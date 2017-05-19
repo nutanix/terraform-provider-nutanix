@@ -1,4 +1,4 @@
-package ahvprovider
+package ahvproviderplugin
 
 import "github.com/hashicorp/terraform/helper/schema"
 

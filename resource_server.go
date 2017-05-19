@@ -1,44 +1,44 @@
-package ahvprovider
+package ahvproviderplugin
 
 import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
-func updateAddress(d *schema.ResourceData) error{
+func updateAddress(d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceServerCreate(d *schema.ResourceData, m interface{} ) error{
+func resourceServerCreate(d *schema.ResourceData, m interface{}) error {
 	address := d.Get("address").(string)
-	d.SetId("myID "+address)
+	d.SetId("myID " + address)
 	return nil
 }
 
-func resourceServerRead(d *schema.ResourceData, m interface{} ) error{
+func resourceServerRead(d *schema.ResourceData, m interface{}) error {
 	/*
-	client := meta.(*MyClient)
+		client := meta.(*MyClient)
 
-	// Attempt to read from an upstream API
-	obj, ok := client.Get(d.Id())
+		// Attempt to read from an upstream API
+		obj, ok := client.Get(d.Id())
 
-	// If resource does not exist, inform Terraform. 
-	// We want to return immediately return here to prevent further processing
-	if !ok {
-		d.SetId("")
-		return nil
-	}
-	
-	d.Set("address", obj.Address)
+		// If resource does not exist, inform Terraform.
+		// We want to return immediately return here to prevent further processing
+		if !ok {
+			d.SetId("")
+			return nil
+		}
+
+		d.Set("address", obj.Address)
 	*/
 	return nil
 
 }
 
-func resourceServerUpdate(d *schema.ResourceData, m interface{} ) error{
+func resourceServerUpdate(d *schema.ResourceData, m interface{}) error {
 	// Enable partial state mode
 	d.Partial(true)
-    // checking that address has changed or not
-	if d.HasChange("address"){
+	// checking that address has changed or not
+	if d.HasChange("address") {
 		//Try updating the address
 		if err := updateAddress(d); err != nil {
 			return err
@@ -54,7 +54,7 @@ func resourceServerUpdate(d *schema.ResourceData, m interface{} ) error{
 	return nil
 }
 
-func resourceServerDelete(d *schema.ResourceData, m interface{} ) error{
+func resourceServerDelete(d *schema.ResourceData, m interface{}) error {
 	d.SetId("")
 	return nil
 }
@@ -68,7 +68,7 @@ func resourceServer() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"address": &schema.Schema{
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Required: true,
 			},
 		},
