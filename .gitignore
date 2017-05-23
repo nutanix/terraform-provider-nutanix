@@ -5,6 +5,9 @@
 *.dylib
 *.tfstate
 *.tfstate.backup
+*.log
+request_log
+file1
 
 # Test binary, build with `go test -c`
 *.test
