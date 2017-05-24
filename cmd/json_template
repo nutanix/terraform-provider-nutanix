@@ -1,73 +1,17 @@
 {
-    "spec" : {
-        "name": "string"
-        "resources": {
-            "nic_list": [
-            {
-                "subnet_reference": {
-                    "kind": "subnet",
-                    "uuid": "string"
-                }
-            }
-            ],
-            "power_state": "POWERED_ON"
-            "num_vcpus_per_socket": 1,
-            "num_sockets": 4,
-            "gpu_list": [
-            ],
-            "memory_size_mib": 12288,
-            "parent_reference": {
-                "kind": "string",
-                "uuid": "string"
-            },
-            "disk_list": [
-            {
-                "device_properties": {
-                    "disk_address": {
-                        "device_index": 0
-                        "adapter_type": "SCSI"
-                    },
-                    "device_type": "DISK"
-                },
-                "disk_size_mib": 10
-            },    
-            {
-                "device_properties": {
-                    "disk_address": {
-                        "device_index": 1
-                        "adapter_type": "SCSI"
-                    },
-                    "device_type": "DISK"
-                },
-                "disk_size_mib": 71680
-            },    
-            {
-                "device_properties": {
-                    "disk_address": {
-                        "device_index": 2
-                        "adapter_type": "SCSI"
-                    },
-                    "device_type": "DISK"
-                },
-                "disk_size_mib": 512000
-            }
-            ]
-        },
-        "description": "string"
-    },
-    "api_version": "string",
-    "metadata": {
-        "last_update_time": "2017-05-18T05:50:45.714Z",
-        "kind": "vm",
-        "uuid": "string",
-        "creation_time": "2017-05-18T05:50:45.714Z",
-        "categories": {},
-        "owner_reference": {
-            "kind": "user",
-            "name": "string",
-            "uuid": "string"
-        },
-        "entity_version": 0,
-        "name": "string"
+  "spec": {
+    "name": "string",
+    "resources": {
+      "num_vcpus_per_socket": 1,
+      "num_sockets": 1,
+      "memory_size_mib": 1024,
+      "power_state": "POWERED_ON"
     }
-}    
+  },
+  "api_version": "3.0",
+  "metadata": {
+    "kind": "vm",
+    "spec_version": 0,
+    "name": "string"
+  }
+}
