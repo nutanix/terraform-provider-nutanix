@@ -1,13 +1,15 @@
 package ahvproviderplugin
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
+	st "github.com/ideadevice/terraform-ahv-provider-plugin/jsonstruct"
 	"github.com/ideadevice/terraform-ahv-provider-plugin/requestutils"
 	"io/ioutil"
-	"os"
+	"log"
+	"reflect"
+	"runtime/debug"
 	"strings"
 )
 
@@ -47,78 +49,141 @@ func check(e error) {
 	}
 }
 
-func resourceServerCreate(d *schema.ResourceData, m interface{}) error {
+//RecoverFunc can be used to recover from panics. name is the name of the caller
+func RecoverFunc(name string) {
+	if err := recover(); err != nil {
+		log.Printf("Recovered from error %s, %s", err, name)
+		log.Printf("Stack Trace: %s", debug.Stack())
+		panic(err)
+	}
+}
 
-	f, err := os.Create("file1")
-	check(err)
+func setStructStringField(v interface{}, field string, path string, d *schema.ResourceData) {
+	defer RecoverFunc("setStructStringField")
+	a := reflect.ValueOf(v).Elem().FieldByName(field)
+	valueCurr := fmt.Sprintf("%v", a)
+	temp := d.Get(path)
+	if a.IsValid() && temp != nil && temp.(string) != "" {
+		a.SetString(temp.(string))
+	} else if valueCurr == "string" {
+		a.SetString("")
+	}
+}
 
-	w := bufio.NewWriter(f)
+func setStructIntField(v interface{}, field string, path string, d *schema.ResourceData) {
+	a := reflect.ValueOf(v).Elem().FieldByName(field)
+	temp := d.Get(path)
+	if a.IsValid() && temp != nil && temp.(int) != 0 {
+		var intVal int64
+		intVal = int64(temp.(int))
+		a.SetInt(intVal)
+	}
+}
 
-	// Opening the json template file
-	filejson, err1 := os.Open("json_template")
-	check(err1)
-	defer filejson.Close()
+// SetJSONFields is function for setting the JSON fields from config file
+func SetJSONFields(myStruct interface{}, path string, d *schema.ResourceData) {
+	v := reflect.ValueOf(myStruct).Elem()
+	typeOfT := v.Type()
 
-	// Create a new scanner and read the file line by line
-	scanner := bufio.NewScanner(filejson)
-	strName := "\"name\": \"string\""
-	flagName := true
-	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), strName) && flagName {
-			name := d.Get("name").(string)
-			strnew := "\"name\": \"" + name + "\""
-			str := strings.Replace(scanner.Text(), strName, strnew, 1)
-			_, err = fmt.Fprintf(w, "%v\n", str)
-			check(err)
-			flagName = true
+	for i := 0; i < v.NumField(); i++ {
+		f := v.Field(i)
+		typeName := fmt.Sprintf("%s", f.Type())
+		fieldName := fmt.Sprintf("%s", typeOfT.Field(i).Name)
+
+		var pathNew string
+		if path == "" {
+			pathNew = fieldName
 		} else {
-			_, err = fmt.Fprintf(w, "%v\n", scanner.Text())
-			check(err)
+			pathNew = path + "_" + fieldName
+		}
+
+		if typeName == "string" {
+			setStructStringField(myStruct, fieldName, pathNew, d)
+		} else if typeName == "int" {
+			setStructIntField(myStruct, fieldName, pathNew, d)
+		} else if typeName != strings.TrimSuffix(typeName, "Struct") && !(reflect.ValueOf(f.Interface()).IsNil()) {
+			SetJSONFields(f.Interface(), pathNew, d)
 		}
 	}
-	w.Flush()
-	f.Close()
+}
 
-	json, err2 := ioutil.ReadFile("file1")
-	check(err2)
-	jsonStr := []byte(json)
-	username := d.Get("username").(string)
-	password := d.Get("password").(string)
+// ID returns the id to be set
+func (m *Machine) ID() string {
+	return "ID-" + m.Name + "!!"
+}
 
-	url := "https://10.5.68.6:9440/api/nutanix/v3/vms"
+// DeleteMachine function deletes the vm using DELETE api call
+func (c *MyClient) DeleteMachine(m *Machine) error {
+
+	jsonStr := []byte(`{}`)
+	url := c.Endpoint + "/list"
 	method := "POST"
-	requestutils.RequestHandler(url, method, jsonStr, username, password)
+	jsonResponse := requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password)
 
-	address := d.Get("address").(string)
-	d.SetId("MyID " + address)
+	var uuid string
+	var vmlist vmList
+	err := json.Unmarshal(jsonResponse, &vmlist)
+	check(err)
+
+	for _, vm := range vmlist.Entities {
+		if vm.Spec.Name == m.Name {
+			uuid = vm.Metadata.UUID
+		}
+	}
+
+	url = c.Endpoint + "/" + uuid
+	method = "DELETE"
+	requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password)
 	return nil
 }
 
-func resourceServerRead(d *schema.ResourceData, m interface{}) error {
-	/*
-		client := meta.(*MyClient)
+// CreateMachine function creates the vm using POST api call
+func (c *MyClient) CreateMachine(m *Machine, d *schema.ResourceData) error {
 
-		// Attempt to read from an upstream API
-		obj, ok := client.Get(d.Id())
+	var JSON st.JSONstruct
 
-		// If resource does not exist, inform Terraform.
-		// We want to return immediately return here to prevent further processing
-		if !ok {
-			d.SetId("")
-			return nil
-		}
+	Input, err := ioutil.ReadFile("json_template")
+	check(err)
+	InputPattern := []byte(Input)
 
-		d.Set("address", obj.Address)
-	*/
-	username := d.Get("username").(string)
-	password := d.Get("password").(string)
+	json.Unmarshal(InputPattern, &JSON)
 
-	url := "http://www.example.com/customers/12345"
-	var jsonStr = []byte(`yo`)
-	method := "GET"
-	requestutils.RequestHandler(url, method, jsonStr, username, password)
+	SetJSONFields(&JSON, "", d)
+	JSON.Spec.Name = m.Name
+	JSON.Metadata.Name = m.Name
+
+	jsonStr, err1 := json.Marshal(JSON)
+	check(err1)
+
+	method := "POST"
+	requestutils.RequestHandler(c.Endpoint, method, jsonStr, c.Username, c.Password)
+	return nil
+}
+
+func resourceServerCreate(d *schema.ResourceData, m interface{}) error {
+
+	client := m.(*MyClient)
+	machine := Machine{
+		Name: d.Get("name").(string),
+		SpecResourcesNumVCPUsPerSocket: d.Get("Spec_Resources_NumVCPUsPerSocket").(int),
+		SpecResourcesNumSockets:        d.Get("Spec_Resources_NumSockets").(int),
+		SpecResourcesMemorySizeMib:     d.Get("Spec_Resources_MemorySizeMib").(int),
+		SpecResourcesPowerState:        d.Get("Spec_Resources_PowerState").(string),
+		APIversion:                     d.Get("APIversion").(string),
+	}
+
+	err := client.CreateMachine(&machine, d)
+	if err != nil {
+		return err
+	}
+
+	d.SetId(machine.ID())
 	return nil
 
+}
+
+func resourceServerRead(d *schema.ResourceData, m interface{}) error {
+	return nil
 }
 
 func resourceServerUpdate(d *schema.ResourceData, m interface{}) error {
@@ -143,30 +208,20 @@ func resourceServerUpdate(d *schema.ResourceData, m interface{}) error {
 
 func resourceServerDelete(d *schema.ResourceData, m interface{}) error {
 
-	username := d.Get("username").(string)
-	password := d.Get("password").(string)
-	name := d.Get("name").(string)
-
-	jsonStr := []byte(`{}`)
-
-	url := "https://10.5.68.6:9440/api/nutanix/v3/vms/list"
-	method := "POST"
-	jsonResponse := requestutils.RequestHandler(url, method, jsonStr, username, password)
-
-	var uuid string
-	var vmlist vmList
-	err := json.Unmarshal(jsonResponse, &vmlist)
-	check(err)
-	for _, vm := range vmlist.Entities {
-		if vm.Spec.Name == name {
-			uuid = vm.Metadata.UUID
-		}
+	client := m.(*MyClient)
+	machine := Machine{
+		Name: d.Get("name").(string),
+		SpecResourcesNumVCPUsPerSocket: d.Get("Spec_Resources_NumVCPUsPerSocket").(int),
+		SpecResourcesNumSockets:        d.Get("Spec_Resources_NumSockets").(int),
+		SpecResourcesMemorySizeMib:     d.Get("Spec_Resources_MemorySizeMib").(int),
+		SpecResourcesPowerState:        d.Get("Spec_Resources_PowerState").(string),
+		APIversion:                     d.Get("APIversion").(string),
 	}
 
-	url = "https://10.5.68.6:9440/api/nutanix/v3/vms/" + uuid
-	jsonStr = []byte(`yo`)
-	method = "DELETE"
-	requestutils.RequestHandler(url, method, jsonStr, username, password)
+	err := client.DeleteMachine(&machine)
+	if err != nil {
+		return err
+	}
 
 	d.SetId("")
 	return nil
@@ -180,19 +235,27 @@ func resourceServer() *schema.Resource {
 		Delete: resourceServerDelete,
 
 		Schema: map[string]*schema.Schema{
-			"address": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"username": &schema.Schema{
+			"Spec_Resources_NumVCPUsPerSocket": &schema.Schema{
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+			"Spec_Resources_NumSockets": &schema.Schema{
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+			"Spec_Resources_MemorySizeMib": &schema.Schema{
+				Type:     schema.TypeInt,
+				Required: true,
+			},
+			"Spec_Resources_PowerState": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"password": &schema.Schema{
+			"APIversion": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
 			},

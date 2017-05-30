@@ -7,7 +7,8 @@
 *.tfstate.backup
 *.log
 request_log
-file1
+cmd/terraform-provider-example
+cmd/cmd
 
 # Test binary, build with `go test -c`
 *.test
@@ -17,3 +18,6 @@ file1
 
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 .glide/
+
+# Test directory
+test/
