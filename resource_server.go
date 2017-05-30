@@ -94,7 +94,7 @@ func SetJSONFields(myStruct interface{}, path string, d *schema.ResourceData) {
 		if path == "" {
 			pathNew = fieldName
 		} else {
-			pathNew = path + "_" + fieldName
+			pathNew = path + ".0." + fieldName
 		}
 
 		if typeName == "string" {
@@ -148,9 +148,13 @@ func (c *MyClient) CreateMachine(m *Machine, d *schema.ResourceData) error {
 
 	json.Unmarshal(InputPattern, &JSON)
 
-	SetJSONFields(&JSON, "", d)
 	JSON.Spec.Name = m.Name
 	JSON.Metadata.Name = m.Name
+	JSON.Spec.Resources.NumVCPUsPerSocket = m.SpecResourcesNumVCPUsPerSocket
+	JSON.Spec.Resources.NumSockets = m.SpecResourcesNumSockets
+	JSON.Spec.Resources.MemorySizeMib = m.SpecResourcesMemorySizeMib
+	JSON.Spec.Resources.PowerState = m.SpecResourcesPowerState
+	JSON.APIVersion = m.APIversion
 
 	jsonStr, err1 := json.Marshal(JSON)
 	check(err1)
@@ -160,15 +164,17 @@ func (c *MyClient) CreateMachine(m *Machine, d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceServerCreate(d *schema.ResourceData, m interface{}) error {
+func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 
-	client := m.(*MyClient)
+	client := meta.(*MyClient)
+	specTemp := d.Get("Spec").(*schema.Set).List()[0].(map[string]interface{})
+	resourcesTemp := specTemp["Resources"].(*schema.Set).List()[0].(map[string]interface{})
 	machine := Machine{
 		Name: d.Get("name").(string),
-		SpecResourcesNumVCPUsPerSocket: d.Get("Spec_Resources_NumVCPUsPerSocket").(int),
-		SpecResourcesNumSockets:        d.Get("Spec_Resources_NumSockets").(int),
-		SpecResourcesMemorySizeMib:     d.Get("Spec_Resources_MemorySizeMib").(int),
-		SpecResourcesPowerState:        d.Get("Spec_Resources_PowerState").(string),
+		SpecResourcesNumVCPUsPerSocket: resourcesTemp["NumVCPUsPerSocket"].(int),
+		SpecResourcesNumSockets:        resourcesTemp["NumSockets"].(int),
+		SpecResourcesMemorySizeMib:     resourcesTemp["MemorySizeMib"].(int),
+		SpecResourcesPowerState:        resourcesTemp["PowerState"].(string),
 		APIversion:                     d.Get("APIversion").(string),
 	}
 
@@ -209,12 +215,14 @@ func resourceServerUpdate(d *schema.ResourceData, m interface{}) error {
 func resourceServerDelete(d *schema.ResourceData, m interface{}) error {
 
 	client := m.(*MyClient)
+	specTemp := d.Get("Spec").(*schema.Set).List()[0].(map[string]interface{})
+	resourcesTemp := specTemp["Resources"].(*schema.Set).List()[0].(map[string]interface{})
 	machine := Machine{
 		Name: d.Get("name").(string),
-		SpecResourcesNumVCPUsPerSocket: d.Get("Spec_Resources_NumVCPUsPerSocket").(int),
-		SpecResourcesNumSockets:        d.Get("Spec_Resources_NumSockets").(int),
-		SpecResourcesMemorySizeMib:     d.Get("Spec_Resources_MemorySizeMib").(int),
-		SpecResourcesPowerState:        d.Get("Spec_Resources_PowerState").(string),
+		SpecResourcesNumVCPUsPerSocket: resourcesTemp["NumVCPUsPerSocket"].(int),
+		SpecResourcesNumSockets:        resourcesTemp["NumSockets"].(int),
+		SpecResourcesMemorySizeMib:     resourcesTemp["MemorySizeMib"].(int),
+		SpecResourcesPowerState:        resourcesTemp["PowerState"].(string),
 		APIversion:                     d.Get("APIversion").(string),
 	}
 
@@ -239,21 +247,37 @@ func resourceServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"Spec_Resources_NumVCPUsPerSocket": &schema.Schema{
-				Type:     schema.TypeInt,
+			"Spec": &schema.Schema{
+				Type:     schema.TypeSet,
 				Required: true,
-			},
-			"Spec_Resources_NumSockets": &schema.Schema{
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"Spec_Resources_MemorySizeMib": &schema.Schema{
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"Spec_Resources_PowerState": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"Resources": &schema.Schema{
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"NumVCPUsPerSocket": &schema.Schema{
+										Type:     schema.TypeInt,
+										Required: true,
+									},
+									"NumSockets": &schema.Schema{
+										Type:     schema.TypeInt,
+										Required: true,
+									},
+									"MemorySizeMib": &schema.Schema{
+										Type:     schema.TypeInt,
+										Required: true,
+									},
+									"PowerState": &schema.Schema{
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"APIversion": &schema.Schema{
 				Type:     schema.TypeString,
