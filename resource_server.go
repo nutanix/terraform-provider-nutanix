@@ -208,22 +208,147 @@ func resourceServer() *schema.Resource {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
+									"hard_clock_timezone": &schema.Schema{
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"guest_os_id": &schema.Schema{
+										Type:     schema.TypeString,
+										Optional: true,
+									},
 									"power_state": &schema.Schema{
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"nic_list": &schema.Schema{
+									"parent_reference": &schema.Schema{
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"uuid": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"kind": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"guest_tools": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"nutanix_guest_tools": &schema.Schema{
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"iso_mount_state": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"state": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"enabled_capability_list": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"boot_config": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"mac_address": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"disk_address": &schema.Schema{
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"device_index": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+															"adapter": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"nic_list": &schema.Schema{
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ip_endpoint_list": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"ip": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"type": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
 												"nic_type": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"mac_address": {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
 												"network_function_nic_type": {
 													Type:     schema.TypeString,
 													Optional: true,
+												},
+												"network_function_chain_reference": &schema.Schema{
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"kind": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"name": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"uuid": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
 												},
 												"subnet_reference": &schema.Schema{
 													Type:     schema.TypeSet,
@@ -248,11 +373,35 @@ func resourceServer() *schema.Resource {
 											},
 										},
 									},
-									"disk_list": &schema.Schema{
-										Type:     schema.TypeSet,
+									"gpu_list": &schema.Schema{
+										Type:     schema.TypeList,
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												"vendor": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"mode": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"device_id": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"disk_list": &schema.Schema{
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"uuid": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
 												"disk_size_mib": {
 													Type:     schema.TypeInt,
 													Optional: true,
@@ -265,6 +414,22 @@ func resourceServer() *schema.Resource {
 															"device_type": {
 																Type:     schema.TypeString,
 																Optional: true,
+															},
+															"disk_address": {
+																Type:     schema.TypeSet,
+																Optional: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"adapter_type": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																		"device_index": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																		},
+																	},
+																},
 															},
 														},
 													},
@@ -336,7 +501,7 @@ func resourceServer() *schema.Resource {
 							Optional: true,
 						},
 						"categories": &schema.Schema{
-							Type:     schema.TypeList,
+							Type:     schema.TypeMap,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},

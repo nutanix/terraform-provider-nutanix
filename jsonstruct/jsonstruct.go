@@ -65,7 +65,7 @@ type GuestCustomizationStruct struct {
 // DiskAddressStruct is DiskAddress data type
 type DiskAddressStruct struct {
 	DeviceIndex int    `json:"device_index,omitempty"`
-	AdaptorType string `json:"adapter_type,omitempty"`
+	AdapterType string `json:"adapter_type,omitempty"`
 }
 
 // BootConfigStruct is BootConfig Data type
@@ -158,7 +158,7 @@ type MetaDataStruct struct {
 	Kind           string                 `json:"kind,omitempty"`
 	UUID           string                 `json:"uuid,omitempty"`
 	CreationTime   string                 `json:"creation_time,omitempty"`
-	Categories     []*string              `json:"categories,omitempty"`
+	Categories     map[string]interface{} `json:"categories,omitempty"`
 	OwnerReference *SubnetReferenceStruct `json:"owner_reference,omitempty"`
 	SpecVersion    int                    `json:"spec_version,omitempty"`
 	EntityVersion  int                    `json:"entity_version,omitempty"`
