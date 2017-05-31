@@ -23,63 +23,80 @@ func convertToString(a interface{}) string {
 }
 
 // SetJSONFields function sets fields in struct from ResourceData
-func SetJSONFields(JSON *(st.JSONstruct), d *schema.ResourceData) {
-
-	JSON.APIVersion = convertToString(d.Get("api_version"))                // api_version
-	spec := d.Get("spec").(*schema.Set).List()[0].(map[string]interface{}) // spec
-	SetSpec(JSON, spec)
+func SetJSONFields(d *schema.ResourceData) st.JSONstruct {
+	spec := d.Get("spec").(*schema.Set).List()[0].(map[string]interface{})         // spec
 	metadata := d.Get("metadata").(*schema.Set).List()[0].(map[string]interface{}) // metadata
-	SetMetadata(JSON, metadata)
+
+	JSON := st.JSONstruct{
+		APIVersion: convertToString(d.Get("api_version")), // api_version
+		Spec:       SetSpec(spec),
+		Metadata:   SetMetadata(metadata),
+	}
+	return JSON
 }
 
 // SetMetadata sets metadata fields in json struct
-func SetMetadata(JSON *(st.JSONstruct), s map[string]interface{}) {
-	JSON.Metadata.LastUpdateTime = convertToString(s["last_update_time"])
-	JSON.Metadata.Kind = convertToString(s["kind"])
-	JSON.Metadata.UUID = convertToString(s["uuid"])
-	JSON.Metadata.CreationTime = convertToString(s["creation_time"])
-	JSON.Metadata.Name = convertToString(s["name"])
-	JSON.Metadata.SpecVersion = convertToInt(s["spec_version"])
-	JSON.Metadata.EntityVersion = convertToInt(s["entity_version"])
+func SetMetadata(s map[string]interface{}) *(st.MetaDataStruct) {
 
-	if s["owner_reference"] != nil {
-		SetSubnetReference(JSON.Metadata.OwnerReference, s["owner_reference"].(*schema.Set).List()[0].(map[string]interface{}))
-	}
-
+	var categories []*string
 	if s["categories"] != nil {
 		for i := 0; i < len(s["categories"].([]interface{})); i++ {
 			str := s["categories"].([]interface{})[i].(string)
-			JSON.Metadata.Categories = append(JSON.Metadata.Categories, &str)
+			categories = append(categories, &str)
 		}
 	}
 
+	MetadataI := st.MetaDataStruct{
+		LastUpdateTime: convertToString(s["last_update_time"]),
+		Kind:           convertToString(s["kind"]),
+		UUID:           convertToString(s["uuid"]),
+		CreationTime:   convertToString(s["creation_time"]),
+		Name:           convertToString(s["name"]),
+		SpecVersion:    convertToInt(s["spec_version"]),
+		EntityVersion:  convertToInt(s["entity_version"]),
+		OwnerReference: SetSubnetReference(s["owner_reference"].(*schema.Set).List()),
+		Categories:     categories,
+	}
+	return &MetadataI
 }
 
 // SetSubnetReference sets owner_reference fields in json struct
-func SetSubnetReference(a *(st.SubnetReferenceStruct), s map[string]interface{}) {
-	a.Kind = convertToString(s["kind"])
-	a.UUID = convertToString(s["uuid"])
-	a.Name = convertToString(s["name"])
+func SetSubnetReference(t []interface{}) *(st.SubnetReferenceStruct) {
+	if len(t) > 0 {
+		s := t[0].(map[string]interface{})
+		SubnetReferenceI := st.SubnetReferenceStruct{
+			Kind: convertToString(s["kind"]),
+			UUID: convertToString(s["uuid"]),
+			Name: convertToString(s["name"]),
+		}
+		return &SubnetReferenceI
+	}
+	return nil
 }
 
 // SetSpec sets spec fields in json struct
-func SetSpec(JSON *(st.JSONstruct), s map[string]interface{}) {
+func SetSpec(s map[string]interface{}) *(st.SpecStruct) {
 
 	resources := s["resources"].(*schema.Set).List()[0].(map[string]interface{}) // resources
-	SetResources(JSON, resources)
 
+	SpecI := st.SpecStruct{
+		Resources: SetResources(resources),
+	}
+	return &SpecI
 }
 
 // SetResources sets resources fields in json struct
-func SetResources(JSON *(st.JSONstruct), s map[string]interface{}) {
+func SetResources(s map[string]interface{}) *(st.ResourcesStruct) {
 
-	JSON.Spec.Resources.NumVCPUsPerSocket = convertToInt(s["num_vcpus_per_socket"])           // num_vcpus_per_socket
-	JSON.Spec.Resources.NumSockets = convertToInt(s["num_sockets"])                           // num_sockets
-	JSON.Spec.Resources.MemorySizeMb = convertToInt(s["memory_size_mb"])                      // memory_size_mb
-	JSON.Spec.Resources.PowerState = convertToString(s["power_state"])                        // power_state
-	JSON.Spec.Resources.GuestOSID = convertToString(s["guest_os_id"])                         // guest_os_id
-	JSON.Spec.Resources.HardwareClockTimezone = convertToString(s["hardware_clock_timezone"]) // hardware_clock_timezone
-
+	ResourcesI := st.ResourcesStruct{
+		NumVCPUsPerSocket:     convertToInt(s["num_vcpus_per_socket"]),       // num_vcpus_per_socket
+		NumSockets:            convertToInt(s["num_sockets"]),                // num_sockets
+		MemorySizeMb:          convertToInt(s["memory_size_mb"]),             // memory_size_mb
+		PowerState:            convertToString(s["power_state"]),             // power_state
+		GuestOSID:             convertToString(s["guest_os_id"]),             // guest_os_id
+		HardwareClockTimezone: convertToString(s["hardware_clock_timezone"]), // hardware_clock_timezone
+	}
+	return &ResourcesI
 }
 
 func main() {

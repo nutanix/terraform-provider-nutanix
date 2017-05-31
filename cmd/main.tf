@@ -18,11 +18,12 @@ resource "example_server" "my-server" {
         kind = "vm"
         spec_version = 0
         name = "kritagya1"
-        owner_reference = {
-            kind = "a"
-            name = "b"
-        }
         categories = ["cat1", "cat2", "cat3"]
+        owner_reference = {
+            name = "stringName"
+            uuid = "stringUUID"
+            kind = "stringKind"
+        }
     }
     api_version = "3.0"
 }

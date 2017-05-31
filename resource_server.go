@@ -6,7 +6,6 @@ import (
 	st "github.com/ideadevice/terraform-ahv-provider-plugin/jsonstruct"
 	"github.com/ideadevice/terraform-ahv-provider-plugin/requestutils"
 	set "github.com/ideadevice/terraform-ahv-provider-plugin/setjsonfields"
-	"io/ioutil"
 	"log"
 	"runtime/debug"
 )
@@ -89,15 +88,8 @@ func (c *MyClient) DeleteMachine(m *Machine) error {
 // CreateMachine function creates the vm using POST api call
 func (c *MyClient) CreateMachine(m *Machine, d *schema.ResourceData) error {
 
-	var JSON st.JSONstruct
+	JSON := set.SetJSONFields(d)
 
-	Input, err := ioutil.ReadFile("json_template")
-	check(err)
-	InputPattern := []byte(Input)
-
-	json.Unmarshal(InputPattern, &JSON)
-
-	set.SetJSONFields(&JSON, d)
 	JSON.Spec.Name = m.Spec.Name
 	JSON.Metadata.Name = m.Metadata.Name
 
