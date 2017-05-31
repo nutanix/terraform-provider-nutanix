@@ -2,15 +2,13 @@ package ahvproviderplugin
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
 	st "github.com/ideadevice/terraform-ahv-provider-plugin/jsonstruct"
 	"github.com/ideadevice/terraform-ahv-provider-plugin/requestutils"
+	set "github.com/ideadevice/terraform-ahv-provider-plugin/setjsonfields"
 	"io/ioutil"
 	"log"
-	"reflect"
 	"runtime/debug"
-	"strings"
 )
 
 type specStruct struct {
@@ -49,7 +47,7 @@ func check(e error) {
 	}
 }
 
-//RecoverFunc can be used to recover from panics. name is the name of the caller
+// RecoverFunc can be used to recover from panics. name is the name of the caller
 func RecoverFunc(name string) {
 	if err := recover(); err != nil {
 		log.Printf("Recovered from error %s, %s", err, name)
@@ -58,58 +56,9 @@ func RecoverFunc(name string) {
 	}
 }
 
-func setStructStringField(v interface{}, field string, path string, d *schema.ResourceData) {
-	defer RecoverFunc("setStructStringField")
-	a := reflect.ValueOf(v).Elem().FieldByName(field)
-	valueCurr := fmt.Sprintf("%v", a)
-	temp := d.Get(path)
-	if a.IsValid() && temp != nil && temp.(string) != "" {
-		a.SetString(temp.(string))
-	} else if valueCurr == "string" {
-		a.SetString("")
-	}
-}
-
-func setStructIntField(v interface{}, field string, path string, d *schema.ResourceData) {
-	a := reflect.ValueOf(v).Elem().FieldByName(field)
-	temp := d.Get(path)
-	if a.IsValid() && temp != nil && temp.(int) != 0 {
-		var intVal int64
-		intVal = int64(temp.(int))
-		a.SetInt(intVal)
-	}
-}
-
-// SetJSONFields is function for setting the JSON fields from config file
-func SetJSONFields(myStruct interface{}, path string, d *schema.ResourceData) {
-	v := reflect.ValueOf(myStruct).Elem()
-	typeOfT := v.Type()
-
-	for i := 0; i < v.NumField(); i++ {
-		f := v.Field(i)
-		typeName := fmt.Sprintf("%s", f.Type())
-		fieldName := fmt.Sprintf("%s", typeOfT.Field(i).Name)
-
-		var pathNew string
-		if path == "" {
-			pathNew = fieldName
-		} else {
-			pathNew = path + ".0." + fieldName
-		}
-
-		if typeName == "string" {
-			setStructStringField(myStruct, fieldName, pathNew, d)
-		} else if typeName == "int" {
-			setStructIntField(myStruct, fieldName, pathNew, d)
-		} else if typeName != strings.TrimSuffix(typeName, "Struct") && !(reflect.ValueOf(f.Interface()).IsNil()) {
-			SetJSONFields(f.Interface(), pathNew, d)
-		}
-	}
-}
-
 // ID returns the id to be set
 func (m *Machine) ID() string {
-	return "ID-" + m.Name + "!!"
+	return "ID-" + m.Spec.Name + "!!"
 }
 
 // DeleteMachine function deletes the vm using DELETE api call
@@ -126,7 +75,7 @@ func (c *MyClient) DeleteMachine(m *Machine) error {
 	check(err)
 
 	for _, vm := range vmlist.Entities {
-		if vm.Spec.Name == m.Name {
+		if vm.Spec.Name == m.Spec.Name {
 			uuid = vm.Metadata.UUID
 		}
 	}
@@ -148,13 +97,9 @@ func (c *MyClient) CreateMachine(m *Machine, d *schema.ResourceData) error {
 
 	json.Unmarshal(InputPattern, &JSON)
 
-	JSON.Spec.Name = m.Name
-	JSON.Metadata.Name = m.Name
-	JSON.Spec.Resources.NumVCPUsPerSocket = m.SpecResourcesNumVCPUsPerSocket
-	JSON.Spec.Resources.NumSockets = m.SpecResourcesNumSockets
-	JSON.Spec.Resources.MemorySizeMib = m.SpecResourcesMemorySizeMib
-	JSON.Spec.Resources.PowerState = m.SpecResourcesPowerState
-	JSON.APIVersion = m.APIversion
+	set.SetJSONFields(&JSON, d)
+	JSON.Spec.Name = m.Spec.Name
+	JSON.Metadata.Name = m.Metadata.Name
 
 	jsonStr, err1 := json.Marshal(JSON)
 	check(err1)
@@ -167,15 +112,16 @@ func (c *MyClient) CreateMachine(m *Machine, d *schema.ResourceData) error {
 func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*MyClient)
-	specTemp := d.Get("Spec").(*schema.Set).List()[0].(map[string]interface{})
-	resourcesTemp := specTemp["Resources"].(*schema.Set).List()[0].(map[string]interface{})
+	//specTemp := d.Get("spec").(*schema.Set).List()[0].(map[string]interface{})
+	//resourcesTemp := specTemp["resources"].(*schema.Set).List()[0].(map[string]interface{})
+
 	machine := Machine{
-		Name: d.Get("name").(string),
-		SpecResourcesNumVCPUsPerSocket: resourcesTemp["NumVCPUsPerSocket"].(int),
-		SpecResourcesNumSockets:        resourcesTemp["NumSockets"].(int),
-		SpecResourcesMemorySizeMib:     resourcesTemp["MemorySizeMib"].(int),
-		SpecResourcesPowerState:        resourcesTemp["PowerState"].(string),
-		APIversion:                     d.Get("APIversion").(string),
+		Spec: &st.SpecStruct{
+			Name: d.Get("name").(string),
+		},
+		Metadata: &st.MetaDataStruct{
+			Name: d.Get("name").(string),
+		},
 	}
 
 	err := client.CreateMachine(&machine, d)
@@ -215,15 +161,16 @@ func resourceServerUpdate(d *schema.ResourceData, m interface{}) error {
 func resourceServerDelete(d *schema.ResourceData, m interface{}) error {
 
 	client := m.(*MyClient)
-	specTemp := d.Get("Spec").(*schema.Set).List()[0].(map[string]interface{})
-	resourcesTemp := specTemp["Resources"].(*schema.Set).List()[0].(map[string]interface{})
+	//specTemp := d.Get("spec").(*schema.Set).List()[0].(map[string]interface{})
+	//resourcesTemp := specTemp["resources"].(*schema.Set).List()[0].(map[string]interface{})
+
 	machine := Machine{
-		Name: d.Get("name").(string),
-		SpecResourcesNumVCPUsPerSocket: resourcesTemp["NumVCPUsPerSocket"].(int),
-		SpecResourcesNumSockets:        resourcesTemp["NumSockets"].(int),
-		SpecResourcesMemorySizeMib:     resourcesTemp["MemorySizeMib"].(int),
-		SpecResourcesPowerState:        resourcesTemp["PowerState"].(string),
-		APIversion:                     d.Get("APIversion").(string),
+		Spec: &st.SpecStruct{
+			Name: d.Get("name").(string),
+		},
+		Metadata: &st.MetaDataStruct{
+			Name: d.Get("name").(string),
+		},
 	}
 
 	err := client.DeleteMachine(&machine)
@@ -247,29 +194,29 @@ func resourceServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"Spec": &schema.Schema{
+			"spec": &schema.Schema{
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"Resources": &schema.Schema{
+						"resources": &schema.Schema{
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"NumVCPUsPerSocket": &schema.Schema{
+									"num_vcpus_per_socket": &schema.Schema{
 										Type:     schema.TypeInt,
 										Required: true,
 									},
-									"NumSockets": &schema.Schema{
+									"num_sockets": &schema.Schema{
 										Type:     schema.TypeInt,
 										Required: true,
 									},
-									"MemorySizeMib": &schema.Schema{
+									"memory_size_mb": &schema.Schema{
 										Type:     schema.TypeInt,
 										Required: true,
 									},
-									"PowerState": &schema.Schema{
+									"power_state": &schema.Schema{
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -279,9 +226,70 @@ func resourceServer() *schema.Resource {
 					},
 				},
 			},
-			"APIversion": &schema.Schema{
+			"api_version": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"metadata": &schema.Schema{
+				Type:     schema.TypeSet,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"last_update_time": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"kind": &schema.Schema{
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"name": &schema.Schema{
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"uuid": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"creation_time": &schema.Schema{
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"spec_version": &schema.Schema{
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+						"entity_version": &schema.Schema{
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"categories": &schema.Schema{
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"owner_reference": &schema.Schema{
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": &schema.Schema{
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"name": &schema.Schema{
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"uuid": &schema.Schema{
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	}

@@ -1,6 +1,9 @@
 package ahvproviderplugin
 
-import "github.com/hashicorp/terraform/helper/schema"
+import (
+	"github.com/hashicorp/terraform/helper/schema"
+	st "github.com/ideadevice/terraform-ahv-provider-plugin/jsonstruct"
+)
 
 // MyClient struct is for defining provider
 type MyClient struct {
@@ -10,14 +13,7 @@ type MyClient struct {
 }
 
 // Machine struct is for defining machine
-type Machine struct {
-	Name                           string
-	SpecResourcesNumVCPUsPerSocket int
-	SpecResourcesNumSockets        int
-	SpecResourcesMemorySizeMib     int
-	SpecResourcesPowerState        string
-	APIversion                     string
-}
+type Machine st.JSONstruct
 
 // Provider function returns the object that implements the terraform.ResourceProvider interface, specifically a schema.Provider
 func Provider() *schema.Provider {

@@ -97,7 +97,7 @@ type ResourcesStruct struct {
 	NumVCPUsPerSocket     int                       `json:"num_vcpus_per_socket,omitempty"`
 	NumSockets            int                       `json:"num_sockets,omitempty"`
 	GPUList               []*GPUListStruct          `json:"gpu_list,omitempty"`
-	MemorySizeMib         int                       `json:"memory_size_mib,omitempty"`
+	MemorySizeMb          int                       `json:"memory_size_mb,omitempty"`
 	ParentReference       *SubnetReferenceStruct    `json:"parent_reference,omitempty"`
 	HardwareClockTimezone string                    `json:"hardware_clock_timezone,omitempty"`
 	GuestCustomization    *GuestCustomizationStruct `json:"guest_customization,omitempty"`
@@ -158,7 +158,7 @@ type MetaDataStruct struct {
 	Kind           string                 `json:"kind,omitempty"`
 	UUID           string                 `json:"uuid,omitempty"`
 	CreationTime   string                 `json:"creation_time,omitempty"`
-	Categories     []*interface{}         `json:"categories,omitempty"`
+	Categories     []*string              `json:"categories,omitempty"`
 	OwnerReference *SubnetReferenceStruct `json:"owner_reference,omitempty"`
 	SpecVersion    int                    `json:"spec_version,omitempty"`
 	EntityVersion  int                    `json:"entity_version,omitempty"`

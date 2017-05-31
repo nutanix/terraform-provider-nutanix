@@ -6,13 +6,23 @@ provider "example" {
 
 resource "example_server" "my-server" {
     name = "kritagya_test1"
-    Spec {
-        Resources = {
-            NumVCPUsPerSocket = 1
-            NumSockets = 1
-            MemorySizeMib = 1024
-            PowerState = "POWERED_ON"
+    spec {
+        resources = {
+            num_vcpus_per_socket = 1
+            num_sockets = 1
+            memory_size_mb = 1024
+            power_state = "POWERED_ON"
         }
     }
-    APIversion = "3.0"
+    metadata = {
+        kind = "vm"
+        spec_version = 0
+        name = "kritagya1"
+        owner_reference = {
+            kind = "a"
+            name = "b"
+        }
+        categories = ["cat1", "cat2", "cat3"]
+    }
+    api_version = "3.0"
 }
