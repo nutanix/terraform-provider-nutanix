@@ -212,6 +212,86 @@ func resourceServer() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
+									"nic_list": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"nic_type": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"network_function_nic_type": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"subnet_reference": &schema.Schema{
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"kind": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"name": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"uuid": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"disk_list": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"disk_size_mib": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"device_properties": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"device_type": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"data_source_reference": &schema.Schema{
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"kind": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"name": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"uuid": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 								},
 							},
 						},
