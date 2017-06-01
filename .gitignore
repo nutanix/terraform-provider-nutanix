@@ -7,7 +7,7 @@
 *.tfstate.backup
 *.log
 request_log
-cmd/terraform-provider-example
+cmd/terraform-provider-*
 cmd/cmd
 
 # Test binary, build with `go test -c`

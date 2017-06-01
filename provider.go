@@ -1,7 +1,8 @@
-package ahvproviderplugin
+package nutanix
 
 import (
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/terraform"
 	st "github.com/ideadevice/terraform-ahv-provider-plugin/jsonstruct"
 )
 
@@ -16,11 +17,13 @@ type MyClient struct {
 type Machine st.JSONstruct
 
 // Provider function returns the object that implements the terraform.ResourceProvider interface, specifically a schema.Provider
-func Provider() *schema.Provider {
+func Provider() terraform.ResourceProvider {
+
+	// Nutanix provider schema
 	return &schema.Provider{
 		Schema: providerSchema(),
 		ResourcesMap: map[string]*schema.Resource{
-			"example_server": resourceServer(),
+			"nutanix_virtual_machine": resourceNutanixVirtualMachine(),
 		},
 		ConfigureFunc: providerConfigure,
 	}

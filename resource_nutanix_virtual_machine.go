@@ -1,4 +1,4 @@
-package ahvproviderplugin
+package nutanix
 
 import (
 	"encoding/json"
@@ -101,7 +101,7 @@ func (c *MyClient) CreateMachine(m *Machine, d *schema.ResourceData) error {
 	return nil
 }
 
-func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*MyClient)
 	//specTemp := d.Get("spec").(*schema.Set).List()[0].(map[string]interface{})
@@ -126,11 +126,11 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 
 }
 
-func resourceServerRead(d *schema.ResourceData, m interface{}) error {
+func resourceNutanixVirtualMachineRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceServerUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, m interface{}) error {
 	// Enable partial state mode
 	d.Partial(true)
 	// checking that address has changed or not
@@ -150,7 +150,7 @@ func resourceServerUpdate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceServerDelete(d *schema.ResourceData, m interface{}) error {
+func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, m interface{}) error {
 
 	client := m.(*MyClient)
 	//specTemp := d.Get("spec").(*schema.Set).List()[0].(map[string]interface{})
@@ -174,12 +174,12 @@ func resourceServerDelete(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceServer() *schema.Resource {
+func resourceNutanixVirtualMachine() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceServerCreate,
-		Read:   resourceServerRead,
-		Update: resourceServerUpdate,
-		Delete: resourceServerDelete,
+		Create: resourceNutanixVirtualMachineCreate,
+		Read:   resourceNutanixVirtualMachineRead,
+		Update: resourceNutanixVirtualMachineUpdate,
+		Delete: resourceNutanixVirtualMachineDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": &schema.Schema{

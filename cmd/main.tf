@@ -1,5 +1,5 @@
 provider "example" {
-    username = "dmin"
+    username = "admin"
     password = "Nutanix123#"
     endpoint = "https://10.5.68.6:9440/api/nutanix/v3/vms"
 }
@@ -8,7 +8,6 @@ resource "example_server" "my-server" {
     name = "kritagya_test1"
     spec {
         name = "kritagya_testvm"
-        description = "description...."
         resources = {
             num_vcpus_per_socket = 1
             num_sockets = 1
@@ -21,7 +20,6 @@ resource "example_server" "my-server" {
                         kind = "subnet"
                         uuid = "c03ecf8f-aa1c-4a07-af43-9f2f198713c0"
                     }
-                    ip_endpoint_list = [ { ip = "ip1" type = "type1"}, {type = "type2"}]
                     network_function_nic_type = "INGRESS"
                 }
             ]
