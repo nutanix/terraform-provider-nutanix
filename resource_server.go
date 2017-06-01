@@ -191,6 +191,178 @@ func resourceServer() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"backup_policy": &schema.Schema{
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"consistency_group_identifier": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"default_snapshot_type": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"snapshot_policy_list": &schema.Schema{
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"snapshot_schedule_list": &schema.Schema{
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"local_retention_quantity": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+															"remote_retention_quantity": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
+															"snapshot_type": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"schedule": &schema.Schema{
+																Type:     schema.TypeSet,
+																Optional: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"is_suspended": {
+																			Type:     schema.TypeBool,
+																			Optional: true,
+																		},
+																		"start_time": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																		"end_time": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																		"interval_type": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																		"duration_secs": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																		},
+																		"interval_multiple": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"replication_target": &schema.Schema{
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"cluster_reference": &schema.Schema{
+																Type:     schema.TypeSet,
+																Optional: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"name": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																		"uuid": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																		"kind": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+															"availability_zone_reference": &schema.Schema{
+																Type:     schema.TypeSet,
+																Optional: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"name": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																		"uuid": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																		"kind": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"availability_zone_reference": &schema.Schema{
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"uuid": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"kind": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"cluster_reference": &schema.Schema{
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"uuid": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"kind": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
 						"resources": &schema.Schema{
 							Type:     schema.TypeSet,
 							Required: true,
@@ -262,6 +434,46 @@ func resourceServer() *schema.Resource {
 																Type:     schema.TypeList,
 																Optional: true,
 																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"guest_customization": &schema.Schema{
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"sysprep": &schema.Schema{
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"install_type": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"unattend_xml": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
+												"cloud_init": &schema.Schema{
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"meta_data": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"user_data": {
+																Type:     schema.TypeString,
+																Optional: true,
 															},
 														},
 													},

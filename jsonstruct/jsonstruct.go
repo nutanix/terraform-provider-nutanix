@@ -44,16 +44,14 @@ type GPUListStruct struct {
 
 // CloudInitStruct is CloudInit data type
 type CloudInitStruct struct {
-	MetaData        string         `json:"meta_data,omitempty"`
-	UserData        string         `json:"user_data,omitempty"`
-	CustomKeyValues []*interface{} `json:"custom_key_values,omitempty"`
+	MetaData string `json:"meta_data,omitempty"`
+	UserData string `json:"user_data,omitempty"`
 }
 
 // SysprepStruct is Sysprep data type
 type SysprepStruct struct {
-	InstallType     string         `json:"install_type,omitempty"`
-	UnattendXML     string         `json:"unattend_xml,omitempty"`
-	CustomKeyValues []*interface{} `json:"custom_key_values,omitempty"`
+	InstallType string `json:"install_type,omitempty"`
+	UnattendXML string `json:"unattend_xml,omitempty"`
 }
 
 // GuestCustomizationStruct is GuestCustomization data type

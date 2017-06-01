@@ -1,12 +1,19 @@
 package setjsonfields
 
 import (
-	//	"bufio"
-	//	"fmt"
+	//"bufio"
+	//"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
 	st "github.com/ideadevice/terraform-ahv-provider-plugin/jsonstruct"
-	//	"os"
+	//"os"
 )
+
+func convertToBool(a interface{}) bool {
+	if a != nil {
+		return a.(bool)
+	}
+	return false
+}
 
 func convertToInt(a interface{}) int {
 	if a != nil {
@@ -73,11 +80,13 @@ func SetSubnetReference(t []interface{}) *(st.SubnetReferenceStruct) {
 
 // SetSpec sets spec fields in json struct
 func SetSpec(s map[string]interface{}) *(st.SpecStruct) {
-
-	resources := s["resources"].(*schema.Set).List()[0].(map[string]interface{}) // resources
-
 	SpecI := st.SpecStruct{
-		Resources: SetResources(resources),
+		Resources:                 SetResources(s["resources"].(*schema.Set).List()[0].(map[string]interface{})), //resources
+		Name:                      convertToString(s["name"]),                                                    //name
+		Description:               convertToString(s["description"]),                                             //description
+		ClusterReference:          SetSubnetReference(s["cluster_reference"].(*schema.Set).List()),               // cluster_description
+		AvailabilityZoneReference: SetSubnetReference(s["availability_zone_reference"].(*schema.Set).List()),     //availability_zone_reference
+		BackupPolicy:              SetBackupPolicy(s["backup_policy"].(*schema.Set).List()),                      // backup_policy
 	}
 	return &SpecI
 }
@@ -110,19 +119,19 @@ func SetResources(s map[string]interface{}) *(st.ResourcesStruct) {
 	}
 
 	ResourcesI := st.ResourcesStruct{
-		NumVCPUsPerSocket:     convertToInt(s["num_vcpus_per_socket"]),                        // num_vcpus_per_socket
-		NumSockets:            convertToInt(s["num_sockets"]),                                 // num_sockets
-		MemorySizeMb:          convertToInt(s["memory_size_mb"]),                              // memory_size_mb
-		PowerState:            convertToString(s["power_state"]),                              // power_state
-		GuestOSID:             convertToString(s["guest_os_id"]),                              // guest_os_id
-		HardwareClockTimezone: convertToString(s["hardware_clock_timezone"]),                  // hardware_clock_timezone
-		NicList:               NicListI,                                                       // nic_list
-		DiskList:              DiskListI,                                                      // disk_list
-		GPUList:               GPUListI,                                                       // gpu_list
-		ParentReference:       SetSubnetReference(s["parent_reference"].(*schema.Set).List()), //parent_reference
-		BootConfig:            SetBootConfig(s["boot_config"].(*schema.Set).List()),           // boot_config
-		GuestTools:            SetGuestTools(s["guest_tools"].(*schema.Set).List()),           //guest_tools
-
+		NumVCPUsPerSocket:     convertToInt(s["num_vcpus_per_socket"]),                              // num_vcpus_per_socket
+		NumSockets:            convertToInt(s["num_sockets"]),                                       // num_sockets
+		MemorySizeMb:          convertToInt(s["memory_size_mb"]),                                    // memory_size_mb
+		PowerState:            convertToString(s["power_state"]),                                    // power_state
+		GuestOSID:             convertToString(s["guest_os_id"]),                                    // guest_os_id
+		HardwareClockTimezone: convertToString(s["hardware_clock_timezone"]),                        // hardware_clock_timezone
+		NicList:               NicListI,                                                             // nic_list
+		DiskList:              DiskListI,                                                            // disk_list
+		GPUList:               GPUListI,                                                             // gpu_list
+		ParentReference:       SetSubnetReference(s["parent_reference"].(*schema.Set).List()),       //parent_reference
+		BootConfig:            SetBootConfig(s["boot_config"].(*schema.Set).List()),                 // boot_config
+		GuestTools:            SetGuestTools(s["guest_tools"].(*schema.Set).List()),                 //guest_tools
+		GuestCustomization:    SetGuestCustomization(s["guest_customization"].(*schema.Set).List()), //guest_customization
 	}
 	return &ResourcesI
 }
@@ -194,6 +203,93 @@ func SetDeviceProperties(t []interface{}) *(st.DevicePropertiesStruct) {
 	return nil
 }
 
+// SetBackupPolicy sets backup-policy fields in json struct
+func SetBackupPolicy(t []interface{}) *(st.BackupPolicyStruct) {
+	if len(t) > 0 {
+		s := t[0].(map[string]interface{})
+		var SnapshotPolicyListI []*st.SnapshotPolicyListStruct
+		if s["snapshot_policy_list"] != nil {
+			for i := 0; i < len(s["snapshot_policy_list"].([]interface{})); i++ {
+				elem := SetSnapshotPolicyList(s["snapshot_policy_list"].([]interface{})[i].(map[string]interface{}))
+				SnapshotPolicyListI = append(SnapshotPolicyListI, elem)
+			}
+		}
+		BackupPolicyI := st.BackupPolicyStruct{
+			DefaultSnapshotType:        convertToString(s["default_snapshot_type"]),
+			ConsistencyGroupIdentifier: convertToString(s["consistency_group_identifier"]),
+			SnapshotPolicyList:         SnapshotPolicyListI,
+		}
+		return &BackupPolicyI
+	}
+	return nil
+}
+
+// SetSnapshotPolicyList sets snapshot_policy_list fields in json struct
+func SetSnapshotPolicyList(t map[string]interface{}) *(st.SnapshotPolicyListStruct) {
+	if len(t) > 0 {
+		s := t
+		var SnapshotScheduleListI []*st.SnapshotScheduleListStruct
+		if s["snapshot_schedule_list"] != nil {
+			for i := 0; i < len(s["snapshot_schedule_list"].([]interface{})); i++ {
+				elem := SetSnapshotScheduleList(s["snapshot_schedule_list"].([]interface{})[i].(map[string]interface{}))
+				SnapshotScheduleListI = append(SnapshotScheduleListI, elem)
+			}
+		}
+
+		SnapshotPolicyListI := st.SnapshotPolicyListStruct{
+			ReplicationTarget:    SetReplicationTarget(s["replication_target"].(*schema.Set).List()),
+			SnapshotScheduleList: SnapshotScheduleListI,
+		}
+		return &SnapshotPolicyListI
+	}
+	return nil
+}
+
+// SetSnapshotScheduleList sets snapshot_schedule_list fields in json struct
+func SetSnapshotScheduleList(t map[string]interface{}) *(st.SnapshotScheduleListStruct) {
+	if len(t) > 0 {
+		s := t
+		SnapshotScheduleListI := st.SnapshotScheduleListStruct{
+			Schedule:                SetSchedule(s["schedule"].(*schema.Set).List()),
+			SnapshotType:            convertToString(s["snapshot_type"]),
+			LocalRetentionQuantity:  convertToInt(s["local_retention_quantity"]),
+			RemoteRetentionQuantity: convertToInt(s["remote_retention_quantity"]),
+		}
+		return &SnapshotScheduleListI
+	}
+	return nil
+}
+
+// SetSchedule sets schedule fields in json struct
+func SetSchedule(t []interface{}) *(st.ScheduleStruct) {
+	if len(t) > 0 {
+		s := t[0].(map[string]interface{})
+		ScheduleI := st.ScheduleStruct{
+			IntervalMultiple: convertToInt(s["interval_multiple"]),
+			DurationSecs:     convertToInt(s["duration_secs"]),
+			EndTime:          convertToString(s["end_time"]),
+			StartTime:        convertToString(s["start_time"]),
+			IntervalType:     convertToString(s["interval_type"]),
+			IsSuspended:      convertToBool(s["is_suspended"]),
+		}
+		return &ScheduleI
+	}
+	return nil
+}
+
+// SetReplicationTarget sets replication_target fields in json struct
+func SetReplicationTarget(t []interface{}) *(st.ReplicationTargetStruct) {
+	if len(t) > 0 {
+		s := t[0].(map[string]interface{})
+		ReplicationTargetI := st.ReplicationTargetStruct{
+			ClusterReference:          SetSubnetReference(s["cluster_reference"].(*schema.Set).List()),
+			AvailabilityZoneReference: SetSubnetReference(s["availability_zone_reference"].(*schema.Set).List()),
+		}
+		return &ReplicationTargetI
+	}
+	return nil
+}
+
 // SetDiskAddress sets disk_address fields in json struct
 func SetDiskAddress(t []interface{}) *(st.DiskAddressStruct) {
 	if len(t) > 0 {
@@ -216,6 +312,45 @@ func SetBootConfig(t []interface{}) *(st.BootConfigStruct) {
 			DiskAddress: SetDiskAddress(s["disk_address"].(*schema.Set).List()),
 		}
 		return &BootConfigI
+	}
+	return nil
+}
+
+// SetGuestCustomization sets guest_customization fields in json struct
+func SetGuestCustomization(t []interface{}) *(st.GuestCustomizationStruct) {
+	if len(t) > 0 {
+		s := t[0].(map[string]interface{})
+		GuestCustomizationI := st.GuestCustomizationStruct{
+			CloudInit: SetCloudInit(s["cloud_init"].(*schema.Set).List()),
+			Sysprep:   SetSysprep(s["sysprep"].(*schema.Set).List()),
+		}
+		return &GuestCustomizationI
+	}
+	return nil
+}
+
+// SetCloudInit sets cloud_init fields in json struct
+func SetCloudInit(t []interface{}) *(st.CloudInitStruct) {
+	if len(t) > 0 {
+		s := t[0].(map[string]interface{})
+		CloudInitI := st.CloudInitStruct{
+			MetaData: convertToString(s["meta_data"]),
+			UserData: convertToString(s["user_data"]),
+		}
+		return &CloudInitI
+	}
+	return nil
+}
+
+// SetSysprep sets sys_prep fields in json struct
+func SetSysprep(t []interface{}) *(st.SysprepStruct) {
+	if len(t) > 0 {
+		s := t[0].(map[string]interface{})
+		SysprepI := st.SysprepStruct{
+			InstallType: convertToString(s["install_type"]),
+			UnattendXML: convertToString(s["unattend_xml"]),
+		}
+		return &SysprepI
 	}
 	return nil
 }

@@ -7,6 +7,8 @@ provider "example" {
 resource "example_server" "my-server" {
     name = "kritagya_test1"
     spec {
+        name = "kritagya_testvm"
+        description = "description...."
         resources = {
             num_vcpus_per_socket = 1
             num_sockets = 1
