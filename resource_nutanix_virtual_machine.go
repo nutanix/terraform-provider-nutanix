@@ -51,9 +51,9 @@ func (m *Machine) ID() string {
 func (c *MyClient) DeleteMachine(m *Machine) error {
 
 	jsonStr := []byte(`{}`)
-	url := c.Endpoint + "/list"
+	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/list"
 	method := "POST"
-	jsonResponse := requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password)
+	jsonResponse := requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
 
 	var uuid string
 	var vmlist vmList
@@ -66,9 +66,9 @@ func (c *MyClient) DeleteMachine(m *Machine) error {
 		}
 	}
 
-	url = c.Endpoint + "/" + uuid
+	url = "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/" + uuid
 	method = "DELETE"
-	requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password)
+	requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
 	return nil
 }
 
@@ -79,7 +79,8 @@ func (c *MyClient) CreateMachine(m *Machine, d *schema.ResourceData) error {
 	check(err1)
 
 	method := "POST"
-	requestutils.RequestHandler(c.Endpoint, method, jsonStr, c.Username, c.Password)
+	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms"
+	requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
 	return nil
 }
 

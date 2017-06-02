@@ -1,10 +1,11 @@
-provider "example" {
+provider "nutanix" {
     username = "admin"
     password = "Nutanix123#"
-    endpoint = "https://10.5.68.6:9440/api/nutanix/v3/vms"
+    endpoint = "10.5.68.6"
+    insecure =  true 
 }
 
-resource "example_server" "my-server" {
+resource "nutanix_virtual_machine" "my-machine" {
     name = "kritagya_test1"
     spec {
         name = "kritagya_testvm"

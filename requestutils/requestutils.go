@@ -23,7 +23,7 @@ func check(e error) {
 }
 
 // RequestHandler  creates a connection request
-func RequestHandler(url, method string, jsonStr []byte, username, password string) []byte {
+func RequestHandler(url, method string, jsonStr []byte, username, password string, b bool) []byte {
 	if method == "POST" {
 
 		file, err := os.Create("request_log")
@@ -43,9 +43,13 @@ func RequestHandler(url, method string, jsonStr []byte, username, password strin
 		fmt.Fprintf(w, "request Header: %v\n\n", req.Header)
 		fmt.Fprintf(w, "request Body: %v\n\n", req.Body)
 
-		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		tr := &http.Transport{}
+		if b {
+			tr = &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			}
 		}
+
 		client := &http.Client{Transport: tr}
 		resp, err2 := client.Do(req)
 		check(err2)
@@ -76,8 +80,11 @@ func RequestHandler(url, method string, jsonStr []byte, username, password strin
 		fmt.Fprintf(w, "request Header: %v\n\n", req.Header)
 		fmt.Fprintf(w, "request Body: %v\n\n", req.Body)
 
-		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		tr := &http.Transport{}
+		if b {
+			tr = &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			}
 		}
 
 		client := &http.Client{Transport: tr}
@@ -110,8 +117,11 @@ func RequestHandler(url, method string, jsonStr []byte, username, password strin
 		fmt.Fprintf(w, "request Header: %v\n\n", req.Header)
 		fmt.Fprintf(w, "request Body: %v\n\n", req.Body)
 
-		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		tr := &http.Transport{}
+		if b {
+			tr = &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			}
 		}
 
 		client := &http.Client{Transport: tr}
