@@ -3,7 +3,7 @@ package nutanix
 import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
-	st "github.com/ideadevice/terraform-ahv-provider-plugin/jsonstruct"
+	st "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachinestruct"
 )
 
 // MyClient struct is for defining provider
@@ -13,8 +13,8 @@ type MyClient struct {
 	Password string
 }
 
-// Machine struct is for defining machine
-type Machine st.JSONstruct
+// Machine struct is for defining virtual machine
+type Machine st.VirtualMachine
 
 // Provider function returns the object that implements the terraform.ResourceProvider interface, specifically a schema.Provider
 func Provider() terraform.ResourceProvider {

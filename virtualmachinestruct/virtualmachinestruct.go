@@ -1,4 +1,4 @@
-package jsonstruct
+package virtualmachinestruct
 
 // SubnetReferenceStruct is SubnetReference data type
 type SubnetReferenceStruct struct {
@@ -163,8 +163,8 @@ type MetaDataStruct struct {
 	Name           string                 `json:"name,omitempty"`
 }
 
-// JSONstruct is struct for the json required for the API call
-type JSONstruct struct {
+// VirtualMachine is struct for the json required for the API call
+type VirtualMachine struct {
 	Spec       *SpecStruct     `json:"spec,omitempty"`
 	APIVersion string          `json:"api_version,omitempty"`
 	Metadata   *MetaDataStruct `json:"metadata,omitempty"`

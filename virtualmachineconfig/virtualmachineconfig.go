@@ -1,10 +1,10 @@
-package setjsonfields
+package virtualmachineconfig
 
 import (
 	//"bufio"
 	//"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
-	st "github.com/ideadevice/terraform-ahv-provider-plugin/jsonstruct"
+	st "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachinestruct"
 	//"os"
 )
 
@@ -29,12 +29,12 @@ func convertToString(a interface{}) string {
 	return ""
 }
 
-// SetJSONFields function sets fields in struct from ResourceData
-func SetJSONFields(d *schema.ResourceData) st.JSONstruct {
+// SetMachineConfig function sets fields in struct from ResourceData
+func SetMachineConfig(d *schema.ResourceData) st.VirtualMachine {
 	spec := d.Get("spec").(*schema.Set).List()[0].(map[string]interface{})         // spec
 	metadata := d.Get("metadata").(*schema.Set).List()[0].(map[string]interface{}) // metadata
 
-	JSON := st.JSONstruct{
+	JSON := st.VirtualMachine{
 		APIVersion: convertToString(d.Get("api_version")), // api_version
 		Spec:       SetSpec(spec),
 		Metadata:   SetMetadata(metadata),

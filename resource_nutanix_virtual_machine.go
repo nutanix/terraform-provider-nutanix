@@ -3,36 +3,23 @@ package nutanix
 import (
 	"encoding/json"
 	"github.com/hashicorp/terraform/helper/schema"
-	st "github.com/ideadevice/terraform-ahv-provider-plugin/jsonstruct"
 	"github.com/ideadevice/terraform-ahv-provider-plugin/requestutils"
-	set "github.com/ideadevice/terraform-ahv-provider-plugin/setjsonfields"
+	vm "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachineconfig"
+	st "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachinestruct"
 	"log"
 	"runtime/debug"
 )
 
-type specStruct struct {
-	Name      string      `json:"name"`
-	Resources interface{} `json:"resources"`
-}
-
-type metaStruct struct {
-	OwnerReference interface{} `json:"owner_reference"`
-	SpecVersion    int64       `json:"spec_version"`
-	UUID           string      `json:"uuid"`
-	Kind           string      `json:"kind"`
-	Categories     interface{} `json:"categories"`
-}
-
 type vmStruct struct {
-	Metadata metaStruct  `json:"metadata"`
-	Status   interface{} `json:"status"`
-	Spec     specStruct  `json:"spec"`
+	Metadata st.MetaDataStruct `json:"metadata"`
+	Status   interface{}       `json:"status"`
+	Spec     st.SpecStruct     `json:"spec"`
 }
 
 type vmList struct {
-	APIVersion string      `json:"api_version"`
-	MetaData   interface{} `json:"metadata"`
-	Entities   []vmStruct  `json:"entities"`
+	APIVersion string            `json:"api_version"`
+	MetaData   st.MetaDataStruct `json:"metadata"`
+	Entities   []vmStruct        `json:"entities"`
 }
 
 func updateAddress(d *schema.ResourceData) error {
@@ -88,12 +75,7 @@ func (c *MyClient) DeleteMachine(m *Machine) error {
 // CreateMachine function creates the vm using POST api call
 func (c *MyClient) CreateMachine(m *Machine, d *schema.ResourceData) error {
 
-	JSON := set.SetJSONFields(d)
-
-	JSON.Spec.Name = m.Spec.Name
-	JSON.Metadata.Name = m.Metadata.Name
-
-	jsonStr, err1 := json.Marshal(JSON)
+	jsonStr, err1 := json.Marshal(m)
 	check(err1)
 
 	method := "POST"
@@ -104,17 +86,9 @@ func (c *MyClient) CreateMachine(m *Machine, d *schema.ResourceData) error {
 func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*MyClient)
-	//specTemp := d.Get("spec").(*schema.Set).List()[0].(map[string]interface{})
-	//resourcesTemp := specTemp["resources"].(*schema.Set).List()[0].(map[string]interface{})
-
-	machine := Machine{
-		Spec: &st.SpecStruct{
-			Name: d.Get("name").(string),
-		},
-		Metadata: &st.MetaDataStruct{
-			Name: d.Get("name").(string),
-		},
-	}
+	machine := Machine(vm.SetMachineConfig(d))
+	machine.Spec.Name = d.Get("name").(string)
+	machine.Metadata.Name = d.Get("name").(string)
 
 	err := client.CreateMachine(&machine, d)
 	if err != nil {
@@ -153,17 +127,9 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, m interface{}) 
 func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, m interface{}) error {
 
 	client := m.(*MyClient)
-	//specTemp := d.Get("spec").(*schema.Set).List()[0].(map[string]interface{})
-	//resourcesTemp := specTemp["resources"].(*schema.Set).List()[0].(map[string]interface{})
-
-	machine := Machine{
-		Spec: &st.SpecStruct{
-			Name: d.Get("name").(string),
-		},
-		Metadata: &st.MetaDataStruct{
-			Name: d.Get("name").(string),
-		},
-	}
+	machine := Machine(vm.SetMachineConfig(d))
+	machine.Spec.Name = d.Get("name").(string)
+	machine.Metadata.Name = d.Get("name").(string)
 
 	err := client.DeleteMachine(&machine)
 	if err != nil {
