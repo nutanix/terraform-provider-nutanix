@@ -72,8 +72,35 @@ func (c *MyClient) DeleteMachine(m *Machine) error {
 	return nil
 }
 
+// UpdateMachine function updates the vm specifications using PUT api call
+func (c *MyClient) UpdateMachine(m *Machine, name string) error {
+
+	jsonStr := []byte(`{}`)
+	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/list"
+	method := "POST"
+	jsonResponse := requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
+
+	var uuid string
+	var vmlist vmList
+	err := json.Unmarshal(jsonResponse, &vmlist)
+	check(err)
+
+	for _, vm := range vmlist.Entities {
+		if vm.Spec.Name == name {
+			uuid = vm.Metadata.UUID
+		}
+	}
+	jsonStr, err = json.Marshal(m)
+	check(err)
+
+	url = "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/" + uuid
+	method = "PUT"
+	requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
+	return nil
+}
+
 // CreateMachine function creates the vm using POST api call
-func (c *MyClient) CreateMachine(m *Machine, d *schema.ResourceData) error {
+func (c *MyClient) CreateMachine(m *Machine) error {
 
 	jsonStr, err1 := json.Marshal(m)
 	check(err1)
@@ -90,8 +117,9 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	machine := Machine(vm.SetMachineConfig(d))
 	machine.Spec.Name = d.Get("name").(string)
 	machine.Metadata.Name = d.Get("name").(string)
+	log.Printf("[DEBUG] Creating Virtual Machine: %s", machine.ID())
 
-	err := client.CreateMachine(&machine, d)
+	err := client.CreateMachine(&machine)
 	if err != nil {
 		return err
 	}
@@ -105,20 +133,28 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, m interface{}) er
 	return nil
 }
 
-func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 	// Enable partial state mode
 	d.Partial(true)
-	// checking that address has changed or not
-	if d.HasChange("address") {
-		//Try updating the address
-		if err := updateAddress(d); err != nil {
+	if d.HasChange("spec") || d.HasChange("metadata") {
+		client := meta.(*MyClient)
+		machine := Machine(vm.SetMachineConfig(d))
+		machine.Metadata.Name = d.Get("name").(string)
+		machine.Spec.Name = d.Get("name").(string)
+		log.Printf("[DEBUG] Updating Virtual Machine: %s", d.Id())
+
+		name := d.Get("name")
+		if d.HasChange("name") {
+			name, _ = d.GetChange("name")
+		}
+
+		err := client.UpdateMachine(&machine, name.(string))
+		if err != nil {
 			return err
 		}
-		// After updating address
-		d.SetPartial("address")
+		d.SetPartial("spec")
+		d.SetPartial("metadata")
 	}
-	// If we were to return here, before disabling patial mode below, then only "address" field would be saved
-
 	//Disabling partial state mode. This will cause terraform to save all fields again
 	d.Partial(false)
 
@@ -128,6 +164,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, m interface{}) 
 func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, m interface{}) error {
 
 	client := m.(*MyClient)
+	log.Printf("[DEBUG] Deleting Virtual Machine: %s", d.Id())
 	machine := Machine(vm.SetMachineConfig(d))
 	machine.Spec.Name = d.Get("name").(string)
 	machine.Metadata.Name = d.Get("name").(string)

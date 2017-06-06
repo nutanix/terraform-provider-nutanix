@@ -59,21 +59,25 @@ func providerSchema() map[string]*schema.Schema {
 		"username": &schema.Schema{
 			Type:        schema.TypeString,
 			Required:    true,
+			DefaultFunc: schema.EnvDefaultFunc("NUTANIX_USERNAME", nil),
 			Description: descriptions["username"],
 		},
 		"password": &schema.Schema{
 			Type:        schema.TypeString,
 			Required:    true,
+			DefaultFunc: schema.EnvDefaultFunc("NUTANIX_PASSWORD", nil),
 			Description: descriptions["password"],
 		},
 		"insecure": &schema.Schema{
 			Type:        schema.TypeBool,
-			Required:    true,
+			Optional:    true,
+			DefaultFunc: schema.EnvDefaultFunc("NUTANIX_INSECURE", false),
 			Description: descriptions["insecure"],
 		},
 		"endpoint": &schema.Schema{
 			Type:        schema.TypeString,
 			Required:    true,
+			DefaultFunc: schema.EnvDefaultFunc("NUTANIX_ENDPOINT", nil),
 			Description: descriptions["endpoint"],
 		},
 	}
