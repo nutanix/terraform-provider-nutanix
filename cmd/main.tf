@@ -22,6 +22,27 @@ resource "nutanix_virtual_machine" "my-machine" {
                         uuid = "c03ecf8f-aa1c-4a07-af43-9f2f198713c0"
                     }
                     network_function_nic_type = "INGRESS"
+                },
+                { 
+                    nic_type = "NORMAL_NIC"
+                    subnet_reference = {
+                        kind = "subnet"
+                        uuid = "c03ecf8f-aa1c-4a07-af43-9f2f198713c0"
+                    }
+                    network_function_nic_type = "INGRESS"
+                }
+            ]
+            disk_list = [
+                {
+                    data_source_reference = {
+                        kind = "image"
+                        name = "Centos7"
+                        uuid = "9eabbb39-1baf-4872-beaf-adedcb612a0b"
+                    }
+                    device_properties = {
+                        device_type = "DISK"
+                    }
+                    disk_size_mib = 1
                 }
             ]
         }
@@ -35,4 +56,9 @@ resource "nutanix_virtual_machine" "my-machine" {
         }
     }
     api_version = "3.0"
+    
+}
+
+output "ip" {
+    value = "${nutanix_virtual_machine.my-machine.ip_address}"
 }

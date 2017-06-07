@@ -22,6 +22,34 @@ type vmList struct {
 	Entities   []vmStruct        `json:"entities"`
 }
 
+// HostReferenceStruct struct
+type HostReferenceStruct struct {
+	Kind string `json:"kind"`
+	UUID string `json:"uuid"`
+}
+
+// StatusStruct has status of VM
+type StatusStruct struct {
+	State             string               `json:"state,omitempty"`
+	Name              string               `json:"name,omitempty"`
+	Resources         *st.ResourcesStruct  `json:"resources,omitempty"`
+	HostReference     *HostReferenceStruct `json:"host_reference,omitempty"`
+	HypervisorType    string               `json:"hypervisor_type",omitempty`
+	NumVcpusPerSocket int                  `json:"num_vcpus_per_socket,omitempty"`
+	NumSockets        int                  `json:"num_sockets,omitempty"`
+	MemorySizeMb      int                  `json:"memory_size_mb,omitempty"`
+	GpuList           []string             `json:"gpu_list,omitempty"`
+	PowerState        string               `json:"power_state,omitempty"`
+}
+
+// VMResponse is struct returned by Post call for creating vm
+type VMResponse struct {
+	Status     *StatusStruct      `json:"status"`
+	Spec       *st.SpecStruct     `json:"spec,omitempty"`
+	APIVersion string             `json:"api_version",omitempty`
+	Metadata   *st.MetaDataStruct `json:"metadata,omitempty"`
+}
+
 func updateAddress(d *schema.ResourceData) error {
 	return nil
 }
@@ -53,11 +81,14 @@ func (c *MyClient) DeleteMachine(m *Machine) error {
 	jsonStr := []byte(`{}`)
 	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/list"
 	method := "POST"
-	jsonResponse := requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
+	jsonResponse, err := requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
+	if err != nil {
+		return err
+	}
 
 	var uuid string
 	var vmlist vmList
-	err := json.Unmarshal(jsonResponse, &vmlist)
+	err = json.Unmarshal(jsonResponse, &vmlist)
 	check(err)
 
 	for _, vm := range vmlist.Entities {
@@ -68,7 +99,10 @@ func (c *MyClient) DeleteMachine(m *Machine) error {
 
 	url = "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/" + uuid
 	method = "DELETE"
-	requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
+	jsonResponse, err = requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -78,11 +112,14 @@ func (c *MyClient) UpdateMachine(m *Machine, name string) error {
 	jsonStr := []byte(`{}`)
 	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/list"
 	method := "POST"
-	jsonResponse := requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
+	jsonResponse, err := requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
+	if err != nil {
+		return err
+	}
 
 	var uuid string
 	var vmlist vmList
-	err := json.Unmarshal(jsonResponse, &vmlist)
+	err = json.Unmarshal(jsonResponse, &vmlist)
 	check(err)
 
 	for _, vm := range vmlist.Entities {
@@ -95,20 +132,76 @@ func (c *MyClient) UpdateMachine(m *Machine, name string) error {
 
 	url = "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/" + uuid
 	method = "PUT"
-	requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
+	jsonResponse, err = requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// WaitForProcess waits till the nutanix gets to running
+func (c *MyClient) WaitForProcess(vmresp1 *VMResponse) (bool, error) {
+	uuid := vmresp1.Metadata.UUID
+	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/" + uuid
+	method := "GET"
+	var vmresp VMResponse
+	var payload []byte
+	for {
+		resp, err := requestutils.RequestHandler(url, method, payload, c.Username, c.Password, c.Insecure)
+		if err != nil {
+			return false, err
+		}
+		json.Unmarshal(resp, &vmresp)
+
+		if vmresp.Status.State == "COMPLETE" {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// WaitForIP function sets the ip address obtained by the GET request
+func (c *MyClient) WaitForIP(vmresp *VMResponse, d *schema.ResourceData) error {
+	uuid := vmresp.Metadata.UUID
+	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/" + uuid
+	method := "GET"
+	var payload []byte
+
+	for {
+		resp, err := requestutils.RequestHandler(url, method, payload, c.Username, c.Password, c.Insecure)
+		if err != nil {
+			return err
+		}
+		var vmresp VMResponse
+		json.Unmarshal(resp, &vmresp)
+
+		if len(vmresp.Status.Resources.NicList) != 0 {
+			for _, nic := range vmresp.Status.Resources.NicList {
+				if len(nic.IPEndpointList) != 0 {
+					if ip := nic.IPEndpointList[0].Address; ip != "" {
+						d.Set("ip_address", ip)
+						return nil
+					}
+				}
+			}
+		}
+	}
 	return nil
 }
 
 // CreateMachine function creates the vm using POST api call
-func (c *MyClient) CreateMachine(m *Machine) error {
+func (c *MyClient) CreateMachine(m *Machine) ([]byte, error) {
 
-	jsonStr, err1 := json.Marshal(m)
-	check(err1)
+	payload, err := json.Marshal(m)
+	check(err)
 
 	method := "POST"
 	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms"
-	requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
-	return nil
+	resp, err := requestutils.RequestHandler(url, method, payload, c.Username, c.Password, c.Insecure)
+	if err != nil {
+		return resp, err
+	}
+	return resp, nil
 }
 
 func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
@@ -119,7 +212,19 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	machine.Metadata.Name = d.Get("name").(string)
 	log.Printf("[DEBUG] Creating Virtual Machine: %s", machine.ID())
 
-	err := client.CreateMachine(&machine)
+	resp, err := client.CreateMachine(&machine)
+	if err != nil {
+		return err
+	}
+	var vmresp VMResponse
+	json.Unmarshal(resp, &vmresp)
+
+	status, err := client.WaitForProcess(&vmresp)
+	if status != true {
+		return err
+	}
+
+	err = client.WaitForIP(&vmresp, d)
 	if err != nil {
 		return err
 	}
@@ -130,6 +235,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceNutanixVirtualMachineRead(d *schema.ResourceData, m interface{}) error {
+
 	return nil
 }
 
@@ -186,6 +292,10 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 		Delete: resourceNutanixVirtualMachineDelete,
 
 		Schema: map[string]*schema.Schema{
+			"ip_address": &schema.Schema{
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": &schema.Schema{
 				Type:     schema.TypeString,
 				Required: true,

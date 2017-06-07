@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/tls"
+	"errors"
 	//"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -23,9 +24,8 @@ func check(e error) {
 }
 
 // RequestHandler  creates a connection request
-func RequestHandler(url, method string, jsonStr []byte, username, password string, b bool) []byte {
+func RequestHandler(url, method string, jsonStr []byte, username, password string, b bool) ([]byte, error) {
 	if method == "POST" {
-
 		file, err := os.Create("request_log")
 		check(err)
 		defer file.Close()
@@ -60,7 +60,13 @@ func RequestHandler(url, method string, jsonStr []byte, username, password strin
 		fmt.Fprintf(w, "response Headers: %v\n\n", resp.Header)
 		body, _ := ioutil.ReadAll(resp.Body)
 		fmt.Fprintf(w, "response Body: %v\n\n", string(body))
-		return body
+
+		if resp.Status != "200 OK" {
+			errorstr := fmt.Sprintf("response Status: %v\n response Body: %v\n", resp.Status, string(body))
+			errormsg := errors.New(errorstr)
+			return body, errormsg
+		}
+		return body, nil
 
 	} else if method == "DELETE" {
 
@@ -97,7 +103,12 @@ func RequestHandler(url, method string, jsonStr []byte, username, password strin
 		fmt.Fprintf(w, "response Headers: %v\n\n", resp.Header)
 		body, _ := ioutil.ReadAll(resp.Body)
 		fmt.Fprintf(w, "response Body: %v\n\n", string(body))
-		return body
+		if resp.Status != "200 OK" {
+			errorstr := fmt.Sprintf("response Status: %v\n response Body: %v\n", resp.Status, string(body))
+			errormsg := errors.New(errorstr)
+			return body, errormsg
+		}
+		return body, nil
 
 	} else if method == "GET" {
 
@@ -134,7 +145,12 @@ func RequestHandler(url, method string, jsonStr []byte, username, password strin
 		fmt.Fprintf(w, "response Headers: %v\n\n", resp.Header)
 		body, _ := ioutil.ReadAll(resp.Body)
 		fmt.Fprintf(w, "response Body: %v\n\n", string(body))
-		return body
+		if resp.Status != "200 OK" {
+			errorstr := fmt.Sprintf("response Status: %v\n response Body: %v\n", resp.Status, string(body))
+			errormsg := errors.New(errorstr)
+			return body, errormsg
+		}
+		return body, nil
 	} else if method == "PUT" {
 
 		file, err := os.Create("request_log")
@@ -171,7 +187,12 @@ func RequestHandler(url, method string, jsonStr []byte, username, password strin
 		fmt.Fprintf(w, "response Headers: %v\n\n", resp.Header)
 		body, _ := ioutil.ReadAll(resp.Body)
 		fmt.Fprintf(w, "response Body: %v\n\n", string(body))
-		return body
+		if resp.Status != "200 OK" {
+			errorstr := fmt.Sprintf("response Status: %v\n response Body: %v\n", resp.Status, string(body))
+			errormsg := errors.New(errorstr)
+			return body, errormsg
+		}
+		return body, nil
 	}
-	return []byte(`{}`)
+	return []byte(`{}`), nil
 }

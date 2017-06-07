@@ -167,8 +167,8 @@ func SetIPEndpointList(t map[string]interface{}) *(st.IPEndpointListStruct) {
 	if len(t) > 0 {
 		s := t
 		IPEndpointListI := st.IPEndpointListStruct{
-			IP:   convertToString(s["ip"]),
-			Type: convertToString(s["type"]),
+			Address: convertToString(s["address"]),
+			Type:    convertToString(s["type"]),
 		}
 		return &IPEndpointListI
 	}

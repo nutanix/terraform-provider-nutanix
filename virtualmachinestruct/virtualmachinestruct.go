@@ -9,8 +9,8 @@ type SubnetReferenceStruct struct {
 
 // IPEndpointListStruct is IPEndpointList data type
 type IPEndpointListStruct struct {
-	IP   string `json:"ip,omitempty"`
-	Type string `json:"type,omitempty"`
+	Address string `json:"address,omitempty"`
+	Type    string `json:"type,omitempty"`
 }
 
 // NicListStruct is NicList data type
