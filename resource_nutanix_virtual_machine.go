@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/ideadevice/terraform-ahv-provider-plugin/requestutils"
 	vm "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachineconfig"
@@ -78,28 +79,18 @@ func (m *Machine) ID() string {
 // DeleteMachine function deletes the vm using DELETE api call
 func (c *MyClient) DeleteMachine(m *Machine) error {
 
-	jsonStr := []byte(`{}`)
-	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/list"
-	method := "POST"
-	jsonResponse, err := requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
+	log.Printf("[DEBUG] Updating Virtual Machine: %s", m.Spec.Name)
+	uuid, err := c.MachineExists(m.Spec.Name)
 	if err != nil {
 		return err
 	}
-
-	var uuid string
-	var vmlist vmList
-	err = json.Unmarshal(jsonResponse, &vmlist)
-	check(err)
-
-	for _, vm := range vmlist.Entities {
-		if vm.Spec.Name == m.Spec.Name {
-			uuid = vm.Metadata.UUID
-		}
+	if uuid == "" {
+		fmt.Errorf("Machine doesn't exists")
 	}
-
-	url = "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/" + uuid
-	method = "DELETE"
-	jsonResponse, err = requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
+	var jsonStr []byte
+	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/" + uuid
+	method := "DELETE"
+	_, err = requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
 	if err != nil {
 		return err
 	}
@@ -109,12 +100,36 @@ func (c *MyClient) DeleteMachine(m *Machine) error {
 // UpdateMachine function updates the vm specifications using PUT api call
 func (c *MyClient) UpdateMachine(m *Machine, name string) error {
 
-	jsonStr := []byte(`{}`)
-	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/list"
-	method := "POST"
-	jsonResponse, err := requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
+	log.Printf("[DEBUG] Updating Virtual Machine: %s", name)
+	uuid, err := c.MachineExists(name)
 	if err != nil {
 		return err
+	}
+	if uuid == "" {
+		fmt.Errorf("Machine doesn't exists")
+	}
+
+	jsonStr, err := json.Marshal(m)
+	check(err)
+
+	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/" + uuid
+	method := "PUT"
+	_, err = requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// MachineExists function returns the uuid of the machine with given name
+func (c *MyClient) MachineExists(name string) (string, error) {
+	log.Printf("[DEBUG] Checking Virtual Machine Existance: %s", name)
+	payload := []byte(`{}`)
+	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/list"
+	method := "POST"
+	jsonResponse, err := requestutils.RequestHandler(url, method, payload, c.Username, c.Password, c.Insecure)
+	if err != nil {
+		return "", err
 	}
 
 	var uuid string
@@ -125,18 +140,72 @@ func (c *MyClient) UpdateMachine(m *Machine, name string) error {
 	for _, vm := range vmlist.Entities {
 		if vm.Spec.Name == name {
 			uuid = vm.Metadata.UUID
+			return uuid, nil
 		}
 	}
-	jsonStr, err = json.Marshal(m)
-	check(err)
+	return "", nil
+}
 
-	url = "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/" + uuid
-	method = "PUT"
-	jsonResponse, err = requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
+// ShutdownMachine function shut vm using PUT api call
+func (c *MyClient) ShutdownMachine(m *Machine, name string) error {
+
+	log.Printf("[DEBUG] Shutting Down Virtual Machine: %s", m.Metadata.Name)
+
+	uuid, err := c.MachineExists(name)
 	if err != nil {
 		return err
 	}
-	return nil
+
+	if uuid == "" {
+		fmt.Errorf("Machine doesn't exists")
+	}
+
+	data := &Machine{
+		Spec: &st.SpecStruct{
+			Name: m.Spec.Name,
+			Resources: &st.ResourcesStruct{
+				PowerState: "POWERED_OFF",
+			},
+		},
+		APIVersion: "3.0",
+		Metadata: &st.MetaDataStruct{
+			Name:        m.Spec.Name,
+			Kind:        "vm",
+			SpecVersion: 0,
+		},
+	}
+
+	payload, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/" + uuid
+	method := "PUT"
+	_, err = requestutils.RequestHandler(url, method, payload, c.Username, c.Password, c.Insecure)
+	return err
+}
+
+// StartMachine function starts the vm using PUT api call
+func (c *MyClient) StartMachine(m *Machine) error {
+
+	log.Printf("[DEBUG] Starting Virtual Machine: %s", m.Metadata.Name)
+	uuid, err := c.MachineExists(m.Spec.Name)
+	if err != nil {
+		return err
+	}
+	if uuid == "" {
+		fmt.Errorf("Machine doesn't exists")
+	}
+
+	m.Spec.Resources.PowerState = "POWERED_ON"
+	payload, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/list"
+	method := "PUT"
+	_, err = requestutils.RequestHandler(url, method, payload, c.Username, c.Password, c.Insecure)
+	return err
 }
 
 // WaitForProcess waits till the nutanix gets to running
@@ -242,17 +311,17 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, m interface{}) er
 func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 	// Enable partial state mode
 	d.Partial(true)
-	if d.HasChange("spec") || d.HasChange("metadata") {
-		client := meta.(*MyClient)
-		machine := Machine(vm.SetMachineConfig(d))
-		machine.Metadata.Name = d.Get("name").(string)
-		machine.Spec.Name = d.Get("name").(string)
-		log.Printf("[DEBUG] Updating Virtual Machine: %s", d.Id())
+	client := meta.(*MyClient)
+	machine := Machine(vm.SetMachineConfig(d))
+	machine.Metadata.Name = d.Get("name").(string)
+	machine.Spec.Name = d.Get("name").(string)
 
-		name := d.Get("name")
-		if d.HasChange("name") {
-			name, _ = d.GetChange("name")
-		}
+	name := d.Get("name")
+	if d.HasChange("name") {
+		name, _ = d.GetChange("name")
+	}
+
+	if d.HasChange("spec") || d.HasChange("metadata") {
 
 		err := client.UpdateMachine(&machine, name.(string))
 		if err != nil {

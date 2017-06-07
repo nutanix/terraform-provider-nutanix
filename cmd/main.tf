@@ -6,9 +6,9 @@ provider "nutanix" {
 }
 
 resource "nutanix_virtual_machine" "my-machine" {
-    name = "kritagya_test1"
+    name = "kritagya_newtest1"
     spec {
-        name = "kritagya_testvm"
+        name = "kritagya_newvm"
         resources = {
             num_vcpus_per_socket = 1
             num_sockets = 1
@@ -56,7 +56,17 @@ resource "nutanix_virtual_machine" "my-machine" {
         }
     }
     api_version = "3.0"
-    
+    provisioner "remote-exec"{
+        inline = [
+            "yum update -y"
+        ]
+        connection {
+            type = "ssh"
+            user = "root"
+            password = "nutanix/4u"
+            host = "${nutanix_virtual_machine.my-machine.ip_address}"
+        }
+    }
 }
 
 output "ip" {
