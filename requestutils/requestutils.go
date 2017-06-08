@@ -23,6 +23,23 @@ func check(e error) {
 	}
 }
 
+var statusCodeFilter map[int]bool
+
+func init() {
+	statusMap := map[int]bool{
+		200: true,
+		201: true,
+		202: true,
+		203: true,
+		204: true,
+		205: true,
+		206: true,
+		207: true,
+		208: true,
+	}
+	statusCodeFilter = statusMap
+}
+
 // RequestHandler  creates a connection request
 func RequestHandler(url, method string, jsonStr []byte, username, password string, b bool) ([]byte, error) {
 	if method == "POST" {
@@ -61,7 +78,7 @@ func RequestHandler(url, method string, jsonStr []byte, username, password strin
 		body, _ := ioutil.ReadAll(resp.Body)
 		fmt.Fprintf(w, "response Body: %v\n\n", string(body))
 
-		if resp.Status != "200 OK" {
+		if !statusCodeFilter[resp.StatusCode] {
 			errorstr := fmt.Sprintf("response Status: %v\n response Body: %v\n", resp.Status, string(body))
 			errormsg := errors.New(errorstr)
 			return body, errormsg
@@ -103,7 +120,7 @@ func RequestHandler(url, method string, jsonStr []byte, username, password strin
 		fmt.Fprintf(w, "response Headers: %v\n\n", resp.Header)
 		body, _ := ioutil.ReadAll(resp.Body)
 		fmt.Fprintf(w, "response Body: %v\n\n", string(body))
-		if resp.Status != "200 OK" {
+		if !statusCodeFilter[resp.StatusCode] {
 			errorstr := fmt.Sprintf("response Status: %v\n response Body: %v\n", resp.Status, string(body))
 			errormsg := errors.New(errorstr)
 			return body, errormsg
@@ -145,7 +162,7 @@ func RequestHandler(url, method string, jsonStr []byte, username, password strin
 		fmt.Fprintf(w, "response Headers: %v\n\n", resp.Header)
 		body, _ := ioutil.ReadAll(resp.Body)
 		fmt.Fprintf(w, "response Body: %v\n\n", string(body))
-		if resp.Status != "200 OK" {
+		if !statusCodeFilter[resp.StatusCode] {
 			errorstr := fmt.Sprintf("response Status: %v\n response Body: %v\n", resp.Status, string(body))
 			errormsg := errors.New(errorstr)
 			return body, errormsg
@@ -187,7 +204,7 @@ func RequestHandler(url, method string, jsonStr []byte, username, password strin
 		fmt.Fprintf(w, "response Headers: %v\n\n", resp.Header)
 		body, _ := ioutil.ReadAll(resp.Body)
 		fmt.Fprintf(w, "response Body: %v\n\n", string(body))
-		if resp.Status != "200 OK" {
+		if !statusCodeFilter[resp.StatusCode] {
 			errorstr := fmt.Sprintf("response Status: %v\n response Body: %v\n", resp.Status, string(body))
 			errormsg := errors.New(errorstr)
 			return body, errormsg
