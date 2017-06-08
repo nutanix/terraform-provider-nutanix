@@ -71,26 +71,15 @@ func RecoverFunc(name string) {
 	}
 }
 
-// ID returns the id to be set
-func (m *Machine) ID() string {
-	return "ID-" + m.Spec.Name + "!!"
-}
-
 // DeleteMachine function deletes the vm using DELETE api call
-func (c *MyClient) DeleteMachine(m *Machine) error {
+func (c *MyClient) DeleteMachine(m *Machine, d *schema.ResourceData) error {
 
 	log.Printf("[DEBUG] Updating Virtual Machine: %s", m.Spec.Name)
-	uuid, err := c.MachineExists(m.Spec.Name)
-	if err != nil {
-		return err
-	}
-	if uuid == "" {
-		fmt.Errorf("Machine doesn't exists")
-	}
+	uuid := d.Id()
 	var jsonStr []byte
 	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/" + uuid
 	method := "DELETE"
-	_, err = requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
+	_, err := requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
 	if err != nil {
 		return err
 	}
@@ -98,16 +87,10 @@ func (c *MyClient) DeleteMachine(m *Machine) error {
 }
 
 // UpdateMachine function updates the vm specifications using PUT api call
-func (c *MyClient) UpdateMachine(m *Machine, name string) error {
+func (c *MyClient) UpdateMachine(m *Machine, d *schema.ResourceData) error {
 
-	log.Printf("[DEBUG] Updating Virtual Machine: %s", name)
-	uuid, err := c.MachineExists(name)
-	if err != nil {
-		return err
-	}
-	if uuid == "" {
-		fmt.Errorf("Machine doesn't exists")
-	}
+	log.Printf("[DEBUG] Updating Virtual Machine: %s", m.Spec.Name)
+	uuid := d.Id()
 
 	jsonStr, err := json.Marshal(m)
 	check(err)
@@ -147,18 +130,11 @@ func (c *MyClient) MachineExists(name string) (string, error) {
 }
 
 // ShutdownMachine function shut vm using PUT api call
-func (c *MyClient) ShutdownMachine(m *Machine, name string) error {
+func (c *MyClient) ShutdownMachine(m *Machine, d *schema.ResourceData) error {
 
 	log.Printf("[DEBUG] Shutting Down Virtual Machine: %s", m.Metadata.Name)
 
-	uuid, err := c.MachineExists(name)
-	if err != nil {
-		return err
-	}
-
-	if uuid == "" {
-		fmt.Errorf("Machine doesn't exists")
-	}
+	uuid := d.Id()
 
 	data := &Machine{
 		Spec: &st.SpecStruct{
@@ -186,23 +162,17 @@ func (c *MyClient) ShutdownMachine(m *Machine, name string) error {
 }
 
 // StartMachine function starts the vm using PUT api call
-func (c *MyClient) StartMachine(m *Machine) error {
+func (c *MyClient) StartMachine(m *Machine, d *schema.ResourceData) error {
 
 	log.Printf("[DEBUG] Starting Virtual Machine: %s", m.Metadata.Name)
-	uuid, err := c.MachineExists(m.Spec.Name)
-	if err != nil {
-		return err
-	}
-	if uuid == "" {
-		fmt.Errorf("Machine doesn't exists")
-	}
+	uuid := d.Id()
 
 	m.Spec.Resources.PowerState = "POWERED_ON"
 	payload, err := json.Marshal(m)
 	if err != nil {
 		return err
 	}
-	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/list"
+	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/" + uuid
 	method := "PUT"
 	_, err = requestutils.RequestHandler(url, method, payload, c.Username, c.Password, c.Insecure)
 	return err
@@ -279,7 +249,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	machine := Machine(vm.SetMachineConfig(d))
 	machine.Spec.Name = d.Get("name").(string)
 	machine.Metadata.Name = d.Get("name").(string)
-	log.Printf("[DEBUG] Creating Virtual Machine: %s", machine.ID())
+	log.Printf("[DEBUG] Creating Virtual Machine: %s", d.Id())
 
 	resp, err := client.CreateMachine(&machine)
 	if err != nil {
@@ -298,7 +268,15 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	d.SetId(machine.ID())
+	uuid, err := client.MachineExists(machine.Spec.Name)
+	if err != nil {
+		return err
+	}
+	if uuid == "" {
+		fmt.Errorf("Machine doesn't exists")
+	}
+
+	d.SetId(uuid)
 	return nil
 
 }
@@ -316,14 +294,9 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	machine.Metadata.Name = d.Get("name").(string)
 	machine.Spec.Name = d.Get("name").(string)
 
-	name := d.Get("name")
-	if d.HasChange("name") {
-		name, _ = d.GetChange("name")
-	}
-
 	if d.HasChange("spec") || d.HasChange("metadata") {
 
-		err := client.UpdateMachine(&machine, name.(string))
+		err := client.UpdateMachine(&machine, d)
 		if err != nil {
 			return err
 		}
@@ -344,7 +317,7 @@ func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, m interface{}) 
 	machine.Spec.Name = d.Get("name").(string)
 	machine.Metadata.Name = d.Get("name").(string)
 
-	err := client.DeleteMachine(&machine)
+	err := client.DeleteMachine(&machine, d)
 	if err != nil {
 		return err
 	}
