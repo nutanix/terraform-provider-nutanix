@@ -58,7 +58,6 @@ resource "nutanix_virtual_machine" "my-machine" {
     api_version = "3.0"
     provisioner "remote-exec"{
         inline = [
-            "yum update -y"
         ]
         connection {
             type = "ssh"

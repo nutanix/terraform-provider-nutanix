@@ -6,6 +6,7 @@
 *.tfstate
 *.tfstate.backup
 *.log
+setenv.sh
 request_log
 cmd/terraform-provider-*
 cmd/cmd
