@@ -53,7 +53,7 @@ func (body TemplateBasicBodyVars) testSprintfTemplateBody(template string) strin
 		body.APIVersion,
 		body.kind,
 		body.specVersion,
-		body.name,
+		"kritagya_test1",
 	)
 }
 
@@ -157,7 +157,7 @@ func (test TestFuncData) testCheckFuncBasic() (resource.TestCheckFunc, resource.
 		resource.TestCheckResourceAttr(vmName, "metadata.#", "1"),
 		resource.TestCheckResourceAttr(vmName, metadataKey+".kind", kind),
 		resource.TestCheckResourceAttr(vmName, metadataKey+".spec_version", specVersion),
-		resource.TestCheckResourceAttr(vmName, "name", name)
+		resource.TestCheckResourceAttr(vmName, "name", "kritagya_test1")
 
 }
 
@@ -371,6 +371,124 @@ resource "nutanix_virtual_machine" "my-machine" {
 					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.1.device_properties.#", "1"),
 					resource.TestCheckResourceAttr(vmName, deviceProperties1Key+".device_type", os.Getenv("NUTANIX_DISK_1_DEVICETYPE")),
 					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.1.disk_size_mib", os.Getenv("NUTANIX_DISK_1_SIZE")),
+				),
+			},
+		},
+	})
+}
+
+// testing update memory in vm
+func TestAccNutanixVirtualMachine_updateMemory1(t *testing.T) {
+	var vm Machine
+	basicVars := setupTemplateBasicBodyVars()
+	basicVars.memorySizeMb = os.Getenv("NUTANIX_UPDATE_MEMORY_SIZE")
+	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testBasicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
+				),
+			},
+		},
+	})
+}
+
+// testing update memory in vm
+func TestAccNutanixVirtualMachine_updateMemory2(t *testing.T) {
+	var vm Machine
+	basicVars := setupTemplateBasicBodyVars()
+	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
+	basicVars.powerState = "POWERED_OFF"
+	configOFF := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
+	basicVars.memorySizeMb = os.Getenv("NUTANIX_UPDATE_MEMORY_SIZE")
+	configUpdate := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
+	basicVars.powerState = "POWERED_ON"
+	configON := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testBasicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
+				),
+			},
+			resource.TestStep{
+				Config: configOFF,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
+				),
+			},
+			resource.TestStep{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
+				),
+			},
+			resource.TestStep{
+				Config: configON,
+				Check: resource.ComposeTestCheckFunc(
+					TestFuncData{vm: vm, memorySizeMb: os.Getenv("NUTANIX_UPDATE_MEMORY_SIZE"), vmName: "nutanix_virtual_machine.my-machine"}.testCheckFuncBasic(),
+				),
+			},
+		},
+	})
+}
+
+// testing update name of the vm
+func TestAccNutanixVirtualMachine_updateName1(t *testing.T) {
+	var vm Machine
+	basicVars := setupTemplateBasicBodyVars()
+	basicVars.name = os.Getenv("NUTANIX_UPDATE_NAME")
+	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testBasicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
+				),
+			},
+		},
+	})
+}
+
+// testing update name of the vm
+func TestAccNutanixVirtualMachine_updateName2(t *testing.T) {
+	var vm Machine
+	basicVars := setupTemplateBasicBodyVars()
+	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
+	basicVars.name = os.Getenv("NUTANIX_UPDATE_NAME")
+	configUpdate := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testBasicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
+				),
+			},
+			resource.TestStep{
+				Config: configUpdate,
+				Check: resource.ComposeTestCheckFunc(
+					TestFuncData{vm: vm, name: os.Getenv("NUTANIX_UPDATE_NAME"), vmName: "nutanix_virtual_machine.my-machine"}.testCheckFuncBasic(),
 				),
 			},
 		},
