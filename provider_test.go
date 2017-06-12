@@ -11,6 +11,7 @@ import (
 var testAccProviders map[string]terraform.ResourceProvider
 var testAccProvider *schema.Provider
 var testAccTemplateProvider *schema.Provider
+var terraformState string
 
 func init() {
 	testAccProvider = Provider().(*schema.Provider)

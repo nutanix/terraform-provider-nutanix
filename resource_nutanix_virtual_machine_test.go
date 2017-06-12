@@ -2,12 +2,14 @@ package nutanix
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	//st "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachinestruct"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -21,13 +23,20 @@ func testBasicPreCheck(t *testing.T) {
 	}
 }
 
+var specKey string
+var specResourcesKey string
+var metadataKey string
+var diskSourceReference0Key string
+var diskSourceReference1Key string
+var deviceProperties0Key string
+var deviceProperties1Key string
+
 type TemplateBasicBodyVars struct {
 	name         string
 	numVCPUs     string
 	numSockets   string
 	memorySizeMb string
 	powerState   string
-	APIversion   string
 	kind         string
 	specVersion  string
 	APIVersion   string
@@ -77,6 +86,25 @@ type TestFuncData struct {
 	specVersion  string
 }
 
+func hashmapKey(s, t string) string {
+	words := strings.Fields(terraformState)
+	prefix := s + "."
+	suffix := "." + t
+	for _, word := range words {
+		if (word == strings.TrimPrefix(word, prefix+"#")) && (word != strings.TrimPrefix(word, prefix)) {
+			str1 := strings.TrimPrefix(word, prefix)
+			str2 := strings.TrimSuffix(str1, suffix)
+			str3 := strings.TrimSuffix(str1, suffix+".#")
+			if str2 != str1 {
+				return str2
+			} else if str3 != str1 {
+				return str3
+			}
+		}
+	}
+	return ""
+}
+
 // returns TestCheckFunc's that will be used in most of our tests
 // numVCPUs, numSockets defaults to 1
 // APIversion defaults to 3.0 specVersion 0 and memorySizeMb tp 1024
@@ -118,19 +146,17 @@ func (test TestFuncData) testCheckFuncBasic() (resource.TestCheckFunc, resource.
 	if specVersion == "" {
 		specVersion = "0"
 	}
-
-	log.Printf("%+v", test.vm)
 	return testAccCheckNutanixVirtualMachineExists(vmName, &test.vm),
 		resource.TestCheckResourceAttr(vmName, "api_version", APIversion),
 		resource.TestCheckResourceAttr(vmName, "spec.#", "1"),
-		resource.TestCheckResourceAttr(vmName, "spec.1373794133.resources.#", "1"),
-		resource.TestCheckResourceAttr(vmName, "spec.1373794133.resources.3082566069.power_state", powerState),
-		resource.TestCheckResourceAttr(vmName, "spec.1373794133.resources.3082566069.memory_size_mb", memorySizeMb),
-		resource.TestCheckResourceAttr(vmName, "spec.1373794133.resources.3082566069.num_sockets", numSockets),
-		resource.TestCheckResourceAttr(vmName, "spec.1373794133.resources.3082566069.num_vcpus_per_socket", numVCPUs),
+		resource.TestCheckResourceAttr(vmName, specKey+".resources.#", "1"),
+		resource.TestCheckResourceAttr(vmName, specResourcesKey+".power_state", powerState),
+		resource.TestCheckResourceAttr(vmName, specResourcesKey+".memory_size_mb", memorySizeMb),
+		resource.TestCheckResourceAttr(vmName, specResourcesKey+".num_sockets", numSockets),
+		resource.TestCheckResourceAttr(vmName, specResourcesKey+".num_vcpus_per_socket", numVCPUs),
 		resource.TestCheckResourceAttr(vmName, "metadata.#", "1"),
-		resource.TestCheckResourceAttr(vmName, "metadata.341341886.kind", kind),
-		resource.TestCheckResourceAttr(vmName, "metadata.341341886.spec_version", specVersion),
+		resource.TestCheckResourceAttr(vmName, metadataKey+".kind", kind),
+		resource.TestCheckResourceAttr(vmName, metadataKey+".spec_version", specVersion),
 		resource.TestCheckResourceAttr(vmName, "name", name)
 
 }
@@ -140,9 +166,11 @@ resource "nutanix_virtual_machine" "my-machine" {
 	name = "kritagya_test1"
 ` + testAccTemplateBasicBodyWithEnd
 
-const testAccTemplateBasicBody = `
-	spec = {
-		name = "%s"
+const testAccTemplateSpecBody = `
+spec = {
+	name = "%s"
+`
+const testAccTemplateResourcesBody = `
 		resources = {
 			num_sockets = %s
 			num_vcpus_per_socket = %s
@@ -158,9 +186,8 @@ const testAccTemplateBasicBody = `
 					network_function_nic_type = "INGRESS"
 				}
 			]
-		}
-	}
-	api_version = "%s"
+`
+const testAccTemplateMetadata = `
 	metadata = {
 		kind = "%s"
 		spec_version = %s
@@ -168,17 +195,46 @@ const testAccTemplateBasicBody = `
 		categories = {
 			"Project" = "nucalm"
 		}
+`
+const testAccTemplateBasicBody = testAccTemplateSpecBody +
+	testAccTemplateResourcesBody + `
+		}
+	}
+	api_version = "%s"
+` +
+	testAccTemplateMetadata + `
 	}
 `
 const testAccTemplateBasicBodyWithEnd = testAccTemplateBasicBody + `
 }`
 
-func TestAccNutanixVirtualMachine_basic(t *testing.T) {
+// testing vms with basic config
+func TestAccNutanixVirtualMachine_basic1(t *testing.T) {
 	var vm Machine
 	basicVars := setupTemplateBasicBodyVars()
 	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
 
-	log.Printf("[DEBUG] template= %s", testAccCheckNutanixVirtualMachineConfigReallyBasic)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testBasicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
+				),
+			},
+		},
+	})
+}
+
+// testing vms with basic config
+func TestAccNutanixVirtualMachine_basic2(t *testing.T) {
+	var vm Machine
+	basicVars := setupTemplateBasicBodyVars()
+	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
+
 	log.Printf("[DEBUG] template config= %s", config)
 
 	resource.Test(t, resource.TestCase{
@@ -196,24 +252,61 @@ func TestAccNutanixVirtualMachine_basic(t *testing.T) {
 	})
 }
 
-const testAccCheckNutanixVirtualMachineConfigDebug = `
-provider "nutanix"{
-	username = "admin"
-	password = "Nutanix123#"
-	endpoint = "10.5.68.6"
+const diskTemplate = `
+				{
+					data_source_reference = {
+						kind = "%s"
+						name = "%s"
+						uuid = "%s"
+					}
+					device_properties = {
+						device_type = "%s"
+					}
+					disk_size_mib = %s
+				}`
+
+func diskSet() string {
+	diskList := `
+			disk_list = [
+	`
+	diskNo, _ := strconv.Atoi(os.Getenv("NUTANIX_DISK_NO"))
+	for i := 0; i < diskNo-1; i++ {
+		disk := fmt.Sprintf(diskTemplate, os.Getenv("NUTANIX_DISK_"+strconv.Itoa(i)+"_KIND"), os.Getenv("NUTANIX_DISK_"+strconv.Itoa(i)+"_NAME"), os.Getenv("NUTANIX_DISK_"+strconv.Itoa(i)+"_UUID"), os.Getenv("NUTANIX_DISK_"+strconv.Itoa(i)+"_DEVICETYPE"), os.Getenv("NUTANIX_DISK_"+strconv.Itoa(i)+"_SIZE")) + ","
+		diskList = diskList + disk
+	}
+	i := diskNo - 1
+	if diskNo > 0 {
+		disk := fmt.Sprintf(diskTemplate, os.Getenv("NUTANIX_DISK_"+strconv.Itoa(i)+"_KIND"), os.Getenv("NUTANIX_DISK_"+strconv.Itoa(i)+"_NAME"), os.Getenv("NUTANIX_DISK_"+strconv.Itoa(i)+"_UUID"), os.Getenv("NUTANIX_DISK_"+strconv.Itoa(i)+"_DEVICETYPE"), os.Getenv("NUTANIX_DISK_"+strconv.Itoa(i)+"_SIZE"))
+		diskList = diskList + disk
+	}
+	diskList = diskList + `
+			]
+	`
+	return diskList
 }
 
-` + testAccCheckNutanixVirtualMachineConfigReallyBasic
-
-func TestAccNutanixVirtualMachine_client_debug(t *testing.T) {
+// testing vms with disk list
+func TestAccNutanixVirtualMachine_diskList1(t *testing.T) {
 	var vm Machine
 	basicVars := setupTemplateBasicBodyVars()
-	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigDebug)
+	diskList := diskSet()
+	testAccTemplateDiskBody := testAccTemplateSpecBody +
+		testAccTemplateResourcesBody + diskList + `
+		}
+	}
+	api_version = "%s"
+	` +
+		testAccTemplateMetadata + `
+	}
+	`
+	testAccCheckNutanixVirtualMachineConfigDisk := `
+resource "nutanix_virtual_machine" "my-machine" {
+	name = "kritagya_test1"
+` + testAccTemplateDiskBody + `
+}`
 
-	log.Printf("[DEBUG] template= %s", testAccCheckNutanixVirtualMachineConfigDebug)
+	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigDisk)
 	log.Printf("[DEBUG] template config= %s", config)
-
-	testExists, testAPIVersion, testSpec, testResources, testPowerState, testMemorySizeMb, testNumSockets, testNumVcpus, testMetadata, testKind, testSpecVersion, testName := TestFuncData{vm: vm}.testCheckFuncBasic()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testBasicPreCheck(t) },
@@ -223,7 +316,61 @@ func TestAccNutanixVirtualMachine_client_debug(t *testing.T) {
 			resource.TestStep{
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testExists, testMetadata, testName, testSpec, testResources, testSpecVersion, testKind, testNumVcpus, testNumSockets, testMemorySizeMb, testPowerState, testAPIVersion, testAccCheckDebugExists(),
+					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
+				),
+			},
+		},
+	})
+}
+
+// testing vms with disk list
+func TestAccNutanixVirtualMachine_diskList2(t *testing.T) {
+	var vm Machine
+	basicVars := setupTemplateBasicBodyVars()
+	diskList := diskSet()
+	vmName := "nutanix_virtual_machine.my-machine"
+	testAccTemplateDiskBody := testAccTemplateSpecBody +
+		testAccTemplateResourcesBody + diskList + `
+		}
+	}
+	api_version = "%s"
+	` +
+		testAccTemplateMetadata + `
+	}
+	`
+	testAccCheckNutanixVirtualMachineConfigDisk := `
+resource "nutanix_virtual_machine" "my-machine" {
+	name = "kritagya_test1"
+` + testAccTemplateDiskBody + `
+}`
+
+	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigDisk)
+	log.Printf("[DEBUG] template config= %s", config)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testBasicPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			resource.TestStep{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
+					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.#", "2"),
+					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.0.data_source_reference.#", "1"),
+					resource.TestCheckResourceAttr(vmName, diskSourceReference0Key+".kind", os.Getenv("NUTANIX_DISK_0_KIND")),
+					resource.TestCheckResourceAttr(vmName, diskSourceReference0Key+".name", os.Getenv("NUTANIX_DISK_0_NAME")),
+					resource.TestCheckResourceAttr(vmName, diskSourceReference0Key+".uuid", os.Getenv("NUTANIX_DISK_0_UUID")),
+					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.0.device_properties.#", "1"),
+					resource.TestCheckResourceAttr(vmName, deviceProperties0Key+".device_type", os.Getenv("NUTANIX_DISK_0_DEVICETYPE")),
+					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.0.disk_size_mib", os.Getenv("NUTANIX_DISK_0_SIZE")),
+					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.1.data_source_reference.#", "1"),
+					resource.TestCheckResourceAttr(vmName, diskSourceReference1Key+".kind", os.Getenv("NUTANIX_DISK_1_KIND")),
+					resource.TestCheckResourceAttr(vmName, diskSourceReference1Key+".name", os.Getenv("NUTANIX_DISK_1_NAME")),
+					resource.TestCheckResourceAttr(vmName, diskSourceReference1Key+".uuid", os.Getenv("NUTANIX_DISK_1_UUID")),
+					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.1.device_properties.#", "1"),
+					resource.TestCheckResourceAttr(vmName, deviceProperties1Key+".device_type", os.Getenv("NUTANIX_DISK_1_DEVICETYPE")),
+					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.1.disk_size_mib", os.Getenv("NUTANIX_DISK_1_SIZE")),
 				),
 			},
 		},
@@ -231,27 +378,19 @@ func TestAccNutanixVirtualMachine_client_debug(t *testing.T) {
 }
 
 func testAccCheckNutanixVirtualMachineDestroy(s *terraform.State) error {
-	//client := testAccProvider.Meta().(*MyClient)
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "nutanix_virtual_machine" {
 			continue
 		}
-		/*	machine := Machine{
-				Spec: &st.SpecStruct{
-					Name: string(rs.Primary.Attributes["name"]),
-				},
-			}
-		*/
+		id := string(rs.Primary.ID)
+		if id == "" {
+			err := errors.New("ID is already set to the null string")
+			return err
+		}
 		return nil
 	}
 	return nil
-}
-
-func testAccCheckDebugExists() resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		return nil
-	}
 }
 
 func testAccCheckNutanixVirtualMachineExists(n string, vm *Machine) resource.TestCheckFunc {
@@ -261,6 +400,14 @@ func testAccCheckNutanixVirtualMachineExists(n string, vm *Machine) resource.Tes
 		defer f.Close()
 		defer w.Flush()
 		fmt.Fprintf(w, "%+v \n %+v\n %+v", s.Serial, s, *s)
+		terraformState = fmt.Sprintf("%+v", s)
+		specKey = "spec." + hashmapKey("spec", "resources")
+		specResourcesKey = specKey + ".resources." + hashmapKey(specKey+".resources", "power_state")
+		metadataKey = "metadata." + hashmapKey("metadata", "kind")
+		diskSourceReference0Key = specResourcesKey + ".disk_list.0.data_source_reference." + hashmapKey(specResourcesKey+".disk_list.0.data_source_reference", "uuid")
+		diskSourceReference1Key = specResourcesKey + ".disk_list.1.data_source_reference." + hashmapKey(specResourcesKey+".disk_list.1.data_source_reference", "uuid")
+		deviceProperties0Key = specResourcesKey + ".disk_list.0.device_properties." + hashmapKey(specResourcesKey+".disk_list.0.device_properties", "device_type")
+		deviceProperties1Key = specResourcesKey + ".disk_list.1.device_properties." + hashmapKey(specResourcesKey+".disk_list.1.device_properties", "device_type")
 		if n == "" {
 			return fmt.Errorf("No vm name passed in")
 		}
@@ -274,7 +421,10 @@ func testAccCheckNutanixVirtualMachineExists(n string, vm *Machine) resource.Tes
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No ID is set")
 		}
-		//client := testAccProvider.Meta().(*MyClient)
+		ipAddress := string(rs.Primary.Attributes["ip_address"])
+		if ipAddress == "" {
+			fmt.Errorf("ip_address is not defined")
+		}
 
 		return nil
 	}
