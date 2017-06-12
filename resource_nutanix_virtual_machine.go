@@ -262,8 +262,11 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	if status != true {
 		return err
 	}
+	d.Set("ip_address", "")
 
-	err = client.WaitForIP(&vmresp, d)
+	if machine.Spec.Resources.NicList != nil && machine.Spec.Resources.PowerState == "POWERED_ON" {
+		err = client.WaitForIP(&vmresp, d)
+	}
 	if err != nil {
 		return err
 	}
@@ -305,6 +308,16 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 	//Disabling partial state mode. This will cause terraform to save all fields again
 	d.Partial(false)
+	if machine.Spec.Resources.NicList != nil && machine.Spec.Resources.PowerState == "POWERED_ON" {
+		vmresp := VMResponse{Metadata: &st.MetaDataStruct{UUID: d.Id()}}
+		err := client.WaitForIP(&vmresp, d)
+		if err != nil {
+			return err
+		}
+	}
+	if machine.Spec.Resources.PowerState == "POWERED_OFF" {
+		d.Set("ip_address", "")
+	}
 
 	return nil
 }
