@@ -1,8 +1,8 @@
 provider "nutanix" {
-    username = "admin"
-    password = "Nutanix123#"
+    username = ""
+    password = ""
     endpoint = "10.5.68.6"
-    insecure =  true 
+    insecure =  true
 }
 
 resource "nutanix_virtual_machine" "my-machine" {
@@ -15,7 +15,7 @@ resource "nutanix_virtual_machine" "my-machine" {
             memory_size_mb = 2048
             power_state = "POWERED_ON"
             nic_list = [
-                { 
+                {
                     nic_type = "NORMAL_NIC"
                     subnet_reference = {
                         kind = "subnet"
