@@ -1,0 +1,45 @@
+{
+    "exclude" : [],
+    "linters" : {
+        "gofmt": {
+            "include": "(\\.go$)",
+            "type": "gofmt"
+        },
+        "golint": {
+            "include": "(\\.go$)",
+            "type": "golint"
+        },
+        "govet": {
+            "include": "(\\.go$)",
+            "type": "govet"
+        },
+        "json": {
+            "type": "json",
+            "include": [
+                "(^\\.arcconfig$)",
+                "(^\\.arclint$)"
+            ]
+        },
+        "text": {
+            "type": "text",
+            "text.max-line-length": 300,
+            "exclude": [
+                "(\\Makefile$)",
+                "(\\.go)"
+            ]
+        },
+        "spelling" : {
+            "type" : "spelling",
+            "include" : "(.*)"
+        },
+        "chmod": {
+            "type": "chmod"
+        },
+        "filename": {
+            "type": "filename"
+        },
+        "merge-conflict": {
+            "type": "merge-conflict"
+        }
+    }
+}
