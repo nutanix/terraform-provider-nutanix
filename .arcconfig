@@ -1,0 +1,7 @@
+ {
+     "project_name": "terraform-ahv-plugin",
+     "conduit_uri" : "http://ph.eng.nutanix.com/",
+     "lint.engine" : "ArcanistConfigurationDrivenLintEngine",
+     "unit.engine": "PytestCovTestEngine",
+     "history.immutable" : true
+ }
