@@ -3,5 +3,6 @@
      "conduit_uri" : "http://ph.eng.nutanix.com/",
      "lint.engine" : "ArcanistConfigurationDrivenLintEngine",
      "unit.engine": "PytestCovTestEngine",
-     "history.immutable" : true
+     "history.immutable" : true,
+     "repository.callsign" : "rTERRA"
  }
