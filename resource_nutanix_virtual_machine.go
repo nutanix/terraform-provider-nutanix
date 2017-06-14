@@ -76,7 +76,7 @@ func (c *NutanixV3Client) DeleteMachine(m *vmdefn.VirtualMachine, d *schema.Reso
 
 	log.Printf("[DEBUG] Updating Virtual Machine: %s", m.Spec.Name)
 	var jsonStr []byte
-	url := c.URL + "/" + d.Id()
+	url := c.URL + "/vms/" + d.Id()
 	method := "DELETE"
 	_, err := requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
 	if err != nil {
@@ -93,7 +93,7 @@ func (c *NutanixV3Client) UpdateMachine(m *vmdefn.VirtualMachine, d *schema.Reso
 	jsonStr, err := json.Marshal(m)
 	check(err)
 
-	url := c.URL + "/" + d.Id()
+	url := c.URL + "/vms/" + d.Id()
 	method := "PUT"
 	_, err = requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
 	if err != nil {
@@ -106,7 +106,7 @@ func (c *NutanixV3Client) UpdateMachine(m *vmdefn.VirtualMachine, d *schema.Reso
 func (c *NutanixV3Client) MachineExists(name string) (string, error) {
 	log.Printf("[DEBUG] Checking Virtual Machine Existance: %s", name)
 	payload := []byte(`{}`)
-	url := c.URL + "/list"
+	url := c.URL + "/vms/list"
 	method := "POST"
 	jsonResponse, err := requestutils.RequestHandler(url, method, payload, c.Username, c.Password, c.Insecure)
 	if err != nil {
@@ -151,7 +151,7 @@ func (c *NutanixV3Client) ShutdownMachine(m *vmdefn.VirtualMachine, d *schema.Re
 	if err != nil {
 		return err
 	}
-	url := c.URL + "/" + d.Id()
+	url := c.URL + "/vms/" + d.Id()
 	method := "PUT"
 	_, err = requestutils.RequestHandler(url, method, payload, c.Username, c.Password, c.Insecure)
 	return err
@@ -167,7 +167,7 @@ func (c *NutanixV3Client) StartMachine(m *vmdefn.VirtualMachine, d *schema.Resou
 	if err != nil {
 		return err
 	}
-	url := c.URL + "/" + d.Id()
+	url := c.URL + "/vms/" + d.Id()
 	method := "PUT"
 	_, err = requestutils.RequestHandler(url, method, payload, c.Username, c.Password, c.Insecure)
 	return err
@@ -176,7 +176,7 @@ func (c *NutanixV3Client) StartMachine(m *vmdefn.VirtualMachine, d *schema.Resou
 // WaitForProcess waits till the nutanix gets to running
 func (c *NutanixV3Client) WaitForProcess(vmresp1 *VMResponse) (bool, error) {
 	uuid := vmresp1.Metadata.UUID
-	url := c.URL + "/" + uuid
+	url := c.URL + "/vms/" + uuid
 	method := "GET"
 	var vmresp VMResponse
 	var payload []byte
@@ -197,7 +197,7 @@ func (c *NutanixV3Client) WaitForProcess(vmresp1 *VMResponse) (bool, error) {
 // WaitForIP function sets the ip address obtained by the GET request
 func (c *NutanixV3Client) WaitForIP(vmresp *VMResponse, d *schema.ResourceData) error {
 	uuid := vmresp.Metadata.UUID
-	url := c.URL + "/" + uuid
+	url := c.URL + "/vms/" + uuid
 	method := "GET"
 	var payload []byte
 
@@ -230,7 +230,7 @@ func (c *NutanixV3Client) CreateMachine(m *vmdefn.VirtualMachine) ([]byte, error
 	check(err)
 
 	method := "POST"
-	resp, err := requestutils.RequestHandler(c.URL, method, payload, c.Username, c.Password, c.Insecure)
+	resp, err := requestutils.RequestHandler(c.URL+"/vms", method, payload, c.Username, c.Password, c.Insecure)
 	if err != nil {
 		return resp, err
 	}
@@ -443,40 +443,14 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 																Type:     schema.TypeSet,
 																Optional: true,
 																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"name": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																		},
-																		"uuid": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																		},
-																		"kind": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																		},
-																	},
+																	Schema: referenceSchema(),
 																},
 															},
 															"availability_zone_reference": &schema.Schema{
 																Type:     schema.TypeSet,
 																Optional: true,
 																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"name": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																		},
-																		"uuid": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																		},
-																		"kind": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																		},
-																	},
+																	Schema: referenceSchema(),
 																},
 															},
 														},
@@ -492,40 +466,14 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"uuid": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"kind": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
+								Schema: referenceSchema(),
 							},
 						},
 						"cluster_reference": &schema.Schema{
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"uuid": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"kind": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
+								Schema: referenceSchema(),
 							},
 						},
 						"resources": &schema.Schema{
@@ -561,20 +509,7 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"name": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"uuid": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"kind": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-											},
+											Schema: referenceSchema(),
 										},
 									},
 									"guest_tools": &schema.Schema{
@@ -711,40 +646,14 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 													Type:     schema.TypeSet,
 													Optional: true,
 													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"kind": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"name": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"uuid": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-														},
+														Schema: referenceSchema(),
 													},
 												},
 												"subnet_reference": &schema.Schema{
 													Type:     schema.TypeSet,
 													Optional: true,
 													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"kind": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"name": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"uuid": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-														},
+														Schema: referenceSchema(),
 													},
 												},
 											},
@@ -815,20 +724,7 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 													Type:     schema.TypeSet,
 													Optional: true,
 													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"kind": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"name": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"uuid": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-														},
+														Schema: referenceSchema(),
 													},
 												},
 											},
@@ -886,25 +782,30 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kind": &schema.Schema{
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"name": &schema.Schema{
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"uuid": &schema.Schema{
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
+								Schema: referenceSchema(),
 							},
 						},
 					},
 				},
 			},
+		},
+	}
+}
+
+// Schema of Reference
+func referenceSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"kind": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"name": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		"uuid": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
 		},
 	}
 }

@@ -74,7 +74,7 @@ func providerSchema() map[string]*schema.Schema {
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	port := d.Get("port").(string)
 	endpoint := d.Get("endpoint").(string)
-	url := "https://" + endpoint + ":" + port + "/api/nutanix/v3/vms"
+	url := "https://" + endpoint + ":" + port + "/api/nutanix/v3"
 	client := NutanixV3Client{
 		Endpoint: endpoint,
 		Username: d.Get("username").(string),
