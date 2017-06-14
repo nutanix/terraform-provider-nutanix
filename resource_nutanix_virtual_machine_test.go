@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	vmdefn "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachinestruct"
 	"log"
 	"os"
 	"strconv"
@@ -77,7 +78,7 @@ func setupTemplateBasicBodyVars() TemplateBasicBodyVars {
 
 // Basic data to create series of testing functions
 type TestFuncData struct {
-	vm           Machine
+	vm           vmdefn.VirtualMachine
 	vmName       string
 	name         string
 	name1        string
@@ -236,7 +237,7 @@ const testAccTemplateBasicBodyWithEnd = testAccTemplateBasicBody + `
 
 // testing vms with basic config
 func TestAccNutanixVirtualMachine_basic1(t *testing.T) {
-	var vm Machine
+	var vm vmdefn.VirtualMachine
 	basicVars := setupTemplateBasicBodyVars()
 	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigMostBasic)
 
@@ -257,7 +258,7 @@ func TestAccNutanixVirtualMachine_basic1(t *testing.T) {
 
 // testing vms with basic config
 func TestAccNutanixVirtualMachine_basic2(t *testing.T) {
-	var vm Machine
+	var vm vmdefn.VirtualMachine
 	basicVars := setupTemplateBasicBodyVars()
 	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigMostBasic)
 
@@ -278,7 +279,7 @@ func TestAccNutanixVirtualMachine_basic2(t *testing.T) {
 
 // testing vms with nic_list config
 func TestAccNutanixVirtualMachine_nicList1(t *testing.T) {
-	var vm Machine
+	var vm vmdefn.VirtualMachine
 	basicVars := setupTemplateBasicBodyVars()
 	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
 
@@ -299,7 +300,7 @@ func TestAccNutanixVirtualMachine_nicList1(t *testing.T) {
 
 // testing vms with nic_list config
 func TestAccNutanixVirtualMachine_nicList2(t *testing.T) {
-	var vm Machine
+	var vm vmdefn.VirtualMachine
 	basicVars := setupTemplateBasicBodyVars()
 	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
 
@@ -355,7 +356,7 @@ func diskSet() string {
 
 // testing vms with disk list
 func TestAccNutanixVirtualMachine_diskList1(t *testing.T) {
-	var vm Machine
+	var vm vmdefn.VirtualMachine
 	basicVars := setupTemplateBasicBodyVars()
 	diskList := diskSet()
 	testAccTemplateDiskBody := testAccTemplateSpecBody +
@@ -393,7 +394,7 @@ resource "nutanix_virtual_machine" "my-machine" {
 
 // testing vms with disk list
 func TestAccNutanixVirtualMachine_diskList2(t *testing.T) {
-	var vm Machine
+	var vm vmdefn.VirtualMachine
 	basicVars := setupTemplateBasicBodyVars()
 	diskList := diskSet()
 	vmName := "nutanix_virtual_machine.my-machine"
@@ -447,7 +448,7 @@ resource "nutanix_virtual_machine" "my-machine" {
 
 // testing update memory in vm
 func TestAccNutanixVirtualMachine_updateMemory1(t *testing.T) {
-	var vm Machine
+	var vm vmdefn.VirtualMachine
 	basicVars := setupTemplateBasicBodyVars()
 	basicVars.memorySizeMb = os.Getenv("NUTANIX_UPDATE_MEMORY_SIZE")
 	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
@@ -470,7 +471,7 @@ func TestAccNutanixVirtualMachine_updateMemory1(t *testing.T) {
 
 // testing update memory in vm
 func TestAccNutanixVirtualMachine_updateMemory2(t *testing.T) {
-	var vm Machine
+	var vm vmdefn.VirtualMachine
 	basicVars := setupTemplateBasicBodyVars()
 	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
 	basicVars.powerState = "POWERED_OFF"
@@ -519,7 +520,7 @@ func TestAccNutanixVirtualMachine_updateMemory2(t *testing.T) {
 
 // testing update name of the vm
 func TestAccNutanixVirtualMachine_updateName1(t *testing.T) {
-	var vm Machine
+	var vm vmdefn.VirtualMachine
 	basicVars := setupTemplateBasicBodyVars()
 	basicVars.name1 = os.Getenv("NUTANIX_UPDATE_NAME")
 	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
@@ -542,7 +543,7 @@ func TestAccNutanixVirtualMachine_updateName1(t *testing.T) {
 
 // testing update name of the vm
 func TestAccNutanixVirtualMachine_updateName2(t *testing.T) {
-	var vm Machine
+	var vm vmdefn.VirtualMachine
 	basicVars := setupTemplateBasicBodyVars()
 	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
 	basicVars.powerState = "POWERED_OFF"
@@ -603,7 +604,7 @@ func testAccCheckNutanixVirtualMachineDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckNutanixVirtualMachineExists(n string, vm *Machine) resource.TestCheckFunc {
+func testAccCheckNutanixVirtualMachineExists(n string, vm *vmdefn.VirtualMachine) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		f, _ := os.Create("/tmp/check")
 		w := bufio.NewWriter(f)

@@ -10,6 +10,7 @@ setenv.sh
 request_log
 cmd/terraform-provider-*
 cmd/cmd
+cmd/main.tf
 
 # Test binary, build with `go test -c`
 *.test

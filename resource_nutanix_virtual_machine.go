@@ -6,21 +6,21 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/ideadevice/terraform-ahv-provider-plugin/requestutils"
 	vm "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachineconfig"
-	st "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachinestruct"
+	vmdefn "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachinestruct"
 	"log"
 	"runtime/debug"
 )
 
 type vmStruct struct {
-	Metadata st.MetaDataStruct `json:"metadata"`
-	Status   interface{}       `json:"status"`
-	Spec     st.SpecStruct     `json:"spec"`
+	Metadata vmdefn.MetaDataStruct `json:"metadata"`
+	Status   interface{}           `json:"status"`
+	Spec     vmdefn.SpecStruct     `json:"spec"`
 }
 
 type vmList struct {
-	APIVersion string            `json:"api_version"`
-	MetaData   st.MetaDataStruct `json:"metadata"`
-	Entities   []vmStruct        `json:"entities"`
+	APIVersion string                `json:"api_version"`
+	MetaData   vmdefn.MetaDataStruct `json:"metadata"`
+	Entities   []vmStruct            `json:"entities"`
 }
 
 // HostReferenceStruct struct
@@ -31,24 +31,24 @@ type HostReferenceStruct struct {
 
 // StatusStruct has status of VM
 type StatusStruct struct {
-	State             string               `json:"state,omitempty"`
-	Name              string               `json:"name,omitempty"`
-	Resources         *st.ResourcesStruct  `json:"resources,omitempty"`
-	HostReference     *HostReferenceStruct `json:"host_reference,omitempty"`
-	HypervisorType    string               `json:"hypervisor_type",omitempty`
-	NumVcpusPerSocket int                  `json:"num_vcpus_per_socket,omitempty"`
-	NumSockets        int                  `json:"num_sockets,omitempty"`
-	MemorySizeMb      int                  `json:"memory_size_mb,omitempty"`
-	GpuList           []string             `json:"gpu_list,omitempty"`
-	PowerState        string               `json:"power_state,omitempty"`
+	State             string                  `json:"state,omitempty"`
+	Name              string                  `json:"name,omitempty"`
+	Resources         *vmdefn.ResourcesStruct `json:"resources,omitempty"`
+	HostReference     *HostReferenceStruct    `json:"host_reference,omitempty"`
+	HypervisorType    string                  `json:"hypervisor_type",omitempty`
+	NumVcpusPerSocket int                     `json:"num_vcpus_per_socket,omitempty"`
+	NumSockets        int                     `json:"num_sockets,omitempty"`
+	MemorySizeMb      int                     `json:"memory_size_mb,omitempty"`
+	GpuList           []string                `json:"gpu_list,omitempty"`
+	PowerState        string                  `json:"power_state,omitempty"`
 }
 
 // VMResponse is struct returned by Post call for creating vm
 type VMResponse struct {
-	Status     *StatusStruct      `json:"status"`
-	Spec       *st.SpecStruct     `json:"spec,omitempty"`
-	APIVersion string             `json:"api_version",omitempty`
-	Metadata   *st.MetaDataStruct `json:"metadata,omitempty"`
+	Status     *StatusStruct          `json:"status"`
+	Spec       *vmdefn.SpecStruct     `json:"spec,omitempty"`
+	APIVersion string                 `json:"api_version",omitempty`
+	Metadata   *vmdefn.MetaDataStruct `json:"metadata,omitempty"`
 }
 
 func updateAddress(d *schema.ResourceData) error {
@@ -72,12 +72,11 @@ func RecoverFunc(name string) {
 }
 
 // DeleteMachine function deletes the vm using DELETE api call
-func (c *MyClient) DeleteMachine(m *Machine, d *schema.ResourceData) error {
+func (c *NutanixV3Client) DeleteMachine(m *vmdefn.VirtualMachine, d *schema.ResourceData) error {
 
 	log.Printf("[DEBUG] Updating Virtual Machine: %s", m.Spec.Name)
-	uuid := d.Id()
 	var jsonStr []byte
-	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/" + uuid
+	url := c.URL + "/" + d.Id()
 	method := "DELETE"
 	_, err := requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
 	if err != nil {
@@ -87,15 +86,14 @@ func (c *MyClient) DeleteMachine(m *Machine, d *schema.ResourceData) error {
 }
 
 // UpdateMachine function updates the vm specifications using PUT api call
-func (c *MyClient) UpdateMachine(m *Machine, d *schema.ResourceData) error {
+func (c *NutanixV3Client) UpdateMachine(m *vmdefn.VirtualMachine, d *schema.ResourceData) error {
 
 	log.Printf("[DEBUG] Updating Virtual Machine: %s", m.Spec.Name)
-	uuid := d.Id()
 
 	jsonStr, err := json.Marshal(m)
 	check(err)
 
-	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/" + uuid
+	url := c.URL + "/" + d.Id()
 	method := "PUT"
 	_, err = requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
 	if err != nil {
@@ -105,10 +103,10 @@ func (c *MyClient) UpdateMachine(m *Machine, d *schema.ResourceData) error {
 }
 
 // MachineExists function returns the uuid of the machine with given name
-func (c *MyClient) MachineExists(name string) (string, error) {
+func (c *NutanixV3Client) MachineExists(name string) (string, error) {
 	log.Printf("[DEBUG] Checking Virtual Machine Existance: %s", name)
 	payload := []byte(`{}`)
-	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/list"
+	url := c.URL + "/list"
 	method := "POST"
 	jsonResponse, err := requestutils.RequestHandler(url, method, payload, c.Username, c.Password, c.Insecure)
 	if err != nil {
@@ -130,21 +128,19 @@ func (c *MyClient) MachineExists(name string) (string, error) {
 }
 
 // ShutdownMachine function shut vm using PUT api call
-func (c *MyClient) ShutdownMachine(m *Machine, d *schema.ResourceData) error {
+func (c *NutanixV3Client) ShutdownMachine(m *vmdefn.VirtualMachine, d *schema.ResourceData) error {
 
 	log.Printf("[DEBUG] Shutting Down Virtual Machine: %s", m.Metadata.Name)
 
-	uuid := d.Id()
-
-	data := &Machine{
-		Spec: &st.SpecStruct{
+	data := &vmdefn.VirtualMachine{
+		Spec: &vmdefn.SpecStruct{
 			Name: m.Spec.Name,
-			Resources: &st.ResourcesStruct{
+			Resources: &vmdefn.ResourcesStruct{
 				PowerState: "POWERED_OFF",
 			},
 		},
 		APIVersion: "3.0",
-		Metadata: &st.MetaDataStruct{
+		Metadata: &vmdefn.MetaDataStruct{
 			Name:        m.Spec.Name,
 			Kind:        "vm",
 			SpecVersion: 0,
@@ -155,33 +151,32 @@ func (c *MyClient) ShutdownMachine(m *Machine, d *schema.ResourceData) error {
 	if err != nil {
 		return err
 	}
-	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/" + uuid
+	url := c.URL + "/" + d.Id()
 	method := "PUT"
 	_, err = requestutils.RequestHandler(url, method, payload, c.Username, c.Password, c.Insecure)
 	return err
 }
 
 // StartMachine function starts the vm using PUT api call
-func (c *MyClient) StartMachine(m *Machine, d *schema.ResourceData) error {
+func (c *NutanixV3Client) StartMachine(m *vmdefn.VirtualMachine, d *schema.ResourceData) error {
 
 	log.Printf("[DEBUG] Starting Virtual Machine: %s", m.Metadata.Name)
-	uuid := d.Id()
 
 	m.Spec.Resources.PowerState = "POWERED_ON"
 	payload, err := json.Marshal(m)
 	if err != nil {
 		return err
 	}
-	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/" + uuid
+	url := c.URL + "/" + d.Id()
 	method := "PUT"
 	_, err = requestutils.RequestHandler(url, method, payload, c.Username, c.Password, c.Insecure)
 	return err
 }
 
 // WaitForProcess waits till the nutanix gets to running
-func (c *MyClient) WaitForProcess(vmresp1 *VMResponse) (bool, error) {
+func (c *NutanixV3Client) WaitForProcess(vmresp1 *VMResponse) (bool, error) {
 	uuid := vmresp1.Metadata.UUID
-	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/" + uuid
+	url := c.URL + "/" + uuid
 	method := "GET"
 	var vmresp VMResponse
 	var payload []byte
@@ -200,9 +195,9 @@ func (c *MyClient) WaitForProcess(vmresp1 *VMResponse) (bool, error) {
 }
 
 // WaitForIP function sets the ip address obtained by the GET request
-func (c *MyClient) WaitForIP(vmresp *VMResponse, d *schema.ResourceData) error {
+func (c *NutanixV3Client) WaitForIP(vmresp *VMResponse, d *schema.ResourceData) error {
 	uuid := vmresp.Metadata.UUID
-	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms/" + uuid
+	url := c.URL + "/" + uuid
 	method := "GET"
 	var payload []byte
 
@@ -229,14 +224,13 @@ func (c *MyClient) WaitForIP(vmresp *VMResponse, d *schema.ResourceData) error {
 }
 
 // CreateMachine function creates the vm using POST api call
-func (c *MyClient) CreateMachine(m *Machine) ([]byte, error) {
+func (c *NutanixV3Client) CreateMachine(m *vmdefn.VirtualMachine) ([]byte, error) {
 
 	payload, err := json.Marshal(m)
 	check(err)
 
 	method := "POST"
-	url := "https://" + c.Endpoint + ":9440/api/nutanix/v3/vms"
-	resp, err := requestutils.RequestHandler(url, method, payload, c.Username, c.Password, c.Insecure)
+	resp, err := requestutils.RequestHandler(c.URL, method, payload, c.Username, c.Password, c.Insecure)
 	if err != nil {
 		return resp, err
 	}
@@ -245,8 +239,8 @@ func (c *MyClient) CreateMachine(m *Machine) ([]byte, error) {
 
 func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*MyClient)
-	machine := Machine(vm.SetMachineConfig(d))
+	client := meta.(*NutanixV3Client)
+	machine := vm.SetMachineConfig(d)
 	machine.Spec.Name = d.Get("name").(string)
 	machine.Metadata.Name = d.Get("name").(string)
 	log.Printf("[DEBUG] Creating Virtual Machine: %s", d.Id())
@@ -292,8 +286,8 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, m interface{}) er
 func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 	// Enable partial state mode
 	d.Partial(true)
-	client := meta.(*MyClient)
-	machine := Machine(vm.SetMachineConfig(d))
+	client := meta.(*NutanixV3Client)
+	machine := vm.SetMachineConfig(d)
 	machine.Metadata.Name = d.Get("name").(string)
 	machine.Spec.Name = d.Get("name").(string)
 
@@ -308,7 +302,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 	//Disabling partial state mode. This will cause terraform to save all fields again
 	d.Partial(false)
-	vmresp := VMResponse{Metadata: &st.MetaDataStruct{UUID: d.Id()}}
+	vmresp := VMResponse{Metadata: &vmdefn.MetaDataStruct{UUID: d.Id()}}
 	status, err := client.WaitForProcess(&vmresp)
 	if status != true {
 		return err
@@ -326,9 +320,9 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 
 func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, m interface{}) error {
 
-	client := m.(*MyClient)
+	client := m.(*NutanixV3Client)
 	log.Printf("[DEBUG] Deleting Virtual Machine: %s", d.Id())
-	machine := Machine(vm.SetMachineConfig(d))
+	machine := vm.SetMachineConfig(d)
 	machine.Spec.Name = d.Get("name").(string)
 	machine.Metadata.Name = d.Get("name").(string)
 
