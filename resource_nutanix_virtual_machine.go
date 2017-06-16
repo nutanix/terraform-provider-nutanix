@@ -72,7 +72,7 @@ func RecoverFunc(name string) {
 }
 
 // DeleteMachine function deletes the vm using DELETE api call
-func (c *NutanixV3Client) DeleteMachine(m *vmdefn.VirtualMachine, d *schema.ResourceData) error {
+func (c *V3Client) DeleteMachine(m *vmdefn.VirtualMachine, d *schema.ResourceData) error {
 
 	log.Printf("[DEBUG] Updating Virtual Machine: %s", m.Spec.Name)
 	var jsonStr []byte
@@ -86,7 +86,7 @@ func (c *NutanixV3Client) DeleteMachine(m *vmdefn.VirtualMachine, d *schema.Reso
 }
 
 // UpdateMachine function updates the vm specifications using PUT api call
-func (c *NutanixV3Client) UpdateMachine(m *vmdefn.VirtualMachine, d *schema.ResourceData) error {
+func (c *V3Client) UpdateMachine(m *vmdefn.VirtualMachine, d *schema.ResourceData) error {
 
 	log.Printf("[DEBUG] Updating Virtual Machine: %s", m.Spec.Name)
 
@@ -103,7 +103,7 @@ func (c *NutanixV3Client) UpdateMachine(m *vmdefn.VirtualMachine, d *schema.Reso
 }
 
 // MachineExists function returns the uuid of the machine with given name
-func (c *NutanixV3Client) MachineExists(name string) (string, error) {
+func (c *V3Client) MachineExists(name string) (string, error) {
 	log.Printf("[DEBUG] Checking Virtual Machine Existance: %s", name)
 	payload := []byte(`{}`)
 	url := c.URL + "/vms/list"
@@ -128,7 +128,7 @@ func (c *NutanixV3Client) MachineExists(name string) (string, error) {
 }
 
 // ShutdownMachine function shut vm using PUT api call
-func (c *NutanixV3Client) ShutdownMachine(m *vmdefn.VirtualMachine, d *schema.ResourceData) error {
+func (c *V3Client) ShutdownMachine(m *vmdefn.VirtualMachine, d *schema.ResourceData) error {
 
 	log.Printf("[DEBUG] Shutting Down Virtual Machine: %s", m.Metadata.Name)
 
@@ -158,7 +158,7 @@ func (c *NutanixV3Client) ShutdownMachine(m *vmdefn.VirtualMachine, d *schema.Re
 }
 
 // StartMachine function starts the vm using PUT api call
-func (c *NutanixV3Client) StartMachine(m *vmdefn.VirtualMachine, d *schema.ResourceData) error {
+func (c *V3Client) StartMachine(m *vmdefn.VirtualMachine, d *schema.ResourceData) error {
 
 	log.Printf("[DEBUG] Starting Virtual Machine: %s", m.Metadata.Name)
 
@@ -174,7 +174,7 @@ func (c *NutanixV3Client) StartMachine(m *vmdefn.VirtualMachine, d *schema.Resou
 }
 
 // WaitForProcess waits till the nutanix gets to running
-func (c *NutanixV3Client) WaitForProcess(vmresp1 *VMResponse) (bool, error) {
+func (c *V3Client) WaitForProcess(vmresp1 *VMResponse) (bool, error) {
 	uuid := vmresp1.Metadata.UUID
 	url := c.URL + "/vms/" + uuid
 	method := "GET"
@@ -195,7 +195,7 @@ func (c *NutanixV3Client) WaitForProcess(vmresp1 *VMResponse) (bool, error) {
 }
 
 // WaitForIP function sets the ip address obtained by the GET request
-func (c *NutanixV3Client) WaitForIP(vmresp *VMResponse, d *schema.ResourceData) error {
+func (c *V3Client) WaitForIP(vmresp *VMResponse, d *schema.ResourceData) error {
 	uuid := vmresp.Metadata.UUID
 	url := c.URL + "/vms/" + uuid
 	method := "GET"
@@ -224,7 +224,7 @@ func (c *NutanixV3Client) WaitForIP(vmresp *VMResponse, d *schema.ResourceData) 
 }
 
 // CreateMachine function creates the vm using POST api call
-func (c *NutanixV3Client) CreateMachine(m *vmdefn.VirtualMachine) ([]byte, error) {
+func (c *V3Client) CreateMachine(m *vmdefn.VirtualMachine) ([]byte, error) {
 
 	payload, err := json.Marshal(m)
 	check(err)
@@ -239,7 +239,7 @@ func (c *NutanixV3Client) CreateMachine(m *vmdefn.VirtualMachine) ([]byte, error
 
 func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
 
-	client := meta.(*NutanixV3Client)
+	client := meta.(*V3Client)
 	machine := vm.SetMachineConfig(d)
 	machine.Spec.Name = d.Get("name").(string)
 	machine.Metadata.Name = d.Get("name").(string)
@@ -286,7 +286,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, m interface{}) er
 func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 	// Enable partial state mode
 	d.Partial(true)
-	client := meta.(*NutanixV3Client)
+	client := meta.(*V3Client)
 	machine := vm.SetMachineConfig(d)
 	machine.Metadata.Name = d.Get("name").(string)
 	machine.Spec.Name = d.Get("name").(string)
@@ -320,7 +320,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 
 func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, m interface{}) error {
 
-	client := m.(*NutanixV3Client)
+	client := m.(*V3Client)
 	log.Printf("[DEBUG] Deleting Virtual Machine: %s", d.Id())
 	machine := vm.SetMachineConfig(d)
 	machine.Spec.Name = d.Get("name").(string)

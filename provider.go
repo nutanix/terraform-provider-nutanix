@@ -5,8 +5,8 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-// NutanixV3Client struct is for defining provider
-type NutanixV3Client struct {
+// V3Client struct is for defining provider
+type V3Client struct {
 	Endpoint string
 	Username string
 	Password string
@@ -75,7 +75,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	port := d.Get("port").(string)
 	endpoint := d.Get("endpoint").(string)
 	url := "https://" + endpoint + ":" + port + "/api/nutanix/v3"
-	client := NutanixV3Client{
+	client := V3Client{
 		Endpoint: endpoint,
 		Username: d.Get("username").(string),
 		Password: d.Get("password").(string),
