@@ -1,9 +1,17 @@
 {
     "exclude" : [],
     "linters" : {
+        "gofmt": {
+            "include": "(\\.go$)",
+            "type": "gofmt"
+        },
         "golint": {
             "include": "(\\.go$)",
             "type": "golint"
+        },
+        "govet": {
+            "include": "(\\.go$)",
+            "type": "govet"
         },
         "json": {
             "type": "json",
