@@ -18,8 +18,7 @@ import (
 func testBasicPreCheck(t *testing.T) {
 	testAccPreCheck(t)
 
-	if v := os.Getenv("NUTANIX_API_VERSION"); v == "" {
-		log.Printf("yo")
+	if NutanixAPIVersion == "" {
 		t.Fatal("env variable NUTANIX_API_VERSION must be set for acceptance tests")
 	}
 }
@@ -62,7 +61,7 @@ func (body TemplateBasicBodyVars) testSprintfTemplateBody(template string) strin
 func (body TemplateBasicBodyVars) testSprintfTemplateBodyUpdateName(template string) string {
 	return fmt.Sprintf(
 		template,
-		os.Getenv("NUTANIX_UPDATE_NAME"),
+		NutanixUpdateName,
 		body.name,
 		body.numSockets,
 		body.numVCPUs,
@@ -78,14 +77,14 @@ func (body TemplateBasicBodyVars) testSprintfTemplateBodyUpdateName(template str
 // setups variables used by fixed ip tests
 func setupTemplateBasicBodyVars() TemplateBasicBodyVars {
 	data := TemplateBasicBodyVars{
-		name:         os.Getenv("NUTANIX_NAME"),
-		numSockets:   os.Getenv("NUTANIX_NUM_SOCKETS"),
-		numVCPUs:     os.Getenv("NUTANIX_NUM_VCPUS"),
-		memorySizeMb: os.Getenv("NUTANIX_MEMORY_SIZE_MB"),
-		powerState:   os.Getenv("NUTANIX_POWER_STATE"),
-		kind:         os.Getenv("NUTANIX_KIND"),
-		specVersion:  os.Getenv("NUTANIX_SPEC_VERSION"),
-		APIVersion:   os.Getenv("NUTANIX_API_VERSION"),
+		name:         NutanixName,
+		numSockets:   NutanixNumSockets,
+		numVCPUs:     NutanixNumVCPUs,
+		memorySizeMb: NutanixMemorySize,
+		powerState:   NutanixPowerState,
+		kind:         NutanixKind,
+		specVersion:  NutanixSpecVersion,
+		APIVersion:   NutanixAPIVersion,
 	}
 	return data
 }
@@ -347,14 +346,14 @@ func diskSet() string {
 	diskList := `
 			disk_list = [
 	`
-	diskNo, _ := strconv.Atoi(os.Getenv("NUTANIX_DISK_NO"))
+	diskNo, _ := strconv.Atoi(NutanixDiskNo)
 	for i := 0; i < diskNo-1; i++ {
-		disk := fmt.Sprintf(diskTemplate, os.Getenv("NUTANIX_DISK_"+strconv.Itoa(i)+"_KIND"), os.Getenv("NUTANIX_DISK_"+strconv.Itoa(i)+"_NAME"), os.Getenv("NUTANIX_DISK_"+strconv.Itoa(i)+"_UUID"), os.Getenv("NUTANIX_DISK_"+strconv.Itoa(i)+"_DEVICETYPE"), os.Getenv("NUTANIX_DISK_"+strconv.Itoa(i)+"_SIZE")) + ","
+		disk := fmt.Sprintf(diskTemplate, NutanixDiskKind[i], NutanixDiskName[i], NutanixDiskUUID[i], NutanixDiskDeviceType[i], NutanixDiskSize[i]) + ","
 		diskList = diskList + disk
 	}
 	i := diskNo - 1
 	if diskNo > 0 {
-		disk := fmt.Sprintf(diskTemplate, os.Getenv("NUTANIX_DISK_"+strconv.Itoa(i)+"_KIND"), os.Getenv("NUTANIX_DISK_"+strconv.Itoa(i)+"_NAME"), os.Getenv("NUTANIX_DISK_"+strconv.Itoa(i)+"_UUID"), os.Getenv("NUTANIX_DISK_"+strconv.Itoa(i)+"_DEVICETYPE"), os.Getenv("NUTANIX_DISK_"+strconv.Itoa(i)+"_SIZE"))
+		disk := fmt.Sprintf(diskTemplate, NutanixDiskKind[i], NutanixDiskName[i], NutanixDiskUUID[i], NutanixDiskDeviceType[i], NutanixDiskSize[i])
 		diskList = diskList + disk
 	}
 	diskList = diskList + `
@@ -436,19 +435,19 @@ resource "nutanix_virtual_machine" "my-machine" {
 					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
 					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.#", "2"),
 					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.0.data_source_reference.#", "1"),
-					resource.TestCheckResourceAttr(vmName, diskSourceReference0Key+".kind", os.Getenv("NUTANIX_DISK_0_KIND")),
-					resource.TestCheckResourceAttr(vmName, diskSourceReference0Key+".name", os.Getenv("NUTANIX_DISK_0_NAME")),
-					resource.TestCheckResourceAttr(vmName, diskSourceReference0Key+".uuid", os.Getenv("NUTANIX_DISK_0_UUID")),
+					resource.TestCheckResourceAttr(vmName, diskSourceReference0Key+".kind", NutanixDiskKind[0]),
+					resource.TestCheckResourceAttr(vmName, diskSourceReference0Key+".name", NutanixDiskName[0]),
+					resource.TestCheckResourceAttr(vmName, diskSourceReference0Key+".uuid", NutanixDiskUUID[0]),
 					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.0.device_properties.#", "1"),
-					resource.TestCheckResourceAttr(vmName, deviceProperties0Key+".device_type", os.Getenv("NUTANIX_DISK_0_DEVICETYPE")),
-					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.0.disk_size_mib", os.Getenv("NUTANIX_DISK_0_SIZE")),
+					resource.TestCheckResourceAttr(vmName, deviceProperties0Key+".device_type", NutanixDiskDeviceType[0]),
+					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.0.disk_size_mib", NutanixDiskSize[0]),
 					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.1.data_source_reference.#", "1"),
-					resource.TestCheckResourceAttr(vmName, diskSourceReference1Key+".kind", os.Getenv("NUTANIX_DISK_1_KIND")),
-					resource.TestCheckResourceAttr(vmName, diskSourceReference1Key+".name", os.Getenv("NUTANIX_DISK_1_NAME")),
-					resource.TestCheckResourceAttr(vmName, diskSourceReference1Key+".uuid", os.Getenv("NUTANIX_DISK_1_UUID")),
+					resource.TestCheckResourceAttr(vmName, diskSourceReference1Key+".kind", NutanixDiskKind[1]),
+					resource.TestCheckResourceAttr(vmName, diskSourceReference1Key+".name", NutanixDiskName[1]),
+					resource.TestCheckResourceAttr(vmName, diskSourceReference1Key+".uuid", NutanixDiskUUID[1]),
 					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.1.device_properties.#", "1"),
-					resource.TestCheckResourceAttr(vmName, deviceProperties1Key+".device_type", os.Getenv("NUTANIX_DISK_1_DEVICETYPE")),
-					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.1.disk_size_mib", os.Getenv("NUTANIX_DISK_1_SIZE")),
+					resource.TestCheckResourceAttr(vmName, deviceProperties1Key+".device_type", NutanixDiskDeviceType[1]),
+					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.1.disk_size_mib", NutanixDiskSize[1]),
 				),
 			},
 		},
@@ -459,7 +458,7 @@ resource "nutanix_virtual_machine" "my-machine" {
 func TestAccNutanixVirtualMachine_updateMemory1(t *testing.T) {
 	var vm vmdefn.VirtualMachine
 	basicVars := setupTemplateBasicBodyVars()
-	basicVars.memorySizeMb = os.Getenv("NUTANIX_UPDATE_MEMORY_SIZE")
+	basicVars.memorySizeMb = NutanixUpdateMemorySize
 	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
 	log.Printf("[DEBUG] template config= %s", config)
 
@@ -485,7 +484,7 @@ func TestAccNutanixVirtualMachine_updateMemory2(t *testing.T) {
 	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
 	basicVars.powerState = "POWERED_OFF"
 	configOFF := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
-	basicVars.memorySizeMb = os.Getenv("NUTANIX_UPDATE_MEMORY_SIZE")
+	basicVars.memorySizeMb = NutanixUpdateMemorySize
 	configUpdate := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
 	basicVars.powerState = "POWERED_ON"
 	configON := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
@@ -520,7 +519,7 @@ func TestAccNutanixVirtualMachine_updateMemory2(t *testing.T) {
 			resource.TestStep{
 				Config: configON,
 				Check: resource.ComposeTestCheckFunc(
-					TestFuncData{vm: vm, memorySizeMb: os.Getenv("NUTANIX_UPDATE_MEMORY_SIZE"), vmName: "nutanix_virtual_machine.my-machine"}.testCheckFuncBasic(),
+					TestFuncData{vm: vm, memorySizeMb: NutanixUpdateMemorySize, vmName: "nutanix_virtual_machine.my-machine"}.testCheckFuncBasic(),
 				),
 			},
 		},
@@ -582,7 +581,7 @@ func TestAccNutanixVirtualMachine_updateName2(t *testing.T) {
 			resource.TestStep{
 				Config: configON,
 				Check: resource.ComposeTestCheckFunc(
-					TestFuncData{vm: vm, name: os.Getenv("NUTANIX_UPDATE_NAME"), vmName: "nutanix_virtual_machine.my-machine"}.testCheckFuncBasic(),
+					TestFuncData{vm: vm, name: NutanixUpdateName, vmName: "nutanix_virtual_machine.my-machine"}.testCheckFuncBasic(),
 				),
 			},
 		},
