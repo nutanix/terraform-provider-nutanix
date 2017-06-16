@@ -1,4 +1,4 @@
-package virtualmachinestruct
+package virtualmachine
 
 // SubnetReferenceStruct is SubnetReference data type
 type SubnetReferenceStruct struct {

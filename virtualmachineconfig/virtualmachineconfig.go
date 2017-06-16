@@ -1,11 +1,8 @@
 package virtualmachineconfig
 
 import (
-	//"bufio"
-	//"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
-	vmdefn "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachinestruct"
-	//"os"
+	vmdefn "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachine"
 )
 
 func convertToBool(a interface{}) bool {
@@ -391,7 +388,4 @@ func SetGuestTools(t []interface{}) *(vmdefn.GuestToolsStruct) {
 		return &GuestToolsI
 	}
 	return nil
-}
-
-func main() {
 }

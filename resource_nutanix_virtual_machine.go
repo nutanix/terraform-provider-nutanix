@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/ideadevice/terraform-ahv-provider-plugin/requestutils"
+	vmdefn "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachine"
 	vm "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachineconfig"
-	vmdefn "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachinestruct"
 	"log"
 	"runtime/debug"
 )

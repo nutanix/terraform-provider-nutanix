@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	vmdefn "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachinestruct"
+	vmdefn "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachine"
 	"log"
 	"os"
 	"strconv"
