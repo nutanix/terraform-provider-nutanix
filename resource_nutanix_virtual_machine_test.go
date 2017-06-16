@@ -34,7 +34,6 @@ var deviceProperties1Key string
 
 type TemplateBasicBodyVars struct {
 	name         string
-	name1        string
 	numVCPUs     string
 	numSockets   string
 	memorySizeMb string
@@ -47,7 +46,23 @@ type TemplateBasicBodyVars struct {
 func (body TemplateBasicBodyVars) testSprintfTemplateBody(template string) string {
 	return fmt.Sprintf(
 		template,
-		body.name1,
+		body.name,
+		body.name,
+		body.numSockets,
+		body.numVCPUs,
+		body.memorySizeMb,
+		body.powerState,
+		body.APIVersion,
+		body.kind,
+		body.specVersion,
+		body.name,
+	)
+}
+
+func (body TemplateBasicBodyVars) testSprintfTemplateBodyUpdateName(template string) string {
+	return fmt.Sprintf(
+		template,
+		os.Getenv("NUTANIX_UPDATE_NAME"),
 		body.name,
 		body.numSockets,
 		body.numVCPUs,
@@ -64,7 +79,6 @@ func (body TemplateBasicBodyVars) testSprintfTemplateBody(template string) strin
 func setupTemplateBasicBodyVars() TemplateBasicBodyVars {
 	data := TemplateBasicBodyVars{
 		name:         os.Getenv("NUTANIX_NAME"),
-		name1:        os.Getenv("NUTANIX_NAME"),
 		numSockets:   os.Getenv("NUTANIX_NUM_SOCKETS"),
 		numVCPUs:     os.Getenv("NUTANIX_NUM_VCPUS"),
 		memorySizeMb: os.Getenv("NUTANIX_MEMORY_SIZE_MB"),
@@ -81,7 +95,6 @@ type TestFuncData struct {
 	vm           vmdefn.VirtualMachine
 	vmName       string
 	name         string
-	name1        string
 	numVCPUs     string
 	numSockets   string
 	memorySizeMb string
@@ -143,10 +156,6 @@ func (test TestFuncData) testCheckFuncBasic() (resource.TestCheckFunc, resource.
 	if name == "" {
 		name = "kritagya_test1"
 	}
-	name1 := test.name1
-	if name1 == "" {
-		name1 = "kritagya_test1"
-	}
 	memorySizeMb := test.memorySizeMb
 	if memorySizeMb == "" {
 		memorySizeMb = "1024"
@@ -166,7 +175,7 @@ func (test TestFuncData) testCheckFuncBasic() (resource.TestCheckFunc, resource.
 		resource.TestCheckResourceAttr(vmName, "metadata.#", "1"),
 		resource.TestCheckResourceAttr(vmName, metadataKey+".kind", kind),
 		resource.TestCheckResourceAttr(vmName, metadataKey+".spec_version", specVersion),
-		resource.TestCheckResourceAttr(vmName, "name", name1)
+		resource.TestCheckResourceAttr(vmName, "name", name)
 
 }
 
@@ -522,8 +531,7 @@ func TestAccNutanixVirtualMachine_updateMemory2(t *testing.T) {
 func TestAccNutanixVirtualMachine_updateName1(t *testing.T) {
 	var vm vmdefn.VirtualMachine
 	basicVars := setupTemplateBasicBodyVars()
-	basicVars.name1 = os.Getenv("NUTANIX_UPDATE_NAME")
-	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
+	config := basicVars.testSprintfTemplateBodyUpdateName(testAccCheckNutanixVirtualMachineConfigReallyBasic)
 	log.Printf("[DEBUG] template config= %s", config)
 
 	resource.Test(t, resource.TestCase{
@@ -548,12 +556,11 @@ func TestAccNutanixVirtualMachine_updateName2(t *testing.T) {
 	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
 	basicVars.powerState = "POWERED_OFF"
 	configOFF := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
-	basicVars.name1 = os.Getenv("NUTANIX_UPDATE_NAME")
-	configUpdate := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
 	basicVars.powerState = "POWERED_ON"
-	configON := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
+	configON := basicVars.testSprintfTemplateBodyUpdateName(testAccCheckNutanixVirtualMachineConfigReallyBasic)
 	log.Printf("[DEBUG] template config= %s", config)
-	log.Printf("[DEBUG] template configUpdate= %s", configUpdate)
+
+	log.Printf("[DEBUG] template configON= %s", configON)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testBasicPreCheck(t) },
@@ -573,15 +580,9 @@ func TestAccNutanixVirtualMachine_updateName2(t *testing.T) {
 				),
 			},
 			resource.TestStep{
-				Config: configUpdate,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
-				),
-			},
-			resource.TestStep{
 				Config: configON,
 				Check: resource.ComposeTestCheckFunc(
-					TestFuncData{vm: vm, name1: os.Getenv("NUTANIX_UPDATE_NAME"), vmName: "nutanix_virtual_machine.my-machine"}.testCheckFuncBasic(),
+					TestFuncData{vm: vm, name: os.Getenv("NUTANIX_UPDATE_NAME"), vmName: "nutanix_virtual_machine.my-machine"}.testCheckFuncBasic(),
 				),
 			},
 		},

@@ -64,7 +64,7 @@ func RequestHandler(url, method string, jsonStr []byte, username, password strin
 	body, _ := ioutil.ReadAll(resp.Body)
 
 	if !statusCodeFilter[resp.StatusCode] {
-		errorstr := fmt.Sprintf("%v URL: %v\n request Header: %v\n request Body: %v\n response Status: %v\n response Body: %v\n", method, url, requestHeader, requestBody, resp.Status, string(body))
+		errorstr := fmt.Sprintf("jsonStr: %v \n %v URL: %v\n request Header: %v\n request Body: %v\n response Status: %v\n response Body: %v\n", string(jsonStr), method, url, requestHeader, requestBody, resp.Status, string(body))
 		errormsg := errors.New(errorstr)
 		return body, errormsg
 	}
