@@ -40,14 +40,14 @@ func SetMachineConfig(d *schema.ResourceData) vmdefn.VirtualMachine {
 }
 
 // SetMetadata sets metadata fields in json struct
-func SetMetadata(s map[string]interface{}) *(vmdefn.MetaDataStruct) {
+func SetMetadata(s map[string]interface{}) *(vmdefn.MetaData) {
 
 	var categories map[string]interface{}
 	if s["categories"] != nil {
 		categories = s["categories"].(map[string]interface{})
 	}
 
-	MetadataI := vmdefn.MetaDataStruct{
+	MetadataI := vmdefn.MetaData{
 		LastUpdateTime: convertToString(s["last_update_time"]),
 		Kind:           convertToString(s["kind"]),
 		UUID:           convertToString(s["uuid"]),
@@ -62,10 +62,10 @@ func SetMetadata(s map[string]interface{}) *(vmdefn.MetaDataStruct) {
 }
 
 // SetSubnetReference sets owner_reference fields in json struct
-func SetSubnetReference(t []interface{}) *(vmdefn.SubnetReferenceStruct) {
+func SetSubnetReference(t []interface{}) *(vmdefn.SubnetReference) {
 	if len(t) > 0 {
 		s := t[0].(map[string]interface{})
-		SubnetReferenceI := vmdefn.SubnetReferenceStruct{
+		SubnetReferenceI := vmdefn.SubnetReference{
 			Kind: convertToString(s["kind"]),
 			UUID: convertToString(s["uuid"]),
 			Name: convertToString(s["name"]),
@@ -76,8 +76,8 @@ func SetSubnetReference(t []interface{}) *(vmdefn.SubnetReferenceStruct) {
 }
 
 // SetSpec sets spec fields in json struct
-func SetSpec(s map[string]interface{}) *(vmdefn.SpecStruct) {
-	SpecI := vmdefn.SpecStruct{
+func SetSpec(s map[string]interface{}) *(vmdefn.Spec) {
+	SpecI := vmdefn.Spec{
 		Resources:                 SetResources(s["resources"].(*schema.Set).List()[0].(map[string]interface{})), //resources
 		Name:                      convertToString(s["name"]),                                                    //name
 		Description:               convertToString(s["description"]),                                             //description
@@ -89,9 +89,9 @@ func SetSpec(s map[string]interface{}) *(vmdefn.SpecStruct) {
 }
 
 // SetResources sets resources fields in json struct
-func SetResources(s map[string]interface{}) *(vmdefn.ResourcesStruct) {
+func SetResources(s map[string]interface{}) *(vmdefn.Resources) {
 
-	var NicListI []*vmdefn.NicListStruct
+	var NicListI []*vmdefn.NicList
 	if s["nic_list"] != nil {
 		for i := 0; i < len(s["nic_list"].([]interface{})); i++ {
 			elem := SetNicList(s["nic_list"].([]interface{})[i].(map[string]interface{}))
@@ -99,7 +99,7 @@ func SetResources(s map[string]interface{}) *(vmdefn.ResourcesStruct) {
 		}
 	}
 
-	var DiskListI []*vmdefn.DiskListStruct
+	var DiskListI []*vmdefn.DiskList
 	if s["disk_list"] != nil {
 		for i := 0; i < len(s["disk_list"].([]interface{})); i++ {
 			elem := SetDiskList(s["disk_list"].([]interface{})[i].(map[string]interface{}))
@@ -107,7 +107,7 @@ func SetResources(s map[string]interface{}) *(vmdefn.ResourcesStruct) {
 		}
 	}
 
-	var GPUListI []*vmdefn.GPUListStruct
+	var GPUListI []*vmdefn.GPUList
 	if s["gpu_list"] != nil {
 		for i := 0; i < len(s["gpu_list"].([]interface{})); i++ {
 			elem := SetGPUList(s["gpu_list"].([]interface{})[i].(map[string]interface{}))
@@ -115,7 +115,7 @@ func SetResources(s map[string]interface{}) *(vmdefn.ResourcesStruct) {
 		}
 	}
 
-	ResourcesI := vmdefn.ResourcesStruct{
+	ResourcesI := vmdefn.Resources{
 		NumVCPUsPerSocket:     convertToInt(s["num_vcpus_per_socket"]),                              // num_vcpus_per_socket
 		NumSockets:            convertToInt(s["num_sockets"]),                                       // num_sockets
 		MemorySizeMb:          convertToInt(s["memory_size_mb"]),                                    // memory_size_mb
@@ -134,11 +134,11 @@ func SetResources(s map[string]interface{}) *(vmdefn.ResourcesStruct) {
 }
 
 // SetNicList sets nic_list fields in json struct
-func SetNicList(t map[string]interface{}) *(vmdefn.NicListStruct) {
+func SetNicList(t map[string]interface{}) *(vmdefn.NicList) {
 	if len(t) > 0 {
 		s := t
 
-		var IPEndpointListI []*vmdefn.IPEndpointListStruct
+		var IPEndpointListI []*vmdefn.IPEndpointList
 		if s["ip_endpoint_list"] != nil {
 			for i := 0; i < len(s["ip_endpoint_list"].([]interface{})); i++ {
 				elem := SetIPEndpointList(s["ip_endpoint_list"].([]interface{})[i].(map[string]interface{}))
@@ -146,7 +146,7 @@ func SetNicList(t map[string]interface{}) *(vmdefn.NicListStruct) {
 			}
 		}
 
-		NicListI := vmdefn.NicListStruct{
+		NicListI := vmdefn.NicList{
 			NicType:                       convertToString(s["nic_type"]),
 			NetworkFunctionNicType:        convertToString(s["network_function_nic_type"]),
 			MacAddress:                    convertToString(s["mac_address"]),
@@ -160,10 +160,10 @@ func SetNicList(t map[string]interface{}) *(vmdefn.NicListStruct) {
 }
 
 // SetIPEndpointList sets ip_endpoint_list fields in json struct
-func SetIPEndpointList(t map[string]interface{}) *(vmdefn.IPEndpointListStruct) {
+func SetIPEndpointList(t map[string]interface{}) *(vmdefn.IPEndpointList) {
 	if len(t) > 0 {
 		s := t
-		IPEndpointListI := vmdefn.IPEndpointListStruct{
+		IPEndpointListI := vmdefn.IPEndpointList{
 			Address: convertToString(s["address"]),
 			Type:    convertToString(s["type"]),
 		}
@@ -173,10 +173,10 @@ func SetIPEndpointList(t map[string]interface{}) *(vmdefn.IPEndpointListStruct) 
 }
 
 // SetDiskList sets disk_list fields in json struct
-func SetDiskList(t map[string]interface{}) *(vmdefn.DiskListStruct) {
+func SetDiskList(t map[string]interface{}) *(vmdefn.DiskList) {
 	if len(t) > 0 {
 		s := t
-		DiskListI := vmdefn.DiskListStruct{
+		DiskListI := vmdefn.DiskList{
 			UUID:                convertToString(s["uuid"]),
 			DiskSizeMib:         convertToInt(s["disk_size_mib"]),
 			DataSourceReference: SetSubnetReference(s["data_source_reference"].(*schema.Set).List()),
@@ -188,10 +188,10 @@ func SetDiskList(t map[string]interface{}) *(vmdefn.DiskListStruct) {
 }
 
 // SetDeviceProperties sets device_properties fields in json struct
-func SetDeviceProperties(t []interface{}) *(vmdefn.DevicePropertiesStruct) {
+func SetDeviceProperties(t []interface{}) *(vmdefn.DeviceProperties) {
 	if len(t) > 0 {
 		s := t[0].(map[string]interface{})
-		DevicePropertiesI := vmdefn.DevicePropertiesStruct{
+		DevicePropertiesI := vmdefn.DeviceProperties{
 			DeviceType:  convertToString(s["device_type"]),
 			DiskAddress: SetDiskAddress(s["disk_address"].(*schema.Set).List()),
 		}
@@ -201,17 +201,17 @@ func SetDeviceProperties(t []interface{}) *(vmdefn.DevicePropertiesStruct) {
 }
 
 // SetBackupPolicy sets backup-policy fields in json struct
-func SetBackupPolicy(t []interface{}) *(vmdefn.BackupPolicyStruct) {
+func SetBackupPolicy(t []interface{}) *(vmdefn.BackupPolicy) {
 	if len(t) > 0 {
 		s := t[0].(map[string]interface{})
-		var SnapshotPolicyListI []*vmdefn.SnapshotPolicyListStruct
+		var SnapshotPolicyListI []*vmdefn.SnapshotPolicyList
 		if s["snapshot_policy_list"] != nil {
 			for i := 0; i < len(s["snapshot_policy_list"].([]interface{})); i++ {
 				elem := SetSnapshotPolicyList(s["snapshot_policy_list"].([]interface{})[i].(map[string]interface{}))
 				SnapshotPolicyListI = append(SnapshotPolicyListI, elem)
 			}
 		}
-		BackupPolicyI := vmdefn.BackupPolicyStruct{
+		BackupPolicyI := vmdefn.BackupPolicy{
 			DefaultSnapshotType:        convertToString(s["default_snapshot_type"]),
 			ConsistencyGroupIdentifier: convertToString(s["consistency_group_identifier"]),
 			SnapshotPolicyList:         SnapshotPolicyListI,
@@ -222,10 +222,10 @@ func SetBackupPolicy(t []interface{}) *(vmdefn.BackupPolicyStruct) {
 }
 
 // SetSnapshotPolicyList sets snapshot_policy_list fields in json struct
-func SetSnapshotPolicyList(t map[string]interface{}) *(vmdefn.SnapshotPolicyListStruct) {
+func SetSnapshotPolicyList(t map[string]interface{}) *(vmdefn.SnapshotPolicyList) {
 	if len(t) > 0 {
 		s := t
-		var SnapshotScheduleListI []*vmdefn.SnapshotScheduleListStruct
+		var SnapshotScheduleListI []*vmdefn.SnapshotScheduleList
 		if s["snapshot_schedule_list"] != nil {
 			for i := 0; i < len(s["snapshot_schedule_list"].([]interface{})); i++ {
 				elem := SetSnapshotScheduleList(s["snapshot_schedule_list"].([]interface{})[i].(map[string]interface{}))
@@ -233,7 +233,7 @@ func SetSnapshotPolicyList(t map[string]interface{}) *(vmdefn.SnapshotPolicyList
 			}
 		}
 
-		SnapshotPolicyListI := vmdefn.SnapshotPolicyListStruct{
+		SnapshotPolicyListI := vmdefn.SnapshotPolicyList{
 			ReplicationTarget:    SetReplicationTarget(s["replication_target"].(*schema.Set).List()),
 			SnapshotScheduleList: SnapshotScheduleListI,
 		}
@@ -243,10 +243,10 @@ func SetSnapshotPolicyList(t map[string]interface{}) *(vmdefn.SnapshotPolicyList
 }
 
 // SetSnapshotScheduleList sets snapshot_schedule_list fields in json struct
-func SetSnapshotScheduleList(t map[string]interface{}) *(vmdefn.SnapshotScheduleListStruct) {
+func SetSnapshotScheduleList(t map[string]interface{}) *(vmdefn.SnapshotScheduleList) {
 	if len(t) > 0 {
 		s := t
-		SnapshotScheduleListI := vmdefn.SnapshotScheduleListStruct{
+		SnapshotScheduleListI := vmdefn.SnapshotScheduleList{
 			Schedule:                SetSchedule(s["schedule"].(*schema.Set).List()),
 			SnapshotType:            convertToString(s["snapshot_type"]),
 			LocalRetentionQuantity:  convertToInt(s["local_retention_quantity"]),
@@ -258,10 +258,10 @@ func SetSnapshotScheduleList(t map[string]interface{}) *(vmdefn.SnapshotSchedule
 }
 
 // SetSchedule sets schedule fields in json struct
-func SetSchedule(t []interface{}) *(vmdefn.ScheduleStruct) {
+func SetSchedule(t []interface{}) *(vmdefn.Schedule) {
 	if len(t) > 0 {
 		s := t[0].(map[string]interface{})
-		ScheduleI := vmdefn.ScheduleStruct{
+		ScheduleI := vmdefn.Schedule{
 			IntervalMultiple: convertToInt(s["interval_multiple"]),
 			DurationSecs:     convertToInt(s["duration_secs"]),
 			EndTime:          convertToString(s["end_time"]),
@@ -275,10 +275,10 @@ func SetSchedule(t []interface{}) *(vmdefn.ScheduleStruct) {
 }
 
 // SetReplicationTarget sets replication_target fields in json struct
-func SetReplicationTarget(t []interface{}) *(vmdefn.ReplicationTargetStruct) {
+func SetReplicationTarget(t []interface{}) *(vmdefn.ReplicationTarget) {
 	if len(t) > 0 {
 		s := t[0].(map[string]interface{})
-		ReplicationTargetI := vmdefn.ReplicationTargetStruct{
+		ReplicationTargetI := vmdefn.ReplicationTarget{
 			ClusterReference:          SetSubnetReference(s["cluster_reference"].(*schema.Set).List()),
 			AvailabilityZoneReference: SetSubnetReference(s["availability_zone_reference"].(*schema.Set).List()),
 		}
@@ -288,10 +288,10 @@ func SetReplicationTarget(t []interface{}) *(vmdefn.ReplicationTargetStruct) {
 }
 
 // SetDiskAddress sets disk_address fields in json struct
-func SetDiskAddress(t []interface{}) *(vmdefn.DiskAddressStruct) {
+func SetDiskAddress(t []interface{}) *(vmdefn.DiskAddress) {
 	if len(t) > 0 {
 		s := t[0].(map[string]interface{})
-		DiskAddressI := vmdefn.DiskAddressStruct{
+		DiskAddressI := vmdefn.DiskAddress{
 			DeviceIndex: convertToInt(s["device_index"]),
 			AdapterType: convertToString(s["adapter_type"]),
 		}
@@ -301,10 +301,10 @@ func SetDiskAddress(t []interface{}) *(vmdefn.DiskAddressStruct) {
 }
 
 // SetBootConfig sets boot_config fields in json struct
-func SetBootConfig(t []interface{}) *(vmdefn.BootConfigStruct) {
+func SetBootConfig(t []interface{}) *(vmdefn.BootConfig) {
 	if len(t) > 0 {
 		s := t[0].(map[string]interface{})
-		BootConfigI := vmdefn.BootConfigStruct{
+		BootConfigI := vmdefn.BootConfig{
 			MacAddress:  convertToString(s["mac_address"]),
 			DiskAddress: SetDiskAddress(s["disk_address"].(*schema.Set).List()),
 		}
@@ -314,10 +314,10 @@ func SetBootConfig(t []interface{}) *(vmdefn.BootConfigStruct) {
 }
 
 // SetGuestCustomization sets guest_customization fields in json struct
-func SetGuestCustomization(t []interface{}) *(vmdefn.GuestCustomizationStruct) {
+func SetGuestCustomization(t []interface{}) *(vmdefn.GuestCustomization) {
 	if len(t) > 0 {
 		s := t[0].(map[string]interface{})
-		GuestCustomizationI := vmdefn.GuestCustomizationStruct{
+		GuestCustomizationI := vmdefn.GuestCustomization{
 			CloudInit: SetCloudInit(s["cloud_init"].(*schema.Set).List()),
 			Sysprep:   SetSysprep(s["sysprep"].(*schema.Set).List()),
 		}
@@ -327,10 +327,10 @@ func SetGuestCustomization(t []interface{}) *(vmdefn.GuestCustomizationStruct) {
 }
 
 // SetCloudInit sets cloud_init fields in json struct
-func SetCloudInit(t []interface{}) *(vmdefn.CloudInitStruct) {
+func SetCloudInit(t []interface{}) *(vmdefn.CloudInit) {
 	if len(t) > 0 {
 		s := t[0].(map[string]interface{})
-		CloudInitI := vmdefn.CloudInitStruct{
+		CloudInitI := vmdefn.CloudInit{
 			MetaData: convertToString(s["meta_data"]),
 			UserData: convertToString(s["user_data"]),
 		}
@@ -340,10 +340,10 @@ func SetCloudInit(t []interface{}) *(vmdefn.CloudInitStruct) {
 }
 
 // SetSysprep sets sys_prep fields in json struct
-func SetSysprep(t []interface{}) *(vmdefn.SysprepStruct) {
+func SetSysprep(t []interface{}) *(vmdefn.Sysprep) {
 	if len(t) > 0 {
 		s := t[0].(map[string]interface{})
-		SysprepI := vmdefn.SysprepStruct{
+		SysprepI := vmdefn.Sysprep{
 			InstallType: convertToString(s["install_type"]),
 			UnattendXML: convertToString(s["unattend_xml"]),
 		}
@@ -353,10 +353,10 @@ func SetSysprep(t []interface{}) *(vmdefn.SysprepStruct) {
 }
 
 // SetGPUList sets gpu_list fields in json struct
-func SetGPUList(t map[string]interface{}) *(vmdefn.GPUListStruct) {
+func SetGPUList(t map[string]interface{}) *(vmdefn.GPUList) {
 	if len(t) > 0 {
 		s := t
-		GPUListI := vmdefn.GPUListStruct{
+		GPUListI := vmdefn.GPUList{
 			Vendor:   convertToString(s["vendor"]),
 			Mode:     convertToString(s["mode"]),
 			DeviceID: convertToInt(s["device_id"]),
@@ -367,7 +367,7 @@ func SetGPUList(t map[string]interface{}) *(vmdefn.GPUListStruct) {
 }
 
 // SetGuestTools sets guest_tools fields in json struct
-func SetGuestTools(t []interface{}) *(vmdefn.GuestToolsStruct) {
+func SetGuestTools(t []interface{}) *(vmdefn.GuestTools) {
 	if len(t) > 0 {
 		s := t[0].(map[string]interface{})["nutanix_guest_tools"].(*schema.Set).List()[0].(map[string]interface{})
 		var str []*string
@@ -378,8 +378,8 @@ func SetGuestTools(t []interface{}) *(vmdefn.GuestToolsStruct) {
 			}
 		}
 
-		GuestToolsI := vmdefn.GuestToolsStruct{
-			NutanixGuestTools: &vmdefn.NutanixGuestToolsStruct{
+		GuestToolsI := vmdefn.GuestTools{
+			NutanixGuestTools: &vmdefn.NutanixGuestTools{
 				ISOMountState: convertToString(s["iso_mount_state"]),
 				State:         convertToString(s["state"]),
 				EnabledCapabilityList: str,
