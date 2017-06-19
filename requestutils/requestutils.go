@@ -1,12 +1,14 @@
 package requestutils
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/tls"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 )
 
 type testStruct struct {
@@ -21,6 +23,7 @@ func check(e error) {
 }
 
 var statusCodeFilter map[int]bool
+var requestLog string
 
 func init() {
 	statusMap := map[int]bool{
@@ -35,6 +38,7 @@ func init() {
 		208: true,
 	}
 	statusCodeFilter = statusMap
+	requestLog = os.Getenv("HTTP_LOG")
 }
 
 // RequestHandler  creates a connection request
@@ -67,6 +71,16 @@ func RequestHandler(url, method string, jsonStr []byte, username, password strin
 		errorstr := fmt.Sprintf("jsonStr: %v \n %v URL: %v\n request Header: %v\n request Body: %v\n response Status: %v\n response Body: %v\n", string(jsonStr), method, url, requestHeader, requestBody, resp.Status, string(body))
 		errormsg := errors.New(errorstr)
 		return body, errormsg
+	}
+	if requestLog != "" {
+		file, err := os.Create(requestLog)
+		if err != nil {
+			return body, err
+		}
+		w := bufio.NewWriter(file)
+		defer file.Close()
+		defer w.Flush()
+		fmt.Fprintf(w, "jsonStr: %v \n %v URL: %v\n request Header: %v\n request Body: %v\n response Status: %v\n response Body: %v\n", string(jsonStr), method, url, requestHeader, requestBody, resp.Status, string(body))
 	}
 	return body, nil
 }

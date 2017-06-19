@@ -5,22 +5,22 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/ideadevice/terraform-ahv-provider-plugin/requestutils"
-	vmdefn "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachine"
+	vm "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachine"
 	vmconfig "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachineconfig"
 	"log"
 	"runtime/debug"
 )
 
-type vm struct {
-	Metadata vmdefn.MetaData `json:"metadata"`
-	Status   interface{}     `json:"status"`
-	Spec     vmdefn.Spec     `json:"spec"`
+type virtualmachine struct {
+	Metadata vm.MetaData `json:"metadata"`
+	Status   *Status     `json:"status"`
+	Spec     vm.Spec     `json:"spec"`
 }
 
 type vmList struct {
-	APIVersion string          `json:"api_version"`
-	MetaData   vmdefn.MetaData `json:"metadata"`
-	Entities   []vm            `json:"entities"`
+	APIVersion string           `json:"api_version"`
+	MetaData   vm.MetaData      `json:"metadata"`
+	Entities   []virtualmachine `json:"entities"`
 }
 
 // HostReference struct
@@ -31,24 +31,24 @@ type HostReference struct {
 
 // Status has status of VM
 type Status struct {
-	State             string            `json:"state,omitempty"`
-	Name              string            `json:"name,omitempty"`
-	Resources         *vmdefn.Resources `json:"resources,omitempty"`
-	HostReference     *HostReference    `json:"host_reference,omitempty"`
-	HypervisorType    string            `json:"hypervisor_type",omitempty`
-	NumVcpusPerSocket int               `json:"num_vcpus_per_socket,omitempty"`
-	NumSockets        int               `json:"num_sockets,omitempty"`
-	MemorySizeMb      int               `json:"memory_size_mb,omitempty"`
-	GpuList           []string          `json:"gpu_list,omitempty"`
-	PowerState        string            `json:"power_state,omitempty"`
+	State             string         `json:"state,omitempty"`
+	Name              string         `json:"name,omitempty"`
+	Resources         *vm.Resources  `json:"resources,omitempty"`
+	HostReference     *HostReference `json:"host_reference,omitempty"`
+	HypervisorType    string         `json:"hypervisor_type",omitempty`
+	NumVcpusPerSocket int            `json:"num_vcpus_per_socket,omitempty"`
+	NumSockets        int            `json:"num_sockets,omitempty"`
+	MemorySizeMb      int            `json:"memory_size_mb,omitempty"`
+	GpuList           []string       `json:"gpu_list,omitempty"`
+	PowerState        string         `json:"power_state,omitempty"`
 }
 
 // VMResponse is struct returned by Post call for creating vm
 type VMResponse struct {
-	Status     *Status          `json:"status"`
-	Spec       *vmdefn.Spec     `json:"spec,omitempty"`
-	APIVersion string           `json:"api_version",omitempty`
-	Metadata   *vmdefn.MetaData `json:"metadata,omitempty"`
+	Status     *Status      `json:"status"`
+	Spec       *vm.Spec     `json:"spec,omitempty"`
+	APIVersion string       `json:"api_version",omitempty`
+	Metadata   *vm.MetaData `json:"metadata,omitempty"`
 }
 
 func updateAddress(d *schema.ResourceData) error {
@@ -72,7 +72,7 @@ func RecoverFunc(name string) {
 }
 
 // DeleteMachine function deletes the vm using DELETE api call
-func (c *V3Client) DeleteMachine(m *vmdefn.VirtualMachine, d *schema.ResourceData) error {
+func (c *V3Client) DeleteMachine(m *vm.VirtualMachine, d *schema.ResourceData) error {
 
 	log.Printf("[DEBUG] Updating Virtual Machine: %s", m.Spec.Name)
 	var jsonStr []byte
@@ -86,7 +86,7 @@ func (c *V3Client) DeleteMachine(m *vmdefn.VirtualMachine, d *schema.ResourceDat
 }
 
 // UpdateMachine function updates the vm specifications using PUT api call
-func (c *V3Client) UpdateMachine(m *vmdefn.VirtualMachine, d *schema.ResourceData) error {
+func (c *V3Client) UpdateMachine(m *vm.VirtualMachine, d *schema.ResourceData) error {
 
 	log.Printf("[DEBUG] Updating Virtual Machine: %s", m.Spec.Name)
 
@@ -128,19 +128,19 @@ func (c *V3Client) MachineExists(name string) (string, error) {
 }
 
 // ShutdownMachine function shut vm using PUT api call
-func (c *V3Client) ShutdownMachine(m *vmdefn.VirtualMachine, d *schema.ResourceData) error {
+func (c *V3Client) ShutdownMachine(m *vm.VirtualMachine, d *schema.ResourceData) error {
 
 	log.Printf("[DEBUG] Shutting Down Virtual Machine: %s", m.Metadata.Name)
 
-	data := &vmdefn.VirtualMachine{
-		Spec: &vmdefn.Spec{
+	data := &vm.VirtualMachine{
+		Spec: &vm.Spec{
 			Name: m.Spec.Name,
-			Resources: &vmdefn.Resources{
+			Resources: &vm.Resources{
 				PowerState: "POWERED_OFF",
 			},
 		},
 		APIVersion: "3.0",
-		Metadata: &vmdefn.MetaData{
+		Metadata: &vm.MetaData{
 			Name:        m.Spec.Name,
 			Kind:        "vm",
 			SpecVersion: 0,
@@ -158,7 +158,7 @@ func (c *V3Client) ShutdownMachine(m *vmdefn.VirtualMachine, d *schema.ResourceD
 }
 
 // StartMachine function starts the vm using PUT api call
-func (c *V3Client) StartMachine(m *vmdefn.VirtualMachine, d *schema.ResourceData) error {
+func (c *V3Client) StartMachine(m *vm.VirtualMachine, d *schema.ResourceData) error {
 
 	log.Printf("[DEBUG] Starting Virtual Machine: %s", m.Metadata.Name)
 
@@ -185,7 +185,10 @@ func (c *V3Client) WaitForProcess(vmresp1 *VMResponse) (bool, error) {
 		if err != nil {
 			return false, err
 		}
-		json.Unmarshal(resp, &vmresp)
+		err = json.Unmarshal(resp, &vmresp)
+		if err != nil {
+			return false, err
+		}
 
 		if vmresp.Status.State == "COMPLETE" {
 			return true, nil
@@ -207,7 +210,10 @@ func (c *V3Client) WaitForIP(vmresp *VMResponse, d *schema.ResourceData) error {
 			return err
 		}
 		var vmresp VMResponse
-		json.Unmarshal(resp, &vmresp)
+		err = json.Unmarshal(resp, &vmresp)
+		if err != nil {
+			return err
+		}
 
 		if len(vmresp.Status.Resources.NicList) != 0 {
 			for _, nic := range vmresp.Status.Resources.NicList {
@@ -224,7 +230,7 @@ func (c *V3Client) WaitForIP(vmresp *VMResponse, d *schema.ResourceData) error {
 }
 
 // CreateMachine function creates the vm using POST api call
-func (c *V3Client) CreateMachine(m *vmdefn.VirtualMachine) ([]byte, error) {
+func (c *V3Client) CreateMachine(m *vm.VirtualMachine) ([]byte, error) {
 
 	payload, err := json.Marshal(m)
 	check(err)
@@ -250,7 +256,10 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		return err
 	}
 	var vmresp VMResponse
-	json.Unmarshal(resp, &vmresp)
+	err = json.Unmarshal(resp, &vmresp)
+	if err != nil {
+		return err
+	}
 
 	status, err := client.WaitForProcess(&vmresp)
 	if status != true {
@@ -270,7 +279,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		return err
 	}
 	if uuid == "" {
-		fmt.Errorf("Machine doesn't exists")
+		return fmt.Errorf("Machine doesn't exists")
 	}
 
 	d.SetId(uuid)
@@ -302,7 +311,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 	//Disabling partial state mode. This will cause terraform to save all fields again
 	d.Partial(false)
-	vmresp := VMResponse{Metadata: &vmdefn.MetaData{UUID: d.Id()}}
+	vmresp := VMResponse{Metadata: &vm.MetaData{UUID: d.Id()}}
 	status, err := client.WaitForProcess(&vmresp)
 	if status != true {
 		return err
