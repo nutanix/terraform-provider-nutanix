@@ -1,0 +1,121 @@
+hash: 7a9107186629a0f6399d68e97b1f567e5cf3b9149cd60cd79a652ecc1d28aad9
+updated: 2017-06-20T01:16:44.811550051-07:00
+imports:
+- name: github.com/apparentlymart/go-cidr
+  version: 2bd8b58cf4275aeb086ade613de226773e29e853
+  subpackages:
+  - cidr
+- name: github.com/aws/aws-sdk-go
+  version: 7ed8f25dbafe291a15d1a1cf89dcd159d5bd2e3f
+  subpackages:
+  - aws
+  - aws/awserr
+  - aws/awsutil
+  - aws/client
+  - aws/client/metadata
+  - aws/corehandlers
+  - aws/credentials
+  - aws/credentials/ec2rolecreds
+  - aws/credentials/endpointcreds
+  - aws/credentials/stscreds
+  - aws/defaults
+  - aws/ec2metadata
+  - aws/endpoints
+  - aws/request
+  - aws/session
+  - aws/signer/v4
+  - internal/shareddefaults
+  - private/protocol
+  - private/protocol/query
+  - private/protocol/query/queryutil
+  - private/protocol/rest
+  - private/protocol/restxml
+  - private/protocol/xml/xmlutil
+  - service/s3
+  - service/sts
+- name: github.com/bgentry/go-netrc
+  version: 9fd32a8b3d3d3f9d43c341bfe098430e07609480
+  subpackages:
+  - netrc
+- name: github.com/davecgh/go-spew
+  version: 346938d642f2ec3594ed81d874461961cd0faa76
+  subpackages:
+  - spew
+- name: github.com/go-ini/ini
+  version: d3de07a94d22b4a0972deb4b96d790c2c0ce8333
+- name: github.com/hashicorp/errwrap
+  version: 7554cd9344cec97297fa6649b055a8c98c2a1e55
+- name: github.com/hashicorp/go-getter
+  version: 90b6568eac830f62a08e8f1f46375daa63e57015
+  subpackages:
+  - helper/url
+- name: github.com/hashicorp/go-multierror
+  version: ed905158d87462226a13fe39ddf685ea65f1c11f
+- name: github.com/hashicorp/go-plugin
+  version: b7d6477501c13292d71fd3b8e688269e51b028ba
+- name: github.com/hashicorp/go-uuid
+  version: 64130c7a86d732268a38cb04cfbaf0cc987fda98
+- name: github.com/hashicorp/go-version
+  version: 03c5bf6be031b6dd45afec16b1cf94fc8938bc77
+- name: github.com/hashicorp/hcl
+  version: 392dba7d905ed5d04a5794ba89f558b27e2ba1ca
+  subpackages:
+  - hcl/ast
+  - hcl/parser
+  - hcl/scanner
+  - hcl/strconv
+  - hcl/token
+  - json/parser
+  - json/scanner
+  - json/token
+- name: github.com/hashicorp/hil
+  version: fac2259da677551de1fb92b844c4d020a38d8468
+  subpackages:
+  - ast
+  - parser
+  - scanner
+- name: github.com/hashicorp/logutils
+  version: 0dc08b1671f34c4250ce212759ebd880f743d883
+- name: github.com/hashicorp/terraform
+  version: 8d560482c34e865458fd884cb0790b4f73f09ad1
+  subpackages:
+  - builtin/providers/template
+  - config
+  - config/module
+  - dag
+  - flatmap
+  - helper/config
+  - helper/experiment
+  - helper/hashcode
+  - helper/hilmapstructure
+  - helper/logging
+  - helper/pathorcontents
+  - helper/resource
+  - helper/schema
+  - helper/shadow
+  - plugin
+  - terraform
+- name: github.com/hashicorp/yamux
+  version: d1caa6c97c9fc1cc9e83bbe34d0603f9ff0ce8bd
+- name: github.com/jmespath/go-jmespath
+  version: bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d
+- name: github.com/mitchellh/copystructure
+  version: d23ffcb85de31694d6ccaa23ccb4a03e55c1303f
+- name: github.com/mitchellh/go-homedir
+  version: b8bc1bf767474819792c23f32d8286a45736f1c6
+- name: github.com/mitchellh/go-testing-interface
+  version: 477c2d05a845d8b55912a5a7993b9b24abcc5ef8
+- name: github.com/mitchellh/hashstructure
+  version: 2bca23e0e452137f789efbc8610126fd8b94f73b
+- name: github.com/mitchellh/mapstructure
+  version: d0303fe809921458f417bcf828397a65db30a7e4
+- name: github.com/mitchellh/reflectwalk
+  version: 8d802ff4ae93611b807597f639c19f76074df5c6
+- name: github.com/satori/go.uuid
+  version: 5bf94b69c6b68ee1b541973bb8e1144db23a194b
+- name: golang.org/x/crypto
+  version: adbae1b6b6fb4b02448a0fc0dbbc9ba2b95b294d
+  subpackages:
+  - bcrypt
+  - blowfish
+testImports: []
