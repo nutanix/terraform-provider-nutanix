@@ -98,7 +98,7 @@ type TestFuncData struct {
 	numSockets   string
 	memorySizeMb string
 	powerState   string
-	APIversion   string
+	APIVersion   string
 	kind         string
 	specVersion  string
 }
@@ -124,56 +124,28 @@ func hashmapKey(s, t string) string {
 
 // returns TestCheckFunc's that will be used in most of our tests
 // numVCPUs, numSockets defaults to 1
-// APIversion defaults to 3.0 specVersion 0 and memorySizeMb tp 1024
+// APIVersion defaults to 3.0 specVersion 0 and memorySizeMb tp 1024
 // kind defaults to "vm" and powerState to "POWERED_ON", vmName to "nutanix_virtual_machine"
 func (test TestFuncData) testCheckFuncBasic() (resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc) {
 	vmName := test.vmName
 	if vmName == "" {
 		vmName = "nutanix_virtual_machine.my-machine"
 	}
-	kind := test.kind
-	if kind == "" {
-		kind = "vm"
-	}
-	powerState := test.powerState
-	if powerState == "" {
-		powerState = "POWERED_ON"
-	}
-	APIversion := test.APIversion
-	if APIversion == "" {
-		APIversion = "3.0"
-	}
-	numSockets := test.numSockets
-	if numSockets == "" {
-		numSockets = "1"
-	}
-	numVCPUs := test.numVCPUs
-	if numVCPUs == "" {
-		numVCPUs = "1"
-	}
 	name := test.name
 	if name == "" {
-		name = "kritagya_test1"
-	}
-	memorySizeMb := test.memorySizeMb
-	if memorySizeMb == "" {
-		memorySizeMb = "1024"
-	}
-	specVersion := test.specVersion
-	if specVersion == "" {
-		specVersion = "0"
+		name = NutanixName
 	}
 	return testAccCheckNutanixVirtualMachineExists(vmName, &test.vm),
-		resource.TestCheckResourceAttr(vmName, "api_version", APIversion),
+		resource.TestCheckResourceAttr(vmName, "api_version", NutanixAPIVersion),
 		resource.TestCheckResourceAttr(vmName, "spec.#", "1"),
 		resource.TestCheckResourceAttr(vmName, specKey+".resources.#", "1"),
-		resource.TestCheckResourceAttr(vmName, specResourcesKey+".power_state", powerState),
-		resource.TestCheckResourceAttr(vmName, specResourcesKey+".memory_size_mb", memorySizeMb),
-		resource.TestCheckResourceAttr(vmName, specResourcesKey+".num_sockets", numSockets),
-		resource.TestCheckResourceAttr(vmName, specResourcesKey+".num_vcpus_per_socket", numVCPUs),
+		resource.TestCheckResourceAttr(vmName, specResourcesKey+".power_state", NutanixPowerState),
+		resource.TestCheckResourceAttr(vmName, specResourcesKey+".memory_size_mb", NutanixMemorySize),
+		resource.TestCheckResourceAttr(vmName, specResourcesKey+".num_sockets", NutanixNumSockets),
+		resource.TestCheckResourceAttr(vmName, specResourcesKey+".num_vcpus_per_socket", NutanixNumVCPUs),
 		resource.TestCheckResourceAttr(vmName, "metadata.#", "1"),
-		resource.TestCheckResourceAttr(vmName, metadataKey+".kind", kind),
-		resource.TestCheckResourceAttr(vmName, metadataKey+".spec_version", specVersion),
+		resource.TestCheckResourceAttr(vmName, metadataKey+".kind", NutanixKind),
+		resource.TestCheckResourceAttr(vmName, metadataKey+".spec_version", NutanixSpecVersion),
 		resource.TestCheckResourceAttr(vmName, "name", name)
 
 }
