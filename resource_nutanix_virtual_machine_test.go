@@ -107,9 +107,9 @@ func hashmapKey(s, t string) string {
 	words := strings.Fields(terraformState)
 	prefix := s + "."
 	suffix := "." + t
-	for _, word := range words {
-		if (word == strings.TrimPrefix(word, prefix+"#")) && (word != strings.TrimPrefix(word, prefix)) {
-			str1 := strings.TrimPrefix(word, prefix)
+	for i := range words {
+		if (words[i] == strings.TrimPrefix(words[i], prefix+"#")) && (words[i] != strings.TrimPrefix(words[i], prefix)) {
+			str1 := strings.TrimPrefix(words[i], prefix)
 			str2 := strings.TrimSuffix(str1, suffix)
 			str3 := strings.TrimSuffix(str1, suffix+".#")
 			if str2 != str1 {
@@ -562,11 +562,11 @@ func TestAccNutanixVirtualMachine_updateName2(t *testing.T) {
 
 func testAccCheckNutanixVirtualMachineDestroy(s *terraform.State) error {
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "nutanix_virtual_machine" {
+	for i := range s.RootModule().Resources {
+		if s.RootModule().Resources[i].Type != "nutanix_virtual_machine" {
 			continue
 		}
-		id := string(rs.Primary.ID)
+		id := string(s.RootModule().Resources[i].Primary.ID)
 		if id == "" {
 			err := errors.New("ID is already set to the null string")
 			return err

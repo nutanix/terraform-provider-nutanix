@@ -118,9 +118,9 @@ func (c *V3Client) MachineExists(name string) (string, error) {
 	err = json.Unmarshal(jsonResponse, &vmlist)
 	check(err)
 
-	for _, vm := range vmlist.Entities {
-		if vm.Spec.Name == name {
-			uuid = vm.Metadata.UUID
+	for i := range vmlist.Entities {
+		if vmlist.Entities[i].Spec.Name == name {
+			uuid = vmlist.Entities[i].Metadata.UUID
 			return uuid, nil
 		}
 	}
@@ -216,9 +216,9 @@ func (c *V3Client) WaitForIP(vmresp *VMResponse, d *schema.ResourceData) error {
 		}
 
 		if len(vmresp.Status.Resources.NicList) != 0 {
-			for _, nic := range vmresp.Status.Resources.NicList {
-				if len(nic.IPEndpointList) != 0 {
-					if ip := nic.IPEndpointList[0].Address; ip != "" {
+			for i := range vmresp.Status.Resources.NicList {
+				if len(vmresp.Status.Resources.NicList[i].IPEndpointList) != 0 {
+					if ip := vmresp.Status.Resources.NicList[i].IPEndpointList[0].Address; ip != "" {
 						d.Set("ip_address", ip)
 						return nil
 					}

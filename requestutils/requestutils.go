@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/ideadevice/terraform-ahv-provider-plugin/flg"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -38,7 +39,6 @@ func init() {
 		208: true,
 	}
 	statusCodeFilter = statusMap
-	requestLog = os.Getenv("HTTP_LOG")
 }
 
 // RequestHandler  creates a connection request
@@ -47,7 +47,6 @@ func RequestHandler(url, method string, jsonStr []byte, username, password strin
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(jsonStr))
 	check(err)
 	req.SetBasicAuth(username, password)
-	req.Header.Set("X-Custom-Header", "myvalue")
 	req.Header.Set("Content-Type", "application/json")
 	requestBody := req.Body
 	requestHeader := req.Header
@@ -72,8 +71,8 @@ func RequestHandler(url, method string, jsonStr []byte, username, password strin
 		errormsg := errors.New(errorstr)
 		return body, errormsg
 	}
-	if requestLog != "" {
-		file, err := os.Create(requestLog)
+	if flg.HTTPLog != "" {
+		file, err := os.Create(flg.HTTPLog)
 		if err != nil {
 			return body, err
 		}

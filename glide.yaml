@@ -5,10 +5,8 @@ import:
   - helper/schema
   - plugin
   - terraform
-- package: github.com/ideadevice/terraform-ahv-provider-plugin
-  subpackages:
-  - virtualmachine    
-  - virtualmachineconfig
+- package: github.com/spf13/pflag
+- package: github.com/spf13/viper
 testImport:
 - package: github.com/hashicorp/terraform
   subpackages:
