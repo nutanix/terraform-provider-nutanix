@@ -354,6 +354,7 @@ resource "nutanix_virtual_machine" "my-machine" {
 ` + testAccTemplateDiskBody + `
 }`
 
+	basicVars.powerState = "POWERED_OFF"
 	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigDisk)
 	log.Printf("[DEBUG] template config= %s", config)
 
@@ -393,6 +394,7 @@ resource "nutanix_virtual_machine" "my-machine" {
 ` + testAccTemplateDiskBody + `
 }`
 
+	basicVars.powerState = "POWERED_OFF"
 	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigDisk)
 	log.Printf("[DEBUG] template config= %s", config)
 
@@ -453,16 +455,12 @@ func TestAccNutanixVirtualMachine_updateMemory1(t *testing.T) {
 func TestAccNutanixVirtualMachine_updateMemory2(t *testing.T) {
 	var vm vmdefn.VirtualMachine
 	basicVars := setupTemplateBasicBodyVars()
-	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
 	basicVars.powerState = "POWERED_OFF"
 	configOFF := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
 	basicVars.memorySizeMb = NutanixUpdateMemorySize
-	configUpdate := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
-	basicVars.powerState = "POWERED_ON"
+	basicVars.powerState = NutanixPowerState
 	configON := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
-	log.Printf("[DEBUG] template config= %s", config)
 	log.Printf("[DEBUG] template configOFF= %s", configOFF)
-	log.Printf("[DEBUG] template configUpdate= %s", configUpdate)
 	log.Printf("[DEBUG] template configON= %s", configON)
 
 	resource.Test(t, resource.TestCase{
@@ -471,19 +469,7 @@ func TestAccNutanixVirtualMachine_updateMemory2(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
-				),
-			},
-			resource.TestStep{
 				Config: configOFF,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
-				),
-			},
-			resource.TestStep{
-				Config: configUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
 				),
@@ -524,12 +510,11 @@ func TestAccNutanixVirtualMachine_updateName1(t *testing.T) {
 func TestAccNutanixVirtualMachine_updateName2(t *testing.T) {
 	var vm vmdefn.VirtualMachine
 	basicVars := setupTemplateBasicBodyVars()
-	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
 	basicVars.powerState = "POWERED_OFF"
 	configOFF := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
-	basicVars.powerState = "POWERED_ON"
+	basicVars.powerState = NutanixPowerState
 	configON := basicVars.testSprintfTemplateBodyUpdateName(testAccCheckNutanixVirtualMachineConfigReallyBasic)
-	log.Printf("[DEBUG] template config= %s", config)
+	log.Printf("[DEBUG] template config= %s", configOFF)
 
 	log.Printf("[DEBUG] template configON= %s", configON)
 
@@ -538,12 +523,6 @@ func TestAccNutanixVirtualMachine_updateName2(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
-				),
-			},
 			resource.TestStep{
 				Config: configOFF,
 				Check: resource.ComposeTestCheckFunc(
