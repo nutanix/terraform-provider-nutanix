@@ -82,6 +82,21 @@ var NutanixUpdateMemorySize string
 // NutanixUpdateName is the updated name of the vm in updateName testcase
 var NutanixUpdateName string
 
+// NutanixNicType is the nic_type of network adapter
+var NutanixNicType string
+
+// NutanixNicKind is the kind of network adapter
+var NutanixNicKind string
+
+// NutanixNicUUID is the nic_uuid of network adapter
+var NutanixNicUUID string
+
+// NutanixNetworkFunctionType is the network_function_type of network adapter
+var NutanixNetworkFunctionType string
+
+// NutanixProject is name any of project inside metadata categories.
+var NutanixProject string
+
 func init() {
 	var diskKind1, diskKind2, diskName1, diskName2, diskUUID1, diskUUID2 string
 	var diskDeviceType1, diskDeviceType2, diskSize1, diskSize2 string
@@ -111,6 +126,11 @@ func init() {
 	flag.StringVar(&diskUUID2, "disk-uuid-2", "9eabbb39-1baf-4872-beaf-adedcb612a0b", "This is UUID of second disk.")
 	flag.StringVar(&diskSize2, "disk-size-2", "1", "This is size of the second disk")
 	flag.StringVar(&diskDeviceType2, "disk-device-type-2", "DISK", "This is device type for the second disk.")
+	flag.StringVar(&NutanixNicType, "nic-type", "NORMAL_NIC", "This is the nic_type of network adapter.")
+	flag.StringVar(&NutanixNicUUID, "nic-uuid", "c03ecf8f-aa1c-4a07-af43-9f2f198713c0", "This is the nic_uuid of network adapter.")
+	flag.StringVar(&NutanixNicKind, "nic-kind", "subnet", "This is the kind of network adapter.")
+	flag.StringVar(&NutanixNetworkFunctionType, "network-function-nic-type", "INGRESS", "This is the network_function_type of network adapter.")
+	flag.StringVar(&NutanixProject, "project", "nucalm", "Name any of project inside metadata categories.")
 
 	//pflag configuration
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
@@ -152,6 +172,11 @@ func init() {
 	diskUUID2 = viper.GetString("disk-uuid-2")
 	diskSize2 = viper.GetString("disk-size-2")
 	diskDeviceType2 = viper.GetString("disk-device-type-2")
+	NutanixNicType = viper.GetString("nic-type")
+	NutanixNicUUID = viper.GetString("nic-uuid")
+	NutanixNicKind = viper.GetString("nic-kind")
+	NutanixNetworkFunctionType = viper.GetString("network-function-nic-type")
+	NutanixProject = viper.GetString("project")
 
 	// Appending to the Disk List
 	NutanixDiskKind = append(NutanixDiskKind, diskKind1)

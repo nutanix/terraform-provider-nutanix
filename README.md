@@ -160,6 +160,14 @@ Following flags are defined for the testcases :-
         This is the memory_size_mb for testcase vm. (default "1024")
   -name string
         This is the name of the vm. (default "vm_test1")
+  -network-function-nic-type string
+        This is the network_function_type of network adapter. (default "INGRESS")
+  -nic-kind string
+        This is the kind of network adapter. (default "subnet")
+  -nic-type string
+        This is the nic_type of network adapter. (default "NORMAL_NIC")
+  -nic-uuid string
+        This is the nic_uuid of network adapter. (default "c03ecf8f-aa1c-4a07-af43-9f2f198713c0")
   -num-sockets string
         This is num_sockets for the testcase vm. (default "1")
   -num-vcpus string
@@ -170,6 +178,8 @@ Following flags are defined for the testcases :-
         port for api call (default "9440")
   -power-state string
         This is power_state for testcase vm. (default "POWERED_ON")
+  -project  string
+        Name any of project inside metadata categories. (default "nucalm")
   -spec-version string
         This is spec_version for testcase vm.
   -update-memory-size string

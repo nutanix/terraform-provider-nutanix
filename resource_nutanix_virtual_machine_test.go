@@ -33,17 +33,22 @@ var deviceProperties0Key string
 var deviceProperties1Key string
 
 type TemplateBasicBodyVars struct {
-	name         string
-	numVCPUs     string
-	numSockets   string
-	memorySizeMb string
-	powerState   string
-	kind         string
-	specVersion  string
-	APIVersion   string
+	name                string
+	numVCPUs            string
+	numSockets          string
+	memorySizeMb        string
+	powerState          string
+	kind                string
+	specVersion         string
+	APIVersion          string
+	nicType             string
+	nicKind             string
+	nicUUID             string
+	networkFunctionType string
+	project             string
 }
 
-func (body TemplateBasicBodyVars) testSprintfTemplateBody(template string) string {
+func (body TemplateBasicBodyVars) testSprintfTemplateBodyWithoutNic(template string) string {
 	return fmt.Sprintf(
 		template,
 		body.name,
@@ -56,6 +61,28 @@ func (body TemplateBasicBodyVars) testSprintfTemplateBody(template string) strin
 		body.kind,
 		body.specVersion,
 		body.name,
+		body.project,
+	)
+}
+
+func (body TemplateBasicBodyVars) testSprintfTemplateBody(template string) string {
+	return fmt.Sprintf(
+		template,
+		body.name,
+		body.name,
+		body.numSockets,
+		body.numVCPUs,
+		body.memorySizeMb,
+		body.powerState,
+		body.nicType,
+		body.nicKind,
+		body.nicUUID,
+		body.networkFunctionType,
+		body.APIVersion,
+		body.kind,
+		body.specVersion,
+		body.name,
+		body.project,
 	)
 }
 
@@ -68,24 +95,34 @@ func (body TemplateBasicBodyVars) testSprintfTemplateBodyUpdateName(template str
 		body.numVCPUs,
 		body.memorySizeMb,
 		body.powerState,
+		body.nicType,
+		body.nicKind,
+		body.nicUUID,
+		body.networkFunctionType,
 		body.APIVersion,
 		body.kind,
 		body.specVersion,
 		body.name,
+		body.project,
 	)
 }
 
 // setups variables used by fixed ip tests
 func setupTemplateBasicBodyVars() TemplateBasicBodyVars {
 	data := TemplateBasicBodyVars{
-		name:         flag.NutanixName,
-		numSockets:   flag.NutanixNumSockets,
-		numVCPUs:     flag.NutanixNumVCPUs,
-		memorySizeMb: flag.NutanixMemorySize,
-		powerState:   flag.NutanixPowerState,
-		kind:         flag.NutanixKind,
-		specVersion:  flag.NutanixSpecVersion,
-		APIVersion:   flag.NutanixAPIVersion,
+		name:                flag.NutanixName,
+		numSockets:          flag.NutanixNumSockets,
+		numVCPUs:            flag.NutanixNumVCPUs,
+		memorySizeMb:        flag.NutanixMemorySize,
+		powerState:          flag.NutanixPowerState,
+		kind:                flag.NutanixKind,
+		specVersion:         flag.NutanixSpecVersion,
+		APIVersion:          flag.NutanixAPIVersion,
+		nicType:             flag.NutanixNicType,
+		nicKind:             flag.NutanixNicKind,
+		nicUUID:             flag.NutanixNicUUID,
+		networkFunctionType: flag.NutanixNetworkFunctionType,
+		project:             flag.NutanixProject,
 	}
 	return data
 }
@@ -152,7 +189,6 @@ func (test TestFuncData) testCheckFuncBasic() (resource.TestCheckFunc, resource.
 		resource.TestCheckResourceAttr(vmName, metadataKey+".kind", flag.NutanixKind),
 		resource.TestCheckResourceAttr(vmName, metadataKey+".spec_version", flag.NutanixSpecVersion),
 		resource.TestCheckResourceAttr(vmName, "name", name)
-
 }
 
 const testAccCheckNutanixVirtualMachineConfigReallyBasic = `
@@ -181,12 +217,12 @@ const testAccTemplateBasicResourcesBody = `
 const nicListBody = `
 			nic_list = [
 				{
-					nic_type = "NORMAL_NIC"
+					nic_type = "%s"
 					subnet_reference = {
-						kind = "subnet"
-						uuid = "c03ecf8f-aa1c-4a07-af43-9f2f198713c0"
+						kind = "%s"
+						uuid = "%s"
 					}
-					network_function_nic_type = "INGRESS"
+					network_function_nic_type = "%s"
 				}
 			]
 `
@@ -196,7 +232,7 @@ const testAccTemplateMetadata = `
 		spec_version = %s
 		name = "%s"
 		categories = {
-			"Project" = "nucalm"
+			"Project" = "%s"
 		}
 `
 const testAccTemplateBasicBody = testAccTemplateSpecBody +
@@ -224,7 +260,7 @@ const testAccTemplateBasicBodyWithEnd = testAccTemplateBasicBody + `
 func TestAccNutanixVirtualMachine_basic1(t *testing.T) {
 	var vm vmdefn.VirtualMachine
 	basicVars := setupTemplateBasicBodyVars()
-	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigMostBasic)
+	config := basicVars.testSprintfTemplateBodyWithoutNic(testAccCheckNutanixVirtualMachineConfigMostBasic)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testBasicPreCheck(t) },
@@ -245,7 +281,7 @@ func TestAccNutanixVirtualMachine_basic1(t *testing.T) {
 func TestAccNutanixVirtualMachine_basic2(t *testing.T) {
 	var vm vmdefn.VirtualMachine
 	basicVars := setupTemplateBasicBodyVars()
-	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigMostBasic)
+	config := basicVars.testSprintfTemplateBodyWithoutNic(testAccCheckNutanixVirtualMachineConfigMostBasic)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testBasicPreCheck(t) },
