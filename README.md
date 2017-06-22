@@ -118,35 +118,35 @@ In order to test the provider, you can simply run `make test`.
 
 ```sh
 $ cd $GOPATH/github.com/ideadevice/terraform-ahv-provider-plugin/
-$ go test --username=username --password=password --endpoint=1.1.1.1 --insecure=true
+$ go test -v $(glide novendor) --username=username --password=password --endpoint=1.1.1.1 --insecure=true
 ```
 Following flags are defined for the testcases :- 
 
 ```sh
-  -apiVersion string
-        api_version (default "3.0")
-  -diskDeviceType1 string
-        disk_device_type_1 (default "DISK")
-  -diskDeviceType2 string
-        disk_device_type_2 (default "DISK")
-  -diskKind1 string
-        disk_kind_1 (default "image")
-  -diskKind2 string
-        disk_kind_2 (default "image")
-  -diskName1 string
-        disk_name_1 (default "Centos7")
-  -diskName2 string
-        disk_name_2 (default "Centos7")
+ -api-version string
+        This is api_version for testcase vm. (default "3.0")
+  -disk-device-type-1 string
+        This is device type for the first disk. (default "DISK")
+  -disk-device-type-2 string
+        This is device type for the second disk. (default "DISK")
+  -disk-kind-1 string
+        This is Kind field for the first disk. (default "image")
+  -disk-kind-2 string
+        This is Kind field for the second disk. (default "image")
+  -disk-name-1 string
+        This is disk name of first disk. (default "Centos7")
+  -disk-name-2 string
+        This is disk name of second disk. (default "Centos7")
+  -disk-size-1 string
+        This is size of the first disk (default "1")
+  -disk-size-2 string
+        This is size of the second disk (default "1")
+  -disk-uuid-1 string
+        This is UUID of first disk. (default "9eabbb39-1baf-4872-beaf-adedcb612a0b")
+  -disk-uuid-2 string
+        This is UUID of second disk. (default "9eabbb39-1baf-4872-beaf-adedcb612a0b")
   -diskNo string
-        disk_No (default "2")
-  -diskSize1 string
-        disk_size_1 (default "1")
-  -diskSize2 string
-        disk_size_2 (default "1")
-  -diskUUID1 string
-        disk_uuid_1 (default "9eabbb39-1baf-4872-beaf-adedcb612a0b")
-  -diskUUID2 string
-        disk_uuid_2 (default "9eabbb39-1baf-4872-beaf-adedcb612a0b")
+        This is the number of disks attached to the disktestcase vm. (default "2")
   -endpoint string
         endpoint must be set
   -http-log string
@@ -154,27 +154,32 @@ Following flags are defined for the testcases :-
   -insecure
         insecure flag must set true to allow provider to perform insecure SSL requests.
   -kind string
-        kind (default "vm")
-  -memorySize string
-        memory_size_mb (default "1024")
+        This is kind for testcase vm. (default "vm")
+  -memory-size string
+        This is the memory_size_mb for testcase vm. (default "1024")
   -name string
-        name (default "vm_test1")
-  -numSockets string
-        num_sockets (default "1")
-  -numVCPUs string
-        num_vcpus (default "1")
+        This is the name of the vm. (default "vm_test1")
+  -num-sockets string
+        This is num_sockets for the testcase vm. (default "1")
+  -num-vcpus string
+        This is num_vcpus for the testcase vm. (default "1")
   -password string
         password for api call
   -port string
         port for api call (default "9440")
-  -powerState string
-        power_state (default "POWERED_ON")
-  -specVersion string
-        spec_version
-  -updateMemorySize string
-        update_memory_size_name (default "2048")
-  -updateName string
-        update_name (default "vm_test2")
+  -power-state string
+        This is power_state for testcase vm. (default "POWERED_ON")
+  -spec-version string
+        This is spec_version for testcase vm.
+  -update-memory-size string
+        This is the memory size to which vm gets upgraded in updateMemory testcase. (default "2048")
+  -update-name string
+        This is the updated name of the vm in updateName testcase. (default "vm_test2")
   -username string
-        username for api call
+        username for api call.
 ```
+
+Instead of flags values can also be passed through the [Environment Variables](https://en.wikipedia.org/wiki/Environment_variable). A flag with name "x-y" can be set in CLI as <binary> --x-y, if the same flag has to be set in ENV, it has to be set as X_Y. For example a flag abc-xyz can be omitted by setting environment variable ABC_XYZ.
+conflicts & resolution order in the descending order of precedence
+    flag
+    env
