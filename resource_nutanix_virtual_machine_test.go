@@ -19,8 +19,8 @@ import (
 func testBasicPreCheck(t *testing.T) {
 	testAccPreCheck(t)
 
-	if flag.NutanixAPIVersion == "" {
-		t.Fatal("env variable NUTANIX_API_VERSION must be set for acceptance tests")
+	if flag.NutanixName == "" {
+		t.Fatal("env variable NUTANIX_NAME must be set for acceptance tests")
 	}
 }
 
@@ -38,9 +38,6 @@ type TemplateBasicBodyVars struct {
 	numSockets          string
 	memorySizeMb        string
 	powerState          string
-	kind                string
-	specVersion         string
-	APIVersion          string
 	nicType             string
 	nicKind             string
 	nicUUID             string
@@ -52,15 +49,10 @@ func (body TemplateBasicBodyVars) testSprintfTemplateBodyWithoutNic(template str
 	return fmt.Sprintf(
 		template,
 		body.name,
-		body.name,
 		body.numSockets,
 		body.numVCPUs,
 		body.memorySizeMb,
 		body.powerState,
-		body.APIVersion,
-		body.kind,
-		body.specVersion,
-		body.name,
 		body.project,
 	)
 }
@@ -69,7 +61,6 @@ func (body TemplateBasicBodyVars) testSprintfTemplateBody(template string) strin
 	return fmt.Sprintf(
 		template,
 		body.name,
-		body.name,
 		body.numSockets,
 		body.numVCPUs,
 		body.memorySizeMb,
@@ -78,10 +69,6 @@ func (body TemplateBasicBodyVars) testSprintfTemplateBody(template string) strin
 		body.nicKind,
 		body.nicUUID,
 		body.networkFunctionType,
-		body.APIVersion,
-		body.kind,
-		body.specVersion,
-		body.name,
 		body.project,
 	)
 }
@@ -90,7 +77,6 @@ func (body TemplateBasicBodyVars) testSprintfTemplateBodyUpdateName(template str
 	return fmt.Sprintf(
 		template,
 		flag.NutanixUpdateName,
-		body.name,
 		body.numSockets,
 		body.numVCPUs,
 		body.memorySizeMb,
@@ -99,10 +85,6 @@ func (body TemplateBasicBodyVars) testSprintfTemplateBodyUpdateName(template str
 		body.nicKind,
 		body.nicUUID,
 		body.networkFunctionType,
-		body.APIVersion,
-		body.kind,
-		body.specVersion,
-		body.name,
 		body.project,
 	)
 }
@@ -115,9 +97,6 @@ func setupTemplateBasicBodyVars() TemplateBasicBodyVars {
 		numVCPUs:            flag.NutanixNumVCPUs,
 		memorySizeMb:        flag.NutanixMemorySize,
 		powerState:          flag.NutanixPowerState,
-		kind:                flag.NutanixKind,
-		specVersion:         flag.NutanixSpecVersion,
-		APIVersion:          flag.NutanixAPIVersion,
 		nicType:             flag.NutanixNicType,
 		nicKind:             flag.NutanixNicKind,
 		nicUUID:             flag.NutanixNicUUID,
@@ -136,9 +115,6 @@ type TestFuncData struct {
 	numSockets   string
 	memorySizeMb string
 	powerState   string
-	APIVersion   string
-	kind         string
-	specVersion  string
 }
 
 func hashmapKey(s, t string) string {
@@ -164,7 +140,7 @@ func hashmapKey(s, t string) string {
 // numVCPUs, numSockets defaults to 1
 // APIVersion defaults to 3.0 specVersion 0 and memorySizeMb tp 1024
 // kind defaults to "vm" and powerState to "POWERED_ON", vmName to "nutanix_virtual_machine"
-func (test TestFuncData) testCheckFuncBasic() (resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc) {
+func (test TestFuncData) testCheckFuncBasic() (resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc) {
 	vmName := test.vmName
 	if vmName == "" {
 		vmName = "nutanix_virtual_machine.my-machine"
@@ -177,17 +153,14 @@ func (test TestFuncData) testCheckFuncBasic() (resource.TestCheckFunc, resource.
 	if memorySize == "" {
 		memorySize = flag.NutanixMemorySize
 	}
+
 	return testAccCheckNutanixVirtualMachineExists(vmName, &test.vm),
-		resource.TestCheckResourceAttr(vmName, "api_version", flag.NutanixAPIVersion),
 		resource.TestCheckResourceAttr(vmName, "spec.#", "1"),
 		resource.TestCheckResourceAttr(vmName, specKey+".resources.#", "1"),
 		resource.TestCheckResourceAttr(vmName, specResourcesKey+".power_state", flag.NutanixPowerState),
 		resource.TestCheckResourceAttr(vmName, specResourcesKey+".memory_size_mb", memorySize),
 		resource.TestCheckResourceAttr(vmName, specResourcesKey+".num_sockets", flag.NutanixNumSockets),
 		resource.TestCheckResourceAttr(vmName, specResourcesKey+".num_vcpus_per_socket", flag.NutanixNumVCPUs),
-		resource.TestCheckResourceAttr(vmName, "metadata.#", "1"),
-		resource.TestCheckResourceAttr(vmName, metadataKey+".kind", flag.NutanixKind),
-		resource.TestCheckResourceAttr(vmName, metadataKey+".spec_version", flag.NutanixSpecVersion),
 		resource.TestCheckResourceAttr(vmName, "name", name)
 }
 
@@ -204,7 +177,6 @@ resource "nutanix_virtual_machine" "my-machine" {
 
 const testAccTemplateSpecBody = `
 spec = {
-	name = "%s"
 `
 const testAccTemplateResourcesBody = testAccTemplateBasicResourcesBody + nicListBody
 const testAccTemplateBasicResourcesBody = `
@@ -228,9 +200,6 @@ const nicListBody = `
 `
 const testAccTemplateMetadata = `
 	metadata = {
-		kind = "%s"
-		spec_version = %s
-		name = "%s"
 		categories = {
 			"Project" = "%s"
 		}
@@ -239,7 +208,6 @@ const testAccTemplateBasicBody = testAccTemplateSpecBody +
 	testAccTemplateResourcesBody + `
 		}
 	}
-	api_version = "%s"
 ` +
 	testAccTemplateMetadata + `
 	}
@@ -248,7 +216,6 @@ const testAccTemplateMostBasicBody = testAccTemplateSpecBody +
 	testAccTemplateBasicResourcesBody + `
 		}
 	}
-	api_version = "%s"
 ` +
 	testAccTemplateMetadata + `
 	}
@@ -303,6 +270,7 @@ func TestAccNutanixVirtualMachine_nicList1(t *testing.T) {
 	var vm vmdefn.VirtualMachine
 	basicVars := setupTemplateBasicBodyVars()
 	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
+	log.Printf("[DEBUG] template config= %s", config)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testBasicPreCheck(t) },
@@ -384,7 +352,6 @@ func TestAccNutanixVirtualMachine_diskList1(t *testing.T) {
 		testAccTemplateResourcesBody + diskList + `
 		}
 	}
-	api_version = "%s"
 	` +
 		testAccTemplateMetadata + `
 	}
@@ -395,7 +362,7 @@ resource "nutanix_virtual_machine" "my-machine" {
 ` + testAccTemplateDiskBody + `
 }`
 
-	basicVars.powerState = "POWERED_OFF"
+	basicVars.powerState = "OFF"
 	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigDisk)
 	log.Printf("[DEBUG] template config= %s", config)
 
@@ -424,7 +391,6 @@ func TestAccNutanixVirtualMachine_diskList2(t *testing.T) {
 		testAccTemplateResourcesBody + diskList + `
 		}
 	}
-	api_version = "%s"
 	` +
 		testAccTemplateMetadata + `
 	}
@@ -435,7 +401,7 @@ resource "nutanix_virtual_machine" "my-machine" {
 ` + testAccTemplateDiskBody + `
 }`
 
-	basicVars.powerState = "POWERED_OFF"
+	basicVars.powerState = "OFF"
 	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigDisk)
 	log.Printf("[DEBUG] template config= %s", config)
 
@@ -606,7 +572,6 @@ func testAccCheckNutanixVirtualMachineExists(n string, vm *vmdefn.VirtualMachine
 		terraformState = fmt.Sprintf("%+v", s)
 		specKey = "spec." + hashmapKey("spec", "resources")
 		specResourcesKey = specKey + ".resources." + hashmapKey(specKey+".resources", "power_state")
-		metadataKey = "metadata." + hashmapKey("metadata", "kind")
 		diskSourceReference0Key = specResourcesKey + ".disk_list.0.data_source_reference." + hashmapKey(specResourcesKey+".disk_list.0.data_source_reference", "uuid")
 		diskSourceReference1Key = specResourcesKey + ".disk_list.1.data_source_reference." + hashmapKey(specResourcesKey+".disk_list.1.data_source_reference", "uuid")
 		deviceProperties0Key = specResourcesKey + ".disk_list.0.device_properties." + hashmapKey(specResourcesKey+".disk_list.0.device_properties", "device_type")

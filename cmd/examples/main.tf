@@ -13,7 +13,7 @@ resource "nutanix_virtual_machine" "my-machine" {
             num_vcpus_per_socket = 1
             num_sockets = 1
             memory_size_mb = 2048
-            power_state = "POWERED_ON"
+            power_state = "On"
             nic_list = [
                 {
                     nic_type = "NORMAL_NIC"
@@ -62,14 +62,10 @@ resource "nutanix_virtual_machine" "my-machine" {
         }
     }
     metadata = {
-        kind = "vm"
-        spec_version = 0
-        name = "kritagya1"
         categories = {
             "Project" =  "nucalm"
         }
     }
-    api_version = "3.0"
     provisioner "remote-exec"{
         inline = [
         ]

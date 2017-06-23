@@ -6,7 +6,7 @@ Provider plugin to integrate with AHV APIs
 Requirments
 ------------
 
--   [Terraform](https://www.terraform.io/downloads.html) 0.9.x
+-   [Terraform](https://www.terraform.io/downloads.html) 0.10.x
 -   [Go](https://golang.org/doc/install) 1.8 (to build the provider plugin)
 
 Building The Provider
@@ -75,14 +75,8 @@ resource "nutanix_virtual_machine" "my-machine"{
             num_vcpus_per_socket = 1
             num_sockets = 1
             memory_size_mib = 1024
-            power_state = "POWERED_ON"
+            power_state = "ON"
         }
-    }
-    api_version = "3.0"
-    metadata = {
-        kind = "vm"
-        spec_version = 0
-        name = "testname"
     }
 }
 
@@ -124,8 +118,6 @@ $ go test -v $(glide novendor) --username=username --password=password --endpoin
 Following flags are defined for the testcases :-
 
 ```sh
- -api-version string
-        This is api_version for testcase vm. (default "3.0")
   -disk-device-type-1 string
         This is device type for the first disk. (default "DISK")
   -disk-device-type-2 string
@@ -154,8 +146,6 @@ Following flags are defined for the testcases :-
         path to file where http request and response headers must be stored
   -insecure
         insecure flag must set true to allow provider to perform insecure SSL requests.
-  -kind string
-        This is kind for testcase vm. (default "vm")
   -memory-size string
         This is the memory_size_mb for testcase vm. (default "1024")
   -name string
@@ -177,11 +167,9 @@ Following flags are defined for the testcases :-
   -port string
         port for api call (default "9440")
   -power-state string
-        This is power_state for testcase vm. (default "POWERED_ON")
+        This is power_state for testcase vm. (default "ON")
   -project  string
         Name any of project inside metadata categories. (default "nucalm")
-  -spec-version string
-        This is spec_version for testcase vm.
   -update-memory-size string
         This is the memory size to which vm gets upgraded in updateMemory testcase. (default "2048")
   -update-name string

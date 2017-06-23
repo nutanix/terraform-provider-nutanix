@@ -3,6 +3,7 @@ package virtualmachineconfig
 import (
 	"github.com/hashicorp/terraform/helper/schema"
 	vm "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachine"
+	"strings"
 )
 
 func convertToBool(a interface{}) bool {
@@ -28,11 +29,11 @@ func convertToString(a interface{}) string {
 
 // SetMachineConfig function sets fields in struct from ResourceData
 func SetMachineConfig(d *schema.ResourceData) vm.VirtualMachine {
-	spec := d.Get("spec").(*schema.Set).List()[0].(map[string]interface{})         // spec
-	metadata := d.Get("metadata").(*schema.Set).List()[0].(map[string]interface{}) // metadata
+	spec := d.Get("spec").(*schema.Set).List()[0].(map[string]interface{}) // spec
+	metadata := d.Get("metadata").(*schema.Set).List()                     // metadata
 
 	JSON := vm.VirtualMachine{
-		APIVersion: convertToString(d.Get("api_version")), // api_version
+		APIVersion: "3.0", // api_version
 		Spec:       SetSpec(spec),
 		Metadata:   SetMetadata(metadata),
 	}
@@ -40,8 +41,16 @@ func SetMachineConfig(d *schema.ResourceData) vm.VirtualMachine {
 }
 
 // SetMetadata sets metadata fields in json struct
-func SetMetadata(s map[string]interface{}) *(vm.MetaData) {
-
+func SetMetadata(t []interface{}) *(vm.MetaData) {
+	if len(t) == 0 {
+		MetadataI := vm.MetaData{
+			Kind:        "vm",
+			Name:        "",
+			SpecVersion: 0,
+		}
+		return &MetadataI
+	}
+	s := t[0].(map[string]interface{})
 	var categories map[string]interface{}
 	if s["categories"] != nil {
 		categories = s["categories"].(map[string]interface{})
@@ -49,11 +58,11 @@ func SetMetadata(s map[string]interface{}) *(vm.MetaData) {
 
 	MetadataI := vm.MetaData{
 		LastUpdateTime: convertToString(s["last_update_time"]),
-		Kind:           convertToString(s["kind"]),
+		Kind:           "vm",
 		UUID:           convertToString(s["uuid"]),
 		CreationTime:   convertToString(s["creation_time"]),
 		Name:           convertToString(s["name"]),
-		SpecVersion:    convertToInt(s["spec_version"]),
+		SpecVersion:    0,
 		EntityVersion:  convertToInt(s["entity_version"]),
 		OwnerReference: SetSubnetReference(s["owner_reference"].(*schema.Set).List()),
 		Categories:     categories,
@@ -114,12 +123,16 @@ func SetResources(s map[string]interface{}) *(vm.Resources) {
 			GPUListI = append(GPUListI, elem)
 		}
 	}
+	powerState := "POWERED_OFF"
+	if strings.ToUpper(convertToString(s["power_state"])) == "ON" {
+		powerState = "POWERED_ON"
+	}
 
 	ResourcesI := vm.Resources{
 		NumVCPUsPerSocket:     convertToInt(s["num_vcpus_per_socket"]),                              // num_vcpus_per_socket
 		NumSockets:            convertToInt(s["num_sockets"]),                                       // num_sockets
 		MemorySizeMb:          convertToInt(s["memory_size_mb"]),                                    // memory_size_mb
-		PowerState:            convertToString(s["power_state"]),                                    // power_state
+		PowerState:            powerState,                                                           // power_state
 		GuestOSID:             convertToString(s["guest_os_id"]),                                    // guest_os_id
 		HardwareClockTimezone: convertToString(s["hardware_clock_timezone"]),                        // hardware_clock_timezone
 		NicList:               NicListI,                                                             // nic_list

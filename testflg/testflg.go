@@ -40,20 +40,11 @@ var NutanixNumSockets string
 // NutanixNumVCPUs is num_vcpus for the testcase vm
 var NutanixNumVCPUs string
 
-// NutanixKind is kind for testcase vm
-var NutanixKind string
-
 // NutanixMemorySize is the memory_size_mb for testcase vm
 var NutanixMemorySize string
 
 // NutanixPowerState is power_state for testcase vm
 var NutanixPowerState string
-
-// NutanixSpecVersion is spec_version for testcase vm
-var NutanixSpecVersion string
-
-// NutanixAPIVersion is api_version for testcase vm
-var NutanixAPIVersion string
 
 // NutanixDiskNo is the number of disks attached to the disktestcase vm
 var NutanixDiskNo string
@@ -107,11 +98,8 @@ func init() {
 	flag.StringVar(&NutanixPort, "port", "9440", "port for api call")
 	flag.StringVar(&NutanixNumSockets, "num-sockets", "1", "This is num_sockets for the testcase vm.")
 	flag.StringVar(&NutanixNumVCPUs, "num-vcpus", "1", "This is num_vcpus for the testcase vm.")
-	flag.StringVar(&NutanixKind, "kind", "vm", "This is kind for testcase vm.")
 	flag.StringVar(&NutanixMemorySize, "memory-size", "1024", "This is the memory_size_mb for testcase vm.")
-	flag.StringVar(&NutanixPowerState, "power-state", "POWERED_ON", "This is power_state for testcase vm.")
-	flag.StringVar(&NutanixSpecVersion, "spec-version", "0", "This is spec_version for testcase vm.")
-	flag.StringVar(&NutanixAPIVersion, "api-version", "3.0", "This is api_version for testcase vm.")
+	flag.StringVar(&NutanixPowerState, "power-state", "ON", "This is power_state for testcase vm.")
 	flag.StringVar(&NutanixName, "name", "vm_test1", "This is the name of the vm.")
 	flag.StringVar(&NutanixUpdateName, "update-name", "vm_test2", "This is the updated name of the vm in updateName testcase.")
 	flag.StringVar(&NutanixUpdateMemorySize, "update-memory-size", "2048", "This is the memory size to which vm gets upgraded in updateMemory testcase.")
@@ -153,11 +141,8 @@ func init() {
 	NutanixPort = viper.GetString("port")
 	NutanixNumSockets = viper.GetString("num-sockets")
 	NutanixNumVCPUs = viper.GetString("num-vcpus")
-	NutanixKind = viper.GetString("kind")
 	NutanixMemorySize = viper.GetString("memory-size")
 	NutanixPowerState = viper.GetString("power-state")
-	NutanixSpecVersion = viper.GetString("spec-version")
-	NutanixAPIVersion = viper.GetString("api-version")
 	NutanixName = viper.GetString("name")
 	NutanixUpdateName = viper.GetString("update-name")
 	NutanixUpdateMemorySize = viper.GetString("update-memory-size")

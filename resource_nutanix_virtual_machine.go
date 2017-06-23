@@ -367,7 +367,7 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"description": {
 							Type:     schema.TypeString,
@@ -745,10 +745,6 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 					},
 				},
 			},
-			"api_version": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"metadata": &schema.Schema{
 				Type:     schema.TypeSet,
 				Required: true,
@@ -758,13 +754,9 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"kind": &schema.Schema{
-							Type:     schema.TypeString,
-							Required: true,
-						},
 						"name": &schema.Schema{
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"uuid": &schema.Schema{
 							Type:     schema.TypeString,
@@ -773,10 +765,6 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 						"creation_time": &schema.Schema{
 							Type:     schema.TypeString,
 							Optional: true,
-						},
-						"spec_version": &schema.Schema{
-							Type:     schema.TypeInt,
-							Required: true,
 						},
 						"entity_version": &schema.Schema{
 							Type:     schema.TypeInt,
