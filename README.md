@@ -16,7 +16,7 @@ Clone repository to: `$GOPATH/src/github.com/ideadevice/terraform-ahv-provider-p
 
 ```sh
 $ mkdir -p $GOPATH/src/github.com/ideadevice; cd $GOPATH/src/github.com/ideadevice
-$ git clone git@github.com:ideadevice/terraform-ahv-provider-plugin
+$ git clone https://github.com/ideadevice/terraform-ahv-provider-plugin.git
 ```
 Enter the provider directory and build the provider
 
