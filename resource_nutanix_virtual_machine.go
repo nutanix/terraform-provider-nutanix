@@ -2,7 +2,6 @@ package nutanix
 
 import (
 	"nutanixV3"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -128,17 +127,6 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	machine.Metadata.Name = d.Get("name").(string)
 	log.Printf("[DEBUG] Creating Virtual Machine: %s", d.Id())
 	APIInstance := setAPIInstance(client)
-
-		file, err := os.Create("/tmp/check1")
-		if err != nil {
-			return err
-		}
-		w := bufio.NewWriter(file)
-		b, _ := json.Marshal(machine)
-		fmt.Fprintf(w, "%v\n\n\n", string(b))
-		fmt.Fprintf(w, "%+v", machine)
-		w.Flush()
-		file.Close()
 	VMIntentResponse, APIResponse, err := APIInstance.VmsPost(machine)
 	if err != nil {
 		return err
@@ -168,7 +156,6 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceNutanixVirtualMachineRead(d *schema.ResourceData, m interface{}) error {
-
 	return nil
 }
 
@@ -209,12 +196,10 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 			return err
 		}
 	}
-
 	return nil
 }
 
 func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, m interface{}) error {
-
 	client := m.(*V3Client)
 	log.Printf("[DEBUG] Deleting Virtual Machine: %s", d.Id())
 	machine := vmconfig.SetMachineConfig(d)
@@ -291,111 +276,6 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"backup_policy": &schema.Schema{
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"consistency_group_identifier": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"default_snapshot_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"snapshot_policy_list": &schema.Schema{
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"snapshot_schedule_list": &schema.Schema{
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"local_retention_quantity": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-															"remote_retention_quantity": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-															"snapshot_type": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"schedule": &schema.Schema{
-																Type:     schema.TypeSet,
-																Optional: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"is_suspended": {
-																			Type:     schema.TypeBool,
-																			Optional: true,
-																		},
-																		"start_time": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																		},
-																		"end_time": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																		},
-																		"interval_type": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																		},
-																		"duration_secs": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																		},
-																		"interval_multiple": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-												"replication_target": &schema.Schema{
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"cluster_reference": &schema.Schema{
-																Type:     schema.TypeSet,
-																Optional: true,
-																Elem: &schema.Resource{
-																	Schema: referenceSchema(),
-																},
-															},
-															"availability_zone_reference": &schema.Schema{
-																Type:     schema.TypeSet,
-																Optional: true,
-																Elem: &schema.Resource{
-																	Schema: referenceSchema(),
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"availability_zone_reference": &schema.Schema{
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: referenceSchema(),
-							},
-						},
 						"cluster_reference": &schema.Schema{
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -420,14 +300,6 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
-									"hard_clock_timezone": &schema.Schema{
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"guest_os_id": &schema.Schema{
-										Type:     schema.TypeString,
-										Optional: true,
-									},
 									"power_state": &schema.Schema{
 										Type:     schema.TypeString,
 										Required: true,
@@ -437,35 +309,6 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: referenceSchema(),
-										},
-									},
-									"guest_tools": &schema.Schema{
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"nutanix_guest_tools": &schema.Schema{
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"iso_mount_state": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"state": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"enabled_capability_list": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-														},
-													},
-												},
-											},
 										},
 									},
 									"guest_customization": &schema.Schema{
