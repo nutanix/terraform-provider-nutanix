@@ -1,58 +1,32 @@
 package nutanix
 
 import (
-	"encoding/json"
+	"nutanixV3"
+	"errors"
 	"fmt"
+	"os"
+	"bufio"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/ideadevice/terraform-ahv-provider-plugin/requestutils"
-	vm "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachine"
+	"github.com/ideadevice/terraform-ahv-provider-plugin/flg"
 	vmconfig "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachineconfig"
 	"log"
 	"runtime/debug"
 )
 
-type virtualmachine struct {
-	Metadata vm.MetaData `json:"metadata"`
-	Status   *Status     `json:"status"`
-	Spec     vm.Spec     `json:"spec"`
-}
-
-type vmList struct {
-	APIVersion string           `json:"api_version"`
-	MetaData   vm.MetaData      `json:"metadata"`
-	Entities   []virtualmachine `json:"entities"`
-}
-
-// HostReference struct
-type HostReference struct {
-	Kind string `json:"kind"`
-	UUID string `json:"uuid"`
-}
-
-// Status has status of VM
-type Status struct {
-	State             string         `json:"state,omitempty"`
-	Name              string         `json:"name,omitempty"`
-	Resources         *vm.Resources  `json:"resources,omitempty"`
-	HostReference     *HostReference `json:"host_reference,omitempty"`
-	HypervisorType    string         `json:"hypervisor_type",omitempty`
-	NumVcpusPerSocket int            `json:"num_vcpus_per_socket,omitempty"`
-	NumSockets        int            `json:"num_sockets,omitempty"`
-	MemorySizeMb      int            `json:"memory_size_mb,omitempty"`
-	GpuList           []string       `json:"gpu_list,omitempty"`
-	PowerState        string         `json:"power_state,omitempty"`
-}
-
-// VMResponse is struct returned by Post call for creating vm
-type VMResponse struct {
-	Status     *Status      `json:"status"`
-	Spec       *vm.Spec     `json:"spec,omitempty"`
-	APIVersion string       `json:"api_version",omitempty`
-	Metadata   *vm.MetaData `json:"metadata,omitempty"`
-}
-
-func updateAddress(d *schema.ResourceData) error {
-	return nil
+var statusCodeFilter map[int]bool
+func init() {
+	statusMap := map[int]bool{
+		200: true,
+		201: true,
+		202: true,
+		203: true,
+		204: true,
+		205: true,
+		206: true,
+		207: true,
+		208: true,
+	}
+	statusCodeFilter = statusMap
 }
 
 // Function checks if there is an error
@@ -60,6 +34,25 @@ func check(e error) {
 	if e != nil {
 		panic(e)
 	}
+}
+
+func checkAPIResponse(resp nutanix.APIResponse) error {
+	response := fmt.Sprintf("Response ==> %+v\n Response Message ==> %+v\n Request ==> %+v\n Request Body==> %+v", resp.Response, resp.Message, resp.Response.Request, resp.Response.Request.Body)
+	if flg.HTTPLog != "" {
+		file, err := os.Create(flg.HTTPLog)
+		if err != nil {
+			return err
+		}
+		w := bufio.NewWriter(file)
+		defer file.Close()
+		defer w.Flush()
+		fmt.Fprintf(w, "%v", response)
+	}
+	if !statusCodeFilter[resp.StatusCode] {
+		errormsg := errors.New(response)
+		return errormsg
+	}
+	return nil
 }
 
 // RecoverFunc can be used to recover from panics. name is the name of the caller
@@ -71,126 +64,29 @@ func RecoverFunc(name string) {
 	}
 }
 
-// DeleteMachine function deletes the vm using DELETE api call
-func (c *V3Client) DeleteMachine(m *vm.VirtualMachine, d *schema.ResourceData) error {
-
-	log.Printf("[DEBUG] Updating Virtual Machine: %s", m.Spec.Name)
-	var jsonStr []byte
-	url := c.URL + "/vms/" + d.Id()
-	method := "DELETE"
-	_, err := requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// UpdateMachine function updates the vm specifications using PUT api call
-func (c *V3Client) UpdateMachine(m *vm.VirtualMachine, d *schema.ResourceData) error {
-
-	log.Printf("[DEBUG] Updating Virtual Machine: %s", m.Spec.Name)
-
-	jsonStr, err := json.Marshal(m)
-	check(err)
-
-	url := c.URL + "/vms/" + d.Id()
-	method := "PUT"
-	_, err = requestutils.RequestHandler(url, method, jsonStr, c.Username, c.Password, c.Insecure)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// MachineExists function returns the uuid of the machine with given name
-func (c *V3Client) MachineExists(name string) (string, error) {
-	log.Printf("[DEBUG] Checking Virtual Machine Existance: %s", name)
-	payload := []byte(`{}`)
-	url := c.URL + "/vms/list"
-	method := "POST"
-	jsonResponse, err := requestutils.RequestHandler(url, method, payload, c.Username, c.Password, c.Insecure)
-	if err != nil {
-		return "", err
-	}
-
-	var uuid string
-	var vmlist vmList
-	err = json.Unmarshal(jsonResponse, &vmlist)
-	check(err)
-
-	for i := range vmlist.Entities {
-		if vmlist.Entities[i].Spec.Name == name {
-			uuid = vmlist.Entities[i].Metadata.UUID
-			return uuid, nil
-		}
-	}
-	return "", nil
-}
-
-// ShutdownMachine function shut vm using PUT api call
-func (c *V3Client) ShutdownMachine(m *vm.VirtualMachine, d *schema.ResourceData) error {
-
-	log.Printf("[DEBUG] Shutting Down Virtual Machine: %s", m.Metadata.Name)
-
-	data := &vm.VirtualMachine{
-		Spec: &vm.Spec{
-			Name: m.Spec.Name,
-			Resources: &vm.Resources{
-				PowerState: "POWERED_OFF",
-			},
-		},
-		APIVersion: "3.0",
-		Metadata: &vm.MetaData{
-			Name:        m.Spec.Name,
-			Kind:        "vm",
-			SpecVersion: 0,
-		},
-	}
-
-	payload, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-	url := c.URL + "/vms/" + d.Id()
-	method := "PUT"
-	_, err = requestutils.RequestHandler(url, method, payload, c.Username, c.Password, c.Insecure)
-	return err
-}
-
-// StartMachine function starts the vm using PUT api call
-func (c *V3Client) StartMachine(m *vm.VirtualMachine, d *schema.ResourceData) error {
-
-	log.Printf("[DEBUG] Starting Virtual Machine: %s", m.Metadata.Name)
-
-	m.Spec.Resources.PowerState = "POWERED_ON"
-	payload, err := json.Marshal(m)
-	if err != nil {
-		return err
-	}
-	url := c.URL + "/vms/" + d.Id()
-	method := "PUT"
-	_, err = requestutils.RequestHandler(url, method, payload, c.Username, c.Password, c.Insecure)
-	return err
+// setAPIInstance sets the nutanix.VmApi from the V3Client
+func setAPIInstance(c *V3Client) *(nutanix.VmApi) {
+	APIInstance := nutanix.NewVmApi()
+	APIInstance.Configuration.Username = c.Username
+	APIInstance.Configuration.Password = c.Password
+	APIInstance.Configuration.BasePath = c.URL
+	APIInstance.Configuration.APIClient.Insecure = c.Insecure
+	return APIInstance
 }
 
 // WaitForProcess waits till the nutanix gets to running
-func (c *V3Client) WaitForProcess(vmresp1 *VMResponse) (bool, error) {
-	uuid := vmresp1.Metadata.UUID
-	url := c.URL + "/vms/" + uuid
-	method := "GET"
-	var vmresp VMResponse
-	var payload []byte
+func (c *V3Client) WaitForProcess(uuid string) (bool, error) {
+	APIInstance := setAPIInstance(c)
 	for {
-		resp, err := requestutils.RequestHandler(url, method, payload, c.Username, c.Password, c.Insecure)
+		VMIntentResponse, APIresponse, err := APIInstance.VmsUuidGet(uuid)
 		if err != nil {
 			return false, err
 		}
-		err = json.Unmarshal(resp, &vmresp)
+		err = checkAPIResponse(*APIresponse)
 		if err != nil {
 			return false, err
 		}
-
-		if vmresp.Status.State == "COMPLETE" {
+		if VMIntentResponse.Status.State == "COMPLETE" {
 			return true, nil
 		}
 	}
@@ -198,27 +94,21 @@ func (c *V3Client) WaitForProcess(vmresp1 *VMResponse) (bool, error) {
 }
 
 // WaitForIP function sets the ip address obtained by the GET request
-func (c *V3Client) WaitForIP(vmresp *VMResponse, d *schema.ResourceData) error {
-	uuid := vmresp.Metadata.UUID
-	url := c.URL + "/vms/" + uuid
-	method := "GET"
-	var payload []byte
-
+func (c *V3Client) WaitForIP(uuid string, d *schema.ResourceData) error {
+	APIInstance := setAPIInstance(c)
 	for {
-		resp, err := requestutils.RequestHandler(url, method, payload, c.Username, c.Password, c.Insecure)
+		VMIntentResponse, APIresponse, err := APIInstance.VmsUuidGet(uuid)
 		if err != nil {
 			return err
 		}
-		var vmresp VMResponse
-		err = json.Unmarshal(resp, &vmresp)
+		err = checkAPIResponse(*APIresponse)
 		if err != nil {
-			return err
+			return  err
 		}
-
-		if len(vmresp.Status.Resources.NicList) != 0 {
-			for i := range vmresp.Status.Resources.NicList {
-				if len(vmresp.Status.Resources.NicList[i].IPEndpointList) != 0 {
-					if ip := vmresp.Status.Resources.NicList[i].IPEndpointList[0].Address; ip != "" {
+		if len(VMIntentResponse.Status.Resources.NicList) != 0 {
+			for i := range VMIntentResponse.Status.Resources.NicList {
+				if len(VMIntentResponse.Status.Resources.NicList[i].IpEndpointList) != 0 {
+					if ip := VMIntentResponse.Status.Resources.NicList[i].IpEndpointList[0].Address; ip != "" {
 						d.Set("ip_address", ip)
 						return nil
 					}
@@ -229,20 +119,6 @@ func (c *V3Client) WaitForIP(vmresp *VMResponse, d *schema.ResourceData) error {
 	return nil
 }
 
-// CreateMachine function creates the vm using POST api call
-func (c *V3Client) CreateMachine(m *vm.VirtualMachine) ([]byte, error) {
-
-	payload, err := json.Marshal(m)
-	check(err)
-
-	method := "POST"
-	resp, err := requestutils.RequestHandler(c.URL+"/vms", method, payload, c.Username, c.Password, c.Insecure)
-	if err != nil {
-		return resp, err
-	}
-	return resp, nil
-}
-
 func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
 
 	client := meta.(*V3Client)
@@ -250,36 +126,28 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	machine.Spec.Name = d.Get("name").(string)
 	machine.Metadata.Name = d.Get("name").(string)
 	log.Printf("[DEBUG] Creating Virtual Machine: %s", d.Id())
-
-	resp, err := client.CreateMachine(&machine)
+	APIInstance := setAPIInstance(client)
+	VMIntentResponse, APIResponse, err := APIInstance.VmsPost(machine)
 	if err != nil {
 		return err
 	}
-	var vmresp VMResponse
-	err = json.Unmarshal(resp, &vmresp)
+	err = checkAPIResponse(*APIResponse)
 	if err != nil {
-		return err
+		return  err
 	}
 
-	status, err := client.WaitForProcess(&vmresp)
-	if status != true {
-		return err
+	uuid := VMIntentResponse.Metadata.Uuid
+	status, err := client.WaitForProcess(uuid)
+	for status != true {
+			return err
 	}
 	d.Set("ip_address", "")
 
 	if machine.Spec.Resources.NicList != nil && machine.Spec.Resources.PowerState == "POWERED_ON" {
-		err = client.WaitForIP(&vmresp, d)
+		err = client.WaitForIP(uuid, d)
 	}
 	if err != nil {
 		return err
-	}
-
-	uuid, err := client.MachineExists(machine.Spec.Name)
-	if err != nil {
-		return err
-	}
-	if uuid == "" {
-		return fmt.Errorf("Machine doesn't exists")
 	}
 
 	d.SetId(uuid)
@@ -288,7 +156,6 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceNutanixVirtualMachineRead(d *schema.ResourceData, m interface{}) error {
-
 	return nil
 }
 
@@ -299,50 +166,85 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	machine := vmconfig.SetMachineConfig(d)
 	machine.Metadata.Name = d.Get("name").(string)
 	machine.Spec.Name = d.Get("name").(string)
+	APIInstance := setAPIInstance(client)
+	uuid := d.Id()
+	log.Printf("[DEBUG] Updating Virtual Machine: %s, %s", machine.Spec.Name, d.Id())
 
 	if d.HasChange("name") || d.HasChange("spec") || d.HasChange("metadata") {
 
-		err := client.UpdateMachine(&machine, d)
+		_, APIResponse, err := APIInstance.VmsUuidPut(uuid, machine)
 		if err != nil {
 			return err
+		}
+		err = checkAPIResponse(*APIResponse)
+		if err != nil {
+			return  err
 		}
 		d.SetPartial("spec")
 		d.SetPartial("metadata")
 	}
 	//Disabling partial state mode. This will cause terraform to save all fields again
 	d.Partial(false)
-	vmresp := VMResponse{Metadata: &vm.MetaData{UUID: d.Id()}}
-	status, err := client.WaitForProcess(&vmresp)
+	status, err := client.WaitForProcess(uuid)
 	if status != true {
 		return err
 	}
 	d.Set("ip_address", "")
 	if len(machine.Spec.Resources.NicList) > 0 && machine.Spec.Resources.PowerState == "POWERED_ON" {
-		err := client.WaitForIP(&vmresp, d)
+		err := client.WaitForIP(uuid, d)
 		if err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 
 func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, m interface{}) error {
-
 	client := m.(*V3Client)
 	log.Printf("[DEBUG] Deleting Virtual Machine: %s", d.Id())
 	machine := vmconfig.SetMachineConfig(d)
 	machine.Spec.Name = d.Get("name").(string)
 	machine.Metadata.Name = d.Get("name").(string)
+	APIInstance := setAPIInstance(client)
+	uuid := d.Id()
 
-	err := client.DeleteMachine(&machine, d)
+	APIResponse, err := APIInstance.VmsUuidDelete(uuid)
 	if err != nil {
 		return err
+	}
+	err = checkAPIResponse(*APIResponse)
+	if err != nil {
+		return  err
 	}
 
 	d.SetId("")
 	return nil
 }
+
+// MachineExists function returns the uuid of the machine with given name
+func resourceNutanixVirtualMachineExists(d *schema.ResourceData, m interface{}) (bool, error) {
+	log.Printf("[DEBUG] Checking Virtual Machine Existance: %s", d.Id())
+	client := m.(*V3Client)
+	APIInstance := setAPIInstance(client)
+
+	getEntitiesRequest := nutanix.VmListMetadata{} // VmListMetadata
+	VMListIntentResponse, APIResponse, err := APIInstance.VmsListPost(getEntitiesRequest)
+	if err != nil {
+		return false, err
+	}
+	err = checkAPIResponse(*APIResponse)
+	if err != nil {
+		return  false,err
+	}
+
+	for i := range VMListIntentResponse.Entities {
+		if VMListIntentResponse.Entities[i].Metadata.Uuid == d.Id() {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 
 func resourceNutanixVirtualMachine() *schema.Resource {
 	return &schema.Resource{
@@ -350,6 +252,7 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 		Read:   resourceNutanixVirtualMachineRead,
 		Update: resourceNutanixVirtualMachineUpdate,
 		Delete: resourceNutanixVirtualMachineDelete,
+		Exists: resourceNutanixVirtualMachineExists,
 
 		Schema: map[string]*schema.Schema{
 			"ip_address": &schema.Schema{
@@ -372,111 +275,6 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 						"description": {
 							Type:     schema.TypeString,
 							Optional: true,
-						},
-						"backup_policy": &schema.Schema{
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"consistency_group_identifier": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"default_snapshot_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"snapshot_policy_list": &schema.Schema{
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"snapshot_schedule_list": &schema.Schema{
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"local_retention_quantity": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-															"remote_retention_quantity": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-															"snapshot_type": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"schedule": &schema.Schema{
-																Type:     schema.TypeSet,
-																Optional: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"is_suspended": {
-																			Type:     schema.TypeBool,
-																			Optional: true,
-																		},
-																		"start_time": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																		},
-																		"end_time": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																		},
-																		"interval_type": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																		},
-																		"duration_secs": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																		},
-																		"interval_multiple": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-												"replication_target": &schema.Schema{
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"cluster_reference": &schema.Schema{
-																Type:     schema.TypeSet,
-																Optional: true,
-																Elem: &schema.Resource{
-																	Schema: referenceSchema(),
-																},
-															},
-															"availability_zone_reference": &schema.Schema{
-																Type:     schema.TypeSet,
-																Optional: true,
-																Elem: &schema.Resource{
-																	Schema: referenceSchema(),
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-						"availability_zone_reference": &schema.Schema{
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: referenceSchema(),
-							},
 						},
 						"cluster_reference": &schema.Schema{
 							Type:     schema.TypeSet,
@@ -502,14 +300,6 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 										Type:     schema.TypeInt,
 										Required: true,
 									},
-									"hard_clock_timezone": &schema.Schema{
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"guest_os_id": &schema.Schema{
-										Type:     schema.TypeString,
-										Optional: true,
-									},
 									"power_state": &schema.Schema{
 										Type:     schema.TypeString,
 										Required: true,
@@ -519,35 +309,6 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: referenceSchema(),
-										},
-									},
-									"guest_tools": &schema.Schema{
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"nutanix_guest_tools": &schema.Schema{
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"iso_mount_state": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"state": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"enabled_capability_list": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-														},
-													},
-												},
-											},
 										},
 									},
 									"guest_customization": &schema.Schema{
