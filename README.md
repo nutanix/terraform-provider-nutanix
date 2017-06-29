@@ -87,11 +87,11 @@ output "ip" {
 Features :
 ----------
 
-- **Create**: This create the new vm. This takes the nested configuration of vm from main.tf and send the POST request on prism v3 api for creating vm. If the http response status something else than 200 - 208 then it gives error.
+- **Create**: This creates the new vm. This takes the nested configuration of vm from main.tf and send the POST request on prism v3 api for creating vm. If the http response status something else than 200 - 208 then it gives error.
 Otherwise it keeps polling till the vm gets created by taking the status state from GET Api call response.
 If the vm is POWERED_ON and there is atleast one network adapter than it keep polling till the vm gets assigned an ip. Then it sets the ip_address with the ip and id of the resource with the vm's uuid.
-- **Update**:  This is called to update the properties of the existing vm. For updating the memory and cpu we have to first update power_state to POWER_OFF and then update the memory. With this updates ip_address of the vm also get recomputed.
-- **Destroy**: This called to delete the vm. It takes the uuid from the id of the resource and then call DELETE on that uuid.
+- **Update**:  This is called to update the properties of the existing vm. For updating the memory and cpu we have to first update power_state to OFF and then update the memory. With this updates ip_address of the vm also get recomputed.
+- **Destroy**: This is called to delete the vm. It takes the uuid from the id of the resource and then call DELETE on that uuid.
 
 Environment variable **HTTP_LOG** can be set to define the path of file from which HTTP request logs can be accessed.
 
@@ -178,8 +178,15 @@ Following flags are defined for the testcases :-
         username for api call.
 ```
 
-Instead of flags values can also be passed through the [Environment Variables](https://en.wikipedia.org/wiki/Environment_variable). A flag with name "x-y" can be set in CLI as <binary> --x-y, if the same flag has to be set in ENV, it has to be set as X_Y.
+Parameters can also be passed through the [Environment Variables](https://en.wikipedia.org/wiki/Environment_variable). A flag with name "x-y" can be set in CLI as <binary> --x-y, if the same flag has to be set in ENV, it has to be set as X_Y.
 For example a flag abc-xyz can be omitted by setting environment variable ABC_XYZ.
-conflicts & resolution order in the descending order of precedence
+
+Conflicts & resolution order in the descending order of precedence
     flag
     env
+
+The necessary flags for the test cases are :- 
+- *username*
+- *password*
+- *endpoint*
+- *insecure*
