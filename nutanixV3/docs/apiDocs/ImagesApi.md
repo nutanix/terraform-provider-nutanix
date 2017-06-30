@@ -3,13 +3,13 @@
 ##ImagesListPost
 //  Get a list of IMAGEs
 var api_instance := nutanix.ImagesApi
-getEntitiesRequest := nutanix.ImageListMetadata() // ImageListMetadata | 
+getEntitiesRequest := nutanix.ImageListMetadata() // ImageListMetadata |
 imageslistpost_response, api_response, err := api_instance.ImagesListPost(getEntitiesRequest)
 
 ##ImagesPost
 //  Create a IMAGE
 var api_instance := nutanix.ImagesApi
-body := nutanix.ImageIntentInput() // ImageIntentInput | 
+body := nutanix.ImageIntentInput() // ImageIntentInput |
 imagespost_response, api_response, err := api_instance.ImagesPost(body)
 
 ##ImagesUuidDelete
@@ -28,7 +28,7 @@ imagesuuidfileget_response, api_response, err := api_instance.ImagesUuidFileGet(
 //  Upload Image Contents
 var api_instance := nutanix.ImagesApi
 uuid := "uuid_example" // string | The UUID of the entity
-image := "image_example" // string | 
+image := "image_example" // string |
 imagesuuidfileput_response, api_response, err := api_instance.ImagesUuidFilePut(uuid, image)
 
 ##ImagesUuidGet
@@ -41,6 +41,5 @@ imagesuuidget_response, api_response, err := api_instance.ImagesUuidGet(uuid)
 //  Update a IMAGE
 var api_instance := nutanix.ImagesApi
 uuid := "uuid_example" // string | The UUID of the entity
-body := nutanix.ImageIntentInput() // ImageIntentInput | 
+body := nutanix.ImageIntentInput() // ImageIntentInput |
 imagesuuidput_response, api_response, err := api_instance.ImagesUuidPut(uuid, body)
-

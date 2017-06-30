@@ -13,4 +13,3 @@ var api_instance := nutanix.PortalservicesApi
 softwareType := "softwareType_example" // string | Software type
 version := "version_example" // string | Software version
 portalservicessoftwaresoftwaretypeversionget_response, api_response, err := api_instance.PortalServicesSoftwareSoftwareTypeVersionGet(softwareType, version)
-

@@ -3,7 +3,7 @@
 ##DockerRegistriesListPost
 //  List all docker registries
 var api_instance := nutanix.DockerregistryApi
-getEntitiesRequest := nutanix.DockerRegistryListMetadata() // DockerRegistryListMetadata | 
+getEntitiesRequest := nutanix.DockerRegistryListMetadata() // DockerRegistryListMetadata |
 dockerregistrieslistpost_response, api_response, err := api_instance.DockerRegistriesListPost(getEntitiesRequest)
 
 ##DockerRegistriesPost
@@ -35,6 +35,5 @@ dockerregistriesuuidput_response, api_response, err := api_instance.DockerRegist
 //  Searches docker containers for specified registry
 var api_instance := nutanix.DockerregistryApi
 uuid := "uuid_example" // string | The UUID of the entity
-getEntitiesRequest := nutanix.DockerRegistryListMetadata() // DockerRegistryListMetadata | 
+getEntitiesRequest := nutanix.DockerRegistryListMetadata() // DockerRegistryListMetadata |
 dockerregistriesuuidsearchlistpost_response, api_response, err := api_instance.DockerRegistriesUuidSearchListPost(uuid, getEntitiesRequest)
-

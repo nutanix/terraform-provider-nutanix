@@ -7,5 +7,3 @@ Name | Type | Description | Notes
 **ProductVersion** | **string** | Version string for the disk image. | [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

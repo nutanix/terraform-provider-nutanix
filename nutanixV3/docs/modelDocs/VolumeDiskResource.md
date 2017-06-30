@@ -10,5 +10,3 @@ Name | Type | Description | Notes
 **VmdiskUuid** | **string** | UUID of the vmdisk. For creating/updating operation, this will be the UUID of the disk to clone from. If UUID is specified, then the operation would be clone and nfs_path should not be set.  | [optional] [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

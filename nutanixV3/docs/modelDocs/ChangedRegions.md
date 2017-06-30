@@ -8,5 +8,3 @@ Name | Type | Description | Notes
 **RegionList** | [**[]Region**](region.md) | List of regions describing the change for the interval [start_offset, next_offset].  | [optional] [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

@@ -12,5 +12,3 @@ Name | Type | Description | Notes
 **TotalMatches** | **int64** | Total matches found for the kind | [optional] [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

@@ -3,7 +3,7 @@
 ##VolumeGroupsListPost
 //  Retrieves all volume groups.
 var api_instance := nutanix.VolumegroupApi
-getEntitiesRequest := nutanix.VolumeGroupListMetadata() // VolumeGroupListMetadata | 
+getEntitiesRequest := nutanix.VolumeGroupListMetadata() // VolumeGroupListMetadata |
 volumegroupslistpost_response, api_response, err := api_instance.VolumeGroupsListPost(getEntitiesRequest)
 
 ##VolumeGroupsPost
@@ -30,4 +30,3 @@ var api_instance := nutanix.VolumegroupApi
 uuid := "uuid_example" // string | The UUID of the entity
 body := nutanix.VolumeGroupIntentInput() // VolumeGroupIntentInput | Volume group object.
 volumegroupsuuidput_response, api_response, err := api_instance.VolumeGroupsUuidPut(uuid, body)
-

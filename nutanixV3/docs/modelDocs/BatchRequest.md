@@ -9,5 +9,3 @@ Name | Type | Description | Notes
 **ExecutionOrder** | **string** | The order of execution of the APIs in the batch. Can be either Sequential (default value) or Parallel.  | [optional] [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

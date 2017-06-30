@@ -9,5 +9,3 @@ Name | Type | Description | Notes
 **StartOffset** | **int64** | The absolute offset in bytes from where to query for the changed regions.  | [optional] [default to 0]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

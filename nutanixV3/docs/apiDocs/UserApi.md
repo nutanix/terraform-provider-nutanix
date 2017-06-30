@@ -21,4 +21,3 @@ usersuuidget_response, api_response, err := api_instance.UsersUuidGet(uuid)
 var api_instance := nutanix.UserApi
 uuid := "uuid_example" // string | The UUID of the entity
 usersuuidprojectusagesummaryget_response, api_response, err := api_instance.UsersUuidProjectUsageSummaryGet(uuid)
-

@@ -3,7 +3,7 @@
 ##DisksListPost
 //  Get a list of Disks
 var api_instance := nutanix.DisksApi
-getEntitiesRequest := nutanix.DiskListMetadata() // DiskListMetadata | 
+getEntitiesRequest := nutanix.DiskListMetadata() // DiskListMetadata |
 diskslistpost_response, api_response, err := api_instance.DisksListPost(getEntitiesRequest)
 
 ##DisksUuidDelete
@@ -17,4 +17,3 @@ disksuuiddelete_response, api_response, err := api_instance.DisksUuidDelete(uuid
 var api_instance := nutanix.DisksApi
 uuid := "uuid_example" // string | The UUID of the entity
 disksuuidget_response, api_response, err := api_instance.DisksUuidGet(uuid)
-

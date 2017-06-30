@@ -10,5 +10,3 @@ Name | Type | Description | Notes
 **Version** | **string** | Version string in format &lt;code_name&gt;-&lt;version_numbers&gt;-&lt;branch_type&gt;, i.e master, danube-4.5.0.2-stable  | [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

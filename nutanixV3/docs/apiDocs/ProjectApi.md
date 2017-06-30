@@ -3,7 +3,7 @@
 ##ProjectsListPost
 //  Retrieves all Projects.
 var api_instance := nutanix.ProjectApi
-getEntitiesRequest := nutanix.ProjectListMetadata() // ProjectListMetadata | 
+getEntitiesRequest := nutanix.ProjectListMetadata() // ProjectListMetadata |
 projectslistpost_response, api_response, err := api_instance.ProjectsListPost(getEntitiesRequest)
 
 ##ProjectsPost
@@ -30,4 +30,3 @@ var api_instance := nutanix.ProjectApi
 uuid := "uuid_example" // string | The UUID of the entity
 body := nutanix.ProjectIntentInput() // ProjectIntentInput | Project object.
 projectsuuidput_response, api_response, err := api_instance.ProjectsUuidPut(uuid, body)
-

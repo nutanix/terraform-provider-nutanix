@@ -3,13 +3,13 @@
 ##VmSnapshotsListPost
 //  Get kind snapshots
 var api_instance := nutanix.VmsnapshotApi
-getEntitiesRequest := nutanix.VmSnapshotListMetadata() // VmSnapshotListMetadata | 
+getEntitiesRequest := nutanix.VmSnapshotListMetadata() // VmSnapshotListMetadata |
 vmsnapshotslistpost_response, api_response, err := api_instance.VmSnapshotsListPost(getEntitiesRequest)
 
 ##VmSnapshotsPost
 //  Create kind snapshot
 var api_instance := nutanix.VmsnapshotApi
-body := nutanix.VmSnapshotIntentInput() // VmSnapshotIntentInput | 
+body := nutanix.VmSnapshotIntentInput() // VmSnapshotIntentInput |
 vmsnapshotspost_response, api_response, err := api_instance.VmSnapshotsPost(body)
 
 ##VmSnapshotsUuidDelete
@@ -28,6 +28,5 @@ vmsnapshotsuuidget_response, api_response, err := api_instance.VmSnapshotsUuidGe
 //  Update kind snapshot
 var api_instance := nutanix.VmsnapshotApi
 uuid := "uuid_example" // string | The UUID of the entity
-body := nutanix.VmSnapshotIntentInput() // VmSnapshotIntentInput | 
+body := nutanix.VmSnapshotIntentInput() // VmSnapshotIntentInput |
 vmsnapshotsuuidput_response, api_response, err := api_instance.VmSnapshotsUuidPut(uuid, body)
-

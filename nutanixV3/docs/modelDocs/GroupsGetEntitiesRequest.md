@@ -29,5 +29,3 @@ Name | Type | Description | Notes
 **QueryName** | **string** | A custom name to use for tagging the query when debugging. | [optional] [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

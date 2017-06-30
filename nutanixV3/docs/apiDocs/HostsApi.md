@@ -3,7 +3,7 @@
 ##HostsListPost
 //  Get a list of Hosts
 var api_instance := nutanix.HostsApi
-getEntitiesRequest := nutanix.HostListMetadata() // HostListMetadata | 
+getEntitiesRequest := nutanix.HostListMetadata() // HostListMetadata |
 hostslistpost_response, api_response, err := api_instance.HostsListPost(getEntitiesRequest)
 
 ##HostsUuidDelete
@@ -24,4 +24,3 @@ var api_instance := nutanix.HostsApi
 uuid := "uuid_example" // string | The UUID of the entity
 body := nutanix.HostIntentInput() // HostIntentInput | Intent Spec of Host.
 hostsuuidput_response, api_response, err := api_instance.HostsUuidPut(uuid, body)
-

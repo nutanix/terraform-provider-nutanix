@@ -11,5 +11,3 @@ Name | Type | Description | Notes
 **UserReferenceList** | [**[]UserReference**](user_reference.md) | List of users in the project. | [optional] [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

@@ -36,14 +36,14 @@ import (
         "nutanix"
 )
 func main() {
-    
+
     nutanix.Configuration.Username := "YOUR_USERNAME"
     nutanix.Configuration.Password := "YOUR_PASSWORD"
 	nutanix.Configuration.BasePath := "URL"
-    
+
     // create an instance of the API class
     api_instance := nutanix.AppblueprintApi
-    getEntitiesRequest := nutanix.AppBlueprintListMetadata() // AppBlueprintListMetadata | 
+    getEntitiesRequest := nutanix.AppBlueprintListMetadata() // AppBlueprintListMetadata |
 
     // List the App Blueprints
     appblueprintslistpost_response, , api_response, err := api_instance.AppBlueprintsListPost(getEntitiesRequest)
@@ -52,6 +52,6 @@ func main() {
     } else {
         fmt.Println("Api response : ", *api_response)
         fmt.Println("AppBlueprintsListPost response : ", *appblueprintslistpost_response)
-    } 
+    }
 }
 ~~~

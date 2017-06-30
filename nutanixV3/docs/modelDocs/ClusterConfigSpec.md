@@ -14,5 +14,3 @@ Name | Type | Description | Notes
 **Timezone** | **string** | Zone name used in value of TZ environment variable. | [optional] [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

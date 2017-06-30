@@ -9,5 +9,3 @@ Name | Type | Description | Notes
 **SubnetMask** | **string** | Subnet mask IP address. | [optional] [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

@@ -7,5 +7,3 @@ Name | Type | Description | Notes
 **UnattendXml** | **string** | This field contains a Sysprep unattend xml definition, as a string. The value must be base64 encoded.  | [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

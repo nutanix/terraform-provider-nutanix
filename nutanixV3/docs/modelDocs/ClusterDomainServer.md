@@ -8,5 +8,3 @@ Name | Type | Description | Notes
 **Nameserver** | **string** | The IP of the nameserver that can resolve the domain name. Must set when joining the domain.  | [optional] [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

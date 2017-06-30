@@ -8,5 +8,3 @@ Name | Type | Description | Notes
 **Metadata** | [**VolumeGroupListMetadataOutput**](volume_group_list_metadata_output.md) |  | [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-

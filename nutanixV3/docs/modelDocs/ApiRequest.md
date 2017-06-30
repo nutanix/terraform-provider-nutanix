@@ -8,5 +8,3 @@ Name | Type | Description | Notes
 **PathAndParams** | **string** | The part of the API request that contains information such as the path and query.  | [default to null]
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
-
-
