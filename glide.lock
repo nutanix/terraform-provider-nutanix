@@ -1,5 +1,5 @@
 hash: b543d2d371f960fcff2f94c6ecd8369fc686a467743d1674c8ab12afb774add5
-updated: 2017-06-21T00:03:31.415284678-07:00
+updated: 2017-06-29T22:59:01.082877509-07:00
 imports:
 - name: github.com/apparentlymart/go-cidr
   version: 2bd8b58cf4275aeb086ade613de226773e29e853
@@ -45,6 +45,8 @@ imports:
   version: 4da3e2cfbabc9f751898f250b49f2439785783a1
 - name: github.com/go-ini/ini
   version: d3de07a94d22b4a0972deb4b96d790c2c0ce8333
+- name: github.com/go-resty/resty
+  version: cf81ed0a604d373be63b4c036c6b05c06520615f
 - name: github.com/golang/protobuf
   version: 1fb8fd32a09087bcd727225167edd31e1b9ceb24
   subpackages:
@@ -152,6 +154,7 @@ imports:
   - idna
   - internal/timeseries
   - lex/httplex
+  - publicsuffix
   - trace
 - name: golang.org/x/sys
   version: fb4cac33e3196ff7f507ab9b2d2a44b0142f5b5a
@@ -186,6 +189,11 @@ imports:
   - status
   - tap
   - transport
+- name: gopkg.in/mgo.v2
+  version: 3f83fa5005286a7fe593b055f0d7771a7dce4655
+  subpackages:
+  - bson
+  - internal/json
 - name: gopkg.in/yaml.v2
   version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
 testImports: []

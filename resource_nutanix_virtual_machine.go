@@ -1,7 +1,7 @@
 package nutanix
 
 import (
-	"nutanixV3"
+	nutanixV3 "github.com/ideadevice/terraform-ahv-provider-plugin/nutanixV3"
 	"errors"
 	"fmt"
 	"os"
@@ -36,7 +36,7 @@ func check(e error) {
 	}
 }
 
-func checkAPIResponse(resp nutanix.APIResponse) error {
+func checkAPIResponse(resp nutanixV3.APIResponse) error {
 	response := fmt.Sprintf("Response ==> %+v\n Response Message ==> %+v\n Request ==> %+v\n Request Body==> %+v", resp.Response, resp.Message, resp.Response.Request, resp.Response.Request.Body)
 	if flg.HTTPLog != "" {
 		file, err := os.Create(flg.HTTPLog)
@@ -64,9 +64,9 @@ func RecoverFunc(name string) {
 	}
 }
 
-// setAPIInstance sets the nutanix.VmApi from the V3Client
-func setAPIInstance(c *V3Client) *(nutanix.VmApi) {
-	APIInstance := nutanix.NewVmApi()
+// setAPIInstance sets the nutanixV3.VmApi from the V3Client
+func setAPIInstance(c *V3Client) *(nutanixV3.VmApi) {
+	APIInstance := nutanixV3.NewVmApi()
 	APIInstance.Configuration.Username = c.Username
 	APIInstance.Configuration.Password = c.Password
 	APIInstance.Configuration.BasePath = c.URL
@@ -227,7 +227,7 @@ func resourceNutanixVirtualMachineExists(d *schema.ResourceData, m interface{}) 
 	client := m.(*V3Client)
 	APIInstance := setAPIInstance(client)
 
-	getEntitiesRequest := nutanix.VmListMetadata{} // VmListMetadata
+	getEntitiesRequest := nutanixV3.VmListMetadata{} // VmListMetadata
 	VMListIntentResponse, APIResponse, err := APIInstance.VmsListPost(getEntitiesRequest)
 	if err != nil {
 		return false, err

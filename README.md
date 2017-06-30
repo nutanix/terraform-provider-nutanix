@@ -185,7 +185,7 @@ Conflicts & resolution order in the descending order of precedence
     flag
     env
 
-The necessary flags for the test cases are :- 
+The necessary flags for the test cases are :-
 - *username*
 - *password*
 - *endpoint*
