@@ -5,7 +5,7 @@ import (
 	"time"
 	"github.com/hashicorp/terraform/helper/schema"
 	"strings"
-	nutanixV3 "github.com/ideadevice/terraform-ahv-provider-plugin/nutanixV3"
+	nutanixV3 "nutanixV3"
 )
 
 func convertToBool(a interface{}) bool {

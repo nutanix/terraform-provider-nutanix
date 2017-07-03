@@ -1,7 +1,7 @@
 package nutanix
 
 import (
-	nutanixV3 "github.com/ideadevice/terraform-ahv-provider-plugin/nutanixV3"
+	nutanixV3 "nutanixV3"
 	"errors"
 	"fmt"
 	"os"
