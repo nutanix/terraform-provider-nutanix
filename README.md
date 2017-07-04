@@ -24,6 +24,7 @@ Enter the provider directory and build the provider
 $ cd $GOPATH/src/github.com/ideadevice/terraform-ahv-provider-plugin
 $ glide install
 $ cd cmd
+$ make getSDK   // for adding go_sdk in $(GOPATH)/src/nutanixV3
 $ make build
 ```
 Using the  provider
