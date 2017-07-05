@@ -7,6 +7,11 @@ getSDK:
 	rm go_sdk.tgz
 	mv $(GOPATH)/src/nutanixV3/go_sdk/* $(GOPATH)/src/nutanixV3
 	rm -r $(GOPATH)/src/nutanixV3/go_sdk
+autoGenerate:	
+	go build ../jsonToStruct
+	./jsonToStruct < ../jsonToStruct/exampleJSON/vmlist.json -structName=VMList
+	./jsonToStruct < ../jsonToStruct/exampleJSON/vm.json
+	rm jsonToStruct
 build:
 	go build -o terraform-provider-nutanix
 
