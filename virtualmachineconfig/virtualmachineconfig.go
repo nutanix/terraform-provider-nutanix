@@ -1,8 +1,11 @@
+
 package virtualmachineconfig
 
 import (
 	"github.com/hashicorp/terraform/helper/schema"
-	vm "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachine"
+	nutanixV3 "nutanixV3"
+	"time"
+	"strings"
 )
 
 func convertToBool(a interface{}) bool {
@@ -11,12 +14,15 @@ func convertToBool(a interface{}) bool {
 	}
 	return false
 }
-func convertToInt(a interface{}) int {
+
+func convertToInt(a interface{}) int64 {
 	if a != nil {
-		return a.(int)
+		i :=  a.(int)
+		return int64(i)
 	}
 	return 0
 }
+
 func convertToString(a interface{}) string {
 	if a != nil {
 		return a.(string)
@@ -24,253 +30,273 @@ func convertToString(a interface{}) string {
 	return ""
 }
 
+// SetMachineConfig function sets fields in struct from ResourceData
+func SetMachineConfig(d *schema.ResourceData) nutanixV3.VmIntentInput {
+	spec := d.Get("spec").(*schema.Set).List()			 // spec
+	metadata := d.Get("metadata").(*schema.Set).List()                     // metadata
+	machine := nutanixV3.VmIntentInput{
+		ApiVersion: "3.0", // api_version
+		Spec:       SetSpec(spec, 0), 	//Spec
+		Metadata:   SetMetadata(metadata, 0), 	//Metadata
+	}
+	if strings.ToUpper(machine.Spec.Resources.PowerState) == "ON" {
+		machine.Spec.Resources.PowerState = "POWERED_ON"
+	} else {
+		machine.Spec.Resources.PowerState = "POWERED_OFF"
+	}
+	machine.Metadata.Kind = "vm"
+	machine.Spec.Name = d.Get("name").(string)
+	machine.Metadata.Name = d.Get("name").(string)
+	return machine
+}
+
+
 
 // SetClusterReference sets cluster_reference fields in  json struct
-func SetClusterReference(t []interface{}, i int) vm.ClusterReference {
+func SetClusterReference(t []interface{}, i int) nutanixV3.ClusterReference {
 	if len(t) > 0 {
 		s := t[i].(map[string]interface{})
 
-		ClusterReference := vm.ClusterReference{
+		ClusterReference := nutanixV3.ClusterReference{
 			Kind:		convertToString(s["kind"]),
 			Name:		convertToString(s["name"]),
-			UUID:		convertToString(s["uuid"]),
+			Uuid:		convertToString(s["uuid"]),
 		}
 		return ClusterReference
 	}
-	return vm.ClusterReference{}
+	return nutanixV3.ClusterReference{}
 }
 
-// SetGPUList sets gpu_list fields in  json struct
-func SetGPUList(t []interface{}, i int) vm.GPUList {
+// SetGpuList sets gpu_list fields in  json struct
+func SetGpuList(t []interface{}, i int) nutanixV3.VmGpu {
 	if len(t) > 0 {
 		s := t[i].(map[string]interface{})
 
-		GPUList := vm.GPUList{
+		GpuList := nutanixV3.VmGpu{
 			Vendor:		convertToString(s["vendor"]),
 			Mode:		convertToString(s["mode"]),
-			DeviceID:		convertToInt(s["device_id"]),
+			DeviceId:		convertToInt(s["device_id"]),
 		}
-		return GPUList
+		return GpuList
 	}
-	return vm.GPUList{}
+	return nutanixV3.VmGpu{}
 }
 
 // SetCloudInit sets cloud_init fields in  json struct
-func SetCloudInit(t []interface{}, i int) vm.CloudInit {
+func SetCloudInit(t []interface{}, i int) nutanixV3.GuestCustomizationCloudInit {
 	if len(t) > 0 {
 		s := t[i].(map[string]interface{})
 
-		CloudInit := vm.CloudInit{
+		CloudInit := nutanixV3.GuestCustomizationCloudInit{
 			MetaData:		convertToString(s["meta_data"]),
 			UserData:		convertToString(s["user_data"]),
 		}
 		return CloudInit
 	}
-	return vm.CloudInit{}
+	return nutanixV3.GuestCustomizationCloudInit{}
 }
 
 // SetSysprep sets sysprep fields in  json struct
-func SetSysprep(t []interface{}, i int) vm.Sysprep {
+func SetSysprep(t []interface{}, i int) nutanixV3.GuestCustomizationSysprep {
 	if len(t) > 0 {
 		s := t[i].(map[string]interface{})
 
-		Sysprep := vm.Sysprep{
-			UnattendXML:		convertToString(s["unattend_xml"]),
+		Sysprep := nutanixV3.GuestCustomizationSysprep{
 			InstallType:		convertToString(s["install_type"]),
+			UnattendXml:		convertToString(s["unattend_xml"]),
 		}
 		return Sysprep
 	}
-	return vm.Sysprep{}
+	return nutanixV3.GuestCustomizationSysprep{}
 }
 
 // SetGuestCustomization sets guest_customization fields in  json struct
-func SetGuestCustomization(t []interface{}, i int) vm.GuestCustomization {
+func SetGuestCustomization(t []interface{}, i int) nutanixV3.GuestCustomization {
 	if len(t) > 0 {
 		s := t[i].(map[string]interface{})
 
-		GuestCustomization := vm.GuestCustomization{
+		GuestCustomization := nutanixV3.GuestCustomization{
 			CloudInit:		SetCloudInit(s["cloud_init"].(*schema.Set).List(), 0),
 			Sysprep:		SetSysprep(s["sysprep"].(*schema.Set).List(), 0),
 		}
 		return GuestCustomization
 	}
-	return vm.GuestCustomization{}
+	return nutanixV3.GuestCustomization{}
 }
 
-// SetDiskAddress sets disk_address fields in  json struct
-func SetDiskAddress(t []interface{}, i int) vm.DiskAddress {
+// SetSubnetReference sets subnet_reference fields in  json struct
+func SetSubnetReference(t []interface{}, i int) nutanixV3.SubnetReference {
 	if len(t) > 0 {
 		s := t[i].(map[string]interface{})
 
-		DiskAddress := vm.DiskAddress{
+		SubnetReference := nutanixV3.SubnetReference{
+			Kind:		convertToString(s["kind"]),
+			Name:		convertToString(s["name"]),
+			Uuid:		convertToString(s["uuid"]),
+		}
+		return SubnetReference
+	}
+	return nutanixV3.SubnetReference{}
+}
+
+// SetIpEndpointList sets ip_endpoint_list fields in  json struct
+func SetIpEndpointList(t []interface{}, i int) nutanixV3.IpAddress {
+	if len(t) > 0 {
+		s := t[i].(map[string]interface{})
+
+		IpEndpointList := nutanixV3.IpAddress{
+			Type:		convertToString(s["type"]),
+			Address:		convertToString(s["address"]),
+		}
+		return IpEndpointList
+	}
+	return nutanixV3.IpAddress{}
+}
+
+// SetNetworkFunctionChainReference sets network_function_chain_reference fields in  json struct
+func SetNetworkFunctionChainReference(t []interface{}, i int) nutanixV3.NetworkFunctionChainReference {
+	if len(t) > 0 {
+		s := t[i].(map[string]interface{})
+
+		NetworkFunctionChainReference := nutanixV3.NetworkFunctionChainReference{
+			Kind:		convertToString(s["kind"]),
+			Name:		convertToString(s["name"]),
+			Uuid:		convertToString(s["uuid"]),
+		}
+		return NetworkFunctionChainReference
+	}
+	return nutanixV3.NetworkFunctionChainReference{}
+}
+
+// SetNicList sets nic_list fields in  json struct
+func SetNicList(t []interface{}, i int) nutanixV3.VmNic {
+	if len(t) > 0 {
+		s := t[i].(map[string]interface{})
+
+		var IpEndpointList []nutanixV3.IpAddress
+		if s["ip_endpoint_list"] != nil {
+			for i := 0; i< len(s["ip_endpoint_list"].([]interface{})); i++ {
+				elem := SetIpEndpointList(s["ip_endpoint_list"].([]interface{}),	i)
+				IpEndpointList = append(IpEndpointList, elem)
+			}
+		}
+
+
+		NicList := nutanixV3.VmNic{
+			NicType:		convertToString(s["nic_type"]),
+			SubnetReference:		SetSubnetReference(s["subnet_reference"].(*schema.Set).List(), 0),
+			NetworkFunctionNicType:		convertToString(s["network_function_nic_type"]),
+			MacAddress:		convertToString(s["mac_address"]),
+			IpEndpointList:		IpEndpointList,
+			NetworkFunctionChainReference:		SetNetworkFunctionChainReference(s["network_function_chain_reference"].(*schema.Set).List(), 0),
+		}
+		return NicList
+	}
+	return nutanixV3.VmNic{}
+}
+
+// SetParentReference sets parent_reference fields in  json struct
+func SetParentReference(t []interface{}, i int) nutanixV3.Reference {
+	if len(t) > 0 {
+		s := t[i].(map[string]interface{})
+
+		ParentReference := nutanixV3.Reference{
+			Kind:		convertToString(s["kind"]),
+			Uuid:		convertToString(s["uuid"]),
+			Name:		convertToString(s["name"]),
+		}
+		return ParentReference
+	}
+	return nutanixV3.Reference{}
+}
+
+// SetDiskAddress sets disk_address fields in  json struct
+func SetDiskAddress(t []interface{}, i int) nutanixV3.DiskAddress {
+	if len(t) > 0 {
+		s := t[i].(map[string]interface{})
+
+		DiskAddress := nutanixV3.DiskAddress{
 			DeviceIndex:		convertToInt(s["device_index"]),
 			AdapterType:		convertToString(s["adapter_type"]),
 		}
 		return DiskAddress
 	}
-	return vm.DiskAddress{}
+	return nutanixV3.DiskAddress{}
 }
 
 // SetBootConfig sets boot_config fields in  json struct
-func SetBootConfig(t []interface{}, i int) vm.BootConfig {
+func SetBootConfig(t []interface{}, i int) nutanixV3.VmBootConfig {
 	if len(t) > 0 {
 		s := t[i].(map[string]interface{})
 
-		BootConfig := vm.BootConfig{
+		BootConfig := nutanixV3.VmBootConfig{
 			DiskAddress:		SetDiskAddress(s["disk_address"].(*schema.Set).List(), 0),
 			MacAddress:		convertToString(s["mac_address"]),
 		}
 		return BootConfig
 	}
-	return vm.BootConfig{}
-}
-
-// SetSubnetReference sets subnet_reference fields in  json struct
-func SetSubnetReference(t []interface{}, i int) vm.SubnetReference {
-	if len(t) > 0 {
-		s := t[i].(map[string]interface{})
-
-		SubnetReference := vm.SubnetReference{
-			UUID:		convertToString(s["uuid"]),
-			Kind:		convertToString(s["kind"]),
-			Name:		convertToString(s["name"]),
-		}
-		return SubnetReference
-	}
-	return vm.SubnetReference{}
-}
-
-// SetIPEndpointList sets ip_endpoint_list fields in  json struct
-func SetIPEndpointList(t []interface{}, i int) vm.IPEndpointList {
-	if len(t) > 0 {
-		s := t[i].(map[string]interface{})
-
-		IPEndpointList := vm.IPEndpointList{
-			Type:		convertToString(s["type"]),
-			Address:		convertToString(s["address"]),
-		}
-		return IPEndpointList
-	}
-	return vm.IPEndpointList{}
-}
-
-// SetNetworkFunctionChainReference sets network_function_chain_reference fields in  json struct
-func SetNetworkFunctionChainReference(t []interface{}, i int) vm.NetworkFunctionChainReference {
-	if len(t) > 0 {
-		s := t[i].(map[string]interface{})
-
-		NetworkFunctionChainReference := vm.NetworkFunctionChainReference{
-			Kind:		convertToString(s["kind"]),
-			Name:		convertToString(s["name"]),
-			UUID:		convertToString(s["uuid"]),
-		}
-		return NetworkFunctionChainReference
-	}
-	return vm.NetworkFunctionChainReference{}
-}
-
-// SetNicList sets nic_list fields in  json struct
-func SetNicList(t []interface{}, i int) vm.NicList {
-	if len(t) > 0 {
-		s := t[i].(map[string]interface{})
-
-		var IPEndpointList []vm.IPEndpointList
-		if s["ip_endpoint_list"] != nil {
-			for i := 0; i< len(s["ip_endpoint_list"].([]interface{})); i++ {
-				elem := SetIPEndpointList(s["ip_endpoint_list"].([]interface{}),	i)
-				IPEndpointList = append(IPEndpointList, elem)
-			}
-		}
-
-
-		NicList := vm.NicList{
-			NicType:		convertToString(s["nic_type"]),
-			SubnetReference:		SetSubnetReference(s["subnet_reference"].(*schema.Set).List(), 0),
-			NetworkFunctionNicType:		convertToString(s["network_function_nic_type"]),
-			MacAddress:		convertToString(s["mac_address"]),
-			IPEndpointList:		IPEndpointList,
-			NetworkFunctionChainReference:		SetNetworkFunctionChainReference(s["network_function_chain_reference"].(*schema.Set).List(), 0),
-		}
-		return NicList
-	}
-	return vm.NicList{}
-}
-
-// SetParentReference sets parent_reference fields in  json struct
-func SetParentReference(t []interface{}, i int) vm.ParentReference {
-	if len(t) > 0 {
-		s := t[i].(map[string]interface{})
-
-		ParentReference := vm.ParentReference{
-			Kind:		convertToString(s["kind"]),
-			UUID:		convertToString(s["uuid"]),
-			Name:		convertToString(s["name"]),
-		}
-		return ParentReference
-	}
-	return vm.ParentReference{}
+	return nutanixV3.VmBootConfig{}
 }
 
 // SetDataSourceReference sets data_source_reference fields in  json struct
-func SetDataSourceReference(t []interface{}, i int) vm.DataSourceReference {
+func SetDataSourceReference(t []interface{}, i int) nutanixV3.Reference {
 	if len(t) > 0 {
 		s := t[i].(map[string]interface{})
 
-		DataSourceReference := vm.DataSourceReference{
+		DataSourceReference := nutanixV3.Reference{
 			Kind:		convertToString(s["kind"]),
-			UUID:		convertToString(s["uuid"]),
+			Uuid:		convertToString(s["uuid"]),
 			Name:		convertToString(s["name"]),
 		}
 		return DataSourceReference
 	}
-	return vm.DataSourceReference{}
+	return nutanixV3.Reference{}
 }
 
 // SetDeviceProperties sets device_properties fields in  json struct
-func SetDeviceProperties(t []interface{}, i int) vm.DeviceProperties {
+func SetDeviceProperties(t []interface{}, i int) nutanixV3.VmDiskDeviceProperties {
 	if len(t) > 0 {
 		s := t[i].(map[string]interface{})
 
-		DeviceProperties := vm.DeviceProperties{
-			DeviceType:		convertToString(s["device_type"]),
+		DeviceProperties := nutanixV3.VmDiskDeviceProperties{
 			DiskAddress:		SetDiskAddress(s["disk_address"].(*schema.Set).List(), 0),
+			DeviceType:		convertToString(s["device_type"]),
 		}
 		return DeviceProperties
 	}
-	return vm.DeviceProperties{}
+	return nutanixV3.VmDiskDeviceProperties{}
 }
 
 // SetDiskList sets disk_list fields in  json struct
-func SetDiskList(t []interface{}, i int) vm.DiskList {
+func SetDiskList(t []interface{}, i int) nutanixV3.VmDisk {
 	if len(t) > 0 {
 		s := t[i].(map[string]interface{})
 
-		DiskList := vm.DiskList{
+		DiskList := nutanixV3.VmDisk{
 			DataSourceReference:		SetDataSourceReference(s["data_source_reference"].(*schema.Set).List(), 0),
 			DeviceProperties:		SetDeviceProperties(s["device_properties"].(*schema.Set).List(), 0),
-			UUID:		convertToString(s["uuid"]),
 			DiskSizeMib:		convertToInt(s["disk_size_mib"]),
 		}
 		return DiskList
 	}
-	return vm.DiskList{}
+	return nutanixV3.VmDisk{}
 }
 
 // SetResources sets resources fields in  json struct
-func SetResources(t []interface{}, i int) vm.Resources {
+func SetResources(t []interface{}, i int) nutanixV3.VmResources {
 	if len(t) > 0 {
 		s := t[i].(map[string]interface{})
 
-		var GPUList []vm.GPUList
+		var GpuList []nutanixV3.VmGpu
 		if s["gpu_list"] != nil {
 			for i := 0; i< len(s["gpu_list"].([]interface{})); i++ {
-				elem := SetGPUList(s["gpu_list"].([]interface{}),	i)
-				GPUList = append(GPUList, elem)
+				elem := SetGpuList(s["gpu_list"].([]interface{}),	i)
+				GpuList = append(GpuList, elem)
 			}
 		}
 
 
-		var NicList []vm.NicList
+		var NicList []nutanixV3.VmNic
 		if s["nic_list"] != nil {
 			for i := 0; i< len(s["nic_list"].([]interface{})); i++ {
 				elem := SetNicList(s["nic_list"].([]interface{}),	i)
@@ -279,7 +305,7 @@ func SetResources(t []interface{}, i int) vm.Resources {
 		}
 
 
-		var DiskList []vm.DiskList
+		var DiskList []nutanixV3.VmDisk
 		if s["disk_list"] != nil {
 			for i := 0; i< len(s["disk_list"].([]interface{})); i++ {
 				elem := SetDiskList(s["disk_list"].([]interface{}),	i)
@@ -288,37 +314,37 @@ func SetResources(t []interface{}, i int) vm.Resources {
 		}
 
 
-		Resources := vm.Resources{
-			PowerState:		convertToString(s["power_state"]),
-			NumSockets:		convertToInt(s["num_sockets"]),
+		Resources := nutanixV3.VmResources{
 			MemorySizeMb:		convertToInt(s["memory_size_mb"]),
-			GPUList:		GPUList,
+			GpuList:		GpuList,
 			GuestCustomization:		SetGuestCustomization(s["guest_customization"].(*schema.Set).List(), 0),
-			BootConfig:		SetBootConfig(s["boot_config"].(*schema.Set).List(), 0),
 			NicList:		NicList,
 			NumVcpusPerSocket:		convertToInt(s["num_vcpus_per_socket"]),
+			NumSockets:		convertToInt(s["num_sockets"]),
 			ParentReference:		SetParentReference(s["parent_reference"].(*schema.Set).List(), 0),
+			BootConfig:		SetBootConfig(s["boot_config"].(*schema.Set).List(), 0),
 			DiskList:		DiskList,
+			PowerState:		convertToString(s["power_state"]),
 		}
 		return Resources
 	}
-	return vm.Resources{}
+	return nutanixV3.VmResources{}
 }
 
 // SetSpec sets spec fields in  json struct
-func SetSpec(t []interface{}, i int) vm.Spec {
+func SetSpec(t []interface{}, i int) nutanixV3.Vm {
 	if len(t) > 0 {
 		s := t[i].(map[string]interface{})
 
-		Spec := vm.Spec{
+		Spec := nutanixV3.Vm{
+			Description:		convertToString(s["description"]),
 			ClusterReference:		SetClusterReference(s["cluster_reference"].(*schema.Set).List(), 0),
 			Resources:		SetResources(s["resources"].(*schema.Set).List(), 0),
 			Name:		convertToString(s["name"]),
-			Description:		convertToString(s["description"]),
 		}
 		return Spec
 	}
-	return vm.Spec{}
+	return nutanixV3.Vm{}
 }
 
 // SetCategories sets categories fields in  json struct
@@ -339,52 +365,63 @@ func SetCategories(s map[string]interface{}) map[string]string {
 
 
 // SetOwnerReference sets owner_reference fields in  json struct
-func SetOwnerReference(t []interface{}, i int) vm.OwnerReference {
+func SetOwnerReference(t []interface{}, i int) nutanixV3.UserReference {
 	if len(t) > 0 {
 		s := t[i].(map[string]interface{})
 
-		OwnerReference := vm.OwnerReference{
+		OwnerReference := nutanixV3.UserReference{
 			Kind:		convertToString(s["kind"]),
 			Name:		convertToString(s["name"]),
-			UUID:		convertToString(s["uuid"]),
+			Uuid:		convertToString(s["uuid"]),
 		}
 		return OwnerReference
 	}
-	return vm.OwnerReference{}
+	return nutanixV3.UserReference{}
 }
 
 // SetMetadata sets metadata fields in  json struct
-func SetMetadata(t []interface{}, i int) vm.Metadata {
+func SetMetadata(t []interface{}, i int) nutanixV3.VmMetadata {
 	if len(t) > 0 {
 		s := t[i].(map[string]interface{})
 
-		Metadata := vm.Metadata{
-			Kind:		convertToString(s["kind"]),
-			ParentReference:		convertToString(s["parent_reference"]),
-			Name:		convertToString(s["name"]),
-			LastUpdateTime:		convertToString(s["last_update_time"]),
-			UUID:		convertToString(s["uuid"]),
-			CreationTime:		convertToString(s["creation_time"]),
+		var LastUpdateTime time.Time
+		tempLastUpdateTime := convertToString(s["last_update_time"])
+		if tempLastUpdateTime != ""{
+			LastUpdateTime, _ = time.Parse(tempLastUpdateTime,tempLastUpdateTime)
+		}
+
+		var CreationTime time.Time
+		tempCreationTime := convertToString(s["creation_time"])
+		if tempCreationTime != ""{
+			CreationTime, _ = time.Parse(tempCreationTime,tempCreationTime)
+		}
+
+		Metadata := nutanixV3.VmMetadata{
 			Categories:		SetCategories(s),
 			OwnerReference:		SetOwnerReference(s["owner_reference"].(*schema.Set).List(), 0),
 			EntityVersion:		convertToInt(s["entity_version"]),
+			Name:		convertToString(s["name"]),
+			LastUpdateTime:		LastUpdateTime,
+			Kind:		convertToString(s["kind"]),
+			Uuid:		convertToString(s["uuid"]),
+			CreationTime:		CreationTime,
 		}
 		return Metadata
 	}
-	return vm.Metadata{}
+	return nutanixV3.VmMetadata{}
 }
 
-// SetVMIntentInput sets VmIntentInput fields in  json struct
-func SetVMIntentInput(t []interface{}, i int) vm.VMIntentInput {
+// SetVmIntentInput sets VmIntentInput fields in  json struct
+func SetVmIntentInput(t []interface{}, i int) nutanixV3.VmIntentInput {
 	if len(t) > 0 {
 		s := t[i].(map[string]interface{})
 
-		VMIntentInput := vm.VMIntentInput{
+		VmIntentInput := nutanixV3.VmIntentInput{
 			Spec:		SetSpec(s["spec"].(*schema.Set).List(), 0),
-			APIVersion:		convertToString(s["api_version"]),
+			ApiVersion:		convertToString(s["api_version"]),
 			Metadata:		SetMetadata(s["metadata"].(*schema.Set).List(), 0),
 		}
-		return VMIntentInput
+		return VmIntentInput
 	}
-	return vm.VMIntentInput{}
+	return nutanixV3.VmIntentInput{}
 }

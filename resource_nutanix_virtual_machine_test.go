@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	flag "github.com/ideadevice/terraform-ahv-provider-plugin/testflg"
-	nutanixV3 "github.com/ideadevice/terraform-ahv-provider-plugin/nutanixV3"
+	nutanixV3 "nutanixV3"
 	"log"
 	"os"
 	"strconv"

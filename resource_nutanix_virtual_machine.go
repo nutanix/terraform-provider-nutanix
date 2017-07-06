@@ -1,14 +1,15 @@
 package nutanix
 
 import (
-	nutanixV3 "nutanixV3"
 	"errors"
 	"fmt"
 	"os"
 	"bufio"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/ideadevice/terraform-ahv-provider-plugin/flg"
+	vmschema "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachineschema"
 	vmconfig "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachineconfig"
+	nutanixV3 "nutanixV3"
 	"log"
 	"runtime/debug"
 )
@@ -123,8 +124,6 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 
 	client := meta.(*V3Client)
 	machine := vmconfig.SetMachineConfig(d)
-	machine.Spec.Name = d.Get("name").(string)
-	machine.Metadata.Name = d.Get("name").(string)
 	log.Printf("[DEBUG] Creating Virtual Machine: %s", d.Id())
 	APIInstance := setAPIInstance(client)
 	VMIntentResponse, APIResponse, err := APIInstance.VmsPost(machine)
@@ -164,8 +163,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	d.Partial(true)
 	client := meta.(*V3Client)
 	machine := vmconfig.SetMachineConfig(d)
-	machine.Metadata.Name = d.Get("name").(string)
-	machine.Spec.Name = d.Get("name").(string)
 	APIInstance := setAPIInstance(client)
 	uuid := d.Id()
 	log.Printf("[DEBUG] Updating Virtual Machine: %s, %s", machine.Spec.Name, d.Id())
@@ -202,9 +199,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*V3Client)
 	log.Printf("[DEBUG] Deleting Virtual Machine: %s", d.Id())
-	machine := vmconfig.SetMachineConfig(d)
-	machine.Spec.Name = d.Get("name").(string)
-	machine.Metadata.Name = d.Get("name").(string)
 	APIInstance := setAPIInstance(client)
 	uuid := d.Id()
 
@@ -254,316 +248,6 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 		Delete: resourceNutanixVirtualMachineDelete,
 		Exists: resourceNutanixVirtualMachineExists,
 
-		Schema: map[string]*schema.Schema{
-			"ip_address": &schema.Schema{
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": &schema.Schema{
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"spec": &schema.Schema{
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"description": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"cluster_reference": &schema.Schema{
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: referenceSchema(),
-							},
-						},
-						"resources": &schema.Schema{
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"num_vcpus_per_socket": &schema.Schema{
-										Type:     schema.TypeInt,
-										Required: true,
-									},
-									"num_sockets": &schema.Schema{
-										Type:     schema.TypeInt,
-										Required: true,
-									},
-									"memory_size_mb": &schema.Schema{
-										Type:     schema.TypeInt,
-										Required: true,
-									},
-									"power_state": &schema.Schema{
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"parent_reference": &schema.Schema{
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: referenceSchema(),
-										},
-									},
-									"guest_customization": &schema.Schema{
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"sysprep": &schema.Schema{
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"install_type": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"unattend_xml": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-														},
-													},
-												},
-												"cloud_init": &schema.Schema{
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"meta_data": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"user_data": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"boot_config": &schema.Schema{
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"mac_address": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"disk_address": &schema.Schema{
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"device_index": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-															"adapter": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"nic_list": &schema.Schema{
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"ip_endpoint_list": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"ip": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"type": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-														},
-													},
-												},
-												"nic_type": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"mac_address": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"network_function_nic_type": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"network_function_chain_reference": &schema.Schema{
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: referenceSchema(),
-													},
-												},
-												"subnet_reference": &schema.Schema{
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: referenceSchema(),
-													},
-												},
-											},
-										},
-									},
-									"gpu_list": &schema.Schema{
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"vendor": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"mode": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"device_id": {
-													Type:     schema.TypeInt,
-													Optional: true,
-												},
-											},
-										},
-									},
-									"disk_list": &schema.Schema{
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"uuid": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"disk_size_mib": {
-													Type:     schema.TypeInt,
-													Optional: true,
-												},
-												"device_properties": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"device_type": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-															"disk_address": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"adapter_type": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																		},
-																		"device_index": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-												"data_source_reference": &schema.Schema{
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: referenceSchema(),
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"metadata": &schema.Schema{
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"last_update_time": &schema.Schema{
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"name": &schema.Schema{
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"uuid": &schema.Schema{
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"creation_time": &schema.Schema{
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"entity_version": &schema.Schema{
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"categories": &schema.Schema{
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"owner_reference": &schema.Schema{
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: referenceSchema(),
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-// Schema of Reference
-func referenceSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"kind": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"name": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
-		"uuid": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-		},
+		Schema: vmschema.VMSchema(),
 	}
 }

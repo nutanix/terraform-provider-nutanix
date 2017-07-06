@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"strings"
 	"errors"
 	"flag"
 	"fmt"
@@ -26,18 +27,35 @@ var (
 	depth 			  = 0
 )
 
+const schemaHeader = `
+package virtualmachineschema
+
+import (
+	"github.com/hashicorp/terraform/helper/schema"
+)
+
+// VMSchema is Schema for VM
+func VMSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"ip_address": &schema.Schema{
+        	Type:     schema.TypeString,
+        	Computed: true,
+        },
+        "name": &schema.Schema{
+            Type:     schema.TypeString,
+            Required: true,
+        },
+`
+
 func main() {
 	flag.Parse()
-	fmt.Fprintf(wSchema, "package virtualmachineschema\n\nimport (\n\t\"github.com/hashicorp/terraform/helper/schema\"\n)")
-	fmt.Fprintf(wSchema, "\n// VMSchema is Schema for VM\nfunc VMSchema() map[string]*schema.Schema {\n")
-	fmt.Fprintf(wSchema, "\treturn map[string]*schema.Schema{\n")
+	fmt.Fprintf(wSchema, "%s\n", schemaHeader)
 	depth = 2
 	err := read(os.Stdin, os.Stdout)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Fprintf(wSchema, "\t}\n")
-	fmt.Fprintf(wSchema, "}")
+	fmt.Fprintf(wSchema, "\t}\n}")
 	wSchema.Flush()
 	fileSchema.Close()
 }
@@ -163,7 +181,7 @@ func xreflect(v interface{}) ([]byte, []byte, []byte, error) {
 				tabN(depth+1)
 				fmt.Fprintf(wSchema, "},\n")
 				fmt.Fprintf(bufConfig, "\t\t\t%s:\t\t%s,\n", goField(key), goField(key))
-				fmt.Fprintf(bufList, "\n\t\tvar %s []vm.%s\n", goField(key), goField(key))
+				fmt.Fprintf(bufList, "\n\t\tvar %s []nutanixV3.%s\n", goField(key), goStruct(key))
 				fmt.Fprintf(bufList, "\t\tif s[\"%s\"] != nil {\n\t\t\tfor i := 0; i< len(s[\"%s\"].([]interface{})); i++ {\n", key, key)
 				fmt.Fprintf(bufList, "\t\t\t\telem := Set%s(s[\"%s\"].([]interface{}),	i)\n", goField(key), key)
 				fmt.Fprintf(bufList, "\t\t\t\t%s = append(%s, elem)\n\t\t\t}\n\t\t}\n\n", goField(key), goField(key))
@@ -172,7 +190,14 @@ func xreflect(v interface{}) ([]byte, []byte, []byte, error) {
 				fields = append(fields, NewField(key, fmt.Sprintf("%T", val), nil, nil))
 				tabN(depth+1)
 				fmt.Fprintf(wSchema, "Type: schema.TypeString,\n")
-				fmt.Fprintf(bufConfig, "\t\t\t%s:\t\tconvertToString(s[\"%s\"]),\n", goField(key), key)
+				if strings.HasSuffix(goField(key), "Time") {
+					fmt.Fprintf(bufConfig, "\t\t\t%s:\t\t%s,\n", goField(key), goField(key))
+					fmt.Fprintf(bufList, "\n\t\tvar %s time.Time\n\t\ttemp%s := convertToString(s[\"%s\"])\n", goField(key), goField(key), key)
+					fmt.Fprintf(bufList, "\t\tif temp%s != \"\"{\n\t\t\t%s, _ = time.Parse(temp%s,temp%s)\n", goField(key), goField(key), goField(key), goField(key))
+					fmt.Fprintf(bufList, "\t\t}\n")
+				} else {	
+					fmt.Fprintf(bufConfig, "\t\t\t%s:\t\tconvertToString(s[\"%s\"]),\n", goField(key), key)
+				}	
 			}
 			tabN(depth)
 			fmt.Fprintf(wSchema, "},\n")
@@ -183,7 +208,7 @@ func xreflect(v interface{}) ([]byte, []byte, []byte, error) {
 	// Sort and write field buffer last to keep order and formatting.
 	sort.Sort(FieldSort(fields))
 	for _, f := range fields {
-		fmt.Fprintf(buf, "%s %s %s\n", f.name, f.gtype, f.tag)
+		fmt.Fprintf(buf, "%s %s\n", f.name, f.gtype)
 	}
 	return buf.Bytes(), bufConfig.Bytes(), bufList.Bytes(), nil
 }

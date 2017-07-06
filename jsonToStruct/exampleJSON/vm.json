@@ -77,7 +77,6 @@
             },
             "device_type": "DISK"
           },
-          "uuid": "string",
           "disk_size_mib": 0
         }
       ]
@@ -91,7 +90,6 @@
     "uuid": "string",
     "creation_time": "string",
     "categories": {},
-    "parent_reference": "string",
     "owner_reference": {
       "kind": "user",
       "name": "string",
