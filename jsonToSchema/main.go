@@ -22,30 +22,10 @@ var (
 	fstruct           = flag.String("structName", "VmIntentInput", "struct name for json object")
 	debug             = false
 	ErrNotValidSyntax = errors.New("Json reflection is not valid Go syntax")
-	fileSchema, _ 	  = os.Create(os.ExpandEnv("$GOPATH/src/github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachineschema/virtualmachineschema.go"))
+	fileSchema, _ 	  = os.Create(os.ExpandEnv(schemaFilePath))
 	wSchema			  = bufio.NewWriter(fileSchema)
 	depth 			  = 0
 )
-
-const schemaHeader = `
-package virtualmachineschema
-
-import (
-	"github.com/hashicorp/terraform/helper/schema"
-)
-
-// VMSchema is Schema for VM
-func VMSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"ip_address": &schema.Schema{
-        	Type:     schema.TypeString,
-        	Computed: true,
-        },
-        "name": &schema.Schema{
-            Type:     schema.TypeString,
-            Required: true,
-        },
-`
 
 func main() {
 	flag.Parse()
@@ -181,10 +161,7 @@ func xreflect(v interface{}) ([]byte, []byte, []byte, error) {
 				tabN(depth+1)
 				fmt.Fprintf(wSchema, "},\n")
 				fmt.Fprintf(bufConfig, "\t\t\t%s:\t\t%s,\n", goField(key), goField(key))
-				fmt.Fprintf(bufList, "\n\t\tvar %s []nutanixV3.%s\n", goField(key), goStruct(key))
-				fmt.Fprintf(bufList, "\t\tif s[\"%s\"] != nil {\n\t\t\tfor i := 0; i< len(s[\"%s\"].([]interface{})); i++ {\n", key, key)
-				fmt.Fprintf(bufList, "\t\t\t\telem := Set%s(s[\"%s\"].([]interface{}),	i)\n", goField(key), key)
-				fmt.Fprintf(bufList, "\t\t\t\t%s = append(%s, elem)\n\t\t\t}\n\t\t}\n\n", goField(key), goField(key))
+				fmt.Fprintf(bufList, configList, goField(key), goStruct(key), key, key, goField(key), key, goField(key), goField(key))
 
 			default:
 				fields = append(fields, NewField(key, fmt.Sprintf("%T", val), nil, nil))
@@ -192,9 +169,7 @@ func xreflect(v interface{}) ([]byte, []byte, []byte, error) {
 				fmt.Fprintf(wSchema, "Type: schema.TypeString,\n")
 				if strings.HasSuffix(goField(key), "Time") {
 					fmt.Fprintf(bufConfig, "\t\t\t%s:\t\t%s,\n", goField(key), goField(key))
-					fmt.Fprintf(bufList, "\n\t\tvar %s time.Time\n\t\ttemp%s := convertToString(s[\"%s\"])\n", goField(key), goField(key), key)
-					fmt.Fprintf(bufList, "\t\tif temp%s != \"\"{\n\t\t\t%s, _ = time.Parse(temp%s,temp%s)\n", goField(key), goField(key), goField(key), goField(key))
-					fmt.Fprintf(bufList, "\t\t}\n")
+					fmt.Fprintf(bufList, configTime, goField(key), goField(key), key, goField(key), goField(key), goField(key), goField(key))
 				} else {	
 					fmt.Fprintf(bufConfig, "\t\t\t%s:\t\tconvertToString(s[\"%s\"]),\n", goField(key), key)
 				}	
