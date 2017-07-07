@@ -65,7 +65,7 @@ func Set%s (t []interface{}, i int) nutanixV3.%s {
 		%s 
 
 		%s := nutanixV3.%s{
-			%s
+%s
 		}
 		return %s
 	}

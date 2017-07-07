@@ -31,15 +31,15 @@ func VMSchema() map[string]*schema.Schema {
 						Type: schema.TypeSet,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"kind": &schema.Schema{
-									Optional: true,
-									Type: schema.TypeString,
-								},
 								"name": &schema.Schema{
 									Optional: true,
 									Type: schema.TypeString,
 								},
 								"uuid": &schema.Schema{
+									Optional: true,
+									Type: schema.TypeString,
+								},
+								"kind": &schema.Schema{
 									Optional: true,
 									Type: schema.TypeString,
 								},
@@ -51,7 +51,7 @@ func VMSchema() map[string]*schema.Schema {
 						Type: schema.TypeSet,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"num_sockets": &schema.Schema{
+								"num_vcpus_per_socket": &schema.Schema{
 									Optional: true,
 									Type: schema.TypeInt,
 								},
@@ -64,10 +64,6 @@ func VMSchema() map[string]*schema.Schema {
 									Type: schema.TypeList,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
-											"vendor": &schema.Schema{
-												Optional: true,
-												Type: schema.TypeString,
-											},
 											"mode": &schema.Schema{
 												Optional: true,
 												Type: schema.TypeString,
@@ -76,23 +72,7 @@ func VMSchema() map[string]*schema.Schema {
 												Optional: true,
 												Type: schema.TypeInt,
 											},
-										},
-									},
-								},
-								"parent_reference": &schema.Schema{
-									Optional: true,
-									Type: schema.TypeSet,
-									Elem: &schema.Resource{
-										Schema: map[string]*schema.Schema{
-											"uuid": &schema.Schema{
-												Optional: true,
-												Type: schema.TypeString,
-											},
-											"name": &schema.Schema{
-												Optional: true,
-												Type: schema.TypeString,
-											},
-											"kind": &schema.Schema{
+											"vendor": &schema.Schema{
 												Optional: true,
 												Type: schema.TypeString,
 											},
@@ -104,22 +84,6 @@ func VMSchema() map[string]*schema.Schema {
 									Type: schema.TypeSet,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
-											"cloud_init": &schema.Schema{
-												Optional: true,
-												Type: schema.TypeSet,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"meta_data": &schema.Schema{
-															Optional: true,
-															Type: schema.TypeString,
-														},
-														"user_data": &schema.Schema{
-															Optional: true,
-															Type: schema.TypeString,
-														},
-													},
-												},
-											},
 											"sysprep": &schema.Schema{
 												Optional: true,
 												Type: schema.TypeSet,
@@ -136,92 +100,24 @@ func VMSchema() map[string]*schema.Schema {
 													},
 												},
 											},
-										},
-									},
-								},
-								"nic_list": &schema.Schema{
-									Optional: true,
-									Type: schema.TypeList,
-									Elem: &schema.Resource{
-										Schema: map[string]*schema.Schema{
-											"mac_address": &schema.Schema{
-												Optional: true,
-												Type: schema.TypeString,
-											},
-											"ip_endpoint_list": &schema.Schema{
-												Optional: true,
-												Type: schema.TypeList,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"address": &schema.Schema{
-															Optional: true,
-															Type: schema.TypeString,
-														},
-														"type": &schema.Schema{
-															Optional: true,
-															Type: schema.TypeString,
-														},
-													},
-												},
-											},
-											"network_function_chain_reference": &schema.Schema{
+											"cloud_init": &schema.Schema{
 												Optional: true,
 												Type: schema.TypeSet,
 												Elem: &schema.Resource{
 													Schema: map[string]*schema.Schema{
-														"uuid": &schema.Schema{
+														"meta_data": &schema.Schema{
 															Optional: true,
 															Type: schema.TypeString,
 														},
-														"kind": &schema.Schema{
-															Optional: true,
-															Type: schema.TypeString,
-														},
-														"name": &schema.Schema{
+														"user_data": &schema.Schema{
 															Optional: true,
 															Type: schema.TypeString,
 														},
 													},
 												},
-											},
-											"nic_type": &schema.Schema{
-												Optional: true,
-												Type: schema.TypeString,
-											},
-											"subnet_reference": &schema.Schema{
-												Optional: true,
-												Type: schema.TypeSet,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"kind": &schema.Schema{
-															Optional: true,
-															Type: schema.TypeString,
-														},
-														"name": &schema.Schema{
-															Optional: true,
-															Type: schema.TypeString,
-														},
-														"uuid": &schema.Schema{
-															Optional: true,
-															Type: schema.TypeString,
-														},
-													},
-												},
-											},
-											"network_function_nic_type": &schema.Schema{
-												Optional: true,
-												Type: schema.TypeString,
 											},
 										},
 									},
-								},
-								"power_state": &schema.Schema{
-									Optional: true,
-									Type: schema.TypeString,
-								},
-								"num_vcpus_per_socket": &schema.Schema{
-									Optional: true,
-									Type: schema.TypeInt,
 								},
 								"boot_config": &schema.Schema{
 									Optional: true,
@@ -233,13 +129,13 @@ func VMSchema() map[string]*schema.Schema {
 												Type: schema.TypeSet,
 												Elem: &schema.Resource{
 													Schema: map[string]*schema.Schema{
-														"device_index": &schema.Schema{
-															Optional: true,
-															Type: schema.TypeInt,
-														},
 														"adapter_type": &schema.Schema{
 															Optional: true,
 															Type: schema.TypeString,
+														},
+														"device_index": &schema.Schema{
+															Optional: true,
+															Type: schema.TypeInt,
 														},
 													},
 												},
@@ -256,6 +152,10 @@ func VMSchema() map[string]*schema.Schema {
 									Type: schema.TypeList,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
+											"disk_size_mib": &schema.Schema{
+												Optional: true,
+												Type: schema.TypeInt,
+											},
 											"data_source_reference": &schema.Schema{
 												Optional: true,
 												Type: schema.TypeSet,
@@ -304,9 +204,109 @@ func VMSchema() map[string]*schema.Schema {
 													},
 												},
 											},
-											"disk_size_mib": &schema.Schema{
+										},
+									},
+								},
+								"nic_list": &schema.Schema{
+									Optional: true,
+									Type: schema.TypeList,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"network_function_nic_type": &schema.Schema{
 												Optional: true,
-												Type: schema.TypeInt,
+												Type: schema.TypeString,
+											},
+											"mac_address": &schema.Schema{
+												Optional: true,
+												Type: schema.TypeString,
+											},
+											"ip_endpoint_list": &schema.Schema{
+												Optional: true,
+												Type: schema.TypeList,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"type": &schema.Schema{
+															Optional: true,
+															Type: schema.TypeString,
+														},
+														"address": &schema.Schema{
+															Optional: true,
+															Type: schema.TypeString,
+														},
+													},
+												},
+											},
+											"network_function_chain_reference": &schema.Schema{
+												Optional: true,
+												Type: schema.TypeSet,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"kind": &schema.Schema{
+															Optional: true,
+															Type: schema.TypeString,
+														},
+														"name": &schema.Schema{
+															Optional: true,
+															Type: schema.TypeString,
+														},
+														"uuid": &schema.Schema{
+															Optional: true,
+															Type: schema.TypeString,
+														},
+													},
+												},
+											},
+											"nic_type": &schema.Schema{
+												Optional: true,
+												Type: schema.TypeString,
+											},
+											"subnet_reference": &schema.Schema{
+												Optional: true,
+												Type: schema.TypeSet,
+												Elem: &schema.Resource{
+													Schema: map[string]*schema.Schema{
+														"kind": &schema.Schema{
+															Optional: true,
+															Type: schema.TypeString,
+														},
+														"name": &schema.Schema{
+															Optional: true,
+															Type: schema.TypeString,
+														},
+														"uuid": &schema.Schema{
+															Optional: true,
+															Type: schema.TypeString,
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+								"power_state": &schema.Schema{
+									Optional: true,
+									Type: schema.TypeString,
+								},
+								"num_sockets": &schema.Schema{
+									Optional: true,
+									Type: schema.TypeInt,
+								},
+								"parent_reference": &schema.Schema{
+									Optional: true,
+									Type: schema.TypeSet,
+									Elem: &schema.Resource{
+										Schema: map[string]*schema.Schema{
+											"kind": &schema.Schema{
+												Optional: true,
+												Type: schema.TypeString,
+											},
+											"uuid": &schema.Schema{
+												Optional: true,
+												Type: schema.TypeString,
+											},
+											"name": &schema.Schema{
+												Optional: true,
+												Type: schema.TypeString,
 											},
 										},
 									},
@@ -330,6 +330,18 @@ func VMSchema() map[string]*schema.Schema {
 			Type: schema.TypeSet,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
+					"kind": &schema.Schema{
+						Optional: true,
+						Type: schema.TypeString,
+					},
+					"uuid": &schema.Schema{
+						Optional: true,
+						Type: schema.TypeString,
+					},
+					"creation_time": &schema.Schema{
+						Optional: true,
+						Type: schema.TypeString,
+					},
 					"categories": &schema.Schema{
 						Optional: true,
 						Type: schema.TypeMap,
@@ -340,15 +352,15 @@ func VMSchema() map[string]*schema.Schema {
 						Type: schema.TypeSet,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"name": &schema.Schema{
-									Optional: true,
-									Type: schema.TypeString,
-								},
 								"uuid": &schema.Schema{
 									Optional: true,
 									Type: schema.TypeString,
 								},
 								"kind": &schema.Schema{
+									Optional: true,
+									Type: schema.TypeString,
+								},
+								"name": &schema.Schema{
 									Optional: true,
 									Type: schema.TypeString,
 								},
@@ -364,18 +376,6 @@ func VMSchema() map[string]*schema.Schema {
 						Type: schema.TypeString,
 					},
 					"last_update_time": &schema.Schema{
-						Optional: true,
-						Type: schema.TypeString,
-					},
-					"kind": &schema.Schema{
-						Optional: true,
-						Type: schema.TypeString,
-					},
-					"uuid": &schema.Schema{
-						Optional: true,
-						Type: schema.TypeString,
-					},
-					"creation_time": &schema.Schema{
 						Optional: true,
 						Type: schema.TypeString,
 					},

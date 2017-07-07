@@ -1,6 +1,7 @@
 package main
 
 import (
+	"regexp"
 	"fmt"
 	"strings"
 	"unicode"
@@ -56,13 +57,13 @@ func NewField(name, gtype string, bodyConfig []byte, bodyList  []byte,body ...by
 	if gtype == "struct" && len(body) > 0 {
 		gtype = goField(name)
 		if !structGenerated[gtype] {
-			fmt.Fprintf(wConfig, configStruct, gtype, name, gtype, goStruct(name),  bodyList, gtype, goStruct(name), bodyConfig, gtype, goStruct(name))
+			fmt.Fprintf(wConfig, configStruct, goFunc(name), name, goFunc(name), goStruct(name),  bodyList, goFunc(name), goStruct(name), bodyConfig, goFunc(name), goStruct(name))
 			structGenerated[gtype] = true
 		}	
 	} else if gtype == "struct" {
 		gtype = "map[string]string"
 		if !structGenerated[goField(name)] {
-			fmt.Fprintf(wConfig, configMap, goField(name), name, goField(name), goField(name), name, goField(name), name, goField(name), goField(name), goField(name), goField(name))
+			fmt.Fprintf(wConfig, configMap, goFunc(name), name, goFunc(name), goField(name), name, goField(name), name, goField(name), goField(name), goField(name), goField(name))
 			structGenerated[goField(name)] = true
 		}	
 	}
@@ -117,3 +118,17 @@ func goStruct(jsonfield string) string{
 	}
 	return structName
 }
+
+// Returns name of the setconfig function for the corresponding struct
+func goFunc(jsonfield string) string{
+	structField := goField(jsonfield)
+	return keywordsToUpper(structField, "Ip", "Uuid", "Vm", "Cpu", "Api")
+}
+
+func keywordsToUpper(src string, keywords ...string) string {
+	var re = regexp.MustCompile(`(` + strings.Join(keywords, "|") + `)`)
+	return re.ReplaceAllStringFunc(src, func(w string) string {
+		return strings.ToUpper(w)
+	})
+}
+						

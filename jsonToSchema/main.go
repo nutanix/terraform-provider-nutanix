@@ -117,7 +117,7 @@ func xreflect(v interface{}) ([]byte, []byte, []byte, error) {
 					fmt.Fprintf(wSchema, "Type: schema.TypeMap,\n")
 					tabN(depth+1)
 					fmt.Fprintf(wSchema, "Elem:     &schema.Schema{Type: schema.TypeString},\n")
-					fmt.Fprintf(bufConfig, "\t\t\t%s:\t\tSet%s(s),\n", goField(key) ,goField(key))
+					fmt.Fprintf(bufConfig, "\t\t\t%s:\t\tSet%s(s),\n", goField(key) ,goFunc(key))
 				} else {
 					fmt.Fprintf(wSchema, "Type: schema.TypeSet,\n")
 					tabN(depth+1)
@@ -160,16 +160,16 @@ func xreflect(v interface{}) ([]byte, []byte, []byte, error) {
 				fmt.Fprintf(wSchema, "},\n")
 				tabN(depth+1)
 				fmt.Fprintf(wSchema, "},\n")
-				fmt.Fprintf(bufConfig, "\t\t\t%s:\t\t%s,\n", goField(key), goField(key))
-				fmt.Fprintf(bufList, configList, goField(key), goStruct(key), key, key, goField(key), key, goField(key), goField(key))
+				fmt.Fprintf(bufConfig, "\t\t\t%s:\t\t%s,\n", goField(key), goFunc(key))
+				fmt.Fprintf(bufList, configList, goFunc(key), goStruct(key), key, key, goFunc(key), key, goFunc(key), goFunc(key))
 
 			default:
 				fields = append(fields, NewField(key, fmt.Sprintf("%T", val), nil, nil))
 				tabN(depth+1)
 				fmt.Fprintf(wSchema, "Type: schema.TypeString,\n")
 				if strings.HasSuffix(goField(key), "Time") {
-					fmt.Fprintf(bufConfig, "\t\t\t%s:\t\t%s,\n", goField(key), goField(key))
-					fmt.Fprintf(bufList, configTime, goField(key), goField(key), key, goField(key), goField(key), goField(key), goField(key))
+					fmt.Fprintf(bufConfig, "\t\t\t%s:\t\t%s,\n", goField(key), goFunc(key))
+					fmt.Fprintf(bufList, configTime, goFunc(key), goFunc(key), key, goFunc(key), goFunc(key), goFunc(key), goFunc(key))
 				} else {	
 					fmt.Fprintf(bufConfig, "\t\t\t%s:\t\tconvertToString(s[\"%s\"]),\n", goField(key), key)
 				}	
