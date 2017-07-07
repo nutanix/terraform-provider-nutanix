@@ -3,11 +3,15 @@ Provider plugin to integrate with AHV APIs
 
 - Website: https://www.terraform.io
 
+![Terraform](https://rawgit.com/hashicorp/terraform-website/master/source/assets/images/logo-hashicorp.svg)
+
 Requirments
 ------------
 
 -   [Terraform](https://www.terraform.io/downloads.html) 0.10.x
 -   [Go](https://golang.org/doc/install) 1.8 (to build the provider plugin)
+
+  ![GOLANG](https://rawgit.com/mholt/golang-graphics/master/svg/gopher-bike.svg)
 
 Building The Provider
 ---------------------
@@ -24,8 +28,8 @@ Enter the provider directory and build the provider
 $ cd $GOPATH/src/github.com/ideadevice/terraform-ahv-provider-plugin
 $ glide install
 $ cd cmd
-$ make getSDK   // for adding go_sdk in $(GOPATH)/src/nutanixV3
-$ make autoGenerate  // for generating schema and config function from json
+$ make getSDK           # for adding go_sdk in $(GOPATH)/src/nutanixV3
+$ make autoGenerate     # for generating schema and config function from json
 $ make build
 ```
 Using the  provider
@@ -35,7 +39,7 @@ The Nutanix Provider is used to interact with AHV APIs. The Provider needs to be
 
 ## Example Usage
 
-```sh
+```go
 // Configure the Nutanix Provider
 provider "nutanix"{
     username  = "username"
@@ -69,7 +73,7 @@ Creates, Updates and Destroy virtual machine resource using Prism Element APIs. 
 
 Following are the required arguments :-
 
-```sh
+```go
 resource "nutanix_virtual_machine" "my-machine"{
     name = "testname"
     spec {
@@ -119,8 +123,7 @@ $ go test -v $(glide novendor) --username=username --password=password --endpoin
 ```
 Following flags are defined for the testcases :-
 
-```sh
-  -disk-device-type-1 string
+>-disk-device-type-1 string
         This is device type for the first disk. (default "DISK")
   -disk-device-type-2 string
         This is device type for the second disk. (default "DISK")
@@ -178,7 +181,6 @@ Following flags are defined for the testcases :-
         This is the updated name of the vm in updateName testcase. (default "vm_test2")
   -username string
         username for api call.
-```
 
 Parameters can also be passed through the [Environment Variables](https://en.wikipedia.org/wiki/Environment_variable). A flag with name "x-y" can be set in CLI as <binary> --x-y, if the same flag has to be set in ENV, it has to be set as X_Y.
 For example a flag abc-xyz can be omitted by setting environment variable ABC_XYZ.
