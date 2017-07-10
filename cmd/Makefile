@@ -1,5 +1,7 @@
 clean:
 	rm terraform.tfstate
+	rm -r ../virtualmachineschema
+	rm -r ../virtualmachineconfig
 getSDK:
 	wget http://developer.nutanix.com/documentation/v3_sdk/html/sdk/go_sdk.tgz
 	mkdir $(GOPATH)/src/nutanixV3
@@ -8,6 +10,8 @@ getSDK:
 	mv $(GOPATH)/src/nutanixV3/go_sdk/* $(GOPATH)/src/nutanixV3
 	rm -r $(GOPATH)/src/nutanixV3/go_sdk
 autoGenerate:	
+	mkdir ../virtualmachineschema
+	mkdir ../virtualmachineconfig
 	go build ../jsonToSchema
 	./jsonToSchema < ../jsonToSchema/exampleJSON/vm.json
 	rm jsonToSchema

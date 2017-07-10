@@ -123,7 +123,8 @@ $ go test -v $(glide novendor) --username=username --password=password --endpoin
 ```
 Following flags are defined for the testcases :-
 
->-disk-device-type-1 string
+``sh
+  -disk-device-type-1 string
         This is device type for the first disk. (default "DISK")
   -disk-device-type-2 string
         This is device type for the second disk. (default "DISK")
@@ -181,6 +182,7 @@ Following flags are defined for the testcases :-
         This is the updated name of the vm in updateName testcase. (default "vm_test2")
   -username string
         username for api call.
+```
 
 Parameters can also be passed through the [Environment Variables](https://en.wikipedia.org/wiki/Environment_variable). A flag with name "x-y" can be set in CLI as <binary> --x-y, if the same flag has to be set in ENV, it has to be set as X_Y.
 For example a flag abc-xyz can be omitted by setting environment variable ABC_XYZ.
