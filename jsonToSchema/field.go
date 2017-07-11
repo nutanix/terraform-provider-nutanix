@@ -3,6 +3,7 @@ package main
 import (
 	"regexp"
 	"fmt"
+	"github.com/fatih/camelcase"
 	"strings"
 	"unicode"
 	"os"
@@ -11,27 +12,8 @@ import (
 )	
 
 var structGenerated = map[string]bool{}
-
-// Field data type
-type Field struct {
-	name string
-	gtype string
-}
-
 var structNameMap =  map[string]string {
-	"cluster_reference": "ClusterReference",
-	"data_source_reference":	"Reference",
-	"disk_address":	"DiskAddress",
-	"device_properties":	"VmDiskDeviceProperties",
-	"spec":	"Vm",
-	"network_function_chain_reference":	"NetworkFunctionChainReference",
-	"subnet_reference":	"SubnetReference",
-	"ip_endpoint_list":	"IpAddress",
-	"parent_reference":	"Reference",
-	"guest_customization":	"GuestCustomization",
-	"cloud_init":	"GuestCustomizationCloudInit",
-	"sysprep":	"GuestCustomizationSysprep",
-	"owner_reference":	"UserReference",
+	"VmIntentInput": "VmIntentInput",
 }
 
 func init() {
@@ -46,7 +28,7 @@ func init() {
 }
 
 // NewField simplifies Field construction
-func NewField(name, gtype string, bodyConfig []byte, bodyList  []byte,body ...byte) Field {
+func NewField(name, gtype string, bodyConfig []byte, bodyList  []byte){
 	fileConfig, err := os.OpenFile(os.ExpandEnv(configFilePath), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		glog.Fatal(err)
@@ -54,39 +36,25 @@ func NewField(name, gtype string, bodyConfig []byte, bodyList  []byte,body ...by
 	wConfig := bufio.NewWriter(fileConfig)
 	defer fileConfig.Close()
 	defer wConfig.Flush()
-	if gtype == "struct" && len(body) > 0 {
-		gtype = goField(name)
-		if !structGenerated[gtype] {
-			fmt.Fprintf(wConfig, configStruct, goFunc(name), name, goFunc(name), goStruct(name),  bodyList, goFunc(name), goStruct(name), bodyConfig, goFunc(name), goStruct(name))
-			structGenerated[gtype] = true
+	if gtype == "struct" {
+		gtype = structNameMap[name]
+		if !structGenerated[name] {
+			fmt.Fprintf(wConfig, configStruct, goFunc(name), fromCamelcase(name), goFunc(name), structNameMap[name],  bodyList, goFunc(name), structNameMap[name], bodyConfig, goFunc(name), structNameMap[name])
+			structGenerated[name] = true
 		}	
-	} else if gtype == "struct" {
-		gtype = "map[string]string"
-		if !structGenerated[goField(name)] {
-			fmt.Fprintf(wConfig, configMap, goFunc(name), name, goFunc(name), goField(name), name, goField(name), name, goField(name), goField(name), goField(name), goField(name))
-			structGenerated[goField(name)] = true
+	} else if gtype == "map[string]string" {
+		if !structGenerated[name] {
+			fmt.Fprintf(wConfig, configMap, goFunc(name), fromCamelcase(name), goFunc(name), name, fromCamelcase(name), name, fromCamelcase(name), name, name, name, name)
+			structGenerated[name] = true
 		}	
 	}
-	return Field{goField(name), gtype}
 }
-
-// FieldSort Provides Sorter interface so we can keep field order
-type FieldSort []Field
-
-func (s FieldSort) Len() int { return len(s) }
-
-func (s FieldSort) Swap(i, j int) { s[i], s[j] = s[j], s[i]}
-
-func (s FieldSort) Less(i, j int) bool {
-	return s[i].name < s[j].name
-}
-
 
 // Returns lower_case json fields to camel case fields
 // Example :
-//		goField("foo_id")
+//		toCamelcase("foo_id")
 //Output: FooId
-func goField(jsonfield string) string {
+func toCamelcase(jsonfield string) string {
 	mkUpper := true
 	structField := ""
 	for _, c := range jsonfield {
@@ -107,21 +75,20 @@ func goField(jsonfield string) string {
 	return fmt.Sprintf("%s", structField)
 }
 
-// Returns struct name for the json TypeSet
-func goStruct(jsonfield string) string{
-	structField := goField(jsonfield)
-	structName := strings.TrimSuffix(structField, "List")
-	structName = strings.TrimPrefix(structName, "Vm")
-	structName = "Vm" + structName
-	if structNameMap[jsonfield] != "" {
-		structName = structNameMap[jsonfield]
+//converts camelcase to delimiter-separeted words
+func fromCamelcase(s string) string{
+	splitted := camelcase.Split(s)
+	name := ""
+	for i := range splitted {
+		name = name + strings.ToLower(splitted[i]) + "_"
 	}
-	return structName
+	name = strings.TrimSuffix(name, "_")
+	return name
 }
 
 // Returns name of the setconfig function for the corresponding struct
 func goFunc(jsonfield string) string{
-	structField := goField(jsonfield)
+	structField := toCamelcase(jsonfield)
 	return keywordsToUpper(structField, "Ip", "Uuid", "Vm", "Cpu", "Api")
 }
 
@@ -131,4 +98,3 @@ func keywordsToUpper(src string, keywords ...string) string {
 		return strings.ToUpper(w)
 	})
 }
-						

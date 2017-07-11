@@ -1,7 +1,28 @@
 clean:
-	rm terraform.tfstate
-	rm -r ../virtualmachineschema
-	rm -r ../virtualmachineconfig
+	if [ -a terraform.tfstate ] ;\
+	then \
+		rm terraform.tfstate; \
+	fi;	
+	if [ -a terraform.tfstate.backup ]; \
+	then \
+		rm terraform.tfstate.backup ; \
+	fi;	
+	if [ -a ../virtualmachineschema ]; \
+	then \
+		rm -r ../virtualmachineschema ; \
+	fi;	
+	if [ -a ../virtualmachineconfig ]; \
+	then \
+		rm -r ../virtualmachineconfig ; \
+	fi;	
+	if [ -a terraform-provider-nutanix ]; \
+	then \
+		rm terraform-provider-nutanix ; \
+	fi;	
+	if [ -a crash.log ]; \
+	then \
+		rm crash.log ; \
+	fi;	
 getSDK:
 	wget http://developer.nutanix.com/documentation/v3_sdk/html/sdk/go_sdk.tgz
 	mkdir $(GOPATH)/src/nutanixV3
@@ -13,7 +34,7 @@ autoGenerate:
 	mkdir ../virtualmachineschema
 	mkdir ../virtualmachineconfig
 	go build ../jsonToSchema
-	./jsonToSchema < ../jsonToSchema/exampleJSON/vm.json
+	./jsonToSchema
 	rm jsonToSchema
 build:
 	go build -o terraform-provider-nutanix

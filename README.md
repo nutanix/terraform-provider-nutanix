@@ -28,8 +28,9 @@ Enter the provider directory and build the provider
 $ cd $GOPATH/src/github.com/ideadevice/terraform-ahv-provider-plugin
 $ glide install
 $ cd cmd
+$ make clean
 $ make getSDK           # for adding go_sdk in $(GOPATH)/src/nutanixV3
-$ make autoGenerate     # for generating schema and config function from json
+$ make autoGenerate     # for generating schema and config function from sdk struct function
 $ make build
 ```
 Using the  provider
@@ -123,7 +124,7 @@ $ go test -v $(glide novendor) --username=username --password=password --endpoin
 ```
 Following flags are defined for the testcases :-
 
-``sh
+```sh
   -disk-device-type-1 string
         This is device type for the first disk. (default "DISK")
   -disk-device-type-2 string
