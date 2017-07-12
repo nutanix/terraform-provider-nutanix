@@ -77,10 +77,10 @@ func toCamelcase(jsonfield string) string {
 
 //converts camelcase to delimiter-separeted words
 func fromCamelcase(s string) string{
-	splitted := camelcase.Split(s)
+	split := camelcase.Split(s)
 	name := ""
-	for i := range splitted {
-		name = name + strings.ToLower(splitted[i]) + "_"
+	for i := range split {
+		name = name + strings.ToLower(split[i]) + "_"
 	}
 	name = strings.TrimSuffix(name, "_")
 	return name

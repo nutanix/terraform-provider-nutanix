@@ -116,7 +116,7 @@ $ make build
 $ $GOPATH/bin/terraform-provider-nutanix
 ...
 ```
-In order to test the provider, you can simply run `make test`.
+In order to test the provider, you can simply run `go test`.
 
 ```sh
 $ cd $GOPATH/github.com/ideadevice/terraform-ahv-provider-plugin/

@@ -7,7 +7,7 @@ import:
   - terraform
 - package: github.com/spf13/pflag
 - package: github.com/spf13/viper
-- package: github.com/fatih/camelcase  
+- package: github.com/fatih/camelcase
 testImport:
 - package: github.com/hashicorp/terraform
   subpackages:
