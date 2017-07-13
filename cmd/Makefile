@@ -34,7 +34,7 @@ autoGenerate:
 	mkdir ../virtualmachineschema
 	mkdir ../virtualmachineconfig
 	go build ../jsonToSchema
-	./jsonToSchema --schema-path=$(schemaPath) --config-path=$(configPath) --sdk-path=$(sdkPath)
+	./jsonToSchema --sdk-path=$(sdkPath)
 	rm jsonToSchema
 build:
 	go build -o terraform-provider-nutanix
