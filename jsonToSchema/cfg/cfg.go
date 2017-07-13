@@ -1,4 +1,4 @@
-package gopath
+package cfg
 
 /*
 Uses Viper to read values from ENV variable or commandline flags transparently.
