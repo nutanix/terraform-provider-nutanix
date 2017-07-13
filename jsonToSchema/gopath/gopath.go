@@ -15,11 +15,17 @@ import (
 	"strings"
 )
 
-// Path is the GOPATH
-var Path string
+// ConfigPath is path for virtualmachineconfig package
+var ConfigPath string
+// SchemaPath is path for virtualmachineschema package
+var SchemaPath string
+// StructPath is path for virtualmachineconfig package
+var StructPath string
 
 func init() {
-	flag.String("gopath", "", "$GOPATH")
+	flag.String("schema-path", "", "path for creating the schema file")
+	flag.String("config-path", "", "path for creating the config file")
+	flag.String("sdk-path", "", "path for sdk repo")
 
 	//pflag configuration
 	pflag.CommandLine.AddGoFlagSet(flag.CommandLine)
@@ -35,5 +41,7 @@ func init() {
 	viper.SetEnvKeyReplacer(replacer)
 
 	//Config Init
-	Path = viper.GetString("gopath")
+	SchemaPath = viper.GetString("schema-path")
+	ConfigPath = viper.GetString("config-path")
+	StructPath = viper.GetString("sdk-path")
 }
