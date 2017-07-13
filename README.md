@@ -30,7 +30,9 @@ $ glide install
 $ cd cmd
 $ make clean
 $ make getSDK           # for adding go_sdk in $(GOPATH)/src/nutanixV3
-$ make autoGenerate schemaPath=$GOPATH/src/github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachineschema configPath=$GOPATH/src/github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachineconfig sdkPath=$GOPATH/src/nutanixV3/    # for generating schema and config function from sdk struct function
+$ make autoGenerate schemaPath=$GOPATH/src/github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachineschema
+configPath=$GOPATH/src/github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachineconfig
+sdkPath=$GOPATH/src/nutanixV3/    # for generating schema and config function from sdk struct function
 $ make build
 ```
 Using the  provider
