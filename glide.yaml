@@ -1,4 +1,6 @@
 package: github.com/ideadevice/terraform-ahv-provider-plugin
+ignore:
+- nutanixV3  
 import:
 - package: github.com/hashicorp/terraform
   subpackages:
@@ -8,6 +10,7 @@ import:
 - package: github.com/spf13/pflag
 - package: github.com/spf13/viper
 - package: github.com/fatih/camelcase
+- package: nutanixV3
 testImport:
 - package: github.com/hashicorp/terraform
   subpackages:

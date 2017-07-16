@@ -34,8 +34,8 @@ func convertToString(a interface{}) string {
 
 // SetMachineConfig function sets fields in struct from ResourceData
 func SetMachineConfig(d *schema.ResourceData) nutanixV3.VmIntentInput {
-    spec := d.Get("spec").(*schema.Set).List()           // spec
-    metadata := d.Get("metadata").(*schema.Set).List()                     // metadata
+    spec := d.Get("spec").([] interface{})           // spec
+    metadata := d.Get("metadata").([] interface{})                     // metadata
     machine := nutanixV3.VmIntentInput{
         ApiVersion: "3.0", // api_version
         Spec:       SetSpec(spec, 0),   //Spec

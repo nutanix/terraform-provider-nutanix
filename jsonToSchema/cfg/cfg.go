@@ -26,7 +26,7 @@ func init() {
 	viper.BindPFlags(pflag.CommandLine)
 	pflag.Parse()
 	pflag.Visit(func(f *pflag.Flag) {
-		fmt.Printf("GOPATH %s overridden: %s -> %s\n", f.Name, f.DefValue, f.Value)
+		fmt.Printf("cfg package: %s overridden: %s -> %s\n", f.Name, f.DefValue, f.Value)
 	})
 
 	//Env configuration

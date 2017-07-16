@@ -112,8 +112,8 @@ func xreflect(name string) ([]byte, []byte, error) {
 				fmt.Fprintf(bufConfig, "\t\t\t%s:\t\t%s,\n", key, goFunc(key))
 				fmt.Fprintf(bufList, configList, goFunc(key), val , fromCamelcase(key), fromCamelcase(key), goFunc(key), fromCamelcase(key), goFunc(key), goFunc(key))
 			} else {
-				fmt.Fprintf(wSchema, "Type: schema.TypeSet,\n")
-				fmt.Fprintf(bufConfig, "\t\t\t%s:\t\tSet%s(s[\"%s\"].(*schema.Set).List(), 0),\n", key, goFunc(key), fromCamelcase(key))
+				fmt.Fprintf(wSchema, "Type: schema.TypeList,\n")
+				fmt.Fprintf(bufConfig, "\t\t\t%s:\t\tSet%s(s[\"%s\"].([] interface{}), 0),\n", key, goFunc(key), fromCamelcase(key))
 			}
 	
 			structNameMap[key] = val

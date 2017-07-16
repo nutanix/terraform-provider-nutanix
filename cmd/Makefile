@@ -31,8 +31,14 @@ getSDK:
 	mv $(GOPATH)/src/nutanixV3/go_sdk/* $(GOPATH)/src/nutanixV3
 	rm -r $(GOPATH)/src/nutanixV3/go_sdk
 autoGenerate:	
-	mkdir ../virtualmachineschema
-	mkdir ../virtualmachineconfig
+	if ! [ -a ../virtualmachineconfig ]; \
+	then \
+		mkdir ../virtualmachineschema; \
+	fi;	
+	if ! [ -a ../virtualmachineconfig ]; \
+	then \
+		mkdir ../virtualmachineconfig; \
+	fi;	
 	go build ../jsonToSchema
 	./jsonToSchema --sdk-path=$(sdkPath)
 	rm jsonToSchema

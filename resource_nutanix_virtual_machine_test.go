@@ -11,7 +11,6 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"strings"
 	"testing"
 )
 
@@ -23,14 +22,6 @@ func testBasicPreCheck(t *testing.T) {
 		t.Fatal("env variable NUTANIX_NAME must be set for acceptance tests")
 	}
 }
-
-var specKey string
-var specResourcesKey string
-var metadataKey string
-var diskSourceReference0Key string
-var diskSourceReference1Key string
-var deviceProperties0Key string
-var deviceProperties1Key string
 
 type TemplateBasicBodyVars struct {
 	name                string
@@ -117,25 +108,6 @@ type TestFuncData struct {
 	powerState   string
 }
 
-func hashmapKey(s, t string) string {
-	words := strings.Fields(terraformState)
-	prefix := s + "."
-	suffix := "." + t
-	for i := range words {
-		if (words[i] == strings.TrimPrefix(words[i], prefix+"#")) && (words[i] != strings.TrimPrefix(words[i], prefix)) {
-			str1 := strings.TrimPrefix(words[i], prefix)
-			str2 := strings.TrimSuffix(str1, suffix)
-			str3 := strings.TrimSuffix(str1, suffix+".#")
-			if str2 != str1 {
-				return str2
-			} else if str3 != str1 {
-				return str3
-			}
-		}
-	}
-	return ""
-}
-
 // returns TestCheckFunc's that will be used in most of our tests
 // numVCPUs, numSockets defaults to 1
 // APIVersion defaults to 3.0 specVersion 0 and memorySizeMb tp 1024
@@ -156,11 +128,11 @@ func (test TestFuncData) testCheckFuncBasic() (resource.TestCheckFunc, resource.
 
 	return testAccCheckNutanixVirtualMachineExists(vmName, &test.vm),
 		resource.TestCheckResourceAttr(vmName, "spec.#", "1"),
-		resource.TestCheckResourceAttr(vmName, specKey+".resources.#", "1"),
-		resource.TestCheckResourceAttr(vmName, specResourcesKey+".power_state", flag.NutanixPowerState),
-		resource.TestCheckResourceAttr(vmName, specResourcesKey+".memory_size_mb", memorySize),
-		resource.TestCheckResourceAttr(vmName, specResourcesKey+".num_sockets", flag.NutanixNumSockets),
-		resource.TestCheckResourceAttr(vmName, specResourcesKey+".num_vcpus_per_socket", flag.NutanixNumVCPUs),
+		resource.TestCheckResourceAttr(vmName, "spec.0.resources.#", "1"),
+		resource.TestCheckResourceAttr(vmName, "spec.0.resources.0.power_state", flag.NutanixPowerState),
+		resource.TestCheckResourceAttr(vmName, "spec.0.resources.0.memory_size_mb", memorySize),
+		resource.TestCheckResourceAttr(vmName, "spec.0.resources.0.num_sockets", flag.NutanixNumSockets),
+		resource.TestCheckResourceAttr(vmName, "spec.0.resources.0.num_vcpus_per_socket", flag.NutanixNumVCPUs),
 		resource.TestCheckResourceAttr(vmName, "name", name)
 }
 
@@ -223,29 +195,7 @@ const testAccTemplateMostBasicBody = testAccTemplateSpecBody +
 const testAccTemplateBasicBodyWithEnd = testAccTemplateBasicBody + `
 }`
 
-// testing vms with basic config
-func TestAccNutanixVirtualMachine_basic1(t *testing.T) {
-	var vm nutanixV3.VmIntentInput
-	basicVars := setupTemplateBasicBodyVars()
-	config := basicVars.testSprintfTemplateBodyWithoutNic(testAccCheckNutanixVirtualMachineConfigMostBasic)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testBasicPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
-		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
-				),
-			},
-		},
-	})
-}
-
-// testing vms with basic config
-func TestAccNutanixVirtualMachine_basic2(t *testing.T) {
+func TestAccNutanixVirtualMachine_basic(t *testing.T) {
 	var vm nutanixV3.VmIntentInput
 	basicVars := setupTemplateBasicBodyVars()
 	config := basicVars.testSprintfTemplateBodyWithoutNic(testAccCheckNutanixVirtualMachineConfigMostBasic)
@@ -266,29 +216,7 @@ func TestAccNutanixVirtualMachine_basic2(t *testing.T) {
 }
 
 // testing vms with nic_list config
-func TestAccNutanixVirtualMachine_nicList1(t *testing.T) {
-	var vm nutanixV3.VmIntentInput
-	basicVars := setupTemplateBasicBodyVars()
-	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
-	log.Printf("[DEBUG] template config= %s", config)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testBasicPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
-		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
-				),
-			},
-		},
-	})
-}
-
-// testing vms with nic_list config
-func TestAccNutanixVirtualMachine_nicList2(t *testing.T) {
+func TestAccNutanixVirtualMachine_nicList(t *testing.T) {
 	var vm nutanixV3.VmIntentInput
 	basicVars := setupTemplateBasicBodyVars()
 	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
@@ -344,45 +272,7 @@ func diskSet() string {
 }
 
 // testing vms with disk list
-func TestAccNutanixVirtualMachine_diskList1(t *testing.T) {
-	var vm nutanixV3.VmIntentInput
-	basicVars := setupTemplateBasicBodyVars()
-	diskList := diskSet()
-	testAccTemplateDiskBody := testAccTemplateSpecBody +
-		testAccTemplateResourcesBody + diskList + `
-		}
-	}
-	` +
-		testAccTemplateMetadata + `
-	}
-	`
-	testAccCheckNutanixVirtualMachineConfigDisk := `
-resource "nutanix_virtual_machine" "my-machine" {
-	name = "%s"
-` + testAccTemplateDiskBody + `
-}`
-
-	basicVars.powerState = "OFF"
-	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigDisk)
-	log.Printf("[DEBUG] template config= %s", config)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testBasicPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
-		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
-				),
-			},
-		},
-	})
-}
-
-// testing vms with disk list
-func TestAccNutanixVirtualMachine_diskList2(t *testing.T) {
+func TestAccNutanixVirtualMachine_diskList(t *testing.T) {
 	var vm nutanixV3.VmIntentInput
 	basicVars := setupTemplateBasicBodyVars()
 	diskList := diskSet()
@@ -414,21 +304,21 @@ resource "nutanix_virtual_machine" "my-machine" {
 				Config: config,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
-					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.#", "2"),
-					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.0.data_source_reference.#", "1"),
-					resource.TestCheckResourceAttr(vmName, diskSourceReference0Key+".kind", flag.NutanixDiskKind[0]),
-					resource.TestCheckResourceAttr(vmName, diskSourceReference0Key+".name", flag.NutanixDiskName[0]),
-					resource.TestCheckResourceAttr(vmName, diskSourceReference0Key+".uuid", flag.NutanixDiskUUID[0]),
-					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.0.device_properties.#", "1"),
-					resource.TestCheckResourceAttr(vmName, deviceProperties0Key+".device_type", flag.NutanixDiskDeviceType[0]),
-					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.0.disk_size_mib", flag.NutanixDiskSize[0]),
-					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.1.data_source_reference.#", "1"),
-					resource.TestCheckResourceAttr(vmName, diskSourceReference1Key+".kind", flag.NutanixDiskKind[1]),
-					resource.TestCheckResourceAttr(vmName, diskSourceReference1Key+".name", flag.NutanixDiskName[1]),
-					resource.TestCheckResourceAttr(vmName, diskSourceReference1Key+".uuid", flag.NutanixDiskUUID[1]),
-					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.1.device_properties.#", "1"),
-					resource.TestCheckResourceAttr(vmName, deviceProperties1Key+".device_type", flag.NutanixDiskDeviceType[1]),
-					resource.TestCheckResourceAttr(vmName, specResourcesKey+".disk_list.1.disk_size_mib", flag.NutanixDiskSize[1]),
+					resource.TestCheckResourceAttr(vmName, "spec.0.resources.0.disk_list.#", "2"),
+					resource.TestCheckResourceAttr(vmName, "spec.0.resources.0.disk_list.0.data_source_reference.#", "1"),
+					resource.TestCheckResourceAttr(vmName, "spec.0.resources.0.disk_list.0.data_source_reference.0.kind", flag.NutanixDiskKind[0]),
+					resource.TestCheckResourceAttr(vmName, "spec.0.resources.0.disk_list.0.data_source_reference.0.name", flag.NutanixDiskName[0]),
+					resource.TestCheckResourceAttr(vmName, "spec.0.resources.0.disk_list.0.data_source_reference.0.uuid", flag.NutanixDiskUUID[0]),
+					resource.TestCheckResourceAttr(vmName, "spec.0.resources.0.disk_list.0.device_properties.#", "1"),
+					resource.TestCheckResourceAttr(vmName, "spec.0.resources.0.disk_list.0.device_properties.0.device_type", flag.NutanixDiskDeviceType[0]),
+					resource.TestCheckResourceAttr(vmName, "spec.0.resources.0.disk_list.0.disk_size_mib", flag.NutanixDiskSize[0]),
+					resource.TestCheckResourceAttr(vmName, "spec.0.resources.0.disk_list.1.data_source_reference.#", "1"),
+					resource.TestCheckResourceAttr(vmName, "spec.0.resources.0.disk_list.1.data_source_reference.0.kind", flag.NutanixDiskKind[1]),
+					resource.TestCheckResourceAttr(vmName, "spec.0.resources.0.disk_list.1.data_source_reference.0.name", flag.NutanixDiskName[1]),
+					resource.TestCheckResourceAttr(vmName, "spec.0.resources.0.disk_list.1.data_source_reference.0.uuid", flag.NutanixDiskUUID[1]),
+					resource.TestCheckResourceAttr(vmName, "spec.0.resources.0.disk_list.1.device_properties.#", "1"),
+					resource.TestCheckResourceAttr(vmName, "spec.0.resources.0.disk_list.1.device_properties.0.device_type", flag.NutanixDiskDeviceType[1]),
+					resource.TestCheckResourceAttr(vmName, "spec.0.resources.0.disk_list.1.disk_size_mib", flag.NutanixDiskSize[1]),
 				),
 			},
 		},
@@ -436,30 +326,7 @@ resource "nutanix_virtual_machine" "my-machine" {
 }
 
 // testing update memory in vm
-func TestAccNutanixVirtualMachine_updateMemory1(t *testing.T) {
-	var vm nutanixV3.VmIntentInput
-	basicVars := setupTemplateBasicBodyVars()
-	basicVars.memorySizeMb = flag.NutanixUpdateMemorySize
-	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
-	log.Printf("[DEBUG] template config= %s", config)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testBasicPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
-		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
-				),
-			},
-		},
-	})
-}
-
-// testing update memory in vm
-func TestAccNutanixVirtualMachine_updateMemory2(t *testing.T) {
+func TestAccNutanixVirtualMachine_updateMemory(t *testing.T) {
 	var vm nutanixV3.VmIntentInput
 	basicVars := setupTemplateBasicBodyVars()
 	basicVars.powerState = "POWERED_OFF"
@@ -492,29 +359,7 @@ func TestAccNutanixVirtualMachine_updateMemory2(t *testing.T) {
 }
 
 // testing update name of the vm
-func TestAccNutanixVirtualMachine_updateName1(t *testing.T) {
-	var vm nutanixV3.VmIntentInput
-	basicVars := setupTemplateBasicBodyVars()
-	config := basicVars.testSprintfTemplateBodyUpdateName(testAccCheckNutanixVirtualMachineConfigReallyBasic)
-	log.Printf("[DEBUG] template config= %s", config)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testBasicPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
-		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.my-machine", &vm),
-				),
-			},
-		},
-	})
-}
-
-// testing update name of the vm
-func TestAccNutanixVirtualMachine_updateName2(t *testing.T) {
+func TestAccNutanixVirtualMachine_updateName(t *testing.T) {
 	var vm nutanixV3.VmIntentInput
 	basicVars := setupTemplateBasicBodyVars()
 	basicVars.powerState = "POWERED_OFF"
@@ -569,13 +414,6 @@ func testAccCheckNutanixVirtualMachineExists(n string, vm *nutanixV3.VmIntentInp
 		defer f.Close()
 		defer w.Flush()
 		fmt.Fprintf(w, "%+v \n %+v\n %+v", s.Serial, s, *s)
-		terraformState = fmt.Sprintf("%+v", s)
-		specKey = "spec." + hashmapKey("spec", "resources")
-		specResourcesKey = specKey + ".resources." + hashmapKey(specKey+".resources", "power_state")
-		diskSourceReference0Key = specResourcesKey + ".disk_list.0.data_source_reference." + hashmapKey(specResourcesKey+".disk_list.0.data_source_reference", "uuid")
-		diskSourceReference1Key = specResourcesKey + ".disk_list.1.data_source_reference." + hashmapKey(specResourcesKey+".disk_list.1.data_source_reference", "uuid")
-		deviceProperties0Key = specResourcesKey + ".disk_list.0.device_properties." + hashmapKey(specResourcesKey+".disk_list.0.device_properties", "device_type")
-		deviceProperties1Key = specResourcesKey + ".disk_list.1.device_properties." + hashmapKey(specResourcesKey+".disk_list.1.device_properties", "device_type")
 		if n == "" {
 			return fmt.Errorf("No vm name passed in")
 		}

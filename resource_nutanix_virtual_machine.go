@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"bufio"
+	"time"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/ideadevice/terraform-ahv-provider-plugin/flg"
 	vmschema "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachineschema"
@@ -90,6 +91,7 @@ func (c *V3Client) WaitForProcess(uuid string) (bool, error) {
 		if VMIntentResponse.Status.State == "COMPLETE" {
 			return true, nil
 		}
+		time.Sleep(3000*time.Millisecond)
 	}
 	return false, nil
 }
@@ -116,6 +118,7 @@ func (c *V3Client) WaitForIP(uuid string, d *schema.ResourceData) error {
 				}
 			}
 		}
+		time.Sleep(3000*time.Millisecond)
 	}
 	return nil
 }
@@ -154,7 +157,19 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 
 }
 
-func resourceNutanixVirtualMachineRead(d *schema.ResourceData, m interface{}) error {
+func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*V3Client)
+	APIInstance := setAPIInstance(client)
+	//VMIntentResponse, APIResponse, err := APIInstance.VmsUuidGet(d.Id())
+	_, APIResponse, err := APIInstance.VmsUuidGet(d.Id())
+	if err != nil {
+		return err
+	}
+
+	err = checkAPIResponse(*APIResponse)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
