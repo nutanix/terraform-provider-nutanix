@@ -41,7 +41,7 @@ func SetMachineConfig(d *schema.ResourceData) nutanixV3.VmIntentInput {
         Spec:       SetSpec(spec, 0),   //Spec
         Metadata:   SetMetadata(metadata, 0),   //Metadata
     }
-    if strings.ToUpper(machine.Spec.Resources.PowerState) == "ON" {
+    if strings.ToUpper(machine.Spec.Resources.PowerState) == "ON" || machine.Spec.Resources.PowerState == "POWERED_ON" {
         machine.Spec.Resources.PowerState = "POWERED_ON"
     } else {
         machine.Spec.Resources.PowerState = "POWERED_OFF"
@@ -128,3 +128,61 @@ const configTime = `
 
 `
 
+const updateList = `
+
+	var %sList []map[string]interface{}
+	for i := 0; i < len(t.%s); i++{
+		%s := update%s(t.%s[i])
+		%sList = append(%sList, %s)
+	}
+	elem["%s"] = %sList
+
+`
+
+const updateStruct = `
+
+	var %sList []map[string]interface{}
+	%s := update%s(t.%s)
+	%sList = append(%sList, %s)
+	elem["%s"] = %sList
+
+`
+
+const updateStateHeader = `
+package virtualmachineconfig
+
+import (
+    "github.com/hashicorp/terraform/helper/schema"
+    nutanixV3 "nutanixV3"
+)
+
+// UpdateTerraformState updates the state of terraform
+func UpdateTerraformState(d *schema.ResourceData,  metadata nutanixV3.VmMetadata, spec    nutanixV3.Vm) error {
+
+	var specList []map[string]interface{}
+	specList = append(specList, updateSpec(spec))
+	if err := d.Set("spec", specList); err !=nil {
+		return err
+	}
+
+	var metadataList []map[string]interface{}
+	metadataList = append(metadataList, updateMetadata(metadata))
+	if err := d.Set("metadata", metadataList); err !=nil {
+         return err
+     }
+
+     return nil
+}	
+
+`
+
+const updateFunc = `
+func update%s(t nutanixV3.%s) map[string]interface{} {
+	elem := make(map[string]interface{})
+
+%s
+
+	return elem
+}
+
+`

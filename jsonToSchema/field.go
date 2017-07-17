@@ -21,25 +21,41 @@ func init() {
 		if err != nil {
 			glog.Fatal(err)
 		}
+		fileUpdate, err := os.Create(os.ExpandEnv(stateUpdateFilePath))
+		if err != nil {
+			glog.Fatal(err)
+		}
+		wState := bufio.NewWriter(fileUpdate)
+		defer fileUpdate.Close()
+		defer wState.Flush()
 		wConfig := bufio.NewWriter(fileConfig)
 		defer fileConfig.Close()
 		defer wConfig.Flush()
 		fmt.Fprintf(wConfig, "%s\n", configHeader)
+		fmt.Fprintf(wState, "%s\n", updateStateHeader)
 }
 
 // NewField simplifies Field construction
-func NewField(name, gtype string, bodyConfig []byte, bodyList  []byte){
-	fileConfig, err := os.OpenFile(os.ExpandEnv(configFilePath), os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+func NewField(name, gtype string, bodyConfig []byte, bodyList  []byte, stateUpdate []byte){
+	fileConfig, err := os.OpenFile(configFilePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		glog.Fatal(err)
 	}
 	wConfig := bufio.NewWriter(fileConfig)
 	defer fileConfig.Close()
 	defer wConfig.Flush()
+	fileUpdate, err := os.OpenFile(stateUpdateFilePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
+		glog.Fatal(err)
+	}
+	wState := bufio.NewWriter(fileUpdate)
+	defer fileUpdate.Close()
+	defer wState.Flush()
 	if gtype == "struct" {
 		gtype = structNameMap[name]
 		if !structGenerated[name] {
 			fmt.Fprintf(wConfig, configStruct, goFunc(name), fromCamelcase(name), goFunc(name), structNameMap[name],  bodyList, goFunc(name), structNameMap[name], bodyConfig, goFunc(name), structNameMap[name])
+			fmt.Fprintf(wState, updateFunc, goFunc(name), structNameMap[name], stateUpdate)
 			structGenerated[name] = true
 		}	
 	} else if gtype == "map[string]string" {

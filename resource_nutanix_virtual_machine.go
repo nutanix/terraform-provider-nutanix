@@ -160,8 +160,8 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*V3Client)
 	APIInstance := setAPIInstance(client)
-	//VMIntentResponse, APIResponse, err := APIInstance.VmsUuidGet(d.Id())
-	_, APIResponse, err := APIInstance.VmsUuidGet(d.Id())
+	VMIntentResponse, APIResponse, err := APIInstance.VmsUuidGet(d.Id())
+	log.Printf("[DEBUG] Synching the remote Virtual Machine instance with local instance: %s, %s", VMIntentResponse.Spec.Name, d.Id())
 	if err != nil {
 		return err
 	}
@@ -170,6 +170,22 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	if err != nil {
 		return err
 	}
+
+	VMIntentResponse.Spec.Resources = vmconfig.GetVMResources(VMIntentResponse.Status.Resources)
+
+	err = vmconfig.UpdateTerraformState(d, VMIntentResponse.Metadata,  VMIntentResponse.Spec)
+	if err != nil {
+		return err
+	}
+
+	d.Set("ip_address", "")
+	if len(VMIntentResponse.Spec.Resources.NicList) > 0 && VMIntentResponse.Spec.Resources.PowerState == "POWERED_ON" {
+		err = client.WaitForIP(d.Id(), d)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
