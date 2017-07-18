@@ -96,7 +96,7 @@ Features :
 Otherwise it keeps polling till the vm gets created by taking the status state from GET Api call response.
 If the vm is POWERED_ON and there is atleast one network adapter than it keep polling till the vm gets assigned an ip. Then it sets the ip_address with the ip and id of the resource with the vm's uuid.
 - **Update**:  This is called to update the properties of the existing vm. For updating the memory and cpu we have to first update power_state to OFF and then update the memory. With this updates ip_address of the vm also get recomputed.
-- **Read**: This is called to resync the remote state with the local state. It does Get API Call on the instance's UUID and then update the terraform state accordingly.  
+- **Read**: This is called to resync the remote state with the local state. It does Get API Call on the instance's UUID and then update the terraform state accordingly.
 - **Exists**: This is called to verify a resource still exists. It is called prior to Read, and lowers the burden of Read to be able to assume the resource exists.
  If the resource is no longer present in remote state, calling SetId with an empty string will signal its removal.
 - **Destroy**: This is called to delete the vm. It takes the uuid from the id of the resource and then call DELETE on that uuid.

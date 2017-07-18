@@ -1,6 +1,6 @@
 package: github.com/ideadevice/terraform-ahv-provider-plugin
 ignore:
-- nutanixV3  
+- nutanixV3
 import:
 - package: github.com/hashicorp/terraform
   subpackages:
