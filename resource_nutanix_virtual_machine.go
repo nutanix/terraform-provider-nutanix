@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"errors"
+	"reflect"
 	"fmt"
 	"os"
 	"bufio"
@@ -165,6 +166,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	if err != nil {
 		return err
 	}
+	machine := vmconfig.SetMachineConfig(d)
 
 	err = checkAPIResponse(*APIResponse)
 	if err != nil {
@@ -173,18 +175,47 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 
 	VMIntentResponse.Spec.Resources = vmconfig.GetVMResources(VMIntentResponse.Status.Resources)
 
-	err = vmconfig.UpdateTerraformState(d, VMIntentResponse.Metadata,  VMIntentResponse.Spec)
-	if err != nil {
-		return err
+	machineTemp := nutanixV3.VmIntentInput{
+		ApiVersion: "3.0",
+		Spec: VMIntentResponse.Spec,
+		Metadata: VMIntentResponse.Metadata,
 	}
 
-	d.Set("ip_address", "")
-	if len(VMIntentResponse.Spec.Resources.NicList) > 0 && VMIntentResponse.Spec.Resources.PowerState == "POWERED_ON" {
-		err = client.WaitForIP(d.Id(), d)
+	if len(machineTemp.Spec.Resources.DiskList) == len(machine.Spec.Resources.DiskList) {
+		machineTemp.Spec.Resources.DiskList = machine.Spec.Resources.DiskList
+	}
+	if len(machineTemp.Spec.Resources.NicList) == len(machine.Spec.Resources.NicList) {
+		machineTemp.Spec.Resources.NicList = machine.Spec.Resources.NicList
+	}
+	machineTemp.Metadata.OwnerReference = machine.Metadata.OwnerReference
+	machineTemp.Metadata.EntityVersion = machine.Metadata.EntityVersion
+	machineTemp.Metadata.Uuid = machine.Metadata.Uuid
+	machineTemp.Metadata.Name = machine.Metadata.Name
+	
+	if ! reflect.DeepEqual(machineTemp, machine) {
+
+		err = vmconfig.UpdateTerraformState(d, VMIntentResponse.Metadata,  VMIntentResponse.Spec)
 		if err != nil {
 			return err
 		}
-	}
+
+		d.Set("ip_address", "")
+		if len(VMIntentResponse.Spec.Resources.NicList) > 0 && VMIntentResponse.Spec.Resources.PowerState == "POWERED_ON" {
+			err = client.WaitForIP(d.Id(), d)
+			if err != nil {
+				return err
+			}
+		}
+		file, err := os.Create("/tmp/check")
+		if err != nil {
+			return err
+		}
+		w := bufio.NewWriter(file)
+		defer file.Close()
+		defer w.Flush()
+		fmt.Fprintf(w, "%+v\n%+v\n", machineTemp, machine)
+		
+	}	
 
 	return nil
 }
