@@ -1,4 +1,4 @@
-The following changes should be made in your SDK repo.
+The following changes are made in go_sdk repo.
 
 1. Added insecure flag in APIClient struct (api_client.go):
 
