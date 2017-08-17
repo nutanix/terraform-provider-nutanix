@@ -40,7 +40,7 @@ MemorySizeMib int64 `json:"memory_size_mb,omitempty" bson:"memory_size_mb,omitem
 
 ```
 // Address string.
-Address string `json:"ip,omitempty" bson:"ip,omitempty"`
+Address string `json:"address,omitempty" bson:"address,omitempty"`
 ```
 
 
