@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	flag "github.com/ideadevice/terraform-ahv-provider-plugin/testflg"
-	nutanixV3 "nutanixV3"
 	"log"
+	nutanixV3 "nutanixV3"
 	"os"
 	"strconv"
 	"testing"
@@ -111,7 +111,7 @@ type TestFuncData struct {
 // returns TestCheckFunc's that will be used in most of our tests
 // numVCPUs, numSockets defaults to 1
 // APIVersion defaults to 3.0 specVersion 0 and memorySizeMb tp 1024
-// kind defaults to "vm" and powerState to "POWERED_ON", vmName to "nutanix_virtual_machine"
+// kind defaults to "vm" and powerState to "ON", vmName to "nutanix_virtual_machine"
 func (test TestFuncData) testCheckFuncBasic() (resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc, resource.TestCheckFunc) {
 	vmName := test.vmName
 	if vmName == "" {
@@ -329,7 +329,7 @@ resource "nutanix_virtual_machine" "my-machine" {
 func TestAccNutanixVirtualMachine_updateMemory(t *testing.T) {
 	var vm nutanixV3.VmIntentInput
 	basicVars := setupTemplateBasicBodyVars()
-	basicVars.powerState = "POWERED_OFF"
+	basicVars.powerState = "OFF"
 	configOFF := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
 	basicVars.memorySizeMb = flag.NutanixUpdateMemorySize
 	basicVars.powerState = flag.NutanixPowerState
@@ -362,7 +362,7 @@ func TestAccNutanixVirtualMachine_updateMemory(t *testing.T) {
 func TestAccNutanixVirtualMachine_updateName(t *testing.T) {
 	var vm nutanixV3.VmIntentInput
 	basicVars := setupTemplateBasicBodyVars()
-	basicVars.powerState = "POWERED_OFF"
+	basicVars.powerState = "OFF"
 	configOFF := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
 	basicVars.powerState = flag.NutanixPowerState
 	configON := basicVars.testSprintfTemplateBodyUpdateName(testAccCheckNutanixVirtualMachineConfigReallyBasic)

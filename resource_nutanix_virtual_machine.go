@@ -1,24 +1,27 @@
 package nutanix
 
 import (
-	"errors"
-	"reflect"
-	"fmt"
-	"os"
 	"bufio"
-	"time"
+	"errors"
+	"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/ideadevice/terraform-ahv-provider-plugin/flg"
-	vmschema "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachineschema"
+	"os"
+	"reflect"
+	"time"
 	vmconfig "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachineconfig"
-	nutanixV3 "nutanixV3"
+	vmschema "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachineschema"
 	"log"
+	nutanixV3 "nutanixV3"
 	"runtime/debug"
+	"encoding/json"
 )
 
 var statusCodeFilter map[int]bool
+var statusMap map[int]bool
+
 func init() {
-	statusMap := map[int]bool{
+	statusMap = map[int]bool{
 		200: true,
 		201: true,
 		202: true,
@@ -68,8 +71,8 @@ func RecoverFunc(name string) {
 }
 
 // setAPIInstance sets the nutanixV3.VmApi from the V3Client
-func setAPIInstance(c *V3Client) *(nutanixV3.VmApi) {
-	APIInstance := nutanixV3.NewVmApi()
+func setAPIInstance(c *V3Client) *(nutanixV3.VmsApi) {
+	APIInstance := nutanixV3.NewVmsApi()
 	APIInstance.Configuration.Username = c.Username
 	APIInstance.Configuration.Password = c.Password
 	APIInstance.Configuration.BasePath = c.URL
@@ -92,7 +95,7 @@ func (c *V3Client) WaitForProcess(uuid string) (bool, error) {
 		if VMIntentResponse.Status.State == "COMPLETE" {
 			return true, nil
 		}
-		time.Sleep(3000*time.Millisecond)
+		time.Sleep(3000 * time.Millisecond)
 	}
 	return false, nil
 }
@@ -107,46 +110,61 @@ func (c *V3Client) WaitForIP(uuid string, d *schema.ResourceData) error {
 		}
 		err = checkAPIResponse(*APIresponse)
 		if err != nil {
-			return  err
+			return err
 		}
 		if len(VMIntentResponse.Status.Resources.NicList) != 0 {
 			for i := range VMIntentResponse.Status.Resources.NicList {
 				if len(VMIntentResponse.Status.Resources.NicList[i].IpEndpointList) != 0 {
-					if ip := VMIntentResponse.Status.Resources.NicList[i].IpEndpointList[0].Address; ip != "" {
+					/*log.Printf("[DEBUG] Checking for ip")
+					log.Printf("[DEBUG] IpEndpointList struct: %+v",VMIntentResponse.Status.Resources.NicList[i].IpEndpointList[0])
+					log.Printf("[DEBUG] Address: %s",VMIntentResponse.Status.Resources.NicList[i].IpEndpointList[0].Address)*/
+					if ip := VMIntentResponse.Status.Resources.NicList[i].IpEndpointList[0].Ip; ip != "" {
 						d.Set("ip_address", ip)
 						return nil
 					}
 				}
 			}
 		}
-		time.Sleep(3000*time.Millisecond)
+		time.Sleep(3000 * time.Millisecond)
 	}
 	return nil
 }
 
 func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
-
+	file, err := os.Create("create_logs")
+	if err != nil {
+		return err
+	}
+	w := bufio.NewWriter(file)
+	defer file.Close()
+	defer w.Flush()
 	client := meta.(*V3Client)
 	machine := vmconfig.SetMachineConfig(d)
 	log.Printf("[DEBUG] Creating Virtual Machine: %s", d.Id())
 	APIInstance := setAPIInstance(client)
+	fmt.Fprintf(w, "\n%+v\n", machine)
+	j,_ := json.Marshal(machine)
+	fmt.Fprintf(w, "\n%+v\n",string(j))
 	VMIntentResponse, APIResponse, err := APIInstance.VmsPost(machine)
 	if err != nil {
 		return err
 	}
+    //log.Printf("[DEBUG] VM creation process begins\n")
+	
 	err = checkAPIResponse(*APIResponse)
 	if err != nil {
-		return  err
+		return err
 	}
-
 	uuid := VMIntentResponse.Metadata.Uuid
 	status, err := client.WaitForProcess(uuid)
 	for status != true {
-			return err
+		return err
 	}
 	d.Set("ip_address", "")
+    log.Printf("[DEBUG] VM creation process complete.\n")
 
-	if machine.Spec.Resources.NicList != nil && machine.Spec.Resources.PowerState == "POWERED_ON" {
+	if machine.Spec.Resources.NicList != nil && machine.Spec.Resources.PowerState == "ON" {
+		log.Printf("[DEBUG] Polling for IP\n")
 		err = client.WaitForIP(uuid, d)
 	}
 	if err != nil {
@@ -177,8 +195,8 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 
 	machineTemp := nutanixV3.VmIntentInput{
 		ApiVersion: "3.0",
-		Spec: VMIntentResponse.Spec,
-		Metadata: VMIntentResponse.Metadata,
+		Spec:       VMIntentResponse.Spec,
+		Metadata:   VMIntentResponse.Metadata,
 	}
 
 	if len(machineTemp.Spec.Resources.DiskList) == len(machine.Spec.Resources.DiskList) {
@@ -188,34 +206,25 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		machineTemp.Spec.Resources.NicList = machine.Spec.Resources.NicList
 	}
 	machineTemp.Metadata.OwnerReference = machine.Metadata.OwnerReference
-	machineTemp.Metadata.EntityVersion = machine.Metadata.EntityVersion
 	machineTemp.Metadata.Uuid = machine.Metadata.Uuid
 	machineTemp.Metadata.Name = machine.Metadata.Name
-	
-	if ! reflect.DeepEqual(machineTemp, machine) {
 
-		err = vmconfig.UpdateTerraformState(d, VMIntentResponse.Metadata,  VMIntentResponse.Spec)
+	if !reflect.DeepEqual(machineTemp, machine) {
+
+		err = vmconfig.UpdateTerraformState(d, VMIntentResponse.Metadata, VMIntentResponse.Spec)
 		if err != nil {
 			return err
 		}
 
 		d.Set("ip_address", "")
-		if len(VMIntentResponse.Spec.Resources.NicList) > 0 && VMIntentResponse.Spec.Resources.PowerState == "POWERED_ON" {
+		if len(VMIntentResponse.Spec.Resources.NicList) > 0 && VMIntentResponse.Spec.Resources.PowerState == "ON" {
 			err = client.WaitForIP(d.Id(), d)
 			if err != nil {
 				return err
 			}
 		}
-		file, err := os.Create("/tmp/check")
-		if err != nil {
-			return err
-		}
-		w := bufio.NewWriter(file)
-		defer file.Close()
-		defer w.Flush()
-		fmt.Fprintf(w, "%+v\n%+v\n", machineTemp, machine)
-		
-	}	
+
+	}
 
 	return nil
 }
@@ -237,7 +246,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		}
 		err = checkAPIResponse(*APIResponse)
 		if err != nil {
-			return  err
+			return err
 		}
 		d.SetPartial("spec")
 		d.SetPartial("metadata")
@@ -249,7 +258,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		return err
 	}
 	d.Set("ip_address", "")
-	if len(machine.Spec.Resources.NicList) > 0 && machine.Spec.Resources.PowerState == "POWERED_ON" {
+	if len(machine.Spec.Resources.NicList) > 0 && machine.Spec.Resources.PowerState == "ON" {
 		err := client.WaitForIP(uuid, d)
 		if err != nil {
 			return err
@@ -270,7 +279,7 @@ func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, m interface{}) 
 	}
 	err = checkAPIResponse(*APIResponse)
 	if err != nil {
-		return  err
+		return err
 	}
 
 	d.SetId("")
@@ -290,7 +299,7 @@ func resourceNutanixVirtualMachineExists(d *schema.ResourceData, m interface{}) 
 	}
 	err = checkAPIResponse(*APIResponse)
 	if err != nil {
-		return  false,err
+		return false, err
 	}
 
 	for i := range VMListIntentResponse.Entities {
@@ -300,7 +309,6 @@ func resourceNutanixVirtualMachineExists(d *schema.ResourceData, m interface{}) 
 	}
 	return false, nil
 }
-
 
 func resourceNutanixVirtualMachine() *schema.Resource {
 	return &schema.Resource{

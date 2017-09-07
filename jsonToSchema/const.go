@@ -42,9 +42,9 @@ func SetMachineConfig(d *schema.ResourceData) nutanixV3.VmIntentInput {
         Metadata:   SetMetadata(metadata, 0),   //Metadata
     }
     if strings.ToUpper(machine.Spec.Resources.PowerState) == "ON" || machine.Spec.Resources.PowerState == "POWERED_ON" {
-        machine.Spec.Resources.PowerState = "POWERED_ON"
+        machine.Spec.Resources.PowerState = "ON"
     } else {
-        machine.Spec.Resources.PowerState = "POWERED_OFF"
+        machine.Spec.Resources.PowerState = "OFF"
     }
     machine.Metadata.Kind = "vm"
     machine.Spec.Name = d.Get("name").(string)
