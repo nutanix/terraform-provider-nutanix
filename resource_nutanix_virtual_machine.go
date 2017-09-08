@@ -19,6 +19,7 @@ import (
 
 var statusCodeFilter map[int]bool
 var statusMap map[int]bool
+var version int64
 
 func init() {
 	statusMap = map[int]bool{
@@ -182,8 +183,6 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		return err
 	}
 	w := bufio.NewWriter(file)
-	defer file.Close()
-	defer w.Flush()
 	client := meta.(*V3Client)
 	APIInstance := setAPIInstance(client)
 	VMIntentResponse, APIResponse, err := APIInstance.VmsUuidGet(d.Id())
@@ -219,29 +218,19 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	fmt.Fprintf(w, "\nLocal machine: \n%+v\n", machine)
 
 	if !reflect.DeepEqual(machineTemp, machine) {
-		fmt.Fprintf(w, "\nSchema Resource Data: \n%+v\n",d)
-		fmt.Fprintf(w, "\nSchema Resource metadata before read: \n%+v\n",d.Get("metadata").([] interface{})[0])
-		fmt.Fprintf(w, "\nSPec before read: \n%+v\n",d.Get("spec").([] interface{})[0])
-		fmt.Fprintf(w, "\nVMIntent Metadata: \n%+v\n",VMIntentResponse.Metadata)
-		fmt.Fprintf(w, "\n,VMIntent spec:  \n%+v\n",VMIntentResponse.Spec)
+		fmt.Fprintf(w, "\nSchema Resource Data: \n%+v\n", d)
+		fmt.Fprintf(w, "\nSchema Resource metadata before read: \n%+v\n", d.Get("metadata").([]interface{})[0])
+		fmt.Fprintf(w, "\nSPec before read: \n%+v\n", d.Get("spec").([]interface{})[0])
+		fmt.Fprintf(w, "\nVMIntent Metadata: \n%+v\n", VMIntentResponse.Metadata)
+		fmt.Fprintf(w, "\n,VMIntent spec:  \n%+v\n", VMIntentResponse.Spec)
 		err = vmconfig.UpdateTerraformState(d, VMIntentResponse.Metadata, VMIntentResponse.Spec)
 		if err != nil {
 			return err
 		}
-		/*err = d.Set("metadata",VMIntentResponse.Metadata)
-		if err!=nil {
-			fmt.Fprintf(w, "=======================================")
-			fmt.Fprintf(w, "Error setting metadata: %s\n",err.Error())
-			fmt.Fprintf(w, "=======================================")
-		}
-		err = d.Set("spec",VMIntentResponse.Spec)
-		if err!=nil {
-			fmt.Fprintf(w, "=======================================")
-			fmt.Fprintf(w, "Error setting spec: %s\n",err.Error())
-			fmt.Fprintf(w, "=======================================")
-		}*/
-		fmt.Fprintf(w, "\nSchema Resource metadata after read: \n%+v\n",d.Get("metadata").([] interface{})[0])
-		fmt.Fprintf(w, "\nSPec after read: \n%+v\n",d.Get("spec").([] interface{})[0])
+		fmt.Fprintf(w, "\nSchema Resource metadata after read: \n%+v\n", d.Get("metadata").([]interface{})[0])
+		fmt.Fprintf(w, "\nSPec after read: \n%+v\n", d.Get("spec").([]interface{})[0])
+		file.Close()
+		w.Flush()
 		d.Set("ip_address", "")
 		if len(VMIntentResponse.Spec.Resources.NicList) > 0 && VMIntentResponse.Spec.Resources.PowerState == "ON" {
 			err = client.WaitForIP(d.Id(), d)
@@ -249,6 +238,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 				return err
 			}
 		}
+		version = VMIntentResponse.Metadata.SpecVersion
 
 	}
 
@@ -256,20 +246,19 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
-	// Enable partial state mode
-	d.Partial(true)
-	client := meta.(*V3Client)
-	machine := vmconfig.SetMachineConfig(d)
 	file, err := os.Create("update_logs")
 	if err != nil {
 		return err
 	}
 	w := bufio.NewWriter(file)
-	defer file.Close()
-	defer w.Flush()
-	fmt.Fprintf(w, "\nSchema Resource metadata during update: \n%+v\n",d.Get("metadata").([] interface{})[0])
-	fmt.Fprintf(w, "\nSPec during update: \n%+v\n",d.Get("spec").([] interface{})[0])
-	
+	fmt.Fprintf(w, "\nSchema Resource metadata during update: \n%+v\n", d.Get("metadata").([]interface{})[0])
+	fmt.Fprintf(w, "\nSPec during update: \n%+v\n", d.Get("spec").([]interface{})[0])
+	// Enable partial state mode
+	d.Partial(true)
+	client := meta.(*V3Client)
+	machine := vmconfig.SetMachineConfig(d)
+	machine.Metadata.SpecVersion = version
+
 	APIInstance := setAPIInstance(client)
 	uuid := d.Id()
 	log.Printf("[DEBUG] Updating Virtual Machine: %s, %s", machine.Spec.Name, d.Id())
@@ -279,6 +268,8 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		fmt.Fprintf(w, "Machine: \n%+v\n", machine)
 		j, _ := json.Marshal(machine)
 		fmt.Fprintf(w, " \n%s\n", string(j))
+		file.Close()
+		w.Flush()
 
 		_, APIResponse, err := APIInstance.VmsUuidPut(uuid, machine)
 		if err != nil {
