@@ -157,7 +157,7 @@ import (
 )
 
 // UpdateTerraformState updates the state of terraform
-func UpdateTerraformState(d *schema.ResourceData,  metadata nutanixV3.VmMetadata, spec    nutanixV3.Vm) error {
+func UpdateTerraformState(d *schema.ResourceData,  metadata nutanixV3.VmMetadata, spec nutanixV3.Vm) error {
 
 	var specList []map[string]interface{}
 	specList = append(specList, updateSpec(spec))
