@@ -2,7 +2,6 @@ package nutanix
 
 import (
 	"bufio"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -116,9 +115,6 @@ func (c *V3Client) WaitForIP(uuid string, d *schema.ResourceData) error {
 		if len(VMIntentResponse.Status.Resources.NicList) != 0 {
 			for i := range VMIntentResponse.Status.Resources.NicList {
 				if len(VMIntentResponse.Status.Resources.NicList[i].IpEndpointList) != 0 {
-					/*log.Printf("[DEBUG] Checking for ip")
-					log.Printf("[DEBUG] IpEndpointList struct: %+v",VMIntentResponse.Status.Resources.NicList[i].IpEndpointList[0])
-					log.Printf("[DEBUG] Address: %s",VMIntentResponse.Status.Resources.NicList[i].IpEndpointList[0].Address)*/
 					if ip := VMIntentResponse.Status.Resources.NicList[i].IpEndpointList[0].Ip; ip != "" {
 						d.Set("ip_address", ip)
 						return nil
@@ -132,20 +128,10 @@ func (c *V3Client) WaitForIP(uuid string, d *schema.ResourceData) error {
 }
 
 func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
-	file, err := os.Create("create_logs")
-	if err != nil {
-		return err
-	}
-	w := bufio.NewWriter(file)
-	defer file.Close()
-	defer w.Flush()
 	client := meta.(*V3Client)
 	machine := vmconfig.SetMachineConfig(d)
 	log.Printf("[DEBUG] Creating Virtual Machine: %s", d.Id())
 	APIInstance := setAPIInstance(client)
-	fmt.Fprintf(w, "\n%+v\n", machine)
-	j, _ := json.Marshal(machine)
-	fmt.Fprintf(w, "\n%+v\n", string(j))
 	VMIntentResponse, APIResponse, err := APIInstance.VmsPost(machine)
 	if err != nil {
 		return err
@@ -178,11 +164,6 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{}) error {
-	file, err := os.Create("read_logs")
-	if err != nil {
-		return err
-	}
-	w := bufio.NewWriter(file)
 	client := meta.(*V3Client)
 	APIInstance := setAPIInstance(client)
 	VMIntentResponse, APIResponse, err := APIInstance.VmsUuidGet(d.Id())
@@ -214,26 +195,16 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	machineTemp.Metadata.OwnerReference = machine.Metadata.OwnerReference
 	machineTemp.Metadata.Uuid = machine.Metadata.Uuid
 	machineTemp.Metadata.Name = machine.Metadata.Name
-	fmt.Fprintf(w, "\nRemote machine: \n%+v\n", machineTemp)
-	fmt.Fprintf(w, "\nLocal machine: \n%+v\n", machine)
 
 	if !reflect.DeepEqual(machineTemp, machine) {
-		fmt.Fprintf(w, "\nSchema Resource Data: \n%+v\n", d)
-		fmt.Fprintf(w, "\nSchema Resource metadata before read: \n%+v\n", d.Get("metadata").([]interface{})[0])
-		fmt.Fprintf(w, "\nSPec before read: \n%+v\n", d.Get("spec").([]interface{})[0])
-		fmt.Fprintf(w, "\nVMIntent Metadata: \n%+v\n", VMIntentResponse.Metadata)
-		fmt.Fprintf(w, "\n,VMIntent spec:  \n%+v\n", VMIntentResponse.Spec)
 		err = vmconfig.UpdateTerraformState(d, VMIntentResponse.Metadata, VMIntentResponse.Spec)
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(w, "\nSchema Resource metadata after read: \n%+v\n", d.Get("metadata").([]interface{})[0])
-		fmt.Fprintf(w, "\nSPec after read: \n%+v\n", d.Get("spec").([]interface{})[0])
-		file.Close()
-		w.Flush()
 		d.Set("ip_address", "")
 		if len(VMIntentResponse.Spec.Resources.NicList) > 0 && VMIntentResponse.Spec.Resources.PowerState == "ON" {
 			err = client.WaitForIP(d.Id(), d)
+			//log.Printf("[DEBUG] Polling for IP\n")
 			if err != nil {
 				return err
 			}
@@ -246,13 +217,6 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
-	file, err := os.Create("update_logs")
-	if err != nil {
-		return err
-	}
-	w := bufio.NewWriter(file)
-	fmt.Fprintf(w, "\nSchema Resource metadata during update: \n%+v\n", d.Get("metadata").([]interface{})[0])
-	fmt.Fprintf(w, "\nSPec during update: \n%+v\n", d.Get("spec").([]interface{})[0])
 	// Enable partial state mode
 	d.Partial(true)
 	client := meta.(*V3Client)
@@ -264,13 +228,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] Updating Virtual Machine: %s, %s", machine.Spec.Name, d.Id())
 
 	if d.HasChange("name") || d.HasChange("spec") || d.HasChange("metadata") {
-		fmt.Fprintf(w, "UUID: %s\n", uuid)
-		fmt.Fprintf(w, "Machine: \n%+v\n", machine)
-		j, _ := json.Marshal(machine)
-		fmt.Fprintf(w, " \n%s\n", string(j))
-		file.Close()
-		w.Flush()
-
 		_, APIResponse, err := APIInstance.VmsUuidPut(uuid, machine)
 		if err != nil {
 			return err
@@ -290,6 +247,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 	d.Set("ip_address", "")
 	if len(machine.Spec.Resources.NicList) > 0 && machine.Spec.Resources.PowerState == "ON" {
+		log.Printf("[DEBUG] Polling for IP\n")
 		err := client.WaitForIP(uuid, d)
 		if err != nil {
 			return err
