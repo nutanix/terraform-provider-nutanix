@@ -11,6 +11,13 @@ type APIClient struct {
 2.A new argument is supplied to "prepareRequest" function which represents the insecure flag of APIClient. And correspondingly, request is modified to skip verification while transport.Changes are made at two places in api_client.go
 
 ```
+//Add the following in imported modules.
+import(
+    ...
+    "crypto/tls"
+    ...
+)
+
 //In CallAPI function where prepareRequest is called
 request := prepareRequest(postBody, headerParams, queryParams, formParams, fileName, fileBytes,c.Insecure)
 
@@ -30,17 +37,16 @@ func prepareRequest(postBody interface{},headerParams map[string]string,queryPar
 
 ```
 
-3.In VmResources, struct field "MemorySizeMib" is modified as follows (vm_resources.go)_
+3. In NewConfiguration function, APIClient is initialised with Insecure flag as false.(configuration.go)
 
 ```
-MemorySizeMib int64 `json:"memory_size_mb,omitempty" bson:"memory_size_mb,omitempty"`
-```
+func NewConfiguration() *Configuration {
+    return &Configuration{
+        ...
+        ...
+        APIClient:     APIClient{Insecure: false},
+    }
+}
 
-4.Changed the "Ip" of "IpAddress" struct to "Address" as Get API returns json with ip in the address field (ip_address.go)
-
 ```
-// Address string.
-Address string `json:"address,omitempty" bson:"address,omitempty"`
-```
-
 

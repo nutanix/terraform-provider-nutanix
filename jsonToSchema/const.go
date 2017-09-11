@@ -1,7 +1,6 @@
 package main
 
-const configHeader = `
-package virtualmachineconfig
+const configHeader = `package virtualmachineconfig
 
 import (
     "github.com/hashicorp/terraform/helper/schema"
@@ -9,6 +8,11 @@ import (
     "time"
     "strings"
 )
+
+//PowerON denotes the vm powered on state
+const PowerON = "%s"
+//PowerOFF denotes the vm powered off state
+const PowerOFF = "%s"
 
 func convertToBool(a interface{}) bool {
     if a != nil {
@@ -42,9 +46,9 @@ func SetMachineConfig(d *schema.ResourceData) nutanixV3.VmIntentInput {
         Metadata:   SetMetadata(metadata, 0),   //Metadata
     }
     if strings.ToUpper(machine.Spec.Resources.PowerState) == "ON" || machine.Spec.Resources.PowerState == "POWERED_ON" {
-        machine.Spec.Resources.PowerState = "POWERED_ON"
+        machine.Spec.Resources.PowerState = PowerON
     } else {
-        machine.Spec.Resources.PowerState = "POWERED_OFF"
+        machine.Spec.Resources.PowerState = PowerOFF
     }
     machine.Metadata.Kind = "vm"
     machine.Spec.Name = d.Get("name").(string)
@@ -52,6 +56,7 @@ func SetMachineConfig(d *schema.ResourceData) nutanixV3.VmIntentInput {
     return machine
 }
 `
+
 const configStruct = `
 
 // Set%s sets %s fields in json struct
@@ -88,8 +93,7 @@ func Set%s(s map[string]interface{}) map[string]string {
 }
 `
 
-const schemaHeader = `
-package virtualmachineschema
+const schemaHeader = `package virtualmachineschema
 
 import (
 	"github.com/hashicorp/terraform/helper/schema"
@@ -148,8 +152,7 @@ const updateStruct = `
 
 `
 
-const updateStateHeader = `
-package virtualmachineconfig
+const updateStateHeader = `package virtualmachineconfig
 
 import (
     "github.com/hashicorp/terraform/helper/schema"
@@ -157,7 +160,7 @@ import (
 )
 
 // UpdateTerraformState updates the state of terraform
-func UpdateTerraformState(d *schema.ResourceData,  metadata nutanixV3.VmMetadata, spec    nutanixV3.Vm) error {
+func UpdateTerraformState(d *schema.ResourceData,  metadata nutanixV3.VmMetadata, spec nutanixV3.Vm) error {
 
 	var specList []map[string]interface{}
 	specList = append(specList, updateSpec(spec))
