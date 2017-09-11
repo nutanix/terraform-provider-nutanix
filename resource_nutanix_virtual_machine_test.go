@@ -291,7 +291,7 @@ resource "nutanix_virtual_machine" "my-machine" {
 ` + testAccTemplateDiskBody + `
 }`
 
-	basicVars.powerState = "OFF"
+	basicVars.powerState = powerOFF
 	config := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigDisk)
 	log.Printf("[DEBUG] template config= %s", config)
 
@@ -329,7 +329,7 @@ resource "nutanix_virtual_machine" "my-machine" {
 func TestAccNutanixVirtualMachine_updateMemory(t *testing.T) {
 	var vm nutanixV3.VmIntentInput
 	basicVars := setupTemplateBasicBodyVars()
-	basicVars.powerState = "OFF"
+	basicVars.powerState = powerOFF
 	configOFF := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
 	basicVars.memorySizeMb = flag.NutanixUpdateMemorySize
 	basicVars.powerState = flag.NutanixPowerState
@@ -362,7 +362,7 @@ func TestAccNutanixVirtualMachine_updateMemory(t *testing.T) {
 func TestAccNutanixVirtualMachine_updateName(t *testing.T) {
 	var vm nutanixV3.VmIntentInput
 	basicVars := setupTemplateBasicBodyVars()
-	basicVars.powerState = "OFF"
+	basicVars.powerState = powerOFF
 	configOFF := basicVars.testSprintfTemplateBody(testAccCheckNutanixVirtualMachineConfigReallyBasic)
 	basicVars.powerState = flag.NutanixPowerState
 	configON := basicVars.testSprintfTemplateBodyUpdateName(testAccCheckNutanixVirtualMachineConfigReallyBasic)

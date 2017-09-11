@@ -31,7 +31,7 @@ func init() {
 	wConfig := bufio.NewWriter(fileConfig)
 	defer fileConfig.Close()
 	defer wConfig.Flush()
-	fmt.Fprintf(wConfig, "%s\n", configHeader)
+	fmt.Fprintf(wConfig, "%s\n", fmt.Sprintf(configHeader, PowerON, PowerOFF))
 	fmt.Fprintf(wState, "%s\n", updateStateHeader)
 }
 

@@ -19,6 +19,8 @@ import (
 var statusCodeFilter map[int]bool
 var statusMap map[int]bool
 var version int64
+var powerON = vmconfig.PowerON
+var powerOFF = vmconfig.PowerOFF
 
 func init() {
 	statusMap = map[int]bool{
@@ -150,7 +152,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	d.Set("ip_address", "")
 	log.Printf("[DEBUG] VM creation process complete.\n")
 
-	if machine.Spec.Resources.NicList != nil && machine.Spec.Resources.PowerState == "ON" {
+	if machine.Spec.Resources.NicList != nil && machine.Spec.Resources.PowerState == powerON {
 		log.Printf("[DEBUG] Polling for IP\n")
 		err = client.WaitForIP(uuid, d)
 	}
@@ -202,7 +204,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 			return err
 		}
 		d.Set("ip_address", "")
-		if len(VMIntentResponse.Spec.Resources.NicList) > 0 && VMIntentResponse.Spec.Resources.PowerState == "ON" {
+		if len(VMIntentResponse.Spec.Resources.NicList) > 0 && VMIntentResponse.Spec.Resources.PowerState == powerON {
 			err = client.WaitForIP(d.Id(), d)
 			//log.Printf("[DEBUG] Polling for IP\n")
 			if err != nil {
@@ -246,7 +248,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		return err
 	}
 	d.Set("ip_address", "")
-	if len(machine.Spec.Resources.NicList) > 0 && machine.Spec.Resources.PowerState == "ON" {
+	if len(machine.Spec.Resources.NicList) > 0 && machine.Spec.Resources.PowerState == powerON {
 		log.Printf("[DEBUG] Polling for IP\n")
 		err := client.WaitForIP(uuid, d)
 		if err != nil {
