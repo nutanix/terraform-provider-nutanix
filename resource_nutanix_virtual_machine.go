@@ -5,14 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/ideadevice/terraform-ahv-provider-plugin/flg"
-	vmconfig "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachineconfig"
-	vmschema "github.com/ideadevice/terraform-ahv-provider-plugin/virtualmachineschema"
 	"log"
 	nutanixV3 "nutanixV3"
 	"os"
 	"reflect"
 	"runtime/debug"
+	"terraform-provider-nutanix/flg"
+	vmconfig "terraform-provider-nutanix/virtualmachineconfig"
+	vmschema "terraform-provider-nutanix/virtualmachineschema"
 	"time"
 )
 
@@ -96,6 +96,8 @@ func (c *V3Client) WaitForProcess(uuid string) (bool, error) {
 		}
 		if VMIntentResponse.Status.State == "COMPLETE" {
 			return true, nil
+		} else if VMIntentResponse.Status.State == "ERROR" {
+			return false, fmt.Errorf("Error while waiting for resource to be up")
 		}
 		time.Sleep(3000 * time.Millisecond)
 	}
@@ -138,7 +140,6 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	if err != nil {
 		return err
 	}
-	//log.Printf("[DEBUG] VM creation process begins\n")
 
 	err = checkAPIResponse(*APIResponse)
 	if err != nil {
@@ -150,7 +151,6 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		return err
 	}
 	d.Set("ip_address", "")
-	log.Printf("[DEBUG] VM creation process complete.\n")
 
 	if machine.Spec.Resources.NicList != nil && machine.Spec.Resources.PowerState == powerON {
 		log.Printf("[DEBUG] Polling for IP\n")
@@ -206,7 +206,6 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		d.Set("ip_address", "")
 		if len(VMIntentResponse.Spec.Resources.NicList) > 0 && VMIntentResponse.Spec.Resources.PowerState == powerON {
 			err = client.WaitForIP(d.Id(), d)
-			//log.Printf("[DEBUG] Polling for IP\n")
 			if err != nil {
 				return err
 			}

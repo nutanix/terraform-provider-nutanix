@@ -14,16 +14,16 @@ Requirments
 Building The Provider
 ---------------------
 
-Clone repository to: `$GOPATH/src/github.com/ideadevice/terraform-ahv-provider-plugin`
+Clone repository to: `$GOPATH/src/terraform-provider-nutanix`
 
 ```sh
-$ mkdir -p $GOPATH/src/github.com/ideadevice; cd $GOPATH/src/github.com/ideadevice
-$ git clone https://github.com/ideadevice/terraform-ahv-provider-plugin.git
+$ cd $GOPATH/src/
+$ git clone https://github.com/nutanix/terraform-provider-nutanix.git
 ```
 Enter the provider directory and build the provider
 
 ```sh
-$ cd $GOPATH/src/github.com/ideadevice/terraform-ahv-provider-plugin
+$ cd $GOPATH/src/terraform-provider-nutanix
 $ glide install
 $ cd cmd
 $ make clean
@@ -68,7 +68,7 @@ Resources
 - nutanix_virtual_machine
 -------------------------
 
-Creates, Updates and Destroy virtual machine resource using Prism Element APIs. Example of usage is given at  `$GOPATH/src/github.com/ideadevice/terraform-ahv-provider-plugin/examples/main.tf`
+Creates, Updates and Destroy virtual machine resource using Prism Element APIs. Example of usage is given at  `$GOPATH/src/terraform-provider-nutanix/cmd/examples/main.tf`
 
 Following are the required arguments :-
 
@@ -111,7 +111,7 @@ If you wish to work on the provider, you'll first need [Go](http://www.golang.or
 To compile the provider, run `make build`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
 
 ```sh
-$ cd $GOPATH/github.com/ideadevice/terraform-ahv-provider-plugin/cmd
+$ cd $GOPATH/src/terraform-provider-nutanix/cmd
 $ make build
 ...
 $ $GOPATH/bin/terraform-provider-nutanix
@@ -120,7 +120,7 @@ $ $GOPATH/bin/terraform-provider-nutanix
 In order to test the provider, you can simply run `go test`.
 
 ```sh
-$ cd $GOPATH/github.com/ideadevice/terraform-ahv-provider-plugin/
+$ cd $GOPATH/src/terraform-provider-nutanix
 $ go test -v $(glide novendor) --username=username --password=password --endpoint=1.1.1.1 --insecure=true
 ```
 Following flags are defined for the testcases :-

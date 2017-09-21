@@ -4,9 +4,9 @@ import (
 	"github.com/hashicorp/terraform/builtin/providers/template"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
-	flag "github.com/ideadevice/terraform-ahv-provider-plugin/testflg"
 	"os"
 	"strconv"
+	flag "terraform-provider-nutanix/testflg"
 	"testing"
 )
 
