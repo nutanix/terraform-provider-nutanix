@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
-	flag "github.com/ideadevice/terraform-ahv-provider-plugin/testflg"
 	"log"
 	nutanixV3 "nutanixV3"
 	"os"
 	"strconv"
+	flag "terraform-provider-nutanix/testflg"
 	"testing"
 )
 

@@ -5,11 +5,11 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"github.com/ideadevice/terraform-ahv-provider-plugin/jsonToSchema/cfg"
 	glog "log"
 	"os"
 	"path/filepath"
 	"strings"
+	"terraform-provider-nutanix/jsonToSchema/cfg"
 )
 
 //PowerON denotes the exact string for vm-powerstate(on) in structs
