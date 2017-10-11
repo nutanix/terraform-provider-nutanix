@@ -5,6 +5,10 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+const (
+	API_VERSION = "3.0"
+)
+
 // Provider function returns the object that implements the terraform.ResourceProvider interface, specifically a schema.Provider
 func Provider() terraform.ResourceProvider {
 
@@ -50,6 +54,7 @@ func Provider() terraform.ResourceProvider {
 		ResourcesMap: map[string]*schema.Resource{
 			// TODO: add additional resources, such as networking, apps, data protection, etc
 			"nutanix_virtual_machine": resourceNutanixVirtualMachine(),
+			"nutanix_image":           resourceNutanixImage(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
