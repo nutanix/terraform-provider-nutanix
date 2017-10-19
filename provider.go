@@ -48,8 +48,8 @@ func Provider() terraform.ResourceProvider {
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			// TODO: add additional non-CUD (i.e read only) data sources, like cluster information
 			"nutanix_image": dataSourceNutanixImage(),
+			//"nutanix_subnet": dataSourceNutanixSubnet(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			// TODO: add additional resources, such as networking, apps, data protection, etc
