@@ -55,6 +55,7 @@ func Provider() terraform.ResourceProvider {
 			// TODO: add additional resources, such as networking, apps, data protection, etc
 			"nutanix_virtual_machine": resourceNutanixVirtualMachine(),
 			"nutanix_image":           resourceNutanixImage(),
+			"nutanix_subnet":          resourceNutanixSubnet(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
