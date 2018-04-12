@@ -11,6 +11,7 @@ request_log
 cmd/terraform-provider-*
 cmd/cmd
 cmd/main.tf
+.DS_Store
 
 # Test binary, build with `go test -c`
 *.test
