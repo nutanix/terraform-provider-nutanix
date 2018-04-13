@@ -7,7 +7,6 @@ import (
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/handler"
-	"github.com/terraform-providers/terraform-provider-outscale/osc"
 )
 
 //Client manages the V3 API
@@ -19,7 +18,7 @@ type Client struct {
 // NewV3Client return a client to operate V3 resources
 func NewV3Client(config client.Config) (*Client, error) {
 
-	u, err := url.Parse(fmt.Sprintf(osc.DefaultBaseURL, config.Credentials.Endpoint, config.Credentials.Port))
+	u, err := url.Parse(fmt.Sprintf(client.DefaultBaseURL, config.Credentials.Endpoint, config.Credentials.Port))
 	if err != nil {
 		return nil, err
 	}
