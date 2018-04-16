@@ -3,6 +3,7 @@ package nutanix
 import (
 	"fmt"
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 )
 
 // Config ...
@@ -15,20 +16,18 @@ type Config struct {
 }
 
 // Client ...
-func (c *Config) Client() (*OutscaleClient, error) {
+func (c *Config) Client() (*NutanixClient, error) {
 
-	config := client.Config{
-		Credentials: client.Credentials{
-			Endpoint: c.Endpoint,
-			Username: c.Username,
-			Password: c.Password,
-			Port: c.Port,
-			Insecure: c.Insecure,
-			URL: fmt.Sprintf(client.DefaultBaseURL, c.Endpoint, c.Port)
-		}
+	configCreds := client.Credentials{
+		URL: fmt.Sprintf("%s:%s", c.Endpoint, c.Port)
+		Endpoint: c.Endpoint,
+		Username: c.Username,
+		Password: c.Password,
+		Port: c.Port,
+		Insecure: c.Insecure,
 	}
 
-	v3, err := v3.NewV3Client(config)
+	v3, err := v3.NewV3Client(configCreds)
 	if err != nil {
 		return nil, err
 	}
