@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 )
@@ -19,11 +20,11 @@ type Config struct {
 func (c *Config) Client() (*NutanixClient, error) {
 
 	configCreds := client.Credentials{
-		URL: fmt.Sprintf("%s:%s", c.Endpoint, c.Port)
+		URL:      fmt.Sprintf("%s:%s", c.Endpoint, c.Port),
 		Endpoint: c.Endpoint,
 		Username: c.Username,
 		Password: c.Password,
-		Port: c.Port,
+		Port:     c.Port,
 		Insecure: c.Insecure,
 	}
 

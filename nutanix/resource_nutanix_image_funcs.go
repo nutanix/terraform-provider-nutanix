@@ -3,7 +3,6 @@ package nutanix
 import (
 	"fmt"
 	"log"
-	nutanixV3 "nutanixV3"
 )
 
 // ImageAPIInstance sets the nutanixV3.VmApi from the V3Client
