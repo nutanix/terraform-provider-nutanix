@@ -3,10 +3,10 @@ package nutanix
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform/helper/schema"
 	"log"
-	nutanixV3 "nutanixV3"
 	"path/filepath"
+
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 const (
