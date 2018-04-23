@@ -590,3 +590,254 @@ type VMListIntentResponse struct {
 
 	Metadata VMListMetadataOutput `json:"metadata"`
 }
+
+//SubnetMetadata The subnet kind metadata
+type SubnetMetadata struct {
+
+	// Categories for the subnet
+	Categories map[string]string `json:"categories,omitempty"`
+
+	// UTC date and time in RFC-3339 format when subnet was created
+	CreationTime time.Time `json:"creation_time,omitempty"`
+
+	// The kind name
+	Kind string `json:"kind"`
+
+	// UTC date and time in RFC-3339 format when subnet was last updated
+	LastUpdateTime time.Time `json:"last_update_time"`
+
+	// subnet name
+	Name string `json:"name,omitempty"`
+
+	OwnerReference Reference `json:"owner_reference,omitempty"`
+
+	// project reference
+	ProjectReference Reference `json:"project_reference,omitempty"`
+
+	// Hash of the spec. This will be returned from server.
+	SpecHash string `json:"spec_hash,omitempty"`
+
+	// Version number of the latest spec.
+	SpecVersion int64 `json:"spec_version,omitempty"`
+
+	// subnet uuid
+	UUID string `json:"uuid,omitempty"`
+}
+
+//Address represents the Host address.
+type Address struct {
+
+	// Fully qualified domain name.
+	FQDN string `json:"fqdn,omitempty"`
+
+	// IPV4 address.
+	IP string `json:"ip,omitempty"`
+
+	// IPV6 address.
+	IPV6 string `json:"ipv6,omitempty"`
+
+	// Port Number
+	Port int64 `json:"port,omitempty"`
+}
+
+//IPPool represents IP pool.
+type IPPool struct {
+
+	// Range of IPs (example: 10.0.0.9 10.0.0.19).
+	Range string `json:"range,omitempty"`
+}
+
+//DHCPOptions Spec for defining DHCP options.
+type DHCPOptions struct {
+	BootFileName string `json:"boot_file_name,omitempty"`
+
+	DomainName string `json:"domain_name,omitempty"`
+
+	DomainNameServerList []string `json:"domain_name_server_list,omitempty"`
+
+	DomainSearchList []string `json:"domain_search_list,omitempty"`
+
+	TFTPServerName string `json:"tftp_server_name,omitempty"`
+}
+
+//IPConfig represents the configurtion of IP.
+type IPConfig struct {
+
+	// Default gateway IP address.
+	DefaultGatewayIP string `json:"default_gateway_ip,omitempty"`
+
+	DhcpOptions DHCPOptions `json:"dhcp_options,omitempty"`
+
+	DhcpServerAddress Address `json:"dhcp_server_address,omitempty" bson:"dhcp_server_address,omitempty"`
+
+	PoolList []IPPool `json:"pool_list,omitempty" bson:"pool_list,omitempty"`
+
+	PrefixLength int64 `json:"prefix_length,omitempty"`
+
+	// Subnet IP address.
+	SubnetIP string `json:"subnet_ip,omitempty"`
+}
+
+//SubnetResources represents Subnet creation/modification spec.
+type SubnetResources struct {
+	IPConfig IPConfig `json:"ip_config,omitempty" bson:"ip_config,omitempty"`
+
+	NetworkFunctionChainReference Reference `json:"network_function_chain_reference,omitempty"`
+
+	SubnetType string `json:"subnet_type"`
+
+	VlanID int64 `json:"vlan_id,omitempty"`
+
+	VswitchName string `json:"vswitch_name,omitempty"`
+}
+
+//Subnet An intentful representation of a subnet spec
+type Subnet struct {
+	AvailabilityZoneReference Reference `json:"availability_zone_reference,omitempty"`
+
+	ClusterReference Reference `json:"cluster_reference,omitempty"`
+
+	// A description for subnet.
+	Description string `json:"description,omitempty"`
+
+	// subnet Name.
+	Name string `json:"name"`
+
+	Resources SubnetResources `json:"resources,omitempty" bson:"resources,omitempty"`
+}
+
+//SubnetIntentInput An intentful representation of a subnet
+type SubnetIntentInput struct {
+	APIVersion string `json:"api_version,omitempty"`
+
+	Metadata SubnetMetadata `json:"metadata"`
+
+	Spec Subnet `json:"spec"`
+}
+
+//SubnetStatus represents The status of a REST API call. Only used when there is a failure to report.
+type SubnetStatus struct {
+	APIVersion string `json:"api_version,omitempty"`
+
+	// The HTTP error code.
+	Code int64 `json:"code,omitempty" bson:"code,omitempty"`
+
+	// The kind name
+	Kind string `json:"kind,omitempty"`
+
+	MessageList []MessageResource `json:"message_list,omitempty"`
+
+	State string `json:"state,omitempty"`
+}
+
+//SubnetResourcesDefStatus represents a Subnet creation/modification status.
+type SubnetResourcesDefStatus struct {
+	IPConfig IPConfig `json:"ip_config,omitempty" bson:"ip_config,omitempty"`
+
+	NetworkFunctionChainReference Reference `json:"network_function_chain_reference,omitempty"`
+
+	SubnetType string `json:"subnet_type"`
+
+	VlanID int64 `json:"vlan_id,omitempty"`
+
+	VswitchName string `json:"vswitch_name,omitempty"`
+}
+
+//SubnetDefStatus An intentful representation of a subnet status
+type SubnetDefStatus struct {
+	AvailabilityZoneReference Reference `json:"availability_zone_reference,omitempty"`
+
+	ClusterReference Reference `json:"cluster_reference,omitempty"`
+
+	// A description for subnet.
+	Description string `json:"description,omitempty"`
+
+	// Any error messages for the subnet, if in an error state.
+	MessageList []MessageResource `json:"message_list,omitempty"`
+
+	// subnet Name.
+	Name string `json:"name"`
+
+	Resources SubnetResourcesDefStatus `json:"resources,omitempty"`
+
+	// The state of the subnet.
+	State string `json:"state,omitempty"`
+}
+
+// SubnetIntentResponse represents the response object for intentful operations on a subnet
+type SubnetIntentResponse struct {
+	APIVersion string `json:"api_version"`
+
+	Metadata SubnetMetadata `json:"metadata,omitempty" bson:"metadata,omitempty"`
+
+	Spec Subnet `json:"spec,omitempty" bson:"spec,omitempty"`
+
+	Status SubnetDefStatus `json:"status,omitempty" bson:"status,omitempty"`
+}
+
+//SubnetIntentResource represents Response object for intentful operations on a subnet
+type SubnetIntentResource struct {
+	APIVersion string `json:"api_version,omitempty"`
+
+	Metadata SubnetMetadata `json:"metadata"`
+
+	Spec Subnet `json:"spec,omitempty"`
+
+	Status SubnetDefStatus `json:"status,omitempty"`
+}
+
+//SubnetListMetadataOutput All api calls that return a list will have this metadata block
+type SubnetListMetadataOutput struct {
+
+	// The filter used for the results
+	Filter string `json:"filter,omitempty"`
+
+	// The kind name
+	Kind string `json:"kind,omitempty"`
+
+	// The number of records retrieved relative to the offset
+	Length int64 `json:"length,omitempty"`
+
+	// Offset from the start of the entity list
+	Offset int64 `json:"offset,omitempty"`
+
+	// The attribute to perform sort on
+	SortAttribute string `json:"sort_attribute,omitempty"`
+
+	// The sort order in which results are returned
+	SortOrder string `json:"sort_order,omitempty"`
+
+	// Total matches found
+	TotalMatches int64 `json:"total_matches,omitempty"`
+}
+
+//SubnetListIntentResponse represents the response object for intentful operation of subnets
+type SubnetListIntentResponse struct {
+	APIVersion string `json:"api_version"`
+
+	Entities []SubnetIntentResource `json:"entities,omitempty" bson:"entities,omitempty"`
+
+	Metadata SubnetListMetadataOutput `json:"metadata"`
+}
+
+//SubnetListMetadata ...
+type SubnetListMetadata struct {
+
+	// The filter in FIQL syntax used for the results.
+	Filter string `json:"filter,omitempty"`
+
+	// The kind name
+	Kind string `json:"kind,omitempty"`
+
+	// The number of records to retrieve relative to the offset
+	Length int64 `json:"length,omitempty"`
+
+	// Offset from the start of the entity list
+	Offset int64 `json:"offset,omitempty"`
+
+	// The attribute to perform sort on
+	SortAttribute string `json:"sort_attribute,omitempty"`
+
+	// The sort order in which results are returned
+	SortOrder string `json:"sort_order,omitempty"`
+}
