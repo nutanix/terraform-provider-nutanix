@@ -1,6 +1,12 @@
 package nutanix
 
 import (
+	"fmt"
+	"log"
+	"time"
+
+	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
+
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -117,40 +123,6 @@ import (
 // 		time.Sleep(3000 * time.Millisecond)
 // 	}
 // 	return nil
-// }
-
-// func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
-// 	client := meta.(*V3Client)
-// 	machine := vmconfig.SetMachineConfig(d)
-// 	log.Printf("[DEBUG] Creating Virtual Machine: %s", d.Id())
-// 	APIInstance := setAPIInstance(client)
-// 	VMIntentResponse, APIResponse, err := APIInstance.VmsPost(machine)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	err = checkAPIResponse(*APIResponse)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	uuid := VMIntentResponse.Metadata.Uuid
-// 	status, err := client.WaitForProcess(uuid)
-// 	for status != true {
-// 		return err
-// 	}
-// 	d.Set("ip_address", "")
-
-// 	if machine.Spec.Resources.NicList != nil && machine.Spec.Resources.PowerState == powerON {
-// 		log.Printf("[DEBUG] Polling for IP\n")
-// 		err = client.WaitForIP(uuid, d)
-// 	}
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	d.SetId(uuid)
-// 	return nil
-
 // }
 
 // func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{}) error {
@@ -288,6 +260,122 @@ import (
 // 	return false, nil
 // }
 // }
+
+func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
+	// Get client connection
+	conn := meta.(*NutanixClient).API
+
+	// Prepare request
+	request := &v3.VMIntentInput{
+		ApiVersion: Version,
+	}
+
+	// Read Arguments
+	spec := d.Get("spec").([]interface{})
+	metadata := d.Get("metadata").([]interface{})
+
+	// request.Spec = SetSpec(spec)
+	// request.Metadata = SetMetadat(metadata)
+
+	// Make request to the API
+	resp, error := conn.V3.CreateVM(request)
+	if err != nil {
+		return err
+	}
+
+	uuid := resp.Metadata.UUID
+
+	// Wait for the VM to be available
+	status, err := waitForProcess(conn, uuid)
+	for status != true {
+		return err
+	}
+
+	// Set terraform state id
+	d.SetId(uuid)
+	d.Partial(true)
+	d.Set("ip_address", "")
+	d.SetPartial(false)
+
+	// Read the ip
+	if machine.Spec.Resources.NicList != nil && machine.Spec.Resources.PowerState == "ON" {
+		log.Printf("[DEBUG] Polling for IP\n")
+		err = waitForIP(conn, uuid, d)
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return resourceNutanixVirtualMachineRead(d, meta)
+}
+
+func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{}) error {
+	// Get client connection
+	conn := meta.(*NutanixClient).API
+
+	// Make request to the API
+	resp, error := conn.V3.GetVM(d.Id())
+	if err != nil {
+		return err
+	}
+
+	// Set vm values
+	status := make(map[string]interface{})
+
+	status["name"] = resp.Status.Name
+	status["state"] = resp.Status.State
+	status["description"] = resp.Status.Description
+
+	availabilityZoneReference := make(map[string]interface{})
+
+	availabilityZoneReference["kind"] = resp.Status.AvailabilityZoneReference.Kind
+	availabilityZoneReference["name"] = resp.Status.AvailabilityZoneReference.Name
+	availabilityZoneReference["uuid"] = resp.Status.AvailabilityZoneReference.UUID
+
+	status["availability_zone_reference"] = availabilityZoneReference
+
+	// TODO: set remaining values
+
+	return nil
+}
+
+func waitForVMProcess(conn *v3.Client, uuid string) (bool, error) {
+	for {
+		resp, err := conn.V3.GetVM(uuid)
+
+		if VMIntentResponse.Status.State == "COMPLETE" {
+			return true, nil
+		} else if VMIntentResponse.Status.State == "ERROR" {
+			return false, fmt.Errorf("Error while waiting for resource to be up")
+		}
+		time.Sleep(3000 * time.Millisecond)
+	}
+	return false, nil
+}
+
+func waitForIP(conn *v3.Client, uuid string, d *schema.ResourceData) error {
+	for {
+		resp, err := conn.V3.GetVM(uuid)
+		if err != nil {
+			return err
+		}
+
+		if len(resp.Status.Resources.NicList) != 0 {
+			for i := range resp.Status.Resources.NicList {
+				if len(resp.Status.Resources.NicList[i].IpEndpointList) != 0 {
+					if ip := resp.Status.Resources.NicList[i].IpEndpointList[0].Ip; ip != "" {
+						// TODO set ip address
+						d.Set("ip_address", ip)
+						return nil
+					}
+				}
+			}
+		}
+		time.Sleep(3000 * time.Millisecond)
+	}
+	return nil
+}
 
 func resourceNutanixVirtualMachine() *schema.Resource {
 	return &schema.Resource{
