@@ -33,17 +33,17 @@ type Service interface {
  * @param body
  * @return *VMIntentResponse
  */
-func (vm Operations) CreateVM(createRequest VMIntentInput) (*VMIntentResponse, error) {
+func (op Operations) CreateVM(createRequest VMIntentInput) (*VMIntentResponse, error) {
 	ctx := context.TODO()
 
-	req, err := vm.client.NewRequest(ctx, http.MethodPost, "/vms", createRequest)
+	req, err := op.client.NewRequest(ctx, http.MethodPost, "/vms", createRequest)
 	if err != nil {
 		return nil, err
 	}
 
 	vmIntentResponse := new(VMIntentResponse)
 
-	err = vm.client.Do(ctx, req, vmIntentResponse)
+	err = op.client.Do(ctx, req, vmIntentResponse)
 
 	if err != nil {
 		return nil, err
@@ -53,43 +53,43 @@ func (vm Operations) CreateVM(createRequest VMIntentInput) (*VMIntentResponse, e
 }
 
 /*DeleteVM Deletes a VM
- * This operation submits a request to delete a VM.
+ * This operation submits a request to delete a op.
  *
  * @param UUID The UUID of the entity.
  * @return error
  */
-func (vm Operations) DeleteVM(UUID string) error {
+func (op Operations) DeleteVM(UUID string) error {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/vms/%s", UUID)
 
-	req, err := vm.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	if err != nil {
 		return err
 	}
 
-	return vm.client.Do(ctx, req, nil)
+	return op.client.Do(ctx, req, nil)
 }
 
 /*GetVM Gets a VM
- * This operation gets a VM.
+ * This operation gets a op.
  *
  * @param UUID The UUID of the entity.
  * @return *VMIntentResponse
  */
-func (vm Operations) GetVM(UUID string) (*VMIntentResponse, error) {
+func (op Operations) GetVM(UUID string) (*VMIntentResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/vms/%s", UUID)
 
-	req, err := vm.client.NewRequest(ctx, http.MethodGet, path, nil)
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	vmIntentResponse := new(VMIntentResponse)
 
-	err = vm.client.Do(ctx, req, vmIntentResponse)
+	err = op.client.Do(ctx, req, vmIntentResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -103,16 +103,16 @@ func (vm Operations) GetVM(UUID string) (*VMIntentResponse, error) {
  * @param getEntitiesRequest
  * @return *VmListIntentResponse
  */
-func (vm Operations) ListVM(getEntitiesRequest VMListMetadata) (*VMListIntentResponse, error) {
+func (op Operations) ListVM(getEntitiesRequest VMListMetadata) (*VMListIntentResponse, error) {
 	ctx := context.TODO()
 	path := "/vms/list"
 
-	req, err := vm.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
 	if err != nil {
 		return nil, err
 	}
 	vmListIntentResponse := new(VMListIntentResponse)
-	err = vm.client.Do(ctx, req, vmListIntentResponse)
+	err = op.client.Do(ctx, req, vmListIntentResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -127,19 +127,19 @@ func (vm Operations) ListVM(getEntitiesRequest VMListMetadata) (*VMListIntentRes
  * @param body
  * @return *VMIntentResponse
  */
-func (vm Operations) UpdateVM(UUID string, body VMIntentInput) (*VMIntentResponse, error) {
+func (op Operations) UpdateVM(UUID string, body VMIntentInput) (*VMIntentResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/vms/%s", UUID)
 
-	req, err := vm.client.NewRequest(ctx, http.MethodPut, path, body)
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
 	if err != nil {
 		return nil, err
 	}
 
 	vmIntentResponse := new(VMIntentResponse)
 
-	err = vm.client.Do(ctx, req, vmIntentResponse)
+	err = op.client.Do(ctx, req, vmIntentResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -153,17 +153,17 @@ func (vm Operations) UpdateVM(UUID string, body VMIntentInput) (*VMIntentRespons
  * @param body
  * @return *SubnetIntentResponse
  */
-func (vm Operations) CreateSubnet(createRequest SubnetIntentInput) (*SubnetIntentResponse, error) {
+func (op Operations) CreateSubnet(createRequest SubnetIntentInput) (*SubnetIntentResponse, error) {
 	ctx := context.TODO()
 
-	req, err := vm.client.NewRequest(ctx, http.MethodPost, "/subnets", createRequest)
+	req, err := op.client.NewRequest(ctx, http.MethodPost, "/subnets", createRequest)
 	if err != nil {
 		return nil, err
 	}
 
 	subnetIntentResponse := new(SubnetIntentResponse)
 
-	err = vm.client.Do(ctx, req, subnetIntentResponse)
+	err = op.client.Do(ctx, req, subnetIntentResponse)
 
 	if err != nil {
 		return nil, err
@@ -178,17 +178,17 @@ func (vm Operations) CreateSubnet(createRequest SubnetIntentInput) (*SubnetInten
  * @param uuid The UUID of the entity.
  * @return error if exist error
  */
-func (vm Operations) DeleteSubnet(UUID string) error {
+func (op Operations) DeleteSubnet(UUID string) error {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/subnets/%s", UUID)
 
-	req, err := vm.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	if err != nil {
 		return err
 	}
 
-	return vm.client.Do(ctx, req, nil)
+	return op.client.Do(ctx, req, nil)
 }
 
 /*GetSubnet Gets a subnet entity
@@ -197,19 +197,19 @@ func (vm Operations) DeleteSubnet(UUID string) error {
  * @param uuid The UUID of the entity.
  * @return *SubnetIntentResponse
  */
-func (vm Operations) GetSubnet(UUID string) (*SubnetIntentResponse, error) {
+func (op Operations) GetSubnet(UUID string) (*SubnetIntentResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/subnets/%s", UUID)
 
-	req, err := vm.client.NewRequest(ctx, http.MethodGet, path, nil)
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	subnetIntentResponse := new(SubnetIntentResponse)
 
-	err = vm.client.Do(ctx, req, subnetIntentResponse)
+	err = op.client.Do(ctx, req, subnetIntentResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -223,18 +223,18 @@ func (vm Operations) GetSubnet(UUID string) (*SubnetIntentResponse, error) {
  * @param getEntitiesRequest
  * @return *SubnetListIntentResponse
  */
-func (vm Operations) ListSubnet(getEntitiesRequest SubnetListMetadata) (*SubnetListIntentResponse, error) {
+func (op Operations) ListSubnet(getEntitiesRequest SubnetListMetadata) (*SubnetListIntentResponse, error) {
 	ctx := context.TODO()
 	path := "/subnets/list"
 
-	req, err := vm.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
 
 	if err != nil {
 		return nil, err
 	}
 
 	subnetListIntentResponse := new(SubnetListIntentResponse)
-	err = vm.client.Do(ctx, req, subnetListIntentResponse)
+	err = op.client.Do(ctx, req, subnetListIntentResponse)
 
 	if err != nil {
 		return nil, err
@@ -250,22 +250,147 @@ func (vm Operations) ListSubnet(getEntitiesRequest SubnetListMetadata) (*SubnetL
  * @param body
  * @return *SubnetIntentResponse
  */
-func (vm Operations) UpdateSubnet(UUID string, body SubnetIntentInput) (*SubnetIntentResponse, error) {
+func (op Operations) UpdateSubnet(UUID string, body SubnetIntentInput) (*SubnetIntentResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/subnets/%s", UUID)
 
-	req, err := vm.client.NewRequest(ctx, http.MethodPut, path, body)
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
 	if err != nil {
 		return nil, err
 	}
 
 	subnetIntentResponse := new(SubnetIntentResponse)
 
-	err = vm.client.Do(ctx, req, subnetIntentResponse)
+	err = op.client.Do(ctx, req, subnetIntentResponse)
 	if err != nil {
 		return nil, err
 	}
 
 	return subnetIntentResponse, nil
 }
+
+/*CreateImage Creates a IMAGE
+ * Images are raw ISO, QCOW2, or VMDK files that are uploaded by a user can be attached to a op. An ISO image is attached as a virtual CD-ROM drive, and QCOW2 and VMDK files are attached as SCSI disks. An image has to be explicitly added to the self-service catalog before users can create VMs from it.
+ *
+ * @param body
+ * @return *ImageIntentResponse
+ */
+func (op Operations) CreateImage(body ImageIntentInput) (*ImageIntentResponse, error) {
+	ctx := context.TODO()
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, "/images", body)
+	if err != nil {
+		return nil, err
+	}
+
+	imageIntentResponse := new(ImageIntentResponse)
+
+	err = op.client.Do(ctx, req, imageIntentResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return imageIntentResponse, nil
+}
+
+/*DeleteImage deletes a IMAGE
+ * This operation submits a request to delete a IMAGE.
+ *
+ * @param uuid The UUID of the entity.
+ * @return error if error exists
+ */
+func (op Operations) DeleteImage(UUID string) error {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/images/%s", UUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	if err != nil {
+		return err
+	}
+
+	return op.client.Do(ctx, req, nil)
+}
+
+/*GetImage gets a IMAGE
+ * This operation gets a IMAGE.
+ *
+ * @param uuid The UUID of the entity.
+ * @return *ImageIntentResponse
+ */
+func (op Operations) GetImage(UUID string) (*ImageIntentResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/images/%s", UUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	imageIntentResponse := new(ImageIntentResponse)
+
+	err = op.client.Do(ctx, req, imageIntentResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return imageIntentResponse, nil
+}
+
+/*ListImage gets a list of IMAGEs
+ * This operation gets a list of IMAGEs, allowing for sorting and pagination. Note: Entities that have not been created successfully are not listed.
+ *
+ * @param getEntitiesRequest
+ * @return *ImageListIntentResponse
+ */
+func (op Operations) ListImage(getEntitiesRequest ImageListMetadata) (*ImageListIntentResponse, error) {
+	ctx := context.TODO()
+	path := "/images/list"
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
+
+	if err != nil {
+		return nil, err
+	}
+
+	imageListIntentResponse := new(ImageListIntentResponse)
+	err = op.client.Do(ctx, req, imageListIntentResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return imageListIntentResponse, nil
+}
+
+/*UpdateImage updates a IMAGE
+ * This operation submits a request to update a IMAGE based on the input parameters.
+ *
+ * @param uuid The UUID of the entity.
+ * @param body
+ * @return *ImageIntentResponse
+ */
+func (op Operations) UpdateImage(UUID string, body ImageIntentInput) (*ImageIntentResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/images/%s", UUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
+	if err != nil {
+		return nil, err
+	}
+
+	imageIntentResponse := new(ImageIntentResponse)
+
+	err = op.client.Do(ctx, req, imageIntentResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return imageIntentResponse, nil
+}
+
+//TODO: Ask for images file put & get requests.
