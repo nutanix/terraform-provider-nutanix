@@ -7,6 +7,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 )
 
+const Version = "3.0"
+
 // Config ...
 type Config struct {
 	Endpoint string
@@ -41,5 +43,5 @@ func (c *Config) Client() (*NutanixClient, error) {
 
 // Nutanix client
 type NutanixClient struct {
-	API *client.Client
+	API *v3.Client
 }
