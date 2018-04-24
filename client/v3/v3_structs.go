@@ -590,3 +590,492 @@ type VMListIntentResponse struct {
 
 	Metadata VMListMetadataOutput `json:"metadata"`
 }
+
+//SubnetMetadata The subnet kind metadata
+type SubnetMetadata struct {
+
+	// Categories for the subnet
+	Categories map[string]string `json:"categories,omitempty"`
+
+	// UTC date and time in RFC-3339 format when subnet was created
+	CreationTime time.Time `json:"creation_time,omitempty"`
+
+	// The kind name
+	Kind string `json:"kind"`
+
+	// UTC date and time in RFC-3339 format when subnet was last updated
+	LastUpdateTime time.Time `json:"last_update_time"`
+
+	// subnet name
+	Name string `json:"name,omitempty"`
+
+	OwnerReference Reference `json:"owner_reference,omitempty"`
+
+	// project reference
+	ProjectReference Reference `json:"project_reference,omitempty"`
+
+	// Hash of the spec. This will be returned from server.
+	SpecHash string `json:"spec_hash,omitempty"`
+
+	// Version number of the latest spec.
+	SpecVersion int64 `json:"spec_version,omitempty"`
+
+	// subnet uuid
+	UUID string `json:"uuid,omitempty"`
+}
+
+//Address represents the Host address.
+type Address struct {
+
+	// Fully qualified domain name.
+	FQDN string `json:"fqdn,omitempty"`
+
+	// IPV4 address.
+	IP string `json:"ip,omitempty"`
+
+	// IPV6 address.
+	IPV6 string `json:"ipv6,omitempty"`
+
+	// Port Number
+	Port int64 `json:"port,omitempty"`
+}
+
+//IPPool represents IP pool.
+type IPPool struct {
+
+	// Range of IPs (example: 10.0.0.9 10.0.0.19).
+	Range string `json:"range,omitempty"`
+}
+
+//DHCPOptions Spec for defining DHCP options.
+type DHCPOptions struct {
+	BootFileName string `json:"boot_file_name,omitempty"`
+
+	DomainName string `json:"domain_name,omitempty"`
+
+	DomainNameServerList []string `json:"domain_name_server_list,omitempty"`
+
+	DomainSearchList []string `json:"domain_search_list,omitempty"`
+
+	TFTPServerName string `json:"tftp_server_name,omitempty"`
+}
+
+//IPConfig represents the configurtion of IP.
+type IPConfig struct {
+
+	// Default gateway IP address.
+	DefaultGatewayIP string `json:"default_gateway_ip,omitempty"`
+
+	DHCPOptions DHCPOptions `json:"dhcp_options,omitempty"`
+
+	DHCPServerAddress Address `json:"dhcp_server_address,omitempty"`
+
+	PoolList []IPPool `json:"pool_list,omitempty"`
+
+	PrefixLength int64 `json:"prefix_length,omitempty"`
+
+	// Subnet IP address.
+	SubnetIP string `json:"subnet_ip,omitempty"`
+}
+
+//SubnetResources represents Subnet creation/modification spec.
+type SubnetResources struct {
+	IPConfig IPConfig `json:"ip_config,omitempty"`
+
+	NetworkFunctionChainReference Reference `json:"network_function_chain_reference,omitempty"`
+
+	SubnetType string `json:"subnet_type"`
+
+	VlanID int64 `json:"vlan_id,omitempty"`
+
+	VswitchName string `json:"vswitch_name,omitempty"`
+}
+
+//Subnet An intentful representation of a subnet spec
+type Subnet struct {
+	AvailabilityZoneReference Reference `json:"availability_zone_reference,omitempty"`
+
+	ClusterReference Reference `json:"cluster_reference,omitempty"`
+
+	// A description for subnet.
+	Description string `json:"description,omitempty"`
+
+	// subnet Name.
+	Name string `json:"name"`
+
+	Resources SubnetResources `json:"resources,omitempty"`
+}
+
+//SubnetIntentInput An intentful representation of a subnet
+type SubnetIntentInput struct {
+	APIVersion string `json:"api_version,omitempty"`
+
+	Metadata SubnetMetadata `json:"metadata"`
+
+	Spec Subnet `json:"spec"`
+}
+
+//SubnetStatus represents The status of a REST API call. Only used when there is a failure to report.
+type SubnetStatus struct {
+	APIVersion string `json:"api_version,omitempty"`
+
+	// The HTTP error code.
+	Code int64 `json:"code,omitempty"`
+
+	// The kind name
+	Kind string `json:"kind,omitempty"`
+
+	MessageList []MessageResource `json:"message_list,omitempty"`
+
+	State string `json:"state,omitempty"`
+}
+
+//SubnetResourcesDefStatus represents a Subnet creation/modification status.
+type SubnetResourcesDefStatus struct {
+	IPConfig IPConfig `json:"ip_config,omitempty"`
+
+	NetworkFunctionChainReference Reference `json:"network_function_chain_reference,omitempty"`
+
+	SubnetType string `json:"subnet_type"`
+
+	VlanID int64 `json:"vlan_id,omitempty"`
+
+	VswitchName string `json:"vswitch_name,omitempty"`
+}
+
+//SubnetDefStatus An intentful representation of a subnet status
+type SubnetDefStatus struct {
+	AvailabilityZoneReference Reference `json:"availability_zone_reference,omitempty"`
+
+	ClusterReference Reference `json:"cluster_reference,omitempty"`
+
+	// A description for subnet.
+	Description string `json:"description,omitempty"`
+
+	// Any error messages for the subnet, if in an error state.
+	MessageList []MessageResource `json:"message_list,omitempty"`
+
+	// subnet Name.
+	Name string `json:"name"`
+
+	Resources SubnetResourcesDefStatus `json:"resources,omitempty"`
+
+	// The state of the subnet.
+	State string `json:"state,omitempty"`
+}
+
+// SubnetIntentResponse represents the response object for intentful operations on a subnet
+type SubnetIntentResponse struct {
+	APIVersion string `json:"api_version"`
+
+	Metadata SubnetMetadata `json:"metadata,omitempty"`
+
+	Spec Subnet `json:"spec,omitempty"`
+
+	Status SubnetDefStatus `json:"status,omitempty"`
+}
+
+//SubnetIntentResource represents Response object for intentful operations on a subnet
+type SubnetIntentResource struct {
+	APIVersion string `json:"api_version,omitempty"`
+
+	Metadata SubnetMetadata `json:"metadata"`
+
+	Spec Subnet `json:"spec,omitempty"`
+
+	Status SubnetDefStatus `json:"status,omitempty"`
+}
+
+//SubnetListMetadataOutput All api calls that return a list will have this metadata block
+type SubnetListMetadataOutput struct {
+
+	// The filter used for the results
+	Filter string `json:"filter,omitempty"`
+
+	// The kind name
+	Kind string `json:"kind,omitempty"`
+
+	// The number of records retrieved relative to the offset
+	Length int64 `json:"length,omitempty"`
+
+	// Offset from the start of the entity list
+	Offset int64 `json:"offset,omitempty"`
+
+	// The attribute to perform sort on
+	SortAttribute string `json:"sort_attribute,omitempty"`
+
+	// The sort order in which results are returned
+	SortOrder string `json:"sort_order,omitempty"`
+
+	// Total matches found
+	TotalMatches int64 `json:"total_matches,omitempty"`
+}
+
+//SubnetListIntentResponse represents the response object for intentful operation of subnets
+type SubnetListIntentResponse struct {
+	APIVersion string `json:"api_version"`
+
+	Entities []SubnetIntentResource `json:"entities,omitempty"`
+
+	Metadata SubnetListMetadataOutput `json:"metadata"`
+}
+
+//SubnetListMetadata ...
+type SubnetListMetadata struct {
+
+	// The filter in FIQL syntax used for the results.
+	Filter string `json:"filter,omitempty"`
+
+	// The kind name
+	Kind string `json:"kind,omitempty"`
+
+	// The number of records to retrieve relative to the offset
+	Length int64 `json:"length,omitempty"`
+
+	// Offset from the start of the entity list
+	Offset int64 `json:"offset,omitempty"`
+
+	// The attribute to perform sort on
+	SortAttribute string `json:"sort_attribute,omitempty"`
+
+	// The sort order in which results are returned
+	SortOrder string `json:"sort_order,omitempty"`
+}
+
+//Checksum represents the image checksum
+type Checksum struct {
+	ChecksumAlgorithm string `json:"checksum_algorithm"`
+	ChecksumValue     string `json:"checksum_value"`
+}
+
+//ImageVersionResources The image version, which is composed of a product name and product version.
+type ImageVersionResources struct {
+
+	// Name of the producer/distribution of the image. For example windows or red hat.
+	ProductName string `json:"product_name"`
+
+	// Version string for the disk image.
+	ProductVersion string `json:"product_version"`
+}
+
+//ImageResources describes the image spec resources object.
+type ImageResources struct {
+
+	// The supported CPU architecture for a disk image.
+	Architecture string `json:"architecture,omitempty"`
+
+	// Checksum of the image. The checksum is used for image validation if the image has a source specified. For images that do not have their source specified the checksum is generated by the image service.
+	Checksum Checksum `json:"checksum,omitempty"`
+
+	// The type of image.
+	ImageType string `json:"image_type,omitempty"`
+
+	// The source URI points at the location of a the source image which is used to create/update image.
+	SourceURI string `json:"source_uri,omitempty"`
+
+	// The image version
+	Version ImageVersionResources `json:"version,omitempty"`
+}
+
+//Image An intentful representation of a image spec
+type Image struct {
+
+	// A description for image.
+	Description string `json:"description,omitempty"`
+
+	// image Name.
+	Name string `json:"name,omitempty"`
+
+	Resources ImageResources `json:"resources"`
+}
+
+//ImageMetadata Metadata The image kind metadata
+type ImageMetadata struct {
+
+	// Categories for the image
+	Categories map[string]string `json:"categories,omitempty"`
+
+	// UTC date and time in RFC-3339 format when vm was created
+	CreationTime time.Time `json:"creation_time,omitempty"`
+
+	// The kind name
+	Kind string `json:"kind"`
+
+	// UTC date and time in RFC-3339 format when image was last updated
+	LastUpdateTime time.Time `json:"last_update_time,omitempty"`
+
+	// image name
+	Name string `json:"name,omitempty"`
+
+	// project reference
+	ProjectReference Reference `json:"project_reference,omitempty"`
+
+	OwnerReference Reference `json:"owner_reference,omitempty"`
+
+	// Hash of the spec. This will be returned from server.
+	SpecHash string `json:"spec_hash,omitempty"`
+
+	// Version number of the latest spec.
+	SpecVersion int64 `json:"spec_version,omitempty"`
+
+	// image uuid
+	UUID string `json:"uuid,omitempty"`
+}
+
+//ImageIntentInput An intentful representation of a image
+type ImageIntentInput struct {
+	APIVersion string `json:"api_version,omitempty"`
+
+	Metadata ImageMetadata `json:"metadata,omitempty"`
+
+	Spec Image `json:"spec,omitempty"`
+}
+
+//ImageStatus represents the status of a REST API call. Only used when there is a failure to report.
+type ImageStatus struct {
+	APIVersion string `json:"api_version,omitempty"`
+
+	// The HTTP error code.
+	Code int64 `json:"code,omitempty"`
+
+	// The kind name
+	Kind string `json:"kind,omitempty"`
+
+	MessageList []MessageResource `json:"message_list,omitempty"`
+
+	State string `json:"state,omitempty"`
+}
+
+//ImageVersionStatus represents the image version, which is composed of a product name and product version.
+type ImageVersionStatus struct {
+
+	// Name of the producer/distribution of the image. For example windows or red hat.
+	ProductName string `json:"product_name"`
+
+	// Version string for the disk image.
+	ProductVersion string `json:"product_version"`
+}
+
+//ImageResourcesDefStatus describes the image status resources object.
+type ImageResourcesDefStatus struct {
+
+	// The supported CPU architecture for a disk image.
+	Architecture string `json:"architecture,omitempty"`
+
+	// Checksum of the image. The checksum is used for image validation if the image has a source specified. For images that do not have their source specified the checksum is generated by the image service.
+	Checksum Checksum `json:"checksum,omitempty"`
+
+	// The type of image.
+	ImageType string `json:"image_type,omitempty"`
+
+	// List of URIs where the raw image data can be accessed.
+	RetrievalURIList []string `json:"retrieval_uri_list,omitempty"`
+
+	// The size of the image in bytes.
+	SizeBytes int64 `json:"size_bytes,omitempty"`
+
+	// The source URI points at the location of a the source image which is used to create/update image.
+	SourceURI string `json:"source_uri,omitempty"`
+
+	// The image version
+	Version ImageVersionStatus `json:"version,omitempty"`
+}
+
+//ImageDefStatus represents an intentful representation of a image status
+type ImageDefStatus struct {
+	AvailabilityZoneReference Reference `json:"availability_zone_reference,omitempty"`
+
+	ClusterReference Reference `json:"cluster_reference,omitempty"`
+
+	// A description for image.
+	Description string `json:"description,omitempty"`
+
+	// Any error messages for the image, if in an error state.
+	MessageList []MessageResource `json:"message_list,omitempty"`
+
+	// image Name.
+	Name string `json:"name"`
+
+	Resources ImageResourcesDefStatus `json:"resources"`
+
+	// The state of the image.
+	State string `json:"state,omitempty"`
+}
+
+//ImageIntentResponse represents the response object for intentful operations on a image
+type ImageIntentResponse struct {
+	APIVersion string `json:"api_version"`
+
+	Metadata ImageMetadata `json:"metadata"`
+
+	Spec Image `json:"spec,omitempty"`
+
+	Status ImageDefStatus `json:"status,omitempty"`
+}
+
+//ImageListMetadata represents metadata input
+type ImageListMetadata struct {
+
+	// The filter in FIQL syntax used for the results.
+	Filter string `json:"filter,omitempty"`
+
+	// The kind name
+	Kind string `json:"kind,omitempty"`
+
+	// The number of records to retrieve relative to the offset
+	Length int64 `json:"length,omitempty"`
+
+	// Offset from the start of the entity list
+	Offset int64 `json:"offset,omitempty"`
+
+	// The attribute to perform sort on
+	SortAttribute string `json:"sort_attribute,omitempty"`
+
+	// The sort order in which results are returned
+	SortOrder string `json:"sort_order,omitempty"`
+}
+
+//ImageIntentResource represents the response object for intentful operations on a image
+type ImageIntentResource struct {
+	APIVersion string `json:"api_version,omitempty"`
+
+	Metadata ImageMetadata `json:"metadata"`
+
+	Spec Image `json:"spec,omitempty"`
+
+	Status ImageDefStatus `json:"status,omitempty"`
+}
+
+//ImageListMetadataOutput represents metadata block in image list
+type ImageListMetadataOutput struct {
+
+	// The filter used for the results
+	Filter string `json:"filter,omitempty"`
+
+	// The kind name
+	Kind string `json:"kind,omitempty"`
+
+	// The number of records retrieved relative to the offset
+	Length int64 `json:"length,omitempty"`
+
+	// Offset from the start of the entity list
+	Offset int64 `json:"offset,omitempty"`
+
+	// The attribute to perform sort on
+	SortAttribute string `json:"sort_attribute,omitempty"`
+
+	// The sort order in which results are returned
+	SortOrder string `json:"sort_order,omitempty"`
+
+	// Total matches found
+	TotalMatches int64 `json:"total_matches,omitempty"`
+}
+
+//ImageListIntentResponse represents the response object for intentful operation of images
+type ImageListIntentResponse struct {
+	APIVersion string `json:"api_version"`
+
+	Entities []ImageIntentResource `json:"entities,omitempty"`
+
+	Metadata ImageListMetadataOutput `json:"metadata"`
+}
