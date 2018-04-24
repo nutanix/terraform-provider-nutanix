@@ -41,7 +41,7 @@ type Credentials struct {
 	Password string
 	Endpoint string
 	Port     string
-	Insecure string
+	Insecure bool
 }
 
 // NewClient returns a new Nutanix API client.
