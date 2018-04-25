@@ -96,6 +96,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		metadata.Name = v.(string)
 	}
 	if v, ok := metad["categories"]; ok {
+		fmt.Printf("[DEBUG] CATEGORIES %+v", v)
 		metadata.Categories = v.(map[string]string)
 	}
 	if v, ok := metad["project_reference"]; ok {
@@ -510,7 +511,6 @@ func setVMResources(m interface{}) v3.VMResources {
 	if v, ok := resources["vnuma_config"]; ok {
 		vm.VMVnumaConfig.NumVnumaNodes = int64(v.(int))
 	}
-
 	if v, ok := resources["nic_list"]; ok {
 		var nics []v3.VMNic
 
@@ -561,6 +561,12 @@ func setVMResources(m interface{}) v3.VMResources {
 
 		vm.NicList = nics
 	}
+	if v, ok := resources["guest_os_id"]; ok {
+		vm.GuestOsID = v.(string)
+	}
+	if v, ok := resources["power_state"]; ok {
+		vm.PowerState = v.(string)
+	}
 	if v, ok := resources["guest_tools"]; ok {
 		ngt := v.(map[string]interface{})
 		if k, ok1 := ngt["nutanix_guest_tools"]; ok1 {
@@ -579,6 +585,12 @@ func setVMResources(m interface{}) v3.VMResources {
 				vm.GuestTools.NutanixGuestTools.EnabledCapabilityList = l
 			}
 		}
+	}
+	if v, ok := resources["num_vcpus_per_socket"]; ok {
+		vm.NumVcpusPerSocket = int64(v.(int))
+	}
+	if v, ok := resources["num_sockets"]; ok {
+		vm.NumVcpusPerSocket = int64(v.(int))
 	}
 	if v, ok := resources["gpu_list"]; ok {
 		var gpl []v3.VMGpu
@@ -604,6 +616,9 @@ func setVMResources(m interface{}) v3.VMResources {
 		if j, ok1 := val["name"]; ok1 {
 			vm.ParentReference.Name = j
 		}
+	}
+	if v, ok := resources["memory_size_mib"]; ok {
+		vm.MemorySizeMib = int64(v.(int))
 	}
 	if v, ok := resources["boot_config"]; ok {
 		val := v.(map[string]interface{})
@@ -634,7 +649,9 @@ func setVMResources(m interface{}) v3.VMResources {
 			vm.BootConfig.BootDevice = bd
 		}
 	}
-
+	if v, ok := resources["hardware_clock_timezone"]; ok {
+		vm.HardwareClockTimezone = v.(string)
+	}
 	if v, ok := resources["guest_customization"]; ok {
 		gci := v.(map[string]interface{})
 		gc := v3.GuestCustomization{}
@@ -668,6 +685,87 @@ func setVMResources(m interface{}) v3.VMResources {
 		}
 
 		vm.GuestCustomization = gc
+	}
+	if v, ok := resources["vga_console_enabled"]; ok {
+		vm.VgaConsoleEnabled = v.(bool)
+	}
+	if v, ok := resources["power_state_mechanism"]; ok {
+		p := v.(map[string]interface{})
+		psm := v3.VMPowerStateMechanism{}
+
+		if v1, ok1 := p["mechanism"]; ok1 {
+			psm.Mechanism = v1.(string)
+		}
+		if v1, ok1 := p["guest_transition_config"]; ok1 {
+			g := v1.(map[string]interface{})
+			gtc := v3.VMGuestPowerStateTransitionConfig{}
+			if v2, ok2 := g["should_fail_on_script_failure"]; ok2 {
+				gtc.ShouldFailOnScriptFailure = v2.(bool)
+			}
+			if v2, ok2 := g["enable_script_exec"]; ok2 {
+				gtc.EnableScriptExec = v2.(bool)
+			}
+			psm.GuestTransitionConfig = gtc
+		}
+
+		vm.PowerStateMechanism = psm
+	}
+	if v, ok := resources["disk_list"]; ok {
+		d := v.([]map[string]interface{})
+		dls := make([]v3.VMDisk, len(d))
+
+		for k, v := range d {
+			dl := v3.VMDisk{}
+			if v1, ok1 := v["uuid"]; ok1 {
+				dl.UUID = v1.(string)
+			}
+			if v1, ok1 := v["disk_size_bytes"]; ok1 {
+				dl.DiskSizeBytes = int64(v1.(int))
+			}
+			if v1, ok1 := v["device_properties"]; ok1 {
+				d := v1.(map[string]interface{})
+				dp := v3.VMDiskDeviceProperties{}
+				if v, ok := d["device_type"]; ok {
+					dp.DeviceType = v.(string)
+				}
+				if v, ok := d["disk_address"]; ok {
+					da := v.(map[string]interface{})
+					dp.DiskAddress = v3.DiskAddress{
+						DeviceIndex: int64(da["device_index"].(int)),
+						AdapterType: da["adapter_type"].(string),
+					}
+				}
+				dl.DeviceProperties = dp
+			}
+			if v1, ok := v["data_source_reference"]; ok {
+				dsri := v1.(map[string]interface{})
+				dsr := v3.Reference{
+					Kind: dsri["kind"].(string),
+					UUID: dsri["uuid"].(string),
+				}
+				if v2, ok2 := dsri["name"]; ok2 {
+					dsr.Name = v2.(string)
+				}
+				dl.DataSourceReference = dsr
+			}
+			if v1, ok := v["volume_group_reference"]; ok {
+				dsri := v1.(map[string]interface{})
+				dsr := v3.Reference{
+					Kind: dsri["kind"].(string),
+					UUID: dsri["uuid"].(string),
+				}
+				if v2, ok2 := dsri["name"]; ok2 {
+					dsr.Name = v2.(string)
+				}
+				dl.VolumeGroupReference = dsr
+			}
+			if v1, ok := v["disk_size_mib"]; ok {
+				dl.DiskSizeMib = int64(v1.(int))
+			}
+			dls[k] = dl
+		}
+
+		vm.DiskList = dls
 	}
 
 	return vm
@@ -1351,100 +1449,101 @@ func getVMSchema() map[string]*schema.Schema {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"uuid": &schema.Schema{
-									Type:     schema.TypeString,
-									Optional: true,
-									Computed: true,
-								},
-								"disk_size_bytes": &schema.Schema{
-									Type:     schema.TypeInt,
-									Optional: true,
-									Computed: true,
-								},
-								"device_properties": &schema.Schema{
-									Type:     schema.TypeMap,
-									Optional: true,
-									Computed: true,
-									Elem: &schema.Resource{
-										Schema: map[string]*schema.Schema{
-											"device_type": &schema.Schema{
-												Type:     schema.TypeString,
-												Optional: true,
-												Computed: true,
-											},
-											"disk_address": &schema.Schema{
-												Type:     schema.TypeMap,
-												Optional: true,
-												Computed: true,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"device_index": &schema.Schema{
-															Type:     schema.TypeInt,
-															Required: true,
-														},
-														"adapter_type": &schema.Schema{
-															Type:     schema.TypeString,
-															Required: true,
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-								"data_source_reference": &schema.Schema{
-									Type:     schema.TypeMap,
-									Optional: true,
-									Computed: true,
-									Elem: &schema.Resource{
-										Schema: map[string]*schema.Schema{
-											"kind": &schema.Schema{
-												Type:     schema.TypeString,
-												Required: true,
-											},
-											"name": &schema.Schema{
-												Type:     schema.TypeString,
-												Optional: true,
-												Computed: true,
-											},
-											"uuid": &schema.Schema{
-												Type:     schema.TypeString,
-												Required: true,
-											},
-										},
-									},
-								},
-								"disk_size_mib": &schema.Schema{
-									Type:     schema.TypeInt,
-									Optional: true,
-									Computed: true,
-								},
-								"volume_group_reference": &schema.Schema{
-									Type:     schema.TypeMap,
-									Optional: true,
-									Computed: true,
-									Elem: &schema.Resource{
-										Schema: map[string]*schema.Schema{
-											"kind": &schema.Schema{
-												Type:     schema.TypeString,
-												Required: true,
-											},
-											"name": &schema.Schema{
-												Type:     schema.TypeString,
-												Optional: true,
-												Computed: true,
-											},
-											"uuid": &schema.Schema{
-												Type:     schema.TypeString,
-												Required: true,
-											},
-										},
-									},
-								},
-							},
-						},
+						Elem:     &schema.Schema{Type: schema.TypeMap},
+						// Elem: &schema.Resource{
+						// 	Schema: map[string]*schema.Schema{
+						// 		"uuid": &schema.Schema{
+						// 			Type:     schema.TypeString,
+						// 			Optional: true,
+						// 			Computed: true,
+						// 		},
+						// 		"disk_size_bytes": &schema.Schema{
+						// 			Type:     schema.TypeInt,
+						// 			Optional: true,
+						// 			Computed: true,
+						// 		},
+						// 		"device_properties": &schema.Schema{
+						// 			Type:     schema.TypeMap,
+						// 			Optional: true,
+						// 			Computed: true,
+						// 			Elem: &schema.Resource{
+						// 				Schema: map[string]*schema.Schema{
+						// 					"device_type": &schema.Schema{
+						// 						Type:     schema.TypeString,
+						// 						Optional: true,
+						// 						Computed: true,
+						// 					},
+						// 					"disk_address": &schema.Schema{
+						// 						Type:     schema.TypeMap,
+						// 						Optional: true,
+						// 						Computed: true,
+						// 						Elem: &schema.Resource{
+						// 							Schema: map[string]*schema.Schema{
+						// 								"device_index": &schema.Schema{
+						// 									Type:     schema.TypeInt,
+						// 									Required: true,
+						// 								},
+						// 								"adapter_type": &schema.Schema{
+						// 									Type:     schema.TypeString,
+						// 									Required: true,
+						// 								},
+						// 							},
+						// 						},
+						// 					},
+						// 				},
+						// 			},
+						// 		},
+						// 		"data_source_reference": &schema.Schema{
+						// 			Type:     schema.TypeMap,
+						// 			Optional: true,
+						// 			Computed: true,
+						// 			Elem: &schema.Resource{
+						// 				Schema: map[string]*schema.Schema{
+						// 					"kind": &schema.Schema{
+						// 						Type:     schema.TypeString,
+						// 						Required: true,
+						// 					},
+						// 					"name": &schema.Schema{
+						// 						Type:     schema.TypeString,
+						// 						Optional: true,
+						// 						Computed: true,
+						// 					},
+						// 					"uuid": &schema.Schema{
+						// 						Type:     schema.TypeString,
+						// 						Required: true,
+						// 					},
+						// 				},
+						// 			},
+						// 		},
+						// 		"disk_size_mib": &schema.Schema{
+						// 			Type:     schema.TypeInt,
+						// 			Optional: true,
+						// 			Computed: true,
+						// 		},
+						// 		"volume_group_reference": &schema.Schema{
+						// 			Type:     schema.TypeMap,
+						// 			Optional: true,
+						// 			Computed: true,
+						// 			Elem: &schema.Resource{
+						// 				Schema: map[string]*schema.Schema{
+						// 					"kind": &schema.Schema{
+						// 						Type:     schema.TypeString,
+						// 						Required: true,
+						// 					},
+						// 					"name": &schema.Schema{
+						// 						Type:     schema.TypeString,
+						// 						Optional: true,
+						// 						Computed: true,
+						// 					},
+						// 					"uuid": &schema.Schema{
+						// 						Type:     schema.TypeString,
+						// 						Required: true,
+						// 					},
+						// 				},
+						// 			},
+						// 		},
+						// 	},
+						// },
 					},
 				},
 			},
