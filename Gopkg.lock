@@ -142,7 +142,6 @@
 [[projects]]
   name = "github.com/hashicorp/terraform"
   packages = [
-    "builtin/providers/template",
     "config",
     "config/module",
     "dag",
@@ -152,7 +151,6 @@
     "helper/hashcode",
     "helper/hilmapstructure",
     "helper/logging",
-    "helper/pathorcontents",
     "helper/resource",
     "helper/schema",
     "helper/shadow",
@@ -332,6 +330,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "933c57d9327f4ab38b577c5d2863b5c781e1081aab3e97e6429b11efd3964c09"
+  inputs-digest = "ddb846be1d117350e628fbd9a606aa33d9173ce58e6f2075c15e0234a461aca2"
   solver-name = "gps-cdcl"
   solver-version = 1
