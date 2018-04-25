@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/hashicorp/terraform/plugin"
-	"terraform-provider-nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 )
 
 func main() {

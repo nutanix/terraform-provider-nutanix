@@ -167,23 +167,14 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	}
 
 	// Set vm values
-	status := make(map[string]interface{})
-
-	// Simple first
-	status["name"] = resp.Status.Name
-	status["state"] = resp.Status.State
-	status["description"] = resp.Status.Description
-
-	// Complext after
+	// set availability zone reference values
 	availabilityZoneReference := make(map[string]interface{})
 	availabilityZoneReference["kind"] = resp.Status.AvailabilityZoneReference.Kind
 	availabilityZoneReference["name"] = resp.Status.AvailabilityZoneReference.Name
 	availabilityZoneReference["uuid"] = resp.Status.AvailabilityZoneReference.UUID
 
-	status["availability_zone_reference"] = availabilityZoneReference
-
+	// set message list values
 	messages := make([]map[string]interface{}, len(resp.Status.MessageList))
-
 	for k, v := range resp.Status.MessageList {
 		message := make(map[string]interface{})
 
@@ -194,15 +185,13 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		messages[k] = message
 	}
 
-	status["message_list"] = messages
-
+	// set cluster reference values
 	clusterReference := make(map[string]interface{})
 	clusterReference["kind"] = resp.Status.ClusterReference.Kind
 	clusterReference["name"] = resp.Status.ClusterReference.Name
 	clusterReference["uuid"] = resp.Status.ClusterReference.UUID
 
-	status["cluster_reference"] = clusterReference
-
+	// set resources values
 	resouces := make(map[string]interface{})
 
 	vnumaConfig := make(map[string]interface{})
@@ -389,8 +378,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 
 	resouces["disk_list"] = diskList
 
-	status["resources"] = resouces
-
+	// set metadata values
 	metadata := make(map[string]interface{})
 	metadata["last_update_time"] = resp.Metadata.LastUpdateTime
 	metadata["kind"] = resp.Metadata.Kind
@@ -414,9 +402,34 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	metadata["project_reference"] = pr
 	metadata["owner_reference"] = or
 
-	d.Set("api_version", resp.APIVersion)
-	d.Set("status", status)
-	d.Set("metadata", metadata)
+	// Simple first
+	if err := d.Set("api_version", resp.APIVersion); err != nil {
+		return err
+	}
+	if err := d.Set("name", resp.Status.Name); err != nil {
+		return err
+	}
+	if err := d.Set("state", resp.Status.State); err != nil {
+		return err
+	}
+	if err := d.Set("description", resp.Status.Description); err != nil {
+		return err
+	}
+	if err := d.Set("availability_zone_reference", availabilityZoneReference); err != nil {
+		return err
+	}
+	if err := d.Set("message_list", messages); err != nil {
+		return err
+	}
+	if err := d.Set("cluster_reference", clusterReference); err != nil {
+		return err
+	}
+	if err := d.Set("resources", resouces); err != nil {
+		return err
+	}
+	if err := d.Set("metadata", metadata); err != nil {
+		return err
+	}
 	d.SetId(resource.UniqueId())
 
 	return nil
@@ -443,7 +456,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		if err != nil {
 			return err
 		}
-		d.SetPartial("spec")
+		d.SetPartial("resources")
 		d.SetPartial("metadata")
 		d.Set("ip_address", "")
 	}
@@ -804,6 +817,10 @@ func getVMSchema() map[string]*schema.Schema {
 			Required: true,
 		},
 		"state": &schema.Schema{
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"ip_address": &schema.Schema{
 			Type:     schema.TypeString,
 			Computed: true,
 		},
