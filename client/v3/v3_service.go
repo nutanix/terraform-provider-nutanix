@@ -15,7 +15,7 @@ type Operations struct {
 
 // Service ...
 type Service interface {
-	CreateVM(createRequest VMIntentInput) (*VMIntentResponse, error)
+	CreateVM(createRequest *VMIntentInput) (*VMIntentResponse, error)
 	DeleteVM(UUID string) error
 	GetVM(UUID string) (*VMIntentResponse, error)
 	ListVM(getEntitiesRequest VMListMetadata) (*VMListIntentResponse, error)
@@ -33,7 +33,7 @@ type Service interface {
  * @param body
  * @return *VMIntentResponse
  */
-func (op Operations) CreateVM(createRequest VMIntentInput) (*VMIntentResponse, error) {
+func (op Operations) CreateVM(createRequest *VMIntentInput) (*VMIntentResponse, error) {
 	ctx := context.TODO()
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, "/vms", createRequest)

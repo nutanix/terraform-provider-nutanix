@@ -4,9 +4,9 @@ import "time"
 
 //Reference ...
 type Reference struct {
-	Kind string `json:"kind"`
-	Name string `json:"name,omitempty"`
-	UUID string `json:"uuid"`
+	Kind *string `json:"kind"`
+	Name *string `json:"name,omitempty"`
+	UUID *string `json:"uuid"`
 }
 
 //VMMetadata Metadata The vm kind metadata
@@ -16,30 +16,30 @@ type VMMetadata struct {
 	Categories map[string]string `json:"categories,omitempty"`
 
 	// UTC date and time in RFC-3339 format when vm was created
-	CreationTime time.Time `json:"creation_time,omitempty"`
+	CreationTime *time.Time `json:"creation_time,omitempty"`
 
 	// The kind name
-	Kind string `json:"kind"`
+	Kind *string `json:"kind"`
 
 	// UTC date and time in RFC-3339 format when vm was last updated
-	LastUpdateTime time.Time `json:"last_update_time,omitempty"`
+	LastUpdateTime *time.Time `json:"last_update_time,omitempty"`
 
 	// vm name
-	Name string `json:"name,omitempty"`
+	Name *string `json:"name,omitempty"`
 
 	// project reference
-	ProjectReference Reference `json:"project_reference,omitempty"`
+	ProjectReference *Reference `json:"project_reference,omitempty"`
 
-	OwnerReference Reference `json:"owner_reference,omitempty"`
+	OwnerReference *Reference `json:"owner_reference,omitempty"`
 
 	// Hash of the spec. This will be returned from server.
-	SpecHash string `json:"spec_hash,omitempty"`
+	SpecHash *string `json:"spec_hash,omitempty"`
 
 	// Version number of the latest spec.
-	SpecVersion int64 `json:"spec_version,omitempty"`
+	SpecVersion *int64 `json:"spec_version,omitempty"`
 
 	// vm uuid
-	UUID string `json:"uuid,omitempty"`
+	UUID *string `json:"uuid,omitempty"`
 }
 
 //VMVnumaConfig Indicates how VM vNUMA should be configured
@@ -276,26 +276,26 @@ type VMResources struct {
 
 //VM An intentful representation of a vm spec
 type VM struct {
-	AvailabilityZoneReference Reference `json:"availability_zone_reference,omitempty"`
+	AvailabilityZoneReference *Reference `json:"availability_zone_reference,omitempty"`
 
-	ClusterReference Reference `json:"cluster_reference,omitempty"`
+	ClusterReference *Reference `json:"cluster_reference,omitempty"`
 
 	// A description for vm.
-	Description string `json:"description,omitempty"`
+	Description *string `json:"description,omitempty"`
 
 	// vm Name.
-	Name string `json:"name"`
+	Name *string `json:"name"`
 
 	Resources VMResources `json:"resources,omitempty"`
 }
 
 //VMIntentInput ...
 type VMIntentInput struct {
-	APIVersion string `json:"api_version,omitempty"`
+	APIVersion *string `json:"api_version,omitempty"`
 
-	Metadata VMMetadata `json:"metadata"`
+	Metadata *VMMetadata `json:"metadata"`
 
-	Spec VM `json:"spec"`
+	Spec *VM `json:"spec"`
 }
 
 //MessageResource ...

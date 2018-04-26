@@ -3,12 +3,14 @@ package client
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 )
 
@@ -46,7 +48,14 @@ type Credentials struct {
 
 // NewClient returns a new Nutanix API client.
 func NewClient(credentials *Credentials) (*Client, error) {
+
+	transCfg := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // ignore expired SSL certificates
+	}
+
 	httpClient := http.DefaultClient
+
+	httpClient.Transport = transCfg
 
 	baseURL, err := url.Parse(fmt.Sprintf(defaultBaseURL, credentials.URL))
 
@@ -90,6 +99,14 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 	req.Header.Add("Authorization", "Basic "+
 		base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
 
+	requestDump, err := httputil.DumpRequestOut(req, true)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("################")
+	fmt.Println("REQUEST")
+	fmt.Println(string(requestDump))
+
 	return req, nil
 }
 
@@ -102,6 +119,15 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("################")
+	fmt.Println("RESPONSE")
+
+	responseDump, err := httputil.DumpResponse(resp, true)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(string(responseDump))
 
 	defer func() {
 		if rerr := resp.Body.Close(); err == nil {
