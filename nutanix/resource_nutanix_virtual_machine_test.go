@@ -71,19 +71,22 @@ provider "nutanix" {
 
 resource "nutanix_virtual_machine" "vm1" {
   metadata {
-		kind = "vm"
-		categories {
-			Project = "test1"
-		}
+	kind = "vm"
+	name = "test1"
   }
 
   name = "test 1"
+
+  cluster_reference = {
+	  kind = "cluster"
+	  uuid = "000567f3-1921-c722-471d-0cc47ac31055" 
+  }
 
   resources {
     num_vcpus_per_socket = 1
     num_sockets          = 1
     memory_size_mib      = 2048
-    power_state          = "On"
+    power_state          = "ON"
   }
 }
 `

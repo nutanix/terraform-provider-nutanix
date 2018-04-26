@@ -390,7 +390,7 @@ type NutanixGuestToolsStatus struct {
 type GuestToolsStatus struct {
 
 	// Nutanix Guest Tools information
-	NutanixGuestTools NutanixGuestToolsStatus `json:"nutanix_guest_tools,omitempty"`
+	NutanixGuestTools *NutanixGuestToolsStatus `json:"nutanix_guest_tools,omitempty"`
 }
 
 //VMGpuOutputStatus Graphics resource status information for the Virtual Machine.
