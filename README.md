@@ -1,9 +1,7 @@
 # Terraform AHV Provider Plugin
 Provider plugin to integrate with AHV APIs
 
-- Website: https://www.terraform.io
-
-![Terraform](https://rawgit.com/hashicorp/terraform-website/master/source/assets/images/logo-hashicorp.svg)
+[![Waffle.io - Columns and their card count](https://badge.waffle.io/b58a88b8face3407eccdc79e19d39058d28754b65f6df7513ed23293ef387491a5f538b65dffd5b12ca0201c6d4b50ce.svg?columns=all)](https://waffle.io/nutanix/terraform-provider-nutanix)
 
 Requirments
 ------------
