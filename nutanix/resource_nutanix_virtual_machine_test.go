@@ -86,7 +86,16 @@ resource "nutanix_virtual_machine" "vm1" {
     num_vcpus_per_socket = 1
     num_sockets          = 1
     memory_size_mib      = 2048
-    power_state          = "ON"
-  }
+		power_state          = "ON"
+		
+		nic_list = [{
+			nic_type = "NORMAL_NIC"
+			subnet_reference = {
+				kind = "subnet"
+				uuid = "c03ecf8f-aa1c-4a07-af43-9f2f198713c0"
+			}
+			network_function_nic_type = "INGRESS"
+		}]
+	}
 }
 `
