@@ -3,6 +3,7 @@ package nutanix
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -10,15 +11,16 @@ import (
 )
 
 func TestAccNutanixSubnet_basic(t *testing.T) {
+	r := rand.Int31()
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixSubnetDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccNutanixVMConfig,
+				Config: testAccNutanixSubnetConfig(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixSubnetExists("nutanix_virtual_machine.vm1"),
+					testAccCheckNutanixSubnetExists("nutanix_subnet.vm1"),
 					resource.TestCheckResourceAttrSet("nutanix_subnet.resource", "ip_config"),
 				),
 			},
@@ -55,7 +57,8 @@ func testAccCheckNutanixSubnetDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccNutanixSubnetConfig = `
+func testAccNutanixSubnetConfig(r int32) string {
+	return fmt.Sprintf(`
 provider "nutanix" {
   username = "admin"
   password = "Nutanix/1234"
@@ -69,30 +72,33 @@ resource "nutanix_subnet" "my-image" {
 		kind = "subnet"
 	}
 
-	name = "sarath_vlan0"
-	description = "Sarath Vlan 0"
-	resources = {
-		vlan_id = 0 
-		subnet_type = "VLAN"
-		ip_config {
-			prefix_length = 24
-			default_gateway_ip = "192.168.0.1"
-			pool_list = [
-				{range = "192.168.0.5"},
-				{range = 192.168.0.100"}
-			]
-			subnet_ip = "192.168.0.0"
-			dhcp_options {
-				boot_file_name = "bootfile"
-				domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
-				domain_search_list = ["nutanix.com", "calm.io"]
-				tftp_server_name = "192.168.0.252"
-				domain_name = "nutanix"
-			}
-    	}
-		
-	}  
+	name = "dou_vlan0_test_%d"
+	description = "Dou Vlan 0"
+
+	cluster_reference = {
+	  kind = "cluster"
+	  uuid = "000567f3-1921-c722-471d-0cc47ac31055" 
+  	}
+
+	vlan_id = 201
+	subnet_type = "VLAN"
+	
+	ip_config {
+		prefix_length = 24
+		default_gateway_ip = "192.168.0.1"
+		subnet_ip = "192.168.0.0"
+	}
+	#ip_config_pool_list_ranges = ["192.168.0.5", "192.168.0.100"]
+	
+	dhcp_options {
+		boot_file_name = "bootfile"
+		tftp_server_name = "192.168.0.252"
+		domain_name = "nutanix"
+	}
+
+	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+	dhcp_domain_search_list = ["nutanix.com", "calm.io"]
+	
 }
-
-
-`
+`, r)
+}
