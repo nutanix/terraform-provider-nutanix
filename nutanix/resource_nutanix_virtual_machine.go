@@ -595,7 +595,6 @@ func resourceNutanixVirtualMachineExists(d *schema.ResourceData, meta interface{
 }
 
 func getMetadaAttributes(d *schema.ResourceData, metadata *v3.VMMetadata) error {
-
 	m, mok := d.GetOk("metadata")
 	metad := m.(map[string]interface{})
 

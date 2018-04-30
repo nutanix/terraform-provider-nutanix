@@ -5,9 +5,9 @@ import (
 	"log"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -33,43 +33,38 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	//Get client connection
 	conn := meta.(*NutanixClient).API
 
-	var version string
-	if v, ok := d.GetOk("api_version"); ok {
-		version = v.(string)
-	} else {
-		version = Version
-	}
-
 	// Prepare request
-	request := &v3.SubnetIntentInput{
-		APIVersion: utils.String(version),
-		Spec: &v3.Subnet{
-			Resources: &v3.SubnetResources{},
-		},
-	}
+	request := &v3.SubnetIntentInput{}
+	spec := &v3.Subnet{}
+	metadata := &v3.SubnetMetadata{}
+	subnet := &v3.SubnetResources{}
 
 	//Read arguments and set request values
-	m, mok := d.GetOk("metadata") //req
-	n, nok := d.GetOk("name")     //req
+	n, nok := d.GetOk("name")
 	desc, descok := d.GetOk("description")
 	azr, azrok := d.GetOk("availability_zone_reference")
 	cr, crok := d.GetOk("cluster_reference")
-	vswich, vok := d.GetOk("vswitch_name")
-	subnet, stok := d.GetOk("subnet_type") //req
-	ipconf, ipok := d.GetOk("ip_config")
-	plr, plrok := d.GetOk("ip_config_pool_list_ranges")
-	dhcp, dok := d.GetOk("dhcp_options")
-	dnsl, dnslok := d.GetOk("dhcp_domain_name_server_list")
-	dsl, dslok := d.GetOk("dhcp_domain_search_list")
-	vlan, vlok := d.GetOk("vlan_id")
-	nfcr, nfok := d.GetOk("network_function_chain_reference")
-	pr, prok := d.GetOk("project_reference")
-	or, orok := d.GetOk("owner_reference")
+	_, stok := d.GetOk("subnet_type")
 
-	if !mok && !stok && !nok {
-		return fmt.Errorf("Please provide the required attributes metadata, name, subnet_type")
+	if !stok && !nok {
+		return fmt.Errorf("Please provide the required attributes name, subnet_type")
 	}
 
+	// Read Arguments and set request values
+	if v, ok := d.GetOk("api_version"); ok {
+		request.APIVersion = utils.String(v.(string))
+	} else {
+		request.APIVersion = utils.String(Version)
+	}
+	if !nok {
+		return fmt.Errorf("Please provide the required name attribute")
+	}
+	if err := getSubnetMetadaAttributes(d, metadata); err != nil {
+		return err
+	}
+	if descok {
+		spec.Description = utils.String(desc.(string))
+	}
 	if azrok {
 		a := azr.(map[string]interface{})
 		r := &v3.Reference{
@@ -79,10 +74,7 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 		if v, ok := a["name"]; ok {
 			r.Name = utils.String(v.(string))
 		}
-		request.Spec.AvailabilityZoneReference = r
-	}
-	if descok {
-		request.Spec.Description = utils.String(desc.(string))
+		spec.AvailabilityZoneReference = r
 	}
 	if crok {
 		a := cr.(map[string]interface{})
@@ -93,113 +85,11 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 		if v, ok := a["name"]; ok {
 			r.Name = utils.String(v.(string))
 		}
-		request.Spec.ClusterReference = r
+		spec.ClusterReference = r
 	}
 
-	if vok {
-		request.Spec.Resources.VswitchName = utils.String(vswich.(string))
-	}
-
-	if stok {
-		request.Spec.Resources.SubnetType = utils.String(subnet.(string))
-	}
-
-	//set ip_config
-	request.Spec.Name = utils.String(n.(string))
-
-	request.Metadata = setSubnetMetadata(m)
-
-	if prok {
-
-		pref := pr.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(pref["kind"].(string)),
-			UUID: utils.String(pref["uuid"].(string)),
-		}
-		if v1, ok1 := pref["name"]; ok1 {
-			r.Name = utils.String(v1.(string))
-		}
-		request.Metadata.ProjectReference = r
-	}
-
-	if orok {
-		pr := or.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(pr["kind"].(string)),
-			UUID: utils.String(pr["uuid"].(string)),
-		}
-		if v1, ok1 := pr["name"]; ok1 {
-			r.Name = utils.String(v1.(string))
-		}
-		request.Metadata.OwnerReference = r
-	}
-
-	if ipok {
-		ipConfig := setSubnetResourcesIPConfig(ipconf)
-
-		if plrok {
-			p := plr.([]interface{})
-
-			pool := make([]*v3.IPPool, len(p))
-
-			for k, v := range p {
-				pItem := &v3.IPPool{}
-				pItem.Range = utils.String(v.(string))
-				pool[k] = pItem
-			}
-
-			ipConfig.PoolList = pool
-
-		}
-
-		if dok {
-			ipConfig.DHCPOptions = setSubnetResourcesDHCPOptions(dhcp)
-
-			//set domain_name_server_list
-			if dnslok {
-				dnslist := dnsl.([]interface{})
-
-				domainNameServerList := make([]*string, len(dnslist))
-
-				for k, v := range dnslist {
-					domainNameServerList[k] = utils.String(v.(string))
-				}
-
-				ipConfig.DHCPOptions.DomainNameServerList = domainNameServerList
-			}
-
-			//set domain_name_search_list
-			if dslok {
-				dsList := dsl.([]interface{})
-
-				domainSearchList := make([]*string, len(dsList))
-
-				for k, v := range dsList {
-					domainSearchList[k] = utils.String(v.(string))
-				}
-
-				ipConfig.DHCPOptions.DomainSearchList = domainSearchList
-			}
-		}
-		request.Spec.Resources.IPConfig = ipConfig
-	}
-
-	//set vlan_id
-	if vlok {
-		request.Spec.Resources.VlanID = utils.Int64(int64(vlan.(int)))
-	}
-
-	// set network_function_chain_reference
-	if nfok {
-		ref := nfcr.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(ref["kind"].(string)),
-			UUID: utils.String(ref["uuid"].(string)),
-		}
-		if v, ok := ref["name"]; ok {
-			r.Name = utils.String(v.(string))
-		}
-		request.Spec.Resources.NetworkFunctionChainReference = r
+	if err := getSubnetResources(d, subnet); err != nil {
+		return err
 	}
 
 	subnetUUID, err := resourceNutanixSubnetExists(conn, d.Get("name").(string))
@@ -212,6 +102,11 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("Subnet already with name %s exists in the given cluster, UUID %s", d.Get("name").(string), *subnetUUID)
 	}
 
+	spec.Name = utils.String(n.(string))
+	spec.Resources = subnet
+	request.Metadata = metadata
+	request.Spec = spec
+
 	utils.PrintToJSON(request, "subnet request")
 
 	//Make request to the API
@@ -223,11 +118,9 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	UUID := *resp.Metadata.UUID
 
 	status, err := waitForSubnetProcess(conn, UUID)
-
 	for status != true {
 		return err
 	}
-
 	//set terraform state
 	d.SetId(UUID)
 
@@ -239,53 +132,11 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Get client connection
 	conn := meta.(*NutanixClient).API
-	fmt.Printf("terraform-uuid %s", d.Id())
+
 	// Make request to the API
 	resp, err := conn.V3.GetSubnet(d.Id())
-
 	if err != nil {
 		return err
-	}
-
-	// Set subnet values
-	// set availability zone reference values
-	if resp.Status.AvailabilityZoneReference != nil {
-		availabilityZoneReference := make(map[string]interface{})
-		availabilityZoneReference["kind"] = utils.StringValue(resp.Status.AvailabilityZoneReference.Kind)
-		availabilityZoneReference["name"] = utils.StringValue(resp.Status.AvailabilityZoneReference.Name)
-		availabilityZoneReference["uuid"] = utils.StringValue(resp.Status.AvailabilityZoneReference.UUID)
-		if err := d.Set("availability_zone_reference", availabilityZoneReference); err != nil {
-			return err
-		}
-	}
-
-	// set message list values
-	if resp.Status.MessageList != nil {
-		messages := make([]map[string]interface{}, len(resp.Status.MessageList))
-		for k, v := range resp.Status.MessageList {
-			message := make(map[string]interface{})
-
-			message["message"] = *v.Message
-			message["reason"] = *v.Reason
-			message["details"] = v.Details
-
-			messages[k] = message
-		}
-		if err := d.Set("message_list", messages); err != nil {
-			return err
-		}
-	}
-
-	// set cluster reference values
-	if resp.Status.ClusterReference != nil {
-		clusterReference := make(map[string]interface{})
-		clusterReference["kind"] = *resp.Status.ClusterReference.Kind
-		clusterReference["name"] = *resp.Status.ClusterReference.Name
-		clusterReference["uuid"] = *resp.Status.ClusterReference.UUID
-
-		if err := d.Set("cluster_reference", clusterReference); err != nil {
-			return err
-		}
 	}
 
 	// set metadata values
@@ -294,79 +145,147 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	metadata["kind"] = utils.StringValue(resp.Metadata.Kind)
 	metadata["uuid"] = utils.StringValue(resp.Metadata.UUID)
 	metadata["creation_time"] = resp.Metadata.CreationTime.String()
-	metadata["spec_version"] = strconv.FormatInt(utils.Int64Value(resp.Metadata.SpecVersion), 10) //convert to string
+	metadata["spec_version"] = strconv.Itoa(int(utils.Int64Value(resp.Metadata.SpecVersion)))
 	metadata["spec_hash"] = utils.StringValue(resp.Metadata.SpecHash)
-	//metadata["categories"] = resp.Metadata.Categories
 	metadata["name"] = utils.StringValue(resp.Metadata.Name)
-
-	if resp.Metadata.ProjectReference != nil {
-		pr := make(map[string]interface{})
-		pr["kind"] = utils.StringValue(resp.Metadata.ProjectReference.Kind)
-		pr["name"] = utils.StringValue(resp.Metadata.ProjectReference.Name)
-		pr["uuid"] = utils.StringValue(resp.Metadata.ProjectReference.UUID)
-
-		if err := d.Set("project_reference", pr); err != nil {
+	if err := d.Set("metadata", metadata); err != nil {
+		return err
+	}
+	if err := d.Set("categories", resp.Metadata.Categories); err != nil {
+		return err
+	}
+	// pr := make(map[string]interface{})
+	// pr["kind"] = utils.StringValue(resp.Metadata.ProjectReference.Kind)
+	// pr["name"] = utils.StringValue(resp.Metadata.ProjectReference.Name)
+	// pr["uuid"] = utils.StringValue(resp.Metadata.ProjectReference.UUID)
+	// if err := d.Set("project_reference", pr); err != nil {
+	// 	return err
+	// }
+	or := make(map[string]interface{})
+	or["kind"] = utils.StringValue(resp.Metadata.OwnerReference.Kind)
+	or["name"] = utils.StringValue(resp.Metadata.OwnerReference.Name)
+	or["uuid"] = utils.StringValue(resp.Metadata.OwnerReference.UUID)
+	if err := d.Set("owner_reference", or); err != nil {
+		return err
+	}
+	if err := d.Set("api_version", utils.StringValue(resp.APIVersion)); err != nil {
+		return err
+	}
+	if err := d.Set("name", utils.StringValue(resp.Status.Name)); err != nil {
+		return err
+	}
+	if err := d.Set("description", utils.StringValue(resp.Status.Description)); err != nil {
+		return err
+	}
+	// set availability zone reference values
+	availabilityZoneReference := make(map[string]interface{})
+	if resp.Status.AvailabilityZoneReference != nil {
+		availabilityZoneReference["kind"] = utils.StringValue(resp.Status.AvailabilityZoneReference.Kind)
+		availabilityZoneReference["name"] = utils.StringValue(resp.Status.AvailabilityZoneReference.Name)
+		availabilityZoneReference["uuid"] = utils.StringValue(resp.Status.AvailabilityZoneReference.UUID)
+	}
+	if err := d.Set("availability_zone_reference", availabilityZoneReference); err != nil {
+		return err
+	}
+	// set cluster reference values
+	clusterReference := make(map[string]interface{})
+	clusterReference["kind"] = utils.StringValue(resp.Status.ClusterReference.Kind)
+	clusterReference["name"] = utils.StringValue(resp.Status.ClusterReference.Name)
+	clusterReference["uuid"] = utils.StringValue(resp.Status.ClusterReference.UUID)
+	if err := d.Set("cluster_reference", clusterReference); err != nil {
+		return err
+	}
+	// set message list values
+	if resp.Status.MessageList != nil {
+		messages := make([]map[string]interface{}, len(resp.Status.MessageList))
+		for k, v := range resp.Status.MessageList {
+			message := make(map[string]interface{})
+			message["message"] = utils.StringValue(v.Message)
+			message["reason"] = utils.StringValue(v.Reason)
+			message["details"] = v.Details
+			messages[k] = message
+		}
+		if err := d.Set("message_list", messages); err != nil {
 			return err
 		}
 	}
-
-	if resp.Metadata.OwnerReference != nil {
-		or := make(map[string]interface{})
-		or["kind"] = *resp.Metadata.OwnerReference.Kind
-		or["name"] = *resp.Metadata.OwnerReference.Name
-		or["uuid"] = *resp.Metadata.OwnerReference.UUID
-
-		if err := d.Set("owner_reference", or); err != nil {
+	// set state value
+	if err := d.Set("state", resp.Status.State); err != nil {
+		return err
+	}
+	if err := d.Set("vswitch_name", resp.Status.Resources.VswitchName); err != nil {
+		return err
+	}
+	if err := d.Set("subnet_type", resp.Status.Resources.SubnetType); err != nil {
+		return err
+	}
+	if err := d.Set("default_gateway_ip", resp.Status.Resources.IPConfig.DefaultGatewayIP); err != nil {
+		return err
+	}
+	if err := d.Set("prefix_length", resp.Status.Resources.IPConfig.PrefixLength); err != nil {
+		return err
+	}
+	if err := d.Set("subnet_ip", resp.Status.Resources.IPConfig.SubnetIP); err != nil {
+		return err
+	}
+	if resp.Status.Resources.IPConfig.DHCPServerAddress != nil {
+		//set ip_config.dhcp_server_address
+		address := make(map[string]interface{})
+		address["ip"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.IP)
+		address["fqdn"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.FQDN)
+		address["ipv6"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.IPV6)
+		if err := d.Set("dhcp_server_address", address); err != nil {
+			return err
+		}
+		if err := d.Set("dhcp_server_address_port", utils.Int64Value(resp.Status.Resources.IPConfig.DHCPServerAddress.Port)); err != nil {
 			return err
 		}
 	}
-
-	// set ip_config
-	ipConfig := make(map[string]interface{})
-
-	ipConfig["default_gateway_ip"] = *resp.Status.Resources.IPConfig.DefaultGatewayIP
-
-	//set ip_config.dhcp_server_address
-	// address := make(map[string]interface{})
-
-	// address["ip"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.IP)
-	// address["fqdn"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.FQDN)
-	// address["port"] = utils.Int64Value(resp.Status.Resources.IPConfig.DHCPServerAddress.Port)
-	// address["ipv6"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.IPV6)
-
-	// ipConfig["dhcp_server_address"] = address
-	ipConfig["prefix_length"] = strconv.FormatInt(utils.Int64Value(resp.Status.Resources.IPConfig.PrefixLength), 10) //conver to string
-	ipConfig["subnet_ip"] = utils.StringValue(resp.Status.Resources.IPConfig.SubnetIP)
-
-	//set ip_config_pool_list_ranges
-	pl := resp.Status.Resources.IPConfig.PoolList
-	poolList := make([]string, len(pl))
-	for k, v := range pl {
-		poolList[k] = utils.StringValue(v.Range)
+	if resp.Status.Resources.IPConfig.PoolList != nil {
+		pl := resp.Status.Resources.IPConfig.PoolList
+		poolList := make([]string, len(pl))
+		for k, v := range pl {
+			poolList[k] = utils.StringValue(v.Range)
+		}
+		if err := d.Set("ip_config_pool_list_ranges", poolList); err != nil {
+			return err
+		}
 	}
+	if resp.Status.Resources.IPConfig.DHCPOptions != nil {
+		//set dhcp_options
+		dOptions := make(map[string]interface{})
+		dOptions["boot_file_name"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPOptions.BootFileName)
+		dOptions["domain_name"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPOptions.DomainName)
+		dOptions["tftp_server_name"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPOptions.TFTPServerName)
 
-	//set dhcp_options
-	dOptions := make(map[string]interface{})
+		if err := d.Set("dhcp_options", dOptions); err != nil {
+			return err
+		}
 
-	dOptions["boot_file_name"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPOptions.BootFileName)
-	dOptions["domain_name"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPOptions.DomainName)
-	dOptions["tftp_server_name"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPOptions.TFTPServerName)
-	ipConfig["default_gateway_ip"] = utils.StringValue(resp.Status.Resources.IPConfig.DefaultGatewayIP)
-
-	//set dhcp_domain_name_server_list
-	dnsl := resp.Status.Resources.IPConfig.DHCPOptions.DomainNameServerList
-	dnsList := make([]string, len(dnsl))
-	for k, v := range dnsl {
-		dnsList[k] = utils.StringValue(v)
+		if resp.Status.Resources.IPConfig.DHCPOptions.DomainNameServerList != nil {
+			dnsl := resp.Status.Resources.IPConfig.DHCPOptions.DomainNameServerList
+			dnsList := make([]string, len(dnsl))
+			for k, v := range dnsl {
+				dnsList[k] = utils.StringValue(v)
+			}
+			if err := d.Set("dhcp_domain_name_server_list", dnsList); err != nil {
+				return err
+			}
+		}
+		if resp.Status.Resources.IPConfig.DHCPOptions.DomainSearchList != nil {
+			dnsl := resp.Status.Resources.IPConfig.DHCPOptions.DomainSearchList
+			dsList := make([]string, len(dnsl))
+			for k, v := range dnsl {
+				dsList[k] = utils.StringValue(v)
+			}
+			if err := d.Set("dhcp_domain_search_list", dsList); err != nil {
+				return err
+			}
+		}
 	}
-
-	//set dhcp_domain_search_list
-	dsl := resp.Status.Resources.IPConfig.DHCPOptions.DomainSearchList
-	dsList := make([]string, len(dsl))
-	for k, v := range dnsl {
-		dsList[k] = utils.StringValue(v)
+	if err := d.Set("vlan_id", resp.Status.Resources.VlanID); err != nil {
+		return err
 	}
-
 	// set network_function_chain_reference
 	if resp.Status.Resources.NetworkFunctionChainReference != nil {
 		nfcr := make(map[string]interface{})
@@ -378,56 +297,6 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 	}
-	if err := d.Set("api_version", resp.APIVersion); err != nil {
-		return err
-	}
-	if err := d.Set("name", resp.Status.Name); err != nil {
-		return err
-	}
-	if err := d.Set("state", resp.Status.State); err != nil {
-		return err
-	}
-	if err := d.Set("description", resp.Status.Description); err != nil {
-		return err
-	}
-
-	if err := d.Set("metadata", metadata); err != nil {
-		return err
-	}
-
-	if err := d.Set("vswitch_name", resp.Status.Resources.VswitchName); err != nil {
-		return err
-	}
-
-	if err := d.Set("subnet_type", resp.Status.Resources.SubnetType); err != nil {
-		return err
-	}
-
-	if err := d.Set("ip_config", ipConfig); err != nil {
-		return err
-	}
-
-	if err := d.Set("ip_config_pool_list_ranges", poolList); err != nil {
-		return err
-	}
-
-	if err := d.Set("dhcp_options", dOptions); err != nil {
-		return err
-	}
-
-	if err := d.Set("dhcp_domain_name_server_list", dnsList); err != nil {
-		return err
-	}
-
-	if err := d.Set("dhcp_domain_search_list", dsList); err != nil {
-		return err
-	}
-
-	if err := d.Set("vlan_id", resp.Status.Resources.VlanID); err != nil {
-		return err
-	}
-
-	d.SetId(resource.UniqueId())
 
 	return nil
 }
@@ -436,38 +305,27 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 	conn := meta.(*NutanixClient).API
 
 	// get state
-	uuid := d.Id()
-	m := d.Get("metadata").(map[string]interface{})
-	name := d.Get("name").(string)
-	description := d.Get("description").(string)
-	azr := d.Get("availability_zone_reference")
-	cr := d.Get("cluster_reference")
-	spec := d.Get("resources").(map[string]interface{})
-
-	log.Printf("[DEBUG] Updating Subnet: %s, %s", name, uuid)
-
-	subnetSpec, err := setSubnetResources(spec)
-
-	if err != nil {
-		return err
-	}
-
 	request := &v3.SubnetIntentInput{}
+	metadata := &v3.SubnetMetadata{}
+	res := &v3.SubnetResources{}
 
-	if d.HasChange("metadata") {
-		request.Metadata = setSubnetMetadata(m)
+	if d.HasChange("metadata") ||
+		d.HasChange("categories") ||
+		d.HasChange("owner_reference") ||
+		d.HasChange("project_reference") {
+		if err := getSubnetMetadaAttributes(d, metadata); err != nil {
+			return err
+		}
+		request.Metadata = metadata
 	}
-
 	if d.HasChange("name") {
-		request.Spec.Name = utils.String(name)
+		request.Spec.Name = utils.String(d.Get("name").(string))
 	}
-
 	if d.HasChange("description") {
-		request.Spec.Description = utils.String(description)
+		request.Spec.Description = utils.String(d.Get("description").(string))
 	}
-
 	if d.HasChange("availability_zone_reference") {
-		a := azr.(map[string]interface{})
+		a := d.Get("availability_zone_reference").(map[string]interface{})
 		r := &v3.Reference{
 			Kind: utils.String(a["kind"].(string)),
 			UUID: utils.String(a["uuid"].(string)),
@@ -475,12 +333,10 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		if v, ok := a["name"]; ok {
 			r.Name = utils.String(v.(string))
 		}
-
 		request.Spec.AvailabilityZoneReference = r
 	}
-
 	if d.HasChange("cluster_reference") {
-		a := cr.(map[string]interface{})
+		a := d.Get("cluster_reference").(map[string]interface{})
 		r := &v3.Reference{
 			Kind: utils.String(a["kind"].(string)),
 			UUID: utils.String(a["uuid"].(string)),
@@ -488,24 +344,33 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		if v, ok := a["name"]; ok {
 			r.Name = utils.String(v.(string))
 		}
-
 		request.Spec.ClusterReference = r
 	}
-
-	d.Partial(true)
-
-	if d.HasChange("resources") {
-		request.Spec.Resources = subnetSpec
+	if d.HasChange("vswitch_name") ||
+		d.HasChange("subnet_type") ||
+		d.HasChange("default_gateway_ip") ||
+		d.HasChange("prefix_length") ||
+		d.HasChange("subnet_ip") ||
+		d.HasChange("dhcp_server_address") ||
+		d.HasChange("dhcp_server_address_port") ||
+		d.HasChange("ip_config_pool_list_ranges") ||
+		d.HasChange("dhcp_options") ||
+		d.HasChange("dhcp_domain_name_server_list") ||
+		d.HasChange("dhcp_domain_search_list") ||
+		d.HasChange("vlan_id") ||
+		d.HasChange("network_function_chain_reference") {
+		if err := getSubnetResources(d, res); err != nil {
+			return err
+		}
+		request.Spec.Resources = res
 	}
 
-	_, errUpdate := conn.V3.UpdateSubnet(uuid, request)
+	_, errUpdate := conn.V3.UpdateSubnet(d.Id(), request)
 	if errUpdate != nil {
 		return errUpdate
 	}
 
-	d.Partial(false)
-
-	status, err := waitForSubnetProcess(conn, uuid)
+	status, err := waitForSubnetProcess(conn, d.Id())
 	for status != true {
 		return err
 	}
@@ -518,6 +383,15 @@ func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error
 	UUID := d.Id()
 
 	if err := conn.V3.DeleteSubnet(UUID); err != nil {
+		return err
+	}
+
+	status, err := waitForVMProcess(conn, d.Id())
+	for status != true {
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
@@ -560,6 +434,181 @@ func waitForSubnetProcess(conn *v3.Client, UUID string) (bool, error) {
 		}
 		time.Sleep(3000 * time.Millisecond)
 	}
+}
+
+func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) error {
+
+	ip := &v3.IPConfig{}
+
+	if v, ok := d.GetOk("vswitch_name"); ok {
+		subnet.VswitchName = utils.String(v.(string))
+	}
+	if st, ok := d.GetOk("subnet_type"); ok {
+		subnet.SubnetType = utils.String(st.(string))
+	}
+	if v, ok := d.GetOk("default_gateway_ip"); ok {
+		ip.DefaultGatewayIP = utils.String(v.(string))
+	}
+	if v, ok := d.GetOk("prefix_length"); ok {
+		ip.PrefixLength = utils.Int64(int64(v.(int)))
+	}
+	if v, ok := d.GetOk("subnet_ip"); ok {
+		ip.SubnetIP = utils.String(v.(string))
+	}
+	if v, ok := d.GetOk("dhcp_server_address"); ok {
+		dhcpa := v.(map[string]interface{})
+		address := &v3.Address{}
+
+		if ip, ok := dhcpa["ip"]; ok {
+			address.IP = utils.String(ip.(string))
+		}
+		if fqdn, ok := dhcpa["fqdn"]; ok {
+			address.FQDN = utils.String(fqdn.(string))
+		}
+		if v, ok := d.GetOk("dhcp_server_address_port"); ok {
+			address.Port = utils.Int64(int64(v.(int64)))
+		}
+		if ipv6, ok := dhcpa["ipv6"]; ok {
+			address.IPV6 = utils.String(ipv6.(string))
+		}
+
+		ip.DHCPServerAddress = address
+	}
+	if v, ok := d.GetOk("ip_config_pool_list_ranges"); ok {
+		p := v.([]interface{})
+		pool := make([]*v3.IPPool, len(p))
+
+		for k, v := range p {
+			pItem := &v3.IPPool{}
+			pItem.Range = utils.String(v.(string))
+			pool[k] = pItem
+		}
+
+		ip.PoolList = pool
+	}
+	if v, ok := d.GetOk("dhcp_options"); ok {
+		dhcpo := &v3.DHCPOptions{}
+
+		dop := v.(map[string]interface{})
+
+		if boot, ok := dop["boot_file_name"]; ok {
+			dhcpo.BootFileName = utils.String(boot.(string))
+		}
+
+		if dn, ok := dop["domain_name"]; ok {
+			dhcpo.DomainName = utils.String(dn.(string))
+		}
+
+		if tsn, ok := dop["tftp_server_name"]; ok {
+			dhcpo.TFTPServerName = utils.String(tsn.(string))
+		}
+		ip.DHCPOptions = dhcpo
+	}
+	if v, ok := d.GetOk("dhcp_domain_name_server_list"); ok {
+		p := v.([]interface{})
+		pool := make([]*string, len(p))
+
+		for k, v := range p {
+			pool[k] = utils.String(v.(string))
+		}
+
+		ip.DHCPOptions.DomainNameServerList = pool
+	}
+	if v, ok := d.GetOk("dhcp_domain_search_list"); ok {
+		p := v.([]interface{})
+		pool := make([]*string, len(p))
+
+		for k, v := range p {
+			pool[k] = utils.String(v.(string))
+		}
+
+		ip.DHCPOptions.DomainSearchList = pool
+	}
+	//set vlan_id
+	if v, ok := d.GetOk("vlan_id"); ok {
+		subnet.VlanID = utils.Int64(int64(v.(int)))
+	}
+
+	// set network_function_chain_reference
+	if v, ok := d.GetOk("network_function_chain_reference"); ok {
+		ref := v.(map[string]interface{})
+		r := &v3.Reference{
+			Kind: utils.String(ref["kind"].(string)),
+			UUID: utils.String(ref["uuid"].(string)),
+		}
+		if v, ok := ref["name"]; ok {
+			r.Name = utils.String(v.(string))
+		}
+		subnet.NetworkFunctionChainReference = r
+	}
+
+	subnet.IPConfig = ip
+
+	return nil
+}
+
+func getSubnetMetadaAttributes(d *schema.ResourceData, metadata *v3.SubnetMetadata) error {
+	m, mok := d.GetOk("metadata")
+	metad := m.(map[string]interface{})
+
+	if !mok {
+		return fmt.Errorf("please provide metadata required attributes")
+	}
+
+	metadata.Kind = utils.String(metad["kind"].(string))
+
+	if v, ok := metad["uuid"]; ok && v != "" {
+		metadata.UUID = utils.String(v.(string))
+	}
+	if v, ok := metad["spec_version"]; ok && v != 0 {
+		i, err := strconv.Atoi(v.(string))
+		if err != nil {
+			return err
+		}
+		metadata.SpecVersion = utils.Int64(int64(i))
+	}
+	if v, ok := metad["spec_hash"]; ok && v != "" {
+		metadata.SpecHash = utils.String(v.(string))
+	}
+	if v, ok := metad["name"]; ok {
+		metadata.Name = utils.String(v.(string))
+	}
+	if v, ok := d.GetOk("categories"); ok {
+		p := v.([]interface{})
+		if len(p) > 0 {
+			c := p[0].(map[string]interface{})
+			labels := map[string]string{}
+
+			for k, v := range c {
+				labels[k] = v.(string)
+			}
+			metadata.Categories = labels
+		}
+	}
+	if p, ok := d.GetOk("project_reference"); ok {
+		pr := p.(map[string]interface{})
+		r := &v3.Reference{
+			Kind: utils.String(pr["kind"].(string)),
+			UUID: utils.String(pr["uuid"].(string)),
+		}
+		if v1, ok1 := pr["name"]; ok1 {
+			r.Name = utils.String(v1.(string))
+		}
+		metadata.ProjectReference = r
+	}
+	if o, ok := metad["owner_reference"]; ok {
+		or := o.(map[string]interface{})
+		r := &v3.Reference{
+			Kind: utils.String(or["kind"].(string)),
+			UUID: utils.String(or["uuid"].(string)),
+		}
+		if v1, ok1 := or["name"]; ok1 {
+			r.Name = utils.String(v1.(string))
+		}
+		metadata.OwnerReference = r
+	}
+
+	return nil
 }
 
 func setSubnetResources(m interface{}) (*v3.SubnetResources, error) {
@@ -819,37 +868,45 @@ func getSubnetSchema() map[string]*schema.Schema {
 					"last_update_time": &schema.Schema{
 						Type:     schema.TypeString,
 						Optional: true,
+						Computed: true,
 					},
 					"kind": &schema.Schema{
 						Type:     schema.TypeString,
 						Optional: true,
+						Computed: true,
 					},
 					"uuid": &schema.Schema{
 						Type:     schema.TypeString,
 						Optional: true,
+						Computed: true,
 					},
 					"creation_time": &schema.Schema{
 						Type:     schema.TypeString,
 						Optional: true,
+						Computed: true,
 					},
 					"spec_version": &schema.Schema{
-						Type:     schema.TypeInt,
+						Type:     schema.TypeString,
 						Optional: true,
+						Computed: true,
 					},
 					"spec_hash": &schema.Schema{
 						Type:     schema.TypeString,
 						Optional: true,
-					},
-					"categories": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
+						Computed: true,
 					},
 					"name": &schema.Schema{
 						Type:     schema.TypeString,
 						Optional: true,
+						Computed: true,
 					},
 				},
 			},
+		},
+		"categories": &schema.Schema{
+			Type:     schema.TypeMap,
+			Optional: true,
+			Computed: true,
 		},
 		"owner_reference": &schema.Schema{
 			Type:     schema.TypeMap,
@@ -894,6 +951,7 @@ func getSubnetSchema() map[string]*schema.Schema {
 		"name": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
+			ForceNew: true,
 		},
 		"state": &schema.Schema{
 			Type:     schema.TypeString,
@@ -908,15 +966,18 @@ func getSubnetSchema() map[string]*schema.Schema {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
+			ForceNew: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"kind": &schema.Schema{
 						Type:     schema.TypeString,
 						Required: true,
+						ForceNew: true,
 					},
 					"uuid": &schema.Schema{
 						Type:     schema.TypeString,
 						Required: true,
+						ForceNew: true,
 					},
 					"name": &schema.Schema{
 						Type:     schema.TypeString,
@@ -950,15 +1011,18 @@ func getSubnetSchema() map[string]*schema.Schema {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
+			ForceNew: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"kind": &schema.Schema{
 						Type:     schema.TypeString,
 						Required: true,
+						ForceNew: true,
 					},
 					"uuid": &schema.Schema{
 						Type:     schema.TypeString,
 						Required: true,
+						ForceNew: true,
 					},
 					"name": &schema.Schema{
 						Type:     schema.TypeString,
@@ -976,53 +1040,40 @@ func getSubnetSchema() map[string]*schema.Schema {
 		"subnet_type": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
+			ForceNew: true,
 		},
-		"ip_config": &schema.Schema{
+		"default_gateway_ip": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"prefix_length": &schema.Schema{
+			Type:     schema.TypeInt,
+			Optional: true,
+			Computed: true,
+		},
+		"subnet_ip": &schema.Schema{
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"dhcp_server_address": &schema.Schema{
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"default_gateway_ip": &schema.Schema{
+					"ip": &schema.Schema{
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"dhcp_server_address": &schema.Schema{
-						Type:     schema.TypeMap,
-						Optional: true,
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"ip": &schema.Schema{
-									Type:     schema.TypeString,
-									Optional: true,
-									Computed: true,
-								},
-								"fqdn": &schema.Schema{
-									Type:     schema.TypeString,
-									Optional: true,
-									Computed: true,
-								},
-								"port": &schema.Schema{
-									Type:     schema.TypeInt,
-									Optional: true,
-									Computed: true,
-								},
-								"ipv6": &schema.Schema{
-									Type:     schema.TypeString,
-									Optional: true,
-									Computed: true,
-								},
-							},
-						},
-					},
-					"prefix_length": &schema.Schema{
-						Type:     schema.TypeInt,
+					"fqdn": &schema.Schema{
+						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"subnet_ip": &schema.Schema{
+					"ipv6": &schema.Schema{
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
@@ -1030,13 +1081,16 @@ func getSubnetSchema() map[string]*schema.Schema {
 				},
 			},
 		},
+		"dhcp_server_address_port": &schema.Schema{
+			Type:     schema.TypeInt,
+			Optional: true,
+			Computed: true,
+		},
 		"ip_config_pool_list_ranges": &schema.Schema{
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
+			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
 		"dhcp_options": &schema.Schema{
 			Type:     schema.TypeMap,
@@ -1066,17 +1120,13 @@ func getSubnetSchema() map[string]*schema.Schema {
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
+			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
 		"dhcp_domain_search_list": &schema.Schema{
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
+			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
 		"vlan_id": &schema.Schema{
 			Type:     schema.TypeInt,

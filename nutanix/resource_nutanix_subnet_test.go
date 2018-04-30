@@ -1,10 +1,11 @@
 package nutanix
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -20,8 +21,7 @@ func TestAccNutanixSubnet_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccNutanixSubnetConfig(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixSubnetExists("nutanix_subnet.vm1"),
-					resource.TestCheckResourceAttrSet("nutanix_subnet.resource", "ip_config"),
+					testAccCheckNutanixSubnetExists("nutanix_subnet.test"),
 				),
 			},
 		},
@@ -43,17 +43,25 @@ func testAccCheckNutanixSubnetExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckNutanixSubnetDestroy(s *terraform.State) error {
-	for i := range s.RootModule().Resources {
-		if s.RootModule().Resources[i].Type != "nutanix_subnet" {
+	conn := testAccProvider.Meta().(*NutanixClient)
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "nutanix_subnet" {
 			continue
 		}
-		id := string(s.RootModule().Resources[i].Primary.ID)
-		if id == "" {
-			err := errors.New("ID is already set to the null string")
-			return err
+		for {
+			_, err := conn.API.V3.GetSubnet(rs.Primary.ID)
+			if err != nil {
+				if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+					return nil
+				}
+				return err
+			}
+			time.Sleep(3000 * time.Millisecond)
 		}
-		return nil
+
 	}
+
 	return nil
 }
 
@@ -67,7 +75,7 @@ provider "nutanix" {
 	port = 9440
 }
 
-resource "nutanix_subnet" "my-image" {
+resource "nutanix_subnet" "test" {
 	metadata = {
 		kind = "subnet"
 	}
@@ -83,11 +91,9 @@ resource "nutanix_subnet" "my-image" {
 	vlan_id = 201
 	subnet_type = "VLAN"
 	
-	ip_config {
-		prefix_length = 24
-		default_gateway_ip = "192.168.0.1"
-		subnet_ip = "192.168.0.0"
-	}
+	prefix_length = 24
+	default_gateway_ip = "192.168.0.1"
+	subnet_ip = "192.168.0.0"
 	#ip_config_pool_list_ranges = ["192.168.0.5", "192.168.0.100"]
 	
 	dhcp_options {
