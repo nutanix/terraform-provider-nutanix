@@ -604,7 +604,7 @@ type SubnetMetadata struct {
 	Kind *string `json:"kind"`
 
 	// UTC date and time in RFC-3339 format when subnet was last updated
-	LastUpdateTime *time.Time `json:"last_update_time"`
+	LastUpdateTime *time.Time `json:"last_update_time,omitempty"`
 
 	// subnet name
 	Name *string `json:"name,omitempty"`
