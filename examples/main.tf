@@ -100,3 +100,7 @@ resource "nutanix_image" "test" {
     checksum_value     = "a9e4e0018c98520002cd7cf506e980e66e31f7ada70b8fc9caa4f4290b019f4f"
   }
 }
+
+data "nutanix_virtual_machine" "nutanix_virtual_machine" {
+  vm_id = "${nutanix_virtual_machine.vm1.id}"
+}
