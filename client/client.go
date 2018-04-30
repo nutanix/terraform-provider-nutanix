@@ -165,27 +165,39 @@ func CheckResponse(r *http.Response) error {
 	}
 
 	data, err := ioutil.ReadAll(r.Body)
-	res := map[string]string{}
-	if err == nil && len(data) > 0 {
-		err := json.Unmarshal(data, &res)
-		if err != nil {
-			return err
-		}
+	res := &ErrorResponse{}
+	err = json.Unmarshal(data, res)
+	if err != nil {
+		return err
 	}
 
-	return &ErrorResponse{
-		Message: res,
-	}
+	return fmt.Errorf("CODE: %d, KIND: %s, MESSAGE: %s, REASON: %s, STATE: %s", res.Code, res.Kind, res.MessageList[0].Message, res.MessageList[0].Reason, res.State)
 }
 
 // ErrorResponse ...
 type ErrorResponse struct {
-	Message map[string]string
+	ApiVersion  string            `json:"api_version"`
+	Code        int64             `json:"code"`
+	Kind        string            `json:"kind"`
+	MessageList []MessageResource `json:"message_list"`
+	State       string            `json:"state"`
+}
+
+type MessageResource struct {
+
+	// Custom key-value details relevant to the status.
+	Details map[string]string `json:"details,omitempty"`
+
+	// If state is ERROR, a message describing the error.
+	Message string `json:"message"`
+
+	// If state is ERROR, a machine-readable snake-cased *string.
+	Reason string `json:"reason"`
 }
 
 func (r *ErrorResponse) Error() string {
 	err := ""
-	for key, value := range r.Message {
+	for key, value := range r.MessageList {
 		err = fmt.Sprintf("%s: %s", key, value)
 	}
 	return err

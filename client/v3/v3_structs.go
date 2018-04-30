@@ -203,7 +203,7 @@ type VMPowerStateMechanism struct {
 type VMDiskDeviceProperties struct {
 	DeviceType *string `json:"device_type,omitempty"`
 
-	DiskAddress DiskAddress `json:"disk_address,omitempty"`
+	DiskAddress *DiskAddress `json:"disk_address,omitempty"`
 }
 
 //VMDisk VirtualMachine Disk (VM Disk).
@@ -251,7 +251,7 @@ type VMResources struct {
 	MemorySizeMib *int64 `json:"memory_size_mib,omitempty"`
 
 	// NICs attached to the VM.
-	NicList []VMNic `json:"nic_list,omitempty"`
+	NicList []*VMNic `json:"nic_list,omitempty"`
 
 	// Number of vCPU sockets.
 	NumSockets *int64 `json:"num_sockets,omitempty"`
