@@ -186,7 +186,7 @@ type ErrorResponse struct {
 type MessageResource struct {
 
 	// Custom key-value details relevant to the status.
-	Details map[string]string `json:"details,omitempty"`
+	Details map[string]interface{} `json:"details,omitempty"`
 
 	// If state is ERROR, a message describing the error.
 	Message string `json:"message"`

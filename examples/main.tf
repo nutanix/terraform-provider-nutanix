@@ -13,10 +13,10 @@ variable clusterid {
 resource "nutanix_virtual_machine" "vm1" {
   metadata {
     kind = "vm"
-    name = "metadata-name-test-dou-%d"
+    name = "metadata-name-test-dou"
   }
 
-  name = "name-test-dou-%d"
+  name = "test-dou"
 
   cluster_reference = {
     kind = "cluster"
@@ -31,8 +31,27 @@ resource "nutanix_virtual_machine" "vm1" {
   nic_list = [{
     subnet_reference = {
       kind = "subnet"
-      uuid = "7206a75c-717a-4e72-b91e-16352971a25a"
+      uuid = "${nutanix_subnet.test.id}"
     }
+
+    ip_endpoint_list = {
+      ip   = "192.168.0.10"
+      type = "ASSIGNED"
+    }
+  }]
+
+  disk_list = [{
+    data_source_reference = [{
+      kind = "image"
+      name = "Centos7"
+      uuid = "9eabbb39-1baf-4872-beaf-adedcb612a0b"
+    }]
+
+    device_properties = [{
+      device_type = "DISK"
+    }]
+
+    disk_size_mib = 5000
   }]
 }
 
