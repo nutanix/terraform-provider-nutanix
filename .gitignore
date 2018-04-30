@@ -28,4 +28,5 @@ cmd/main.tf
 # vendor directory
 vendor/
 
-examples/terraform-provider-nutanix
+examples/terraform*
+examples/.terraform*
