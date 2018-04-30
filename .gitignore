@@ -1,10 +1,10 @@
 # Binaries for programs and plugins
-*.exe
 *.dll
 *.so
 *.dylib
 *.tfstate
 *.tfstate.backup
+*.terraform*
 *.log
 setenv.sh
 request_log
@@ -27,6 +27,3 @@ cmd/main.tf
 
 # vendor directory
 vendor/
-
-examples/terraform*
-examples/.terraform*
