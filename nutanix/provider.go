@@ -49,8 +49,8 @@ func Provider() terraform.ResourceProvider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine": resourceNutanixVirtualMachine(),
-			// "nutanix_image":           resourceNutanixImage(),
-			"nutanix_subnet": resourceNutanixSubnet(),
+			"nutanix_image":           resourceNutanixImage(),
+			"nutanix_subnet":          resourceNutanixSubnet(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
