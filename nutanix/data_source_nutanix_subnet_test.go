@@ -10,13 +10,14 @@ import (
 
 func TestAccNutanixSubnetDataSource_basic(t *testing.T) {
 	rInt := acctest.RandInt()
+	clusterID := testClusterID()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetDataSourceConfig(rInt),
+				Config: testAccSubnetDataSourceConfig(rInt, clusterID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.nutanix_subnet.nutanix_subnet", "prefix_length", "24"),
@@ -28,18 +29,10 @@ func TestAccNutanixSubnetDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccSubnetDataSourceConfig(r int) string {
+func testAccSubnetDataSourceConfig(r int, clusterID string) string {
 	return fmt.Sprintf(`
-provider "nutanix" {
-  username = "admin"
-  password = "Nutanix/1234"
-  endpoint = "10.5.81.134"
-	insecure = true
-	port = 9440
-}
-
 variable clusterid {
-	default = "000567f3-1921-c722-471d-0cc47ac31055"
+	default = "%s"
 }
 
 resource "nutanix_subnet" "test" {
@@ -73,5 +66,5 @@ resource "nutanix_subnet" "test" {
 	dhcp_domain_search_list = ["nutanix.com", "calm.io"]
 	
 }
-`, r)
+`, clusterID, r)
 }
