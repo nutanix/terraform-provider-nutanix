@@ -1,6 +1,7 @@
 package nutanix
 
 import (
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/schema"
@@ -31,4 +32,8 @@ func TestProvider_impl(t *testing.T) {
 }
 
 func testAccPreCheck(t *testing.T) {
+}
+
+func testClusterID() string {
+	return os.Getenv("NUTANIX_CLUSTER_ID")
 }
