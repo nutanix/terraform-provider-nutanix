@@ -2,7 +2,7 @@
 
 ## Refactor
 
-- [ ] Change to `dep` instead of `glide` (`dep` is the official Golang experiment).
+- [x] Change to `dep` instead of `glide` (`dep` is the official Golang experiment).
 - [ ] Vendor `nutanixV3` SDK
 - [ ] Clean-up code comply with Terraform providers structure
 - [ ] Add generic Hashicorp Makefile and add aditional Nutanix targets
