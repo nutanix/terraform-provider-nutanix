@@ -1,38 +1,26 @@
-# Terraform AHV Provider Plugin
-Provider plugin to integrate with AHV APIs
+# Terraform Nutanix Provider
+Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
 [![Waffle.io - Columns and their card count](https://badge.waffle.io/b58a88b8face3407eccdc79e19d39058d28754b65f6df7513ed23293ef387491a5f538b65dffd5b12ca0201c6d4b50ce.svg?columns=all)](https://waffle.io/nutanix/terraform-provider-nutanix)
 
-Requirments
-------------
+## Community
+Nutanix is taking an inclusive approach to developing this new feature and welcomes customer feedback. Please see our development project on GitHub (you're here!), comment on requirements, design, code, and/or feel free to join us on Slack. Instructions on commenting, contributing, and joining our community Slack channel are all located within our GitHub Readme.
 
--   [Terraform](https://www.terraform.io/downloads.html) 0.10.x
--   [Go](https://golang.org/doc/install) 1.8 (to build the provider plugin)
+For a slack invite, please contact Terraform@nutanix.com from your business address, and we'll add you.
 
-Building The Provider
----------------------
 
-Clone repository to: `$GOPATH/src/terraform-provider-nutanix`
+## Requirements
+### Provider Use
+-   [Terraform](https://www.terraform.io/downloads.html) 0.11.7+
+-   [Nutanix](https://portal.nutanix.com/#/page/home) Prism Central 5.6.0+
+- Note: Nutanix Community Edition will be supported, when an AOS 5.6 based version is released
 
-```sh
-$ cd $GOPATH/src/
-$ git clone https://github.com/nutanix/terraform-provider-nutanix.git
-```
-Enter the provider directory and build the provider
+### Provider Development
+-   [Go](https://golang.org/doc/install) 1.9+ (to build the provider plugin)
 
-```sh
-$ cd $GOPATH/src/terraform-provider-nutanix
-$ glide install
-$ cd cmd
-$ make clean
-$ make getSDK           # for adding go_sdk in $(GOPATH)/src/nutanixV3
-$ make autoGenerate sdkPath=$GOPATH/src/nutanixV3/    # for generating schema and config function from sdk struct function
-$ make build
-```
-Using the  provider
--------------------
+## Provider Use
 
-The Nutanix Provider is used to interact with AHV APIs. The Provider needs to be configured with the proper credentials before it can be used.
+The Terraform Nutanix provider is designed to work with Nutanix Prism Central, such that you can manage one or more Prism Element clusters at scale. AOS/PC 5.6.0 or higher is required, as this Provider makes exclusive use of the v3 APIs
 
 ## Example Usage
 
@@ -100,6 +88,65 @@ If the vm is POWERED_ON and there is atleast one network adapter than it keep po
 - **Destroy**: This is called to delete the vm. It takes the uuid from the id of the resource and then call DELETE on that uuid.
 
 Environment variable **HTTP_LOG** can be set to define the path of file from which HTTP request logs can be accessed.
+
+## Additional Resources
+We've got a handful of resources outside of this repository that will help users understand the interactions between terraform and Nutanix
+
+* YouTube
+      * Overview Video: https://www.youtube.com/watch?v=V8_Lu1mxV6g
+      * Working with images: https://www.youtube.com/watch?v=IW0eQevZ73I
+* Nutanix GitHub
+      * https://github.com/nutanix/terraform-provider-nutanix 
+      * Private repo until code goes upstream
+* Jon’s GitHub
+      * https://github.com/JonKohler/ThisOldCloud/tree/master/Terraform-Nutanix
+      * Contains sample TF’s and PDFs from the youtube videos
+* Slack channel
+      * User community slack channel is available on nutanix.slack.com. Email terraform@nutanix.com to gain entry.
+
+## Roadmap
+This provider will be released as Tech Preview at .NEXT New Orleans, and is linked into the HashiCorp community providers page, here: https://www.terraform.io/docs/providers/type/community-index.html
+
+We'll be working with HashiCorp as code stabilizes to upstream this properly, at which time we'll PR this entire plugin to the terraform providers org.
+
+* Complete upstream work with successful pull request
+    * Note: Depending on external review timelines from HashiCorp and subsequent code change(s) as required
+* Add Volume Group resource and data source support
+      * This is dependent on the VG v3 API, which is currently not GA (work in progress)
+* Investigate data protection workflows (likely scoped snapshots, but this may directly conflict with overall pets v cattle)
+* Investigate project as a resource and data source, for SSP integration
+* Investigate Calm once API constructs are available
+* Investigate AFS administration workflows
+* Investigate cluster administration APIs (think foundation, admin settings, etc) to do physical provisioning (think DC as Code)
+
+## Quick Install
+
+## Install Dependencies
+
+## Install from source
+
+## Install from package
+
+
+## Building Provider
+
+Clone repository to: `$GOPATH/src/terraform-provider-nutanix`
+
+```sh
+$ cd $GOPATH/src/
+$ git clone https://github.com/nutanix/terraform-provider-nutanix.git
+```
+Enter the provider directory and build the provider
+
+```sh
+$ cd $GOPATH/src/terraform-provider-nutanix
+$ glide install
+$ cd cmd
+$ make clean
+$ make getSDK           # for adding go_sdk in $(GOPATH)/src/nutanixV3
+$ make autoGenerate sdkPath=$GOPATH/src/nutanixV3/    # for generating schema and config function from sdk struct function
+$ make build
+```
 
 Developing the Provider
 ---------------------------
