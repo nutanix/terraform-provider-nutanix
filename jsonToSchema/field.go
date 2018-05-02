@@ -3,12 +3,13 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/fatih/camelcase"
 	glog "log"
 	"os"
 	"regexp"
 	"strings"
 	"unicode"
+
+	"github.com/fatih/camelcase"
 )
 
 var structGenerated = map[string]bool{}

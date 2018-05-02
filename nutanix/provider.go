@@ -5,10 +5,6 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-const (
-	API_VERSION = "3.0"
-)
-
 // Provider function returns the object that implements the terraform.ResourceProvider interface, specifically a schema.Provider
 func Provider() terraform.ResourceProvider {
 
@@ -48,11 +44,12 @@ func Provider() terraform.ResourceProvider {
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"nutanix_image": dataSourceNutanixImage(),
+			"nutanix_virtual_machine":  dataSourceNutanixVirtualMachine(),
+			"nutanix_virtual_machines": dataSourceNutanixVirtualMachines(),
+			// "nutanix_image":  dataSourceNutanixImage(),
 			"nutanix_subnet": dataSourceNutanixSubnet(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			// TODO: add additional resources, such as networking, apps, data protection, etc
 			"nutanix_virtual_machine": resourceNutanixVirtualMachine(),
 			"nutanix_image":           resourceNutanixImage(),
 			"nutanix_subnet":          resourceNutanixSubnet(),
@@ -83,30 +80,16 @@ func init() {
 	}
 }
 
-// V3Client struct is for defining provider
-type V3Client struct {
-	Endpoint string
-	Username string
-	Password string
-	Port     string
-	URL      string
-	Insecure bool
-}
-
 // This function used to fetch the configuration params given to our provider which
 // we will use to initialize a dummy client that interacts with API.
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
-	port := d.Get("port").(string)
-	endpoint := d.Get("endpoint").(string)
-	url := "https://" + endpoint + ":" + port + "/api/nutanix/v3"
-	client := V3Client{
-		Endpoint: endpoint,
+	config := Config{
+		Endpoint: d.Get("endpoint").(string),
 		Username: d.Get("username").(string),
 		Password: d.Get("password").(string),
 		Insecure: d.Get("insecure").(bool),
-		Port:     port,
-		URL:      url,
+		Port:     d.Get("port").(string),
 	}
 
-	return &client, nil
+	return config.Client()
 }

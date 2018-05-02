@@ -9,7 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"terraform-provider-nutanix/jsonToSchema/cfg"
+
+	"github.com/terraform-providers/terraform-provider-nutanix/jsonToSchema/cfg"
 )
 
 //PowerON denotes the exact string for vm-powerstate(on) in structs
