@@ -171,7 +171,8 @@ func CheckResponse(r *http.Response) error {
 		return err
 	}
 
-	return fmt.Errorf("CODE: %d, KIND: %s, MESSAGE: %s, REASON: %s, STATE: %s", res.Code, res.Kind, res.MessageList[0].Message, res.MessageList[0].Reason, res.State)
+	pretty, _ := json.MarshalIndent(res, "", "  ")
+	return fmt.Errorf("Error: %s", string(pretty))
 }
 
 // ErrorResponse ...
