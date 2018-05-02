@@ -386,7 +386,7 @@ func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	status, err := waitForVMProcess(conn, d.Id())
+	status, err := waitForSubnetProcess(conn, d.Id())
 	for status != true {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")

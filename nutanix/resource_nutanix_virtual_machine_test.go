@@ -2,17 +2,17 @@ package nutanix
 
 import (
 	"fmt"
-	"math/rand"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccNutanixVirtualMachine_basic(t *testing.T) {
-	r := rand.Int31()
+	r := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -72,7 +72,7 @@ func testAccCheckNutanixVirtualMachineDestroy(s *terraform.State) error {
 
 }
 
-func testAccNutanixVMConfig(r int32) string {
+func testAccNutanixVMConfig(r int) string {
 	return fmt.Sprintf(`
 provider "nutanix" {
   username = "admin"

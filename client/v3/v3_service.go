@@ -25,6 +25,11 @@ type Service interface {
 	GetSubnet(UUID string) (*SubnetIntentResponse, error)
 	ListSubnet(getEntitiesRequest *SubnetListMetadata) (*SubnetListIntentResponse, error)
 	UpdateSubnet(UUID string, body *SubnetIntentInput) (*SubnetIntentResponse, error)
+	CreateImage(createRequest *ImageIntentInput) (*ImageIntentResponse, error)
+	DeleteImage(UUID string) error
+	GetImage(UUID string) (*ImageIntentResponse, error)
+	ListImage(getEntitiesRequest *ImageListMetadata) (*ImageListIntentResponse, error)
+	UpdateImage(UUID string, body *ImageIntentInput) (*ImageIntentResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -276,7 +281,7 @@ func (op Operations) UpdateSubnet(UUID string, body *SubnetIntentInput) (*Subnet
  * @param body
  * @return *ImageIntentResponse
  */
-func (op Operations) CreateImage(body ImageIntentInput) (*ImageIntentResponse, error) {
+func (op Operations) CreateImage(body *ImageIntentInput) (*ImageIntentResponse, error) {
 	ctx := context.TODO()
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, "/images", body)
@@ -346,7 +351,7 @@ func (op Operations) GetImage(UUID string) (*ImageIntentResponse, error) {
  * @param getEntitiesRequest
  * @return *ImageListIntentResponse
  */
-func (op Operations) ListImage(getEntitiesRequest ImageListMetadata) (*ImageListIntentResponse, error) {
+func (op Operations) ListImage(getEntitiesRequest *ImageListMetadata) (*ImageListIntentResponse, error) {
 	ctx := context.TODO()
 	path := "/images/list"
 
@@ -373,7 +378,7 @@ func (op Operations) ListImage(getEntitiesRequest ImageListMetadata) (*ImageList
  * @param body
  * @return *ImageIntentResponse
  */
-func (op Operations) UpdateImage(UUID string, body ImageIntentInput) (*ImageIntentResponse, error) {
+func (op Operations) UpdateImage(UUID string, body *ImageIntentInput) (*ImageIntentResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/images/%s", UUID)
