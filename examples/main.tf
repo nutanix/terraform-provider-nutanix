@@ -35,7 +35,7 @@ variable clusterid {
 #     }
 
 #     ip_endpoint_list = {
-#       ip   = "192.168.0.10"
+#       ip   = "1.2.3.10"
 #       type = "ASSIGNED"
 #     }
 #   }]
@@ -123,7 +123,6 @@ resource "nutanix_image" "centos73-install-iso" {
 resource "nutanix_image" "centos-lamp-app" {
   name        = "CentOS-LAMP-APP.qcow2"
   description = "CentOS LAMP - App"
-  image_type  = "DISK_IMAGE"
   source_uri  = "http://filer.dev.eng.nutanix.com:8080/GoldImages/NuCalm/AHV-UVM-Images/CentOS-LAMP-APP.qcow2"
 
   metadata = {
@@ -131,25 +130,25 @@ resource "nutanix_image" "centos-lamp-app" {
   }
 }
 
-# resource "nutanix_image" "centos-lamp-db" {
-#   name        = "CentOS-LAMP-DB.qcow2"
-#   description = "CentOS LAMP - DB"
-#   source_uri  = "http://filer.dev.eng.nutanix.com:8080/GoldImages/NuCalm/AHV-UVM-Images/CentOS-LAMP-DB.qcow2"
+resource "nutanix_image" "centos-lamp-db" {
+  name        = "CentOS-LAMP-DB.qcow2"
+  description = "CentOS LAMP - DB"
+  source_uri  = "http://filer.dev.eng.nutanix.com:8080/GoldImages/NuCalm/AHV-UVM-Images/CentOS-LAMP-DB.qcow2"
 
-#   metadata = {
-#     kind = "image"
-#   }
-# }
+  metadata = {
+    kind = "image"
+  }
+}
 
-# resource "nutanix_image" "centos-lamp-haproxy" {
-#   name        = "CentOS-LAMP-HAPROXY.qcow2"
-#   description = "CentOS LAMP - HAProxy"
-#   source_uri  = "http://filer.dev.eng.nutanix.com:8080/GoldImages/NuCalm/AHV-UVM-Images/CentOS-LAMP-HAProxy.qcow2"
+resource "nutanix_image" "centos-lamp-haproxy" {
+  name        = "CentOS-LAMP-HAPROXY.qcow2"
+  description = "CentOS LAMP - HAProxy"
+  source_uri  = "http://filer.dev.eng.nutanix.com:8080/GoldImages/NuCalm/AHV-UVM-Images/CentOS-LAMP-HAProxy.qcow2"
 
-#   metadata = {
-#     kind = "image"
-#   }
-# }
+  metadata = {
+    kind = "image"
+  }
+}
 
 resource "nutanix_subnet" "next-lamp-subnet" {
   metadata = {
@@ -179,49 +178,49 @@ resource "nutanix_subnet" "next-lamp-subnet" {
   dhcp_domain_search_list      = ["nutanix.com", "eng.nutanix.com"]
 }
 
-# resource "nutanix_virtual_machine" "demo-01-web" {
-#   metadata {
-#     kind = "vm"
-#   }
+resource "nutanix_virtual_machine" "demo-01-web" {
+  metadata {
+    kind = "vm"
+  }
 
-#   name                 = "demo-01-web"
-#   description          = "demo Frontend Web Server"
-#   num_vcpus_per_socket = 2
-#   num_sockets          = 1
-#   memory_size_mib      = 4096
-#   power_state          = "ON"
+  name                 = "demo-01-web"
+  description          = "demo Frontend Web Server"
+  num_vcpus_per_socket = 2
+  num_sockets          = 1
+  memory_size_mib      = 4096
+  power_state          = "ON"
 
-#   cluster_reference = {
-#     kind = "cluster"
-#     uuid = "${var.clusterid}"
-#   }
+  cluster_reference = {
+    kind = "cluster"
+    uuid = "${var.clusterid}"
+  }
 
-#   nic_list = [{
-#     subnet_reference = {
-#       kind = "subnet"
-#       uuid = "${nutanix_subnet.next-lamp-subnet.id}"
-#     }
+  nic_list = [{
+    subnet_reference = {
+      kind = "subnet"
+      uuid = "${nutanix_subnet.next-lamp-subnet.id}"
+    }
 
-#     ip_endpoint_list = {
-#       ip   = "192.168.0.10"
-#       type = "ASSIGNED"
-#     }
-#   }]
+    ip_endpoint_list = {
+      ip   = "1.2.3.12"
+      type = "ASSIGNED"
+    }
+  }]
 
-#   disk_list = [{
-#     data_source_reference = [{
-#       kind = "image"
-#       name = "Centos7"
-#       uuid = "${nutanix_image.centos-lamp-haproxy.id}"
-#     }]
+  disk_list = [{
+    data_source_reference = [{
+      kind = "image"
+      name = "Centos7"
+      uuid = "${nutanix_image.centos-lamp-haproxy.id}"
+    }]
 
-#     device_properties = [{
-#       device_type = "DISK"
-#     }]
+    device_properties = [{
+      device_type = "DISK"
+    }]
 
-#     disk_size_mib = 5000
-#   }]
-# }
+    disk_size_mib = 5000
+  }]
+}
 
 resource "nutanix_virtual_machine" "demo-01-app" {
   metadata {
@@ -247,7 +246,7 @@ resource "nutanix_virtual_machine" "demo-01-app" {
     }
 
     ip_endpoint_list = {
-      ip   = "192.168.0.10"
+      ip   = "1.2.3.10"
       type = "ASSIGNED"
     }
   }]
@@ -267,54 +266,46 @@ resource "nutanix_virtual_machine" "demo-01-app" {
   }]
 }
 
-# resource "nutanix_virtual_machine" "demo-01-db" {
-#   metadata {
-#     kind = "vm"
-#   }
+resource "nutanix_virtual_machine" "demo-01-db" {
+  metadata {
+    kind = "vm"
+  }
 
+  name                 = "demo-01-db"
+  description          = "demo MySQL Database Server"
+  num_vcpus_per_socket = 4
+  num_sockets          = 1
+  memory_size_mib      = 16384
+  power_state          = "ON"
 
-#   name                 = "demo-01-db"
-#   description          = "demo MySQL Database Server"
-#   num_vcpus_per_socket = 4
-#   num_sockets          = 1
-#   memory_size_mib      = 16384
-#   power_state          = "ON"
+  cluster_reference = {
+    kind = "cluster"
+    uuid = "${var.clusterid}"
+  }
 
+  nic_list = [{
+    subnet_reference = {
+      kind = "subnet"
+      uuid = "${nutanix_subnet.next-lamp-subnet.id}"
+    }
 
-#   cluster_reference = {
-#     kind = "cluster"
-#     uuid = "${var.clusterid}"
-#   }
+    ip_endpoint_list = {
+      ip   = "1.2.3.11"
+      type = "ASSIGNED"
+    }
+  }]
 
+  disk_list = [{
+    data_source_reference = [{
+      kind = "image"
+      name = "Centos7"
+      uuid = "${nutanix_image.centos-lamp-db.id}"
+    }]
 
-#   nic_list = [{
-#     subnet_reference = {
-#       kind = "subnet"
-#       uuid = "${nutanix_subnet.next-lamp-subnet.id}"
-#     }
+    device_properties = [{
+      device_type = "DISK"
+    }]
 
-
-#     ip_endpoint_list = {
-#       ip   = "192.168.0.10"
-#       type = "ASSIGNED"
-#     }
-#   }]
-
-
-#   disk_list = [{
-#     data_source_reference = [{
-#       kind = "image"
-#       name = "Centos7"
-#       uuid = "${nutanix_image.centos-lamp-db.id}"
-#     }]
-
-
-#     device_properties = [{
-#       device_type = "DISK"
-#     }]
-
-
-#     disk_size_mib = 5000
-#   }]
-# }
-
+    disk_size_mib = 5000
+  }]
+}
