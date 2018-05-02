@@ -9,9 +9,12 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 const (
@@ -99,6 +102,9 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 	req.Header.Add("Authorization", "Basic "+
 		base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
 
+	log.Printf("REQUEST BODY \n")
+	utils.PrintToJSON(req, "REQUEST BODY")
+
 	requestDump, err := httputil.DumpRequestOut(req, true)
 	if err != nil {
 		fmt.Println(err)
@@ -152,6 +158,9 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 			if err != nil {
 				return err
 			}
+
+			log.Printf("RESPONSE BODY \n")
+			utils.PrintToJSON(v, "RESPONSE BODY")
 		}
 	}
 
