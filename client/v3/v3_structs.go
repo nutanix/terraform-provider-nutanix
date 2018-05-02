@@ -1079,3 +1079,110 @@ type ImageListIntentResponse struct {
 
 	Metadata *ImageListMetadataOutput `json:"metadata"`
 }
+
+// ClusterListMetadataOutput ...
+type ClusterListMetadataOutput struct {
+
+	// The filter used for the results
+	Filter *string `json:"filter,omitempty"`
+
+	// The kind name
+	Kind *string `json:"kind,omitempty"`
+
+	// The number of records retrieved relative to the offset
+	Length *int64 `json:"length,omitempty"`
+
+	// Offset from the start of the entity list
+	Offset *int64 `json:"offset,omitempty"`
+
+	// The attribute to perform sort on
+	SortAttribute *string `json:"sort_attribute,omitempty"`
+
+	// The sort order in which results are returned
+	SortOrder *string `json:"sort_order,omitempty"`
+
+	// Total matches found
+	TotalMatches *int64 `json:"total_matches,omitempty"`
+}
+
+// ClusterListIntentResponse ...
+type ClusterListIntentResponse struct {
+	APIVersion *string `json:"api_version"`
+
+	Entities []*ClusterIntentResource `json:"entities,omitempty"`
+
+	Metadata *ClusterListMetadataOutput `json:"metadata"`
+}
+
+// ClusterIntentResource ...
+type ClusterIntentResource struct {
+	APIVersion *string `json:"api_version,omitempty"`
+
+	Metadata *ClusterMetadata `json:"metadata"`
+
+	Spec *Cluster `json:"spec,omitempty"`
+
+	Status *ClusterDefStatus `json:"status,omitempty"`
+}
+
+// ClusterMetadata ...
+type ClusterMetadata struct {
+
+	// Categories for the image
+	Categories map[string]string `json:"categories,omitempty"`
+
+	// UTC date and time in RFC-3339 format when vm was created
+	CreationTime *time.Time `json:"creation_time,omitempty"`
+
+	// The kind name
+	Kind *string `json:"kind"`
+
+	// UTC date and time in RFC-3339 format when image was last updated
+	LastUpdateTime *time.Time `json:"last_update_time,omitempty"`
+
+	// image name
+	Name *string `json:"name,omitempty"`
+
+	// project reference
+	ProjectReference *Reference `json:"project_reference,omitempty"`
+
+	OwnerReference *Reference `json:"owner_reference,omitempty"`
+
+	// Hash of the spec. This will be returned from server.
+	SpecHash *string `json:"spec_hash,omitempty"`
+
+	// Version number of the latest spec.
+	SpecVersion *int64 `json:"spec_version,omitempty"`
+
+	// image uuid
+	UUID *string `json:"uuid,omitempty"`
+}
+
+// Cluster ...
+type Cluster struct {
+	Name      *string          `json:"name,omitempty"`
+	Resources *ClusterResource `json:"resources,omitempty"`
+}
+
+// ClusterDefStatus ...
+type ClusterDefStatus struct {
+	State       *string            `json:"state,omitempty"`
+	MessageList []*MessageResource `json:"message_list,omitempty"`
+	Name        *string            `json:"name,omitempty"`
+	Resources   *string            `json:"resources,omitempty"`
+}
+
+// ClusterResource ...
+type ClusterResource struct {
+	Config            *ConfigClusterSpec `json:"config,omitempty"`
+	Network           *ClusterNetwork    `json:"network,omitempty"`
+	RunTimeStatusList []*string          `json:"runtime_status_list,omitempty"`
+}
+
+// ConfigClusterSpec ...
+type ConfigClusterSpec struct {
+}
+
+// ClusterNetwork ...
+type ClusterNetwork struct {
+}
