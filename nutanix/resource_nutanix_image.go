@@ -25,7 +25,9 @@ func resourceNutanixImage() *schema.Resource {
 		Read:   resourceNutanixImageRead,
 		Update: resourceNutanixImageUpdate,
 		Delete: resourceNutanixImageDelete,
-
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: getImageSchema(),
 	}
 }

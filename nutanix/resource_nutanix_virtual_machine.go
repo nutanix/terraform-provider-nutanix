@@ -20,7 +20,9 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 		Update: resourceNutanixVirtualMachineUpdate,
 		Delete: resourceNutanixVirtualMachineDelete,
 		Exists: resourceNutanixVirtualMachineExists,
-
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: getVMSchema(),
 	}
 }
