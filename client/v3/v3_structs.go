@@ -1600,3 +1600,242 @@ type CategoryValue struct {
 	// Value for the category.
 	Value *string `json:"value,omitempty"`
 }
+
+//PortRange represents Range of TCP/UDP ports.
+type PortRange struct {
+	EndPort *int64 `json:"end_port,omitempty"`
+
+	StartPort *int64 `json:"start_port,omitempty"`
+}
+
+//IPSubnet IP subnet provided as an address and prefix length.
+type IPSubnet struct {
+
+	// IPV4 address.
+	IP *string `json:"ip,omitempty"`
+
+	PrefixLength *int64 `json:"prefix_length,omitempty"`
+}
+
+//NetworkRuleIcmpTypeCodeList ..
+type NetworkRuleIcmpTypeCodeList struct {
+	Code *int64 `json:"code,omitempty"`
+
+	Type *int64 `json:"type,omitempty"`
+}
+
+//NetworkRule ...
+type NetworkRule struct {
+
+	// Timestamp of expiration time.
+	ExpirationTime *string `json:"expiration_time,omitempty"`
+
+	// The set of categories that matching VMs need to have.
+	Filter *CategoryFilter `json:"filter,omitempty"`
+
+	// List of ICMP types and codes allowed by this rule.
+	IcmpTypeCodeList []*NetworkRuleIcmpTypeCodeList `json:"icmp_type_code_list,omitempty"`
+
+	IPSubnet IPSubnet `json:"ip_subnet,omitempty"`
+
+	NetworkFunctionChainReference *Reference `json:"network_function_chain_reference,omitempty"`
+
+	// The set of categories that matching VMs need to have.
+	PeerSpecificationType *string `json:"peer_specification_type,omitempty"`
+
+	// Select a protocol to allow.  Multiple protocols can be allowed by repeating network_rule object.  If a protocol is not configured in the network_rule object then it is allowed.
+	Protocol *string `json:"protocol,omitempty"`
+
+	// List of TCP ports that are allowed by this rule.
+	TCPPortRangeList []*PortRange `json:"tcp_port_range_list,omitempty"`
+
+	// List of UDP ports that are allowed by this rule.
+	UDPPortRangeList []*PortRange `json:"udp_port_range_list,omitempty"`
+}
+
+//TargetGroup ...
+type TargetGroup struct {
+
+	// Default policy for communication within target group.
+	DefaultInternalPolicy *string `json:"default_internal_policy,omitempty"`
+
+	// The set of categories that matching VMs need to have.
+	Filter *CategoryFilter `json:"filter,omitempty"`
+
+	// Way to identify the object for which rule is applied.
+	PeerSpecificationType *string `json:"peer_specification_type,omitempty"`
+}
+
+//NetworkSecurityRuleResourcesRule These rules are used for quarantining suspected VMs. Target group is a required attribute.  Empty inbound_allow_list will not allow anything into target group. Empty outbound_allow_list will allow everything from target group.
+type NetworkSecurityRuleResourcesRule struct {
+
+	// Type of action.
+	Action *string `json:"action,omitempty"`
+
+	InboundAllowList []*NetworkRule `json:"inbound_allow_list,omitempty"`
+
+	OutboundAllowList []*NetworkRule `json:"outbound_allow_list,omitempty"`
+
+	TargetGroup *TargetGroup `json:"target_group,omitempty"`
+}
+
+//NetworkSecurityRuleIsolationRule These rules are used for environmental isolation.
+type NetworkSecurityRuleIsolationRule struct {
+
+	// Type of action.
+	Action *string `json:"action,omitempty"`
+
+	// The set of categories that matching VMs need to have.
+	FirstEntityFilter *CategoryFilter `json:"first_entity_filter,omitempty"`
+
+	// The set of categories that matching VMs need to have.
+	SecondEntityFilter *CategoryFilter `json:"second_entity_filter,omitempty"`
+}
+
+//NetworkSecurityRuleResources ...
+type NetworkSecurityRuleResources struct {
+	AppRule *NetworkSecurityRuleResourcesRule `json:"app_rule,omitempty"`
+
+	IsolationRule *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty"`
+
+	QuarantineRule *NetworkSecurityRuleResourcesRule `json:"quarantine_rule,omitempty"`
+}
+
+//NetworkSecurityRule ...
+type NetworkSecurityRule struct {
+	Description *string `json:"description"`
+
+	Name *string `json:"name,omitempty"`
+
+	Resources *NetworkSecurityRuleResources `json:"resources,omitempty" `
+}
+
+//Metadata Metadata The kind metadata
+type Metadata struct {
+	Categories map[string]string `json:"categories,omitempty"`
+
+	CreationTime *time.Time `json:"creation_time,omitempty"`
+
+	Kind *string `json:"kind"`
+
+	LastUpdateTime *time.Time `json:"last_update_time,omitempty"`
+
+	Name *string `json:"name,omitempty"`
+
+	SpecHash *string `json:"spec_hash,omitempty"`
+
+	SpecVersion *int64 `json:"spec_version,omitempty"`
+
+	UUID *string `json:"uuid,omitempty"`
+}
+
+//NetworkSecurityRuleIntentInput An intentful representation of a network_security_rule
+type NetworkSecurityRuleIntentInput struct {
+	APIVersion *string `json:"api_version,omitempty"`
+
+	Metadata *Metadata `json:"metadata"`
+
+	Spec *NetworkSecurityRule `json:"spec"`
+}
+
+//NetworkSecurityRuleDefStatus ... Network security rule status
+type NetworkSecurityRuleDefStatus struct {
+	AppRule *NetworkSecurityRuleResourcesRule `json:"app_rule,omitempty"`
+
+	IsolationRule *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty"`
+
+	QuarantineRule *NetworkSecurityRuleResourcesRule `json:"quarantine_rule,omitempty"`
+}
+
+//NetworkSecurityRuleIntentResponse Response object for intentful operations on a network_security_rule
+type NetworkSecurityRuleIntentResponse struct {
+	APIVersion *string `json:"api_version,omitempty"`
+
+	Metadata *Metadata `json:"metadata"`
+
+	Spec *NetworkSecurityRule `json:"spec,omitempty"`
+
+	Status NetworkSecurityRuleDefStatus `json:"status,omitempty" bson:"status,omitempty"`
+}
+
+//NetworkSecurityRuleStatus The status of a REST API call. Only used when there is a failure to report.
+type NetworkSecurityRuleStatus struct {
+	APIVersion *string `json:"api_version,omitempty"`
+
+	// The HTTP error code.
+	Code *int64 `json:"code,omitempty"`
+
+	// The kind name
+	Kind *string `json:"kind,omitempty"`
+
+	MessageList []*MessageResource `json:"message_list,omitempty"`
+
+	State *string `json:"state,omitempty"`
+}
+
+//ListMetadata All api calls that return a list will have this metadata block as input
+type ListMetadata struct {
+
+	// The filter in FIQL syntax used for the results.
+	Filter *string `json:"filter,omitempty"`
+
+	// The kind name
+	Kind *string `json:"kind,omitempty"`
+
+	// The number of records to retrieve relative to the offset
+	Length *int64 `json:"length,omitempty"`
+
+	// Offset from the start of the entity list
+	Offset *int64 `json:"offset,omitempty"`
+
+	// The attribute to perform sort on
+	SortAttribute *string `json:"sort_attribute,omitempty"`
+
+	// The sort order in which results are returned
+	SortOrder *string `json:"sort_order,omitempty"`
+}
+
+//ListMetadataOutput All api calls that return a list will have this metadata block
+type ListMetadataOutput struct {
+
+	// The filter used for the results
+	Filter *string `json:"filter,omitempty"`
+
+	// The kind name
+	Kind *string `json:"kind,omitempty"`
+
+	// The number of records retrieved relative to the offset
+	Length *int64 `json:"length,omitempty"`
+
+	// Offset from the start of the entity list
+	Offset *int64 `json:"offset,omitempty"`
+
+	// The attribute to perform sort on
+	SortAttribute *string `json:"sort_attribute,omitempty"`
+
+	// The sort order in which results are returned
+	SortOrder *string `json:"sort_order,omitempty"`
+
+	// Total matches found
+	TotalMatches *int64 `json:"total_matches,omitempty"`
+}
+
+//NetworkSecurityRuleIntentResource ... Response object for intentful operations on a network_security_rule
+type NetworkSecurityRuleIntentResource struct {
+	APIVersion string `json:"api_version,omitempty"`
+
+	Metadata Metadata `json:"metadata,omitempty"`
+
+	Spec NetworkSecurityRule `json:"spec,omitempty"`
+
+	Status NetworkSecurityRuleDefStatus `json:"status,omitempty"`
+}
+
+//NetworkSecurityRuleListIntentResponse Response object for intentful operation of network_security_rules
+type NetworkSecurityRuleListIntentResponse struct {
+	APIVersion string `json:"api_version"`
+
+	Entities []NetworkSecurityRuleIntentResource `json:"entities,omitempty" bson:"entities,omitempty"`
+
+	Metadata ListMetadataOutput `json:"metadata"`
+}
