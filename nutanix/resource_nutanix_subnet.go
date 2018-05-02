@@ -24,7 +24,9 @@ func resourceNutanixSubnet() *schema.Resource {
 		Read:   resourceNutanixSubnetRead,
 		Update: resourceNutanixSubnetUpdate,
 		Delete: resourceNutanixSubnetDelete,
-
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 		Schema: getSubnetSchema(),
 	}
 }
