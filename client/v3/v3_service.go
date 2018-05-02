@@ -41,6 +41,11 @@ type Service interface {
 	GetCategoryValue(name string, value string) (*CategoryValueStatus, error)
 	DeleteCategoryValue(name string, value string) error
 	GetCategoryQuery(query *CategoryQueryInput) (*CategoryQueryResponse, error)
+	UpdateNetworkSecurityRule(UUID string, body *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error)
+	ListNetworkSecurityRule(getEntitiesRequest *ListMetadata) (*NetworkSecurityRuleListIntentResponse, error)
+	GetNetworkSecurityRule(UUID string) (*NetworkSecurityRuleIntentResponse, error)
+	DeleteNetworkSecurityRule(UUID string) error
+	CreateNetworkSecurityRule(request *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -497,9 +502,6 @@ func (op Operations) CreateOrUpdateCategoryKey(body *CategoryKey) (*CategoryKeyS
 	path := fmt.Sprintf("/categories/%s", utils.StringValue(body.Name))
 
 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
-	if err != nil {
-		return nil, err
-	}
 
 	categoryKeyResponse := new(CategoryKeyStatus)
 
@@ -575,6 +577,7 @@ func (op Operations) GetCategoryKey(name string) (*CategoryKeyStatus, error) {
 	categoryKeyStatusResponse := new(CategoryKeyStatus)
 
 	err = op.client.Do(ctx, req, categoryKeyStatusResponse)
+
 	if err != nil {
 		return nil, err
 	}
@@ -594,7 +597,6 @@ func (op Operations) ListCategoryValues(name string, getEntitiesRequest *Categor
 	path := fmt.Sprintf("/categories/%s/list", name)
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
-
 	if err != nil {
 		return nil, err
 	}
@@ -623,9 +625,6 @@ func (op Operations) CreateOrUpdateCategoryValue(name string, body *CategoryValu
 	categoryValueResponse := new(CategoryValueStatus)
 
 	err = op.client.Do(ctx, req, categoryValueResponse)
-	if err != nil {
-		return nil, err
-	}
 
 	return categoryValueResponse, nil
 }
@@ -657,7 +656,7 @@ func (op Operations) GetCategoryValue(name string, value string) (*CategoryValue
 	return categoryValueStatusResponse, nil
 }
 
-/*DeleteCategoryValue Deletes a Category
+/*DeleteCategoryValue Deletes a Category Value
  * This operation submits a request to delete a op.
  *
  * @param name The name of the entity.
@@ -688,16 +687,131 @@ func (op Operations) GetCategoryQuery(query *CategoryQueryInput) (*CategoryQuery
 	path := "/categories/query"
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, query)
-	if err != nil {
-		return nil, err
-	}
-
 	categoryQueryResponse := new(CategoryQueryResponse)
 
 	err = op.client.Do(ctx, req, categoryQueryResponse)
+
 	if err != nil {
 		return nil, err
 	}
 
 	return categoryQueryResponse, nil
+}
+
+/*CreateNetworkSecurityRule Creates a Network security rule
+ * This operation submits a request to create a Network security rule based on the input parameters.
+ *
+ * @param request
+ * @return *NetworkSecurityRuleIntentResponse
+ */
+func (op Operations) CreateNetworkSecurityRule(request *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error) {
+	ctx := context.TODO()
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, "/network_security_rules", request)
+	networkSecurityRuleIntentResponse := new(NetworkSecurityRuleIntentResponse)
+
+	err = op.client.Do(ctx, req, networkSecurityRuleIntentResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return networkSecurityRuleIntentResponse, nil
+}
+
+/*DeleteNetworkSecurityRule Deletes a Network security rule
+ * This operation submits a request to delete a Network security rule.
+ *
+ * @param UUID The UUID of the entity.
+ * @return void
+ */
+func (op Operations) DeleteNetworkSecurityRule(UUID string) error {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/network_security_rules/%s", UUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	if err != nil {
+		return err
+	}
+
+	return op.client.Do(ctx, req, nil)
+}
+
+/*GetNetworkSecurityRule Gets a Network security rule
+ * This operation gets a Network security rule.
+ *
+ * @param UUID The UUID of the entity.
+ * @return *NetworkSecurityRuleIntentResponse
+ */
+func (op Operations) GetNetworkSecurityRule(UUID string) (*NetworkSecurityRuleIntentResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/network_security_rules/%s", UUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	networkSecurityRuleIntentResponse := new(NetworkSecurityRuleIntentResponse)
+
+	err = op.client.Do(ctx, req, networkSecurityRuleIntentResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return networkSecurityRuleIntentResponse, nil
+}
+
+/*ListNetworkSecurityRule Gets all network security rules
+ * This operation gets a list of Network security rules, allowing for sorting and pagination. Note: Entities that have not been created successfully are not listed.
+ *
+ * @param getEntitiesRequest
+ * @return *NetworkSecurityRuleListIntentResponse
+ */
+func (op Operations) ListNetworkSecurityRule(getEntitiesRequest *ListMetadata) (*NetworkSecurityRuleListIntentResponse, error) {
+	ctx := context.TODO()
+	path := "/network_security_rules/list"
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
+
+	if err != nil {
+		return nil, err
+	}
+
+	networkSecurityRuleListIntentResponse := new(NetworkSecurityRuleListIntentResponse)
+	err = op.client.Do(ctx, req, networkSecurityRuleListIntentResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return networkSecurityRuleListIntentResponse, nil
+}
+
+/*UpdateNetworkSecurityRule Updates a Network security rule
+ * This operation submits a request to update a Network security rule based on the input parameters.
+ *
+ * @param uuid The UUID of the entity.
+ * @param body
+ * @return void
+ */
+func (op Operations) UpdateNetworkSecurityRule(UUID string, body *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/network_security_rules/%s", UUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
+	if err != nil {
+		return nil, err
+	}
+
+	networkSecurityRuleIntentResponse := new(NetworkSecurityRuleIntentResponse)
+
+	err = op.client.Do(ctx, req, networkSecurityRuleIntentResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return networkSecurityRuleIntentResponse, nil
 }
