@@ -594,20 +594,14 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 	if su, suok := d.GetOk("source_uri"); suok {
 		ext := filepath.Ext(su.(string))
 		if ext == ".qcow2" {
-			if csok {
-				checksum := cs.(map[string]interface{})
-				if checksum["checksum_algorithm"].(string) != "" || checksum["checksum_value"].(string) != "" {
-					return fmt.Errorf("Checksums are not supported for images that require conversion '%s'", ext)
-				}
-			}
 			image.ImageType = utils.String("DISK_IMAGE")
-
 		} else if ext == ".iso" {
 			image.ImageType = utils.String("ISO_IMAGE")
 		} else {
 			// By default assuming the image to be raw disk image.
 			image.ImageType = utils.String("DISK_IMAGE")
 		}
+		// set source uri
 		image.SourceURI = utils.String(su.(string))
 	}
 
@@ -628,9 +622,9 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 			}
 			checks.ChecksumValue = utils.String(cv.(string))
 		}
+		image.Checksum = checks
 	}
 
-	image.Checksum = checks
 	return nil
 }
 

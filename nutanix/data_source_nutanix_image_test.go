@@ -39,18 +39,21 @@ provider "nutanix" {
 }
 
 resource "nutanix_image" "test" {
+  name        = "CentOS-LAMP-APP.qcow2"
+  description = "CentOS LAMP - App"
+  image_type  = "DISK_IMAGE"
+  source_uri  = "http://filer.dev.eng.nutanix.com:8080/GoldImages/NuCalm/AHV-UVM-Images/CentOS-LAMP-APP.qcow2"
+
+  metadata = {
+    kind = "image"
+  }
+}
+
+data "nutanix_image" "test" {
 	metadata = {
 		kind = "image"
 	}
-
-	description = "Dou Image Test %d"
-	name = "CentOS7-ISO"
-	source_uri = "http://10.7.1.7/data1/ISOs/CentOS-7-x86_64-Minimal-1503-01.iso"
-
-	checksum = {
-		checksum_algorithm = "SHA_256"
-		checksum_value = "a9e4e0018c98520002cd7cf506e980e66e31f7ada70b8fc9caa4f4290b019f4f"
-	}
+	image_id = "${nutanix_image.test.id}"
 }
 `, r)
 }
