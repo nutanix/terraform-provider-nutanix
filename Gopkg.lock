@@ -146,6 +146,7 @@
     "config/module",
     "dag",
     "flatmap",
+    "helper/acctest",
     "helper/config",
     "helper/experiment",
     "helper/hashcode",
@@ -258,7 +259,11 @@
   name = "golang.org/x/crypto"
   packages = [
     "bcrypt",
-    "blowfish"
+    "blowfish",
+    "curve25519",
+    "ed25519",
+    "ed25519/internal/edwards25519",
+    "ssh"
   ]
   revision = "adbae1b6b6fb4b02448a0fc0dbbc9ba2b95b294d"
 
@@ -330,6 +335,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ddb846be1d117350e628fbd9a606aa33d9173ce58e6f2075c15e0234a461aca2"
+  inputs-digest = "4017ffc22380d3e6179ee9ec1a4a259f8eb7859d79a8620bd218e4ff93eec1ba"
   solver-name = "gps-cdcl"
   solver-version = 1

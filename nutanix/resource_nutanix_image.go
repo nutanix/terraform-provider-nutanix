@@ -611,12 +611,20 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 
 	if csok {
 		checksum := cs.(map[string]interface{})
-		if checksum["checksum_algorithm"].(string) != "" || checksum["checksum_value"].(string) != "" {
-			if checksum["checksum_value"].(string) == "" && checksum["checksum_algorithm"].(string) == "" {
-				return fmt.Errorf("'checksum_value' or 'checksum_algorithm' is not given")
+		ca, caok := checksum["checksum_algorithm"]
+		cv, cvok := checksum["checksum_value"]
+
+		if caok {
+			if ca.(string) == "" {
+				return fmt.Errorf("'checksum_algorithm' is not given")
 			}
-			checks.ChecksumAlgorithm = utils.String(checksum["checksum_algorithm"].(string))
-			checks.ChecksumValue = utils.String(checksum["checksum_value"].(string))
+			checks.ChecksumAlgorithm = utils.String(ca.(string))
+		}
+		if cvok {
+			if cv.(string) == "" {
+				return fmt.Errorf("'checksum_value' is not given")
+			}
+			checks.ChecksumValue = utils.String(cv.(string))
 		}
 	}
 
