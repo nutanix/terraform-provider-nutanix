@@ -83,11 +83,10 @@ resource "nutanix_image" "test" {
 	name = "dou_image_%d"
 	description = "Dou Image Test"
 	name = "CentOS7-ISO"
-	source_uri = "http://10.7.1.7/data1/ISOs/CentOS-7-x86_64-Minimal-1503-01.iso"
+	source_uri = "http://endor.dyn.nutanix.com/acro_images/DISKs/cirros-0.3.4-x86_64-disk.img"
 
 	checksum = {
 		checksum_algorithm = "SHA_256"
-		checksum_value = "a9e4e0018c98520002cd7cf506e980e66e31f7ada70b8fc9caa4f4290b019f4f"
 	}
 }
 `, r)
