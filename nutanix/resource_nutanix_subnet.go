@@ -427,9 +427,8 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 
 func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*NutanixClient).API
-	UUID := d.Id()
 
-	if err := conn.V3.DeleteSubnet(UUID); err != nil {
+	if err := conn.V3.DeleteSubnet(d.Id()); err != nil {
 		return err
 	}
 
