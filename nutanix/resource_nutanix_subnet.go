@@ -212,22 +212,22 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	// set state value
-	if err := d.Set("state", resp.Status.State); err != nil {
+	if err := d.Set("state", utils.StringValue(resp.Status.State)); err != nil {
 		return err
 	}
-	if err := d.Set("vswitch_name", resp.Status.Resources.VswitchName); err != nil {
+	if err := d.Set("vswitch_name", utils.StringValue(resp.Status.Resources.VswitchName)); err != nil {
 		return err
 	}
-	if err := d.Set("subnet_type", resp.Status.Resources.SubnetType); err != nil {
+	if err := d.Set("subnet_type", utils.StringValue(resp.Status.Resources.SubnetType)); err != nil {
 		return err
 	}
-	if err := d.Set("default_gateway_ip", resp.Status.Resources.IPConfig.DefaultGatewayIP); err != nil {
+	if err := d.Set("default_gateway_ip", utils.StringValue(resp.Status.Resources.IPConfig.DefaultGatewayIP)); err != nil {
 		return err
 	}
-	if err := d.Set("prefix_length", resp.Status.Resources.IPConfig.PrefixLength); err != nil {
+	if err := d.Set("prefix_length", utils.Int64Value(resp.Status.Resources.IPConfig.PrefixLength)); err != nil {
 		return err
 	}
-	if err := d.Set("subnet_ip", resp.Status.Resources.IPConfig.SubnetIP); err != nil {
+	if err := d.Set("subnet_ip", utils.StringValue(resp.Status.Resources.IPConfig.SubnetIP)); err != nil {
 		return err
 	}
 	if resp.Status.Resources.IPConfig.DHCPServerAddress != nil {
