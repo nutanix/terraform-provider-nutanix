@@ -88,7 +88,7 @@ resource "nutanix_subnet" "test" {
 	  uuid = "000567f3-1921-c722-471d-0cc47ac31055" 
   	}
 
-	vlan_id = 201
+	vlan_id = 0
 	subnet_type = "VLAN"
 	
 	prefix_length = 24

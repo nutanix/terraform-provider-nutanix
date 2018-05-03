@@ -579,7 +579,8 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 	}
 
 	//set vlan_id
-	if v, ok := d.GetOk("vlan_id"); ok {
+	v, ok := d.GetOk("vlan_id")
+	if v.(int) == 0 || ok {
 		subnet.VlanID = utils.Int64(int64(v.(int)))
 	}
 
