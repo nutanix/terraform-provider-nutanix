@@ -2,9 +2,9 @@
 *.dll
 *.so
 *.dylib
-*.tfstate
-*.tfstate.backup
-*.terraform*
+**/*.tfstate
+**/*.tfstate.backup
+**/*.terraform*
 *.log
 setenv.sh
 request_log
@@ -27,3 +27,4 @@ cmd/main.tf
 
 # vendor directory
 vendor/
+examples.zip
