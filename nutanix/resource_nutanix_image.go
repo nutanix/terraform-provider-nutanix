@@ -48,8 +48,6 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 	// Read Arguments and set request values
 	if v, ok := d.GetOk("api_version"); ok {
 		request.APIVersion = utils.String(v.(string))
-	} else {
-		request.APIVersion = utils.String(Version)
 	}
 
 	if !nok {

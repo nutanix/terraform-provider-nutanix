@@ -45,8 +45,6 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 
 	if v, ok := d.GetOk("api_version"); ok {
 		request.APIVersion = utils.String(v.(string))
-	} else {
-		request.APIVersion = utils.String(Version)
 	}
 	if !nok {
 		return fmt.Errorf("Please provide the required name attribute")
