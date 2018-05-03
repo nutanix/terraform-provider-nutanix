@@ -141,6 +141,8 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	utils.PrintToJSON(resp, "RESPONSE")
+
 	// set metadata values
 	metadata := make(map[string]interface{})
 	metadata["last_update_time"] = resp.Metadata.LastUpdateTime.String()
@@ -221,70 +223,109 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("subnet_type", utils.StringValue(resp.Status.Resources.SubnetType)); err != nil {
 		return err
 	}
-	if err := d.Set("default_gateway_ip", utils.StringValue(resp.Status.Resources.IPConfig.DefaultGatewayIP)); err != nil {
-		return err
-	}
-	if err := d.Set("prefix_length", utils.Int64Value(resp.Status.Resources.IPConfig.PrefixLength)); err != nil {
-		return err
-	}
-	if err := d.Set("subnet_ip", utils.StringValue(resp.Status.Resources.IPConfig.SubnetIP)); err != nil {
-		return err
-	}
-	if resp.Status.Resources.IPConfig.DHCPServerAddress != nil {
-		//set ip_config.dhcp_server_address
-		address := make(map[string]interface{})
-		address["ip"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.IP)
-		address["fqdn"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.FQDN)
-		address["ipv6"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.IPV6)
-		if err := d.Set("dhcp_server_address", address); err != nil {
+	if resp.Status.Resources.IPConfig != nil {
+		if err := d.Set("default_gateway_ip", utils.StringValue(resp.Status.Resources.IPConfig.DefaultGatewayIP)); err != nil {
 			return err
 		}
-		if err := d.Set("dhcp_server_address_port", utils.Int64Value(resp.Status.Resources.IPConfig.DHCPServerAddress.Port)); err != nil {
+		if err := d.Set("prefix_length", utils.Int64Value(resp.Status.Resources.IPConfig.PrefixLength)); err != nil {
 			return err
 		}
-	}
-	if resp.Status.Resources.IPConfig.PoolList != nil {
-		pl := resp.Status.Resources.IPConfig.PoolList
-		poolList := make([]string, len(pl))
-		for k, v := range pl {
-			poolList[k] = utils.StringValue(v.Range)
-		}
-		if err := d.Set("ip_config_pool_list_ranges", poolList); err != nil {
+		if err := d.Set("subnet_ip", utils.StringValue(resp.Status.Resources.IPConfig.SubnetIP)); err != nil {
 			return err
 		}
-	}
-	if resp.Status.Resources.IPConfig.DHCPOptions != nil {
-		//set dhcp_options
-		dOptions := make(map[string]interface{})
-		dOptions["boot_file_name"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPOptions.BootFileName)
-		dOptions["domain_name"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPOptions.DomainName)
-		dOptions["tftp_server_name"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPOptions.TFTPServerName)
-
-		if err := d.Set("dhcp_options", dOptions); err != nil {
-			return err
-		}
-
-		if resp.Status.Resources.IPConfig.DHCPOptions.DomainNameServerList != nil {
-			dnsl := resp.Status.Resources.IPConfig.DHCPOptions.DomainNameServerList
-			dnsList := make([]string, len(dnsl))
-			for k, v := range dnsl {
-				dnsList[k] = utils.StringValue(v)
+		if resp.Status.Resources.IPConfig.DHCPServerAddress != nil {
+			//set ip_config.dhcp_server_address
+			address := make(map[string]interface{})
+			address["ip"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.IP)
+			address["fqdn"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.FQDN)
+			address["ipv6"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.IPV6)
+			if err := d.Set("dhcp_server_address", address); err != nil {
+				return err
 			}
-			if err := d.Set("dhcp_domain_name_server_list", dnsList); err != nil {
+			if err := d.Set("dhcp_server_address_port", utils.Int64Value(resp.Status.Resources.IPConfig.DHCPServerAddress.Port)); err != nil {
 				return err
 			}
 		}
-		if resp.Status.Resources.IPConfig.DHCPOptions.DomainSearchList != nil {
-			dnsl := resp.Status.Resources.IPConfig.DHCPOptions.DomainSearchList
-			dsList := make([]string, len(dnsl))
-			for k, v := range dnsl {
-				dsList[k] = utils.StringValue(v)
+		if resp.Status.Resources.IPConfig.PoolList != nil {
+			pl := resp.Status.Resources.IPConfig.PoolList
+			poolList := make([]string, len(pl))
+			for k, v := range pl {
+				poolList[k] = utils.StringValue(v.Range)
 			}
-			if err := d.Set("dhcp_domain_search_list", dsList); err != nil {
+			if err := d.Set("ip_config_pool_list_ranges", poolList); err != nil {
 				return err
 			}
 		}
+		if resp.Status.Resources.IPConfig.DHCPOptions != nil {
+			//set dhcp_options
+			dOptions := make(map[string]interface{})
+			dOptions["boot_file_name"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPOptions.BootFileName)
+			dOptions["domain_name"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPOptions.DomainName)
+			dOptions["tftp_server_name"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPOptions.TFTPServerName)
+
+			if err := d.Set("dhcp_options", dOptions); err != nil {
+				return err
+			}
+
+			if resp.Status.Resources.IPConfig.DHCPOptions.DomainNameServerList != nil {
+				dnsl := resp.Status.Resources.IPConfig.DHCPOptions.DomainNameServerList
+				dnsList := make([]string, len(dnsl))
+				for k, v := range dnsl {
+					dnsList[k] = utils.StringValue(v)
+				}
+				if err := d.Set("dhcp_domain_name_server_list", dnsList); err != nil {
+					return err
+				}
+			}
+			if resp.Status.Resources.IPConfig.DHCPOptions.DomainSearchList != nil {
+				dnsl := resp.Status.Resources.IPConfig.DHCPOptions.DomainSearchList
+				dsList := make([]string, len(dnsl))
+				for k, v := range dnsl {
+					dsList[k] = utils.StringValue(v)
+				}
+				if err := d.Set("dhcp_domain_search_list", dsList); err != nil {
+					return err
+				}
+			}
+		} else {
+			if err := d.Set("dhcp_options", make(map[string]interface{})); err != nil {
+				return err
+			}
+			if err := d.Set("dhcp_domain_name_server_list", make([]map[string]interface{}, 0)); err != nil {
+				return err
+			}
+			if err := d.Set("dhcp_domain_search_list", make([]map[string]interface{}, 0)); err != nil {
+				return err
+			}
+		}
+	} else {
+		log.Print("No IPCONFIG recieved in the response")
+		if err := d.Set("default_gateway_ip", ""); err != nil {
+			return err
+		}
+		if err := d.Set("prefix_length", 0); err != nil {
+			return err
+		}
+		if err := d.Set("subnet_ip", ""); err != nil {
+			return err
+		}
+		if err := d.Set("dhcp_server_address_port", 0); err != nil {
+			return err
+		}
+		if err := d.Set("ip_config_pool_list_ranges", make([]map[string]interface{}, 0)); err != nil {
+			return err
+		}
+		if err := d.Set("dhcp_options", make(map[string]interface{})); err != nil {
+			return err
+		}
+		if err := d.Set("dhcp_domain_name_server_list", make([]map[string]interface{}, 0)); err != nil {
+			return err
+		}
+		if err := d.Set("dhcp_domain_search_list", make([]map[string]interface{}, 0)); err != nil {
+			return err
+		}
 	}
+
 	if err := d.Set("vlan_id", resp.Status.Resources.VlanID); err != nil {
 		return err
 	}
