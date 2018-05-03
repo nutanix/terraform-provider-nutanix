@@ -220,8 +220,14 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("vswitch_name", utils.StringValue(resp.Status.Resources.VswitchName)); err != nil {
 		return err
 	}
-	if err := d.Set("subnet_type", utils.StringValue(resp.Status.Resources.SubnetType)); err != nil {
-		return err
+	if resp.Status.Resources.SubnetType != nil {
+		if err := d.Set("subnet_type", utils.StringValue(resp.Status.Resources.SubnetType)); err != nil {
+			return err
+		}
+	} else {
+		if err := d.Set("subnet_type", ""); err != nil {
+			return err
+		}
 	}
 	if resp.Status.Resources.IPConfig != nil {
 		if err := d.Set("default_gateway_ip", utils.StringValue(resp.Status.Resources.IPConfig.DefaultGatewayIP)); err != nil {
