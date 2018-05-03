@@ -504,28 +504,33 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 		if tsn, ok := dop["tftp_server_name"]; ok {
 			dhcpo.TFTPServerName = utils.String(tsn.(string))
 		}
+		if v, ok := d.GetOk("dhcp_domain_name_server_list"); ok {
+			p := v.([]interface{})
+			if len(p) > 0 {
+				pool := make([]*string, len(p))
+
+				for k, v := range p {
+					pool[k] = utils.String(v.(string))
+				}
+
+				dhcpo.DomainNameServerList = pool
+			}
+		}
+		if v, ok := d.GetOk("dhcp_domain_search_list"); ok {
+			p := v.([]interface{})
+			if len(p) > 0 {
+				pool := make([]*string, len(p))
+
+				for k, v := range p {
+					pool[k] = utils.String(v.(string))
+				}
+
+				dhcpo.DomainSearchList = pool
+			}
+		}
 		ip.DHCPOptions = dhcpo
 	}
-	if v, ok := d.GetOk("dhcp_domain_name_server_list"); ok {
-		p := v.([]interface{})
-		pool := make([]*string, len(p))
 
-		for k, v := range p {
-			pool[k] = utils.String(v.(string))
-		}
-
-		ip.DHCPOptions.DomainNameServerList = pool
-	}
-	if v, ok := d.GetOk("dhcp_domain_search_list"); ok {
-		p := v.([]interface{})
-		pool := make([]*string, len(p))
-
-		for k, v := range p {
-			pool[k] = utils.String(v.(string))
-		}
-
-		ip.DHCPOptions.DomainSearchList = pool
-	}
 	//set vlan_id
 	if v, ok := d.GetOk("vlan_id"); ok {
 		subnet.VlanID = utils.Int64(int64(v.(int)))

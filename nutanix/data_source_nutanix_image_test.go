@@ -55,5 +55,5 @@ data "nutanix_image" "test" {
 	}
 	image_id = "${nutanix_image.test.id}"
 }
-`, r)
+`)
 }

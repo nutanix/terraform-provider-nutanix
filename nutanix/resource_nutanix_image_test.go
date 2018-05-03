@@ -85,5 +85,5 @@ resource "nutanix_image" "test" {
     kind = "image"
   }
 }
-`, r)
+`)
 }
