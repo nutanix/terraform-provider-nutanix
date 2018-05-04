@@ -76,26 +76,26 @@ func testAccNutanixVMConfig(r int) string {
 	return fmt.Sprint(`
 provider "nutanix" {
   username = "admin"
-  password = "Nutanix.123"
-  endpoint = "10.4.147.165"
-  insecure = true
-  port     = 9440
+  password = "Nutanix/1234"
+  endpoint = "10.5.81.134"
+	insecure = true
+	port = 9440
 }
 
 ### Define Script Local Variables
 ### This can be used for any manner of things, but is useful for like clusterid, to store a mapping of targets for provisioning
 ### TODO: Need to make clusters a data source object, such that consumers do not need to manually provision cluster ID
 variable cluster1 {
-  default   = "00056a3a-762d-fc9d-0000-0000000090cf"
+  default   = "000567f3-1921-c722-471d-0cc47ac31055"
 }
 variable ip_haproxy {
-  default   = "10.4.147.166"
+  default   = "10.5.81.135"
 }
 variable ip_app {
-  default   = "10.4.147.167"
+  default   = "10.5.81.136"
 }
 variable ip_db {
-  default   = "10.4.147.168"
+  default   = "10.5.81.137"
 }
 
 ##########################

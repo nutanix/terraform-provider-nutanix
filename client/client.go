@@ -9,9 +9,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -102,16 +100,16 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 	req.Header.Add("Authorization", "Basic "+
 		base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
 
-	log.Printf("REQUEST BODY \n")
-	utils.PrintToJSON(req, "REQUEST BODY")
+	// log.Printf("REQUEST BODY \n")
+	// utils.PrintToJSON(req, "REQUEST BODY")
 
-	requestDump, err := httputil.DumpRequestOut(req, true)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println("################")
-	fmt.Println("REQUEST")
-	fmt.Println(string(requestDump))
+	// requestDump, err := httputil.DumpRequestOut(req, true)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Println("################")
+	// fmt.Println("REQUEST")
+	// fmt.Println(string(requestDump))
 
 	return req, nil
 }
@@ -126,14 +124,14 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 		return err
 	}
 
-	fmt.Println("################")
-	fmt.Println("RESPONSE")
+	// fmt.Println("################")
+	// fmt.Println("RESPONSE")
 
-	responseDump, err := httputil.DumpResponse(resp, true)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(string(responseDump))
+	// responseDump, err := httputil.DumpResponse(resp, true)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// fmt.Println(string(responseDump))
 
 	defer func() {
 		if rerr := resp.Body.Close(); err == nil {
@@ -159,7 +157,6 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 				return err
 			}
 
-			log.Printf("RESPONSE BODY \n")
 			utils.PrintToJSON(v, "RESPONSE BODY")
 		}
 	}
