@@ -750,7 +750,7 @@ type SubnetDefStatus struct {
 	ClusterReference *Reference `json:"cluster_reference,omitempty"`
 
 	// A description for subnet.
-	Description *string `json:"description,omitempty"`
+	Description *string `json:"description"`
 
 	// Any error messages for the subnet, if in an error state.
 	MessageList []*MessageResource `json:"message_list,omitempty"`
