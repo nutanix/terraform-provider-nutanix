@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
@@ -21,7 +20,7 @@ func TestAccNutanixSubnet_basic(t *testing.T) {
 			resource.TestStep{
 				Config: testAccNutanixSubnetConfig(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixSubnetExists("nutanix_subnet.test"),
+					testAccCheckNutanixSubnetExists("nutanix_subnet.next-iac-managed"),
 				),
 			},
 		},
@@ -49,17 +48,12 @@ func testAccCheckNutanixSubnetDestroy(s *terraform.State) error {
 		if rs.Type != "nutanix_subnet" {
 			continue
 		}
-		for {
-			_, err := conn.API.V3.GetSubnet(rs.Primary.ID)
-			if err != nil {
-				if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-					return nil
-				}
-				return err
+		if _, err := resourceNutanixSubnetExists(conn.API, rs.Primary.ID); err != nil {
+			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+				return nil
 			}
-			time.Sleep(3000 * time.Millisecond)
+			return err
 		}
-
 	}
 
 	return nil
@@ -75,36 +69,40 @@ provider "nutanix" {
 	port = 9440
 }
 
-resource "nutanix_subnet" "test" {
-	metadata = {
-		kind = "subnet"
-	}
+resource "nutanix_subnet" "next-iac-managed" {
+  # Can I hard code image to be kind image? 
+  # We're going to make this implict in future API releases, so hard coding it is safe on the plugin side
+  metadata = {
+    kind = "subnet"
+  }
 
-	name = "dou_vlan0_test_%d"
-	description = "Dou Vlan 0"
+  # What cluster will this VLAN live on?
+  cluster_reference = {
+    kind = "cluster"
+    uuid = "000567f3-1921-c722-471d-0cc47ac31055"
+  }
 
-	cluster_reference = {
-	  kind = "cluster"
-	  uuid = "000567f3-1921-c722-471d-0cc47ac31055" 
-  	}
+  # General Information
+  name        = "next-iac-managed-%d"
+  description = "NEXT"
+  vlan_id     = 101
+  subnet_type = "VLAN"
 
-	vlan_id = 201
-	subnet_type = "VLAN"
-	
-	prefix_length = 24
-	default_gateway_ip = "192.168.0.1"
-	subnet_ip = "192.168.0.0"
-	#ip_config_pool_list_ranges = ["192.168.0.5", "192.168.0.100"]
-	
-	dhcp_options {
-		boot_file_name = "bootfile"
-		tftp_server_name = "192.168.0.252"
-		domain_name = "nutanix"
-	}
+  # Managed L3 Networks
+  # This bit is only needed if you intend to turn on IPAM
+  prefix_length = 20
 
-	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
-	dhcp_domain_search_list = ["nutanix.com", "calm.io"]
-	
+  default_gateway_ip = "10.5.80.1"
+  subnet_ip          = "10.5.80.0"
+
+  #dhcp_options {
+  #    boot_file_name   = "bootfile"
+  #    tftp_server_name = "1.2.3.200"
+  #    domain_name      = "nutanix"
+  #}
+
+  dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+  dhcp_domain_search_list      = ["nutanix.com", "eng.nutanix.com"]
 }
 `, r)
 }

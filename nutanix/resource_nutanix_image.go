@@ -11,6 +11,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -48,8 +49,6 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 	// Read Arguments and set request values
 	if v, ok := d.GetOk("api_version"); ok {
 		request.APIVersion = utils.String(v.(string))
-	} else {
-		request.APIVersion = utils.String(Version)
 	}
 
 	if !nok {
@@ -93,13 +92,22 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	UUID := *resp.Metadata.UUID
-
-	status, err := waitForImageProcess(conn, UUID)
-	for status != true {
-		return err
-	}
 	//set terraform state
 	d.SetId(UUID)
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"PENDING", "RUNNING"},
+		Target:     []string{"COMPLETE"},
+		Refresh:    imageStateRefreshFunc(conn, d.Id()),
+		Timeout:    10 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	if _, err := stateConf.WaitForState(); err != nil {
+		return fmt.Errorf(
+			"Error waiting for vm (%s) to create: %s", d.Id(), err)
+	}
 	return resourceNutanixImageRead(d, meta)
 }
 
@@ -252,9 +260,18 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 		return errUpdate
 	}
 
-	status, err := waitForImageProcess(conn, d.Id())
-	for status != true {
-		return err
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"PENDING", "RUNNING"},
+		Target:     []string{"COMPLETE"},
+		Refresh:    imageStateRefreshFunc(conn, d.Id()),
+		Timeout:    10 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	if _, err := stateConf.WaitForState(); err != nil {
+		return fmt.Errorf(
+			"Error waiting for vm (%s) to update: %s", d.Id(), err)
 	}
 
 	return resourceNutanixImageRead(d, meta)
@@ -270,13 +287,18 @@ func resourceNutanixImageDelete(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	status, err := waitForImageProcess(conn, d.Id())
-	for status != true {
-		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-			d.SetId("")
-			return nil
-		}
-		return err
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"PENDING", "RUNNING", "DELETE_IN_PROGRESS", "COMPLETE"},
+		Target:     []string{"DELETED"},
+		Refresh:    imageStateRefreshFunc(conn, d.Id()),
+		Timeout:    10 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	if _, err := stateConf.WaitForState(); err != nil {
+		return fmt.Errorf(
+			"Error waiting for image (%s) to delete: %s", d.Id(), err)
 	}
 
 	d.SetId("")
@@ -381,7 +403,6 @@ func getImageSchema() map[string]*schema.Schema {
 		"name": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
-			ForceNew: true,
 		},
 		"state": &schema.Schema{
 			Type:     schema.TypeString,
@@ -396,18 +417,15 @@ func getImageSchema() map[string]*schema.Schema {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
-			ForceNew: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"kind": &schema.Schema{
 						Type:     schema.TypeString,
 						Required: true,
-						ForceNew: true,
 					},
 					"uuid": &schema.Schema{
 						Type:     schema.TypeString,
 						Required: true,
-						ForceNew: true,
 					},
 					"name": &schema.Schema{
 						Type:     schema.TypeString,
@@ -441,18 +459,15 @@ func getImageSchema() map[string]*schema.Schema {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
-			ForceNew: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"kind": &schema.Schema{
 						Type:     schema.TypeString,
 						Required: true,
-						ForceNew: true,
 					},
 					"uuid": &schema.Schema{
 						Type:     schema.TypeString,
 						Required: true,
-						ForceNew: true,
 					},
 					"name": &schema.Schema{
 						Type:     schema.TypeString,
@@ -648,19 +663,18 @@ func resourceNutanixImageExists(conn *v3.Client, name string) (*string, error) {
 	return imageUUID, nil
 }
 
-func waitForImageProcess(conn *v3.Client, UUID string) (bool, error) {
-	for {
-		imageIntentResponse, err := conn.V3.GetImage(UUID)
+func imageStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		v, err := client.V3.GetImage(uuid)
 
 		if err != nil {
-			return false, err
+			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+				return v, "DELETED", nil
+			}
+			log.Printf("ERROR %s", err)
+			return nil, "", err
 		}
 
-		if utils.StringValue(imageIntentResponse.Status.State) == "COMPLETE" {
-			return true, nil
-		} else if utils.StringValue(imageIntentResponse.Status.State) == "ERROR" {
-			return false, fmt.Errorf("%s", utils.StringValue(imageIntentResponse.Status.MessageList[0].Message))
-		}
-		time.Sleep(3000 * time.Millisecond)
+		return v, *v.Status.State, nil
 	}
 }
