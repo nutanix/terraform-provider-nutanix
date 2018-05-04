@@ -10,6 +10,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -97,14 +98,23 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 
 	uuid := *resp.Metadata.UUID
 
-	// Wait for the VM to be available
-
-	if err := waitForVMProcess(conn, uuid); err != nil {
-		return err
-	}
-
 	// Set terraform state id
 	d.SetId(uuid)
+
+	// Wait for the VM to be available
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"PENDING", "RUNNING"},
+		Target:     []string{"COMPLETE"},
+		Refresh:    vmStateRefreshFunc(conn, d.Id()),
+		Timeout:    10 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	if _, err := stateConf.WaitForState(); err != nil {
+		return fmt.Errorf(
+			"Error waiting for vm (%s) to create: %s", d.Id(), err)
+	}
 
 	// Read the ip
 	if resp.Spec.Resources.NicList != nil && *resp.Spec.Resources.PowerState == "ON" {
@@ -547,8 +557,18 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	if err := waitForVMProcess(conn, d.Id()); err != nil {
-		return err
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"PENDING", "RUNNING"},
+		Target:     []string{"COMPLETE"},
+		Refresh:    vmStateRefreshFunc(conn, d.Id()),
+		Timeout:    10 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	if _, err := stateConf.WaitForState(); err != nil {
+		return fmt.Errorf(
+			"Error waiting for vm (%s) to update: %s", d.Id(), err)
 	}
 
 	return resourceNutanixVirtualMachineRead(d, meta)
@@ -562,8 +582,18 @@ func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	if err := waitForVMProcess(conn, d.Id()); err != nil {
-		return err
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"PENDING", "RUNNING", "DELETE_IN_PROGRESS", "COMPLETE"},
+		Target:     []string{"DELETED"},
+		Refresh:    vmStateRefreshFunc(conn, d.Id()),
+		Timeout:    10 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	if _, err := stateConf.WaitForState(); err != nil {
+		return fmt.Errorf(
+			"Error waiting for vm (%s) to delete: %s", d.Id(), err)
 	}
 
 	d.SetId("")
@@ -941,21 +971,19 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	return nil
 }
 
-func waitForVMProcess(conn *v3.Client, uuid string) error {
-	for {
-		resp, err := conn.V3.GetVM(uuid)
+func vmStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		v, err := client.V3.GetVM(uuid)
+
 		if err != nil {
 			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-				return nil
+				return v, "DELETED", nil
 			}
-			return err
+			log.Printf("ERROR %s", err)
+			return nil, "", err
 		}
 
-		if *resp.Status.State == "COMPLETE" {
-			return nil
-		}
-
-		time.Sleep(3 * time.Second)
+		return v, *v.Status.State, nil
 	}
 }
 

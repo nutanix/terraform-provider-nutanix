@@ -11,6 +11,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -91,12 +92,22 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	UUID := *resp.Metadata.UUID
-
-	if err := waitForImageProcess(conn, UUID); err != nil {
-		return err
-	}
 	//set terraform state
 	d.SetId(UUID)
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"PENDING", "RUNNING"},
+		Target:     []string{"COMPLETE"},
+		Refresh:    imageStateRefreshFunc(conn, d.Id()),
+		Timeout:    10 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	if _, err := stateConf.WaitForState(); err != nil {
+		return fmt.Errorf(
+			"Error waiting for vm (%s) to create: %s", d.Id(), err)
+	}
 	return resourceNutanixImageRead(d, meta)
 }
 
@@ -249,8 +260,18 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 		return errUpdate
 	}
 
-	if err := waitForImageProcess(conn, d.Id()); err != nil {
-		return err
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"PENDING", "RUNNING"},
+		Target:     []string{"COMPLETE"},
+		Refresh:    imageStateRefreshFunc(conn, d.Id()),
+		Timeout:    10 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	if _, err := stateConf.WaitForState(); err != nil {
+		return fmt.Errorf(
+			"Error waiting for vm (%s) to update: %s", d.Id(), err)
 	}
 
 	return resourceNutanixImageRead(d, meta)
@@ -266,8 +287,18 @@ func resourceNutanixImageDelete(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	if err := waitForImageProcess(conn, UUID); err != nil {
-		return err
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"PENDING", "RUNNING", "DELETE_IN_PROGRESS", "COMPLETE"},
+		Target:     []string{"DELETED"},
+		Refresh:    imageStateRefreshFunc(conn, d.Id()),
+		Timeout:    10 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	if _, err := stateConf.WaitForState(); err != nil {
+		return fmt.Errorf(
+			"Error waiting for image (%s) to delete: %s", d.Id(), err)
 	}
 
 	d.SetId("")
@@ -632,21 +663,18 @@ func resourceNutanixImageExists(conn *v3.Client, name string) (*string, error) {
 	return imageUUID, nil
 }
 
-func waitForImageProcess(conn *v3.Client, UUID string) error {
-	for {
-		imageIntentResponse, err := conn.V3.GetImage(UUID)
+func imageStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		v, err := client.V3.GetImage(uuid)
 
 		if err != nil {
 			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-				return nil
+				return v, "DELETED", nil
 			}
-			return err
+			log.Printf("ERROR %s", err)
+			return nil, "", err
 		}
 
-		if *imageIntentResponse.Status.State == "COMPLETE" {
-			return nil
-		}
-
-		time.Sleep(3 * time.Second)
+		return v, *v.Status.State, nil
 	}
 }
