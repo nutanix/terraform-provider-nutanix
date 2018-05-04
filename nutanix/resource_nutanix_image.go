@@ -92,8 +92,7 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 
 	UUID := *resp.Metadata.UUID
 
-	status, err := waitForImageProcess(conn, UUID)
-	for status != true {
+	if err := waitForImageProcess(conn, UUID); err != nil {
 		return err
 	}
 	//set terraform state
@@ -250,8 +249,7 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 		return errUpdate
 	}
 
-	status, err := waitForImageProcess(conn, d.Id())
-	for status != true {
+	if err := waitForImageProcess(conn, d.Id()); err != nil {
 		return err
 	}
 
@@ -268,12 +266,7 @@ func resourceNutanixImageDelete(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	status, err := waitForImageProcess(conn, d.Id())
-	for status != true {
-		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-			d.SetId("")
-			return nil
-		}
+	if err := waitForImageProcess(conn, UUID); err != nil {
 		return err
 	}
 
@@ -379,7 +372,6 @@ func getImageSchema() map[string]*schema.Schema {
 		"name": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
-			ForceNew: true,
 		},
 		"state": &schema.Schema{
 			Type:     schema.TypeString,
@@ -394,18 +386,15 @@ func getImageSchema() map[string]*schema.Schema {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
-			ForceNew: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"kind": &schema.Schema{
 						Type:     schema.TypeString,
 						Required: true,
-						ForceNew: true,
 					},
 					"uuid": &schema.Schema{
 						Type:     schema.TypeString,
 						Required: true,
-						ForceNew: true,
 					},
 					"name": &schema.Schema{
 						Type:     schema.TypeString,
@@ -439,18 +428,15 @@ func getImageSchema() map[string]*schema.Schema {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
-			ForceNew: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"kind": &schema.Schema{
 						Type:     schema.TypeString,
 						Required: true,
-						ForceNew: true,
 					},
 					"uuid": &schema.Schema{
 						Type:     schema.TypeString,
 						Required: true,
-						ForceNew: true,
 					},
 					"name": &schema.Schema{
 						Type:     schema.TypeString,
@@ -646,19 +632,21 @@ func resourceNutanixImageExists(conn *v3.Client, name string) (*string, error) {
 	return imageUUID, nil
 }
 
-func waitForImageProcess(conn *v3.Client, UUID string) (bool, error) {
+func waitForImageProcess(conn *v3.Client, UUID string) error {
 	for {
 		imageIntentResponse, err := conn.V3.GetImage(UUID)
 
 		if err != nil {
-			return false, err
+			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+				return nil
+			}
+			return err
 		}
 
-		if utils.StringValue(imageIntentResponse.Status.State) == "COMPLETE" {
-			return true, nil
-		} else if utils.StringValue(imageIntentResponse.Status.State) == "ERROR" {
-			return false, fmt.Errorf("%s", utils.StringValue(imageIntentResponse.Status.MessageList[0].Message))
+		if *imageIntentResponse.Status.State == "COMPLETE" {
+			return nil
 		}
-		time.Sleep(3000 * time.Millisecond)
+
+		time.Sleep(3 * time.Second)
 	}
 }

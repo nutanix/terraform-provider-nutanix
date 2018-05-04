@@ -98,8 +98,8 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	uuid := *resp.Metadata.UUID
 
 	// Wait for the VM to be available
-	status, err := waitForVMProcess(conn, uuid)
-	for status != true {
+
+	if err := waitForVMProcess(conn, uuid); err != nil {
 		return err
 	}
 
@@ -547,8 +547,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	status, err := waitForVMProcess(conn, d.Id())
-	for status != true {
+	if err := waitForVMProcess(conn, d.Id()); err != nil {
 		return err
 	}
 
@@ -563,12 +562,7 @@ func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	status, err := waitForVMProcess(conn, d.Id())
-	for status != true {
-		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-			d.SetId("")
-			return nil
-		}
+	if err := waitForVMProcess(conn, d.Id()); err != nil {
 		return err
 	}
 
@@ -947,21 +941,22 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	return nil
 }
 
-func waitForVMProcess(conn *v3.Client, uuid string) (bool, error) {
+func waitForVMProcess(conn *v3.Client, uuid string) error {
 	for {
 		resp, err := conn.V3.GetVM(uuid)
 		if err != nil {
-			return false, err
+			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+				return nil
+			}
+			return err
 		}
 
-		if utils.StringValue(resp.Status.State) == "COMPLETE" {
-			return true, nil
-		} else if utils.StringValue(resp.Status.State) == "ERROR" {
-			return false, fmt.Errorf("Error while waiting for resource to be up, reason: %s", utils.StringValue(resp.Status.MessageList[0].Message))
+		if *resp.Status.State == "COMPLETE" {
+			return nil
 		}
-		time.Sleep(3000 * time.Millisecond)
+
+		time.Sleep(3 * time.Second)
 	}
-	// return false, nil
 }
 
 func waitForIP(conn *v3.Client, uuid string, d *schema.ResourceData) error {
@@ -992,7 +987,6 @@ func getVMSchema() map[string]*schema.Schema {
 		"metadata": &schema.Schema{
 			Type:     schema.TypeMap,
 			Required: true,
-			ForceNew: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"last_update_time": &schema.Schema{
@@ -1003,7 +997,6 @@ func getVMSchema() map[string]*schema.Schema {
 					"kind": &schema.Schema{
 						Type:     schema.TypeString,
 						Required: true,
-						ForceNew: true,
 					},
 					"uuid": &schema.Schema{
 						Type:     schema.TypeString,
@@ -1042,13 +1035,11 @@ func getVMSchema() map[string]*schema.Schema {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
-			ForceNew: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"kind": &schema.Schema{
 						Type:     schema.TypeString,
 						Required: true,
-						ForceNew: true,
 					},
 					"uuid": &schema.Schema{
 						Type:     schema.TypeString,
@@ -1072,12 +1063,10 @@ func getVMSchema() map[string]*schema.Schema {
 					"kind": &schema.Schema{
 						Type:     schema.TypeString,
 						Required: true,
-						ForceNew: true,
 					},
 					"uuid": &schema.Schema{
 						Type:     schema.TypeString,
 						Required: true,
-						ForceNew: true,
 					},
 					"name": &schema.Schema{
 						Type:     schema.TypeString,
@@ -1095,7 +1084,6 @@ func getVMSchema() map[string]*schema.Schema {
 		"name": &schema.Schema{
 			Type:     schema.TypeString,
 			Required: true,
-			ForceNew: true,
 		},
 		"description": &schema.Schema{
 			Type:     schema.TypeString,
@@ -1111,12 +1099,10 @@ func getVMSchema() map[string]*schema.Schema {
 					"kind": &schema.Schema{
 						Type:     schema.TypeString,
 						Required: true,
-						ForceNew: true,
 					},
 					"uuid": &schema.Schema{
 						Type:     schema.TypeString,
 						Required: true,
-						ForceNew: true,
 					},
 					"name": &schema.Schema{
 						Type:     schema.TypeString,
@@ -1130,18 +1116,15 @@ func getVMSchema() map[string]*schema.Schema {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
-			ForceNew: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"kind": &schema.Schema{
 						Type:     schema.TypeString,
 						Required: true,
-						ForceNew: true,
 					},
 					"uuid": &schema.Schema{
 						Type:     schema.TypeString,
 						Required: true,
-						ForceNew: true,
 					},
 					"name": &schema.Schema{
 						Type:     schema.TypeString,
