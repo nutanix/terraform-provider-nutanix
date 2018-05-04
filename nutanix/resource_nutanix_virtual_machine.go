@@ -696,16 +696,13 @@ func getMetadaAttributes(d *schema.ResourceData, metadata *v3.VMMetadata) error 
 		metadata.Name = utils.String(v.(string))
 	}
 	if v, ok := d.GetOk("categories"); ok {
-		p := v.([]interface{})
-		if len(p) > 0 {
-			c := p[0].(map[string]interface{})
-			labels := map[string]string{}
+		c := v.(map[string]interface{})
+		labels := map[string]string{}
 
-			for k, v := range c {
-				labels[k] = v.(string)
-			}
-			metadata.Categories = labels
+		for k, v := range c {
+			labels[k] = v.(string)
 		}
+		metadata.Categories = labels
 	}
 	if p, ok := d.GetOk("project_reference"); ok {
 		pr := p.(map[string]interface{})
