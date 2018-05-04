@@ -996,6 +996,7 @@ func subnetStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefres
 			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 				return v, "DELETED", nil
 			}
+			log.Printf("ERROR %s", err)
 			return nil, "", err
 		}
 
