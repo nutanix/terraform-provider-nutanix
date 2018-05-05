@@ -123,8 +123,6 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	utils.PrintToJSON(resp, "[DEBUG] Read Image")
-
 	// set metadata values
 	metadata := make(map[string]interface{})
 	metadata["last_update_time"] = resp.Metadata.LastUpdateTime.String()
