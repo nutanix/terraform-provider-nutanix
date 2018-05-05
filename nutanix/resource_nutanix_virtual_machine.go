@@ -138,8 +138,6 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	utils.PrintToJSON(resp, "VMRead Response")
-
 	// set metadata values
 	metadata := make(map[string]interface{})
 	metadata["last_update_time"] = resp.Metadata.LastUpdateTime.String()
@@ -155,19 +153,31 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	if err := d.Set("categories", resp.Metadata.Categories); err != nil {
 		return err
 	}
-	pr := make(map[string]interface{})
-	pr["kind"] = utils.StringValue(resp.Metadata.ProjectReference.Kind)
-	pr["name"] = utils.StringValue(resp.Metadata.ProjectReference.Name)
-	pr["uuid"] = utils.StringValue(resp.Metadata.ProjectReference.UUID)
-	if err := d.Set("project_reference", pr); err != nil {
-		return err
+	if resp.Metadata.ProjectReference != nil {
+		pr := make(map[string]interface{})
+		pr["kind"] = utils.StringValue(resp.Metadata.ProjectReference.Kind)
+		pr["name"] = utils.StringValue(resp.Metadata.ProjectReference.Name)
+		pr["uuid"] = utils.StringValue(resp.Metadata.ProjectReference.UUID)
+		if err := d.Set("project_reference", pr); err != nil {
+			return err
+		}
+	} else {
+		if err := d.Set("project_reference", make(map[string]interface{})); err != nil {
+			return err
+		}
 	}
-	or := make(map[string]interface{})
-	or["kind"] = utils.StringValue(resp.Metadata.OwnerReference.Kind)
-	or["name"] = utils.StringValue(resp.Metadata.OwnerReference.Name)
-	or["uuid"] = utils.StringValue(resp.Metadata.OwnerReference.UUID)
-	if err := d.Set("owner_reference", or); err != nil {
-		return err
+	if resp.Metadata.OwnerReference != nil {
+		or := make(map[string]interface{})
+		or["kind"] = utils.StringValue(resp.Metadata.OwnerReference.Kind)
+		or["name"] = utils.StringValue(resp.Metadata.OwnerReference.Name)
+		or["uuid"] = utils.StringValue(resp.Metadata.OwnerReference.UUID)
+		if err := d.Set("owner_reference", or); err != nil {
+			return err
+		}
+	} else {
+		if err := d.Set("owner_reference", make(map[string]interface{})); err != nil {
+			return err
+		}
 	}
 	if err := d.Set("api_version", utils.StringValue(resp.APIVersion)); err != nil {
 		return err
@@ -179,22 +189,34 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		return err
 	}
 	// set availability zone reference values
-	availabilityZoneReference := make(map[string]interface{})
 	if resp.Status.AvailabilityZoneReference != nil {
-		availabilityZoneReference["kind"] = utils.StringValue(resp.Status.AvailabilityZoneReference.Kind)
-		availabilityZoneReference["name"] = utils.StringValue(resp.Status.AvailabilityZoneReference.Name)
-		availabilityZoneReference["uuid"] = utils.StringValue(resp.Status.AvailabilityZoneReference.UUID)
-	}
-	if err := d.Set("availability_zone_reference", availabilityZoneReference); err != nil {
-		return err
+		availabilityZoneReference := make(map[string]interface{})
+		if resp.Status.AvailabilityZoneReference != nil {
+			availabilityZoneReference["kind"] = utils.StringValue(resp.Status.AvailabilityZoneReference.Kind)
+			availabilityZoneReference["name"] = utils.StringValue(resp.Status.AvailabilityZoneReference.Name)
+			availabilityZoneReference["uuid"] = utils.StringValue(resp.Status.AvailabilityZoneReference.UUID)
+		}
+		if err := d.Set("availability_zone_reference", availabilityZoneReference); err != nil {
+			return err
+		}
+	} else {
+		if err := d.Set("availability_zone_reference", make(map[string]interface{})); err != nil {
+			return err
+		}
 	}
 	// set cluster reference values
-	clusterReference := make(map[string]interface{})
-	clusterReference["kind"] = utils.StringValue(resp.Status.ClusterReference.Kind)
-	clusterReference["name"] = utils.StringValue(resp.Status.ClusterReference.Name)
-	clusterReference["uuid"] = utils.StringValue(resp.Status.ClusterReference.UUID)
-	if err := d.Set("cluster_reference", clusterReference); err != nil {
-		return err
+	if resp.Status.ClusterReference != nil {
+		clusterReference := make(map[string]interface{})
+		clusterReference["kind"] = utils.StringValue(resp.Status.ClusterReference.Kind)
+		clusterReference["name"] = utils.StringValue(resp.Status.ClusterReference.Name)
+		clusterReference["uuid"] = utils.StringValue(resp.Status.ClusterReference.UUID)
+		if err := d.Set("cluster_reference", clusterReference); err != nil {
+			return err
+		}
+	} else {
+		if err := d.Set("cluster_reference", make(map[string]interface{})); err != nil {
+			return err
+		}
 	}
 	// set message list values
 	if resp.Status.MessageList != nil {
@@ -265,14 +287,24 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		if err := d.Set("nic_list", nicLists); err != nil {
 			return err
 		}
+	} else {
+		if err := d.Set("nic_list", make([]map[string]interface{}, 0)); err != nil {
+			return err
+		}
 	}
 	// set host_reference value
-	hostRef := make(map[string]interface{})
-	hostRef["kind"] = utils.StringValue(resp.Status.Resources.HostReference.Kind)
-	hostRef["name"] = utils.StringValue(resp.Status.Resources.HostReference.Name)
-	hostRef["uuid"] = utils.StringValue(resp.Status.Resources.HostReference.UUID)
-	if err := d.Set("host_reference", hostRef); err != nil {
-		return err
+	if resp.Status.Resources.HostReference != nil {
+		hostRef := make(map[string]interface{})
+		hostRef["kind"] = utils.StringValue(resp.Status.Resources.HostReference.Kind)
+		hostRef["name"] = utils.StringValue(resp.Status.Resources.HostReference.Name)
+		hostRef["uuid"] = utils.StringValue(resp.Status.Resources.HostReference.UUID)
+		if err := d.Set("host_reference", hostRef); err != nil {
+			return err
+		}
+	} else {
+		if err := d.Set("host_reference", make(map[string]interface{})); err != nil {
+			return err
+		}
 	}
 	// set guest_os_id value
 	if err := d.Set("guest_os_id", resp.Status.Resources.GuestOsID); err != nil {
@@ -305,6 +337,10 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		if err := d.Set("nutanix_guest_tools", nutanixGuestTools); err != nil {
 			return err
 		}
+	} else {
+		if err := d.Set("nutanix_guest_tools", make(map[string]interface{})); err != nil {
+			return err
+		}
 	}
 	// set num_vcpus_per_socket value
 	if err := d.Set("num_vcpus_per_socket", resp.Status.Resources.NumVcpusPerSocket); err != nil {
@@ -335,6 +371,10 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		if err := d.Set("gpu_list", gpuList); err != nil {
 			return err
 		}
+	} else {
+		if err := d.Set("gpu_list", make([]map[string]interface{}, 0)); err != nil {
+			return err
+		}
 	}
 
 	if resp.Status.Resources.ParentReference != nil {
@@ -346,6 +386,9 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		if err := d.Set("parent_reference", parentRef); err != nil {
 			return err
 		}
+	}
+	if err := d.Set("parent_reference", make(map[string]interface{})); err != nil {
+		return err
 	}
 	// set memory_size_mib value
 	if err := d.Set("memory_size_mib", resp.Status.Resources.MemorySizeMib); err != nil {
@@ -374,6 +417,10 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		bootDevice["mac_address"] = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.MacAddress)
 		// set boot_device value
 		if err := d.Set("boot_device", bootDevice); err != nil {
+			return err
+		}
+	} else {
+		if err := d.Set("boot_device", make(map[string]interface{})); err != nil {
 			return err
 		}
 	}
@@ -473,6 +520,10 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		}
 		// set disk_list value
 		if err := d.Set("disk_list", diskList); err != nil {
+			return err
+		}
+	} else {
+		if err := d.Set("disk_list", make([]map[string]interface{}, 0)); err != nil {
 			return err
 		}
 	}

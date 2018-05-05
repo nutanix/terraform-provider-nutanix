@@ -399,3 +399,82 @@ func (op Operations) UpdateImage(UUID string, body *ImageIntentInput) (*ImageInt
 }
 
 //TODO: Ask for images file put & get requests.
+
+/*GetCluster gets a CLUSTER
+ * This operation gets a CLUSTER.
+ *
+ * @param uuid The UUID of the entity.
+ * @return *ImageIntentResponse
+ */
+// func (op Operations) GetCluster(UUID string) (*ImageIntentResponse, error) {
+// 	ctx := context.TODO()
+
+// 	path := fmt.Sprintf("/images/%s", UUID)
+
+// 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	imageIntentResponse := new(ImageIntentResponse)
+
+// 	err = op.client.Do(ctx, req, imageIntentResponse)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return imageIntentResponse, nil
+// }
+
+/*ListCluster gets a list of CLUSTERS
+ * This operation gets a list of CLUSTERS, allowing for sorting and pagination. Note: Entities that have not been created successfully are not listed.
+ *
+ * @param getEntitiesRequest
+ * @return *ClusterListIntentResponse
+ */
+func (op Operations) ListCluster(getEntitiesRequest *ClusterListMetadataOutput) (*ClusterListIntentResponse, error) {
+	ctx := context.TODO()
+	path := "/clusters/list"
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
+
+	if err != nil {
+		return nil, err
+	}
+
+	clusterList := new(ClusterListIntentResponse)
+	err = op.client.Do(ctx, req, clusterList)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return clusterList, nil
+}
+
+/*UpdateImage updates a CLUSTER
+ * This operation submits a request to update a CLUSTER based on the input parameters.
+ *
+ * @param uuid The UUID of the entity.
+ * @param body
+ * @return *ImageIntentResponse
+ */
+// func (op Operations) UpdateImage(UUID string, body *ImageIntentInput) (*ImageIntentResponse, error) {
+// 	ctx := context.TODO()
+
+// 	path := fmt.Sprintf("/images/%s", UUID)
+
+// 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	imageIntentResponse := new(ImageIntentResponse)
+
+// 	err = op.client.Do(ctx, req, imageIntentResponse)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return imageIntentResponse, nil
+// }
