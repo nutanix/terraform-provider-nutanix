@@ -158,9 +158,12 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	or := make(map[string]interface{})
-	or["kind"] = utils.StringValue(resp.Metadata.OwnerReference.Kind)
-	or["name"] = utils.StringValue(resp.Metadata.OwnerReference.Name)
-	or["uuid"] = utils.StringValue(resp.Metadata.OwnerReference.UUID)
+	if resp.Metadata.OwnerReference != nil {
+		or["kind"] = utils.StringValue(resp.Metadata.OwnerReference.Kind)
+		or["name"] = utils.StringValue(resp.Metadata.OwnerReference.Name)
+		or["uuid"] = utils.StringValue(resp.Metadata.OwnerReference.UUID)
+
+	}
 	if err := d.Set("owner_reference", or); err != nil {
 		return err
 	}
@@ -185,9 +188,11 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	// set cluster reference values
 	clusterReference := make(map[string]interface{})
-	clusterReference["kind"] = utils.StringValue(resp.Status.ClusterReference.Kind)
-	clusterReference["name"] = utils.StringValue(resp.Status.ClusterReference.Name)
-	clusterReference["uuid"] = utils.StringValue(resp.Status.ClusterReference.UUID)
+	if resp.Status.ClusterReference != nil {
+		clusterReference["kind"] = utils.StringValue(resp.Status.ClusterReference.Kind)
+		clusterReference["name"] = utils.StringValue(resp.Status.ClusterReference.Name)
+		clusterReference["uuid"] = utils.StringValue(resp.Status.ClusterReference.UUID)
+	}
 	if err := d.Set("cluster_reference", clusterReference); err != nil {
 		return err
 	}
@@ -217,18 +222,20 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		if err := d.Set("subnet_ip", utils.StringValue(resp.Status.Resources.IPConfig.SubnetIP)); err != nil {
 			return err
 		}
+		address := make(map[string]interface{})
+		port := int64(0)
 		if resp.Status.Resources.IPConfig.DHCPServerAddress != nil {
 			//set ip_config.dhcp_server_address
-			address := make(map[string]interface{})
 			address["ip"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.IP)
 			address["fqdn"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.FQDN)
 			address["ipv6"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.IPV6)
-			if err := d.Set("dhcp_server_address", address); err != nil {
-				return err
-			}
-			if err := d.Set("dhcp_server_address_port", utils.Int64Value(resp.Status.Resources.IPConfig.DHCPServerAddress.Port)); err != nil {
-				return err
-			}
+			port = utils.Int64Value(resp.Status.Resources.IPConfig.DHCPServerAddress.Port)
+		}
+		if err := d.Set("dhcp_server_address", address); err != nil {
+			return err
+		}
+		if err := d.Set("dhcp_server_address_port", port); err != nil {
+			return err
 		}
 		if resp.Status.Resources.IPConfig.PoolList != nil {
 			pl := resp.Status.Resources.IPConfig.PoolList
@@ -287,7 +294,6 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	} else {
-		log.Print("No IPCONFIG recieved in the response")
 		if err := d.Set("default_gateway_ip", ""); err != nil {
 			return err
 		}
