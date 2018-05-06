@@ -140,13 +140,15 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	or := make(map[string]interface{})
-	or["kind"] = utils.StringValue(resp.Metadata.OwnerReference.Kind)
-	or["name"] = utils.StringValue(resp.Metadata.OwnerReference.Name)
-	or["uuid"] = utils.StringValue(resp.Metadata.OwnerReference.UUID)
+	if resp.Metadata.OwnerReference != nil {
+		or["kind"] = utils.StringValue(resp.Metadata.OwnerReference.Kind)
+		or["name"] = utils.StringValue(resp.Metadata.OwnerReference.Name)
+		or["uuid"] = utils.StringValue(resp.Metadata.OwnerReference.UUID)
+
+	}
 	if err := d.Set("owner_reference", or); err != nil {
 		return err
 	}
-
 	if err := d.Set("api_version", utils.StringValue(resp.APIVersion)); err != nil {
 		return err
 	}
@@ -156,7 +158,6 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("description", utils.StringValue(resp.Status.Description)); err != nil {
 		return err
 	}
-
 	// set availability zone reference values
 	availabilityZoneReference := make(map[string]interface{})
 	if resp.Status.AvailabilityZoneReference != nil {
@@ -168,29 +169,24 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 	// set cluster reference values
+	clusterReference := make(map[string]interface{})
 	if resp.Status.ClusterReference != nil {
-		clusterReference := make(map[string]interface{})
 		clusterReference["kind"] = utils.StringValue(resp.Status.ClusterReference.Kind)
 		clusterReference["name"] = utils.StringValue(resp.Status.ClusterReference.Name)
 		clusterReference["uuid"] = utils.StringValue(resp.Status.ClusterReference.UUID)
-		if err := d.Set("cluster_reference", clusterReference); err != nil {
-			return err
-		}
+	}
+	if err := d.Set("cluster_reference", clusterReference); err != nil {
+		return err
 	}
 
-	// set message list values
-	if resp.Status.MessageList != nil {
-		messages := make([]map[string]interface{}, len(resp.Status.MessageList))
-		for k, v := range resp.Status.MessageList {
-			message := make(map[string]interface{})
-			message["message"] = utils.StringValue(v.Message)
-			message["reason"] = utils.StringValue(v.Reason)
-			message["details"] = v.Details
-			messages[k] = message
-		}
-		if err := d.Set("message_list", messages); err != nil {
-			return err
-		}
+	if err := d.Set("api_version", utils.StringValue(resp.APIVersion)); err != nil {
+		return err
+	}
+	if err := d.Set("name", utils.StringValue(resp.Status.Name)); err != nil {
+		return err
+	}
+	if err := d.Set("description", utils.StringValue(resp.Status.Description)); err != nil {
+		return err
 	}
 
 	// set state value
