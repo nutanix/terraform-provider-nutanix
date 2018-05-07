@@ -51,7 +51,7 @@ type Credentials struct {
 func NewClient(credentials *Credentials) (*Client, error) {
 
 	transCfg := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // ignore expired SSL certificates
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: credentials.Insecure}, // ignore expired SSL certificates
 	}
 
 	httpClient := http.DefaultClient
@@ -100,8 +100,7 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 	req.Header.Add("Authorization", "Basic "+
 		base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
 
-	// log.Printf("REQUEST BODY \n")
-	// utils.PrintToJSON(req, "REQUEST BODY")
+	utils.PrintToJSON(req, "REQUEST BODY")
 
 	// requestDump, err := httputil.DumpRequestOut(req, true)
 	// if err != nil {
@@ -156,7 +155,6 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 			if err != nil {
 				return err
 			}
-
 			utils.PrintToJSON(v, "RESPONSE BODY")
 		}
 	}
@@ -171,6 +169,11 @@ func CheckResponse(r *http.Response) error {
 	}
 
 	data, err := ioutil.ReadAll(r.Body)
+
+	if err != nil {
+		return err
+	}
+
 	res := &ErrorResponse{}
 	err = json.Unmarshal(data, res)
 	if err != nil {
@@ -181,15 +184,16 @@ func CheckResponse(r *http.Response) error {
 	return fmt.Errorf("Error: %s", string(pretty))
 }
 
-// ErrorResponse ...
+//ErrorResponse ...
 type ErrorResponse struct {
-	ApiVersion  string            `json:"api_version"`
+	APIVersion  string            `json:"api_version"`
 	Code        int64             `json:"code"`
 	Kind        string            `json:"kind"`
 	MessageList []MessageResource `json:"message_list"`
 	State       string            `json:"state"`
 }
 
+//MessageResource ...
 type MessageResource struct {
 
 	// Custom key-value details relevant to the status.
@@ -205,7 +209,7 @@ type MessageResource struct {
 func (r *ErrorResponse) Error() string {
 	err := ""
 	for key, value := range r.MessageList {
-		err = fmt.Sprintf("%s: %s", key, value)
+		err = fmt.Sprintf("%d: {message:%s, reason:%s }", key, value.Message, value.Reason)
 	}
 	return err
 }
