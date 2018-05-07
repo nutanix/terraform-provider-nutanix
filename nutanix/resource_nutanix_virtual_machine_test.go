@@ -74,14 +74,6 @@ func testAccCheckNutanixVirtualMachineDestroy(s *terraform.State) error {
 
 func testAccNutanixVMConfig(r int) string {
 	return fmt.Sprint(`
-provider "nutanix" {
-  username = "admin"
-  password = "Nutanix/1234"
-  endpoint = "10.5.81.134"
-	insecure = true
-	port = 9440
-}
-
 ### Define Script Local Variables
 ### This can be used for any manner of things, but is useful for like clusterid, to store a mapping of targets for provisioning
 ### TODO: Need to make clusters a data source object, such that consumers do not need to manually provision cluster ID
