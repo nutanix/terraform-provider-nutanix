@@ -53,6 +53,7 @@ func Provider() terraform.ResourceProvider {
 			"nutanix_virtual_machine": resourceNutanixVirtualMachine(),
 			"nutanix_image":           resourceNutanixImage(),
 			"nutanix_subnet":          resourceNutanixSubnet(),
+			"nutanix_category_key":    resourceNutanixCategoryKey(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
