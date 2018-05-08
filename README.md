@@ -1,6 +1,8 @@
 # Terraform Nutanix Provider
 Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
+NOTE: terraform-provider-nutanix is currently tech preview as of 9 May 2018. See "Current Development Status" below.
+
 [![Waffle.io - Columns and their card count](https://badge.waffle.io/b58a88b8face3407eccdc79e19d39058d28754b65f6df7513ed23293ef387491a5f538b65dffd5b12ca0201c6d4b50ce.svg?columns=all)](https://waffle.io/nutanix/terraform-provider-nutanix)
 
 ## Community
@@ -8,6 +10,39 @@ Nutanix is taking an inclusive approach to developing this new feature and welco
 
 For a slack invite, please contact Terraform@nutanix.com from your business address, and we'll add you.
 
+## Current Development Status
+**Completed**
+* Finished VM resource.
+** VM resource and VM resource test.
+* Finished subnet resource.
+** Subnet resource and Subnet resource test.
+* Finished Image resource
+** Image resource and image resource test.
+* Finished VM data source.
+** VM data source and VM data source test.
+* Finished subnet data source.
+** Subnet data source and Subnet data source test.
+* Finished Image data source
+** Image data source and image data source test.
+* Terraform Tech Preview Demo/Checkpoint.
+** VM.
+** Subnet.
+ 
+**Currently working on: (2nd Milestone)**
+* Cluster data source.
+* Clusters data source.
+* Virtual Machines data source.
+* Category keys resource.
+* Category values resource.
+* Network security group resource.
+ 
+**Features: (3rd Milestone)**
+* Volume group resource and data source.
+* File server resource and data source.
+* Cluster resource.
+ 
+**Issues**
+* See open issues on GitHub issues
 
 ## Requirements
 ### Provider Use
