@@ -12,25 +12,25 @@ For a slack invite, please contact Terraform@nutanix.com from your business addr
 
 ## Current Development Status
 **Completed**
-[x] Finished VM resource (VM resource and VM resource test.)
-[x] Finished subnet resource (Subnet resource and Subnet resource test.)
-[x] Finished Image resource (Image resource and image resource test.)
-[x] Finished VM data source (VM data source and VM data source test.)
-[x] Finished subnet data source (Subnet data source and Subnet data source test)
-[x] Finished Image data source (Image data source and image data source test.)
+- [x] Finished VM resource (VM resource and VM resource test.)
+- [x] Finished subnet resource (Subnet resource and Subnet resource test.)
+- [x] Finished Image resource (Image resource and image resource test.)
+- [x] Finished VM data source (VM data source and VM data source test.)
+- [x] Finished subnet data source (Subnet data source and Subnet data source test)
+- [x] Finished Image data source (Image data source and image data source test.)
  
 **Currently working on: (2nd Milestone)**
-[ ] Cluster data source.
-[ ] Clusters data source.
-[ ] Virtual Machines data source.
-[ ] Category keys resource.
-[ ] Category values resource.
-[ ] Network security group resource.
+- [ ] Cluster data source.
+- [ ] Clusters data source.
+- [ ] Virtual Machines data source.
+- [ ] Category keys resource.
+- [ ] Category values resource.
+- [ ] Network security group resource.
  
 **Features: (3rd Milestone)**
-[ ] Volume group resource and data source.
-[ ] File server resource and data source.
-[ ] Cluster resource.
+- [ ] Volume group resource and data source.
+- [ ] File server resource and data source.
+- [ ] Cluster resource.
  
 **Issues**
 * See open issues on GitHub issues
