@@ -13,20 +13,17 @@ For a slack invite, please contact Terraform@nutanix.com from your business addr
 ## Current Development Status
 **Completed**
 * Finished VM resource.
-** VM resource and VM resource test.
+ * VM resource and VM resource test.
 * Finished subnet resource.
-** Subnet resource and Subnet resource test.
+ * Subnet resource and Subnet resource test.
 * Finished Image resource
-** Image resource and image resource test.
+ * Image resource and image resource test.
 * Finished VM data source.
-** VM data source and VM data source test.
+ * VM data source and VM data source test.
 * Finished subnet data source.
-** Subnet data source and Subnet data source test.
+ * Subnet data source and Subnet data source test.
 * Finished Image data source
-** Image data source and image data source test.
-* Terraform Tech Preview Demo/Checkpoint.
-** VM.
-** Subnet.
+ * Image data source and image data source test.
  
 **Currently working on: (2nd Milestone)**
 * Cluster data source.
