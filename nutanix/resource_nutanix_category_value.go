@@ -56,10 +56,10 @@ func resourceNutanixCategoryValueCreateOrUpdate(resourceData *schema.ResourceDat
 		return err
 	}
 
-	n := *resp.Name
+	v := *resp.Value
 
 	// set terraform state
-	resourceData.SetId(n)
+	resourceData.SetId(v)
 
 	return resourceNutanixCategoryValueRead(resourceData, meta)
 }
@@ -73,6 +73,8 @@ func resourceNutanixCategoryValueRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Please provide the required attributes name")
 	}
 
+	fmt.Printf("NAME: %s, ID:%s", name.(string), d.Id())
+
 	// Get client connection
 	conn := meta.(*NutanixClient).API
 
@@ -80,6 +82,7 @@ func resourceNutanixCategoryValueRead(d *schema.ResourceData, meta interface{}) 
 	resp, err := conn.V3.GetCategoryValue(name.(string), d.Id())
 
 	if err != nil {
+		fmt.Println("ERROR HERE:")
 		return err
 	}
 
@@ -110,6 +113,8 @@ func resourceNutanixCategoryValueDelete(d *schema.ResourceData, meta interface{}
 	if !nameOK {
 		return fmt.Errorf("Please provide the required attributes name")
 	}
+
+	fmt.Println("HELLO DELETE:")
 
 	log.Printf("Destroying the category with the name %s", d.Id())
 	fmt.Printf("Destroying the category with the name %s", d.Id())
