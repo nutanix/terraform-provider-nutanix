@@ -2,7 +2,6 @@ package nutanix
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"testing"
 	"time"
@@ -50,10 +49,9 @@ func testAccCheckNutanixCategoryValueDestroy(s *terraform.State) error {
 			continue
 		}
 		for {
-			log.Println(rs.Primary.Attributes)
-			_, err := conn.API.V3.GetCategoryValue("app-suppport-1", rs.Primary.ID)
+			_, err := conn.API.V3.GetCategoryValue(rs.Primary.Attributes["name"], rs.Primary.ID)
 			if err != nil {
-				if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+				if strings.Contains(fmt.Sprint(err), "CATEGORY_NAME_VALUE_MISMATCH") {
 					return nil
 				}
 				return err
@@ -75,7 +73,7 @@ resource "nutanix_category_key" "test-category-key"{
 
 
 resource "nutanix_category_value" "test"{
-    name = "${test-category-key.name}"
+    name = "${nutanix_category_key.test-category-key.id}"
 	description = "Test Category Value"
 	value = "test-value"
 }

@@ -11,10 +11,10 @@ import (
 
 func resourceNutanixCategoryKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceNutanixCategoryKeyKeyCreateOrUpdate,
-		Read:   resourceNutanixCategoryKeyKeyRead,
-		Update: resourceNutanixCategoryKeyKeyCreateOrUpdate,
-		Delete: resourceNutanixCategoryKeyKeyDelete,
+		Create: resourceNutanixCategoryKeyCreateOrUpdate,
+		Read:   resourceNutanixCategoryKeyRead,
+		Update: resourceNutanixCategoryKeyCreateOrUpdate,
+		Delete: resourceNutanixCategoryKeyDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -22,7 +22,7 @@ func resourceNutanixCategoryKey() *schema.Resource {
 	}
 }
 
-func resourceNutanixCategoryKeyKeyCreateOrUpdate(resourceData *schema.ResourceData, meta interface{}) error {
+func resourceNutanixCategoryKeyCreateOrUpdate(resourceData *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating CategoryKey: %s", resourceData.Get("name").(string))
 
 	conn := meta.(*NutanixClient).API
@@ -59,10 +59,10 @@ func resourceNutanixCategoryKeyKeyCreateOrUpdate(resourceData *schema.ResourceDa
 	// set terraform state
 	resourceData.SetId(n)
 
-	return resourceNutanixCategoryKeyKeyRead(resourceData, meta)
+	return resourceNutanixCategoryKeyRead(resourceData, meta)
 }
 
-func resourceNutanixCategoryKeyKeyRead(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixCategoryKeyRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading CategoryKey: %s", d.Get("name").(string))
 
 	// Get client connection
@@ -94,7 +94,7 @@ func resourceNutanixCategoryKeyKeyRead(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func resourceNutanixCategoryKeyKeyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixCategoryKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*NutanixClient).API
 
 	log.Printf("Destroying the category with the name %s", d.Id())
