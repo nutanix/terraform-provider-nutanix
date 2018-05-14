@@ -557,7 +557,7 @@ func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceNutanixSubnetExists(conn *v3.Client, name string) (*string, error) {
-	log.Printf("[DEBUG] Get Subnet Existance : %s", name)
+	log.Printf("[DEBUG] Get Subnet Existence: %s", name)
 
 	subnetEntities := &v3.SubnetListMetadata{}
 	var subnetUUID *string
