@@ -109,8 +109,67 @@ We'll be working with HashiCorp as code stabilizes to upstream this properly, at
 
 ## Install Dependencies
 
+* Terraform
+
+### For developing or build from source
+
+#### Golang
+
+https://github.com/golang/go
+
+#### Dep: Go dependency management tool
+
+On MacOS you can install or upgrade to the latest released version with Homebrew:
+
+```sh
+$ brew install dep
+$ brew upgrade dep
+```
+
+On other platforms you can use the `install.sh` script:
+
+```sh
+$ curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+```
+
+It will install into your `$GOPATH/bin` directory by default or any other directory you specify using the `INSTALL_DIRECTORY` environment variable.
+
+If your platform is not supported, you'll need to build it manually or let the team (go/dep team) know and we'll consider adding your platform
+to the release builds.
+
+More Info: https://github.com/golang/dep
+
 ## Install from source
 
 ## Install from package
 
 ## Building/Developing Provider
+
+Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix`
+
+```sh
+$ mkdir $GOPATH/src/github.com/terraform-providers && cd "$_" #if you already created it only change directory
+
+$ git clone https://github.com/nutanix/terraform-provider-nutanix.git
+```
+
+Enter the provider directory and build the provider
+
+```sh
+$ cd $GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix
+$ dep ensure #install dependencies
+$ cd cmd
+$ make build
+```
+
+This will create a binary file `terraform-provider-nutanix` you can copy to your terraform specific project.
+
+Alternative build: with our demo
+
+```sh
+$ cd $GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix
+$ dep ensure #install dependencies
+$ go build -o examples/terraform-provider-nutanix
+$ cd examples
+$ terraform init #to try out our demo
+```

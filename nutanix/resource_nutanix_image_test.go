@@ -67,14 +67,6 @@ func testAccCheckNutanixImageDestroy(s *terraform.State) error {
 
 func testAccNutanixImageConfig(r int32) string {
 	return fmt.Sprintf(`
-provider "nutanix" {
-  username = "admin"
-  password = "Nutanix/1234"
-  endpoint = "10.5.81.134"
-  insecure = true
-  port = 9440
-}
-
 resource "nutanix_image" "test" {
   name        = "CentOS-LAMP-APP.qcow2"
   description = "CentOS LAMP - App"

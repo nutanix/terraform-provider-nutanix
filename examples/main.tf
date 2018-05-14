@@ -41,6 +41,37 @@ resource "nutanix_virtual_machine" "vm1" {
   }]
 }
 
+resource "nutanix_virtual_machine" "vm2" {
+  metadata {
+    kind = "vm"
+    name = "metadata-name-test-dou"
+  }
+
+  name = "test-dou"
+
+  cluster_reference = {
+    kind = "cluster"
+    uuid = "${var.clusterid}"
+  }
+
+  num_vcpus_per_socket = 1
+  num_sockets          = 1
+  memory_size_mib      = 2048
+  power_state          = "ON"
+
+  nic_list = [{
+    subnet_reference = {
+      kind = "subnet"
+      uuid = "${nutanix_subnet.test.id}"
+    }
+
+    ip_endpoint_list = {
+      ip   = "192.168.0.11"
+      type = "ASSIGNED"
+    }
+  }]
+}
+
 resource "nutanix_subnet" "test" {
   metadata = {
     kind = "subnet"
@@ -73,4 +104,10 @@ resource "nutanix_subnet" "test" {
 
 data "nutanix_virtual_machine" "nutanix_virtual_machine" {
   vm_id = "${nutanix_virtual_machine.vm1.id}"
+}
+
+data "nutanix_virtual_machines" "nutanix_virtual_machine" {
+  metadata = {
+    length = 2
+  }
 }

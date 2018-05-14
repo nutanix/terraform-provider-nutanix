@@ -109,7 +109,7 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 		clusterReference["name"] = utils.StringValue(v.Status.ClusterReference.Name)
 		clusterReference["uuid"] = utils.StringValue(v.Status.ClusterReference.UUID)
 		entity["cluster_reference"] = availabilityZoneReference
-		entity["state"] = *v.Status.State
+		entity["state"] = utils.StringValue(v.Status.State)
 		entity["num_vnuma_nodes"] = utils.Int64Value(v.Status.Resources.VnumaConfig.NumVnumaNodes)
 
 		// set nic list value
@@ -118,7 +118,7 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 			nicLists := make([]map[string]interface{}, len(nics))
 			for k, v := range nics {
 				nic := make(map[string]interface{})
-				// simple firts
+				// simple first
 				nic["nic_type"] = utils.StringValue(v.NicType)
 				nic["uuid"] = utils.StringValue(v.UUID)
 				nic["floating_ip"] = utils.StringValue(v.FloatingIP)
@@ -233,31 +233,28 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 		}
 		entity["memory_size_mib"] = utils.Int64Value(v.Status.Resources.MemorySizeMib)
 
+		boots := make([]string, 0)
+		diskAddress := make(map[string]interface{})
+		mac := ""
+
 		if v.Status.Resources.BootConfig != nil {
-			boots := make([]string, len(v.Status.Resources.BootConfig.BootDeviceOrderList))
+			boots = make([]string, len(v.Status.Resources.BootConfig.BootDeviceOrderList))
 			for k, v := range v.Status.Resources.BootConfig.BootDeviceOrderList {
 				boots[k] = utils.StringValue(v)
 			}
-			// set boot_device_order_list value
-			entity["boot_device_order_list"] = boots
 
-			bootDevice := make(map[string]interface{})
-			disk := make([]map[string]interface{}, 1)
-			diskAddress := make(map[string]interface{})
 			if v.Status.Resources.BootConfig.BootDevice.DiskAddress != nil {
-				diskAddress["device_index"] = utils.Int64Value(v.Status.Resources.BootConfig.BootDevice.DiskAddress.DeviceIndex)
+				i := strconv.Itoa(int(utils.Int64Value(v.Status.Resources.BootConfig.BootDevice.DiskAddress.DeviceIndex)))
+				diskAddress["device_index"] = i
 				diskAddress["adapter_type"] = utils.StringValue(v.Status.Resources.BootConfig.BootDevice.DiskAddress.AdapterType)
 			}
-			disk[0] = diskAddress
 
-			bootDevice["disk_address"] = disk
-			bootDevice["mac_address"] = utils.StringValue(v.Status.Resources.BootConfig.BootDevice.MacAddress)
-			// set boot_device value
-			entity["boot_device"] = bootDevice
-		} else {
-			entity["boot_device_order_list"] = make([]string, 0)
-			entity["boot_device"] = make(map[string]interface{})
+			mac = utils.StringValue(v.Status.Resources.BootConfig.BootDevice.MacAddress)
 		}
+		entity["boot_device_order_list"] = boots
+		entity["boot_device_disk_address"] = diskAddress
+		entity["boot_device_mac_address"] = mac
+
 		entity["hardware_clock_timezone"] = utils.StringValue(v.Status.Resources.HardwareClockTimezone)
 
 		if v.Status.Resources.GuestCustomization != nil {
@@ -279,64 +276,64 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 			}
 			// set guest_customization_sysprep value
 			entity["guest_customization_sysprep"] = sysprep
-			entity["should_fail_on_script_failure"] = utils.BoolValue(v.Status.Resources.PowerStateMechanism.GuestTransitionConfig.ShouldFailOnScriptFailure)
-			entity["enable_script_exec"] = utils.BoolValue(v.Status.Resources.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec)
-			entity["power_state_mechanism"] = utils.StringValue(v.Status.Resources.PowerStateMechanism.Mechanism)
-			entity["vga_console_enabled"] = utils.BoolValue(v.Status.Resources.VgaConsoleEnabled)
+		}
+		entity["should_fail_on_script_failure"] = utils.BoolValue(v.Status.Resources.PowerStateMechanism.GuestTransitionConfig.ShouldFailOnScriptFailure)
+		entity["enable_script_exec"] = utils.BoolValue(v.Status.Resources.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec)
+		entity["power_state_mechanism"] = utils.StringValue(v.Status.Resources.PowerStateMechanism.Mechanism)
+		entity["vga_console_enabled"] = utils.BoolValue(v.Status.Resources.VgaConsoleEnabled)
 
-			if v.Status.Resources.DiskList != nil {
-				diskList := make([]map[string]interface{}, len(v.Status.Resources.DiskList))
-				for k, v := range v.Status.Resources.DiskList {
-					disk := make(map[string]interface{})
-					disk["uuid"] = *v.UUID
-					disk["disk_size_bytes"] = *v.DiskSizeBytes
-					disk["disk_size_mib"] = *v.DiskSizeMib
+		if v.Status.Resources.DiskList != nil {
+			diskList := make([]map[string]interface{}, len(v.Status.Resources.DiskList))
+			for k, v1 := range v.Status.Resources.DiskList {
+				disk := make(map[string]interface{})
+				disk["uuid"] = utils.StringValue(v1.UUID)
+				disk["disk_size_bytes"] = utils.Int64Value(v1.DiskSizeBytes)
+				disk["disk_size_mib"] = utils.Int64Value(v1.DiskSizeMib)
 
-					ds := make([]map[string]interface{}, 1)
-					dsourceRef := make(map[string]interface{})
-					if v.DataSourceReference != nil {
-						dsourceRef["kind"] = utils.StringValue(v.DataSourceReference.Kind)
-						dsourceRef["name"] = utils.StringValue(v.DataSourceReference.Name)
-						dsourceRef["uuid"] = utils.StringValue(v.DataSourceReference.UUID)
-					}
-					ds[0] = dsourceRef
-
-					disk["data_source_reference"] = ds
-
-					vr := make([]map[string]interface{}, 1)
-					volumeRef := make(map[string]interface{})
-					if v.VolumeGroupReference != nil {
-						volumeRef["kind"] = utils.StringValue(v.VolumeGroupReference.Kind)
-						volumeRef["name"] = utils.StringValue(v.VolumeGroupReference.Name)
-						volumeRef["uuid"] = utils.StringValue(v.VolumeGroupReference.UUID)
-					}
-					vr[0] = volumeRef
-
-					disk["volume_group_reference"] = vr
-
-					dp := make([]map[string]interface{}, 1)
-					deviceProps := make(map[string]interface{})
-					deviceProps["device_type"] = utils.StringValue(v.DeviceProperties.DeviceType)
-					dp[0] = deviceProps
-
-					da := make([]map[string]interface{}, 1)
-					diskAddress := make(map[string]interface{})
-					if v.DeviceProperties.DiskAddress != nil {
-						diskAddress["device_index"] = utils.Int64Value(v.DeviceProperties.DiskAddress.DeviceIndex)
-						diskAddress["adapter_type"] = utils.StringValue(v.DeviceProperties.DiskAddress.AdapterType)
-					}
-					da[0] = diskAddress
-					deviceProps["disk_address"] = da
-
-					disk["device_properties"] = dp
-
-					diskList[k] = disk
+				ds := make([]map[string]interface{}, 1)
+				dsourceRef := make(map[string]interface{})
+				if v1.DataSourceReference != nil {
+					dsourceRef["kind"] = utils.StringValue(v1.DataSourceReference.Kind)
+					dsourceRef["name"] = utils.StringValue(v1.DataSourceReference.Name)
+					dsourceRef["uuid"] = utils.StringValue(v1.DataSourceReference.UUID)
 				}
-				// set disk_list value
-				entity["disk_list"] = diskList
-			} else {
-				entity["disk_list"] = make([]map[string]interface{}, 0)
+				ds[0] = dsourceRef
+
+				disk["data_source_reference"] = ds
+
+				vr := make([]map[string]interface{}, 1)
+				volumeRef := make(map[string]interface{})
+				if v1.VolumeGroupReference != nil {
+					volumeRef["kind"] = utils.StringValue(v1.VolumeGroupReference.Kind)
+					volumeRef["name"] = utils.StringValue(v1.VolumeGroupReference.Name)
+					volumeRef["uuid"] = utils.StringValue(v1.VolumeGroupReference.UUID)
+				}
+				vr[0] = volumeRef
+
+				disk["volume_group_reference"] = vr
+
+				dp := make([]map[string]interface{}, 1)
+				deviceProps := make(map[string]interface{})
+				deviceProps["device_type"] = utils.StringValue(v1.DeviceProperties.DeviceType)
+				dp[0] = deviceProps
+
+				da := make([]map[string]interface{}, 1)
+				diskAddress := make(map[string]interface{})
+				if v1.DeviceProperties.DiskAddress != nil {
+					diskAddress["device_index"] = utils.Int64Value(v1.DeviceProperties.DiskAddress.DeviceIndex)
+					diskAddress["adapter_type"] = utils.StringValue(v1.DeviceProperties.DiskAddress.AdapterType)
+				}
+				da[0] = diskAddress
+				deviceProps["disk_address"] = da
+
+				disk["device_properties"] = dp
+
+				diskList[k] = disk
 			}
+			// set disk_list value
+			entity["disk_list"] = diskList
+		} else {
+			entity["disk_list"] = make([]map[string]interface{}, 0)
 		}
 		entities[k] = entity
 	}
@@ -811,33 +808,29 @@ func getDataSourceVMSSchema() map[string]*schema.Schema {
 						Computed: true,
 						Elem:     &schema.Schema{Type: schema.TypeString},
 					},
-					"boot_device": &schema.Schema{
+					"boot_device_disk_address": &schema.Schema{
 						Type:     schema.TypeMap,
+						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"disk_address": &schema.Schema{
-									Type:     schema.TypeList,
-									Computed: true,
-									Elem: &schema.Resource{
-										Schema: map[string]*schema.Schema{
-											"device_index": &schema.Schema{
-												Type:     schema.TypeInt,
-												Computed: true,
-											},
-											"adapter_type": &schema.Schema{
-												Type:     schema.TypeString,
-												Computed: true,
-											},
-										},
-									},
-								},
-								"mac_address": &schema.Schema{
+								"device_index": &schema.Schema{
 									Type:     schema.TypeString,
+									Optional: true,
+									Computed: true,
+								},
+								"adapter_type": &schema.Schema{
+									Type:     schema.TypeString,
+									Optional: true,
 									Computed: true,
 								},
 							},
 						},
+					},
+					"boot_device_mac_address": &schema.Schema{
+						Type:     schema.TypeString,
+						Optional: true,
+						Computed: true,
 					},
 					"hardware_clock_timezone": &schema.Schema{
 						Type:     schema.TypeString,
@@ -934,6 +927,7 @@ func getDataSourceVMSSchema() map[string]*schema.Schema {
 												Computed: true,
 												Elem: &schema.Resource{
 													Schema: map[string]*schema.Schema{
+
 														"device_index": &schema.Schema{
 															Type:     schema.TypeInt,
 															Computed: true,

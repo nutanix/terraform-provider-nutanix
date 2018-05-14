@@ -26,7 +26,7 @@ func setup() {
 	mux = http.NewServeMux()
 	server = httptest.NewServer(mux)
 
-	client, _ = NewClient(&Credentials{"", "username", "password", "", "", ""})
+	client, _ = NewClient(&Credentials{"", "username", "password", "", "", true})
 	client.BaseURL, _ = url.Parse(server.URL)
 }
 
@@ -36,7 +36,7 @@ func teardown() {
 
 func TestNewClient(t *testing.T) {
 	u := "foo.com"
-	c, err := NewClient(&Credentials{u, "username", "password", "", "", ""})
+	c, err := NewClient(&Credentials{u, "username", "password", "", "", true})
 
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
@@ -55,7 +55,7 @@ func TestNewClient(t *testing.T) {
 
 func TestNewRequest(t *testing.T) {
 	u := "foo.com"
-	c, err := NewClient(&Credentials{u, "username", "password", "", "", ""})
+	c, err := NewClient(&Credentials{u, "username", "password", "", "", true})
 
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
@@ -79,7 +79,12 @@ func TestNewRequest(t *testing.T) {
 }
 
 func TestErrorResponse_Error(t *testing.T) {
-	err := ErrorResponse{Message: map[string]string{"name": "This field may not be blank."}}
+	messageResource := MessageResource{Message: "This field may not be blank."}
+	messageList := make([]MessageResource, 1)
+	messageList[0] = messageResource
+
+	err := ErrorResponse{MessageList: messageList}
+
 	if err.Error() == "" {
 		t.Errorf("Expected non-empty ErrorResponse.Error()")
 	}
@@ -89,23 +94,17 @@ func TestGetResponse(t *testing.T) {
 	res := &http.Response{
 		Request:    &http.Request{},
 		StatusCode: http.StatusBadRequest,
-		Body:       ioutil.NopCloser(strings.NewReader(`{"name": "This field may not be blank."}`)),
+		Body:       ioutil.NopCloser(strings.NewReader(`{"api_version": "3.0", "code": 400, "kind": "error", "message_list": [{"message": "This field may not be blank."}], "state": "none"}`)),
 	}
 
-	err := CheckResponse(res).(*ErrorResponse)
+	err := CheckResponse(res)
 
 	if err == nil {
 		t.Fatal("Expected error response.")
 	}
 
-	expected := &ErrorResponse{
-		Message: map[string]string{
-			"name": "This field may not be blank.",
-		},
-	}
-
-	if !reflect.DeepEqual(err, expected) {
-		t.Errorf("Error = %#v, expected %#v", err, expected)
+	if !strings.Contains(fmt.Sprint(err), "This field may not be blank.") {
+		t.Errorf("Error = %#v, expected %#v", err, "This field may not be blank.")
 	}
 }
 
@@ -113,21 +112,16 @@ func TestCheckResponse(t *testing.T) {
 	res := &http.Response{
 		Request:    &http.Request{},
 		StatusCode: http.StatusBadRequest,
-		Body:       ioutil.NopCloser(strings.NewReader(`{"name": "This field may not be blank."}`)),
+		Body:       ioutil.NopCloser(strings.NewReader(`{"api_version": "3.0", "code": 400, "kind": "error", "message_list": [{"message": "This field may not be blank."}], "state": "none"}`)),
 	}
-	err := CheckResponse(res).(*ErrorResponse)
+	err := CheckResponse(res)
 
 	if err == nil {
 		t.Fatalf("Expected error response.")
 	}
 
-	expected := &ErrorResponse{
-		Message: map[string]string{
-			"name": "This field may not be blank.",
-		},
-	}
-	if !reflect.DeepEqual(err, expected) {
-		t.Errorf("Error = %#v, expected %#v", err, expected)
+	if !strings.Contains(fmt.Sprint(err), "This field may not be blank.") {
+		t.Errorf("Error = %#v, expected %#v", err, "This field may not be blank.")
 	}
 }
 
