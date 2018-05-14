@@ -63,7 +63,7 @@ func testAccNutanixSubnetConfig(r int32) string {
 	return fmt.Sprintf(`
 resource "nutanix_subnet" "next-iac-managed" {
   # Can I hard code image to be kind image? 
-  # We're going to make this implict in future API releases, so hard coding it is safe on the plugin side
+  # We're going to make this implicit in future API releases, so hard coding it is safe on the plugin side
   metadata = {
     kind = "subnet"
   }
