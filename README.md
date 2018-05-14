@@ -5,6 +5,7 @@ NOTE: terraform-provider-nutanix is currently tech preview as of 9 May 2018. See
 
 [![Waffle.io - Columns and their card count](https://badge.waffle.io/b58a88b8face3407eccdc79e19d39058d28754b65f6df7513ed23293ef387491a5f538b65dffd5b12ca0201c6d4b50ce.svg?columns=all)](https://waffle.io/nutanix/terraform-provider-nutanix)
 [![Coverage Status](https://coveralls.io/repos/github/nutanix/terraform-provider-nutanix/badge.svg?branch=master)](https://coveralls.io/github/nutanix/terraform-provider-nutanix?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/nutanix/terraform-provider-nutanix)](https://goreportcard.com/report/github.com/nutanix/terraform-provider-nutanix)
 
 ## Community
 Nutanix is taking an inclusive approach to developing this new feature and welcomes customer feedback. Please see our development project on GitHub (you're here!), comment on requirements, design, code, and/or feel free to join us on Slack. Instructions on commenting, contributing, and joining our community Slack channel are all located within our GitHub Readme.
