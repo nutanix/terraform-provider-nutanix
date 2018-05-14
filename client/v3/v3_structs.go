@@ -178,7 +178,7 @@ type GuestCustomization struct {
 	// Flag to allow override of customization by deployer.
 	IsOverridable *bool `json:"is_overridable,omitempty"`
 
-	Sysprep map[string]interface{} `json:"sysprep,omitempty"`
+	Sysprep *GuestCustomizationSysprep `json:"sysprep,omitempty"`
 }
 
 //VMGuestPowerStateTransitionConfig Extra configs related to power state transition.

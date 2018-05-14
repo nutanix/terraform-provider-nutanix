@@ -46,6 +46,7 @@ type Service interface {
 	GetNetworkSecurityRule(UUID string) (*NetworkSecurityRuleIntentResponse, error)
 	DeleteNetworkSecurityRule(UUID string) error
 	CreateNetworkSecurityRule(request *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error)
+	ListCluster(getEntitiesRequest *ClusterListMetadataOutput) (*ClusterListIntentResponse, error)
 }
 
 /*CreateVM Creates a VM

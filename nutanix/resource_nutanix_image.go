@@ -211,11 +211,7 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 		uriList = append(uriList, utils.StringValue(uri))
 	}
 
-	if err := d.Set("retrieval_uri_list", uriList); err != nil {
-		return err
-	}
-
-	return nil
+	return d.Set("retrieval_uri_list", uriList)
 }
 
 func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -638,7 +634,7 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 }
 
 func resourceNutanixImageExists(conn *v3.Client, name string) (*string, error) {
-	log.Printf("[DEBUG] Get Image Existance : %s", name)
+	log.Printf("[DEBUG] Get Image Existence : %s", name)
 
 	imageEntities := &v3.ImageListMetadata{}
 	var imageUUID *string
