@@ -20,7 +20,7 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 		Create: resourceNutanixNetworkSecurityRuleCreate,
 		Read:   resourceNutanixNetworkSecurityRuleRead,
 		Update: resourceNutanixNetworkSecurityRuleUpdate,
-		Delete: resourceNutanixNetworkSecurityRuleUpdate,
+		Delete: resourceNutanixNetworkSecurityRuleDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -748,14 +748,71 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 	metadata := &v3.Metadata{}
 	networkSecurityRule := &v3.NetworkSecurityRuleResources{}
 
-	if d.HasChange("metadata") ||
-		d.HasChange("categories") ||
-		d.HasChange("owner_reference") ||
-		d.HasChange("project_reference") {
-		if err := getMetadataAttributes(d, metadata); err != nil {
-			return err
+	response, err := conn.V3.GetNetworkSecurityRule(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	if response.Metadata != nil {
+		metadata = response.Metadata
+	}
+
+	if response.Spec != nil {
+		spec = response.Spec
+
+		if response.Spec.Resources != nil {
+			networkSecurityRule = response.Spec.Resources
 		}
-		request.Metadata = metadata
+	}
+
+	if d.HasChange("metadata") {
+		m := d.Get("metadata")
+		metad := m.(map[string]interface{})
+		if v, ok := metad["uuid"]; ok && v != "" {
+			metadata.UUID = utils.String(v.(string))
+		}
+		if v, ok := metad["spec_version"]; ok && v != 0 {
+			i, err := strconv.Atoi(v.(string))
+			if err != nil {
+				return err
+			}
+			metadata.SpecVersion = utils.Int64(int64(i))
+		}
+		if v, ok := metad["spec_hash"]; ok && v != "" {
+			metadata.SpecHash = utils.String(v.(string))
+		}
+		if v, ok := metad["name"]; ok {
+			metadata.Name = utils.String(v.(string))
+		}
+	}
+
+	if d.HasChange("categories") {
+		p := d.Get("categories").(map[string]interface{})
+		labels := map[string]string{}
+		for k, v := range p {
+			labels[k] = v.(string)
+		}
+		metadata.Categories = labels
+	}
+
+	if d.HasChange("owner_reference") {
+		or := d.Get("owner_reference").(map[string]interface{})
+		r := &v3.Reference{
+			Kind: utils.String(or["kind"].(string)),
+			UUID: utils.String(or["uuid"].(string)),
+			Name: utils.String(or["name"].(string)),
+		}
+		metadata.OwnerReference = r
+	}
+	if d.HasChange("project_reference") {
+		pr := d.Get("project_reference").(map[string]interface{})
+		r := &v3.Reference{
+			Kind: utils.String(pr["kind"].(string)),
+			UUID: utils.String(pr["uuid"].(string)),
+			Name: utils.String(pr["name"].(string)),
+		}
+		metadata.ProjectReference = r
 	}
 
 	if d.HasChange("name") {
@@ -765,6 +822,7 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 		spec.Description = utils.String(d.Get("description").(string))
 	}
 
+	//TODO: Change
 	if d.HasChange("quarantine_rule_action") ||
 		d.HasChange("quarantine_rule_outbound_allow_list") ||
 		d.HasChange("quarantine_rule_target_group_default_internal_policy") ||
@@ -793,9 +851,10 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 			return err
 		}
 		spec.Resources = networkSecurityRule
-
-		request.Spec = spec
 	}
+
+	request.Spec = spec
+	request.Metadata = metadata
 
 	_, errUpdate := conn.V3.UpdateNetworkSecurityRule(d.Id(), request)
 
@@ -817,7 +876,7 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 			"Error waiting for network_security_rule (%s) to update: %s", d.Id(), err)
 	}
 
-	return resourceNutanixNetworkSecurityRuleUpdate(d, meta)
+	return resourceNutanixNetworkSecurityRuleRead(d, meta)
 
 }
 
@@ -894,15 +953,15 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			iPSubnet := &v3.IPSubnet{}
 			filter := &v3.CategoryFilter{}
 
-			if proto, pok := nr["protocol"]; pok {
+			if proto, pok := nr["protocol"]; pok && proto.(string) != "" {
 				nrItem.Protocol = utils.String(proto.(string))
 			}
 
-			if ip, ipok := nr["ip_subnet"]; ipok {
+			if ip, ipok := nr["ip_subnet"]; ipok && ip.(string) != "" {
 				iPSubnet.IP = utils.String(ip.(string))
 			}
 
-			if ippl, ipok := nr["ip_subnet_prefix_length"]; ipok {
+			if ippl, ipok := nr["ip_subnet_prefix_length"]; ipok && ippl.(string) != "" {
 				if i, err := strconv.Atoi(ippl.(string)); err != nil {
 					iPSubnet.PrefixLength = utils.Int64(int64(i))
 				}
@@ -1110,15 +1169,15 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			iPSubnet := &v3.IPSubnet{}
 			filter := &v3.CategoryFilter{}
 
-			if proto, pok := nr["protocol"]; pok {
+			if proto, pok := nr["protocol"]; pok && proto.(string) != "" {
 				nrItem.Protocol = utils.String(proto.(string))
 			}
 
-			if ip, ipok := nr["ip_subnet"]; ipok {
+			if ip, ipok := nr["ip_subnet"]; ipok && ip.(string) != "" {
 				iPSubnet.IP = utils.String(ip.(string))
 			}
 
-			if ippl, ipok := nr["ip_subnet_prefix_length"]; ipok {
+			if ippl, ipok := nr["ip_subnet_prefix_length"]; ipok && ippl.(string) != "" {
 				if i, err := strconv.Atoi(ippl.(string)); err != nil {
 					iPSubnet.PrefixLength = utils.Int64(int64(i))
 				}
@@ -1283,15 +1342,15 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			iPSubnet := &v3.IPSubnet{}
 			filter := &v3.CategoryFilter{}
 
-			if proto, pok := nr["protocol"]; pok {
+			if proto, pok := nr["protocol"]; pok && proto.(string) != "" {
 				nrItem.Protocol = utils.String(proto.(string))
 			}
 
-			if ip, ipok := nr["ip_subnet"]; ipok {
+			if ip, ipok := nr["ip_subnet"]; ipok && ip.(string) != "" {
 				iPSubnet.IP = utils.String(ip.(string))
 			}
 
-			if ippl, ipok := nr["ip_subnet_prefix_length"]; ipok {
+			if ippl, ipok := nr["ip_subnet_prefix_length"]; ipok && ippl.(string) != "" {
 				if i, err := strconv.Atoi(ippl.(string)); err != nil {
 					iPSubnet.PrefixLength = utils.Int64(int64(i))
 				}
@@ -1392,7 +1451,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 				nrItem.ExpirationTime = utils.String(et.(string))
 			}
 
-			if nfcr, nfcrok := nr["network_function_chain_reference"]; nfcrok && nfcr.(string) != "" {
+			if nfcr, nfcrok := nr["network_function_chain_reference"]; nfcrok && len(nfcr.(map[string]interface{})) > 0 {
 				a := nfcr.(map[string]interface{})
 				r := &v3.Reference{
 					Kind: utils.String(a["kind"].(string)),
@@ -1499,15 +1558,15 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			iPSubnet := &v3.IPSubnet{}
 			filter := &v3.CategoryFilter{}
 
-			if proto, pok := nr["protocol"]; pok {
+			if proto, pok := nr["protocol"]; pok && proto.(string) != "" {
 				nrItem.Protocol = utils.String(proto.(string))
 			}
 
-			if ip, ipok := nr["ip_subnet"]; ipok {
+			if ip, ipok := nr["ip_subnet"]; ipok && ip.(string) != "" {
 				iPSubnet.IP = utils.String(ip.(string))
 			}
 
-			if ippl, ipok := nr["ip_subnet_prefix_length"]; ipok {
+			if ippl, ipok := nr["ip_subnet_prefix_length"]; ipok && ippl.(string) != "" {
 				if i, err := strconv.Atoi(ippl.(string)); err != nil {
 					iPSubnet.PrefixLength = utils.Int64(int64(i))
 				}
@@ -1608,7 +1667,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 				nrItem.ExpirationTime = utils.String(et.(string))
 			}
 
-			if nfcr, nfcrok := nr["network_function_chain_reference"]; nfcrok && nfcr.(string) != "" {
+			if nfcr, nfcrok := nr["network_function_chain_reference"]; nfcrok && len(nfcr.(map[string]interface{})) > 0 {
 				a := nfcr.(map[string]interface{})
 				r := &v3.Reference{
 					Kind: utils.String(a["kind"].(string)),
