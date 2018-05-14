@@ -141,7 +141,7 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 		nicLists := make([]map[string]interface{}, len(nics))
 		for k, v := range nics {
 			nic := make(map[string]interface{})
-			// simple firts
+			// simple first
 			nic["nic_type"] = utils.StringValue(v.NicType)
 			nic["uuid"] = utils.StringValue(v.UUID)
 			nic["floating_ip"] = utils.StringValue(v.FloatingIP)
