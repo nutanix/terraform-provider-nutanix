@@ -30,14 +30,6 @@ func TestAccNutanixImageDataSource_basic(t *testing.T) {
 
 func testAccImageDataSourceConfig(r int) string {
 	return fmt.Sprintf(`
-provider "nutanix" {
-  username = "admin"
-  password = "Nutanix/1234"
-  endpoint = "10.5.81.134"
-  insecure = true
-  port = 9440
-}
-
 resource "nutanix_image" "test" {
   name        = "CentOS-LAMP-APP.qcow2"
   description = "CentOS LAMP - App"
