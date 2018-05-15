@@ -627,6 +627,10 @@ func (op Operations) CreateOrUpdateCategoryValue(name string, body *CategoryValu
 
 	err = op.client.Do(ctx, req, categoryValueResponse)
 
+	if err != nil {
+		return nil, err
+	}
+
 	return categoryValueResponse, nil
 }
 

@@ -1,3 +1,20 @@
 language: go
 go: 
-  - 1.10
+  - "1.10"
+
+go_import_path: github.com/terraform-providers/terraform-provider-nutanix
+
+before_install:
+  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+  - dep status
+  - dep ensure
+
+install:
+  - export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
+  - make build 
+
+before_script:
+  - make vet
+
+script:
+  - make testacc
