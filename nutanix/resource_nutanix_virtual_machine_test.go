@@ -19,7 +19,7 @@ func TestAccNutanixVirtualMachine_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNutanixVMConfig(r),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.vm1"),
