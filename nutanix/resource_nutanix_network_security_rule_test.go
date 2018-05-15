@@ -24,6 +24,12 @@ func TestAccNutanixNetworkSecurityRule_basic(t *testing.T) {
 					testAccCheckNutanixNetworkSecurityRuleExists("nutanix_network_security_rule.TEST-TIER"),
 				),
 			},
+			{
+				Config: testAccNutanixNetworkSecurityRuleConfigUpdate(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixNetworkSecurityRuleExists("nutanix_network_security_rule.TEST-TIER"),
+				),
+			},
 		},
 	})
 }
@@ -70,6 +76,66 @@ func testAccNutanixNetworkSecurityRuleConfig(r int32) string {
 resource "nutanix_network_security_rule" "TEST-TIER" {
   name        = "RULE-1-TIERS"
   description = "rule 1 tiers"
+
+  app_rule_action = "APPLY"
+
+  app_rule_inbound_allow_list = [
+    {
+      peer_specification_type = "FILTER"
+      filter_type             = "CATEGORIES_MATCH_ALL"
+      filter_kind_list        = ["vm"]
+
+      filter_params = [
+        {
+          name   = "TIER"
+          values = ["WEB"]
+        },
+      ]
+    },
+  ]
+
+  app_rule_target_group_default_internal_policy = "DENY_ALL"
+
+  app_rule_target_group_peer_specification_type = "FILTER"
+
+  app_rule_target_group_filter_type = "CATEGORIES_MATCH_ALL"
+
+  app_rule_target_group_filter_kind_list = ["vm"]
+
+  app_rule_target_group_filter_params = [
+    {
+      name   = "TIER"
+      values = ["APP"]
+    },
+    {
+      name   = "TIER"
+      values = ["ashwini"]
+    },
+  ]
+
+  app_rule_outbound_allow_list = [
+    {
+      peer_specification_type = "FILTER"
+      filter_type             = "CATEGORIES_MATCH_ALL"
+      filter_kind_list        = ["vm"]
+
+      filter_params = [
+        {
+          name   = "TIER"
+          values = ["DB"]
+        },
+      ]
+    },
+  ]
+}
+`)
+}
+
+func testAccNutanixNetworkSecurityRuleConfigUpdate(r int32) string {
+	return fmt.Sprintf(`
+resource "nutanix_network_security_rule" "TEST-TIER" {
+  name        = "RULE-1-TIERS-1"
+  description = "rule 1 tiers 1"
 
   app_rule_action = "APPLY"
 
