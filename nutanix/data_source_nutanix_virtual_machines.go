@@ -108,7 +108,7 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 		clusterReference["kind"] = utils.StringValue(v.Status.ClusterReference.Kind)
 		clusterReference["name"] = utils.StringValue(v.Status.ClusterReference.Name)
 		clusterReference["uuid"] = utils.StringValue(v.Status.ClusterReference.UUID)
-		entity["cluster_reference"] = availabilityZoneReference
+		entity["cluster_reference"] = clusterReference
 		entity["state"] = utils.StringValue(v.Status.State)
 		entity["num_vnuma_nodes"] = utils.Int64Value(v.Status.Resources.VnumaConfig.NumVnumaNodes)
 
