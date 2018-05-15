@@ -7,6 +7,9 @@ NOTE: terraform-provider-nutanix is currently tech preview as of 9 May 2018. See
 [![Coverage Status](https://coveralls.io/repos/github/nutanix/terraform-provider-nutanix/badge.svg?branch=master)](https://coveralls.io/github/nutanix/terraform-provider-nutanix?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nutanix/terraform-provider-nutanix)](https://goreportcard.com/report/github.com/nutanix/terraform-provider-nutanix)
 
+[![Build Status: master](https://travis-ci.org/nutanix/terraform-provider-nutanix.svg?branch=master)](https://travis-ci.org/nutanix/terraform-provider-nutanix)
+[![Build Status: develop](https://travis-ci.org/nutanix/terraform-provider-nutanix.svg?branch=develop)](https://travis-ci.org/nutanix/terraform-provider-nutanix)
+
 ## Community
 Nutanix is taking an inclusive approach to developing this new feature and welcomes customer feedback. Please see our development project on GitHub (you're here!), comment on requirements, design, code, and/or feel free to join us on Slack. Instructions on commenting, contributing, and joining our community Slack channel are all located within our GitHub Readme.
 
@@ -24,7 +27,7 @@ For a slack invite, please contact Terraform@nutanix.com from your business addr
 **Currently working on: (2nd Milestone)**
 - [ ] Cluster data source.
 - [ ] Clusters data source.
-- [ ] Virtual Machines data source.
+- [x] Virtual Machines data source.
 - [ ] Category keys resource.
 - [ ] Category values resource.
 - [ ] Network security group resource.
