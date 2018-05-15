@@ -1,3 +1,13 @@
 language: go
 go: 
   - 1.10
+
+go_import_path: github.com/terraform-providers/terraform-provider-nutanix
+
+install:
+- bash scripts/gogetcookie.sh
+- curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+
+script:
+- make vendor-status
+- make testacc
