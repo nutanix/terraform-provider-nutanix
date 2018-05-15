@@ -17,7 +17,7 @@ func TestAccNutanixSubnet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixSubnetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNutanixSubnetConfig(r),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixSubnetExists("nutanix_subnet.next-iac-managed"),
