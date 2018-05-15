@@ -9,7 +9,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func getMetadataAttributes(d *schema.ResourceData, metadata *v3.Metadata) error {
+func getMetadataAttributes(d *schema.ResourceData, metadata *v3.Metadata, kind string) error {
 	m, mok := d.GetOk("metadata")
 	metad := m.(map[string]interface{})
 
@@ -17,7 +17,7 @@ func getMetadataAttributes(d *schema.ResourceData, metadata *v3.Metadata) error 
 		return fmt.Errorf("please provide metadata required attributes")
 	}
 
-	metadata.Kind = utils.String(metad["kind"].(string))
+	metadata.Kind = utils.String(kind)
 
 	if v, ok := metad["uuid"]; ok && v != "" {
 		metadata.UUID = utils.String(v.(string))
