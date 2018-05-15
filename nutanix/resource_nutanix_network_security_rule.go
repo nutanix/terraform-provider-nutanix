@@ -912,25 +912,25 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 
 	utils.PrintToJSON(request, "UPDATE REQUEST ###")
 
-	// _, errUpdate := conn.V3.UpdateNetworkSecurityRule(d.Id(), request)
+	_, errUpdate := conn.V3.UpdateNetworkSecurityRule(d.Id(), request)
 
-	// if errUpdate != nil {
-	// 	return errUpdate
-	// }
+	if errUpdate != nil {
+		return errUpdate
+	}
 
-	// stateConf := &resource.StateChangeConf{
-	// 	Pending:    []string{"PENDING", "RUNNING"},
-	// 	Target:     []string{"COMPLETE"},
-	// 	Refresh:    networkSecurityRuleStateRefreshFunc(conn, d.Id()),
-	// 	Timeout:    10 * time.Minute,
-	// 	Delay:      10 * time.Second,
-	// 	MinTimeout: 3 * time.Second,
-	// }
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"PENDING", "RUNNING"},
+		Target:     []string{"COMPLETE"},
+		Refresh:    networkSecurityRuleStateRefreshFunc(conn, d.Id()),
+		Timeout:    10 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
 
-	// if _, err := stateConf.WaitForState(); err != nil {
-	// 	return fmt.Errorf(
-	// 		"Error waiting for network_security_rule (%s) to update: %s", d.Id(), err)
-	// }
+	if _, err := stateConf.WaitForState(); err != nil {
+		return fmt.Errorf(
+			"Error waiting for network_security_rule (%s) to update: %s", d.Id(), err)
+	}
 
 	return resourceNutanixNetworkSecurityRuleRead(d, meta)
 
