@@ -18,7 +18,7 @@ func TestAccNutanixNetworkSecurityRule_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixNetworkSecurityRuleDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNutanixNetworkSecurityRuleConfig(r),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixNetworkSecurityRuleExists("nutanix_network_security_rule.TEST-TIER"),
@@ -70,10 +70,6 @@ func testAccNutanixNetworkSecurityRuleConfig(r int32) string {
 resource "nutanix_network_security_rule" "TEST-TIER" {
   name        = "RULE-1-TIERS"
   description = "rule 1 tiers"
-
-  metadata = {
-    kind = "network_security_rule"
-  }
 
   app_rule_action = "APPLY"
 

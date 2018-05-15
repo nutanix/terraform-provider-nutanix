@@ -51,9 +51,8 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 		request.APIVersion = utils.String(v.(string))
 	}
 
-	if err := getMetadataAttributes(d, metadata); err != nil {
-		return err
-	}
+	//only set kind
+	metadata.Kind = utils.String("network_security_rule")
 
 	if descok {
 		spec.Description = utils.String(desc.(string))
@@ -127,37 +126,60 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 	}
 
 	// set metadata values
-	metadata := make(map[string]interface{})
-	metadata["last_update_time"] = resp.Metadata.LastUpdateTime.String()
-	metadata["kind"] = utils.StringValue(resp.Metadata.Kind)
-	metadata["uuid"] = utils.StringValue(resp.Metadata.UUID)
-	metadata["creation_time"] = resp.Metadata.CreationTime.String()
-	metadata["spec_version"] = strconv.Itoa(int(utils.Int64Value(resp.Metadata.SpecVersion)))
-	metadata["spec_hash"] = utils.StringValue(resp.Metadata.SpecHash)
-	metadata["name"] = utils.StringValue(resp.Metadata.Name)
-	if err := d.Set("metadata", metadata); err != nil {
-		return err
-	}
-	if err := d.Set("categories", resp.Metadata.Categories); err != nil {
-		return err
+	if resp.Metadata != nil {
+		metadata := make(map[string]interface{})
+
+		metadata["last_update_time"] = resp.Metadata.LastUpdateTime.String()
+		//metadata["kind"] = utils.StringValue(resp.Metadata.Kind)
+		metadata["uuid"] = utils.StringValue(resp.Metadata.UUID)
+
+		if resp.Metadata.CreationTime != nil {
+			metadata["creation_time"] = resp.Metadata.CreationTime.String()
+		}
+
+		metadata["spec_version"] = strconv.Itoa(int(utils.Int64Value(resp.Metadata.SpecVersion)))
+		metadata["spec_hash"] = utils.StringValue(resp.Metadata.SpecHash)
+		metadata["name"] = utils.StringValue(resp.Metadata.Name)
+
+		if err := d.Set("metadata", metadata); err != nil {
+			return err
+		}
+
+		if err := d.Set("categories", resp.Metadata.Categories); err != nil {
+			return err
+		}
+
+		or := make(map[string]interface{})
+		if resp.Metadata.OwnerReference != nil {
+			or["kind"] = utils.StringValue(resp.Metadata.OwnerReference.Kind)
+			or["name"] = utils.StringValue(resp.Metadata.OwnerReference.Name)
+			or["uuid"] = utils.StringValue(resp.Metadata.OwnerReference.UUID)
+		}
+
+		if err := d.Set("owner_reference", or); err != nil {
+			return err
+		}
+
+		pr := make(map[string]interface{})
+		if resp.Metadata.ProjectReference != nil {
+			or["kind"] = utils.StringValue(resp.Metadata.ProjectReference.Kind)
+			or["name"] = utils.StringValue(resp.Metadata.ProjectReference.Name)
+			or["uuid"] = utils.StringValue(resp.Metadata.ProjectReference.UUID)
+		}
+
+		if err := d.Set("project_reference", pr); err != nil {
+			return err
+		}
 	}
 
-	or := make(map[string]interface{})
-	if resp.Metadata.OwnerReference != nil {
-		or["kind"] = utils.StringValue(resp.Metadata.OwnerReference.Kind)
-		or["name"] = utils.StringValue(resp.Metadata.OwnerReference.Name)
-		or["uuid"] = utils.StringValue(resp.Metadata.OwnerReference.UUID)
-
-	}
-	if err := d.Set("owner_reference", or); err != nil {
-		return err
-	}
 	if err := d.Set("api_version", utils.StringValue(resp.APIVersion)); err != nil {
 		return err
 	}
-	if err := d.Set("name", utils.StringValue(resp.Metadata.Name)); err != nil {
+
+	if err := d.Set("name", utils.StringValue(resp.Spec.Name)); err != nil {
 		return err
 	}
+
 	if err := d.Set("description", utils.StringValue(resp.Spec.Description)); err != nil {
 		return err
 	}
@@ -408,6 +430,19 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 			}
 		}
 
+	} else {
+		if err := d.Set("quarantine_rule_inbound_allow_list", make([]string, 0)); err != nil {
+			return err
+		}
+		if err := d.Set("quarantine_rule_outbound_allow_list", make([]string, 0)); err != nil {
+			return err
+		}
+		if err := d.Set("quarantine_rule_target_group_filter_kind_list", make([]string, 0)); err != nil {
+			return err
+		}
+		if err := d.Set("quarantine_rule_target_group_filter_params", make([]string, 0)); err != nil {
+			return err
+		}
 	}
 
 	if resp.Status.AppRule != nil {
@@ -666,12 +701,17 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 		if resp.Status.IsolationRule.FirstEntityFilter != nil {
 			firstFilter := resp.Status.IsolationRule.FirstEntityFilter
 			if firstFilter.KindList != nil {
+				log.Println("KIND LIST##")
 				fkl := firstFilter.KindList
 				fkList := make([]string, len(fkl))
 				for i, f := range fkl {
 					fkList[i] = utils.StringValue(f)
 				}
 				if err := d.Set("isolation_rule_first_entity_filter_kind_list", fkList); err != nil {
+					return err
+				}
+			} else {
+				if err := d.Set("isolation_rule_first_entity_filter_kind_list", make([]string, 0)); err != nil {
 					return err
 				}
 			}
@@ -733,6 +773,19 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 
 		}
 
+	} else {
+		if err := d.Set("isolation_rule_first_entity_filter_kind_list", make([]string, 0)); err != nil {
+			return err
+		}
+		if err := d.Set("isolation_rule_first_entity_filter_params", make([]string, 0)); err != nil {
+			return err
+		}
+		if err := d.Set("isolation_rule_second_entity_filter_kind_list", make([]string, 0)); err != nil {
+			return err
+		}
+		if err := d.Set("isolation_rule_second_entity_filter_params", make([]string, 0)); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -805,6 +858,7 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 		}
 		metadata.OwnerReference = r
 	}
+
 	if d.HasChange("project_reference") {
 		pr := d.Get("project_reference").(map[string]interface{})
 		r := &v3.Reference{
@@ -856,25 +910,27 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 	request.Spec = spec
 	request.Metadata = metadata
 
-	_, errUpdate := conn.V3.UpdateNetworkSecurityRule(d.Id(), request)
+	utils.PrintToJSON(request, "UPDATE REQUEST ###")
 
-	if errUpdate != nil {
-		return errUpdate
-	}
+	// _, errUpdate := conn.V3.UpdateNetworkSecurityRule(d.Id(), request)
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
-		Target:     []string{"COMPLETE"},
-		Refresh:    networkSecurityRuleStateRefreshFunc(conn, d.Id()),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
+	// if errUpdate != nil {
+	// 	return errUpdate
+	// }
 
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
-			"Error waiting for network_security_rule (%s) to update: %s", d.Id(), err)
-	}
+	// stateConf := &resource.StateChangeConf{
+	// 	Pending:    []string{"PENDING", "RUNNING"},
+	// 	Target:     []string{"COMPLETE"},
+	// 	Refresh:    networkSecurityRuleStateRefreshFunc(conn, d.Id()),
+	// 	Timeout:    10 * time.Minute,
+	// 	Delay:      10 * time.Second,
+	// 	MinTimeout: 3 * time.Second,
+	// }
+
+	// if _, err := stateConf.WaitForState(); err != nil {
+	// 	return fmt.Errorf(
+	// 		"Error waiting for network_security_rule (%s) to update: %s", d.Id(), err)
+	// }
 
 	return resourceNutanixNetworkSecurityRuleRead(d, meta)
 
@@ -1834,9 +1890,6 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	if !reflect.DeepEqual(*isolationRule, (v3.NetworkSecurityRuleIsolationRule{})) {
 		networkSecurityRule.IsolationRule = isolationRule
 	}
-
-	fmt.Printf("NetworkSecrityRule (Resources): %+v", networkSecurityRule.QuarantineRule)
-
 	return nil
 }
 
@@ -1858,146 +1911,137 @@ func networkSecurityRuleStateRefreshFunc(client *v3.Client, uuid string) resourc
 
 func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"api_version": &schema.Schema{
+		"api_version": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"metadata": &schema.Schema{
+		"metadata": {
 			Type:     schema.TypeMap,
-			Required: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"last_update_time": &schema.Schema{
+					"last_update_time": {
 						Type:     schema.TypeString,
-						Optional: true,
 						Computed: true,
 					},
-					"kind": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
-						Optional: true,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"creation_time": {
 						Type:     schema.TypeString,
-						Optional: true,
 						Computed: true,
 					},
-					"creation_time": &schema.Schema{
+					"spec_version": {
 						Type:     schema.TypeString,
-						Optional: true,
 						Computed: true,
 					},
-					"spec_version": &schema.Schema{
+					"spec_hash": {
 						Type:     schema.TypeString,
-						Optional: true,
 						Computed: true,
 					},
-					"spec_hash": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
-					},
-					"name": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"categories": &schema.Schema{
+		"categories": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 		},
-		"owner_reference": &schema.Schema{
+		"owner_reference": {
 			Type:     schema.TypeMap,
 			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Optional: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Optional: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Optional: true,
 					},
 				},
 			},
 		},
-		"project_reference": &schema.Schema{
+		"project_reference": {
 			Type:     schema.TypeMap,
 			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Optional: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Optional: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Optional: true,
 					},
 				},
 			},
 		},
-		"name": &schema.Schema{
+		"name": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"description": &schema.Schema{
+		"description": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"quarantine_rule_action": &schema.Schema{
+		"quarantine_rule_action": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"quarantine_rule_outbound_allow_list": &schema.Schema{
+		"quarantine_rule_outbound_allow_list": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"protocol": &schema.Schema{
+					"protocol": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"ip_subnet": &schema.Schema{
+					"ip_subnet": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"ip_subnet_prefix_length": &schema.Schema{
+					"ip_subnet_prefix_length": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"tcp_port_range_list": &schema.Schema{
+					"tcp_port_range_list": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"end_port": &schema.Schema{
+								"end_port": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
 								},
-								"start_port": &schema.Schema{
+								"start_port": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
@@ -2005,18 +2049,18 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 							},
 						},
 					},
-					"udp_port_range_list": &schema.Schema{
+					"udp_port_range_list": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"end_port": &schema.Schema{
+								"end_port": {
 									Type:     schema.TypeInt,
 									Optional: true,
 									Computed: true,
 								},
-								"start_port": &schema.Schema{
+								"start_port": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
@@ -2024,28 +2068,28 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 							},
 						},
 					},
-					"filter_kind_list": &schema.Schema{
+					"filter_kind_list": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem:     &schema.Schema{Type: schema.TypeString},
 					},
-					"filter_type": &schema.Schema{
+					"filter_type": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"filter_params": &schema.Schema{
+					"filter_params": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"name": &schema.Schema{
+								"name": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
-								"values": &schema.Schema{
+								"values": {
 									Type:     schema.TypeList,
 									Required: true,
 									Elem:     &schema.Schema{Type: schema.TypeString},
@@ -2053,32 +2097,32 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 							},
 						},
 					},
-					"peer_specification_type": &schema.Schema{
+					"peer_specification_type": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
 
-					"expiration_time": &schema.Schema{
+					"expiration_time": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"network_function_chain_reference": &schema.Schema{
+					"network_function_chain_reference": {
 						Type:     schema.TypeMap,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"kind": &schema.Schema{
+								"kind": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
-								"uuid": &schema.Schema{
+								"uuid": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
-								"name": &schema.Schema{
+								"name": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
@@ -2086,18 +2130,18 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 							},
 						},
 					},
-					"icmp_type_code_list": &schema.Schema{
+					"icmp_type_code_list": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"code": &schema.Schema{
+								"code": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
 								},
-								"type": &schema.Schema{
+								"type": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
@@ -2108,36 +2152,36 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"quarantine_rule_target_group_default_internal_policy": &schema.Schema{
+		"quarantine_rule_target_group_default_internal_policy": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"quarantine_rule_target_group_peer_specification_type": &schema.Schema{
+		"quarantine_rule_target_group_peer_specification_type": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"quarantine_rule_target_group_filter_kind_list": &schema.Schema{
+		"quarantine_rule_target_group_filter_kind_list": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-		"quarantine_rule_target_group_filter_type": &schema.Schema{
+		"quarantine_rule_target_group_filter_type": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"quarantine_rule_target_group_filter_params": &schema.Schema{
+		"quarantine_rule_target_group_filter_params": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Required: true,
 					},
-					"values": &schema.Schema{
+					"values": {
 						Type:     schema.TypeList,
 						Required: true,
 						Elem:     &schema.Schema{Type: schema.TypeString},
@@ -2145,39 +2189,39 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"quarantine_rule_inbound_allow_list": &schema.Schema{
+		"quarantine_rule_inbound_allow_list": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"protocol": &schema.Schema{
+					"protocol": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"ip_subnet": &schema.Schema{
+					"ip_subnet": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"ip_subnet_prefix_length": &schema.Schema{
+					"ip_subnet_prefix_length": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"tcp_port_range_list": &schema.Schema{
+					"tcp_port_range_list": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"end_port": &schema.Schema{
+								"end_port": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
 								},
-								"start_port": &schema.Schema{
+								"start_port": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
@@ -2185,18 +2229,18 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 							},
 						},
 					},
-					"udp_port_range_list": &schema.Schema{
+					"udp_port_range_list": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"end_port": &schema.Schema{
+								"end_port": {
 									Type:     schema.TypeInt,
 									Optional: true,
 									Computed: true,
 								},
-								"start_port": &schema.Schema{
+								"start_port": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
@@ -2204,28 +2248,28 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 							},
 						},
 					},
-					"filter_kind_list": &schema.Schema{
+					"filter_kind_list": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem:     &schema.Schema{Type: schema.TypeString},
 					},
-					"filter_type": &schema.Schema{
+					"filter_type": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"filter_params": &schema.Schema{
+					"filter_params": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"name": &schema.Schema{
+								"name": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
-								"values": &schema.Schema{
+								"values": {
 									Type:     schema.TypeList,
 									Required: true,
 									Elem:     &schema.Schema{Type: schema.TypeString},
@@ -2233,32 +2277,32 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 							},
 						},
 					},
-					"peer_specification_type": &schema.Schema{
+					"peer_specification_type": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
 
-					"expiration_time": &schema.Schema{
+					"expiration_time": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"network_function_chain_reference": &schema.Schema{
+					"network_function_chain_reference": {
 						Type:     schema.TypeMap,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"kind": &schema.Schema{
+								"kind": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
-								"uuid": &schema.Schema{
+								"uuid": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
-								"name": &schema.Schema{
+								"name": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
@@ -2266,18 +2310,18 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 							},
 						},
 					},
-					"icmp_type_code_list": &schema.Schema{
+					"icmp_type_code_list": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"code": &schema.Schema{
+								"code": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
 								},
-								"type": &schema.Schema{
+								"type": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
@@ -2288,44 +2332,44 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"app_rule_action": &schema.Schema{
+		"app_rule_action": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"app_rule_outbound_allow_list": &schema.Schema{
+		"app_rule_outbound_allow_list": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"protocol": &schema.Schema{
+					"protocol": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"ip_subnet": &schema.Schema{
+					"ip_subnet": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"ip_subnet_prefix_length": &schema.Schema{
+					"ip_subnet_prefix_length": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"tcp_port_range_list": &schema.Schema{
+					"tcp_port_range_list": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"end_port": &schema.Schema{
+								"end_port": {
 									Type:     schema.TypeInt,
 									Optional: true,
 									Computed: true,
 								},
-								"start_port": &schema.Schema{
+								"start_port": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
@@ -2333,18 +2377,18 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 							},
 						},
 					},
-					"udp_port_range_list": &schema.Schema{
+					"udp_port_range_list": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"end_port": &schema.Schema{
+								"end_port": {
 									Type:     schema.TypeInt,
 									Optional: true,
 									Computed: true,
 								},
-								"start_port": &schema.Schema{
+								"start_port": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
@@ -2352,28 +2396,28 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 							},
 						},
 					},
-					"filter_kind_list": &schema.Schema{
+					"filter_kind_list": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem:     &schema.Schema{Type: schema.TypeString},
 					},
-					"filter_type": &schema.Schema{
+					"filter_type": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"filter_params": &schema.Schema{
+					"filter_params": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"name": &schema.Schema{
+								"name": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
-								"values": &schema.Schema{
+								"values": {
 									Type:     schema.TypeList,
 									Required: true,
 									Elem:     &schema.Schema{Type: schema.TypeString},
@@ -2381,32 +2425,32 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 							},
 						},
 					},
-					"peer_specification_type": &schema.Schema{
+					"peer_specification_type": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
 
-					"expiration_time": &schema.Schema{
+					"expiration_time": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"network_function_chain_reference": &schema.Schema{
+					"network_function_chain_reference": {
 						Type:     schema.TypeMap,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"kind": &schema.Schema{
+								"kind": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
-								"uuid": &schema.Schema{
+								"uuid": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
-								"name": &schema.Schema{
+								"name": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
@@ -2414,18 +2458,18 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 							},
 						},
 					},
-					"icmp_type_code_list": &schema.Schema{
+					"icmp_type_code_list": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"code": &schema.Schema{
+								"code": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
 								},
-								"type": &schema.Schema{
+								"type": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
@@ -2436,36 +2480,36 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"app_rule_target_group_default_internal_policy": &schema.Schema{
+		"app_rule_target_group_default_internal_policy": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"app_rule_target_group_peer_specification_type": &schema.Schema{
+		"app_rule_target_group_peer_specification_type": {
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"app_rule_target_group_filter_kind_list": &schema.Schema{
+		"app_rule_target_group_filter_kind_list": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-		"app_rule_target_group_filter_type": &schema.Schema{
+		"app_rule_target_group_filter_type": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"app_rule_target_group_filter_params": &schema.Schema{
+		"app_rule_target_group_filter_params": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Required: true,
 					},
-					"values": &schema.Schema{
+					"values": {
 						Type:     schema.TypeList,
 						Required: true,
 						Elem:     &schema.Schema{Type: schema.TypeString},
@@ -2473,39 +2517,39 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"app_rule_inbound_allow_list": &schema.Schema{
+		"app_rule_inbound_allow_list": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"protocol": &schema.Schema{
+					"protocol": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"ip_subnet": &schema.Schema{
+					"ip_subnet": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"ip_subnet_prefix_length": &schema.Schema{
+					"ip_subnet_prefix_length": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"tcp_port_range_list": &schema.Schema{
+					"tcp_port_range_list": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"end_port": &schema.Schema{
+								"end_port": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
 								},
-								"start_port": &schema.Schema{
+								"start_port": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
@@ -2513,18 +2557,18 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 							},
 						},
 					},
-					"udp_port_range_list": &schema.Schema{
+					"udp_port_range_list": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"end_port": &schema.Schema{
+								"end_port": {
 									Type:     schema.TypeInt,
 									Optional: true,
 									Computed: true,
 								},
-								"start_port": &schema.Schema{
+								"start_port": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
@@ -2532,28 +2576,28 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 							},
 						},
 					},
-					"filter_kind_list": &schema.Schema{
+					"filter_kind_list": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem:     &schema.Schema{Type: schema.TypeString},
 					},
-					"filter_type": &schema.Schema{
+					"filter_type": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"filter_params": &schema.Schema{
+					"filter_params": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"name": &schema.Schema{
+								"name": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
-								"values": &schema.Schema{
+								"values": {
 									Type:     schema.TypeList,
 									Required: true,
 									Elem:     &schema.Schema{Type: schema.TypeString},
@@ -2561,32 +2605,32 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 							},
 						},
 					},
-					"peer_specification_type": &schema.Schema{
+					"peer_specification_type": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
 
-					"expiration_time": &schema.Schema{
+					"expiration_time": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"network_function_chain_reference": &schema.Schema{
+					"network_function_chain_reference": {
 						Type:     schema.TypeMap,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"kind": &schema.Schema{
+								"kind": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
-								"uuid": &schema.Schema{
+								"uuid": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
-								"name": &schema.Schema{
+								"name": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
@@ -2594,18 +2638,18 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 							},
 						},
 					},
-					"icmp_type_code_list": &schema.Schema{
+					"icmp_type_code_list": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"code": &schema.Schema{
+								"code": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
 								},
-								"type": &schema.Schema{
+								"type": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
@@ -2616,33 +2660,33 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"isolation_rule_action": &schema.Schema{
+		"isolation_rule_action": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"isolation_rule_first_entity_filter_kind_list": &schema.Schema{
+		"isolation_rule_first_entity_filter_kind_list": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-		"isolation_rule_first_entity_filter_type": &schema.Schema{
+		"isolation_rule_first_entity_filter_type": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"isolation_rule_first_entity_filter_params": &schema.Schema{
+		"isolation_rule_first_entity_filter_params": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Required: true,
 					},
-					"values": &schema.Schema{
+					"values": {
 						Type:     schema.TypeList,
 						Required: true,
 						Elem:     &schema.Schema{Type: schema.TypeString},
@@ -2650,28 +2694,28 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"isolation_rule_second_entity_filter_kind_list": &schema.Schema{
+		"isolation_rule_second_entity_filter_kind_list": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-		"isolation_rule_second_entity_filter_type": &schema.Schema{
+		"isolation_rule_second_entity_filter_type": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"isolation_rule_second_entity_filter_params": &schema.Schema{
+		"isolation_rule_second_entity_filter_params": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Required: true,
 					},
-					"values": &schema.Schema{
+					"values": {
 						Type:     schema.TypeList,
 						Required: true,
 						Elem:     &schema.Schema{Type: schema.TypeString},
