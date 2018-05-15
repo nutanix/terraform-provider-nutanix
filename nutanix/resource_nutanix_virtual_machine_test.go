@@ -74,14 +74,6 @@ func testAccCheckNutanixVirtualMachineDestroy(s *terraform.State) error {
 
 func testAccNutanixVMConfig(r int) string {
 	return fmt.Sprint(`
-provider "nutanix" {
-  username = "admin"
-  password = "Nutanix/1234"
-  endpoint = "10.5.81.139"
-  insecure = true
-  port     = 9440
-}
-
 variable clusterid {
   default = "000567f3-1921-c722-471d-0cc47ac31055"
 }
