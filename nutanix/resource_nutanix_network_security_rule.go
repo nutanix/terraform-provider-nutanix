@@ -52,7 +52,9 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 	}
 
 	//only set kind
-	metadata.Kind = utils.String("network_security_rule")
+	if errMetad := getMetadataAttributes(d, metadata, "network_security_rule"); errMetad != nil {
+		return errMetad
+	}
 
 	if descok {
 		spec.Description = utils.String(desc.(string))
@@ -816,27 +818,6 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 
 		if response.Spec.Resources != nil {
 			networkSecurityRule = response.Spec.Resources
-		}
-	}
-
-	if d.HasChange("metadata") {
-		m := d.Get("metadata")
-		metad := m.(map[string]interface{})
-		if v, ok := metad["uuid"]; ok && v != "" {
-			metadata.UUID = utils.String(v.(string))
-		}
-		if v, ok := metad["spec_version"]; ok && v != 0 {
-			i, err := strconv.Atoi(v.(string))
-			if err != nil {
-				return err
-			}
-			metadata.SpecVersion = utils.Int64(int64(i))
-		}
-		if v, ok := metad["spec_hash"]; ok && v != "" {
-			metadata.SpecHash = utils.String(v.(string))
-		}
-		if v, ok := metad["name"]; ok {
-			metadata.Name = utils.String(v.(string))
 		}
 	}
 
