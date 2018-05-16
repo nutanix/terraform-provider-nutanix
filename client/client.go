@@ -34,7 +34,13 @@ type Client struct {
 
 	// User agent for client
 	UserAgent string
+
+	// Optional function called after every successful request made.
+	onRequestCompleted RequestCompletionCallback
 }
+
+// RequestCompletionCallback defines the type of the request callback function
+type RequestCompletionCallback func(*http.Request, *http.Response, interface{})
 
 // Credentials needed username and password
 type Credentials struct {
@@ -63,7 +69,7 @@ func NewClient(credentials *Credentials) (*Client, error) {
 		return nil, err
 	}
 
-	c := &Client{credentials, httpClient, baseURL, userAgent}
+	c := &Client{credentials, httpClient, baseURL, userAgent, nil}
 
 	return c, nil
 }
@@ -86,7 +92,6 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 			return nil, err
 		}
 	}
-
 	req, err := http.NewRequest(method, u.String(), buf)
 
 	if err != nil {
@@ -112,24 +117,21 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 	return req, nil
 }
 
+// OnRequestCompleted sets the DO API request completion callback
+func (c *Client) OnRequestCompleted(rc RequestCompletionCallback) {
+	c.onRequestCompleted = rc
+}
+
 //Do performs request passed
 func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error {
 
 	req = req.WithContext(ctx)
 
 	resp, err := c.client.Do(req)
+
 	if err != nil {
 		return err
 	}
-
-	// fmt.Println("################")
-	// fmt.Println("RESPONSE")
-
-	// responseDump, err := httputil.DumpResponse(resp, true)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println(string(responseDump))
 
 	defer func() {
 		if rerr := resp.Body.Close(); err == nil {
@@ -156,6 +158,10 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 			}
 			// utils.PrintToJSON(v, "RESPONSE BODY")
 		}
+	}
+
+	if c.onRequestCompleted != nil {
+		c.onRequestCompleted(req, resp, v)
 	}
 
 	return err
