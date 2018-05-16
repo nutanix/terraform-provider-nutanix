@@ -10,6 +10,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 )
 
@@ -105,13 +106,13 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 
 	// utils.PrintToJSON(req, "REQUEST BODY")
 
-	// requestDump, err := httputil.DumpRequestOut(req, true)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println("################")
-	// fmt.Println("REQUEST")
-	// fmt.Println(string(requestDump))
+	requestDump, err := httputil.DumpRequestOut(req, true)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("################")
+	fmt.Println("REQUEST")
+	fmt.Println(string(requestDump))
 
 	return req, nil
 }
