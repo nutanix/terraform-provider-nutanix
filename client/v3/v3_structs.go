@@ -926,7 +926,7 @@ type ImageMetadata struct {
 type ImageIntentInput struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
-	Metadata *ImageMetadata `json:"metadata,omitempty"`
+	Metadata *Metadata `json:"metadata,omitempty"`
 
 	Spec *Image `json:"spec,omitempty"`
 }
@@ -1006,7 +1006,7 @@ type ImageDefStatus struct {
 type ImageIntentResponse struct {
 	APIVersion *string `json:"api_version"`
 
-	Metadata *ImageMetadata `json:"metadata"`
+	Metadata *Metadata `json:"metadata"`
 
 	Spec *Image `json:"spec,omitempty"`
 

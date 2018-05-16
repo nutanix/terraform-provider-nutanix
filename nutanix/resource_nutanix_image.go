@@ -40,7 +40,7 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 
 	request := &v3.ImageIntentInput{}
 	spec := &v3.Image{}
-	metadata := &v3.ImageMetadata{}
+	metadata := &v3.Metadata{}
 	image := &v3.ImageResources{}
 
 	n, nok := d.GetOk("name")
@@ -55,7 +55,7 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("Please provide the required attribute name")
 	}
 
-	if err := getImageMetadaAttributes(d, metadata); err != nil {
+	if err := getMetadataAttributes(d, metadata, "image"); err != nil {
 		return err
 	}
 
@@ -126,12 +126,12 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 	// set metadata values
 	metadata := make(map[string]interface{})
 	metadata["last_update_time"] = resp.Metadata.LastUpdateTime.String()
-	metadata["kind"] = utils.StringValue(resp.Metadata.Kind)
 	metadata["uuid"] = utils.StringValue(resp.Metadata.UUID)
 	metadata["creation_time"] = resp.Metadata.CreationTime.String()
 	metadata["spec_version"] = strconv.Itoa(int(utils.Int64Value(resp.Metadata.SpecVersion)))
 	metadata["spec_hash"] = utils.StringValue(resp.Metadata.SpecHash)
 	metadata["name"] = utils.StringValue(resp.Metadata.Name)
+
 	if err := d.Set("metadata", metadata); err != nil {
 		return err
 	}
@@ -146,9 +146,11 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 		or["uuid"] = utils.StringValue(resp.Metadata.OwnerReference.UUID)
 
 	}
+
 	if err := d.Set("owner_reference", or); err != nil {
 		return err
 	}
+
 	if err := d.Set("api_version", utils.StringValue(resp.APIVersion)); err != nil {
 		return err
 	}
@@ -179,16 +181,6 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("api_version", utils.StringValue(resp.APIVersion)); err != nil {
-		return err
-	}
-	if err := d.Set("name", utils.StringValue(resp.Status.Name)); err != nil {
-		return err
-	}
-	if err := d.Set("description", utils.StringValue(resp.Status.Description)); err != nil {
-		return err
-	}
-
 	// set state value
 	if err := d.Set("state", resp.Status.State); err != nil {
 		return err
@@ -206,6 +198,26 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	checksum := make(map[string]string)
+	if resp.Status.Resources.Checksum != nil {
+		checksum["checksum_algorithm"] = utils.StringValue(resp.Status.Resources.Checksum.ChecksumAlgorithm)
+		checksum["checksum_value"] = utils.StringValue(resp.Status.Resources.Checksum.ChecksumValue)
+	}
+
+	if err := d.Set("checksum", checksum); err != nil {
+		return err
+	}
+
+	version := make(map[string]string)
+	if resp.Status.Resources.Version != nil {
+		version["product_version"] = utils.StringValue(resp.Status.Resources.Version.ProductVersion)
+		version["product_name"] = utils.StringValue(resp.Status.Resources.Version.ProductName)
+	}
+
+	if err := d.Set("version", version); err != nil {
+		return err
+	}
+
 	var uriList []string
 	for _, uri := range resp.Status.Resources.RetrievalURIList {
 		uriList = append(uriList, utils.StringValue(uri))
@@ -219,32 +231,74 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 
 	// get state
 	request := &v3.ImageIntentInput{}
-	metadata := &v3.ImageMetadata{}
+	metadata := &v3.Metadata{}
+	spec := &v3.Image{}
 	res := &v3.ImageResources{}
 
-	if d.HasChange("metadata") ||
-		d.HasChange("categories") ||
-		d.HasChange("owner_reference") ||
-		d.HasChange("project_reference") {
-		if err := getImageMetadaAttributes(d, metadata); err != nil {
-			return err
+	response, err := conn.V3.GetImage(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	if response.Metadata != nil {
+		metadata = response.Metadata
+	}
+
+	if response.Spec != nil {
+		spec = response.Spec
+
+		if response.Spec.Resources != nil {
+			res = response.Spec.Resources
 		}
-		request.Metadata = metadata
+	}
+
+	if d.HasChange("categories") {
+		p := d.Get("categories").(map[string]interface{})
+		labels := map[string]string{}
+		for k, v := range p {
+			labels[k] = v.(string)
+		}
+		metadata.Categories = labels
+	}
+
+	if d.HasChange("owner_reference") {
+		or := d.Get("owner_reference").(map[string]interface{})
+		r := &v3.Reference{
+			Kind: utils.String(or["kind"].(string)),
+			UUID: utils.String(or["uuid"].(string)),
+			Name: utils.String(or["name"].(string)),
+		}
+		metadata.OwnerReference = r
+	}
+
+	if d.HasChange("project_reference") {
+		pr := d.Get("project_reference").(map[string]interface{})
+		r := &v3.Reference{
+			Kind: utils.String(pr["kind"].(string)),
+			UUID: utils.String(pr["uuid"].(string)),
+			Name: utils.String(pr["name"].(string)),
+		}
+		metadata.ProjectReference = r
 	}
 
 	if d.HasChange("name") {
-		request.Spec.Name = utils.String(d.Get("name").(string))
+		spec.Name = utils.String(d.Get("name").(string))
 	}
 	if d.HasChange("description") {
-		request.Spec.Description = utils.String(d.Get("description").(string))
+		spec.Description = utils.String(d.Get("description").(string))
 	}
 
 	if d.HasChange("source_uri") || d.HasChange("checksum") {
 		if err := getImageResource(d, res); err != nil {
 			return err
 		}
-		request.Spec.Resources = res
+		spec.Resources = res
 	}
+
+	request.Metadata = metadata
+	request.Spec = spec
+
 	_, errUpdate := conn.V3.UpdateImage(d.Id(), request)
 	if errUpdate != nil {
 		return errUpdate
@@ -304,42 +358,32 @@ func getImageSchema() map[string]*schema.Schema {
 		},
 		"metadata": {
 			Type:     schema.TypeMap,
-			Required: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"last_update_time": {
 						Type:     schema.TypeString,
-						Optional: true,
 						Computed: true,
 					},
-					"kind": {
-						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
-					},
+
 					"uuid": {
 						Type:     schema.TypeString,
-						Optional: true,
 						Computed: true,
 					},
 					"creation_time": {
 						Type:     schema.TypeString,
-						Optional: true,
 						Computed: true,
 					},
 					"spec_version": {
 						Type:     schema.TypeString,
-						Optional: true,
 						Computed: true,
 					},
 					"spec_hash": {
 						Type:     schema.TypeString,
-						Optional: true,
 						Computed: true,
 					},
 					"name": {
 						Type:     schema.TypeString,
-						Optional: true,
 						Computed: true,
 					},
 				},
@@ -353,6 +397,7 @@ func getImageSchema() map[string]*schema.Schema {
 		"owner_reference": {
 			Type:     schema.TypeMap,
 			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"kind": {
@@ -420,26 +465,6 @@ func getImageSchema() map[string]*schema.Schema {
 					"name": {
 						Type:     schema.TypeString,
 						Optional: true,
-						Computed: true,
-					},
-				},
-			},
-		},
-		"message_list": {
-			Type:     schema.TypeList,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"message": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"reason": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"details": {
-						Type:     schema.TypeMap,
 						Computed: true,
 					},
 				},

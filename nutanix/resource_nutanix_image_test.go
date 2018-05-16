@@ -24,6 +24,12 @@ func TestAccNutanixImage_basic(t *testing.T) {
 					testAccCheckNutanixImageExists("nutanix_image.test"),
 				),
 			},
+			{
+				Config: testAccNutanixImageConfigUpdate(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixImageExists("nutanix_image.test"),
+				),
+			},
 		},
 	})
 }
@@ -72,10 +78,17 @@ resource "nutanix_image" "test" {
   description = "CentOS LAMP - App"
   image_type  = "DISK_IMAGE"
   source_uri  = "http://filer.dev.eng.nutanix.com:8080/GoldImages/NuCalm/AHV-UVM-Images/CentOS-LAMP-APP.qcow2"
+}
+`)
+}
 
-  metadata = {
-    kind = "image"
-  }
+func testAccNutanixImageConfigUpdate(r int32) string {
+	return fmt.Sprintf(`
+resource "nutanix_image" "test" {
+  name        = "CentOS-LAMP-APP-Updated.qcow2"
+  description = "CentOS LAMP - App Updated"
+  image_type  = "DISK_IMAGE"
+  source_uri  = "http://filer.dev.eng.nutanix.com:8080/GoldImages/NuCalm/AHV-UVM-Images/CentOS-LAMP-APP.qcow2"
 }
 `)
 }
