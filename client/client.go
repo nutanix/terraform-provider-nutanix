@@ -10,9 +10,8 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
-
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 const (
@@ -100,15 +99,15 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 	req.Header.Add("Authorization", "Basic "+
 		base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
 
-	utils.PrintToJSON(req, "REQUEST BODY")
+	// utils.PrintToJSON(req, "REQUEST BODY")
 
-	// requestDump, err := httputil.DumpRequestOut(req, true)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println("################")
-	// fmt.Println("REQUEST")
-	// fmt.Println(string(requestDump))
+	requestDump, err := httputil.DumpRequestOut(req, true)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("################")
+	fmt.Println("REQUEST")
+	fmt.Println(string(requestDump))
 
 	return req, nil
 }
@@ -155,7 +154,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 			if err != nil {
 				return err
 			}
-			utils.PrintToJSON(v, "RESPONSE BODY")
+			// utils.PrintToJSON(v, "RESPONSE BODY")
 		}
 	}
 

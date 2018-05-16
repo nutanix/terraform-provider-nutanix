@@ -6,8 +6,14 @@ provider "nutanix" {
   port     = 9440
 }
 
-variable clusterid {
-  default = "000567f3-1921-c722-471d-0cc47ac31055"
+data "nutanix_clusters" "clusters" {
+  metadata = {
+    length = 3
+  }
+}
+
+output "cluster" {
+  value = "${data.nutanix_clusters.clusters.entities.2.metadata.uuid}"
 }
 
 resource "nutanix_virtual_machine" "vm1" {
@@ -20,7 +26,7 @@ resource "nutanix_virtual_machine" "vm1" {
 
   cluster_reference = {
     kind = "cluster"
-    uuid = "${var.clusterid}"
+    uuid = "${data.nutanix_clusters.clusters.entities.2.metadata.uuid}"
   }
 
   num_vcpus_per_socket = 1
@@ -39,6 +45,65 @@ resource "nutanix_virtual_machine" "vm1" {
       type = "ASSIGNED"
     }
   }]
+
+  disk_list = [{
+    data_source_reference = [{
+      kind = "image"
+      name = "${nutanix_image.ubuntu_cloud_url.name}"
+      uuid = "${nutanix_image.ubuntu_cloud_url.id}"
+    }]
+
+    device_properties = [{
+      device_type = "DISK"
+    }]
+
+    disk_size_mib = "${nutanix_image.ubuntu_cloud_url.size_bytes}"
+  }]
+}
+
+resource "nutanix_virtual_machine" "vm2" {
+  metadata {
+    kind = "vm"
+    name = "metadata-name-test-dou"
+  }
+
+  name = "test-dou"
+
+  cluster_reference = {
+    kind = "cluster"
+    uuid = "${data.nutanix_clusters.clusters.entities.2.metadata.uuid}"
+  }
+
+  num_vcpus_per_socket = 1
+  num_sockets          = 1
+  memory_size_mib      = 2048
+  power_state          = "ON"
+
+  nic_list = [{
+    subnet_reference = {
+      kind = "subnet"
+      uuid = "${nutanix_subnet.test.id}"
+    }
+
+    ip_endpoint_list = {
+      ip   = "192.168.0.11"
+      type = "ASSIGNED"
+    }
+  }]
+
+  disk_list = [{
+    data_source_reference = [{
+      kind = "image"
+      name = "${nutanix_image.ubuntu_cloud_url.name}"
+      uuid = "${nutanix_image.ubuntu_cloud_url.id}"
+    }]
+
+    device_properties = [{
+      device_type = "DISK"
+    }]
+
+    disk_size_mib = "${nutanix_image.ubuntu_cloud_url.size_bytes}"
+  }]
 }
 
 resource "nutanix_subnet" "test" {
@@ -51,7 +116,7 @@ resource "nutanix_subnet" "test" {
 
   cluster_reference = {
     kind = "cluster"
-    uuid = "${var.clusterid}"
+    uuid = "${data.nutanix_clusters.clusters.entities.2.metadata.uuid}"
   }
 
   vlan_id     = 201
@@ -73,4 +138,21 @@ resource "nutanix_subnet" "test" {
 
 data "nutanix_virtual_machine" "nutanix_virtual_machine" {
   vm_id = "${nutanix_virtual_machine.vm1.id}"
+}
+
+data "nutanix_virtual_machines" "nutanix_virtual_machine" {
+  metadata = {
+    length = 2
+  }
+}
+
+resource "nutanix_image" "ubuntu_cloud_url" {
+  # General Information
+  name        = "Ubuntu"
+  description = "Ubuntu"
+  source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
+
+  metadata = {
+    kind = "image"
+  }
 }

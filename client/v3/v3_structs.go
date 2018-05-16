@@ -178,7 +178,7 @@ type GuestCustomization struct {
 	// Flag to allow override of customization by deployer.
 	IsOverridable *bool `json:"is_overridable,omitempty"`
 
-	Sysprep map[string]interface{} `json:"sysprep,omitempty"`
+	Sysprep *GuestCustomizationSysprep `json:"sysprep,omitempty"`
 }
 
 //VMGuestPowerStateTransitionConfig Extra configs related to power state transition.
@@ -1186,13 +1186,26 @@ type ClusterNodes struct {
 	HypervisorServerList []*HypervisorServer `json:"hypervisor_server_list,omitempty"`
 }
 
+// SoftwareMapValues ...
+type SoftwareMapValues struct {
+	SoftwareType *string `json:"software_type,omitempty"`
+	Status       *string `json:"status,omitempty"`
+	Version      *string `json:"version,omitempty"`
+}
+
+// SoftwareMap ...
+type SoftwareMap struct {
+	NCC *SoftwareMapValues `json:"ncc,omitempty"`
+	NOS *SoftwareMapValues `json:"nos,omitempty"`
+}
+
 // ClusterConfig ...
 type ClusterConfig struct {
 	GpuDriverVersion              *string                    `json:"gpu_driver_version,omitempty"`
 	ClientAuth                    *ClientAuth                `json:"client_auth,omitempty"`
 	AuthorizedPublicKeyList       []*PublicKey               `json:"authorized_public_key_list,omitempty"`
-	SoftwareMap                   map[string]interface{}     `json:"software_map,omitempty"`
-	EncryptionStatus              map[string]interface{}     `json:"encryption_status,omitempty"`
+	SoftwareMap                   *SoftwareMap               `json:"software_map,omitempty"`
+	EncryptionStatus              *string                    `json:"encryption_status,omitempty"`
 	SslKey                        *SslKey                    `json:"ssl_key,omitempty"`
 	ServiceList                   []*string                  `json:"service_list,omitempty"`
 	SupportedInformationVerbosity *string                    `json:"supported_information_verbosity,omitempty"`
@@ -1305,7 +1318,7 @@ type ConfigClusterSpec struct {
 	ClientAuth                    *ClientAuth                 `json:"client_auth,omitempty"`
 	AuthorizedPublicKeyList       []*PublicKey                `json:"authorized_public_key_list,omitempty"`
 	SoftwareMap                   map[string]interface{}      `json:"software_map,omitempty"`
-	EncryptionStatus              map[string]interface{}      `json:"encryption_status,omitempty"`
+	EncryptionStatus              string                      `json:"encryption_status,omitempty"`
 	RedundancyFactor              *int64                      `json:"redundancy_factor,omitempty"`
 	CertificationSigningInfo      *CertificationSigningInfo   `json:"certification_signing_info,omitempty"`
 	SupportedInformationVerbosity *string                     `json:"supported_information_verbosity,omitempty"`
@@ -1385,9 +1398,18 @@ type Credentials struct {
 	Password *string `json:"password,omitempty"`
 }
 
+// VMEfficiencyMap ...
+type VMEfficiencyMap struct {
+	BullyVMNum           *string `json:"bully_vm_num,omitempty"`
+	ConstrainedVMNum     *string `json:"constrained_vm_num,omitempty"`
+	DeadVMNum            *string `json:"dead_vm_num,omitempty"`
+	InefficientVMNum     *string `json:"inefficient_vm_num,omitempty"`
+	OverprovisionedVMNum *string `json:"overprovisioned_vm_num,omitempty"`
+}
+
 // ClusterAnalysis ...
 type ClusterAnalysis struct {
-	VMEfficiencyMap map[string]interface{} `json:"vm_efficiency_map,omitempty"`
+	VMEfficiencyMap *VMEfficiencyMap `json:"vm_efficiency_map,omitempty"`
 }
 
 //CategoryListMetadata All api calls that return a list will have this metadata block as input
@@ -1502,7 +1524,7 @@ type CategoryFilter struct {
 	KindList []*string `json:"kind_list,omitempty"`
 
 	// A list of category key and list of values.
-	Params map[string][]*string `json:"params"`
+	Params map[string][]string `json:"params,omitempty"`
 
 	// The type of the filter being used.
 	Type *string `json:"type,omitempty"`
@@ -1636,7 +1658,7 @@ type NetworkRule struct {
 	// List of ICMP types and codes allowed by this rule.
 	IcmpTypeCodeList []*NetworkRuleIcmpTypeCodeList `json:"icmp_type_code_list,omitempty"`
 
-	IPSubnet IPSubnet `json:"ip_subnet,omitempty"`
+	IPSubnet *IPSubnet `json:"ip_subnet,omitempty"`
 
 	NetworkFunctionChainReference *Reference `json:"network_function_chain_reference,omitempty"`
 
@@ -1712,21 +1734,26 @@ type NetworkSecurityRule struct {
 
 //Metadata Metadata The kind metadata
 type Metadata struct {
-	Categories map[string]string `json:"categories,omitempty"`
-
-	CreationTime *time.Time `json:"creation_time,omitempty"`
+	LastUpdateTime *time.Time `json:"last_update_time,omitempty"`
 
 	Kind *string `json:"kind"`
 
-	LastUpdateTime *time.Time `json:"last_update_time,omitempty"`
+	UUID *string `json:"uuid,omitempty"`
 
-	Name *string `json:"name,omitempty"`
+	// project reference
+	ProjectReference *Reference `json:"project_reference,omitempty"`
 
-	SpecHash *string `json:"spec_hash,omitempty"`
+	CreationTime *time.Time `json:"creation_time,omitempty"`
 
 	SpecVersion *int64 `json:"spec_version,omitempty"`
 
-	UUID *string `json:"uuid,omitempty"`
+	SpecHash *string `json:"spec_hash,omitempty"`
+
+	OwnerReference *Reference `json:"owner_reference,omitempty"`
+
+	Categories map[string]string `json:"categories,omitempty"`
+
+	Name *string `json:"name,omitempty"`
 }
 
 //NetworkSecurityRuleIntentInput An intentful representation of a network_security_rule
@@ -1745,6 +1772,8 @@ type NetworkSecurityRuleDefStatus struct {
 	IsolationRule *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty"`
 
 	QuarantineRule *NetworkSecurityRuleResourcesRule `json:"quarantine_rule,omitempty"`
+
+	State *string `json:"state,omitmepty"`
 }
 
 //NetworkSecurityRuleIntentResponse Response object for intentful operations on a network_security_rule
