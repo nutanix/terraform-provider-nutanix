@@ -134,11 +134,7 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 		metadata["last_update_time"] = resp.Metadata.LastUpdateTime.String()
 		//metadata["kind"] = utils.StringValue(resp.Metadata.Kind)
 		metadata["uuid"] = utils.StringValue(resp.Metadata.UUID)
-
-		if resp.Metadata.CreationTime != nil {
-			metadata["creation_time"] = resp.Metadata.CreationTime.String()
-		}
-
+		metadata["creation_time"] = resp.Metadata.CreationTime.String()
 		metadata["spec_version"] = strconv.Itoa(int(utils.Int64Value(resp.Metadata.SpecVersion)))
 		metadata["spec_hash"] = utils.StringValue(resp.Metadata.SpecHash)
 		metadata["name"] = utils.StringValue(resp.Metadata.Name)
