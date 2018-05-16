@@ -106,7 +106,7 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf(
-			"Error waiting for vm (%s) to create: %s", d.Id(), err)
+			"Error waiting for image (%s) to create: %s", d.Id(), err)
 	}
 	return resourceNutanixImageRead(d, meta)
 }
@@ -261,7 +261,7 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf(
-			"Error waiting for vm (%s) to update: %s", d.Id(), err)
+			"Error waiting for image (%s) to update: %s", d.Id(), err)
 	}
 
 	return resourceNutanixImageRead(d, meta)
