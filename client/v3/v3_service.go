@@ -46,6 +46,7 @@ type Service interface {
 	GetNetworkSecurityRule(UUID string) (*NetworkSecurityRuleIntentResponse, error)
 	DeleteNetworkSecurityRule(UUID string) error
 	CreateNetworkSecurityRule(request *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error)
+	ListCluster(getEntitiesRequest *ClusterListMetadataOutput) (*ClusterListIntentResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -625,6 +626,10 @@ func (op Operations) CreateOrUpdateCategoryValue(name string, body *CategoryValu
 	categoryValueResponse := new(CategoryValueStatus)
 
 	err = op.client.Do(ctx, req, categoryValueResponse)
+
+	if err != nil {
+		return nil, err
+	}
 
 	return categoryValueResponse, nil
 }

@@ -18,7 +18,7 @@ func TestAccNutanixImage_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixImageDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNutanixImageConfig(r),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixImageExists("nutanix_image.test"),
