@@ -45,6 +45,20 @@ resource "nutanix_virtual_machine" "vm1" {
       type = "ASSIGNED"
     }
   }]
+
+  disk_list = [{
+    data_source_reference = [{
+      kind = "image"
+      name = "${nutanix_image.ubuntu_cloud_url.name}"
+      uuid = "${nutanix_image.ubuntu_cloud_url.id}"
+    }]
+
+    device_properties = [{
+      device_type = "DISK"
+    }]
+
+    disk_size_mib = "${nutanix_image.ubuntu_cloud_url.size_bytes}"
+  }]
 }
 
 resource "nutanix_virtual_machine" "vm2" {
@@ -75,6 +89,20 @@ resource "nutanix_virtual_machine" "vm2" {
       ip   = "192.168.0.11"
       type = "ASSIGNED"
     }
+  }]
+
+  disk_list = [{
+    data_source_reference = [{
+      kind = "image"
+      name = "${nutanix_image.ubuntu_cloud_url.name}"
+      uuid = "${nutanix_image.ubuntu_cloud_url.id}"
+    }]
+
+    device_properties = [{
+      device_type = "DISK"
+    }]
+
+    disk_size_mib = "${nutanix_image.ubuntu_cloud_url.size_bytes}"
   }]
 }
 
@@ -115,5 +143,16 @@ data "nutanix_virtual_machine" "nutanix_virtual_machine" {
 data "nutanix_virtual_machines" "nutanix_virtual_machine" {
   metadata = {
     length = 2
+  }
+}
+
+resource "nutanix_image" "ubuntu_cloud_url" {
+  # General Information
+  name        = "Ubuntu"
+  description = "Ubuntu"
+  source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
+
+  metadata = {
+    kind = "image"
   }
 }
