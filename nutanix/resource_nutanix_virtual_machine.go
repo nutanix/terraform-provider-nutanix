@@ -50,7 +50,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	if !nok {
 		return fmt.Errorf("Please provide the required name attribute")
 	}
-	if err := getMetadaAttributes(d, metadata); err != nil {
+	if err := getVMMetadaAttributes(d, metadata); err != nil {
 		return err
 	}
 	if descok {
@@ -912,7 +912,7 @@ func resourceNutanixVirtualMachineExists(d *schema.ResourceData, meta interface{
 	return false, nil
 }
 
-func getMetadaAttributes(d *schema.ResourceData, metadata *v3.VMMetadata) error {
+func getVMMetadaAttributes(d *schema.ResourceData, metadata *v3.VMMetadata) error {
 	m, mok := d.GetOk("metadata")
 	metad := m.(map[string]interface{})
 
