@@ -1,6 +1,10 @@
 package v3
 
 import (
+	"net/http"
+
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
 )
 
@@ -24,6 +28,13 @@ func NewV3Client(credentials client.Credentials) (*Client, error) {
 			client: c,
 		},
 	}
+
+	f.client.OnRequestCompleted(func(req *http.Request, resp *http.Response, v interface{}) {
+		if v != nil {
+			utils.PrintToJSON(v, "[Debug] FINISHED REQUEST")
+			//TBD: How to print responses before all requests.
+		}
+	})
 
 	return f, nil
 }
