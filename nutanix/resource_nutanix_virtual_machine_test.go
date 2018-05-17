@@ -74,16 +74,23 @@ func testAccCheckNutanixVirtualMachineDestroy(s *terraform.State) error {
 
 func testAccNutanixVMConfig(r int) string {
 	return fmt.Sprint(`
-variable clusterid {
-  default = "000567f3-1921-c722-471d-0cc47ac31055"
+data "nutanix_clusters" "clusters" {
+  metadata = {
+    length = 3
+  }
 }
+
+output "cluster" {
+  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+}
+
 
 resource "nutanix_virtual_machine" "vm1" {
   name = "test-dou"
 
   cluster_reference = {
-    kind = "cluster"
-    uuid = "${var.clusterid}"
+	  kind = "cluster"
+	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   }
 
   num_vcpus_per_socket = 1

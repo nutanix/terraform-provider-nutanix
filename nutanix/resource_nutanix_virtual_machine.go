@@ -256,8 +256,8 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 			subtnetRef := make(map[string]interface{})
 			if v.SubnetReference != nil {
 				subtnetRef["kind"] = utils.StringValue(v.SubnetReference.Kind)
-				subtnetRef["name"] = utils.StringValue(v.SubnetReference.Name)
 				subtnetRef["uuid"] = utils.StringValue(v.SubnetReference.UUID)
+				nic["subnet_reference_name"] = utils.StringValue(v.SubnetReference.Name)
 			}
 			nic["subnet_reference"] = subtnetRef
 
@@ -1046,7 +1046,7 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 					if j, ok1 := v["uuid"]; ok1 {
 						ref.UUID = utils.String(j.(string))
 					}
-					if j, ok1 := v["name"]; ok1 {
+					if j, ok1 := val["subnet_reference_name"]; ok1 {
 						ref.Name = utils.String(j.(string))
 					}
 					nic.SubnetReference = ref
@@ -1582,17 +1582,17 @@ func getVMSchema() map[string]*schema.Schema {
 									Type:     schema.TypeString,
 									Required: true,
 								},
-								"name": {
-									Type:     schema.TypeString,
-									Optional: true,
-									Computed: true,
-								},
 								"uuid": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
 							},
 						},
+					},
+					"subnet_reference_name": {
+						Type:     schema.TypeString,
+						Optional: true,
+						Computed: true,
 					},
 				},
 			},
