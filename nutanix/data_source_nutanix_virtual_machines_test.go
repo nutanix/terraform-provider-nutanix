@@ -26,7 +26,7 @@ func TestAccNutanixVMSDataSource_basic(t *testing.T) {
 const testAccVMSSDataSourceConfig = `
 data "nutanix_clusters" "clusters" {
   metadata = {
-    length = 3
+    length = 2
   }
 }
 

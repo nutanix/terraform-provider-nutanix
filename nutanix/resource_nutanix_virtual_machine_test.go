@@ -76,7 +76,7 @@ func testAccNutanixVMConfig(r int) string {
 	return fmt.Sprint(`
 data "nutanix_clusters" "clusters" {
   metadata = {
-    length = 3
+    length = 2
   }
 }
 

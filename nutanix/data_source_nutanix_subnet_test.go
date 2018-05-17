@@ -32,7 +32,7 @@ func testAccSubnetDataSourceConfig(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {
   metadata = {
-    length = 3
+    length = 2
   }
 }
 
