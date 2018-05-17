@@ -61,11 +61,21 @@ func testAccCheckNutanixSubnetDestroy(s *terraform.State) error {
 
 func testAccNutanixSubnetConfig(r int32) string {
 	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {
+  metadata = {
+    length = 3
+  }
+}
+
+output "cluster" {
+  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+}
+		
 resource "nutanix_subnet" "next-iac-managed" {
   # What cluster will this VLAN live on?
   cluster_reference = {
-    kind = "cluster"
-    uuid = "000567f3-1921-c722-471d-0cc47ac31055"
+	kind = "cluster"
+	uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   }
 
   # General Information
