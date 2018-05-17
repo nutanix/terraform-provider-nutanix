@@ -710,7 +710,7 @@ type Subnet struct {
 type SubnetIntentInput struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
-	Metadata *SubnetMetadata `json:"metadata"`
+	Metadata *Metadata `json:"metadata"`
 
 	Spec *Subnet `json:"spec"`
 }
@@ -768,7 +768,7 @@ type SubnetDefStatus struct {
 type SubnetIntentResponse struct {
 	APIVersion *string `json:"api_version"`
 
-	Metadata *SubnetMetadata `json:"metadata,omitempty"`
+	Metadata *Metadata `json:"metadata,omitempty"`
 
 	Spec *Subnet `json:"spec,omitempty"`
 
