@@ -19,7 +19,7 @@ func TestAccNutanixImageDataSource_basic(t *testing.T) {
 				Config: testAccImageDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"data.nutanix_image.test", "name", "CentOS-LAMP-APP.qcow2"),
+						"data.nutanix_image.test", "name", "Ubuntu"),
 					resource.TestCheckResourceAttr(
 						"data.nutanix_image.test", "source_uri", "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"),
 				),
