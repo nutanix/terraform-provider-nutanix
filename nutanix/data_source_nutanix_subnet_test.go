@@ -19,9 +19,9 @@ func TestAccNutanixSubnetDataSource_basic(t *testing.T) {
 				Config: testAccSubnetDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"data.nutanix_subnet.nutanix_subnet", "prefix_length", "24"),
+						"data.nutanix_subnet.test", "prefix_length", "24"),
 					resource.TestCheckResourceAttr(
-						"data.nutanix_subnet.nutanix_subnet", "subnet_type", "VLAN"),
+						"data.nutanix_subnet.test", "subnet_type", "VLAN"),
 				),
 			},
 		},
@@ -35,12 +35,7 @@ variable clusterid {
 }
 
 resource "nutanix_subnet" "test" {
-	metadata = {
-		kind = "subnet"
-	}
-
 	name = "dou_vlan0_test_%d"
-	description = "Dou Vlan 0"
 
 	cluster_reference = {
 	  kind = "cluster"
@@ -64,6 +59,10 @@ resource "nutanix_subnet" "test" {
 	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
 	dhcp_domain_search_list = ["nutanix.com", "calm.io"]
 	
+}
+
+data "nutanix_subnet" "test" {
+	subnet_id = "${nutanix_subnet.test.id}"
 }
 `, r)
 }
