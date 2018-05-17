@@ -21,7 +21,7 @@ func TestAccNutanixImageDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"data.nutanix_image.test", "name", "CentOS-LAMP-APP.qcow2"),
 					resource.TestCheckResourceAttr(
-						"data.nutanix_image.test", "source_uri", "http://filer.dev.eng.nutanix.com:8080/GoldImages/NuCalm/AHV-UVM-Images/CentOS-LAMP-APP.qcow2"),
+						"data.nutanix_image.test", "source_uri", "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"),
 				),
 			},
 		},
@@ -31,11 +31,11 @@ func TestAccNutanixImageDataSource_basic(t *testing.T) {
 func testAccImageDataSourceConfig(r int) string {
 	return fmt.Sprintf(`
 resource "nutanix_image" "test" {
-  name        = "CentOS-LAMP-APP.qcow2"
-  description = "CentOS LAMP - App"
-  image_type  = "DISK_IMAGE"
-  source_uri  = "http://filer.dev.eng.nutanix.com:8080/GoldImages/NuCalm/AHV-UVM-Images/CentOS-LAMP-APP.qcow2"
+  name        = "Ubuntu"
+  description = "Ubuntu"
+  source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
 }
+
 
 data "nutanix_image" "test" {
 	image_id = "${nutanix_image.test.id}"
