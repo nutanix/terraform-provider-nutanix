@@ -293,7 +293,7 @@ type VM struct {
 type VMIntentInput struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
-	Metadata *VMMetadata `json:"metadata"`
+	Metadata *Metadata `json:"metadata"`
 
 	Spec *VM `json:"spec"`
 }
@@ -517,7 +517,7 @@ type VMDefStatus struct {
 type VMIntentResponse struct {
 	APIVersion *string `json:"api_version"`
 
-	Metadata *VMMetadata `json:"metadata,omitempty"`
+	Metadata *Metadata `json:"metadata,omitempty"`
 
 	Spec *VM `json:"spec,omitempty"`
 

@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"net/http/httputil"
 	"net/url"
 	"reflect"
 	"strings"
@@ -194,49 +193,49 @@ func TestDo_redirectLoop(t *testing.T) {
 	}
 }
 
-func TestDo_completion_callback(t *testing.T) {
-	setup()
-	defer teardown()
+// func TestDo_completion_callback(t *testing.T) {
+// 	setup()
+// 	defer teardown()
 
-	type foo struct {
-		A string
-	}
+// 	type foo struct {
+// 		A string
+// 	}
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if m := http.MethodGet; m != r.Method {
-			t.Errorf("Request method = %v, expected %v", r.Method, m)
-		}
-		fmt.Fprint(w, `{"A":"a"}`)
-	})
+// 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+// 		if m := http.MethodGet; m != r.Method {
+// 			t.Errorf("Request method = %v, expected %v", r.Method, m)
+// 		}
+// 		fmt.Fprint(w, `{"A":"a"}`)
+// 	})
 
-	req, _ := client.NewRequest(ctx, http.MethodGet, "/", nil)
-	req = req.WithContext(ctx)
-	body := new(foo)
+// 	req, _ := client.NewRequest(ctx, http.MethodGet, "/", nil)
+// 	req = req.WithContext(ctx)
+// 	body := new(foo)
 
-	//var completedReq *http.Request
-	var completedResp string
+// 	//var completedReq *http.Request
+// 	var completedResp string
 
-	client.OnRequestCompleted(func(req *http.Request, resp *http.Response, v interface{}) {
-		//completedReq = req
-		b, err := httputil.DumpResponse(resp, true)
-		if err != nil {
-			t.Errorf("Failed to dump response: %s", err)
-		}
-		completedResp = string(b)
-	})
-	err := client.Do(ctx, req, body)
+// 	client.OnRequestCompleted(func(req *http.Request, resp *http.Response, v interface{}) {
+// 		//completedReq = req
+// 		b, err := httputil.DumpResponse(resp, true)
+// 		if err != nil {
+// 			t.Errorf("Failed to dump response: %s", err)
+// 		}
+// 		completedResp = string(b)
+// 	})
+// 	err := client.Do(ctx, req, body)
 
-	if err != nil {
-		t.Fatalf("Do(): %v", err)
-	}
+// 	if err != nil {
+// 		t.Fatalf("Do(): %v", err)
+// 	}
 
-	// if !reflect.DeepEqual(req., completedReq) {
-	// 	t.Errorf("Completed request = %v, expected %v", completedReq, req)
-	// }
+// 	// if !reflect.DeepEqual(req., completedReq) {
+// 	// 	t.Errorf("Completed request = %v, expected %v", completedReq, req)
+// 	// }
 
-	expected := `{"A":"a"}`
+// 	expected := `{"A":"a"}`
 
-	if !strings.Contains(completedResp, expected) {
-		t.Errorf("expected response to contain %v, Response = %v", expected, completedResp)
-	}
-}
+// 	if !strings.Contains(completedResp, expected) {
+// 		t.Errorf("expected response to contain %v, Response = %v", expected, completedResp)
+// 	}
+// }
