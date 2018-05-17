@@ -62,12 +62,6 @@ func testAccCheckNutanixSubnetDestroy(s *terraform.State) error {
 func testAccNutanixSubnetConfig(r int32) string {
 	return fmt.Sprintf(`
 resource "nutanix_subnet" "next-iac-managed" {
-  # Can I hard code image to be kind image? 
-  # We're going to make this implicit in future API releases, so hard coding it is safe on the plugin side
-  metadata = {
-    kind = "subnet"
-  }
-
   # What cluster will this VLAN live on?
   cluster_reference = {
     kind = "cluster"
@@ -76,7 +70,6 @@ resource "nutanix_subnet" "next-iac-managed" {
 
   # General Information
   name        = "next-iac-managed-%d"
-  description = "NEXT"
   vlan_id     = 101
   subnet_type = "VLAN"
 
