@@ -3,6 +3,7 @@ package nutanix
 import (
 	"fmt"
 	"log"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -35,7 +36,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	// Prepare request
 	request := &v3.VMIntentInput{}
 	spec := &v3.VM{}
-	metadata := &v3.VMMetadata{}
+	metadata := &v3.Metadata{}
 	res := &v3.VMResources{}
 
 	// Read Arguments and set request values
@@ -50,7 +51,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	if !nok {
 		return fmt.Errorf("Please provide the required name attribute")
 	}
-	if err := getVMMetadaAttributes(d, metadata); err != nil {
+	if err := getMetadataAttributes(d, metadata, "vm"); err != nil {
 		return err
 	}
 	if descok {
@@ -73,8 +74,8 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 			Kind: utils.String(a["kind"].(string)),
 			UUID: utils.String(a["uuid"].(string)),
 		}
-		if v, ok := a["name"]; ok {
-			r.Name = utils.String(v.(string))
+		if cn, cnok := d.GetOk("cluster_name"); cnok {
+			r.Name = utils.String(cn.(string))
 		}
 		spec.ClusterReference = r
 	}
@@ -199,11 +200,12 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	clusterReference := make(map[string]interface{})
 	if resp.Status.ClusterReference != nil {
 		clusterReference["kind"] = utils.StringValue(resp.Status.ClusterReference.Kind)
-		clusterReference["name"] = utils.StringValue(resp.Status.ClusterReference.Name)
 		clusterReference["uuid"] = utils.StringValue(resp.Status.ClusterReference.UUID)
-	}
 
-	utils.PrintToJSON(clusterReference, "CLUSTER READ =>")
+		if err := d.Set("cluster_name", utils.StringValue(resp.Status.ClusterReference.Name)); err != nil {
+			return err
+		}
+	}
 
 	if err := d.Set("cluster_reference", clusterReference); err != nil {
 		return err
@@ -491,7 +493,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	fmt.Printf("Updating VM values %s", d.Id())
 
 	request := &v3.VMIntentInput{}
-	metadata := &v3.VMMetadata{}
+	metadata := &v3.Metadata{}
 	res := &v3.VMResources{}
 	spec := &v3.VM{}
 	guest := &v3.GuestCustomization{}
@@ -1145,33 +1147,43 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	if v, ok := d.GetOk("hardware_clock_timezone"); ok {
 		vm.HardwareClockTimezone = utils.String(v.(string))
 	}
+
+	gestCustom := &v3.GuestCustomization{}
+
 	if v, ok := d.GetOk("guest_customization_cloud_init"); ok {
+		gestCustom.CloudInit = &v3.GuestCustomizationCloudInit{}
 		cii := v.(map[string]interface{})
 		if v2, ok2 := cii["meta_data"]; ok2 {
-			vm.GuestCustomization.CloudInit.MetaData = utils.String(v2.(string))
+			gestCustom.CloudInit.MetaData = utils.String(v2.(string))
 		}
 		if v2, ok2 := cii["user_data"]; ok2 {
-			vm.GuestCustomization.CloudInit.UserData = utils.String(v2.(string))
+			gestCustom.CloudInit.UserData = utils.String(v2.(string))
 		}
 		if v2, ok2 := cii["custom_key_values"]; ok2 {
-			vm.GuestCustomization.CloudInit.CustomKeyValues = v2.(map[string]string)
+			gestCustom.CloudInit.CustomKeyValues = v2.(map[string]string)
 		}
 	}
 	if v, ok := d.GetOk("guest_customization_is_overridable"); ok {
-		vm.GuestCustomization.IsOverridable = utils.Bool(v.(bool))
+		gestCustom.IsOverridable = utils.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("guest_customization_sysprep"); ok {
+		gestCustom.Sysprep = &v3.GuestCustomizationSysprep{}
 		spi := v.(map[string]interface{})
 		if v2, ok2 := spi["install_type"]; ok2 {
-			vm.GuestCustomization.Sysprep.InstallType = utils.String(v2.(string))
+			gestCustom.Sysprep.InstallType = utils.String(v2.(string))
 		}
 		if v2, ok2 := spi["unattend_xml"]; ok2 {
-			vm.GuestCustomization.Sysprep.UnattendXML = utils.String(v2.(string))
+			gestCustom.Sysprep.UnattendXML = utils.String(v2.(string))
 		}
 		if v2, ok2 := spi["custom_key_values"]; ok2 {
-			vm.GuestCustomization.Sysprep.CustomKeyValues = v2.(map[string]string)
+			gestCustom.Sysprep.CustomKeyValues = v2.(map[string]string)
 		}
 	}
+
+	if !reflect.DeepEqual(*gestCustom, (v3.GuestCustomization{})) {
+		vm.GuestCustomization = gestCustom
+	}
+
 	if v, ok := d.GetOk("vga_console_enabled"); ok {
 		vm.VgaConsoleEnabled = utils.Bool(v.(bool))
 	}
@@ -1305,16 +1317,12 @@ func getVMSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"metadata": {
 			Type:     schema.TypeMap,
-			Required: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"last_update_time": {
 						Type:     schema.TypeString,
 						Computed: true,
-					},
-					"kind": {
-						Type:     schema.TypeString,
-						Required: true,
 					},
 					"uuid": {
 						Type:     schema.TypeString,
@@ -1440,16 +1448,14 @@ func getVMSchema() map[string]*schema.Schema {
 						Type:     schema.TypeString,
 						Required: true,
 					},
-					"name": {
-						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
-					},
 				},
 			},
 		},
-
-		// COMPUTED
+		"cluster_name": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
 		"state": {
 			Type:     schema.TypeString,
 			Computed: true,

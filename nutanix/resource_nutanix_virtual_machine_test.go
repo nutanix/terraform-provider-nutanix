@@ -79,11 +79,6 @@ variable clusterid {
 }
 
 resource "nutanix_virtual_machine" "vm1" {
-  metadata {
-    kind = "vm"
-    name = "metadata-name-test-dou"
-  }
-
   name = "test-dou"
 
   cluster_reference = {
