@@ -80,18 +80,22 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 		entity["categories"] = v.Metadata.Categories
 		entity["api_version"] = utils.StringValue(v.APIVersion)
 
-		pr := make(map[string]interface{})
-		pr["kind"] = utils.StringValue(v.Metadata.ProjectReference.Kind)
-		pr["name"] = utils.StringValue(v.Metadata.ProjectReference.Name)
-		pr["uuid"] = utils.StringValue(v.Metadata.ProjectReference.UUID)
+		if v.Metadata.ProjectReference != nil {
+			pr := make(map[string]interface{})
+			pr["kind"] = utils.StringValue(v.Metadata.ProjectReference.Kind)
+			pr["name"] = utils.StringValue(v.Metadata.ProjectReference.Name)
+			pr["uuid"] = utils.StringValue(v.Metadata.ProjectReference.UUID)
+			entity["project_reference"] = pr
+		}
 
-		entity["project_reference"] = pr
+		if v.Metadata.OwnerReference != nil {
+			or := make(map[string]interface{})
+			or["kind"] = utils.StringValue(v.Metadata.OwnerReference.Kind)
+			or["name"] = utils.StringValue(v.Metadata.OwnerReference.Name)
+			or["uuid"] = utils.StringValue(v.Metadata.OwnerReference.UUID)
+			entity["owner_reference"] = or
+		}
 
-		or := make(map[string]interface{})
-		or["kind"] = utils.StringValue(v.Metadata.OwnerReference.Kind)
-		or["name"] = utils.StringValue(v.Metadata.OwnerReference.Name)
-		or["uuid"] = utils.StringValue(v.Metadata.OwnerReference.UUID)
-		entity["owner_reference"] = or
 		entity["name"] = utils.StringValue(v.Status.Name)
 		entity["description"] = utils.StringValue(v.Status.Description)
 
