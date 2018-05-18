@@ -77,7 +77,19 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 		metadata["name"] = utils.StringValue(v.Metadata.Name)
 		entity["metadata"] = metadata
 
-		entity["categories"] = v.Metadata.Categories
+		if v.Metadata.Categories != nil {
+			categories := v.Metadata.Categories
+			var catList []map[string]interface{}
+
+			for name, values := range categories {
+				catItem := make(map[string]interface{})
+				catItem["name"] = name
+				catItem["value"] = values
+				catList = append(catList, catItem)
+			}
+			entity["categories"] = catList
+		}
+
 		entity["api_version"] = utils.StringValue(v.APIVersion)
 
 		if v.Metadata.ProjectReference != nil {
@@ -430,8 +442,21 @@ func getDataSourceVMSSchema() map[string]*schema.Schema {
 						},
 					},
 					"categories": {
-						Type:     schema.TypeMap,
+						Type:     schema.TypeList,
+						Optional: true,
 						Computed: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"name": {
+									Type:     schema.TypeString,
+									Required: true,
+								},
+								"value": {
+									Type:     schema.TypeString,
+									Required: true,
+								},
+							},
+						},
 					},
 					"project_reference": {
 						Type:     schema.TypeMap,
