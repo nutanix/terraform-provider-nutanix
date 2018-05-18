@@ -74,10 +74,9 @@ func testAccCheckNutanixImageDestroy(s *terraform.State) error {
 func testAccNutanixImageConfig(r int32) string {
 	return fmt.Sprintf(`
 resource "nutanix_image" "test" {
-  name        = "CentOS-LAMP-APP.qcow2"
-  description = "CentOS LAMP - App"
-  image_type  = "DISK_IMAGE"
-  source_uri  = "http://filer.dev.eng.nutanix.com:8080/GoldImages/NuCalm/AHV-UVM-Images/CentOS-LAMP-APP.qcow2"
+  name        = "Ubuntu"
+  description = "Ubuntu"
+  source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
 }
 `)
 }
@@ -85,10 +84,9 @@ resource "nutanix_image" "test" {
 func testAccNutanixImageConfigUpdate(r int32) string {
 	return fmt.Sprintf(`
 resource "nutanix_image" "test" {
-  name        = "CentOS-LAMP-APP-Updated.qcow2"
-  description = "CentOS LAMP - App Updated"
-  image_type  = "DISK_IMAGE"
-  source_uri  = "http://filer.dev.eng.nutanix.com:8080/GoldImages/NuCalm/AHV-UVM-Images/CentOS-LAMP-APP.qcow2"
+  name        = "Ubuntu Updated"
+  description = "Ubuntu Updated"
+  source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
 }
 `)
 }

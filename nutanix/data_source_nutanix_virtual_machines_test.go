@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccOutscaleVMSSDataSource_basic(t *testing.T) {
+func TestAccNutanixVMSDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -24,21 +24,22 @@ func TestAccOutscaleVMSSDataSource_basic(t *testing.T) {
 
 // Lookup based on InstanceID
 const testAccVMSSDataSourceConfig = `
-variable clusterid {
-  default = "000567f3-1921-c722-471d-0cc47ac31055"
+data "nutanix_clusters" "clusters" {
+  metadata = {
+    length = 2
+  }
+}
+
+output "cluster" {
+  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 
 resource "nutanix_virtual_machine" "vm1" {
-  metadata {
-    kind = "vm"
-    name = "metadata-name-test-dou-vm1"
-  }
-
   name = "test-dou-vm1"
 
   cluster_reference = {
-    kind = "cluster"
-    uuid = "${var.clusterid}"
+	  kind = "cluster"
+	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   }
 
   num_vcpus_per_socket = 1
@@ -60,16 +61,11 @@ resource "nutanix_virtual_machine" "vm1" {
 }
 
 resource "nutanix_virtual_machine" "vm2" {
-  metadata {
-    kind = "vm"
-    name = "metadata-name-test-dou-vm2"
-  }
-
   name = "test-dou-vm2"
 
   cluster_reference = {
-    kind = "cluster"
-    uuid = "${var.clusterid}"
+	  kind = "cluster"
+	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   }
 
   num_vcpus_per_socket = 1
@@ -91,16 +87,11 @@ resource "nutanix_virtual_machine" "vm2" {
 }
 
 resource "nutanix_subnet" "test" {
-  metadata = {
-    kind = "subnet"
-  }
-
   name        = "dou_vlan0_test"
-  description = "Dou Vlan 0"
 
   cluster_reference = {
-    kind = "cluster"
-    uuid = "${var.clusterid}"
+	  kind = "cluster"
+	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   }
 
   vlan_id     = 201
