@@ -1146,6 +1146,10 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 		vm.HardwareClockTimezone = utils.String(v.(string))
 	}
 	if v, ok := d.GetOk("guest_customization_cloud_init"); ok {
+		if vm.GuestCustomization == nil {
+			vm.GuestCustomization = &v3.GuestCustomization{}
+			vm.GuestCustomization.CloudInit = &v3.GuestCustomizationCloudInit{}
+		}
 		cii := v.(map[string]interface{})
 		if v2, ok2 := cii["meta_data"]; ok2 {
 			vm.GuestCustomization.CloudInit.MetaData = utils.String(v2.(string))
