@@ -15,7 +15,7 @@ func TestAccOutscaleClustersDataSource_basic(t *testing.T) {
 				Config: testAccClustersDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"data.nutanix_clusters.basic_web", "entities.#", "3"),
+						"data.nutanix_clusters.basic_web", "entities.#", "2"),
 				),
 			},
 		},
@@ -26,6 +26,6 @@ func TestAccOutscaleClustersDataSource_basic(t *testing.T) {
 const testAccClustersDataSourceConfig = `
 data "nutanix_clusters" "basic_web" {
 	metadata = {
-		length = 3
+		length = 2
 	}
 }`
