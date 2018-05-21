@@ -26,11 +26,11 @@ For a slack invite, please contact Terraform@nutanix.com from your business addr
  
 **Currently working on: (2nd Milestone)**
 - [ ] Cluster data source.
-- [ ] Clusters data source.
+- [x] Clusters data source.
 - [x] Virtual Machines data source.
-- [ ] Category keys resource.
-- [ ] Category values resource.
-- [ ] Network security group resource.
+- [x] Category keys resource.
+- [x] Category values resource.
+- [x] Network security group resource.
  
 **Features: (3rd Milestone)**
 - [ ] Volume group resource and data source.

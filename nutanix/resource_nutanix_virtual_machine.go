@@ -154,9 +154,22 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	if err := d.Set("metadata", metadata); err != nil {
 		return err
 	}
-	if err := d.Set("categories", resp.Metadata.Categories); err != nil {
-		return err
+
+	if resp.Metadata.Categories != nil {
+		categories := resp.Metadata.Categories
+		var catList []map[string]interface{}
+
+		for name, values := range categories {
+			catItem := make(map[string]interface{})
+			catItem["name"] = name
+			catItem["value"] = values
+			catList = append(catList, catItem)
+		}
+		if err := d.Set("categories", catList); err != nil {
+			return err
+		}
 	}
+
 	pr := make(map[string]interface{})
 	if resp.Metadata.ProjectReference != nil {
 		pr["kind"] = utils.StringValue(resp.Metadata.ProjectReference.Kind)
@@ -524,12 +537,23 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if d.HasChange("categories") {
-		p := d.Get("categories").(map[string]interface{})
-		labels := map[string]string{}
-		for k, v := range p {
-			labels[k] = v.(string)
+		catl := d.Get("categories").([]interface{})
+
+		if len(catl) > 0 {
+			cl := make(map[string]string)
+			for _, v := range catl {
+				item := v.(map[string]interface{})
+
+				if i, ok := item["name"]; ok && i.(string) != "" {
+					if k, kok := item["value"]; kok && k.(string) != "" {
+						cl[i.(string)] = k.(string)
+					}
+				}
+			}
+			metadata.Categories = cl
+		} else {
+			metadata.Categories = nil
 		}
-		metadata.Categories = labels
 	}
 	if d.HasChange("owner_reference") {
 		or := d.Get("owner_reference").(map[string]interface{})
@@ -914,67 +938,6 @@ func resourceNutanixVirtualMachineExists(d *schema.ResourceData, meta interface{
 	return false, nil
 }
 
-func getVMMetadaAttributes(d *schema.ResourceData, metadata *v3.VMMetadata) error {
-	m, mok := d.GetOk("metadata")
-	metad := m.(map[string]interface{})
-
-	if !mok {
-		return fmt.Errorf("please provide metadata required attributes")
-	}
-
-	metadata.Kind = utils.String(metad["kind"].(string))
-
-	if v, ok := metad["uuid"]; ok && v != "" {
-		metadata.UUID = utils.String(v.(string))
-	}
-	if v, ok := metad["spec_version"]; ok && v != 0 {
-		i, err := strconv.Atoi(v.(string))
-		if err != nil {
-			return err
-		}
-		metadata.SpecVersion = utils.Int64(int64(i))
-	}
-	if v, ok := metad["spec_hash"]; ok && v != "" {
-		metadata.SpecHash = utils.String(v.(string))
-	}
-	if v, ok := metad["name"]; ok {
-		metadata.Name = utils.String(v.(string))
-	}
-	if v, ok := d.GetOk("categories"); ok {
-		c := v.(map[string]interface{})
-		labels := map[string]string{}
-
-		for k, v := range c {
-			labels[k] = v.(string)
-		}
-		metadata.Categories = labels
-	}
-	if p, ok := d.GetOk("project_reference"); ok {
-		pr := p.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(pr["kind"].(string)),
-			UUID: utils.String(pr["uuid"].(string)),
-		}
-		if v1, ok1 := pr["name"]; ok1 {
-			r.Name = utils.String(v1.(string))
-		}
-		metadata.ProjectReference = r
-	}
-	if o, ok := metad["owner_reference"]; ok {
-		or := o.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(or["kind"].(string)),
-			UUID: utils.String(or["uuid"].(string)),
-		}
-		if v1, ok1 := or["name"]; ok1 {
-			r.Name = utils.String(v1.(string))
-		}
-		metadata.OwnerReference = r
-	}
-
-	return nil
-}
-
 func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	if v, ok := d.GetOk("num_vnuma_nodes"); ok {
 		vm.VMVnumaConfig.NumVnumaNodes = utils.Int64(v.(int64))
@@ -1349,9 +1312,21 @@ func getVMSchema() map[string]*schema.Schema {
 			},
 		},
 		"categories": {
-			Type:     schema.TypeMap,
+			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"name": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					"value": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+				},
+			},
 		},
 		"project_reference": {
 			Type:     schema.TypeMap,
