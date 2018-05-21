@@ -10,13 +10,23 @@ func getMetadataAttributes(d *schema.ResourceData, metadata *v3.Metadata, kind s
 	metadata.Kind = utils.String(kind)
 
 	if v, ok := d.GetOk("categories"); ok {
-		c := v.(map[string]interface{})
-		labels := map[string]string{}
+		catl := v.([]interface{})
 
-		for k, v := range c {
-			labels[k] = v.(string)
+		if len(catl) > 0 {
+			cl := make(map[string]string)
+			for _, v := range catl {
+				item := v.(map[string]interface{})
+
+				if i, ok := item["name"]; ok && i.(string) != "" {
+					if k, kok := item["value"]; kok && k.(string) != "" {
+						cl[i.(string)] = k.(string)
+					}
+				}
+			}
+			metadata.Categories = cl
+		} else {
+			metadata.Categories = nil
 		}
-		metadata.Categories = labels
 	}
 	if p, ok := d.GetOk("project_reference"); ok {
 		pr := p.(map[string]interface{})

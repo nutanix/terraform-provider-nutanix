@@ -150,8 +150,20 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("metadata", metadata); err != nil {
 		return err
 	}
-	if err := d.Set("categories", resp.Metadata.Categories); err != nil {
-		return err
+
+	if resp.Metadata.Categories != nil {
+		categories := resp.Metadata.Categories
+		var catList []map[string]interface{}
+
+		for name, values := range categories {
+			catItem := make(map[string]interface{})
+			catItem["name"] = name
+			catItem["value"] = values
+			catList = append(catList, catItem)
+		}
+		if err := d.Set("categories", catList); err != nil {
+			return err
+		}
 	}
 
 	or := make(map[string]interface{})
@@ -406,12 +418,23 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("categories") {
-		p := d.Get("categories").(map[string]interface{})
-		labels := map[string]string{}
-		for k, v := range p {
-			labels[k] = v.(string)
+		catl := d.Get("categories").([]interface{})
+
+		if len(catl) > 0 {
+			cl := make(map[string]string)
+			for _, v := range catl {
+				item := v.(map[string]interface{})
+
+				if i, ok := item["name"]; ok && i.(string) != "" {
+					if k, kok := item["value"]; kok && k.(string) != "" {
+						cl[i.(string)] = k.(string)
+					}
+				}
+			}
+			metadata.Categories = cl
+		} else {
+			metadata.Categories = nil
 		}
-		metadata.Categories = labels
 	}
 	if d.HasChange("owner_reference") {
 		or := d.Get("owner_reference").(map[string]interface{})
@@ -1083,9 +1106,21 @@ func getSubnetSchema() map[string]*schema.Schema {
 			},
 		},
 		"categories": {
-			Type:     schema.TypeMap,
+			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"name": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					"value": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+				},
+			},
 		},
 		"owner_reference": {
 			Type:     schema.TypeMap,
