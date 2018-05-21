@@ -293,7 +293,7 @@ type VM struct {
 type VMIntentInput struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
-	Metadata *VMMetadata `json:"metadata"`
+	Metadata *Metadata `json:"metadata"`
 
 	Spec *VM `json:"spec"`
 }
@@ -517,7 +517,7 @@ type VMDefStatus struct {
 type VMIntentResponse struct {
 	APIVersion *string `json:"api_version"`
 
-	Metadata *VMMetadata `json:"metadata,omitempty"`
+	Metadata *Metadata `json:"metadata,omitempty"`
 
 	Spec *VM `json:"spec,omitempty"`
 
@@ -710,7 +710,7 @@ type Subnet struct {
 type SubnetIntentInput struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
-	Metadata *SubnetMetadata `json:"metadata"`
+	Metadata *Metadata `json:"metadata"`
 
 	Spec *Subnet `json:"spec"`
 }
@@ -768,7 +768,7 @@ type SubnetDefStatus struct {
 type SubnetIntentResponse struct {
 	APIVersion *string `json:"api_version"`
 
-	Metadata *SubnetMetadata `json:"metadata,omitempty"`
+	Metadata *Metadata `json:"metadata,omitempty"`
 
 	Spec *Subnet `json:"spec,omitempty"`
 
@@ -926,7 +926,7 @@ type ImageMetadata struct {
 type ImageIntentInput struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
-	Metadata *ImageMetadata `json:"metadata,omitempty"`
+	Metadata *Metadata `json:"metadata,omitempty"`
 
 	Spec *Image `json:"spec,omitempty"`
 }
@@ -1006,7 +1006,7 @@ type ImageDefStatus struct {
 type ImageIntentResponse struct {
 	APIVersion *string `json:"api_version"`
 
-	Metadata *ImageMetadata `json:"metadata"`
+	Metadata *Metadata `json:"metadata"`
 
 	Spec *Image `json:"spec,omitempty"`
 
@@ -1535,7 +1535,7 @@ type CategoryFilter struct {
 	KindList []*string `json:"kind_list,omitempty"`
 
 	// A list of category key and list of values.
-	Params map[string][]*string `json:"params"`
+	Params map[string][]string `json:"params,omitempty"`
 
 	// The type of the filter being used.
 	Type *string `json:"type,omitempty"`
@@ -1669,7 +1669,7 @@ type NetworkRule struct {
 	// List of ICMP types and codes allowed by this rule.
 	IcmpTypeCodeList []*NetworkRuleIcmpTypeCodeList `json:"icmp_type_code_list,omitempty"`
 
-	IPSubnet IPSubnet `json:"ip_subnet,omitempty"`
+	IPSubnet *IPSubnet `json:"ip_subnet,omitempty"`
 
 	NetworkFunctionChainReference *Reference `json:"network_function_chain_reference,omitempty"`
 
@@ -1745,21 +1745,26 @@ type NetworkSecurityRule struct {
 
 //Metadata Metadata The kind metadata
 type Metadata struct {
-	Categories map[string]string `json:"categories,omitempty"`
-
-	CreationTime *time.Time `json:"creation_time,omitempty"`
+	LastUpdateTime *time.Time `json:"last_update_time,omitempty"`
 
 	Kind *string `json:"kind"`
 
-	LastUpdateTime *time.Time `json:"last_update_time,omitempty"`
+	UUID *string `json:"uuid,omitempty"`
 
-	Name *string `json:"name,omitempty"`
+	// project reference
+	ProjectReference *Reference `json:"project_reference,omitempty"`
 
-	SpecHash *string `json:"spec_hash,omitempty"`
+	CreationTime *time.Time `json:"creation_time,omitempty"`
 
 	SpecVersion *int64 `json:"spec_version,omitempty"`
 
-	UUID *string `json:"uuid,omitempty"`
+	SpecHash *string `json:"spec_hash,omitempty"`
+
+	OwnerReference *Reference `json:"owner_reference,omitempty"`
+
+	Categories map[string]string `json:"categories,omitempty"`
+
+	Name *string `json:"name,omitempty"`
 }
 
 //NetworkSecurityRuleIntentInput An intentful representation of a network_security_rule
@@ -1778,6 +1783,8 @@ type NetworkSecurityRuleDefStatus struct {
 	IsolationRule *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty"`
 
 	QuarantineRule *NetworkSecurityRuleResourcesRule `json:"quarantine_rule,omitempty"`
+
+	State *string `json:"state,omitmepty"`
 }
 
 //NetworkSecurityRuleIntentResponse Response object for intentful operations on a network_security_rule

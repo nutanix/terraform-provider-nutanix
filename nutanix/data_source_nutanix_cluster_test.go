@@ -22,16 +22,7 @@ func TestAccOutscaleClusterDataSource_basic(t *testing.T) {
 	})
 }
 
-// Lookup based on InstanceID
 const testAccClusterDataSourceConfig = `
-provider "nutanix" {
-  username = "admin"
-  password = "Nutanix/1234"
-  endpoint = "10.5.81.134"
-  insecure = true
-  port     = 9440
-}
-
 data "nutanix_clusters" "clusters" {
 	metadata = {
 		length = 2

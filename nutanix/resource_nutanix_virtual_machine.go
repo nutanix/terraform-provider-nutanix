@@ -3,6 +3,7 @@ package nutanix
 import (
 	"fmt"
 	"log"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -35,7 +36,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	// Prepare request
 	request := &v3.VMIntentInput{}
 	spec := &v3.VM{}
-	metadata := &v3.VMMetadata{}
+	metadata := &v3.Metadata{}
 	res := &v3.VMResources{}
 
 	// Read Arguments and set request values
@@ -50,7 +51,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	if !nok {
 		return fmt.Errorf("Please provide the required name attribute")
 	}
-	if err := getMetadaAttributes(d, metadata); err != nil {
+	if err := getMetadataAttributes(d, metadata, "vm"); err != nil {
 		return err
 	}
 	if descok {
@@ -73,8 +74,8 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 			Kind: utils.String(a["kind"].(string)),
 			UUID: utils.String(a["uuid"].(string)),
 		}
-		if v, ok := a["name"]; ok {
-			r.Name = utils.String(v.(string))
+		if cn, cnok := d.GetOk("cluster_name"); cnok {
+			r.Name = utils.String(cn.(string))
 		}
 		spec.ClusterReference = r
 	}
@@ -153,9 +154,22 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	if err := d.Set("metadata", metadata); err != nil {
 		return err
 	}
-	if err := d.Set("categories", resp.Metadata.Categories); err != nil {
-		return err
+
+	if resp.Metadata.Categories != nil {
+		categories := resp.Metadata.Categories
+		var catList []map[string]interface{}
+
+		for name, values := range categories {
+			catItem := make(map[string]interface{})
+			catItem["name"] = name
+			catItem["value"] = values
+			catList = append(catList, catItem)
+		}
+		if err := d.Set("categories", catList); err != nil {
+			return err
+		}
 	}
+
 	pr := make(map[string]interface{})
 	if resp.Metadata.ProjectReference != nil {
 		pr["kind"] = utils.StringValue(resp.Metadata.ProjectReference.Kind)
@@ -199,11 +213,12 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	clusterReference := make(map[string]interface{})
 	if resp.Status.ClusterReference != nil {
 		clusterReference["kind"] = utils.StringValue(resp.Status.ClusterReference.Kind)
-		clusterReference["name"] = utils.StringValue(resp.Status.ClusterReference.Name)
 		clusterReference["uuid"] = utils.StringValue(resp.Status.ClusterReference.UUID)
-	}
 
-	utils.PrintToJSON(clusterReference, "CLUSTER READ =>")
+		if err := d.Set("cluster_name", utils.StringValue(resp.Status.ClusterReference.Name)); err != nil {
+			return err
+		}
+	}
 
 	if err := d.Set("cluster_reference", clusterReference); err != nil {
 		return err
@@ -254,8 +269,8 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 			subtnetRef := make(map[string]interface{})
 			if v.SubnetReference != nil {
 				subtnetRef["kind"] = utils.StringValue(v.SubnetReference.Kind)
-				subtnetRef["name"] = utils.StringValue(v.SubnetReference.Name)
 				subtnetRef["uuid"] = utils.StringValue(v.SubnetReference.UUID)
+				nic["subnet_reference_name"] = utils.StringValue(v.SubnetReference.Name)
 			}
 			nic["subnet_reference"] = subtnetRef
 
@@ -491,7 +506,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	fmt.Printf("Updating VM values %s", d.Id())
 
 	request := &v3.VMIntentInput{}
-	metadata := &v3.VMMetadata{}
+	metadata := &v3.Metadata{}
 	res := &v3.VMResources{}
 	spec := &v3.VM{}
 	guest := &v3.GuestCustomization{}
@@ -522,12 +537,23 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if d.HasChange("categories") {
-		p := d.Get("categories").(map[string]interface{})
-		labels := map[string]string{}
-		for k, v := range p {
-			labels[k] = v.(string)
+		catl := d.Get("categories").([]interface{})
+
+		if len(catl) > 0 {
+			cl := make(map[string]string)
+			for _, v := range catl {
+				item := v.(map[string]interface{})
+
+				if i, ok := item["name"]; ok && i.(string) != "" {
+					if k, kok := item["value"]; kok && k.(string) != "" {
+						cl[i.(string)] = k.(string)
+					}
+				}
+			}
+			metadata.Categories = cl
+		} else {
+			metadata.Categories = nil
 		}
-		metadata.Categories = labels
 	}
 	if d.HasChange("owner_reference") {
 		or := d.Get("owner_reference").(map[string]interface{})
@@ -912,67 +938,6 @@ func resourceNutanixVirtualMachineExists(d *schema.ResourceData, meta interface{
 	return false, nil
 }
 
-func getMetadaAttributes(d *schema.ResourceData, metadata *v3.VMMetadata) error {
-	m, mok := d.GetOk("metadata")
-	metad := m.(map[string]interface{})
-
-	if !mok {
-		return fmt.Errorf("please provide metadata required attributes")
-	}
-
-	metadata.Kind = utils.String(metad["kind"].(string))
-
-	if v, ok := metad["uuid"]; ok && v != "" {
-		metadata.UUID = utils.String(v.(string))
-	}
-	if v, ok := metad["spec_version"]; ok && v != 0 {
-		i, err := strconv.Atoi(v.(string))
-		if err != nil {
-			return err
-		}
-		metadata.SpecVersion = utils.Int64(int64(i))
-	}
-	if v, ok := metad["spec_hash"]; ok && v != "" {
-		metadata.SpecHash = utils.String(v.(string))
-	}
-	if v, ok := metad["name"]; ok {
-		metadata.Name = utils.String(v.(string))
-	}
-	if v, ok := d.GetOk("categories"); ok {
-		c := v.(map[string]interface{})
-		labels := map[string]string{}
-
-		for k, v := range c {
-			labels[k] = v.(string)
-		}
-		metadata.Categories = labels
-	}
-	if p, ok := d.GetOk("project_reference"); ok {
-		pr := p.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(pr["kind"].(string)),
-			UUID: utils.String(pr["uuid"].(string)),
-		}
-		if v1, ok1 := pr["name"]; ok1 {
-			r.Name = utils.String(v1.(string))
-		}
-		metadata.ProjectReference = r
-	}
-	if o, ok := metad["owner_reference"]; ok {
-		or := o.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(or["kind"].(string)),
-			UUID: utils.String(or["uuid"].(string)),
-		}
-		if v1, ok1 := or["name"]; ok1 {
-			r.Name = utils.String(v1.(string))
-		}
-		metadata.OwnerReference = r
-	}
-
-	return nil
-}
-
 func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	if v, ok := d.GetOk("num_vnuma_nodes"); ok {
 		vm.VMVnumaConfig.NumVnumaNodes = utils.Int64(v.(int64))
@@ -1044,7 +1009,7 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 					if j, ok1 := v["uuid"]; ok1 {
 						ref.UUID = utils.String(j.(string))
 					}
-					if j, ok1 := v["name"]; ok1 {
+					if j, ok1 := val["subnet_reference_name"]; ok1 {
 						ref.Name = utils.String(j.(string))
 					}
 					nic.SubnetReference = ref
@@ -1145,33 +1110,43 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	if v, ok := d.GetOk("hardware_clock_timezone"); ok {
 		vm.HardwareClockTimezone = utils.String(v.(string))
 	}
+
+	gestCustom := &v3.GuestCustomization{}
+
 	if v, ok := d.GetOk("guest_customization_cloud_init"); ok {
+		gestCustom.CloudInit = &v3.GuestCustomizationCloudInit{}
 		cii := v.(map[string]interface{})
 		if v2, ok2 := cii["meta_data"]; ok2 {
-			vm.GuestCustomization.CloudInit.MetaData = utils.String(v2.(string))
+			gestCustom.CloudInit.MetaData = utils.String(v2.(string))
 		}
 		if v2, ok2 := cii["user_data"]; ok2 {
-			vm.GuestCustomization.CloudInit.UserData = utils.String(v2.(string))
+			gestCustom.CloudInit.UserData = utils.String(v2.(string))
 		}
 		if v2, ok2 := cii["custom_key_values"]; ok2 {
-			vm.GuestCustomization.CloudInit.CustomKeyValues = v2.(map[string]string)
+			gestCustom.CloudInit.CustomKeyValues = v2.(map[string]string)
 		}
 	}
 	if v, ok := d.GetOk("guest_customization_is_overridable"); ok {
-		vm.GuestCustomization.IsOverridable = utils.Bool(v.(bool))
+		gestCustom.IsOverridable = utils.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("guest_customization_sysprep"); ok {
+		gestCustom.Sysprep = &v3.GuestCustomizationSysprep{}
 		spi := v.(map[string]interface{})
 		if v2, ok2 := spi["install_type"]; ok2 {
-			vm.GuestCustomization.Sysprep.InstallType = utils.String(v2.(string))
+			gestCustom.Sysprep.InstallType = utils.String(v2.(string))
 		}
 		if v2, ok2 := spi["unattend_xml"]; ok2 {
-			vm.GuestCustomization.Sysprep.UnattendXML = utils.String(v2.(string))
+			gestCustom.Sysprep.UnattendXML = utils.String(v2.(string))
 		}
 		if v2, ok2 := spi["custom_key_values"]; ok2 {
-			vm.GuestCustomization.Sysprep.CustomKeyValues = v2.(map[string]string)
+			gestCustom.Sysprep.CustomKeyValues = v2.(map[string]string)
 		}
 	}
+
+	if !reflect.DeepEqual(*gestCustom, (v3.GuestCustomization{})) {
+		vm.GuestCustomization = gestCustom
+	}
+
 	if v, ok := d.GetOk("vga_console_enabled"); ok {
 		vm.VgaConsoleEnabled = utils.Bool(v.(bool))
 	}
@@ -1303,122 +1278,130 @@ func waitForIP(conn *v3.Client, uuid string, d *schema.ResourceData) error {
 
 func getVMSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"metadata": &schema.Schema{
+		"metadata": {
 			Type:     schema.TypeMap,
+			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"last_update_time": {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					"uuid": {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					"creation_time": {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					"spec_version": {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					"spec_hash": {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					"name": {
+						Type:     schema.TypeString,
+						Optional: true,
+						Computed: true,
+					},
+				},
+			},
+		},
+		"categories": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"name": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					"value": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+				},
+			},
+		},
+		"project_reference": {
+			Type:     schema.TypeMap,
+			Optional: true,
+			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"kind": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					"uuid": {
+						Type:     schema.TypeString,
+						Optional: true,
+						Computed: true,
+					},
+					"name": {
+						Type:     schema.TypeString,
+						Optional: true,
+						Computed: true,
+					},
+				},
+			},
+		},
+		"owner_reference": {
+			Type:     schema.TypeMap,
+			Optional: true,
+			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"kind": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					"uuid": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					"name": {
+						Type:     schema.TypeString,
+						Optional: true,
+						Computed: true,
+					},
+				},
+			},
+		},
+		"api_version": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"name": {
+			Type:     schema.TypeString,
 			Required: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"last_update_time": &schema.Schema{
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"kind": &schema.Schema{
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"uuid": &schema.Schema{
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"creation_time": &schema.Schema{
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"spec_version": &schema.Schema{
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"spec_hash": &schema.Schema{
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"name": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
-					},
-				},
-			},
 		},
-		"categories": &schema.Schema{
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
-		"project_reference": &schema.Schema{
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"uuid": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
-					},
-					"name": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
-					},
-				},
-			},
-		},
-		"owner_reference": &schema.Schema{
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"uuid": &schema.Schema{
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"name": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
-					},
-				},
-			},
-		},
-		"api_version": &schema.Schema{
+		"description": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"name": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"description": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"availability_zone_reference": &schema.Schema{
+		"availability_zone_reference": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Required: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Required: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
@@ -1426,117 +1409,115 @@ func getVMSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"cluster_reference": &schema.Schema{
+		"cluster_reference": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Required: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Required: true,
-					},
-					"name": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
 					},
 				},
 			},
 		},
-
-		// COMPUTED
-		"state": &schema.Schema{
+		"cluster_name": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"state": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"ip_address": &schema.Schema{
+		"ip_address": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"host_reference": &schema.Schema{
+		"host_reference": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"hypervisor_type": &schema.Schema{
+		"hypervisor_type": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
 
 		// RESOURCES ARGUMENTS
 
-		"num_vnuma_nodes": &schema.Schema{
+		"num_vnuma_nodes": {
 			Type:     schema.TypeInt,
 			Optional: true,
 			Computed: true,
 		},
-		"nic_list": &schema.Schema{
+		"nic_list": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"nic_type": &schema.Schema{
+					"nic_type": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"floating_ip": &schema.Schema{
+					"floating_ip": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"model": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
-					},
-					"network_function_nic_type": &schema.Schema{
+					"model": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"mac_address": &schema.Schema{
+					"network_function_nic_type": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"ip_endpoint_list": &schema.Schema{
+					"mac_address": {
+						Type:     schema.TypeString,
+						Optional: true,
+						Computed: true,
+					},
+					"ip_endpoint_list": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"ip": &schema.Schema{
+								"ip": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
 								},
-								"type": &schema.Schema{
+								"type": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
@@ -1544,167 +1525,167 @@ func getVMSchema() map[string]*schema.Schema {
 							},
 						},
 					},
-					"network_function_chain_reference": &schema.Schema{
+					"network_function_chain_reference": {
 						Type:     schema.TypeMap,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"kind": &schema.Schema{
+								"kind": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
-								"name": &schema.Schema{
+								"name": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
 								},
-								"uuid": &schema.Schema{
+								"uuid": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
 							},
 						},
 					},
-					"subnet_reference": &schema.Schema{
+					"subnet_reference": {
 						Type:     schema.TypeMap,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"kind": &schema.Schema{
+								"kind": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
-								"name": &schema.Schema{
-									Type:     schema.TypeString,
-									Optional: true,
-									Computed: true,
-								},
-								"uuid": &schema.Schema{
+								"uuid": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
 							},
 						},
+					},
+					"subnet_reference_name": {
+						Type:     schema.TypeString,
+						Optional: true,
+						Computed: true,
 					},
 				},
 			},
 		},
-		"guest_os_id": &schema.Schema{
+		"guest_os_id": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"power_state": &schema.Schema{
+		"power_state": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"nutanix_guest_tools": &schema.Schema{
+		"nutanix_guest_tools": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"available_version": &schema.Schema{
+					"available_version": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"iso_mount_state": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
-					},
-					"state": &schema.Schema{
+					"iso_mount_state": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"version": &schema.Schema{
+					"state": {
+						Type:     schema.TypeString,
+						Optional: true,
+						Computed: true,
+					},
+					"version": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"guest_os_version": &schema.Schema{
+					"guest_os_version": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"enabled_capability_list": &schema.Schema{
+					"enabled_capability_list": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem:     &schema.Schema{Type: schema.TypeString},
 					},
-					"vss_snapshot_capable": &schema.Schema{
+					"vss_snapshot_capable": {
 						Type:     schema.TypeBool,
 						Computed: true,
 					},
-					"is_reachable": &schema.Schema{
+					"is_reachable": {
 						Type:     schema.TypeBool,
 						Computed: true,
 					},
-					"vm_mobility_drivers_installed": &schema.Schema{
+					"vm_mobility_drivers_installed": {
 						Type:     schema.TypeBool,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"num_vcpus_per_socket": &schema.Schema{
+		"num_vcpus_per_socket": {
 			Type:     schema.TypeInt,
 			Optional: true,
 			Computed: true,
 		},
-		"num_sockets": &schema.Schema{
+		"num_sockets": {
 			Type:     schema.TypeInt,
 			Optional: true,
 			Computed: true,
 		},
-		"gpu_list": &schema.Schema{
+		"gpu_list": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"frame_buffer_size_mib": &schema.Schema{
+					"frame_buffer_size_mib": {
 						Type:     schema.TypeInt,
 						Computed: true,
 					},
-					"vendor": &schema.Schema{
+					"vendor": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"pci_address": &schema.Schema{
+					"pci_address": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"fraction": &schema.Schema{
+					"fraction": {
 						Type:     schema.TypeInt,
 						Computed: true,
 					},
-					"mode": &schema.Schema{
+					"mode": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"num_virtual_display_heads": &schema.Schema{
+					"num_virtual_display_heads": {
 						Type:     schema.TypeInt,
 						Computed: true,
 					},
-					"guest_driver_version": &schema.Schema{
+					"guest_driver_version": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"device_id": &schema.Schema{
+					"device_id": {
 						Type:     schema.TypeInt,
 						Optional: true,
 						Computed: true,
@@ -1712,51 +1693,51 @@ func getVMSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"parent_reference": &schema.Schema{
+		"parent_reference": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Required: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Required: true,
 					},
 				},
 			},
 		},
-		"memory_size_mib": &schema.Schema{
+		"memory_size_mib": {
 			Type:     schema.TypeInt,
 			Optional: true,
 			Computed: true,
 		},
-		"boot_device_order_list": &schema.Schema{
+		"boot_device_order_list": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-		"boot_device_disk_address": &schema.Schema{
+		"boot_device_disk_address": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"device_index": &schema.Schema{
+					"device_index": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"adapter_type": &schema.Schema{
+					"adapter_type": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
@@ -1764,33 +1745,33 @@ func getVMSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"boot_device_mac_address": &schema.Schema{
+		"boot_device_mac_address": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"hardware_clock_timezone": &schema.Schema{
+		"hardware_clock_timezone": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"guest_customization_cloud_init": &schema.Schema{
+		"guest_customization_cloud_init": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"meta_data": &schema.Schema{
+					"meta_data": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"user_data": &schema.Schema{
+					"user_data": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"custom_key_values": &schema.Schema{
+					"custom_key_values": {
 						Type:     schema.TypeMap,
 						Optional: true,
 						Computed: true,
@@ -1798,28 +1779,28 @@ func getVMSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"guest_customization_is_overridable": &schema.Schema{
+		"guest_customization_is_overridable": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Computed: true,
 		},
-		"guest_customization_sysprep": &schema.Schema{
+		"guest_customization_sysprep": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"install_type": &schema.Schema{
+					"install_type": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"unattend_xml": &schema.Schema{
+					"unattend_xml": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"custom_key_values": &schema.Schema{
+					"custom_key_values": {
 						Type:     schema.TypeMap,
 						Optional: true,
 						Computed: true,
@@ -1827,69 +1808,69 @@ func getVMSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"should_fail_on_script_failure": &schema.Schema{
+		"should_fail_on_script_failure": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Computed: true,
 		},
-		"enable_script_exec": &schema.Schema{
+		"enable_script_exec": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Computed: true,
 		},
-		"power_state_mechanism": &schema.Schema{
+		"power_state_mechanism": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"vga_console_enabled": &schema.Schema{
+		"vga_console_enabled": {
 			Type:     schema.TypeBool,
 			Optional: true,
 			Computed: true,
 		},
-		"disk_list": &schema.Schema{
+		"disk_list": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"disk_size_bytes": &schema.Schema{
+					"disk_size_bytes": {
 						Type:     schema.TypeInt,
 						Optional: true,
 						Computed: true,
 					},
-					"disk_size_mib": &schema.Schema{
+					"disk_size_mib": {
 						Type:     schema.TypeInt,
 						Optional: true,
 						Computed: true,
 					},
-					"device_properties": &schema.Schema{
+					"device_properties": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"device_type": &schema.Schema{
+								"device_type": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
 								},
-								"disk_address": &schema.Schema{
+								"disk_address": {
 									Type:     schema.TypeList,
 									Optional: true,
 									Computed: true,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
-											"device_index": &schema.Schema{
+											"device_index": {
 												Type:     schema.TypeInt,
 												Required: true,
 											},
-											"adapter_type": &schema.Schema{
+											"adapter_type": {
 												Type:     schema.TypeString,
 												Required: true,
 											},
@@ -1899,22 +1880,22 @@ func getVMSchema() map[string]*schema.Schema {
 							},
 						},
 					},
-					"data_source_reference": &schema.Schema{
+					"data_source_reference": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"kind": &schema.Schema{
+								"kind": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
-								"name": &schema.Schema{
+								"name": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
 								},
-								"uuid": &schema.Schema{
+								"uuid": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
@@ -1922,22 +1903,22 @@ func getVMSchema() map[string]*schema.Schema {
 						},
 					},
 
-					"volume_group_reference": &schema.Schema{
+					"volume_group_reference": {
 						Type:     schema.TypeList,
 						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"kind": &schema.Schema{
+								"kind": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
-								"name": &schema.Schema{
+								"name": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
 								},
-								"uuid": &schema.Schema{
+								"uuid": {
 									Type:     schema.TypeString,
 									Required: true,
 								},

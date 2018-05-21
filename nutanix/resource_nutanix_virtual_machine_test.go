@@ -19,7 +19,7 @@ func TestAccNutanixVirtualMachine_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNutanixVMConfig(r),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.vm1"),
@@ -74,29 +74,40 @@ func testAccCheckNutanixVirtualMachineDestroy(s *terraform.State) error {
 
 func testAccNutanixVMConfig(r int) string {
 	return fmt.Sprint(`
-provider "nutanix" {
-  username = "admin"
-  password = "Nutanix/1234"
-  endpoint = "10.5.81.139"
-  insecure = true
-  port     = 9440
+resource "nutanix_category_key" "test-category-key"{
+    name = "app-suppport-1"
+	description = "App Support Category Key"
 }
 
-variable clusterid {
-  default = "000567f3-1921-c722-471d-0cc47ac31055"
+
+resource "nutanix_category_value" "test"{
+    name = "${nutanix_category_key.test-category-key.id}"
+	description = "Test Category Value"
+	value = "test-value"
 }
+
+data "nutanix_clusters" "clusters" {
+  metadata = {
+    length = 2
+  }
+}
+
+output "cluster" {
+  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+}
+
 
 resource "nutanix_virtual_machine" "vm1" {
-  metadata {
-    kind = "vm"
-    name = "metadata-name-test-dou"
-  }
-
   name = "test-dou"
 
+  categories = [{
+	  name   = "${nutanix_category_key.test-category-key.id}"
+	  value = "${nutanix_category_value.test.id}"
+  }]
+
   cluster_reference = {
-    kind = "cluster"
-    uuid = "${var.clusterid}"
+	  kind = "cluster"
+	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   }
 
   num_vcpus_per_socket = 1

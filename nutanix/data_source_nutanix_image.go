@@ -44,8 +44,20 @@ func dataSourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error 
 	if err := d.Set("metadata", metadata); err != nil {
 		return err
 	}
-	if err := d.Set("categories", resp.Metadata.Categories); err != nil {
-		return err
+
+	if resp.Metadata.Categories != nil {
+		categories := resp.Metadata.Categories
+		var catList []map[string]interface{}
+
+		for name, values := range categories {
+			catItem := make(map[string]interface{})
+			catItem["name"] = name
+			catItem["value"] = values
+			catList = append(catList, catItem)
+		}
+		if err := d.Set("categories", catList); err != nil {
+			return err
+		}
 	}
 
 	or := make(map[string]interface{})
@@ -131,216 +143,229 @@ func dataSourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error 
 
 func getDataSourceImageSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"image_id": &schema.Schema{
+		"image_id": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"api_version": &schema.Schema{
+		"api_version": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"metadata": &schema.Schema{
+		"metadata": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"last_update_time": &schema.Schema{
+					"last_update_time": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"creation_time": &schema.Schema{
+					"creation_time": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"spec_version": &schema.Schema{
+					"spec_version": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"spec_hash": &schema.Schema{
+					"spec_hash": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"categories": &schema.Schema{
-			Type:     schema.TypeMap,
+		"categories": {
+			Type:     schema.TypeList,
+			Optional: true,
 			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"name": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					"value": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+				},
+			},
 		},
-		"owner_reference": &schema.Schema{
+		"owner_reference": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"project_reference": &schema.Schema{
+		"project_reference": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"name": &schema.Schema{
+		"name": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"state": &schema.Schema{
+		"state": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"description": &schema.Schema{
+		"description": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"availability_zone_reference": &schema.Schema{
+		"availability_zone_reference": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"message_list": &schema.Schema{
+		"message_list": {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"message": &schema.Schema{
+					"message": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"reason": &schema.Schema{
+					"reason": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"details": &schema.Schema{
+					"details": {
 						Type:     schema.TypeMap,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"cluster_reference": &schema.Schema{
+		"cluster_reference": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"retrieval_uri_list": &schema.Schema{
+		"retrieval_uri_list": {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-		"image_type": &schema.Schema{
+		"image_type": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"checksum": &schema.Schema{
+		"checksum": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"checksum_algorithm": &schema.Schema{
+					"checksum_algorithm": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"checksum_value": &schema.Schema{
+					"checksum_value": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"source_uri": &schema.Schema{
+		"source_uri": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"version": &schema.Schema{
+		"version": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"product_version": &schema.Schema{
+					"product_version": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"product_name": &schema.Schema{
+					"product_name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"architecture": &schema.Schema{
+		"architecture": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"size_bytes": &schema.Schema{
+		"size_bytes": {
 			Type:     schema.TypeInt,
 			Computed: true,
 		},
