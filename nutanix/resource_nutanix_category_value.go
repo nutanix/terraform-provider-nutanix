@@ -98,11 +98,7 @@ func resourceNutanixCategoryValueRead(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	if err := d.Set("system_defined", utils.BoolValue(resp.SystemDefined)); err != nil {
-		return err
-	}
-
-	return nil
+	return d.Set("system_defined", utils.BoolValue(resp.SystemDefined))
 }
 
 func resourceNutanixCategoryValueDelete(d *schema.ResourceData, meta interface{}) error {
