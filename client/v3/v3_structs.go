@@ -1125,6 +1125,17 @@ type ClusterIntentResource struct {
 	Status *ClusterDefStatus `json:"status,omitempty"`
 }
 
+// ClusterIntentResponse ...
+type ClusterIntentResponse struct {
+	APIVersion *string `json:"api_version,omitempty"`
+
+	Metadata *ClusterMetadata `json:"metadata"`
+
+	Spec *Cluster `json:"spec,omitempty"`
+
+	Status *ClusterDefStatus `json:"status,omitempty"`
+}
+
 // ClusterMetadata ...
 type ClusterMetadata struct {
 

@@ -1,4 +1,5 @@
 # Terraform Nutanix Provider
+
 Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
 NOTE: terraform-provider-nutanix is currently tech preview as of 9 May 2018. See "Current Development Status" below.
@@ -11,99 +12,112 @@ NOTE: terraform-provider-nutanix is currently tech preview as of 9 May 2018. See
 [![Build Status: develop](https://travis-ci.org/nutanix/terraform-provider-nutanix.svg?branch=develop)](https://travis-ci.org/nutanix/terraform-provider-nutanix)
 
 ## Community
+
 Nutanix is taking an inclusive approach to developing this new feature and welcomes customer feedback. Please see our development project on GitHub (you're here!), comment on requirements, design, code, and/or feel free to join us on Slack. Instructions on commenting, contributing, and joining our community Slack channel are all located within our GitHub Readme.
 
 For a slack invite, please contact Terraform@nutanix.com from your business address, and we'll add you.
 
 ## Current Development Status
+
 **Completed**
-- [x] Finished VM resource (VM resource and VM resource test.)
-- [x] Finished subnet resource (Subnet resource and Subnet resource test.)
-- [x] Finished Image resource (Image resource and image resource test.)
-- [x] Finished VM data source (VM data source and VM data source test.)
-- [x] Finished subnet data source (Subnet data source and Subnet data source test)
-- [x] Finished Image data source (Image data source and image data source test.)
- 
+
+* [x] Finished VM resource (VM resource and VM resource test.)
+* [x] Finished subnet resource (Subnet resource and Subnet resource test.)
+* [x] Finished Image resource (Image resource and image resource test.)
+* [x] Finished VM data source (VM data source and VM data source test.)
+* [x] Finished subnet data source (Subnet data source and Subnet data source test)
+* [x] Finished Image data source (Image data source and image data source test.)
+
 **Currently working on: (2nd Milestone)**
-- [ ] Cluster data source.
-- [x] Clusters data source.
-- [x] Virtual Machines data source.
-- [x] Category keys resource.
-- [x] Category values resource.
-- [x] Network security group resource.
-- [x] Network security group data source.
- 
+
+* [x] Cluster data source.
+* [x] Clusters data source.
+* [x] Virtual Machines data source.
+* [x] Category keys resource.
+* [x] Category values resource.
+* [x] Network security group resource.
+* [x] Network security group data source.
+
 **Features: (3rd Milestone)**
-- [ ] Volume group resource and data source.
-- [ ] File server resource and data source.
-- [ ] Cluster resource.
- 
+
+* [ ] Volume group resource and data source.
+* [ ] File server resource and data source.
+* [ ] Cluster resource.
+
 **Issues**
+
 * See open issues on GitHub issues
 
 ## Requirements
+
 ### Provider Use
--   [Terraform](https://www.terraform.io/downloads.html) 0.11.7+
--   [Nutanix](https://portal.nutanix.com/#/page/home) Prism Central 5.6.0+
-- Note: Nutanix Community Edition will be supported, when an AOS 5.6 based version is released
+
+* [Terraform](https://www.terraform.io/downloads.html) 0.11.7+
+* [Nutanix](https://portal.nutanix.com/#/page/home) Prism Central 5.6.0+
+* Note: Nutanix Community Edition will be supported, when an AOS 5.6 based version is released
 
 ### Provider Development
--   [Go](https://golang.org/doc/install) 1.9+ (to build the provider plugin)
+
+* [Go](https://golang.org/doc/install) 1.9+ (to build the provider plugin)
 
 ## Provider Use
 
 The Terraform Nutanix provider is designed to work with Nutanix Prism Central, such that you can manage one or more Prism Element clusters at scale. AOS/PC 5.6.0 or higher is required, as this Provider makes exclusive use of the v3 APIs
 
 ## Example Usage
+
 See the Examples folder for a handful of main.tf demos as well as some pre-compiled binaries.
 
-We'll be refreshing these examples and binaries as we work through tech preview. 
+We'll be refreshing these examples and binaries as we work through tech preview.
 
-Long term, once this is upstream, no pre-compiled binaries will be needed, as terraform will automatically download on use. 
+Long term, once this is upstream, no pre-compiled binaries will be needed, as terraform will automatically download on use.
 
 ## Configuration Reference
+
 The following keys can be used to configure the provider.
 
-- **endpoint** - (Required) IP address for the Nutanix Prism Element.
-- **username** - (Required) Username for Nutanix Prism Element. Could be local cluster auth (e.g. `auth`) or directory auth.
-- **password** - (Required) Password for the provided username.
-- **port**     - (Optional) Port for the Nutanix Prism Element. Default port is 9440.
-- **insecure** - (Optional) Explicitly allow the provider to perform insecure SSL requests. If omitted, default value is false.
+* **endpoint** - (Required) IP address for the Nutanix Prism Element.
+* **username** - (Required) Username for Nutanix Prism Element. Could be local cluster auth (e.g. `auth`) or directory auth.
+* **password** - (Required) Password for the provided username.
+* **port** - (Optional) Port for the Nutanix Prism Element. Default port is 9440.
+* **insecure** - (Optional) Explicitly allow the provider to perform insecure SSL requests. If omitted, default value is false.
 
 ## Resources
-- nutanix_virtual_machine
-- nutanix_subnet
-- nutanix_image
+
+* nutanix_virtual_machine
+* nutanix_subnet
+* nutanix_image
 
 ## Data Sources
-- nutanix_virtual_machine
-- nutanix_subnet
-- nutanix_image
+
+* nutanix_virtual_machine
+* nutanix_subnet
+* nutanix_image
 
 ## Additional Resources
+
 We've got a handful of resources outside of this repository that will help users understand the interactions between terraform and Nutanix
 
 * YouTube
-      * Overview Video: https://www.youtube.com/watch?v=V8_Lu1mxV6g
-      * Working with images: https://www.youtube.com/watch?v=IW0eQevZ73I
+  _ Overview Video: https://www.youtube.com/watch?v=V8_Lu1mxV6g
+  _ Working with images: https://www.youtube.com/watch?v=IW0eQevZ73I
 * Nutanix GitHub
-      * https://github.com/nutanix/terraform-provider-nutanix 
-      * Private repo until code goes upstream
+  _ https://github.com/nutanix/terraform-provider-nutanix
+  _ Private repo until code goes upstream
 * Jon’s GitHub
-      * https://github.com/JonKohler/ThisOldCloud/tree/master/Terraform-Nutanix
-      * Contains sample TF’s and PDFs from the youtube videos
-* Slack channel
-      * User community slack channel is available on nutanix.slack.com. Email terraform@nutanix.com to gain entry.
+  _ https://github.com/JonKohler/ThisOldCloud/tree/master/Terraform-Nutanix
+  _ Contains sample TF’s and PDFs from the youtube videos
+* Slack channel \* User community slack channel is available on nutanix.slack.com. Email terraform@nutanix.com to gain entry.
 
 ## Roadmap
+
 This provider will be released as Tech Preview at .NEXT New Orleans, and is linked into the HashiCorp community providers page, here: https://www.terraform.io/docs/providers/type/community-index.html
 
 We'll be working with HashiCorp as code stabilizes to upstream this properly, at which time we'll PR this entire plugin to the terraform providers org.
 
 * Complete upstream work with successful pull request
-    * Note: Depending on external review timelines from HashiCorp and subsequent code change(s) as required
-* Add Volume Group resource and data source support
-      * This is dependent on the VG v3 API, which is currently not GA (work in progress)
+  * Note: Depending on external review timelines from HashiCorp and subsequent code change(s) as required
+* Add Volume Group resource and data source support \* This is dependent on the VG v3 API, which is currently not GA (work in progress)
 * Investigate data protection workflows (likely scoped snapshots, but this may directly conflict with overall pets v cattle)
 * Investigate project as a resource and data source, for SSP integration
 * Investigate Calm once API constructs are available
