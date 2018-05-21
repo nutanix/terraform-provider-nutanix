@@ -33,12 +33,11 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	// Prepare request
 	request := &v3.SubnetIntentInput{}
 	spec := &v3.Subnet{}
-	metadata := &v3.SubnetMetadata{}
+	metadata := &v3.Metadata{}
 	subnet := &v3.SubnetResources{}
 
 	//Read arguments and set request values
 	n, nok := d.GetOk("name")
-	desc, descok := d.GetOk("description")
 	azr, azrok := d.GetOk("availability_zone_reference")
 	cr, crok := d.GetOk("cluster_reference")
 	_, stok := d.GetOk("subnet_type")
@@ -54,12 +53,10 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	if !nok {
 		return fmt.Errorf("Please provide the required name attribute")
 	}
-	if err := getSubnetMetadaAttributes(d, metadata); err != nil {
+	if err := getMetadataAttributes(d, metadata, "subnet"); err != nil {
 		return err
 	}
-	if descok {
-		spec.Description = utils.String(desc.(string))
-	}
+
 	if azrok {
 		a := azr.(map[string]interface{})
 		r := &v3.Reference{
@@ -77,8 +74,8 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 			Kind: utils.String(a["kind"].(string)),
 			UUID: utils.String(a["uuid"].(string)),
 		}
-		if v, ok := a["name"]; ok {
-			r.Name = utils.String(v.(string))
+		if cn, cnok := d.GetOk("cluster_name"); cnok {
+			r.Name = utils.String(cn.(string))
 		}
 		spec.ClusterReference = r
 	}
@@ -153,8 +150,20 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("metadata", metadata); err != nil {
 		return err
 	}
-	if err := d.Set("categories", resp.Metadata.Categories); err != nil {
-		return err
+
+	if resp.Metadata.Categories != nil {
+		categories := resp.Metadata.Categories
+		var catList []map[string]interface{}
+
+		for name, values := range categories {
+			catItem := make(map[string]interface{})
+			catItem["name"] = name
+			catItem["value"] = values
+			catList = append(catList, catItem)
+		}
+		if err := d.Set("categories", catList); err != nil {
+			return err
+		}
 	}
 
 	or := make(map[string]interface{})
@@ -164,16 +173,26 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		or["uuid"] = utils.StringValue(resp.Metadata.OwnerReference.UUID)
 
 	}
+
 	if err := d.Set("owner_reference", or); err != nil {
+		return err
+	}
+
+	pr := make(map[string]interface{})
+	if resp.Metadata.ProjectReference != nil {
+		pr["kind"] = utils.StringValue(resp.Metadata.ProjectReference.Kind)
+		pr["name"] = utils.StringValue(resp.Metadata.ProjectReference.Name)
+		pr["uuid"] = utils.StringValue(resp.Metadata.ProjectReference.UUID)
+
+	}
+
+	if err := d.Set("project_reference", pr); err != nil {
 		return err
 	}
 	if err := d.Set("api_version", utils.StringValue(resp.APIVersion)); err != nil {
 		return err
 	}
 	if err := d.Set("name", utils.StringValue(resp.Status.Name)); err != nil {
-		return err
-	}
-	if err := d.Set("description", utils.StringValue(resp.Status.Description)); err != nil {
 		return err
 	}
 	// set availability zone reference values
@@ -190,8 +209,11 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	clusterReference := make(map[string]interface{})
 	if resp.Status.ClusterReference != nil {
 		clusterReference["kind"] = utils.StringValue(resp.Status.ClusterReference.Kind)
-		clusterReference["name"] = utils.StringValue(resp.Status.ClusterReference.Name)
 		clusterReference["uuid"] = utils.StringValue(resp.Status.ClusterReference.UUID)
+
+		if err := d.Set("cluster_name", utils.StringValue(resp.Status.ClusterReference.Name)); err != nil {
+			return err
+		}
 	}
 	if err := d.Set("cluster_reference", clusterReference); err != nil {
 		return err
@@ -349,11 +371,29 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 	fmt.Printf("Updating the subnet with the uuid %s", d.Id())
 
 	request := &v3.SubnetIntentInput{}
-	metadata := &v3.SubnetMetadata{}
+	metadata := &v3.Metadata{}
 	res := &v3.SubnetResources{}
 	ipcfg := &v3.IPConfig{}
 	dhcpO := &v3.DHCPOptions{}
 	spec := &v3.Subnet{}
+
+	response, err := conn.V3.GetSubnet(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	if response.Metadata != nil {
+		metadata = response.Metadata
+	}
+
+	if response.Spec != nil {
+		spec = response.Spec
+
+		if response.Spec.Resources != nil {
+			res = response.Spec.Resources
+		}
+	}
 
 	// get state
 	if d.HasChange("metadata") {
@@ -378,12 +418,23 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("categories") {
-		p := d.Get("categories").(map[string]interface{})
-		labels := map[string]string{}
-		for k, v := range p {
-			labels[k] = v.(string)
+		catl := d.Get("categories").([]interface{})
+
+		if len(catl) > 0 {
+			cl := make(map[string]string)
+			for _, v := range catl {
+				item := v.(map[string]interface{})
+
+				if i, ok := item["name"]; ok && i.(string) != "" {
+					if k, kok := item["value"]; kok && k.(string) != "" {
+						cl[i.(string)] = k.(string)
+					}
+				}
+			}
+			metadata.Categories = cl
+		} else {
+			metadata.Categories = nil
 		}
-		metadata.Categories = labels
 	}
 	if d.HasChange("owner_reference") {
 		or := d.Get("owner_reference").(map[string]interface{})
@@ -405,9 +456,6 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("name") {
 		spec.Name = utils.String(d.Get("name").(string))
-	}
-	if d.HasChange("description") {
-		spec.Description = utils.String(d.Get("description").(string))
 	}
 	if d.HasChange("availability_zone_reference") {
 		a := d.Get("availability_zone_reference").(map[string]interface{})
@@ -557,7 +605,7 @@ func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceNutanixSubnetExists(conn *v3.Client, name string) (*string, error) {
-	log.Printf("[DEBUG] Get Subnet Existance : %s", name)
+	log.Printf("[DEBUG] Get Subnet Existence: %s", name)
 
 	subnetEntities := &v3.SubnetListMetadata{}
 	var subnetUUID *string
@@ -1009,47 +1057,47 @@ func subnetStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefres
 
 func getSubnetSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"api_version": &schema.Schema{
+		"api_version": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"metadata": &schema.Schema{
+		"metadata": {
 			Type:     schema.TypeMap,
-			Required: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"last_update_time": &schema.Schema{
+					"last_update_time": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"creation_time": &schema.Schema{
+					"creation_time": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"spec_version": &schema.Schema{
+					"spec_version": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"spec_hash": &schema.Schema{
+					"spec_hash": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
@@ -1057,149 +1105,158 @@ func getSubnetSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"categories": &schema.Schema{
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
-		"owner_reference": &schema.Schema{
-			Type:     schema.TypeMap,
-			Optional: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"uuid": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"name": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-				},
-			},
-		},
-		"project_reference": &schema.Schema{
-			Type:     schema.TypeMap,
-			Optional: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"uuid": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"name": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-				},
-			},
-		},
-		"name": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"state": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"description": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"availability_zone_reference": &schema.Schema{
-			Type:     schema.TypeMap,
+		"categories": {
+			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Required: true,
 					},
-					"uuid": &schema.Schema{
+					"value": {
 						Type:     schema.TypeString,
 						Required: true,
-					},
-					"name": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
 					},
 				},
 			},
 		},
-		"cluster_reference": &schema.Schema{
+		"owner_reference": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"uuid": &schema.Schema{
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"name": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Optional: true,
-						Computed: true,
+					},
+					"uuid": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+					"name": {
+						Type:     schema.TypeString,
+						Optional: true,
 					},
 				},
 			},
 		},
-		"vswitch_name": &schema.Schema{
-			Type:     schema.TypeString,
+		"project_reference": {
+			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"kind": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+					"uuid": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+					"name": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+				},
+			},
 		},
-		"subnet_type": &schema.Schema{
+		"name": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"default_gateway_ip": &schema.Schema{
+		"state": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"availability_zone_reference": {
+			Type:     schema.TypeMap,
+			Optional: true,
+			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"kind": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					"uuid": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					"name": {
+						Type:     schema.TypeString,
+						Optional: true,
+						Computed: true,
+					},
+				},
+			},
+		},
+		"cluster_reference": {
+			Type:     schema.TypeMap,
+			Optional: true,
+			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"kind": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					"uuid": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+				},
+			},
+		},
+		"cluster_name": {
+			Type:     schema.TypeString,
+			Computed: true,
+			Optional: true,
+		},
+		"vswitch_name": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"prefix_length": &schema.Schema{
+		"subnet_type": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"default_gateway_ip": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"prefix_length": {
 			Type:     schema.TypeInt,
 			Optional: true,
 			Computed: true,
 		},
-		"subnet_ip": &schema.Schema{
+		"subnet_ip": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"dhcp_server_address": &schema.Schema{
+		"dhcp_server_address": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"ip": &schema.Schema{
+					"ip": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"fqdn": &schema.Schema{
+					"fqdn": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"ipv6": &schema.Schema{
+					"ipv6": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
@@ -1207,34 +1264,34 @@ func getSubnetSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"dhcp_server_address_port": &schema.Schema{
+		"dhcp_server_address_port": {
 			Type:     schema.TypeInt,
 			Optional: true,
 			Computed: true,
 		},
-		"ip_config_pool_list_ranges": &schema.Schema{
+		"ip_config_pool_list_ranges": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-		"dhcp_options": &schema.Schema{
+		"dhcp_options": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"boot_file_name": &schema.Schema{
+					"boot_file_name": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"domain_name": &schema.Schema{
+					"domain_name": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
 					},
-					"tftp_server_name": &schema.Schema{
+					"tftp_server_name": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
@@ -1242,39 +1299,39 @@ func getSubnetSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"dhcp_domain_name_server_list": &schema.Schema{
+		"dhcp_domain_name_server_list": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-		"dhcp_domain_search_list": &schema.Schema{
+		"dhcp_domain_search_list": {
 			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-		"vlan_id": &schema.Schema{
+		"vlan_id": {
 			Type:     schema.TypeInt,
 			Optional: true,
 			ForceNew: true,
 			Computed: true,
 		},
-		"network_function_chain_reference": &schema.Schema{
+		"network_function_chain_reference": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Required: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Required: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,

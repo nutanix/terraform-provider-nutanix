@@ -2,6 +2,7 @@ package v3
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -235,6 +236,12 @@ func (op Operations) GetSubnet(UUID string) (*SubnetIntentResponse, error) {
 	err = op.client.Do(ctx, req, subnetIntentResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	//Recheck subnet already exist error
+	if *subnetIntentResponse.Status.State == "ERROR" {
+		pretty, _ := json.MarshalIndent(subnetIntentResponse.Status.MessageList, "", "  ")
+		return nil, fmt.Errorf("Error: %s", string(pretty))
 	}
 
 	return subnetIntentResponse, nil
@@ -625,6 +632,10 @@ func (op Operations) CreateOrUpdateCategoryValue(name string, body *CategoryValu
 	categoryValueResponse := new(CategoryValueStatus)
 
 	err = op.client.Do(ctx, req, categoryValueResponse)
+
+	if err != nil {
+		return nil, err
+	}
 
 	return categoryValueResponse, nil
 }

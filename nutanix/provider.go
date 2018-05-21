@@ -11,32 +11,32 @@ func Provider() terraform.ResourceProvider {
 	// Nutanix provider schema
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"username": &schema.Schema{
+			"username": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_USERNAME", nil),
 				Description: descriptions["username"],
 			},
-			"password": &schema.Schema{
+			"password": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_PASSWORD", nil),
 				Description: descriptions["password"],
 			},
-			"insecure": &schema.Schema{
+			"insecure": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_INSECURE", false),
 				Description: descriptions["insecure"],
 			},
-			"port": &schema.Schema{
+			"port": {
 				Type:        schema.TypeString,
 				Default:     "9440",
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_PORT", false),
 				Description: descriptions["port"],
 			},
-			"endpoint": &schema.Schema{
+			"endpoint": {
 				Type:        schema.TypeString,
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_ENDPOINT", nil),
@@ -44,17 +44,22 @@ func Provider() terraform.ResourceProvider {
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"nutanix_virtual_machine":  dataSourceNutanixVirtualMachine(),
-			"nutanix_virtual_machines": dataSourceNutanixVirtualMachines(),
-			"nutanix_image":            dataSourceNutanixImage(),
-			"nutanix_subnet":           dataSourceNutanixSubnet(),
-			"nutanix_clusters":         dataSourceNutanixClusters(),
-			"nutanix_cluster":          dataSourceNutanixCluster(),
+
+			"nutanix_virtual_machine":       dataSourceNutanixVirtualMachine(),
+			"nutanix_virtual_machines":      dataSourceNutanixVirtualMachines(),
+			"nutanix_image":                 dataSourceNutanixImage(),
+			"nutanix_subnet":                dataSourceNutanixSubnet(),
+			"nutanix_clusters":              dataSourceNutanixClusters(),
+			"nutanix_network_security_rule": dataSourceNutanixNetworkSecurityRule(),
+			"nutanix_cluster":               dataSourceNutanixCluster(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"nutanix_virtual_machine": resourceNutanixVirtualMachine(),
-			"nutanix_image":           resourceNutanixImage(),
-			"nutanix_subnet":          resourceNutanixSubnet(),
+			"nutanix_virtual_machine":       resourceNutanixVirtualMachine(),
+			"nutanix_image":                 resourceNutanixImage(),
+			"nutanix_subnet":                resourceNutanixSubnet(),
+			"nutanix_category_key":          resourceNutanixCategoryKey(),
+			"nutanix_category_value":        resourceNutanixCategoryValue(),
+			"nutanix_network_security_rule": resourceNutanixNetworkSecurityRule(),
 		},
 		ConfigureFunc: providerConfigure,
 	}

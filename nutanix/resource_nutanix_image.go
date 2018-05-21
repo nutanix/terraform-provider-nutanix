@@ -40,7 +40,7 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 
 	request := &v3.ImageIntentInput{}
 	spec := &v3.Image{}
-	metadata := &v3.ImageMetadata{}
+	metadata := &v3.Metadata{}
 	image := &v3.ImageResources{}
 
 	n, nok := d.GetOk("name")
@@ -55,7 +55,7 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("Please provide the required attribute name")
 	}
 
-	if err := getImageMetadaAttributes(d, metadata); err != nil {
+	if err := getMetadataAttributes(d, metadata, "image"); err != nil {
 		return err
 	}
 
@@ -126,17 +126,29 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 	// set metadata values
 	metadata := make(map[string]interface{})
 	metadata["last_update_time"] = resp.Metadata.LastUpdateTime.String()
-	metadata["kind"] = utils.StringValue(resp.Metadata.Kind)
 	metadata["uuid"] = utils.StringValue(resp.Metadata.UUID)
 	metadata["creation_time"] = resp.Metadata.CreationTime.String()
 	metadata["spec_version"] = strconv.Itoa(int(utils.Int64Value(resp.Metadata.SpecVersion)))
 	metadata["spec_hash"] = utils.StringValue(resp.Metadata.SpecHash)
 	metadata["name"] = utils.StringValue(resp.Metadata.Name)
+
 	if err := d.Set("metadata", metadata); err != nil {
 		return err
 	}
-	if err := d.Set("categories", resp.Metadata.Categories); err != nil {
-		return err
+
+	if resp.Metadata.Categories != nil {
+		categories := resp.Metadata.Categories
+		var catList []map[string]interface{}
+
+		for name, values := range categories {
+			catItem := make(map[string]interface{})
+			catItem["name"] = name
+			catItem["value"] = values
+			catList = append(catList, catItem)
+		}
+		if err := d.Set("categories", catList); err != nil {
+			return err
+		}
 	}
 
 	or := make(map[string]interface{})
@@ -146,9 +158,11 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 		or["uuid"] = utils.StringValue(resp.Metadata.OwnerReference.UUID)
 
 	}
+
 	if err := d.Set("owner_reference", or); err != nil {
 		return err
 	}
+
 	if err := d.Set("api_version", utils.StringValue(resp.APIVersion)); err != nil {
 		return err
 	}
@@ -179,16 +193,6 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	if err := d.Set("api_version", utils.StringValue(resp.APIVersion)); err != nil {
-		return err
-	}
-	if err := d.Set("name", utils.StringValue(resp.Status.Name)); err != nil {
-		return err
-	}
-	if err := d.Set("description", utils.StringValue(resp.Status.Description)); err != nil {
-		return err
-	}
-
 	// set state value
 	if err := d.Set("state", resp.Status.State); err != nil {
 		return err
@@ -206,6 +210,26 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	checksum := make(map[string]string)
+	if resp.Status.Resources.Checksum != nil {
+		checksum["checksum_algorithm"] = utils.StringValue(resp.Status.Resources.Checksum.ChecksumAlgorithm)
+		checksum["checksum_value"] = utils.StringValue(resp.Status.Resources.Checksum.ChecksumValue)
+	}
+
+	if err := d.Set("checksum", checksum); err != nil {
+		return err
+	}
+
+	version := make(map[string]string)
+	if resp.Status.Resources.Version != nil {
+		version["product_version"] = utils.StringValue(resp.Status.Resources.Version.ProductVersion)
+		version["product_name"] = utils.StringValue(resp.Status.Resources.Version.ProductName)
+	}
+
+	if err := d.Set("version", version); err != nil {
+		return err
+	}
+
 	var uriList []string
 	for _, uri := range resp.Status.Resources.RetrievalURIList {
 		uriList = append(uriList, utils.StringValue(uri))
@@ -219,32 +243,85 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 
 	// get state
 	request := &v3.ImageIntentInput{}
-	metadata := &v3.ImageMetadata{}
+	metadata := &v3.Metadata{}
+	spec := &v3.Image{}
 	res := &v3.ImageResources{}
 
-	if d.HasChange("metadata") ||
-		d.HasChange("categories") ||
-		d.HasChange("owner_reference") ||
-		d.HasChange("project_reference") {
-		if err := getImageMetadaAttributes(d, metadata); err != nil {
-			return err
+	response, err := conn.V3.GetImage(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	if response.Metadata != nil {
+		metadata = response.Metadata
+	}
+
+	if response.Spec != nil {
+		spec = response.Spec
+
+		if response.Spec.Resources != nil {
+			res = response.Spec.Resources
 		}
-		request.Metadata = metadata
+	}
+
+	if d.HasChange("categories") {
+		catl := d.Get("categories").([]interface{})
+
+		if len(catl) > 0 {
+			cl := make(map[string]string)
+			for _, v := range catl {
+				item := v.(map[string]interface{})
+
+				if i, ok := item["name"]; ok && i.(string) != "" {
+					if k, kok := item["value"]; kok && k.(string) != "" {
+						cl[i.(string)] = k.(string)
+					}
+				}
+			}
+			metadata.Categories = cl
+		} else {
+			metadata.Categories = nil
+		}
+	}
+
+	if d.HasChange("owner_reference") {
+		or := d.Get("owner_reference").(map[string]interface{})
+		r := &v3.Reference{
+			Kind: utils.String(or["kind"].(string)),
+			UUID: utils.String(or["uuid"].(string)),
+			Name: utils.String(or["name"].(string)),
+		}
+		metadata.OwnerReference = r
+	}
+
+	if d.HasChange("project_reference") {
+		pr := d.Get("project_reference").(map[string]interface{})
+		r := &v3.Reference{
+			Kind: utils.String(pr["kind"].(string)),
+			UUID: utils.String(pr["uuid"].(string)),
+			Name: utils.String(pr["name"].(string)),
+		}
+		metadata.ProjectReference = r
 	}
 
 	if d.HasChange("name") {
-		request.Spec.Name = utils.String(d.Get("name").(string))
+		spec.Name = utils.String(d.Get("name").(string))
 	}
 	if d.HasChange("description") {
-		request.Spec.Description = utils.String(d.Get("description").(string))
+		spec.Description = utils.String(d.Get("description").(string))
 	}
 
 	if d.HasChange("source_uri") || d.HasChange("checksum") {
 		if err := getImageResource(d, res); err != nil {
 			return err
 		}
-		request.Spec.Resources = res
+		spec.Resources = res
 	}
+
+	request.Metadata = metadata
+	request.Spec = spec
+
 	_, errUpdate := conn.V3.UpdateImage(d.Id(), request)
 	if errUpdate != nil {
 		return errUpdate
@@ -297,169 +374,130 @@ func resourceNutanixImageDelete(d *schema.ResourceData, meta interface{}) error 
 
 func getImageSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"api_version": &schema.Schema{
+		"api_version": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"metadata": &schema.Schema{
+		"metadata": {
 			Type:     schema.TypeMap,
-			Required: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"last_update_time": &schema.Schema{
+					"last_update_time": {
 						Type:     schema.TypeString,
-						Optional: true,
 						Computed: true,
 					},
-					"kind": &schema.Schema{
+
+					"uuid": {
 						Type:     schema.TypeString,
-						Optional: true,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"creation_time": {
 						Type:     schema.TypeString,
-						Optional: true,
 						Computed: true,
 					},
-					"creation_time": &schema.Schema{
+					"spec_version": {
 						Type:     schema.TypeString,
-						Optional: true,
 						Computed: true,
 					},
-					"spec_version": &schema.Schema{
+					"spec_hash": {
 						Type:     schema.TypeString,
-						Optional: true,
 						Computed: true,
 					},
-					"spec_hash": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
-					},
-					"name": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"categories": &schema.Schema{
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-		},
-		"owner_reference": &schema.Schema{
-			Type:     schema.TypeMap,
-			Optional: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"uuid": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"name": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-				},
-			},
-		},
-		"project_reference": &schema.Schema{
-			Type:     schema.TypeMap,
-			Optional: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"uuid": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"name": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-				},
-			},
-		},
-		"name": &schema.Schema{
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"state": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"description": &schema.Schema{
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"availability_zone_reference": &schema.Schema{
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"uuid": &schema.Schema{
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"name": &schema.Schema{
-						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
-					},
-				},
-			},
-		},
-		"message_list": &schema.Schema{
+		"categories": {
 			Type:     schema.TypeList,
+			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"message": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
-						Computed: true,
+						Required: true,
 					},
-					"reason": &schema.Schema{
+					"value": {
 						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"details": &schema.Schema{
-						Type:     schema.TypeMap,
-						Computed: true,
+						Required: true,
 					},
 				},
 			},
 		},
-		"cluster_reference": &schema.Schema{
+		"owner_reference": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
+					"kind": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+					"uuid": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+					"name": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+				},
+			},
+		},
+		"project_reference": {
+			Type:     schema.TypeMap,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"kind": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+					"uuid": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+					"name": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+				},
+			},
+		},
+		"name": {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		"state": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"description": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"availability_zone_reference": {
+			Type:     schema.TypeMap,
+			Optional: true,
+			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Required: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Required: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Optional: true,
 						Computed: true,
@@ -467,61 +505,83 @@ func getImageSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"retrieval_uri_list": &schema.Schema{
+		"cluster_reference": {
+			Type:     schema.TypeMap,
+			Optional: true,
+			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"kind": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					"uuid": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					"name": {
+						Type:     schema.TypeString,
+						Optional: true,
+						Computed: true,
+					},
+				},
+			},
+		},
+		"retrieval_uri_list": {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-		"image_type": &schema.Schema{
+		"image_type": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"checksum": &schema.Schema{
+		"checksum": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"checksum_algorithm": &schema.Schema{
+					"checksum_algorithm": {
 						Type:     schema.TypeString,
 						Required: true,
 					},
-					"checksum_value": &schema.Schema{
+					"checksum_value": {
 						Type:     schema.TypeString,
 						Required: true,
 					},
 				},
 			},
 		},
-		"source_uri": &schema.Schema{
+		"source_uri": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"version": &schema.Schema{
+		"version": {
 			Type:     schema.TypeMap,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"product_version": &schema.Schema{
+					"product_version": {
 						Type:     schema.TypeString,
 						Required: true,
 					},
-					"product_name": &schema.Schema{
+					"product_name": {
 						Type:     schema.TypeString,
 						Required: true,
 					},
 				},
 			},
 		},
-		"architecture": &schema.Schema{
+		"architecture": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"size_bytes": &schema.Schema{
+		"size_bytes": {
 			Type:     schema.TypeInt,
 			Computed: true,
 		},

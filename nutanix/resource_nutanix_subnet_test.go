@@ -17,7 +17,7 @@ func TestAccNutanixSubnet_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixSubnetDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNutanixSubnetConfig(r),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixSubnetExists("nutanix_subnet.next-iac-managed"),
@@ -61,22 +61,25 @@ func testAccCheckNutanixSubnetDestroy(s *terraform.State) error {
 
 func testAccNutanixSubnetConfig(r int32) string {
 	return fmt.Sprintf(`
-resource "nutanix_subnet" "next-iac-managed" {
-  # Can I hard code image to be kind image? 
-  # We're going to make this implicit in future API releases, so hard coding it is safe on the plugin side
+data "nutanix_clusters" "clusters" {
   metadata = {
-    kind = "subnet"
+    length = 2
   }
+}
 
+output "cluster" {
+  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+}
+		
+resource "nutanix_subnet" "next-iac-managed" {
   # What cluster will this VLAN live on?
   cluster_reference = {
-    kind = "cluster"
-    uuid = "000567f3-1921-c722-471d-0cc47ac31055"
+	kind = "cluster"
+	uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   }
 
   # General Information
   name        = "next-iac-managed-%d"
-  description = "NEXT"
   vlan_id     = 101
   subnet_type = "VLAN"
 

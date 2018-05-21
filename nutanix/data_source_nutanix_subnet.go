@@ -44,8 +44,20 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 	if err := d.Set("metadata", metadata); err != nil {
 		return err
 	}
-	if err := d.Set("categories", resp.Metadata.Categories); err != nil {
-		return err
+
+	if resp.Metadata.Categories != nil {
+		categories := resp.Metadata.Categories
+		var catList []map[string]interface{}
+
+		for name, values := range categories {
+			catItem := make(map[string]interface{})
+			catItem["name"] = name
+			catItem["value"] = values
+			catList = append(catList, catItem)
+		}
+		if err := d.Set("categories", catList); err != nil {
+			return err
+		}
 	}
 
 	or := make(map[string]interface{})
@@ -237,263 +249,276 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 
 func getDataSourceSubnetSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"subnet_id": &schema.Schema{
+		"subnet_id": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"api_version": &schema.Schema{
+		"api_version": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"metadata": &schema.Schema{
+		"metadata": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"last_update_time": &schema.Schema{
+					"last_update_time": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"creation_time": &schema.Schema{
+					"creation_time": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"spec_version": &schema.Schema{
+					"spec_version": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"spec_hash": &schema.Schema{
+					"spec_hash": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"categories": &schema.Schema{
-			Type:     schema.TypeMap,
+		"categories": {
+			Type:     schema.TypeList,
+			Optional: true,
 			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"name": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					"value": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+				},
+			},
 		},
-		"owner_reference": &schema.Schema{
+		"owner_reference": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"project_reference": &schema.Schema{
+		"project_reference": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"name": &schema.Schema{
+		"name": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"state": &schema.Schema{
+		"state": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"description": &schema.Schema{
+		"description": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"availability_zone_reference": &schema.Schema{
+		"availability_zone_reference": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"message_list": &schema.Schema{
+		"message_list": {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"message": &schema.Schema{
+					"message": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"reason": &schema.Schema{
+					"reason": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"details": &schema.Schema{
+					"details": {
 						Type:     schema.TypeMap,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"cluster_reference": &schema.Schema{
+		"cluster_reference": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"vswitch_name": &schema.Schema{
+		"vswitch_name": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"subnet_type": &schema.Schema{
+		"subnet_type": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"default_gateway_ip": &schema.Schema{
+		"default_gateway_ip": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"prefix_length": &schema.Schema{
+		"prefix_length": {
 			Type:     schema.TypeInt,
 			Computed: true,
 		},
-		"subnet_ip": &schema.Schema{
+		"subnet_ip": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"dhcp_server_address": &schema.Schema{
+		"dhcp_server_address": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"ip": &schema.Schema{
+					"ip": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"fqdn": &schema.Schema{
+					"fqdn": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"ipv6": &schema.Schema{
+					"ipv6": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"dhcp_server_address_port": &schema.Schema{
+		"dhcp_server_address_port": {
 			Type:     schema.TypeInt,
 			Computed: true,
 		},
-		"ip_config_pool_list_ranges": &schema.Schema{
+		"ip_config_pool_list_ranges": {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-		"dhcp_options": &schema.Schema{
+		"dhcp_options": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"boot_file_name": &schema.Schema{
+					"boot_file_name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"domain_name": &schema.Schema{
+					"domain_name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"tftp_server_name": &schema.Schema{
+					"tftp_server_name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"dhcp_domain_name_server_list": &schema.Schema{
+		"dhcp_domain_name_server_list": {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-		"dhcp_domain_search_list": &schema.Schema{
+		"dhcp_domain_search_list": {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-		"vlan_id": &schema.Schema{
+		"vlan_id": {
 			Type:     schema.TypeInt,
 			Computed: true,
 		},
-		"network_function_chain_reference": &schema.Schema{
+		"network_function_chain_reference": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
