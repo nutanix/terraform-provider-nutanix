@@ -44,11 +44,12 @@ func Provider() terraform.ResourceProvider {
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"nutanix_virtual_machine":  dataSourceNutanixVirtualMachine(),
-			"nutanix_virtual_machines": dataSourceNutanixVirtualMachines(),
-			"nutanix_image":            dataSourceNutanixImage(),
-			"nutanix_subnet":           dataSourceNutanixSubnet(),
-			"nutanix_clusters":         dataSourceNutanixClusters(),
+			"nutanix_virtual_machine":       dataSourceNutanixVirtualMachine(),
+			"nutanix_virtual_machines":      dataSourceNutanixVirtualMachines(),
+			"nutanix_image":                 dataSourceNutanixImage(),
+			"nutanix_subnet":                dataSourceNutanixSubnet(),
+			"nutanix_clusters":              dataSourceNutanixClusters(),
+			"nutanix_network_security_rule": dataSourceNutanixNetworkSecurityRule(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":       resourceNutanixVirtualMachine(),
