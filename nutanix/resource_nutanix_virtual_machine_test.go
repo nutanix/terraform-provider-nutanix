@@ -76,7 +76,7 @@ func testAccNutanixVMConfig(r int) string {
 	return fmt.Sprint(`
 resource "nutanix_category_key" "test-category-key"{
     name = "app-suppport-1"
-	description = "App Support Category Key"
+		description = "App Support Category Key"
 }
 
 

@@ -35,14 +35,17 @@ For a slack invite, please contact Terraform@nutanix.com from your business addr
 * [x] Virtual Machines data source.
 * [x] Category keys resource.
 * [x] Category values resource.
-* [x] Network security group resource.
-* [x] Network security group data source.
+* [x] Network security rule resource.
+* [x] Network security rule data source.
 
 **Features: (3rd Milestone)**
 
-* [ ] Volume group resource and data source.
-* [ ] File server resource and data source.
-* [ ] Cluster resource.
+* [ ] Network security rules data source.
+* [ ] Volume group resource.
+* [ ] Volume group datasource.
+* [ ] Volume groups datasource.
+* [ ] Documentation for Resources.
+* [ ] Documentation for Datasources.
 
 **Issues**
 
