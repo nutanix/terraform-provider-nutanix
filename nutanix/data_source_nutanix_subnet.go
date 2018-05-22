@@ -44,8 +44,20 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 	if err := d.Set("metadata", metadata); err != nil {
 		return err
 	}
-	if err := d.Set("categories", resp.Metadata.Categories); err != nil {
-		return err
+
+	if resp.Metadata.Categories != nil {
+		categories := resp.Metadata.Categories
+		var catList []map[string]interface{}
+
+		for name, values := range categories {
+			catItem := make(map[string]interface{})
+			catItem["name"] = name
+			catItem["value"] = values
+			catList = append(catList, catItem)
+		}
+		if err := d.Set("categories", catList); err != nil {
+			return err
+		}
 	}
 
 	or := make(map[string]interface{})
@@ -282,8 +294,21 @@ func getDataSourceSubnetSchema() map[string]*schema.Schema {
 			},
 		},
 		"categories": {
-			Type:     schema.TypeMap,
+			Type:     schema.TypeList,
+			Optional: true,
 			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"name": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					"value": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+				},
+			},
 		},
 		"owner_reference": {
 			Type:     schema.TypeMap,

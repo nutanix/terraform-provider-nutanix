@@ -2,6 +2,7 @@ package v3
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -47,6 +48,7 @@ type Service interface {
 	DeleteNetworkSecurityRule(UUID string) error
 	CreateNetworkSecurityRule(request *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error)
 	ListCluster(getEntitiesRequest *ClusterListMetadataOutput) (*ClusterListIntentResponse, error)
+	GetCluster(UUID string) (*ClusterIntentResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -236,6 +238,12 @@ func (op Operations) GetSubnet(UUID string) (*SubnetIntentResponse, error) {
 		return nil, err
 	}
 
+	//Recheck subnet already exist error
+	if *subnetIntentResponse.Status.State == "ERROR" {
+		pretty, _ := json.MarshalIndent(subnetIntentResponse.Status.MessageList, "", "  ")
+		return nil, fmt.Errorf("Error: %s", string(pretty))
+	}
+
 	return subnetIntentResponse, nil
 }
 
@@ -415,33 +423,31 @@ func (op Operations) UpdateImage(UUID string, body *ImageIntentInput) (*ImageInt
 	return imageIntentResponse, nil
 }
 
-//TODO: Ask for images file put & get requests.
-
 /*GetCluster gets a CLUSTER
  * This operation gets a CLUSTER.
  *
  * @param uuid The UUID of the entity.
  * @return *ImageIntentResponse
  */
-// func (op Operations) GetCluster(UUID string) (*ImageIntentResponse, error) {
-// 	ctx := context.TODO()
+func (op Operations) GetCluster(UUID string) (*ClusterIntentResponse, error) {
+	ctx := context.TODO()
 
-// 	path := fmt.Sprintf("/images/%s", UUID)
+	path := fmt.Sprintf("/clusters/%s", UUID)
 
-// 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
 
-// 	imageIntentResponse := new(ImageIntentResponse)
+	clusterIntentResponse := new(ClusterIntentResponse)
 
-// 	err = op.client.Do(ctx, req, imageIntentResponse)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	err = op.client.Do(ctx, req, clusterIntentResponse)
+	if err != nil {
+		return nil, err
+	}
 
-// 	return imageIntentResponse, nil
-// }
+	return clusterIntentResponse, nil
+}
 
 /*ListCluster gets a list of CLUSTERS
  * This operation gets a list of CLUSTERS, allowing for sorting and pagination. Note: Entities that have not been created successfully are not listed.

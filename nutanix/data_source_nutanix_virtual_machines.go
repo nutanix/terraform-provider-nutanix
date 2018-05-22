@@ -77,21 +77,37 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 		metadata["name"] = utils.StringValue(v.Metadata.Name)
 		entity["metadata"] = metadata
 
-		entity["categories"] = v.Metadata.Categories
+		if v.Metadata.Categories != nil {
+			categories := v.Metadata.Categories
+			var catList []map[string]interface{}
+
+			for name, values := range categories {
+				catItem := make(map[string]interface{})
+				catItem["name"] = name
+				catItem["value"] = values
+				catList = append(catList, catItem)
+			}
+			entity["categories"] = catList
+		}
+
 		entity["api_version"] = utils.StringValue(v.APIVersion)
 
-		pr := make(map[string]interface{})
-		pr["kind"] = utils.StringValue(v.Metadata.ProjectReference.Kind)
-		pr["name"] = utils.StringValue(v.Metadata.ProjectReference.Name)
-		pr["uuid"] = utils.StringValue(v.Metadata.ProjectReference.UUID)
+		if v.Metadata.ProjectReference != nil {
+			pr := make(map[string]interface{})
+			pr["kind"] = utils.StringValue(v.Metadata.ProjectReference.Kind)
+			pr["name"] = utils.StringValue(v.Metadata.ProjectReference.Name)
+			pr["uuid"] = utils.StringValue(v.Metadata.ProjectReference.UUID)
+			entity["project_reference"] = pr
+		}
 
-		entity["project_reference"] = pr
+		if v.Metadata.OwnerReference != nil {
+			or := make(map[string]interface{})
+			or["kind"] = utils.StringValue(v.Metadata.OwnerReference.Kind)
+			or["name"] = utils.StringValue(v.Metadata.OwnerReference.Name)
+			or["uuid"] = utils.StringValue(v.Metadata.OwnerReference.UUID)
+			entity["owner_reference"] = or
+		}
 
-		or := make(map[string]interface{})
-		or["kind"] = utils.StringValue(v.Metadata.OwnerReference.Kind)
-		or["name"] = utils.StringValue(v.Metadata.OwnerReference.Name)
-		or["uuid"] = utils.StringValue(v.Metadata.OwnerReference.UUID)
-		entity["owner_reference"] = or
 		entity["name"] = utils.StringValue(v.Status.Name)
 		entity["description"] = utils.StringValue(v.Status.Description)
 
@@ -426,8 +442,21 @@ func getDataSourceVMSSchema() map[string]*schema.Schema {
 						},
 					},
 					"categories": {
-						Type:     schema.TypeMap,
+						Type:     schema.TypeList,
+						Optional: true,
 						Computed: true,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"name": {
+									Type:     schema.TypeString,
+									Required: true,
+								},
+								"value": {
+									Type:     schema.TypeString,
+									Required: true,
+								},
+							},
+						},
 					},
 					"project_reference": {
 						Type:     schema.TypeMap,

@@ -3,6 +3,7 @@ package nutanix
 import (
 	"fmt"
 	"log"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -35,7 +36,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	// Prepare request
 	request := &v3.VMIntentInput{}
 	spec := &v3.VM{}
-	metadata := &v3.VMMetadata{}
+	metadata := &v3.Metadata{}
 	res := &v3.VMResources{}
 
 	// Read Arguments and set request values
@@ -50,7 +51,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	if !nok {
 		return fmt.Errorf("Please provide the required name attribute")
 	}
-	if err := getMetadaAttributes(d, metadata); err != nil {
+	if err := getMetadataAttributes(d, metadata, "vm"); err != nil {
 		return err
 	}
 	if descok {
@@ -73,8 +74,8 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 			Kind: utils.String(a["kind"].(string)),
 			UUID: utils.String(a["uuid"].(string)),
 		}
-		if v, ok := a["name"]; ok {
-			r.Name = utils.String(v.(string))
+		if cn, cnok := d.GetOk("cluster_name"); cnok {
+			r.Name = utils.String(cn.(string))
 		}
 		spec.ClusterReference = r
 	}
@@ -153,9 +154,22 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	if err := d.Set("metadata", metadata); err != nil {
 		return err
 	}
-	if err := d.Set("categories", resp.Metadata.Categories); err != nil {
-		return err
+
+	if resp.Metadata.Categories != nil {
+		categories := resp.Metadata.Categories
+		var catList []map[string]interface{}
+
+		for name, values := range categories {
+			catItem := make(map[string]interface{})
+			catItem["name"] = name
+			catItem["value"] = values
+			catList = append(catList, catItem)
+		}
+		if err := d.Set("categories", catList); err != nil {
+			return err
+		}
 	}
+
 	pr := make(map[string]interface{})
 	if resp.Metadata.ProjectReference != nil {
 		pr["kind"] = utils.StringValue(resp.Metadata.ProjectReference.Kind)
@@ -199,11 +213,12 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	clusterReference := make(map[string]interface{})
 	if resp.Status.ClusterReference != nil {
 		clusterReference["kind"] = utils.StringValue(resp.Status.ClusterReference.Kind)
-		clusterReference["name"] = utils.StringValue(resp.Status.ClusterReference.Name)
 		clusterReference["uuid"] = utils.StringValue(resp.Status.ClusterReference.UUID)
-	}
 
-	utils.PrintToJSON(clusterReference, "CLUSTER READ =>")
+		if err := d.Set("cluster_name", utils.StringValue(resp.Status.ClusterReference.Name)); err != nil {
+			return err
+		}
+	}
 
 	if err := d.Set("cluster_reference", clusterReference); err != nil {
 		return err
@@ -254,8 +269,8 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 			subtnetRef := make(map[string]interface{})
 			if v.SubnetReference != nil {
 				subtnetRef["kind"] = utils.StringValue(v.SubnetReference.Kind)
-				subtnetRef["name"] = utils.StringValue(v.SubnetReference.Name)
 				subtnetRef["uuid"] = utils.StringValue(v.SubnetReference.UUID)
+				nic["subnet_reference_name"] = utils.StringValue(v.SubnetReference.Name)
 			}
 			nic["subnet_reference"] = subtnetRef
 
@@ -491,7 +506,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	fmt.Printf("Updating VM values %s", d.Id())
 
 	request := &v3.VMIntentInput{}
-	metadata := &v3.VMMetadata{}
+	metadata := &v3.Metadata{}
 	res := &v3.VMResources{}
 	spec := &v3.VM{}
 	guest := &v3.GuestCustomization{}
@@ -522,12 +537,23 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if d.HasChange("categories") {
-		p := d.Get("categories").(map[string]interface{})
-		labels := map[string]string{}
-		for k, v := range p {
-			labels[k] = v.(string)
+		catl := d.Get("categories").([]interface{})
+
+		if len(catl) > 0 {
+			cl := make(map[string]string)
+			for _, v := range catl {
+				item := v.(map[string]interface{})
+
+				if i, ok := item["name"]; ok && i.(string) != "" {
+					if k, kok := item["value"]; kok && k.(string) != "" {
+						cl[i.(string)] = k.(string)
+					}
+				}
+			}
+			metadata.Categories = cl
+		} else {
+			metadata.Categories = nil
 		}
-		metadata.Categories = labels
 	}
 	if d.HasChange("owner_reference") {
 		or := d.Get("owner_reference").(map[string]interface{})
@@ -912,67 +938,6 @@ func resourceNutanixVirtualMachineExists(d *schema.ResourceData, meta interface{
 	return false, nil
 }
 
-func getMetadaAttributes(d *schema.ResourceData, metadata *v3.VMMetadata) error {
-	m, mok := d.GetOk("metadata")
-	metad := m.(map[string]interface{})
-
-	if !mok {
-		return fmt.Errorf("please provide metadata required attributes")
-	}
-
-	metadata.Kind = utils.String(metad["kind"].(string))
-
-	if v, ok := metad["uuid"]; ok && v != "" {
-		metadata.UUID = utils.String(v.(string))
-	}
-	if v, ok := metad["spec_version"]; ok && v != 0 {
-		i, err := strconv.Atoi(v.(string))
-		if err != nil {
-			return err
-		}
-		metadata.SpecVersion = utils.Int64(int64(i))
-	}
-	if v, ok := metad["spec_hash"]; ok && v != "" {
-		metadata.SpecHash = utils.String(v.(string))
-	}
-	if v, ok := metad["name"]; ok {
-		metadata.Name = utils.String(v.(string))
-	}
-	if v, ok := d.GetOk("categories"); ok {
-		c := v.(map[string]interface{})
-		labels := map[string]string{}
-
-		for k, v := range c {
-			labels[k] = v.(string)
-		}
-		metadata.Categories = labels
-	}
-	if p, ok := d.GetOk("project_reference"); ok {
-		pr := p.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(pr["kind"].(string)),
-			UUID: utils.String(pr["uuid"].(string)),
-		}
-		if v1, ok1 := pr["name"]; ok1 {
-			r.Name = utils.String(v1.(string))
-		}
-		metadata.ProjectReference = r
-	}
-	if o, ok := metad["owner_reference"]; ok {
-		or := o.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(or["kind"].(string)),
-			UUID: utils.String(or["uuid"].(string)),
-		}
-		if v1, ok1 := or["name"]; ok1 {
-			r.Name = utils.String(v1.(string))
-		}
-		metadata.OwnerReference = r
-	}
-
-	return nil
-}
-
 func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	if v, ok := d.GetOk("num_vnuma_nodes"); ok {
 		vm.VMVnumaConfig.NumVnumaNodes = utils.Int64(v.(int64))
@@ -1044,7 +1009,7 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 					if j, ok1 := v["uuid"]; ok1 {
 						ref.UUID = utils.String(j.(string))
 					}
-					if j, ok1 := v["name"]; ok1 {
+					if j, ok1 := val["subnet_reference_name"]; ok1 {
 						ref.Name = utils.String(j.(string))
 					}
 					nic.SubnetReference = ref
@@ -1145,37 +1110,43 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	if v, ok := d.GetOk("hardware_clock_timezone"); ok {
 		vm.HardwareClockTimezone = utils.String(v.(string))
 	}
+
+	gestCustom := &v3.GuestCustomization{}
+
 	if v, ok := d.GetOk("guest_customization_cloud_init"); ok {
-		if vm.GuestCustomization == nil {
-			vm.GuestCustomization = &v3.GuestCustomization{}
-			vm.GuestCustomization.CloudInit = &v3.GuestCustomizationCloudInit{}
-		}
+		gestCustom.CloudInit = &v3.GuestCustomizationCloudInit{}
 		cii := v.(map[string]interface{})
 		if v2, ok2 := cii["meta_data"]; ok2 {
-			vm.GuestCustomization.CloudInit.MetaData = utils.String(v2.(string))
+			gestCustom.CloudInit.MetaData = utils.String(v2.(string))
 		}
 		if v2, ok2 := cii["user_data"]; ok2 {
-			vm.GuestCustomization.CloudInit.UserData = utils.String(v2.(string))
+			gestCustom.CloudInit.UserData = utils.String(v2.(string))
 		}
 		if v2, ok2 := cii["custom_key_values"]; ok2 {
-			vm.GuestCustomization.CloudInit.CustomKeyValues = v2.(map[string]string)
+			gestCustom.CloudInit.CustomKeyValues = v2.(map[string]string)
 		}
 	}
 	if v, ok := d.GetOk("guest_customization_is_overridable"); ok {
-		vm.GuestCustomization.IsOverridable = utils.Bool(v.(bool))
+		gestCustom.IsOverridable = utils.Bool(v.(bool))
 	}
 	if v, ok := d.GetOk("guest_customization_sysprep"); ok {
+		gestCustom.Sysprep = &v3.GuestCustomizationSysprep{}
 		spi := v.(map[string]interface{})
 		if v2, ok2 := spi["install_type"]; ok2 {
-			vm.GuestCustomization.Sysprep.InstallType = utils.String(v2.(string))
+			gestCustom.Sysprep.InstallType = utils.String(v2.(string))
 		}
 		if v2, ok2 := spi["unattend_xml"]; ok2 {
-			vm.GuestCustomization.Sysprep.UnattendXML = utils.String(v2.(string))
+			gestCustom.Sysprep.UnattendXML = utils.String(v2.(string))
 		}
 		if v2, ok2 := spi["custom_key_values"]; ok2 {
-			vm.GuestCustomization.Sysprep.CustomKeyValues = v2.(map[string]string)
+			gestCustom.Sysprep.CustomKeyValues = v2.(map[string]string)
 		}
 	}
+
+	if !reflect.DeepEqual(*gestCustom, (v3.GuestCustomization{})) {
+		vm.GuestCustomization = gestCustom
+	}
+
 	if v, ok := d.GetOk("vga_console_enabled"); ok {
 		vm.VgaConsoleEnabled = utils.Bool(v.(bool))
 	}
@@ -1309,16 +1280,12 @@ func getVMSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"metadata": {
 			Type:     schema.TypeMap,
-			Required: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"last_update_time": {
 						Type:     schema.TypeString,
 						Computed: true,
-					},
-					"kind": {
-						Type:     schema.TypeString,
-						Required: true,
 					},
 					"uuid": {
 						Type:     schema.TypeString,
@@ -1345,9 +1312,21 @@ func getVMSchema() map[string]*schema.Schema {
 			},
 		},
 		"categories": {
-			Type:     schema.TypeMap,
+			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"name": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					"value": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+				},
+			},
 		},
 		"project_reference": {
 			Type:     schema.TypeMap,
@@ -1444,16 +1423,14 @@ func getVMSchema() map[string]*schema.Schema {
 						Type:     schema.TypeString,
 						Required: true,
 					},
-					"name": {
-						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
-					},
 				},
 			},
 		},
-
-		// COMPUTED
+		"cluster_name": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
 		"state": {
 			Type:     schema.TypeString,
 			Computed: true,
@@ -1580,17 +1557,17 @@ func getVMSchema() map[string]*schema.Schema {
 									Type:     schema.TypeString,
 									Required: true,
 								},
-								"name": {
-									Type:     schema.TypeString,
-									Optional: true,
-									Computed: true,
-								},
 								"uuid": {
 									Type:     schema.TypeString,
 									Required: true,
 								},
 							},
 						},
+					},
+					"subnet_reference_name": {
+						Type:     schema.TypeString,
+						Optional: true,
+						Computed: true,
 					},
 				},
 			},
