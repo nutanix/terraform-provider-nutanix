@@ -33,12 +33,11 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	// Prepare request
 	request := &v3.SubnetIntentInput{}
 	spec := &v3.Subnet{}
-	metadata := &v3.SubnetMetadata{}
+	metadata := &v3.Metadata{}
 	subnet := &v3.SubnetResources{}
 
 	//Read arguments and set request values
 	n, nok := d.GetOk("name")
-	desc, descok := d.GetOk("description")
 	azr, azrok := d.GetOk("availability_zone_reference")
 	cr, crok := d.GetOk("cluster_reference")
 	_, stok := d.GetOk("subnet_type")
@@ -54,12 +53,10 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	if !nok {
 		return fmt.Errorf("Please provide the required name attribute")
 	}
-	if err := getSubnetMetadaAttributes(d, metadata); err != nil {
+	if err := getMetadataAttributes(d, metadata, "subnet"); err != nil {
 		return err
 	}
-	if descok {
-		spec.Description = utils.String(desc.(string))
-	}
+
 	if azrok {
 		a := azr.(map[string]interface{})
 		r := &v3.Reference{
@@ -77,8 +74,8 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 			Kind: utils.String(a["kind"].(string)),
 			UUID: utils.String(a["uuid"].(string)),
 		}
-		if v, ok := a["name"]; ok {
-			r.Name = utils.String(v.(string))
+		if cn, cnok := d.GetOk("cluster_name"); cnok {
+			r.Name = utils.String(cn.(string))
 		}
 		spec.ClusterReference = r
 	}
@@ -153,8 +150,20 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("metadata", metadata); err != nil {
 		return err
 	}
-	if err := d.Set("categories", resp.Metadata.Categories); err != nil {
-		return err
+
+	if resp.Metadata.Categories != nil {
+		categories := resp.Metadata.Categories
+		var catList []map[string]interface{}
+
+		for name, values := range categories {
+			catItem := make(map[string]interface{})
+			catItem["name"] = name
+			catItem["value"] = values
+			catList = append(catList, catItem)
+		}
+		if err := d.Set("categories", catList); err != nil {
+			return err
+		}
 	}
 
 	or := make(map[string]interface{})
@@ -164,16 +173,26 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		or["uuid"] = utils.StringValue(resp.Metadata.OwnerReference.UUID)
 
 	}
+
 	if err := d.Set("owner_reference", or); err != nil {
+		return err
+	}
+
+	pr := make(map[string]interface{})
+	if resp.Metadata.ProjectReference != nil {
+		pr["kind"] = utils.StringValue(resp.Metadata.ProjectReference.Kind)
+		pr["name"] = utils.StringValue(resp.Metadata.ProjectReference.Name)
+		pr["uuid"] = utils.StringValue(resp.Metadata.ProjectReference.UUID)
+
+	}
+
+	if err := d.Set("project_reference", pr); err != nil {
 		return err
 	}
 	if err := d.Set("api_version", utils.StringValue(resp.APIVersion)); err != nil {
 		return err
 	}
 	if err := d.Set("name", utils.StringValue(resp.Status.Name)); err != nil {
-		return err
-	}
-	if err := d.Set("description", utils.StringValue(resp.Status.Description)); err != nil {
 		return err
 	}
 	// set availability zone reference values
@@ -190,8 +209,11 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	clusterReference := make(map[string]interface{})
 	if resp.Status.ClusterReference != nil {
 		clusterReference["kind"] = utils.StringValue(resp.Status.ClusterReference.Kind)
-		clusterReference["name"] = utils.StringValue(resp.Status.ClusterReference.Name)
 		clusterReference["uuid"] = utils.StringValue(resp.Status.ClusterReference.UUID)
+
+		if err := d.Set("cluster_name", utils.StringValue(resp.Status.ClusterReference.Name)); err != nil {
+			return err
+		}
 	}
 	if err := d.Set("cluster_reference", clusterReference); err != nil {
 		return err
@@ -349,11 +371,29 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 	fmt.Printf("Updating the subnet with the uuid %s", d.Id())
 
 	request := &v3.SubnetIntentInput{}
-	metadata := &v3.SubnetMetadata{}
+	metadata := &v3.Metadata{}
 	res := &v3.SubnetResources{}
 	ipcfg := &v3.IPConfig{}
 	dhcpO := &v3.DHCPOptions{}
 	spec := &v3.Subnet{}
+
+	response, err := conn.V3.GetSubnet(d.Id())
+
+	if err != nil {
+		return err
+	}
+
+	if response.Metadata != nil {
+		metadata = response.Metadata
+	}
+
+	if response.Spec != nil {
+		spec = response.Spec
+
+		if response.Spec.Resources != nil {
+			res = response.Spec.Resources
+		}
+	}
 
 	// get state
 	if d.HasChange("metadata") {
@@ -378,12 +418,23 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("categories") {
-		p := d.Get("categories").(map[string]interface{})
-		labels := map[string]string{}
-		for k, v := range p {
-			labels[k] = v.(string)
+		catl := d.Get("categories").([]interface{})
+
+		if len(catl) > 0 {
+			cl := make(map[string]string)
+			for _, v := range catl {
+				item := v.(map[string]interface{})
+
+				if i, ok := item["name"]; ok && i.(string) != "" {
+					if k, kok := item["value"]; kok && k.(string) != "" {
+						cl[i.(string)] = k.(string)
+					}
+				}
+			}
+			metadata.Categories = cl
+		} else {
+			metadata.Categories = nil
 		}
-		metadata.Categories = labels
 	}
 	if d.HasChange("owner_reference") {
 		or := d.Get("owner_reference").(map[string]interface{})
@@ -405,9 +456,6 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("name") {
 		spec.Name = utils.String(d.Get("name").(string))
-	}
-	if d.HasChange("description") {
-		spec.Description = utils.String(d.Get("description").(string))
 	}
 	if d.HasChange("availability_zone_reference") {
 		a := d.Get("availability_zone_reference").(map[string]interface{})
@@ -1016,7 +1064,7 @@ func getSubnetSchema() map[string]*schema.Schema {
 		},
 		"metadata": {
 			Type:     schema.TypeMap,
-			Required: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"last_update_time": {
@@ -1058,13 +1106,26 @@ func getSubnetSchema() map[string]*schema.Schema {
 			},
 		},
 		"categories": {
-			Type:     schema.TypeMap,
+			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"name": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					"value": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+				},
+			},
 		},
 		"owner_reference": {
 			Type:     schema.TypeMap,
 			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"kind": {
@@ -1085,6 +1146,7 @@ func getSubnetSchema() map[string]*schema.Schema {
 		"project_reference": {
 			Type:     schema.TypeMap,
 			Optional: true,
+			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"kind": {
@@ -1108,11 +1170,6 @@ func getSubnetSchema() map[string]*schema.Schema {
 		},
 		"state": {
 			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"description": {
-			Type:     schema.TypeString,
-			Optional: true,
 			Computed: true,
 		},
 		"availability_zone_reference": {
@@ -1151,13 +1208,13 @@ func getSubnetSchema() map[string]*schema.Schema {
 						Type:     schema.TypeString,
 						Required: true,
 					},
-					"name": {
-						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
-					},
 				},
 			},
+		},
+		"cluster_name": {
+			Type:     schema.TypeString,
+			Computed: true,
+			Optional: true,
 		},
 		"vswitch_name": {
 			Type:     schema.TypeString,

@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccNutanixVMDataSource_basic(t *testing.T) {
+func TestAccNutanixVirtualMachineDataSource_basic(t *testing.T) {
 	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
@@ -30,29 +30,22 @@ func TestAccNutanixVMDataSource_basic(t *testing.T) {
 
 func testAccVMDataSourceConfig(r int) string {
 	return fmt.Sprintf(`
-provider "nutanix" {
-  username = "admin"
-  password = "Nutanix/1234"
-  endpoint = "10.5.81.134"
-  insecure = true
-  port     = 9440
+data "nutanix_clusters" "clusters" {
+  metadata = {
+    length = 2
+  }
 }
 
-variable clusterid {
-  default = "000567f3-1921-c722-471d-0cc47ac31055"
+output "cluster" {
+  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 
 resource "nutanix_virtual_machine" "vm1" {
-  metadata {
-    kind = "vm"
-    name = "metadata-name-test-dou-%d"
-  }
-
   name = "test-dou-%d"
 
   cluster_reference = {
-    kind = "cluster"
-    uuid = "${var.clusterid}"
+	  kind = "cluster"
+	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   }
 
   num_vcpus_per_socket = 1
@@ -64,5 +57,5 @@ resource "nutanix_virtual_machine" "vm1" {
 data "nutanix_virtual_machine" "nutanix_virtual_machine" {
 	vm_id = "${nutanix_virtual_machine.vm1.id}"
 }
-`, r, r+1)
+`, r)
 }
