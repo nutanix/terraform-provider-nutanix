@@ -42,7 +42,7 @@ func testAccCheckNutanixSubnetExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckNutanixSubnetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*NutanixClient)
+	conn := testAccProvider.Meta().(*Client)
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "nutanix_subnet" {

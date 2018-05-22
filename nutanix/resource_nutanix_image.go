@@ -36,7 +36,7 @@ func resourceNutanixImage() *schema.Resource {
 func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating Image: %s", d.Get("name").(string))
 
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	request := &v3.ImageIntentInput{}
 	spec := &v3.Image{}
@@ -115,7 +115,7 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading Image: %s", d.Get("name").(string))
 
 	// Get client connection
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	// Make request to the API
 	resp, err := conn.V3.GetImage(d.Id())
@@ -239,7 +239,7 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	// get state
 	request := &v3.ImageIntentInput{}
@@ -347,7 +347,7 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 func resourceNutanixImageDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting Image: %s", d.Get("name").(string))
 
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 	UUID := d.Id()
 
 	if err := conn.V3.DeleteImage(UUID); err != nil {

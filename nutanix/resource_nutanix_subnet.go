@@ -28,7 +28,7 @@ func resourceNutanixSubnet() *schema.Resource {
 
 func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 	//Get client connection
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	// Prepare request
 	request := &v3.SubnetIntentInput{}
@@ -130,7 +130,7 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading Subnet: %s", d.Get("name").(string))
 
 	// Get client connection
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	// Make request to the API
 	resp, err := conn.V3.GetSubnet(d.Id())
@@ -365,7 +365,7 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	log.Printf("Updating the subnet with the uuid %s", d.Id())
 	fmt.Printf("Updating the subnet with the uuid %s", d.Id())
@@ -577,7 +577,7 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	log.Printf("Destroying the subnet with the uuid %s", d.Id())
 	fmt.Printf("Destroying the subnet with the uuid %s", d.Id())

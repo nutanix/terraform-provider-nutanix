@@ -25,7 +25,7 @@ func resourceNutanixCategoryValue() *schema.Resource {
 func resourceNutanixCategoryValueCreateOrUpdate(resourceData *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating CategoryValue: %s", resourceData.Get("value").(string))
 
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	request := &v3.CategoryValue{}
 
@@ -76,7 +76,7 @@ func resourceNutanixCategoryValueRead(d *schema.ResourceData, meta interface{}) 
 	fmt.Printf("NAME: %s, ID:%s", name.(string), d.Id())
 
 	// Get client connection
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	// Make request to the API
 	resp, err := conn.V3.GetCategoryValue(name.(string), d.Id())
@@ -102,7 +102,7 @@ func resourceNutanixCategoryValueRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceNutanixCategoryValueDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	name, nameOK := d.GetOk("name")
 
