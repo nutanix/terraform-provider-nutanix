@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_virtual_machine"
-sidebar_current: "docs-outscale-resource-vpn-gateway"
+sidebar_current: "docs-outscale-resource-virtual-machine"
 description: |-
   Provides a Nutanix Virtual Machine resource to Create a virtual machine.
 ---
@@ -14,15 +14,15 @@ Provides a Nutanix Virtual Machine resource to Create a virtual machine.
 
 ```hcl
 resource "nutanix_category_key" "test-category-key"{
-    name = "app-suppport-1"
-		description = "App Support Category Key"
+    name        = "app-suppport-1"
+    description = "App Support Category Key"
 }
 
 
 resource "nutanix_category_value" "test"{
-    name = "${nutanix_category_key.test-category-key.id}"
-		description = "Test Category Value"
-		value = "test-value"
+    name        = "${nutanix_category_key.test-category-key.id}"
+    description = "Test Category Value"
+    value       = "test-value"
 }
 
 data "nutanix_clusters" "clusters" {
@@ -66,9 +66,41 @@ The following arguments are supported:
 * `description`: - (Optional) A description for vm.
 * `num_vnuma_nodes`: - (Optional) Number of vNUMA nodes. 0 means vNUMA is disabled.
 * `nic_list`: - (Optional) NICs attached to the VM.
-* `guest_os_id`: - (Optional) Guest OS Identifier. For ESX, refer to VMware documentation link (https://www.vmware.com/support/developer/converter-sdk/conv43_apireference/vim.vm.GuestOsDescriptor.GuestOsIdentifier.html) for the list of guest OS identifiers.
-  `power_state`: - (Optional) The current or desired power state of the VM. (Options : ON , OFF)
-* `nutanix_guest_tools`: -
+* `guest_os_id`: - (Optional) Guest OS Identifier. For ESX, refer to VMware documentation [link](https://www.vmware.com/support/developer/converter-sdk/conv43_apireference/vim.vm.GuestOsDescriptor.GuestOsIdentifier.html) for the list of guest OS identifiers.
+* `power_state`: - (Optional) The current or desired power state of the VM. (Options : ON , OFF)
+* `nutanix_guest_tools`: - (Optional) Information regarding Nutanix Guest Tools.
+* `num_vcpus_per_socket`: - (Optional) Number of vCPUs per socket.
+* `num_sockets`: - (Optional) Number of vCPU sockets.
+* `gpu_list`: - (Optional) GPUs attached to the VM.
+
+### GPU List
+
+The gpu_list attribute supports the following:
+
+* `frame_buffer_size_mib`: - (ReadOnly) GPU frame buffer size in MiB.
+* `vendor`: - (Optional) The vendor of the GPU.
+* `uuid`: - (ReadOnly) UUID of the GPU.
+* `name`: - (ReadOnly) Name of the GPU resource.
+* `pci_address` - (ReadOnly) GPU {segment:bus:device:function} (sbdf) address if assigned.
+* `fraction` - (ReadOnly) Fraction of the physical GPU assigned.
+* `mode`: - (Optional) The mode of this GPU.
+* `num_virtual_display_heads`: - (ReadOnly) Number of supported virtual display heads.
+* `guest_driver_version`: - (ReadOnly) Last determined guest driver version.
+* `device_id`: - (Computed) The device ID of the GPU.
+
+### Nutanix Guest Tools
+
+The nutanix_guest_tools attribute supports the following:
+
+* `available_version`: - (ReadOnly) Version of Nutanix Guest Tools available on the cluster.
+* `iso_mount_state`: - (Optioinal) Desired mount state of Nutanix Guest Tools ISO.
+* `state`: - (Optional) Nutanix Guest Tools is enabled or not.
+* `version`: - (ReadOnly) Version of Nutanix Guest Tools installed on the VM.
+* `guest_os_version`: - (ReadOnly) Version of the operating system on the VM.
+* `enabled_capability_list`: - (Optional) Application names that are enabled.
+* `vss_snapshot_capable`: - (ReadOnly) Whether the VM is configured to take VSS snapshots through NGT.
+* `is_reachable`: - (ReadOnly) Communication from VM to CVM is active or not.
+* `vm_mobility_drivers_installed`: - (ReadOnly) Whether VM mobility drivers are installed in the VM.
 
 ### NIC List
 
