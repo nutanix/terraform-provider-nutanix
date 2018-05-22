@@ -1862,13 +1862,13 @@ type ListMetadataOutput struct {
 
 //NetworkSecurityRuleIntentResource ... Response object for intentful operations on a network_security_rule
 type NetworkSecurityRuleIntentResource struct {
-	APIVersion string `json:"api_version,omitempty"`
+	APIVersion *string `json:"api_version,omitempty"`
 
-	Metadata Metadata `json:"metadata,omitempty"`
+	Metadata *Metadata `json:"metadata,omitempty"`
 
-	Spec NetworkSecurityRule `json:"spec,omitempty"`
+	Spec *NetworkSecurityRule `json:"spec,omitempty"`
 
-	Status NetworkSecurityRuleDefStatus `json:"status,omitempty"`
+	Status *NetworkSecurityRuleDefStatus `json:"status,omitempty"`
 }
 
 //NetworkSecurityRuleListIntentResponse Response object for intentful operation of network_security_rules
