@@ -42,7 +42,7 @@ For a slack invite, please contact terraform@nutanix.com from your business emai
 
 **Features: (3rd Milestone)**
 
-* [ ] Network security rules data source.
+* [x] Network security rules data source.
 * [ ] Volume group resource.
 * [ ] Volume group datasource.
 * [ ] Volume groups datasource.
