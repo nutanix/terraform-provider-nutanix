@@ -171,9 +171,9 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 
 //CheckResponse checks errors if exist errors in request
 func CheckResponse(r *http.Response) error {
-	// if c := r.StatusCode; c >= 200 && c <= 299 {
-	// 	return nil
-	// }
+	if c := r.StatusCode; c >= 200 && c <= 299 && r.Request.Method == http.MethodDelete {
+		return nil
+	}
 
 	buf, err := ioutil.ReadAll(r.Body)
 
