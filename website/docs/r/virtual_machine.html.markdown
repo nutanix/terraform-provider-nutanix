@@ -72,6 +72,61 @@ The following arguments are supported:
 * `num_vcpus_per_socket`: - (Optional) Number of vCPUs per socket.
 * `num_sockets`: - (Optional) Number of vCPU sockets.
 * `gpu_list`: - (Optional) GPUs attached to the VM.
+* `parent_referece`: - (Optional) Reference to an entity that the VM cloned from.
+* `memory_size_mib`: - (Optional) Memory size in MiB.
+* `boot_device_order_list`: - (Optional) Indicates the order of device types in which VM should try to boot from. If boot device order is not provided the system will decide appropriate boot device order.
+* `boot_device_disk_address`: - (Optional) Address of disk to boot from.
+* `boot_device_mac_address`: - (Optional) MAC address of nic to boot from.
+* `hardware_clock_timezone`: - (Optional) VM's hardware clock timezone in IANA TZDB format (America/Los_Angeles).
+* `guest_customization_cloud_init`: - (Optional) VM guests may be customized at boot time using one of several different methods. Currently, cloud-init w/ ConfigDriveV2 (for Linux VMs) and Sysprep (for Windows VMs) are supported. Only ONE OF sysprep or cloud_init should be provided. Note that guest customization can currently only be set during VM creation. Attempting to change it after creation will result in an error. Additional properties can be specified. For example - in the context of VM template creation if \"override_script\" is set to \"True\" then the deployer can upload their own custom script.
+* `guest_customization_is_overridable`: - (Optional) Flag to allow override of customization by deployer.
+* `guest_customization_sysprep`: - (Optional) VM guests may be customized at boot time using one of several different methods. Currently, cloud-init w/ ConfigDriveV2 (for Linux VMs) and Sysprep (for Windows VMs) are supported. Only ONE OF sysprep or cloud_init should be provided. Note that guest customization can currently only be set during VM creation. Attempting to change it after creation will result in an error. Additional properties can be specified. For example - in the context of VM template creation if \"override_script\" is set to \"True\" then the deployer can upload their own custom script.
+* `should_fail_on_script_failure`: - (Optional)  Extra configs related to power state transition. Indicates whether to abort ngt shutdown/reboot if script fails.
+* `enable_script_exec`: - (Optional) Extra configs related to power state transition. Indicates whether to execute set script before ngt shutdown/reboot.
+* `power_state_mechanism`: - (Optional) Indicates the mechanism guiding the VM power state transition. Currently used for the transition to \"OFF\" state. Power state mechanism (ACPI/GUEST/HARD).
+* `vga_console_enabled`: - (Optional) Indicates whether VGA console should be enabled or not.
+* `disk_list` Disks attached to the VM.
+
+### Disk List
+
+The disk_list attribute supports the following:
+
+* `uuid`: - (Optional) The device ID which is used to uniquely identify this particular disk.
+* `disk_size_bytes` - (Optional) Size of the disk in Bytes.
+* `disk_size_mib` - (Optional) Size of the disk in MiB. Must match the size specified in 'disk_size_bytes' - rounded up to the nearest MiB -  when that field is present.
+* `device_properties` - (Optional)
+* `data_source_reference` - (Optional) Reference
+* `volume_group_reference` - (Optional) Reference
+
+### Device Properties
+
+The device_properties attribute supports the following.
+
+* `device_type`: - (Optional)
+* `disk_address`: - (Optional)
+
+### Sysprep
+
+The guest_customization_sysprep attribute supports the following:
+
+* `install_type`: - (Optional) Whether the guest will be freshly installed using this unattend configuration, or whether this unattend configuration will be applied to a pre-prepared image. Default is \"PREPARED\".
+* `unattend_xml`: - (Optional) Generic key value pair used for custom attributes.
+* `custom_key_values`: - (Optional) Generic key value pair used for custom attributes.
+
+### Cloud Init
+
+The guest_customization_cloud_init attribute supports the following:
+
+* `meta_data`: - (Optional) The contents of the meta_data configuration for cloud-init. This can be formatted as YAML or JSON. The value must be base64 encoded.
+* `user_data`: - (Optional) The contents of the user_data configuration for cloud-init. This can be formatted as YAML, JSON, or could be a shell script. The value must be base64 encoded.
+* `custom_key_values`: - (Optional) Generic key value pair used for custom attributes.
+
+### Disk Address
+
+ The boot_device_disk_address attribute supports the following:
+
+* `device_index`: - (Optional)
+* `adapter_type`: - (Optional)
 
 ### GPU List
 
@@ -135,7 +190,7 @@ The following attributes are exported:
 * `state`: -
 * `ip_address`: -
 * `host_reference`: -
-* `hypervisor_type`: -
+* `hypervisor_type`: - The hypervisor type for the hypervisor the VM is hosted on.
 
 ### Metadata
 
@@ -157,7 +212,7 @@ The categories attribute supports the following:
 
 ### Reference
 
-The `project_reference`, `owner_reference`, `availability_zone_reference`, `cluster_reference`, `network_function_chain_reference`, `subnet_reference`.
+The `project_reference`, `owner_reference`, `availability_zone_reference`, `cluster_reference`, `network_function_chain_reference`, `subnet_reference`, `data_source_reference`, `volume_group_reference`.
 
 attributes supports the following:
 
