@@ -148,11 +148,14 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 		if w, ok := v.(io.Writer); ok {
 			_, err = io.Copy(w, resp.Body)
 			if err != nil {
+				fmt.Printf("Error io.Copy %s", err)
 				return err
 			}
 		} else {
 			err = json.NewDecoder(resp.Body).Decode(v)
 			if err != nil {
+				fmt.Printf("BODY %v", resp.Body)
+				fmt.Printf("Error new decoder %s", err)
 				return err
 			}
 			// utils.PrintToJSON(v, "RESPONSE BODY")
@@ -168,31 +171,54 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 
 //CheckResponse checks errors if exist errors in request
 func CheckResponse(r *http.Response) error {
-	if c := r.StatusCode; c >= 200 && c <= 299 {
+	// if c := r.StatusCode; c >= 200 && c <= 299 {
+	// 	return nil
+	// }
+
+	buf, err := ioutil.ReadAll(r.Body)
+
+	if err != nil {
+		return err
+	}
+
+	rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
+
+	r.Body = rdr2
+
+	//if has entities -> return nil
+	//if has message_list -> check_error["state"]
+	//if has status -> check_error["status.state"]
+
+	var res map[string]interface{}
+	err = json.Unmarshal(buf, &res)
+
+	if err != nil {
+		return err
+	}
+
+	errRes := &ErrorResponse{}
+
+	if status, ok := res["status"]; ok {
+		fillStruct(status.(map[string]interface{}), errRes)
+	} else if _, ok := res["state"]; ok {
+		fillStruct(res, errRes)
+	} else if _, ok := res["entities"]; ok {
 		return nil
 	}
 
-	data, err := ioutil.ReadAll(r.Body)
-
-	if err != nil {
-		return err
+	if errRes.State != "ERROR" {
+		return nil
 	}
 
-	res := &ErrorResponse{}
-	err = json.Unmarshal(data, res)
-	if err != nil {
-		return err
-	}
-
-	pretty, _ := json.MarshalIndent(res, "", "  ")
+	pretty, _ := json.MarshalIndent(errRes, "", "  ")
 	return fmt.Errorf("Error: %s", string(pretty))
 }
 
 //ErrorResponse ...
 type ErrorResponse struct {
-	APIVersion  string            `json:"api_version"`
-	Code        int64             `json:"code"`
-	Kind        string            `json:"kind"`
+	APIVersion  string            `json:"api_version,omitempty"`
+	Code        int64             `json:"code,omitempty"`
+	Kind        string            `json:"kind,omitempty"`
 	MessageList []MessageResource `json:"message_list"`
 	State       string            `json:"state"`
 }
@@ -216,4 +242,12 @@ func (r *ErrorResponse) Error() string {
 		err = fmt.Sprintf("%d: {message:%s, reason:%s }", key, value.Message, value.Reason)
 	}
 	return err
+}
+
+func fillStruct(data map[string]interface{}, result interface{}) error {
+	j, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(j, result)
 }
