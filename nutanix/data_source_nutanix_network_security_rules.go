@@ -21,7 +21,7 @@ func dataSourceNutanixNetworkSecurityRules() *schema.Resource {
 
 func dataSourceNutanixNetworkSecurityRulesRead(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	metadata := &v3.ListMetadata{}
 
