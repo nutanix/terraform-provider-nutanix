@@ -51,11 +51,6 @@
   version = "v1.1.0"
 
 [[projects]]
-  name = "github.com/fatih/camelcase"
-  packages = ["."]
-  revision = "f6a740d52f961c60348ebb109adde9f4635d7540"
-
-[[projects]]
   name = "github.com/fsnotify/fsnotify"
   packages = ["."]
   revision = "4da3e2cfbabc9f751898f250b49f2439785783a1"
@@ -335,6 +330,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "4017ffc22380d3e6179ee9ec1a4a259f8eb7859d79a8620bd218e4ff93eec1ba"
+  inputs-digest = "ecb759384410ed2f9174c5ef58a51759c5539823075ff4f2faf246868bf06cdf"
   solver-name = "gps-cdcl"
   solver-version = 1
