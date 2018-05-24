@@ -1,6 +1,9 @@
 package nutanix
 
 import (
+	"os"
+	"strconv"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -44,11 +47,12 @@ func Provider() terraform.ResourceProvider {
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-
 			"nutanix_virtual_machine":        dataSourceNutanixVirtualMachine(),
 			"nutanix_virtual_machines":       dataSourceNutanixVirtualMachines(),
 			"nutanix_image":                  dataSourceNutanixImage(),
+			"nutanix_images":                 dataSourceNutanixImages(),
 			"nutanix_subnet":                 dataSourceNutanixSubnet(),
+			"nutanix_subnets":                dataSourceNutanixSubnets(),
 			"nutanix_clusters":               dataSourceNutanixClusters(),
 			"nutanix_network_security_rule":  dataSourceNutanixNetworkSecurityRule(),
 			"nutanix_network_security_rules": dataSourceNutanixNetworkSecurityRules(),
@@ -100,4 +104,14 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	}
 
 	return config.Client()
+}
+
+func isGCPEnvironment() bool {
+	g := os.Getenv("NUTANIX_GCP")
+
+	gcp, err := strconv.ParseBool(g)
+	if err != nil {
+		return false
+	}
+	return gcp
 }

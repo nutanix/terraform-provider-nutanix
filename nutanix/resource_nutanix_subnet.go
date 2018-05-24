@@ -99,8 +99,6 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	request.Metadata = metadata
 	request.Spec = spec
 
-	utils.PrintToJSON(request, "CREATE METHOD REQUEST")
-
 	//Make request to the API
 	resp, err := conn.V3.CreateSubnet(request)
 	if err != nil {
@@ -305,41 +303,19 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 		} else {
-			if err := d.Set("dhcp_options", make(map[string]interface{})); err != nil {
-				return err
-			}
-			if err := d.Set("dhcp_domain_name_server_list", make([]map[string]interface{}, 0)); err != nil {
-				return err
-			}
-			if err := d.Set("dhcp_domain_search_list", make([]map[string]interface{}, 0)); err != nil {
-				return err
-			}
+			d.Set("dhcp_options", make(map[string]interface{}))
+			d.Set("dhcp_domain_name_server_list", make([]map[string]interface{}, 0))
+			d.Set("dhcp_domain_search_list", make([]map[string]interface{}, 0))
 		}
 	} else {
-		if err := d.Set("default_gateway_ip", ""); err != nil {
-			return err
-		}
-		if err := d.Set("prefix_length", 0); err != nil {
-			return err
-		}
-		if err := d.Set("subnet_ip", ""); err != nil {
-			return err
-		}
-		if err := d.Set("dhcp_server_address_port", 0); err != nil {
-			return err
-		}
-		if err := d.Set("ip_config_pool_list_ranges", make([]map[string]interface{}, 0)); err != nil {
-			return err
-		}
-		if err := d.Set("dhcp_options", make(map[string]interface{})); err != nil {
-			return err
-		}
-		if err := d.Set("dhcp_domain_name_server_list", make([]map[string]interface{}, 0)); err != nil {
-			return err
-		}
-		if err := d.Set("dhcp_domain_search_list", make([]map[string]interface{}, 0)); err != nil {
-			return err
-		}
+		d.Set("default_gateway_ip", "")
+		d.Set("prefix_length", 0)
+		d.Set("subnet_ip", "")
+		d.Set("dhcp_server_address_port", 0)
+		d.Set("ip_config_pool_list_ranges", make([]map[string]interface{}, 0))
+		d.Set("dhcp_options", make(map[string]interface{}))
+		d.Set("dhcp_domain_name_server_list", make([]map[string]interface{}, 0))
+		d.Set("dhcp_domain_search_list", make([]map[string]interface{}, 0))
 	}
 
 	if err := d.Set("vlan_id", resp.Status.Resources.VlanID); err != nil {

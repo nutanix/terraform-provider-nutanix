@@ -5,6 +5,14 @@ Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 NOTE: terraform-provider-nutanix is currently tech preview as of 9 May 2018. See "Current Development Status" below.
 
 #### Project, Build, Quality Status
+* [![Waffle.io - Columns and their card count](https://badge.waffle.io/b58a88b8face3407eccdc79e19d39058d28754b65f6df7513ed23293ef387491a5f538b65dffd5b12ca0201c6d4b50ce.svg?columns=all)](https://waffle.io/nutanix/terraform-provider-nutanix)
+* [![Go Report Card](https://goreportcard.com/badge/github.com/nutanix/terraform-provider-nutanix)](https://goreportcard.com/report/github.com/nutanix/terraform-provider-nutanix)
+* [![Build Status: master](https://travis-ci.org/nutanix/terraform-provider-nutanix.svg?branch=master)](https://travis-ci.org/nutanix/terraform-provider-nutanix) Master
+* [![Build Status: develop](https://travis-ci.org/nutanix/terraform-provider-nutanix.svg?branch=develop)](https://travis-ci.org/nutanix/terraform-provider-nutanix) Develop
+* [![Maintainability](https://api.codeclimate.com/v1/badges/8b9e61df450276bbdbdb/maintainability)](https://codeclimate.com/github/nutanix/terraform-provider-nutanix/maintainability)
+* [![Test Coverage](https://api.codeclimate.com/v1/badges/8b9e61df450276bbdbdb/test_coverage)](https://codeclimate.com/github/nutanix/terraform-provider-nutanix/test_coverage)
+* [![Coverage Status](https://coveralls.io/repos/github/nutanix/terraform-provider-nutanix/badge.svg?branch=master)](https://coveralls.io/github/nutanix/terraform-provider-nutanix?branch=master)
+=======
 [![Waffle.io - Columns and their card count](https://badge.waffle.io/b58a88b8face3407eccdc79e19d39058d28754b65f6df7513ed23293ef387491a5f538b65dffd5b12ca0201c6d4b50ce.svg?columns=all)](https://waffle.io/nutanix/terraform-provider-nutanix)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nutanix/terraform-provider-nutanix)](https://goreportcard.com/report/github.com/nutanix/terraform-provider-nutanix)
 
@@ -29,9 +37,6 @@ For a slack invite, please contact terraform@nutanix.com from your business emai
 * [x] Finished VM data source (VM data source and VM data source test.)
 * [x] Finished subnet data source (Subnet data source and Subnet data source test)
 * [x] Finished Image data source (Image data source and image data source test.)
-
-**Currently working on: (2nd Milestone)**
-
 * [x] Cluster data source.
 * [x] Clusters data source.
 * [x] Virtual Machines data source.
@@ -40,14 +45,16 @@ For a slack invite, please contact terraform@nutanix.com from your business emai
 * [x] Network security rule resource.
 * [x] Network security rule data source.
 
-**Features: (3rd Milestone)**
+**Currently working on: (3rd Milestone)**
 
 * [x] Network security rules data source.
+* [x] Subnets data source.
+* [x] Images data source.
 * [ ] Volume group resource.
 * [ ] Volume group datasource.
 * [ ] Volume groups datasource.
-* [ ] Documentation for Resources.
-* [ ] Documentation for Datasources.
+* [ ] Documentation for Resources - (partial).
+* [ ] Documentation for Datasources - (partial).
 
 **Issues**
 
@@ -90,14 +97,24 @@ The following keys can be used to configure the provider.
 ## Resources
 
 * nutanix_virtual_machine
-* nutanix_subnet
 * nutanix_image
+* nutanix_subnet
+* nutanix_category_key
+* nutanix_category_value
+* nutanix_network_security_rule
 
 ## Data Sources
 
 * nutanix_virtual_machine
-* nutanix_subnet
+* nutanix_virtual_machines
 * nutanix_image
+* nutanix_images
+* nutanix_subnet
+* nutanix_subnets
+* nutanix_clusters
+* nutanix_network_security_rule
+* nutanix_network_security_rules
+* nutanix_cluster
 
 ## Additional Resources
 
@@ -131,7 +148,7 @@ We'll be working with HashiCorp as code stabilizes to upstream this properly, at
 
 ## Quick Install
 
-## Install Dependencies
+### Install Dependencies
 
 * Terraform
 
