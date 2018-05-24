@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_virtual_machine"
-sidebar_current: "docs-outscale-resource-virtual-machine"
+sidebar_current: "docs-nutanix-resource-virtual-machine"
 description: |-
   Provides a Nutanix Virtual Machine resource to Create a virtual machine.
 ---
@@ -35,13 +35,13 @@ resource "nutanix_virtual_machine" "vm1" {
   name = "test-dou"
 
   categories = [{
-	  name   = "${nutanix_category_key.test-category-key.id}"
-	  value = "${nutanix_category_value.test.id}"
+      name   = "${nutanix_category_key.test-category-key.id}"
+      value = "${nutanix_category_value.test.id}"
   }]
 
   cluster_reference = {
-	  kind = "cluster"
-	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+      kind = "cluster"
+      uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   }
 
   num_vcpus_per_socket = 1
@@ -212,9 +212,7 @@ The categories attribute supports the following:
 
 ### Reference
 
-The `project_reference`, `owner_reference`, `availability_zone_reference`, `cluster_reference`, `network_function_chain_reference`, `subnet_reference`, `data_source_reference`, `volume_group_reference`.
-
-attributes supports the following:
+The `project_reference`, `owner_reference`, `availability_zone_reference`, `cluster_reference`, `network_function_chain_reference`, `subnet_reference`, `data_source_reference`, `volume_group_reference` attributes supports the following:
 
 * `kind`: - The kind name (Default value: project)(Required).
 * `name`: - the name(Optional).
