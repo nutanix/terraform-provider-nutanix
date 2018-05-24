@@ -2,23 +2,28 @@ package nutanix
 
 import (
 	"fmt"
-	"math/rand"
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccNutanixSubnet_basic(t *testing.T) {
-	r := rand.Int31()
+	//Skipped because this test didn't pass in GCP environment
+	if isGCPEnvironment() {
+		t.Skip()
+	}
+
+	rInt := acctest.RandIntRange(0, 500)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixSubnetConfig(r),
+				Config: testAccNutanixSubnetConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixSubnetExists("nutanix_subnet.next-iac-managed"),
 				),
@@ -59,7 +64,7 @@ func testAccCheckNutanixSubnetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccNutanixSubnetConfig(r int32) string {
+func testAccNutanixSubnetConfig(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {
   metadata = {
@@ -80,7 +85,7 @@ resource "nutanix_subnet" "next-iac-managed" {
 
   # General Information
   name        = "next-iac-managed-%d"
-  vlan_id     = 101
+  vlan_id     = %d
   subnet_type = "VLAN"
 
   # Managed L3 Networks
@@ -99,5 +104,5 @@ resource "nutanix_subnet" "next-iac-managed" {
   dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
   dhcp_domain_search_list      = ["nutanix.com", "eng.nutanix.com"]
 }
-`, r)
+`, r, r)
 }

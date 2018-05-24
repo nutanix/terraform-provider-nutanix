@@ -9,7 +9,13 @@ import (
 )
 
 func TestAccNutanixNetworkSecurityRuleDataSource_basic(t *testing.T) {
-	rInt := acctest.RandInt()
+
+	//Skipped because this test didn't pass in GCP environment
+	if isGCPEnvironment() {
+		t.Skip()
+	}
+
+	rInt := acctest.RandIntRange(0, 500)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },

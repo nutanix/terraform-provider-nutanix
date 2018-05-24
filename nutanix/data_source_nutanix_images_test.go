@@ -42,14 +42,6 @@ func testAccCheckNutanixImagesExists(n string) resource.TestCheckFunc {
 
 func testAccImagesDataSourceConfig(r int) string {
 	return fmt.Sprintf(`
-		provider "nutanix" {
-  username = "admin"
-  password = "Nutanix/1234"
-  endpoint = "10.5.81.134"
-  insecure = true
-  port     = 9440
-}
-
 resource "nutanix_image" "test" {
   name        = "Ubuntu"
   description = "Ubuntu"
