@@ -25,7 +25,7 @@ func TestAccNutanixVirtualMachine_basic(t *testing.T) {
 					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.vm1"),
 					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "hardware_clock_timezone", "UTC"),
 					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "power_state", "ON"),
-					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "memory_size_mib", "2048"),
+					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "memory_size_mib", "186"),
 					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "num_sockets", "1"),
 					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "num_vcpus_per_socket", "1"),
 				),
