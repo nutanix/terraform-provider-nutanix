@@ -129,3 +129,13 @@ func getReferenceValues(r *v3.Reference) map[string]interface{} {
 
 	return reference
 }
+
+func getClusterReferenceValues(r *v3.Reference) map[string]interface{} {
+	reference := make(map[string]interface{})
+	if r != nil {
+		reference["kind"] = utils.StringValue(r.Kind)
+		reference["uuid"] = utils.StringValue(r.UUID)
+	}
+
+	return reference
+}

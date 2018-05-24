@@ -127,6 +127,7 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 
 		diskAddress := make(map[string]interface{})
 		mac := ""
+		b := make([]string, 0)
 
 		if v.Status.Resources.BootConfig != nil {
 			if v.Status.Resources.BootConfig.BootDevice.DiskAddress != nil {
@@ -134,11 +135,13 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 				diskAddress["device_index"] = i
 				diskAddress["adapter_type"] = utils.StringValue(v.Status.Resources.BootConfig.BootDevice.DiskAddress.AdapterType)
 			}
-
+			if v.Status.Resources.BootConfig.BootDeviceOrderList != nil {
+				b = utils.StringValueSlice(v.Status.Resources.BootConfig.BootDeviceOrderList)
+			}
 			mac = utils.StringValue(v.Status.Resources.BootConfig.BootDevice.MacAddress)
 		}
 
-		entity["boot_device_order_list"] = utils.StringValueSlice(v.Status.Resources.BootConfig.BootDeviceOrderList)
+		entity["boot_device_order_list"] = b
 		entity["boot_device_disk_address"] = diskAddress
 		entity["boot_device_mac_address"] = mac
 		entity["hardware_clock_timezone"] = utils.StringValue(v.Status.Resources.HardwareClockTimezone)

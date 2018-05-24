@@ -154,10 +154,11 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	if err := d.Set("availability_zone_reference", getReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
 		return err
 	}
-	if err := d.Set("cluster_reference", getReferenceValues(resp.Status.ClusterReference)); err != nil {
+	if err := d.Set("cluster_reference", getClusterReferenceValues(resp.Status.ClusterReference)); err != nil {
 		return err
 	}
 
+	d.Set("cluster_reference_name", utils.StringValue(resp.Status.ClusterReference.Name))
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
 	d.Set("name", utils.StringValue(resp.Status.Name))
 	d.Set("description", utils.StringValue(resp.Status.Description))
@@ -251,31 +252,23 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	}
 	d.Set("memory_size_mib", utils.Int64Value(resp.Status.Resources.MemorySizeMib))
 
-	bootDevice := make(map[string]interface{})
+	mac := ""
+	disk := make(map[string]interface{})
+	boots := make([]string, 0)
 	if resp.Status.Resources.BootConfig != nil {
-		boots := make([]string, len(resp.Status.Resources.BootConfig.BootDeviceOrderList))
-		for k, v := range resp.Status.Resources.BootConfig.BootDeviceOrderList {
-			boots[k] = utils.StringValue(v)
-		}
-		if err := d.Set("boot_device_order_list", boots); err != nil {
-			return err
-		}
+		boots = utils.StringValueSlice(resp.Status.Resources.BootConfig.BootDeviceOrderList)
 
-		disk := make([]map[string]interface{}, 1)
-		diskAddress := make(map[string]interface{})
 		if resp.Status.Resources.BootConfig.BootDevice.DiskAddress != nil {
-			diskAddress["device_index"] = utils.Int64Value(resp.Status.Resources.BootConfig.BootDevice.DiskAddress.DeviceIndex)
-			diskAddress["adapter_type"] = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.DiskAddress.AdapterType)
+			disk["device_index"] = utils.Int64Value(resp.Status.Resources.BootConfig.BootDevice.DiskAddress.DeviceIndex)
+			disk["adapter_type"] = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.DiskAddress.AdapterType)
 		}
-		disk[0] = diskAddress
 
-		bootDevice["disk_address"] = disk
-		bootDevice["mac_address"] = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.MacAddress)
-	}
-	if err := d.Set("boot_device", bootDevice); err != nil {
-		return err
+		mac = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.MacAddress)
 	}
 
+	d.Set("boot_device_order_list", boots)
+	d.Set("boot_device_disk_address", disk)
+	d.Set("boot_device_mac_address", mac)
 	d.Set("hardware_clock_timezone", utils.StringValue(resp.Status.Resources.HardwareClockTimezone))
 
 	sysprep := make(map[string]interface{})
