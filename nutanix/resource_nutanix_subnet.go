@@ -136,206 +136,111 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// set metadata values
-	metadata := make(map[string]interface{})
-	metadata["last_update_time"] = resp.Metadata.LastUpdateTime.String()
-	metadata["kind"] = utils.StringValue(resp.Metadata.Kind)
-	metadata["uuid"] = utils.StringValue(resp.Metadata.UUID)
-	metadata["creation_time"] = resp.Metadata.CreationTime.String()
-	metadata["spec_version"] = strconv.Itoa(int(utils.Int64Value(resp.Metadata.SpecVersion)))
-	metadata["spec_hash"] = utils.StringValue(resp.Metadata.SpecHash)
-	metadata["name"] = utils.StringValue(resp.Metadata.Name)
-	if err := d.Set("metadata", metadata); err != nil {
+	m, c := setRSEntityMetadata(resp.Metadata)
+
+	if err := d.Set("metadata", m); err != nil {
+		return err
+	}
+	if err := d.Set("categories", c); err != nil {
+		return err
+	}
+	if err := d.Set("project_reference", getReferenceValues(resp.Metadata.ProjectReference)); err != nil {
+		return err
+	}
+	if err := d.Set("owner_reference", getReferenceValues(resp.Metadata.OwnerReference)); err != nil {
+		return err
+	}
+	if err := d.Set("availability_zone_reference", getReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
+		return err
+	}
+	if err := d.Set("cluster_reference", getReferenceValues(resp.Status.ClusterReference)); err != nil {
 		return err
 	}
 
-	if resp.Metadata.Categories != nil {
-		categories := resp.Metadata.Categories
-		var catList []map[string]interface{}
+	d.Set("api_version", utils.StringValue(resp.APIVersion))
+	d.Set("name", utils.StringValue(resp.Status.Name))
+	d.Set("description", utils.StringValue(resp.Status.Description))
+	d.Set("state", utils.StringValue(resp.Status.State))
+	d.Set("vswitch_name", utils.StringValue(resp.Status.Resources.VswitchName))
 
-		for name, values := range categories {
-			catItem := make(map[string]interface{})
-			catItem["name"] = name
-			catItem["value"] = values
-			catList = append(catList, catItem)
-		}
-		if err := d.Set("categories", catList); err != nil {
-			return err
-		}
-	}
-
-	or := make(map[string]interface{})
-	if resp.Metadata.OwnerReference != nil {
-		or["kind"] = utils.StringValue(resp.Metadata.OwnerReference.Kind)
-		or["name"] = utils.StringValue(resp.Metadata.OwnerReference.Name)
-		or["uuid"] = utils.StringValue(resp.Metadata.OwnerReference.UUID)
-
-	}
-
-	if err := d.Set("owner_reference", or); err != nil {
-		return err
-	}
-
-	pr := make(map[string]interface{})
-	if resp.Metadata.ProjectReference != nil {
-		pr["kind"] = utils.StringValue(resp.Metadata.ProjectReference.Kind)
-		pr["name"] = utils.StringValue(resp.Metadata.ProjectReference.Name)
-		pr["uuid"] = utils.StringValue(resp.Metadata.ProjectReference.UUID)
-
-	}
-
-	if err := d.Set("project_reference", pr); err != nil {
-		return err
-	}
-	if err := d.Set("api_version", utils.StringValue(resp.APIVersion)); err != nil {
-		return err
-	}
-	if err := d.Set("name", utils.StringValue(resp.Status.Name)); err != nil {
-		return err
-	}
-	// set availability zone reference values
-	availabilityZoneReference := make(map[string]interface{})
-	if resp.Status.AvailabilityZoneReference != nil {
-		availabilityZoneReference["kind"] = utils.StringValue(resp.Status.AvailabilityZoneReference.Kind)
-		availabilityZoneReference["name"] = utils.StringValue(resp.Status.AvailabilityZoneReference.Name)
-		availabilityZoneReference["uuid"] = utils.StringValue(resp.Status.AvailabilityZoneReference.UUID)
-	}
-	if err := d.Set("availability_zone_reference", availabilityZoneReference); err != nil {
-		return err
-	}
-	// set cluster reference values
-	clusterReference := make(map[string]interface{})
-	if resp.Status.ClusterReference != nil {
-		clusterReference["kind"] = utils.StringValue(resp.Status.ClusterReference.Kind)
-		clusterReference["uuid"] = utils.StringValue(resp.Status.ClusterReference.UUID)
-
-		if err := d.Set("cluster_name", utils.StringValue(resp.Status.ClusterReference.Name)); err != nil {
-			return err
-		}
-	}
-	if err := d.Set("cluster_reference", clusterReference); err != nil {
-		return err
-	}
-	// set state value
-	if err := d.Set("state", utils.StringValue(resp.Status.State)); err != nil {
-		return err
-	}
-	if err := d.Set("vswitch_name", utils.StringValue(resp.Status.Resources.VswitchName)); err != nil {
-		return err
-	}
+	stype := ""
 	if resp.Status.Resources.SubnetType != nil {
-		if err := d.Set("subnet_type", utils.StringValue(resp.Status.Resources.SubnetType)); err != nil {
-			return err
-		}
-	} else {
-		if err := d.Set("subnet_type", ""); err != nil {
-			return err
-		}
+		stype = utils.StringValue(resp.Status.Resources.SubnetType)
 	}
+	d.Set("subnet_type", stype)
+
+	dgIP := ""
+	sIP := ""
+	pl := int64(0)
+	port := int64(0)
+	address := make(map[string]interface{})
+	dhcpSA := make(map[string]interface{})
+	dOptions := make(map[string]interface{})
+	ipcpl := make([]string, 0)
+	dnsList := make([]string, 0)
+	dsList := make([]string, 0)
+	poolList := make([]string, 0)
+
 	if resp.Status.Resources.IPConfig != nil {
-		if err := d.Set("default_gateway_ip", utils.StringValue(resp.Status.Resources.IPConfig.DefaultGatewayIP)); err != nil {
-			return err
-		}
-		if err := d.Set("prefix_length", utils.Int64Value(resp.Status.Resources.IPConfig.PrefixLength)); err != nil {
-			return err
-		}
-		if err := d.Set("subnet_ip", utils.StringValue(resp.Status.Resources.IPConfig.SubnetIP)); err != nil {
-			return err
-		}
-		address := make(map[string]interface{})
-		port := int64(0)
+		dgIP = utils.StringValue(resp.Status.Resources.IPConfig.DefaultGatewayIP)
+		pl = utils.Int64Value(resp.Status.Resources.IPConfig.PrefixLength)
+		sIP = utils.StringValue(resp.Status.Resources.IPConfig.SubnetIP)
+
 		if resp.Status.Resources.IPConfig.DHCPServerAddress != nil {
-			//set ip_config.dhcp_server_address
 			address["ip"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.IP)
 			address["fqdn"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.FQDN)
 			address["ipv6"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.IPV6)
 			port = utils.Int64Value(resp.Status.Resources.IPConfig.DHCPServerAddress.Port)
 		}
-		if err := d.Set("dhcp_server_address", address); err != nil {
-			return err
-		}
-		if err := d.Set("dhcp_server_address_port", port); err != nil {
-			return err
-		}
+
+		dhcpSA = address
+
 		if resp.Status.Resources.IPConfig.PoolList != nil {
 			pl := resp.Status.Resources.IPConfig.PoolList
-			poolList := make([]string, len(pl))
+			poolList = make([]string, len(pl))
 			for k, v := range pl {
 				poolList[k] = utils.StringValue(v.Range)
 			}
-			if err := d.Set("ip_config_pool_list_ranges", poolList); err != nil {
-				return err
-			}
-		} else {
-			if err := d.Set("ip_config_pool_list_ranges", make([]string, 0)); err != nil {
-				return err
-			}
+			ipcpl = poolList
 		}
 		if resp.Status.Resources.IPConfig.DHCPOptions != nil {
-			//set dhcp_options
-			dOptions := make(map[string]interface{})
 			dOptions["boot_file_name"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPOptions.BootFileName)
 			dOptions["domain_name"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPOptions.DomainName)
 			dOptions["tftp_server_name"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPOptions.TFTPServerName)
 
-			if err := d.Set("dhcp_options", dOptions); err != nil {
-				return err
-			}
-
 			if resp.Status.Resources.IPConfig.DHCPOptions.DomainNameServerList != nil {
-				dnsl := resp.Status.Resources.IPConfig.DHCPOptions.DomainNameServerList
-				dnsList := make([]string, len(dnsl))
-				for k, v := range dnsl {
-					dnsList[k] = utils.StringValue(v)
-				}
-				if err := d.Set("dhcp_domain_name_server_list", dnsList); err != nil {
-					return err
-				}
+				dnsList = utils.StringValueSlice(resp.Status.Resources.IPConfig.DHCPOptions.DomainNameServerList)
 			}
 			if resp.Status.Resources.IPConfig.DHCPOptions.DomainSearchList != nil {
-				dnsl := resp.Status.Resources.IPConfig.DHCPOptions.DomainSearchList
-				dsList := make([]string, len(dnsl))
-				for k, v := range dnsl {
-					dsList[k] = utils.StringValue(v)
-				}
-				if err := d.Set("dhcp_domain_search_list", dsList); err != nil {
-					return err
-				}
+				dsList = utils.StringValueSlice(resp.Status.Resources.IPConfig.DHCPOptions.DomainSearchList)
 			}
-		} else {
-			d.Set("dhcp_options", make(map[string]interface{}))
-			d.Set("dhcp_domain_name_server_list", make([]map[string]interface{}, 0))
-			d.Set("dhcp_domain_search_list", make([]map[string]interface{}, 0))
 		}
-	} else {
-		d.Set("default_gateway_ip", "")
-		d.Set("prefix_length", 0)
-		d.Set("subnet_ip", "")
-		d.Set("dhcp_server_address_port", 0)
-		d.Set("ip_config_pool_list_ranges", make([]map[string]interface{}, 0))
-		d.Set("dhcp_options", make(map[string]interface{}))
-		d.Set("dhcp_domain_name_server_list", make([]map[string]interface{}, 0))
-		d.Set("dhcp_domain_search_list", make([]map[string]interface{}, 0))
 	}
 
-	if err := d.Set("vlan_id", resp.Status.Resources.VlanID); err != nil {
-		return err
+	if err := d.Set("dhcp_server_address", dhcpSA); err != nil {
+		return nil
 	}
-	// set network_function_chain_reference
-	if resp.Status.Resources.NetworkFunctionChainReference != nil {
-		nfcr := make(map[string]interface{})
-		nfcr["kind"] = utils.StringValue(resp.Status.Resources.NetworkFunctionChainReference.Kind)
-		nfcr["name"] = utils.StringValue(resp.Status.Resources.NetworkFunctionChainReference.Name)
-		nfcr["uuid"] = utils.StringValue(resp.Status.Resources.NetworkFunctionChainReference.UUID)
+	if err := d.Set("ip_config_pool_list_ranges", ipcpl); err != nil {
+		return nil
+	}
+	if err := d.Set("dhcp_options", dOptions); err != nil {
+		return nil
+	}
+	if err := d.Set("dhcp_domain_name_server_list", dnsList); err != nil {
+		return nil
+	}
+	if err := d.Set("dhcp_domain_search_list", dsList); err != nil {
+		return nil
+	}
 
-		if err := d.Set("network_function_chain_reference", nfcr); err != nil {
-			return err
-		}
-	} else {
-		if err := d.Set("network_function_chain_reference", make(map[string]interface{})); err != nil {
-			return err
-		}
-	}
+	d.Set("default_gateway_ip", dgIP)
+	d.Set("prefix_length", pl)
+	d.Set("subnet_ip", sIP)
+	d.Set("dhcp_server_address_port", port)
+	d.Set("vlan_id", utils.Int64Value(resp.Status.Resources.VlanID))
+	d.Set("network_function_chain_reference", getReferenceValues(resp.Status.Resources.NetworkFunctionChainReference))
+
+	d.SetId(*resp.Metadata.UUID)
 
 	return nil
 }
@@ -583,7 +488,7 @@ func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error
 func resourceNutanixSubnetExists(conn *v3.Client, name string) (*string, error) {
 	log.Printf("[DEBUG] Get Subnet Existence: %s", name)
 
-	subnetEntities := &v3.SubnetListMetadata{}
+	subnetEntities := &v3.DSMetadata{}
 	var subnetUUID *string
 
 	subnetList, err := conn.V3.ListSubnet(subnetEntities)
