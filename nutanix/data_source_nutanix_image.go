@@ -276,26 +276,6 @@ func getDataSourceImageSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"message_list": {
-			Type:     schema.TypeList,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"message": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"reason": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"details": {
-						Type:     schema.TypeMap,
-						Computed: true,
-					},
-				},
-			},
-		},
 		"cluster_reference": {
 			Type:     schema.TypeMap,
 			Computed: true,
