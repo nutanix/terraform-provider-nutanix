@@ -31,7 +31,7 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 
 func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	// Prepare request
 	request := &v3.VMIntentInput{}
@@ -131,7 +131,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 
 func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	// Make request to the API
 	resp, err := conn.V3.GetVM(d.Id())
@@ -500,7 +500,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	log.Printf("Updating VM values %s", d.Id())
 	fmt.Printf("Updating VM values %s", d.Id())
@@ -895,7 +895,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	log.Printf("[DEBUG] Deleting Virtual Machine: %s, %s", d.Get("name").(string), d.Id())
 	if err := conn.V3.DeleteVM(d.Id()); err != nil {
@@ -921,7 +921,7 @@ func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, meta interface{
 }
 
 func resourceNutanixVirtualMachineExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	getEntitiesRequest := &v3.VMListMetadata{}
 	resp, err := conn.V3.ListVM(getEntitiesRequest)
@@ -1305,7 +1305,6 @@ func getVMSchema() map[string]*schema.Schema {
 					},
 					"name": {
 						Type:     schema.TypeString,
-						Optional: true,
 						Computed: true,
 					},
 				},

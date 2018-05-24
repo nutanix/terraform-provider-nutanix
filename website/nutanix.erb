@@ -1,0 +1,38 @@
+<% wrap_layout :inner do %>
+    <% content_for :sidebar do %>
+        <div class="docs-sidebar hidden-print affix-top" role="complementary">
+            <ul class="nav docs-sidenav">
+                <li<%= sidebar_current("docs-home") %>>
+                    <a href="/docs/providers/index.html">All Providers</a>
+                </li>
+
+                <li<%= sidebar_current("docs-nutanix-index") %>>
+                    <a href="/docs/providers/nutanix/index.html">Nutanix Provider</a>
+                </li>
+
+                <li<%= sidebar_current("docs-nutanix-datasource") %>>
+                <a href="#">Data Sources</a>
+                    <ul class="nav nav-visible">
+                        <li<%= sidebar_current("docs-nutanix-datasource-virtual_machine") %>>
+                            <a href="/docs/providers/nutanix/d/virtual_machine.html">nutanix_virtual_machine</a>
+                        </li>
+                        <li<%= sidebar_current("docs-nutanix-datasource-virtual_machines") %>>
+                            <a href="/docs/providers/nutanix/d/virtual_machines.html">nutanix_virtual_machines</a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li<%= sidebar_current("docs-nutanix-resource") %>>
+                    <a href="#">Resources</a>
+                    <ul class="nav nav-visible">
+                        <li<%= sidebar_current("docs-nutanix-resource-nutanix_virtual_machine") %>>
+                            <a href="/docs/providers/nutanix/r/nutanix_virtual_machine.html">nutanix_virtual_machine</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    <% end %>
+
+    <%= yield %>
+<% end %>
