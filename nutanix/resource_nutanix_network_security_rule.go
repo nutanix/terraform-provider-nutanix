@@ -963,7 +963,7 @@ func resourceNutanixNetworkSecurityRuleDelete(d *schema.ResourceData, meta inter
 }
 
 func resourceNutanixNetworkSecurityRuleExists(conn *v3.Client, name string) (*string, error) {
-	log.Printf("[DEBUG] Get Network Security Rule Existance : %s", name)
+	log.Printf("[DEBUG] Get Network Security Rule Existence : %s", name)
 
 	subnetEntities := &v3.ListMetadata{}
 	var nsrUUID *string
