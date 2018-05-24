@@ -17,7 +17,7 @@ func dataSourceNutanixSubnet() *schema.Resource {
 
 func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	subnetID, ok := d.GetOk("subnet_id")
 

@@ -18,7 +18,7 @@ func dataSourceNutanixImage() *schema.Resource {
 
 func dataSourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	imageID, ok := d.GetOk("image_id")
 

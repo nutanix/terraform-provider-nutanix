@@ -19,7 +19,7 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 
 func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	vm, ok := d.GetOk("vm_id")
 

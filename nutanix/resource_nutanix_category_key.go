@@ -25,7 +25,7 @@ func resourceNutanixCategoryKey() *schema.Resource {
 func resourceNutanixCategoryKeyCreateOrUpdate(resourceData *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating CategoryKey: %s", resourceData.Get("name").(string))
 
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	request := &v3.CategoryKey{}
 
@@ -66,7 +66,7 @@ func resourceNutanixCategoryKeyRead(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Reading CategoryKey: %s", d.Get("name").(string))
 
 	// Get client connection
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	// Make request to the API
 	resp, err := conn.V3.GetCategoryKey(d.Id())
@@ -91,7 +91,7 @@ func resourceNutanixCategoryKeyRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceNutanixCategoryKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	log.Printf("Destroying the category with the name %s", d.Id())
 	fmt.Printf("Destroying the category with the name %s", d.Id())

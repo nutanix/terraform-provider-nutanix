@@ -21,7 +21,7 @@ func dataSourceNutanixClusters() *schema.Resource {
 
 func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	metadata := &v3.ClusterListMetadataOutput{}
 
