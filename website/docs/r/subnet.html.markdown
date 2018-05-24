@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_subnet"
-sidebar_current: "docs-outscale-resource-subnet"
+sidebar_current: "docs-nutanix-resource-subnet"
 description: |-
   This operation submits a request to create a subnet based on the input parameters. A subnet is a block of IP addresses.
 ---
