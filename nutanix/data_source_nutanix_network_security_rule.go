@@ -21,7 +21,7 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Reading Network Security Rule: %s", d.Get("name").(string))
 
 	// Get client connection
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	networkSecurityRuleID, ok := d.GetOk("network_security_rule_id")
 
