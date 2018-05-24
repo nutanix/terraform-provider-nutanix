@@ -20,7 +20,7 @@ type Config struct {
 }
 
 // Client ...
-func (c *Config) Client() (*NutanixClient, error) {
+func (c *Config) Client() (*Client, error) {
 
 	configCreds := client.Credentials{
 		URL:      fmt.Sprintf("%s:%s", c.Endpoint, c.Port),
@@ -35,14 +35,14 @@ func (c *Config) Client() (*NutanixClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	client := &NutanixClient{
+	client := &Client{
 		API: v3,
 	}
 
 	return client, nil
 }
 
-//NutanixClient represents the nutanix API client
-type NutanixClient struct {
+//Client represents the nutanix API client
+type Client struct {
 	API *v3.Client
 }

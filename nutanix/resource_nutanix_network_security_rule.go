@@ -30,7 +30,7 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 
 func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	//Get client connection
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	// Prepare request
 	request := &v3.NetworkSecurityRuleIntentInput{}
@@ -119,7 +119,7 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 	log.Printf("[DEBUG] Reading Network Security Rule: %s", d.Get("name").(string))
 
 	// Get client connection
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	// Make request to the API
 	resp, err := conn.V3.GetNetworkSecurityRule(d.Id())
@@ -801,7 +801,7 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 
 func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	//Get client connection
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 
 	// Prepare request
 	request := &v3.NetworkSecurityRuleIntentInput{}
@@ -937,7 +937,7 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 func resourceNutanixNetworkSecurityRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deleting Network Security Rule: %s", d.Get("name").(string))
 
-	conn := meta.(*NutanixClient).API
+	conn := meta.(*Client).API
 	UUID := d.Id()
 
 	if err := conn.V3.DeleteNetworkSecurityRule(UUID); err != nil {
