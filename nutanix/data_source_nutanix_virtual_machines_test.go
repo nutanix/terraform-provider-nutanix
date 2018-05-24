@@ -74,5 +74,5 @@ data "nutanix_virtual_machines" "basic_web" {
 	metadata = {
 		length = 2
 	}
-}`, r)
+}`)
 }
