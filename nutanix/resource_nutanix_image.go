@@ -83,8 +83,6 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("Image already with name %s exists in the given cluster, UUID %s", d.Get("name").(string), *imageUUID)
 	}
 
-	utils.PrintToJSON(request, "[DEBUG] Image request")
-
 	//Make request to the API
 	resp, err := conn.V3.CreateImage(request)
 	if err != nil {
