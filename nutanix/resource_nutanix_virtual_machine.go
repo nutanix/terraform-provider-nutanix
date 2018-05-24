@@ -89,8 +89,6 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	request.Metadata = metadata
 	request.Spec = spec
 
-	utils.PrintToJSON(request, "REQUEST VM")
-
 	// Make request to the API
 	resp, err := conn.V3.CreateVM(request)
 	if err != nil {

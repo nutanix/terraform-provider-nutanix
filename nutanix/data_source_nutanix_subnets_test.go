@@ -6,13 +6,14 @@ import (
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/terraform"
 )
 
-func TestAccNutanixSubnetDataSource_basic(t *testing.T) {
+func TestAccNutanixSubnetsDataSource_basic(t *testing.T) {
 	//Skipped because this test didn't pass in GCP environment
-	// if isGCPEnvironment() {
-	// 	t.Skip()
-	// }
+	if isGCPEnvironment() {
+		t.Skip()
+	}
 
 	rInt := acctest.RandIntRange(0, 500)
 
@@ -21,28 +22,35 @@ func TestAccNutanixSubnetDataSource_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetDataSourceConfig(rInt),
+				Config: testAccSubnetsDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						"data.nutanix_subnet.test", "prefix_length", "24"),
-					resource.TestCheckResourceAttr(
-						"data.nutanix_subnet.test", "subnet_type", "VLAN"),
+					testAccCheckNutanixSubnetsExists("data.nutanix_subnets.test1"),
 				),
 			},
 		},
 	})
 }
 
-func testAccSubnetDataSourceConfig(r int) string {
+func testAccCheckNutanixSubnetsExists(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		return nil
+	}
+}
+
+func testAccSubnetsDataSourceConfig(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {
   metadata = {
     length = 2
   }
-}
-
-output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 
 resource "nutanix_subnet" "test" {
@@ -75,5 +83,10 @@ resource "nutanix_subnet" "test" {
 data "nutanix_subnet" "test" {
 	subnet_id = "${nutanix_subnet.test.id}"
 }
-`, r, r)
+
+data "nutanix_subnets" "test1" {
+	metadata {
+		length = 1
+	}
+}`, r, r)
 }
