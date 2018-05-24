@@ -49,6 +49,11 @@ type Service interface {
 	CreateNetworkSecurityRule(request *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error)
 	ListCluster(getEntitiesRequest *ClusterListMetadataOutput) (*ClusterListIntentResponse, error)
 	GetCluster(UUID string) (*ClusterIntentResponse, error)
+	UpdateVolumeGroup(UUID string, body *VolumeGroupInput) (*VolumeGroupResponse, error)
+	ListVolumeGroup(getEntitiesRequest *ListMetadata) (*VolumeGroupListResponse, error)
+	GetVolumeGroup(UUID string) (*VolumeGroupResponse, error)
+	DeleteVolumeGroup(UUID string) error
+	CreateVolumeGroup(request *VolumeGroupInput) (*VolumeGroupResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -825,4 +830,122 @@ func (op Operations) UpdateNetworkSecurityRule(UUID string, body *NetworkSecurit
 	}
 
 	return networkSecurityRuleIntentResponse, nil
+}
+
+/*CreateVolumeGroup Creates a Volume group
+ * This operation submits a request to create a Volume group based on the input parameters.
+ *
+ * @param request
+ * @return *VolumeGroupResponse
+ */
+func (op Operations) CreateVolumeGroup(request *VolumeGroupInput) (*VolumeGroupResponse, error) {
+	ctx := context.TODO()
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, "/volume_groups", request)
+	networkSecurityRuleResponse := new(VolumeGroupResponse)
+
+	err = op.client.Do(ctx, req, networkSecurityRuleResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return networkSecurityRuleResponse, nil
+}
+
+/*DeleteVolumeGroup Deletes a Volume group
+ * This operation submits a request to delete a Volume group.
+ *
+ * @param UUID The UUID of the entity.
+ * @return void
+ */
+func (op Operations) DeleteVolumeGroup(UUID string) error {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/volume_groups/%s", UUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	if err != nil {
+		return err
+	}
+
+	return op.client.Do(ctx, req, nil)
+}
+
+/*GetVolumeGroup Gets a Volume group
+ * This operation gets a Volume group.
+ *
+ * @param UUID The UUID of the entity.
+ * @return *VolumeGroupResponse
+ */
+func (op Operations) GetVolumeGroup(UUID string) (*VolumeGroupResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/volume_groups/%s", UUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	networkSecurityRuleResponse := new(VolumeGroupResponse)
+
+	err = op.client.Do(ctx, req, networkSecurityRuleResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return networkSecurityRuleResponse, nil
+}
+
+/*ListVolumeGroup Gets all network security rules
+ * This operation gets a list of Volume groups, allowing for sorting and pagination. Note: Entities that have not been created successfully are not listed.
+ *
+ * @param getEntitiesRequest
+ * @return *VolumeGroupListResponse
+ */
+func (op Operations) ListVolumeGroup(getEntitiesRequest *ListMetadata) (*VolumeGroupListResponse, error) {
+	ctx := context.TODO()
+	path := "/volume_groups/list"
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
+
+	if err != nil {
+		return nil, err
+	}
+
+	networkSecurityRuleListResponse := new(VolumeGroupListResponse)
+	err = op.client.Do(ctx, req, networkSecurityRuleListResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return networkSecurityRuleListResponse, nil
+}
+
+/*UpdateVolumeGroup Updates a Volume group
+ * This operation submits a request to update a Volume group based on the input parameters.
+ *
+ * @param uuid The UUID of the entity.
+ * @param body
+ * @return void
+ */
+func (op Operations) UpdateVolumeGroup(UUID string, body *VolumeGroupInput) (*VolumeGroupResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/volume_groups/%s", UUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
+	if err != nil {
+		return nil, err
+	}
+
+	networkSecurityRuleResponse := new(VolumeGroupResponse)
+
+	err = op.client.Do(ctx, req, networkSecurityRuleResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return networkSecurityRuleResponse, nil
 }
