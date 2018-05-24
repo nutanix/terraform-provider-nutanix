@@ -49,10 +49,11 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	if err := d.Set("availability_zone_reference", getReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
 		return err
 	}
-	if err := d.Set("cluster_reference", getReferenceValues(resp.Status.ClusterReference)); err != nil {
+	if err := d.Set("cluster_reference", getClusterReferenceValues(resp.Status.ClusterReference)); err != nil {
 		return err
 	}
 
+	d.Set("cluster_reference_name", utils.StringValue(resp.Status.ClusterReference.Name))
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
 	d.Set("name", utils.StringValue(resp.Status.Name))
 	d.Set("description", utils.StringValue(resp.Status.Description))
