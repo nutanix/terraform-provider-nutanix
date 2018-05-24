@@ -1668,181 +1668,174 @@ type TargetGroup struct {
 
 //NetworkSecurityRuleResourcesRule These rules are used for quarantining suspected VMs. Target group is a required attribute.  Empty inbound_allow_list will not allow anything into target group. Empty outbound_allow_list will allow everything from target group.
 type NetworkSecurityRuleResourcesRule struct {
-
-	// Type of action.
-	Action *string `json:"action,omitempty"`
-
-	InboundAllowList []*NetworkRule `json:"inbound_allow_list,omitempty"`
-
+	Action            *string        `json:"action,omitempty"`             // Type of action.
+	InboundAllowList  []*NetworkRule `json:"inbound_allow_list,omitempty"` //
 	OutboundAllowList []*NetworkRule `json:"outbound_allow_list,omitempty"`
-
-	TargetGroup *TargetGroup `json:"target_group,omitempty"`
+	TargetGroup       *TargetGroup   `json:"target_group,omitempty"`
 }
 
 //NetworkSecurityRuleIsolationRule These rules are used for environmental isolation.
 type NetworkSecurityRuleIsolationRule struct {
-
-	// Type of action.
-	Action *string `json:"action,omitempty"`
-
-	// The set of categories that matching VMs need to have.
-	FirstEntityFilter *CategoryFilter `json:"first_entity_filter,omitempty"`
-
-	// The set of categories that matching VMs need to have.
-	SecondEntityFilter *CategoryFilter `json:"second_entity_filter,omitempty"`
+	Action             *string         `json:"action,omitempty"`               // Type of action.
+	FirstEntityFilter  *CategoryFilter `json:"first_entity_filter,omitempty"`  // The set of categories that matching VMs need to have.
+	SecondEntityFilter *CategoryFilter `json:"second_entity_filter,omitempty"` // The set of categories that matching VMs need to have.
 }
 
 //NetworkSecurityRuleResources ...
 type NetworkSecurityRuleResources struct {
-	AppRule *NetworkSecurityRuleResourcesRule `json:"app_rule,omitempty"`
-
-	IsolationRule *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty"`
-
+	AppRule        *NetworkSecurityRuleResourcesRule `json:"app_rule,omitempty"`
+	IsolationRule  *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty"`
 	QuarantineRule *NetworkSecurityRuleResourcesRule `json:"quarantine_rule,omitempty"`
 }
 
 //NetworkSecurityRule ...
 type NetworkSecurityRule struct {
-	Description *string `json:"description"`
-
-	Name *string `json:"name,omitempty"`
-
-	Resources *NetworkSecurityRuleResources `json:"resources,omitempty" `
+	Description *string                       `json:"description"`
+	Name        *string                       `json:"name,omitempty"`
+	Resources   *NetworkSecurityRuleResources `json:"resources,omitempty" `
 }
 
 //Metadata Metadata The kind metadata
 type Metadata struct {
-	LastUpdateTime *time.Time `json:"last_update_time,omitempty"`
-
-	Kind *string `json:"kind"`
-
-	UUID *string `json:"uuid,omitempty"`
-
-	// project reference
-	ProjectReference *Reference `json:"project_reference,omitempty"`
-
-	CreationTime *time.Time `json:"creation_time,omitempty"`
-
-	SpecVersion *int64 `json:"spec_version,omitempty"`
-
-	SpecHash *string `json:"spec_hash,omitempty"`
-
-	OwnerReference *Reference `json:"owner_reference,omitempty"`
-
-	Categories map[string]string `json:"categories,omitempty"`
-
-	Name *string `json:"name,omitempty"`
+	LastUpdateTime   *time.Time        `json:"last_update_time,omitempty"`  //
+	Kind             *string           `json:"kind"`                        //
+	UUID             *string           `json:"uuid,omitempty"`              //
+	ProjectReference *Reference        `json:"project_reference,omitempty"` // project reference
+	CreationTime     *time.Time        `json:"creation_time,omitempty"`
+	SpecVersion      *int64            `json:"spec_version,omitempty"`
+	SpecHash         *string           `json:"spec_hash,omitempty"`
+	OwnerReference   *Reference        `json:"owner_reference,omitempty"`
+	Categories       map[string]string `json:"categories,omitempty"`
+	Name             *string           `json:"name,omitempty"`
 }
 
 //NetworkSecurityRuleIntentInput An intentful representation of a network_security_rule
 type NetworkSecurityRuleIntentInput struct {
-	APIVersion *string `json:"api_version,omitempty"`
-
-	Metadata *Metadata `json:"metadata"`
-
-	Spec *NetworkSecurityRule `json:"spec"`
+	APIVersion *string              `json:"api_version,omitempty"`
+	Metadata   *Metadata            `json:"metadata"`
+	Spec       *NetworkSecurityRule `json:"spec"`
 }
 
 //NetworkSecurityRuleDefStatus ... Network security rule status
 type NetworkSecurityRuleDefStatus struct {
-	AppRule *NetworkSecurityRuleResourcesRule `json:"app_rule,omitempty"`
-
-	IsolationRule *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty"`
-
+	AppRule        *NetworkSecurityRuleResourcesRule `json:"app_rule,omitempty"`
+	IsolationRule  *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty"`
 	QuarantineRule *NetworkSecurityRuleResourcesRule `json:"quarantine_rule,omitempty"`
-
-	State *string `json:"state,omitmepty"`
+	State          *string                           `json:"state,omitmepty"`
 }
 
 //NetworkSecurityRuleIntentResponse Response object for intentful operations on a network_security_rule
 type NetworkSecurityRuleIntentResponse struct {
-	APIVersion *string `json:"api_version,omitempty"`
-
-	Metadata *Metadata `json:"metadata"`
-
-	Spec *NetworkSecurityRule `json:"spec,omitempty"`
-
-	Status NetworkSecurityRuleDefStatus `json:"status,omitempty" bson:"status,omitempty"`
+	APIVersion *string                      `json:"api_version,omitempty"`
+	Metadata   *Metadata                    `json:"metadata"`
+	Spec       *NetworkSecurityRule         `json:"spec,omitempty"`
+	Status     NetworkSecurityRuleDefStatus `json:"status,omitempty" bson:"status,omitempty"`
 }
 
 //NetworkSecurityRuleStatus The status of a REST API call. Only used when there is a failure to report.
 type NetworkSecurityRuleStatus struct {
-	APIVersion *string `json:"api_version,omitempty"`
-
-	// The HTTP error code.
-	Code *int64 `json:"code,omitempty"`
-
-	// The kind name
-	Kind *string `json:"kind,omitempty"`
-
+	APIVersion  *string            `json:"api_version,omitempty"` //
+	Code        *int64             `json:"code,omitempty"`        // The HTTP error code.
+	Kind        *string            `json:"kind,omitempty"`        // The kind name
 	MessageList []*MessageResource `json:"message_list,omitempty"`
-
-	State *string `json:"state,omitempty"`
+	State       *string            `json:"state,omitempty"`
 }
 
 //ListMetadata All api calls that return a list will have this metadata block as input
 type ListMetadata struct {
-
-	// The filter in FIQL syntax used for the results.
-	Filter *string `json:"filter,omitempty"`
-
-	// The kind name
-	Kind *string `json:"kind,omitempty"`
-
-	// The number of records to retrieve relative to the offset
-	Length *int64 `json:"length,omitempty"`
-
-	// Offset from the start of the entity list
-	Offset *int64 `json:"offset,omitempty"`
-
-	// The attribute to perform sort on
-	SortAttribute *string `json:"sort_attribute,omitempty"`
-
-	// The sort order in which results are returned
-	SortOrder *string `json:"sort_order,omitempty"`
+	Filter        *string `json:"filter,omitempty"`         // The filter in FIQL syntax used for the results.
+	Kind          *string `json:"kind,omitempty"`           // The kind name
+	Length        *int64  `json:"length,omitempty"`         // The number of records to retrieve relative to the offset
+	Offset        *int64  `json:"offset,omitempty"`         // Offset from the start of the entity list
+	SortAttribute *string `json:"sort_attribute,omitempty"` // The attribute to perform sort on
+	SortOrder     *string `json:"sort_order,omitempty"`     // The sort order in which results are returned
 }
 
 //ListMetadataOutput All api calls that return a list will have this metadata block
 type ListMetadataOutput struct {
-
-	// The filter used for the results
-	Filter *string `json:"filter,omitempty"`
-
-	// The kind name
-	Kind *string `json:"kind,omitempty"`
-
-	// The number of records retrieved relative to the offset
-	Length *int64 `json:"length,omitempty"`
-
-	// Offset from the start of the entity list
-	Offset *int64 `json:"offset,omitempty"`
-
-	// The attribute to perform sort on
-	SortAttribute *string `json:"sort_attribute,omitempty"`
-
-	// The sort order in which results are returned
-	SortOrder *string `json:"sort_order,omitempty"`
-
-	// Total matches found
-	TotalMatches *int64 `json:"total_matches,omitempty"`
+	Filter        *string `json:"filter,omitempty"`         // The filter used for the results
+	Kind          *string `json:"kind,omitempty"`           // The kind name
+	Length        *int64  `json:"length,omitempty"`         // The number of records retrieved relative to the offset
+	Offset        *int64  `json:"offset,omitempty"`         // Offset from the start of the entity list
+	SortAttribute *string `json:"sort_attribute,omitempty"` // The attribute to perform sort on
+	SortOrder     *string `json:"sort_order,omitempty"`     // The sort order in which results are returned
+	TotalMatches  *int64  `json:"total_matches,omitempty"`  // Total matches found
 }
 
 //NetworkSecurityRuleIntentResource ... Response object for intentful operations on a network_security_rule
 type NetworkSecurityRuleIntentResource struct {
-	APIVersion *string `json:"api_version,omitempty"`
-
-	Metadata *Metadata `json:"metadata,omitempty"`
-
-	Spec *NetworkSecurityRule `json:"spec,omitempty"`
-
-	Status *NetworkSecurityRuleDefStatus `json:"status,omitempty"`
+	APIVersion *string                       `json:"api_version,omitempty"`
+	Metadata   *Metadata                     `json:"metadata,omitempty"`
+	Spec       *NetworkSecurityRule          `json:"spec,omitempty"`
+	Status     *NetworkSecurityRuleDefStatus `json:"status,omitempty"`
 }
 
 //NetworkSecurityRuleListIntentResponse Response object for intentful operation of network_security_rules
 type NetworkSecurityRuleListIntentResponse struct {
-	APIVersion string `json:"api_version"`
+	APIVersion string                              `json:"api_version"`
+	Entities   []NetworkSecurityRuleIntentResource `json:"entities,omitempty" bson:"entities,omitempty"`
+	Metadata   ListMetadataOutput                  `json:"metadata"`
+}
 
-	Entities []NetworkSecurityRuleIntentResource `json:"entities,omitempty" bson:"entities,omitempty"`
+//VolumeGroupInput Represents the request body for create volume_grop request
+type VolumeGroupInput struct {
+	APIVersion *string      `json:"api_version,omitempty"` //default 3.1.0
+	Metadata   *Metadata    `json:"metadata,omitempty"`    //The volume_group kind metadata.
+	Spec       *VolumeGroup `json:"spec,omitempty"`        //Volume group input spec.
+}
 
-	Metadata ListMetadataOutput `json:"metadata"`
+//VolumeGroup Represents volume group input spec.
+type VolumeGroup struct {
+	Name        *string               `json:"name"`                  //Volume Group name (required)
+	Description *string               `json:"description,omitempty"` //Volume Group description.
+	Resources   *VolumeGroupResources `json:"resources"`             //Volume Group resources.
+}
+
+//VolumeGroupResources Represents the volume group resources
+type VolumeGroupResources struct {
+	FlashMode         *string         `json:"flash_mode"`          //Flash Mode, if enabled all volume disks of the VG will be pinned to SSD tier.
+	FileSystemType    *string         `json:"file_system_type"`    //File system to be used for volume
+	SharingStatus     *string         `json:"sharing_status"`      //Whether the volume group can be shared across multiple iSCSI initiators.
+	AttachmentList    []*VMAttachment `json:"attachment_list"`     //VMs attached to volume group.
+	DiskList          []*VGDisk       `json:"disk_list"`           //VGDisk Volume group disk specification.
+	IscsiTargetPrefix *string         `json:"iscsi_target_prefix"` //iSCSI target prefix-name.
+}
+
+//VMAttachment VMs attached to volume group.
+type VMAttachment struct {
+	VMReference        *Reference `json:"vm_reference"`         //Reference to a kind
+	IscsiInitiatorName *string    `json:"iscsi_initiator_name"` //Name of the iSCSI initiator of the workload outside Nutanix cluster.
+}
+
+//VGDisk Volume group disk specification.
+type VGDisk struct {
+	VmdiskUUID           *string    `json:"vmdisk_uuid"`            //The UUID of this volume disk
+	Index                *int64     `json:"index"`                  //Index of the volume disk in the group.
+	DataSourceReference  *Reference `json:"data_source_reference"`  //Reference to a kind
+	DiskSizeMib          *int64     `json:"disk_size_mib"`          //Size of the disk in MiB.
+	StorageContainerUUID *string    `json:"storage_container_uuid"` //Container UUID on which to create the disk.
+}
+
+//VolumeGroupResponse Response object for intentful operations on a volume_group
+type VolumeGroupResponse struct {
+	APIVersion *string               `json:"api_version"`      //
+	Metadata   *Metadata             `json:"metadata"`         //The volume_group kind metadata
+	Spec       *VolumeGroup          `json:"spec,omitempty"`   //Volume group input spec.
+	Status     *VolumeGroupDefStatus `json:"status,omitempty"` //Volume group configuration.
+}
+
+//VolumeGroupDefStatus  Volume group configuration.
+type VolumeGroupDefStatus struct {
+	State       *string               `json:"state"`        //The state of the volume group entity.
+	MessageList []*MessageResource    `json:"message_list"` //Volume group message list.
+	Name        *string               `json:"name"`         //Volume group name.
+	Resources   *VolumeGroupResources `json:"resources"`    //Volume group resources.
+	Description *string               `json:"description"`  //Volume group description.
+}
+
+//VolumeGroupListResponse Response object for intentful operation of volume_groups
+type VolumeGroupListResponse struct {
+	APIVersion *string                `json:"api_version"`
+	Entities   []*VolumeGroupResponse `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput    `json:"metadata"`
 }
