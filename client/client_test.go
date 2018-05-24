@@ -94,7 +94,7 @@ func TestGetResponse(t *testing.T) {
 	res := &http.Response{
 		Request:    &http.Request{},
 		StatusCode: http.StatusBadRequest,
-		Body:       ioutil.NopCloser(strings.NewReader(`{"api_version": "3.0", "code": 400, "kind": "error", "message_list": [{"message": "This field may not be blank."}], "state": "none"}`)),
+		Body:       ioutil.NopCloser(strings.NewReader(`{"api_version": "3.0", "code": 400, "kind": "error", "message_list": [{"message": "This field may not be blank."}], "state": "ERROR"}`)),
 	}
 
 	err := CheckResponse(res)
@@ -112,7 +112,7 @@ func TestCheckResponse(t *testing.T) {
 	res := &http.Response{
 		Request:    &http.Request{},
 		StatusCode: http.StatusBadRequest,
-		Body:       ioutil.NopCloser(strings.NewReader(`{"api_version": "3.0", "code": 400, "kind": "error", "message_list": [{"message": "This field may not be blank."}], "state": "none"}`)),
+		Body:       ioutil.NopCloser(strings.NewReader(`{"api_version": "3.0", "code": 400, "kind": "error", "message_list": [{"message": "This field may not be blank."}], "state": "ERROR"}`)),
 	}
 	err := CheckResponse(res)
 
