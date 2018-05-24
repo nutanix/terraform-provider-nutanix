@@ -1,14 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_subnet"
-sidebar_current: "docs-nutanix-resource-subnet"
+page_title: "NUTANIX: nutanix_subnets"
+sidebar_current: "docs-nutanix-datasource-images"
 description: |-
-  This operation submits a request to create a subnet based on the input parameters. A subnet is a block of IP addresses.
+ Describes a List of Subnets
 ---
 
-# nutanix_subnet
+# nutanix_subnets
 
-Provides a resource to create a subnet based on the input parameters. A subnet is a block of IP addresses.
+Describes a List of Subnets
 
 ## Example Usage
 
@@ -23,35 +23,68 @@ output "cluster" {
   value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 
-resource "nutanix_subnet" "next-iac-managed" {
-  # What cluster will this VLAN live on?
-  cluster_reference = {
-	kind = "cluster"
-	uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
+resource "nutanix_subnet" "test" {
+    name = "dou_vlan0_test_%d"
 
-  # General Information
-  name        = "next-iac-managed-%d"
-  vlan_id     = 101
-  subnet_type = "VLAN"
+    cluster_reference = {
+      kind = "cluster"
+      uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+    }
 
-  # Managed L3 Networks
-  # This bit is only needed if you intend to turn on IPAM
-  prefix_length = 20
+    vlan_id = 201
+    subnet_type = "VLAN"
 
-  default_gateway_ip = "10.5.80.1"
-  subnet_ip          = "10.5.80.0"
+    prefix_length = 24
+    default_gateway_ip = "192.168.0.1"
+    subnet_ip = "192.168.0.0"
+    #ip_config_pool_list_ranges = ["192.168.0.5", "192.168.0.100"]
 
-  dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
-  dhcp_domain_search_list      = ["nutanix.com", "eng.nutanix.com"]
+    dhcp_options {
+        boot_file_name = "bootfile"
+        tftp_server_name = "192.168.0.252"
+        domain_name = "nutanix"
+    }
+
+    dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+    dhcp_domain_search_list = ["nutanix.com", "calm.io"]
+
+}
+
+data "nutanix_subnets" "test" {
+    metadata = {
+        length = 1
+    }
 }
 ```
 
 ## Argument Reference
 
+The following arguments are supported:
+
+* `metadata`: Represents virtual machine uuid
+
+### Metadata Argument
+
+The metadata attribute supports the following:
+
+* `kind`: - The kind name.
+* `sort_attribute`: The attribute to perform sort on.
+* `filter`: - The filter in FIQL syntax used for the results.
+* `length`: - The number of records to retrieve relative to the offset.
+* `sort_order`: - The sort order in which results are returned
+* `offset`: - Offset from the start of the entity list
+
+## Attribute Reference
+
+The following attributes are exported:
+
+* `entities`: - A list of virtual machines.
+
+### Entities Attribute
+
+The entities attribute supports the following:
+
 * `metadata`: - (Required) The subnet kind metadata.
-
-
 * `availability_zone_reference`: - (Optional) The reference to a availability_zone.
 * `cluster_reference`: - (Optional) The reference to a cluster.
 * `cluster_name`: - (Optional) The name of a cluster.
@@ -76,7 +109,7 @@ resource "nutanix_subnet" "next-iac-managed" {
 
 The following attributes are exported:
 
-* `metadata`: - The vm kind metadata.
+* `metadata`: - The subnet kind metadata.
 * `state`: -
 
 ### Metadata

@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_subnet"
-sidebar_current: "docs-outscale-datasource-subnet"
+sidebar_current: "docs-nutanix-datasource-subnet"
 description: |-
   This operation retrieves a subnet based on the input parameters. A subnet is a block of IP addresses.
 ---
@@ -59,7 +59,7 @@ data "nutanix_subnet" "test" {
 
 The following arguments are supported:
 
-* `subnet_id`: - (Required) The name for the vm.
+* `subnet_id`: - (Required) The name for the subnet.
 
 ## Attributes Reference
 
@@ -88,7 +88,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `metadata`: - The vm kind metadata.
+* `metadata`: - The subnet kind metadata.
 * `state`: -
 
 ### Metadata
