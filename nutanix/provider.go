@@ -49,6 +49,7 @@ func Provider() terraform.ResourceProvider {
 			"nutanix_image":                  dataSourceNutanixImage(),
 			"nutanix_images":                 dataSourceNutanixImages(),
 			"nutanix_subnet":                 dataSourceNutanixSubnet(),
+			"nutanix_subnets":                dataSourceNutanixSubnets(),
 			"nutanix_clusters":               dataSourceNutanixClusters(),
 			"nutanix_network_security_rule":  dataSourceNutanixNetworkSecurityRule(),
 			"nutanix_network_security_rules": dataSourceNutanixNetworkSecurityRules(),
