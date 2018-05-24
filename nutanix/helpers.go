@@ -1,6 +1,8 @@
 package nutanix
 
 import (
+	"strconv"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -52,4 +54,78 @@ func getMetadataAttributes(d *schema.ResourceData, metadata *v3.Metadata, kind s
 	}
 
 	return nil
+}
+
+func readListMetadata(d *schema.ResourceData, kind string) (*v3.DSMetadata, error) {
+	metadata := &v3.DSMetadata{
+		Kind: utils.String(kind),
+	}
+
+	if v, ok := d.GetOk("metadata"); ok {
+		m := v.(map[string]interface{})
+
+		if mv, mok := m["sort_attribute"]; mok {
+			metadata.SortAttribute = utils.String(mv.(string))
+		}
+		if mv, mok := m["filter"]; mok {
+			metadata.Filter = utils.String(mv.(string))
+		}
+		if mv, mok := m["length"]; mok {
+			i, err := strconv.Atoi(mv.(string))
+			if err != nil {
+				return nil, err
+			}
+			metadata.Length = utils.Int64(int64(i))
+		}
+		if mv, mok := m["sort_order"]; mok {
+			metadata.SortOrder = utils.String(mv.(string))
+		}
+		if mv, mok := m["offset"]; mok {
+			i, err := strconv.Atoi(mv.(string))
+			if err != nil {
+				return nil, err
+			}
+			metadata.Offset = utils.Int64(int64(i))
+		}
+	}
+
+	return metadata, nil
+}
+
+func setRSEntityMetadata(v *v3.Metadata) (map[string]interface{}, []map[string]interface{}) {
+	metadata := make(map[string]interface{})
+	metadata["last_update_time"] = utils.TimeValue(v.LastUpdateTime).String()
+	metadata["kind"] = utils.StringValue(v.Kind)
+	metadata["uuid"] = utils.StringValue(v.UUID)
+	metadata["creation_time"] = utils.TimeValue(v.CreationTime).String()
+	metadata["spec_version"] = strconv.Itoa(int(utils.Int64Value(v.SpecVersion)))
+	metadata["spec_hash"] = utils.StringValue(v.SpecHash)
+	metadata["name"] = utils.StringValue(v.Name)
+
+	c := make([]map[string]interface{}, 0)
+	if v.Categories != nil {
+		categories := v.Categories
+		var catList []map[string]interface{}
+
+		for name, values := range categories {
+			catItem := make(map[string]interface{})
+			catItem["name"] = name
+			catItem["value"] = values
+			catList = append(catList, catItem)
+		}
+		c = catList
+	}
+
+	return metadata, c
+}
+
+func getReferenceValues(r *v3.Reference) map[string]interface{} {
+	reference := make(map[string]interface{})
+	if r != nil {
+		reference["kind"] = utils.StringValue(r.Kind)
+		reference["name"] = utils.StringValue(r.Name)
+		reference["uuid"] = utils.StringValue(r.UUID)
+	}
+
+	return reference
 }

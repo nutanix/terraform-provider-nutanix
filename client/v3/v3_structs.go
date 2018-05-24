@@ -9,39 +9,6 @@ type Reference struct {
 	UUID *string `json:"uuid"`
 }
 
-//VMMetadata Metadata The vm kind metadata
-type VMMetadata struct {
-
-	// Categories for the vm
-	Categories map[string]string `json:"categories,omitempty"`
-
-	// UTC date and time in RFC-3339 format when vm was created
-	CreationTime *time.Time `json:"creation_time,omitempty"`
-
-	// The kind name
-	Kind *string `json:"kind"`
-
-	// UTC date and time in RFC-3339 format when vm was last updated
-	LastUpdateTime *time.Time `json:"last_update_time,omitempty"`
-
-	// vm name
-	Name *string `json:"name,omitempty"`
-
-	// project reference
-	ProjectReference *Reference `json:"project_reference,omitempty"`
-
-	OwnerReference *Reference `json:"owner_reference,omitempty"`
-
-	// Hash of the spec. This will be returned from server.
-	SpecHash *string `json:"spec_hash,omitempty"`
-
-	// Version number of the latest spec.
-	SpecVersion *int64 `json:"spec_version,omitempty"`
-
-	// vm uuid
-	UUID *string `json:"uuid,omitempty"`
-}
-
 //VMVnumaConfig Indicates how VM vNUMA should be configured
 type VMVnumaConfig struct {
 
@@ -524,8 +491,8 @@ type VMIntentResponse struct {
 	Status *VMDefStatus `json:"status,omitempty"`
 }
 
-//VMListMetadata All api calls that return a list will have this metadata block as input
-type VMListMetadata struct {
+//DSMetadata All api calls that return a list will have this metadata block as input
+type DSMetadata struct {
 
 	// The filter in FIQL syntax used for the results.
 	Filter *string `json:"filter,omitempty"`
@@ -550,7 +517,7 @@ type VMListMetadata struct {
 type VMIntentResource struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
-	Metadata *VMMetadata `json:"metadata"`
+	Metadata *Metadata `json:"metadata"`
 
 	Spec *VM `json:"spec,omitempty"`
 
@@ -779,7 +746,7 @@ type SubnetIntentResponse struct {
 type SubnetIntentResource struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
-	Metadata *SubnetMetadata `json:"metadata"`
+	Metadata *Metadata `json:"metadata"`
 
 	Spec *Subnet `json:"spec,omitempty"`
 
