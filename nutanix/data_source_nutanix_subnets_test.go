@@ -42,22 +42,10 @@ func testAccCheckNutanixSubnetsExists(n string) resource.TestCheckFunc {
 
 func testAccSubnetsDataSourceConfig(r int) string {
 	return fmt.Sprintf(`
-		provider "nutanix" {
-  username = "admin"
-  password = "Nutanix/1234"
-  endpoint = "10.5.81.134"
-  insecure = true
-  port     = 9440
-}
-
 data "nutanix_clusters" "clusters" {
   metadata = {
     length = 2
   }
-}
-
-output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 
 resource "nutanix_subnet" "test" {
