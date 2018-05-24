@@ -383,14 +383,13 @@ func getDataSourceVMSchema() map[string]*schema.Schema {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"name": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
 				},
 			},
 		},
-
+		"cluster_reference_name": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		// COMPUTED
 		"message_list": {
 			Type:     schema.TypeList,
