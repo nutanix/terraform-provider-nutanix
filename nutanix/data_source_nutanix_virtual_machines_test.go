@@ -1,18 +1,23 @@
 package nutanix
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccNutanixVMSDataSource_basic(t *testing.T) {
+
+	rInt := acctest.RandIntRange(0, 500)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVMSSDataSourceConfig,
+				Config: testAccVMSSDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.nutanix_virtual_machines.basic_web", "entities.#", "2"),
@@ -23,7 +28,8 @@ func TestAccNutanixVMSDataSource_basic(t *testing.T) {
 }
 
 // Lookup based on InstanceID
-const testAccVMSSDataSourceConfig = `
+func testAccVMSSDataSourceConfig(r int) string {
+	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {
   metadata = {
     length = 2
@@ -94,7 +100,7 @@ resource "nutanix_subnet" "test" {
 	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   }
 
-  vlan_id     = 201
+  vlan_id     = %d
   subnet_type = "VLAN"
 
   prefix_length      = 24
@@ -115,4 +121,5 @@ data "nutanix_virtual_machines" "basic_web" {
 	metadata = {
 		length = 2
 	}
-}`
+}`, r)
+}
