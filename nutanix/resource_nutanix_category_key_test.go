@@ -2,24 +2,24 @@ package nutanix
 
 import (
 	"fmt"
-	"math/rand"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccNutanixCategoryKey_basic(t *testing.T) {
-	r := rand.Int31()
+	rInt := acctest.RandIntRange(0, 500)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixCategoryKeyDestroy,
 		Steps: []resource.TestStep{
 			resource.TestStep{
-				Config: testAccNutanixCategoryKeyConfig(r),
+				Config: testAccNutanixCategoryKeyConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixCategoryKeyExists("nutanix_category_key.test"),
 				),
@@ -65,7 +65,7 @@ func testAccCheckNutanixCategoryKeyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccNutanixCategoryKeyConfig(r int32) string {
+func testAccNutanixCategoryKeyConfig(r int) string {
 	return fmt.Sprintf(`
 resource "nutanix_category_key" "test"{
     name = "app-support-%d"

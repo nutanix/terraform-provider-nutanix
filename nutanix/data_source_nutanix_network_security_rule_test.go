@@ -15,7 +15,7 @@ func TestAccNutanixNetworkSecurityRuleDataSource_basic(t *testing.T) {
 		t.Skip()
 	}
 
-	rInt := acctest.RandInt()
+	rInt := acctest.RandIntRange(0, 500)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },

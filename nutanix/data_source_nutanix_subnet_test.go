@@ -9,7 +9,12 @@ import (
 )
 
 func TestAccNutanixSubnetDataSource_basic(t *testing.T) {
-	rInt := acctest.RandInt()
+	//Skipped because this test didn't pass in GCP environment
+	// if isGCPEnvironment() {
+	// 	t.Skip()
+	// }
+
+	rInt := acctest.RandIntRange(0, 500)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -48,7 +53,7 @@ resource "nutanix_subnet" "test" {
 	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   	}
 
-	vlan_id = 201
+	vlan_id = %d
 	subnet_type = "VLAN"
 	
 	prefix_length = 24
@@ -70,5 +75,5 @@ resource "nutanix_subnet" "test" {
 data "nutanix_subnet" "test" {
 	subnet_id = "${nutanix_subnet.test.id}"
 }
-`, r)
+`, r, r)
 }
