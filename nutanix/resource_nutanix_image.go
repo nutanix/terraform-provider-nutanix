@@ -1,6 +1,7 @@
 package nutanix
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"path/filepath"
@@ -45,6 +46,14 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 
 	n, nok := d.GetOk("name")
 	desc, descok := d.GetOk("description")
+
+	_, iok := d.GetOk("source_uri")
+	_, pok := d.GetOk("source_path")
+
+	// if both path and uri are provided, return an error
+	if iok && pok {
+		return errors.New("Both source_uri and source_path provided")
+	}
 
 	// Read Arguments and set request values
 	if v, ok := d.GetOk("api_version"); ok {
@@ -106,6 +115,17 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf(
 			"Error waiting for image (%s) to create: %s", d.Id(), err)
 	}
+
+	// if we need to upload an image, we do it now
+	if pok {
+		path := d.Get("source_path")
+
+		err = conn.V3.UploadImage(UUID, path.(string))
+		if err != nil {
+			return fmt.Errorf("Failed uploading image: %s", err)
+		}
+	}
+
 	return resourceNutanixImageRead(d, meta)
 }
 
@@ -553,6 +573,11 @@ func getImageSchema() map[string]*schema.Schema {
 			},
 		},
 		"source_uri": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"source_path": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
