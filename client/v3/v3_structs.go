@@ -1006,7 +1006,7 @@ type ImageListMetadata struct {
 type ImageIntentResource struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
-	Metadata *ImageMetadata `json:"metadata"`
+	Metadata *Metadata `json:"metadata"`
 
 	Spec *Image `json:"spec,omitempty"`
 
