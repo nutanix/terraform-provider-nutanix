@@ -3,6 +3,7 @@ package nutanix
 import (
 	"strconv"
 
+	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -51,78 +52,14 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 		entity["cluster_reference_name"] = utils.StringValue(v.Status.ClusterReference.Name)
 		entity["state"] = utils.StringValue(v.Status.State)
 		entity["num_vnuma_nodes"] = utils.Int64Value(v.Status.Resources.VnumaConfig.NumVnumaNodes)
-
-		nicLists := make([]map[string]interface{}, 0)
-		if v.Status.Resources.NicList != nil {
-			nicLists = make([]map[string]interface{}, len(v.Status.Resources.NicList))
-			for k, v := range v.Status.Resources.NicList {
-				nic := make(map[string]interface{})
-				nic["nic_type"] = utils.StringValue(v.NicType)
-				nic["uuid"] = utils.StringValue(v.UUID)
-				nic["floating_ip"] = utils.StringValue(v.FloatingIP)
-				nic["network_function_nic_type"] = utils.StringValue(v.NetworkFunctionNicType)
-				nic["mac_address"] = utils.StringValue(v.MacAddress)
-				nic["model"] = utils.StringValue(v.Model)
-
-				ipEndpointList := make([]map[string]interface{}, len(v.IPEndpointList))
-				for k1, v1 := range v.IPEndpointList {
-					ipEndpoint := make(map[string]interface{})
-					ipEndpoint["ip"] = utils.StringValue(v1.IP)
-					ipEndpoint["type"] = utils.StringValue(v1.Type)
-					ipEndpointList[k1] = ipEndpoint
-				}
-				nic["ip_endpoint_list"] = ipEndpointList
-				nic["network_function_chain_reference"] = getReferenceValues(v.NetworkFunctionChainReference)
-				nic["subnet_reference"] = getReferenceValues(v.SubnetReference)
-
-				nicLists[k] = nic
-				entity["ip_address"] = utils.StringValue(v.IPEndpointList[0].IP)
-			}
-		}
-		entity["nic_list"] = nicLists
+		entity["nic_list"], entity["ip_address"] = setNicList(v.Status.Resources.NicList)
 		entity["host_reference"] = getReferenceValues(v.Status.Resources.HostReference)
 		entity["guest_os_id"] = utils.StringValue(v.Status.Resources.GuestOsID)
 		entity["power_state"] = utils.StringValue(v.Status.Resources.PowerState)
-
-		nutanixGuestTools := make(map[string]interface{})
-		if v.Status.Resources.GuestTools != nil {
-			tools := v.Status.Resources.GuestTools.NutanixGuestTools
-			nutanixGuestTools["available_version"] = utils.StringValue(tools.AvailableVersion)
-			nutanixGuestTools["iso_mount_state"] = utils.StringValue(tools.IsoMountState)
-			nutanixGuestTools["state"] = utils.StringValue(tools.State)
-			nutanixGuestTools["version"] = utils.StringValue(tools.Version)
-			nutanixGuestTools["guest_os_version"] = utils.StringValue(tools.GuestOsVersion)
-			nutanixGuestTools["enabled_capability_list"] = utils.StringValueSlice(tools.EnabledCapabilityList)
-			nutanixGuestTools["vss_snapshot_capable"] = utils.BoolValue(tools.VSSSnapshotCapable)
-			nutanixGuestTools["is_reachable"] = utils.BoolValue(tools.IsReachable)
-			nutanixGuestTools["vm_mobility_drivers_installed"] = utils.BoolValue(tools.VMMobilityDriversInstalled)
-		}
-
-		entity["nutanix_guest_tools"] = nutanixGuestTools
+		entity["nutanix_guest_tools"] = setNutanixGuestTools(v.Status.Resources.GuestTools)
 		entity["num_vcpus_per_socket"] = utils.Int64Value(v.Status.Resources.NumVcpusPerSocket)
 		entity["num_sockets"] = utils.Int64Value(v.Status.Resources.NumSockets)
-
-		gpuList := make([]map[string]interface{}, 0)
-		if v.Status.Resources.GpuList != nil {
-			gpuList = make([]map[string]interface{}, len(v.Status.Resources.GpuList))
-			for k, v := range v.Status.Resources.GpuList {
-				gpu := make(map[string]interface{})
-				gpu["frame_buffer_size_mib"] = utils.Int64Value(v.FrameBufferSizeMib)
-				gpu["vendor"] = utils.StringValue(v.Vendor)
-				gpu["uuid"] = utils.StringValue(v.UUID)
-				gpu["name"] = utils.StringValue(v.Name)
-				gpu["pci_address"] = utils.StringValue(v.PCIAddress)
-				gpu["fraction"] = utils.Int64Value(v.Fraction)
-				gpu["mode"] = utils.StringValue(v.Mode)
-				gpu["num_virtual_display_heads"] = utils.Int64Value(v.NumVirtualDisplayHeads)
-				gpu["guest_driver_version"] = utils.StringValue(v.GuestDriverVersion)
-				gpu["device_id"] = utils.Int64Value(v.DeviceID)
-
-				gpuList[k] = gpu
-			}
-		}
-
-		entity["gpu_list"] = gpuList
+		entity["gpu_list"] = setGPUList(v.Status.Resources.GpuList)
 		entity["parent_reference"] = getReferenceValues(v.Status.Resources.ParentReference)
 		entity["memory_size_mib"] = utils.Int64Value(v.Status.Resources.MemorySizeMib)
 
@@ -172,38 +109,7 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 		entity["enable_script_exec"] = utils.BoolValue(v.Status.Resources.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec)
 		entity["power_state_mechanism"] = utils.StringValue(v.Status.Resources.PowerStateMechanism.Mechanism)
 		entity["vga_console_enabled"] = utils.BoolValue(v.Status.Resources.VgaConsoleEnabled)
-
-		diskList := make([]map[string]interface{}, 0)
-		if v.Status.Resources.DiskList != nil {
-			diskList = make([]map[string]interface{}, len(v.Status.Resources.DiskList))
-			for k, v1 := range v.Status.Resources.DiskList {
-				disk := make(map[string]interface{})
-				disk["uuid"] = utils.StringValue(v1.UUID)
-				disk["disk_size_bytes"] = utils.Int64Value(v1.DiskSizeBytes)
-				disk["disk_size_mib"] = utils.Int64Value(v1.DiskSizeMib)
-				disk["data_source_reference"] = []map[string]interface{}{getReferenceValues(v1.DataSourceReference)}
-				disk["volume_group_reference"] = []map[string]interface{}{getReferenceValues(v1.VolumeGroupReference)}
-
-				dp := make([]map[string]interface{}, 1)
-				deviceProps := make(map[string]interface{})
-				deviceProps["device_type"] = utils.StringValue(v1.DeviceProperties.DeviceType)
-				dp[0] = deviceProps
-
-				da := make([]map[string]interface{}, 1)
-				diskAddress := make(map[string]interface{})
-				if v1.DeviceProperties.DiskAddress != nil {
-					diskAddress["device_index"] = utils.Int64Value(v1.DeviceProperties.DiskAddress.DeviceIndex)
-					diskAddress["adapter_type"] = utils.StringValue(v1.DeviceProperties.DiskAddress.AdapterType)
-				}
-				da[0] = diskAddress
-				deviceProps["disk_address"] = da
-
-				disk["device_properties"] = dp
-
-				diskList[k] = disk
-			}
-		}
-		entity["disk_list"] = diskList
+		entity["disk_list"] = setDiskList(v.Status.Resources.DiskList)
 
 		entities[k] = entity
 	}
@@ -212,6 +118,111 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 	d.Set("api_version", resp.APIVersion)
 
 	return d.Set("entities", entities)
+}
+
+func setDiskList(disk []*v3.VMDisk) []map[string]interface{} {
+	diskList := make([]map[string]interface{}, 0)
+	if disk != nil {
+		diskList = make([]map[string]interface{}, len(disk))
+		for k, v1 := range disk {
+			disk := make(map[string]interface{})
+			disk["uuid"] = utils.StringValue(v1.UUID)
+			disk["disk_size_bytes"] = utils.Int64Value(v1.DiskSizeBytes)
+			disk["disk_size_mib"] = utils.Int64Value(v1.DiskSizeMib)
+			disk["data_source_reference"] = []map[string]interface{}{getReferenceValues(v1.DataSourceReference)}
+			disk["volume_group_reference"] = []map[string]interface{}{getReferenceValues(v1.VolumeGroupReference)}
+
+			dp := make([]map[string]interface{}, 1)
+			deviceProps := make(map[string]interface{})
+			deviceProps["device_type"] = utils.StringValue(v1.DeviceProperties.DeviceType)
+			dp[0] = deviceProps
+
+			da := make([]map[string]interface{}, 1)
+			diskAddress := make(map[string]interface{})
+			if v1.DeviceProperties.DiskAddress != nil {
+				diskAddress["device_index"] = utils.Int64Value(v1.DeviceProperties.DiskAddress.DeviceIndex)
+				diskAddress["adapter_type"] = utils.StringValue(v1.DeviceProperties.DiskAddress.AdapterType)
+			}
+			da[0] = diskAddress
+			deviceProps["disk_address"] = da
+
+			disk["device_properties"] = dp
+
+			diskList[k] = disk
+		}
+	}
+	return diskList
+}
+
+func setGPUList(gpu []*v3.VMGpuOutputStatus) []map[string]interface{} {
+	gpuList := make([]map[string]interface{}, 0)
+	if gpu != nil {
+		gpuList = make([]map[string]interface{}, len(gpu))
+		for k, v := range gpu {
+			gpu := make(map[string]interface{})
+			gpu["frame_buffer_size_mib"] = utils.Int64Value(v.FrameBufferSizeMib)
+			gpu["vendor"] = utils.StringValue(v.Vendor)
+			gpu["uuid"] = utils.StringValue(v.UUID)
+			gpu["name"] = utils.StringValue(v.Name)
+			gpu["pci_address"] = utils.StringValue(v.PCIAddress)
+			gpu["fraction"] = utils.Int64Value(v.Fraction)
+			gpu["mode"] = utils.StringValue(v.Mode)
+			gpu["num_virtual_display_heads"] = utils.Int64Value(v.NumVirtualDisplayHeads)
+			gpu["guest_driver_version"] = utils.StringValue(v.GuestDriverVersion)
+			gpu["device_id"] = utils.Int64Value(v.DeviceID)
+			gpuList[k] = gpu
+		}
+	}
+	return gpuList
+}
+
+func setNutanixGuestTools(guest *v3.GuestToolsStatus) map[string]interface{} {
+	nutanixGuestTools := make(map[string]interface{})
+	if guest != nil {
+		tools := guest.NutanixGuestTools
+		nutanixGuestTools["available_version"] = utils.StringValue(tools.AvailableVersion)
+		nutanixGuestTools["iso_mount_state"] = utils.StringValue(tools.IsoMountState)
+		nutanixGuestTools["state"] = utils.StringValue(tools.State)
+		nutanixGuestTools["version"] = utils.StringValue(tools.Version)
+		nutanixGuestTools["guest_os_version"] = utils.StringValue(tools.GuestOsVersion)
+		nutanixGuestTools["enabled_capability_list"] = utils.StringValueSlice(tools.EnabledCapabilityList)
+		nutanixGuestTools["vss_snapshot_capable"] = utils.BoolValue(tools.VSSSnapshotCapable)
+		nutanixGuestTools["is_reachable"] = utils.BoolValue(tools.IsReachable)
+		nutanixGuestTools["vm_mobility_drivers_installed"] = utils.BoolValue(tools.VMMobilityDriversInstalled)
+	}
+	return nutanixGuestTools
+}
+
+func setNicList(nics []*v3.VMNicOutputStatus) ([]map[string]interface{}, string) {
+	nicLists := make([]map[string]interface{}, len(nics))
+	ip := ""
+	if nics != nil {
+		nicLists = make([]map[string]interface{}, 0)
+		for k, v := range nics {
+			nic := make(map[string]interface{})
+			nic["nic_type"] = utils.StringValue(v.NicType)
+			nic["uuid"] = utils.StringValue(v.UUID)
+			nic["floating_ip"] = utils.StringValue(v.FloatingIP)
+			nic["network_function_nic_type"] = utils.StringValue(v.NetworkFunctionNicType)
+			nic["mac_address"] = utils.StringValue(v.MacAddress)
+			nic["model"] = utils.StringValue(v.Model)
+			ip = utils.StringValue(v.IPEndpointList[0].IP)
+			ipEndpointList := make([]map[string]interface{}, len(v.IPEndpointList))
+			for k1, v1 := range v.IPEndpointList {
+				ipEndpoint := make(map[string]interface{})
+				ipEndpoint["ip"] = utils.StringValue(v1.IP)
+				ipEndpoint["type"] = utils.StringValue(v1.Type)
+				ipEndpointList[k1] = ipEndpoint
+			}
+			nic["ip_endpoint_list"] = ipEndpointList
+			nic["network_function_chain_reference"] = getReferenceValues(v.NetworkFunctionChainReference)
+			nic["subnet_reference"] = getReferenceValues(v.SubnetReference)
+
+			nicLists[k] = nic
+		}
+	}
+
+	return nicLists, ip
 }
 
 func getDataSourceVMSSchema() map[string]*schema.Schema {
