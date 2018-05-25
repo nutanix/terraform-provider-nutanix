@@ -124,8 +124,6 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	d.Set("power_state", utils.StringValue(resp.Status.Resources.PowerState))
-
 	return resourceNutanixVirtualMachineRead(d, meta)
 }
 
