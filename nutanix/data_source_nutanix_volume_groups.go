@@ -95,9 +95,7 @@ func dataSourceNutanixVolumeGroupsRead(d *schema.ResourceData, meta interface{})
 
 		entities[k] = entity
 	}
-
 	d.SetId(resource.UniqueId())
-
 	return d.Set("entities", entities)
 }
 
