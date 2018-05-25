@@ -93,12 +93,8 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	if err := d.Set("host_reference", getReferenceValues(resp.Status.Resources.HostReference)); err != nil {
 		return err
 	}
-	if err := d.Set("guest_os_id", utils.StringValue(resp.Status.Resources.GuestOsID)); err != nil {
-		return err
-	}
-	if err := d.Set("power_state", utils.StringValue(resp.Status.Resources.PowerState)); err != nil {
-		return err
-	}
+	d.Set("guest_os_id", utils.StringValue(resp.Status.Resources.GuestOsID))
+	d.Set("power_state", utils.StringValue(resp.Status.Resources.PowerState))
 
 	nutanixGuestTools := make(map[string]interface{})
 	if resp.Status.Resources.GuestTools != nil {
