@@ -18,7 +18,7 @@ func dataSourceNutanixSubnetsRead(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*Client).API
 
 	// Get the metadata request
-	metadata, err := readListMetadata(d, "vm")
+	metadata, err := readListMetadata(d, "subnet")
 	if err != nil {
 		return err
 	}
