@@ -694,7 +694,7 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 func resourceNutanixImageExists(conn *v3.Client, name string) (*string, error) {
 	log.Printf("[DEBUG] Get Image Existence : %s", name)
 
-	imageEntities := &v3.ImageListMetadata{}
+	imageEntities := &v3.DSMetadata{}
 	var imageUUID *string
 
 	imageList, err := conn.V3.ListImage(imageEntities)
