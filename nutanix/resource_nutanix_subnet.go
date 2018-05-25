@@ -157,30 +157,15 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	d.Set("cluster_reference_name", utils.StringValue(resp.Status.ClusterReference.Name))
-	d.Set("api_version", utils.StringValue(resp.APIVersion))
-	d.Set("name", utils.StringValue(resp.Status.Name))
-	d.Set("description", utils.StringValue(resp.Status.Description))
-	d.Set("state", utils.StringValue(resp.Status.State))
-	d.Set("vswitch_name", utils.StringValue(resp.Status.Resources.VswitchName))
-
-	stype := ""
-	if resp.Status.Resources.SubnetType != nil {
-		stype = utils.StringValue(resp.Status.Resources.SubnetType)
-	}
-	d.Set("subnet_type", stype)
-
 	dgIP := ""
 	sIP := ""
 	pl := int64(0)
 	port := int64(0)
-	address := make(map[string]interface{})
 	dhcpSA := make(map[string]interface{})
 	dOptions := make(map[string]interface{})
 	ipcpl := make([]string, 0)
 	dnsList := make([]string, 0)
 	dsList := make([]string, 0)
-	poolList := make([]string, 0)
 
 	if resp.Status.Resources.IPConfig != nil {
 		dgIP = utils.StringValue(resp.Status.Resources.IPConfig.DefaultGatewayIP)
@@ -188,17 +173,15 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		sIP = utils.StringValue(resp.Status.Resources.IPConfig.SubnetIP)
 
 		if resp.Status.Resources.IPConfig.DHCPServerAddress != nil {
-			address["ip"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.IP)
-			address["fqdn"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.FQDN)
-			address["ipv6"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.IPV6)
+			dhcpSA["ip"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.IP)
+			dhcpSA["fqdn"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.FQDN)
+			dhcpSA["ipv6"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.IPV6)
 			port = utils.Int64Value(resp.Status.Resources.IPConfig.DHCPServerAddress.Port)
 		}
 
-		dhcpSA = address
-
 		if resp.Status.Resources.IPConfig.PoolList != nil {
 			pl := resp.Status.Resources.IPConfig.PoolList
-			poolList = make([]string, len(pl))
+			poolList := make([]string, len(pl))
 			for k, v := range pl {
 				poolList[k] = utils.StringValue(v.Range)
 			}
@@ -234,6 +217,13 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
+	d.Set("cluster_reference_name", utils.StringValue(resp.Status.ClusterReference.Name))
+	d.Set("api_version", utils.StringValue(resp.APIVersion))
+	d.Set("name", utils.StringValue(resp.Status.Name))
+	d.Set("description", utils.StringValue(resp.Status.Description))
+	d.Set("state", utils.StringValue(resp.Status.State))
+	d.Set("vswitch_name", utils.StringValue(resp.Status.Resources.VswitchName))
+	d.Set("subnet_type", utils.StringValue(resp.Status.Resources.SubnetType))
 	d.Set("default_gateway_ip", dgIP)
 	d.Set("prefix_length", pl)
 	d.Set("subnet_ip", sIP)
