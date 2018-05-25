@@ -31,7 +31,7 @@ type Service interface {
 	CreateImage(createRequest *ImageIntentInput) (*ImageIntentResponse, error)
 	DeleteImage(UUID string) error
 	GetImage(UUID string) (*ImageIntentResponse, error)
-	ListImage(getEntitiesRequest *ImageListMetadata) (*ImageListIntentResponse, error)
+	ListImage(getEntitiesRequest *DSMetadata) (*ImageListIntentResponse, error)
 	UpdateImage(UUID string, body *ImageIntentInput) (*ImageIntentResponse, error)
 	CreateOrUpdateCategoryKey(body *CategoryKey) (*CategoryKeyStatus, error)
 	ListCategories(getEntitiesRequest *CategoryListMetadata) (*CategoryKeyListResponse, error)
@@ -43,7 +43,7 @@ type Service interface {
 	DeleteCategoryValue(name string, value string) error
 	GetCategoryQuery(query *CategoryQueryInput) (*CategoryQueryResponse, error)
 	UpdateNetworkSecurityRule(UUID string, body *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error)
-	ListNetworkSecurityRule(getEntitiesRequest *ListMetadata) (*NetworkSecurityRuleListIntentResponse, error)
+	ListNetworkSecurityRule(getEntitiesRequest *DSMetadata) (*NetworkSecurityRuleListIntentResponse, error)
 	GetNetworkSecurityRule(UUID string) (*NetworkSecurityRuleIntentResponse, error)
 	DeleteNetworkSecurityRule(UUID string) error
 	CreateNetworkSecurityRule(request *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error)
@@ -376,7 +376,7 @@ func (op Operations) GetImage(UUID string) (*ImageIntentResponse, error) {
  * @param getEntitiesRequest
  * @return *ImageListIntentResponse
  */
-func (op Operations) ListImage(getEntitiesRequest *ImageListMetadata) (*ImageListIntentResponse, error) {
+func (op Operations) ListImage(getEntitiesRequest *DSMetadata) (*ImageListIntentResponse, error) {
 	ctx := context.TODO()
 	path := "/images/list"
 
@@ -781,7 +781,7 @@ func (op Operations) GetNetworkSecurityRule(UUID string) (*NetworkSecurityRuleIn
  * @param getEntitiesRequest
  * @return *NetworkSecurityRuleListIntentResponse
  */
-func (op Operations) ListNetworkSecurityRule(getEntitiesRequest *ListMetadata) (*NetworkSecurityRuleListIntentResponse, error) {
+func (op Operations) ListNetworkSecurityRule(getEntitiesRequest *DSMetadata) (*NetworkSecurityRuleListIntentResponse, error) {
 	ctx := context.TODO()
 	path := "/network_security_rules/list"
 
