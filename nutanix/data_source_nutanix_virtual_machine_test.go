@@ -50,7 +50,7 @@ resource "nutanix_virtual_machine" "vm1" {
 
   num_vcpus_per_socket = 1
   num_sockets          = 1
-  memory_size_mib      = 2048
+  memory_size_mib      = 186
   power_state          = "ON"
 }
 
