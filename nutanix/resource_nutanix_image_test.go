@@ -39,7 +39,7 @@ func TestAccNutanixImage_basic_uploadLocal(t *testing.T) {
 
 	t.Skip()
 
-	r := rand.Int31()
+	r := "path-to-file"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -118,22 +118,22 @@ resource "nutanix_image" "test" {
 `)
 }
 
-func testAccNutanixImageLocalConfig(r int32) string {
+func testAccNutanixImageLocalConfig(r string) string {
 	return fmt.Sprintf(`
 resource "nutanix_image" "test" {
   name        = "Ubuntu"
   description = "Ubuntu"
-  source_path  = "/Users/thetonymaster/development/src/github.com/terraform-providers/terraform-provider-nutanix/mini.iso"
+  source_path  = "%s"
 }
-`)
+`, r)
 }
 
-func testAccNutanixImageLocalConfigUpdate(r int32) string {
+func testAccNutanixImageLocalConfigUpdate(r string) string {
 	return fmt.Sprintf(`
 resource "nutanix_image" "test" {
   name        = "Ubuntu Updated"
   description = "Ubuntu Updated"
-  source_path  = "/Users/thetonymaster/development/src/github.com/terraform-providers/terraform-provider-nutanix/alp.iso"
+  source_path  = "%s"
 }
-`)
+`, r)
 }
