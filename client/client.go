@@ -116,6 +116,31 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 	return req, nil
 }
 
+func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, body []byte) (*http.Request, error) {
+	rel, errp := url.Parse(absolutePath + urlStr)
+	if errp != nil {
+		return nil, errp
+	}
+
+	u := c.BaseURL.ResolveReference(rel)
+
+	buf := bytes.NewBuffer(body)
+
+	req, err := http.NewRequest(method, u.String(), buf)
+
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", "application/octet-stream")
+	req.Header.Add("Accept", "application/octet-stream")
+	req.Header.Add("User-Agent", c.UserAgent)
+	req.Header.Add("Authorization", "Basic "+
+		base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
+
+	return req, nil
+}
+
 // OnRequestCompleted sets the DO API request completion callback
 func (c *Client) OnRequestCompleted(rc RequestCompletionCallback) {
 	c.onRequestCompleted = rc

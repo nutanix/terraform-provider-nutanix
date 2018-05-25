@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"os"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
@@ -33,6 +35,7 @@ type Service interface {
 	GetImage(UUID string) (*ImageIntentResponse, error)
 	ListImage(getEntitiesRequest *DSMetadata) (*ImageListIntentResponse, error)
 	UpdateImage(UUID string, body *ImageIntentInput) (*ImageIntentResponse, error)
+	UploadImage(UUID, filepath string) error
 	CreateOrUpdateCategoryKey(body *CategoryKey) (*CategoryKeyStatus, error)
 	ListCategories(getEntitiesRequest *CategoryListMetadata) (*CategoryKeyListResponse, error)
 	DeleteCategoryKey(name string) error
@@ -323,6 +326,32 @@ func (op Operations) CreateImage(body *ImageIntentInput) (*ImageIntentResponse, 
 	}
 
 	return imageIntentResponse, nil
+}
+
+func (op Operations) UploadImage(UUID, filepath string) error {
+	ctx := context.Background()
+
+	path := fmt.Sprintf("/images/%s/file", UUID)
+
+	file, err := os.Open(filepath)
+	if err != nil {
+		return fmt.Errorf("Cannot open file: %s", err)
+	}
+	defer file.Close()
+
+	fileContents, err := ioutil.ReadAll(file)
+	if err != nil {
+		return fmt.Errorf("Cannot read file %s", err)
+	}
+
+	req, err := op.client.NewUploadRequest(ctx, http.MethodPut, path, fileContents)
+	if err != nil {
+		return fmt.Errorf("Error Creating request %s", err)
+	}
+	err = op.client.Do(ctx, req, nil)
+
+	return err
+
 }
 
 /*DeleteImage deletes a IMAGE
