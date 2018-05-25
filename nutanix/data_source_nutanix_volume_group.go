@@ -3,7 +3,6 @@ package nutanix
 import (
 	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
@@ -36,52 +35,18 @@ func dataSourceNutanixVolumeGroupRead(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	// set metadata values
-	metadata := make(map[string]interface{})
-	metadata["last_update_time"] = resp.Metadata.LastUpdateTime.String()
-	metadata["kind"] = utils.StringValue(resp.Metadata.Kind)
-	metadata["uuid"] = utils.StringValue(resp.Metadata.UUID)
-	metadata["creation_time"] = resp.Metadata.CreationTime.String()
-	metadata["spec_version"] = strconv.Itoa(int(utils.Int64Value(resp.Metadata.SpecVersion)))
-	metadata["spec_hash"] = utils.StringValue(resp.Metadata.SpecHash)
-	metadata["name"] = utils.StringValue(resp.Metadata.Name)
-	if err := d.Set("metadata", metadata); err != nil {
+	m, c := setRSEntityMetadata(resp.Metadata)
+
+	if err := d.Set("metadata", m); err != nil {
 		return err
 	}
-
-	if resp.Metadata.Categories != nil {
-		categories := resp.Metadata.Categories
-		var catList []map[string]interface{}
-
-		for name, values := range categories {
-			catItem := make(map[string]interface{})
-			catItem["name"] = name
-			catItem["value"] = values
-			catList = append(catList, catItem)
-		}
-		if err := d.Set("categories", catList); err != nil {
-			return err
-		}
-	}
-
-	pr := make(map[string]interface{})
-	if resp.Metadata.ProjectReference != nil {
-		pr["kind"] = utils.StringValue(resp.Metadata.ProjectReference.Kind)
-		pr["name"] = utils.StringValue(resp.Metadata.ProjectReference.Name)
-		pr["uuid"] = utils.StringValue(resp.Metadata.ProjectReference.UUID)
-
-	}
-	if err := d.Set("project_reference", pr); err != nil {
+	if err := d.Set("categories", c); err != nil {
 		return err
 	}
-	or := make(map[string]interface{})
-	if resp.Metadata.OwnerReference != nil {
-		or["kind"] = utils.StringValue(resp.Metadata.OwnerReference.Kind)
-		or["name"] = utils.StringValue(resp.Metadata.OwnerReference.Name)
-		or["uuid"] = utils.StringValue(resp.Metadata.OwnerReference.UUID)
-
+	if err := d.Set("project_reference", getReferenceValues(resp.Metadata.ProjectReference)); err != nil {
+		return err
 	}
-	if err := d.Set("owner_reference", or); err != nil {
+	if err := d.Set("owner_reference", getReferenceValues(resp.Metadata.OwnerReference)); err != nil {
 		return err
 	}
 	if err := d.Set("api_version", utils.StringValue(resp.APIVersion)); err != nil {
@@ -118,21 +83,10 @@ func dataSourceNutanixVolumeGroupRead(d *schema.ResourceData, meta interface{}) 
 		attachList = make([]map[string]interface{}, len(al))
 		for k, v := range al {
 			attach := make(map[string]interface{})
-
-			// set vm_reference value
-			vmRef := make(map[string]interface{})
-			if v.VMReference != nil {
-				vmRef["kind"] = utils.StringValue(v.VMReference.Kind)
-				vmRef["uuid"] = utils.StringValue(v.VMReference.UUID)
-			}
-			attach["vm_reference"] = vmRef
-
-			// set iscsi_initiator_name
+			attach["vm_reference"] = getClusterReferenceValues(v.VMReference)
 			attach["iscsi_initiator_name"] = utils.StringValue(v.IscsiInitiatorName)
-
 			attachList[k] = attach
 		}
-
 	}
 	if err := d.Set("attachment_list", attachList); err != nil {
 		return err
@@ -151,18 +105,9 @@ func dataSourceNutanixVolumeGroupRead(d *schema.ResourceData, meta interface{}) 
 			vgDisk["index"] = utils.Int64Value(v.Index)
 			vgDisk["disk_size_mib"] = utils.Int64Value(v.DiskSizeMib)
 			vgDisk["storage_container_uuid"] = utils.StringValue(v.StorageContainerUUID)
-
-			// set vm_reference value
-			dsRef := make(map[string]interface{})
-			if v.DataSourceReference != nil {
-				dsRef["kind"] = utils.StringValue(v.DataSourceReference.Kind)
-				dsRef["uuid"] = utils.StringValue(v.DataSourceReference.UUID)
-			}
-			vgDisk["vm_reference"] = dsRef
-
+			vgDisk["vm_reference"] = getClusterReferenceValues(v.DataSourceReference)
 			diskList[k] = vgDisk
 		}
-
 	}
 	if err := d.Set("disk_list", diskList); err != nil {
 		return err

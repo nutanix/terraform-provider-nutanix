@@ -50,7 +50,7 @@ type Service interface {
 	ListCluster(getEntitiesRequest *ClusterListMetadataOutput) (*ClusterListIntentResponse, error)
 	GetCluster(UUID string) (*ClusterIntentResponse, error)
 	UpdateVolumeGroup(UUID string, body *VolumeGroupInput) (*VolumeGroupResponse, error)
-	ListVolumeGroup(getEntitiesRequest *ListMetadata) (*VolumeGroupListResponse, error)
+	ListVolumeGroup(getEntitiesRequest *DSMetadata) (*VolumeGroupListResponse, error)
 	GetVolumeGroup(UUID string) (*VolumeGroupResponse, error)
 	DeleteVolumeGroup(UUID string) error
 	CreateVolumeGroup(request *VolumeGroupInput) (*VolumeGroupResponse, error)
@@ -904,7 +904,7 @@ func (op Operations) GetVolumeGroup(UUID string) (*VolumeGroupResponse, error) {
  * @param getEntitiesRequest
  * @return *VolumeGroupListResponse
  */
-func (op Operations) ListVolumeGroup(getEntitiesRequest *ListMetadata) (*VolumeGroupListResponse, error) {
+func (op Operations) ListVolumeGroup(getEntitiesRequest *DSMetadata) (*VolumeGroupListResponse, error) {
 	ctx := context.TODO()
 	path := "/volume_groups/list"
 
