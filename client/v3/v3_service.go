@@ -21,12 +21,12 @@ type Service interface {
 	CreateVM(createRequest *VMIntentInput) (*VMIntentResponse, error)
 	DeleteVM(UUID string) error
 	GetVM(UUID string) (*VMIntentResponse, error)
-	ListVM(getEntitiesRequest *VMListMetadata) (*VMListIntentResponse, error)
+	ListVM(getEntitiesRequest *DSMetadata) (*VMListIntentResponse, error)
 	UpdateVM(UUID string, body *VMIntentInput) (*VMIntentResponse, error)
 	CreateSubnet(createRequest *SubnetIntentInput) (*SubnetIntentResponse, error)
 	DeleteSubnet(UUID string) error
 	GetSubnet(UUID string) (*SubnetIntentResponse, error)
-	ListSubnet(getEntitiesRequest *SubnetListMetadata) (*SubnetListIntentResponse, error)
+	ListSubnet(getEntitiesRequest *DSMetadata) (*SubnetListIntentResponse, error)
 	UpdateSubnet(UUID string, body *SubnetIntentInput) (*SubnetIntentResponse, error)
 	CreateImage(createRequest *ImageIntentInput) (*ImageIntentResponse, error)
 	DeleteImage(UUID string) error
@@ -127,7 +127,7 @@ func (op Operations) GetVM(UUID string) (*VMIntentResponse, error) {
  * @param getEntitiesRequest
  * @return *VmListIntentResponse
  */
-func (op Operations) ListVM(getEntitiesRequest *VMListMetadata) (*VMListIntentResponse, error) {
+func (op Operations) ListVM(getEntitiesRequest *DSMetadata) (*VMListIntentResponse, error) {
 	ctx := context.TODO()
 	path := "/vms/list"
 
@@ -253,7 +253,7 @@ func (op Operations) GetSubnet(UUID string) (*SubnetIntentResponse, error) {
  * @param getEntitiesRequest
  * @return *SubnetListIntentResponse
  */
-func (op Operations) ListSubnet(getEntitiesRequest *SubnetListMetadata) (*SubnetListIntentResponse, error) {
+func (op Operations) ListSubnet(getEntitiesRequest *DSMetadata) (*SubnetListIntentResponse, error) {
 	ctx := context.TODO()
 	path := "/subnets/list"
 
