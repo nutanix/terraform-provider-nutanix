@@ -1,8 +1,6 @@
 package nutanix
 
 import (
-	"strconv"
-
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -23,34 +21,12 @@ func dataSourceNutanixVolumeGroupsRead(d *schema.ResourceData, meta interface{})
 	// Get client connection
 	conn := meta.(*Client).API
 
-	metadata := &v3.ListMetadata{}
+	metadata := &v3.DSMetadata{}
 
-	if v, ok := d.GetOk("metadata"); ok {
-		m := v.(map[string]interface{})
-		metadata.Kind = utils.String("volume_group")
-		if mv, mok := m["sort_attribute"]; mok {
-			metadata.SortAttribute = utils.String(mv.(string))
-		}
-		if mv, mok := m["filter"]; mok {
-			metadata.Filter = utils.String(mv.(string))
-		}
-		if mv, mok := m["length"]; mok {
-			i, err := strconv.Atoi(mv.(string))
-			if err != nil {
-				return err
-			}
-			metadata.Length = utils.Int64(int64(i))
-		}
-		if mv, mok := m["sort_order"]; mok {
-			metadata.SortOrder = utils.String(mv.(string))
-		}
-		if mv, mok := m["offset"]; mok {
-			i, err := strconv.Atoi(mv.(string))
-			if err != nil {
-				return err
-			}
-			metadata.Offset = utils.Int64(int64(i))
-		}
+	// Get the metadata request
+	metadata, err := readListMetadata(d, "volume_group")
+	if err != nil {
+		return err
 	}
 
 	// Make request to the API
@@ -66,48 +42,13 @@ func dataSourceNutanixVolumeGroupsRead(d *schema.ResourceData, meta interface{})
 	entities := make([]map[string]interface{}, len(resp.Entities))
 	for k, v := range resp.Entities {
 		entity := make(map[string]interface{})
-		// set metadata values
-		metadata := make(map[string]interface{})
-		metadata["last_update_time"] = utils.TimeValue(v.Metadata.LastUpdateTime).String()
-		metadata["kind"] = utils.StringValue(v.Metadata.Kind)
-		metadata["uuid"] = utils.StringValue(v.Metadata.UUID)
-		metadata["creation_time"] = utils.TimeValue(v.Metadata.CreationTime).String()
-		metadata["spec_version"] = strconv.Itoa(int(utils.Int64Value(v.Metadata.SpecVersion)))
-		metadata["spec_hash"] = utils.StringValue(v.Metadata.SpecHash)
-		metadata["name"] = utils.StringValue(v.Metadata.Name)
-		entity["metadata"] = metadata
+		m, c := setRSEntityMetadata(v.Metadata)
 
-		if v.Metadata.Categories != nil {
-			categories := v.Metadata.Categories
-			var catList []map[string]interface{}
-
-			for name, values := range categories {
-				catItem := make(map[string]interface{})
-				catItem["name"] = name
-				catItem["value"] = values
-				catList = append(catList, catItem)
-			}
-			entity["categories"] = catList
-		}
-
+		entity["metadata"] = m
+		entity["project_reference"] = getReferenceValues(v.Metadata.ProjectReference)
+		entity["owner_reference"] = getReferenceValues(v.Metadata.OwnerReference)
+		entity["categories"] = c
 		entity["api_version"] = utils.StringValue(v.APIVersion)
-
-		pr := make(map[string]interface{})
-		if v.Metadata.ProjectReference != nil {
-			pr["kind"] = utils.StringValue(v.Metadata.ProjectReference.Kind)
-			pr["name"] = utils.StringValue(v.Metadata.ProjectReference.Name)
-			pr["uuid"] = utils.StringValue(v.Metadata.ProjectReference.UUID)
-		}
-		entity["project_reference"] = pr
-
-		or := make(map[string]interface{})
-		if v.Metadata.OwnerReference != nil {
-			or["kind"] = utils.StringValue(v.Metadata.OwnerReference.Kind)
-			or["name"] = utils.StringValue(v.Metadata.OwnerReference.Name)
-			or["uuid"] = utils.StringValue(v.Metadata.OwnerReference.UUID)
-		}
-		entity["owner_reference"] = or
-
 		entity["name"] = utils.StringValue(v.Status.Name)
 		entity["description"] = utils.StringValue(v.Status.Description)
 		entity["state"] = utils.StringValue(v.Status.State)
@@ -122,18 +63,8 @@ func dataSourceNutanixVolumeGroupsRead(d *schema.ResourceData, meta interface{})
 			attachList = make([]map[string]interface{}, len(al))
 			for k, v := range al {
 				attach := make(map[string]interface{})
-
-				// set vm_reference value
-				vmRef := make(map[string]interface{})
-				if v.VMReference != nil {
-					vmRef["kind"] = utils.StringValue(v.VMReference.Kind)
-					vmRef["uuid"] = utils.StringValue(v.VMReference.UUID)
-				}
-				attach["vm_reference"] = vmRef
-
-				// set iscsi_initiator_name
+				attach["vm_reference"] = getClusterReferenceValues(v.VMReference)
 				attach["iscsi_initiator_name"] = utils.StringValue(v.IscsiInitiatorName)
-
 				attachList[k] = attach
 			}
 
@@ -152,15 +83,7 @@ func dataSourceNutanixVolumeGroupsRead(d *schema.ResourceData, meta interface{})
 				vgDisk["index"] = utils.Int64Value(v.Index)
 				vgDisk["disk_size_mib"] = utils.Int64Value(v.DiskSizeMib)
 				vgDisk["storage_container_uuid"] = utils.StringValue(v.StorageContainerUUID)
-
-				// set vm_reference value
-				dsRef := make(map[string]interface{})
-				if v.DataSourceReference != nil {
-					dsRef["kind"] = utils.StringValue(v.DataSourceReference.Kind)
-					dsRef["uuid"] = utils.StringValue(v.DataSourceReference.UUID)
-				}
-				vgDisk["vm_reference"] = dsRef
-
+				vgDisk["vm_reference"] = getClusterReferenceValues(v.DataSourceReference)
 				diskList[k] = vgDisk
 			}
 
@@ -173,12 +96,9 @@ func dataSourceNutanixVolumeGroupsRead(d *schema.ResourceData, meta interface{})
 		entities[k] = entity
 	}
 
-	if err := d.Set("entities", entities); err != nil {
-		return err
-	}
 	d.SetId(resource.UniqueId())
 
-	return nil
+	return d.Set("entities", entities)
 }
 
 func getDataSourceVolumeGroupsSchema() map[string]*schema.Schema {
