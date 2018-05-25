@@ -194,10 +194,10 @@ func setNutanixGuestTools(guest *v3.GuestToolsStatus) map[string]interface{} {
 }
 
 func setNicList(nics []*v3.VMNicOutputStatus) ([]map[string]interface{}, string) {
-	nicLists := make([]map[string]interface{}, len(nics))
+	nicLists := make([]map[string]interface{}, 0)
 	ip := ""
 	if nics != nil {
-		nicLists = make([]map[string]interface{}, 0)
+		nicLists = make([]map[string]interface{}, len(nics))
 		for k, v := range nics {
 			nic := make(map[string]interface{})
 			nic["nic_type"] = utils.StringValue(v.NicType)
