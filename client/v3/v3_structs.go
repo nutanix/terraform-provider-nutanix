@@ -1793,12 +1793,12 @@ type VolumeGroup struct {
 
 //VolumeGroupResources Represents the volume group resources
 type VolumeGroupResources struct {
-	FlashMode         *string         `json:"flash_mode"`          //Flash Mode, if enabled all volume disks of the VG will be pinned to SSD tier.
-	FileSystemType    *string         `json:"file_system_type"`    //File system to be used for volume
-	SharingStatus     *string         `json:"sharing_status"`      //Whether the volume group can be shared across multiple iSCSI initiators.
-	AttachmentList    []*VMAttachment `json:"attachment_list"`     //VMs attached to volume group.
-	DiskList          []*VGDisk       `json:"disk_list"`           //VGDisk Volume group disk specification.
-	IscsiTargetPrefix *string         `json:"iscsi_target_prefix"` //iSCSI target prefix-name.
+	FlashMode         *string         `json:"flash_mode,omitempty"`          //Flash Mode, if enabled all volume disks of the VG will be pinned to SSD tier.
+	FileSystemType    *string         `json:"file_system_type,omitempty"`    //File system to be used for volume
+	SharingStatus     *string         `json:"sharing_status,omitempty"`      //Whether the volume group can be shared across multiple iSCSI initiators.
+	AttachmentList    []*VMAttachment `json:"attachment_list,omitempty"`     //VMs attached to volume group.
+	DiskList          []*VGDisk       `json:"disk_list,omitempty"`           //VGDisk Volume group disk specification.
+	IscsiTargetPrefix *string         `json:"iscsi_target_prefix,omitempty"` //iSCSI target prefix-name.
 }
 
 //VMAttachment VMs attached to volume group.

@@ -7,7 +7,7 @@ import (
 )
 
 func TestAccNutanixVolumeGroupsDataSource_basic(t *testing.T) {
-	t.Skip()
+	//t.Skip()
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -37,7 +37,9 @@ resource "nutanix_volume_group" "test-1" {
   
 }
 
-data "nutanix_volume_group" "test" {
-	volume_group_id = "${nutanix_volume_group.test.id}"
+data "nutanix_volume_groups" "test" {
+	metadata = {
+		length = 2
+	}
 }
 `
