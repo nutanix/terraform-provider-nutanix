@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccNutanixVolumeGroupDataSource_basic(t *testing.T) {
-	t.Skip()
+	//t.Skip()
 	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
