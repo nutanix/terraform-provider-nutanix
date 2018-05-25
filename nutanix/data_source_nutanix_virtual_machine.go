@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
@@ -69,30 +70,25 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	bootDevice := make(map[string]interface{})
-	if resp.Status.Resources.BootConfig != nil {
-		boots := make([]string, len(resp.Status.Resources.BootConfig.BootDeviceOrderList))
-		for k, v := range resp.Status.Resources.BootConfig.BootDeviceOrderList {
-			boots[k] = utils.StringValue(v)
-		}
-		if err := d.Set("boot_device_order_list", boots); err != nil {
-			return err
-		}
+	diskAddress := make(map[string]interface{})
+	mac := ""
+	b := make([]string, 0)
 
-		disk := make([]map[string]interface{}, 1)
-		diskAddress := make(map[string]interface{})
+	if resp.Status.Resources.BootConfig != nil {
 		if resp.Status.Resources.BootConfig.BootDevice.DiskAddress != nil {
-			diskAddress["device_index"] = utils.Int64Value(resp.Status.Resources.BootConfig.BootDevice.DiskAddress.DeviceIndex)
+			i := strconv.Itoa(int(utils.Int64Value(resp.Status.Resources.BootConfig.BootDevice.DiskAddress.DeviceIndex)))
+			diskAddress["device_index"] = i
 			diskAddress["adapter_type"] = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.DiskAddress.AdapterType)
 		}
-		disk[0] = diskAddress
+		if resp.Status.Resources.BootConfig.BootDeviceOrderList != nil {
+			b = utils.StringValueSlice(resp.Status.Resources.BootConfig.BootDeviceOrderList)
+		}
+		mac = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.MacAddress)
+	}
 
-		bootDevice["disk_address"] = disk
-		bootDevice["mac_address"] = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.MacAddress)
-	}
-	if err := d.Set("boot_device", bootDevice); err != nil {
-		return err
-	}
+	d.Set("boot_device_order_list", b)
+	d.Set("boot_device_disk_address", diskAddress)
+	d.Set("boot_device_mac_address", mac)
 
 	sysprep := make(map[string]interface{})
 	cloudInit := make(map[string]interface{})
@@ -577,33 +573,29 @@ func getDataSourceVMSchema() map[string]*schema.Schema {
 			Computed: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-		"boot_device": {
+		"boot_device_disk_address": {
 			Type:     schema.TypeMap,
+			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"disk_address": {
-						Type:     schema.TypeList,
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"device_index": {
-									Type:     schema.TypeInt,
-									Computed: true,
-								},
-								"adapter_type": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-							},
-						},
-					},
-					"mac_address": {
+					"device_index": {
 						Type:     schema.TypeString,
+						Optional: true,
+						Computed: true,
+					},
+					"adapter_type": {
+						Type:     schema.TypeString,
+						Optional: true,
 						Computed: true,
 					},
 				},
 			},
+		},
+		"boot_device_mac_address": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
 		},
 		"hardware_clock_timezone": {
 			Type:     schema.TypeString,
