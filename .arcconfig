@@ -1,7 +1,0 @@
- {
-     "project_name": "terraform-ahv-plugin",
-     "conduit_uri" : "http://ph.eng.nutanix.com/",
-     "lint.engine" : "ArcanistConfigurationDrivenLintEngine",
-     "history.immutable" : true,
-     "repository.callsign" : "rTERRA"
- }
