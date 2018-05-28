@@ -43,9 +43,9 @@ For a slack invite, please contact terraform@nutanix.com from your business emai
 * [x] Network security rules data source.
 * [x] Subnets data source.
 * [x] Images data source.
-* [ ] Volume group resource.
-* [ ] Volume group datasource.
-* [ ] Volume groups datasource.
+* [x] Volume group resource.
+* [x] Volume group datasource.
+* [x] Volume groups datasource.
 * [ ] Documentation for Resources - (partial).
 * [ ] Documentation for Datasources - (partial).
 
@@ -95,6 +95,7 @@ The following keys can be used to configure the provider.
 * nutanix_category_key
 * nutanix_category_value
 * nutanix_network_security_rule
+* nutanix_volume_group
 
 ## Data Sources
 
@@ -108,6 +109,8 @@ The following keys can be used to configure the provider.
 * nutanix_network_security_rule
 * nutanix_network_security_rules
 * nutanix_cluster
+* nutanix_volume_group
+* nutanix_volume_groups
 
 ## Additional Resources
 
