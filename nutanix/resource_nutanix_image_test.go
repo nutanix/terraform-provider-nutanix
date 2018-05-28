@@ -34,6 +34,33 @@ func TestAccNutanixImage_basic(t *testing.T) {
 	})
 }
 
+// Skipping this test for now, since it is difficult to implement on the CI
+func TestAccNutanixImage_basic_uploadLocal(t *testing.T) {
+
+	t.Skip()
+
+	r := "path-to-file"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixImageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixImageLocalConfig(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixImageExists("nutanix_image.test"),
+				),
+			},
+			{
+				Config: testAccNutanixImageLocalConfigUpdate(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixImageExists("nutanix_image.test"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixImageExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -89,4 +116,24 @@ resource "nutanix_image" "test" {
   source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
 }
 `)
+}
+
+func testAccNutanixImageLocalConfig(r string) string {
+	return fmt.Sprintf(`
+resource "nutanix_image" "test" {
+  name        = "Ubuntu"
+  description = "Ubuntu"
+  source_path  = "%s"
+}
+`, r)
+}
+
+func testAccNutanixImageLocalConfigUpdate(r string) string {
+	return fmt.Sprintf(`
+resource "nutanix_image" "test" {
+  name        = "Ubuntu Updated"
+  description = "Ubuntu Updated"
+  source_path  = "%s"
+}
+`, r)
 }
