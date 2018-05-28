@@ -85,7 +85,9 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 		entity["hardware_clock_timezone"] = utils.StringValue(v.Status.Resources.HardwareClockTimezone)
 
 		cloudInit := make(map[string]interface{})
+		cloudInitCV := make(map[string]string)
 		sysprep := make(map[string]interface{})
+		sysprepCV := make(map[string]string)
 		isOv := false
 		if v.Status.Resources.GuestCustomization != nil {
 			isOv = utils.BoolValue(v.Status.Resources.GuestCustomization.IsOverridable)
@@ -94,27 +96,24 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 				cloudInit["meta_data"] = utils.StringValue(v.Status.Resources.GuestCustomization.CloudInit.MetaData)
 				cloudInit["user_data"] = utils.StringValue(v.Status.Resources.GuestCustomization.CloudInit.UserData)
 				if v.Status.Resources.GuestCustomization.CloudInit.CustomKeyValues != nil {
-					cv := make(map[string]string)
 					for k, v := range v.Status.Resources.GuestCustomization.CloudInit.CustomKeyValues {
-						cv[k] = v
+						cloudInitCV[k] = v
 					}
-
-					entity["guest_customization_cloud_init_custom_key_values"] = cv
 				}
 			}
 			if v.Status.Resources.GuestCustomization.Sysprep != nil {
 				sysprep["install_type"] = utils.StringValue(v.Status.Resources.GuestCustomization.Sysprep.InstallType)
 				sysprep["unattend_xml"] = utils.StringValue(v.Status.Resources.GuestCustomization.Sysprep.UnattendXML)
 				if v.Status.Resources.GuestCustomization.Sysprep.CustomKeyValues != nil {
-					cv := make(map[string]string)
 					for k, v := range v.Status.Resources.GuestCustomization.Sysprep.CustomKeyValues {
-						cv[k] = v
+						sysprepCV[k] = v
 					}
-					entity["guest_customization_sysprep_custom_key_values"] = cv
 				}
 			}
 		}
 
+		entity["guest_customization_cloud_init_custom_key_values"] = cloudInitCV
+		entity["guest_customization_sysprep_custom_key_values"] = sysprepCV
 		entity["guest_customization_is_overridable"] = isOv
 		entity["guest_customization_cloud_init"] = cloudInit
 		entity["guest_customization_sysprep"] = sysprep

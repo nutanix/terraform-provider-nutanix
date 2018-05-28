@@ -91,7 +91,9 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	d.Set("boot_device_mac_address", mac)
 
 	sysprep := make(map[string]interface{})
+	sysrepCV := make(map[string]string)
 	cloudInit := make(map[string]interface{})
+	cloudInitCV := make(map[string]string)
 	isOv := false
 	if resp.Status.Resources.GuestCustomization != nil {
 		isOv = utils.BoolValue(resp.Status.Resources.GuestCustomization.IsOverridable)
@@ -99,13 +101,8 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 			cloudInit["meta_data"] = utils.StringValue(resp.Status.Resources.GuestCustomization.CloudInit.MetaData)
 			cloudInit["user_data"] = utils.StringValue(resp.Status.Resources.GuestCustomization.CloudInit.UserData)
 			if resp.Status.Resources.GuestCustomization.CloudInit.CustomKeyValues != nil {
-				cv := make(map[string]string)
 				for k, v := range resp.Status.Resources.GuestCustomization.CloudInit.CustomKeyValues {
-					cv[k] = v
-				}
-
-				if err := d.Set("guest_customization_cloud_init_custom_key_values", cv); err != nil {
-					return err
+					cloudInitCV[k] = v
 				}
 			}
 		}
@@ -114,15 +111,17 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 			sysprep["unattend_xml"] = utils.StringValue(resp.Status.Resources.GuestCustomization.Sysprep.UnattendXML)
 
 			if resp.Status.Resources.GuestCustomization.Sysprep.CustomKeyValues != nil {
-				cv := make(map[string]string)
 				for k, v := range resp.Status.Resources.GuestCustomization.Sysprep.CustomKeyValues {
-					cv[k] = v
-				}
-				if err := d.Set("guest_customization_sysprep_custom_key_values", cv); err != nil {
-					return err
+					sysrepCV[k] = v
 				}
 			}
 		}
+	}
+	if err := d.Set("guest_customization_cloud_init_custom_key_values", cloudInitCV); err != nil {
+		return err
+	}
+	if err := d.Set("guest_customization_sysprep_custom_key_values", sysrepCV); err != nil {
+		return err
 	}
 	if err := d.Set("guest_customization_sysprep", sysprep); err != nil {
 		return err
