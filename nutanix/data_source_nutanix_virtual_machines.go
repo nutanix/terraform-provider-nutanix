@@ -93,12 +93,25 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 			if v.Status.Resources.GuestCustomization.CloudInit != nil {
 				cloudInit["meta_data"] = utils.StringValue(v.Status.Resources.GuestCustomization.CloudInit.MetaData)
 				cloudInit["user_data"] = utils.StringValue(v.Status.Resources.GuestCustomization.CloudInit.UserData)
-				cloudInit["custom_key_values"] = v.Status.Resources.GuestCustomization.CloudInit.CustomKeyValues
+				if v.Status.Resources.GuestCustomization.CloudInit.CustomKeyValues != nil {
+					cv := make(map[string]string)
+					for k, v := range v.Status.Resources.GuestCustomization.CloudInit.CustomKeyValues {
+						cv[k] = v
+					}
+
+					entity["guest_customization_cloud_init_custom_key_values"] = cv
+				}
 			}
 			if v.Status.Resources.GuestCustomization.Sysprep != nil {
 				sysprep["install_type"] = utils.StringValue(v.Status.Resources.GuestCustomization.Sysprep.InstallType)
 				sysprep["unattend_xml"] = utils.StringValue(v.Status.Resources.GuestCustomization.Sysprep.UnattendXML)
-				sysprep["custom_key_values"] = v.Status.Resources.GuestCustomization.Sysprep.CustomKeyValues
+				if v.Status.Resources.GuestCustomization.Sysprep.CustomKeyValues != nil {
+					cv := make(map[string]string)
+					for k, v := range v.Status.Resources.GuestCustomization.Sysprep.CustomKeyValues {
+						cv[k] = v
+					}
+					entity["guest_customization_sysprep_custom_key_values"] = cv
+				}
 			}
 		}
 
@@ -741,12 +754,12 @@ func getDataSourceVMSSchema() map[string]*schema.Schema {
 									Type:     schema.TypeString,
 									Computed: true,
 								},
-								"custom_key_values": {
-									Type:     schema.TypeMap,
-									Computed: true,
-								},
 							},
 						},
+					},
+					"guest_customization_cloud_init_custom_key_values": {
+						Type:     schema.TypeMap,
+						Computed: true,
 					},
 					"guest_customization_is_overridable": {
 						Type:     schema.TypeBool,
@@ -765,12 +778,12 @@ func getDataSourceVMSSchema() map[string]*schema.Schema {
 									Type:     schema.TypeString,
 									Computed: true,
 								},
-								"custom_key_values": {
-									Type:     schema.TypeMap,
-									Computed: true,
-								},
 							},
 						},
+					},
+					"guest_customization_sysprep_custom_key_values": {
+						Type:     schema.TypeMap,
+						Computed: true,
 					},
 					"should_fail_on_script_failure": {
 						Type:     schema.TypeBool,
