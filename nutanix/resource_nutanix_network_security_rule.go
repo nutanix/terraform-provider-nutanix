@@ -126,6 +126,7 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 	if err != nil {
 		return err
 	}
+
 	m, c := setRSEntityMetadata(resp.Metadata)
 
 	if err := d.Set("metadata", m); err != nil {
@@ -482,7 +483,6 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 							fpItem["values"] = values
 							fpList = append(fpList, fpItem)
 						}
-
 						if err := d.Set("app_rule_target_group_filter_params", fpList); err != nil {
 							return err
 						}
@@ -775,8 +775,6 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 	request.Spec = spec
 	request.Metadata = metadata
 
-	utils.PrintToJSON(request, "UPDATE REQUEST ###")
-
 	_, errUpdate := conn.V3.UpdateNetworkSecurityRule(d.Id(), request)
 
 	if errUpdate != nil {
@@ -1055,29 +1053,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	}
 
 	if fp, fpok := d.GetOk("quarantine_rule_target_group_filter_params"); fpok {
-		fpl := fp.([]interface{})
-
-		if len(fpl) > 0 {
-			fl := make(map[string][]string)
-			for _, v := range fpl {
-				item := v.(map[string]interface{})
-
-				if i, ok := item["name"]; ok && i.(string) != "" {
-					if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
-						var values []string
-						for _, item := range k.([]interface{}) {
-							values = append(values, item.(string))
-						}
-						fl[i.(string)] = values
-					}
-
-				}
-			}
-			qRuleTargetGroupFilter.Params = fl
-		} else {
-			qRuleTargetGroupFilter.Params = nil
-		}
-
+		qRuleTargetGroupFilter.Params = expandFilterParams(fp.(*schema.Set))
 	}
 
 	if qrial, ok := d.GetOk("quarantine_rule_inbound_allow_list"); ok {
@@ -1444,29 +1420,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	}
 
 	if fp, fpok := d.GetOk("app_rule_target_group_filter_params"); fpok {
-		fpl := fp.([]interface{})
-
-		if len(fpl) > 0 {
-			fl := make(map[string][]string)
-			for _, v := range fpl {
-				item := v.(map[string]interface{})
-
-				if i, ok := item["name"]; ok && i.(string) != "" {
-					if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
-						var values []string
-						for _, item := range k.([]interface{}) {
-							values = append(values, item.(string))
-						}
-						fl[i.(string)] = values
-					}
-
-				}
-			}
-			aRuleTargetGroupFilter.Params = fl
-		} else {
-			aRuleTargetGroupFilter.Params = nil
-		}
-
+		aRuleTargetGroupFilter.Params = expandFilterParams(fp.(*schema.Set))
 	}
 
 	if qrial, ok := d.GetOk("app_rule_inbound_allow_list"); ok {
@@ -1656,28 +1610,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	}
 
 	if fp, fpok := d.GetOk("isolation_rule_first_entity_filter_params"); fpok {
-		fpl := fp.([]interface{})
-
-		if len(fpl) > 0 {
-			fl := make(map[string][]string)
-			for _, v := range fpl {
-				item := v.(map[string]interface{})
-
-				if i, ok := item["name"]; ok && i.(string) != "" {
-					if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
-						var values []string
-						for _, item := range k.([]interface{}) {
-							values = append(values, item.(string))
-						}
-						fl[i.(string)] = values
-					}
-
-				}
-			}
-			iRuleFirstEntityFilter.Params = fl
-		} else {
-			iRuleFirstEntityFilter.Params = nil
-		}
+		iRuleFirstEntityFilter.Params = expandFilterParams(fp.(*schema.Set))
 
 	}
 
@@ -1695,29 +1628,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	}
 
 	if fp, fpok := d.GetOk("isolation_rule_second_entity_filter_params"); fpok {
-		fpl := fp.([]interface{})
-
-		if len(fpl) > 0 {
-			fl := make(map[string][]string)
-			for _, v := range fpl {
-				item := v.(map[string]interface{})
-
-				if i, ok := item["name"]; ok && i.(string) != "" {
-					if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
-						var values []string
-						for _, item := range k.([]interface{}) {
-							values = append(values, item.(string))
-						}
-						fl[i.(string)] = values
-					}
-
-				}
-			}
-			iRuleSecondEntityFilter.Params = fl
-		} else {
-			iRuleSecondEntityFilter.Params = nil
-		}
-
+		iRuleSecondEntityFilter.Params = expandFilterParams(fp.(*schema.Set))
 	}
 
 	if !reflect.DeepEqual(*qRuleTargetGroupFilter, (v3.CategoryFilter{})) {
@@ -1756,6 +1667,27 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 		networkSecurityRule.IsolationRule = isolationRule
 	}
 	return nil
+}
+
+func expandFilterParams(fp *schema.Set) map[string][]string {
+	fpl := fp.List()
+	fl := make(map[string][]string)
+	if len(fpl) > 0 {
+		for _, v := range fpl {
+			item := v.(map[string]interface{})
+
+			if i, ok := item["name"]; ok && i.(string) != "" {
+				if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
+					var values []string
+					for _, item := range k.([]interface{}) {
+						values = append(values, item.(string))
+					}
+					fl[i.(string)] = values
+				}
+			}
+		}
+	}
+	return fl
 }
 
 func networkSecurityRuleStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefreshFunc {
@@ -2049,7 +1981,7 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"quarantine_rule_target_group_filter_params": {
-			Type:     schema.TypeList,
+			Type:     schema.TypeSet,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -2377,7 +2309,7 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"app_rule_target_group_filter_params": {
-			Type:     schema.TypeList,
+			Type:     schema.TypeSet,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -2554,7 +2486,7 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"isolation_rule_first_entity_filter_params": {
-			Type:     schema.TypeList,
+			Type:     schema.TypeSet,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -2583,7 +2515,7 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"isolation_rule_second_entity_filter_params": {
-			Type:     schema.TypeList,
+			Type:     schema.TypeSet,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
