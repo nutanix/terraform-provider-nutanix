@@ -75,17 +75,9 @@ func resourceNutanixCategoryKeyRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	if err := d.Set("api_version", utils.StringValue(resp.APIVersion)); err != nil {
-		return err
-	}
-
-	if err := d.Set("name", utils.StringValue(resp.Name)); err != nil {
-		return err
-	}
-
-	if err := d.Set("description", utils.StringValue(resp.Description)); err != nil {
-		return err
-	}
+	d.Set("api_version", utils.StringValue(resp.APIVersion))
+	d.Set("name", utils.StringValue(resp.Name))
+	d.Set("description", utils.StringValue(resp.Description))
 
 	return d.Set("system_defined", utils.BoolValue(resp.SystemDefined))
 }
