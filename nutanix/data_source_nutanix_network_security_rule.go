@@ -100,43 +100,14 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 				}
 
 				if v.Filter != nil {
-					if v.Filter.KindList != nil {
-						fkl := v.Filter.KindList
-						fkList := make([]string, len(fkl))
-						for i, f := range fkl {
-							fkList[i] = utils.StringValue(f)
-						}
-						qroaItem["filter_kind_list"] = fkList
-					}
-
+					qroaItem["filter_kind_list"] = utils.StringValueSlice(v.Filter.KindList)
 					qroaItem["filter_type"] = utils.StringValue(v.Filter.Type)
-
-					if v.Filter.Params != nil {
-						fp := v.Filter.Params
-						var fpList []map[string]interface{}
-
-						for name, values := range fp {
-							fpItem := make(map[string]interface{})
-							fpItem["name"] = name
-							fpItem["values"] = values
-							fpList = append(fpList, fpItem)
-						}
-						qroaItem["filter_params"] = fpList
-					}
-
+					qroaItem["filter_params"] = expandFilterParams(v.Filter.Params)
 				}
 
 				qroaItem["peer_specification_type"] = utils.StringValue(v.PeerSpecificationType)
 				qroaItem["expiration_time"] = utils.StringValue(v.ExpirationTime)
-
-				// set network_function_chain_reference
-				if v.NetworkFunctionChainReference != nil {
-					nfcr := make(map[string]interface{})
-					nfcr["kind"] = utils.StringValue(v.NetworkFunctionChainReference.Kind)
-					nfcr["name"] = utils.StringValue(v.NetworkFunctionChainReference.Name)
-					nfcr["uuid"] = utils.StringValue(v.NetworkFunctionChainReference.UUID)
-					qroaItem["network_function_chain_reference"] = nfcr
-				}
+				qroaItem["network_function_chain_reference"] = getReferenceValues(v.NetworkFunctionChainReference)
 
 				if v.IcmpTypeCodeList != nil {
 					icmptcl := v.IcmpTypeCodeList
@@ -172,37 +143,15 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 			if resp.Spec.Resources.QuarantineRule.TargetGroup.Filter != nil {
 				v := resp.Spec.Resources.QuarantineRule.TargetGroup
 				if v.Filter != nil {
-					if v.Filter.KindList != nil {
-						fkl := v.Filter.KindList
-						fkList := make([]string, len(fkl))
-						for i, f := range fkl {
-							fkList[i] = utils.StringValue(f)
-						}
-						if err := d.Set("quarantine_rule_target_group_filter_kind_list", fkList); err != nil {
-							return err
-						}
+					if err := d.Set("quarantine_rule_target_group_filter_kind_list", utils.StringValueSlice(v.Filter.KindList)); err != nil {
+						return err
 					}
-
 					if err := d.Set("quarantine_rule_target_group_filter_type", utils.StringValue(v.Filter.Type)); err != nil {
 						return err
 					}
-
-					if v.Filter.Params != nil {
-						fp := v.Filter.Params
-						var fpList []map[string]interface{}
-
-						for name, values := range fp {
-							fpItem := make(map[string]interface{})
-							fpItem["name"] = name
-							fpItem["values"] = values
-							fpList = append(fpList, fpItem)
-						}
-
-						if err := d.Set("quarantine_rule_target_group_filter_params", fpList); err != nil {
-							return err
-						}
+					if err := d.Set("quarantine_rule_target_group_filter_params", expandFilterParams(v.Filter.Params)); err != nil {
+						return err
 					}
-
 				}
 			}
 
@@ -245,43 +194,14 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 				}
 
 				if v.Filter != nil {
-					if v.Filter.KindList != nil {
-						fkl := v.Filter.KindList
-						fkList := make([]string, len(fkl))
-						for i, f := range fkl {
-							fkList[i] = utils.StringValue(f)
-						}
-						qriaItem["filter_kind_list"] = fkList
-					}
-
+					qriaItem["filter_kind_list"] = utils.StringValueSlice(v.Filter.KindList)
 					qriaItem["filter_type"] = utils.StringValue(v.Filter.Type)
-
-					if v.Filter.Params != nil {
-						fp := v.Filter.Params
-						var fpList []map[string]interface{}
-
-						for name, values := range fp {
-							fpItem := make(map[string]interface{})
-							fpItem["name"] = name
-							fpItem["values"] = values
-							fpList = append(fpList, fpItem)
-						}
-						qriaItem["filter_params"] = fpList
-					}
-
+					qriaItem["filter_params"] = expandFilterParams(v.Filter.Params)
 				}
 
 				qriaItem["peer_specification_type"] = utils.StringValue(v.PeerSpecificationType)
 				qriaItem["expiration_time"] = utils.StringValue(v.ExpirationTime)
-
-				// set network_function_chain_reference
-				if v.NetworkFunctionChainReference != nil {
-					nfcr := make(map[string]interface{})
-					nfcr["kind"] = utils.StringValue(v.NetworkFunctionChainReference.Kind)
-					nfcr["name"] = utils.StringValue(v.NetworkFunctionChainReference.Name)
-					nfcr["uuid"] = utils.StringValue(v.NetworkFunctionChainReference.UUID)
-					qriaItem["network_function_chain_reference"] = nfcr
-				}
+				qriaItem["network_function_chain_reference"] = getReferenceValues(v.NetworkFunctionChainReference)
 
 				if v.IcmpTypeCodeList != nil {
 					icmptcl := v.IcmpTypeCodeList
@@ -361,43 +281,14 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 				}
 
 				if v.Filter != nil {
-					if v.Filter.KindList != nil {
-						fkl := v.Filter.KindList
-						fkList := make([]string, len(fkl))
-						for i, f := range fkl {
-							fkList[i] = utils.StringValue(f)
-						}
-						aroaItem["filter_kind_list"] = fkList
-					}
-
+					aroaItem["filter_kind_list"] = utils.StringValueSlice(v.Filter.KindList)
 					aroaItem["filter_type"] = utils.StringValue(v.Filter.Type)
-
-					if v.Filter.Params != nil {
-						fp := v.Filter.Params
-						var fpList []map[string]interface{}
-
-						for name, values := range fp {
-							fpItem := make(map[string]interface{})
-							fpItem["name"] = name
-							fpItem["values"] = values
-							fpList = append(fpList, fpItem)
-						}
-						aroaItem["filter_params"] = fpList
-					}
-
+					aroaItem["filter_params"] = expandFilterParams(v.Filter.Params)
 				}
 
 				aroaItem["peer_specification_type"] = utils.StringValue(v.PeerSpecificationType)
 				aroaItem["expiration_time"] = utils.StringValue(v.ExpirationTime)
-
-				// set network_function_chain_reference
-				if v.NetworkFunctionChainReference != nil {
-					nfcr := make(map[string]interface{})
-					nfcr["kind"] = utils.StringValue(v.NetworkFunctionChainReference.Kind)
-					nfcr["name"] = utils.StringValue(v.NetworkFunctionChainReference.Name)
-					nfcr["uuid"] = utils.StringValue(v.NetworkFunctionChainReference.UUID)
-					aroaItem["network_function_chain_reference"] = nfcr
-				}
+				aroaItem["network_function_chain_reference"] = getReferenceValues(v.NetworkFunctionChainReference)
 
 				if v.IcmpTypeCodeList != nil {
 					icmptcl := v.IcmpTypeCodeList
@@ -433,37 +324,15 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 			if resp.Spec.Resources.AppRule.TargetGroup.Filter != nil {
 				v := resp.Spec.Resources.AppRule.TargetGroup
 				if v.Filter != nil {
-					if v.Filter.KindList != nil {
-						fkl := v.Filter.KindList
-						fkList := make([]string, len(fkl))
-						for i, f := range fkl {
-							fkList[i] = utils.StringValue(f)
-						}
-						if err := d.Set("app_rule_target_group_filter_kind_list", fkList); err != nil {
-							return err
-						}
+					if err := d.Set("app_rule_target_group_filter_kind_list", utils.StringValueSlice(v.Filter.KindList)); err != nil {
+						return err
 					}
-
 					if err := d.Set("app_rule_target_group_filter_type", utils.StringValue(v.Filter.Type)); err != nil {
 						return err
 					}
-
-					if v.Filter.Params != nil {
-						fp := v.Filter.Params
-						var fpList []map[string]interface{}
-
-						for name, values := range fp {
-							fpItem := make(map[string]interface{})
-							fpItem["name"] = name
-							fpItem["values"] = values
-							fpList = append(fpList, fpItem)
-						}
-
-						if err := d.Set("app_rule_target_group_filter_params", fpList); err != nil {
-							return err
-						}
+					if err := d.Set("app_rule_target_group_filter_params", expandFilterParams(v.Filter.Params)); err != nil {
+						return err
 					}
-
 				}
 			}
 
@@ -506,43 +375,14 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 				}
 
 				if v.Filter != nil {
-					if v.Filter.KindList != nil {
-						fkl := v.Filter.KindList
-						fkList := make([]string, len(fkl))
-						for i, f := range fkl {
-							fkList[i] = utils.StringValue(f)
-						}
-						ariaItem["filter_kind_list"] = fkList
-					}
-
+					ariaItem["filter_kind_list"] = utils.StringValueSlice(v.Filter.KindList)
 					ariaItem["filter_type"] = utils.StringValue(v.Filter.Type)
-
-					if v.Filter.Params != nil {
-						fp := v.Filter.Params
-						var fpList []map[string]interface{}
-
-						for name, values := range fp {
-							fpItem := make(map[string]interface{})
-							fpItem["name"] = name
-							fpItem["values"] = values
-							fpList = append(fpList, fpItem)
-						}
-						ariaItem["filter_params"] = fpList
-					}
-
+					ariaItem["filter_params"] = expandFilterParams(v.Filter.Params)
 				}
 
 				ariaItem["peer_specification_type"] = utils.StringValue(v.PeerSpecificationType)
 				ariaItem["expiration_time"] = utils.StringValue(v.ExpirationTime)
-
-				// set network_function_chain_reference
-				if v.NetworkFunctionChainReference != nil {
-					nfcr := make(map[string]interface{})
-					nfcr["kind"] = utils.StringValue(v.NetworkFunctionChainReference.Kind)
-					nfcr["name"] = utils.StringValue(v.NetworkFunctionChainReference.Name)
-					nfcr["uuid"] = utils.StringValue(v.NetworkFunctionChainReference.UUID)
-					ariaItem["network_function_chain_reference"] = nfcr
-				}
+				ariaItem["network_function_chain_reference"] = getReferenceValues(v.NetworkFunctionChainReference)
 
 				if v.IcmpTypeCodeList != nil {
 					icmptcl := v.IcmpTypeCodeList
@@ -578,74 +418,32 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 
 		if resp.Spec.Resources.IsolationRule.FirstEntityFilter != nil {
 			firstFilter := resp.Spec.Resources.IsolationRule.FirstEntityFilter
-			if firstFilter.KindList != nil {
-				fkl := firstFilter.KindList
-				fkList := make([]string, len(fkl))
-				for i, f := range fkl {
-					fkList[i] = utils.StringValue(f)
-				}
-				if err := d.Set("isolation_rule_first_entity_filter_kind_list", fkList); err != nil {
-					return err
-				}
-			} else {
-				if err := d.Set("isolation_rule_first_entity_filter_kind_list", make([]string, 0)); err != nil {
-					return err
-				}
+			if err := d.Set("isolation_rule_first_entity_filter_kind_list", utils.StringValueSlice(firstFilter.KindList)); err != nil {
+				return err
 			}
 
 			if err := d.Set("isolation_rule_first_entity_filter_type", utils.StringValue(firstFilter.Type)); err != nil {
 				return err
 			}
 
-			if firstFilter.Params != nil {
-				fp := firstFilter.Params
-				var fpList []map[string]interface{}
-
-				for name, values := range fp {
-					fpItem := make(map[string]interface{})
-					fpItem["name"] = name
-					fpItem["values"] = values
-					fpList = append(fpList, fpItem)
-				}
-
-				if err := d.Set("isolation_rule_first_entity_filter_params", fpList); err != nil {
-					return err
-				}
+			if err := d.Set("isolation_rule_first_entity_filter_params", expandFilterParams(firstFilter.Params)); err != nil {
+				return err
 			}
 
 		}
 
 		if resp.Spec.Resources.IsolationRule.SecondEntityFilter != nil {
 			secondFilter := resp.Spec.Resources.IsolationRule.SecondEntityFilter
-			if secondFilter.KindList != nil {
-				fkl := secondFilter.KindList
-				fkList := make([]string, len(fkl))
-				for i, f := range fkl {
-					fkList[i] = utils.StringValue(f)
-				}
-				if err := d.Set("isolation_rule_second_entity_filter_kind_list", fkList); err != nil {
-					return err
-				}
+			if err := d.Set("isolation_rule_second_entity_filter_kind_list", utils.StringValueSlice(secondFilter.KindList)); err != nil {
+				return err
 			}
 
 			if err := d.Set("isolation_rule_second_entity_filter_type", utils.StringValue(secondFilter.Type)); err != nil {
 				return err
 			}
 
-			if secondFilter.Params != nil {
-				fp := secondFilter.Params
-				var fpList []map[string]interface{}
-
-				for name, values := range fp {
-					fpItem := make(map[string]interface{})
-					fpItem["name"] = name
-					fpItem["values"] = values
-					fpList = append(fpList, fpItem)
-				}
-
-				if err := d.Set("isolation_rule_second_entity_filter_params", fpList); err != nil {
-					return err
-				}
+			if err := d.Set("isolation_rule_second_entity_filter_params", expandFilterParams(secondFilter.Params)); err != nil {
+				return err
 			}
 
 		}
