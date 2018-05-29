@@ -141,77 +141,29 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	// set metadata values
-	metadata := make(map[string]interface{})
-	metadata["last_update_time"] = resp.Metadata.LastUpdateTime.String()
-	metadata["uuid"] = utils.StringValue(resp.Metadata.UUID)
-	metadata["creation_time"] = resp.Metadata.CreationTime.String()
-	metadata["spec_version"] = strconv.Itoa(int(utils.Int64Value(resp.Metadata.SpecVersion)))
-	metadata["spec_hash"] = utils.StringValue(resp.Metadata.SpecHash)
-	metadata["name"] = utils.StringValue(resp.Metadata.Name)
+	m, c := setRSEntityMetadata(resp.Metadata)
 
-	if err := d.Set("metadata", metadata); err != nil {
+	if err := d.Set("metadata", m); err != nil {
+		return err
+	}
+	if err := d.Set("categories", c); err != nil {
 		return err
 	}
 
-	if resp.Metadata.Categories != nil {
-		categories := resp.Metadata.Categories
-		var catList []map[string]interface{}
-
-		for name, values := range categories {
-			catItem := make(map[string]interface{})
-			catItem["name"] = name
-			catItem["value"] = values
-			catList = append(catList, catItem)
-		}
-		if err := d.Set("categories", catList); err != nil {
-			return err
-		}
+	if err := d.Set("owner_reference", getReferenceValues(resp.Metadata.OwnerReference)); err != nil {
+		return err
 	}
+	d.Set("api_version", utils.StringValue(resp.APIVersion))
+	d.Set("name", utils.StringValue(resp.Status.Name))
+	d.Set("description", utils.StringValue(resp.Status.Description))
 
-	or := make(map[string]interface{})
-	if resp.Metadata.OwnerReference != nil {
-		or["kind"] = utils.StringValue(resp.Metadata.OwnerReference.Kind)
-		or["name"] = utils.StringValue(resp.Metadata.OwnerReference.Name)
-		or["uuid"] = utils.StringValue(resp.Metadata.OwnerReference.UUID)
-
+	if err := d.Set("availability_zone_reference", getReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
+		return err
 	}
-
-	if err := d.Set("owner_reference", or); err != nil {
+	if err := d.Set("cluster_reference", getClusterReferenceValues(resp.Status.ClusterReference)); err != nil {
 		return err
 	}
 
-	if err := d.Set("api_version", utils.StringValue(resp.APIVersion)); err != nil {
-		return err
-	}
-	if err := d.Set("name", utils.StringValue(resp.Status.Name)); err != nil {
-		return err
-	}
-	if err := d.Set("description", utils.StringValue(resp.Status.Description)); err != nil {
-		return err
-	}
-	// set availability zone reference values
-	availabilityZoneReference := make(map[string]interface{})
-	if resp.Status.AvailabilityZoneReference != nil {
-		availabilityZoneReference["kind"] = utils.StringValue(resp.Status.AvailabilityZoneReference.Kind)
-		availabilityZoneReference["name"] = utils.StringValue(resp.Status.AvailabilityZoneReference.Name)
-		availabilityZoneReference["uuid"] = utils.StringValue(resp.Status.AvailabilityZoneReference.UUID)
-	}
-	if err := d.Set("availability_zone_reference", availabilityZoneReference); err != nil {
-		return err
-	}
-	// set cluster reference values
-	clusterReference := make(map[string]interface{})
-	if resp.Status.ClusterReference != nil {
-		clusterReference["kind"] = utils.StringValue(resp.Status.ClusterReference.Kind)
-		clusterReference["name"] = utils.StringValue(resp.Status.ClusterReference.Name)
-		clusterReference["uuid"] = utils.StringValue(resp.Status.ClusterReference.UUID)
-	}
-	if err := d.Set("cluster_reference", clusterReference); err != nil {
-		return err
-	}
-
-	// set state value
 	if err := d.Set("state", resp.Status.State); err != nil {
 		return err
 	}
