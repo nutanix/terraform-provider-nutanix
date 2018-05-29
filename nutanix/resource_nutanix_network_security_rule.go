@@ -135,6 +135,7 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 	if err := d.Set("categories", c); err != nil {
 		return err
 	}
+
 	if err := d.Set("project_reference", getReferenceValues(resp.Metadata.ProjectReference)); err != nil {
 		return err
 	}
@@ -143,22 +144,17 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 	}
 
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
+	d.Set("name", utils.StringValue(resp.Spec.Name))
+	d.Set("description", utils.StringValue(resp.Spec.Description))
 
-	qra := ""
-	qroaList := make([]map[string]interface{}, 0)
-	qrtgdip := ""
-	qrtgdit := ""
-	qrtgft := ""
-	qrtgfkl := make([]string, 0)
-	qrtgfp := make([]map[string]interface{}, 0)
-	qriaList := make([]map[string]interface{}, 0)
+	if resp.Status.QuarantineRule != nil {
+		if err := d.Set("quarantine_rule_action", utils.StringValue(resp.Status.QuarantineRule.Action)); err != nil {
+			return err
+		}
 
-	if resp.Spec.Resources.QuarantineRule != nil {
-		qra = utils.StringValue(resp.Spec.Resources.QuarantineRule.Action)
-
-		if resp.Spec.Resources.QuarantineRule.OutboundAllowList != nil {
-			oal := resp.Spec.Resources.QuarantineRule.OutboundAllowList
-			qroaList = make([]map[string]interface{}, len(oal))
+		if resp.Status.QuarantineRule.OutboundAllowList != nil {
+			oal := resp.Status.QuarantineRule.OutboundAllowList
+			qroaList := make([]map[string]interface{}, len(oal))
 			for k, v := range oal {
 				qroaItem := make(map[string]interface{})
 				qroaItem["protocol"] = utils.StringValue(v.Protocol)
@@ -194,7 +190,12 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 
 				if v.Filter != nil {
 					if v.Filter.KindList != nil {
-						qroaItem["filter_kind_list"] = utils.StringValueSlice(v.Filter.KindList)
+						fkl := v.Filter.KindList
+						fkList := make([]string, len(fkl))
+						for i, f := range fkl {
+							fkList[i] = utils.StringValue(f)
+						}
+						qroaItem["filter_kind_list"] = fkList
 					}
 
 					qroaItem["filter_type"] = utils.StringValue(v.Filter.Type)
@@ -216,7 +217,15 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 
 				qroaItem["peer_specification_type"] = utils.StringValue(v.PeerSpecificationType)
 				qroaItem["expiration_time"] = utils.StringValue(v.ExpirationTime)
-				qroaItem["network_function_chain_reference"] = getReferenceValues(v.NetworkFunctionChainReference)
+
+				// set network_function_chain_reference
+				if v.NetworkFunctionChainReference != nil {
+					nfcr := make(map[string]interface{})
+					nfcr["kind"] = utils.StringValue(v.NetworkFunctionChainReference.Kind)
+					nfcr["name"] = utils.StringValue(v.NetworkFunctionChainReference.Name)
+					nfcr["uuid"] = utils.StringValue(v.NetworkFunctionChainReference.UUID)
+					qroaItem["network_function_chain_reference"] = nfcr
+				}
 
 				if v.IcmpTypeCodeList != nil {
 					icmptcl := v.IcmpTypeCodeList
@@ -232,39 +241,65 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 
 				qroaList[k] = qroaItem
 			}
+
+			//Set quarantine_rule_outbound_allow_list
+			if err := d.Set("quarantine_rule_outbound_allow_list", qroaList); err != nil {
+				return err
+			}
 		}
 
-		if resp.Spec.Resources.QuarantineRule.TargetGroup != nil {
-			qrtgdip = utils.StringValue(resp.Spec.Resources.QuarantineRule.TargetGroup.DefaultInternalPolicy)
-			qrtgdit = utils.StringValue(resp.Spec.Resources.QuarantineRule.TargetGroup.PeerSpecificationType)
+		if resp.Status.QuarantineRule.TargetGroup != nil {
+			if err := d.Set("quarantine_rule_target_group_default_internal_policy",
+				utils.StringValue(resp.Status.QuarantineRule.TargetGroup.DefaultInternalPolicy)); err != nil {
+				return err
+			}
+			if err := d.Set("quarantine_rule_target_group_peer_specification_type",
+				utils.StringValue(resp.Status.QuarantineRule.TargetGroup.PeerSpecificationType)); err != nil {
+				return err
+			}
 
-			if resp.Spec.Resources.QuarantineRule.TargetGroup.Filter != nil {
-				v := resp.Spec.Resources.QuarantineRule.TargetGroup
+			if resp.Status.QuarantineRule.TargetGroup.Filter != nil {
+				v := resp.Status.QuarantineRule.TargetGroup
 				if v.Filter != nil {
 					if v.Filter.KindList != nil {
-						qrtgfkl = utils.StringValueSlice(v.Filter.KindList)
+						fkl := v.Filter.KindList
+						fkList := make([]string, len(fkl))
+						for i, f := range fkl {
+							fkList[i] = utils.StringValue(f)
+						}
+						if err := d.Set("quarantine_rule_target_group_filter_kind_list", fkList); err != nil {
+							return err
+						}
 					}
 
-					qrtgft = utils.StringValue(v.Filter.Type)
+					if err := d.Set("quarantine_rule_target_group_filter_type", utils.StringValue(v.Filter.Type)); err != nil {
+						return err
+					}
 
 					if v.Filter.Params != nil {
-						qrtgfp = make([]map[string]interface{}, len(v.Filter.Params))
+						fp := v.Filter.Params
+						var fpList []map[string]interface{}
 
-						for name, values := range v.Filter.Params {
+						for name, values := range fp {
 							fpItem := make(map[string]interface{})
 							fpItem["name"] = name
 							fpItem["values"] = values
-							qrtgfp = append(qrtgfp, fpItem)
+							fpList = append(fpList, fpItem)
+						}
+
+						if err := d.Set("quarantine_rule_target_group_filter_params", fpList); err != nil {
+							return err
 						}
 					}
+
 				}
 			}
 
 		}
 
-		if resp.Spec.Resources.QuarantineRule.InboundAllowList != nil {
-			ial := resp.Spec.Resources.QuarantineRule.InboundAllowList
-			qriaList = make([]map[string]interface{}, len(ial))
+		if resp.Status.QuarantineRule.InboundAllowList != nil {
+			ial := resp.Status.QuarantineRule.InboundAllowList
+			qriaList := make([]map[string]interface{}, len(ial))
 			for k, v := range ial {
 				qriaItem := make(map[string]interface{})
 				qriaItem["protocol"] = utils.StringValue(v.Protocol)
@@ -299,7 +334,15 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 				}
 
 				if v.Filter != nil {
-					qriaItem["filter_kind_list"] = utils.StringValueSlice(v.Filter.KindList)
+					if v.Filter.KindList != nil {
+						fkl := v.Filter.KindList
+						fkList := make([]string, len(fkl))
+						for i, f := range fkl {
+							fkList[i] = utils.StringValue(f)
+						}
+						qriaItem["filter_kind_list"] = fkList
+					}
+
 					qriaItem["filter_type"] = utils.StringValue(v.Filter.Type)
 
 					if v.Filter.Params != nil {
@@ -319,7 +362,15 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 
 				qriaItem["peer_specification_type"] = utils.StringValue(v.PeerSpecificationType)
 				qriaItem["expiration_time"] = utils.StringValue(v.ExpirationTime)
-				qriaItem["network_function_chain_reference"] = getReferenceValues(v.NetworkFunctionChainReference)
+
+				// set network_function_chain_reference
+				if v.NetworkFunctionChainReference != nil {
+					nfcr := make(map[string]interface{})
+					nfcr["kind"] = utils.StringValue(v.NetworkFunctionChainReference.Kind)
+					nfcr["name"] = utils.StringValue(v.NetworkFunctionChainReference.Name)
+					nfcr["uuid"] = utils.StringValue(v.NetworkFunctionChainReference.UUID)
+					qriaItem["network_function_chain_reference"] = nfcr
+				}
 
 				if v.IcmpTypeCodeList != nil {
 					icmptcl := v.IcmpTypeCodeList
@@ -335,46 +386,35 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 
 				qriaList[k] = qriaItem
 			}
+
+			//Set quarantine_rule_inbound_allow_list
+			if err := d.Set("quarantine_rule_inbound_allow_list", qriaList); err != nil {
+				return err
+			}
+		}
+
+	} else {
+		if err := d.Set("quarantine_rule_inbound_allow_list", make([]string, 0)); err != nil {
+			return err
+		}
+		if err := d.Set("quarantine_rule_outbound_allow_list", make([]string, 0)); err != nil {
+			return err
+		}
+		if err := d.Set("quarantine_rule_target_group_filter_kind_list", make([]string, 0)); err != nil {
+			return err
+		}
+		if err := d.Set("quarantine_rule_target_group_filter_params", make([]string, 0)); err != nil {
+			return err
 		}
 	}
 
-	if err := d.Set("quarantine_rule_action", qra); err != nil {
-		return err
-	}
-	if err := d.Set("quarantine_rule_outbound_allow_list", qroaList); err != nil {
-		return err
-	}
-
-	if err := d.Set("quarantine_rule_target_group_default_internal_policy", qrtgdip); err != nil {
-		return err
-	}
-	if err := d.Set("quarantine_rule_target_group_peer_specification_type", qrtgdit); err != nil {
-		return err
-	}
-
-	if err := d.Set("quarantine_rule_target_group_filter_kind_list", qrtgfkl); err != nil {
-		return err
-	}
-
-	if err := d.Set("quarantine_rule_target_group_filter_type", qrtgft); err != nil {
-		return err
-	}
-
-	if err := d.Set("quarantine_rule_target_group_filter_params", qrtgfp); err != nil {
-		return err
-	}
-
-	if err := d.Set("quarantine_rule_inbound_allow_list", qriaList); err != nil {
-		return err
-	}
-
-	if resp.Spec.Resources.AppRule != nil {
-		if err := d.Set("app_rule_action", utils.StringValue(resp.Spec.Resources.AppRule.Action)); err != nil {
+	if resp.Status.AppRule != nil {
+		if err := d.Set("app_rule_action", utils.StringValue(resp.Status.AppRule.Action)); err != nil {
 			return err
 		}
 
-		if resp.Spec.Resources.AppRule.OutboundAllowList != nil {
-			oal := resp.Spec.Resources.AppRule.OutboundAllowList
+		if resp.Status.AppRule.OutboundAllowList != nil {
+			oal := resp.Status.AppRule.OutboundAllowList
 			aroaList := make([]map[string]interface{}, len(oal))
 			for k, v := range oal {
 				aroaItem := make(map[string]interface{})
@@ -410,7 +450,15 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 				}
 
 				if v.Filter != nil {
-					aroaItem["filter_kind_list"] = utils.StringValueSlice(v.Filter.KindList)
+					if v.Filter.KindList != nil {
+						fkl := v.Filter.KindList
+						fkList := make([]string, len(fkl))
+						for i, f := range fkl {
+							fkList[i] = utils.StringValue(f)
+						}
+						aroaItem["filter_kind_list"] = fkList
+					}
+
 					aroaItem["filter_type"] = utils.StringValue(v.Filter.Type)
 
 					if v.Filter.Params != nil {
@@ -430,7 +478,15 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 
 				aroaItem["peer_specification_type"] = utils.StringValue(v.PeerSpecificationType)
 				aroaItem["expiration_time"] = utils.StringValue(v.ExpirationTime)
-				aroaItem["network_function_chain_reference"] = getReferenceValues(v.NetworkFunctionChainReference)
+
+				// set network_function_chain_reference
+				if v.NetworkFunctionChainReference != nil {
+					nfcr := make(map[string]interface{})
+					nfcr["kind"] = utils.StringValue(v.NetworkFunctionChainReference.Kind)
+					nfcr["name"] = utils.StringValue(v.NetworkFunctionChainReference.Name)
+					nfcr["uuid"] = utils.StringValue(v.NetworkFunctionChainReference.UUID)
+					aroaItem["network_function_chain_reference"] = nfcr
+				}
 
 				if v.IcmpTypeCodeList != nil {
 					icmptcl := v.IcmpTypeCodeList
@@ -453,22 +509,30 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 			}
 		}
 
-		if resp.Spec.Resources.AppRule.TargetGroup != nil {
+		if resp.Status.AppRule.TargetGroup != nil {
 			if err := d.Set("app_rule_target_group_default_internal_policy",
-				utils.StringValue(resp.Spec.Resources.AppRule.TargetGroup.DefaultInternalPolicy)); err != nil {
+				utils.StringValue(resp.Status.AppRule.TargetGroup.DefaultInternalPolicy)); err != nil {
 				return err
 			}
 			if err := d.Set("app_rule_target_group_peer_specification_type",
-				utils.StringValue(resp.Spec.Resources.AppRule.TargetGroup.PeerSpecificationType)); err != nil {
+				utils.StringValue(resp.Status.AppRule.TargetGroup.PeerSpecificationType)); err != nil {
 				return err
 			}
 
-			if resp.Spec.Resources.AppRule.TargetGroup.Filter != nil {
-				v := resp.Spec.Resources.AppRule.TargetGroup
+			if resp.Status.AppRule.TargetGroup.Filter != nil {
+				v := resp.Status.AppRule.TargetGroup
 				if v.Filter != nil {
-					if err := d.Set("app_rule_target_group_filter_kind_list", utils.StringValueSlice(v.Filter.KindList)); err != nil {
-						return err
+					if v.Filter.KindList != nil {
+						fkl := v.Filter.KindList
+						fkList := make([]string, len(fkl))
+						for i, f := range fkl {
+							fkList[i] = utils.StringValue(f)
+						}
+						if err := d.Set("app_rule_target_group_filter_kind_list", fkList); err != nil {
+							return err
+						}
 					}
+
 					if err := d.Set("app_rule_target_group_filter_type", utils.StringValue(v.Filter.Type)); err != nil {
 						return err
 					}
@@ -483,6 +547,7 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 							fpItem["values"] = values
 							fpList = append(fpList, fpItem)
 						}
+
 						if err := d.Set("app_rule_target_group_filter_params", fpList); err != nil {
 							return err
 						}
@@ -493,8 +558,8 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 
 		}
 
-		if resp.Spec.Resources.AppRule.InboundAllowList != nil {
-			ial := resp.Spec.Resources.AppRule.InboundAllowList
+		if resp.Status.AppRule.InboundAllowList != nil {
+			ial := resp.Status.AppRule.InboundAllowList
 			ariaList := make([]map[string]interface{}, len(ial))
 			for k, v := range ial {
 				ariaItem := make(map[string]interface{})
@@ -558,7 +623,15 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 
 				ariaItem["peer_specification_type"] = utils.StringValue(v.PeerSpecificationType)
 				ariaItem["expiration_time"] = utils.StringValue(v.ExpirationTime)
-				ariaItem["network_function_chain_reference"] = getReferenceValues(v.NetworkFunctionChainReference)
+
+				// set network_function_chain_reference
+				if v.NetworkFunctionChainReference != nil {
+					nfcr := make(map[string]interface{})
+					nfcr["kind"] = utils.StringValue(v.NetworkFunctionChainReference.Kind)
+					nfcr["name"] = utils.StringValue(v.NetworkFunctionChainReference.Name)
+					nfcr["uuid"] = utils.StringValue(v.NetworkFunctionChainReference.UUID)
+					ariaItem["network_function_chain_reference"] = nfcr
+				}
 
 				if v.IcmpTypeCodeList != nil {
 					icmptcl := v.IcmpTypeCodeList
@@ -581,22 +654,31 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 			}
 		}
 
-	} else {
-		if err := d.Set("app_rule_action", ""); err != nil {
-			return err
-		}
 	}
 
-	if resp.Spec.Resources.IsolationRule != nil {
-		if err := d.Set("isolation_rule_action", utils.StringValue(resp.Spec.Resources.IsolationRule.Action)); err != nil {
+	if resp.Status.IsolationRule != nil {
+		if err := d.Set("isolation_rule_action", utils.StringValue(resp.Status.IsolationRule.Action)); err != nil {
 			return err
 		}
 
-		if resp.Spec.Resources.IsolationRule.FirstEntityFilter != nil {
-			firstFilter := resp.Spec.Resources.IsolationRule.FirstEntityFilter
-			if err := d.Set("isolation_rule_first_entity_filter_kind_list", utils.StringValueSlice(firstFilter.KindList)); err != nil {
-				return err
+		if resp.Status.IsolationRule.FirstEntityFilter != nil {
+			firstFilter := resp.Status.IsolationRule.FirstEntityFilter
+			if firstFilter.KindList != nil {
+				log.Println("KIND LIST##")
+				fkl := firstFilter.KindList
+				fkList := make([]string, len(fkl))
+				for i, f := range fkl {
+					fkList[i] = utils.StringValue(f)
+				}
+				if err := d.Set("isolation_rule_first_entity_filter_kind_list", fkList); err != nil {
+					return err
+				}
+			} else {
+				if err := d.Set("isolation_rule_first_entity_filter_kind_list", make([]string, 0)); err != nil {
+					return err
+				}
 			}
+
 			if err := d.Set("isolation_rule_first_entity_filter_type", utils.StringValue(firstFilter.Type)); err != nil {
 				return err
 			}
@@ -619,11 +701,19 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 
 		}
 
-		if resp.Spec.Resources.IsolationRule.SecondEntityFilter != nil {
-			secondFilter := resp.Spec.Resources.IsolationRule.SecondEntityFilter
-			if err := d.Set("isolation_rule_second_entity_filter_kind_list", utils.StringValueSlice(secondFilter.KindList)); err != nil {
-				return err
+		if resp.Status.IsolationRule.SecondEntityFilter != nil {
+			secondFilter := resp.Status.IsolationRule.SecondEntityFilter
+			if secondFilter.KindList != nil {
+				fkl := secondFilter.KindList
+				fkList := make([]string, len(fkl))
+				for i, f := range fkl {
+					fkList[i] = utils.StringValue(f)
+				}
+				if err := d.Set("isolation_rule_second_entity_filter_kind_list", fkList); err != nil {
+					return err
+				}
 			}
+
 			if err := d.Set("isolation_rule_second_entity_filter_type", utils.StringValue(secondFilter.Type)); err != nil {
 				return err
 			}
@@ -660,8 +750,6 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 			return err
 		}
 	}
-
-	d.SetId(*resp.Metadata.UUID)
 
 	return nil
 }
@@ -774,6 +862,8 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 
 	request.Spec = spec
 	request.Metadata = metadata
+
+	utils.PrintToJSON(request, "UPDATE REQUEST ###")
 
 	_, errUpdate := conn.V3.UpdateNetworkSecurityRule(d.Id(), request)
 
@@ -1053,7 +1143,29 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	}
 
 	if fp, fpok := d.GetOk("quarantine_rule_target_group_filter_params"); fpok {
-		qRuleTargetGroupFilter.Params = expandFilterParams(fp.(*schema.Set))
+		fpl := fp.([]interface{})
+
+		if len(fpl) > 0 {
+			fl := make(map[string][]string)
+			for _, v := range fpl {
+				item := v.(map[string]interface{})
+
+				if i, ok := item["name"]; ok && i.(string) != "" {
+					if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
+						var values []string
+						for _, item := range k.([]interface{}) {
+							values = append(values, item.(string))
+						}
+						fl[i.(string)] = values
+					}
+
+				}
+			}
+			qRuleTargetGroupFilter.Params = fl
+		} else {
+			qRuleTargetGroupFilter.Params = nil
+		}
+
 	}
 
 	if qrial, ok := d.GetOk("quarantine_rule_inbound_allow_list"); ok {
@@ -1420,7 +1532,29 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	}
 
 	if fp, fpok := d.GetOk("app_rule_target_group_filter_params"); fpok {
-		aRuleTargetGroupFilter.Params = expandFilterParams(fp.(*schema.Set))
+		fpl := fp.([]interface{})
+
+		if len(fpl) > 0 {
+			fl := make(map[string][]string)
+			for _, v := range fpl {
+				item := v.(map[string]interface{})
+
+				if i, ok := item["name"]; ok && i.(string) != "" {
+					if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
+						var values []string
+						for _, item := range k.([]interface{}) {
+							values = append(values, item.(string))
+						}
+						fl[i.(string)] = values
+					}
+
+				}
+			}
+			aRuleTargetGroupFilter.Params = fl
+		} else {
+			aRuleTargetGroupFilter.Params = nil
+		}
+
 	}
 
 	if qrial, ok := d.GetOk("app_rule_inbound_allow_list"); ok {
@@ -1610,7 +1744,28 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	}
 
 	if fp, fpok := d.GetOk("isolation_rule_first_entity_filter_params"); fpok {
-		iRuleFirstEntityFilter.Params = expandFilterParams(fp.(*schema.Set))
+		fpl := fp.([]interface{})
+
+		if len(fpl) > 0 {
+			fl := make(map[string][]string)
+			for _, v := range fpl {
+				item := v.(map[string]interface{})
+
+				if i, ok := item["name"]; ok && i.(string) != "" {
+					if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
+						var values []string
+						for _, item := range k.([]interface{}) {
+							values = append(values, item.(string))
+						}
+						fl[i.(string)] = values
+					}
+
+				}
+			}
+			iRuleFirstEntityFilter.Params = fl
+		} else {
+			iRuleFirstEntityFilter.Params = nil
+		}
 
 	}
 
@@ -1628,7 +1783,29 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	}
 
 	if fp, fpok := d.GetOk("isolation_rule_second_entity_filter_params"); fpok {
-		iRuleSecondEntityFilter.Params = expandFilterParams(fp.(*schema.Set))
+		fpl := fp.([]interface{})
+
+		if len(fpl) > 0 {
+			fl := make(map[string][]string)
+			for _, v := range fpl {
+				item := v.(map[string]interface{})
+
+				if i, ok := item["name"]; ok && i.(string) != "" {
+					if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
+						var values []string
+						for _, item := range k.([]interface{}) {
+							values = append(values, item.(string))
+						}
+						fl[i.(string)] = values
+					}
+
+				}
+			}
+			iRuleSecondEntityFilter.Params = fl
+		} else {
+			iRuleSecondEntityFilter.Params = nil
+		}
+
 	}
 
 	if !reflect.DeepEqual(*qRuleTargetGroupFilter, (v3.CategoryFilter{})) {
@@ -1667,27 +1844,6 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 		networkSecurityRule.IsolationRule = isolationRule
 	}
 	return nil
-}
-
-func expandFilterParams(fp *schema.Set) map[string][]string {
-	fpl := fp.List()
-	fl := make(map[string][]string)
-	if len(fpl) > 0 {
-		for _, v := range fpl {
-			item := v.(map[string]interface{})
-
-			if i, ok := item["name"]; ok && i.(string) != "" {
-				if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
-					var values []string
-					for _, item := range k.([]interface{}) {
-						values = append(values, item.(string))
-					}
-					fl[i.(string)] = values
-				}
-			}
-		}
-	}
-	return fl
 }
 
 func networkSecurityRuleStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefreshFunc {
@@ -1981,7 +2137,7 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"quarantine_rule_target_group_filter_params": {
-			Type:     schema.TypeSet,
+			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -2309,7 +2465,7 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"app_rule_target_group_filter_params": {
-			Type:     schema.TypeSet,
+			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -2486,7 +2642,7 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"isolation_rule_first_entity_filter_params": {
-			Type:     schema.TypeSet,
+			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
@@ -2515,7 +2671,7 @@ func getNetworkSecurityRuleSchema() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"isolation_rule_second_entity_filter_params": {
-			Type:     schema.TypeSet,
+			Type:     schema.TypeList,
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
