@@ -66,48 +66,13 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 	entities := make([]map[string]interface{}, len(resp.Entities))
 	for k, v := range resp.Entities {
 		entity := make(map[string]interface{})
-		// set metadata values
-		metadata := make(map[string]interface{})
-		metadata["last_update_time"] = utils.TimeValue(v.Metadata.LastUpdateTime).String()
-		metadata["kind"] = utils.StringValue(v.Metadata.Kind)
-		metadata["uuid"] = utils.StringValue(v.Metadata.UUID)
-		metadata["creation_time"] = utils.TimeValue(v.Metadata.CreationTime).String()
-		metadata["spec_version"] = strconv.Itoa(int(utils.Int64Value(v.Metadata.SpecVersion)))
-		metadata["spec_hash"] = utils.StringValue(v.Metadata.SpecHash)
-		metadata["name"] = utils.StringValue(v.Metadata.Name)
-		entity["metadata"] = metadata
+		m, c := setRSEntityMetadata(v.Metadata)
 
-		if v.Metadata.Categories != nil {
-			categories := v.Metadata.Categories
-			var catList []map[string]interface{}
-
-			for name, values := range categories {
-				catItem := make(map[string]interface{})
-				catItem["name"] = name
-				catItem["value"] = values
-				catList = append(catList, catItem)
-			}
-			entity["categories"] = catList
-		}
-
+		entity["metadata"] = m
+		entity["project_reference"] = getReferenceValues(v.Metadata.ProjectReference)
+		entity["owner_reference"] = getReferenceValues(v.Metadata.OwnerReference)
+		entity["categories"] = c
 		entity["api_version"] = utils.StringValue(v.APIVersion)
-
-		pr := make(map[string]interface{})
-		if v.Metadata.ProjectReference != nil {
-			pr["kind"] = utils.StringValue(v.Metadata.ProjectReference.Kind)
-			pr["name"] = utils.StringValue(v.Metadata.ProjectReference.Name)
-			pr["uuid"] = utils.StringValue(v.Metadata.ProjectReference.UUID)
-		}
-		entity["project_reference"] = pr
-
-		or := make(map[string]interface{})
-		if v.Metadata.OwnerReference != nil {
-			or["kind"] = utils.StringValue(v.Metadata.OwnerReference.Kind)
-			or["name"] = utils.StringValue(v.Metadata.OwnerReference.Name)
-			or["uuid"] = utils.StringValue(v.Metadata.OwnerReference.UUID)
-		}
-		entity["owner_reference"] = or
-
 		entity["name"] = utils.StringValue(v.Status.Name)
 		entity["state"] = utils.StringValue(v.Status.State)
 
