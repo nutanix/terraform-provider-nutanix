@@ -73,8 +73,6 @@ func resourceNutanixCategoryValueRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Please provide the required attributes name")
 	}
 
-	fmt.Printf("NAME: %s, ID:%s", name.(string), d.Id())
-
 	// Get client connection
 	conn := meta.(*Client).API
 
@@ -82,21 +80,12 @@ func resourceNutanixCategoryValueRead(d *schema.ResourceData, meta interface{}) 
 	resp, err := conn.V3.GetCategoryValue(name.(string), d.Id())
 
 	if err != nil {
-		fmt.Println("ERROR HERE:")
 		return err
 	}
 
-	if err := d.Set("api_version", utils.StringValue(resp.APIVersion)); err != nil {
-		return err
-	}
-
-	if err := d.Set("name", utils.StringValue(resp.Name)); err != nil {
-		return err
-	}
-
-	if err := d.Set("description", utils.StringValue(resp.Description)); err != nil {
-		return err
-	}
+	d.Set("api_version", utils.StringValue(resp.APIVersion))
+	d.Set("name", utils.StringValue(resp.Name))
+	d.Set("description", utils.StringValue(resp.Description))
 
 	return d.Set("system_defined", utils.BoolValue(resp.SystemDefined))
 }

@@ -83,6 +83,11 @@ resource "nutanix_category_key" "test-category-key"{
 	  description = "TIER Category Key"
 }
 
+resource "nutanix_category_key" "USER"{
+    name = "user"
+	  description = "user Category Key"
+}
+
 
 resource "nutanix_category_value" "WEB"{
     name = "${nutanix_category_key.test-category-key.id}"
@@ -103,7 +108,7 @@ resource "nutanix_category_value" "DB"{
 }
 
 resource "nutanix_category_value" "ashwini"{
-    name = "${nutanix_category_key.test-category-key.id}"
+    name = "${nutanix_category_key.USER.id}"
 	  description = "ashwini Category Value"
 	 value = "ashwini-1"
 }
@@ -144,7 +149,7 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
       values = ["${nutanix_category_value.APP.id}"]
     },
     {
-      name   = "${nutanix_category_key.test-category-key.id}"
+      name   = "${nutanix_category_key.USER.id}"
       values = ["${nutanix_category_value.ashwini.id}"]
     },
   ]
@@ -174,6 +179,10 @@ resource "nutanix_category_key" "test-category-key"{
 	  description = "TIER Category Key"
 }
 
+resource "nutanix_category_key" "USER"{
+    name = "user"
+	  description = "user Category Key"
+}
 
 resource "nutanix_category_value" "WEB"{
     name = "${nutanix_category_key.test-category-key.id}"
@@ -194,7 +203,7 @@ resource "nutanix_category_value" "DB"{
 }
 
 resource "nutanix_category_value" "ashwini"{
-    name = "${nutanix_category_key.test-category-key.id}"
+    name = "${nutanix_category_key.USER.id}"
 	  description = "ashwini Category Value"
 	 value = "ashwini-1"
 }
@@ -229,16 +238,16 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
 
   app_rule_target_group_filter_kind_list = ["vm"]
 
-  app_rule_target_group_filter_params = [
-    {
+  app_rule_target_group_filter_params = {
       name   = "${nutanix_category_key.test-category-key.id}"
       values = ["${nutanix_category_value.APP.id}"]
-    },
-    {
-      name   = "${nutanix_category_key.test-category-key.id}"
+  }
+    
+  app_rule_target_group_filter_params = {
+      name   = "${nutanix_category_key.USER.id}"
       values = ["${nutanix_category_value.ashwini.id}"]
-    },
-  ]
+  }
+  
 
   app_rule_outbound_allow_list = [
     {

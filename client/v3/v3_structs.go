@@ -1085,7 +1085,7 @@ type ClusterListIntentResponse struct {
 type ClusterIntentResource struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
-	Metadata *ClusterMetadata `json:"metadata"`
+	Metadata *Metadata `json:"metadata"`
 
 	Spec *Cluster `json:"spec,omitempty"`
 
@@ -1096,44 +1096,11 @@ type ClusterIntentResource struct {
 type ClusterIntentResponse struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
-	Metadata *ClusterMetadata `json:"metadata"`
+	Metadata *Metadata `json:"metadata"`
 
 	Spec *Cluster `json:"spec,omitempty"`
 
 	Status *ClusterDefStatus `json:"status,omitempty"`
-}
-
-// ClusterMetadata ...
-type ClusterMetadata struct {
-
-	// Categories for the image
-	Categories map[string]string `json:"categories,omitempty"`
-
-	// UTC date and time in RFC-3339 format when vm was created
-	CreationTime *time.Time `json:"creation_time,omitempty"`
-
-	// The kind name
-	Kind *string `json:"kind"`
-
-	// UTC date and time in RFC-3339 format when image was last updated
-	LastUpdateTime *time.Time `json:"last_update_time,omitempty"`
-
-	// image name
-	Name *string `json:"name,omitempty"`
-
-	// project reference
-	ProjectReference *Reference `json:"project_reference,omitempty"`
-
-	OwnerReference *Reference `json:"owner_reference,omitempty"`
-
-	// Hash of the spec. This will be returned from server.
-	SpecHash *string `json:"spec_hash,omitempty"`
-
-	// Version number of the latest spec.
-	SpecVersion *int64 `json:"spec_version,omitempty"`
-
-	// image uuid
-	UUID *string `json:"uuid,omitempty"`
 }
 
 // Cluster ...

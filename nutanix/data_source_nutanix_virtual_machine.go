@@ -91,20 +91,37 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	d.Set("boot_device_mac_address", mac)
 
 	sysprep := make(map[string]interface{})
+	sysrepCV := make(map[string]string)
 	cloudInit := make(map[string]interface{})
+	cloudInitCV := make(map[string]string)
 	isOv := false
 	if resp.Status.Resources.GuestCustomization != nil {
 		isOv = utils.BoolValue(resp.Status.Resources.GuestCustomization.IsOverridable)
 		if resp.Status.Resources.GuestCustomization.CloudInit != nil {
 			cloudInit["meta_data"] = utils.StringValue(resp.Status.Resources.GuestCustomization.CloudInit.MetaData)
 			cloudInit["user_data"] = utils.StringValue(resp.Status.Resources.GuestCustomization.CloudInit.UserData)
-			cloudInit["custom_key_values"] = resp.Status.Resources.GuestCustomization.CloudInit.CustomKeyValues
+			if resp.Status.Resources.GuestCustomization.CloudInit.CustomKeyValues != nil {
+				for k, v := range resp.Status.Resources.GuestCustomization.CloudInit.CustomKeyValues {
+					cloudInitCV[k] = v
+				}
+			}
 		}
 		if resp.Status.Resources.GuestCustomization.Sysprep != nil {
 			sysprep["install_type"] = utils.StringValue(resp.Status.Resources.GuestCustomization.Sysprep.InstallType)
 			sysprep["unattend_xml"] = utils.StringValue(resp.Status.Resources.GuestCustomization.Sysprep.UnattendXML)
-			sysprep["custom_key_values"] = resp.Status.Resources.GuestCustomization.Sysprep.CustomKeyValues
+
+			if resp.Status.Resources.GuestCustomization.Sysprep.CustomKeyValues != nil {
+				for k, v := range resp.Status.Resources.GuestCustomization.Sysprep.CustomKeyValues {
+					sysrepCV[k] = v
+				}
+			}
 		}
+	}
+	if err := d.Set("guest_customization_cloud_init_custom_key_values", cloudInitCV); err != nil {
+		return err
+	}
+	if err := d.Set("guest_customization_sysprep_custom_key_values", sysrepCV); err != nil {
+		return err
 	}
 	if err := d.Set("guest_customization_sysprep", sysprep); err != nil {
 		return err
@@ -614,12 +631,12 @@ func getDataSourceVMSchema() map[string]*schema.Schema {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"custom_key_values": {
-						Type:     schema.TypeMap,
-						Computed: true,
-					},
 				},
 			},
+		},
+		"guest_customization_cloud_init_custom_key_values": {
+			Type:     schema.TypeMap,
+			Computed: true,
 		},
 		"guest_customization_is_overridable": {
 			Type:     schema.TypeBool,
@@ -638,12 +655,12 @@ func getDataSourceVMSchema() map[string]*schema.Schema {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"custom_key_values": {
-						Type:     schema.TypeMap,
-						Computed: true,
-					},
 				},
 			},
+		},
+		"guest_customization_sysprep_custom_key_values": {
+			Type:     schema.TypeMap,
+			Computed: true,
 		},
 		"should_fail_on_script_failure": {
 			Type:     schema.TypeBool,

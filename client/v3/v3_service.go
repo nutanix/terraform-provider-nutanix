@@ -333,6 +333,12 @@ func (op Operations) CreateImage(body *ImageIntentInput) (*ImageIntentResponse, 
 	return imageIntentResponse, nil
 }
 
+/*UploadImage Uplloads a Image Binary file
+ * Images are raw ISO, QCOW2, or VMDK files that are uploaded by a user can be attached to a op. An ISO image is attached as a virtual CD-ROM drive, and QCOW2 and VMDK files are attached as SCSI disks. An image has to be explicitly added to the self-service catalog before users can create VMs from it.
+ *
+ * @param UUID
+ * @param filepath
+ */
 func (op Operations) UploadImage(UUID, filepath string) error {
 	ctx := context.Background()
 
