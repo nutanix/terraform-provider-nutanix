@@ -1,12 +1,12 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_virtual_machine"
-sidebar_current: "docs-nutanix-datasource-virtual-machine"
+page_title: "NUTANIX: nutanix_image"
+sidebar_current: "docs-nutanix-datasource-image"
 description: |-
  Describes a Image
 ---
 
-# nutanix_virtual_machine
+# nutanix_image
 
 Describes a Image
 

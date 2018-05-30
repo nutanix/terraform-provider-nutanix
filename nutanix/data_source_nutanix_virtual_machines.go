@@ -85,7 +85,9 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 		entity["hardware_clock_timezone"] = utils.StringValue(v.Status.Resources.HardwareClockTimezone)
 
 		cloudInit := make(map[string]interface{})
+		cloudInitCV := make(map[string]string)
 		sysprep := make(map[string]interface{})
+		sysprepCV := make(map[string]string)
 		isOv := false
 		if v.Status.Resources.GuestCustomization != nil {
 			isOv = utils.BoolValue(v.Status.Resources.GuestCustomization.IsOverridable)
@@ -93,15 +95,25 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 			if v.Status.Resources.GuestCustomization.CloudInit != nil {
 				cloudInit["meta_data"] = utils.StringValue(v.Status.Resources.GuestCustomization.CloudInit.MetaData)
 				cloudInit["user_data"] = utils.StringValue(v.Status.Resources.GuestCustomization.CloudInit.UserData)
-				cloudInit["custom_key_values"] = v.Status.Resources.GuestCustomization.CloudInit.CustomKeyValues
+				if v.Status.Resources.GuestCustomization.CloudInit.CustomKeyValues != nil {
+					for k, v := range v.Status.Resources.GuestCustomization.CloudInit.CustomKeyValues {
+						cloudInitCV[k] = v
+					}
+				}
 			}
 			if v.Status.Resources.GuestCustomization.Sysprep != nil {
 				sysprep["install_type"] = utils.StringValue(v.Status.Resources.GuestCustomization.Sysprep.InstallType)
 				sysprep["unattend_xml"] = utils.StringValue(v.Status.Resources.GuestCustomization.Sysprep.UnattendXML)
-				sysprep["custom_key_values"] = v.Status.Resources.GuestCustomization.Sysprep.CustomKeyValues
+				if v.Status.Resources.GuestCustomization.Sysprep.CustomKeyValues != nil {
+					for k, v := range v.Status.Resources.GuestCustomization.Sysprep.CustomKeyValues {
+						sysprepCV[k] = v
+					}
+				}
 			}
 		}
 
+		entity["guest_customization_cloud_init_custom_key_values"] = cloudInitCV
+		entity["guest_customization_sysprep_custom_key_values"] = sysprepCV
 		entity["guest_customization_is_overridable"] = isOv
 		entity["guest_customization_cloud_init"] = cloudInit
 		entity["guest_customization_sysprep"] = sysprep
@@ -741,12 +753,12 @@ func getDataSourceVMSSchema() map[string]*schema.Schema {
 									Type:     schema.TypeString,
 									Computed: true,
 								},
-								"custom_key_values": {
-									Type:     schema.TypeMap,
-									Computed: true,
-								},
 							},
 						},
+					},
+					"guest_customization_cloud_init_custom_key_values": {
+						Type:     schema.TypeMap,
+						Computed: true,
 					},
 					"guest_customization_is_overridable": {
 						Type:     schema.TypeBool,
@@ -765,12 +777,12 @@ func getDataSourceVMSSchema() map[string]*schema.Schema {
 									Type:     schema.TypeString,
 									Computed: true,
 								},
-								"custom_key_values": {
-									Type:     schema.TypeMap,
-									Computed: true,
-								},
 							},
 						},
+					},
+					"guest_customization_sysprep_custom_key_values": {
+						Type:     schema.TypeMap,
+						Computed: true,
 					},
 					"should_fail_on_script_failure": {
 						Type:     schema.TypeBool,

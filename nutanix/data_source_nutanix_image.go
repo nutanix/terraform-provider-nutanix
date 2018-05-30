@@ -2,7 +2,6 @@ package nutanix
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -32,100 +31,37 @@ func dataSourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	// set metadata values
-	metadata := make(map[string]interface{})
-	metadata["last_update_time"] = resp.Metadata.LastUpdateTime.String()
-	metadata["kind"] = utils.StringValue(resp.Metadata.Kind)
-	metadata["uuid"] = utils.StringValue(resp.Metadata.UUID)
-	metadata["creation_time"] = resp.Metadata.CreationTime.String()
-	metadata["spec_version"] = strconv.Itoa(int(utils.Int64Value(resp.Metadata.SpecVersion)))
-	metadata["spec_hash"] = utils.StringValue(resp.Metadata.SpecHash)
-	metadata["name"] = utils.StringValue(resp.Metadata.Name)
-	if err := d.Set("metadata", metadata); err != nil {
+	m, c := setRSEntityMetadata(resp.Metadata)
+
+	if err := d.Set("metadata", m); err != nil {
+		return err
+	}
+	if err := d.Set("categories", c); err != nil {
 		return err
 	}
 
-	if resp.Metadata.Categories != nil {
-		categories := resp.Metadata.Categories
-		var catList []map[string]interface{}
+	if err := d.Set("owner_reference", getReferenceValues(resp.Metadata.OwnerReference)); err != nil {
+		return err
+	}
 
-		for name, values := range categories {
-			catItem := make(map[string]interface{})
-			catItem["name"] = name
-			catItem["value"] = values
-			catList = append(catList, catItem)
-		}
-		if err := d.Set("categories", catList); err != nil {
+	if err := d.Set("availability_zone_reference", getReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
+		return err
+	}
+	if resp.Status.ClusterReference != nil {
+		if err := d.Set("cluster_reference", getClusterReferenceValues(resp.Status.ClusterReference)); err != nil {
 			return err
 		}
+
+		d.Set("cluster_reference_name", utils.StringValue(resp.Status.ClusterReference.Name))
 	}
 
-	or := make(map[string]interface{})
-	if resp.Metadata.OwnerReference != nil {
-		or["kind"] = utils.StringValue(resp.Metadata.OwnerReference.Kind)
-		or["name"] = utils.StringValue(resp.Metadata.OwnerReference.Name)
-		or["uuid"] = utils.StringValue(resp.Metadata.OwnerReference.UUID)
-
-	}
-	if err := d.Set("owner_reference", or); err != nil {
-		return err
-	}
-	if err := d.Set("api_version", utils.StringValue(resp.APIVersion)); err != nil {
-		return err
-	}
-	if err := d.Set("name", utils.StringValue(resp.Status.Name)); err != nil {
-		return err
-	}
-	if err := d.Set("description", utils.StringValue(resp.Status.Description)); err != nil {
-		return err
-	}
-	// set availability zone reference values
-	availabilityZoneReference := make(map[string]interface{})
-	if resp.Status.AvailabilityZoneReference != nil {
-		availabilityZoneReference["kind"] = utils.StringValue(resp.Status.AvailabilityZoneReference.Kind)
-		availabilityZoneReference["name"] = utils.StringValue(resp.Status.AvailabilityZoneReference.Name)
-		availabilityZoneReference["uuid"] = utils.StringValue(resp.Status.AvailabilityZoneReference.UUID)
-	}
-	if err := d.Set("availability_zone_reference", availabilityZoneReference); err != nil {
-		return err
-	}
-	// set cluster reference values
-	clusterReference := make(map[string]interface{})
-	if resp.Status.ClusterReference != nil {
-		clusterReference["kind"] = utils.StringValue(resp.Status.ClusterReference.Kind)
-		clusterReference["name"] = utils.StringValue(resp.Status.ClusterReference.Name)
-		clusterReference["uuid"] = utils.StringValue(resp.Status.ClusterReference.UUID)
-	}
-	if err := d.Set("cluster_reference", clusterReference); err != nil {
-		return err
-	}
-
-	if err := d.Set("api_version", utils.StringValue(resp.APIVersion)); err != nil {
-		return err
-	}
-	if err := d.Set("name", utils.StringValue(resp.Status.Name)); err != nil {
-		return err
-	}
-	if err := d.Set("description", utils.StringValue(resp.Status.Description)); err != nil {
-		return err
-	}
-
-	// set state value
-	if err := d.Set("state", resp.Status.State); err != nil {
-		return err
-	}
-
-	if err := d.Set("image_type", resp.Status.Resources.ImageType); err != nil {
-		return err
-	}
-
-	if err := d.Set("source_uri", resp.Status.Resources.SourceURI); err != nil {
-		return err
-	}
-
-	if err := d.Set("size_bytes", resp.Status.Resources.SizeBytes); err != nil {
-		return err
-	}
+	d.Set("api_version", utils.StringValue(resp.APIVersion))
+	d.Set("name", utils.StringValue(resp.Status.Name))
+	d.Set("description", utils.StringValue(resp.Status.Description))
+	d.Set("state", utils.StringValue(resp.Status.State))
+	d.Set("image_type", resp.Status.Resources.ImageType)
+	d.Set("source_uri", resp.Status.Resources.SourceURI)
+	d.Set("size_bytes", utils.Int64Value(resp.Status.Resources.SizeBytes))
 
 	var uriList []string
 	for _, uri := range resp.Status.Resources.RetrievalURIList {
@@ -289,12 +225,12 @@ func getDataSourceImageSchema() map[string]*schema.Schema {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"name": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
 				},
 			},
+		},
+		"cluster_reference_name": {
+			Type:     schema.TypeString,
+			Computed: true,
 		},
 		"retrieval_uri_list": {
 			Type:     schema.TypeList,

@@ -159,7 +159,9 @@ The entities attribute supports the following:
 * `hardware_clock_timezone`: - VM's hardware clock timezone in IANA TZDB format (America/Los_Angeles).
 * `guest_customization_cloud_init`: - VM guests may be customized at boot time using one of several different methods. Currently, cloud-init w/ ConfigDriveV2 (for Linux VMs) and Sysprep (for Windows VMs) are supported. Only ONE OF sysprep or cloud_init should be provided. Note that guest customization can currently only be set during VM creation. Attempting to change it after creation will result in an error. Additional properties can be specified. For example - in the context of VM template creation if \"override_script\" is set to \"True\" then the deployer can upload their own custom script.
 * `guest_customization_is_overridable`: - Flag to allow override of customization by deployer.
+* `guest_customization_cloud_init_custom_key_values`: - (Optional) Generic key value pair used for custom attributes in cloud init.
 * `guest_customization_sysprep`: - VM guests may be customized at boot time using one of several different methods. Currently, cloud-init w/ ConfigDriveV2 (for Linux VMs) and Sysprep (for Windows VMs) are supported. Only ONE OF sysprep or cloud_init should be provided. Note that guest customization can currently only be set during VM creation. Attempting to change it after creation will result in an error. Additional properties can be specified. For example - in the context of VM template creation if \"override_script\" is set to \"True\" then the deployer can upload their own custom script.
+* `guest_customization_sysrep_custom_key_values`: - (Optional) Generic key value pair used for custom attributes in sysrep.
 * `should_fail_on_script_failure`: -  Extra configs related to power state transition. Indicates whether to abort ngt shutdown/reboot if script fails.
 * `enable_script_exec`: - Extra configs related to power state transition. Indicates whether to execute set script before ngt shutdown/reboot.
 * `power_state_mechanism`: - Indicates the mechanism guiding the VM power state transition. Currently used for the transition to \"OFF\" state. Power state mechanism (ACPI/GUEST/HARD).
@@ -195,7 +197,6 @@ The guest_customization_sysprep attribute supports the following:
 
 * `install_type`: - Whether the guest will be freshly installed using this unattend configuration, or whether this unattend configuration will be applied to a pre-prepared image. Default is \"PREPARED\".
 * `unattend_xml`: - Generic key value pair used for custom attributes.
-* `custom_key_values`: - Generic key value pair used for custom attributes.
 
 ### Cloud Init
 
@@ -203,7 +204,6 @@ The guest_customization_cloud_init attribute supports the following:
 
 * `meta_data`: - The contents of the meta_data configuration for cloud-init. This can be formatted as YAML or JSON. The value must be base64 encoded.
 * `user_data`: - The contents of the user_data configuration for cloud-init. This can be formatted as YAML, JSON, or could be a shell script. The value must be base64 encoded.
-* `custom_key_values`: - Generic key value pair used for custom attributes.
 
 ### Disk Address
 

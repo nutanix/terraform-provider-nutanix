@@ -1,9 +1,9 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_image"
-sidebar_current: "docs-nutanix-resource-virtual-machine"
+sidebar_current: "docs-nutanix-resource-image"
 description: |-
-  Provides a Nutanix Virtual Machine resource to Create a virtual machine.
+  Provides a Nutanix Image resource to Create a Image.
 ---
 
 # nutanix_image
