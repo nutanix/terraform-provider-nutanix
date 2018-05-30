@@ -33,44 +33,27 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	// set metadata values
-	metadata := make(map[string]interface{})
-	metadata["last_update_time"] = utils.TimeValue(v.Metadata.LastUpdateTime).String()
-	metadata["kind"] = utils.StringValue(v.Metadata.Kind)
-	metadata["uuid"] = utils.StringValue(v.Metadata.UUID)
-	metadata["creation_time"] = utils.TimeValue(v.Metadata.CreationTime).String()
-	metadata["spec_version"] = strconv.Itoa(int(utils.Int64Value(v.Metadata.SpecVersion)))
-	metadata["spec_hash"] = utils.StringValue(v.Metadata.SpecHash)
-	metadata["name"] = utils.StringValue(v.Metadata.Name)
-	if err := d.Set("metadata", metadata); err != nil {
+	m, c := setRSEntityMetadata(v.Metadata)
+
+	if err := d.Set("metadata", m); err != nil {
 		return err
 	}
-	if err := d.Set("categories", v.Metadata.Categories); err != nil {
+	if err := d.Set("categories", c); err != nil {
 		return err
 	}
+
 	if err := d.Set("api_version", utils.StringValue(v.APIVersion)); err != nil {
 		return err
 	}
 
-	pr := make(map[string]interface{})
-	if v.Metadata.ProjectReference != nil {
-		pr["kind"] = utils.StringValue(v.Metadata.ProjectReference.Kind)
-		pr["name"] = utils.StringValue(v.Metadata.ProjectReference.Name)
-		pr["uuid"] = utils.StringValue(v.Metadata.ProjectReference.UUID)
-	}
-	if err := d.Set("project_reference", pr); err != nil {
+	if err := d.Set("project_reference", getReferenceValues(v.Metadata.ProjectReference)); err != nil {
 		return err
 	}
 
-	or := make(map[string]interface{})
-	if v.Metadata.OwnerReference != nil {
-		or["kind"] = utils.StringValue(v.Metadata.OwnerReference.Kind)
-		or["name"] = utils.StringValue(v.Metadata.OwnerReference.Name)
-		or["uuid"] = utils.StringValue(v.Metadata.OwnerReference.UUID)
-	}
-	if err := d.Set("owner_reference", or); err != nil {
+	if err := d.Set("owner_reference", getReferenceValues(v.Metadata.OwnerReference)); err != nil {
 		return err
 	}
+
 	if err := d.Set("name", utils.StringValue(v.Status.Name)); err != nil {
 		return err
 	}
@@ -469,9 +452,22 @@ func getDataSourceClusterSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"categories": &schema.Schema{
-			Type:     schema.TypeMap,
+		"categories": {
+			Type:     schema.TypeList,
+			Optional: true,
 			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"name": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					"value": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+				},
+			},
 		},
 		"project_reference": &schema.Schema{
 			Type:     schema.TypeMap,
