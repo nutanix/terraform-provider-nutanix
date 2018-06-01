@@ -52,7 +52,7 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 		entity["cluster_reference_name"] = utils.StringValue(v.Status.ClusterReference.Name)
 		entity["state"] = utils.StringValue(v.Status.State)
 		entity["num_vnuma_nodes"] = utils.Int64Value(v.Status.Resources.VnumaConfig.NumVnumaNodes)
-		entity["nic_list"], entity["ip_address"] = setNicList(v.Status.Resources.NicList)
+		entity["nic_list"] = setNicList(v.Status.Resources.NicList)
 		entity["host_reference"] = getReferenceValues(v.Status.Resources.HostReference)
 		entity["guest_os_id"] = utils.StringValue(v.Status.Resources.GuestOsID)
 		entity["power_state"] = utils.StringValue(v.Status.Resources.PowerState)
@@ -205,9 +205,8 @@ func setNutanixGuestTools(guest *v3.GuestToolsStatus) map[string]interface{} {
 	return nutanixGuestTools
 }
 
-func setNicList(nics []*v3.VMNicOutputStatus) ([]map[string]interface{}, string) {
+func setNicList(nics []*v3.VMNicOutputStatus) []map[string]interface{} {
 	nicLists := make([]map[string]interface{}, 0)
-	ip := ""
 	if nics != nil {
 		nicLists = make([]map[string]interface{}, len(nics))
 		for k, v := range nics {
@@ -218,7 +217,6 @@ func setNicList(nics []*v3.VMNicOutputStatus) ([]map[string]interface{}, string)
 			nic["network_function_nic_type"] = utils.StringValue(v.NetworkFunctionNicType)
 			nic["mac_address"] = utils.StringValue(v.MacAddress)
 			nic["model"] = utils.StringValue(v.Model)
-			ip = utils.StringValue(v.IPEndpointList[0].IP)
 			ipEndpointList := make([]map[string]interface{}, len(v.IPEndpointList))
 			for k1, v1 := range v.IPEndpointList {
 				ipEndpoint := make(map[string]interface{})
@@ -234,7 +232,7 @@ func setNicList(nics []*v3.VMNicOutputStatus) ([]map[string]interface{}, string)
 		}
 	}
 
-	return nicLists, ip
+	return nicLists
 }
 
 func getDataSourceVMSSchema() map[string]*schema.Schema {
@@ -448,10 +446,6 @@ func getDataSourceVMSSchema() map[string]*schema.Schema {
 						},
 					},
 					"state": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"ip_address": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
