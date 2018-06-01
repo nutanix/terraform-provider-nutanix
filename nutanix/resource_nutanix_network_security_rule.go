@@ -642,22 +642,12 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 
 	if d.HasChange("owner_reference") {
 		or := d.Get("owner_reference").(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(or["kind"].(string)),
-			UUID: utils.String(or["uuid"].(string)),
-			Name: utils.String(or["name"].(string)),
-		}
-		metadata.OwnerReference = r
+		metadata.OwnerReference = validateRef(or)
 	}
 
 	if d.HasChange("project_reference") {
 		pr := d.Get("project_reference").(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(pr["kind"].(string)),
-			UUID: utils.String(pr["uuid"].(string)),
-			Name: utils.String(pr["name"].(string)),
-		}
-		metadata.ProjectReference = r
+		metadata.ProjectReference = validateRef(pr)
 	}
 
 	if d.HasChange("name") {
@@ -911,14 +901,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 
 			if nfcr, nfcrok := nr["network_function_chain_reference"]; nfcrok && len(nfcr.(map[string]interface{})) > 0 {
 				a := nfcr.(map[string]interface{})
-				r := &v3.Reference{
-					Kind: utils.String(a["kind"].(string)),
-					UUID: utils.String(a["uuid"].(string)),
-				}
-				if v, ok := a["name"]; ok {
-					r.Name = utils.String(v.(string))
-				}
-				nrItem.NetworkFunctionChainReference = r
+				nrItem.NetworkFunctionChainReference = validateRef(a)
 			}
 
 			if icmp, icmpok := nr["icmp_type_code_list"]; icmpok {
@@ -1127,14 +1110,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 
 			if nfcr, nfcrok := nr["network_function_chain_reference"]; nfcrok && nfcr.(string) != "" {
 				a := nfcr.(map[string]interface{})
-				r := &v3.Reference{
-					Kind: utils.String(a["kind"].(string)),
-					UUID: utils.String(a["uuid"].(string)),
-				}
-				if v, ok := a["name"]; ok {
-					r.Name = utils.String(v.(string))
-				}
-				nrItem.NetworkFunctionChainReference = r
+				nrItem.NetworkFunctionChainReference = validateRef(a)
 			}
 
 			if icmp, icmpok := nr["icmp_type_code_list"]; icmpok {
@@ -1300,14 +1276,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 
 			if nfcr, nfcrok := nr["network_function_chain_reference"]; nfcrok && len(nfcr.(map[string]interface{})) > 0 {
 				a := nfcr.(map[string]interface{})
-				r := &v3.Reference{
-					Kind: utils.String(a["kind"].(string)),
-					UUID: utils.String(a["uuid"].(string)),
-				}
-				if v, ok := a["name"]; ok {
-					r.Name = utils.String(v.(string))
-				}
-				nrItem.NetworkFunctionChainReference = r
+				nrItem.NetworkFunctionChainReference = validateRef(a)
 			}
 
 			if icmp, icmpok := nr["icmp_type_code_list"]; icmpok {
@@ -1516,14 +1485,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 
 			if nfcr, nfcrok := nr["network_function_chain_reference"]; nfcrok && len(nfcr.(map[string]interface{})) > 0 {
 				a := nfcr.(map[string]interface{})
-				r := &v3.Reference{
-					Kind: utils.String(a["kind"].(string)),
-					UUID: utils.String(a["uuid"].(string)),
-				}
-				if v, ok := a["name"]; ok {
-					r.Name = utils.String(v.(string))
-				}
-				nrItem.NetworkFunctionChainReference = r
+				nrItem.NetworkFunctionChainReference = validateRef(a)
 			}
 
 			if icmp, icmpok := nr["icmp_type_code_list"]; icmpok {
