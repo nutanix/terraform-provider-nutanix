@@ -220,7 +220,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 			}
 		}
 	}
-	if err := d.Set("guest_customization_cloud_init_custom_key_values", cloudInit); err != nil {
+	if err := d.Set("guest_customization_cloud_init_custom_key_values", cloudInitCV); err != nil {
 		return err
 	}
 	if err := d.Set("guest_customization_sysprep_custom_key_values", sysprepCV); err != nil {
@@ -271,32 +271,21 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	boot := &v3.VMBootConfig{}
 	pw := &v3.VMPowerStateMechanism{}
 
-	// get state
-	if d.HasChange("metadata") {
-		m := d.Get("metadata")
-		metad := m.(map[string]interface{})
-		if v, ok := metad["uuid"]; ok && v != "" {
-			metadata.UUID = utils.String(v.(string))
-		}
-		if v, ok := metad["spec_version"]; ok && v != 0 {
-			i, err := strconv.Atoi(v.(string))
-			if err != nil {
-				return err
-			}
-			metadata.SpecVersion = utils.Int64(int64(i))
-		}
-		if v, ok := metad["spec_hash"]; ok && v != "" {
-			metadata.SpecHash = utils.String(v.(string))
-		}
-		if v, ok := metad["name"]; ok {
-			metadata.Name = utils.String(v.(string))
-		}
+	response, err := conn.V3.GetVM(d.Id())
+	preFillUpdateRequest(res, guestTool, guest, pw, response)
+
+	if err != nil {
+		return err
+	}
+
+	if response.Metadata != nil {
+		metadata = response.Metadata
 	}
 
 	if d.HasChange("categories") {
 		catl := d.Get("categories").([]interface{})
 
-		if len(catl) > 0 {
+		if len(catl) > 0 && catl != nil {
 			cl := make(map[string]string)
 			for _, v := range catl {
 				item := v.(map[string]interface{})
@@ -312,134 +301,132 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 			metadata.Categories = nil
 		}
 	}
+	metadata.OwnerReference = response.Metadata.OwnerReference
 	if d.HasChange("owner_reference") {
-		or := d.Get("owner_reference").(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(or["kind"].(string)),
-			UUID: utils.String(or["uuid"].(string)),
-			Name: utils.String(or["name"].(string)),
-		}
-		metadata.OwnerReference = r
+		_, n := d.GetChange("owner_reference")
+		metadata.OwnerReference = validateRef(n.(map[string]interface{}))
 	}
+	metadata.ProjectReference = response.Metadata.ProjectReference
 	if d.HasChange("project_reference") {
-		pr := d.Get("project_reference").(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(pr["kind"].(string)),
-			UUID: utils.String(pr["uuid"].(string)),
-			Name: utils.String(pr["name"].(string)),
-		}
-		metadata.ProjectReference = r
+		_, n := d.GetChange("project_reference")
+		metadata.ProjectReference = validateRef(n.(map[string]interface{}))
 	}
+	spec.Name = response.Status.Name
 	if d.HasChange("name") {
-		spec.Name = utils.String(d.Get("name").(string))
+		_, n := d.GetChange("name")
+		spec.Name = utils.String(n.(string))
 	}
+	spec.Description = response.Status.Description
 	if d.HasChange("description") {
-		spec.Description = utils.String(d.Get("description").(string))
+		_, n := d.GetChange("description")
+		spec.Description = utils.String(n.(string))
 	}
+	spec.AvailabilityZoneReference = response.Status.AvailabilityZoneReference
 	if d.HasChange("availability_zone_reference") {
-		a := d.Get("availability_zone_reference").(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(a["kind"].(string)),
-			UUID: utils.String(a["uuid"].(string)),
-			Name: utils.String(a["name"].(string)),
-		}
-		spec.AvailabilityZoneReference = r
+		_, n := d.GetChange("availability_zone_reference")
+		spec.AvailabilityZoneReference = validateRef(n.(map[string]interface{}))
 	}
+	spec.ClusterReference = response.Status.ClusterReference
 	if d.HasChange("cluster_reference") {
-		a := d.Get("cluster_reference").(map[string]interface{})
-
-		r := &v3.Reference{
-			Kind: utils.String(a["kind"].(string)),
-			UUID: utils.String(a["uuid"].(string)),
-			Name: utils.String(a["name"].(string)),
-		}
-		spec.ClusterReference = r
+		_, n := d.GetChange("cluster_reference")
+		spec.ClusterReference = validateRef(n.(map[string]interface{}))
 	}
 	if d.HasChange("parent_reference") {
-		a := d.Get("parent_reference").(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(a["kind"].(string)),
-			UUID: utils.String(a["uuid"].(string)),
-			Name: utils.String(a["name"].(string)),
-		}
-		res.ParentReference = r
+		_, n := d.GetChange("parent_reference")
+		res.ParentReference = validateRef(n.(map[string]interface{}))
 	}
-
 	if d.HasChange("num_vnuma_nodes") {
+		_, n := d.GetChange("num_vnuma_nodes")
 		res.VMVnumaConfig = &v3.VMVnumaConfig{
-			NumVnumaNodes: utils.Int64(int64(d.Get("num_vnuma_nodes").(int))),
+			NumVnumaNodes: utils.Int64(int64(n.(int))),
 		}
 	}
 	if d.HasChange("guest_os_id") {
-		res.GuestOsID = utils.String(d.Get("guest_os_id").(string))
+		_, n := d.GetChange("guest_os_id")
+		res.GuestOsID = utils.String(n.(string))
 	}
 	if d.HasChange("power_state") {
-		res.PowerState = utils.String(d.Get("power_state").(string))
+		_, n := d.GetChange("power_state")
+
+		res.PowerState = utils.String(n.(string))
 	}
 	if d.HasChange("num_vcpus_per_socket") {
-		res.NumVcpusPerSocket = utils.Int64(int64(d.Get("num_vcpus_per_socket").(int)))
+		_, n := d.GetChange("num_vcpus_per_socket")
+		res.NumVcpusPerSocket = utils.Int64(int64(n.(int)))
 	}
 	if d.HasChange("num_sockets") {
-		res.NumSockets = utils.Int64(int64(d.Get("num_sockets").(int)))
+		_, n := d.GetChange("num_sockets")
+		res.NumSockets = utils.Int64(int64(n.(int)))
 	}
 	if d.HasChange("memory_size_mib") {
-		res.MemorySizeMib = utils.Int64(int64(d.Get("memory_size_mib").(int)))
+		_, n := d.GetChange("memory_size_mib")
+		res.MemorySizeMib = utils.Int64(int64(n.(int)))
 	}
 	if d.HasChange("hardware_clock_timezone") {
-		res.HardwareClockTimezone = utils.String(d.Get("hardware_clock_timezone").(string))
+		_, n := d.GetChange("hardware_clock_timezone")
+		res.HardwareClockTimezone = utils.String(n.(string))
 	}
 	if d.HasChange("vga_console_enabled") {
-		res.VgaConsoleEnabled = utils.Bool(d.Get("vga_console_enabled").(bool))
+		_, n := d.GetChange("vga_console_enabled")
+		res.VgaConsoleEnabled = utils.Bool(n.(bool))
 	}
 	if d.HasChange("guest_customization_is_overridable") {
-		guest.IsOverridable = utils.Bool(d.Get("guest_customization_is_overridable").(bool))
+		_, n := d.GetChange("guest_customization_is_overridable")
+		guest.IsOverridable = utils.Bool(n.(bool))
 	}
 	if d.HasChange("power_state_mechanism") {
-		pw.Mechanism = utils.String(d.Get("power_state_mechanism").(string))
+		_, n := d.GetChange("power_state_mechanism")
+		pw.Mechanism = utils.String(n.(string))
 	}
 	if d.HasChange("power_state_guest_transition_config") {
-		val := d.Get("power_state_guest_transition_config").(map[string]interface{})
-		pw.GuestTransitionConfig = &v3.VMGuestPowerStateTransitionConfig{
-			EnableScriptExec:          utils.Bool(val["enable_script_exec"].(bool)),
-			ShouldFailOnScriptFailure: utils.Bool(val["should_fail_on_script_failure"].(bool)),
-		}
-	}
+		_, n := d.GetChange("power_state_guest_transition_config")
+		val := n.(map[string]interface{})
 
+		p := &v3.VMGuestPowerStateTransitionConfig{}
+		if v, ok := val["enable_script_exec"]; ok {
+			p.EnableScriptExec = utils.Bool(v.(bool))
+		}
+		if v, ok := val["should_fail_on_script_failure"]; ok {
+			p.ShouldFailOnScriptFailure = utils.Bool(v.(bool))
+		}
+		pw.GuestTransitionConfig = p
+	}
 	if d.HasChange("guest_customization_cloud_init") {
-		a := d.Get("guest_customization_cloud_init").(map[string]interface{})
-		r := &v3.GuestCustomizationCloudInit{
-			MetaData: utils.String(a["meta_data"].(string)),
-			UserData: utils.String(a["user_data"].(string)),
-		}
-		guest.CloudInit = r
-	}
+		_, n := d.GetChange("guest_customization_cloud_init")
+		a := n.(map[string]interface{})
 
+		guest.CloudInit = &v3.GuestCustomizationCloudInit{
+			MetaData: validateMapStringValue(a, "meta_data"),
+			UserData: validateMapStringValue(a, "user_data"),
+		}
+	}
 	if d.HasChange("guest_customization_cloud_init_custom_key_values") {
 		if guest.CloudInit == nil {
 			guest.CloudInit = &v3.GuestCustomizationCloudInit{}
 		}
-		guest.CloudInit.CustomKeyValues = d.Get("guest_customization_cloud_init_custom_key_values").(map[string]string)
+		_, n := d.GetChange("guest_customization_cloud_init_custom_key_values")
+		guest.CloudInit.CustomKeyValues = n.(map[string]string)
 	}
 	if d.HasChange("guest_customization_sysprep") {
-		a := d.Get("guest_customization_sysprep").(map[string]interface{})
-		r := &v3.GuestCustomizationSysprep{
-			InstallType: utils.String(a["install_type"].(string)),
-			UnattendXML: utils.String(a["unattend_xml"].(string)),
+		_, n := d.GetChange("guest_customization_sysprep")
+		a := n.(map[string]interface{})
+
+		guest.Sysprep = &v3.GuestCustomizationSysprep{
+			InstallType: validateMapStringValue(a, "install_type"),
+			UnattendXML: validateMapStringValue(a, "unattend_xml"),
 		}
-
-		guest.Sysprep = r
 	}
-
 	if d.HasChange("guest_customization_sysprep_custom_key_values") {
 		if guest.Sysprep == nil {
 			guest.Sysprep = &v3.GuestCustomizationSysprep{}
 		}
-		guest.Sysprep.CustomKeyValues = d.Get("guest_customization_sysprep_custom_key_values").(map[string]string)
+		_, n := d.GetChange("guest_customization_sysprep_custom_key_values")
+		guest.Sysprep.CustomKeyValues = n.(map[string]string)
 	}
-
 	if d.HasChange("nic_list") {
-		n := d.Get("nic_list").([]interface{})
-		if len(n) > 0 {
+		_, ne := d.GetChange("nic_list")
+		n := ne.([]interface{})
+		if len(n) > 0 && n != nil {
 			nics := make([]*v3.VMNic, len(n))
 
 			for k, nc := range n {
@@ -448,37 +435,26 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 				sub := val["subnet_reference"].(map[string]interface{})
 
 				nic := &v3.VMNic{
-					NicType: utils.String(val["nic_type"].(string)),
-					UUID:    utils.String(val["uuid"].(string)),
-					NetworkFunctionNicType: utils.String(val["network_function_nic_type"].(string)),
-					MacAddress:             utils.String(val["mac_address"].(string)),
-					Model:                  utils.String(val["model"].(string)),
-					NetworkFunctionChainReference: &v3.Reference{
-						Kind: utils.String(net["kind"].(string)),
-						UUID: utils.String(net["uuid"].(string)),
-						Name: utils.String(net["name"].(string)),
-					},
-					SubnetReference: &v3.Reference{
-						Kind: utils.String(sub["kind"].(string)),
-						UUID: utils.String(sub["uuid"].(string)),
-						Name: utils.String(sub["name"].(string)),
-					},
+					NicType: validateMapStringValue(val, "nic_type"),
+					UUID:    validateMapStringValue(val, "uuid"),
+					NetworkFunctionNicType: validateMapStringValue(val, "network_function_nic_type"),
+					MacAddress:             validateMapStringValue(val, "mac_address"),
+					Model:                  validateMapStringValue(val, "model"),
 				}
 
-				if value, ok := val["ip_endpoint_list"]; ok {
-					ipl := value.([]interface{})
-					if len(ipl) > 0 {
-						ip := make([]*v3.IPAddress, len(ipl))
-						for k, i := range ipl {
-							v := i.(map[string]interface{})
-							v3ip := &v3.IPAddress{
-								IP:   utils.String(v["ip"].(string)),
-								Type: utils.String(v["type"].(string)),
-							}
-							ip[k] = v3ip
+				nic.NetworkFunctionChainReference = validateRef(net)
+				nic.SubnetReference = validateRef(sub)
+
+				if value, ok := val["ip_endpoint_list"]; ok && len(value.([]interface{})) > 0 && value.([]interface{}) != nil {
+					ip := make([]*v3.IPAddress, len(value.([]interface{})))
+					for k, i := range value.([]interface{}) {
+						v := i.(map[string]interface{})
+						ip[k] = &v3.IPAddress{
+							IP:   validateMapStringValue(v, "ip"),
+							Type: validateMapStringValue(v, "type"),
 						}
-						nic.IPEndpointList = ip
 					}
+					nic.IPEndpointList = ip
 				}
 
 				nics[k] = nic
@@ -486,15 +462,15 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 			res.NicList = nics
 		}
 	}
-	if d.HasChange("nic_list") {
-		ngt := d.Get("nutanix_guest_tools").(map[string]interface{})
+	if d.HasChange("nutanix_guest_tools") {
+		_, n := d.GetChange("nutanix_guest_tools")
+		ngt := n.(map[string]interface{})
 
-		tool := &v3.NutanixGuestToolsSpec{
-			IsoMountState: utils.String(ngt["iso_mount_state"].(string)),
-			State:         utils.String(ngt["state"].(string)),
-		}
+		tool := &v3.NutanixGuestToolsSpec{}
+		tool.IsoMountState = validateMapStringValue(ngt, "iso_mount_state")
+		tool.State = validateMapStringValue(ngt, "state")
 
-		if val, ok2 := ngt["enabled_capability_list"]; ok2 {
+		if val, ok2 := ngt["enabled_capability_list"]; ok2 && val.([]interface{}) != nil {
 			var l []*string
 			for _, list := range val.([]interface{}) {
 				l = append(l, utils.String(list.(string)))
@@ -504,130 +480,97 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		guestTool.NutanixGuestTools = tool
 	}
 	if d.HasChange("gpu_list") {
-		if v, ok := d.GetOk("gpu_list"); ok {
-			gpl := make([]*v3.VMGpu, len(v.([]interface{})))
+		_, n := d.GetChange("gpu_list")
 
-			for k, va := range v.([]interface{}) {
+		if v, ok := n.([]interface{}); ok && v != nil {
+			gpl := make([]*v3.VMGpu, len(v))
+
+			for k, va := range v {
 				val := va.(map[string]interface{})
-				gpu := &v3.VMGpu{}
-				if value, ok1 := val["vendor"]; ok1 {
-					gpu.Vendor = utils.String(value.(string))
+				gpl[k] = &v3.VMGpu{
+					Vendor:   validateMapStringValue(val, "vendor"),
+					Mode:     validateMapStringValue(val, "mode"),
+					DeviceID: validateMapIntValue(val, "device_id"),
 				}
-				if value, ok1 := val["device_id"]; ok1 {
-					gpu.DeviceID = utils.Int64(int64(value.(int)))
-				}
-				if value, ok1 := val["mode"]; ok1 {
-					gpu.Mode = utils.String(value.(string))
-				}
-				gpl[k] = gpu
 			}
 			res.GpuList = gpl
 		}
 	}
 	if d.HasChange("boot_device_order_list") {
+		_, n := d.GetChange("boot_device_order_list")
 		var b []*string
-		for _, boot := range d.Get("boot_device_order_list").([]interface{}) {
+		for _, boot := range n.([]interface{}) {
 			b = append(b, utils.String(boot.(string)))
 		}
 		boot.BootDeviceOrderList = b
 	}
 
 	bd := &v3.VMBootDevice{}
+	dska := &v3.DiskAddress{}
 	if d.HasChange("boot_device_disk_address") {
-		dai := d.Get("boot_device_disk_address").(map[string]interface{})
-		da := &v3.DiskAddress{}
-		if value3, ok3 := dai["device_index"]; ok3 {
-			da.DeviceIndex = utils.Int64(int64(value3.(int)))
+		_, n := d.GetChange("boot_device_disk_address")
+		dai := n.(map[string]interface{})
+		dska = &v3.DiskAddress{
+			DeviceIndex: validateMapIntValue(dai, "device_index"),
+			AdapterType: validateMapStringValue(dai, "adapter_type"),
 		}
-		if value3, ok3 := dai["adapter_type"]; ok3 {
-			da.AdapterType = utils.String(value3.(string))
-		}
-		bd.DiskAddress = da
 	}
-
 	if d.HasChange("boot_device_mac_address") {
-		v := d.Get("boot_device_mac_address").(string)
-		bd.MacAddress = utils.String(v)
+		_, n := d.GetChange("boot_device_mac_address")
+		bd.MacAddress = utils.String(n.(string))
 	}
-
 	if d.HasChange("disk_list") {
-		if v, ok := d.GetOk("disk_list"); ok {
-			dsk := v.([]interface{})
-			if len(dsk) > 0 {
-				dls := make([]*v3.VMDisk, len(dsk))
+		_, n := d.GetChange("disk_list")
+		if dsk, ok := n.([]interface{}); ok && len(dsk) > 0 && dsk != nil {
+			dls := make([]*v3.VMDisk, len(dsk))
 
-				for k, val := range dsk {
-					v := val.(map[string]interface{})
-					dl := &v3.VMDisk{}
-					if v1, ok1 := v["uuid"]; ok1 && v1.(string) != "" {
-						dl.UUID = utils.String(v1.(string))
-					}
-					if v1, ok1 := v["disk_size_bytes"]; ok1 && v1.(int) != 0 {
-						dl.DiskSizeBytes = utils.Int64(int64(v1.(int)))
-					}
-					if v1, ok := v["disk_size_mib"]; ok && v1.(int) != 0 {
-						dl.DiskSizeMib = utils.Int64(int64(v1.(int)))
-					}
-					if v1, ok1 := v["device_properties"]; ok1 {
-						dvp := v1.([]interface{})
-						if len(dvp) > 0 {
-							d := dvp[0].(map[string]interface{})
-							dp := &v3.VMDiskDeviceProperties{}
-							if v, ok := d["device_type"]; ok {
-								dp.DeviceType = utils.String(v.(string))
-							}
-							if v, ok := d["disk_address"]; ok {
-								if len(v.([]interface{})) > 0 {
-									da := v.([]interface{})[0].(map[string]interface{})
-									v3disk := &v3.DiskAddress{}
-									if di, diok := da["device_index"]; diok {
-										v3disk.DeviceIndex = utils.Int64(int64(di.(int)))
-									}
-									if di, diok := da["adapter_type"]; diok {
-										v3disk.AdapterType = utils.String(di.(string))
-									}
-									dp.DiskAddress = v3disk
-								}
-							}
-							dl.DeviceProperties = dp
-						}
-					}
-					if v1, ok := v["data_source_reference"]; ok {
-						dsref := v1.([]interface{})
-						if len(dsref) > 0 {
-							dsri := dsref[0].(map[string]interface{})
-							dsr := &v3.Reference{
-								Kind: utils.String(dsri["kind"].(string)),
-								UUID: utils.String(dsri["uuid"].(string)),
-							}
-							if v2, ok2 := dsri["name"]; ok2 {
-								dsr.Name = utils.String(v2.(string))
-							}
-							dl.DataSourceReference = dsr
-						}
-					}
-					if v1, ok := v["volume_group_reference"]; ok {
-						volgr := v1.([]interface{})
-						if len(volgr) > 0 {
-							dsri := volgr[0].(map[string]interface{})
-							dsr := &v3.Reference{
-								Kind: utils.String(dsri["kind"].(string)),
-								UUID: utils.String(dsri["uuid"].(string)),
-							}
-							if v2, ok2 := dsri["name"]; ok2 {
-								dsr.Name = utils.String(v2.(string))
-							}
-							dl.VolumeGroupReference = dsr
-						}
-					}
-					dls[k] = dl
+			for k, val := range dsk {
+				v := val.(map[string]interface{})
+				dl := &v3.VMDisk{
+					UUID:          validateMapStringValue(v, "uuid"),
+					DiskSizeBytes: validateMapIntValue(v, "disk_size_bytes"),
+					DiskSizeMib:   validateMapIntValue(v, "disk_size_mib"),
 				}
-				res.DiskList = dls
+				if v1, ok1 := v["device_properties"]; ok1 && v1.([]interface{}) != nil && len(v1.([]interface{})) > 0 {
+					dvp := v1.([]interface{})
+					d := dvp[0].(map[string]interface{})
+					dp := &v3.VMDiskDeviceProperties{
+						DeviceType: validateMapStringValue(d, "device_type"),
+					}
+					if v, ok := d["disk_address"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+						da := v.([]interface{})[0].(map[string]interface{})
+						dp.DiskAddress = &v3.DiskAddress{
+							AdapterType: validateMapStringValue(da, "adapter_type"),
+							DeviceIndex: validateMapIntValue(da, "device_index"),
+						}
+					}
+					dl.DeviceProperties = dp
+				}
+				if v1, ok := v["data_source_reference"]; ok {
+					dsref := v1.([]interface{})
+					if len(dsref) > 0 && dsref[0] != nil {
+						dsri := dsref[0].(map[string]interface{})
+						dl.DataSourceReference = validateRef(dsri)
+					}
+				}
+				if v1, ok := v["volume_group_reference"]; ok {
+					volgr := v1.([]interface{})
+					if len(volgr) > 0 && volgr[0] != nil {
+						dsri := volgr[0].(map[string]interface{})
+						dl.VolumeGroupReference = validateRef(dsri)
+					}
+				}
+				dls[k] = dl
 			}
+			res.DiskList = dls
 		}
 	}
-
 	boot.BootDevice = bd
+
+	if dska.AdapterType == nil && dska.DeviceIndex == nil && bd.MacAddress == nil {
+		boot = nil
+	}
+
 	res.PowerStateMechanism = pw
 	res.BootConfig = boot
 	res.GuestTools = guestTool
@@ -640,9 +583,9 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	fmt.Printf("[DEBUG] Updating Virtual Machine: %s, %s", d.Get("name").(string), d.Id())
 
 	utils.PrintToJSON(request, "UPDATE")
-	_, err := conn.V3.UpdateVM(d.Id(), request)
-	if err != nil {
-		return err
+	_, err2 := conn.V3.UpdateVM(d.Id(), request)
+	if err2 != nil {
+		return err2
 	}
 
 	stateConf := &resource.StateChangeConf{
@@ -755,32 +698,11 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 				}
 				if value, ok := val["network_function_chain_reference"]; ok && len(value.(map[string]interface{})) != 0 {
 					v := value.(map[string]interface{})
-					ref := &v3.Reference{}
-					if j, ok1 := v["kind"]; ok1 {
-						ref.Kind = utils.String(j.(string))
-					}
-					if j, ok1 := v["uuid"]; ok1 {
-						ref.UUID = utils.String(j.(string))
-					}
-					if j, ok1 := v["name"]; ok1 {
-						ref.Name = utils.String(j.(string))
-					}
-					nic.NetworkFunctionChainReference = ref
+					nic.NetworkFunctionChainReference = validateRef(v)
 				}
 				if value, ok := val["subnet_reference"]; ok {
 					v := value.(map[string]interface{})
-					ref := &v3.Reference{}
-
-					if j, ok1 := v["kind"]; ok1 {
-						ref.Kind = utils.String(j.(string))
-					}
-					if j, ok1 := v["uuid"]; ok1 {
-						ref.UUID = utils.String(j.(string))
-					}
-					if j, ok1 := val["subnet_reference_name"]; ok1 {
-						ref.Name = utils.String(j.(string))
-					}
-					nic.SubnetReference = ref
+					nic.SubnetReference = validateRef(v)
 				}
 				nics[k] = nic
 			}
@@ -836,12 +758,8 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 		vm.GpuList = gpl
 	}
 	if v, ok := d.GetOk("parent_reference"); ok {
-		val := v.(map[string]string)
-		vm.ParentReference.Kind = utils.String(val["kind"])
-		vm.ParentReference.UUID = utils.String(val["uuid"])
-		if j, ok1 := val["name"]; ok1 {
-			vm.ParentReference.Name = utils.String(j)
-		}
+		val := v.(map[string]interface{})
+		vm.ParentReference = validateRef(val)
 	}
 	if v, ok := d.GetOk("memory_size_mib"); ok {
 		vm.MemorySizeMib = utils.Int64(int64(v.(int)))
@@ -980,28 +898,14 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 					dsref := v1.([]interface{})
 					if len(dsref) > 0 {
 						dsri := dsref[0].(map[string]interface{})
-						dsr := &v3.Reference{
-							Kind: utils.String(dsri["kind"].(string)),
-							UUID: utils.String(dsri["uuid"].(string)),
-						}
-						if v2, ok2 := dsri["name"]; ok2 {
-							dsr.Name = utils.String(v2.(string))
-						}
-						dl.DataSourceReference = dsr
+						dl.DataSourceReference = validateRef(dsri)
 					}
 				}
 				if v1, ok := v["volume_group_reference"]; ok {
 					volgr := v1.([]interface{})
 					if len(volgr) > 0 {
 						dsri := volgr[0].(map[string]interface{})
-						dsr := &v3.Reference{
-							Kind: utils.String(dsri["kind"].(string)),
-							UUID: utils.String(dsri["uuid"].(string)),
-						}
-						if v2, ok2 := dsri["name"]; ok2 {
-							dsr.Name = utils.String(v2.(string))
-						}
-						dl.VolumeGroupReference = dsr
+						dl.VolumeGroupReference = validateRef(dsri)
 					}
 				}
 				dls[k] = dl
@@ -1050,6 +954,79 @@ func waitForIP(conn *v3.Client, uuid string, d *schema.ResourceData) error {
 		time.Sleep(3000 * time.Millisecond)
 	}
 	// return nil
+}
+
+func preFillUpdateRequest(res *v3.VMResources, guestTool *v3.GuestToolsSpec, guest *v3.GuestCustomization, pw *v3.VMPowerStateMechanism, response *v3.VMIntentResponse) {
+	res.ParentReference = response.Status.Resources.ParentReference
+	res.VMVnumaConfig = &v3.VMVnumaConfig{NumVnumaNodes: response.Status.Resources.VnumaConfig.NumVnumaNodes}
+	res.GuestOsID = response.Status.Resources.GuestOsID
+	res.PowerState = response.Status.Resources.PowerState
+	res.NumVcpusPerSocket = response.Status.Resources.NumVcpusPerSocket
+	res.NumSockets = response.Status.Resources.NumSockets
+	res.MemorySizeMib = response.Status.Resources.MemorySizeMib
+	res.HardwareClockTimezone = response.Status.Resources.HardwareClockTimezone
+	res.VgaConsoleEnabled = response.Status.Resources.VgaConsoleEnabled
+
+	if response.Status.Resources.PowerStateMechanism != nil {
+		pw.Mechanism = response.Status.Resources.PowerStateMechanism.Mechanism
+		pw.GuestTransitionConfig = response.Status.Resources.PowerStateMechanism.GuestTransitionConfig
+	} else {
+		pw = nil
+	}
+
+	nold := make([]*v3.VMNic, len(response.Status.Resources.NicList))
+	if len(response.Status.Resources.NicList) > 0 {
+		for k, v := range response.Status.Resources.NicList {
+			nold[k] = &v3.VMNic{
+				NicType: v.NicType,
+				UUID:    v.UUID,
+				NetworkFunctionNicType: v.NetworkFunctionNicType,
+				MacAddress:             v.MacAddress,
+				Model:                  v.Model,
+				NetworkFunctionChainReference: v.NetworkFunctionChainReference,
+				SubnetReference:               v.SubnetReference,
+				IPEndpointList:                v.IPEndpointList,
+			}
+		}
+	} else {
+		nold = nil
+	}
+	res.NicList = nold
+	if response.Status.Resources.GuestTools != nil {
+		guestTool.NutanixGuestTools = &v3.NutanixGuestToolsSpec{
+			EnabledCapabilityList: response.Status.Resources.GuestTools.NutanixGuestTools.EnabledCapabilityList,
+			IsoMountState:         response.Status.Resources.GuestTools.NutanixGuestTools.IsoMountState,
+			State:                 response.Status.Resources.GuestTools.NutanixGuestTools.State,
+		}
+	} else {
+		guestTool = nil
+	}
+	gold := make([]*v3.VMGpu, len(response.Status.Resources.GpuList))
+	if len(response.Status.Resources.GpuList) > 0 {
+		for k, v := range response.Status.Resources.GpuList {
+			gold[k] = &v3.VMGpu{
+				Vendor:   v.Vendor,
+				Mode:     v.Mode,
+				DeviceID: v.DeviceID,
+			}
+		}
+	} else {
+		gold = nil
+	}
+	res.GpuList = gold
+	if response.Status.Resources.BootConfig != nil {
+		res.BootConfig = response.Status.Resources.BootConfig
+	} else {
+		res.BootConfig = nil
+	}
+	if response.Status.Resources.GuestCustomization != nil {
+		guest.CloudInit = response.Status.Resources.GuestCustomization.CloudInit
+		guest.Sysprep = response.Status.Resources.GuestCustomization.Sysprep
+		guest.IsOverridable = response.Status.Resources.GuestCustomization.IsOverridable
+	} else {
+		guest = nil
+	}
+
 }
 
 func getVMSchema() map[string]*schema.Schema {
@@ -1643,11 +1620,13 @@ func getVMSchema() map[string]*schema.Schema {
 										Schema: map[string]*schema.Schema{
 											"device_index": {
 												Type:     schema.TypeInt,
-												Required: true,
+												Optional: true,
+												Computed: true,
 											},
 											"adapter_type": {
 												Type:     schema.TypeString,
-												Required: true,
+												Optional: true,
+												Computed: true,
 											},
 										},
 									},
@@ -1663,7 +1642,8 @@ func getVMSchema() map[string]*schema.Schema {
 							Schema: map[string]*schema.Schema{
 								"kind": {
 									Type:     schema.TypeString,
-									Required: true,
+									Optional: true,
+									Computed: true,
 								},
 								"name": {
 									Type:     schema.TypeString,
@@ -1672,7 +1652,8 @@ func getVMSchema() map[string]*schema.Schema {
 								},
 								"uuid": {
 									Type:     schema.TypeString,
-									Required: true,
+									Optional: true,
+									Computed: true,
 								},
 							},
 						},
@@ -1686,7 +1667,8 @@ func getVMSchema() map[string]*schema.Schema {
 							Schema: map[string]*schema.Schema{
 								"kind": {
 									Type:     schema.TypeString,
-									Required: true,
+									Optional: true,
+									Computed: true,
 								},
 								"name": {
 									Type:     schema.TypeString,
@@ -1695,7 +1677,8 @@ func getVMSchema() map[string]*schema.Schema {
 								},
 								"uuid": {
 									Type:     schema.TypeString,
-									Required: true,
+									Optional: true,
+									Computed: true,
 								},
 							},
 						},

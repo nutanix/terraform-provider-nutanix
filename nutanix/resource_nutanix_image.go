@@ -257,22 +257,12 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 
 	if d.HasChange("owner_reference") {
 		or := d.Get("owner_reference").(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(or["kind"].(string)),
-			UUID: utils.String(or["uuid"].(string)),
-			Name: utils.String(or["name"].(string)),
-		}
-		metadata.OwnerReference = r
+		metadata.OwnerReference = validateRef(or)
 	}
 
 	if d.HasChange("project_reference") {
 		pr := d.Get("project_reference").(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(pr["kind"].(string)),
-			UUID: utils.String(pr["uuid"].(string)),
-			Name: utils.String(pr["name"].(string)),
-		}
-		metadata.ProjectReference = r
+		metadata.ProjectReference = validateRef(pr)
 	}
 
 	if d.HasChange("name") {
