@@ -115,15 +115,6 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 			"Error waiting for vm (%s) to create: %s", d.Id(), err)
 	}
 
-	// Read the ip
-	if resp.Spec.Resources.NicList != nil && *resp.Spec.Resources.PowerState == "ON" {
-		log.Printf("[DEBUG] Polling for IP\n")
-		err := waitForIP(conn, uuid, d)
-		if err != nil {
-			return err
-		}
-	}
-
 	return resourceNutanixVirtualMachineRead(d, meta)
 }
 
@@ -138,7 +129,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
-	n, i := setNicList(resp.Status.Resources.NicList)
+	n := setNicList(resp.Status.Resources.NicList)
 
 	if err := d.Set("metadata", m); err != nil {
 		return err
@@ -240,7 +231,6 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	d.Set("description", utils.StringValue(resp.Status.Description))
 	d.Set("state", utils.StringValue(resp.Status.State))
 	d.Set("num_vnuma_nodes", utils.Int64Value(resp.Status.Resources.VnumaConfig.NumVnumaNodes))
-	d.Set("ip_address", i)
 	d.Set("guest_os_id", utils.StringValue(resp.Status.Resources.GuestOsID))
 	d.Set("power_state", utils.StringValue(resp.Status.Resources.PowerState))
 	d.Set("num_vcpus_per_socket", utils.Int64Value(resp.Status.Resources.NumVcpusPerSocket))
@@ -936,29 +926,6 @@ func vmStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefreshFun
 	}
 }
 
-func waitForIP(conn *v3.Client, uuid string, d *schema.ResourceData) error {
-	for {
-		resp, err := conn.V3.GetVM(uuid)
-		if err != nil {
-			return err
-		}
-
-		if len(resp.Status.Resources.NicList) != 0 {
-			for i := range resp.Status.Resources.NicList {
-				if len(resp.Status.Resources.NicList[i].IPEndpointList) != 0 {
-					if ip := resp.Status.Resources.NicList[i].IPEndpointList[0].IP; ip != nil {
-						// TODO set ip address
-						d.Set("ip_address", *ip)
-						return nil
-					}
-				}
-			}
-		}
-		time.Sleep(3000 * time.Millisecond)
-	}
-	// return nil
-}
-
 func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse) {
 	res.ParentReference = response.Status.Resources.ParentReference
 	res.VMVnumaConfig = &v3.VMVnumaConfig{NumVnumaNodes: response.Status.Resources.VnumaConfig.NumVnumaNodes}
@@ -1195,10 +1162,6 @@ func getVMSchema() map[string]*schema.Schema {
 			Computed: true,
 		},
 		"state": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"ip_address": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
