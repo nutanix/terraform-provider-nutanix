@@ -34,7 +34,7 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
-	n, i := setNicList(resp.Status.Resources.NicList)
+	n := setNicList(resp.Status.Resources.NicList)
 
 	if err := d.Set("metadata", m); err != nil {
 		return err
@@ -137,7 +137,6 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	d.Set("description", utils.StringValue(resp.Status.Description))
 	d.Set("state", utils.StringValue(resp.Status.State))
 	d.Set("num_vnuma_nodes", utils.Int64Value(resp.Status.Resources.VnumaConfig.NumVnumaNodes))
-	d.Set("ip_address", i)
 	d.Set("guest_os_id", utils.StringValue(resp.Status.Resources.GuestOsID))
 	d.Set("power_state", utils.StringValue(resp.Status.Resources.PowerState))
 	d.Set("num_vcpus_per_socket", utils.Int64Value(resp.Status.Resources.NumVcpusPerSocket))
@@ -326,10 +325,6 @@ func getDataSourceVMSchema() map[string]*schema.Schema {
 			},
 		},
 		"state": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"ip_address": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
