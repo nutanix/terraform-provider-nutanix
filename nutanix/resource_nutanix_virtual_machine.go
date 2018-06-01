@@ -272,7 +272,10 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	pw := &v3.VMPowerStateMechanism{}
 
 	response, err := conn.V3.GetVM(d.Id())
-	preFillUpdateRequest(res, guestTool, guest, pw, response)
+	preFillResUpdateRequest(res, response)
+	preFillGTUpdateRequest(guestTool, response)
+	preFillGUpdateRequest(guest, response)
+	preFillPWUpdateRequest(pw, response)
 
 	if err != nil {
 		return err
@@ -956,7 +959,7 @@ func waitForIP(conn *v3.Client, uuid string, d *schema.ResourceData) error {
 	// return nil
 }
 
-func preFillUpdateRequest(res *v3.VMResources, guestTool *v3.GuestToolsSpec, guest *v3.GuestCustomization, pw *v3.VMPowerStateMechanism, response *v3.VMIntentResponse) {
+func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse) {
 	res.ParentReference = response.Status.Resources.ParentReference
 	res.VMVnumaConfig = &v3.VMVnumaConfig{NumVnumaNodes: response.Status.Resources.VnumaConfig.NumVnumaNodes}
 	res.GuestOsID = response.Status.Resources.GuestOsID
@@ -966,13 +969,6 @@ func preFillUpdateRequest(res *v3.VMResources, guestTool *v3.GuestToolsSpec, gue
 	res.MemorySizeMib = response.Status.Resources.MemorySizeMib
 	res.HardwareClockTimezone = response.Status.Resources.HardwareClockTimezone
 	res.VgaConsoleEnabled = response.Status.Resources.VgaConsoleEnabled
-
-	if response.Status.Resources.PowerStateMechanism != nil {
-		pw.Mechanism = response.Status.Resources.PowerStateMechanism.Mechanism
-		pw.GuestTransitionConfig = response.Status.Resources.PowerStateMechanism.GuestTransitionConfig
-	} else {
-		pw = nil
-	}
 
 	nold := make([]*v3.VMNic, len(response.Status.Resources.NicList))
 	if len(response.Status.Resources.NicList) > 0 {
@@ -992,15 +988,7 @@ func preFillUpdateRequest(res *v3.VMResources, guestTool *v3.GuestToolsSpec, gue
 		nold = nil
 	}
 	res.NicList = nold
-	if response.Status.Resources.GuestTools != nil {
-		guestTool.NutanixGuestTools = &v3.NutanixGuestToolsSpec{
-			EnabledCapabilityList: response.Status.Resources.GuestTools.NutanixGuestTools.EnabledCapabilityList,
-			IsoMountState:         response.Status.Resources.GuestTools.NutanixGuestTools.IsoMountState,
-			State:                 response.Status.Resources.GuestTools.NutanixGuestTools.State,
-		}
-	} else {
-		guestTool = nil
-	}
+
 	gold := make([]*v3.VMGpu, len(response.Status.Resources.GpuList))
 	if len(response.Status.Resources.GpuList) > 0 {
 		for k, v := range response.Status.Resources.GpuList {
@@ -1019,6 +1007,21 @@ func preFillUpdateRequest(res *v3.VMResources, guestTool *v3.GuestToolsSpec, gue
 	} else {
 		res.BootConfig = nil
 	}
+}
+
+func preFillGTUpdateRequest(guestTool *v3.GuestToolsSpec, response *v3.VMIntentResponse) {
+	if response.Status.Resources.GuestTools != nil {
+		guestTool.NutanixGuestTools = &v3.NutanixGuestToolsSpec{
+			EnabledCapabilityList: response.Status.Resources.GuestTools.NutanixGuestTools.EnabledCapabilityList,
+			IsoMountState:         response.Status.Resources.GuestTools.NutanixGuestTools.IsoMountState,
+			State:                 response.Status.Resources.GuestTools.NutanixGuestTools.State,
+		}
+	} else {
+		guestTool = nil
+	}
+}
+
+func preFillGUpdateRequest(guest *v3.GuestCustomization, response *v3.VMIntentResponse) {
 	if response.Status.Resources.GuestCustomization != nil {
 		guest.CloudInit = response.Status.Resources.GuestCustomization.CloudInit
 		guest.Sysprep = response.Status.Resources.GuestCustomization.Sysprep
@@ -1026,7 +1029,15 @@ func preFillUpdateRequest(res *v3.VMResources, guestTool *v3.GuestToolsSpec, gue
 	} else {
 		guest = nil
 	}
+}
 
+func preFillPWUpdateRequest(pw *v3.VMPowerStateMechanism, response *v3.VMIntentResponse) {
+	if response.Status.Resources.PowerStateMechanism != nil {
+		pw.Mechanism = response.Status.Resources.PowerStateMechanism.Mechanism
+		pw.GuestTransitionConfig = response.Status.Resources.PowerStateMechanism.GuestTransitionConfig
+	} else {
+		pw = nil
+	}
 }
 
 func getVMSchema() map[string]*schema.Schema {
