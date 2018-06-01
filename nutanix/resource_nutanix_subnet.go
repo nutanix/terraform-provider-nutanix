@@ -59,25 +59,11 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 
 	if azrok {
 		a := azr.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(a["kind"].(string)),
-			UUID: utils.String(a["uuid"].(string)),
-		}
-		if v, ok := a["name"]; ok {
-			r.Name = utils.String(v.(string))
-		}
-		spec.AvailabilityZoneReference = r
+		spec.AvailabilityZoneReference = validateRef(a)
 	}
 	if crok {
 		a := cr.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(a["kind"].(string)),
-			UUID: utils.String(a["uuid"].(string)),
-		}
-		if cn, cnok := d.GetOk("cluster_name"); cnok {
-			r.Name = utils.String(cn.(string))
-		}
-		spec.ClusterReference = r
+		spec.ClusterReference = validateRef(a)
 	}
 
 	if err := getSubnetResources(d, subnet); err != nil {
@@ -267,28 +253,6 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	// get state
-	if d.HasChange("metadata") {
-		m := d.Get("metadata")
-		metad := m.(map[string]interface{})
-		if v, ok := metad["uuid"]; ok && v != "" {
-			metadata.UUID = utils.String(v.(string))
-		}
-		if v, ok := metad["spec_version"]; ok && v != 0 {
-			i, err := strconv.Atoi(v.(string))
-			if err != nil {
-				return err
-			}
-			metadata.SpecVersion = utils.Int64(int64(i))
-		}
-		if v, ok := metad["spec_hash"]; ok && v != "" {
-			metadata.SpecHash = utils.String(v.(string))
-		}
-		if v, ok := metad["name"]; ok {
-			metadata.Name = utils.String(v.(string))
-		}
-	}
-
 	if d.HasChange("categories") {
 		catl := d.Get("categories").([]interface{})
 
@@ -310,83 +274,59 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 	if d.HasChange("owner_reference") {
 		or := d.Get("owner_reference").(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(or["kind"].(string)),
-			UUID: utils.String(or["uuid"].(string)),
-			Name: utils.String(or["name"].(string)),
-		}
-		metadata.OwnerReference = r
+		metadata.OwnerReference = validateRef(or)
 	}
 	if d.HasChange("project_reference") {
 		pr := d.Get("project_reference").(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(pr["kind"].(string)),
-			UUID: utils.String(pr["uuid"].(string)),
-			Name: utils.String(pr["name"].(string)),
-		}
-		metadata.ProjectReference = r
+		metadata.ProjectReference = validateRef(pr)
 	}
 	if d.HasChange("name") {
 		spec.Name = utils.String(d.Get("name").(string))
 	}
 	if d.HasChange("availability_zone_reference") {
 		a := d.Get("availability_zone_reference").(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(a["kind"].(string)),
-			UUID: utils.String(a["uuid"].(string)),
-			Name: utils.String(a["name"].(string)),
-		}
-		spec.AvailabilityZoneReference = r
+		spec.AvailabilityZoneReference = validateRef(a)
 	}
 	if d.HasChange("cluster_reference") {
 		a := d.Get("cluster_reference").(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(a["kind"].(string)),
-			UUID: utils.String(a["uuid"].(string)),
-			Name: utils.String(a["name"].(string)),
-		}
-		spec.ClusterReference = r
+		spec.ClusterReference = validateRef(a)
 	}
 	if d.HasChange("dhcp_domain_name_server_list") {
-		dd := d.Get("dhcp_domain_name_server_list").([]string)
+		dd := d.Get("dhcp_domain_name_server_list").([]interface{})
 		ddn := make([]*string, len(dd))
 		for k, v := range dd {
-			ddn[k] = utils.String(v)
+			ddn[k] = utils.String(v.(string))
 		}
 		dhcpO.DomainNameServerList = ddn
 	}
 	if d.HasChange("dhcp_domain_search_list") {
-		dd := d.Get("dhcp_domain_search_list").([]string)
+		dd := d.Get("dhcp_domain_search_list").([]interface{})
 		ddn := make([]*string, len(dd))
 		for k, v := range dd {
-			ddn[k] = utils.String(v)
+			ddn[k] = utils.String(v.(string))
 		}
 		dhcpO.DomainSearchList = ddn
 	}
 	if d.HasChange("ip_config_pool_list_ranges") {
-		dd := d.Get("ip_config_pool_list_ranges").([]string)
+		dd := d.Get("ip_config_pool_list_ranges").([]interface{})
 		ddn := make([]*v3.IPPool, len(dd))
 		for k, v := range dd {
 			i := &v3.IPPool{}
-			i.Range = utils.String(v)
+			i.Range = utils.String(v.(string))
 			ddn[k] = i
 		}
 		ipcfg.PoolList = ddn
 	}
 	if d.HasChange("dhcp_options") {
 		dOptions := d.Get("dhcp_options").(map[string]interface{})
-		dhcpO.BootFileName = utils.String(dOptions["boot_file_name"].(string))
-		dhcpO.DomainName = utils.String(dOptions["domain_name"].(string))
-		dhcpO.TFTPServerName = utils.String(dOptions["tftp_server_name"].(string))
+
+		dhcpO.BootFileName = validateMapStringValue(dOptions, "boot_file_name")
+		dhcpO.DomainName = validateMapStringValue(dOptions, "domain_name")
+		dhcpO.TFTPServerName = validateMapStringValue(dOptions, "tftp_server_name")
 	}
 	if d.HasChange("network_function_chain_reference") {
 		a := d.Get("network_function_chain_reference").(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(a["kind"].(string)),
-			UUID: utils.String(a["uuid"].(string)),
-			Name: utils.String(a["name"].(string)),
-		}
-		res.NetworkFunctionChainReference = r
+		res.NetworkFunctionChainReference = validateRef(a)
 	}
 	if d.HasChange("vswitch_name") {
 		res.VswitchName = utils.String(d.Get("vswitch_name").(string))
@@ -404,14 +344,13 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		ipcfg.SubnetIP = utils.String(d.Get("subnet_ip").(string))
 	}
 	if d.HasChange("dhcp_server_address") {
-		dhcs := &v3.Address{}
-
 		dh := d.Get("dhcp_server_address").(map[string]interface{})
-		dhcs.IP = utils.String(dh["ip"].(string))
-		dhcs.IPV6 = utils.String(dh["ipv6"].(string))
-		dhcs.FQDN = utils.String(dh["fqdn"].(string))
 
-		ipcfg.DHCPServerAddress = dhcs
+		ipcfg.DHCPServerAddress = &v3.Address{
+			IP:   validateMapStringValue(dh, "ip"),
+			IPV6: validateMapStringValue(dh, "ipv6"),
+			FQDN: validateMapStringValue(dh, "fqdn"),
+		}
 	}
 	if d.HasChange("dhcp_server_address_port") {
 		ipcfg.DHCPServerAddress.Port = utils.Int64(int64(d.Get("dhcp_server_address_port").(int)))
@@ -425,8 +364,6 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 	spec.Resources = res
 	request.Metadata = metadata
 	request.Spec = spec
-
-	utils.PrintToJSON(request, "UPDATE METHOD REQUEST")
 
 	if _, errUpdate := conn.V3.UpdateSubnet(d.Id(), request); errUpdate != nil {
 		return errUpdate
@@ -647,25 +584,11 @@ func getSubnetMetadaAttributes(d *schema.ResourceData, metadata *v3.SubnetMetada
 	}
 	if p, ok := d.GetOk("project_reference"); ok {
 		pr := p.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(pr["kind"].(string)),
-			UUID: utils.String(pr["uuid"].(string)),
-		}
-		if v1, ok1 := pr["name"]; ok1 {
-			r.Name = utils.String(v1.(string))
-		}
-		metadata.ProjectReference = r
+		metadata.ProjectReference = validateRef(pr)
 	}
 	if o, ok := metad["owner_reference"]; ok {
 		or := o.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(or["kind"].(string)),
-			UUID: utils.String(or["uuid"].(string)),
-		}
-		if v1, ok1 := or["name"]; ok1 {
-			r.Name = utils.String(v1.(string))
-		}
-		metadata.OwnerReference = r
+		metadata.OwnerReference = validateRef(or)
 	}
 
 	return nil
@@ -698,14 +621,7 @@ func setSubnetResources(m interface{}) (*v3.SubnetResources, error) {
 
 	if nfcrok {
 		a := nfcr.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(a["kind"].(string)),
-			UUID: utils.String(a["uuid"].(string)),
-		}
-		if v, ok := a["name"]; ok {
-			r.Name = utils.String(v.(string))
-		}
-		subnet.NetworkFunctionChainReference = r
+		subnet.NetworkFunctionChainReference = validateRef(a)
 	}
 
 	//ip config

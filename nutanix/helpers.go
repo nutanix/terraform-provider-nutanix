@@ -139,3 +139,40 @@ func getClusterReferenceValues(r *v3.Reference) map[string]interface{} {
 
 	return reference
 }
+
+func validateRef(ref map[string]interface{}) *v3.Reference {
+	r := &v3.Reference{}
+	hasValue := false
+	if v, ok := ref["kind"]; ok {
+		r.Kind = utils.String(v.(string))
+		hasValue = true
+	}
+	if v, ok := ref["uuid"]; ok {
+		r.UUID = utils.String(v.(string))
+		hasValue = true
+	}
+	// if v, ok := ref["name"]; ok {
+	// 	r.Name = utils.String(v.(string))
+	// 	hasValue = true
+	// }
+
+	if hasValue {
+		return r
+	}
+
+	return nil
+}
+
+func validateMapStringValue(value map[string]interface{}, key string) *string {
+	if v, ok := value[key]; ok && v != nil && v.(string) != "" {
+		return utils.String(v.(string))
+	}
+	return nil
+}
+
+func validateMapIntValue(value map[string]interface{}, key string) *int64 {
+	if v, ok := value[key]; ok && v != nil && v.(int) != 0 {
+		return utils.Int64(int64(v.(int)))
+	}
+	return nil
+}
