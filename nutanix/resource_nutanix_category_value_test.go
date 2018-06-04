@@ -16,7 +16,7 @@ func TestAccNutanixCategoryValue_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixCategoryValueDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNutanixCategoryValueConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixCategoryValueExists("nutanix_category_value.test"),
