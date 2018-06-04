@@ -20,7 +20,7 @@ func TestAccNutanixVMSDataSource_basic(t *testing.T) {
 				Config: testAccVMSSDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"data.nutanix_virtual_machines.basic_web", "entities.#", "2"),
+						"data.nutanix_virtual_machines.unittest", "entities.#", "2"),
 				),
 			},
 		},
@@ -41,7 +41,7 @@ output "cluster" {
 }
 
 resource "nutanix_virtual_machine" "vm1" {
-  name = "test-dou-vm1"
+  name = "unittest-dou-vm1"
 
   cluster_reference = {
 	  kind = "cluster"
@@ -56,7 +56,7 @@ resource "nutanix_virtual_machine" "vm1" {
 }
 
 resource "nutanix_virtual_machine" "vm2" {
-  name = "test-dou-vm2"
+  name = "unittest-dou-vm2"
 
   cluster_reference = {
 	  kind = "cluster"
@@ -70,7 +70,7 @@ resource "nutanix_virtual_machine" "vm2" {
 
 }
 
-data "nutanix_virtual_machines" "basic_web" {
+data "nutanix_virtual_machines" "unittest" {
 	metadata = {
 		length = 2
 	}
