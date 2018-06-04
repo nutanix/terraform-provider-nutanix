@@ -112,26 +112,26 @@ func resourceNutanixCategoryValueDelete(d *schema.ResourceData, meta interface{}
 
 func getCategoryValueSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"value": &schema.Schema{
+		"value": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"system_defined": &schema.Schema{
+		"system_defined": {
 			Type:     schema.TypeBool,
 			Computed: true,
 		},
-		"description": &schema.Schema{
+		"description": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"api_version": &schema.Schema{
+		"api_version": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"name": &schema.Schema{
+		"name": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
