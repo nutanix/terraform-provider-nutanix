@@ -18,7 +18,7 @@ func TestAccNutanixCategoryKey_basic(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixCategoryKeyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccNutanixCategoryKeyConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixCategoryKeyExists("nutanix_category_key.test"),
