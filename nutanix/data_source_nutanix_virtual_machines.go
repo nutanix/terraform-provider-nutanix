@@ -121,7 +121,7 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 		entity["enable_script_exec"] = utils.BoolValue(v.Status.Resources.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec)
 		entity["power_state_mechanism"] = utils.StringValue(v.Status.Resources.PowerStateMechanism.Mechanism)
 		entity["vga_console_enabled"] = utils.BoolValue(v.Status.Resources.VgaConsoleEnabled)
-		entity["disk_list"] = setDiskList(v.Status.Resources.DiskList)
+		entity["disk_list"] = setDiskList(v.Status.Resources.DiskList, v.Status.Resources.GuestCustomization)
 
 		entities[k] = entity
 	}
@@ -132,11 +132,15 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 	return d.Set("entities", entities)
 }
 
-func setDiskList(disk []*v3.VMDisk) []map[string]interface{} {
-	diskList := make([]map[string]interface{}, 0)
+func setDiskList(disk []*v3.VMDisk, hasCloudInit *v3.GuestCustomizationStatus) []map[string]interface{} {
+	var diskList []map[string]interface{}
 	if disk != nil {
-		diskList = make([]map[string]interface{}, len(disk))
-		for k, v1 := range disk {
+		for _, v1 := range disk {
+
+			if hasCloudInit.CloudInit != nil && utils.StringValue(v1.DeviceProperties.DeviceType) == "CDROM" {
+				continue
+			}
+
 			disk := make(map[string]interface{})
 			disk["uuid"] = utils.StringValue(v1.UUID)
 			disk["disk_size_bytes"] = utils.Int64Value(v1.DiskSizeBytes)
@@ -160,9 +164,14 @@ func setDiskList(disk []*v3.VMDisk) []map[string]interface{} {
 
 			disk["device_properties"] = dp
 
-			diskList[k] = disk
+			diskList = append(diskList, disk)
 		}
 	}
+
+	if diskList == nil {
+		return make([]map[string]interface{}, 0)
+	}
+
 	return diskList
 }
 
@@ -226,7 +235,8 @@ func setNicList(nics []*v3.VMNicOutputStatus) []map[string]interface{} {
 			}
 			nic["ip_endpoint_list"] = ipEndpointList
 			nic["network_function_chain_reference"] = getReferenceValues(v.NetworkFunctionChainReference)
-			nic["subnet_reference"] = getReferenceValues(v.SubnetReference)
+			nic["subnet_reference"] = getClusterReferenceValues(v.SubnetReference)
+			nic["subnet_reference_name"] = utils.StringValue(v.SubnetReference.Name)
 
 			nicLists[k] = nic
 		}

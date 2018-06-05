@@ -151,10 +151,10 @@ func validateRef(ref map[string]interface{}) *v3.Reference {
 		r.UUID = utils.String(v.(string))
 		hasValue = true
 	}
-	// if v, ok := ref["name"]; ok {
-	// 	r.Name = utils.String(v.(string))
-	// 	hasValue = true
-	// }
+	if v, ok := ref["name"]; ok {
+		r.Name = utils.String(v.(string))
+		hasValue = true
+	}
 
 	if hasValue {
 		return r
