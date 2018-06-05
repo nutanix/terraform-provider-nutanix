@@ -149,7 +149,7 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	d.Set("vga_console_enabled", utils.BoolValue(resp.Status.Resources.VgaConsoleEnabled))
 	d.SetId(*resp.Metadata.UUID)
 
-	return d.Set("disk_list", setDiskList(resp.Status.Resources.DiskList))
+	return d.Set("disk_list", setDiskList(resp.Status.Resources.DiskList, resp.Status.Resources.GuestCustomization))
 }
 
 func getDataSourceVMSchema() map[string]*schema.Schema {

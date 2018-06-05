@@ -59,25 +59,11 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	}
 	if azrok {
 		a := azr.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(a["kind"].(string)),
-			UUID: utils.String(a["uuid"].(string)),
-		}
-		if v, ok := a["name"]; ok {
-			r.Name = utils.String(v.(string))
-		}
-		spec.AvailabilityZoneReference = r
+		spec.AvailabilityZoneReference = validateRef(a)
 	}
 	if crok {
 		a := cr.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(a["kind"].(string)),
-			UUID: utils.String(a["uuid"].(string)),
-		}
-		if cn, cnok := d.GetOk("cluster_name"); cnok {
-			r.Name = utils.String(cn.(string))
-		}
-		spec.ClusterReference = r
+		spec.ClusterReference = validateRef(a)
 	}
 
 	if err := getVMResources(d, res); err != nil {
@@ -243,7 +229,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	d.Set("vga_console_enabled", utils.BoolValue(resp.Status.Resources.VgaConsoleEnabled))
 	d.SetId(*resp.Metadata.UUID)
 
-	return d.Set("disk_list", setDiskList(resp.Status.Resources.DiskList))
+	return d.Set("disk_list", setDiskList(resp.Status.Resources.DiskList, resp.Status.Resources.GuestCustomization))
 }
 
 func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -518,6 +504,11 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 			dls := make([]*v3.VMDisk, len(dsk))
 
 			for k, val := range dsk {
+
+				if response.Status.Resources.GuestCustomization.CloudInit != nil && val.(map[string]interface{})["device_properties"].([]interface{})[0].(map[string]interface{})["device_type"].(string) == "CDROM" {
+					continue
+				}
+
 				v := val.(map[string]interface{})
 				dl := &v3.VMDisk{
 					UUID:          validateMapStringValue(v, "uuid"),
@@ -576,6 +567,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	fmt.Printf("[DEBUG] Updating Virtual Machine: %s, %s", d.Get("name").(string), d.Id())
 
 	utils.PrintToJSON(request, "UPDATE")
+
 	_, err2 := conn.V3.UpdateVM(d.Id(), request)
 	if err2 != nil {
 		return err2
@@ -800,6 +792,8 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 		}
 		if v2, ok2 := cii["user_data"]; ok2 {
 			guestCustom.CloudInit.UserData = utils.String(v2.(string))
+		} else if *guestCustom.CloudInit.UserData != "" {
+			guestCustom.CloudInit.MetaData = utils.String("")
 		}
 	}
 
