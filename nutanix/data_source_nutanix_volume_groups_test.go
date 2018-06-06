@@ -7,7 +7,9 @@ import (
 )
 
 func TestAccNutanixVolumeGroupsDataSource_basic(t *testing.T) {
+	// skipping as this API is not yet GA (will GA in upcoming AOS release)
 	t.Skip()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
