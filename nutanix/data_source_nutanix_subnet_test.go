@@ -9,11 +9,6 @@ import (
 )
 
 func TestAccNutanixSubnetDataSource_basic(t *testing.T) {
-	//Skipped because this test didn't pass in GCP environment
-	// if isGCPEnvironment() {
-	// 	t.Skip()
-	// }
-
 	rInt := acctest.RandIntRange(0, 500)
 
 	resource.Test(t, resource.TestCase{
