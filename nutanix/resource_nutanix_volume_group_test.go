@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccNutanixVolumeGroup_basic(t *testing.T) {
+	// skipping as this API is not yet GA (will GA in upcoming AOS release)
 	t.Skip()
 
 	r := rand.Int31()
