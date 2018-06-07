@@ -123,7 +123,10 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 		err = conn.V3.UploadImage(UUID, path.(string))
 		if err != nil {
 
-			resourceNutanixImageDelete(d, meta)
+			delErr := resourceNutanixImageDelete(d, meta)
+			if delErr != nil {
+				return delErr
+			}
 
 			return fmt.Errorf("Failed uploading image: %s", err)
 		}
