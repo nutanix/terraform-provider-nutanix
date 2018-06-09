@@ -1,6 +1,7 @@
 env:
   global:
-    - CC_TEST_REPORTER_ID=d2932adfad8744ef4ae964bc340004bc591e47243889257aa9b3e3f5a31fcb43
+    - CC_TEST_REPORTER_ID=cc87240e386a4ba0f0cc906614c36ec7b7726c93a681bf180111e28cda9988ab
+    
 language: go
 go: 
   - "1.10"
@@ -11,7 +12,6 @@ before_install:
   - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
   - dep ensure
   - dep status
-
 
 install:
   - export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
