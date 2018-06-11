@@ -23,6 +23,5 @@ sanity:
 
 .PHONY: deps
 deps:
-	dep ensure -add github.com/kisielk/errcheck
 	dep ensure
 	dep status
