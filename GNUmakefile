@@ -1,6 +1,5 @@
-TEST?=$$(go list ./... |grep -v 'vendor')
-GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
-GOVET_FILES?=$$(find . -name '*.go' |grep -v vendor)
+TEST ?= $$(go list ./... |grep -v 'vendor')
+GO_FILES ?= $$(find . -name '*.go' |grep -v vendor)
 
 default: build
 
@@ -18,7 +17,7 @@ testacc: fmtcheck
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m -coverprofile c.out
 
 vetcheck:
-	@sh -c "'$(CURDIR)/scripts/govetcheck.sh'"
+	go tool vet -v $(GO_FILES)
 
 fmt:
 	gofmt -s .
