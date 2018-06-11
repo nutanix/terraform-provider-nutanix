@@ -3,13 +3,11 @@ GO_FILES ?= $$(go list ./... |grep -v 'vendor')
 default: build
 
 .PHONY: build
-build:
-	sanity
+build: sanity
 	go install
 
 .PHONY: test
-test:
-	sanity
+test: sanity
 	TF_ACC=1 go test $(GO_FILES) -v $(TESTARGS) -timeout 120m -coverprofile c.out
 
 .PHONY: fmt
