@@ -1,3 +1,4 @@
+---
 language: go
 go:
   - "1.10.3"
@@ -6,8 +7,7 @@ go_import_path: github.com/terraform-providers/terraform-provider-nutanix
 
 before_install:
   - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-  - dep ensure
-  - dep status
+  - make vendor-status
 
 install:
   - export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
@@ -19,7 +19,7 @@ before_script:
   - ./cc-test-reporter before-build
 
 script:
-  - make testacc
+  - make test
 
 after_script:
   - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT

@@ -2,25 +2,35 @@ GO_FILES ?= $$(go list ./... |grep -v 'vendor')
 
 default: build
 
-build: sanity
+build:
+	echo "==> Starting make build"
+	sanity
+	echo "==> Starting go install"
 	go install
+	echo "==> Finished Build"
 
-test: sanity
-	go test -i $(GO_FILES) || exit 1
-	echo $(GO_FILES) | xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4 -coverprofile c.out
-
-testacc: sanity
+test:
+	echo "==> Starting acceptance tests"
+	sanity
 	TF_ACC=1 go test $(GO_FILES) -v $(TESTARGS) -timeout 120m -coverprofile c.out
+	echo "==> Finished acceptance tests"
 
 fmt:
+	echo "==> Starting gofmt with simplify flag"
 	gofmt -s .
+	echo "==> Finished gofmt with simplify flag"
 
 sanity:
+	echo "==> Running Sanity Checks"
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
 	@sh -c "'$(CURDIR)/scripts/govetcheck.sh'"
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
+	echo "==> Finishes Sanity Checks"
 
 vendor-status:
+	echo "==> Starting go dep ensure"
 	@dep ensure
+	@dep status
+	echo "==> Finished go dep ensure"
 
-.PHONY: build test testacc fmt sanity vendor-status
+.PHONY: build test fmt sanity vendor-status
