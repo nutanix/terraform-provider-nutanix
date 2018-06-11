@@ -2,17 +2,18 @@ TEST?=$$(go list ./... |grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 GOVET_FILES?=$$(find . -name '*.go' |grep -v vendor)
 
-default: build
+default:
+	build
 
-build: fmtcheck
+build:
+	fmtcheck
 	vetcheck
 	go install
 
 test: fmtcheck
 	vetcheck
 	go test -i $(TEST) || exit 1
-	echo $(TEST) | \
-		xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4 -coverprofile c.out
+	echo $(TEST) | xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4 -coverprofile c.out
 
 testacc: fmtcheck
 	vetcheck
@@ -41,4 +42,4 @@ test-compile:
 	fi
 	go test -c $(TEST) $(TESTARGS)
 
-.PHONY: build test testacc vet fmt fmtcheck errcheck vetcheck vendor-status test-compile
+.PHONY: build test testacc fmt fmtcheck errcheck vetcheck vendor-status test-compile
