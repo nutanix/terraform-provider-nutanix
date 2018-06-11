@@ -22,7 +22,8 @@ sanity:
 	echo "Sanity: gofmt simplify"
 	gofmt -l -s $(GO_FILES)
 	echo "Sanity: error check"
-	go install $(TRAVIS_BUILD_DIR)/vendor/github.com/kisielk/errcheck
+	cd $(TRAVIS_BUILD_DIR)/vendor/github.com/kisielk/errcheck
+	go install .
 	errcheck -ignoretests -ignore 'github.com/hashicorp/terraform/helper/schema:Set' -ignore 'bytes:.*' -ignore 'io:Close|Write' $(GO_FILES)
 
 .PHONY: deps
