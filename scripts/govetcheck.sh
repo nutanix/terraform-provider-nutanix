@@ -2,7 +2,7 @@
 
 # Check go vet
 echo "==> Checking that code complies with go vet requirements..."
-govet_files="$(go vet "$(find . -name '*.go' | grep -v vendor)")"
+govet_files="$(go tool vet -v "$(find . -name '*.go' | grep -v vendor)")"
 if [[ -n ${govet_files} ]]; then
     echo "Vet found suspicious constructs. Please check the reported constructs";
     echo "and fix them if necessary"
@@ -11,4 +11,5 @@ if [[ -n ${govet_files} ]]; then
     exit 1
 fi
 
+echo "==> Code complies with go vet requirements..."
 exit 0
