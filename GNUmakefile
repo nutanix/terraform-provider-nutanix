@@ -1,5 +1,6 @@
 TEST?=$$(go list ./... |grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
+GOVET_FILES?=$$(find . -name '*.go' |grep -v vendor)
 
 default: build
 
@@ -40,5 +41,4 @@ test-compile:
 	fi
 	go test -c $(TEST) $(TESTARGS)
 
-.PHONY: build test testacc vet fmt fmtcheck errcheck vendor-status test-compile
-
+.PHONY: build test testacc vet fmt fmtcheck errcheck vetcheck vendor-status test-compile

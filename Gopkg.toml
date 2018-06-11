@@ -28,11 +28,7 @@ ignored = ["nutanixV3"]
 
 [[constraint]]
   name = "github.com/hashicorp/terraform"
-  version = "0.9.8"
-
-[[constraint]]
-  name = "github.com/spf13/pflag"
-  version = "1.0.0"
+  version = "0.11.7"
 
 [prune]
   go-tests = true
