@@ -1,4 +1,5 @@
-GO_FILES ?= $$(go list ./... |grep -v 'vendor')
+TEST_FILES ?= $$(go list ./... | grep -v 'vendor')
+GO_FILES ?= $$(find . -name '*.go' | grep -v 'vendor')
 
 default: build
 
@@ -8,7 +9,7 @@ build: sanity
 
 .PHONY: test
 test: sanity
-	TF_ACC=1 go test $(GO_FILES) -v $(TESTARGS) -timeout 120m -coverprofile c.out
+	TF_ACC=1 go test $(TEST_FILES) -v $(TESTARGS) -timeout 120m -coverprofile c.out
 
 .PHONY: fmt
 fmt:
@@ -16,9 +17,10 @@ fmt:
 
 .PHONY: sanity
 sanity:
-	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
-	@sh -c "'$(CURDIR)/scripts/govetcheck.sh'"
-	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
+	go tool vet -v $(GO_FILES)
+	gofmt -l -s $(GO_FILES)
+	go get -u github.com/kisielk/errcheck
+	errcheck -ignoretests -ignore 'github.com/hashicorp/terraform/helper/schema:Set' -ignore 'bytes:.*' -ignore 'io:Close|Write' $(GO_FILES)
 
 .PHONY: vendor-status
 vendor-status:
