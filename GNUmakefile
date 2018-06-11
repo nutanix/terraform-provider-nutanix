@@ -19,7 +19,6 @@ fmt:
 sanity:
 	go tool vet -v $(GO_FILES)
 	gofmt -l -s $(GO_FILES)
-	go get -u github.com/kisielk/errcheck
 	errcheck -ignoretests -ignore 'github.com/hashicorp/terraform/helper/schema:Set' -ignore 'bytes:.*' -ignore 'io:Close|Write' $(GO_FILES)
 
 .PHONY: deps
