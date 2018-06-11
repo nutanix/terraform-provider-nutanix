@@ -2,11 +2,9 @@ TEST?=$$(go list ./... |grep -v 'vendor')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 GOVET_FILES?=$$(find . -name '*.go' |grep -v vendor)
 
-default:
-	build
+default: build
 
-build:
-	fmtcheck
+build: fmtcheck
 	vetcheck
 	go install
 
