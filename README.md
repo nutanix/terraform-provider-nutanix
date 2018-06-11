@@ -194,8 +194,7 @@ Enter the provider directory and build the provider
 
 ```sh
 $ cd $GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix
-$ dep ensure #install dependencies
-$ cd cmd
+$ make deps
 $ make build
 ```
 
@@ -205,7 +204,7 @@ Alternative build: with our demo
 
 ```sh
 $ cd $GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix
-$ dep ensure #install dependencies
+$ make deps
 $ go build -o examples/terraform-provider-nutanix
 $ cd examples
 $ terraform init #to try out our demo

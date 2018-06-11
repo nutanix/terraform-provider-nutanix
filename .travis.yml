@@ -7,7 +7,7 @@ go_import_path: github.com/terraform-providers/terraform-provider-nutanix
 
 before_install:
   - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-  - make vendor-status
+  - make deps
 
 install:
   - export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
