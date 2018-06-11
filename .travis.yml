@@ -1,6 +1,6 @@
 language: go
-go: 
-  - "1.10"
+go:
+  - "1.10.3"
 
 go_import_path: github.com/terraform-providers/terraform-provider-nutanix
 
@@ -11,10 +11,9 @@ before_install:
 
 install:
   - export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
-  - make build 
+  - make build
 
 before_script:
-  - make vet
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
