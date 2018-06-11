@@ -17,8 +17,12 @@ fmt:
 
 .PHONY: sanity
 sanity:
+	echo "Sanity: go vet"
 	go tool vet -v $(GO_FILES)
+	echo "Sanity: gofmt simplify"
 	gofmt -l -s $(GO_FILES)
+	echo "Sanity: error check"
+	go install $(GO_PATH)/github.com/kisielk/errcheck
 	errcheck -ignoretests -ignore 'github.com/hashicorp/terraform/helper/schema:Set' -ignore 'bytes:.*' -ignore 'io:Close|Write' $(GO_FILES)
 
 .PHONY: deps
