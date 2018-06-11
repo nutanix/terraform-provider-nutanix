@@ -13,7 +13,7 @@ test: sanity
 
 .PHONY: fmt
 fmt:
-	@gofmt -s .
+	gofmt -s .
 
 .PHONY: sanity
 sanity:
@@ -23,5 +23,6 @@ sanity:
 
 .PHONY: deps
 deps:
-	@dep ensure
-	@dep status
+	dep ensure -add github.com/kisielk/errcheck
+	dep ensure
+	dep status
