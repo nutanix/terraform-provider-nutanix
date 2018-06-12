@@ -61,7 +61,7 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if !nok {
-		return fmt.Errorf("Please provide the required attribute name")
+		return fmt.Errorf("please provide the required attribute name")
 	}
 
 	if err := getMetadataAttributes(d, metadata, "image"); err != nil {
@@ -89,7 +89,7 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if imageUUID != nil {
-		return fmt.Errorf("Image already with name %s exists in the given cluster, UUID %s", d.Get("name").(string), *imageUUID)
+		return fmt.Errorf("image already with name %s exists in the given cluster, UUID %s", d.Get("name").(string), *imageUUID)
 	}
 
 	//Make request to the API
@@ -128,7 +128,7 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 				return delErr
 			}
 
-			return fmt.Errorf("Failed uploading image: %s", err)
+			return fmt.Errorf("failed uploading image: %s", err)
 		}
 	}
 

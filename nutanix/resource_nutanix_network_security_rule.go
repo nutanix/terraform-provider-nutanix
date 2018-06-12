@@ -43,7 +43,7 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 	desc, descok := d.GetOk("description")
 
 	if !nok {
-		return fmt.Errorf("Please provide the required attribute name")
+		return fmt.Errorf("please provide the required attribute name")
 	}
 
 	// Read arguments and set request values
@@ -76,7 +76,7 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 	}
 
 	if networkSecurityRueUUID != nil {
-		return fmt.Errorf("Network Security Rule already with name %s exists in the given cluster, UUID %s", d.Get("name").(string), *networkSecurityRueUUID)
+		return fmt.Errorf("network security rule already with name %s exists in the given cluster, UUID %s", d.Get("name").(string), *networkSecurityRueUUID)
 	}
 
 	//set request
