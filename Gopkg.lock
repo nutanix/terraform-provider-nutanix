@@ -59,8 +59,8 @@
     "service/s3",
     "service/sts"
   ]
-  revision = "c9af76f2478f81c6566d0f7f4d522254ec7c0b52"
-  version = "v1.14.3"
+  revision = "d2d4fca90395039f60821c231da759cab8f318c7"
+  version = "v1.14.4"
 
 [[projects]]
   branch = "master"
@@ -258,24 +258,6 @@
   revision = "0b12d6b5"
 
 [[projects]]
-  name = "github.com/kisielk/errcheck"
-  packages = [
-    ".",
-    "internal/errcheck"
-  ]
-  revision = "55d8f507faff4d6eddd0c41a3e713e2567fca4e5"
-  version = "v1.1.0"
-
-[[projects]]
-  name = "github.com/kisielk/gotool"
-  packages = [
-    ".",
-    "internal/load"
-  ]
-  revision = "80517062f582ea3340cd4baf70e86d539ae7d84d"
-  version = "v1.0.0"
-
-[[projects]]
   name = "github.com/mattn/go-colorable"
   packages = ["."]
   revision = "167de6bfdfba052fa6b2d3664c8f5272e23c9072"
@@ -444,16 +426,6 @@
 
 [[projects]]
   branch = "master"
-  name = "golang.org/x/tools"
-  packages = [
-    "go/ast/astutil",
-    "go/buildutil",
-    "go/loader"
-  ]
-  revision = "2475cf16d30626b42cfadd38c9be514959b36f37"
-
-[[projects]]
-  branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   revision = "32ee49c4dd805befd833990acba36cb75042378c"
@@ -494,6 +466,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "747e758bca58ab208796cbf766c0d8ca8dd9d169ab663288078dd6e0123322e9"
+  inputs-digest = "c9c0a62de76deec1dec90305a4fedd4177a105cfdbee1dceda0e5cc53a91b9c3"
   solver-name = "gps-cdcl"
   solver-version = 1
