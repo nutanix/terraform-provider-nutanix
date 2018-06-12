@@ -13,18 +13,18 @@ git:
 
 go_import_path: github.com/terraform-providers/terraform-provider-nutanix
 
-install:
-  - go get -u github.com/golang/dep/cmd/dep
-  - make deps
-  - go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint/
-  - make sanity
+# install:
+#   - go get -u github.com/golang/dep/cmd/dep
+#   - make deps
+#   - go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint/
+#   - make sanity
 
 script:
   - export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
   - make cibuild
 
-after_success:
-  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+# after_success:
+#   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   # - chmod +x ./cc-test-reporter
   # - ./cc-test-reporter before-build
   # - make citest
@@ -37,9 +37,12 @@ stages:
 jobs:
   include:
     - stage: initialize
-      script: false
+      script:
+        - go get -u github.com/golang/dep/cmd/dep
+        - make deps
+        - go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint/
+        - make sanity
       go: 1.10.x
-
     - stage: build
       script: true
       go: 1.9.x
@@ -47,7 +50,6 @@ jobs:
       go: 1.10.x
     - script: true
       go: tip
-
 
 matrix:
   fast_finish: true
