@@ -108,8 +108,7 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
-			"Error waiting for network_security_rule (%s) to create: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for network_security_rule (%s) to create: %s", d.Id(), err)
 	}
 
 	return resourceNutanixNetworkSecurityRuleRead(d, meta)
@@ -710,7 +709,7 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf(
-			"Error waiting for network_security_rule (%s) to update: %s", d.Id(), err)
+			"error waiting for network_security_rule (%s) to update: %s", d.Id(), err)
 	}
 
 	return resourceNutanixNetworkSecurityRuleRead(d, meta)
@@ -738,7 +737,7 @@ func resourceNutanixNetworkSecurityRuleDelete(d *schema.ResourceData, meta inter
 
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf(
-			"Error waiting for network_security_rule (%s) to delete: %s", d.Id(), err)
+			"error waiting for network_security_rule (%s) to delete: %s", d.Id(), err)
 	}
 
 	d.SetId("")
