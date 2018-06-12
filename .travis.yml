@@ -5,6 +5,11 @@ cache:
   directories:
     - vendor
 
+go:
+  - 1.9.x
+  - 1.10.x
+  - tip
+
 git:
   depth: 1
 
@@ -33,9 +38,12 @@ jobs:
         - make sanity
       go: 1.10.x
     - stage: build
+      script: true
       go: 1.9.x
-    - go: 1.10.x
-    - go: tip
+    - script: true
+      go: 1.10.x
+    - script: true
+      go: tip
     - stage: acceptance testing
       go: 1.10.x
       script:
