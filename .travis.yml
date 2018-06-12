@@ -20,23 +20,23 @@ script:
   - make cibuild
 
 stages:
-  # - warm up dependencies
-  # - sanity testing
+  - warm up dependencies
+  - sanity testing
   - build
   - acceptance testing
 
 jobs:
   include:
-    # - stage: warm up dependencies
-    #   script:
-    #     - go get -u github.com/golang/dep/cmd/dep
-    #     - make deps
-    #   go: 1.10.x
-    # - stage: sanity testing
-    #   script:
-    #     - go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint/
-    #     - make sanity
-    #   go: 1.10.x
+    - stage: warm up dependencies
+      script:
+        - go get -u github.com/golang/dep/cmd/dep
+        - make deps
+      go: 1.10.x
+    - stage: sanity testing
+      script:
+        - go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint/
+        - make sanity
+      go: 1.10.x
     - stage: build
       script: true
       go: 1.9.x
