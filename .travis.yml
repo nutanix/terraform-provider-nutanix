@@ -13,7 +13,7 @@ go_import_path: github.com/terraform-providers/terraform-provider-nutanix
 before_install:
   - go get -u github.com/golang/dep/cmd/dep
   - make deps
-  - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s "1.6.1"
+  - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s v1.6.1
   - golangci-lint run
 
 # install:
