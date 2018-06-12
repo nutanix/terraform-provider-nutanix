@@ -17,7 +17,7 @@ install:
   - go get -u github.com/golang/dep/cmd/dep
   - make deps
   - go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint/
-  - golangci-lint run
+  #- golangci-lint run
 
 before_script:
   - export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
@@ -31,21 +31,16 @@ before_script:
 
 # after_script:
 #   - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
-# stages:
-#   - initialize
-#   - validate
-#   - build
-#   # - name: deploy
-#   #   if: branch = master1234
-# jobs:
-#   include:
-#     - stage: initialize
-#       script: true
-#     - script: make deps
-#     - script: go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint/
-#       - golangci-lint run
-#     - stage: build
-#       go: 1.10.x
+stages:
+  - initialize
+  - build
+  # - name: deploy
+  #   if: branch = master1234
+jobs:
+  include:
+    - stage: initialize
+      script: true
+    - stage: build
 
 matrix:
   fast_finish: true
