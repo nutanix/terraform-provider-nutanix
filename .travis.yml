@@ -3,36 +3,20 @@ language: go
 cache:
   directories:
     - vendor
-# go:
-#   - 1.9.x
-#   - 1.10.x
-#   - tip
 
 git:
   depth: 1
 
 go_import_path: github.com/terraform-providers/terraform-provider-nutanix
 
-# install:
-#   - go get -u github.com/golang/dep/cmd/dep
-#   - make deps
-#   - go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint/
-#   - make sanity
-
 script:
   - export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
   - make cibuild
 
-# after_success:
-#   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-  # - chmod +x ./cc-test-reporter
-  # - ./cc-test-reporter before-build
-  # - make citest
-  # - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
-
 stages:
   - initialize
   - build
+  - test
 
 jobs:
   include:
@@ -50,6 +34,14 @@ jobs:
       go: 1.10.x
     - script: true
       go: tip
+    - stage: test
+      go: 1.10.x
+      script:
+        - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+        - chmod +x ./cc-test-reporter
+        - ./cc-test-reporter before-build
+        - make citest
+        - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
 
 matrix:
   fast_finish: true
