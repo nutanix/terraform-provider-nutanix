@@ -15,6 +15,7 @@ cibuild:
 	go install
 
 citest:
+	export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
 	go test $(TEST_FILES) -v $(TESTARGS) -timeout 120m -coverprofile c.out
 
 fmt:
