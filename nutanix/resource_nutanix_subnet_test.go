@@ -2,12 +2,15 @@ package nutanix
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 )
 
 func TestAccNutanixSubnet_basic(t *testing.T) {
@@ -105,4 +108,356 @@ resource "nutanix_subnet" "next-iac-managed" {
   dhcp_domain_search_list      = ["nutanix.com", "eng.nutanix.com"]
 }
 `, r, r)
+}
+
+func Test_resourceNutanixSubnet(t *testing.T) {
+	tests := []struct {
+		name string
+		want *schema.Resource
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := resourceNutanixSubnet(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("resourceNutanixSubnet() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_resourceNutanixSubnetCreate(t *testing.T) {
+	type args struct {
+		d    *schema.ResourceData
+		meta interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := resourceNutanixSubnetCreate(tt.args.d, tt.args.meta); (err != nil) != tt.wantErr {
+				t.Errorf("resourceNutanixSubnetCreate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_resourceNutanixSubnetRead(t *testing.T) {
+	type args struct {
+		d    *schema.ResourceData
+		meta interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := resourceNutanixSubnetRead(tt.args.d, tt.args.meta); (err != nil) != tt.wantErr {
+				t.Errorf("resourceNutanixSubnetRead() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_resourceNutanixSubnetUpdate(t *testing.T) {
+	type args struct {
+		d    *schema.ResourceData
+		meta interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := resourceNutanixSubnetUpdate(tt.args.d, tt.args.meta); (err != nil) != tt.wantErr {
+				t.Errorf("resourceNutanixSubnetUpdate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_resourceNutanixSubnetDelete(t *testing.T) {
+	type args struct {
+		d    *schema.ResourceData
+		meta interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := resourceNutanixSubnetDelete(tt.args.d, tt.args.meta); (err != nil) != tt.wantErr {
+				t.Errorf("resourceNutanixSubnetDelete() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_resourceNutanixSubnetExists(t *testing.T) {
+	type args struct {
+		conn *v3.Client
+		name string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *string
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := resourceNutanixSubnetExists(tt.args.conn, tt.args.name)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("resourceNutanixSubnetExists() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("resourceNutanixSubnetExists() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_getSubnetResources(t *testing.T) {
+	type args struct {
+		d      *schema.ResourceData
+		subnet *v3.SubnetResources
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := getSubnetResources(tt.args.d, tt.args.subnet); (err != nil) != tt.wantErr {
+				t.Errorf("getSubnetResources() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_getSubnetMetadaAttributes(t *testing.T) {
+	type args struct {
+		d        *schema.ResourceData
+		metadata *v3.SubnetMetadata
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := getSubnetMetadaAttributes(tt.args.d, tt.args.metadata); (err != nil) != tt.wantErr {
+				t.Errorf("getSubnetMetadaAttributes() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_setSubnetResources(t *testing.T) {
+	type args struct {
+		m interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *v3.SubnetResources
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := setSubnetResources(tt.args.m)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("setSubnetResources() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("setSubnetResources() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_setSubnetResourcesIPConfig(t *testing.T) {
+	type args struct {
+		ic interface{}
+	}
+	tests := []struct {
+		name string
+		args args
+		want *v3.IPConfig
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := setSubnetResourcesIPConfig(tt.args.ic); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("setSubnetResourcesIPConfig() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_setSubnetResourcesDHCPOptions(t *testing.T) {
+	type args struct {
+		dhcp interface{}
+	}
+	tests := []struct {
+		name string
+		args args
+		want *v3.DHCPOptions
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := setSubnetResourcesDHCPOptions(tt.args.dhcp); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("setSubnetResourcesDHCPOptions() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_setSubnetMetadata(t *testing.T) {
+	type args struct {
+		m interface{}
+	}
+	tests := []struct {
+		name string
+		args args
+		want *v3.SubnetMetadata
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := setSubnetMetadata(tt.args.m); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("setSubnetMetadata() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_subnetStateRefreshFunc(t *testing.T) {
+	type args struct {
+		client *v3.Client
+		uuid   string
+	}
+	tests := []struct {
+		name string
+		args args
+		want resource.StateRefreshFunc
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := subnetStateRefreshFunc(tt.args.client, tt.args.uuid); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("subnetStateRefreshFunc() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_getSubnetSchema(t *testing.T) {
+	tests := []struct {
+		name string
+		want map[string]*schema.Schema
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getSubnetSchema(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getSubnetSchema() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_testAccCheckNutanixSubnetExists(t *testing.T) {
+	type args struct {
+		n string
+	}
+	tests := []struct {
+		name string
+		args args
+		want resource.TestCheckFunc
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := testAccCheckNutanixSubnetExists(tt.args.n); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("testAccCheckNutanixSubnetExists() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_testAccCheckNutanixSubnetDestroy(t *testing.T) {
+	type args struct {
+		s *terraform.State
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := testAccCheckNutanixSubnetDestroy(tt.args.s); (err != nil) != tt.wantErr {
+				t.Errorf("testAccCheckNutanixSubnetDestroy() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_testAccNutanixSubnetConfig(t *testing.T) {
+	type args struct {
+		r int
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := testAccNutanixSubnetConfig(tt.args.r); got != tt.want {
+				t.Errorf("testAccNutanixSubnetConfig() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

@@ -1,4 +1,4 @@
-TEST?=./...
+TEST?=$$(go list ./... |grep -v 'vendor' |grep -v 'utils')
 GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
 PKG_NAME=nutanix
 WEBSITE_REPO=github.com/hashicorp/terraform-website
@@ -15,7 +15,7 @@ cibuild:
 	go install
 
 citest:
-	go test $(TEST) -v $(TESTARGS) -timeout 120m -coverprofile c.out
+	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m -coverprofile c.out
 
 fmt:
 	gofmt -s .
