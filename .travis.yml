@@ -11,6 +11,7 @@ git:
 go_import_path: github.com/terraform-providers/terraform-provider-nutanix
 
 script:
+  - export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
   - make cibuild
 
 stages:
