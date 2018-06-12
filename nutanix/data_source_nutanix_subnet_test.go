@@ -2,10 +2,12 @@ package nutanix
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func TestAccNutanixSubnetDataSource_basic(t *testing.T) {
@@ -71,4 +73,77 @@ data "nutanix_subnet" "test" {
 	subnet_id = "${nutanix_subnet.test.id}"
 }
 `, r, r)
+}
+
+func Test_dataSourceNutanixSubnet(t *testing.T) {
+	tests := []struct {
+		name string
+		want *schema.Resource
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := dataSourceNutanixSubnet(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("dataSourceNutanixSubnet() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_dataSourceNutanixSubnetRead(t *testing.T) {
+	type args struct {
+		d    *schema.ResourceData
+		meta interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := dataSourceNutanixSubnetRead(tt.args.d, tt.args.meta); (err != nil) != tt.wantErr {
+				t.Errorf("dataSourceNutanixSubnetRead() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_getDataSourceSubnetSchema(t *testing.T) {
+	tests := []struct {
+		name string
+		want map[string]*schema.Schema
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getDataSourceSubnetSchema(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getDataSourceSubnetSchema() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_testAccSubnetDataSourceConfig(t *testing.T) {
+	type args struct {
+		r int
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := testAccSubnetDataSourceConfig(tt.args.r); got != tt.want {
+				t.Errorf("testAccSubnetDataSourceConfig() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
