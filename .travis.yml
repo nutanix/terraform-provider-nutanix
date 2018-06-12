@@ -3,10 +3,10 @@ language: go
 cache:
   directories:
     - vendor
-go:
-  - 1.9.x
-  - 1.10.x
-  - tip
+# go:
+#   - 1.9.x
+#   - 1.10.x
+#   - tip
 
 git:
   depth: 1
@@ -25,28 +25,29 @@ script:
 
 after_success:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-  - chmod +x ./cc-test-reporter
-  - ./cc-test-reporter before-build
-  - make citest
-  - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
+  # - chmod +x ./cc-test-reporter
+  # - ./cc-test-reporter before-build
+  # - make citest
+  # - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
 
-# stages:
-#   - initialize
-#   - build
+stages:
+  - initialize
+  - build
 
-# jobs:
-#   include:
-#     - stage: initialize
-#       script: true
-#       go:
+jobs:
+  include:
+    - stage: initialize
+      script: false
+      go: 1.10.x
 
-#         - 1.10.x
+    - stage: build
+      script: true
+      go: 1.9.x
+    - script: true
+      go: 1.10.x
+    - script: true
+      go: tip
 
-#     - stage: build
-#       go:
-#         - 1.9.x
-#         - 1.10.x
-#         - tip
 
 matrix:
   fast_finish: true
