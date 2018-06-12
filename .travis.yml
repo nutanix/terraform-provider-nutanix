@@ -19,28 +19,35 @@ install:
   - go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint/
   #- golangci-lint run
 
-before_script:
+script:
   - export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
-  # - make cibuild
-  # - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-  # - chmod +x ./cc-test-reporter
-  # - ./cc-test-reporter before-build
+  - make cibuild
+  - golangci-lint run
 
-# script:
-#   - make citest
+after_success:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
+  - make citest
+  - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
 
-# after_script:
-#   - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
 stages:
   - initialize
   - build
-  # - name: deploy
-  #   if: branch = master1234
+
 jobs:
   include:
     - stage: initialize
       script: true
+      go:
+
+        - 1.10.x
+
     - stage: build
+      go:
+        - 1.9.x
+        - 1.10.x
+        - tip
 
 matrix:
   fast_finish: true
