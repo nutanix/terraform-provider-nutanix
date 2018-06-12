@@ -1,25 +1,29 @@
 ---
 language: go
 go:
-  - "1.10.3"
+  - 1.9.x
+  - 1.10.x
+  - master
 
 go_import_path: github.com/terraform-providers/terraform-provider-nutanix
 
 before_install:
-  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+  - go get -u github.com/golang/dep/cmd/dep
+  - go get -u github.com/alecthomas/gometalinter
+  - gometalinter --install
   - make deps
 
-install:
-  - export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
-  - make build
+# install:
+#   - export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
+#   - make cibuild
 
-before_script:
-  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-  - chmod +x ./cc-test-reporter
-  - ./cc-test-reporter before-build
+# before_script:
+#   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+#   - chmod +x ./cc-test-reporter
+#   - ./cc-test-reporter before-build
 
-script:
-  - make test
+# script:
+#   - make citest
 
-after_script:
-  - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
+# after_script:
+#   - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
