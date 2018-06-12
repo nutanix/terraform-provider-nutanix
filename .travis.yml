@@ -1,7 +1,7 @@
 ---
 language: go
 go:
-  # - 1.9.x
+  - 1.9.x
   - 1.10.x
   # - tip
 
@@ -10,15 +10,16 @@ git:
 
 go_import_path: github.com/terraform-providers/terraform-provider-nutanix
 
-before_install:
-  - go get -u github.com/golang/dep/cmd/dep
-  - make deps
-  - go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint/
-  - golangci-lint run
+# before_install:
+  # - go get -u github.com/golang/dep/cmd/dep
+  # - make deps
+  # - go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint/
+  # - golangci-lint run
 
 # install:
-#   - export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
-#   - make cibuild
+#   -
+#   -
+  #- make cibuild
 
 # before_script:
 #   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
@@ -31,17 +32,22 @@ before_install:
 # after_script:
 #   - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
 stages:
-  - prepare cache
-  - validate
+  - initialize build environment
+  # - validate
   - build
   # - name: deploy
   #   if: branch = master1234
 jobs:
   include:
-    - stage: prepare cache
-      script: true
+    - stage: initialize build environment
+      script: go get -u github.com/golang/dep/cmd/dep
+    - script: make deps
+    - script: go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint/
+    - script: make sanity
     - stage: build
+      script: export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
       go: 1.10.x
+    - script: echo "doggy dog"
 
 matrix:
   fast_finish: true
