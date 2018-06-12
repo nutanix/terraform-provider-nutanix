@@ -111,8 +111,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
-			"Error waiting for vm (%s) to create: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for vm (%s) to create: %s", d.Id(), err)
 	}
 
 	return resourceNutanixVirtualMachineRead(d, meta)
@@ -592,7 +591,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf(
-			"Error waiting for vm (%s) to update: %s", d.Id(), err)
+			"error waiting for vm (%s) to update: %s", d.Id(), err)
 	}
 
 	return resourceNutanixVirtualMachineRead(d, meta)
@@ -617,7 +616,7 @@ func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, meta interface{
 
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf(
-			"Error waiting for vm (%s) to delete: %s", d.Id(), err)
+			"error waiting for vm (%s) to delete: %s", d.Id(), err)
 	}
 
 	d.SetId("")
