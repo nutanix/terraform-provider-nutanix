@@ -52,7 +52,7 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 
 	// if both path and uri are provided, return an error
 	if iok && pok {
-		return errors.New("Both source_uri and source_path provided")
+		return errors.New("both source_uri and source_path provided")
 	}
 
 	// Read Arguments and set request values
@@ -112,8 +112,7 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
-			"Error waiting for image (%s) to create: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for image (%s) to create: %s", d.Id(), err)
 	}
 
 	// if we need to upload an image, we do it now
@@ -303,8 +302,7 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
-			"Error waiting for image (%s) to update: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for image (%s) to update: %s", d.Id(), err)
 	}
 
 	return resourceNutanixImageRead(d, meta)

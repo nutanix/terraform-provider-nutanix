@@ -417,29 +417,3 @@ func Test_fillStruct(t *testing.T) {
 		})
 	}
 }
-
-func Test_setup(t *testing.T) {
-	tests := []struct {
-		name string
-	}{
-		// TODO: Add test cases.
-	}
-	for range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			setup()
-		})
-	}
-}
-
-func Test_teardown(t *testing.T) {
-	tests := []struct {
-		name string
-	}{
-		// TODO: Add test cases.
-	}
-	for range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			teardown()
-		})
-	}
-}
