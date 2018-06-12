@@ -43,10 +43,10 @@ func testAccCheckNutanixNetworkSecurityRuleExists(n string) resource.TestCheckFu
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("no ID is set")
 		}
 
 		return nil
@@ -77,7 +77,7 @@ func testAccCheckNutanixNetworkSecurityRuleDestroy(s *terraform.State) error {
 }
 
 func testAccNutanixNetworkSecurityRuleConfig(r int32) string {
-	return fmt.Sprintf(` 
+	return fmt.Sprintf(`
 resource "nutanix_category_key" "test-category-key"{
     name = "TIER-1"
 	  description = "TIER Category Key"
@@ -242,12 +242,12 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
       name   = "${nutanix_category_key.test-category-key.id}"
       values = ["${nutanix_category_value.APP.id}"]
   }
-    
+
   app_rule_target_group_filter_params = {
       name   = "${nutanix_category_key.USER.id}"
       values = ["${nutanix_category_value.ashwini.id}"]
   }
-  
+
 
   app_rule_outbound_allow_list = [
     {

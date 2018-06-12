@@ -35,10 +35,10 @@ func testAccCheckNutanixSubnetsExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("no ID is set")
 		}
 
 		return nil
@@ -63,12 +63,12 @@ resource "nutanix_subnet" "test" {
 
 	vlan_id = %d
 	subnet_type = "VLAN"
-	
+
 	prefix_length = 24
 	default_gateway_ip = "192.168.0.1"
 	subnet_ip = "192.168.0.0"
 	#ip_config_pool_list_ranges = ["192.168.0.5", "192.168.0.100"]
-	
+
 	dhcp_options {
 		boot_file_name = "bootfile"
 		tftp_server_name = "192.168.0.252"
@@ -77,7 +77,7 @@ resource "nutanix_subnet" "test" {
 
 	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
 	dhcp_domain_search_list = ["nutanix.com", "calm.io"]
-	
+
 }
 
 data "nutanix_subnet" "test" {
