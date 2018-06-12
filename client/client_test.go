@@ -104,7 +104,7 @@ func TestGetResponse(t *testing.T) {
 	}
 
 	if !strings.Contains(fmt.Sprint(err), "This field may not be blank.") {
-		t.Errorf("Error = %#v, expected %#v", err, "This field may not be blank.")
+		t.Errorf("error = %#v, expected %#v", err, "This field may not be blank.")
 	}
 }
 
@@ -121,7 +121,7 @@ func TestCheckResponse(t *testing.T) {
 	}
 
 	if !strings.Contains(fmt.Sprint(err), "This field may not be blank.") {
-		t.Errorf("Error = %#v, expected %#v", err, "This field may not be blank.")
+		t.Errorf("error = %#v, expected %#v", err, "This field may not be blank.")
 	}
 }
 

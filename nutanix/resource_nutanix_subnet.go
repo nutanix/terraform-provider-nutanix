@@ -103,8 +103,7 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
-			"Error waiting for subnet (%s) to create: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for subnet (%s) to create: %s", d.Id(), err)
 	}
 
 	return resourceNutanixSubnetRead(d, meta)
@@ -380,7 +379,7 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf(
-			"Error waiting for subnet (%s) to update: %s", d.Id(), err)
+			"error waiting for subnet (%s) to update: %s", d.Id(), err)
 	}
 	return resourceNutanixSubnetRead(d, meta)
 }
@@ -406,7 +405,7 @@ func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error
 
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf(
-			"Error waiting for subnet (%s) to delete: %s", d.Id(), err)
+			"error waiting for subnet (%s) to delete: %s", d.Id(), err)
 	}
 
 	d.SetId("")

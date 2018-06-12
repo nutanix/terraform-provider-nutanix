@@ -328,8 +328,7 @@ func resourceNutanixImageDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
-			"Error waiting for image (%s) to delete: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for image (%s) to delete: %s", d.Id(), err)
 	}
 
 	d.SetId("")
