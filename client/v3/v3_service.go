@@ -249,7 +249,7 @@ func (op Operations) GetSubnet(UUID string) (*SubnetIntentResponse, error) {
 	//Recheck subnet already exist error
 	if *subnetIntentResponse.Status.State == "ERROR" {
 		pretty, _ := json.MarshalIndent(subnetIntentResponse.Status.MessageList, "", "  ")
-		return nil, fmt.Errorf("Error: %s", string(pretty))
+		return nil, fmt.Errorf("error: %s", string(pretty))
 	}
 
 	return subnetIntentResponse, nil
@@ -346,18 +346,18 @@ func (op Operations) UploadImage(UUID, filepath string) error {
 
 	file, err := os.Open(filepath)
 	if err != nil {
-		return fmt.Errorf("Cannot open file: %s", err)
+		return fmt.Errorf("error: cannot open file: %s", err)
 	}
 	defer file.Close()
 
 	fileContents, err := ioutil.ReadAll(file)
 	if err != nil {
-		return fmt.Errorf("Cannot read file %s", err)
+		return fmt.Errorf("error: Cannot read file %s", err)
 	}
 
 	req, err := op.client.NewUploadRequest(ctx, http.MethodPut, path, fileContents)
 	if err != nil {
-		return fmt.Errorf("Error Creating request %s", err)
+		return fmt.Errorf("error: Creating request %s", err)
 	}
 	err = op.client.Do(ctx, req, nil)
 

@@ -1,28 +1,51 @@
-TEST_FILES ?= $$(go list ./... | grep -v 'vendor')
-GO_FILES ?= $$(find . -name '*.go' | grep -v 'vendor')
+TEST?=./...
+GOFMT_FILES?=$$(find . -name '*.go' |grep -v vendor)
+PKG_NAME=nutanix
+WEBSITE_REPO=github.com/hashicorp/terraform-website
 
 default: build
 
-.PHONY: build
-build: sanity
+build: deps sanity
 	go install
 
-.PHONY: test
-test: sanity
-	TF_ACC=1 go test $(TEST_FILES) -v $(TESTARGS) -timeout 120m -coverprofile c.out
+test: deps sanity
+	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m -coverprofile c.out
 
-.PHONY: fmt
+cibuild:
+	go install
+
+citest:
+	go test $(TEST) -v $(TESTARGS) -timeout 120m -coverprofile c.out
+
 fmt:
 	gofmt -s .
 
-.PHONY: sanity
 sanity:
-	go tool vet -v $(GO_FILES)
-	gofmt -l -s $(GO_FILES)
-	errcheck -ignoretests -ignore 'github.com/hashicorp/terraform/helper/schema:Set' -ignore 'bytes:.*' -ignore 'io:Close|Write' $(GO_FILES)
+	echo "==>sanity: golangci-lint"
+	golangci-lint run
 
-.PHONY: deps
 deps:
-	dep ensure -add github.com/kisielk/errcheck
-	dep ensure
+	dep ensure -v
 	dep status
+
+tools:
+	go get -u github.com/golang/dep/cmd/dep
+	go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+
+website:
+ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
+	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
+	git clone https://$(WEBSITE_REPO) $(GOPATH)/src/$(WEBSITE_REPO)
+endif
+	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
+
+website-test:
+ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
+	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
+	git clone https://$(WEBSITE_REPO) $(GOPATH)/src/$(WEBSITE_REPO)
+endif
+	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
+
+.NOTPARALLEL:
+
+.PHONY: build test cibuild citest fmt sanity deps tools website website-test

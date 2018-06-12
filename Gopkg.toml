@@ -24,8 +24,9 @@
 #   go-tests = true
 #   unused-packages = true
 
-required = ["github.com/kisielk/errcheck"]
-ignored = ["nutanixV3"]
+required = [
+  "github.com/golangci/golangci-lint/cmd/golangci-lint",
+]
 
 [[constraint]]
   name = "github.com/hashicorp/terraform"
@@ -34,3 +35,7 @@ ignored = ["nutanixV3"]
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "github.com/golangci/golangci-lint"
+  version = "1.6.1"

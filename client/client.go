@@ -55,6 +55,7 @@ type Credentials struct {
 func NewClient(credentials *Credentials) (*Client, error) {
 
 	transCfg := &http.Transport{
+		//nolint:gas
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: credentials.Insecure}, // ignore expired SSL certificates
 	}
 
@@ -237,7 +238,7 @@ func CheckResponse(r *http.Response) error {
 	}
 
 	pretty, _ := json.MarshalIndent(errRes, "", "  ")
-	return fmt.Errorf("Error: %s", string(pretty))
+	return fmt.Errorf("error: %s", string(pretty))
 }
 
 //ErrorResponse ...
