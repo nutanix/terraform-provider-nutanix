@@ -24,6 +24,10 @@
 #   go-tests = true
 #   unused-packages = true
 
+required = [
+  "github.com/golangci/golangci-lint/cmd/golangci-lint",
+]
+
 [[constraint]]
   name = "github.com/hashicorp/terraform"
   version = "0.11.7"
@@ -31,3 +35,7 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "github.com/golangci/golangci-lint"
+  version = "1.6.1"
