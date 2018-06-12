@@ -49,7 +49,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		request.APIVersion = utils.String(v.(string))
 	}
 	if !nok {
-		return fmt.Errorf("Please provide the required name attribute")
+		return fmt.Errorf("please provide the required name attribute")
 	}
 	if err := getMetadataAttributes(d, metadata, "vm"); err != nil {
 		return err
