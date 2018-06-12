@@ -1,53 +1,51 @@
 ---
 language: go
+cache:
+  directories:
+    - vendor
 go:
   - 1.9.x
   - 1.10.x
-  # - tip
+  - tip
 
 git:
   depth: 1
 
 go_import_path: github.com/terraform-providers/terraform-provider-nutanix
 
-# before_install:
-  # - go get -u github.com/golang/dep/cmd/dep
-  # - make deps
-  # - go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint/
-  # - golangci-lint run
+install:
+  - go get -u github.com/golang/dep/cmd/dep
+  - make deps
+  - go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint/
+  - golangci-lint run
 
-# install:
-#   -
-#   -
-  #- make cibuild
-
-# before_script:
-#   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-#   - chmod +x ./cc-test-reporter
-#   - ./cc-test-reporter before-build
+before_script:
+  - export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
+  # - make cibuild
+  # - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  # - chmod +x ./cc-test-reporter
+  # - ./cc-test-reporter before-build
 
 # script:
 #   - make citest
 
 # after_script:
 #   - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
-stages:
-  - initialize build environment
-  # - validate
-  - build
-  # - name: deploy
-  #   if: branch = master1234
-jobs:
-  include:
-    - stage: initialize build environment
-      script: go get -u github.com/golang/dep/cmd/dep
-    - script: make deps
-    - script: go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint/
-    - script: make sanity
-    - stage: build
-      script: export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
-      go: 1.10.x
-    - script: echo "doggy dog"
+# stages:
+#   - initialize
+#   - validate
+#   - build
+#   # - name: deploy
+#   #   if: branch = master1234
+# jobs:
+#   include:
+#     - stage: initialize
+#       script: true
+#     - script: make deps
+#     - script: go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint/
+#       - golangci-lint run
+#     - stage: build
+#       go: 1.10.x
 
 matrix:
   fast_finish: true
