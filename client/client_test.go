@@ -239,3 +239,181 @@ func TestDo_redirectLoop(t *testing.T) {
 // 		t.Errorf("expected response to contain %v, Response = %v", expected, completedResp)
 // 	}
 // }
+
+func TestClient_NewRequest(t *testing.T) {
+	type fields struct {
+		Credentials        *Credentials
+		client             *http.Client
+		BaseURL            *url.URL
+		UserAgent          string
+		onRequestCompleted RequestCompletionCallback
+	}
+	type args struct {
+		ctx    context.Context
+		method string
+		urlStr string
+		body   interface{}
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *http.Request
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Client{
+				Credentials:        tt.fields.Credentials,
+				client:             tt.fields.client,
+				BaseURL:            tt.fields.BaseURL,
+				UserAgent:          tt.fields.UserAgent,
+				onRequestCompleted: tt.fields.onRequestCompleted,
+			}
+			got, err := c.NewRequest(tt.args.ctx, tt.args.method, tt.args.urlStr, tt.args.body)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Client.NewRequest() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Client.NewRequest() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestClient_NewUploadRequest(t *testing.T) {
+	type fields struct {
+		Credentials        *Credentials
+		client             *http.Client
+		BaseURL            *url.URL
+		UserAgent          string
+		onRequestCompleted RequestCompletionCallback
+	}
+	type args struct {
+		ctx    context.Context
+		method string
+		urlStr string
+		body   []byte
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *http.Request
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Client{
+				Credentials:        tt.fields.Credentials,
+				client:             tt.fields.client,
+				BaseURL:            tt.fields.BaseURL,
+				UserAgent:          tt.fields.UserAgent,
+				onRequestCompleted: tt.fields.onRequestCompleted,
+			}
+			got, err := c.NewUploadRequest(tt.args.ctx, tt.args.method, tt.args.urlStr, tt.args.body)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Client.NewUploadRequest() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Client.NewUploadRequest() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestClient_OnRequestCompleted(t *testing.T) {
+	type fields struct {
+		Credentials        *Credentials
+		client             *http.Client
+		BaseURL            *url.URL
+		UserAgent          string
+		onRequestCompleted RequestCompletionCallback
+	}
+	type args struct {
+		rc RequestCompletionCallback
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Client{
+				Credentials:        tt.fields.Credentials,
+				client:             tt.fields.client,
+				BaseURL:            tt.fields.BaseURL,
+				UserAgent:          tt.fields.UserAgent,
+				onRequestCompleted: tt.fields.onRequestCompleted,
+			}
+			c.OnRequestCompleted(tt.args.rc)
+		})
+	}
+}
+
+func TestClient_Do(t *testing.T) {
+	type fields struct {
+		Credentials        *Credentials
+		client             *http.Client
+		BaseURL            *url.URL
+		UserAgent          string
+		onRequestCompleted RequestCompletionCallback
+	}
+	type args struct {
+		ctx context.Context
+		req *http.Request
+		v   interface{}
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &Client{
+				Credentials:        tt.fields.Credentials,
+				client:             tt.fields.client,
+				BaseURL:            tt.fields.BaseURL,
+				UserAgent:          tt.fields.UserAgent,
+				onRequestCompleted: tt.fields.onRequestCompleted,
+			}
+			if err := c.Do(tt.args.ctx, tt.args.req, tt.args.v); (err != nil) != tt.wantErr {
+				t.Errorf("Client.Do() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_fillStruct(t *testing.T) {
+	type args struct {
+		data   map[string]interface{}
+		result interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := fillStruct(tt.args.data, tt.args.result); (err != nil) != tt.wantErr {
+				t.Errorf("fillStruct() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

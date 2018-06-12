@@ -24,7 +24,7 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 	c, ok := d.GetOk("cluster_id")
 
 	if !ok {
-		return fmt.Errorf("Please provide the cluster_id attribute")
+		return fmt.Errorf("please provide the cluster_id attribute")
 	}
 
 	// Make request to the API

@@ -43,7 +43,7 @@ func resourceNutanixVolumeGroupCreate(d *schema.ResourceData, meta interface{}) 
 		request.APIVersion = utils.String(v.(string))
 	}
 	if !nok {
-		return fmt.Errorf("Please provide the required name attribute")
+		return fmt.Errorf("please provide the required name attribute")
 	}
 	if err := getMetadataAttributes(d, metadata, "volume_group"); err != nil {
 		return err
