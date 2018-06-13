@@ -372,7 +372,7 @@ func getVolumeGroupResources(d *schema.ResourceData, vg *v3.VolumeGroupResources
 					disk.StorageContainerUUID = utils.String(value.(string))
 				}
 
-				dl[k] = d
+				dl[k] = disk
 			}
 			vg.DiskList = dl
 		}

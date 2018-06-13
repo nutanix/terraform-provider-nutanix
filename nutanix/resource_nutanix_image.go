@@ -113,8 +113,8 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 		MinTimeout: 3 * time.Second,
 	}
 
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("error waiting for image (%s) to create: %s", d.Id(), err)
+	if _, errw := stateConf.WaitForState(); err != nil {
+		return fmt.Errorf("error waiting for image (%s) to create: %s", d.Id(), errw)
 	}
 
 	// if we need to upload an image, we do it now
