@@ -55,6 +55,7 @@ type Credentials struct {
 func NewClient(credentials *Credentials) (*Client, error) {
 
 	transCfg := &http.Transport{
+		//nolint:gas
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: credentials.Insecure}, // ignore expired SSL certificates
 	}
 
@@ -116,6 +117,7 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 	return req, nil
 }
 
+// NewUploadRequest Handles image uploads for image service
 func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, body []byte) (*http.Request, error) {
 	rel, errp := url.Parse(absolutePath + urlStr)
 	if errp != nil {
@@ -236,7 +238,7 @@ func CheckResponse(r *http.Response) error {
 	}
 
 	pretty, _ := json.MarshalIndent(errRes, "", "  ")
-	return fmt.Errorf("Error: %s", string(pretty))
+	return fmt.Errorf("error: %s", string(pretty))
 }
 
 //ErrorResponse ...

@@ -16,7 +16,7 @@ if [[ ! -f CHANGELOG.md ]]; then
   exit 1
 fi
 
-if [[ `uname` == "Darwin" ]]; then
+if [[ $(uname) == "Darwin" ]]; then
   echo "Using BSD sed"
   SED="sed -i.bak -E -e"
 else
@@ -24,7 +24,7 @@ else
   SED="sed -i.bak -r -e"
 fi
 
-PROVIDER_URL="https:\/\/github.com\/terraform-providers\/terraform-provider-aws\/issues"
+PROVIDER_URL="https:\/\/github.com\/terraform-providers\/terraform-provider-nutanix\/issues"
 
 $SED "s/GH-([0-9]+)/\[#\1\]\($PROVIDER_URL\/\1\)/g" -e 's/\[\[#(.+)([0-9])\)]$/(\[#\1\2))/g' CHANGELOG.md
 

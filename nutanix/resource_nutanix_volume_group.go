@@ -43,7 +43,7 @@ func resourceNutanixVolumeGroupCreate(d *schema.ResourceData, meta interface{}) 
 		request.APIVersion = utils.String(v.(string))
 	}
 	if !nok {
-		return fmt.Errorf("Please provide the required name attribute")
+		return fmt.Errorf("please provide the required name attribute")
 	}
 	if err := getMetadataAttributes(d, metadata, "volume_group"); err != nil {
 		return err
@@ -84,8 +84,7 @@ func resourceNutanixVolumeGroupCreate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
-			"Error waiting for volume_group (%s) to create: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for volume_group (%s) to create: %s", d.Id(), err)
 	}
 
 	return resourceNutanixVolumeGroupRead(d, meta)
@@ -336,7 +335,7 @@ func resourceNutanixVolumeGroupUpdate(d *schema.ResourceData, meta interface{}) 
 
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf(
-			"Error waiting for volume group (%s) to update: %s", d.Id(), err)
+			"error waiting for volume group (%s) to update: %s", d.Id(), err)
 	}
 
 	return resourceNutanixVolumeGroupRead(d, meta)
@@ -362,8 +361,7 @@ func resourceNutanixVolumeGroupDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
-			"Error waiting for volume group (%s) to delete: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for volume group (%s) to delete: %s", d.Id(), err)
 	}
 
 	d.SetId("")

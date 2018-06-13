@@ -42,7 +42,7 @@ func resourceNutanixCategoryKeyCreateOrUpdate(resourceData *schema.ResourceData,
 
 	// validaste required fields
 	if !nameOK {
-		return fmt.Errorf("Please provide the required attribute name")
+		return fmt.Errorf("please provide the required attribute name")
 	}
 
 	request.Name = utils.String(name.(string))
@@ -98,21 +98,21 @@ func resourceNutanixCategoryKeyDelete(d *schema.ResourceData, meta interface{}) 
 
 func getCategoryKeySchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"system_defined": &schema.Schema{
+		"system_defined": {
 			Type:     schema.TypeBool,
 			Computed: true,
 		},
-		"description": &schema.Schema{
+		"description": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"api_version": &schema.Schema{
+		"api_version": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"name": &schema.Schema{
+		"name": {
 			Type:     schema.TypeString,
 			Required: true,
 		},

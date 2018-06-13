@@ -3,15 +3,19 @@ package nutanix
 import (
 	"fmt"
 	"math/rand"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 )
 
 func TestAccNutanixVolumeGroup_basic(t *testing.T) {
+	// skipping as this API is not yet GA (will GA in upcoming AOS release)
 	t.Skip()
 
 	r := rand.Int31()
@@ -40,10 +44,10 @@ func testAccCheckNutanixVolumeGroupExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("not found: %s", n)
 		}
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("no ID is set")
 		}
 
 		return nil
@@ -74,7 +78,7 @@ func testAccCheckNutanixVolumeGroupDestroy(s *terraform.State) error {
 }
 
 func testAccNutanixVolumeGroupConfig(r int32) string {
-	return fmt.Sprintf(` 
+	return fmt.Sprintf(`
 
 resource "nutanix_volume_group" "test_volume" {
   name        = "Test Volume Group"
@@ -90,4 +94,242 @@ resource "nutanix_volume_group" "test_volume" {
   description = "Tes Volume Group Description Update"
 }
 `)
+}
+
+func Test_resourceNutanixVolumeGroup(t *testing.T) {
+	tests := []struct {
+		name string
+		want *schema.Resource
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := resourceNutanixVolumeGroup(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("resourceNutanixVolumeGroup() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_resourceNutanixVolumeGroupCreate(t *testing.T) {
+	type args struct {
+		d    *schema.ResourceData
+		meta interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := resourceNutanixVolumeGroupCreate(tt.args.d, tt.args.meta); (err != nil) != tt.wantErr {
+				t.Errorf("resourceNutanixVolumeGroupCreate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_resourceNutanixVolumeGroupRead(t *testing.T) {
+	type args struct {
+		d    *schema.ResourceData
+		meta interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := resourceNutanixVolumeGroupRead(tt.args.d, tt.args.meta); (err != nil) != tt.wantErr {
+				t.Errorf("resourceNutanixVolumeGroupRead() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_resourceNutanixVolumeGroupUpdate(t *testing.T) {
+	type args struct {
+		d    *schema.ResourceData
+		meta interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := resourceNutanixVolumeGroupUpdate(tt.args.d, tt.args.meta); (err != nil) != tt.wantErr {
+				t.Errorf("resourceNutanixVolumeGroupUpdate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_resourceNutanixVolumeGroupDelete(t *testing.T) {
+	type args struct {
+		d    *schema.ResourceData
+		meta interface{}
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := resourceNutanixVolumeGroupDelete(tt.args.d, tt.args.meta); (err != nil) != tt.wantErr {
+				t.Errorf("resourceNutanixVolumeGroupDelete() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_getVolumeGroupResources(t *testing.T) {
+	type args struct {
+		d  *schema.ResourceData
+		vg *v3.VolumeGroupResources
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := getVolumeGroupResources(tt.args.d, tt.args.vg); (err != nil) != tt.wantErr {
+				t.Errorf("getVolumeGroupResources() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_getVGSchema(t *testing.T) {
+	tests := []struct {
+		name string
+		want map[string]*schema.Schema
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := getVGSchema(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getVGSchema() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_volumeGroupStateRefreshFunc(t *testing.T) {
+	type args struct {
+		client *v3.Client
+		uuid   string
+	}
+	tests := []struct {
+		name string
+		args args
+		want resource.StateRefreshFunc
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := volumeGroupStateRefreshFunc(tt.args.client, tt.args.uuid); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("volumeGroupStateRefreshFunc() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_testAccCheckNutanixVolumeGroupExists(t *testing.T) {
+	type args struct {
+		n string
+	}
+	tests := []struct {
+		name string
+		args args
+		want resource.TestCheckFunc
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := testAccCheckNutanixVolumeGroupExists(tt.args.n); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("testAccCheckNutanixVolumeGroupExists() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_testAccCheckNutanixVolumeGroupDestroy(t *testing.T) {
+	type args struct {
+		s *terraform.State
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := testAccCheckNutanixVolumeGroupDestroy(tt.args.s); (err != nil) != tt.wantErr {
+				t.Errorf("testAccCheckNutanixVolumeGroupDestroy() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_testAccNutanixVolumeGroupConfig(t *testing.T) {
+	type args struct {
+		r int32
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := testAccNutanixVolumeGroupConfig(tt.args.r); got != tt.want {
+				t.Errorf("testAccNutanixVolumeGroupConfig() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_testAccNutanixVolumeGroupConfigUpdate(t *testing.T) {
+	type args struct {
+		r int32
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := testAccNutanixVolumeGroupConfigUpdate(tt.args.r); got != tt.want {
+				t.Errorf("testAccNutanixVolumeGroupConfigUpdate() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }

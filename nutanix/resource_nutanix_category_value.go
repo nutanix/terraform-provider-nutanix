@@ -44,7 +44,7 @@ func resourceNutanixCategoryValueCreateOrUpdate(resourceData *schema.ResourceDat
 
 	// validaste required fields
 	if !nameOK || !valueOK {
-		return fmt.Errorf("Please provide the required attributes name and value")
+		return fmt.Errorf("please provide the required attributes name and value")
 	}
 
 	request.Value = utils.String(value.(string))
@@ -70,7 +70,7 @@ func resourceNutanixCategoryValueRead(d *schema.ResourceData, meta interface{}) 
 	name, nameOK := d.GetOk("name")
 
 	if !nameOK {
-		return fmt.Errorf("Please provide the required attributes name")
+		return fmt.Errorf("please provide the required attributes name")
 	}
 
 	// Get client connection
@@ -96,7 +96,7 @@ func resourceNutanixCategoryValueDelete(d *schema.ResourceData, meta interface{}
 	name, nameOK := d.GetOk("name")
 
 	if !nameOK {
-		return fmt.Errorf("Please provide the required attributes name")
+		return fmt.Errorf("please provide the required attributes name")
 	}
 
 	log.Printf("Destroying the category with the name %s", d.Id())
@@ -112,26 +112,26 @@ func resourceNutanixCategoryValueDelete(d *schema.ResourceData, meta interface{}
 
 func getCategoryValueSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"value": &schema.Schema{
+		"value": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"system_defined": &schema.Schema{
+		"system_defined": {
 			Type:     schema.TypeBool,
 			Computed: true,
 		},
-		"description": &schema.Schema{
+		"description": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"api_version": &schema.Schema{
+		"api_version": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
 		},
-		"name": &schema.Schema{
+		"name": {
 			Type:     schema.TypeString,
 			Required: true,
 		},

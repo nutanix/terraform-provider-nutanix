@@ -24,7 +24,7 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 	c, ok := d.GetOk("cluster_id")
 
 	if !ok {
-		return fmt.Errorf("Please provide the cluster_id attribute")
+		return fmt.Errorf("please provide the cluster_id attribute")
 	}
 
 	// Make request to the API
@@ -412,40 +412,40 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 
 func getDataSourceClusterSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"cluster_id": &schema.Schema{
+		"cluster_id": {
 			Type:     schema.TypeString,
 			Required: true,
 		},
-		"metadata": &schema.Schema{
+		"metadata": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"last_update_time": &schema.Schema{
+					"last_update_time": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"creation_time": &schema.Schema{
+					"creation_time": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"spec_version": &schema.Schema{
+					"spec_version": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"spec_hash": &schema.Schema{
+					"spec_hash": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
@@ -469,375 +469,375 @@ func getDataSourceClusterSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"project_reference": &schema.Schema{
+		"project_reference": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"owner_reference": &schema.Schema{
+		"owner_reference": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"kind": &schema.Schema{
+					"kind": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"uuid": &schema.Schema{
+					"uuid": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"api_version": &schema.Schema{
+		"api_version": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"name": &schema.Schema{
+		"name": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
 
 		// COMPUTED
-		"state": &schema.Schema{
+		"state": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"nodes": &schema.Schema{
+		"nodes": {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"ip": &schema.Schema{
+					"ip": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"version": &schema.Schema{
+					"version": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"type": &schema.Schema{
+					"type": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"gpu_driver_version": &schema.Schema{
+		"gpu_driver_version": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"client_auth": &schema.Schema{
+		"client_auth": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"status": &schema.Schema{
+					"status": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"ca_chain": &schema.Schema{
+					"ca_chain": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"name": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"authorized_public_key_list": &schema.Schema{
+		"authorized_public_key_list": {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"key": &schema.Schema{
+					"key": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"name": &schema.Schema{
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-				},
-			},
-		},
-		"software_map_ncc": &schema.Schema{
-			Type:     schema.TypeMap,
-			Computed: true,
-		},
-		"software_map_nos": &schema.Schema{
-			Type:     schema.TypeMap,
-			Computed: true,
-		},
-		"encryption_status": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"ssl_key_type": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"ssl_key_name": &schema.Schema{
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"ssl_key_signing_info": &schema.Schema{
-			Type:     schema.TypeMap,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"city": &schema.Schema{
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"common_name_suffix": &schema.Schema{
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"state": &schema.Schema{
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"country_code": &schema.Schema{
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"common_name": &schema.Schema{
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"organization": &schema.Schema{
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"email_address": &schema.Schema{
+					"name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"ssl_key_expire_datetime": &schema.Schema{
+		"software_map_ncc": {
+			Type:     schema.TypeMap,
+			Computed: true,
+		},
+		"software_map_nos": {
+			Type:     schema.TypeMap,
+			Computed: true,
+		},
+		"encryption_status": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"service_list": &schema.Schema{
-			Type:     schema.TypeList,
-			Computed: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-		},
-		"supported_information_verbosity": &schema.Schema{
+		"ssl_key_type": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"certification_signing_info": &schema.Schema{
+		"ssl_key_name": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"ssl_key_signing_info": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"city": &schema.Schema{
+					"city": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"common_name_suffix": &schema.Schema{
+					"common_name_suffix": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"state": &schema.Schema{
+					"state": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"country_code": &schema.Schema{
+					"country_code": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"common_name": &schema.Schema{
+					"common_name": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"organization": &schema.Schema{
+					"organization": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"email_address": &schema.Schema{
+					"email_address": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"operation_mode": &schema.Schema{
+		"ssl_key_expire_datetime": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"ca_certificate_list": &schema.Schema{
-			Type:     schema.TypeList,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"ca_name": &schema.Schema{
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"certificate": &schema.Schema{
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-				},
-			},
-		},
-		"enabled_feature_list": &schema.Schema{
+		"service_list": {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-		"is_available": &schema.Schema{
+		"supported_information_verbosity": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"certification_signing_info": {
+			Type:     schema.TypeMap,
+			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"city": {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					"common_name_suffix": {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					"state": {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					"country_code": {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					"common_name": {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					"organization": {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					"email_address": {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+				},
+			},
+		},
+		"operation_mode": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"ca_certificate_list": {
+			Type:     schema.TypeList,
+			Computed: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"ca_name": {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+					"certificate": {
+						Type:     schema.TypeString,
+						Computed: true,
+					},
+				},
+			},
+		},
+		"enabled_feature_list": {
+			Type:     schema.TypeList,
+			Computed: true,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+		},
+		"is_available": {
 			Type:     schema.TypeBool,
 			Computed: true,
 		},
-		"build": &schema.Schema{
+		"build": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"commit_id": &schema.Schema{
+					"commit_id": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"full_version": &schema.Schema{
+					"full_version": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"commit_date": &schema.Schema{
+					"commit_date": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"version": &schema.Schema{
+					"version": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"short_commit_id": &schema.Schema{
+					"short_commit_id": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"build_type": &schema.Schema{
+					"build_type": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"timezone": &schema.Schema{
+		"timezone": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"cluster_arch": &schema.Schema{
+		"cluster_arch": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"management_server_list": &schema.Schema{
+		"management_server_list": {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"ip": &schema.Schema{
+					"ip": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"drs_enabled": &schema.Schema{
+					"drs_enabled": {
 						Type:     schema.TypeBool,
 						Computed: true,
 					},
-					"status_list": &schema.Schema{
+					"status_list": {
 						Type:     schema.TypeList,
 						Computed: true,
 						Elem:     &schema.Schema{Type: schema.TypeString},
 					},
-					"type": &schema.Schema{
+					"type": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"masquerading_port": &schema.Schema{
+		"masquerading_port": {
 			Type:     schema.TypeInt,
 			Computed: true,
 		},
-		"masquerading_ip": &schema.Schema{
+		"masquerading_ip": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"external_ip": &schema.Schema{
+		"external_ip": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"http_proxy_list": &schema.Schema{
+		"http_proxy_list": {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"credentials": &schema.Schema{
+					"credentials": {
 						Type:     schema.TypeMap,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"username": &schema.Schema{
+								"username": {
 									Type:     schema.TypeString,
 									Computed: true,
 								},
-								"password": &schema.Schema{
+								"password": {
 									Type:     schema.TypeString,
 									Computed: true,
 								},
 							},
 						},
 					},
-					"proxy_type_list": &schema.Schema{
+					"proxy_type_list": {
 						Type:     schema.TypeList,
 						Computed: true,
 						Elem:     &schema.Schema{Type: schema.TypeString},
 					},
-					"address": &schema.Schema{
+					"address": {
 						Type:     schema.TypeMap,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
-								"ip": &schema.Schema{
+								"ip": {
 									Type:     schema.TypeString,
 									Computed: true,
 								},
-								"fqdn": &schema.Schema{
+								"fqdn": {
 									Type:     schema.TypeString,
 									Computed: true,
 								},
-								"port": &schema.Schema{
+								"port": {
 									Type:     schema.TypeString,
 									Computed: true,
 								},
-								"ipv6": &schema.Schema{
+								"ipv6": {
 									Type:     schema.TypeString,
 									Computed: true,
 								},
@@ -847,148 +847,148 @@ func getDataSourceClusterSchema() map[string]*schema.Schema {
 				},
 			},
 		},
-		"smtp_server_type": &schema.Schema{
+		"smtp_server_type": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"smtp_server_email_address": &schema.Schema{
+		"smtp_server_email_address": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"smtp_server_credentials": &schema.Schema{
+		"smtp_server_credentials": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"username": &schema.Schema{
+					"username": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"password": &schema.Schema{
+					"password": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"smtp_server_proxy_type_list": &schema.Schema{
+		"smtp_server_proxy_type_list": {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-		"smtp_server_address": &schema.Schema{
+		"smtp_server_address": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"ip": &schema.Schema{
+					"ip": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"fqdn": &schema.Schema{
+					"fqdn": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"port": &schema.Schema{
+					"port": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"ipv6": &schema.Schema{
+					"ipv6": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"ntp_server_ip_list": &schema.Schema{
+		"ntp_server_ip_list": {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-		"external_subnet": &schema.Schema{
+		"external_subnet": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"external_data_services_ip": &schema.Schema{
+		"external_data_services_ip": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"internal_subnet": &schema.Schema{
+		"internal_subnet": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"domain_server_nameserver": &schema.Schema{
+		"domain_server_nameserver": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"domain_server_name": &schema.Schema{
+		"domain_server_name": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"domain_server_credentials": &schema.Schema{
+		"domain_server_credentials": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"username": &schema.Schema{
+					"username": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"password": &schema.Schema{
+					"password": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"nfs_subnet_whitelist": &schema.Schema{
+		"nfs_subnet_whitelist": {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-		"name_server_ip_list": &schema.Schema{
+		"name_server_ip_list": {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
-		"http_proxy_whitelist": &schema.Schema{
+		"http_proxy_whitelist": {
 			Type:     schema.TypeList,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"target": &schema.Schema{
+					"target": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"target_type": &schema.Schema{
+					"target_type": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
 				},
 			},
 		},
-		"analysis_vm_efficiency_map": &schema.Schema{
+		"analysis_vm_efficiency_map": {
 			Type:     schema.TypeMap,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
-					"bully_vm_num": &schema.Schema{
+					"bully_vm_num": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"constrained_vm_num": &schema.Schema{
+					"constrained_vm_num": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"dead_vm_num": &schema.Schema{
+					"dead_vm_num": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"inefficient_vm_num": &schema.Schema{
+					"inefficient_vm_num": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"overprovisioned_vm_num": &schema.Schema{
+					"overprovisioned_vm_num": {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
