@@ -566,7 +566,11 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	res.PowerStateMechanism = pw
 	res.BootConfig = boot
 	res.GuestTools = guestTool
-	res.GuestCustomization = guest
+
+	if !reflect.DeepEqual(*guest, (v3.GuestCustomization{})) {
+		res.GuestCustomization = guest
+	}
+
 	spec.Resources = res
 	request.Metadata = metadata
 	request.Spec = spec
