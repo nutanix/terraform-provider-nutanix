@@ -33,6 +33,17 @@ func TestAccNutanixVirtualMachine_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "num_vcpus_per_socket", "1"),
 				),
 			},
+			{
+				Config: testAccNutanixVMConfigUpdate(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.vm1"),
+					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "hardware_clock_timezone", "UTC"),
+					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "power_state", "ON"),
+					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "memory_size_mib", "186"),
+					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "num_sockets", "1"),
+					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "num_vcpus_per_socket", "1"),
+				),
+			},
 		},
 	})
 }
@@ -90,6 +101,35 @@ output "cluster" {
 
 resource "nutanix_virtual_machine" "vm1" {
   name = "test-dou"
+
+  cluster_reference = {
+	  kind = "cluster"
+	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  }
+
+  num_vcpus_per_socket = 1
+  num_sockets          = 1
+  memory_size_mib      = 186
+  power_state          = "ON"
+}
+`)
+}
+
+func testAccNutanixVMConfigUpdate(r int) string {
+	return fmt.Sprint(`
+data "nutanix_clusters" "clusters" {
+  metadata = {
+    length = 2
+  }
+}
+
+output "cluster" {
+  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+}
+
+
+resource "nutanix_virtual_machine" "vm1" {
+  name = "test-dou-updated"
 
   cluster_reference = {
 	  kind = "cluster"
