@@ -72,8 +72,7 @@ func (op Operations) CreateVM(createRequest *VMIntentInput) (*VMIntentResponse, 
 	vmIntentResponse := new(VMIntentResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, vmIntentResponse)
-		return nil, err
+		return nil, op.client.Do(ctx, req, vmIntentResponse)
 	}
 
 	return vmIntentResponse, nil

@@ -1663,7 +1663,7 @@ func networkSecurityRuleStateRefreshFunc(client *v3.Client, uuid string) resourc
 
 func expandFilterParams(fp map[string][]string) []map[string]interface{} {
 	fpList := make([]map[string]interface{}, 0)
-	if len(fp) > 0 {
+	if fp != nil {
 		fpList := make([]map[string]interface{}, len(fp))
 		for name, values := range fp {
 			fpItem := make(map[string]interface{})
