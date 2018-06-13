@@ -121,26 +121,6 @@ func Test_dataSourceNutanixVirtualMachinesRead(t *testing.T) {
 	}
 }
 
-func Test_setDiskList(t *testing.T) {
-	type args struct {
-		disk []*v3.VMDisk
-	}
-	tests := []struct {
-		name string
-		args args
-		want []map[string]interface{}
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := setDiskList(tt.args.disk); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("setDiskList() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func Test_setGPUList(t *testing.T) {
 	type args struct {
 		gpu []*v3.VMGpuOutputStatus
