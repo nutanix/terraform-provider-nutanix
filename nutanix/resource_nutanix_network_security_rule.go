@@ -873,9 +873,9 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 						item := v.(map[string]interface{})
 
 						if i, ok := item["name"]; ok && i.(string) != "" {
-							if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
+							if k2, kok := item["values"]; kok && len(k2.([]interface{})) > 0 {
 								var values []string
-								for _, item := range k.([]interface{}) {
+								for _, item := range k2.([]interface{}) {
 									values = append(values, item.(string))
 								}
 								fl[i.(string)] = values
@@ -1082,9 +1082,9 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 						item := v.(map[string]interface{})
 
 						if i, ok := item["name"]; ok && i.(string) != "" {
-							if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
+							if k2, kok := item["values"]; kok && len(k2.([]interface{})) > 0 {
 								var values []string
-								for _, item := range k.([]interface{}) {
+								for _, item := range k2.([]interface{}) {
 									values = append(values, item.(string))
 								}
 								fl[i.(string)] = values
@@ -1248,9 +1248,9 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 						item := v.(map[string]interface{})
 
 						if i, ok := item["name"]; ok && i.(string) != "" {
-							if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
+							if k2, kok := item["values"]; kok && len(k2.([]interface{})) > 0 {
 								var values []string
-								for _, item := range k.([]interface{}) {
+								for _, item := range k2.([]interface{}) {
 									values = append(values, item.(string))
 								}
 								fl[i.(string)] = values
@@ -1457,9 +1457,9 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 						item := v.(map[string]interface{})
 
 						if i, ok := item["name"]; ok && i.(string) != "" {
-							if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
+							if k2, kok := item["values"]; kok && len(k2.([]interface{})) > 0 {
 								var values []string
-								for _, item := range k.([]interface{}) {
+								for _, item := range k2.([]interface{}) {
 									values = append(values, item.(string))
 								}
 								fl[i.(string)] = values
@@ -1662,8 +1662,9 @@ func networkSecurityRuleStateRefreshFunc(client *v3.Client, uuid string) resourc
 }
 
 func expandFilterParams(fp map[string][]string) []map[string]interface{} {
-	var fpList []map[string]interface{}
-	if fp != nil {
+	fpList := make([]map[string]interface{}, 0)
+	if len(fp) > 0 {
+		fpList := make([]map[string]interface{}, len(fp))
 		for name, values := range fp {
 			fpItem := make(map[string]interface{})
 			fpItem["name"] = name
