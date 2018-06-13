@@ -95,7 +95,7 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 
 	authPublicKey := make([]map[string]interface{}, 0)
 	if config.AuthorizedPublicKeyList != nil {
-		authPublicKey := make([]map[string]interface{}, len(config.AuthorizedPublicKeyList))
+		authPublicKey = make([]map[string]interface{}, len(config.AuthorizedPublicKeyList))
 		for k, v := range config.AuthorizedPublicKeyList {
 			auth := make(map[string]interface{})
 			auth["key"] = utils.StringValue(v.Key)

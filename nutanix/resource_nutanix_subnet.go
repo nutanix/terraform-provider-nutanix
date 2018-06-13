@@ -2,7 +2,6 @@ package nutanix
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -26,16 +25,13 @@ func resourceNutanixSubnet() *schema.Resource {
 }
 
 func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error {
-	//Get client connection
 	conn := meta.(*Client).API
 
-	// Prepare request
 	request := &v3.SubnetIntentInput{}
 	spec := &v3.Subnet{}
 	metadata := &v3.Metadata{}
 	subnet := &v3.SubnetResources{}
 
-	//Read arguments and set request values
 	n, nok := d.GetOk("name")
 	azr, azrok := d.GetOk("availability_zone_reference")
 	cr, crok := d.GetOk("cluster_reference")
@@ -45,7 +41,6 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("please provide the required attributes name, subnet_type")
 	}
 
-	// Read Arguments and set request values
 	if v, ok := d.GetOk("api_version"); ok {
 		request.APIVersion = utils.String(v.(string))
 	}
@@ -84,7 +79,6 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	request.Metadata = metadata
 	request.Spec = spec
 
-	//Make request to the API
 	resp, err := conn.V3.CreateSubnet(request)
 	if err != nil {
 		return err
@@ -109,12 +103,8 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG] Reading Subnet: %s", d.Get("name").(string))
-
-	// Get client connection
 	conn := meta.(*Client).API
 
-	// Make request to the API
 	resp, err := conn.V3.GetSubnet(d.Id())
 	if err != nil {
 		return err
@@ -222,9 +212,6 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
-
-	log.Printf("Updating the subnet with the uuid %s", d.Id())
-	fmt.Printf("Updating the subnet with the uuid %s", d.Id())
 
 	request := &v3.SubnetIntentInput{}
 	metadata := &v3.Metadata{}
@@ -390,9 +377,6 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 
-	log.Printf("Destroying the subnet with the uuid %s", d.Id())
-	fmt.Printf("Destroying the subnet with the uuid %s", d.Id())
-
 	if err := conn.V3.DeleteSubnet(d.Id()); err != nil {
 		return err
 	}
@@ -416,8 +400,6 @@ func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceNutanixSubnetExists(conn *v3.Client, name string) (*string, error) {
-	log.Printf("[DEBUG] Get Subnet Existence: %s", name)
-
 	subnetEntities := &v3.DSMetadata{}
 	var subnetUUID *string
 
@@ -466,7 +448,7 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 			address.FQDN = utils.String(fqdn.(string))
 		}
 		if v, ok := d.GetOk("dhcp_server_address_port"); ok {
-			address.Port = utils.Int64(int64(v.(int64)))
+			address.Port = utils.Int64(int64(v.(int)))
 		}
 		if ipv6, ok := dhcpa["ipv6"]; ok {
 			address.IPV6 = utils.String(ipv6.(string))
@@ -523,23 +505,13 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 		dhcpo.DomainSearchList = pool
 	}
 
-	//set vlan_id
 	v, ok := d.GetOk("vlan_id")
 	if v.(int) == 0 || ok {
 		subnet.VlanID = utils.Int64(int64(v.(int)))
 	}
 
-	// set network_function_chain_reference
 	if v, ok := d.GetOk("network_function_chain_reference"); ok {
-		ref := v.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(ref["kind"].(string)),
-			UUID: utils.String(ref["uuid"].(string)),
-		}
-		if v, ok := ref["name"]; ok {
-			r.Name = utils.String(v.(string))
-		}
-		subnet.NetworkFunctionChainReference = r
+		subnet.NetworkFunctionChainReference = validateRef(v.(map[string]interface{}))
 	}
 
 	ip.DHCPOptions = dhcpo
@@ -555,9 +527,8 @@ func subnetStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefres
 
 		if err != nil {
 			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-				return v, "DELETED", nil
+				return v, DELETED, nil
 			}
-			log.Printf("ERROR %s", err)
 			return nil, "", err
 		}
 

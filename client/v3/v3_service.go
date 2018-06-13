@@ -69,16 +69,10 @@ func (op Operations) CreateVM(createRequest *VMIntentInput) (*VMIntentResponse, 
 	ctx := context.TODO()
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, "/vms", createRequest)
-	if err != nil {
-		return nil, err
-	}
-
 	vmIntentResponse := new(VMIntentResponse)
 
-	err = op.client.Do(ctx, req, vmIntentResponse)
-
 	if err != nil {
-		return nil, err
+		return nil, op.client.Do(ctx, req, vmIntentResponse)
 	}
 
 	return vmIntentResponse, nil
@@ -115,14 +109,10 @@ func (op Operations) GetVM(UUID string) (*VMIntentResponse, error) {
 	path := fmt.Sprintf("/vms/%s", UUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
-	if err != nil {
-		return nil, err
-	}
-
 	vmIntentResponse := new(VMIntentResponse)
 
-	err = op.client.Do(ctx, req, vmIntentResponse)
 	if err != nil {
+		err = op.client.Do(ctx, req, vmIntentResponse)
 		return nil, err
 	}
 
@@ -140,12 +130,9 @@ func (op Operations) ListVM(getEntitiesRequest *DSMetadata) (*VMListIntentRespon
 	path := "/vms/list"
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
-	if err != nil {
-		return nil, err
-	}
 	vmListIntentResponse := new(VMListIntentResponse)
-	err = op.client.Do(ctx, req, vmListIntentResponse)
 	if err != nil {
+		err = op.client.Do(ctx, req, vmListIntentResponse)
 		return nil, err
 	}
 
@@ -163,16 +150,11 @@ func (op Operations) UpdateVM(UUID string, body *VMIntentInput) (*VMIntentRespon
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/vms/%s", UUID)
-
 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
-	if err != nil {
-		return nil, err
-	}
-
 	vmIntentResponse := new(VMIntentResponse)
 
-	err = op.client.Do(ctx, req, vmIntentResponse)
 	if err != nil {
+		err = op.client.Do(ctx, req, vmIntentResponse)
 		return nil, err
 	}
 
@@ -189,15 +171,10 @@ func (op Operations) CreateSubnet(createRequest *SubnetIntentInput) (*SubnetInte
 	ctx := context.TODO()
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, "/subnets", createRequest)
-	if err != nil {
-		return nil, err
-	}
-
 	subnetIntentResponse := new(SubnetIntentResponse)
 
-	err = op.client.Do(ctx, req, subnetIntentResponse)
-
 	if err != nil {
+		err = op.client.Do(ctx, req, subnetIntentResponse)
 		return nil, err
 	}
 
@@ -235,14 +212,10 @@ func (op Operations) GetSubnet(UUID string) (*SubnetIntentResponse, error) {
 	path := fmt.Sprintf("/subnets/%s", UUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
-	if err != nil {
-		return nil, err
-	}
-
 	subnetIntentResponse := new(SubnetIntentResponse)
 
-	err = op.client.Do(ctx, req, subnetIntentResponse)
 	if err != nil {
+		err = op.client.Do(ctx, req, subnetIntentResponse)
 		return nil, err
 	}
 
@@ -266,15 +239,10 @@ func (op Operations) ListSubnet(getEntitiesRequest *DSMetadata) (*SubnetListInte
 	path := "/subnets/list"
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
-
-	if err != nil {
-		return nil, err
-	}
-
 	subnetListIntentResponse := new(SubnetListIntentResponse)
-	err = op.client.Do(ctx, req, subnetListIntentResponse)
 
 	if err != nil {
+		err = op.client.Do(ctx, req, subnetListIntentResponse)
 		return nil, err
 	}
 
@@ -292,15 +260,14 @@ func (op Operations) UpdateSubnet(UUID string, body *SubnetIntentInput) (*Subnet
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/subnets/%s", UUID)
-
 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
+	subnetIntentResponse := new(SubnetIntentResponse)
+
 	if err != nil {
+		err = op.client.Do(ctx, req, subnetIntentResponse)
 		return nil, err
 	}
 
-	subnetIntentResponse := new(SubnetIntentResponse)
-
-	err = op.client.Do(ctx, req, subnetIntentResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -318,15 +285,10 @@ func (op Operations) CreateImage(body *ImageIntentInput) (*ImageIntentResponse, 
 	ctx := context.TODO()
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, "/images", body)
-	if err != nil {
-		return nil, err
-	}
-
 	imageIntentResponse := new(ImageIntentResponse)
 
-	err = op.client.Do(ctx, req, imageIntentResponse)
-
 	if err != nil {
+		err = op.client.Do(ctx, req, imageIntentResponse)
 		return nil, err
 	}
 
@@ -396,14 +358,10 @@ func (op Operations) GetImage(UUID string) (*ImageIntentResponse, error) {
 	path := fmt.Sprintf("/images/%s", UUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
-	if err != nil {
-		return nil, err
-	}
-
 	imageIntentResponse := new(ImageIntentResponse)
 
-	err = op.client.Do(ctx, req, imageIntentResponse)
 	if err != nil {
+		err = op.client.Do(ctx, req, imageIntentResponse)
 		return nil, err
 	}
 
@@ -421,15 +379,10 @@ func (op Operations) ListImage(getEntitiesRequest *DSMetadata) (*ImageListIntent
 	path := "/images/list"
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
-
-	if err != nil {
-		return nil, err
-	}
-
 	imageListIntentResponse := new(ImageListIntentResponse)
-	err = op.client.Do(ctx, req, imageListIntentResponse)
 
 	if err != nil {
+		err = op.client.Do(ctx, req, imageListIntentResponse)
 		return nil, err
 	}
 
@@ -447,16 +400,11 @@ func (op Operations) UpdateImage(UUID string, body *ImageIntentInput) (*ImageInt
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/images/%s", UUID)
-
 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
-	if err != nil {
-		return nil, err
-	}
-
 	imageIntentResponse := new(ImageIntentResponse)
 
-	err = op.client.Do(ctx, req, imageIntentResponse)
 	if err != nil {
+		err = op.client.Do(ctx, req, imageIntentResponse)
 		return nil, err
 	}
 
@@ -475,14 +423,10 @@ func (op Operations) GetCluster(UUID string) (*ClusterIntentResponse, error) {
 	path := fmt.Sprintf("/clusters/%s", UUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
-	if err != nil {
-		return nil, err
-	}
-
 	clusterIntentResponse := new(ClusterIntentResponse)
 
-	err = op.client.Do(ctx, req, clusterIntentResponse)
 	if err != nil {
+		err = op.client.Do(ctx, req, clusterIntentResponse)
 		return nil, err
 	}
 
@@ -500,15 +444,10 @@ func (op Operations) ListCluster(getEntitiesRequest *ClusterListMetadataOutput) 
 	path := "/clusters/list"
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
-
-	if err != nil {
-		return nil, err
-	}
-
 	clusterList := new(ClusterListIntentResponse)
-	err = op.client.Do(ctx, req, clusterList)
 
 	if err != nil {
+		err = op.client.Do(ctx, req, clusterList)
 		return nil, err
 	}
 
@@ -547,13 +486,11 @@ func (op Operations) CreateOrUpdateCategoryKey(body *CategoryKey) (*CategoryKeyS
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/categories/%s", utils.StringValue(body.Name))
-
 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
-
 	categoryKeyResponse := new(CategoryKeyStatus)
 
-	err = op.client.Do(ctx, req, categoryKeyResponse)
 	if err != nil {
+		err = op.client.Do(ctx, req, categoryKeyResponse)
 		return nil, err
 	}
 
@@ -571,15 +508,10 @@ func (op Operations) ListCategories(getEntitiesRequest *CategoryListMetadata) (*
 	path := "/categories/list"
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
-
-	if err != nil {
-		return nil, err
-	}
-
 	categoryKeyListResponse := new(CategoryKeyListResponse)
-	err = op.client.Do(ctx, req, categoryKeyListResponse)
 
 	if err != nil {
+		err = op.client.Do(ctx, req, categoryKeyListResponse)
 		return nil, err
 	}
 
@@ -615,17 +547,11 @@ func (op Operations) GetCategoryKey(name string) (*CategoryKeyStatus, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/categories/%s", name)
-
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
-	if err != nil {
-		return nil, err
-	}
-
 	categoryKeyStatusResponse := new(CategoryKeyStatus)
 
-	err = op.client.Do(ctx, req, categoryKeyStatusResponse)
-
 	if err != nil {
+		err = op.client.Do(ctx, req, categoryKeyStatusResponse)
 		return nil, err
 	}
 
@@ -644,14 +570,10 @@ func (op Operations) ListCategoryValues(name string, getEntitiesRequest *Categor
 	path := fmt.Sprintf("/categories/%s/list", name)
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
-	if err != nil {
-		return nil, err
-	}
-
 	categoryValueListResponse := new(CategoryValueListResponse)
-	err = op.client.Do(ctx, req, categoryValueListResponse)
 
 	if err != nil {
+		err = op.client.Do(ctx, req, categoryValueListResponse)
 		return nil, err
 	}
 
@@ -663,17 +585,11 @@ func (op Operations) CreateOrUpdateCategoryValue(name string, body *CategoryValu
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/categories/%s/%s", name, utils.StringValue(body.Value))
-
 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
-	if err != nil {
-		return nil, err
-	}
-
 	categoryValueResponse := new(CategoryValueStatus)
 
-	err = op.client.Do(ctx, req, categoryValueResponse)
-
 	if err != nil {
+		err = op.client.Do(ctx, req, categoryValueResponse)
 		return nil, err
 	}
 
@@ -693,14 +609,10 @@ func (op Operations) GetCategoryValue(name string, value string) (*CategoryValue
 	path := fmt.Sprintf("/categories/%s/%s", name, value)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
-	if err != nil {
-		return nil, err
-	}
-
 	categoryValueStatusResponse := new(CategoryValueStatus)
 
-	err = op.client.Do(ctx, req, categoryValueStatusResponse)
 	if err != nil {
+		err = op.client.Do(ctx, req, categoryValueStatusResponse)
 		return nil, err
 	}
 
@@ -740,9 +652,8 @@ func (op Operations) GetCategoryQuery(query *CategoryQueryInput) (*CategoryQuery
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, query)
 	categoryQueryResponse := new(CategoryQueryResponse)
 
-	err = op.client.Do(ctx, req, categoryQueryResponse)
-
 	if err != nil {
+		err = op.client.Do(ctx, req, categoryQueryResponse)
 		return nil, err
 	}
 
@@ -758,12 +669,11 @@ func (op Operations) GetCategoryQuery(query *CategoryQueryInput) (*CategoryQuery
 func (op Operations) CreateNetworkSecurityRule(request *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error) {
 	ctx := context.TODO()
 
-	req, err := op.client.NewRequest(ctx, http.MethodPost, "/network_security_rules", request)
 	networkSecurityRuleIntentResponse := new(NetworkSecurityRuleIntentResponse)
-
-	err = op.client.Do(ctx, req, networkSecurityRuleIntentResponse)
+	req, err := op.client.NewRequest(ctx, http.MethodPost, "/network_security_rules", request)
 
 	if err != nil {
+		err = op.client.Do(ctx, req, networkSecurityRuleIntentResponse)
 		return nil, err
 	}
 
@@ -801,14 +711,10 @@ func (op Operations) GetNetworkSecurityRule(UUID string) (*NetworkSecurityRuleIn
 	path := fmt.Sprintf("/network_security_rules/%s", UUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
-	if err != nil {
-		return nil, err
-	}
-
 	networkSecurityRuleIntentResponse := new(NetworkSecurityRuleIntentResponse)
 
-	err = op.client.Do(ctx, req, networkSecurityRuleIntentResponse)
 	if err != nil {
+		err = op.client.Do(ctx, req, networkSecurityRuleIntentResponse)
 		return nil, err
 	}
 
@@ -826,14 +732,10 @@ func (op Operations) ListNetworkSecurityRule(getEntitiesRequest *DSMetadata) (*N
 	path := "/network_security_rules/list"
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
-
-	if err != nil {
-		return nil, err
-	}
-
 	networkSecurityRuleListIntentResponse := new(NetworkSecurityRuleListIntentResponse)
-	err = op.client.Do(ctx, req, networkSecurityRuleListIntentResponse)
+
 	if err != nil {
+		err = op.client.Do(ctx, req, networkSecurityRuleListIntentResponse)
 		return nil, err
 	}
 
@@ -851,16 +753,11 @@ func (op Operations) UpdateNetworkSecurityRule(UUID string, body *NetworkSecurit
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/network_security_rules/%s", UUID)
-
 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
-	if err != nil {
-		return nil, err
-	}
-
 	networkSecurityRuleIntentResponse := new(NetworkSecurityRuleIntentResponse)
 
-	err = op.client.Do(ctx, req, networkSecurityRuleIntentResponse)
 	if err != nil {
+		err = op.client.Do(ctx, req, networkSecurityRuleIntentResponse)
 		return nil, err
 	}
 
@@ -879,9 +776,8 @@ func (op Operations) CreateVolumeGroup(request *VolumeGroupInput) (*VolumeGroupR
 	req, err := op.client.NewRequest(ctx, http.MethodPost, "/volume_groups", request)
 	networkSecurityRuleResponse := new(VolumeGroupResponse)
 
-	err = op.client.Do(ctx, req, networkSecurityRuleResponse)
-
 	if err != nil {
+		err = op.client.Do(ctx, req, networkSecurityRuleResponse)
 		return nil, err
 	}
 
@@ -917,16 +813,11 @@ func (op Operations) GetVolumeGroup(UUID string) (*VolumeGroupResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/volume_groups/%s", UUID)
-
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
-	if err != nil {
-		return nil, err
-	}
-
 	networkSecurityRuleResponse := new(VolumeGroupResponse)
 
-	err = op.client.Do(ctx, req, networkSecurityRuleResponse)
 	if err != nil {
+		err = op.client.Do(ctx, req, networkSecurityRuleResponse)
 		return nil, err
 	}
 
@@ -942,16 +833,11 @@ func (op Operations) GetVolumeGroup(UUID string) (*VolumeGroupResponse, error) {
 func (op Operations) ListVolumeGroup(getEntitiesRequest *DSMetadata) (*VolumeGroupListResponse, error) {
 	ctx := context.TODO()
 	path := "/volume_groups/list"
-
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
-
-	if err != nil {
-		return nil, err
-	}
-
 	networkSecurityRuleListResponse := new(VolumeGroupListResponse)
-	err = op.client.Do(ctx, req, networkSecurityRuleListResponse)
+
 	if err != nil {
+		err = op.client.Do(ctx, req, networkSecurityRuleListResponse)
 		return nil, err
 	}
 
@@ -969,16 +855,11 @@ func (op Operations) UpdateVolumeGroup(UUID string, body *VolumeGroupInput) (*Vo
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/volume_groups/%s", UUID)
-
 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
-	if err != nil {
-		return nil, err
-	}
-
 	networkSecurityRuleResponse := new(VolumeGroupResponse)
 
-	err = op.client.Do(ctx, req, networkSecurityRuleResponse)
 	if err != nil {
+		err = op.client.Do(ctx, req, networkSecurityRuleResponse)
 		return nil, err
 	}
 

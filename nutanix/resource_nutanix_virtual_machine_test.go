@@ -93,20 +93,15 @@ data "nutanix_clusters" "clusters" {
     length = 2
   }
 }
-
 output "cluster" {
   value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
-
-
 resource "nutanix_virtual_machine" "vm1" {
   name = "test-dou"
-
   cluster_reference = {
 	  kind = "cluster"
 	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   }
-
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186

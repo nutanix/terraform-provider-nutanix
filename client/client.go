@@ -226,9 +226,9 @@ func CheckResponse(r *http.Response) error {
 	errRes := &ErrorResponse{}
 
 	if status, ok := res["status"]; ok {
-		fillStruct(status.(map[string]interface{}), errRes)
+		return fillStruct(status.(map[string]interface{}), errRes)
 	} else if _, ok := res["state"]; ok {
-		fillStruct(res, errRes)
+		return fillStruct(res, errRes)
 	} else if _, ok := res["entities"]; ok {
 		return nil
 	}

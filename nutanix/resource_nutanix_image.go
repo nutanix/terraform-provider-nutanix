@@ -19,6 +19,8 @@ import (
 const (
 	//ImageKind Represents kind of resource
 	ImageKind = "image"
+	// DELETED ...
+	DELETED = "DELETED"
 )
 
 func resourceNutanixImage() *schema.Resource {
@@ -111,8 +113,8 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 		MinTimeout: 3 * time.Second,
 	}
 
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("error waiting for image (%s) to create: %s", d.Id(), err)
+	if _, errw := stateConf.WaitForState(); err != nil {
+		return fmt.Errorf("error waiting for image (%s) to create: %s", d.Id(), errw)
 	}
 
 	// if we need to upload an image, we do it now
@@ -687,9 +689,8 @@ func imageStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefresh
 
 		if err != nil {
 			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-				return v, "DELETED", nil
+				return v, DELETED, nil
 			}
-			log.Printf("ERROR %s", err)
 			return nil, "", err
 		}
 
