@@ -151,10 +151,29 @@ func validateRef(ref map[string]interface{}) *v3.Reference {
 		r.UUID = utils.String(v.(string))
 		hasValue = true
 	}
-	// if v, ok := ref["name"]; ok {
-	// 	r.Name = utils.String(v.(string))
-	// 	hasValue = true
-	// }
+	if v, ok := ref["name"]; ok {
+		r.Name = utils.String(v.(string))
+		hasValue = true
+	}
+
+	if hasValue {
+		return r
+	}
+
+	return nil
+}
+
+func validateShortRef(ref map[string]interface{}) *v3.Reference {
+	r := &v3.Reference{}
+	hasValue := false
+	if v, ok := ref["kind"]; ok {
+		r.Kind = utils.String(v.(string))
+		hasValue = true
+	}
+	if v, ok := ref["uuid"]; ok {
+		r.UUID = utils.String(v.(string))
+		hasValue = true
+	}
 
 	if hasValue {
 		return r

@@ -35,14 +35,13 @@ func teardown() {
 }
 
 func TestNewClient(t *testing.T) {
-	u := "foo.com"
-	c, err := NewClient(&Credentials{u, "username", "password", "", "", true})
+	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true})
 
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
 
-	expectedURL := fmt.Sprintf(defaultBaseURL, u)
+	expectedURL := fmt.Sprintf(defaultBaseURL, "foo.com")
 
 	if c.BaseURL == nil || c.BaseURL.String() != expectedURL {
 		t.Errorf("NewClient BaseURL = %v, expected %v", c.BaseURL, expectedURL)
@@ -54,14 +53,13 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestNewRequest(t *testing.T) {
-	u := "foo.com"
-	c, err := NewClient(&Credentials{u, "username", "password", "", "", true})
+	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true})
 
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
 
-	inURL, outURL := "/foo", fmt.Sprintf(defaultBaseURL+absolutePath+"/foo", u)
+	inURL, outURL := "/foo", fmt.Sprintf(defaultBaseURL+absolutePath+"/foo", "foo.com")
 	inBody, outBody := map[string]interface{}{"name": "bar"}, `{"name":"bar"}`+"\n"
 
 	req, _ := c.NewRequest(ctx, http.MethodPost, inURL, inBody)
