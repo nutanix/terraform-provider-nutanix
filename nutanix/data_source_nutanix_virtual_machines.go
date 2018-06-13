@@ -139,7 +139,7 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 
 func setDiskList(disk []*v3.VMDisk, hasCloudInit *v3.GuestCustomizationStatus) []map[string]interface{} {
 	var diskList []map[string]interface{}
-	if disk != nil {
+	if len(disk) > 0 {
 		for _, v1 := range disk {
 
 			if hasCloudInit.CloudInit != nil && utils.StringValue(v1.DeviceProperties.DeviceType) == CDROM {
