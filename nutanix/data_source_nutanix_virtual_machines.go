@@ -10,6 +10,11 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+const (
+	// CDROM ...
+	CDROM = "CDROM"
+)
+
 func dataSourceNutanixVirtualMachines() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceNutanixVirtualMachinesRead,
@@ -137,7 +142,7 @@ func setDiskList(disk []*v3.VMDisk, hasCloudInit *v3.GuestCustomizationStatus) [
 	if disk != nil {
 		for _, v1 := range disk {
 
-			if hasCloudInit.CloudInit != nil && utils.StringValue(v1.DeviceProperties.DeviceType) == "CDROM" {
+			if hasCloudInit.CloudInit != nil && utils.StringValue(v1.DeviceProperties.DeviceType) == CDROM {
 				continue
 			}
 
