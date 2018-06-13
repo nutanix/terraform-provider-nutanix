@@ -520,8 +520,8 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 					dp := &v3.VMDiskDeviceProperties{
 						DeviceType: validateMapStringValue(d, "device_type"),
 					}
-					if v, ok := d["disk_address"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-						da := v.([]interface{})[0].(map[string]interface{})
+					if v2, ok := d["disk_address"]; ok && len(v2.([]interface{})) > 0 && v2.([]interface{})[0] != nil {
+						da := v2.([]interface{})[0].(map[string]interface{})
 						dp.DiskAddress = &v3.DiskAddress{
 							AdapterType: validateMapStringValue(da, "adapter_type"),
 							DeviceIndex: validateMapIntValue(da, "device_index"),
@@ -861,12 +861,12 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 					if len(dvp) > 0 {
 						d := dvp[0].(map[string]interface{})
 						dp := &v3.VMDiskDeviceProperties{}
-						if v, ok := d["device_type"]; ok {
-							dp.DeviceType = utils.String(v.(string))
+						if v1, ok := d["device_type"]; ok {
+							dp.DeviceType = utils.String(v1.(string))
 						}
-						if v, ok := d["disk_address"]; ok {
-							if len(v.([]interface{})) > 0 {
-								da := v.([]interface{})[0].(map[string]interface{})
+						if v2, ok := d["disk_address"]; ok {
+							if len(v2.([]interface{})) > 0 {
+								da := v2.([]interface{})[0].(map[string]interface{})
 								v3disk := &v3.DiskAddress{}
 								if di, diok := da["device_index"]; diok {
 									v3disk.DeviceIndex = utils.Int64(int64(di.(int)))

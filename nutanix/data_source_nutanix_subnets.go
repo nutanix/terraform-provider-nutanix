@@ -61,7 +61,6 @@ func dataSourceNutanixSubnetsRead(d *schema.ResourceData, meta interface{}) erro
 		ipcpl := make([]string, 0)
 		dnsList := make([]string, 0)
 		dsList := make([]string, 0)
-		poolList := make([]string, 0)
 
 		if v.Status.Resources.IPConfig != nil {
 			dgIP = utils.StringValue(v.Status.Resources.IPConfig.DefaultGatewayIP)
@@ -79,7 +78,7 @@ func dataSourceNutanixSubnetsRead(d *schema.ResourceData, meta interface{}) erro
 
 			if v.Status.Resources.IPConfig.PoolList != nil {
 				pl := v.Status.Resources.IPConfig.PoolList
-				poolList = make([]string, len(pl))
+				poolList := make([]string, len(pl))
 				for k, v := range pl {
 					poolList[k] = utils.StringValue(v.Range)
 				}

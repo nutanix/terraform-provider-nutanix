@@ -3,8 +3,6 @@ package nutanix
 import (
 	"strconv"
 
-	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
-
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -20,18 +18,13 @@ func dataSourceNutanixNetworkSecurityRules() *schema.Resource {
 }
 
 func dataSourceNutanixNetworkSecurityRulesRead(d *schema.ResourceData, meta interface{}) error {
-	// Get client connection
 	conn := meta.(*Client).API
 
-	metadata := &v3.DSMetadata{}
-
-	// Get the metadata request
 	metadata, err := readListMetadata(d, "network_security_rule")
 	if err != nil {
 		return err
 	}
 
-	// Make request to the API
 	resp, err := conn.V3.ListNetworkSecurityRule(metadata)
 	if err != nil {
 		return err
