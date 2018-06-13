@@ -49,7 +49,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		request.APIVersion = utils.String(v.(string))
 	}
 	if !nok {
-		return fmt.Errorf("Please provide the required name attribute")
+		return fmt.Errorf("please provide the required name attribute")
 	}
 	if err := getMetadataAttributes(d, metadata, "vm"); err != nil {
 		return err
@@ -97,8 +97,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
-			"Error waiting for vm (%s) to create: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for vm (%s) to create: %s", d.Id(), err)
 	}
 
 	return resourceNutanixVirtualMachineRead(d, meta)
@@ -584,7 +583,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf(
-			"Error waiting for vm (%s) to update: %s", d.Id(), err)
+			"error waiting for vm (%s) to update: %s", d.Id(), err)
 	}
 
 	return resourceNutanixVirtualMachineRead(d, meta)
@@ -609,7 +608,7 @@ func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, meta interface{
 
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf(
-			"Error waiting for vm (%s) to delete: %s", d.Id(), err)
+			"error waiting for vm (%s) to delete: %s", d.Id(), err)
 	}
 
 	d.SetId("")

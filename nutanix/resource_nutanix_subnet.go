@@ -43,7 +43,7 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	_, stok := d.GetOk("subnet_type")
 
 	if !stok && !nok {
-		return fmt.Errorf("Please provide the required attributes name, subnet_type")
+		return fmt.Errorf("please provide the required attributes name, subnet_type")
 	}
 
 	// Read Arguments and set request values
@@ -51,7 +51,7 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 		request.APIVersion = utils.String(v.(string))
 	}
 	if !nok {
-		return fmt.Errorf("Please provide the required name attribute")
+		return fmt.Errorf("please provide the required name attribute")
 	}
 	if err := getMetadataAttributes(d, metadata, "subnet"); err != nil {
 		return err
@@ -77,7 +77,7 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if subnetUUID != nil {
-		return fmt.Errorf("Subnet already with name %s exists in the given cluster, UUID %s", d.Get("name").(string), *subnetUUID)
+		return fmt.Errorf("subnet already with name %s exists in the given cluster, UUID %s", d.Get("name").(string), *subnetUUID)
 	}
 
 	spec.Name = utils.String(n.(string))
@@ -103,8 +103,7 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
-			"Error waiting for subnet (%s) to create: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for subnet (%s) to create: %s", d.Id(), err)
 	}
 
 	return resourceNutanixSubnetRead(d, meta)
@@ -380,7 +379,7 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf(
-			"Error waiting for subnet (%s) to update: %s", d.Id(), err)
+			"error waiting for subnet (%s) to update: %s", d.Id(), err)
 	}
 	return resourceNutanixSubnetRead(d, meta)
 }
@@ -406,7 +405,7 @@ func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error
 
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf(
-			"Error waiting for subnet (%s) to delete: %s", d.Id(), err)
+			"error waiting for subnet (%s) to delete: %s", d.Id(), err)
 	}
 
 	d.SetId("")
@@ -607,7 +606,7 @@ func setSubnetResources(m interface{}) (*v3.SubnetResources, error) {
 	st, stok := resources["subnet_type"]
 
 	if !stok {
-		return nil, fmt.Errorf("Plase provide required subnet_type attribute")
+		return nil, fmt.Errorf("plase provide required subnet_type attribute")
 	}
 
 	if vlan, ok := resources["vlan_id"]; ok {

@@ -1,0 +1,15 @@
+linters-settings:
+  govet:
+    check-shadowing: true
+  golint:
+    min-confidence: 0
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+
+linters:
+  enable-all: true
+  disable:
+    - maligned
+    - dupl
+    - gocyclo

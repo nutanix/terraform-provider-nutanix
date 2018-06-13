@@ -1,21 +1,56 @@
+---
 language: go
-go: 
-  - "1.10"
+
+cache:
+  directories:
+    - vendor
+
+git:
+  depth: 1
 
 go_import_path: github.com/terraform-providers/terraform-provider-nutanix
 
-before_install:
-  - curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-  - dep ensure
-  - dep status
-
-
-install:
-  - export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
-  - make build 
-
-before_script:
-  - make vet
-
 script:
-  - make testacc
+  - export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
+  - make cibuild
+
+stages:
+  - warm up dependencies
+  - sanity testing
+  - build
+  - acceptance testing
+
+jobs:
+  include:
+    - stage: warm up dependencies
+      script:
+        - go get -u github.com/golang/dep/cmd/dep
+        - make deps
+      go: 1.10.x
+    - stage: sanity testing
+      script:
+        - go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint/
+        - make sanity
+      go: 1.10.x
+    - stage: build
+      script: true
+      go: 1.9.x
+    - script: true
+      go: 1.10.x
+    - script: true
+      go: tip
+    - stage: acceptance testing
+      go: 1.10.x
+      script:
+        - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+        - chmod +x ./cc-test-reporter
+        - ./cc-test-reporter before-build
+        - make citest
+        - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
+
+matrix:
+  fast_finish: true
+  allow_failures:
+  - stage: sanity testing
+  - script: make sanity
+  - go: tip
