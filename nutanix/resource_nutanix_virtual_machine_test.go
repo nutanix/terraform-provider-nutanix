@@ -122,6 +122,13 @@ output "cluster" {
   value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 
+resource "nutanix_image" "centos-lamp-app" {
+  # General Information
+  name        = "CentOS-LAMP-APP.qcow2"
+  description = "CentOS LAMP - App"
+  source_uri  = "http://filer.dev.eng.nutanix.com:8080/GoldImages/NuCalm/AHV-UVM-Images/CentOS-LAMP-APP.qcow2"
+}
+
 
 resource "nutanix_virtual_machine" "vm1" {
   name = "test-dou-updated"
@@ -130,6 +137,19 @@ resource "nutanix_virtual_machine" "vm1" {
 	  kind = "cluster"
 	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   }
+
+    disk_list = [{
+    data_source_reference = [{
+      kind = "image"
+      uuid = "${nutanix_image.centos-lamp-app.id}"
+    }]
+
+    device_properties = [{
+      device_type = "DISK"
+    }]
+
+    disk_size_mib = 20480
+  }]
 
   num_vcpus_per_socket = 1
   num_sockets          = 1
