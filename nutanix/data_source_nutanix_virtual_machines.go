@@ -142,8 +142,10 @@ func setDiskList(disk []*v3.VMDisk, hasCloudInit *v3.GuestCustomizationStatus) [
 	if len(disk) > 0 {
 		for _, v1 := range disk {
 
-			if hasCloudInit.CloudInit != nil && utils.StringValue(v1.DeviceProperties.DeviceType) == CDROM {
-				continue
+			if hasCloudInit != nil {
+				if hasCloudInit.CloudInit != nil && utils.StringValue(v1.DeviceProperties.DeviceType) == CDROM {
+					continue
+				}
 			}
 
 			disk := make(map[string]interface{})
@@ -579,6 +581,10 @@ func getDataSourceVMSSchema() map[string]*schema.Schema {
 											},
 										},
 									},
+								},
+								"subnet_reference_name": {
+									Type:     schema.TypeString,
+									Computed: true,
 								},
 							},
 						},
