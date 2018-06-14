@@ -92,14 +92,15 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 
 	sysprep := make(map[string]interface{})
 	sysrepCV := make(map[string]string)
-	cloudInit := make(map[string]interface{})
+	cloudInitUser := ""
+	cloudInitMeta := ""
 	cloudInitCV := make(map[string]string)
 	isOv := false
 	if resp.Status.Resources.GuestCustomization != nil {
 		isOv = utils.BoolValue(resp.Status.Resources.GuestCustomization.IsOverridable)
 		if resp.Status.Resources.GuestCustomization.CloudInit != nil {
-			cloudInit["meta_data"] = utils.StringValue(resp.Status.Resources.GuestCustomization.CloudInit.MetaData)
-			cloudInit["user_data"] = utils.StringValue(resp.Status.Resources.GuestCustomization.CloudInit.UserData)
+			cloudInitMeta = utils.StringValue(resp.Status.Resources.GuestCustomization.CloudInit.MetaData)
+			cloudInitUser = utils.StringValue(resp.Status.Resources.GuestCustomization.CloudInit.UserData)
 			if resp.Status.Resources.GuestCustomization.CloudInit.CustomKeyValues != nil {
 				for k, v := range resp.Status.Resources.GuestCustomization.CloudInit.CustomKeyValues {
 					cloudInitCV[k] = v
@@ -126,10 +127,9 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	if err := d.Set("guest_customization_sysprep", sysprep); err != nil {
 		return err
 	}
-	if err := d.Set("guest_customization_cloud_init", cloudInit); err != nil {
-		return err
-	}
 
+	d.Set("guest_customization_cloud_init_user_data", cloudInitUser)
+	d.Set("guest_customization_cloud_init_meta_data", cloudInitMeta)
 	d.Set("hardware_clock_timezone", utils.StringValue(resp.Status.Resources.HardwareClockTimezone))
 	d.Set("cluster_reference_name", utils.StringValue(resp.Status.ClusterReference.Name))
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
@@ -613,21 +613,13 @@ func getDataSourceVMSchema() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
-		"guest_customization_cloud_init": {
-			Type:     schema.TypeMap,
+		"guest_customization_cloud_init_meta_data": {
+			Type:     schema.TypeString,
 			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"meta_data": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"user_data": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-				},
-			},
+		},
+		"guest_customization_cloud_init_user_data": {
+			Type:     schema.TypeString,
+			Computed: true,
 		},
 		"guest_customization_cloud_init_custom_key_values": {
 			Type:     schema.TypeMap,
