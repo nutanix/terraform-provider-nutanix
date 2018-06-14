@@ -122,12 +122,11 @@ output "cluster" {
   value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 
-resource "nutanix_image" "centos-lamp-app" {
-  # General Information
-  name        = "CentOS-LAMP-APP.qcow2"
-  description = "CentOS LAMP - App"
-  source_uri  = "http://filer.dev.eng.nutanix.com:8080/GoldImages/NuCalm/AHV-UVM-Images/CentOS-LAMP-APP.qcow2"
-}
+#resource "nutanix_image" "test" {
+#  name        = "Ubuntu VM"
+#  description = "Ubuntu VM"
+#  source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
+#}
 
 
 resource "nutanix_virtual_machine" "vm1" {
@@ -138,18 +137,18 @@ resource "nutanix_virtual_machine" "vm1" {
 	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   }
 
-    disk_list = [{
-    data_source_reference = [{
-      kind = "image"
-      uuid = "${nutanix_image.centos-lamp-app.id}"
-    }]
+#    disk_list = [{
+#    data_source_reference = [{
+#      kind = "image"
+#      uuid = "${nutanix_image.test.id}"
+#    }]
 
-    device_properties = [{
-      device_type = "DISK"
-    }]
-
-    disk_size_mib = 20480
-  }]
+#   device_properties = [{
+#      device_type = "DISK"
+#    }]
+#
+#    disk_size_mib = 64
+#  }]
 
   num_vcpus_per_socket = 1
   num_sockets          = 1
