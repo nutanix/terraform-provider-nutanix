@@ -2,7 +2,6 @@ package v3
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -72,10 +71,10 @@ func (op Operations) CreateVM(createRequest *VMIntentInput) (*VMIntentResponse, 
 	vmIntentResponse := new(VMIntentResponse)
 
 	if err != nil {
-		return nil, op.client.Do(ctx, req, vmIntentResponse)
+		return nil, err
 	}
 
-	return vmIntentResponse, nil
+	return vmIntentResponse, op.client.Do(ctx, req, vmIntentResponse)
 }
 
 /*DeleteVM Deletes a VM
@@ -112,11 +111,10 @@ func (op Operations) GetVM(UUID string) (*VMIntentResponse, error) {
 	vmIntentResponse := new(VMIntentResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, vmIntentResponse)
 		return nil, err
 	}
 
-	return vmIntentResponse, nil
+	return vmIntentResponse, op.client.Do(ctx, req, vmIntentResponse)
 }
 
 /*ListVM Get a list of VMs
@@ -131,12 +129,12 @@ func (op Operations) ListVM(getEntitiesRequest *DSMetadata) (*VMListIntentRespon
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
 	vmListIntentResponse := new(VMListIntentResponse)
+
 	if err != nil {
-		err = op.client.Do(ctx, req, vmListIntentResponse)
 		return nil, err
 	}
 
-	return vmListIntentResponse, nil
+	return vmListIntentResponse, op.client.Do(ctx, req, vmListIntentResponse)
 }
 
 /*UpdateVM Updates a VM
@@ -154,11 +152,10 @@ func (op Operations) UpdateVM(UUID string, body *VMIntentInput) (*VMIntentRespon
 	vmIntentResponse := new(VMIntentResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, vmIntentResponse)
 		return nil, err
 	}
 
-	return vmIntentResponse, nil
+	return vmIntentResponse, op.client.Do(ctx, req, vmIntentResponse)
 }
 
 /*CreateSubnet Creates a subnet
@@ -174,11 +171,10 @@ func (op Operations) CreateSubnet(createRequest *SubnetIntentInput) (*SubnetInte
 	subnetIntentResponse := new(SubnetIntentResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, subnetIntentResponse)
 		return nil, err
 	}
 
-	return subnetIntentResponse, nil
+	return subnetIntentResponse, op.client.Do(ctx, req, subnetIntentResponse)
 }
 
 /*DeleteSubnet Deletes a subnet
@@ -215,17 +211,16 @@ func (op Operations) GetSubnet(UUID string) (*SubnetIntentResponse, error) {
 	subnetIntentResponse := new(SubnetIntentResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, subnetIntentResponse)
 		return nil, err
 	}
 
-	//Recheck subnet already exist error
-	if *subnetIntentResponse.Status.State == "ERROR" {
-		pretty, _ := json.MarshalIndent(subnetIntentResponse.Status.MessageList, "", "  ")
-		return nil, fmt.Errorf("error: %s", string(pretty))
-	}
+	// //Recheck subnet already exist error
+	// if *subnetIntentResponse.Status.State == "ERROR" {
+	// 	pretty, _ := json.MarshalIndent(subnetIntentResponse.Status.MessageList, "", "  ")
+	// 	return nil, fmt.Errorf("error: %s", string(pretty))
+	// }
 
-	return subnetIntentResponse, nil
+	return subnetIntentResponse, op.client.Do(ctx, req, subnetIntentResponse)
 }
 
 /*ListSubnet Gets a list of subnets
@@ -242,11 +237,10 @@ func (op Operations) ListSubnet(getEntitiesRequest *DSMetadata) (*SubnetListInte
 	subnetListIntentResponse := new(SubnetListIntentResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, subnetListIntentResponse)
 		return nil, err
 	}
 
-	return subnetListIntentResponse, nil
+	return subnetListIntentResponse, op.client.Do(ctx, req, subnetListIntentResponse)
 }
 
 /*UpdateSubnet Updates a subnet
@@ -264,15 +258,10 @@ func (op Operations) UpdateSubnet(UUID string, body *SubnetIntentInput) (*Subnet
 	subnetIntentResponse := new(SubnetIntentResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, subnetIntentResponse)
 		return nil, err
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	return subnetIntentResponse, nil
+	return subnetIntentResponse, op.client.Do(ctx, req, subnetIntentResponse)
 }
 
 /*CreateImage Creates a IMAGE
@@ -288,11 +277,10 @@ func (op Operations) CreateImage(body *ImageIntentInput) (*ImageIntentResponse, 
 	imageIntentResponse := new(ImageIntentResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, imageIntentResponse)
 		return nil, err
 	}
 
-	return imageIntentResponse, nil
+	return imageIntentResponse, op.client.Do(ctx, req, imageIntentResponse)
 }
 
 /*UploadImage Uplloads a Image Binary file
@@ -361,11 +349,9 @@ func (op Operations) GetImage(UUID string) (*ImageIntentResponse, error) {
 	imageIntentResponse := new(ImageIntentResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, imageIntentResponse)
 		return nil, err
 	}
-
-	return imageIntentResponse, nil
+	return imageIntentResponse, op.client.Do(ctx, req, imageIntentResponse)
 }
 
 /*ListImage gets a list of IMAGEs
@@ -382,11 +368,10 @@ func (op Operations) ListImage(getEntitiesRequest *DSMetadata) (*ImageListIntent
 	imageListIntentResponse := new(ImageListIntentResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, imageListIntentResponse)
 		return nil, err
 	}
 
-	return imageListIntentResponse, nil
+	return imageListIntentResponse, op.client.Do(ctx, req, imageListIntentResponse)
 }
 
 /*UpdateImage updates a IMAGE
@@ -404,11 +389,10 @@ func (op Operations) UpdateImage(UUID string, body *ImageIntentInput) (*ImageInt
 	imageIntentResponse := new(ImageIntentResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, imageIntentResponse)
 		return nil, err
 	}
 
-	return imageIntentResponse, nil
+	return imageIntentResponse, op.client.Do(ctx, req, imageIntentResponse)
 }
 
 /*GetCluster gets a CLUSTER
@@ -426,11 +410,10 @@ func (op Operations) GetCluster(UUID string) (*ClusterIntentResponse, error) {
 	clusterIntentResponse := new(ClusterIntentResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, clusterIntentResponse)
 		return nil, err
 	}
 
-	return clusterIntentResponse, nil
+	return clusterIntentResponse, op.client.Do(ctx, req, clusterIntentResponse)
 }
 
 /*ListCluster gets a list of CLUSTERS
@@ -447,11 +430,10 @@ func (op Operations) ListCluster(getEntitiesRequest *ClusterListMetadataOutput) 
 	clusterList := new(ClusterListIntentResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, clusterList)
 		return nil, err
 	}
 
-	return clusterList, nil
+	return clusterList, op.client.Do(ctx, req, clusterList)
 }
 
 /*UpdateImage updates a CLUSTER
@@ -490,11 +472,10 @@ func (op Operations) CreateOrUpdateCategoryKey(body *CategoryKey) (*CategoryKeyS
 	categoryKeyResponse := new(CategoryKeyStatus)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, categoryKeyResponse)
 		return nil, err
 	}
 
-	return categoryKeyResponse, nil
+	return categoryKeyResponse, op.client.Do(ctx, req, categoryKeyResponse)
 }
 
 /*ListCategories gets a list of Categories
@@ -511,11 +492,10 @@ func (op Operations) ListCategories(getEntitiesRequest *CategoryListMetadata) (*
 	categoryKeyListResponse := new(CategoryKeyListResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, categoryKeyListResponse)
 		return nil, err
 	}
 
-	return categoryKeyListResponse, nil
+	return categoryKeyListResponse, op.client.Do(ctx, req, categoryKeyListResponse)
 }
 
 /*DeleteCategoryKey Deletes a Category
@@ -551,11 +531,10 @@ func (op Operations) GetCategoryKey(name string) (*CategoryKeyStatus, error) {
 	categoryKeyStatusResponse := new(CategoryKeyStatus)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, categoryKeyStatusResponse)
 		return nil, err
 	}
 
-	return categoryKeyStatusResponse, nil
+	return categoryKeyStatusResponse, op.client.Do(ctx, req, categoryKeyStatusResponse)
 }
 
 /*ListCategoryValues gets a list of Category values for a specific key
@@ -573,11 +552,10 @@ func (op Operations) ListCategoryValues(name string, getEntitiesRequest *Categor
 	categoryValueListResponse := new(CategoryValueListResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, categoryValueListResponse)
 		return nil, err
 	}
 
-	return categoryValueListResponse, nil
+	return categoryValueListResponse, op.client.Do(ctx, req, categoryValueListResponse)
 }
 
 //CreateOrUpdateCategoryValue ...
@@ -589,11 +567,10 @@ func (op Operations) CreateOrUpdateCategoryValue(name string, body *CategoryValu
 	categoryValueResponse := new(CategoryValueStatus)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, categoryValueResponse)
 		return nil, err
 	}
 
-	return categoryValueResponse, nil
+	return categoryValueResponse, op.client.Do(ctx, req, categoryValueResponse)
 }
 
 /*GetCategoryValue gets a Category Value
@@ -612,11 +589,10 @@ func (op Operations) GetCategoryValue(name string, value string) (*CategoryValue
 	categoryValueStatusResponse := new(CategoryValueStatus)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, categoryValueStatusResponse)
 		return nil, err
 	}
 
-	return categoryValueStatusResponse, nil
+	return categoryValueStatusResponse, op.client.Do(ctx, req, categoryValueStatusResponse)
 }
 
 /*DeleteCategoryValue Deletes a Category Value
@@ -653,11 +629,10 @@ func (op Operations) GetCategoryQuery(query *CategoryQueryInput) (*CategoryQuery
 	categoryQueryResponse := new(CategoryQueryResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, categoryQueryResponse)
 		return nil, err
 	}
 
-	return categoryQueryResponse, nil
+	return categoryQueryResponse, op.client.Do(ctx, req, categoryQueryResponse)
 }
 
 /*CreateNetworkSecurityRule Creates a Network security rule
@@ -673,11 +648,10 @@ func (op Operations) CreateNetworkSecurityRule(request *NetworkSecurityRuleInten
 	req, err := op.client.NewRequest(ctx, http.MethodPost, "/network_security_rules", request)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, networkSecurityRuleIntentResponse)
 		return nil, err
 	}
 
-	return networkSecurityRuleIntentResponse, nil
+	return networkSecurityRuleIntentResponse, op.client.Do(ctx, req, networkSecurityRuleIntentResponse)
 }
 
 /*DeleteNetworkSecurityRule Deletes a Network security rule
@@ -714,11 +688,10 @@ func (op Operations) GetNetworkSecurityRule(UUID string) (*NetworkSecurityRuleIn
 	networkSecurityRuleIntentResponse := new(NetworkSecurityRuleIntentResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, networkSecurityRuleIntentResponse)
 		return nil, err
 	}
 
-	return networkSecurityRuleIntentResponse, nil
+	return networkSecurityRuleIntentResponse, op.client.Do(ctx, req, networkSecurityRuleIntentResponse)
 }
 
 /*ListNetworkSecurityRule Gets all network security rules
@@ -735,11 +708,10 @@ func (op Operations) ListNetworkSecurityRule(getEntitiesRequest *DSMetadata) (*N
 	networkSecurityRuleListIntentResponse := new(NetworkSecurityRuleListIntentResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, networkSecurityRuleListIntentResponse)
 		return nil, err
 	}
 
-	return networkSecurityRuleListIntentResponse, nil
+	return networkSecurityRuleListIntentResponse, op.client.Do(ctx, req, networkSecurityRuleListIntentResponse)
 }
 
 /*UpdateNetworkSecurityRule Updates a Network security rule
@@ -757,11 +729,10 @@ func (op Operations) UpdateNetworkSecurityRule(UUID string, body *NetworkSecurit
 	networkSecurityRuleIntentResponse := new(NetworkSecurityRuleIntentResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, networkSecurityRuleIntentResponse)
 		return nil, err
 	}
 
-	return networkSecurityRuleIntentResponse, nil
+	return networkSecurityRuleIntentResponse, op.client.Do(ctx, req, networkSecurityRuleIntentResponse)
 }
 
 /*CreateVolumeGroup Creates a Volume group
@@ -777,11 +748,10 @@ func (op Operations) CreateVolumeGroup(request *VolumeGroupInput) (*VolumeGroupR
 	networkSecurityRuleResponse := new(VolumeGroupResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, networkSecurityRuleResponse)
 		return nil, err
 	}
 
-	return networkSecurityRuleResponse, nil
+	return networkSecurityRuleResponse, op.client.Do(ctx, req, networkSecurityRuleResponse)
 }
 
 /*DeleteVolumeGroup Deletes a Volume group
@@ -817,11 +787,10 @@ func (op Operations) GetVolumeGroup(UUID string) (*VolumeGroupResponse, error) {
 	networkSecurityRuleResponse := new(VolumeGroupResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, networkSecurityRuleResponse)
 		return nil, err
 	}
 
-	return networkSecurityRuleResponse, nil
+	return networkSecurityRuleResponse, op.client.Do(ctx, req, networkSecurityRuleResponse)
 }
 
 /*ListVolumeGroup Gets all network security rules
@@ -837,11 +806,10 @@ func (op Operations) ListVolumeGroup(getEntitiesRequest *DSMetadata) (*VolumeGro
 	networkSecurityRuleListResponse := new(VolumeGroupListResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, networkSecurityRuleListResponse)
 		return nil, err
 	}
 
-	return networkSecurityRuleListResponse, nil
+	return networkSecurityRuleListResponse, op.client.Do(ctx, req, networkSecurityRuleListResponse)
 }
 
 /*UpdateVolumeGroup Updates a Volume group
@@ -859,9 +827,8 @@ func (op Operations) UpdateVolumeGroup(UUID string, body *VolumeGroupInput) (*Vo
 	networkSecurityRuleResponse := new(VolumeGroupResponse)
 
 	if err != nil {
-		err = op.client.Do(ctx, req, networkSecurityRuleResponse)
 		return nil, err
 	}
 
-	return networkSecurityRuleResponse, nil
+	return networkSecurityRuleResponse, op.client.Do(ctx, req, networkSecurityRuleResponse)
 }
