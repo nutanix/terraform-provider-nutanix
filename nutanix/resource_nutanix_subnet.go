@@ -2,8 +2,6 @@ package nutanix
 
 import (
 	"fmt"
-	"log"
-	"strconv"
 	"strings"
 	"time"
 
@@ -27,16 +25,13 @@ func resourceNutanixSubnet() *schema.Resource {
 }
 
 func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error {
-	//Get client connection
 	conn := meta.(*Client).API
 
-	// Prepare request
 	request := &v3.SubnetIntentInput{}
 	spec := &v3.Subnet{}
 	metadata := &v3.Metadata{}
 	subnet := &v3.SubnetResources{}
 
-	//Read arguments and set request values
 	n, nok := d.GetOk("name")
 	azr, azrok := d.GetOk("availability_zone_reference")
 	cr, crok := d.GetOk("cluster_reference")
@@ -46,7 +41,6 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("please provide the required attributes name, subnet_type")
 	}
 
-	// Read Arguments and set request values
 	if v, ok := d.GetOk("api_version"); ok {
 		request.APIVersion = utils.String(v.(string))
 	}
@@ -85,7 +79,6 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	request.Metadata = metadata
 	request.Spec = spec
 
-	//Make request to the API
 	resp, err := conn.V3.CreateSubnet(request)
 	if err != nil {
 		return err
@@ -110,12 +103,8 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG] Reading Subnet: %s", d.Get("name").(string))
-
-	// Get client connection
 	conn := meta.(*Client).API
 
-	// Make request to the API
 	resp, err := conn.V3.GetSubnet(d.Id())
 	if err != nil {
 		return err
@@ -224,9 +213,6 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 
-	log.Printf("Updating the subnet with the uuid %s", d.Id())
-	fmt.Printf("Updating the subnet with the uuid %s", d.Id())
-
 	request := &v3.SubnetIntentInput{}
 	metadata := &v3.Metadata{}
 	res := &v3.SubnetResources{}
@@ -249,6 +235,10 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 
 		if response.Spec.Resources != nil {
 			res = response.Spec.Resources
+			ipcfg = res.IPConfig
+			if ipcfg != nil {
+				dhcpO = ipcfg.DHCPOptions
+			}
 		}
 	}
 
@@ -387,9 +377,6 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 
-	log.Printf("Destroying the subnet with the uuid %s", d.Id())
-	fmt.Printf("Destroying the subnet with the uuid %s", d.Id())
-
 	if err := conn.V3.DeleteSubnet(d.Id()); err != nil {
 		return err
 	}
@@ -413,8 +400,6 @@ func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceNutanixSubnetExists(conn *v3.Client, name string) (*string, error) {
-	log.Printf("[DEBUG] Get Subnet Existence: %s", name)
-
 	subnetEntities := &v3.DSMetadata{}
 	var subnetUUID *string
 
@@ -463,7 +448,7 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 			address.FQDN = utils.String(fqdn.(string))
 		}
 		if v, ok := d.GetOk("dhcp_server_address_port"); ok {
-			address.Port = utils.Int64(int64(v.(int64)))
+			address.Port = utils.Int64(int64(v.(int)))
 		}
 		if ipv6, ok := dhcpa["ipv6"]; ok {
 			address.IPV6 = utils.String(ipv6.(string))
@@ -520,23 +505,13 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 		dhcpo.DomainSearchList = pool
 	}
 
-	//set vlan_id
 	v, ok := d.GetOk("vlan_id")
 	if v.(int) == 0 || ok {
 		subnet.VlanID = utils.Int64(int64(v.(int)))
 	}
 
-	// set network_function_chain_reference
 	if v, ok := d.GetOk("network_function_chain_reference"); ok {
-		ref := v.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(ref["kind"].(string)),
-			UUID: utils.String(ref["uuid"].(string)),
-		}
-		if v, ok := ref["name"]; ok {
-			r.Name = utils.String(v.(string))
-		}
-		subnet.NetworkFunctionChainReference = r
+		subnet.NetworkFunctionChainReference = validateRef(v.(map[string]interface{}))
 	}
 
 	ip.DHCPOptions = dhcpo
@@ -546,295 +521,14 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 	return nil
 }
 
-func getSubnetMetadaAttributes(d *schema.ResourceData, metadata *v3.SubnetMetadata) error {
-	m, mok := d.GetOk("metadata")
-	metad := m.(map[string]interface{})
-
-	if !mok {
-		return fmt.Errorf("please provide metadata required attributes")
-	}
-
-	metadata.Kind = utils.String(metad["kind"].(string))
-
-	if v, ok := metad["uuid"]; ok && v != "" {
-		metadata.UUID = utils.String(v.(string))
-	}
-	if v, ok := metad["spec_version"]; ok && v != 0 {
-		i, err := strconv.Atoi(v.(string))
-		if err != nil {
-			return err
-		}
-		metadata.SpecVersion = utils.Int64(int64(i))
-	}
-	if v, ok := metad["spec_hash"]; ok && v != "" {
-		metadata.SpecHash = utils.String(v.(string))
-	}
-	if v, ok := metad["name"]; ok {
-		metadata.Name = utils.String(v.(string))
-	}
-	if v, ok := d.GetOk("categories"); ok {
-		c := v.(map[string]interface{})
-		labels := map[string]string{}
-
-		for k, v := range c {
-			labels[k] = v.(string)
-		}
-		metadata.Categories = labels
-	}
-	if p, ok := d.GetOk("project_reference"); ok {
-		pr := p.(map[string]interface{})
-		metadata.ProjectReference = validateRef(pr)
-	}
-	if o, ok := metad["owner_reference"]; ok {
-		or := o.(map[string]interface{})
-		metadata.OwnerReference = validateRef(or)
-	}
-
-	return nil
-}
-
-func setSubnetResources(m interface{}) (*v3.SubnetResources, error) {
-
-	subnet := &v3.SubnetResources{}
-
-	resources := m.(map[string]interface{})
-
-	if v, ok := resources["vswitch_name"]; ok {
-		subnet.VswitchName = utils.String(v.(string))
-	}
-
-	st, stok := resources["subnet_type"]
-
-	if !stok {
-		return nil, fmt.Errorf("plase provide required subnet_type attribute")
-	}
-
-	if vlan, ok := resources["vlan_id"]; ok {
-		if n, err := strconv.Atoi(vlan.(string)); err == nil {
-			subnet.VlanID = utils.Int64(int64(n))
-		}
-
-	}
-
-	nfcr, nfcrok := resources["network_function_chain_reference"]
-
-	if nfcrok {
-		a := nfcr.(map[string]interface{})
-		subnet.NetworkFunctionChainReference = validateRef(a)
-	}
-
-	//ip config
-	if ipcfg, ipcok := resources["ip_config"]; ipcok {
-		ipc := ipcfg.([]interface{})
-		if len(ipc) > 0 {
-			cfg := ipc[0].(map[string]interface{})
-			ipConf := &v3.IPConfig{}
-
-			if d, ok := cfg["default_gateway_ip"]; ok {
-				ipConf.DefaultGatewayIP = utils.String(d.(string))
-			}
-
-			if d, ok := cfg["prefix_length"]; ok {
-				ipConf.PrefixLength = utils.Int64(d.(int64))
-			}
-
-			if d, ok := cfg["subnet_ip"]; ok {
-				ipConf.SubnetIP = utils.String(d.(string))
-			}
-
-			if dhcp, dok := cfg["dhcp_server_address"]; dok {
-				dhcpa := dhcp.(map[string]interface{})
-				address := &v3.Address{}
-
-				if ip, ok := dhcpa["ip"]; ok {
-					address.IP = utils.String(ip.(string))
-				}
-
-				if fqdn, ok := dhcpa["fqdn"]; ok {
-					address.FQDN = utils.String(fqdn.(string))
-				}
-
-				if port, ok := dhcpa["port"]; ok {
-					address.Port = utils.Int64(int64(port.(int64)))
-				}
-
-				if ipv6, ok := dhcpa["ipv6"]; ok {
-					address.IPV6 = utils.String(ipv6.(string))
-				}
-
-				ipConf.DHCPServerAddress = address
-			}
-
-			if pl, ok := cfg["pool_list"]; ok {
-				p := pl.([]map[string]interface{})
-
-				pool := make([]*v3.IPPool, len(p))
-
-				for k, v := range p {
-					pItem := &v3.IPPool{}
-					if val, ok := v["range"]; ok {
-						pItem.Range = utils.String(val.(string))
-					}
-					pool[k] = pItem
-				}
-
-				ipConf.PoolList = pool
-			}
-
-			if do, ok := cfg["dhcp_options"]; ok {
-				dhcpo := &v3.DHCPOptions{}
-
-				dop := do.(map[string]interface{})
-
-				if dn, ok := dop["domain_name_server_list"]; ok {
-					dnsl := dn.([]*string)
-
-					domainNameServerList := make([]*string, len(dnsl))
-
-					for k, v := range dnsl {
-						domainNameServerList[k] = v
-					}
-
-					dhcpo.DomainNameServerList = domainNameServerList
-				}
-
-				if boot, ok := dop["boot_file_name"]; ok {
-					dhcpo.BootFileName = utils.String(boot.(string))
-				}
-
-				if ds, ok := dop["domain_search_list"]; ok {
-					dsl := ds.([]*string)
-
-					domainSearchList := make([]*string, len(dsl))
-
-					for k, v := range dsl {
-						domainSearchList[k] = v
-					}
-
-					dhcpo.DomainSearchList = domainSearchList
-				}
-
-				if dn, ok := dop["domain_name"]; ok {
-					dhcpo.DomainName = utils.String(dn.(string))
-				}
-
-				if tsn, ok := dop["tftp_server_name"]; ok {
-					dhcpo.TFTPServerName = utils.String(tsn.(string))
-				}
-
-				ipConf.DHCPOptions = dhcpo
-			}
-			subnet.IPConfig = ipConf
-		}
-
-	}
-
-	subnet.SubnetType = utils.String(st.(string))
-
-	return subnet, nil
-}
-
-func setSubnetResourcesIPConfig(ic interface{}) *v3.IPConfig {
-	cfg := ic.(map[string]interface{})
-
-	ipConf := &v3.IPConfig{}
-
-	if d, ok := cfg["default_gateway_ip"]; ok {
-		ipConf.DefaultGatewayIP = utils.String(d.(string))
-	}
-
-	if d, ok := cfg["prefix_length"]; ok {
-		if n, err := strconv.Atoi(d.(string)); err == nil {
-			ipConf.PrefixLength = utils.Int64(int64(n))
-		}
-
-	}
-
-	if d, ok := cfg["subnet_ip"]; ok {
-		ipConf.SubnetIP = utils.String(d.(string))
-	}
-
-	if dhcp, dok := cfg["dhcp_server_address"]; dok {
-		dhcpa := dhcp.(map[string]interface{})
-		address := &v3.Address{}
-
-		if ip, ok := dhcpa["ip"]; ok {
-			address.IP = utils.String(ip.(string))
-		}
-
-		if fqdn, ok := dhcpa["fqdn"]; ok {
-			address.FQDN = utils.String(fqdn.(string))
-		}
-
-		if port, ok := dhcpa["port"]; ok {
-			address.Port = utils.Int64(int64(port.(int64)))
-		}
-
-		if ipv6, ok := dhcpa["ipv6"]; ok {
-			address.IPV6 = utils.String(ipv6.(string))
-		}
-
-		ipConf.DHCPServerAddress = address
-	}
-	return ipConf
-}
-
-func setSubnetResourcesDHCPOptions(dhcp interface{}) *v3.DHCPOptions {
-	dhcpo := &v3.DHCPOptions{}
-
-	dop := dhcp.(map[string]interface{})
-
-	if boot, ok := dop["boot_file_name"]; ok {
-		dhcpo.BootFileName = utils.String(boot.(string))
-	}
-
-	if dn, ok := dop["domain_name"]; ok {
-		dhcpo.DomainName = utils.String(dn.(string))
-	}
-
-	if tsn, ok := dop["tftp_server_name"]; ok {
-		dhcpo.TFTPServerName = utils.String(tsn.(string))
-	}
-
-	return dhcpo
-
-}
-
-func setSubnetMetadata(m interface{}) *v3.SubnetMetadata {
-	metad := m.(map[string]interface{})
-	metadata := &v3.SubnetMetadata{
-		Kind: utils.String(metad["kind"].(string)),
-	}
-	if v, ok := metad["uuid"]; ok {
-		metadata.UUID = utils.String(v.(string))
-	}
-	if v, ok := metad["spec_version"]; ok {
-		if n, err := strconv.Atoi(v.(string)); err == nil {
-			metadata.SpecVersion = utils.Int64(int64(n))
-		}
-	}
-	if v, ok := metad["spec_hash"]; ok {
-		metadata.SpecHash = utils.String(v.(string))
-	}
-	if v, ok := metad["name"]; ok {
-		metadata.Name = utils.String(v.(string))
-	}
-	if v, ok := metad["categories"]; ok {
-		metadata.Categories = v.(map[string]string)
-	}
-
-	return metadata
-}
-
 func subnetStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := client.V3.GetSubnet(uuid)
 
 		if err != nil {
 			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-				return v, "DELETED", nil
+				return v, DELETED, nil
 			}
-			log.Printf("ERROR %s", err)
 			return nil, "", err
 		}
 

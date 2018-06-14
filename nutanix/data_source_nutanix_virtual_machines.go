@@ -10,6 +10,11 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+const (
+	// CDROM ...
+	CDROM = "CDROM"
+)
+
 func dataSourceNutanixVirtualMachines() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceNutanixVirtualMachinesRead,
@@ -84,7 +89,8 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 		entity["boot_device_mac_address"] = mac
 		entity["hardware_clock_timezone"] = utils.StringValue(v.Status.Resources.HardwareClockTimezone)
 
-		cloudInit := make(map[string]interface{})
+		cloudInitUser := ""
+		cloudInitMeta := ""
 		cloudInitCV := make(map[string]string)
 		sysprep := make(map[string]interface{})
 		sysprepCV := make(map[string]string)
@@ -93,8 +99,8 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 			isOv = utils.BoolValue(v.Status.Resources.GuestCustomization.IsOverridable)
 
 			if v.Status.Resources.GuestCustomization.CloudInit != nil {
-				cloudInit["meta_data"] = utils.StringValue(v.Status.Resources.GuestCustomization.CloudInit.MetaData)
-				cloudInit["user_data"] = utils.StringValue(v.Status.Resources.GuestCustomization.CloudInit.UserData)
+				cloudInitMeta = utils.StringValue(v.Status.Resources.GuestCustomization.CloudInit.MetaData)
+				cloudInitUser = utils.StringValue(v.Status.Resources.GuestCustomization.CloudInit.UserData)
 				if v.Status.Resources.GuestCustomization.CloudInit.CustomKeyValues != nil {
 					for k, v := range v.Status.Resources.GuestCustomization.CloudInit.CustomKeyValues {
 						cloudInitCV[k] = v
@@ -115,13 +121,14 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 		entity["guest_customization_cloud_init_custom_key_values"] = cloudInitCV
 		entity["guest_customization_sysprep_custom_key_values"] = sysprepCV
 		entity["guest_customization_is_overridable"] = isOv
-		entity["guest_customization_cloud_init"] = cloudInit
+		entity["guest_customization_cloud_init_user_data"] = cloudInitUser
+		entity["guest_customization_cloud_init_meta_data"] = cloudInitMeta
 		entity["guest_customization_sysprep"] = sysprep
 		entity["should_fail_on_script_failure"] = utils.BoolValue(v.Status.Resources.PowerStateMechanism.GuestTransitionConfig.ShouldFailOnScriptFailure)
 		entity["enable_script_exec"] = utils.BoolValue(v.Status.Resources.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec)
 		entity["power_state_mechanism"] = utils.StringValue(v.Status.Resources.PowerStateMechanism.Mechanism)
 		entity["vga_console_enabled"] = utils.BoolValue(v.Status.Resources.VgaConsoleEnabled)
-		entity["disk_list"] = setDiskList(v.Status.Resources.DiskList)
+		entity["disk_list"] = setDiskList(v.Status.Resources.DiskList, v.Status.Resources.GuestCustomization)
 
 		entities[k] = entity
 	}
@@ -132,16 +139,22 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 	return d.Set("entities", entities)
 }
 
-func setDiskList(disk []*v3.VMDisk) []map[string]interface{} {
-	diskList := make([]map[string]interface{}, 0)
-	if disk != nil {
-		diskList = make([]map[string]interface{}, len(disk))
-		for k, v1 := range disk {
+func setDiskList(disk []*v3.VMDisk, hasCloudInit *v3.GuestCustomizationStatus) []map[string]interface{} {
+	var diskList []map[string]interface{}
+	if len(disk) > 0 {
+		for _, v1 := range disk {
+
+			if hasCloudInit != nil {
+				if hasCloudInit.CloudInit != nil && utils.StringValue(v1.DeviceProperties.DeviceType) == CDROM {
+					continue
+				}
+			}
+
 			disk := make(map[string]interface{})
 			disk["uuid"] = utils.StringValue(v1.UUID)
 			disk["disk_size_bytes"] = utils.Int64Value(v1.DiskSizeBytes)
 			disk["disk_size_mib"] = utils.Int64Value(v1.DiskSizeMib)
-			disk["data_source_reference"] = []map[string]interface{}{getReferenceValues(v1.DataSourceReference)}
+			disk["data_source_reference"] = []map[string]interface{}{getClusterReferenceValues(v1.DataSourceReference)}
 			disk["volume_group_reference"] = []map[string]interface{}{getReferenceValues(v1.VolumeGroupReference)}
 
 			dp := make([]map[string]interface{}, 1)
@@ -160,9 +173,14 @@ func setDiskList(disk []*v3.VMDisk) []map[string]interface{} {
 
 			disk["device_properties"] = dp
 
-			diskList[k] = disk
+			diskList = append(diskList, disk)
 		}
 	}
+
+	if diskList == nil {
+		return make([]map[string]interface{}, 0)
+	}
+
 	return diskList
 }
 
@@ -226,7 +244,8 @@ func setNicList(nics []*v3.VMNicOutputStatus) []map[string]interface{} {
 			}
 			nic["ip_endpoint_list"] = ipEndpointList
 			nic["network_function_chain_reference"] = getReferenceValues(v.NetworkFunctionChainReference)
-			nic["subnet_reference"] = getReferenceValues(v.SubnetReference)
+			nic["subnet_reference"] = getClusterReferenceValues(v.SubnetReference)
+			nic["subnet_reference_name"] = utils.StringValue(v.SubnetReference.Name)
 
 			nicLists[k] = nic
 		}
@@ -565,6 +584,10 @@ func getDataSourceVMSSchema() map[string]*schema.Schema {
 										},
 									},
 								},
+								"subnet_reference_name": {
+									Type:     schema.TypeString,
+									Computed: true,
+								},
 							},
 						},
 					},
@@ -734,21 +757,13 @@ func getDataSourceVMSSchema() map[string]*schema.Schema {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
-					"guest_customization_cloud_init": {
-						Type:     schema.TypeMap,
+					"guest_customization_cloud_init_meta_data": {
+						Type:     schema.TypeString,
 						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"meta_data": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-								"user_data": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-							},
-						},
+					},
+					"guest_customization_cloud_init_user_data": {
+						Type:     schema.TypeString,
+						Computed: true,
 					},
 					"guest_customization_cloud_init_custom_key_values": {
 						Type:     schema.TypeMap,

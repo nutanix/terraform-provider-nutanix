@@ -31,6 +31,12 @@ func TestAccNutanixSubnet_basic(t *testing.T) {
 					testAccCheckNutanixSubnetExists("nutanix_subnet.next-iac-managed"),
 				),
 			},
+			{
+				Config: testAccNutanixSubnetConfigUpdate(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixSubnetExists("nutanix_subnet.next-iac-managed"),
+				),
+			},
 		},
 	})
 }
@@ -110,6 +116,48 @@ resource "nutanix_subnet" "next-iac-managed" {
 `, r, r)
 }
 
+func testAccNutanixSubnetConfigUpdate(r int) string {
+	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {
+  metadata = {
+    length = 2
+  }
+}
+
+output "cluster" {
+  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+}
+
+resource "nutanix_subnet" "next-iac-managed" {
+  # What cluster will this VLAN live on?
+  cluster_reference = {
+	kind = "cluster"
+	uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  }
+
+  # General Information
+  name        = "next-iac-managed-%d-Updated"
+  vlan_id     = %d
+  subnet_type = "VLAN"
+
+  # Managed L3 Networks
+  # This bit is only needed if you intend to turn on IPAM
+  prefix_length = 20
+
+  default_gateway_ip = "10.5.80.1"
+  subnet_ip          = "10.5.80.0"
+
+  #dhcp_options {
+  #    boot_file_name   = "bootfile"
+  #    tftp_server_name = "1.2.3.200"
+  #    domain_name      = "nutanix"
+  #}
+
+  dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+  dhcp_domain_search_list      = ["nutanix.com", "eng.nutanix.com"]
+}
+`, r, r)
+}
 func Test_resourceNutanixSubnet(t *testing.T) {
 	tests := []struct {
 		name string
@@ -253,113 +301,6 @@ func Test_getSubnetResources(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := getSubnetResources(tt.args.d, tt.args.subnet); (err != nil) != tt.wantErr {
 				t.Errorf("getSubnetResources() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func Test_getSubnetMetadaAttributes(t *testing.T) {
-	type args struct {
-		d        *schema.ResourceData
-		metadata *v3.SubnetMetadata
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := getSubnetMetadaAttributes(tt.args.d, tt.args.metadata); (err != nil) != tt.wantErr {
-				t.Errorf("getSubnetMetadaAttributes() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func Test_setSubnetResources(t *testing.T) {
-	type args struct {
-		m interface{}
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    *v3.SubnetResources
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := setSubnetResources(tt.args.m)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("setSubnetResources() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("setSubnetResources() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_setSubnetResourcesIPConfig(t *testing.T) {
-	type args struct {
-		ic interface{}
-	}
-	tests := []struct {
-		name string
-		args args
-		want *v3.IPConfig
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := setSubnetResourcesIPConfig(tt.args.ic); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("setSubnetResourcesIPConfig() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_setSubnetResourcesDHCPOptions(t *testing.T) {
-	type args struct {
-		dhcp interface{}
-	}
-	tests := []struct {
-		name string
-		args args
-		want *v3.DHCPOptions
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := setSubnetResourcesDHCPOptions(tt.args.dhcp); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("setSubnetResourcesDHCPOptions() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_setSubnetMetadata(t *testing.T) {
-	type args struct {
-		m interface{}
-	}
-	tests := []struct {
-		name string
-		args args
-		want *v3.SubnetMetadata
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := setSubnetMetadata(tt.args.m); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("setSubnetMetadata() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -150,7 +150,6 @@ func (c *Client) OnRequestCompleted(rc RequestCompletionCallback) {
 
 //Do performs request passed
 func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error {
-
 	req = req.WithContext(ctx)
 
 	resp, err := c.client.Do(req)
@@ -226,11 +225,15 @@ func CheckResponse(r *http.Response) error {
 	errRes := &ErrorResponse{}
 
 	if status, ok := res["status"]; ok {
-		fillStruct(status.(map[string]interface{}), errRes)
+		err = fillStruct(status.(map[string]interface{}), errRes)
 	} else if _, ok := res["state"]; ok {
-		fillStruct(res, errRes)
+		err = fillStruct(res, errRes)
 	} else if _, ok := res["entities"]; ok {
 		return nil
+	}
+
+	if err != nil {
+		return err
 	}
 
 	if errRes.State != "ERROR" {
