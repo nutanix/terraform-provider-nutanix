@@ -686,7 +686,6 @@ func resourceNutanixImageExists(conn *v3.Client, name string) (*string, error) {
 func imageStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := client.V3.GetImage(uuid)
-
 		if err != nil {
 			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 				return v, DELETED, nil

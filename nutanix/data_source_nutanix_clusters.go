@@ -1,6 +1,7 @@
 package nutanix
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
@@ -52,6 +53,8 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 			metadata.Offset = utils.Int64(int64(i))
 		}
 	}
+
+	fmt.Println("CLUSTERS")
 
 	// Make request to the API
 	resp, err := conn.V3.ListCluster(metadata)
