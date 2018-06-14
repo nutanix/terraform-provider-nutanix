@@ -26,16 +26,13 @@ func resourceNutanixVolumeGroup() *schema.Resource {
 }
 
 func resourceNutanixVolumeGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	// Get client connection
 	conn := meta.(*Client).API
 
-	// Prepare request
 	request := &v3.VolumeGroupInput{}
 	spec := &v3.VolumeGroup{}
 	metadata := &v3.Metadata{}
 	res := &v3.VolumeGroupResources{}
 
-	// Read Arguments and set request values
 	n, nok := d.GetOk("name")
 	desc, descok := d.GetOk("description")
 
@@ -61,19 +58,14 @@ func resourceNutanixVolumeGroupCreate(d *schema.ResourceData, meta interface{}) 
 	request.Metadata = metadata
 	request.Spec = spec
 
-	// Make request to the API
 	resp, err := conn.V3.CreateVolumeGroup(request)
 
 	if err != nil {
 		return err
 	}
 
-	uuid := *resp.Metadata.UUID
+	d.SetId(*resp.Metadata.UUID)
 
-	// Set terraform state id
-	d.SetId(uuid)
-
-	// Wait for the VM to be available
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"PENDING", "RUNNING"},
 		Target:     []string{"COMPLETE"},
@@ -91,17 +83,12 @@ func resourceNutanixVolumeGroupCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceNutanixVolumeGroupRead(d *schema.ResourceData, meta interface{}) error {
-	// Get client connection
 	conn := meta.(*Client).API
 
-	// Make request to the API
 	resp, err := conn.V3.GetVolumeGroup(d.Id())
 	if err != nil {
 		return err
 	}
-
-	log.Printf("Reading Volume Group values %s", d.Id())
-	fmt.Printf("Reading Volume Group values %s", d.Id())
 
 	m, c := setRSEntityMetadata(resp.Metadata)
 
@@ -117,34 +104,15 @@ func resourceNutanixVolumeGroupRead(d *schema.ResourceData, meta interface{}) er
 	if err := d.Set("owner_reference", getReferenceValues(resp.Metadata.OwnerReference)); err != nil {
 		return err
 	}
-	if err := d.Set("api_version", utils.StringValue(resp.APIVersion)); err != nil {
-		return err
-	}
-	if err := d.Set("name", utils.StringValue(resp.Status.Name)); err != nil {
-		return err
-	}
-	if err := d.Set("description", utils.StringValue(resp.Status.Description)); err != nil {
-		return err
-	}
 
-	// set state value
-	if err := d.Set("state", resp.Status.State); err != nil {
-		return err
-	}
-	// set flash_mode
-	if err := d.Set("flash_mode", utils.StringValue(resp.Status.Resources.FlashMode)); err != nil {
-		return err
-	}
+	d.Set("api_version", utils.StringValue(resp.APIVersion))
+	d.Set("name", utils.StringValue(resp.Status.Name))
+	d.Set("description", utils.StringValue(resp.Status.Description))
+	d.Set("state", utils.StringValue(resp.Status.State))
+	d.Set("flash_mode", utils.StringValue(resp.Status.Resources.FlashMode))
+	d.Set("file_system_type", utils.StringValue(resp.Status.Resources.FileSystemType))
+	d.Set("sharing_status", utils.StringValue(resp.Status.Resources.SharingStatus))
 
-	if err := d.Set("file_system_type", utils.StringValue(resp.Status.Resources.FileSystemType)); err != nil {
-		return err
-	}
-
-	if err := d.Set("sharing_status", utils.StringValue(resp.Status.Resources.SharingStatus)); err != nil {
-		return err
-	}
-
-	// set attachment value
 	al := resp.Status.Resources.AttachmentList
 	attachList := make([]map[string]interface{}, 0)
 	if al != nil {
@@ -156,19 +124,17 @@ func resourceNutanixVolumeGroupRead(d *schema.ResourceData, meta interface{}) er
 			attachList[k] = attach
 		}
 	}
+
 	if err := d.Set("attachment_list", attachList); err != nil {
 		return err
 	}
 
-	// set disk_list value
 	dl := resp.Status.Resources.DiskList
 	diskList := make([]map[string]interface{}, 0)
 	if dl != nil {
 		diskList = make([]map[string]interface{}, len(dl))
 		for k, v := range dl {
 			vgDisk := make(map[string]interface{})
-
-			// simple first
 			vgDisk["vmdisk_uuid"] = utils.StringValue(v.VmdiskUUID)
 			vgDisk["index"] = utils.Int64Value(v.Index)
 			vgDisk["disk_size_mib"] = utils.Int64Value(v.DiskSizeMib)
@@ -181,11 +147,7 @@ func resourceNutanixVolumeGroupRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	// set iscsi_target_prefix value
-	if err := d.Set("iscsi_target_prefix", resp.Status.Resources.IscsiTargetPrefix); err != nil {
-		return err
-	}
-
+	d.Set("iscsi_target_prefix", utils.StringValue(resp.Status.Resources.IscsiTargetPrefix))
 	d.SetId(*resp.Metadata.UUID)
 
 	return nil
@@ -193,9 +155,6 @@ func resourceNutanixVolumeGroupRead(d *schema.ResourceData, meta interface{}) er
 
 func resourceNutanixVolumeGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
-
-	log.Printf("Updating Volume Group values %s", d.Id())
-	fmt.Printf("Updating Volume Group values %s", d.Id())
 
 	request := &v3.VolumeGroupInput{}
 	metadata := &v3.Metadata{}
@@ -220,7 +179,6 @@ func resourceNutanixVolumeGroupUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	// get state
 	if d.HasChange("categories") {
 		catl := d.Get("categories").([]interface{})
 
@@ -242,21 +200,11 @@ func resourceNutanixVolumeGroupUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 	if d.HasChange("owner_reference") {
 		or := d.Get("owner_reference").(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(or["kind"].(string)),
-			UUID: utils.String(or["uuid"].(string)),
-			Name: utils.String(or["name"].(string)),
-		}
-		metadata.OwnerReference = r
+		metadata.OwnerReference = validateRef(or)
 	}
 	if d.HasChange("project_reference") {
 		pr := d.Get("project_reference").(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(pr["kind"].(string)),
-			UUID: utils.String(pr["uuid"].(string)),
-			Name: utils.String(pr["name"].(string)),
-		}
-		metadata.ProjectReference = r
+		metadata.ProjectReference = validateRef(pr)
 	}
 	if d.HasChange("name") {
 		spec.Name = utils.String(d.Get("name").(string))
@@ -288,15 +236,7 @@ func resourceNutanixVolumeGroupUpdate(d *schema.ResourceData, meta interface{}) 
 					attachment := &v3.VMAttachment{}
 
 					if value, ok := val["vm_reference"]; ok && len(value.(map[string]interface{})) != 0 {
-						v := value.(map[string]interface{})
-						ref := &v3.Reference{}
-						if j, ok1 := v["kind"]; ok1 {
-							ref.Kind = utils.String(j.(string))
-						}
-						if j, ok1 := v["uuid"]; ok1 {
-							ref.UUID = utils.String(j.(string))
-						}
-						attachment.VMReference = ref
+						attachment.VMReference = validateShortRef(value.(map[string]interface{}))
 					}
 
 					if value, ok := val["iscsi_initiator_name"]; ok && value.(string) != "" {
@@ -391,15 +331,7 @@ func getVolumeGroupResources(d *schema.ResourceData, vg *v3.VolumeGroupResources
 				attachment := &v3.VMAttachment{}
 
 				if value, ok := val["vm_reference"]; ok && len(value.(map[string]interface{})) != 0 {
-					v := value.(map[string]interface{})
-					ref := &v3.Reference{}
-					if j, ok1 := v["kind"]; ok1 {
-						ref.Kind = utils.String(j.(string))
-					}
-					if j, ok1 := v["uuid"]; ok1 {
-						ref.UUID = utils.String(j.(string))
-					}
-					attachment.VMReference = ref
+					attachment.VMReference = validateShortRef(value.(map[string]interface{}))
 				}
 
 				if value, ok := val["iscsi_initiator_name"]; ok && value.(string) != "" {
@@ -418,37 +350,29 @@ func getVolumeGroupResources(d *schema.ResourceData, vg *v3.VolumeGroupResources
 
 			for k, nc := range n {
 				val := nc.(map[string]interface{})
-				d := &v3.VGDisk{}
+				disk := &v3.VGDisk{}
 
 				if value, ok := val["vmdisk_uuid"]; ok && value.(string) != "" {
-					d.VmdiskUUID = utils.String(value.(string))
+					disk.VmdiskUUID = utils.String(value.(string))
 				}
 
 				if value, ok := val["index"]; ok && value.(int) >= 0 {
-					d.Index = utils.Int64(int64(value.(int)))
+					disk.Index = utils.Int64(int64(value.(int)))
 				}
 
 				if value, ok := val["data_source_reference"]; ok && len(value.(map[string]interface{})) != 0 {
-					v := value.(map[string]interface{})
-					ref := &v3.Reference{}
-					if j, ok1 := v["kind"]; ok1 {
-						ref.Kind = utils.String(j.(string))
-					}
-					if j, ok1 := v["uuid"]; ok1 {
-						ref.UUID = utils.String(j.(string))
-					}
-					d.DataSourceReference = ref
+					disk.DataSourceReference = validateShortRef(value.(map[string]interface{}))
 				}
 
 				if value, ok := val["disk_size_mib"]; ok && value.(int) >= 0 {
-					d.DiskSizeMib = utils.Int64(int64(value.(int)))
+					disk.DiskSizeMib = utils.Int64(int64(value.(int)))
 				}
 
 				if value, ok := val["storage_container_uuid"]; ok && value.(string) != "" {
-					d.StorageContainerUUID = utils.String(value.(string))
+					disk.StorageContainerUUID = utils.String(value.(string))
 				}
 
-				dl[k] = d
+				dl[k] = disk
 			}
 			vg.DiskList = dl
 		}

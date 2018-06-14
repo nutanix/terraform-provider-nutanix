@@ -812,14 +812,14 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 					portRange := &v3.PortRange{}
 
 					if endp, epok := tcpp["end_port"]; epok {
-						if i, err := strconv.Atoi(endp.(string)); err != nil {
-							portRange.EndPort = utils.Int64(int64(i))
+						if port, err := strconv.Atoi(endp.(string)); err != nil {
+							portRange.EndPort = utils.Int64(int64(port))
 						}
 					}
 
 					if stp, stpok := tcpp["start_port"]; stpok {
-						if i, err := strconv.Atoi(stp.(string)); err != nil {
-							portRange.StartPort = utils.Int64(int64(i))
+						if port, err := strconv.Atoi(stp.(string)); err != nil {
+							portRange.StartPort = utils.Int64(int64(port))
 						}
 					}
 					tcpPorts[i] = portRange
@@ -836,14 +836,14 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 					portRange := &v3.PortRange{}
 
 					if endp, epok := udpp["end_port"]; epok {
-						if i, err := strconv.Atoi(endp.(string)); err != nil {
-							portRange.EndPort = utils.Int64(int64(i))
+						if port, err := strconv.Atoi(endp.(string)); err != nil {
+							portRange.EndPort = utils.Int64(int64(port))
 						}
 					}
 
 					if stp, stpok := udpp["start_port"]; stpok {
-						if i, err := strconv.Atoi(stp.(string)); err != nil {
-							portRange.StartPort = utils.Int64(int64(i))
+						if port, err := strconv.Atoi(stp.(string)); err != nil {
+							portRange.StartPort = utils.Int64(int64(port))
 						}
 					}
 					udpPorts[i] = portRange
@@ -873,9 +873,9 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 						item := v.(map[string]interface{})
 
 						if i, ok := item["name"]; ok && i.(string) != "" {
-							if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
+							if k2, kok := item["values"]; kok && len(k2.([]interface{})) > 0 {
 								var values []string
-								for _, item := range k.([]interface{}) {
+								for _, item := range k2.([]interface{}) {
 									values = append(values, item.(string))
 								}
 								fl[i.(string)] = values
@@ -1021,14 +1021,14 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 					portRange := &v3.PortRange{}
 
 					if endp, epok := tcpp["end_port"]; epok {
-						if i, err := strconv.Atoi(endp.(string)); err != nil {
-							portRange.EndPort = utils.Int64(int64(i))
+						if port, err := strconv.Atoi(endp.(string)); err != nil {
+							portRange.EndPort = utils.Int64(int64(port))
 						}
 					}
 
 					if stp, stpok := tcpp["start_port"]; stpok {
-						if i, err := strconv.Atoi(stp.(string)); err != nil {
-							portRange.StartPort = utils.Int64(int64(i))
+						if port, err := strconv.Atoi(stp.(string)); err != nil {
+							portRange.StartPort = utils.Int64(int64(port))
 						}
 					}
 					tcpPorts[i] = portRange
@@ -1045,14 +1045,14 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 					portRange := &v3.PortRange{}
 
 					if endp, epok := udpp["end_port"]; epok {
-						if i, err := strconv.Atoi(endp.(string)); err != nil {
-							portRange.EndPort = utils.Int64(int64(i))
+						if port, err := strconv.Atoi(endp.(string)); err != nil {
+							portRange.EndPort = utils.Int64(int64(port))
 						}
 					}
 
 					if stp, stpok := udpp["start_port"]; stpok {
-						if i, err := strconv.Atoi(stp.(string)); err != nil {
-							portRange.StartPort = utils.Int64(int64(i))
+						if port, err := strconv.Atoi(stp.(string)); err != nil {
+							portRange.StartPort = utils.Int64(int64(port))
 						}
 					}
 					udpPorts[i] = portRange
@@ -1082,9 +1082,9 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 						item := v.(map[string]interface{})
 
 						if i, ok := item["name"]; ok && i.(string) != "" {
-							if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
+							if k2, kok := item["values"]; kok && len(k2.([]interface{})) > 0 {
 								var values []string
-								for _, item := range k.([]interface{}) {
+								for _, item := range k2.([]interface{}) {
 									values = append(values, item.(string))
 								}
 								fl[i.(string)] = values
@@ -1187,14 +1187,14 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 					portRange := &v3.PortRange{}
 
 					if endp, epok := tcpp["end_port"]; epok {
-						if i, err := strconv.Atoi(endp.(string)); err != nil {
-							portRange.EndPort = utils.Int64(int64(i))
+						if port, err := strconv.Atoi(endp.(string)); err != nil {
+							portRange.EndPort = utils.Int64(int64(port))
 						}
 					}
 
 					if stp, stpok := tcpp["start_port"]; stpok {
-						if i, err := strconv.Atoi(stp.(string)); err != nil {
-							portRange.StartPort = utils.Int64(int64(i))
+						if port, err := strconv.Atoi(stp.(string)); err != nil {
+							portRange.StartPort = utils.Int64(int64(port))
 						}
 					}
 					tcpPorts[i] = portRange
@@ -1211,14 +1211,14 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 					portRange := &v3.PortRange{}
 
 					if endp, epok := udpp["end_port"]; epok {
-						if i, err := strconv.Atoi(endp.(string)); err != nil {
-							portRange.EndPort = utils.Int64(int64(i))
+						if port, err := strconv.Atoi(endp.(string)); err != nil {
+							portRange.EndPort = utils.Int64(int64(port))
 						}
 					}
 
 					if stp, stpok := udpp["start_port"]; stpok {
-						if i, err := strconv.Atoi(stp.(string)); err != nil {
-							portRange.StartPort = utils.Int64(int64(i))
+						if port, err := strconv.Atoi(stp.(string)); err != nil {
+							portRange.StartPort = utils.Int64(int64(port))
 						}
 					}
 					udpPorts[i] = portRange
@@ -1248,9 +1248,9 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 						item := v.(map[string]interface{})
 
 						if i, ok := item["name"]; ok && i.(string) != "" {
-							if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
+							if k2, kok := item["values"]; kok && len(k2.([]interface{})) > 0 {
 								var values []string
-								for _, item := range k.([]interface{}) {
+								for _, item := range k2.([]interface{}) {
 									values = append(values, item.(string))
 								}
 								fl[i.(string)] = values
@@ -1396,14 +1396,14 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 					portRange := &v3.PortRange{}
 
 					if endp, epok := tcpp["end_port"]; epok {
-						if i, err := strconv.Atoi(endp.(string)); err != nil {
-							portRange.EndPort = utils.Int64(int64(i))
+						if port, err := strconv.Atoi(endp.(string)); err != nil {
+							portRange.EndPort = utils.Int64(int64(port))
 						}
 					}
 
 					if stp, stpok := tcpp["start_port"]; stpok {
-						if i, err := strconv.Atoi(stp.(string)); err != nil {
-							portRange.StartPort = utils.Int64(int64(i))
+						if port, err := strconv.Atoi(stp.(string)); err != nil {
+							portRange.StartPort = utils.Int64(int64(port))
 						}
 					}
 					tcpPorts[i] = portRange
@@ -1420,14 +1420,14 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 					portRange := &v3.PortRange{}
 
 					if endp, epok := udpp["end_port"]; epok {
-						if i, err := strconv.Atoi(endp.(string)); err != nil {
-							portRange.EndPort = utils.Int64(int64(i))
+						if port, err := strconv.Atoi(endp.(string)); err != nil {
+							portRange.EndPort = utils.Int64(int64(port))
 						}
 					}
 
 					if stp, stpok := udpp["start_port"]; stpok {
-						if i, err := strconv.Atoi(stp.(string)); err != nil {
-							portRange.StartPort = utils.Int64(int64(i))
+						if port, err := strconv.Atoi(stp.(string)); err != nil {
+							portRange.StartPort = utils.Int64(int64(port))
 						}
 					}
 					udpPorts[i] = portRange
@@ -1457,9 +1457,9 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 						item := v.(map[string]interface{})
 
 						if i, ok := item["name"]; ok && i.(string) != "" {
-							if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
+							if k2, kok := item["values"]; kok && len(k2.([]interface{})) > 0 {
 								var values []string
-								for _, item := range k.([]interface{}) {
+								for _, item := range k2.([]interface{}) {
 									values = append(values, item.(string))
 								}
 								fl[i.(string)] = values
@@ -1651,9 +1651,8 @@ func networkSecurityRuleStateRefreshFunc(client *v3.Client, uuid string) resourc
 
 		if err != nil {
 			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-				return v, "DELETED", nil
+				return v, DELETED, nil
 			}
-			log.Printf("ERROR %s", err)
 			return nil, "", err
 		}
 
@@ -1662,8 +1661,9 @@ func networkSecurityRuleStateRefreshFunc(client *v3.Client, uuid string) resourc
 }
 
 func expandFilterParams(fp map[string][]string) []map[string]interface{} {
-	var fpList []map[string]interface{}
+	fpList := make([]map[string]interface{}, 0)
 	if fp != nil {
+		fpList = make([]map[string]interface{}, len(fp))
 		for name, values := range fp {
 			fpItem := make(map[string]interface{})
 			fpItem["name"] = name

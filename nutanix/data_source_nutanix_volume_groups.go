@@ -1,8 +1,6 @@
 package nutanix
 
 import (
-	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
-
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -18,26 +16,19 @@ func dataSourceNutanixVolumeGroups() *schema.Resource {
 }
 
 func dataSourceNutanixVolumeGroupsRead(d *schema.ResourceData, meta interface{}) error {
-	// Get client connection
 	conn := meta.(*Client).API
 
-	metadata := &v3.DSMetadata{}
-
-	// Get the metadata request
 	metadata, err := readListMetadata(d, "volume_group")
 	if err != nil {
 		return err
 	}
 
-	// Make request to the API
 	resp, err := conn.V3.ListVolumeGroup(metadata)
 	if err != nil {
 		return err
 	}
 
-	if err := d.Set("api_version", resp.APIVersion); err != nil {
-		return err
-	}
+	d.Set("api_version", resp.APIVersion)
 
 	entities := make([]map[string]interface{}, len(resp.Entities))
 	for k, v := range resp.Entities {
