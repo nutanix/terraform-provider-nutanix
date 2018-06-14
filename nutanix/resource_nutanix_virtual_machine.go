@@ -370,27 +370,31 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		pw.GuestTransitionConfig = p
 	}
 
-	if guest.CloudInit == nil {
-		guest.CloudInit = &v3.GuestCustomizationCloudInit{}
+	cloudInit := guest.CloudInit
+
+	if cloudInit == nil {
+		cloudInit = &v3.GuestCustomizationCloudInit{}
 	}
 
 	if d.HasChange("guest_customization_cloud_init_user_data") {
 		_, n := d.GetChange("guest_customization_user_data")
-		guest.CloudInit.UserData = utils.String(n.(string))
+		cloudInit.UserData = utils.String(n.(string))
 	}
 
 	if d.HasChange("guest_customization_cloud_init_meta_data") {
 		_, n := d.GetChange("guest_customization_meta_data")
-		guest.CloudInit.MetaData = utils.String(n.(string))
+		cloudInit.MetaData = utils.String(n.(string))
 	}
 
 	if d.HasChange("guest_customization_cloud_init_custom_key_values") {
-		if guest.CloudInit == nil {
-			guest.CloudInit = &v3.GuestCustomizationCloudInit{}
-		}
 		_, n := d.GetChange("guest_customization_cloud_init_custom_key_values")
-		guest.CloudInit.CustomKeyValues = n.(map[string]string)
+		cloudInit.CustomKeyValues = n.(map[string]string)
 	}
+
+	if !reflect.DeepEqual(*cloudInit, (v3.GuestCustomizationCloudInit{})) {
+		guest.CloudInit = cloudInit
+	}
+
 	if d.HasChange("guest_customization_sysprep") {
 		_, n := d.GetChange("guest_customization_sysprep")
 		a := n.(map[string]interface{})
@@ -792,22 +796,24 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	}
 
 	guestCustom := &v3.GuestCustomization{}
-	guestCustom.CloudInit = &v3.GuestCustomizationCloudInit{}
+	cloudInit := &v3.GuestCustomizationCloudInit{}
 
 	if v, ok := d.GetOk("guest_customization_cloud_init_user_data"); ok {
-		guestCustom.CloudInit.UserData = utils.String(v.(string))
+		cloudInit.UserData = utils.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("guest_customization_cloud_init_meta_data"); ok {
-		guestCustom.CloudInit.MetaData = utils.String(v.(string))
+		cloudInit.MetaData = utils.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("guest_customization_cloud_init_custom_key_values"); ok {
-		if guestCustom.CloudInit == nil {
-			guestCustom.CloudInit = &v3.GuestCustomizationCloudInit{}
-		}
-		guestCustom.CloudInit.CustomKeyValues = v.(map[string]string)
+		cloudInit.CustomKeyValues = v.(map[string]string)
 	}
+
+	if !reflect.DeepEqual(*cloudInit, (v3.GuestCustomizationCloudInit{})) {
+		guestCustom.CloudInit = cloudInit
+	}
+
 	if v, ok := d.GetOk("guest_customization_is_overridable"); ok {
 		guestCustom.IsOverridable = utils.Bool(v.(bool))
 	}
@@ -823,8 +829,8 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	}
 
 	if v, ok := d.GetOk("guest_customization_sysprep_custom_key_values"); ok {
-		if guestCustom.CloudInit == nil {
-			guestCustom.CloudInit = &v3.GuestCustomizationCloudInit{}
+		if guestCustom.Sysprep == nil {
+			guestCustom.Sysprep = &v3.GuestCustomizationSysprep{}
 		}
 		guestCustom.Sysprep.CustomKeyValues = v.(map[string]string)
 	}
