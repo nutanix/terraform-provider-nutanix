@@ -59,25 +59,11 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	}
 	if azrok {
 		a := azr.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(a["kind"].(string)),
-			UUID: utils.String(a["uuid"].(string)),
-		}
-		if v, ok := a["name"]; ok {
-			r.Name = utils.String(v.(string))
-		}
-		spec.AvailabilityZoneReference = r
+		spec.AvailabilityZoneReference = validateRef(a)
 	}
 	if crok {
 		a := cr.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.String(a["kind"].(string)),
-			UUID: utils.String(a["uuid"].(string)),
-		}
-		if cn, cnok := d.GetOk("cluster_name"); cnok {
-			r.Name = utils.String(cn.(string))
-		}
-		spec.ClusterReference = r
+		spec.ClusterReference = validateRef(a)
 	}
 
 	if err := getVMResources(d, res); err != nil {
@@ -184,16 +170,17 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	d.Set("boot_device_disk_address", diskAddress)
 	d.Set("boot_device_mac_address", mac)
 
+	cloudInitUser := ""
+	cloudInitMeta := ""
 	sysprep := make(map[string]interface{})
 	sysprepCV := make(map[string]string)
-	cloudInit := make(map[string]interface{})
 	cloudInitCV := make(map[string]string)
 	isOv := false
 	if resp.Status.Resources.GuestCustomization != nil {
 		isOv = utils.BoolValue(resp.Status.Resources.GuestCustomization.IsOverridable)
 		if resp.Status.Resources.GuestCustomization.CloudInit != nil {
-			cloudInit["meta_data"] = utils.StringValue(resp.Status.Resources.GuestCustomization.CloudInit.MetaData)
-			cloudInit["user_data"] = utils.StringValue(resp.Status.Resources.GuestCustomization.CloudInit.UserData)
+			cloudInitMeta = utils.StringValue(resp.Status.Resources.GuestCustomization.CloudInit.MetaData)
+			cloudInitUser = utils.StringValue(resp.Status.Resources.GuestCustomization.CloudInit.UserData)
 			if resp.Status.Resources.GuestCustomization.CloudInit.CustomKeyValues != nil {
 				for k, v := range resp.Status.Resources.GuestCustomization.CloudInit.CustomKeyValues {
 					cloudInitCV[k] = v
@@ -219,10 +206,9 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	if err := d.Set("guest_customization_sysprep", sysprep); err != nil {
 		return err
 	}
-	if err := d.Set("guest_customization_cloud_init", cloudInit); err != nil {
-		return err
-	}
 
+	d.Set("guest_customization_cloud_init_user_data", cloudInitUser)
+	d.Set("guest_customization_cloud_init_meta_data", cloudInitMeta)
 	d.Set("hardware_clock_timezone", utils.StringValue(resp.Status.Resources.HardwareClockTimezone))
 	d.Set("cluster_reference_name", utils.StringValue(resp.Status.ClusterReference.Name))
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
@@ -242,7 +228,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	d.Set("vga_console_enabled", utils.BoolValue(resp.Status.Resources.VgaConsoleEnabled))
 	d.SetId(*resp.Metadata.UUID)
 
-	return d.Set("disk_list", setDiskList(resp.Status.Resources.DiskList))
+	return d.Set("disk_list", setDiskList(resp.Status.Resources.DiskList, resp.Status.Resources.GuestCustomization))
 }
 
 func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -383,22 +369,32 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		}
 		pw.GuestTransitionConfig = p
 	}
-	if d.HasChange("guest_customization_cloud_init") {
-		_, n := d.GetChange("guest_customization_cloud_init")
-		a := n.(map[string]interface{})
 
-		guest.CloudInit = &v3.GuestCustomizationCloudInit{
-			MetaData: validateMapStringValue(a, "meta_data"),
-			UserData: validateMapStringValue(a, "user_data"),
-		}
+	cloudInit := guest.CloudInit
+
+	if cloudInit == nil {
+		cloudInit = &v3.GuestCustomizationCloudInit{}
 	}
+
+	if d.HasChange("guest_customization_cloud_init_user_data") {
+		_, n := d.GetChange("guest_customization_user_data")
+		cloudInit.UserData = utils.String(n.(string))
+	}
+
+	if d.HasChange("guest_customization_cloud_init_meta_data") {
+		_, n := d.GetChange("guest_customization_meta_data")
+		cloudInit.MetaData = utils.String(n.(string))
+	}
+
 	if d.HasChange("guest_customization_cloud_init_custom_key_values") {
-		if guest.CloudInit == nil {
-			guest.CloudInit = &v3.GuestCustomizationCloudInit{}
-		}
 		_, n := d.GetChange("guest_customization_cloud_init_custom_key_values")
-		guest.CloudInit.CustomKeyValues = n.(map[string]string)
+		cloudInit.CustomKeyValues = n.(map[string]string)
 	}
+
+	if !reflect.DeepEqual(*cloudInit, (v3.GuestCustomizationCloudInit{})) {
+		guest.CloudInit = cloudInit
+	}
+
 	if d.HasChange("guest_customization_sysprep") {
 		_, n := d.GetChange("guest_customization_sysprep")
 		a := n.(map[string]interface{})
@@ -517,6 +513,13 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 			dls := make([]*v3.VMDisk, len(dsk))
 
 			for k, val := range dsk {
+
+				if response.Status.Resources.GuestCustomization != nil {
+					if response.Status.Resources.GuestCustomization.CloudInit != nil && val.(map[string]interface{})["device_properties"].([]interface{})[0].(map[string]interface{})["device_type"].(string) == "CDROM" {
+						continue
+					}
+				}
+
 				v := val.(map[string]interface{})
 				dl := &v3.VMDisk{
 					UUID:          validateMapStringValue(v, "uuid"),
@@ -529,8 +532,8 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 					dp := &v3.VMDiskDeviceProperties{
 						DeviceType: validateMapStringValue(d, "device_type"),
 					}
-					if v, ok := d["disk_address"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-						da := v.([]interface{})[0].(map[string]interface{})
+					if v2, ok := d["disk_address"]; ok && len(v2.([]interface{})) > 0 && v2.([]interface{})[0] != nil {
+						da := v2.([]interface{})[0].(map[string]interface{})
 						dp.DiskAddress = &v3.DiskAddress{
 							AdapterType: validateMapStringValue(da, "adapter_type"),
 							DeviceIndex: validateMapIntValue(da, "device_index"),
@@ -542,7 +545,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 					dsref := v1.([]interface{})
 					if len(dsref) > 0 && dsref[0] != nil {
 						dsri := dsref[0].(map[string]interface{})
-						dl.DataSourceReference = validateRef(dsri)
+						dl.DataSourceReference = validateShortRef(dsri)
 					}
 				}
 				if v1, ok := v["volume_group_reference"]; ok {
@@ -565,8 +568,15 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 
 	res.PowerStateMechanism = pw
 	res.BootConfig = boot
-	res.GuestTools = guestTool
-	res.GuestCustomization = guest
+
+	if !reflect.DeepEqual(*guestTool, (v3.GuestToolsSpec{})) {
+		res.GuestTools = guestTool
+	}
+
+	if !reflect.DeepEqual(*guest, (v3.GuestCustomization{})) {
+		res.GuestCustomization = guest
+	}
+
 	spec.Resources = res
 	request.Metadata = metadata
 	request.Spec = spec
@@ -574,7 +584,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] Updating Virtual Machine: %s, %s", d.Get("name").(string), d.Id())
 	fmt.Printf("[DEBUG] Updating Virtual Machine: %s, %s", d.Get("name").(string), d.Id())
 
-	utils.PrintToJSON(request, "UPDATE")
 	_, err2 := conn.V3.UpdateVM(d.Id(), request)
 	if err2 != nil {
 		return err2
@@ -790,24 +799,24 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	}
 
 	guestCustom := &v3.GuestCustomization{}
+	cloudInit := &v3.GuestCustomizationCloudInit{}
 
-	if v, ok := d.GetOk("guest_customization_cloud_init"); ok {
-		guestCustom.CloudInit = &v3.GuestCustomizationCloudInit{}
-		cii := v.(map[string]interface{})
-		if v2, ok2 := cii["meta_data"]; ok2 {
-			guestCustom.CloudInit.MetaData = utils.String(v2.(string))
-		}
-		if v2, ok2 := cii["user_data"]; ok2 {
-			guestCustom.CloudInit.UserData = utils.String(v2.(string))
-		}
+	if v, ok := d.GetOk("guest_customization_cloud_init_user_data"); ok {
+		cloudInit.UserData = utils.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("guest_customization_cloud_init_meta_data"); ok {
+		cloudInit.MetaData = utils.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("guest_customization_cloud_init_custom_key_values"); ok {
-		if guestCustom.CloudInit == nil {
-			guestCustom.CloudInit = &v3.GuestCustomizationCloudInit{}
-		}
-		guestCustom.CloudInit.CustomKeyValues = v.(map[string]string)
+		cloudInit.CustomKeyValues = v.(map[string]string)
 	}
+
+	if !reflect.DeepEqual(*cloudInit, (v3.GuestCustomizationCloudInit{})) {
+		guestCustom.CloudInit = cloudInit
+	}
+
 	if v, ok := d.GetOk("guest_customization_is_overridable"); ok {
 		guestCustom.IsOverridable = utils.Bool(v.(bool))
 	}
@@ -823,8 +832,8 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	}
 
 	if v, ok := d.GetOk("guest_customization_sysprep_custom_key_values"); ok {
-		if guestCustom.CloudInit == nil {
-			guestCustom.CloudInit = &v3.GuestCustomizationCloudInit{}
+		if guestCustom.Sysprep == nil {
+			guestCustom.Sysprep = &v3.GuestCustomizationSysprep{}
 		}
 		guestCustom.Sysprep.CustomKeyValues = v.(map[string]string)
 	}
@@ -867,12 +876,12 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 					if len(dvp) > 0 {
 						d := dvp[0].(map[string]interface{})
 						dp := &v3.VMDiskDeviceProperties{}
-						if v, ok := d["device_type"]; ok {
-							dp.DeviceType = utils.String(v.(string))
+						if v1, ok := d["device_type"]; ok {
+							dp.DeviceType = utils.String(v1.(string))
 						}
-						if v, ok := d["disk_address"]; ok {
-							if len(v.([]interface{})) > 0 {
-								da := v.([]interface{})[0].(map[string]interface{})
+						if v2, ok := d["disk_address"]; ok {
+							if len(v2.([]interface{})) > 0 {
+								da := v2.([]interface{})[0].(map[string]interface{})
 								v3disk := &v3.DiskAddress{}
 								if di, diok := da["device_index"]; diok {
 									v3disk.DeviceIndex = utils.Int64(int64(di.(int)))
@@ -890,7 +899,7 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 					dsref := v1.([]interface{})
 					if len(dsref) > 0 {
 						dsri := dsref[0].(map[string]interface{})
-						dl.DataSourceReference = validateRef(dsri)
+						dl.DataSourceReference = validateShortRef(dsri)
 					}
 				}
 				if v1, ok := v["volume_group_reference"]; ok {
@@ -915,9 +924,8 @@ func vmStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefreshFun
 
 		if err != nil {
 			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-				return v, "DELETED", nil
+				return v, DELETED, nil
 			}
-			log.Printf("ERROR %s", err)
 			return nil, "", err
 		}
 
@@ -1480,24 +1488,15 @@ func getVMSchema() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 		},
-		"guest_customization_cloud_init": {
-			Type:     schema.TypeMap,
+		"guest_customization_cloud_init_user_data": {
+			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"meta_data": {
-						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
-					},
-					"user_data": {
-						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
-					},
-				},
-			},
+		},
+		"guest_customization_cloud_init_meta_data": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
 		},
 		"guest_customization_cloud_init_custom_key_values": {
 			Type:     schema.TypeMap,
@@ -1614,11 +1613,6 @@ func getVMSchema() map[string]*schema.Schema {
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"kind": {
-									Type:     schema.TypeString,
-									Optional: true,
-									Computed: true,
-								},
-								"name": {
 									Type:     schema.TypeString,
 									Optional: true,
 									Computed: true,
