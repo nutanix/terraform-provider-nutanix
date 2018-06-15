@@ -85,8 +85,7 @@ func resourceNutanixCategoryKeyRead(d *schema.ResourceData, meta interface{}) er
 func resourceNutanixCategoryKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 
-	log.Printf("Destroying the category with the name %s", d.Id())
-	fmt.Printf("Destroying the category with the name %s", d.Id())
+	log.Printf("[Debug] Destroying the category with the name %s", d.Id())
 
 	if err := conn.V3.DeleteCategoryKey(d.Id()); err != nil {
 		return err
