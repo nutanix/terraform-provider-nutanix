@@ -47,14 +47,16 @@ func dataSourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error 
 	if err := d.Set("availability_zone_reference", getReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
 		return err
 	}
+	cluster := make(map[string]interface{})
+	cl := ""
 	if resp.Status.ClusterReference != nil {
-		if err := d.Set("cluster_reference", getClusterReferenceValues(resp.Status.ClusterReference)); err != nil {
-			return err
-		}
-
-		d.Set("cluster_reference_name", utils.StringValue(resp.Status.ClusterReference.Name))
+		cluster = getClusterReferenceValues(resp.Status.ClusterReference)
+		cl = utils.StringValue(resp.Status.ClusterReference.Name)
 	}
-
+	if err := d.Set("cluster_reference", cluster); err != nil {
+		return err
+	}
+	d.Set("cluster_reference_name", cl)
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
 	d.Set("name", utils.StringValue(resp.Status.Name))
 	d.Set("description", utils.StringValue(resp.Status.Description))
