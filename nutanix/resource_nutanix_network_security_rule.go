@@ -690,8 +690,6 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 	request.Spec = spec
 	request.Metadata = metadata
 
-	utils.PrintToJSON(request, "UPDATE REQUEST ###")
-
 	_, errUpdate := conn.V3.UpdateNetworkSecurityRule(d.Id(), request)
 
 	if errUpdate != nil {

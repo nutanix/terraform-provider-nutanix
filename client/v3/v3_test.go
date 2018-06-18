@@ -8,6 +8,12 @@ import (
 )
 
 func TestNewV3Client(t *testing.T) {
+	cred := client.Credentials{URL: "foo.com", Username: "username", Password: "password", Port: "", Endpoint: "", Insecure: true}
+	c, _ := NewV3Client(cred)
+
+	cred2 := client.Credentials{URL: "^^^", Username: "username", Password: "password", Port: "", Endpoint: "", Insecure: true}
+	c2, _ := NewV3Client(cred2)
+
 	type args struct {
 		credentials client.Credentials
 	}
@@ -17,7 +23,18 @@ func TestNewV3Client(t *testing.T) {
 		want    *Client
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			"test one",
+			args{cred},
+			c,
+			false,
+		},
+		{
+			"test one",
+			args{cred2},
+			c2,
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
