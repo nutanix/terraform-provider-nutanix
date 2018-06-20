@@ -7,9 +7,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 //Operations ...

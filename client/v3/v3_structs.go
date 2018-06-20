@@ -1739,9 +1739,9 @@ type NetworkSecurityRuleIntentResource struct {
 
 //NetworkSecurityRuleListIntentResponse Response object for intentful operation of network_security_rules
 type NetworkSecurityRuleListIntentResponse struct {
-	APIVersion string                              `json:"api_version"`
-	Entities   []NetworkSecurityRuleIntentResource `json:"entities,omitempty" bson:"entities,omitempty"`
-	Metadata   ListMetadataOutput                  `json:"metadata"`
+	APIVersion string                               `json:"api_version"`
+	Entities   []*NetworkSecurityRuleIntentResource `json:"entities,omitempty" bson:"entities,omitempty"`
+	Metadata   *ListMetadataOutput                  `json:"metadata"`
 }
 
 //VolumeGroupInput Represents the request body for create volume_grop request
