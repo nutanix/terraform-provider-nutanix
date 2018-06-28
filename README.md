@@ -22,7 +22,7 @@ For a slack invite, please contact terraform@nutanix.com from your business emai
 
 ## Current Development Status
 
-**Completed**
+### Completed
 
 * [x] Finished VM resource (VM resource and VM resource test.)
 * [x] Finished subnet resource (Subnet resource and Subnet resource test.)
@@ -38,7 +38,7 @@ For a slack invite, please contact terraform@nutanix.com from your business emai
 * [x] Network security rule resource.
 * [x] Network security rule data source.
 
-**Currently working on: (3rd Milestone)**
+### Currently working on: (3rd Milestone)
 
 * [x] Network security rules data source.
 * [x] Subnets data source.
@@ -46,10 +46,10 @@ For a slack invite, please contact terraform@nutanix.com from your business emai
 * [x] Volume group resource.
 * [x] Volume group datasource.
 * [x] Volume groups datasource.
-* [ ] Documentation for Resources - (partial).
-* [ ] Documentation for Datasources - (partial).
+* [x] Documentation for Resources.s
+* [x] Documentation for Datasources.
 
-**Issues**
+### Issues
 
 * See open issues on GitHub issues
 
@@ -65,7 +65,7 @@ For a slack invite, please contact terraform@nutanix.com from your business emai
 
 * [Go](https://golang.org/doc/install) 1.9+ (to build the provider plugin)
 
-## Provider Use
+### Provider Use
 
 The Terraform Nutanix provider is designed to work with Nutanix Prism Central, such that you can manage one or more Prism Element clusters at scale. AOS/PC 5.6.0 or higher is required, as this Provider makes exclusive use of the v3 APIs
 
@@ -117,19 +117,19 @@ The following keys can be used to configure the provider.
 We've got a handful of resources outside of this repository that will help users understand the interactions between terraform and Nutanix
 
 * YouTube
-  _ Overview Video: https://www.youtube.com/watch?v=V8_Lu1mxV6g
-  _ Working with images: https://www.youtube.com/watch?v=IW0eQevZ73I
+  _ Overview Video: [](https://www.youtube.com/watch?v=V8_Lu1mxV6g)
+  _ Working with images: [](https://www.youtube.com/watch?v=IW0eQevZ73I)
 * Nutanix GitHub
-  _ https://github.com/nutanix/terraform-provider-nutanix
+  _ [](https://github.com/nutanix/terraform-provider-nutanix)
   _ Private repo until code goes upstream
 * Jon’s GitHub
-  _ https://github.com/JonKohler/ThisOldCloud/tree/master/Terraform-Nutanix
+  _ [](https://github.com/JonKohler/ThisOldCloud/tree/master/Terraform-Nutanix)
   _ Contains sample TF’s and PDFs from the youtube videos
 * Slack channel \* User community slack channel is available on nutanix.slack.com. Email terraform@nutanix.com to gain entry.
 
 ## Roadmap
 
-This provider will be released as Tech Preview at .NEXT New Orleans, and is linked into the HashiCorp community providers page, here: https://www.terraform.io/docs/providers/type/community-index.html
+This provider will be released as Tech Preview at .NEXT New Orleans, and is linked into the HashiCorp community providers page, here: [](https://www.terraform.io/docs/providers/type/community-index.html)
 
 We'll be working with HashiCorp as code stabilizes to upstream this properly, at which time we'll PR this entire plugin to the terraform providers org.
 
@@ -152,7 +152,7 @@ We'll be working with HashiCorp as code stabilizes to upstream this properly, at
 
 #### Golang
 
-https://github.com/golang/go
+[](https://github.com/golang/go)
 
 #### Dep: Go dependency management tool
 
