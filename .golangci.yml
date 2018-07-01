@@ -3,16 +3,29 @@ linters-settings:
     check-shadowing: true
   golint:
     min-confidence: 0
+  gocyclo:
+    min-complexity: 20
+  maligned:
+    suggest-new: true
+  dupl:
+    threshold: 100
   goconst:
     min-len: 2
     min-occurrences: 2
+  depguard:
+    list-type: blacklist
+    packages:
+      # logging is allowed only by logutils.Log, logrus
+      # is allowed to use only in logutils package
+      - github.com/sirupsen/logrus
+  misspell:
+    locale: US
 
 linters:
   enable-all: true
   disable:
     - maligned
-    - dupl
-    - gocyclo
+    - prealloc
     - errcheck
       # errocheck disabled to silience errors here: https://travis-ci.com/nutanix/terraform-provider-nutanix/jobs/131154435
       # Example error:
