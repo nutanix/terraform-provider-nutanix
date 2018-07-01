@@ -51,4 +51,6 @@ jobs:
 matrix:
   fast_finish: true
   allow_failures:
+  - stage: sanity testing
+  - script: make sanity
   - go: tip
