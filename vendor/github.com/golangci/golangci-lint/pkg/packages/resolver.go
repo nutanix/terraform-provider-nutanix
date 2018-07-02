@@ -10,7 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"github.com/golangci/golangci-lint/pkg/fsutils"
+	"github.com/golangci/golangci-lint/pkg/logutils"
 )
 
 type Resolver struct {
@@ -18,9 +19,13 @@ type Resolver struct {
 	buildTags   []string
 
 	skippedDirs []string
+	log         logutils.Log
+
+	wd                  string // working directory
+	importErrorsOccured int    // count of errors because too bad files in packages
 }
 
-func NewResolver(buildTags, excludeDirs []string) (*Resolver, error) {
+func NewResolver(buildTags, excludeDirs []string, log logutils.Log) (*Resolver, error) {
 	excludeDirsMap := map[string]*regexp.Regexp{}
 	for _, dir := range excludeDirs {
 		re, err := regexp.Compile(dir)
@@ -31,9 +36,16 @@ func NewResolver(buildTags, excludeDirs []string) (*Resolver, error) {
 		excludeDirsMap[dir] = re
 	}
 
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("can't get working dir: %s", err)
+	}
+
 	return &Resolver{
 		excludeDirs: excludeDirsMap,
 		buildTags:   buildTags,
+		log:         log,
+		wd:          wd,
 	}, nil
 }
 
@@ -68,7 +80,7 @@ func (r *Resolver) resolveRecursively(root string, prog *Program) error {
 
 	fis, err := ioutil.ReadDir(root)
 	if err != nil {
-		return fmt.Errorf("can't resolve dir %s: %s", root, err)
+		return fmt.Errorf("can't read dir %s: %s", root, err)
 	}
 	// TODO: pass cached fis to build.Context
 
@@ -79,6 +91,15 @@ func (r *Resolver) resolveRecursively(root string, prog *Program) error {
 		}
 
 		subdir := filepath.Join(root, fi.Name())
+
+		// Normalize each subdir because working directory can be one of these subdirs:
+		// working dir = /app/subdir, resolve root is ../, without this normalization
+		// path of subdir will be "../subdir" but it must be ".".
+		// Normalize path before checking is ignored dir.
+		subdir, err := r.normalizePath(subdir)
+		if err != nil {
+			return err
+		}
 
 		if r.isIgnoredDir(subdir) {
 			r.skippedDirs = append(r.skippedDirs, subdir)
@@ -93,7 +114,7 @@ func (r *Resolver) resolveRecursively(root string, prog *Program) error {
 	return nil
 }
 
-func (r Resolver) resolveDir(dir string, prog *Program) error {
+func (r *Resolver) resolveDir(dir string, prog *Program) error {
 	// TODO: fork build.Import to reuse AST parsing
 	bp, err := prog.bctx.ImportDir(dir, build.ImportComment|build.IgnoreVendor)
 	if err != nil {
@@ -102,7 +123,14 @@ func (r Resolver) resolveDir(dir string, prog *Program) error {
 			return nil
 		}
 
-		return fmt.Errorf("can't resolve dir %s: %s", dir, err)
+		err = fmt.Errorf("can't import dir %q: %s", dir, err)
+		r.importErrorsOccured++
+		if r.importErrorsOccured >= 10 {
+			return err
+		}
+
+		r.log.Warnf("Can't analyze dir %q: %s", dir, err)
+		return nil
 	}
 
 	pkg := Package{
@@ -118,9 +146,11 @@ func (r Resolver) addFakePackage(filePath string, prog *Program) {
 	// do it.
 	p := Package{
 		bp: &build.Package{
+			// TODO: detect is it test file or not: without that we can't analyze only one test file
 			GoFiles: []string{filePath},
 		},
 		isFake: true,
+		dir:    filepath.Dir(filePath),
 	}
 	prog.addPackage(&p)
 }
@@ -128,7 +158,7 @@ func (r Resolver) addFakePackage(filePath string, prog *Program) {
 func (r Resolver) Resolve(paths ...string) (prog *Program, err error) {
 	startedAt := time.Now()
 	defer func() {
-		logrus.Infof("Paths resolving took %s: %s", time.Since(startedAt), prog)
+		r.log.Infof("Paths resolving took %s: %s", time.Since(startedAt), prog)
 	}()
 
 	if len(paths) == 0 {
@@ -141,25 +171,24 @@ func (r Resolver) Resolve(paths ...string) (prog *Program, err error) {
 		bctx: bctx,
 	}
 
-	root, err := os.Getwd()
-	if err != nil {
-		return nil, fmt.Errorf("can't get working dir: %s", err)
-	}
-
 	for _, path := range paths {
-		if err := r.resolvePath(path, prog, root); err != nil {
+		if err := r.resolvePath(path, prog); err != nil {
 			return nil, err
 		}
 	}
 
 	if len(r.skippedDirs) != 0 {
-		logrus.Infof("Skipped dirs: %s", r.skippedDirs)
+		r.log.Infof("Skipped dirs: %s", r.skippedDirs)
 	}
 
 	return prog, nil
 }
 
-func (r *Resolver) resolvePath(path string, prog *Program, root string) error {
+func (r *Resolver) normalizePath(path string) (string, error) {
+	return fsutils.ShortestRelPath(path, r.wd)
+}
+
+func (r *Resolver) resolvePath(path string, prog *Program) error {
 	needRecursive := strings.HasSuffix(path, "/...")
 	if needRecursive {
 		path = filepath.Dir(path)
@@ -171,14 +200,9 @@ func (r *Resolver) resolvePath(path string, prog *Program, root string) error {
 	}
 	path = evalPath
 
-	if filepath.IsAbs(path) {
-		var relPath string
-		relPath, err = filepath.Rel(root, path)
-		if err != nil {
-			return fmt.Errorf("can't get relative path for path %s and root %s: %s",
-				path, root, err)
-		}
-		path = relPath
+	path, err = r.normalizePath(path)
+	if err != nil {
+		return err
 	}
 
 	if needRecursive {

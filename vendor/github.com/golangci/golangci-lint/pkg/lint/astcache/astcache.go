@@ -8,7 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/sirupsen/logrus"
+	"github.com/golangci/golangci-lint/pkg/logutils"
 	"golang.org/x/tools/go/loader"
 )
 
@@ -20,13 +20,15 @@ type File struct {
 }
 
 type Cache struct {
-	m map[string]*File
-	s []*File
+	m   map[string]*File
+	s   []*File
+	log logutils.Log
 }
 
-func NewCache() *Cache {
+func NewCache(log logutils.Log) *Cache {
 	return &Cache{
-		m: map[string]*File{},
+		m:   map[string]*File{},
+		log: log,
 	}
 }
 
@@ -40,7 +42,7 @@ func (c Cache) GetOrParse(filename string) *File {
 		return f
 	}
 
-	logrus.Infof("Parse AST for file %s on demand", filename)
+	c.log.Infof("Parse AST for file %s on demand", filename)
 	c.parseFile(filename, nil)
 	return c.m[filename]
 }
@@ -60,10 +62,8 @@ func (c *Cache) prepareValidFiles() {
 	c.s = files
 }
 
-func LoadFromProgram(prog *loader.Program) (*Cache, error) {
-	c := &Cache{
-		m: map[string]*File{},
-	}
+func LoadFromProgram(prog *loader.Program, log logutils.Log) (*Cache, error) {
+	c := NewCache(log)
 
 	root, err := os.Getwd()
 	if err != nil {
@@ -79,7 +79,7 @@ func LoadFromProgram(prog *loader.Program) (*Cache, error) {
 
 			relPath, err := filepath.Rel(root, pos.Filename)
 			if err != nil {
-				logrus.Warnf("Can't get relative path for %s and %s: %s",
+				c.log.Warnf("Can't get relative path for %s and %s: %s",
 					root, pos.Filename, err)
 				continue
 			}
@@ -108,12 +108,13 @@ func (c *Cache) parseFile(filePath string, fset *token.FileSet) {
 		Err:  err,
 		Name: filePath,
 	}
+	if err != nil {
+		c.log.Warnf("Can't parse AST of %s: %s", filePath, err)
+	}
 }
 
-func LoadFromFiles(files []string) (*Cache, error) {
-	c := &Cache{
-		m: map[string]*File{},
-	}
+func LoadFromFiles(files []string, log logutils.Log) (*Cache, error) { //nolint:unparam
+	c := NewCache(log)
 
 	fset := token.NewFileSet()
 	for _, filePath := range files {

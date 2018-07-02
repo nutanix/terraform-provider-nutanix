@@ -25,7 +25,6 @@ sanity:
 	golangci-lint run
 
 deps:
-	dep ensure -v
 	dep status
 
 tools:
