@@ -97,6 +97,12 @@
   version = "v3.5.1"
 
 [[projects]]
+  name = "github.com/client9/misspell"
+  packages = ["."]
+  revision = "b90dc15cfd220ecf8bbc9043ecb928cef381f011"
+  version = "v0.3.4"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -155,28 +161,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/golangci/go-tools"
-  packages = [
-    "callgraph",
-    "callgraph/static",
-    "cmd/megacheck",
-    "deprecated",
-    "functions",
-    "internal/sharedcheck",
-    "lint",
-    "lint/lintutil",
-    "simple",
-    "ssa",
-    "ssa/ssautil",
-    "staticcheck",
-    "staticcheck/vrp",
-    "unused",
-    "version"
-  ]
-  revision = "e37cd5dbe6dac91e427e242d7fb61cc92201c8bf"
-
-[[projects]]
-  branch = "master"
   name = "github.com/golangci/goconst"
   packages = ["."]
   revision = "041c5f2b40f3dd334a4a6ee6a3f84ca3fc70680a"
@@ -202,8 +186,10 @@
     "cmd/golangci-lint",
     "pkg/commands",
     "pkg/config",
+    "pkg/exitcodes",
     "pkg/fsutils",
     "pkg/golinters",
+    "pkg/goutils",
     "pkg/lint",
     "pkg/lint/astcache",
     "pkg/lint/linter",
@@ -211,12 +197,13 @@
     "pkg/logutils",
     "pkg/packages",
     "pkg/printers",
+    "pkg/report",
     "pkg/result",
     "pkg/result/processors",
     "pkg/timeutils"
   ]
-  revision = "7c70250d8ca7824dace80dd9e58cc3faa09cb9b0"
-  version = "v1.6.1"
+  revision = "1774bf22a26aa1203677a947092345d1e61e6e26"
+  version = "v1.9.1"
 
 [[projects]]
   branch = "master"
@@ -236,12 +223,6 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/golangci/lint"
-  packages = ["."]
-  revision = "e1cc50c0cfa0e058f40ced1b3d54b86014440c91"
-
-[[projects]]
-  branch = "master"
   name = "github.com/golangci/lint-1"
   packages = ["."]
   revision = "4bf9709227d15e5f14c84a381e315a4695c4a372"
@@ -251,6 +232,12 @@
   name = "github.com/golangci/maligned"
   packages = ["."]
   revision = "b1d89398deca2fd3f8578e5a9551e819bd01ca5f"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/golangci/prealloc"
+  packages = ["."]
+  revision = "215b22d4de21190b80ce05e7d8466677c1aa3223"
 
 [[projects]]
   branch = "master"
@@ -702,14 +689,21 @@
   packages = [
     "go/ast/astutil",
     "go/buildutil",
+    "go/callgraph",
+    "go/callgraph/cha",
+    "go/callgraph/rta",
+    "go/callgraph/static",
     "go/gcexportdata",
     "go/internal/gcimporter",
     "go/loader",
+    "go/ssa",
+    "go/ssa/ssautil",
     "go/types/typeutil",
     "imports",
     "internal/fastwalk"
   ]
   revision = "8c39fb57ad842377bfea6ab5eff7608e4e8f6765"
+  source = "github.com/golangci/tools"
 
 [[projects]]
   branch = "master"
@@ -758,10 +752,40 @@
 
 [[projects]]
   branch = "master"
+  name = "honnef.co/go/tools"
+  packages = [
+    "deprecated",
+    "functions",
+    "internal/sharedcheck",
+    "lint",
+    "lint/lintutil",
+    "simple",
+    "staticcheck",
+    "staticcheck/vrp",
+    "unused",
+    "version"
+  ]
+  revision = "986cd2acf8dbf500b75aef5636a8107de6044e63"
+  source = "github.com/golangci/go-tools"
+
+[[projects]]
+  branch = "master"
   name = "mvdan.cc/interfacer"
   packages = ["check"]
-  revision = "87cc93d81c1c4e460392bd89c6eb500f2c4cf629"
-  source = "github.com/golangci/interfacer"
+  revision = "822e100dd73a2677e406ccc437efdb4a82e67033"
+
+[[projects]]
+  branch = "master"
+  name = "mvdan.cc/lint"
+  packages = ["."]
+  revision = "adc824a0674b99099789b6188a058d485eaf61c0"
+
+[[projects]]
+  branch = "fix-crash-on-nil-constant"
+  name = "mvdan.cc/unparam"
+  packages = ["check"]
+  revision = "f30d69ad8b55690d0e814cdd96e955834e0d0ee1"
+  source = "github.com/golangci/unparam"
 
 [[projects]]
   branch = "master"
@@ -778,6 +802,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a1bb5437b0149c99b19e6670c84d252f9bd2207b8411d6675a462708ecdddfc8"
+  inputs-digest = "9a7bf09a5692f7a393738d9ca617cefa15e1b8478b39f9ffb003b87160bd3edb"
   solver-name = "gps-cdcl"
   solver-version = 1
