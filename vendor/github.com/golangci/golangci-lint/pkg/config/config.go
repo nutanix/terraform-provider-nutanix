@@ -4,16 +4,21 @@ import (
 	"time"
 )
 
-type OutFormat string
-
 const (
 	OutFormatJSON              = "json"
 	OutFormatLineNumber        = "line-number"
 	OutFormatColoredLineNumber = "colored-line-number"
 	OutFormatTab               = "tab"
+	OutFormatCheckstyle        = "checkstyle"
 )
 
-var OutFormats = []string{OutFormatColoredLineNumber, OutFormatLineNumber, OutFormatJSON, OutFormatTab}
+var OutFormats = []string{
+	OutFormatColoredLineNumber,
+	OutFormatLineNumber,
+	OutFormatJSON,
+	OutFormatTab,
+	OutFormatCheckstyle,
+}
 
 type ExcludePattern struct {
 	Pattern string
@@ -23,14 +28,16 @@ type ExcludePattern struct {
 
 var DefaultExcludePatterns = []ExcludePattern{
 	{
-		Pattern: "Error return value of .((os\\.)?std(out|err)\\..*|.*Close|.*Flush|os\\.Remove(All)?|.*printf?|os\\.(Un)?Setenv). is not checked",
-		Linter:  "errcheck",
-		Why:     "Almost all programs ignore errors on these functions and in most cases it's ok",
+		Pattern: "Error return value of .((os\\.)?std(out|err)\\..*|.*Close" +
+			"|.*Flush|os\\.Remove(All)?|.*printf?|os\\.(Un)?Setenv). is not checked",
+		Linter: "errcheck",
+		Why:    "Almost all programs ignore errors on these functions and in most cases it's ok",
 	},
 	{
-		Pattern: "(comment on exported (method|function)|should have( a package)? comment|comment should be of the form)",
-		Linter:  "golint",
-		Why:     "Annoying issue about not having a comment. The rare codebase has such comments",
+		Pattern: "(comment on exported (method|function|type|const)|" +
+			"should have( a package)? comment|comment should be of the form)",
+		Linter: "golint",
+		Why:    "Annoying issue about not having a comment. The rare codebase has such comments",
 	},
 	{
 		Pattern: "func name will be used as test\\.Test.* by other packages, and that stutters; consider calling this",
@@ -85,6 +92,7 @@ func GetDefaultExcludePatternsStrings() []string {
 
 type Run struct {
 	IsVerbose           bool `mapstructure:"verbose"`
+	Silent              bool
 	CPUProfilePath      string
 	MemProfilePath      string
 	Concurrency         int
@@ -112,7 +120,8 @@ type LintersSettings struct {
 		CheckAssignToBlank  bool `mapstructure:"check-blank"`
 	}
 	Govet struct {
-		CheckShadowing bool `mapstructure:"check-shadowing"`
+		CheckShadowing       bool `mapstructure:"check-shadowing"`
+		UseInstalledPackages bool `mapstructure:"use-installed-packages"`
 	}
 	Golint struct {
 		MinConfidence float64 `mapstructure:"min-confidence"`
@@ -144,6 +153,53 @@ type LintersSettings struct {
 		Packages      []string
 		IncludeGoRoot bool `mapstructure:"include-go-root"`
 	}
+	Misspell struct {
+		Locale string
+	}
+	Unused struct {
+		CheckExported bool `mapstructure:"check-exported"`
+	}
+
+	Lll      LllSettings
+	Unparam  UnparamSettings
+	Nakedret NakedretSettings
+	Prealloc PreallocSettings
+}
+
+type LllSettings struct {
+	LineLength int `mapstructure:"line-length"`
+}
+
+type UnparamSettings struct {
+	CheckExported bool `mapstructure:"check-exported"`
+	Algo          string
+}
+
+type NakedretSettings struct {
+	MaxFuncLines int `mapstructure:"max-func-lines"`
+}
+
+type PreallocSettings struct {
+	Simple     bool
+	RangeLoops bool `mapstructure:"range-loops"`
+	ForLoops   bool `mapstructure:"for-loops"`
+}
+
+var defaultLintersSettings = LintersSettings{
+	Lll: LllSettings{
+		LineLength: 120,
+	},
+	Unparam: UnparamSettings{
+		Algo: "cha",
+	},
+	Nakedret: NakedretSettings{
+		MaxFuncLines: 30,
+	},
+	Prealloc: PreallocSettings{
+		Simple:     true,
+		RangeLoops: true,
+		ForLoops:   false,
+	},
 }
 
 type Linters struct {
@@ -183,4 +239,10 @@ type Config struct { //nolint:maligned
 	Issues          Issues
 
 	InternalTest bool // Option is used only for testing golangci-lint code, don't use it
+}
+
+func NewDefault() *Config {
+	return &Config{
+		LintersSettings: defaultLintersSettings,
+	}
 }

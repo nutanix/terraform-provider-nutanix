@@ -2,13 +2,21 @@ package golinters
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
-	megacheckAPI "github.com/golangci/go-tools/cmd/megacheck"
+	"golang.org/x/tools/go/loader"
+	"golang.org/x/tools/go/ssa"
+	"honnef.co/go/tools/lint"
+	"honnef.co/go/tools/lint/lintutil"
+	"honnef.co/go/tools/simple"
+	"honnef.co/go/tools/staticcheck"
+	"honnef.co/go/tools/unused"
+
+	"github.com/golangci/golangci-lint/pkg/fsutils"
 	"github.com/golangci/golangci-lint/pkg/lint/linter"
 	"github.com/golangci/golangci-lint/pkg/result"
-	"github.com/sirupsen/logrus"
 )
 
 type Megacheck struct {
@@ -51,20 +59,51 @@ func (m Megacheck) Desc() string {
 	return descs[m.Name()]
 }
 
+func prettifyCompilationError(err error) error {
+	i := TypeCheck{}.parseError(err)
+	if i == nil {
+		return err
+	}
+
+	shortFilename, pathErr := fsutils.ShortestRelPath(i.Pos.Filename, "")
+	if pathErr != nil {
+		return err
+	}
+
+	errText := shortFilename
+	if i.Line() != 0 {
+		errText += fmt.Sprintf(":%d", i.Line())
+	}
+	errText += fmt.Sprintf(": %s", i.Text)
+	return errors.New(errText)
+}
+
 func (m Megacheck) Run(ctx context.Context, lintCtx *linter.Context) ([]result.Issue, error) {
 	if len(lintCtx.NotCompilingPackages) != 0 {
 		var packages []string
+		var errors []error
 		for _, p := range lintCtx.NotCompilingPackages {
 			packages = append(packages, p.String())
+			errors = append(errors, p.Errors...)
 		}
-		logrus.Warnf("Can't run megacheck because of compilation errors in packages "+
-			"%s: run `typecheck` linter to see errors", packages)
+
+		warnText := fmt.Sprintf("Can't run megacheck because of compilation errors in packages %s",
+			packages)
+		if len(errors) != 0 {
+			warnText += fmt.Sprintf(": %s", prettifyCompilationError(errors[0]))
+			if len(errors) > 1 {
+				const runCmd = "golangci-lint run --no-config --disable-all -E typecheck"
+				warnText += fmt.Sprintf(" and %d more errors: run `%s` to see all errors", len(errors)-1, runCmd)
+			}
+		}
+		lintCtx.Log.Warnf("%s", warnText)
+
 		// megacheck crashes if there are not compiling packages
 		return nil, nil
 	}
 
-	issues := megacheckAPI.Run(lintCtx.Program, lintCtx.LoaderConfig, lintCtx.SSAProgram,
-		m.StaticcheckEnabled, m.GosimpleEnabled, m.UnusedEnabled)
+	issues := runMegacheck(lintCtx.Program, lintCtx.SSAProgram, lintCtx.LoaderConfig,
+		m.StaticcheckEnabled, m.GosimpleEnabled, m.UnusedEnabled, lintCtx.Settings().Unused.CheckExported)
 	if len(issues) == 0 {
 		return nil, nil
 	}
@@ -78,4 +117,36 @@ func (m Megacheck) Run(ctx context.Context, lintCtx *linter.Context) ([]result.I
 		})
 	}
 	return res, nil
+}
+
+func runMegacheck(program *loader.Program, ssaProg *ssa.Program, conf *loader.Config,
+	enableStaticcheck, enableGosimple, enableUnused, checkExportedUnused bool) []lint.Problem {
+
+	var checkers []lintutil.CheckerConfig
+
+	if enableStaticcheck {
+		sac := staticcheck.NewChecker()
+		checkers = append(checkers, lintutil.CheckerConfig{
+			Checker: sac,
+		})
+	}
+
+	if enableGosimple {
+		sc := simple.NewChecker()
+		checkers = append(checkers, lintutil.CheckerConfig{
+			Checker: sc,
+		})
+	}
+
+	if enableUnused {
+		uc := unused.NewChecker(unused.CheckAll)
+		uc.WholeProgram = checkExportedUnused
+		uc.ConsiderReflection = true
+		checkers = append(checkers, lintutil.CheckerConfig{
+			Checker: unused.NewLintChecker(uc),
+		})
+	}
+
+	fs := lintutil.FlagSet("megacheck")
+	return lintutil.ProcessFlagSet(checkers, fs, program, ssaProg, conf)
 }
