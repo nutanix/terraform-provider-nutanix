@@ -10,11 +10,12 @@ import (
 	"github.com/golangci/golangci-lint/pkg/config"
 	"github.com/golangci/golangci-lint/pkg/golinters"
 	"github.com/golangci/golangci-lint/pkg/lint/linter"
-	"github.com/sirupsen/logrus"
+	"github.com/golangci/golangci-lint/pkg/logutils"
 )
 
 func AllPresets() []string {
-	return []string{linter.PresetBugs, linter.PresetUnused, linter.PresetFormatting, linter.PresetStyle, linter.PresetComplexity, linter.PresetPerformance}
+	return []string{linter.PresetBugs, linter.PresetUnused, linter.PresetFormatting,
+		linter.PresetStyle, linter.PresetComplexity, linter.PresetPerformance}
 }
 
 func allPresetsSet() map[string]bool {
@@ -57,6 +58,7 @@ func enableLinterConfigs(lcs []linter.Config, isEnabled func(lc *linter.Config) 
 func GetAllSupportedLinterConfigs() []linter.Config {
 	lcs := []linter.Config{
 		linter.NewConfig(golinters.Govet{}).
+			WithFullImport(). // TODO: depend on it's configuration here
 			WithPresets(linter.PresetBugs).
 			WithSpeed(4).
 			WithURL("https://golang.org/cmd/vet/"),
@@ -161,6 +163,28 @@ func GetAllSupportedLinterConfigs() []linter.Config {
 			WithPresets(linter.PresetStyle).
 			WithSpeed(6).
 			WithURL("https://github.com/OpenPeeDeeP/depguard"),
+		linter.NewConfig(golinters.Misspell{}).
+			WithPresets(linter.PresetStyle).
+			WithSpeed(7).
+			WithURL("https://github.com/client9/misspell"),
+		linter.NewConfig(golinters.Lll{}).
+			WithPresets(linter.PresetStyle).
+			WithSpeed(10).
+			WithURL("https://github.com/walle/lll"),
+		linter.NewConfig(golinters.Unparam{}).
+			WithPresets(linter.PresetUnused).
+			WithSpeed(3).
+			WithFullImport().
+			WithSSA().
+			WithURL("https://github.com/mvdan/unparam"),
+		linter.NewConfig(golinters.Nakedret{}).
+			WithPresets(linter.PresetComplexity).
+			WithSpeed(10).
+			WithURL("https://github.com/alexkohler/nakedret"),
+		linter.NewConfig(golinters.Prealloc{}).
+			WithPresets(linter.PresetPerformance).
+			WithSpeed(8).
+			WithURL("https://github.com/alexkohler/prealloc"),
 	}
 
 	if os.Getenv("GOLANGCI_COM_RUN") == "1" {
@@ -169,6 +193,11 @@ func GetAllSupportedLinterConfigs() []linter.Config {
 			golinters.Dupl{}.Name():      true, // annoying
 			golinters.Maligned{}.Name():  true, // rarely usable
 			golinters.TypeCheck{}.Name(): true, // annoying because of different building envs
+			golinters.Misspell{}.Name():  true, // unsure about false-positives number
+			golinters.Lll{}.Name():       true, // annoying
+			golinters.Unparam{}.Name():   true, // need to check it first
+			golinters.Nakedret{}.Name():  true, // annoying
+			golinters.Prealloc{}.Name():  true, // annoying
 		}
 		return enableLinterConfigs(lcs, func(lc *linter.Config) bool {
 			return !disabled[lc.Linter.Name()]
@@ -308,7 +337,10 @@ func GetAllLinterConfigsForPreset(p string) []linter.Config {
 	return ret
 }
 
-func getEnabledLintersSet(lcfg *config.Linters, enabledByDefaultLinters []linter.Config) map[string]*linter.Config { // nolint:gocyclo
+// nolint:gocyclo
+func getEnabledLintersSet(lcfg *config.Linters,
+	enabledByDefaultLinters []linter.Config) map[string]*linter.Config {
+
 	resultLintersSet := map[string]*linter.Config{}
 	switch {
 	case len(lcfg.Presets) != 0:
@@ -398,7 +430,7 @@ func optimizeLintersSet(linters map[string]*linter.Config) {
 	linters[m.Name()] = &lc
 }
 
-func GetEnabledLinters(cfg *config.Config) ([]linter.Config, error) {
+func GetEnabledLinters(cfg *config.Config, log logutils.Log) ([]linter.Config, error) {
 	if err := validateEnabledDisabledLintersConfig(&cfg.Linters); err != nil {
 		return nil, err
 	}
@@ -410,21 +442,21 @@ func GetEnabledLinters(cfg *config.Config) ([]linter.Config, error) {
 		resultLinters = append(resultLinters, *lc)
 	}
 
-	verbosePrintLintersStatus(cfg, resultLinters)
+	verbosePrintLintersStatus(cfg, resultLinters, log)
 
 	return resultLinters, nil
 }
 
-func verbosePrintLintersStatus(cfg *config.Config, lcs []linter.Config) {
+func verbosePrintLintersStatus(cfg *config.Config, lcs []linter.Config, log logutils.Log) {
 	var linterNames []string
 	for _, lc := range lcs {
 		linterNames = append(linterNames, lc.Linter.Name())
 	}
 	sort.StringSlice(linterNames).Sort()
-	logrus.Infof("Active %d linters: %s", len(linterNames), linterNames)
+	log.Infof("Active %d linters: %s", len(linterNames), linterNames)
 
 	if len(cfg.Linters.Presets) != 0 {
 		sort.StringSlice(cfg.Linters.Presets).Sort()
-		logrus.Infof("Active presets: %s", cfg.Linters.Presets)
+		log.Infof("Active presets: %s", cfg.Linters.Presets)
 	}
 }

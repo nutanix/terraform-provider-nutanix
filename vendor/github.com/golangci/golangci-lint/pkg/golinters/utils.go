@@ -12,7 +12,7 @@ import (
 	"github.com/golangci/golangci-lint/pkg/config"
 )
 
-func formatCode(code string, cfg *config.Config) string {
+func formatCode(code string, _ *config.Config) string {
 	if strings.Contains(code, "`") {
 		return code // TODO: properly escape or remove
 	}
@@ -20,7 +20,7 @@ func formatCode(code string, cfg *config.Config) string {
 	return fmt.Sprintf("`%s`", code)
 }
 
-func formatCodeBlock(code string, cfg *config.Config) string {
+func formatCodeBlock(code string, _ *config.Config) string {
 	if strings.Contains(code, "`") {
 		return code // TODO: properly escape or remove
 	}
@@ -35,7 +35,7 @@ func getASTFilesForPkg(ctx *linter.Context, pkg *packages.Package) ([]*ast.File,
 	for _, filename := range filenames {
 		f := ctx.ASTCache.Get(filename)
 		if f == nil {
-			return nil, nil, fmt.Errorf("no AST for file %s in cache", filename)
+			return nil, nil, fmt.Errorf("no AST for file %s in cache: %+v", filename, *ctx.ASTCache)
 		}
 
 		if f.Err != nil {
