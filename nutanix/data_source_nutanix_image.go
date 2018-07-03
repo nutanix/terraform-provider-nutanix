@@ -65,7 +65,7 @@ func dataSourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("source_uri", resp.Status.Resources.SourceURI)
 	d.Set("size_bytes", utils.Int64Value(resp.Status.Resources.SizeBytes))
 
-	var uriList []string
+	uriList := make([]string, 0, len(resp.Status.Resources.RetrievalURIList))
 	for _, uri := range resp.Status.Resources.RetrievalURIList {
 		uriList = append(uriList, utils.StringValue(uri))
 	}

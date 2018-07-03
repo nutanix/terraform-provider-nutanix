@@ -76,7 +76,9 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 	}
 
 	if networkSecurityRueUUID != nil {
-		return fmt.Errorf("network security rule already with name %s exists in the given cluster, UUID %s", d.Get("name").(string), *networkSecurityRueUUID)
+		return fmt.Errorf(
+			"network security rule already with name %s exists in the given cluster, UUID %s",
+			d.Get("name").(string), *networkSecurityRueUUID)
 	}
 
 	//set request

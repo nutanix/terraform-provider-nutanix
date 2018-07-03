@@ -207,7 +207,7 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	var uriList []string
+	uriList := make([]string, 0, len(resp.Status.Resources.RetrievalURIList))
 	for _, uri := range resp.Status.Resources.RetrievalURIList {
 		uriList = append(uriList, utils.StringValue(uri))
 	}
