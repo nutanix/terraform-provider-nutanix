@@ -22,7 +22,13 @@ var (
 func setup() {
 	mux = http.NewServeMux()
 	server = httptest.NewServer(mux)
-	c, _ = client.NewClient(&client.Credentials{URL: "", Username: "username", Password: "password", Port: "", Endpoint: "", Insecure: true})
+	c, _ = client.NewClient(&client.Credentials{
+		URL:      "",
+		Username: "username",
+		Password: "password",
+		Port:     "",
+		Endpoint: "",
+		Insecure: true})
 	c.BaseURL, _ = url.Parse(server.URL)
 }
 
@@ -40,7 +46,7 @@ func TestOperations_CreateVM(t *testing.T) {
 		}
 
 		expected := map[string]interface{}{
-			"api_version": "3.0",
+			"api_version": "3.1",
 			"metadata": map[string]interface{}{
 				"kind": "vm",
 			},
@@ -64,7 +70,7 @@ func TestOperations_CreateVM(t *testing.T) {
 		}
 
 		fmt.Fprintf(w, `{
-			"api_version": "3.0",
+			"api_version": "3.1",
 			"metadata": {
 				"kind": "vm",
 				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
@@ -92,7 +98,7 @@ func TestOperations_CreateVM(t *testing.T) {
 			},
 			args{
 				&VMIntentInput{
-					APIVersion: utils.String("3.0"),
+					APIVersion: utils.String("3.1"),
 					Metadata: &Metadata{
 						Kind: utils.String("vm"),
 					},
@@ -106,7 +112,7 @@ func TestOperations_CreateVM(t *testing.T) {
 				},
 			},
 			&VMIntentResponse{
-				APIVersion: utils.String("3.0"),
+				APIVersion: utils.String("3.1"),
 				Metadata: &Metadata{
 					Kind: utils.String("vm"),
 					UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
@@ -298,7 +304,7 @@ func TestOperations_UpdateVM(t *testing.T) {
 		testHTTPMethod(t, r, http.MethodPut)
 
 		expected := map[string]interface{}{
-			"api_version": "3.0",
+			"api_version": "3.1",
 			"metadata": map[string]interface{}{
 				"kind": "vm",
 			},
@@ -322,7 +328,7 @@ func TestOperations_UpdateVM(t *testing.T) {
 		}
 
 		fmt.Fprintf(w, `{
-			"api_version": "3.0",
+			"api_version": "3.1",
 			"metadata": {
 				"kind": "vm",
 				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
@@ -353,7 +359,7 @@ func TestOperations_UpdateVM(t *testing.T) {
 			args{
 				"cfde831a-4e87-4a75-960f-89b0148aa2cc",
 				&VMIntentInput{
-					APIVersion: utils.String("3.0"),
+					APIVersion: utils.String("3.1"),
 					Metadata: &Metadata{
 						Kind: utils.String("vm"),
 					},
@@ -367,7 +373,7 @@ func TestOperations_UpdateVM(t *testing.T) {
 				},
 			},
 			&VMIntentResponse{
-				APIVersion: utils.String("3.0"),
+				APIVersion: utils.String("3.1"),
 				Metadata: &Metadata{
 					Kind: utils.String("vm"),
 					UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
@@ -401,7 +407,7 @@ func TestOperations_CreateSubnet(t *testing.T) {
 		testHTTPMethod(t, r, http.MethodPost)
 
 		expected := map[string]interface{}{
-			"api_version": "3.0",
+			"api_version": "3.1",
 			"metadata": map[string]interface{}{
 				"kind": "subnet",
 			},
@@ -425,7 +431,7 @@ func TestOperations_CreateSubnet(t *testing.T) {
 		}
 
 		fmt.Fprintf(w, `{
-			"api_version": "3.0",
+			"api_version": "3.1",
 			"metadata": {
 				"kind": "subnet",
 				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
@@ -453,7 +459,7 @@ func TestOperations_CreateSubnet(t *testing.T) {
 			},
 			args{
 				&SubnetIntentInput{
-					APIVersion: utils.String("3.0"),
+					APIVersion: utils.String("3.1"),
 					Metadata: &Metadata{
 						Kind: utils.String("subnet"),
 					},
@@ -467,7 +473,7 @@ func TestOperations_CreateSubnet(t *testing.T) {
 				},
 			},
 			&SubnetIntentResponse{
-				APIVersion: utils.String("3.0"),
+				APIVersion: utils.String("3.1"),
 				Metadata: &Metadata{
 					Kind: utils.String("subnet"),
 					UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
@@ -658,7 +664,7 @@ func TestOperations_UpdateSubnet(t *testing.T) {
 		testHTTPMethod(t, r, http.MethodPut)
 
 		expected := map[string]interface{}{
-			"api_version": "3.0",
+			"api_version": "3.1",
 			"metadata": map[string]interface{}{
 				"kind": "subnet",
 			},
@@ -682,7 +688,7 @@ func TestOperations_UpdateSubnet(t *testing.T) {
 		}
 
 		fmt.Fprintf(w, `{
-			"api_version": "3.0",
+			"api_version": "3.1",
 			"metadata": {
 				"kind": "subnet",
 				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
@@ -713,7 +719,7 @@ func TestOperations_UpdateSubnet(t *testing.T) {
 			args{
 				"cfde831a-4e87-4a75-960f-89b0148aa2cc",
 				&SubnetIntentInput{
-					APIVersion: utils.String("3.0"),
+					APIVersion: utils.String("3.1"),
 					Metadata: &Metadata{
 						Kind: utils.String("subnet"),
 					},
@@ -727,7 +733,7 @@ func TestOperations_UpdateSubnet(t *testing.T) {
 				},
 			},
 			&SubnetIntentResponse{
-				APIVersion: utils.String("3.0"),
+				APIVersion: utils.String("3.1"),
 				Metadata: &Metadata{
 					Kind: utils.String("subnet"),
 					UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
@@ -761,7 +767,7 @@ func TestOperations_CreateImage(t *testing.T) {
 		testHTTPMethod(t, r, http.MethodPost)
 
 		expected := map[string]interface{}{
-			"api_version": "3.0",
+			"api_version": "3.1",
 			"metadata": map[string]interface{}{
 				"kind": "image",
 			},
@@ -784,7 +790,7 @@ func TestOperations_CreateImage(t *testing.T) {
 		}
 
 		fmt.Fprintf(w, `{
-			"api_version": "3.0",
+			"api_version": "3.1",
 			"metadata": {
 				"kind": "image",
 				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
@@ -812,7 +818,7 @@ func TestOperations_CreateImage(t *testing.T) {
 			},
 			args{
 				&ImageIntentInput{
-					APIVersion: utils.String("3.0"),
+					APIVersion: utils.String("3.1"),
 					Metadata: &Metadata{
 						Kind: utils.String("image"),
 					},
@@ -825,7 +831,7 @@ func TestOperations_CreateImage(t *testing.T) {
 				},
 			},
 			&ImageIntentResponse{
-				APIVersion: utils.String("3.0"),
+				APIVersion: utils.String("3.1"),
 				Metadata: &Metadata{
 					Kind: utils.String("image"),
 					UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
@@ -1050,7 +1056,7 @@ func TestOperations_UpdateImage(t *testing.T) {
 		testHTTPMethod(t, r, http.MethodPut)
 
 		expected := map[string]interface{}{
-			"api_version": "3.0",
+			"api_version": "3.1",
 			"metadata": map[string]interface{}{
 				"kind": "image",
 			},
@@ -1073,7 +1079,7 @@ func TestOperations_UpdateImage(t *testing.T) {
 		}
 
 		fmt.Fprintf(w, `{
-			"api_version": "3.0",
+			"api_version": "3.1",
 			"metadata": {
 				"kind": "image",
 				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
@@ -1104,7 +1110,7 @@ func TestOperations_UpdateImage(t *testing.T) {
 			args{
 				"cfde831a-4e87-4a75-960f-89b0148aa2cc",
 				&ImageIntentInput{
-					APIVersion: utils.String("3.0"),
+					APIVersion: utils.String("3.1"),
 					Metadata: &Metadata{
 						Kind: utils.String("image"),
 					},
@@ -1117,7 +1123,7 @@ func TestOperations_UpdateImage(t *testing.T) {
 				},
 			},
 			&ImageIntentResponse{
-				APIVersion: utils.String("3.0"),
+				APIVersion: utils.String("3.1"),
 				Metadata: &Metadata{
 					Kind: utils.String("image"),
 					UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
@@ -1300,8 +1306,13 @@ func TestOperations_CreateOrUpdateCategoryKey(t *testing.T) {
 		{
 			"Test CreateOrUpdateCaegoryKey OK",
 			fields{c},
-			args{&CategoryKey{Description: utils.String("Testing Keys"), Name: utils.String("test_category_key")}},
-			&CategoryKeyStatus{Description: utils.String("Testing Keys"), Name: utils.String("test_category_key"), SystemDefined: utils.Bool(false)},
+			args{&CategoryKey{
+				Description: utils.String("Testing Keys"),
+				Name:        utils.String("test_category_key")}},
+			&CategoryKeyStatus{
+				Description:   utils.String("Testing Keys"),
+				Name:          utils.String("test_category_key"),
+				SystemDefined: utils.Bool(false)},
 			false,
 		},
 	}
@@ -1333,7 +1344,10 @@ func TestOperations_ListCategories(t *testing.T) {
 
 	list := &CategoryKeyListResponse{}
 	list.Entities = make([]*CategoryKeyStatus, 1)
-	list.Entities[0] = &CategoryKeyStatus{Description: utils.String("Testing Keys"), Name: utils.String("test_category_key"), SystemDefined: utils.Bool(false)}
+	list.Entities[0] = &CategoryKeyStatus{
+		Description:   utils.String("Testing Keys"),
+		Name:          utils.String("test_category_key"),
+		SystemDefined: utils.Bool(false)}
 
 	input := &CategoryListMetadata{
 		Length: utils.Int64(1.0),
@@ -1491,7 +1505,10 @@ func TestOperations_ListCategoryValues(t *testing.T) {
 
 	list := &CategoryValueListResponse{}
 	list.Entities = make([]*CategoryValueStatus, 1)
-	list.Entities[0] = &CategoryValueStatus{Description: utils.String("Testing Keys"), Value: utils.String("test_category_value"), SystemDefined: utils.Bool(false)}
+	list.Entities[0] = &CategoryValueStatus{
+		Description:   utils.String("Testing Keys"),
+		Value:         utils.String("test_category_value"),
+		SystemDefined: utils.Bool(false)}
 
 	input := &CategoryListMetadata{
 		Length: utils.Int64(1.0),
@@ -1583,8 +1600,14 @@ func TestOperations_CreateOrUpdateCategoryValue(t *testing.T) {
 		{
 			"Test CreateOrUpdateCategoryValue OK",
 			fields{c},
-			args{"test_category_key", &CategoryValue{Description: utils.String("Testing Value"), Value: utils.String("test_category_value")}},
-			&CategoryValueStatus{Description: utils.String("Testing Value"), Value: utils.String("test_category_value"), Name: utils.String("test_category_key"), SystemDefined: utils.Bool(false)},
+			args{"test_category_key", &CategoryValue{
+				Description: utils.String("Testing Value"),
+				Value:       utils.String("test_category_value")}},
+			&CategoryValueStatus{
+				Description:   utils.String("Testing Value"),
+				Value:         utils.String("test_category_value"),
+				Name:          utils.String("test_category_key"),
+				SystemDefined: utils.Bool(false)},
 			false,
 		},
 	}
@@ -1777,7 +1800,7 @@ func TestOperations_CreateNetworkSecurityRule(t *testing.T) {
 		testHTTPMethod(t, r, http.MethodPost)
 
 		expected := map[string]interface{}{
-			"api_version": "3.0",
+			"api_version": "3.1",
 			"metadata": map[string]interface{}{
 				"kind": "network_security_rule",
 			},
@@ -1798,7 +1821,7 @@ func TestOperations_CreateNetworkSecurityRule(t *testing.T) {
 		}
 
 		fmt.Fprintf(w, `{
-			"api_version": "3.0",
+			"api_version": "3.1",
 			"metadata": {
 				"kind": "network_security_rule",
 				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
@@ -1826,7 +1849,7 @@ func TestOperations_CreateNetworkSecurityRule(t *testing.T) {
 			},
 			args{
 				&NetworkSecurityRuleIntentInput{
-					APIVersion: utils.String("3.0"),
+					APIVersion: utils.String("3.1"),
 					Metadata: &Metadata{
 						Kind: utils.String("network_security_rule"),
 					},
@@ -1838,7 +1861,7 @@ func TestOperations_CreateNetworkSecurityRule(t *testing.T) {
 				},
 			},
 			&NetworkSecurityRuleIntentResponse{
-				APIVersion: utils.String("3.0"),
+				APIVersion: utils.String("3.1"),
 				Metadata: &Metadata{
 					Kind: utils.String("network_security_rule"),
 					UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
@@ -1868,9 +1891,10 @@ func TestOperations_DeleteNetworkSecurityRule(t *testing.T) {
 	setup()
 	defer teardown()
 
-	mux.HandleFunc("/api/nutanix/v3/network_security_rules/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
-		testHTTPMethod(t, r, http.MethodDelete)
-	})
+	mux.HandleFunc("/api/nutanix/v3/network_security_rules/cfde831a-4e87-4a75-960f-89b0148aa2cc",
+		func(w http.ResponseWriter, r *http.Request) {
+			testHTTPMethod(t, r, http.MethodDelete)
+		})
 
 	type fields struct {
 		client *client.Client
@@ -1914,10 +1938,11 @@ func TestOperations_GetNetworkSecurityRule(t *testing.T) {
 	setup()
 	defer teardown()
 
-	mux.HandleFunc("/api/nutanix/v3/network_security_rules/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
-		testHTTPMethod(t, r, http.MethodGet)
-		fmt.Fprint(w, `{"metadata": {"kind":"network_security_rule","uuid":"cfde831a-4e87-4a75-960f-89b0148aa2cc"}}`)
-	})
+	mux.HandleFunc("/api/nutanix/v3/network_security_rules/cfde831a-4e87-4a75-960f-89b0148aa2cc",
+		func(w http.ResponseWriter, r *http.Request) {
+			testHTTPMethod(t, r, http.MethodGet)
+			fmt.Fprint(w, `{"metadata": {"kind":"network_security_rule","uuid":"cfde831a-4e87-4a75-960f-89b0148aa2cc"}}`)
+		})
 
 	response := &NetworkSecurityRuleIntentResponse{}
 	response.Metadata = &Metadata{
@@ -2026,39 +2051,40 @@ func TestOperations_UpdateNetworkSecurityRule(t *testing.T) {
 	setup()
 	defer teardown()
 
-	mux.HandleFunc("/api/nutanix/v3/network_security_rules/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
-		testHTTPMethod(t, r, http.MethodPut)
+	mux.HandleFunc("/api/nutanix/v3/network_security_rules/cfde831a-4e87-4a75-960f-89b0148aa2cc",
+		func(w http.ResponseWriter, r *http.Request) {
+			testHTTPMethod(t, r, http.MethodPut)
 
-		expected := map[string]interface{}{
-			"api_version": "3.0",
-			"metadata": map[string]interface{}{
-				"kind": "network_security_rule",
-			},
-			"spec": map[string]interface{}{
-				"description": "Network Update",
-				"name":        "network.update",
-			},
-		}
+			expected := map[string]interface{}{
+				"api_version": "3.1",
+				"metadata": map[string]interface{}{
+					"kind": "network_security_rule",
+				},
+				"spec": map[string]interface{}{
+					"description": "Network Update",
+					"name":        "network.update",
+				},
+			}
 
-		var v map[string]interface{}
-		err := json.NewDecoder(r.Body).Decode(&v)
-		if err != nil {
-			t.Fatalf("decode json: %v", err)
-		}
+			var v map[string]interface{}
+			err := json.NewDecoder(r.Body).Decode(&v)
+			if err != nil {
+				t.Fatalf("decode json: %v", err)
+			}
 
-		if !reflect.DeepEqual(v, expected) {
-			t.Errorf("Request body\n got=%#v\nwant=%#v", v, expected)
-		}
+			if !reflect.DeepEqual(v, expected) {
+				t.Errorf("Request body\n got=%#v\nwant=%#v", v, expected)
+			}
 
-		fmt.Fprintf(w, `{
-			"api_version": "3.0",
+			fmt.Fprintf(w, `{
+			"api_version": "3.1",
 			"metadata": {
 				"kind": "network_security_rule",
 				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
 			}
 		}`)
 
-	})
+		})
 
 	type fields struct {
 		client *client.Client
@@ -2082,7 +2108,7 @@ func TestOperations_UpdateNetworkSecurityRule(t *testing.T) {
 			args{
 				"cfde831a-4e87-4a75-960f-89b0148aa2cc",
 				&NetworkSecurityRuleIntentInput{
-					APIVersion: utils.String("3.0"),
+					APIVersion: utils.String("3.1"),
 					Metadata: &Metadata{
 						Kind: utils.String("network_security_rule"),
 					},
@@ -2094,7 +2120,7 @@ func TestOperations_UpdateNetworkSecurityRule(t *testing.T) {
 				},
 			},
 			&NetworkSecurityRuleIntentResponse{
-				APIVersion: utils.String("3.0"),
+				APIVersion: utils.String("3.1"),
 				Metadata: &Metadata{
 					Kind: utils.String("network_security_rule"),
 					UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
@@ -2128,7 +2154,7 @@ func TestOperations_CreateVolumeGroup(t *testing.T) {
 		testHTTPMethod(t, r, http.MethodPost)
 
 		expected := map[string]interface{}{
-			"api_version": "3.0",
+			"api_version": "3.1",
 			"metadata": map[string]interface{}{
 				"kind": "volume_group",
 			},
@@ -2151,7 +2177,7 @@ func TestOperations_CreateVolumeGroup(t *testing.T) {
 		}
 
 		fmt.Fprintf(w, `{
-			"api_version": "3.0",
+			"api_version": "3.1",
 			"metadata": {
 				"kind": "volume_group",
 				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
@@ -2177,7 +2203,7 @@ func TestOperations_CreateVolumeGroup(t *testing.T) {
 			fields{c},
 			args{
 				&VolumeGroupInput{
-					APIVersion: utils.String("3.0"),
+					APIVersion: utils.String("3.1"),
 					Metadata: &Metadata{
 						Kind: utils.String("volume_group"),
 					},
@@ -2190,7 +2216,7 @@ func TestOperations_CreateVolumeGroup(t *testing.T) {
 				},
 			},
 			&VolumeGroupResponse{
-				APIVersion: utils.String("3.0"),
+				APIVersion: utils.String("3.1"),
 				Metadata: &Metadata{
 					Kind: utils.String("volume_group"),
 					UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
@@ -2382,7 +2408,7 @@ func TestOperations_UpdateVolumeGroup(t *testing.T) {
 		testHTTPMethod(t, r, http.MethodPut)
 
 		expected := map[string]interface{}{
-			"api_version": "3.0",
+			"api_version": "3.1",
 			"metadata": map[string]interface{}{
 				"kind": "volume_group",
 			},
@@ -2405,7 +2431,7 @@ func TestOperations_UpdateVolumeGroup(t *testing.T) {
 		}
 
 		fmt.Fprintf(w, `{
-			"api_version": "3.0",
+			"api_version": "3.1",
 			"metadata": {
 				"kind": "volume_group",
 				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
@@ -2433,7 +2459,7 @@ func TestOperations_UpdateVolumeGroup(t *testing.T) {
 			args{
 				"cfde831a-4e87-4a75-960f-89b0148aa2cc",
 				&VolumeGroupInput{
-					APIVersion: utils.String("3.0"),
+					APIVersion: utils.String("3.1"),
 					Metadata: &Metadata{
 						Kind: utils.String("volume_group"),
 					},
@@ -2446,7 +2472,7 @@ func TestOperations_UpdateVolumeGroup(t *testing.T) {
 				},
 			},
 			&VolumeGroupResponse{
-				APIVersion: utils.String("3.0"),
+				APIVersion: utils.String("3.1"),
 				Metadata: &Metadata{
 					Kind: utils.String("volume_group"),
 					UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
