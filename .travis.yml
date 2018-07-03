@@ -45,10 +45,6 @@ jobs:
         - make cibuild
       go: 1.9.x
       env: GOOS=linux GOARCH=amd64
-    - script:
-        - make cibuild
-      go: 1.9.x
-      env: GOOS=linux GOARCH=ppc64
     # Build Go 1.10.x
     - stage: build go 1.10
       go: 1.10.x
@@ -63,10 +59,6 @@ jobs:
         - make cibuild
       go: 1.10.x
       env: GOOS=linux GOARCH=amd64
-    - script:
-        - make cibuild
-      go: 1.10.x
-      env: GOOS=linux GOARCH=ppc64
     # Build Go master (helps hedge against upstream code breaking downstream builds later, acts as a canary)
     - stage: build go master
       go: tip
@@ -81,10 +73,6 @@ jobs:
         - make cibuild
       go: tip
       env: GOOS=linux GOARCH=amd64
-    - script:
-        - make cibuild
-      go: tip
-      env: GOOS=linux GOARCH=ppc64
     - stage: acceptance testing
       go: 1.10.x
       script:
