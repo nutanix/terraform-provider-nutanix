@@ -27,6 +27,8 @@ linters-settings:
 linters:
   enable-all: true
   disable:
+    - unparam
+      # disabled as go vet picks up the proper unused parameters, and this package seems to be a bit flaky
     - gocyclo
       # disabled gocyclo as we do have a lot of large methods to iterate thru the large JSON specs
     - dupl
