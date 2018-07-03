@@ -116,11 +116,10 @@ func (op Operations) GetVM(UUID string) (*VMIntentResponse, error) {
 	return vmIntentResponse, op.client.Do(ctx, req, vmIntentResponse)
 }
 
-/*ListVM Get a list of VMs
- * This operation gets a list of VMs, allowing for sorting and pagination. Note: Entities that have not been created successfully are not listed.
+/*ListVM Get a list of VMs This operation gets a list of VMs, allowing for sorting and pagination. Note: Entities that have not been created
+ * successfully are not listed.
  *
- * @param getEntitiesRequest
- * @return *VmListIntentResponse
+ * @param getEntitiesRequest @return *VmListIntentResponse
  */
 func (op Operations) ListVM(getEntitiesRequest *DSMetadata) (*VMListIntentResponse, error) {
 	ctx := context.TODO()
@@ -222,11 +221,10 @@ func (op Operations) GetSubnet(UUID string) (*SubnetIntentResponse, error) {
 	return subnetIntentResponse, op.client.Do(ctx, req, subnetIntentResponse)
 }
 
-/*ListSubnet Gets a list of subnets
- * This operation gets a list of subnets, allowing for sorting and pagination. Note: Entities that have not been created successfully are not listed.
+/*ListSubnet Gets a list of subnets This operation gets a list of subnets, allowing for sorting and pagination. Note: Entities that have not
+ * been created successfully are not listed.
  *
- * @param getEntitiesRequest
- * @return *SubnetListIntentResponse
+ * @param getEntitiesRequest @return *SubnetListIntentResponse
  */
 func (op Operations) ListSubnet(getEntitiesRequest *DSMetadata) (*SubnetListIntentResponse, error) {
 	ctx := context.TODO()
@@ -263,11 +261,11 @@ func (op Operations) UpdateSubnet(UUID string, body *SubnetIntentInput) (*Subnet
 	return subnetIntentResponse, op.client.Do(ctx, req, subnetIntentResponse)
 }
 
-/*CreateImage Creates a IMAGE
- * Images are raw ISO, QCOW2, or VMDK files that are uploaded by a user can be attached to a op. An ISO image is attached as a virtual CD-ROM drive, and QCOW2 and VMDK files are attached as SCSI disks. An image has to be explicitly added to the self-service catalog before users can create VMs from it.
+/*CreateImage Creates a IMAGE Images are raw ISO, QCOW2, or VMDK files that are uploaded by a user can be attached to a op. An ISO image is
+ * attached as a virtual CD-ROM drive, and QCOW2 and VMDK files are attached as SCSI disks. An image has to be explicitly added to the
+ * self-service catalog before users can create VMs from it.
  *
- * @param body
- * @return *ImageIntentResponse
+ * @param body @return *ImageIntentResponse
  */
 func (op Operations) CreateImage(body *ImageIntentInput) (*ImageIntentResponse, error) {
 	ctx := context.TODO()
@@ -282,11 +280,11 @@ func (op Operations) CreateImage(body *ImageIntentInput) (*ImageIntentResponse, 
 	return imageIntentResponse, op.client.Do(ctx, req, imageIntentResponse)
 }
 
-/*UploadImage Uplloads a Image Binary file
- * Images are raw ISO, QCOW2, or VMDK files that are uploaded by a user can be attached to a op. An ISO image is attached as a virtual CD-ROM drive, and QCOW2 and VMDK files are attached as SCSI disks. An image has to be explicitly added to the self-service catalog before users can create VMs from it.
+/*UploadImage Uplloads a Image Binary file Images are raw ISO, QCOW2, or VMDK files that are uploaded by a user can be attached to a op. An
+ * ISO image is attached as a virtual CD-ROM drive, and QCOW2 and VMDK files are attached as SCSI disks. An image has to be explicitly added
+ * to the self-service catalog before users can create VMs from it.
  *
- * @param UUID
- * @param filepath
+ * @param UUID @param filepath
  */
 func (op Operations) UploadImage(UUID, filepath string) error {
 	ctx := context.Background()
@@ -353,11 +351,10 @@ func (op Operations) GetImage(UUID string) (*ImageIntentResponse, error) {
 	return imageIntentResponse, op.client.Do(ctx, req, imageIntentResponse)
 }
 
-/*ListImage gets a list of IMAGEs
- * This operation gets a list of IMAGEs, allowing for sorting and pagination. Note: Entities that have not been created successfully are not listed.
+/*ListImage gets a list of IMAGEs This operation gets a list of IMAGEs, allowing for sorting and pagination. Note: Entities that have not
+ * been created successfully are not listed.
  *
- * @param getEntitiesRequest
- * @return *ImageListIntentResponse
+ * @param getEntitiesRequest @return *ImageListIntentResponse
  */
 func (op Operations) ListImage(getEntitiesRequest *DSMetadata) (*ImageListIntentResponse, error) {
 	ctx := context.TODO()
@@ -415,11 +412,10 @@ func (op Operations) GetCluster(UUID string) (*ClusterIntentResponse, error) {
 	return clusterIntentResponse, op.client.Do(ctx, req, clusterIntentResponse)
 }
 
-/*ListCluster gets a list of CLUSTERS
- * This operation gets a list of CLUSTERS, allowing for sorting and pagination. Note: Entities that have not been created successfully are not listed.
+/*ListCluster gets a list of CLUSTERS This operation gets a list of CLUSTERS, allowing for sorting and pagination. Note: Entities that have
+ * not been created successfully are not listed.
  *
- * @param getEntitiesRequest
- * @return *ClusterListIntentResponse
+ * @param getEntitiesRequest @return *ClusterListIntentResponse
  */
 func (op Operations) ListCluster(getEntitiesRequest *ClusterListMetadataOutput) (*ClusterListIntentResponse, error) {
 	ctx := context.TODO()
@@ -477,11 +473,10 @@ func (op Operations) CreateOrUpdateCategoryKey(body *CategoryKey) (*CategoryKeyS
 	return categoryKeyResponse, op.client.Do(ctx, req, categoryKeyResponse)
 }
 
-/*ListCategories gets a list of Categories
- * This operation gets a list of Categories, allowing for sorting and pagination. Note: Entities that have not been created successfully are not listed.
+/*ListCategories gets a list of Categories This operation gets a list of Categories, allowing for sorting and pagination. Note: Entities
+ * that have not been created successfully are not listed.
  *
- * @param getEntitiesRequest
- * @return *ImageListIntentResponse
+ * @param getEntitiesRequest @return *ImageListIntentResponse
  */
 func (op Operations) ListCategories(getEntitiesRequest *CategoryListMetadata) (*CategoryKeyListResponse, error) {
 	ctx := context.TODO()
@@ -536,12 +531,10 @@ func (op Operations) GetCategoryKey(name string) (*CategoryKeyStatus, error) {
 	return categoryKeyStatusResponse, op.client.Do(ctx, req, categoryKeyStatusResponse)
 }
 
-/*ListCategoryValues gets a list of Category values for a specific key
- * This operation gets a list of Categories, allowing for sorting and pagination. Note: Entities that have not been created successfully are not listed.
+/*ListCategoryValues gets a list of Category values for a specific key This operation gets a list of Categories, allowing for sorting and
+ * pagination. Note: Entities that have not been created successfully are not listed.
  *
- * @param name
- * @param getEntitiesRequest
- * @return *CategoryValueListResponse
+ * @param name @param getEntitiesRequest @return *CategoryValueListResponse
  */
 func (op Operations) ListCategoryValues(name string, getEntitiesRequest *CategoryListMetadata) (*CategoryValueListResponse, error) {
 	ctx := context.TODO()
@@ -693,11 +686,10 @@ func (op Operations) GetNetworkSecurityRule(UUID string) (*NetworkSecurityRuleIn
 	return networkSecurityRuleIntentResponse, op.client.Do(ctx, req, networkSecurityRuleIntentResponse)
 }
 
-/*ListNetworkSecurityRule Gets all network security rules
- * This operation gets a list of Network security rules, allowing for sorting and pagination. Note: Entities that have not been created successfully are not listed.
+/*ListNetworkSecurityRule Gets all network security rules This operation gets a list of Network security rules, allowing for sorting and
+ * pagination. Note: Entities that have not been created successfully are not listed.
  *
- * @param getEntitiesRequest
- * @return *NetworkSecurityRuleListIntentResponse
+ * @param getEntitiesRequest @return *NetworkSecurityRuleListIntentResponse
  */
 func (op Operations) ListNetworkSecurityRule(getEntitiesRequest *DSMetadata) (*NetworkSecurityRuleListIntentResponse, error) {
 	ctx := context.TODO()
@@ -720,7 +712,9 @@ func (op Operations) ListNetworkSecurityRule(getEntitiesRequest *DSMetadata) (*N
  * @param body
  * @return void
  */
-func (op Operations) UpdateNetworkSecurityRule(UUID string, body *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error) {
+func (op Operations) UpdateNetworkSecurityRule(
+	UUID string,
+	body *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/network_security_rules/%s", UUID)
@@ -792,11 +786,10 @@ func (op Operations) GetVolumeGroup(UUID string) (*VolumeGroupResponse, error) {
 	return networkSecurityRuleResponse, op.client.Do(ctx, req, networkSecurityRuleResponse)
 }
 
-/*ListVolumeGroup Gets all network security rules
- * This operation gets a list of Volume groups, allowing for sorting and pagination. Note: Entities that have not been created successfully are not listed.
+/*ListVolumeGroup Gets all network security rules This operation gets a list of Volume groups, allowing for sorting and pagination. Note:
+ * Entities that have not been created successfully are not listed.
  *
- * @param getEntitiesRequest
- * @return *VolumeGroupListResponse
+ * @param getEntitiesRequest @return *VolumeGroupListResponse
  */
 func (op Operations) ListVolumeGroup(getEntitiesRequest *DSMetadata) (*VolumeGroupListResponse, error) {
 	ctx := context.TODO()

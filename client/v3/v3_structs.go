@@ -22,7 +22,8 @@ type IPAddress struct {
 	// Address *string.
 	IP *string `json:"ip,omitempty"`
 
-	// Address type. It can only be \"ASSIGNED\" in the spec. If no type is specified in the spec, the default type is set to \"ASSIGNED\".
+	// Address type. It can only be \"ASSIGNED\" in the spec. If no type is specified in the spec, the default type is
+	// set to \"ASSIGNED\".
 	Type *string `json:"type,omitempty"`
 }
 
@@ -48,7 +49,8 @@ type VMNic struct {
 
 	SubnetReference *Reference `json:"subnet_reference,omitempty"`
 
-	// The NIC's UUID, which is used to uniquely identify this particular NIC. This UUID may be used to refer to the NIC outside the context of the particular VM it is attached to.
+	// The NIC's UUID, which is used to uniquely identify this particular NIC. This UUID may be used to refer to the NIC
+	// outside the context of the particular VM it is attached to.
 	UUID *string `json:"uuid,omitempty"`
 }
 
@@ -72,10 +74,13 @@ type VMBootDevice struct {
 //VMBootConfig Indicates which device a VM should boot from.
 type VMBootConfig struct {
 
-	// Indicates which device a VM should boot from. Boot device takes precdence over boot device order. If both are given then specified boot device will be primary boot device and remaining devices will be assigned boot order according to boot device order field.
+	// Indicates which device a VM should boot from. Boot device takes precdence over boot device order. If both are
+	// given then specified boot device will be primary boot device and remaining devices will be assigned boot order
+	// according to boot device order field.
 	BootDevice *VMBootDevice `json:"boot_device,omitempty"`
 
-	// Indicates the order of device types in which VM should try to boot from. If boot device order is not provided the system will decide appropriate boot device order.
+	// Indicates the order of device types in which VM should try to boot from. If boot device order is not provided the
+	// system will decide appropriate boot device order.
 	BootDeviceOrderList []*string `json:"boot_device_order_list,omitempty"`
 }
 
@@ -112,33 +117,45 @@ type VMGpu struct {
 	Vendor *string `json:"vendor,omitempty"`
 }
 
-//GuestCustomizationCloudInit If this field is set, the guest will be customized using cloud-init. Either user_data or custom_key_values should be provided. If custom_key_ves are provided then the user data will be generated using these key-value pairs.
+//GuestCustomizationCloudInit If this field is set, the guest will be customized using cloud-init. Either user_data or
+//custom_key_values should be provided. If custom_key_ves are provided then the user data will be generated using these
+//key-value pairs.
 type GuestCustomizationCloudInit struct {
 
 	// Generic key value pair used for custom attributes
 	CustomKeyValues map[string]string `json:"custom_key_values,omitempty"`
 
-	// The contents of the meta_data configuration for cloud-init. This can be formatted as YAML or JSON. The value must be base64 encoded.
+	// The contents of the meta_data configuration for cloud-init. This can be formatted as YAML or JSON. The value must
+	// be base64 encoded.
 	MetaData *string `json:"meta_data,omitempty"`
 
-	// The contents of the user_data configuration for cloud-init. This can be formatted as YAML, JSON, or could be a shell script. The value must be base64 encoded.
+	// The contents of the user_data configuration for cloud-init. This can be formatted as YAML, JSON, or could be a
+	// shell script. The value must be base64 encoded.
 	UserData *string `json:"user_data,omitempty"`
 }
 
-//GuestCustomizationSysprep If this field is set, the guest will be customized using Sysprep. Either unattend_xml or custom_key_values should be provided. If custom_key_values are provided then the unattended answer file will be generated using these key-value pairs.
+//GuestCustomizationSysprep If this field is set, the guest will be customized using Sysprep. Either unattend_xml or
+//custom_key_values should be provided. If custom_key_values are provided then the unattended answer file will be
+//generated using these key-value pairs.
 type GuestCustomizationSysprep struct {
 
 	// Generic key value pair used for custom attributes
 	CustomKeyValues map[string]string `json:"custom_key_values,omitempty"`
 
-	// Whether the guest will be freshly installed using this unattend configuration, or whether this unattend configuration will be applied to a pre-prepared image. Default is \"PREPARED\".
+	// Whether the guest will be freshly installed using this unattend configuration, or whether this unattend
+	// configuration will be applied to a pre-prepared image. Default is \"PREPARED\".
 	InstallType *string `json:"install_type,omitempty"`
 
 	// This field contains a Sysprep unattend xml definition, as a *string. The value must be base64 encoded.
 	UnattendXML *string `json:"unattend_xml,omitempty"`
 }
 
-//GuestCustomization VM guests may be customized at boot time using one of several different methods. Currently, cloud-init w/ ConfigDriveV2 (for Linux VMs) and Sysprep (for Windows VMs) are supported. Only ONE OF sysprep or cloud_init should be provided. Note that guest customization can currently only be set during VM creation. Attempting to change it after creation will result in an error. Additional properties can be specified. For example - in the context of VM template creation if \"override_script\" is set to \"True\" then the deployer can upload their own custom script.
+//GuestCustomization VM guests may be customized at boot time using one of several different methods. Currently,
+//cloud-init w/ ConfigDriveV2 (for Linux VMs) and Sysprep (for Windows VMs) are supported. Only ONE OF sysprep or
+//cloud_init should be provided. Note that guest customization can currently only be set during VM creation. Attempting
+//to change it after creation will result in an error. Additional properties can be specified. For example - in the
+//context of VM template creation if \"override_script\" is set to \"True\" then the deployer can upload their own
+//custom script.
 type GuestCustomization struct {
 	CloudInit *GuestCustomizationCloudInit `json:"cloud_init,omitempty"`
 
@@ -158,7 +175,8 @@ type VMGuestPowerStateTransitionConfig struct {
 	ShouldFailOnScriptFailure *bool `json:"should_fail_on_script_failure,omitempty"`
 }
 
-//VMPowerStateMechanism Indicates the mechanism guiding the VM power state transition. Currently used for the transition to \"OFF\" state.
+//VMPowerStateMechanism Indicates the mechanism guiding the VM power state transition. Currently used for the transition
+//to \"OFF\" state.
 type VMPowerStateMechanism struct {
 	GuestTransitionConfig *VMGuestPowerStateTransitionConfig `json:"guest_transition_config,omitempty"`
 
@@ -182,7 +200,8 @@ type VMDisk struct {
 	// Size of the disk in Bytes.
 	DiskSizeBytes *int64 `json:"disk_size_bytes,omitempty"`
 
-	// Size of the disk in MiB. Must match the size specified in 'disk_size_bytes' - rounded up to the nearest MiB -  when that field is present.
+	// Size of the disk in MiB. Must match the size specified in 'disk_size_bytes' - rounded up to the nearest MiB -
+	// when that field is present.
 	DiskSizeMib *int64 `json:"disk_size_mib,omitempty"`
 
 	// The device ID which is used to uniquely identify this particular disk.
@@ -205,7 +224,9 @@ type VMResources struct {
 
 	GuestCustomization *GuestCustomization `json:"guest_customization,omitempty"`
 
-	// Guest OS Identifier. For ESX, refer to VMware documentation link (https://www.vmware.com/support/developer/converter-sdk/conv43_apireference/vim.vm.GuestOsDescriptor.GuestOsIdentifier.html) for the list of guest OS identifiers.
+	// Guest OS Identifier. For ESX, refer to VMware documentation link
+	// https://www.vmware.com/support/orchestrator/doc/vro-vsphere65-api/html/VcVirtualMachineGuestOsIdentifier.html
+	// for the list of guest OS identifiers.
 	GuestOsID *string `json:"guest_os_id,omitempty"`
 
 	// Information regarding guest tools.
@@ -318,7 +339,8 @@ type VMNicOutputStatus struct {
 
 	SubnetReference *Reference `json:"subnet_reference,omitempty"`
 
-	// The NIC's UUID, which is used to uniquely identify this particular NIC. This UUID may be used to refer to the NIC outside the context of the particular VM it is attached to.
+	// The NIC's UUID, which is used to uniquely identify this particular NIC. This UUID may be used to refer to the NIC
+	// outside the context of the particular VM it is attached to.
 	UUID *string `json:"uuid,omitempty"`
 }
 
@@ -394,7 +416,12 @@ type VMGpuOutputStatus struct {
 	Vendor *string `json:"vendor,omitempty"`
 }
 
-//GuestCustomizationStatus VM guests may be customized at boot time using one of several different methods. Currently, cloud-init w/ ConfigDriveV2 (for Linux VMs) and Sysprep (for Windows VMs) are supported. Only ONE OF sysprep or cloud_init should be provided. Note that guest customization can currently only be set during VM creation. Attempting to change it after creation will result in an error. Additional properties can be specified. For example - in the context of VM template creation if \"override_script\" is set to \"True\" then the deployer can upload their own custom script.
+//GuestCustomizationStatus VM guests may be customized at boot time using one of several different methods. Currently,
+//cloud-init w/ ConfigDriveV2 (for Linux VMs) and Sysprep (for Windows VMs) are supported. Only ONE OF sysprep or
+//cloud_init should be provided. Note that guest customization can currently only be set during VM creation. Attempting
+//to change it after creation will result in an error. Additional properties can be specified. For example - in the
+//context of VM template creation if \"override_script\" is set to \"True\" then the deployer can upload their own
+//custom script.
 type GuestCustomizationStatus struct {
 	CloudInit *GuestCustomizationCloudInit `json:"cloud_init,omitempty"`
 
@@ -418,7 +445,9 @@ type VMResourcesDefStatus struct {
 
 	GuestCustomization *GuestCustomizationStatus `json:"guest_customization,omitempty"`
 
-	// Guest OS Identifier. For ESX, refer to VMware documentation link (https://www.vmware.com/support/developer/converter-sdk/conv43_apireference/vim.vm.GuestOsDescriptor.GuestOsIdentifier.html) for the list of guest OS identifiers.
+	// Guest OS Identifier. For ESX, refer to VMware documentation link
+	// https://www.vmware.com/support/orchestrator/doc/vro-vsphere65-api/html/VcVirtualMachineGuestOsIdentifier.html
+	// for the list of guest OS identifiers.
 	GuestOsID *string `json:"guest_os_id,omitempty"`
 
 	// Information regarding guest tools.
@@ -831,7 +860,8 @@ type ImageResources struct {
 	// The supported CPU architecture for a disk image.
 	Architecture *string `json:"architecture,omitempty"`
 
-	// Checksum of the image. The checksum is used for image validation if the image has a source specified. For images that do not have their source specified the checksum is generated by the image service.
+	// Checksum of the image. The checksum is used for image validation if the image has a source specified. For images
+	// that do not have their source specified the checksum is generated by the image service.
 	Checksum *Checksum `json:"checksum,omitempty"`
 
 	// The type of image.
@@ -929,7 +959,8 @@ type ImageResourcesDefStatus struct {
 	// The supported CPU architecture for a disk image.
 	Architecture *string `json:"architecture,omitempty"`
 
-	// Checksum of the image. The checksum is used for image validation if the image has a source specified. For images that do not have their source specified the checksum is generated by the image service.
+	// Checksum of the image. The checksum is used for image validation if the image has a source specified. For images
+	// that do not have their source specified the checksum is generated by the image service.
 	Checksum *Checksum `json:"checksum,omitempty"`
 
 	// The type of image.
@@ -1489,7 +1520,8 @@ type CategoryQueryInput struct {
 	// The offset into the total member set to return per group.
 	GroupMemberOffset *int64 `json:"group_member_offset,omitempty"`
 
-	//TBD: USED_IN - to get policies in which specified categories are used. APPLIED_TO - to get entities attached to specified categories.
+	//TBD: USED_IN - to get policies in which specified categories are used. APPLIED_TO - to get entities attached to
+	//specified categories.
 	UsageType *string `json:"usage_type,omitempty"`
 }
 
@@ -1610,7 +1642,8 @@ type NetworkRule struct {
 	// The set of categories that matching VMs need to have.
 	PeerSpecificationType *string `json:"peer_specification_type,omitempty"`
 
-	// Select a protocol to allow.  Multiple protocols can be allowed by repeating network_rule object.  If a protocol is not configured in the network_rule object then it is allowed.
+	// Select a protocol to allow.  Multiple protocols can be allowed by repeating network_rule object.  If a protocol
+	// is not configured in the network_rule object then it is allowed.
 	Protocol *string `json:"protocol,omitempty"`
 
 	// List of TCP ports that are allowed by this rule.
@@ -1633,7 +1666,9 @@ type TargetGroup struct {
 	PeerSpecificationType *string `json:"peer_specification_type,omitempty"`
 }
 
-//NetworkSecurityRuleResourcesRule These rules are used for quarantining suspected VMs. Target group is a required attribute.  Empty inbound_allow_list will not allow anything into target group. Empty outbound_allow_list will allow everything from target group.
+//NetworkSecurityRuleResourcesRule These rules are used for quarantining suspected VMs. Target group is a required
+//attribute.  Empty inbound_allow_list will not allow anything into target group. Empty outbound_allow_list will allow
+//everything from target group.
 type NetworkSecurityRuleResourcesRule struct {
 	Action            *string        `json:"action,omitempty"`             // Type of action.
 	InboundAllowList  []*NetworkRule `json:"inbound_allow_list,omitempty"` //
@@ -1760,9 +1795,9 @@ type VolumeGroup struct {
 
 //VolumeGroupResources Represents the volume group resources
 type VolumeGroupResources struct {
-	FlashMode         *string         `json:"flash_mode,omitempty"`          //Flash Mode, if enabled all volume disks of the VG will be pinned to SSD tier.
+	FlashMode         *string         `json:"flash_mode,omitempty"`          //Flash Mode, if enabled all disks of the VG are pinned to SSD
 	FileSystemType    *string         `json:"file_system_type,omitempty"`    //File system to be used for volume
-	SharingStatus     *string         `json:"sharing_status,omitempty"`      //Whether the volume group can be shared across multiple iSCSI initiators.
+	SharingStatus     *string         `json:"sharing_status,omitempty"`      //Whether the VG can be shared across multiple iSCSI initiators
 	AttachmentList    []*VMAttachment `json:"attachment_list,omitempty"`     //VMs attached to volume group.
 	DiskList          []*VGDisk       `json:"disk_list,omitempty"`           //VGDisk Volume group disk specification.
 	IscsiTargetPrefix *string         `json:"iscsi_target_prefix,omitempty"` //iSCSI target prefix-name.

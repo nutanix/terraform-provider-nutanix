@@ -3,8 +3,6 @@ linters-settings:
     check-shadowing: true
   golint:
     min-confidence: 0
-  gocyclo:
-    min-complexity: 20
   maligned:
     suggest-new: true
   goconst:
@@ -18,10 +16,19 @@ linters-settings:
       - github.com/sirupsen/logrus
   misspell:
     locale: US
+  lll:
+    # Default is 120. '\t' is counted as 1 character.
+    # set our project to 140, as things like v3_structs with inline comments end up being a touch long
+    # also, for anyone using vscode, use the following configs:
+    # "rewrap.wrappingColumn": 140 ... requires the rewrap plugin
+    # "editor.rulers": [140]
+    line-length: 140
 
 linters:
   enable-all: true
   disable:
+    - gocyclo
+      # disabled gocyclo as we do have a lot of large methods to iterate thru the large JSON specs
     - dupl
       # disabled dupl as we do have a lot of duplicated code between resources and their tests, which gets flagged by this
     - errcheck
