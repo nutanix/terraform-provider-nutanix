@@ -12,15 +12,16 @@ import (
 
 func TestAccNutanixImageDataSource_basic(t *testing.T) {
 
+	rInt := acctest.RandInt()
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageDataSourceConfig(acctest.RandIntRange(0, 500)),
+				Config: testAccImageDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"data.nutanix_image.test", "name", "Ubuntu"),
+						"data.nutanix_image.test", "description", "Ubuntu mini ISO"),
 					resource.TestCheckResourceAttr(
 						"data.nutanix_image.test",
 						"source_uri",

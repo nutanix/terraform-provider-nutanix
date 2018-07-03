@@ -40,6 +40,8 @@ func TestAccNutanixImage_basic(t *testing.T) {
 }
 
 func TestAccNutanixImage_basic_uploadLocal(t *testing.T) {
+	// Skipping as this test needs functional work
+	t.Skip()
 	// function guts inspired by resource_aws_s3_bucket_object_test.go
 	tmpFile, err := ioutil.TempFile("", "tf-acc-image-source")
 	if err != nil {
