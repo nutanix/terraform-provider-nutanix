@@ -2,12 +2,14 @@ package nutanix
 
 import (
 	"fmt"
-	"math/rand"
+	"io/ioutil"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
@@ -15,20 +17,20 @@ import (
 )
 
 func TestAccNutanixImage_basic(t *testing.T) {
-	r := rand.Int31()
+	rInt := acctest.RandInt()
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixImageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixImageConfig(r),
+				Config: testAccNutanixImageConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixImageExists("nutanix_image.test"),
 				),
 			},
 			{
-				Config: testAccNutanixImageConfigUpdate(r),
+				Config: testAccNutanixImageConfigUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixImageExists("nutanix_image.test"),
 				),
@@ -37,25 +39,36 @@ func TestAccNutanixImage_basic(t *testing.T) {
 	})
 }
 
-// Skipping this test for now, since it is difficult to implement on the CI
 func TestAccNutanixImage_basic_uploadLocal(t *testing.T) {
+	// function guts inspired by resource_aws_s3_bucket_object_test.go
+	tmpFile, err := ioutil.TempFile("", "tf-acc-image-source")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmpFile.Name())
 
-	t.Skip()
+	rInt := acctest.RandInt()
+	// first write some data to the tempfile just so it's not 0 bytes.
+	err = ioutil.WriteFile(tmpFile.Name(), []byte("{anything will do }"), 0644)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	r := "path-to-file"
+	// t.Skip()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixImageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixImageLocalConfig(r),
+				Config: testAccNutanixImageLocalConfig(rInt, tmpFile.Name()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixImageExists("nutanix_image.test"),
 				),
 			},
 			{
-				Config: testAccNutanixImageLocalConfigUpdate(r),
+				Config: testAccNutanixImageLocalConfigUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixImageExists("nutanix_image.test"),
 				),
@@ -101,44 +114,43 @@ func testAccCheckNutanixImageDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccNutanixImageConfig(r int32) string {
+func testAccNutanixImageConfig(r int) string {
 	return fmt.Sprintf(`
 resource "nutanix_image" "test" {
-  name        = "Ubuntu"
+  name        = "Ubuntu-%d"
   description = "Ubuntu"
   source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
-}
-`)
-}
-
-func testAccNutanixImageConfigUpdate(r int32) string {
-	return fmt.Sprintf(`
-resource "nutanix_image" "test" {
-  name        = "Ubuntu Updated"
-  description = "Ubuntu Updated"
-  source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
-}
-`)
-}
-
-func testAccNutanixImageLocalConfig(r string) string {
-	return fmt.Sprintf(`
-resource "nutanix_image" "test" {
-  name        = "Ubuntu"
-  description = "Ubuntu"
-  source_path  = "%s"
 }
 `, r)
 }
 
-func testAccNutanixImageLocalConfigUpdate(r string) string {
+func testAccNutanixImageConfigUpdate(r int) string {
 	return fmt.Sprintf(`
 resource "nutanix_image" "test" {
-  name        = "Ubuntu Updated"
+  name        = "Ubuntu-%d"
   description = "Ubuntu Updated"
-  source_path  = "%s"
+  source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
 }
 `, r)
+}
+
+func testAccNutanixImageLocalConfig(rNumb int, rFile string) string {
+	return fmt.Sprintf(`
+resource "nutanix_image" "test" {
+  name        = "random-local-image-%d"
+  description = "some description"
+  source_path  = "%s"
+}
+`, rNumb, rFile)
+}
+
+func testAccNutanixImageLocalConfigUpdate(rNumb int) string {
+	return fmt.Sprintf(`
+resource "nutanix_image" "test" {
+  name        = "random-local-image-%d"
+  description = "update my description!"
+}
+`, rNumb)
 }
 
 func Test_resourceNutanixImage(t *testing.T) {
@@ -389,7 +401,7 @@ func Test_testAccCheckNutanixImageDestroy(t *testing.T) {
 
 func Test_testAccNutanixImageConfig(t *testing.T) {
 	type args struct {
-		r int32
+		r int
 	}
 	tests := []struct {
 		name string
@@ -409,7 +421,7 @@ func Test_testAccNutanixImageConfig(t *testing.T) {
 
 func Test_testAccNutanixImageConfigUpdate(t *testing.T) {
 	type args struct {
-		r int32
+		r int
 	}
 	tests := []struct {
 		name string
@@ -429,7 +441,8 @@ func Test_testAccNutanixImageConfigUpdate(t *testing.T) {
 
 func Test_testAccNutanixImageLocalConfig(t *testing.T) {
 	type args struct {
-		r string
+		r1 int
+		r2 string
 	}
 	tests := []struct {
 		name string
@@ -440,7 +453,7 @@ func Test_testAccNutanixImageLocalConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := testAccNutanixImageLocalConfig(tt.args.r); got != tt.want {
+			if got := testAccNutanixImageLocalConfig(tt.args.r1, tt.args.r2); got != tt.want {
 				t.Errorf("testAccNutanixImageLocalConfig() = %v, want %v", got, tt.want)
 			}
 		})
@@ -449,7 +462,7 @@ func Test_testAccNutanixImageLocalConfig(t *testing.T) {
 
 func Test_testAccNutanixImageLocalConfigUpdate(t *testing.T) {
 	type args struct {
-		r string
+		r1 int
 	}
 	tests := []struct {
 		name string
@@ -460,7 +473,7 @@ func Test_testAccNutanixImageLocalConfigUpdate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := testAccNutanixImageLocalConfigUpdate(tt.args.r); got != tt.want {
+			if got := testAccNutanixImageLocalConfigUpdate(tt.args.r1); got != tt.want {
 				t.Errorf("testAccNutanixImageLocalConfigUpdate() = %v, want %v", got, tt.want)
 			}
 		})

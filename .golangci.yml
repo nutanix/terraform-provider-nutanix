@@ -27,8 +27,6 @@ linters-settings:
 linters:
   enable-all: true
   disable:
-    - unparam
-      # disabled as go vet picks up the proper unused parameters, and this package seems to be a bit flaky
     - gocyclo
       # disabled gocyclo as we do have a lot of large methods to iterate thru the large JSON specs
     - dupl
@@ -39,3 +37,8 @@ linters:
         # nutanix/data_source_nutanix_image.go:61:7: Error return value of `d.Set` is not checked (errcheck)
         # d.Set("name", utils.StringValue(resp.Status.Name))
       # waiting on terraform/hashi to let us know how they want us to changle thoseerrors seeError return value of `d.Set` is not checked (errcheck)
+
+issues:
+  exclude:
+    - composite literal uses unkeyed fields
+      # part of the golangci govet package is picking up things that go vet doesn't. Seems flaky, shutting that specific error off
