@@ -29,17 +29,31 @@ jobs:
         - make deps
         - make extrasanity
       go: 1.10.x
-      env: GOOS=linux GOARCH=amd64
     - stage: build
       script:
         - make cibuild
       go: 1.9.x
+      env:
+        - GOOS=darwin GOARCH=amd64
+        - GOOS=windows GOARCH=amd64
+        - GOOS=linux GOARCH=amd64
+        - GOOS=linux GOARCH=ppc64
     - script:
         - make cibuild
       go: 1.10.x
+      env:
+        - GOOS=darwin GOARCH=amd64
+        - GOOS=windows GOARCH=amd64
+        - GOOS=linux GOARCH=amd64
+        - GOOS=linux GOARCH=ppc64
     - script:
         - make cibuild
       go: tip
+      env:
+        - GOOS=darwin GOARCH=amd64
+        - GOOS=windows GOARCH=amd64
+        - GOOS=linux GOARCH=amd64
+        - GOOS=linux GOARCH=ppc64
     - stage: acceptance testing
       go: 1.10.x
       script:
@@ -48,7 +62,6 @@ jobs:
         - ./cc-test-reporter before-build
         - make citest
         - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
-      env: GOOS=linux GOARCH=amd64
     - stage: deploy
       provider: script
       skip_cleanup: true
@@ -56,11 +69,6 @@ jobs:
       on:
         tags: true
         condition: $TRAVIS_GO_VERSION =~ ^99\.99\.
-env:
-  - GOOS=darwin GOARCH=amd64 go build
-  - GOOS=windows GOARCH=amd64 go build
-  - GOOS=linux GOARCH=amd64 go build
-  - GOOS=linux GOARCH=ppc64 go build
 
 matrix:
   fast_finish: true
