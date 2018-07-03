@@ -50,7 +50,7 @@ jobs:
       go: 1.9.x
       env: GOOS=linux GOARCH=ppc64
     # Build Go 1.10.x
-    - stage: build go 1.9
+    - stage: build go 1.10
       go: 1.10.x
       script:
         - make cibuild
