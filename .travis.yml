@@ -16,19 +16,15 @@ script:
   - make cibuild
 
 stages:
-  - warm up dependencies
   - sanity testing
   - build
   - acceptance testing
 
 jobs:
   include:
-    - stage: warm up dependencies
-      script:
-        - make deps
-      go: 1.10.x
     - stage: sanity testing
       script:
+        - make deps
         - make extrasanity
       go: 1.10.x
     - stage: build
@@ -50,6 +46,4 @@ jobs:
 matrix:
   fast_finish: true
   allow_failures:
-  - stage: sanity testing
-  - script: make sanity
   - go: tip
