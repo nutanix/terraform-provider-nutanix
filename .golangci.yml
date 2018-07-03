@@ -7,8 +7,6 @@ linters-settings:
     min-complexity: 20
   maligned:
     suggest-new: true
-  dupl:
-    threshold: 100
   goconst:
     min-len: 2
     min-occurrences: 2
@@ -24,8 +22,8 @@ linters-settings:
 linters:
   enable-all: true
   disable:
-    - maligned
-    - prealloc
+    - dupl
+      # disabled dupl as we do have a lot of duplicated code between resources and their tests, which gets flagged by this
     - errcheck
       # errocheck disabled to silience errors here: https://travis-ci.com/nutanix/terraform-provider-nutanix/jobs/131154435
       # Example error:
