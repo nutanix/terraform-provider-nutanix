@@ -19,6 +19,8 @@ stages:
   - sanity testing
   - build
   - acceptance testing
+  - name: deploy
+    if: branch = master
 
 jobs:
   include:
@@ -45,6 +47,13 @@ jobs:
         - ./cc-test-reporter before-build
         - make citest
         - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
+    - stage: deploy
+      provider: script
+      skip_cleanup: true
+      script: curl -sL https://git.io/goreleaser | bash
+      on:
+        tags: true
+        condition: $TRAVIS_GO_VERSION =~ ^99\.99\.
 
 matrix:
   fast_finish: true
