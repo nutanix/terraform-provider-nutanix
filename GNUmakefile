@@ -10,6 +10,7 @@ build: deps
 
 test: deps
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m -coverprofile c.out
+	go tool cover -html=c.out
 
 cibuild:
 	go install

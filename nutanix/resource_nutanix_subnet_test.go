@@ -19,20 +19,19 @@ func TestAccNutanixSubnet_basic(t *testing.T) {
 		t.Skip()
 	}
 
-	rInt := acctest.RandIntRange(0, 500)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixSubnetConfig(rInt),
+				Config: testAccNutanixSubnetConfig(acctest.RandIntRange(0, 500)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixSubnetExists("nutanix_subnet.next-iac-managed"),
 				),
 			},
 			{
-				Config: testAccNutanixSubnetConfigUpdate(rInt),
+				Config: testAccNutanixSubnetConfigUpdate(acctest.RandIntRange(0, 500)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixSubnetExists("nutanix_subnet.next-iac-managed"),
 				),

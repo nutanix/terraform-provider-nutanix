@@ -2,12 +2,12 @@ package nutanix
 
 import (
 	"fmt"
-	"math/rand"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
@@ -15,23 +15,20 @@ import (
 )
 
 func TestAccNutanixVolumeGroup_basic(t *testing.T) {
-	// skipping as this API is not yet GA (will GA in upcoming AOS release)
-	t.Skip()
-
-	r := rand.Int31()
+	rInt := acctest.RandInt()
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixVolumeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixVolumeGroupConfig(r),
+				Config: testAccNutanixVolumeGroupConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixVolumeGroupExists("nutanix_volume_group.test_volume"),
 				),
 			},
 			{
-				Config: testAccNutanixVolumeGroupConfigUpdate(r),
+				Config: testAccNutanixVolumeGroupConfigUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixVolumeGroupExists("nutanix_volume_group.test_volume"),
 				),
@@ -77,23 +74,23 @@ func testAccCheckNutanixVolumeGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccNutanixVolumeGroupConfig(r int32) string {
+func testAccNutanixVolumeGroupConfig(r int) string {
 	return fmt.Sprintf(`
 
 resource "nutanix_volume_group" "test_volume" {
-  name        = "Test Volume Group"
+  name        = "Test Volume Group %d"
   description = "Tes Volume Group Description"
 }
-`)
+`, r)
 }
 
-func testAccNutanixVolumeGroupConfigUpdate(r int32) string {
+func testAccNutanixVolumeGroupConfigUpdate(r int) string {
 	return fmt.Sprintf(`
 resource "nutanix_volume_group" "test_volume" {
-  name        = "Test Volume Group Update"
+	name        = "Test Volume Group %d"
   description = "Tes Volume Group Description Update"
 }
-`)
+`, r)
 }
 
 func Test_resourceNutanixVolumeGroup(t *testing.T) {
@@ -296,7 +293,7 @@ func Test_testAccCheckNutanixVolumeGroupDestroy(t *testing.T) {
 
 func Test_testAccNutanixVolumeGroupConfig(t *testing.T) {
 	type args struct {
-		r int32
+		r int
 	}
 	tests := []struct {
 		name string
@@ -316,7 +313,7 @@ func Test_testAccNutanixVolumeGroupConfig(t *testing.T) {
 
 func Test_testAccNutanixVolumeGroupConfigUpdate(t *testing.T) {
 	type args struct {
-		r int32
+		r int
 	}
 	tests := []struct {
 		name string

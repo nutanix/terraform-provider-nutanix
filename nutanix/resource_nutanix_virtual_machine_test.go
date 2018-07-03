@@ -87,7 +87,7 @@ func testAccCheckNutanixVirtualMachineDestroy(s *terraform.State) error {
 }
 
 func testAccNutanixVMConfig(r int) string {
-	return fmt.Sprint(`
+	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {
   metadata = {
     length = 2
@@ -97,7 +97,7 @@ output "cluster" {
   value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 resource "nutanix_virtual_machine" "vm1" {
-  name = "test-dou"
+  name = "test-dou-%d"
   cluster_reference = {
 	  kind = "cluster"
 	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
@@ -107,55 +107,31 @@ resource "nutanix_virtual_machine" "vm1" {
   memory_size_mib      = 186
   power_state          = "ON"
 }
-`)
+`, r)
 }
 
 func testAccNutanixVMConfigUpdate(r int) string {
-	return fmt.Sprint(`
+	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {
   metadata = {
     length = 2
   }
 }
-
 output "cluster" {
   value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
-
-#resource "nutanix_image" "test" {
-#  name        = "Ubuntu VM"
-#  description = "Ubuntu VM"
-#  source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
-#}
-
-
 resource "nutanix_virtual_machine" "vm1" {
-  name = "test-dou-updated"
-
+  name = "test-dou-%d"
   cluster_reference = {
 	  kind = "cluster"
 	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   }
-
-#    disk_list = [{
-#    data_source_reference = [{
-#      kind = "image"
-#      uuid = "${nutanix_image.test.id}"
-#    }]
-
-#   device_properties = [{
-#      device_type = "DISK"
-#    }]
-#
-#    disk_size_mib = 64
-#  }]
-
   num_vcpus_per_socket = 1
-  num_sockets          = 1
+  num_sockets          = 2
   memory_size_mib      = 186
   power_state          = "ON"
 }
-`)
+`, r)
 }
 
 func Test_resourceNutanixVirtualMachine(t *testing.T) {

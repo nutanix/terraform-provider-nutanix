@@ -12,14 +12,13 @@ import (
 )
 
 func TestAccNutanixImagesDataSource_basic(t *testing.T) {
-	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImagesDataSourceConfig(rInt),
+				Config: testAccImagesDataSourceConfig(acctest.RandIntRange(0, 500)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixImagesExists("data.nutanix_images.test1"),
 				),
@@ -42,10 +41,10 @@ func testAccCheckNutanixImagesExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccImagesDataSourceConfig(r int) string {
+func testAccImagesDataSourceConfig(rNumber int) string {
 	return fmt.Sprintf(`
 resource "nutanix_image" "test" {
-  name        = "Ubuntu"
+  name        = "Ubuntu-%d"
   description = "Ubuntu"
   source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
 }
@@ -55,7 +54,7 @@ data "nutanix_images" "test1" {
 	metadata {
 		length = 1
 	}
-}`)
+}`, rNumber)
 }
 
 func Test_dataSourceNutanixImages(t *testing.T) {

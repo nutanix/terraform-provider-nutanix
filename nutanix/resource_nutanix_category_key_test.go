@@ -14,14 +14,14 @@ import (
 )
 
 func TestAccNutanixCategoryKey_basic(t *testing.T) {
-	rInt := acctest.RandIntRange(0, 500)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixCategoryKeyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixCategoryKeyConfig(rInt),
+				Config: testAccNutanixCategoryKeyConfig(acctest.RandIntRange(0, 500)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixCategoryKeyExists("nutanix_category_key.test"),
 				),
