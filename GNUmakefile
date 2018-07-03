@@ -5,10 +5,10 @@ WEBSITE_REPO=github.com/hashicorp/terraform-website
 
 default: build
 
-build: deps sanity
+build: deps
 	go install
 
-test: deps sanity
+test: deps
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m -coverprofile c.out
 
 cibuild:
@@ -20,16 +20,14 @@ citest:
 fmt:
 	gofmt -s .
 
-sanity:
+extrasanity:
 	echo "==>sanity: golangci-lint"
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $GOPATH/bin v1.9.1
 	golangci-lint run
 
 deps:
-	dep status
-
-tools:
 	go get -u github.com/golang/dep/cmd/dep
-	go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+	dep status
 
 website:
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
