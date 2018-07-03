@@ -13,7 +13,10 @@ test: deps
 	go tool cover -html=c.out
 
 cibuild:
-	go install
+	env GOOS=darwin GOARCH=amd64 go build
+	env GOOS=windows GOARCH=amd64 go build
+	env GOOS=linux GOARCH=amd64 go build
+	env GOOS=linux GOARCH=ppc64 go build
 
 citest:
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m -coverprofile c.out
