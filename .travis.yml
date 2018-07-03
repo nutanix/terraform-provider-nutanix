@@ -28,11 +28,14 @@ jobs:
         - make extrasanity
       go: 1.10.x
     - stage: build
-      script: true
+      script:
+        - make cibuild
       go: 1.9.x
-    - script: true
+    - script:
+        - make cibuild
       go: 1.10.x
-    - script: true
+    - script:
+        - make cibuild
       go: tip
     - stage: acceptance testing
       go: 1.10.x
