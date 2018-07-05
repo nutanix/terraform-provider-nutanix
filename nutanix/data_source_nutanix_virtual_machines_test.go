@@ -12,10 +12,6 @@ import (
 )
 
 func TestAccNutanixVMSDataSource_basic(t *testing.T) {
-	//Skipped because this test didn't pass in GCP environment
-	if isGCPEnvironment() {
-		t.Skip()
-	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
