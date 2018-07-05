@@ -56,8 +56,6 @@ func TestAccNutanixImage_basic_uploadLocal(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// t.Skip()
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
