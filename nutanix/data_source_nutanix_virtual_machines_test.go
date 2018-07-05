@@ -17,14 +17,12 @@ func TestAccNutanixVMSDataSource_basic(t *testing.T) {
 		t.Skip()
 	}
 
-	rInt := acctest.RandIntRange(0, 500)
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVMSSDataSourceConfig(rInt),
+				Config: testAccVMSSDataSourceConfig(acctest.RandIntRange(0, 100), acctest.RandIntRange(200, 300)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.nutanix_virtual_machines.unittest", "entities.#", "2"),
@@ -35,7 +33,7 @@ func TestAccNutanixVMSDataSource_basic(t *testing.T) {
 }
 
 // Lookup based on InstanceID
-func testAccVMSSDataSourceConfig(r int) string {
+func testAccVMSSDataSourceConfig(rNumVM1 int, rNumVM2 int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {
   metadata = {
@@ -48,7 +46,7 @@ output "cluster" {
 }
 
 resource "nutanix_virtual_machine" "vm1" {
-  name = "unittest-dou-vm1"
+  name = "unittest-dou-vm%d"
 
   cluster_reference = {
 	  kind = "cluster"
@@ -63,7 +61,7 @@ resource "nutanix_virtual_machine" "vm1" {
 }
 
 resource "nutanix_virtual_machine" "vm2" {
-  name = "unittest-dou-vm2"
+  name = "unittest-dou-vm%d"
 
   cluster_reference = {
 	  kind = "cluster"
@@ -81,7 +79,7 @@ data "nutanix_virtual_machines" "unittest" {
 	metadata = {
 		length = 2
 	}
-}`)
+}`, rNumVM1, rNumVM2)
 }
 
 func Test_dataSourceNutanixVirtualMachines(t *testing.T) {
@@ -199,7 +197,8 @@ func Test_getDataSourceVMSSchema(t *testing.T) {
 
 func Test_testAccVMSSDataSourceConfig(t *testing.T) {
 	type args struct {
-		r int
+		r1 int
+		r2 int
 	}
 	tests := []struct {
 		name string
@@ -210,7 +209,7 @@ func Test_testAccVMSSDataSourceConfig(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := testAccVMSSDataSourceConfig(tt.args.r); got != tt.want {
+			if got := testAccVMSSDataSourceConfig(tt.args.r1, tt.args.r2); got != tt.want {
 				t.Errorf("testAccVMSSDataSourceConfig() = %v, want %v", got, tt.want)
 			}
 		})

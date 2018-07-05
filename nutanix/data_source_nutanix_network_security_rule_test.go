@@ -17,14 +17,12 @@ func TestAccNutanixNetworkSecurityRuleDataSource_basic(t *testing.T) {
 		t.Skip()
 	}
 
-	rInt := acctest.RandIntRange(0, 500)
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkSecurityRuleDataSourceConfig(rInt),
+				Config: testAccNetworkSecurityRuleDataSourceConfig(acctest.RandIntRange(0, 500)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.nutanix_network_security_rule.test", "name", "RULE-1-TIERS"),
@@ -70,7 +68,7 @@ resource "nutanix_category_value" "ashwini"{
 
 
 resource "nutanix_network_security_rule" "TEST-TIER" {
-  name        = "RULE-1-TIERS"
+  name        = "RULE-1-TIERS-%d"
   description = "rule 1 tiers"
 
   app_rule_action = "APPLY"
@@ -128,7 +126,7 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
 data "nutanix_network_security_rule" "test" {
 	network_security_rule_id = "${nutanix_network_security_rule.TEST-TIER.id}"
 }
-`)
+`, r)
 }
 
 func Test_dataSourceNutanixNetworkSecurityRule(t *testing.T) {

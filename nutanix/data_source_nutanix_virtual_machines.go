@@ -124,7 +124,8 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 		entity["guest_customization_cloud_init_user_data"] = cloudInitUser
 		entity["guest_customization_cloud_init_meta_data"] = cloudInitMeta
 		entity["guest_customization_sysprep"] = sysprep
-		entity["should_fail_on_script_failure"] = utils.BoolValue(v.Status.Resources.PowerStateMechanism.GuestTransitionConfig.ShouldFailOnScriptFailure)
+		entity["should_fail_on_script_failure"] = utils.BoolValue(
+			v.Status.Resources.PowerStateMechanism.GuestTransitionConfig.ShouldFailOnScriptFailure)
 		entity["enable_script_exec"] = utils.BoolValue(v.Status.Resources.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec)
 		entity["power_state_mechanism"] = utils.StringValue(v.Status.Resources.PowerStateMechanism.Mechanism)
 		entity["vga_console_enabled"] = utils.BoolValue(v.Status.Resources.VgaConsoleEnabled)

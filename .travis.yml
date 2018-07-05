@@ -16,30 +16,63 @@ script:
   - make cibuild
 
 stages:
-  - warm up dependencies
   - sanity testing
-  - build
+  - build go 1.9
+  - build go 1.10
+  - build go master
   - acceptance testing
+  - name: deploy
+    if: branch = master
 
 jobs:
   include:
-    - stage: warm up dependencies
-      script:
-        - go get -u github.com/golang/dep/cmd/dep
-        - make deps
-      go: 1.10.x
     - stage: sanity testing
       script:
-        - go install ./vendor/github.com/golangci/golangci-lint/cmd/golangci-lint/
-        - make sanity
+        - make deps
+        - make extrasanity
       go: 1.10.x
-    - stage: build
-      script: true
+    # Build Go 1.9.x
+    - stage: build go 1.9
       go: 1.9.x
-    - script: true
+      script:
+        - make cibuild
+      env: GOOS=darwin GOARCH=amd64
+    - script:
+        - make cibuild
+      go: 1.9.x
+      env: GOOS=windows GOARCH=amd64
+    - script:
+        - make cibuild
+      go: 1.9.x
+      env: GOOS=linux GOARCH=amd64
+    # Build Go 1.10.x
+    - stage: build go 1.10
       go: 1.10.x
-    - script: true
+      script:
+        - make cibuild
+      env: GOOS=darwin GOARCH=amd64
+    - script:
+        - make cibuild
+      go: 1.10.x
+      env: GOOS=windows GOARCH=amd64
+    - script:
+        - make cibuild
+      go: 1.10.x
+      env: GOOS=linux GOARCH=amd64
+    # Build Go master (helps hedge against upstream code breaking downstream builds later, acts as a canary)
+    - stage: build go master
       go: tip
+      script:
+        - make cibuild
+      env: GOOS=darwin GOARCH=amd64
+    - script:
+        - make cibuild
+      go: tip
+      env: GOOS=windows GOARCH=amd64
+    - script:
+        - make cibuild
+      go: tip
+      env: GOOS=linux GOARCH=amd64
     - stage: acceptance testing
       go: 1.10.x
       script:
@@ -48,10 +81,15 @@ jobs:
         - ./cc-test-reporter before-build
         - make citest
         - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
+    - stage: deploy
+      provider: script
+      skip_cleanup: true
+      script: curl -sL https://git.io/goreleaser | bash
+      on:
+        tags: true
+        condition: $TRAVIS_GO_VERSION =~ ^99\.99\.
 
 matrix:
   fast_finish: true
   allow_failures:
-  - stage: sanity testing
-  - script: make sanity
   - go: tip

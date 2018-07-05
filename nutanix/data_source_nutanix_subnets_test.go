@@ -17,14 +17,12 @@ func TestAccNutanixSubnetsDataSource_basic(t *testing.T) {
 		t.Skip()
 	}
 
-	rInt := acctest.RandIntRange(0, 500)
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetsDataSourceConfig(rInt),
+				Config: testAccSubnetsDataSourceConfig(acctest.RandIntRange(0, 500)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixSubnetsExists("data.nutanix_subnets.test1"),
 				),

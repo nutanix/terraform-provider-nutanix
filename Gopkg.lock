@@ -2,22 +2,6 @@
 
 
 [[projects]]
-  branch = "master"
-  name = "github.com/GoASTScanner/gas"
-  packages = [
-    ".",
-    "rules"
-  ]
-  revision = "a9de4d6c1589158e002cc336c495bf11fbf3ea06"
-  source = "github.com/golangci/gas"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/OpenPeeDeeP/depguard"
-  packages = ["."]
-  revision = "f2dff4f73566d1b9bd73f9bfd765030fbae5263a"
-
-[[projects]]
   name = "github.com/agext/levenshtein"
   packages = ["."]
   revision = "5f10fee965225ac1eecdc234c09daf5cd9e7f7b6"
@@ -97,12 +81,6 @@
   version = "v3.5.1"
 
 [[projects]]
-  name = "github.com/client9/misspell"
-  packages = ["."]
-  revision = "b90dc15cfd220ecf8bbc9043ecb928cef381f011"
-  version = "v0.3.4"
-
-[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -115,22 +93,10 @@
   version = "v1.7.0"
 
 [[projects]]
-  name = "github.com/fsnotify/fsnotify"
-  packages = ["."]
-  revision = "c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9"
-  version = "v1.4.7"
-
-[[projects]]
   name = "github.com/go-ini/ini"
   packages = ["."]
   revision = "06f5f3d67269ccec1fe5fe4134ba6e982984f7f5"
   version = "v1.37.0"
-
-[[projects]]
-  name = "github.com/gogo/protobuf"
-  packages = ["proto"]
-  revision = "1adfc126b41513cc696b209667c8656ea7aac67c"
-  version = "v1.0.0"
 
 [[projects]]
   name = "github.com/golang/protobuf"
@@ -143,113 +109,6 @@
   ]
   revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
   version = "v1.1.0"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/golangci/check"
-  packages = [
-    "cmd/structcheck",
-    "cmd/varcheck"
-  ]
-  revision = "cfe4005ccda277a820149d44d6ededc400cc99a2"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/golangci/go-misc"
-  packages = ["deadcode"]
-  revision = "a61b005a223b50d3656798639dd87073ca5c1981"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/golangci/goconst"
-  packages = ["."]
-  revision = "041c5f2b40f3dd334a4a6ee6a3f84ca3fc70680a"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/golangci/gocyclo"
-  packages = ["pkg/gocyclo"]
-  revision = "0a533e8fa43d6605069e94f455bf9d79d4b8ea8c"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/golangci/gofmt"
-  packages = [
-    "gofmt",
-    "goimports"
-  ]
-  revision = "2076e05ced53480baa8ba14a05b80a415bec9377"
-
-[[projects]]
-  name = "github.com/golangci/golangci-lint"
-  packages = [
-    "cmd/golangci-lint",
-    "pkg/commands",
-    "pkg/config",
-    "pkg/exitcodes",
-    "pkg/fsutils",
-    "pkg/golinters",
-    "pkg/goutils",
-    "pkg/lint",
-    "pkg/lint/astcache",
-    "pkg/lint/linter",
-    "pkg/lint/lintersdb",
-    "pkg/logutils",
-    "pkg/packages",
-    "pkg/printers",
-    "pkg/report",
-    "pkg/result",
-    "pkg/result/processors",
-    "pkg/timeutils"
-  ]
-  revision = "1774bf22a26aa1203677a947092345d1e61e6e26"
-  version = "v1.9.1"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/golangci/govet"
-  packages = [
-    ".",
-    "lib/cfg",
-    "lib/whitelist"
-  ]
-  revision = "1a9ab8120ec96a014df3afab2d6c47f7e12d8928"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/golangci/ineffassign"
-  packages = ["."]
-  revision = "7b41b0f84881918dab3c16c5e5148d8aa55d27b4"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/golangci/lint-1"
-  packages = ["."]
-  revision = "4bf9709227d15e5f14c84a381e315a4695c4a372"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/golangci/maligned"
-  packages = ["."]
-  revision = "b1d89398deca2fd3f8578e5a9551e819bd01ca5f"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/golangci/prealloc"
-  packages = ["."]
-  revision = "215b22d4de21190b80ce05e7d8466677c1aa3223"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/golangci/revgrep"
-  packages = ["."]
-  revision = "8a5b4160227a907a1065f982c6943efca449d309"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/golangci/unconvert"
-  packages = ["."]
-  revision = "28b1c447d1f4a810737ee6ab40ea6c1d0ceae4ad"
 
 [[projects]]
   branch = "master"
@@ -315,7 +174,6 @@
     ".",
     "hcl/ast",
     "hcl/parser",
-    "hcl/printer",
     "hcl/scanner",
     "hcl/strconv",
     "hcl/token",
@@ -395,40 +253,9 @@
   revision = "3520598351bb3500a49ae9563f5539666ae0a27c"
 
 [[projects]]
-  name = "github.com/inconshreveable/mousetrap"
-  packages = ["."]
-  revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
-  version = "v1.0"
-
-[[projects]]
   name = "github.com/jmespath/go-jmespath"
   packages = ["."]
   revision = "0b12d6b5"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/kisielk/errcheck"
-  packages = [
-    "golangci",
-    "internal/errcheck"
-  ]
-  revision = "78f2b28b23265c54a520979eceadf679f93fc92b"
-  source = "github.com/golangci/errcheck"
-
-[[projects]]
-  name = "github.com/kisielk/gotool"
-  packages = [
-    ".",
-    "internal/load"
-  ]
-  revision = "80517062f582ea3340cd4baf70e86d539ae7d84d"
-  version = "v1.0.0"
-
-[[projects]]
-  name = "github.com/magiconair/properties"
-  packages = ["."]
-  revision = "c2353362d570a7bfa228149c62842019201cfb71"
-  version = "v1.8.0"
 
 [[projects]]
   name = "github.com/mattn/go-colorable"
@@ -441,20 +268,6 @@
   packages = ["."]
   revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
   version = "v0.0.3"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/mibk/dupl"
-  packages = [
-    ".",
-    "job",
-    "printer",
-    "suffixtree",
-    "syntax",
-    "syntax/golang"
-  ]
-  revision = "53b9af5a45362a6f2896cfa39cc17d17ba9667ea"
-  source = "github.com/golangci/dupl"
 
 [[projects]]
   branch = "master"
@@ -505,32 +318,10 @@
   revision = "63d60e9d0dbc60cf9164e6510889b0db6683d98c"
 
 [[projects]]
-  name = "github.com/nbutton23/zxcvbn-go"
-  packages = [
-    ".",
-    "adjacency",
-    "data",
-    "entropy",
-    "frequency",
-    "match",
-    "matching",
-    "scoring",
-    "utils/math"
-  ]
-  revision = "eafdab6b0663b4b528c35975c8b0e78be6e25261"
-  version = "v0.1"
-
-[[projects]]
   name = "github.com/oklog/run"
   packages = ["."]
   revision = "4dadeb3030eda0273a12382bb2348ffc7c9d1a39"
   version = "v1.0.0"
-
-[[projects]]
-  name = "github.com/pelletier/go-toml"
-  packages = ["."]
-  revision = "c01d1270ff3e442a8a57cddc1c92dc1138598194"
-  version = "v1.2.0"
 
 [[projects]]
   name = "github.com/posener/complete"
@@ -542,51 +333,6 @@
   ]
   revision = "98eb9847f27ba2008d380a32c98be474dea55bdf"
   version = "v1.1.1"
-
-[[projects]]
-  name = "github.com/sirupsen/logrus"
-  packages = ["."]
-  revision = "c155da19408a8799da419ed3eeb0cb5db0ad5dbc"
-  version = "v1.0.5"
-
-[[projects]]
-  name = "github.com/spf13/afero"
-  packages = [
-    ".",
-    "mem"
-  ]
-  revision = "787d034dfe70e44075ccc060d346146ef53270ad"
-  version = "v1.1.1"
-
-[[projects]]
-  name = "github.com/spf13/cast"
-  packages = ["."]
-  revision = "8965335b8c7107321228e3e3702cab9832751bac"
-  version = "v1.2.0"
-
-[[projects]]
-  name = "github.com/spf13/cobra"
-  packages = ["."]
-  revision = "ef82de70bb3f60c65fb8eebacbb2d122ef517385"
-  version = "v0.0.3"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/spf13/jwalterweatherman"
-  packages = ["."]
-  revision = "7c0cea34c8ece3fbeb2b27ab9b59511d360fb394"
-
-[[projects]]
-  name = "github.com/spf13/pflag"
-  packages = ["."]
-  revision = "583c0c0531f06d5278b7d917446061adc344b5cd"
-  version = "v1.0.1"
-
-[[projects]]
-  name = "github.com/spf13/viper"
-  packages = ["."]
-  revision = "b5e8006cbee93ec955a89ab31e0e3ce3204f3736"
-  version = "v1.0.2"
 
 [[projects]]
   name = "github.com/ulikunitz/xz"
@@ -631,8 +377,7 @@
     "openpgp/packet",
     "openpgp/s2k",
     "poly1305",
-    "ssh",
-    "ssh/terminal"
+    "ssh"
   ]
   revision = "8ac0e0d97ce45cd83d1d7243c060cb8461dda5e9"
 
@@ -655,10 +400,7 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
-  packages = [
-    "unix",
-    "windows"
-  ]
+  packages = ["unix"]
   revision = "bff228c7b664c5fce602223a05fb708fd8654986"
 
 [[projects]]
@@ -677,33 +419,10 @@
     "unicode/bidi",
     "unicode/cldr",
     "unicode/norm",
-    "unicode/rangetable",
-    "width"
+    "unicode/rangetable"
   ]
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
-
-[[projects]]
-  branch = "master"
-  name = "golang.org/x/tools"
-  packages = [
-    "go/ast/astutil",
-    "go/buildutil",
-    "go/callgraph",
-    "go/callgraph/cha",
-    "go/callgraph/rta",
-    "go/callgraph/static",
-    "go/gcexportdata",
-    "go/internal/gcimporter",
-    "go/loader",
-    "go/ssa",
-    "go/ssa/ssautil",
-    "go/types/typeutil",
-    "imports",
-    "internal/fastwalk"
-  ]
-  revision = "8c39fb57ad842377bfea6ab5eff7608e4e8f6765"
-  source = "github.com/golangci/tools"
 
 [[projects]]
   branch = "master"
@@ -744,64 +463,9 @@
   revision = "7a6a684ca69eb4cae85ad0a484f2e531598c047b"
   version = "v1.12.2"
 
-[[projects]]
-  name = "gopkg.in/yaml.v2"
-  packages = ["."]
-  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
-  version = "v2.2.1"
-
-[[projects]]
-  branch = "master"
-  name = "honnef.co/go/tools"
-  packages = [
-    "deprecated",
-    "functions",
-    "internal/sharedcheck",
-    "lint",
-    "lint/lintutil",
-    "simple",
-    "staticcheck",
-    "staticcheck/vrp",
-    "unused",
-    "version"
-  ]
-  revision = "986cd2acf8dbf500b75aef5636a8107de6044e63"
-  source = "github.com/golangci/go-tools"
-
-[[projects]]
-  branch = "master"
-  name = "mvdan.cc/interfacer"
-  packages = ["check"]
-  revision = "822e100dd73a2677e406ccc437efdb4a82e67033"
-
-[[projects]]
-  branch = "master"
-  name = "mvdan.cc/lint"
-  packages = ["."]
-  revision = "adc824a0674b99099789b6188a058d485eaf61c0"
-
-[[projects]]
-  branch = "fix-crash-on-nil-constant"
-  name = "mvdan.cc/unparam"
-  packages = ["check"]
-  revision = "f30d69ad8b55690d0e814cdd96e955834e0d0ee1"
-  source = "github.com/golangci/unparam"
-
-[[projects]]
-  branch = "master"
-  name = "sourcegraph.com/sourcegraph/go-diff"
-  packages = ["diff"]
-  revision = "3f415a150aec0685cb81b73cc201e762e075006d"
-
-[[projects]]
-  branch = "master"
-  name = "sourcegraph.com/sqs/pbtypes"
-  packages = ["."]
-  revision = "d3ebe8f20ae404b082e57662738480545bc2ad3d"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9a7bf09a5692f7a393738d9ca617cefa15e1b8478b39f9ffb003b87160bd3edb"
+  inputs-digest = "c9c0a62de76deec1dec90305a4fedd4177a105cfdbee1dceda0e5cc53a91b9c3"
   solver-name = "gps-cdcl"
   solver-version = 1
