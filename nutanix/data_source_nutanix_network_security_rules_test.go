@@ -1,11 +1,9 @@
 package nutanix
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func TestAccNutanixNetworkSecurityRulesDataSource_basic(t *testing.T) {
@@ -124,56 +122,3 @@ data "nutanix_network_security_rules" "test" {
 		length = 1
 	}
 }`
-
-func Test_dataSourceNutanixNetworkSecurityRules(t *testing.T) {
-	tests := []struct {
-		name string
-		want *schema.Resource
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := dataSourceNutanixNetworkSecurityRules(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("dataSourceNutanixNetworkSecurityRules() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_dataSourceNutanixNetworkSecurityRulesRead(t *testing.T) {
-	type args struct {
-		d    *schema.ResourceData
-		meta interface{}
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := dataSourceNutanixNetworkSecurityRulesRead(tt.args.d, tt.args.meta); (err != nil) != tt.wantErr {
-				t.Errorf("dataSourceNutanixNetworkSecurityRulesRead() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func Test_getDataSourceNetworkSecurityRulesSchema(t *testing.T) {
-	tests := []struct {
-		name string
-		want map[string]*schema.Schema
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := getDataSourceNetworkSecurityRulesSchema(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getDataSourceNetworkSecurityRulesSchema() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
