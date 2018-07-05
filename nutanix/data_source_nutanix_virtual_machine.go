@@ -143,7 +143,8 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	d.Set("num_sockets", utils.Int64Value(resp.Status.Resources.NumSockets))
 	d.Set("memory_size_mib", utils.Int64Value(resp.Status.Resources.MemorySizeMib))
 	d.Set("guest_customization_is_overridable", isOv)
-	d.Set("should_fail_on_script_failure", utils.BoolValue(resp.Status.Resources.PowerStateMechanism.GuestTransitionConfig.ShouldFailOnScriptFailure))
+	d.Set("should_fail_on_script_failure", utils.BoolValue(
+		resp.Status.Resources.PowerStateMechanism.GuestTransitionConfig.ShouldFailOnScriptFailure))
 	d.Set("enable_script_exec", utils.BoolValue(resp.Status.Resources.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec))
 	d.Set("power_state_mechanism", utils.StringValue(resp.Status.Resources.PowerStateMechanism.Mechanism))
 	d.Set("vga_console_enabled", utils.BoolValue(resp.Status.Resources.VgaConsoleEnabled))

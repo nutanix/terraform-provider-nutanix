@@ -11,14 +11,13 @@ import (
 )
 
 func TestAccNutanixVirtualMachineDataSource_basic(t *testing.T) {
-	rInt := acctest.RandIntRange(0, 500)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVMDataSourceConfig(rInt),
+				Config: testAccVMDataSourceConfig(acctest.RandIntRange(0, 500)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.nutanix_virtual_machine.nutanix_virtual_machine", "num_vcpus_per_socket", "1"),

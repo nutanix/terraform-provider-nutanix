@@ -14,14 +14,12 @@ func TestAccNutanixVolumeGroupDataSource_basic(t *testing.T) {
 	// skipping as this API is not yet GA (will GA in upcoming AOS release)
 	t.Skip()
 
-	rInt := acctest.RandInt()
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVolumeGroupDataSourceConfig(rInt),
+				Config: testAccVolumeGroupDataSourceConfig(acctest.RandIntRange(0, 500)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.nutanix_volume_group.test", "name", "Ubuntu"),
@@ -36,15 +34,15 @@ func TestAccNutanixVolumeGroupDataSource_basic(t *testing.T) {
 func testAccVolumeGroupDataSourceConfig(r int) string {
 	return fmt.Sprintf(`
 resource "nutanix_volume_group" "test" {
-  name        = "VG Test"
+  name        = "VG Test %d"
   description = "VG Test Description"
-  
+
 }
 
 data "nutanix_volume_group" "test" {
 	volume_group_id = "${nutanix_volume_group.test.id}"
 }
-`)
+`, r)
 }
 
 func Test_dataSourceNutanixVolumeGroup(t *testing.T) {

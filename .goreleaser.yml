@@ -1,0 +1,53 @@
+---
+project_name: terraform-provider-nutanix
+
+release:
+  github:
+    owner: nutanix
+    name: terraform-provider-nutanix
+
+builds:
+  - binary: terraform-provider-nutanix
+    goos:
+      - darwin
+      - windows
+      - linux
+    goarch:
+      - amd64
+    ldflags: -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+
+archive:
+  format: tar.gz
+  wrap_in_directory: true
+  format_overrides:
+    - goos: windows
+      format: zip
+  name_template: '{{ .Binary }}-{{ .Version }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+  files:
+    - LICENSE
+    - README.md
+    - examples/*
+  replacements:
+    amd64: 64-bit
+    386: 32-bit
+    darwin: macOS
+
+snapshot:
+  name_template: SNAPSHOT-{{ .Commit }}
+
+checksum:
+  name_template: '{{ .ProjectName }}-{{ .Version }}-checksums.txt'
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
+    - '^dev:'
+    - 'README'
+    - Merge pull request
+    - Merge branch
+
+git:
+  short_hash: true

@@ -2,12 +2,12 @@ package nutanix
 
 import (
 	"fmt"
-	"math/rand"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
@@ -20,20 +20,20 @@ func TestAccNutanixNetworkSecurityRule_basic(t *testing.T) {
 		t.Skip()
 	}
 
-	r := rand.Int31()
+	rInt := acctest.RandInt()
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixNetworkSecurityRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixNetworkSecurityRuleConfig(r),
+				Config: testAccNutanixNetworkSecurityRuleConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixNetworkSecurityRuleExists("nutanix_network_security_rule.TEST-TIER"),
 				),
 			},
 			{
-				Config: testAccNutanixNetworkSecurityRuleConfigUpdate(r),
+				Config: testAccNutanixNetworkSecurityRuleConfigUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixNetworkSecurityRuleExists("nutanix_network_security_rule.TEST-TIER"),
 				),
@@ -79,7 +79,7 @@ func testAccCheckNutanixNetworkSecurityRuleDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccNutanixNetworkSecurityRuleConfig(r int32) string {
+func testAccNutanixNetworkSecurityRuleConfig(r int) string {
 	return fmt.Sprintf(`
 resource "nutanix_category_key" "test-category-key"{
     name = "TIER-1"
@@ -118,7 +118,7 @@ resource "nutanix_category_value" "ashwini"{
 
 
 resource "nutanix_network_security_rule" "TEST-TIER" {
-  name        = "RULE-1-TIERS"
+  name        = "RULE-1-TIERS-%d"
   description = "rule 1 tiers"
 
   app_rule_action = "APPLY"
@@ -172,10 +172,10 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
     },
   ]
 }
-`)
+`, r)
 }
 
-func testAccNutanixNetworkSecurityRuleConfigUpdate(r int32) string {
+func testAccNutanixNetworkSecurityRuleConfigUpdate(r int) string {
 	return fmt.Sprintf(`
 resource "nutanix_category_key" "test-category-key"{
     name = "TIER-1"
@@ -213,7 +213,7 @@ resource "nutanix_category_value" "ashwini"{
 
 
 resource "nutanix_network_security_rule" "TEST-TIER" {
-  name        = "RULE-1-TIERS Updated"
+  name        = "RULE-1-TIERS-%d"
   description = "rule 1 tiers Updated"
 
   app_rule_action = "APPLY"
@@ -267,7 +267,7 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
     },
   ]
 }
-`)
+`, r)
 }
 
 func Test_resourceNutanixNetworkSecurityRule(t *testing.T) {
@@ -517,7 +517,7 @@ func Test_testAccCheckNutanixNetworkSecurityRuleDestroy(t *testing.T) {
 
 func Test_testAccNutanixNetworkSecurityRuleConfig(t *testing.T) {
 	type args struct {
-		r int32
+		r int
 	}
 	tests := []struct {
 		name string
@@ -537,7 +537,7 @@ func Test_testAccNutanixNetworkSecurityRuleConfig(t *testing.T) {
 
 func Test_testAccNutanixNetworkSecurityRuleConfigUpdate(t *testing.T) {
 	type args struct {
-		r int32
+		r int
 	}
 	tests := []struct {
 		name string
