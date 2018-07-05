@@ -3,7 +3,7 @@
 # Author: tarak@nutanix.com
 #
 #############################################################################
-# Demo Multi-Tier App Deployment                                  
+# Demo Multi-Tier App Deployment
 # This script is a quick demo of how to use the following provider objects
 # - providers
 #     - terraform-provider-nutanix
@@ -13,14 +13,14 @@
 #     - nutanix_image
 # - data sources
 #     - nutanix_virtual_machine
-#     - 
+#     -
 #     -
 # - script Variables
 #     - clusterid's for targeting clusters within prism central
 #
-# The goal of this script is to show a multi-tier applicaiton, interacting with these various objects. 
+# The goal of this script is to show a multi-tier applicaiton, interacting with these various objects.
 # Feel free to reuse, comment, and contribute, so that others may learn and benefit
-#                                                                           
+#
 #############################################################################
 ### Define Provider Info for terraform-provider-nutanix
 ### This is where you define the credentials for Prism Central
@@ -46,7 +46,7 @@ locals {
 ### Data Sources
 ##########################
 ### These are "lookups" to simply define an already existing object as a plain text name
-### This is useful when managing a nutanix prism central instance from multiple state files, or deploying terraform into an existing / brownfield environment 
+### This is useful when managing a nutanix prism central instance from multiple state files, or deploying terraform into an existing / brownfield environment
 ### Virtual Machine Data Sources
 # data "nutanix_virtual_machine" "nutanix_virtual_machine" {
 #   vm_id = "${nutanix_virtual_machine.vm1.id}"
@@ -76,9 +76,9 @@ locals {
 ### Resources
 ##########################
 ### Image Resources (Managed by the Image Service)
-### 
-### Images are raw ISO, QCOW2, or VMDK files that are uploaded by a user can be attached to a VM. 
-### An ISO image is attached as a virtual CD-ROM drive, and QCOW2 and VMDK files are attached as SCSI disks. 
+###
+### Images are raw ISO, QCOW2, or VMDK files that are uploaded by a user can be attached to a VM.
+### An ISO image is attached as a virtual CD-ROM drive, and QCOW2 and VMDK files are attached as SCSI disks.
 ### For self service portal use cases: An image has to be explicitly added to the self-service catalog before users can create VMs from it.
 ###
 ### Image Service Product Docs: https://portal.nutanix.com/#/page/docs/details?targetId=Prism-Central-Guide-Prism-v56:mul-images-manage-pc-c.html
@@ -125,18 +125,18 @@ resource "nutanix_image" "centos-lamp-haproxy" {
 #     }
 # }
 ### Subnet Resources (Virtual Networks within AHV)
-### 
-### Subnets are virtual networks (VLANs) and can either be standard L2 VLANs or standard L2 VLANs with additional L3 IPAM provided by Acropolis. 
+###
+### Subnets are virtual networks (VLANs) and can either be standard L2 VLANs or standard L2 VLANs with additional L3 IPAM provided by Acropolis.
 ### Note: Using Managed Networks (aka IPAM) does not even hit the wire and is a neat way to inject IP addresses into VMs.
 ### Example: You can create a "managed" network in terraform that doesn't have a DHCP pool assoicated, then using the assign IP address feature to "pass" that static IP into the guest as an acropolis managed IP.
 ### This way, you can avoid having to use sysprep/cloud-init to actually set said IP address, and that assigned IP address will "stick" with the VM from cradle to grave, even if the VM is off.
-### You can also use this as "plumbing" for other IPAM systems, especially if said IPAM system isn't yet configured with an IP Helper/DHCP on the network yet. 
+### You can also use this as "plumbing" for other IPAM systems, especially if said IPAM system isn't yet configured with an IP Helper/DHCP on the network yet.
 ### Meaning, you could grab an IP as a resource from a 3rd party VLAN, and pass that IP Object into the VM via this feature, without having to interact with your physical network team at all.
 ###
 ### Subnets (aka Virtual Networks) Product Docs: https://portal.nutanix.com/#/page/docs/details?targetId=Prism-Central-Guide-Prism-v56:mul-network-configuration-acropolis-pc-t.html
 ### Subnets Developer Docs: http://developer.nutanix.com/reference/prism_central/v3/#subnet
 resource "nutanix_subnet" "next-iac-managed" {
-  # Can I hard code image to be kind image? 
+  # Can I hard code image to be kind image?
   # We're going to make this implicit in future API releases, so hard coding it is safe on the plugin side
   metadata = {
     kind = "subnet"
@@ -154,31 +154,28 @@ resource "nutanix_subnet" "next-iac-managed" {
   vlan_id     = 0
   subnet_type = "VLAN"
 
-  # Managed L3 Networks
-  # This bit is only needed if you intend to turn on IPAM
-  prefix_length = 20
-
-  default_gateway_ip = "10.5.80.1"
-  subnet_ip          = "10.5.80.0"
-
-  #dhcp_options {
-  #    boot_file_name   = "bootfile"
-  #    tftp_server_name = "1.2.3.200"
-  #    domain_name      = "nutanix"
-  #}
-  dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
-
-  dhcp_domain_search_list = ["nutanix.com", "eng.nutanix.com"]
+  # Provision a Managed L3 Network
+  # This bit is only needed if you intend to turn on AHV's IPAM
+	subnet_ip          = "10.250.140.0"
+  default_gateway_ip = "10.250.140.1"
+  prefix_length = 24
+  dhcp_options {
+		boot_file_name   = "bootfile"
+		domain_name      = "nutanix"
+		domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+		domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
+		tftp_server_name = "10.250.140.200"
+  }
 }
 
 ### Virtual Machine Resources
-### 
+###
 ### These are VMs managed by Prism Central, which could span across AHV, ESXi, or Prism Self Service Portal. That said, if you're doing ESXi, it is most likely that would deploy them via a vmware provider against vCenter APIs. That said, the capability does exist here
 ###
 ### VM Management Product Docs: https://portal.nutanix.com/#/page/docs/details?targetId=Prism-Central-Guide-Prism-v56:mul-vm-create-manage-pc-c.html
 ### Virtual Machines Developer Docs: http://developer.nutanix.com/reference/prism_central/v3/#vms
 resource "nutanix_virtual_machine" "demo-01-web" {
-  # Can I hard code image to be kind image? 
+  # Can I hard code image to be kind image?
   # We're going to make this implicit in future API releases, so hard coding it is safe on the plugin side
   # WRT virtual machine, metadata section may only be useful when setting the "projects" and "categories" constructs
   metadata {
@@ -229,7 +226,7 @@ resource "nutanix_virtual_machine" "demo-01-web" {
 }
 
 resource "nutanix_virtual_machine" "demo-01-app" {
-  # Can I hard code image to be kind image? 
+  # Can I hard code image to be kind image?
   # We're going to make this implicit in future API releases, so hard coding it is safe on the plugin side
   # WRT virtual machine, metadata section may only be useful when setting the "projects" and "categories" constructs
   metadata {
@@ -280,7 +277,7 @@ resource "nutanix_virtual_machine" "demo-01-app" {
 }
 
 resource "nutanix_virtual_machine" "demo-01-db" {
-  # Can I hard code image to be kind image? 
+  # Can I hard code image to be kind image?
   # We're going to make this implicit in future API releases, so hard coding it is safe on the plugin side
   # WRT virtual machine, metadata section may only be useful when setting the "projects" and "categories" constructs
   metadata {

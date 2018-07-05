@@ -105,10 +105,10 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 	if err := d.Set("dhcp_options", dOptions); err != nil {
 		return nil
 	}
-	if err := d.Set("dhcp_domain_name_server_list", dnsList); err != nil {
+	if err := d.Set("domain_name_server_list", dnsList); err != nil {
 		return nil
 	}
-	if err := d.Set("dhcp_domain_search_list", dsList); err != nil {
+	if err := d.Set("domain_search_list", dsList); err != nil {
 		return nil
 	}
 
@@ -372,18 +372,18 @@ func getDataSourceSubnetSchema() map[string]*schema.Schema {
 						Type:     schema.TypeString,
 						Computed: true,
 					},
+					"domain_name_server_list": {
+						Type:     schema.TypeList,
+						Computed: true,
+						Elem:     &schema.Schema{Type: schema.TypeString},
+					},
+					"domain_search_list": {
+						Type:     schema.TypeList,
+						Computed: true,
+						Elem:     &schema.Schema{Type: schema.TypeString},
+					},
 				},
 			},
-		},
-		"dhcp_domain_name_server_list": {
-			Type:     schema.TypeList,
-			Computed: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-		},
-		"dhcp_domain_search_list": {
-			Type:     schema.TypeList,
-			Computed: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
 		"vlan_id": {
 			Type:     schema.TypeInt,

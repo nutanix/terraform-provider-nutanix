@@ -184,10 +184,10 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("dhcp_options", dOptions); err != nil {
 		return nil
 	}
-	if err := d.Set("dhcp_domain_name_server_list", dnsList); err != nil {
+	if err := d.Set("domain_name_server_list", dnsList); err != nil {
 		return nil
 	}
-	if err := d.Set("dhcp_domain_search_list", dsList); err != nil {
+	if err := d.Set("domain_search_list", dsList); err != nil {
 		return nil
 	}
 
@@ -280,16 +280,16 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		a := d.Get("cluster_reference").(map[string]interface{})
 		spec.ClusterReference = validateRef(a)
 	}
-	if d.HasChange("dhcp_domain_name_server_list") {
-		dd := d.Get("dhcp_domain_name_server_list").([]interface{})
+	if d.HasChange("domain_name_server_list") {
+		dd := d.Get("domain_name_server_list").([]interface{})
 		ddn := make([]*string, len(dd))
 		for k, v := range dd {
 			ddn[k] = utils.String(v.(string))
 		}
 		dhcpO.DomainNameServerList = ddn
 	}
-	if d.HasChange("dhcp_domain_search_list") {
-		dd := d.Get("dhcp_domain_search_list").([]interface{})
+	if d.HasChange("domain_search_list") {
+		dd := d.Get("domain_search_list").([]interface{})
 		ddn := make([]*string, len(dd))
 		for k, v := range dd {
 			ddn[k] = utils.String(v.(string))
@@ -484,7 +484,7 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 		}
 	}
 
-	if v, ok := d.GetOk("dhcp_domain_name_server_list"); ok {
+	if v, ok := d.GetOk("domain_name_server_list"); ok {
 		p := v.([]interface{})
 		pool := make([]*string, len(p))
 
@@ -494,7 +494,7 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 
 		dhcpo.DomainNameServerList = pool
 	}
-	if v, ok := d.GetOk("dhcp_domain_search_list"); ok {
+	if v, ok := d.GetOk("domain_search_list"); ok {
 		p := v.([]interface{})
 		pool := make([]*string, len(p))
 
@@ -777,20 +777,20 @@ func getSubnetSchema() map[string]*schema.Schema {
 						Optional: true,
 						Computed: true,
 					},
+					"domain_name_server_list": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Computed: true,
+						Elem:     &schema.Schema{Type: schema.TypeString},
+					},
+					"domain_search_list": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Computed: true,
+						Elem:     &schema.Schema{Type: schema.TypeString},
+					},
 				},
 			},
-		},
-		"dhcp_domain_name_server_list": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Computed: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-		},
-		"dhcp_domain_search_list": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Computed: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
 		"vlan_id": {
 			Type:     schema.TypeInt,

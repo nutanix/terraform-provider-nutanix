@@ -104,8 +104,8 @@ func dataSourceNutanixSubnetsRead(d *schema.ResourceData, meta interface{}) erro
 		entity["dhcp_server_address_port"] = port
 		entity["ip_config_pool_list_ranges"] = ipcpl
 		entity["dhcp_options"] = dOptions
-		entity["dhcp_domain_name_server_list"] = dnsList
-		entity["dhcp_domain_search_list"] = dsList
+		entity["domain_name_server_list"] = dnsList
+		entity["domain_search_list"] = dsList
 		entity["vlan_id"] = utils.Int64Value(v.Status.Resources.VlanID)
 		entity["network_function_chain_reference"] = getReferenceValues(v.Status.Resources.NetworkFunctionChainReference)
 		entities[k] = entity
@@ -395,18 +395,18 @@ func getDataSourceSubnetsSchema() map[string]*schema.Schema {
 									Type:     schema.TypeString,
 									Computed: true,
 								},
+								"domain_name_server_list": {
+									Type:     schema.TypeList,
+									Computed: true,
+									Elem:     &schema.Schema{Type: schema.TypeString},
+								},
+								"domain_search_list": {
+									Type:     schema.TypeList,
+									Computed: true,
+									Elem:     &schema.Schema{Type: schema.TypeString},
+								},
 							},
 						},
-					},
-					"dhcp_domain_name_server_list": {
-						Type:     schema.TypeList,
-						Computed: true,
-						Elem:     &schema.Schema{Type: schema.TypeString},
-					},
-					"dhcp_domain_search_list": {
-						Type:     schema.TypeList,
-						Computed: true,
-						Elem:     &schema.Schema{Type: schema.TypeString},
 					},
 					"vlan_id": {
 						Type:     schema.TypeInt,
