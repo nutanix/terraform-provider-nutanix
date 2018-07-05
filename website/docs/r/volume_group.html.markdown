@@ -15,7 +15,7 @@ Provides a Nutanix Volume Group resource to Create a volume_group.
 ```hcl
 resource "nutanix_volume_group" "test_volume" {
   name        = "Test Volume Group"
-  description = "Tes Volume Group Description"
+  description = "Test Volume Group Description"
 }
 ```
 
