@@ -36,9 +36,16 @@ linters:
       # Example error:
         # nutanix/data_source_nutanix_image.go:61:7: Error return value of `d.Set` is not checked (errcheck)
         # d.Set("name", utils.StringValue(resp.Status.Name))
-      # waiting on terraform/hashi to let us know how they want us to changle thoseerrors seeError return value of `d.Set` is not checked (errcheck)
+      # waiting on terraform/hashi to let us know how they want us to changle those errors
+        # see Error return value of `d.Set` is not checked (errcheck)
 
 issues:
   exclude:
     - composite literal uses unkeyed fields
       # part of the golangci govet package is picking up things that go vet doesn't. Seems flaky, shutting that specific error off
+
+run:
+  # which dirs to skip: they won't be analyzed;
+  skip-dirs:
+    - vendor$
+    - future$
