@@ -38,6 +38,7 @@ linters:
         # d.Set("name", utils.StringValue(resp.Status.Name))
       # waiting on terraform/hashi to let us know how they want us to changle those errors
         # see Error return value of `d.Set` is not checked (errcheck)
+    - typecheck
 
 issues:
   exclude:
