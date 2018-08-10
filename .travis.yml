@@ -1,10 +1,10 @@
 ---
 language: go
 
-cache:
-  directories:
-    - vendor
-    - /home/travis/gopath/pkg
+#cache:
+#  directories:
+#    - vendor
+#    - /home/travis/gopath/pkg
 
 git:
   depth: 1
