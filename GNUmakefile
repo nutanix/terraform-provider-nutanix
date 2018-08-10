@@ -32,7 +32,7 @@ extrasanity:
 
 deps:
 	go get -u github.com/golang/dep/cmd/dep
-	dep status
+	dep check
 
 website:
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
