@@ -178,6 +178,87 @@ More Info: https://github.com/golang/dep
 
 ## Install from source
 
+## Building from sources
+
+1. Follow [Go installation instructions](https://golang.org/doc/install)
+
+1. Make sure that `$GOPATH` variable is set (and `$GOROOT` if necessary)
+
+1. Clone the repository:
+
+    ```bash
+    git clone https://github.com/nutanix/terraform-provider-nutanix.git $GOPATH/src/github.com/nutanix/terraform-provider-nutanix
+    ```
+
+1. Install [golang/dep](https://github.com/golang/dep):
+
+    ```bash
+    go get -u github.com/golang/dep/cmd/dep
+    ```
+
+1. Get dependencies:
+
+    ```bash
+    cd $GOPATH/src/github.com/nutanix/terraform-provider-nutanix
+    dep ensure
+    ```
+
+1. Run tests:
+
+    ```bash
+    cd $GOPATH/src/github.com/nutanix/terraform-provider-nutanix
+    (TODO: add test here)
+    ```
+
+1. Build the binary:
+
+    ```bash
+    cd $GOPATH/src/github.com/nutanix/terraform-provider-nutanix
+    go build
+    ```
+
+## Release it
+
+1. Install `goreleaser` tool:
+
+    ```bash
+    go get -v github.com/goreleaser/goreleaser
+    cd $GOPATH/src/github.com/goreleaser/goreleaser
+    go install
+    ```
+
+    Alternatively you can download a latest release from [goreleaser Releases Page](https://github.com/goreleaser/goreleaser/releases)
+
+1. Clean up folder `(builds)` if exists
+
+1. Make sure that the repository state is clean:
+
+    ```bash
+    git status
+    ```
+
+1. Tag the release:
+
+    ```bash
+    git tag v1.1.0
+    ```
+
+1. Run `goreleaser`:
+
+    ```bash
+    cd (TODO: go dir)
+    goreleaser --skip-publish v1.1.0
+    ```
+
+1. Check builds inside `(TODO: build dir)` directory.
+
+1. Publish release tag to GitHub:
+
+    ```bash
+    git push origin v1.1.0
+    ```
+
+
 ## Install from package
 
 ## Building/Developing Provider
