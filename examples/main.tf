@@ -1,5 +1,5 @@
 #############################################################################
-# Demo Multi-Tier App Deployment
+# Example main.tf for Nutanix + Terraform
 #
 # Author: jon@nutanix.com
 #
@@ -11,14 +11,11 @@
 #     - nutanix_subnet
 #     - nutanix_image
 # - data sources
-#     - nutanix_virtual_machine
+#     -
 #     -
 #     -
 # - script Variables
 #     - clusterid's for targeting clusters within prism central
-#
-# The goal of this script is to show a multi-tier applicaiton, interacting with
-# these various objects.
 #
 # Feel free to reuse, comment, and contribute, so that others may learn.
 #
@@ -39,20 +36,21 @@ provider "nutanix" {
 }
 
 ### Define Script Local Variables
-### This can be used for any manner of things, but is useful for like clusterid, to store a mapping of targets for provisioning
-### TODO: Need to make clusters a data source object, such that consumers do not need to manually provision cluster ID
+### This can be used for any manner of things, but is useful for like clusterid,
+###   to store a mapping of targets for provisioning
+### TODO: Need to make clusters a data source object, such that consumers do
+###       not need to manually provision cluster ID
 locals {
   cluster1   = "00054051-250f-5ccc-0000-00000000cf0d"
-  ip_haproxy = "10.5.94.11"
-  ip_app     = "10.5.94.12"
-  ip_db      = "10.5.94.13"
 }
 
 ##########################
 ### Data Sources
 ##########################
-### These are "lookups" to simply define an already existing object as a plain text name
-### This is useful when managing a nutanix prism central instance from multiple state files, or deploying terraform into an existing / brownfield environment
+### These are "lookups" to simply define an already existing object as a
+### plain text name
+### This is useful when managing a nutanix prism central instance from multiple
+### state files, or deploying terraform into an existing / brownfield environment
 ### Virtual Machine Data Sources
 # data "nutanix_virtual_machine" "nutanix_virtual_machine" {
 #   vm_id = "${nutanix_virtual_machine.vm1.id}"
@@ -82,54 +80,27 @@ locals {
 ### Resources
 ##########################
 ### Image Resources (Managed by the Image Service)
+## Related Product Docs:
+##   https://portal.nutanix.com/#/page/docs/details?targetId=Prism-Central-Guide-Prism-v58:mul-images-manage-pc-c.html
+## Related Developer Docs:
+##   http://developer.nutanix.com/reference/prism_central/v3/#images
 ###
-### Images are raw ISO, QCOW2, or VMDK files that are uploaded by a user can be attached to a VM.
-### An ISO image is attached as a virtual CD-ROM drive, and QCOW2 and VMDK files are attached as SCSI disks.
-### For self service portal use cases: An image has to be explicitly added to the self-service catalog before users can create VMs from it.
-###
-### Image Service Product Docs: https://portal.nutanix.com/#/page/docs/details?targetId=Prism-Central-Guide-Prism-v56:mul-images-manage-pc-c.html
-### Image Service Developer Docs: http://developer.nutanix.com/reference/prism_central/v3/#images
-# resource "nutanix_image" "centos-lamp-app" {
-#   # General Information
-#   name        = "CentOS-LAMP-APP.qcow2"
-#   description = "CentOS LAMP - App"
-#   source_uri  = "http://filer.dev.eng.nutanix.com:8080/GoldImages/NuCalm/AHV-UVM-Images/CentOS-LAMP-APP.qcow2"
+### Images are raw ISO, QCOW2, or VMDK files that are uploaded by a user can be
+###attached to a VM.
+### An ISO image is attached as a virtual CD-ROM drive, and QCOW2 and VMDK files
+### are attached as SCSI disks.
+### For self service portal use cases: An image has to be explicitly added to
+### the self-service catalog before users can create VMs from it.
 
-#   metadata = {
-#     kind = "image"
-#   }
-# }
-
-# resource "nutanix_image" "centos-lamp-db" {
-#   # General Information
-#   name        = "CentOS-LAMP-DB.qcow2"
-#   description = "CentOS LAMP - DB"
-#   source_uri  = "http://filer.dev.eng.nutanix.com:8080/GoldImages/NuCalm/AHV-UVM-Images/CentOS-LAMP-DB.qcow2"
-
-#   metadata = {
-#     kind = "image"
-#   }
-# }
-
-# resource "nutanix_image" "centos-lamp-haproxy" {
-#   # General Information
-#   name        = "CentOS-LAMP-HAPROXY.qcow2"
-#   description = "CentOS LAMP - HAProxy"
-#   source_uri  = "http://filer.dev.eng.nutanix.com:8080/GoldImages/NuCalm/AHV-UVM-Images/CentOS-LAMP-HAProxy.qcow2"
-
-#   metadata = {
-#     kind = "image"
-#   }
-# }
-
-# resource "nutanix_image" "cirros-034-disk" {
-#     name        = "cirros-034-disk"
-#     source_uri  = "http://endor.dyn.nutanix.com/acro_images/DISKs/cirros-0.3.4-x86_64-disk.img"
-#     description = "heres a tiny linux image, not an iso, but a real disk!"
-#     metadata = {
-#         kind = "image"
-#     }
-# }
+# This demo used a single dummy image from a local filer. Multiple images can be
+#   presented here as separate resources, or existing images on a cluster can be
+#   called in as data sources, which you can see in the data sources section
+#   above.
+resource "nutanix_image" "cirros-034-disk" {
+    name        = "cirros-034-disk"
+    source_uri  = "http://endor.dyn.nutanix.com/acro_images/DISKs/cirros-0.3.4-x86_64-disk.img"
+    description = "heres a tiny linux image, not an iso, but a real disk!"
+}
 
 ### Subnet Resources (Virtual Networks within AHV)
 ## Related Product Docs:
@@ -170,22 +141,17 @@ locals {
 # grave, even if the VM is off.
 
 # ### Define Terraform Managed Subnets
-# resource "nutanix_subnet" "infra-managed-network-140" {
-#   metadata = {
-#     kind = "subnet"
-#   }
+resource "nutanix_subnet" "infra-managed-network-140" {
+  # What cluster will this VLAN live on?
+  cluster_reference = {
+    kind = "cluster"
+    uuid = "${local.cluster1}"
+  }
 
-#   # What cluster will this VLAN live on?
-#   cluster_reference = {
-#     kind = "cluster"
-#     uuid = "${local.cluster1}"
-#   }
-
-#   # General Information
-#   name        = "next-iac-managed"
-#   description = "NEXT"
-#   vlan_id     = 0
-#   subnet_type = "VLAN"
+  # General Information
+  name        = "infra-managed-network-140"
+  vlan_id     = 140
+  subnet_type = "VLAN"
 
 #   # Provision a Managed L3 Network
 #   # This bit is only needed if you intend to turn on AHV's IPAM
@@ -199,25 +165,19 @@ locals {
 # 		domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
 # 		tftp_server_name = "10.250.140.200"
 #   }
-# }
+}
 
 ### Virtual Machine Resources
 ## Related Product Docs:
 ##    https://portal.nutanix.com/#/page/docs/details?targetId=Prism-Central-Guide-Prism-v58:mul-vm-create-manage-pc-c.html
 ## Related Developer Docs:
 ##    http://developer.nutanix.com/reference/prism_central/v3/#vms
-## Implementation Notes on Subnets
+## Implementation Notes on VMs
 # These are VMs managed by Prism Central, which could span across AHV, ESXi, or
 # Prism Self Service Portal. That said, if you're doing ESXi, it is most likely
-# that would deploy them via a VMware provider against vCenter APIs. That said,
-# the capability does exist here.
+# that would deploy them via a VMware provider against vCenter APIs.
 
 resource "nutanix_virtual_machine" "demo-01-web" {
-  # WRT virtual machine, metadata section may only be useful when setting the "projects" and "categories" constructs
-  metadata {
-    kind = "vm"
-  }
-
   # General Information
   name                 = "demo-01-web"
   description          = "demo Frontend Web Server"
@@ -234,131 +194,33 @@ resource "nutanix_virtual_machine" "demo-01-web" {
 
   # What networks will this be attached to?
   nic_list = [{
+    # subnet_reference is saying, which VLAN/network do you want to attach here?
     subnet_reference = {
       kind = "subnet"
-      uuid = "${nutanix_subnet.next-iac-managed.id}"
+      uuid = "${nutanix_subnet.infra-managed-network-140.id}"
     }
 
-    ip_endpoint_list = {
-      ip   = "${local.ip_haproxy}"
-      type = "ASSIGNED"
-    }
+  #   ip_endpoint_list = {
+  #     ip   = "${local.ip_haproxy}"
+  #     type = "ASSIGNED"
+  #   }
   }]
 
   # What disk/cdrom configuration will this have?
   disk_list = [{
+    # data_source_reference in the Nutanix API refers to where the source for
+    # the disk device will come from. Could be a clone of a different VM or a
+    # image like we're doing here
     data_source_reference = [{
       kind = "image"
-      name = "Centos7"
-      uuid = "${nutanix_image.centos-lamp-haproxy.id}"
+      uuid = "${nutanix_image.cirros-034-disk.id}"
     }]
 
+    # defining an additional entry in the disk_list array will create another
+    # disk in addition to the image we're showing off above.
     device_properties = [{
       device_type = "DISK"
     }]
-
-    disk_size_mib = 5000
-  }]
-}
-
-resource "nutanix_virtual_machine" "demo-01-app" {
-  # Can I hard code image to be kind image?
-  # We're going to make this implicit in future API releases, so hard coding it is safe on the plugin side
-  # WRT virtual machine, metadata section may only be useful when setting the "projects" and "categories" constructs
-  metadata {
-    kind = "vm"
-  }
-
-  # General Information
-  name                 = "demo-01-app"
-  description          = "Demo Java middleware App server"
-  num_vcpus_per_socket = 2
-  num_sockets          = 1
-  memory_size_mib      = 8192
-  power_state          = "ON"
-
-  # What cluster will this VLAN live on?
-  cluster_reference = {
-    kind = "cluster"
-    uuid = "${local.cluster1}"
-  }
-
-  # What networks will this be attached to?
-  nic_list = [{
-    subnet_reference = {
-      kind = "subnet"
-      uuid = "${nutanix_subnet.next-iac-managed.id}"
-    }
-
-    ip_endpoint_list = {
-      ip   = "${local.ip_app}"
-      type = "ASSIGNED"
-    }
-  }]
-
-  #What disk/cdrom configuration will this have?
-  disk_list = [{
-    data_source_reference = [{
-      kind = "image"
-      name = "Centos7"
-      uuid = "${nutanix_image.centos-lamp-app.id}"
-    }]
-
-    device_properties = [{
-      device_type = "DISK"
-    }]
-
-    disk_size_mib = 5000
-  }]
-}
-
-resource "nutanix_virtual_machine" "demo-01-db" {
-  # Can I hard code image to be kind image?
-  # We're going to make this implicit in future API releases, so hard coding it is safe on the plugin side
-  # WRT virtual machine, metadata section may only be useful when setting the "projects" and "categories" constructs
-  metadata {
-    kind = "vm"
-  }
-
-  # General Information
-  name                 = "demo-01-db"
-  description          = "demo MySQL Database Server"
-  num_vcpus_per_socket = 4
-  num_sockets          = 1
-  memory_size_mib      = 16384
-  power_state          = "ON"
-
-  # What cluster will this VLAN live on?
-  cluster_reference = {
-    kind = "cluster"
-    uuid = "${local.cluster1}"
-  }
-
-  #What networks will this be attached to?
-  nic_list = [{
-    subnet_reference = {
-      kind = "subnet"
-      uuid = "${nutanix_subnet.next-iac-managed.id}"
-    }
-
-    ip_endpoint_list = {
-      ip   = "${local.ip_db}"
-      type = "ASSIGNED"
-    }
-  }]
-
-  # What disk/cdrom configuration will this have?
-  disk_list = [{
-    data_source_reference = [{
-      kind = "image"
-      name = "Centos7"
-      uuid = "${nutanix_image.centos-lamp-db.id}"
-    }]
-
-    device_properties = [{
-      device_type = "DISK"
-    }]
-
     disk_size_mib = 5000
   }]
 }
