@@ -4,9 +4,9 @@ Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
 NOTE: terraform-provider-nutanix is currently tech preview as of 9 May 2018. See "Current Development Status" below.
 
-#### Project, Build, Quality Status
+#### Build, Quality Status
 
-[![Waffle.io - Columns and their card count](https://badge.waffle.io/b58a88b8face3407eccdc79e19d39058d28754b65f6df7513ed23293ef387491a5f538b65dffd5b12ca0201c6d4b50ce.svg?columns=all)](https://waffle.io/nutanix/terraform-provider-nutanix) [![Go Report Card](https://goreportcard.com/badge/github.com/nutanix/terraform-provider-nutanix)](https://goreportcard.com/report/github.com/nutanix/terraform-provider-nutanix)
+ [![Go Report Card](https://goreportcard.com/badge/github.com/nutanix/terraform-provider-nutanix)](https://goreportcard.com/report/github.com/nutanix/terraform-provider-nutanix)
 
 [![Maintainability](https://api.codeclimate.com/v1/badges/8b9e61df450276bbdbdb/maintainability)](https://codeclimate.com/github/nutanix/terraform-provider-nutanix/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/8b9e61df450276bbdbdb/test_coverage)](https://codeclimate.com/github/nutanix/terraform-provider-nutanix/test_coverage)
 
@@ -37,17 +37,17 @@ For a slack invite, please contact terraform@nutanix.com from your business emai
 * [x] Category values resource.
 * [x] Network security rule resource.
 * [x] Network security rule data source.
-
-### Currently working on: (3rd Milestone)
-
 * [x] Network security rules data source.
 * [x] Subnets data source.
 * [x] Images data source.
 * [x] Volume group resource.
 * [x] Volume group datasource.
 * [x] Volume groups datasource.
-* [x] Documentation for Resources.s
+* [x] Documentation for Resources.
 * [x] Documentation for Datasources.
+
+### Currently working on:
+* [] Phase 2 scoping for bug cleanup and polish
 
 ### Issues
 
@@ -57,7 +57,7 @@ For a slack invite, please contact terraform@nutanix.com from your business emai
 
 ### Provider Use
 
-* [Terraform](https://www.terraform.io/downloads.html) 0.11.7+
+* [Terraform](https://www.terraform.io/downloads.html) 0.11.8+
 * [Nutanix](https://portal.nutanix.com/#/page/home) Prism Central 5.6.0+
 * Note: Nutanix Community Edition will be supported, when an AOS 5.6 based version is released
 
