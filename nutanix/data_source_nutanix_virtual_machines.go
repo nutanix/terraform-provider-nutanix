@@ -3,10 +3,10 @@ package nutanix
 import (
 	"strconv"
 
+	uuid "github.com/satori/go.uuid"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -127,7 +127,7 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 		entities[k] = entity
 	}
 
-	d.SetId(resource.UniqueId())
+	d.SetId(uuid.NewV4().String())
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
 
 	return d.Set("entities", entities)

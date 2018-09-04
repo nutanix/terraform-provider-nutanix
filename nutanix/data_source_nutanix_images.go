@@ -1,8 +1,8 @@
 package nutanix
 
 import (
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	uuid "github.com/satori/go.uuid"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -54,7 +54,7 @@ func dataSourceNutanixImagesRead(d *schema.ResourceData, meta interface{}) error
 	if err := d.Set("entities", entities); err != nil {
 		return err
 	}
-	d.SetId(resource.UniqueId())
+	d.SetId(uuid.NewV4().String())
 
 	return nil
 }

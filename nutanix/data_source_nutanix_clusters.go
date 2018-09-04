@@ -3,9 +3,10 @@ package nutanix
 import (
 	"strconv"
 
+	uuid "github.com/satori/go.uuid"
+
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -284,7 +285,8 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 	if err := d.Set("entities", entities); err != nil {
 		return err
 	}
-	d.SetId(resource.UniqueId())
+
+	d.SetId(uuid.NewV4().String())
 
 	return nil
 }
