@@ -463,7 +463,7 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 		}
 	}
 
-	d.SetId(*resp.Metadata.UUID)
+	d.SetId(utils.StringValue(resp.Metadata.UUID))
 
 	return nil
 }

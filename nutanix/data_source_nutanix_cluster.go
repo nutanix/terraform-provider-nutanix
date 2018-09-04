@@ -404,7 +404,7 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	d.SetId(*v.Metadata.UUID)
+	d.SetId(utils.StringValue(v.Metadata.UUID))
 
 	return nil
 }

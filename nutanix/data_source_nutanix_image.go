@@ -3,7 +3,6 @@ package nutanix
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -74,7 +73,7 @@ func dataSourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	d.SetId(resource.UniqueId())
+	d.SetId(utils.StringValue(resp.Metadata.UUID))
 
 	return nil
 }

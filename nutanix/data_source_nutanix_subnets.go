@@ -1,8 +1,8 @@
 package nutanix
 
 import (
-	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	uuid "github.com/satori/go.uuid"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -107,7 +107,7 @@ func dataSourceNutanixSubnetsRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
-	d.SetId(resource.UniqueId())
+	d.SetId(uuid.NewV4().String())
 
 	return d.Set("entities", entities)
 }
