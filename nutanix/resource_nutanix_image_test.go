@@ -23,14 +23,14 @@ func TestAccNutanixImage_basic(t *testing.T) {
 			{
 				Config: testAccNutanixImageConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixImageExists("nutanix_image.test"),
+					testAccCheckNutanixImageExists("nutanix_image.acctest-test"),
 				),
 			},
 			{
 				Config: testAccNutanixImageConfigUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixImageExists("nutanix_image.test"),
-					resource.TestCheckResourceAttr("nutanix_image.testUpload", "name", "image-updateName"),
+					testAccCheckNutanixImageExists("nutanix_image.acctest-test"),
+					resource.TestCheckResourceAttr("nutanix_image.acctest-test", "name", fmt.Sprintf("Ubuntu-%d-updated", rInt)),
 				),
 			},
 		},
@@ -126,7 +126,7 @@ resource "nutanix_image" "acctest-test" {
 func testAccNutanixImageConfigUpdate(r int) string {
 	return fmt.Sprintf(`
 resource "nutanix_image" "acctest-test" {
-  name        = "Ubuntu-%d"
+  name        = "Ubuntu-%d-updated"
   description = "Ubuntu Updated"
   source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
 }
