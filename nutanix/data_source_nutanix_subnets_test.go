@@ -66,10 +66,10 @@ resource "nutanix_subnet" "test" {
 	dhcp_options {
 		boot_file_name   = "bootfile"
 		domain_name      = "nutanix"
-		domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
-		domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
 		tftp_server_name = "10.250.140.200"
   }
+  dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+  dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
 }
 
 data "nutanix_subnet" "test" {

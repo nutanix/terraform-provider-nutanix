@@ -64,6 +64,8 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
+	spec.Description = utils.String(d.Get("description").(string))
+
 	subnetUUID, err := resourceNutanixSubnetExists(conn, d.Get("name").(string))
 
 	if err != nil {
@@ -98,6 +100,9 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf("error waiting for subnet (%s) to create: %s", d.Id(), err)
 	}
+
+	//Setting Description because in Get request is not present.
+	d.Set("description", utils.StringValue(resp.Spec.Description))
 
 	return resourceNutanixSubnetRead(d, meta)
 }
@@ -184,17 +189,17 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("dhcp_options", dOptions); err != nil {
 		return nil
 	}
-	if err := d.Set("domain_name_server_list", dnsList); err != nil {
+	if err := d.Set("dhcp_domain_name_server_list", dnsList); err != nil {
 		return nil
 	}
-	if err := d.Set("domain_search_list", dsList); err != nil {
+	if err := d.Set("dhcp_domain_search_list", dsList); err != nil {
 		return nil
 	}
 
 	d.Set("cluster_reference_name", utils.StringValue(resp.Status.ClusterReference.Name))
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
 	d.Set("name", utils.StringValue(resp.Status.Name))
-	d.Set("description", utils.StringValue(resp.Status.Description))
+	//d.Set("description", utils.StringValue(resp.Status.Description))
 	d.Set("state", utils.StringValue(resp.Status.State))
 	d.Set("vswitch_name", utils.StringValue(resp.Status.Resources.VswitchName))
 	d.Set("subnet_type", utils.StringValue(resp.Status.Resources.SubnetType))
@@ -272,6 +277,9 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("name") {
 		spec.Name = utils.String(d.Get("name").(string))
 	}
+	if d.HasChange("description") {
+		spec.Description = utils.String(d.Get("description").(string))
+	}
 	if d.HasChange("availability_zone_reference") {
 		a := d.Get("availability_zone_reference").(map[string]interface{})
 		spec.AvailabilityZoneReference = validateRef(a)
@@ -280,16 +288,16 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		a := d.Get("cluster_reference").(map[string]interface{})
 		spec.ClusterReference = validateRef(a)
 	}
-	if d.HasChange("domain_name_server_list") {
-		dd := d.Get("domain_name_server_list").([]interface{})
+	if d.HasChange("dhcp_domain_name_server_list") {
+		dd := d.Get("dhcp_domain_name_server_list").([]interface{})
 		ddn := make([]*string, len(dd))
 		for k, v := range dd {
 			ddn[k] = utils.String(v.(string))
 		}
 		dhcpO.DomainNameServerList = ddn
 	}
-	if d.HasChange("domain_search_list") {
-		dd := d.Get("domain_search_list").([]interface{})
+	if d.HasChange("dhcp_domain_search_list") {
+		dd := d.Get("dhcp_domain_search_list").([]interface{})
 		ddn := make([]*string, len(dd))
 		for k, v := range dd {
 			ddn[k] = utils.String(v.(string))
@@ -354,7 +362,8 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 	request.Metadata = metadata
 	request.Spec = spec
 
-	if _, errUpdate := conn.V3.UpdateSubnet(d.Id(), request); errUpdate != nil {
+	resp, errUpdate := conn.V3.UpdateSubnet(d.Id(), request)
+	if errUpdate != nil {
 		return errUpdate
 	}
 
@@ -371,6 +380,9 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf(
 			"error waiting for subnet (%s) to update: %s", d.Id(), err)
 	}
+	//Setting Description because in Get request is not present.
+	d.Set("description", utils.StringValue(resp.Spec.Description))
+
 	return resourceNutanixSubnetRead(d, meta)
 }
 
@@ -484,7 +496,7 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 		}
 	}
 
-	if v, ok := d.GetOk("domain_name_server_list"); ok {
+	if v, ok := d.GetOk("dhcp_domain_name_server_list"); ok {
 		p := v.([]interface{})
 		pool := make([]*string, len(p))
 
@@ -494,7 +506,7 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 
 		dhcpo.DomainNameServerList = pool
 	}
-	if v, ok := d.GetOk("domain_search_list"); ok {
+	if v, ok := d.GetOk("dhcp_domain_search_list"); ok {
 		p := v.([]interface{})
 		pool := make([]*string, len(p))
 
@@ -539,6 +551,11 @@ func subnetStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefres
 func getSubnetSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"api_version": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"description": {
 			Type:     schema.TypeString,
 			Optional: true,
 			Computed: true,
@@ -777,20 +794,20 @@ func getSubnetSchema() map[string]*schema.Schema {
 						Optional: true,
 						Computed: true,
 					},
-					"domain_name_server_list": {
-						Type:     schema.TypeList,
-						Optional: true,
-						Computed: true,
-						Elem:     &schema.Schema{Type: schema.TypeString},
-					},
-					"domain_search_list": {
-						Type:     schema.TypeList,
-						Optional: true,
-						Computed: true,
-						Elem:     &schema.Schema{Type: schema.TypeString},
-					},
 				},
 			},
+		},
+		"dhcp_domain_name_server_list": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Computed: true,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+		},
+		"dhcp_domain_search_list": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Computed: true,
+			Elem:     &schema.Schema{Type: schema.TypeString},
 		},
 		"vlan_id": {
 			Type:     schema.TypeInt,

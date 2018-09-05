@@ -104,16 +104,6 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 	req.Header.Add("Authorization", "Basic "+
 		base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
 
-	// utils.PrintToJSON(req, "REQUEST BODY")
-
-	// requestDump, err := httputil.DumpRequestOut(req, true)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println("################")
-	// fmt.Println("REQUEST")
-	// fmt.Println(string(requestDump))
-
 	return req, nil
 }
 
