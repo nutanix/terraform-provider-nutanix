@@ -22,6 +22,7 @@ func TestAccNutanixSubnet_basic(t *testing.T) {
 				Config: testAccNutanixSubnetConfig(r),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixSubnetExists("nutanix_subnet.acctest-managed"),
+					resource.TestCheckResourceAttr("nutanix_subnet.acctest-managed", "description", "Description of my unit test VLAN"),
 				),
 			},
 			{
@@ -29,6 +30,7 @@ func TestAccNutanixSubnet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixSubnetExists("nutanix_subnet.acctest-managed"),
 					resource.TestCheckResourceAttr("nutanix_subnet.acctest-managed", "name", "acctest-managed-updateName"),
+					resource.TestCheckResourceAttr("nutanix_subnet.acctest-managed", "description", "Description of my unit test VLAN updated"),
 				),
 			},
 		},
@@ -88,7 +90,7 @@ resource "nutanix_subnet" "acctest-managed" {
 
   # General Information for subnet
 	name        = "acctest-managed"
-	description = "here's a good description of my unit test VLAN"
+	description = "Description of my unit test VLAN"
   vlan_id     = %d
 	subnet_type = "VLAN"
 
@@ -100,10 +102,10 @@ resource "nutanix_subnet" "acctest-managed" {
   dhcp_options {
 		boot_file_name   = "bootfile"
 		domain_name      = "nutanix"
-		domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
-		domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
 		tftp_server_name = "10.250.140.200"
-  }
+	}
+	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
 }
 `, r)
 }
@@ -129,7 +131,7 @@ resource "nutanix_subnet" "acctest-managed" {
 
   # General Information for subnet
 	name        = "acctest-managed-updateName"
-	description = "here's a good description of my unit test VLAN"
+	description = "Description of my unit test VLAN updated"
   vlan_id     = %d
 	subnet_type = "VLAN"
 
@@ -141,10 +143,11 @@ resource "nutanix_subnet" "acctest-managed" {
   dhcp_options {
 		boot_file_name   = "bootfile"
 		domain_name      = "nutanix"
-		domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
-		domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
 		tftp_server_name = "10.250.140.200"
-  }
+	}
+	
+	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
 }
 `, r)
 }

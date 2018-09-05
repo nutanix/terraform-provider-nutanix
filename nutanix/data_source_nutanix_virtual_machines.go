@@ -135,7 +135,7 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 	}
 
 	d.SetId(resource.UniqueId())
-	d.Set("api_version", resp.APIVersion)
+	d.Set("api_version", utils.StringValue(resp.APIVersion))
 
 	return d.Set("entities", entities)
 }
