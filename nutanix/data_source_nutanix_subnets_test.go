@@ -41,11 +41,7 @@ func testAccCheckNutanixSubnetsExists(n string) resource.TestCheckFunc {
 
 func testAccSubnetsDataSourceConfig(r int) string {
 	return fmt.Sprintf(`
-data "nutanix_clusters" "clusters" {
-  metadata = {
-    length = 2
-  }
-}
+data "nutanix_clusters" "clusters" {}
 
 resource "nutanix_subnet" "test" {
 	name = "dou_vlan0_test_%d"
@@ -76,9 +72,5 @@ data "nutanix_subnet" "test" {
 	subnet_id = "${nutanix_subnet.test.id}"
 }
 
-data "nutanix_subnets" "test1" {
-	metadata {
-		length = 1
-	}
-}`, r, r)
+data "nutanix_subnets" "test1" {}`, r, r)
 }
