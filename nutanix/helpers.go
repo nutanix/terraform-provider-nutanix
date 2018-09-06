@@ -56,42 +56,6 @@ func getMetadataAttributes(d *schema.ResourceData, metadata *v3.Metadata, kind s
 	return nil
 }
 
-func readListMetadata(d *schema.ResourceData, kind string) (*v3.DSMetadata, error) {
-	metadata := &v3.DSMetadata{
-		Kind: utils.String(kind),
-	}
-
-	if v, ok := d.GetOk("metadata"); ok {
-		m := v.(map[string]interface{})
-
-		if mv, mok := m["sort_attribute"]; mok {
-			metadata.SortAttribute = utils.String(mv.(string))
-		}
-		if mv, mok := m["filter"]; mok {
-			metadata.Filter = utils.String(mv.(string))
-		}
-		if mv, mok := m["length"]; mok {
-			i, err := strconv.Atoi(mv.(string))
-			if err != nil {
-				return nil, err
-			}
-			metadata.Length = utils.Int64(int64(i))
-		}
-		if mv, mok := m["sort_order"]; mok {
-			metadata.SortOrder = utils.String(mv.(string))
-		}
-		if mv, mok := m["offset"]; mok {
-			i, err := strconv.Atoi(mv.(string))
-			if err != nil {
-				return nil, err
-			}
-			metadata.Offset = utils.Int64(int64(i))
-		}
-	}
-
-	return metadata, nil
-}
-
 func setRSEntityMetadata(v *v3.Metadata) (map[string]interface{}, []map[string]interface{}) {
 	metadata := make(map[string]interface{})
 	metadata["last_update_time"] = utils.TimeValue(v.LastUpdateTime).String()
