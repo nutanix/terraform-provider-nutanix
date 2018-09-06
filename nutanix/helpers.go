@@ -1,6 +1,7 @@
 package nutanix
 
 import (
+	"log"
 	"strconv"
 
 	"github.com/hashicorp/terraform/helper/schema"
@@ -54,6 +55,54 @@ func getMetadataAttributes(d *schema.ResourceData, metadata *v3.Metadata, kind s
 	}
 
 	return nil
+}
+
+func hasNext(ri *int64, itemsPerPage int64) bool {
+	*ri = *ri - itemsPerPage
+	return *ri >= (0 - itemsPerPage)
+}
+
+func getVMListDSEntries(conn *v3.Client, itemsPerPage int64) (*v3.VMListIntentResponse, error) {
+	entities := make([]*v3.VMIntentResource, 0)
+
+	//make first request
+	resp, err := conn.V3.ListVM(&v3.DSMetadata{
+		Kind:   utils.String("vm"),
+		Length: utils.Int64(itemsPerPage),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	log.Printf("[Debug] total=%d, remaining=%d, offset=%d\n", totalEntities, remaining, offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining, itemsPerPage) {
+			resp, err = conn.V3.ListVM(&v3.DSMetadata{
+				Kind:   utils.String("vm"),
+				Length: utils.Int64(itemsPerPage),
+				Offset: utils.Int64(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			//append to entities array
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
+		}
+		resp.Entities = entities
+	}
+
+	return resp, nil
 }
 
 func readListMetadata(d *schema.ResourceData, kind string) (*v3.DSMetadata, error) {
