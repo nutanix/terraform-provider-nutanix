@@ -48,9 +48,5 @@ resource "nutanix_image" "test" {
 }
 
 
-data "nutanix_images" "test1" {
-	metadata {
-		length = 1
-	}
-}`, rNumber)
+data "nutanix_images" "test1" {}`, rNumber)
 }

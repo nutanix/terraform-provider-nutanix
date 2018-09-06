@@ -32,7 +32,7 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
 	conn := meta.(*Client).API
-
+	fmt.Println("######CREATE######")
 	// Prepare request
 	request := &v3.VMIntentInput{}
 	spec := &v3.VM{}
@@ -106,6 +106,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
 	conn := meta.(*Client).API
+	fmt.Println("######READ######")
 
 	// Make request to the API
 	resp, err := conn.V3.GetVM(d.Id())
@@ -235,6 +236,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 
+	fmt.Println("######UPDATE######")
 	log.Printf("Updating VM values %s", d.Id())
 	fmt.Printf("Updating VM values %s", d.Id())
 
@@ -424,8 +426,8 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 				sub := val["subnet_reference"].(map[string]interface{})
 
 				nic := &v3.VMNic{
-					NicType: validateMapStringValue(val, "nic_type"),
-					UUID:    validateMapStringValue(val, "uuid"),
+					UUID:                   validateMapStringValue(val, "uuid"),
+					NicType:                validateMapStringValue(val, "nic_type"),
 					NetworkFunctionNicType: validateMapStringValue(val, "network_function_nic_type"),
 					MacAddress:             validateMapStringValue(val, "mac_address"),
 					Model:                  validateMapStringValue(val, "model"),
@@ -611,8 +613,11 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 
+	fmt.Println("######DELETE######")
+
 	log.Printf("[DEBUG] Deleting Virtual Machine: %s, %s", d.Get("name").(string), d.Id())
-	if err := conn.V3.DeleteVM(d.Id()); err != nil {
+	err := conn.V3.DeleteVM(d.Id())
+	if err != nil {
 		return err
 	}
 
