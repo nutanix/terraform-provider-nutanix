@@ -20,12 +20,14 @@ func dataSourceNutanixNetworkSecurityRules() *schema.Resource {
 func dataSourceNutanixNetworkSecurityRulesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 
-	metadata, err := readListMetadata(d, "network_security_rule")
-	if err != nil {
-		return err
-	}
+	// metadata, err := readListMetadata(d, "network_security_rule")
+	// if err != nil {
+	// 	return err
+	// }
 
-	resp, err := conn.V3.ListNetworkSecurityRule(metadata)
+	// resp, err := conn.V3.ListNetworkSecurityRule(metadata)
+
+	resp, err := conn.V3.ListAllNetworkSecurityRule()
 	if err != nil {
 		return err
 	}

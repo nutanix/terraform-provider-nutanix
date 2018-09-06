@@ -24,8 +24,4 @@ func TestAccNutanixClustersDataSource_basic(t *testing.T) {
 
 // Lookup based on InstanceID
 const testAccClustersDataSourceConfig = `
-data "nutanix_clusters" "basic_web" {
-	metadata = {
-		length = 2
-	}
-}`
+data "nutanix_clusters" "basic_web" {}`
