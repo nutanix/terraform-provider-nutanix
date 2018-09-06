@@ -833,7 +833,7 @@ func (op Operations) UpdateVolumeGroup(UUID string, body *VolumeGroupInput) (*Vo
 
 const itemsPerPage = int64(100)
 
-func hasNext(ri *int64, itemsPerPage int64) bool {
+func hasNext(ri *int64) bool {
 	*ri = *ri - itemsPerPage
 	return *ri >= (0 - itemsPerPage)
 }
@@ -859,7 +859,7 @@ func (op Operations) ListAllVM() (*VMListIntentResponse, error) {
 	log.Printf("[Debug] total=%d, remaining=%d, offset=%d\n", totalEntities, remaining, offset)
 
 	if totalEntities > itemsPerPage {
-		for hasNext(&remaining, itemsPerPage) {
+		for hasNext(&remaining) {
 			resp, err = op.ListVM(&DSMetadata{
 				Kind:   utils.String("vm"),
 				Length: utils.Int64(itemsPerPage),
@@ -903,7 +903,7 @@ func (op Operations) ListAllSubnet() (*SubnetListIntentResponse, error) {
 	log.Printf("[Debug] total=%d, remaining=%d, offset=%d\n", totalEntities, remaining, offset)
 
 	if totalEntities > itemsPerPage {
-		for hasNext(&remaining, itemsPerPage) {
+		for hasNext(&remaining) {
 			resp, err = op.ListSubnet(&DSMetadata{
 				Kind:   utils.String("subnet"),
 				Length: utils.Int64(itemsPerPage),
@@ -947,7 +947,7 @@ func (op Operations) ListAllNetworkSecurityRule() (*NetworkSecurityRuleListInten
 	log.Printf("[Debug] total=%d, remaining=%d, offset=%d\n", totalEntities, remaining, offset)
 
 	if totalEntities > itemsPerPage {
-		for hasNext(&remaining, itemsPerPage) {
+		for hasNext(&remaining) {
 			resp, err = op.ListNetworkSecurityRule(&DSMetadata{
 				Kind:   utils.String("network_security_rule"),
 				Length: utils.Int64(itemsPerPage),
@@ -991,7 +991,7 @@ func (op Operations) ListAllImage() (*ImageListIntentResponse, error) {
 	log.Printf("[Debug] total=%d, remaining=%d, offset=%d\n", totalEntities, remaining, offset)
 
 	if totalEntities > itemsPerPage {
-		for hasNext(&remaining, itemsPerPage) {
+		for hasNext(&remaining) {
 			resp, err = op.ListImage(&DSMetadata{
 				Kind:   utils.String("image"),
 				Length: utils.Int64(itemsPerPage),
@@ -1035,7 +1035,7 @@ func (op Operations) ListAllCluster() (*ClusterListIntentResponse, error) {
 	log.Printf("[Debug] total=%d, remaining=%d, offset=%d\n", totalEntities, remaining, offset)
 
 	if totalEntities > itemsPerPage {
-		for hasNext(&remaining, itemsPerPage) {
+		for hasNext(&remaining) {
 			resp, err = op.ListCluster(&DSMetadata{
 				Kind:   utils.String("cluster"),
 				Length: utils.Int64(itemsPerPage),

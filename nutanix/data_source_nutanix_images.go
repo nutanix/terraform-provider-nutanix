@@ -17,14 +17,6 @@ func dataSourceNutanixImagesRead(d *schema.ResourceData, meta interface{}) error
 	// Get client connection
 	conn := meta.(*Client).API
 
-	// // Get the metadata request
-	// metadata, err := readListMetadata(d, "image")
-	// if err != nil {
-	// 	return err
-	// }
-	// // Make request to the API
-	// resp, err := conn.V3.ListImage(metadata)
-
 	resp, err := conn.V3.ListAllImage()
 	if err != nil {
 		return err

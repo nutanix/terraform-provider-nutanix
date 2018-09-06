@@ -27,18 +27,6 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 	// Get client connection
 	conn := meta.(*Client).API
 
-	// // Get the metadata request
-	// metadata, err := readListMetadata(d, "vm")
-	// if err != nil {
-	// 	return err
-	// }
-
-	// // Make request to the API
-	// resp, err := conn.V3.ListVM(metadata)
-	// if err != nil {
-	// 	return err
-	// }
-
 	resp, err := conn.V3.ListAllVM()
 	if err != nil {
 		return err
