@@ -1219,7 +1219,7 @@ func TestOperations_ListCluster(t *testing.T) {
 		Kind: utils.String("cluster"),
 	}
 
-	input := &ClusterListMetadataOutput{
+	input := &DSMetadata{
 		Length: utils.Int64(1.0),
 	}
 
@@ -1227,7 +1227,7 @@ func TestOperations_ListCluster(t *testing.T) {
 		client *client.Client
 	}
 	type args struct {
-		getEntitiesRequest *ClusterListMetadataOutput
+		getEntitiesRequest *DSMetadata
 	}
 	tests := []struct {
 		name    string

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 
@@ -55,6 +56,11 @@ type Service interface {
 	GetVolumeGroup(UUID string) (*VolumeGroupResponse, error)
 	DeleteVolumeGroup(UUID string) error
 	CreateVolumeGroup(request *VolumeGroupInput) (*VolumeGroupResponse, error)
+	ListAllVM() (*VMListIntentResponse, error)
+	ListAllSubnet() (*SubnetListIntentResponse, error)
+	ListAllNetworkSecurityRule() (*NetworkSecurityRuleListIntentResponse, error)
+	ListAllImage() (*ImageListIntentResponse, error)
+	ListAllCluster() (*ClusterListIntentResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -823,4 +829,231 @@ func (op Operations) UpdateVolumeGroup(UUID string, body *VolumeGroupInput) (*Vo
 	}
 
 	return networkSecurityRuleResponse, op.client.Do(ctx, req, networkSecurityRuleResponse)
+}
+
+const itemsPerPage = int64(100)
+
+func hasNext(ri *int64, itemsPerPage int64) bool {
+	*ri = *ri - itemsPerPage
+	return *ri >= (0 - itemsPerPage)
+}
+
+//ListAllVM ...
+func (op Operations) ListAllVM() (*VMListIntentResponse, error) {
+	entities := make([]*VMIntentResource, 0)
+
+	//make first request
+	resp, err := op.ListVM(&DSMetadata{
+		Kind:   utils.String("vm"),
+		Length: utils.Int64(itemsPerPage),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	log.Printf("[Debug] total=%d, remaining=%d, offset=%d\n", totalEntities, remaining, offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining, itemsPerPage) {
+			resp, err = op.ListVM(&DSMetadata{
+				Kind:   utils.String("vm"),
+				Length: utils.Int64(itemsPerPage),
+				Offset: utils.Int64(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			//append to entities array
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
+		}
+		resp.Entities = entities
+	}
+
+	return resp, nil
+}
+
+//ListAllSubnet ...
+func (op Operations) ListAllSubnet() (*SubnetListIntentResponse, error) {
+	entities := make([]*SubnetIntentResource, 0)
+
+	//make first request
+	resp, err := op.ListSubnet(&DSMetadata{
+		Kind:   utils.String("subnet"),
+		Length: utils.Int64(itemsPerPage),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	log.Printf("[Debug] total=%d, remaining=%d, offset=%d\n", totalEntities, remaining, offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining, itemsPerPage) {
+			resp, err = op.ListSubnet(&DSMetadata{
+				Kind:   utils.String("subnet"),
+				Length: utils.Int64(itemsPerPage),
+				Offset: utils.Int64(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			//append to entities array
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
+		}
+		resp.Entities = entities
+	}
+
+	return resp, nil
+}
+
+//ListAllNetworkSecurityRule ...
+func (op Operations) ListAllNetworkSecurityRule() (*NetworkSecurityRuleListIntentResponse, error) {
+	entities := make([]*NetworkSecurityRuleIntentResource, 0)
+
+	//make first request
+	resp, err := op.ListNetworkSecurityRule(&DSMetadata{
+		Kind:   utils.String("network_security_rule"),
+		Length: utils.Int64(itemsPerPage),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	log.Printf("[Debug] total=%d, remaining=%d, offset=%d\n", totalEntities, remaining, offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining, itemsPerPage) {
+			resp, err = op.ListNetworkSecurityRule(&DSMetadata{
+				Kind:   utils.String("network_security_rule"),
+				Length: utils.Int64(itemsPerPage),
+				Offset: utils.Int64(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			//append to entities array
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
+		}
+		resp.Entities = entities
+	}
+
+	return resp, nil
+}
+
+//ListAllImage ...
+func (op Operations) ListAllImage() (*ImageListIntentResponse, error) {
+	entities := make([]*ImageIntentResource, 0)
+
+	//make first request
+	resp, err := op.ListImage(&DSMetadata{
+		Kind:   utils.String("image"),
+		Length: utils.Int64(itemsPerPage),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	log.Printf("[Debug] total=%d, remaining=%d, offset=%d\n", totalEntities, remaining, offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining, itemsPerPage) {
+			resp, err = op.ListImage(&DSMetadata{
+				Kind:   utils.String("image"),
+				Length: utils.Int64(itemsPerPage),
+				Offset: utils.Int64(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			//append to entities array
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
+		}
+		resp.Entities = entities
+	}
+
+	return resp, nil
+}
+
+//ListAllCluster ...
+func (op Operations) ListAllCluster() (*ClusterListIntentResponse, error) {
+	entities := make([]*ClusterIntentResource, 0)
+
+	//make first request
+	resp, err := op.ListCluster(&DSMetadata{
+		Kind:   utils.String("cluster"),
+		Length: utils.Int64(itemsPerPage),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	log.Printf("[Debug] total=%d, remaining=%d, offset=%d\n", totalEntities, remaining, offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining, itemsPerPage) {
+			resp, err = op.ListCluster(&DSMetadata{
+				Kind:   utils.String("cluster"),
+				Length: utils.Int64(itemsPerPage),
+				Offset: utils.Int64(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			//append to entities array
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
+		}
+		resp.Entities = entities
+	}
+
+	return resp, nil
 }
