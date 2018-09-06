@@ -48,7 +48,7 @@ type Service interface {
 	GetNetworkSecurityRule(UUID string) (*NetworkSecurityRuleIntentResponse, error)
 	DeleteNetworkSecurityRule(UUID string) error
 	CreateNetworkSecurityRule(request *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error)
-	ListCluster(getEntitiesRequest *ClusterListMetadataOutput) (*ClusterListIntentResponse, error)
+	ListCluster(getEntitiesRequest *DSMetadata) (*ClusterListIntentResponse, error)
 	GetCluster(UUID string) (*ClusterIntentResponse, error)
 	UpdateVolumeGroup(UUID string, body *VolumeGroupInput) (*VolumeGroupResponse, error)
 	ListVolumeGroup(getEntitiesRequest *DSMetadata) (*VolumeGroupListResponse, error)
@@ -417,7 +417,7 @@ func (op Operations) GetCluster(UUID string) (*ClusterIntentResponse, error) {
  *
  * @param getEntitiesRequest @return *ClusterListIntentResponse
  */
-func (op Operations) ListCluster(getEntitiesRequest *ClusterListMetadataOutput) (*ClusterListIntentResponse, error) {
+func (op Operations) ListCluster(getEntitiesRequest *DSMetadata) (*ClusterListIntentResponse, error) {
 	ctx := context.TODO()
 	path := "/clusters/list"
 

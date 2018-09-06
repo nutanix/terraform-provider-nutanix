@@ -553,38 +553,13 @@ type VMIntentResource struct {
 	Status *VMDefStatus `json:"status,omitempty"`
 }
 
-// VMListMetadataOutput All api calls that return a list will have this metadata block
-type VMListMetadataOutput struct {
-
-	// The filter used for the results
-	Filter *string `json:"filter,omitempty"`
-
-	// The kind name
-	Kind *string `json:"kind,omitempty"`
-
-	// The number of records retrieved relative to the offset
-	Length *int64 `json:"length,omitempty"`
-
-	// Offset from the start of the entity list
-	Offset *int64 `json:"offset,omitempty"`
-
-	// The attribute to perform sort on
-	SortAttribute *string `json:"sort_attribute,omitempty"`
-
-	// The sort order in which results are returned
-	SortOrder *string `json:"sort_order,omitempty"`
-
-	// Total matches found
-	TotalMatches *int64 `json:"total_matches,omitempty"`
-}
-
 // VMListIntentResponse Response object for intentful operation of vms
 type VMListIntentResponse struct {
 	APIVersion *string `json:"api_version"`
 
 	Entities []*VMIntentResource `json:"entities,omitempty"`
 
-	Metadata *VMListMetadataOutput `json:"metadata"`
+	Metadata *ListMetadataOutput `json:"metadata"`
 }
 
 // SubnetMetadata The subnet kind metadata
@@ -782,38 +757,13 @@ type SubnetIntentResource struct {
 	Status *SubnetDefStatus `json:"status,omitempty"`
 }
 
-// SubnetListMetadataOutput All api calls that return a list will have this metadata block
-type SubnetListMetadataOutput struct {
-
-	// The filter used for the results
-	Filter *string `json:"filter,omitempty"`
-
-	// The kind name
-	Kind *string `json:"kind,omitempty"`
-
-	// The number of records retrieved relative to the offset
-	Length *int64 `json:"length,omitempty"`
-
-	// Offset from the start of the entity list
-	Offset *int64 `json:"offset,omitempty"`
-
-	// The attribute to perform sort on
-	SortAttribute *string `json:"sort_attribute,omitempty"`
-
-	// The sort order in which results are returned
-	SortOrder *string `json:"sort_order,omitempty"`
-
-	// Total matches found
-	TotalMatches *int64 `json:"total_matches,omitempty"`
-}
-
 // SubnetListIntentResponse represents the response object for intentful operation of subnets
 type SubnetListIntentResponse struct {
 	APIVersion *string `json:"api_version"`
 
 	Entities []*SubnetIntentResource `json:"entities,omitempty"`
 
-	Metadata *SubnetListMetadataOutput `json:"metadata"`
+	Metadata *ListMetadataOutput `json:"metadata"`
 }
 
 // SubnetListMetadata ...
@@ -1044,83 +994,28 @@ type ImageIntentResource struct {
 	Status *ImageDefStatus `json:"status,omitempty"`
 }
 
-// ImageListMetadataOutput represents metadata block in image list
-type ImageListMetadataOutput struct {
-
-	// The filter used for the results
-	Filter *string `json:"filter,omitempty"`
-
-	// The kind name
-	Kind *string `json:"kind,omitempty"`
-
-	// The number of records retrieved relative to the offset
-	Length *int64 `json:"length,omitempty"`
-
-	// Offset from the start of the entity list
-	Offset *int64 `json:"offset,omitempty"`
-
-	// The attribute to perform sort on
-	SortAttribute *string `json:"sort_attribute,omitempty"`
-
-	// The sort order in which results are returned
-	SortOrder *string `json:"sort_order,omitempty"`
-
-	// Total matches found
-	TotalMatches *int64 `json:"total_matches,omitempty"`
-}
-
 // ImageListIntentResponse represents the response object for intentful operation of images
 type ImageListIntentResponse struct {
 	APIVersion *string `json:"api_version"`
 
 	Entities []*ImageIntentResource `json:"entities,omitempty"`
 
-	Metadata *ImageListMetadataOutput `json:"metadata"`
-}
-
-// ClusterListMetadataOutput ...
-type ClusterListMetadataOutput struct {
-
-	// The filter used for the results
-	Filter *string `json:"filter,omitempty"`
-
-	// The kind name
-	Kind *string `json:"kind,omitempty"`
-
-	// The number of records retrieved relative to the offset
-	Length *int64 `json:"length,omitempty"`
-
-	// Offset from the start of the entity list
-	Offset *int64 `json:"offset,omitempty"`
-
-	// The attribute to perform sort on
-	SortAttribute *string `json:"sort_attribute,omitempty"`
-
-	// The sort order in which results are returned
-	SortOrder *string `json:"sort_order,omitempty"`
-
-	// Total matches found
-	TotalMatches *int64 `json:"total_matches,omitempty"`
+	Metadata *ListMetadataOutput `json:"metadata"`
 }
 
 // ClusterListIntentResponse ...
 type ClusterListIntentResponse struct {
-	APIVersion *string `json:"api_version"`
-
-	Entities []*ClusterIntentResource `json:"entities,omitempty"`
-
-	Metadata *ClusterListMetadataOutput `json:"metadata"`
+	APIVersion *string                  `json:"api_version"`
+	Entities   []*ClusterIntentResource `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput      `json:"metadata"`
 }
 
 // ClusterIntentResource ...
 type ClusterIntentResource struct {
-	APIVersion *string `json:"api_version,omitempty"`
-
-	Metadata *Metadata `json:"metadata"`
-
-	Spec *Cluster `json:"spec,omitempty"`
-
-	Status *ClusterDefStatus `json:"status,omitempty"`
+	APIVersion *string           `json:"api_version,omitempty"`
+	Metadata   *Metadata         `json:"metadata"`
+	Spec       *Cluster          `json:"spec,omitempty"`
+	Status     *ClusterDefStatus `json:"status,omitempty"`
 }
 
 // ClusterIntentResponse ...

@@ -23,7 +23,7 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 	// Get client connection
 	conn := meta.(*Client).API
 
-	metadata := &v3.ClusterListMetadataOutput{}
+	metadata := &v3.DSMetadata{}
 
 	if v, ok := d.GetOk("metadata"); ok {
 		m := v.(map[string]interface{})
