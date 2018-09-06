@@ -39,7 +39,7 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 	// 	return err
 	// }
 
-	resp, err := getVMListDSEntries(conn, int64(100))
+	resp, err := conn.V3.ListAllVM()
 	if err != nil {
 		return err
 	}

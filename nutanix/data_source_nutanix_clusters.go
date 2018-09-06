@@ -3,8 +3,6 @@ package nutanix
 import (
 	"strconv"
 
-	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
-
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -23,38 +21,8 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 	// Get client connection
 	conn := meta.(*Client).API
 
-	metadata := &v3.DSMetadata{}
+	resp, err := conn.V3.ListAllCluster()
 
-	if v, ok := d.GetOk("metadata"); ok {
-		m := v.(map[string]interface{})
-		metadata.Kind = utils.String("cluster")
-		if mv, mok := m["sort_attribute"]; mok {
-			metadata.SortAttribute = utils.String(mv.(string))
-		}
-		if mv, mok := m["filter"]; mok {
-			metadata.Filter = utils.String(mv.(string))
-		}
-		if mv, mok := m["length"]; mok {
-			i, err := strconv.Atoi(mv.(string))
-			if err != nil {
-				return err
-			}
-			metadata.Length = utils.Int64(int64(i))
-		}
-		if mv, mok := m["sort_order"]; mok {
-			metadata.SortOrder = utils.String(mv.(string))
-		}
-		if mv, mok := m["offset"]; mok {
-			i, err := strconv.Atoi(mv.(string))
-			if err != nil {
-				return err
-			}
-			metadata.Offset = utils.Int64(int64(i))
-		}
-	}
-
-	// Make request to the API
-	resp, err := conn.V3.ListCluster(metadata)
 	if err != nil {
 		return err
 	}
@@ -323,38 +291,6 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 
 func getDataSourceClustersSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"metadata": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"kind": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"sort_attribute": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"filter": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"length": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"sort_order": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"offset": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-				},
-			},
-		},
 		"api_version": {
 			Type:     schema.TypeString,
 			Computed: true,
