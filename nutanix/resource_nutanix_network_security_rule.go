@@ -100,10 +100,13 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 
 	d.SetId(*resp.Metadata.UUID)
 
+	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
+
+	// Wait for the VM to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
-		Target:     []string{"COMPLETE"},
-		Refresh:    networkSecurityRuleStateRefreshFunc(conn, d.Id()),
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -692,16 +695,19 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 	request.Spec = spec
 	request.Metadata = metadata
 
-	_, errUpdate := conn.V3.UpdateNetworkSecurityRule(d.Id(), request)
+	resp, errUpdate := conn.V3.UpdateNetworkSecurityRule(d.Id(), request)
 
 	if errUpdate != nil {
 		return errUpdate
 	}
 
+	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
+
+	// Wait for the VM to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
-		Target:     []string{"COMPLETE"},
-		Refresh:    networkSecurityRuleStateRefreshFunc(conn, d.Id()),
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -722,14 +728,18 @@ func resourceNutanixNetworkSecurityRuleDelete(d *schema.ResourceData, meta inter
 	conn := meta.(*Client).API
 	UUID := d.Id()
 
-	if err := conn.V3.DeleteNetworkSecurityRule(UUID); err != nil {
+	resp, err := conn.V3.DeleteNetworkSecurityRule(UUID)
+	if err != nil {
 		return err
 	}
 
+	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
+
+	// Wait for the VM to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING", "DELETE_IN_PROGRESS", "COMPLETE"},
-		Target:     []string{"DELETED"},
-		Refresh:    networkSecurityRuleStateRefreshFunc(conn, d.Id()),
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -747,10 +757,9 @@ func resourceNutanixNetworkSecurityRuleDelete(d *schema.ResourceData, meta inter
 func resourceNutanixNetworkSecurityRuleExists(conn *v3.Client, name string) (*string, error) {
 	log.Printf("[DEBUG] Get Network Security Rule Existence : %s", name)
 
-	subnetEntities := &v3.DSMetadata{}
 	var nsrUUID *string
 
-	networkSecurityRuleList, err := conn.V3.ListNetworkSecurityRule(subnetEntities)
+	networkSecurityRuleList, err := conn.V3.ListAllNetworkSecurityRule()
 
 	if err != nil {
 		return nil, err

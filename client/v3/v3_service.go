@@ -47,7 +47,7 @@ type Service interface {
 	UpdateNetworkSecurityRule(UUID string, body *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error)
 	ListNetworkSecurityRule(getEntitiesRequest *DSMetadata) (*NetworkSecurityRuleListIntentResponse, error)
 	GetNetworkSecurityRule(UUID string) (*NetworkSecurityRuleIntentResponse, error)
-	DeleteNetworkSecurityRule(UUID string) error
+	DeleteNetworkSecurityRule(UUID string) (*DeleteResponse, error)
 	CreateNetworkSecurityRule(request *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error)
 	ListCluster(getEntitiesRequest *DSMetadata) (*ClusterListIntentResponse, error)
 	GetCluster(UUID string) (*ClusterIntentResponse, error)
@@ -661,17 +661,18 @@ func (op Operations) CreateNetworkSecurityRule(request *NetworkSecurityRuleInten
  * @param UUID The UUID of the entity.
  * @return void
  */
-func (op Operations) DeleteNetworkSecurityRule(UUID string) error {
+func (op Operations) DeleteNetworkSecurityRule(UUID string) (*DeleteResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/network_security_rules/%s", UUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	deleteResponse := new(DeleteResponse)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return op.client.Do(ctx, req, nil)
+	return deleteResponse, op.client.Do(ctx, req, deleteResponse)
 }
 
 /*GetNetworkSecurityRule Gets a Network security rule
