@@ -177,7 +177,7 @@ func TestOperations_DeleteVM(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
 			}
-			if err := op.DeleteVM(tt.args.UUID); (err != nil) != tt.wantErr {
+			if _, err := op.DeleteVM(tt.args.UUID); (err != nil) != tt.wantErr {
 				t.Errorf("Operations.DeleteVM() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -538,7 +538,7 @@ func TestOperations_DeleteSubnet(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
 			}
-			if err := op.DeleteSubnet(tt.args.UUID); (err != nil) != tt.wantErr {
+			if _, err := op.DeleteSubnet(tt.args.UUID); (err != nil) != tt.wantErr {
 				t.Errorf("Operations.DeleteSubnet() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -929,7 +929,7 @@ func TestOperations_DeleteImage(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
 			}
-			if err := op.DeleteImage(tt.args.UUID); (err != nil) != tt.wantErr {
+			if _, err := op.DeleteImage(tt.args.UUID); (err != nil) != tt.wantErr {
 				t.Errorf("Operations.DeleteImage() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1927,7 +1927,7 @@ func TestOperations_DeleteNetworkSecurityRule(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
 			}
-			if err := op.DeleteNetworkSecurityRule(tt.args.UUID); (err != nil) != tt.wantErr {
+			if _, err := op.DeleteNetworkSecurityRule(tt.args.UUID); (err != nil) != tt.wantErr {
 				t.Errorf("Operations.DeleteNetworkSecurityRule() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
