@@ -174,6 +174,9 @@ func taskStateRefreshFunc(client *v3.Client, taskUUID string) resource.StateRefr
 			return nil, "", err
 		}
 
+		if *v.Status == "INVALID_UUID" || *v.Status == "FAILED" {
+			return v, *v.Status, fmt.Errorf(*v.ErrorDetail)
+		}
 		return v, *v.Status, nil
 	}
 }

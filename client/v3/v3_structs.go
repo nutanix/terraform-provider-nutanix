@@ -1624,10 +1624,11 @@ type NetworkSecurityRuleIntentInput struct {
 
 // NetworkSecurityRuleDefStatus ... Network security rule status
 type NetworkSecurityRuleDefStatus struct {
-	AppRule        *NetworkSecurityRuleResourcesRule `json:"app_rule,omitempty"`
-	IsolationRule  *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty"`
-	QuarantineRule *NetworkSecurityRuleResourcesRule `json:"quarantine_rule,omitempty"`
-	State          *string                           `json:"state,omitmepty"`
+	AppRule          *NetworkSecurityRuleResourcesRule `json:"app_rule,omitempty"`
+	IsolationRule    *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty"`
+	QuarantineRule   *NetworkSecurityRuleResourcesRule `json:"quarantine_rule,omitempty"`
+	State            *string                           `json:"state,omitmepty"`
+	ExecutionContext *ExecutionContext                 `json:"execution_context,omitempty"`
 }
 
 // NetworkSecurityRuleIntentResponse Response object for intentful operations on a network_security_rule
@@ -1762,6 +1763,7 @@ type TasksResponse struct {
 	PercentageComplete   *int64       `json:"percentage_complete,omitempty"`
 	APIVersion           *string      `json:"api_version,omitempty"`
 	UUID                 *string      `json:"uuid,omitempty"`
+	ErrorDetail          *string      `json:"error_detail,omitempty"`
 }
 
 //DeleteResponse ...

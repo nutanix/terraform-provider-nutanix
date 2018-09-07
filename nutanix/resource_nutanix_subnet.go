@@ -450,10 +450,9 @@ func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceNutanixSubnetExists(conn *v3.Client, name string) (*string, error) {
-	subnetEntities := &v3.DSMetadata{}
 	var subnetUUID *string
 
-	subnetList, err := conn.V3.ListSubnet(subnetEntities)
+	subnetList, err := conn.V3.ListAllSubnet()
 
 	if err != nil {
 		return nil, err
