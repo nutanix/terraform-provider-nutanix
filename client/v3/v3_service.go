@@ -30,7 +30,7 @@ type Service interface {
 	ListSubnet(getEntitiesRequest *DSMetadata) (*SubnetListIntentResponse, error)
 	UpdateSubnet(UUID string, body *SubnetIntentInput) (*SubnetIntentResponse, error)
 	CreateImage(createRequest *ImageIntentInput) (*ImageIntentResponse, error)
-	DeleteImage(UUID string) error
+	DeleteImage(UUID string) (*DeleteResponse, error)
 	GetImage(UUID string) (*ImageIntentResponse, error)
 	ListImage(getEntitiesRequest *DSMetadata) (*ImageListIntentResponse, error)
 	UpdateImage(UUID string, body *ImageIntentInput) (*ImageIntentResponse, error)
@@ -327,17 +327,18 @@ func (op Operations) UploadImage(UUID, filepath string) error {
  * @param uuid The UUID of the entity.
  * @return error if error exists
  */
-func (op Operations) DeleteImage(UUID string) error {
+func (op Operations) DeleteImage(UUID string) (*DeleteResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/images/%s", UUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	deleteResponse := new(DeleteResponse)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return op.client.Do(ctx, req, nil)
+	return deleteResponse, op.client.Do(ctx, req, deleteResponse)
 }
 
 /*GetImage gets a IMAGE

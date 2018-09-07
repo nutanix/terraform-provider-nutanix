@@ -99,7 +99,7 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 
 	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
 
-	// Wait for the VM to be available
+	// Wait for the Subnet to be available
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
