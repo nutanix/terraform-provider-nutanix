@@ -25,12 +25,8 @@ resource "nutanix_image" "centos" {
   source_uri  = "http://earth.corp.nutanix.com/isos/linux/centos/7/CentOS-7.3-x86_64-Minimal-1611.iso""
 }
 
-
-data "nutanix_images" "test" {
-    metadata = {
-        length = 2
-    }
-}
+#list all images
+data "nutanix_images" "test" {}
 ```
 
 ## Argument Reference

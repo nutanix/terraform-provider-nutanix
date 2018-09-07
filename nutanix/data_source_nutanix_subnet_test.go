@@ -28,11 +28,7 @@ func TestAccNutanixSubnetDataSource_basic(t *testing.T) {
 
 func testAccSubnetDataSourceConfig(r int) string {
 	return fmt.Sprintf(`
-data "nutanix_clusters" "clusters" {
-  metadata = {
-    length = 2
-  }
-}
+data "nutanix_clusters" "clusters" {}
 
 output "cluster" {
   value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"

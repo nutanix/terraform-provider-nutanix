@@ -144,6 +144,23 @@ func TestOperations_DeleteVM(t *testing.T) {
 
 	mux.HandleFunc("/api/nutanix/v3/vms/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodDelete)
+
+		fmt.Fprintf(w, `{
+				"status": {
+					"state": "DELETE_PENDING",
+					"execution_context": {
+						"task_uuid": "ff1b9547-dc9a-4ebd-a2ff-f2b718af935e"
+					}
+				},
+				"spec": "",
+				"api_version": "3.1",
+				"metadata": {
+					"kind": "vm",
+					"categories": {
+						"Project": "default"
+					}
+				}
+			}`)
 	})
 
 	type fields struct {
@@ -177,7 +194,7 @@ func TestOperations_DeleteVM(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
 			}
-			if err := op.DeleteVM(tt.args.UUID); (err != nil) != tt.wantErr {
+			if _, err := op.DeleteVM(tt.args.UUID); (err != nil) != tt.wantErr {
 				t.Errorf("Operations.DeleteVM() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -505,6 +522,23 @@ func TestOperations_DeleteSubnet(t *testing.T) {
 
 	mux.HandleFunc("/api/nutanix/v3/subnets/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodDelete)
+
+		fmt.Fprintf(w, `{
+				"status": {
+					"state": "DELETE_PENDING",
+					"execution_context": {
+						"task_uuid": "ff1b9547-dc9a-4ebd-a2ff-f2b718af935e"
+					}
+				},
+				"spec": "",
+				"api_version": "3.1",
+				"metadata": {
+					"kind": "subnet",
+					"categories": {
+						"Project": "default"
+					}
+				}
+			}`)
 	})
 
 	type fields struct {
@@ -538,7 +572,7 @@ func TestOperations_DeleteSubnet(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
 			}
-			if err := op.DeleteSubnet(tt.args.UUID); (err != nil) != tt.wantErr {
+			if _, err := op.DeleteSubnet(tt.args.UUID); (err != nil) != tt.wantErr {
 				t.Errorf("Operations.DeleteSubnet() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -896,6 +930,23 @@ func TestOperations_DeleteImage(t *testing.T) {
 
 	mux.HandleFunc("/api/nutanix/v3/images/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodDelete)
+
+		fmt.Fprintf(w, `{
+				"status": {
+					"state": "DELETE_PENDING",
+					"execution_context": {
+						"task_uuid": "ff1b9547-dc9a-4ebd-a2ff-f2b718af935e"
+					}
+				},
+				"spec": "",
+				"api_version": "3.1",
+				"metadata": {
+					"kind": "image",
+					"categories": {
+						"Project": "default"
+					}
+				}
+			}`)
 	})
 
 	type fields struct {
@@ -929,7 +980,7 @@ func TestOperations_DeleteImage(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
 			}
-			if err := op.DeleteImage(tt.args.UUID); (err != nil) != tt.wantErr {
+			if _, err := op.DeleteImage(tt.args.UUID); (err != nil) != tt.wantErr {
 				t.Errorf("Operations.DeleteImage() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1219,7 +1270,7 @@ func TestOperations_ListCluster(t *testing.T) {
 		Kind: utils.String("cluster"),
 	}
 
-	input := &ClusterListMetadataOutput{
+	input := &DSMetadata{
 		Length: utils.Int64(1.0),
 	}
 
@@ -1227,7 +1278,7 @@ func TestOperations_ListCluster(t *testing.T) {
 		client *client.Client
 	}
 	type args struct {
-		getEntitiesRequest *ClusterListMetadataOutput
+		getEntitiesRequest *DSMetadata
 	}
 	tests := []struct {
 		name    string
@@ -1894,6 +1945,23 @@ func TestOperations_DeleteNetworkSecurityRule(t *testing.T) {
 	mux.HandleFunc("/api/nutanix/v3/network_security_rules/cfde831a-4e87-4a75-960f-89b0148aa2cc",
 		func(w http.ResponseWriter, r *http.Request) {
 			testHTTPMethod(t, r, http.MethodDelete)
+
+			fmt.Fprintf(w, `{
+				"status": {
+					"state": "DELETE_PENDING",
+					"execution_context": {
+						"task_uuid": "ff1b9547-dc9a-4ebd-a2ff-f2b718af935e"
+					}
+				},
+				"spec": "",
+				"api_version": "3.1",
+				"metadata": {
+					"kind": "network_security_rule",
+					"categories": {
+						"Project": "default"
+					}
+				}
+			}`)
 		})
 
 	type fields struct {
@@ -1927,7 +1995,7 @@ func TestOperations_DeleteNetworkSecurityRule(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
 			}
-			if err := op.DeleteNetworkSecurityRule(tt.args.UUID); (err != nil) != tt.wantErr {
+			if _, err := op.DeleteNetworkSecurityRule(tt.args.UUID); (err != nil) != tt.wantErr {
 				t.Errorf("Operations.DeleteNetworkSecurityRule() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

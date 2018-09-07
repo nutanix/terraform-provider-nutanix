@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 
@@ -19,17 +20,17 @@ type Operations struct {
 // Service ...
 type Service interface {
 	CreateVM(createRequest *VMIntentInput) (*VMIntentResponse, error)
-	DeleteVM(UUID string) error
+	DeleteVM(UUID string) (*DeleteResponse, error)
 	GetVM(UUID string) (*VMIntentResponse, error)
 	ListVM(getEntitiesRequest *DSMetadata) (*VMListIntentResponse, error)
 	UpdateVM(UUID string, body *VMIntentInput) (*VMIntentResponse, error)
 	CreateSubnet(createRequest *SubnetIntentInput) (*SubnetIntentResponse, error)
-	DeleteSubnet(UUID string) error
+	DeleteSubnet(UUID string) (*DeleteResponse, error)
 	GetSubnet(UUID string) (*SubnetIntentResponse, error)
 	ListSubnet(getEntitiesRequest *DSMetadata) (*SubnetListIntentResponse, error)
 	UpdateSubnet(UUID string, body *SubnetIntentInput) (*SubnetIntentResponse, error)
 	CreateImage(createRequest *ImageIntentInput) (*ImageIntentResponse, error)
-	DeleteImage(UUID string) error
+	DeleteImage(UUID string) (*DeleteResponse, error)
 	GetImage(UUID string) (*ImageIntentResponse, error)
 	ListImage(getEntitiesRequest *DSMetadata) (*ImageListIntentResponse, error)
 	UpdateImage(UUID string, body *ImageIntentInput) (*ImageIntentResponse, error)
@@ -46,15 +47,21 @@ type Service interface {
 	UpdateNetworkSecurityRule(UUID string, body *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error)
 	ListNetworkSecurityRule(getEntitiesRequest *DSMetadata) (*NetworkSecurityRuleListIntentResponse, error)
 	GetNetworkSecurityRule(UUID string) (*NetworkSecurityRuleIntentResponse, error)
-	DeleteNetworkSecurityRule(UUID string) error
+	DeleteNetworkSecurityRule(UUID string) (*DeleteResponse, error)
 	CreateNetworkSecurityRule(request *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error)
-	ListCluster(getEntitiesRequest *ClusterListMetadataOutput) (*ClusterListIntentResponse, error)
+	ListCluster(getEntitiesRequest *DSMetadata) (*ClusterListIntentResponse, error)
 	GetCluster(UUID string) (*ClusterIntentResponse, error)
 	UpdateVolumeGroup(UUID string, body *VolumeGroupInput) (*VolumeGroupResponse, error)
 	ListVolumeGroup(getEntitiesRequest *DSMetadata) (*VolumeGroupListResponse, error)
 	GetVolumeGroup(UUID string) (*VolumeGroupResponse, error)
 	DeleteVolumeGroup(UUID string) error
 	CreateVolumeGroup(request *VolumeGroupInput) (*VolumeGroupResponse, error)
+	ListAllVM() (*VMListIntentResponse, error)
+	ListAllSubnet() (*SubnetListIntentResponse, error)
+	ListAllNetworkSecurityRule() (*NetworkSecurityRuleListIntentResponse, error)
+	ListAllImage() (*ImageListIntentResponse, error)
+	ListAllCluster() (*ClusterListIntentResponse, error)
+	GetTask(TaskUUID string) (*TasksResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -82,17 +89,18 @@ func (op Operations) CreateVM(createRequest *VMIntentInput) (*VMIntentResponse, 
  * @param UUID The UUID of the entity.
  * @return error
  */
-func (op Operations) DeleteVM(UUID string) error {
+func (op Operations) DeleteVM(UUID string) (*DeleteResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/vms/%s", UUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	deleteResponse := new(DeleteResponse)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return op.client.Do(ctx, req, nil)
+	return deleteResponse, op.client.Do(ctx, req, deleteResponse)
 }
 
 /*GetVM Gets a VM
@@ -181,17 +189,18 @@ func (op Operations) CreateSubnet(createRequest *SubnetIntentInput) (*SubnetInte
  * @param uuid The UUID of the entity.
  * @return error if exist error
  */
-func (op Operations) DeleteSubnet(UUID string) error {
+func (op Operations) DeleteSubnet(UUID string) (*DeleteResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/subnets/%s", UUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	deleteResponse := new(DeleteResponse)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return op.client.Do(ctx, req, nil)
+	return deleteResponse, op.client.Do(ctx, req, deleteResponse)
 }
 
 /*GetSubnet Gets a subnet entity
@@ -318,17 +327,18 @@ func (op Operations) UploadImage(UUID, filepath string) error {
  * @param uuid The UUID of the entity.
  * @return error if error exists
  */
-func (op Operations) DeleteImage(UUID string) error {
+func (op Operations) DeleteImage(UUID string) (*DeleteResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/images/%s", UUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	deleteResponse := new(DeleteResponse)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return op.client.Do(ctx, req, nil)
+	return deleteResponse, op.client.Do(ctx, req, deleteResponse)
 }
 
 /*GetImage gets a IMAGE
@@ -417,7 +427,7 @@ func (op Operations) GetCluster(UUID string) (*ClusterIntentResponse, error) {
  *
  * @param getEntitiesRequest @return *ClusterListIntentResponse
  */
-func (op Operations) ListCluster(getEntitiesRequest *ClusterListMetadataOutput) (*ClusterListIntentResponse, error) {
+func (op Operations) ListCluster(getEntitiesRequest *DSMetadata) (*ClusterListIntentResponse, error) {
 	ctx := context.TODO()
 	path := "/clusters/list"
 
@@ -652,17 +662,18 @@ func (op Operations) CreateNetworkSecurityRule(request *NetworkSecurityRuleInten
  * @param UUID The UUID of the entity.
  * @return void
  */
-func (op Operations) DeleteNetworkSecurityRule(UUID string) error {
+func (op Operations) DeleteNetworkSecurityRule(UUID string) (*DeleteResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/network_security_rules/%s", UUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	deleteResponse := new(DeleteResponse)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return op.client.Do(ctx, req, nil)
+	return deleteResponse, op.client.Do(ctx, req, deleteResponse)
 }
 
 /*GetNetworkSecurityRule Gets a Network security rule
@@ -823,4 +834,225 @@ func (op Operations) UpdateVolumeGroup(UUID string, body *VolumeGroupInput) (*Vo
 	}
 
 	return networkSecurityRuleResponse, op.client.Do(ctx, req, networkSecurityRuleResponse)
+}
+
+const itemsPerPage = int64(100)
+
+func hasNext(ri *int64) bool {
+	*ri = *ri - itemsPerPage
+	return *ri >= (0 - itemsPerPage)
+}
+
+// ListAllVM ...
+func (op Operations) ListAllVM() (*VMListIntentResponse, error) {
+	entities := make([]*VMIntentResource, 0)
+
+	resp, err := op.ListVM(&DSMetadata{
+		Kind:   utils.String("vm"),
+		Length: utils.Int64(itemsPerPage),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining) {
+			resp, err = op.ListVM(&DSMetadata{
+				Kind:   utils.String("vm"),
+				Length: utils.Int64(itemsPerPage),
+				Offset: utils.Int64(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+		}
+		resp.Entities = entities
+	}
+
+	return resp, nil
+}
+
+// ListAllSubnet ...
+func (op Operations) ListAllSubnet() (*SubnetListIntentResponse, error) {
+	entities := make([]*SubnetIntentResource, 0)
+
+	resp, err := op.ListSubnet(&DSMetadata{
+		Kind:   utils.String("subnet"),
+		Length: utils.Int64(itemsPerPage),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining) {
+			resp, err = op.ListSubnet(&DSMetadata{
+				Kind:   utils.String("subnet"),
+				Length: utils.Int64(itemsPerPage),
+				Offset: utils.Int64(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
+		}
+		resp.Entities = entities
+	}
+
+	return resp, nil
+}
+
+// ListAllNetworkSecurityRule ...
+func (op Operations) ListAllNetworkSecurityRule() (*NetworkSecurityRuleListIntentResponse, error) {
+	entities := make([]*NetworkSecurityRuleIntentResource, 0)
+
+	resp, err := op.ListNetworkSecurityRule(&DSMetadata{
+		Kind:   utils.String("network_security_rule"),
+		Length: utils.Int64(itemsPerPage),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining) {
+			resp, err = op.ListNetworkSecurityRule(&DSMetadata{
+				Kind:   utils.String("network_security_rule"),
+				Length: utils.Int64(itemsPerPage),
+				Offset: utils.Int64(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
+		}
+		resp.Entities = entities
+	}
+
+	return resp, nil
+}
+
+// ListAllImage ...
+func (op Operations) ListAllImage() (*ImageListIntentResponse, error) {
+	entities := make([]*ImageIntentResource, 0)
+
+	resp, err := op.ListImage(&DSMetadata{
+		Kind:   utils.String("image"),
+		Length: utils.Int64(itemsPerPage),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining) {
+			resp, err = op.ListImage(&DSMetadata{
+				Kind:   utils.String("image"),
+				Length: utils.Int64(itemsPerPage),
+				Offset: utils.Int64(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
+		}
+		resp.Entities = entities
+	}
+
+	return resp, nil
+}
+
+// ListAllCluster ...
+func (op Operations) ListAllCluster() (*ClusterListIntentResponse, error) {
+	entities := make([]*ClusterIntentResource, 0)
+
+	resp, err := op.ListCluster(&DSMetadata{
+		Kind:   utils.String("cluster"),
+		Length: utils.Int64(itemsPerPage),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining) {
+			resp, err = op.ListCluster(&DSMetadata{
+				Kind:   utils.String("cluster"),
+				Length: utils.Int64(itemsPerPage),
+				Offset: utils.Int64(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
+		}
+		resp.Entities = entities
+	}
+
+	return resp, nil
+}
+
+//GetTask ...
+func (op Operations) GetTask(TaskUUID string) (*TasksResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/tasks/%s", TaskUUID)
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+	tasksTesponse := new(TasksResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tasksTesponse, op.client.Do(ctx, req, tasksTesponse)
 }

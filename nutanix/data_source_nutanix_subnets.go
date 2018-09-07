@@ -17,13 +17,8 @@ func dataSourceNutanixSubnetsRead(d *schema.ResourceData, meta interface{}) erro
 	// Get client connection
 	conn := meta.(*Client).API
 
-	// Get the metadata request
-	metadata, err := readListMetadata(d, "subnet")
-	if err != nil {
-		return err
-	}
 	// Make request to the API
-	resp, err := conn.V3.ListSubnet(metadata)
+	resp, err := conn.V3.ListAllSubnet()
 	if err != nil {
 		return err
 	}
@@ -119,38 +114,7 @@ func dataSourceNutanixSubnetsRead(d *schema.ResourceData, meta interface{}) erro
 
 func getDataSourceSubnetsSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"metadata": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"kind": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"sort_attribute": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"filter": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"length": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"sort_order": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"offset": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-				},
-			},
-		},
+		"metadata": getDSMetadataSchema(),
 		"api_version": {
 			Type:     schema.TypeString,
 			Computed: true,

@@ -27,14 +27,7 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 	// Get client connection
 	conn := meta.(*Client).API
 
-	// Get the metadata request
-	metadata, err := readListMetadata(d, "vm")
-	if err != nil {
-		return err
-	}
-
-	// Make request to the API
-	resp, err := conn.V3.ListVM(metadata)
+	resp, err := conn.V3.ListAllVM()
 	if err != nil {
 		return err
 	}
@@ -257,38 +250,7 @@ func setNicList(nics []*v3.VMNicOutputStatus) []map[string]interface{} {
 
 func getDataSourceVMSSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"metadata": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"kind": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"sort_attribute": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"filter": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"length": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"sort_order": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"offset": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-				},
-			},
-		},
+		//"metadata": getDSMetadataSchema(),
 		"api_version": {
 			Type:     schema.TypeString,
 			Computed: true,
@@ -900,6 +862,41 @@ func getDataSourceVMSSchema() map[string]*schema.Schema {
 							},
 						},
 					},
+				},
+			},
+		},
+	}
+}
+
+func getDSMetadataSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeMap,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"kind": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"sort_attribute": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"filter": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"length": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"sort_order": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"offset": {
+					Type:     schema.TypeString,
+					Optional: true,
 				},
 			},
 		},

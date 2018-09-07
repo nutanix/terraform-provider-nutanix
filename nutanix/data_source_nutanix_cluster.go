@@ -11,8 +11,7 @@ import (
 
 func dataSourceNutanixCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceNutanixClusterRead,
-
+		Read:   dataSourceNutanixClusterRead,
 		Schema: getDataSourceClusterSchema(),
 	}
 }
