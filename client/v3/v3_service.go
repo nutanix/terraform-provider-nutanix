@@ -838,11 +838,10 @@ func hasNext(ri *int64) bool {
 	return *ri >= (0 - itemsPerPage)
 }
 
-//ListAllVM ...
+// ListAllVM ...
 func (op Operations) ListAllVM() (*VMListIntentResponse, error) {
 	entities := make([]*VMIntentResource, 0)
 
-	//make first request
 	resp, err := op.ListVM(&DSMetadata{
 		Kind:   utils.String("vm"),
 		Length: utils.Int64(itemsPerPage),
@@ -856,8 +855,6 @@ func (op Operations) ListAllVM() (*VMListIntentResponse, error) {
 	remaining := totalEntities
 	offset := utils.Int64Value(resp.Metadata.Offset)
 
-	log.Printf("[Debug] total=%d, remaining=%d, offset=%d\n", totalEntities, remaining, offset)
-
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
 			resp, err = op.ListVM(&DSMetadata{
@@ -870,11 +867,9 @@ func (op Operations) ListAllVM() (*VMListIntentResponse, error) {
 				return nil, err
 			}
 
-			//append to entities array
 			entities = append(entities, resp.Entities...)
 
 			offset += itemsPerPage
-			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
 		}
 		resp.Entities = entities
 	}
@@ -882,11 +877,10 @@ func (op Operations) ListAllVM() (*VMListIntentResponse, error) {
 	return resp, nil
 }
 
-//ListAllSubnet ...
+// ListAllSubnet ...
 func (op Operations) ListAllSubnet() (*SubnetListIntentResponse, error) {
 	entities := make([]*SubnetIntentResource, 0)
 
-	//make first request
 	resp, err := op.ListSubnet(&DSMetadata{
 		Kind:   utils.String("subnet"),
 		Length: utils.Int64(itemsPerPage),
@@ -900,8 +894,6 @@ func (op Operations) ListAllSubnet() (*SubnetListIntentResponse, error) {
 	remaining := totalEntities
 	offset := utils.Int64Value(resp.Metadata.Offset)
 
-	log.Printf("[Debug] total=%d, remaining=%d, offset=%d\n", totalEntities, remaining, offset)
-
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
 			resp, err = op.ListSubnet(&DSMetadata{
@@ -914,7 +906,6 @@ func (op Operations) ListAllSubnet() (*SubnetListIntentResponse, error) {
 				return nil, err
 			}
 
-			//append to entities array
 			entities = append(entities, resp.Entities...)
 
 			offset += itemsPerPage
@@ -926,11 +917,10 @@ func (op Operations) ListAllSubnet() (*SubnetListIntentResponse, error) {
 	return resp, nil
 }
 
-//ListAllNetworkSecurityRule ...
+// ListAllNetworkSecurityRule ...
 func (op Operations) ListAllNetworkSecurityRule() (*NetworkSecurityRuleListIntentResponse, error) {
 	entities := make([]*NetworkSecurityRuleIntentResource, 0)
 
-	//make first request
 	resp, err := op.ListNetworkSecurityRule(&DSMetadata{
 		Kind:   utils.String("network_security_rule"),
 		Length: utils.Int64(itemsPerPage),
@@ -944,8 +934,6 @@ func (op Operations) ListAllNetworkSecurityRule() (*NetworkSecurityRuleListInten
 	remaining := totalEntities
 	offset := utils.Int64Value(resp.Metadata.Offset)
 
-	log.Printf("[Debug] total=%d, remaining=%d, offset=%d\n", totalEntities, remaining, offset)
-
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
 			resp, err = op.ListNetworkSecurityRule(&DSMetadata{
@@ -958,7 +946,6 @@ func (op Operations) ListAllNetworkSecurityRule() (*NetworkSecurityRuleListInten
 				return nil, err
 			}
 
-			//append to entities array
 			entities = append(entities, resp.Entities...)
 
 			offset += itemsPerPage
@@ -970,11 +957,10 @@ func (op Operations) ListAllNetworkSecurityRule() (*NetworkSecurityRuleListInten
 	return resp, nil
 }
 
-//ListAllImage ...
+// ListAllImage ...
 func (op Operations) ListAllImage() (*ImageListIntentResponse, error) {
 	entities := make([]*ImageIntentResource, 0)
 
-	//make first request
 	resp, err := op.ListImage(&DSMetadata{
 		Kind:   utils.String("image"),
 		Length: utils.Int64(itemsPerPage),
@@ -988,8 +974,6 @@ func (op Operations) ListAllImage() (*ImageListIntentResponse, error) {
 	remaining := totalEntities
 	offset := utils.Int64Value(resp.Metadata.Offset)
 
-	log.Printf("[Debug] total=%d, remaining=%d, offset=%d\n", totalEntities, remaining, offset)
-
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
 			resp, err = op.ListImage(&DSMetadata{
@@ -1002,7 +986,6 @@ func (op Operations) ListAllImage() (*ImageListIntentResponse, error) {
 				return nil, err
 			}
 
-			//append to entities array
 			entities = append(entities, resp.Entities...)
 
 			offset += itemsPerPage
@@ -1014,11 +997,10 @@ func (op Operations) ListAllImage() (*ImageListIntentResponse, error) {
 	return resp, nil
 }
 
-//ListAllCluster ...
+// ListAllCluster ...
 func (op Operations) ListAllCluster() (*ClusterListIntentResponse, error) {
 	entities := make([]*ClusterIntentResource, 0)
 
-	//make first request
 	resp, err := op.ListCluster(&DSMetadata{
 		Kind:   utils.String("cluster"),
 		Length: utils.Int64(itemsPerPage),
@@ -1032,8 +1014,6 @@ func (op Operations) ListAllCluster() (*ClusterListIntentResponse, error) {
 	remaining := totalEntities
 	offset := utils.Int64Value(resp.Metadata.Offset)
 
-	log.Printf("[Debug] total=%d, remaining=%d, offset=%d\n", totalEntities, remaining, offset)
-
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
 			resp, err = op.ListCluster(&DSMetadata{
@@ -1046,7 +1026,6 @@ func (op Operations) ListAllCluster() (*ClusterListIntentResponse, error) {
 				return nil, err
 			}
 
-			//append to entities array
 			entities = append(entities, resp.Entities...)
 
 			offset += itemsPerPage
