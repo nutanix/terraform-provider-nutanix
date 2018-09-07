@@ -59,7 +59,7 @@ The following attributes are exported:
 The metadata attribute exports the following:
 
 * `last_update_time`: - UTC date and time in RFC-3339 format when image was last updated.
-* `uuid`: - image uuid.
+* `UUID`: - image UUID.
 * `creation_time`: - UTC date and time in RFC-3339 format when image was created.
 * `spec_version`: - Version number of the latest spec.
 * `spec_hash`: - Hash of the spec. This will be returned from server.
@@ -71,6 +71,6 @@ The `project_reference`, `owner_reference`, `availability_zone_reference`, `clus
 
 * `kind`: - The kind name (Default value: project)(Required).
 * `name`: - the name(Optional).
-* `uuid`: - the uuid(Required).
+* `UUID`: - the UUID(Required).
 
 See detailed information in [Nutanix Image](http://developer.nutanix.com/reference/prism_central/v3/#images).

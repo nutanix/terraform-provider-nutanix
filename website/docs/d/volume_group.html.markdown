@@ -28,7 +28,7 @@ data "nutanix_volume_group" "test" {
 
 The following arguments are supported:
 
-* `volume_group_id`: Represents volume group uuid
+* `volume_group_id`: Represents volume group UUID
 
 ## Attribute Reference
 
@@ -53,11 +53,11 @@ The following attributes are exported:
 
 The disk_list attribute supports the following:
 
-* `vmdisk_uuid`: - (Optional) The UUID of this volume disk.
+* `vmdisk_UUID`: - (Optional) The UUID of this volume disk.
 * `index`: - (Optional) Index of the volume disk in the group.
 * `data_source_reference`: - (Optional) Reference to a kind
 * `disk_size_mib`: - (Optional) Size of the disk in MiB.
-* `storage_container_uuid`: - (Optional) Container UUID on which to create the disk.
+* `storage_container_UUID`: - (Optional) Container UUID on which to create the disk.
 
 ### Attachment List
 
@@ -71,7 +71,7 @@ The attachment_list attribute supports the following:
 The metadata attribute exports the following:
 
 * `last_update_time`: - UTC date and time in RFC-3339 format when volume_group was last updated.
-* `uuid`: - volume_group uuid.
+* `UUID`: - volume_group UUID.
 * `creation_time`: - UTC date and time in RFC-3339 format when volume_group was created.
 * `spec_version`: - Version number of the latest spec.
 * `spec_hash`: - Hash of the spec. This will be returned from server.
@@ -83,7 +83,7 @@ The `project_reference`, `owner_reference`, `availability_zone_reference`, `clus
 
 * `kind`: - The kind name (Default value: project)(Required).
 * `name`: - the name(Optional).
-* `uuid`: - the uuid(Required).
+* `UUID`: - the UUID(Required).
 
 Note: `vm_reference` and `data_source_reference` don't support `name` argument.
 

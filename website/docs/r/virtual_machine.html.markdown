@@ -41,7 +41,7 @@ resource "nutanix_virtual_machine" "vm1" {
 
   cluster_reference = {
       kind = "cluster"
-      uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+      UUID = "${data.nutanix_clusters.clusters.entities.0.metadata.UUID}"
   }
 
   num_vcpus_per_socket = 1
@@ -93,7 +93,7 @@ The following arguments are supported:
 
 The disk_list attribute supports the following:
 
-* `uuid`: - (Optional) The device ID which is used to uniquely identify this particular disk.
+* `UUID`: - (Optional) The device ID which is used to uniquely identify this particular disk.
 * `disk_size_bytes` - (Optional) Size of the disk in Bytes.
 * `disk_size_mib` - (Optional) Size of the disk in MiB. Must match the size specified in 'disk_size_bytes' - rounded up to the nearest MiB -  when that field is present.
 * `device_properties` - (Optional)
@@ -134,7 +134,7 @@ The gpu_list attribute supports the following:
 
 * `frame_buffer_size_mib`: - (ReadOnly) GPU frame buffer size in MiB.
 * `vendor`: - (Optional) The vendor of the GPU.
-* `uuid`: - (ReadOnly) UUID of the GPU.
+* `UUID`: - (ReadOnly) UUID of the GPU.
 * `name`: - (ReadOnly) Name of the GPU resource.
 * `pci_address` - (ReadOnly) GPU {segment:bus:device:function} (sbdf) address if assigned.
 * `fraction` - (ReadOnly) Fraction of the physical GPU assigned.
@@ -163,7 +163,7 @@ The nic_list attribute supports the following:
 
 * `nic_type`: - (Optional) The type of this NIC. Defaults to NORMAL_NIC. (Options : NORMAL_NIC , DIRECT_NIC , NETWORK_FUNCTION_NIC)
   .
-* `uuid`: - (Optional) The NIC's UUID, which is used to uniquely identify this particular NIC. This UUID may be used to refer to the NIC outside the context of the particular VM it is attached to.
+* `UUID`: - (Optional) The NIC's UUID, which is used to uniquely identify this particular NIC. This UUID may be used to refer to the NIC outside the context of the particular VM it is attached to.
 
 * `floating_ip`: - (ReadOnly)
 
@@ -197,7 +197,7 @@ The following attributes are exported:
 The metadata attribute exports the following:
 
 * `last_update_time`: - UTC date and time in RFC-3339 format when vm was last updated.
-* `uuid`: - vm uuid.
+* `UUID`: - vm UUID.
 * `creation_time`: - UTC date and time in RFC-3339 format when vm was created.
 * `spec_version`: - Version number of the latest spec.
 * `spec_hash`: - Hash of the spec. This will be returned from server.
@@ -216,7 +216,7 @@ The `project_reference`, `owner_reference`, `availability_zone_reference`, `clus
 
 * `kind`: - The kind name (Default value: project)(Required).
 * `name`: - the name(Optional).
-* `uuid`: - the uuid(Required).
+* `UUID`: - the UUID(Required).
 
 Note: `cluster_reference`, `subnet_reference` does not support the attribute `name`
 
