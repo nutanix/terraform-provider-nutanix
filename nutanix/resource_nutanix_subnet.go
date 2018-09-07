@@ -88,10 +88,22 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(*resp.Metadata.UUID)
 
+	// stateConf := &resource.StateChangeConf{
+	// 	Pending:    []string{"PENDING", "RUNNING"},
+	// 	Target:     []string{"COMPLETE"},
+	// 	Refresh:    subnetStateRefreshFunc(conn, d.Id()),
+	// 	Timeout:    10 * time.Minute,
+	// 	Delay:      10 * time.Second,
+	// 	MinTimeout: 3 * time.Second,
+	// }
+
+	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
+
+	// Wait for the VM to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
-		Target:     []string{"COMPLETE"},
-		Refresh:    subnetStateRefreshFunc(conn, d.Id()),
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -367,10 +379,22 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		return errUpdate
 	}
 
+	// stateConf := &resource.StateChangeConf{
+	// 	Pending:    []string{"PENDING", "RUNNING"},
+	// 	Target:     []string{"COMPLETE"},
+	// 	Refresh:    subnetStateRefreshFunc(conn, d.Id()),
+	// 	Timeout:    10 * time.Minute,
+	// 	Delay:      10 * time.Second,
+	// 	MinTimeout: 3 * time.Second,
+	// }
+
+	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
+
+	// Wait for the VM to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
-		Target:     []string{"COMPLETE"},
-		Refresh:    subnetStateRefreshFunc(conn, d.Id()),
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -389,14 +413,28 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 
-	if err := conn.V3.DeleteSubnet(d.Id()); err != nil {
+	resp, err := conn.V3.DeleteSubnet(d.Id())
+
+	if err != nil {
 		return err
 	}
 
+	// stateConf := &resource.StateChangeConf{
+	// 	Pending:    []string{"PENDING", "RUNNING", "DELETE_IN_PROGRESS", "COMPLETE"},
+	// 	Target:     []string{"DELETED"},
+	// 	Refresh:    subnetStateRefreshFunc(conn, d.Id()),
+	// 	Timeout:    10 * time.Minute,
+	// 	Delay:      10 * time.Second,
+	// 	MinTimeout: 3 * time.Second,
+	// }
+
+	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
+
+	// Wait for the VM to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING", "DELETE_IN_PROGRESS", "COMPLETE"},
-		Target:     []string{"DELETED"},
-		Refresh:    subnetStateRefreshFunc(conn, d.Id()),
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,

@@ -25,7 +25,7 @@ type Service interface {
 	ListVM(getEntitiesRequest *DSMetadata) (*VMListIntentResponse, error)
 	UpdateVM(UUID string, body *VMIntentInput) (*VMIntentResponse, error)
 	CreateSubnet(createRequest *SubnetIntentInput) (*SubnetIntentResponse, error)
-	DeleteSubnet(UUID string) error
+	DeleteSubnet(UUID string) (*DeleteResponse, error)
 	GetSubnet(UUID string) (*SubnetIntentResponse, error)
 	ListSubnet(getEntitiesRequest *DSMetadata) (*SubnetListIntentResponse, error)
 	UpdateSubnet(UUID string, body *SubnetIntentInput) (*SubnetIntentResponse, error)
@@ -189,17 +189,18 @@ func (op Operations) CreateSubnet(createRequest *SubnetIntentInput) (*SubnetInte
  * @param uuid The UUID of the entity.
  * @return error if exist error
  */
-func (op Operations) DeleteSubnet(UUID string) error {
+func (op Operations) DeleteSubnet(UUID string) (*DeleteResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/subnets/%s", UUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	deleteResponse := new(DeleteResponse)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return op.client.Do(ctx, req, nil)
+	return deleteResponse, op.client.Do(ctx, req, deleteResponse)
 }
 
 /*GetSubnet Gets a subnet entity

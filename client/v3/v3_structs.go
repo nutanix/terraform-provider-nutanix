@@ -740,6 +740,8 @@ type SubnetDefStatus struct {
 
 	// The state of the subnet.
 	State *string `json:"state,omitempty"`
+
+	ExecutionContext *ExecutionContext `json:"execution_context,omitempty"`
 }
 
 // SubnetIntentResponse represents the response object for intentful operations on a subnet

@@ -1,8 +1,11 @@
 package nutanix
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -158,4 +161,19 @@ func validateMapIntValue(value map[string]interface{}, key string) *int64 {
 		return utils.Int64(int64(v.(int)))
 	}
 	return nil
+}
+
+func taskStateRefreshFunc(client *v3.Client, taskUUID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		v, err := client.V3.GetTask(taskUUID)
+
+		if err != nil {
+			if strings.Contains(fmt.Sprint(err), "INVALID_UUID") {
+				return v, "ERROR", nil
+			}
+			return nil, "", err
+		}
+
+		return v, *v.Status, nil
+	}
 }
