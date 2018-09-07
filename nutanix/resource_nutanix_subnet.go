@@ -101,7 +101,7 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error waiting for subnet (%s) to create: %s", d.Id(), err)
 	}
 
-	//Setting Description because in Get request is not present.
+	// Setting Description because in Get request is not present.
 	d.Set("description", utils.StringValue(resp.Spec.Description))
 
 	return resourceNutanixSubnetRead(d, meta)
@@ -199,7 +199,7 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cluster_reference_name", utils.StringValue(resp.Status.ClusterReference.Name))
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
 	d.Set("name", utils.StringValue(resp.Status.Name))
-	//d.Set("description", utils.StringValue(resp.Status.Description))
+	// d.Set("description", utils.StringValue(resp.Status.Description))
 	d.Set("state", utils.StringValue(resp.Status.State))
 	d.Set("vswitch_name", utils.StringValue(resp.Status.Resources.VswitchName))
 	d.Set("subnet_type", utils.StringValue(resp.Status.Resources.SubnetType))
@@ -380,7 +380,7 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf(
 			"error waiting for subnet (%s) to update: %s", d.Id(), err)
 	}
-	//Setting Description because in Get request is not present.
+	// Setting Description because in Get request is not present.
 	d.Set("description", utils.StringValue(resp.Spec.Description))
 
 	return resourceNutanixSubnetRead(d, meta)
