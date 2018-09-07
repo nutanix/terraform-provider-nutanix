@@ -20,7 +20,7 @@ data "nutanix_clusters" "clusters" {
 
 
 data "nutanix_cluster" "cluster" {
-	cluster_id = "${data.nutanix_clusters.clusters.entities.1.metadata.uuid}"
+	cluster_id = "${data.nutanix_clusters.clusters.entities.1.metadata.UUID}"
 }`
 ```
 
@@ -30,14 +30,14 @@ data "nutanix_cluster" "cluster" {
 
 The following arguments are supported:
 
-* `image_id`: Represents clusters uuid
+* `image_id`: Represents clusters UUID
 
 ### Metadata
 
 The metadata attribute exports the following:
 
 * `last_update_time`: - UTC date and time in RFC-3339 format when image was last updated.
-* `uuid`: - image uuid.
+* `UUID`: - image UUID.
 * `creation_time`: - UTC date and time in RFC-3339 format when image was created.
 * `spec_version`: - Version number of the latest spec.
 * `spec_hash`: - Hash of the spec. This will be returned from server.
@@ -111,7 +111,7 @@ The `project_reference`, `owner_reference`, `availability_zone_reference`, `clus
 
 * `kind`: - The kind name (Default value: project).
 * `name`: - the name.
-* `uuid`: - the uuid.
+* `UUID`: - the UUID.
 
 ### Categories
 
