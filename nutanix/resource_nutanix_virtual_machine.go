@@ -84,8 +84,6 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	uuid := *resp.Metadata.UUID
 	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
 
-	fmt.Printf("UUID->%s#####\nTaskUUID->%s\n", uuid, taskUUID)
-
 	// Wait for the VM to be available
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"QUEUED", "RUNNING"},
@@ -957,21 +955,6 @@ func vmStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefreshFun
 		}
 
 		return v, *v.Status.State, nil
-	}
-}
-
-func taskStateRefreshFunc(client *v3.Client, taskUUID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		v, err := client.V3.GetTask(taskUUID)
-
-		if err != nil {
-			if strings.Contains(fmt.Sprint(err), "INVALID_UUID") {
-				return v, "ERROR", nil
-			}
-			return nil, "", err
-		}
-
-		return v, *v.Status, nil
 	}
 }
 
