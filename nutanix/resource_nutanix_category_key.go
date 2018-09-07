@@ -47,7 +47,7 @@ func resourceNutanixCategoryKeyCreateOrUpdate(resourceData *schema.ResourceData,
 
 	request.Name = utils.String(name.(string))
 
-	//Make request to the API
+	// Make request to the API
 	resp, err := conn.V3.CreateOrUpdateCategoryKey(request)
 
 	if err != nil {

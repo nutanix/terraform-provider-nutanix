@@ -124,7 +124,7 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 				qroaList[k] = qroaItem
 			}
 
-			//Set quarantine_rule_outbound_allow_list
+			// Set quarantine_rule_outbound_allow_list
 			if err := d.Set("quarantine_rule_outbound_allow_list", qroaList); err != nil {
 				return err
 			}
@@ -218,7 +218,7 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 				qriaList[k] = qriaItem
 			}
 
-			//Set quarantine_rule_inbound_allow_list
+			// Set quarantine_rule_inbound_allow_list
 			if err := d.Set("quarantine_rule_inbound_allow_list", qriaList); err != nil {
 				return err
 			}
@@ -305,7 +305,7 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 				aroaList[k] = aroaItem
 			}
 
-			//Set app_rule_outbound_allow_list
+			// Set app_rule_outbound_allow_list
 			if err := d.Set("app_rule_outbound_allow_list", aroaList); err != nil {
 				return err
 			}
@@ -399,7 +399,7 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 				ariaList[k] = ariaItem
 			}
 
-			//Set app_rule_inbound_allow_list
+			// Set app_rule_inbound_allow_list
 			if err := d.Set("app_rule_inbound_allow_list", ariaList); err != nil {
 				return err
 			}
