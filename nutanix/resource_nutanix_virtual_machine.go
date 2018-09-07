@@ -82,15 +82,15 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	}
 
 	uuid := *resp.Metadata.UUID
+	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
 
-	// Set terraform state id
-	d.SetId(uuid)
+	fmt.Printf("UUID->%s#####\nTaskUUID->%s\n", uuid, taskUUID)
 
 	// Wait for the VM to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
-		Target:     []string{"COMPLETE"},
-		Refresh:    vmStateRefreshFunc(conn, d.Id()),
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -100,6 +100,8 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error waiting for vm (%s) to create: %s", d.Id(), err)
 	}
 
+	// Set terraform state id
+	d.SetId(uuid)
 	return resourceNutanixVirtualMachineRead(d, meta)
 }
 
@@ -228,8 +230,9 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	d.Set("enable_script_exec", utils.BoolValue(resp.Status.Resources.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec))
 	d.Set("power_state_mechanism", utils.StringValue(resp.Status.Resources.PowerStateMechanism.Mechanism))
 	d.Set("vga_console_enabled", utils.BoolValue(resp.Status.Resources.VgaConsoleEnabled))
+	fmt.Printf("STATEID ->%s\n", d.Id())
 	d.SetId(*resp.Metadata.UUID)
-
+	fmt.Printf("UUID READ->%s", *resp.Metadata.UUID)
 	return d.Set("disk_list", setDiskList(resp.Status.Resources.DiskList, resp.Status.Resources.GuestCustomization))
 }
 
@@ -588,15 +591,24 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] Updating Virtual Machine: %s, %s", d.Get("name").(string), d.Id())
 	fmt.Printf("[DEBUG] Updating Virtual Machine: %s, %s", d.Get("name").(string), d.Id())
 
-	_, err2 := conn.V3.UpdateVM(d.Id(), request)
+	resp, err2 := conn.V3.UpdateVM(d.Id(), request)
 	if err2 != nil {
 		return err2
 	}
 
+	// stateConf := &resource.StateChangeConf{
+	// 	Pending:    []string{"PENDING", "RUNNING"},
+	// 	Target:     []string{"COMPLETE"},
+	// 	Refresh:    vmStateRefreshFunc(conn, d.Id()),
+	// 	Timeout:    10 * time.Minute,
+	// 	Delay:      10 * time.Second,
+	// 	MinTimeout: 3 * time.Second,
+	// }
+
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
-		Target:     []string{"COMPLETE"},
-		Refresh:    vmStateRefreshFunc(conn, d.Id()),
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, resp.Status.ExecutionContext.TaskUUID.(string)),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -616,15 +628,24 @@ func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, meta interface{
 	fmt.Println("######DELETE######")
 
 	log.Printf("[DEBUG] Deleting Virtual Machine: %s, %s", d.Get("name").(string), d.Id())
-	err := conn.V3.DeleteVM(d.Id())
+	resp, err := conn.V3.DeleteVM(d.Id())
 	if err != nil {
 		return err
 	}
 
+	// stateConf := &resource.StateChangeConf{
+	// 	Pending:    []string{"PENDING", "RUNNING", "DELETE_IN_PROGRESS", "COMPLETE"},
+	// 	Target:     []string{"DELETED"},
+	// 	Refresh:    vmStateRefreshFunc(conn, d.Id()),
+	// 	Timeout:    10 * time.Minute,
+	// 	Delay:      10 * time.Second,
+	// 	MinTimeout: 3 * time.Second,
+	// }
+	//DELETE_PENDING
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING", "DELETE_IN_PROGRESS", "COMPLETE"},
-		Target:     []string{"DELETED"},
-		Refresh:    vmStateRefreshFunc(conn, d.Id()),
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, resp.Status.ExecutionContext.TaskUUID.(string)),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -642,8 +663,7 @@ func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, meta interface{
 func resourceNutanixVirtualMachineExists(d *schema.ResourceData, meta interface{}) (bool, error) {
 	conn := meta.(*Client).API
 
-	getEntitiesRequest := &v3.DSMetadata{}
-	resp, err := conn.V3.ListVM(getEntitiesRequest)
+	resp, err := conn.V3.ListAllVM()
 
 	if err != nil {
 		return false, err
@@ -940,6 +960,21 @@ func vmStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefreshFun
 	}
 }
 
+func taskStateRefreshFunc(client *v3.Client, taskUUID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		v, err := client.V3.GetTask(taskUUID)
+
+		if err != nil {
+			if strings.Contains(fmt.Sprint(err), "INVALID_UUID") {
+				return v, "ERROR", nil
+			}
+			return nil, "", err
+		}
+
+		return v, *v.Status, nil
+	}
+}
+
 func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse) {
 	res.ParentReference = response.Status.Resources.ParentReference
 	res.VMVnumaConfig = &v3.VMVnumaConfig{NumVnumaNodes: response.Status.Resources.VnumaConfig.NumVnumaNodes}
@@ -955,11 +990,11 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 	if len(response.Status.Resources.NicList) > 0 {
 		for k, v := range response.Status.Resources.NicList {
 			nold[k] = &v3.VMNic{
-				NicType: v.NicType,
-				UUID:    v.UUID,
-				NetworkFunctionNicType: v.NetworkFunctionNicType,
-				MacAddress:             v.MacAddress,
-				Model:                  v.Model,
+				NicType:                       v.NicType,
+				UUID:                          v.UUID,
+				NetworkFunctionNicType:        v.NetworkFunctionNicType,
+				MacAddress:                    v.MacAddress,
+				Model:                         v.Model,
 				NetworkFunctionChainReference: v.NetworkFunctionChainReference,
 				SubnetReference:               v.SubnetReference,
 				IPEndpointList:                v.IPEndpointList,
