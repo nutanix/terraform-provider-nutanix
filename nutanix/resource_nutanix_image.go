@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
@@ -626,18 +625,4 @@ func resourceNutanixImageExists(conn *v3.Client, name string) (*string, error) {
 		}
 	}
 	return imageUUID, nil
-}
-
-func imageStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		v, err := client.V3.GetImage(uuid)
-		if err != nil {
-			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-				return v, DELETED, nil
-			}
-			return nil, "", err
-		}
-
-		return v, *v.Status.State, nil
-	}
 }

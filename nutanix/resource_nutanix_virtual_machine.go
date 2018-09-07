@@ -5,7 +5,6 @@ import (
 	"log"
 	"reflect"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
@@ -943,21 +942,6 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	return nil
 }
 
-func vmStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		v, err := client.V3.GetVM(uuid)
-
-		if err != nil {
-			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-				return v, DELETED, nil
-			}
-			return nil, "", err
-		}
-
-		return v, *v.Status.State, nil
-	}
-}
-
 func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse) {
 	res.ParentReference = response.Status.Resources.ParentReference
 	res.VMVnumaConfig = &v3.VMVnumaConfig{NumVnumaNodes: response.Status.Resources.VnumaConfig.NumVnumaNodes}
@@ -973,11 +957,11 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 	if len(response.Status.Resources.NicList) > 0 {
 		for k, v := range response.Status.Resources.NicList {
 			nold[k] = &v3.VMNic{
-				NicType:                       v.NicType,
-				UUID:                          v.UUID,
-				NetworkFunctionNicType:        v.NetworkFunctionNicType,
-				MacAddress:                    v.MacAddress,
-				Model:                         v.Model,
+				NicType: v.NicType,
+				UUID:    v.UUID,
+				NetworkFunctionNicType: v.NetworkFunctionNicType,
+				MacAddress:             v.MacAddress,
+				Model:                  v.Model,
 				NetworkFunctionChainReference: v.NetworkFunctionChainReference,
 				SubnetReference:               v.SubnetReference,
 				IPEndpointList:                v.IPEndpointList,
