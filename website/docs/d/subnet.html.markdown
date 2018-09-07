@@ -20,7 +20,7 @@ data "nutanix_clusters" "clusters" {
 }
 
 output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  value = "${data.nutanix_clusters.clusters.entities.0.metadata.UUID}"
 }
 
 resource "nutanix_subnet" "test" {
@@ -28,7 +28,7 @@ resource "nutanix_subnet" "test" {
 
 	cluster_reference = {
 	  kind = "cluster"
-	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+	  UUID = "${data.nutanix_clusters.clusters.entities.0.metadata.UUID}"
   	}
 
 	vlan_id = 201
@@ -96,7 +96,7 @@ The following attributes are exported:
 The metadata attribute exports the following:
 
 * `last_update_time`: - UTC date and time in RFC-3339 format when subnet was last updated.
-* `uuid`: - subnet uuid.
+* `UUID`: - subnet UUID.
 * `creation_time`: - UTC date and time in RFC-3339 format when subnet was created.
 * `spec_version`: - Version number of the latest spec.
 * `spec_hash`: - Hash of the spec. This will be returned from server.
@@ -117,7 +117,7 @@ attributes supports the following:
 
 * `kind`: - The kind name (Default value: project)(Required).
 * `name`: - the name(Optional).
-* `uuid`: - the uuid(Required).
+* `UUID`: - the UUID(Required).
 
 Note: `cluster_reference`, `subnet_reference` does not support the attribute `name`
 

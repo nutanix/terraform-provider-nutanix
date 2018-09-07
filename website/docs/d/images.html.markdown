@@ -37,7 +37,7 @@ data "nutanix_images" "test" {
 
 The following arguments are supported:
 
-* `metadata`: Represents virtual machine uuid
+* `metadata`: Represents virtual machine UUID
 
 ### Metadata Argument
 
@@ -82,7 +82,7 @@ The entities attribute supports the following:
 The metadata attribute exports the following:
 
 * `last_update_time`: - UTC date and time in RFC-3339 format when image was last updated.
-* `uuid`: - image uuid.
+* `UUID`: - image UUID.
 * `creation_time`: - UTC date and time in RFC-3339 format when image was created.
 * `spec_version`: - Version number of the latest spec.
 * `spec_hash`: - Hash of the spec. This will be returned from server.
@@ -94,7 +94,7 @@ The `project_reference`, `owner_reference`, `availability_zone_reference`, `clus
 
 * `kind`: - The kind name (Default value: project).
 * `name`: - the name.
-* `uuid`: - the uuid.
+* `UUID`: - the UUID.
 
 ### Version
 
