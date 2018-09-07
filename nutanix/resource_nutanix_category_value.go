@@ -42,7 +42,7 @@ func resourceNutanixCategoryValueCreateOrUpdate(resourceData *schema.ResourceDat
 		request.Description = utils.String(desc.(string))
 	}
 
-	// validaste required fields
+	// validate required fields
 	if !nameOK || !valueOK {
 		return fmt.Errorf("please provide the required attributes name and value")
 	}
