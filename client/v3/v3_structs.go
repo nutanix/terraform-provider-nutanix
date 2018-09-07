@@ -507,6 +507,13 @@ type VMDefStatus struct {
 
 	// The state of the vm.
 	State *string `json:"state,omitempty"`
+
+	ExecutionContext *ExecutionContext `json:"execution_context,omitempty"`
+}
+
+//ExecutionContext ...
+type ExecutionContext struct {
+	TaskUUID interface{} `json:"task_uuid,omitempty"`
 }
 
 // VMIntentResponse Response object for intentful operations on a vm
@@ -1735,4 +1742,36 @@ type VolumeGroupListResponse struct {
 	APIVersion *string                `json:"api_version"`
 	Entities   []*VolumeGroupResponse `json:"entities,omitempty"`
 	Metadata   *ListMetadataOutput    `json:"metadata"`
+}
+
+//TasksResponse
+type TasksResponse struct {
+	Status               *string      `json:"status,omitempty"`
+	LastUpdateTime       *time.Time   `json:"last_update_time,omitempty"`
+	LogicalTimestamp     *int64       `json:"logical_timestamp,omitempty"`
+	EntityReferenceList  []*Reference `json:"entity_reference_list,omitempty"`
+	StartTime            *time.Time   `json:"start_time,omitempty"`
+	CreationTime         *time.Time   `json:"creation_time,omitempty"`
+	ClusterReference     *Reference   `json:"cluster_reference,omitempty"`
+	SubtaskReferenceList []*Reference `json:"subtask_reference_list,omitempty"`
+	CompletionTime       *time.Time   `json:"completion_timev"`
+	ProgressMessage      *string      `json:"progress_message,omitempty"`
+	OperationType        *string      `json:"operation_type,omitempty"`
+	PercentageComplete   *int64       `json:"percentage_complete,omitempty"`
+	APIVersion           *string      `json:"api_version,omitempty"`
+	UUID                 *string      `json:"uuid,omitempty"`
+}
+
+//DeleteResponse ...
+type DeleteResponse struct {
+	Status     *DeleteStatus `json:"status"`
+	Spec       string        `json:"spec"`
+	APIVersion string        `json:"api_version"`
+	Metadata   *Metadata     `json:"metadata"`
+}
+
+//DeleteStatus ...
+type DeleteStatus struct {
+	State            string            `json:"state"`
+	ExecutionContext *ExecutionContext `json:"execution_context"`
 }

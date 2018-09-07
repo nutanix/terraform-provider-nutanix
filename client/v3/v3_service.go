@@ -20,7 +20,7 @@ type Operations struct {
 // Service ...
 type Service interface {
 	CreateVM(createRequest *VMIntentInput) (*VMIntentResponse, error)
-	DeleteVM(UUID string) error
+	DeleteVM(UUID string) (*DeleteResponse, error)
 	GetVM(UUID string) (*VMIntentResponse, error)
 	ListVM(getEntitiesRequest *DSMetadata) (*VMListIntentResponse, error)
 	UpdateVM(UUID string, body *VMIntentInput) (*VMIntentResponse, error)
@@ -61,6 +61,7 @@ type Service interface {
 	ListAllNetworkSecurityRule() (*NetworkSecurityRuleListIntentResponse, error)
 	ListAllImage() (*ImageListIntentResponse, error)
 	ListAllCluster() (*ClusterListIntentResponse, error)
+	GetTask(TaskUUID string) (*TasksResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -88,17 +89,18 @@ func (op Operations) CreateVM(createRequest *VMIntentInput) (*VMIntentResponse, 
  * @param UUID The UUID of the entity.
  * @return error
  */
-func (op Operations) DeleteVM(UUID string) error {
+func (op Operations) DeleteVM(UUID string) (*DeleteResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/vms/%s", UUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	deleteResponse := new(DeleteResponse)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return op.client.Do(ctx, req, nil)
+	return deleteResponse, op.client.Do(ctx, req, deleteResponse)
 }
 
 /*GetVM Gets a VM
@@ -1035,4 +1037,19 @@ func (op Operations) ListAllCluster() (*ClusterListIntentResponse, error) {
 	}
 
 	return resp, nil
+}
+
+//GetTask ...
+func (op Operations) GetTask(TaskUUID string) (*TasksResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/tasks/%s", TaskUUID)
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+	tasksTesponse := new(TasksResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tasksTesponse, op.client.Do(ctx, req, tasksTesponse)
 }

@@ -215,6 +215,11 @@ func CheckResponse(r *http.Response) error {
 	errRes := &ErrorResponse{}
 
 	if status, ok := res["status"]; ok {
+		_, sok := status.(string)
+		if sok {
+			return nil
+		}
+
 		err = fillStruct(status.(map[string]interface{}), errRes)
 	} else if _, ok := res["state"]; ok {
 		err = fillStruct(res, errRes)
