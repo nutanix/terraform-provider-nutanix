@@ -957,6 +957,8 @@ type ImageDefStatus struct {
 
 	// The state of the image.
 	State *string `json:"state,omitempty"`
+
+	ExecutionContext *ExecutionContext `json:"execution_context,omitempty"`
 }
 
 // ImageIntentResponse represents the response object for intentful operations on a image
