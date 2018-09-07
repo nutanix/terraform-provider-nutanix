@@ -1749,7 +1749,7 @@ type VolumeGroupListResponse struct {
 	Metadata   *ListMetadataOutput    `json:"metadata"`
 }
 
-//TasksResponse
+// TasksResponse ...
 type TasksResponse struct {
 	Status               *string      `json:"status,omitempty"`
 	LastUpdateTime       *time.Time   `json:"last_update_time,omitempty"`
@@ -1768,7 +1768,7 @@ type TasksResponse struct {
 	ErrorDetail          *string      `json:"error_detail,omitempty"`
 }
 
-//DeleteResponse ...
+// DeleteResponse ...
 type DeleteResponse struct {
 	Status     *DeleteStatus `json:"status"`
 	Spec       string        `json:"spec"`
@@ -1776,7 +1776,7 @@ type DeleteResponse struct {
 	Metadata   *Metadata     `json:"metadata"`
 }
 
-//DeleteStatus ...
+// DeleteStatus ...
 type DeleteStatus struct {
 	State            string            `json:"state"`
 	ExecutionContext *ExecutionContext `json:"execution_context"`

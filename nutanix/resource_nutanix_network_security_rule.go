@@ -5,7 +5,6 @@ import (
 	"log"
 	"reflect"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -1652,21 +1651,6 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 		networkSecurityRule.IsolationRule = isolationRule
 	}
 	return nil
-}
-
-func networkSecurityRuleStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		v, err := client.V3.GetNetworkSecurityRule(uuid)
-
-		if err != nil {
-			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-				return v, DELETED, nil
-			}
-			return nil, "", err
-		}
-
-		return v, *v.Status.State, nil
-	}
 }
 
 func expandFilterParams(fp map[string][]string) []map[string]interface{} {

@@ -2,7 +2,6 @@ package nutanix
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -568,21 +567,6 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 	subnet.IPConfig = ip
 
 	return nil
-}
-
-func subnetStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		v, err := client.V3.GetSubnet(uuid)
-
-		if err != nil {
-			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-				return v, DELETED, nil
-			}
-			return nil, "", err
-		}
-
-		return v, *v.Status.State, nil
-	}
 }
 
 func getSubnetSchema() map[string]*schema.Schema {
