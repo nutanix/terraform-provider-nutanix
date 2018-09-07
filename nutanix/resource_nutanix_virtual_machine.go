@@ -5,7 +5,6 @@ import (
 	"log"
 	"reflect"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
@@ -32,7 +31,6 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
 	conn := meta.(*Client).API
-
 	// Prepare request
 	request := &v3.VMIntentInput{}
 	spec := &v3.VM{}
@@ -82,15 +80,13 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	}
 
 	uuid := *resp.Metadata.UUID
-
-	// Set terraform state id
-	d.SetId(uuid)
+	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
 
 	// Wait for the VM to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
-		Target:     []string{"COMPLETE"},
-		Refresh:    vmStateRefreshFunc(conn, d.Id()),
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -100,6 +96,8 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error waiting for vm (%s) to create: %s", d.Id(), err)
 	}
 
+	// Set terraform state id
+	d.SetId(uuid)
 	return resourceNutanixVirtualMachineRead(d, meta)
 }
 
@@ -228,15 +226,13 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	d.Set("power_state_mechanism", utils.StringValue(resp.Status.Resources.PowerStateMechanism.Mechanism))
 	d.Set("vga_console_enabled", utils.BoolValue(resp.Status.Resources.VgaConsoleEnabled))
 	d.SetId(*resp.Metadata.UUID)
-
 	return d.Set("disk_list", setDiskList(resp.Status.Resources.DiskList, resp.Status.Resources.GuestCustomization))
 }
 
 func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 
-	log.Printf("Updating VM values %s", d.Id())
-	fmt.Printf("Updating VM values %s", d.Id())
+	log.Printf("[Debug] Updating VM values %s", d.Id())
 
 	request := &v3.VMIntentInput{}
 	metadata := &v3.Metadata{}
@@ -424,8 +420,8 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 				sub := val["subnet_reference"].(map[string]interface{})
 
 				nic := &v3.VMNic{
-					NicType: validateMapStringValue(val, "nic_type"),
-					UUID:    validateMapStringValue(val, "uuid"),
+					UUID:                   validateMapStringValue(val, "uuid"),
+					NicType:                validateMapStringValue(val, "nic_type"),
 					NetworkFunctionNicType: validateMapStringValue(val, "network_function_nic_type"),
 					MacAddress:             validateMapStringValue(val, "mac_address"),
 					Model:                  validateMapStringValue(val, "model"),
@@ -586,15 +582,24 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] Updating Virtual Machine: %s, %s", d.Get("name").(string), d.Id())
 	fmt.Printf("[DEBUG] Updating Virtual Machine: %s, %s", d.Get("name").(string), d.Id())
 
-	_, err2 := conn.V3.UpdateVM(d.Id(), request)
+	resp, err2 := conn.V3.UpdateVM(d.Id(), request)
 	if err2 != nil {
 		return err2
 	}
 
+	// stateConf := &resource.StateChangeConf{
+	// 	Pending:    []string{"PENDING", "RUNNING"},
+	// 	Target:     []string{"COMPLETE"},
+	// 	Refresh:    vmStateRefreshFunc(conn, d.Id()),
+	// 	Timeout:    10 * time.Minute,
+	// 	Delay:      10 * time.Second,
+	// 	MinTimeout: 3 * time.Second,
+	// }
+
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
-		Target:     []string{"COMPLETE"},
-		Refresh:    vmStateRefreshFunc(conn, d.Id()),
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, resp.Status.ExecutionContext.TaskUUID.(string)),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -612,14 +617,15 @@ func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, meta interface{
 	conn := meta.(*Client).API
 
 	log.Printf("[DEBUG] Deleting Virtual Machine: %s, %s", d.Get("name").(string), d.Id())
-	if err := conn.V3.DeleteVM(d.Id()); err != nil {
+	resp, err := conn.V3.DeleteVM(d.Id())
+	if err != nil {
 		return err
 	}
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING", "DELETE_IN_PROGRESS", "COMPLETE"},
-		Target:     []string{"DELETED"},
-		Refresh:    vmStateRefreshFunc(conn, d.Id()),
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, resp.Status.ExecutionContext.TaskUUID.(string)),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -637,8 +643,7 @@ func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, meta interface{
 func resourceNutanixVirtualMachineExists(d *schema.ResourceData, meta interface{}) (bool, error) {
 	conn := meta.(*Client).API
 
-	getEntitiesRequest := &v3.DSMetadata{}
-	resp, err := conn.V3.ListVM(getEntitiesRequest)
+	resp, err := conn.V3.ListAllVM()
 
 	if err != nil {
 		return false, err
@@ -918,21 +923,6 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	}
 
 	return nil
-}
-
-func vmStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		v, err := client.V3.GetVM(uuid)
-
-		if err != nil {
-			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-				return v, DELETED, nil
-			}
-			return nil, "", err
-		}
-
-		return v, *v.Status.State, nil
-	}
 }
 
 func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse) {

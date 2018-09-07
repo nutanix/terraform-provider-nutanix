@@ -23,11 +23,7 @@ func TestAccNutanixClusterDataSource_basic(t *testing.T) {
 }
 
 const testAccClusterDataSourceConfig = `
-data "nutanix_clusters" "clusters" {
-	metadata = {
-		length = 2
-	}
-}
+data "nutanix_clusters" "clusters" {}
 
 
 data "nutanix_cluster" "cluster" {

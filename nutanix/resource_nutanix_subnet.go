@@ -2,7 +2,6 @@ package nutanix
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -88,10 +87,22 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(*resp.Metadata.UUID)
 
+	// stateConf := &resource.StateChangeConf{
+	// 	Pending:    []string{"PENDING", "RUNNING"},
+	// 	Target:     []string{"COMPLETE"},
+	// 	Refresh:    subnetStateRefreshFunc(conn, d.Id()),
+	// 	Timeout:    10 * time.Minute,
+	// 	Delay:      10 * time.Second,
+	// 	MinTimeout: 3 * time.Second,
+	// }
+
+	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
+
+	// Wait for the Subnet to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
-		Target:     []string{"COMPLETE"},
-		Refresh:    subnetStateRefreshFunc(conn, d.Id()),
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -367,10 +378,22 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		return errUpdate
 	}
 
+	// stateConf := &resource.StateChangeConf{
+	// 	Pending:    []string{"PENDING", "RUNNING"},
+	// 	Target:     []string{"COMPLETE"},
+	// 	Refresh:    subnetStateRefreshFunc(conn, d.Id()),
+	// 	Timeout:    10 * time.Minute,
+	// 	Delay:      10 * time.Second,
+	// 	MinTimeout: 3 * time.Second,
+	// }
+
+	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
+
+	// Wait for the VM to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
-		Target:     []string{"COMPLETE"},
-		Refresh:    subnetStateRefreshFunc(conn, d.Id()),
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -389,14 +412,28 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 
-	if err := conn.V3.DeleteSubnet(d.Id()); err != nil {
+	resp, err := conn.V3.DeleteSubnet(d.Id())
+
+	if err != nil {
 		return err
 	}
 
+	// stateConf := &resource.StateChangeConf{
+	// 	Pending:    []string{"PENDING", "RUNNING", "DELETE_IN_PROGRESS", "COMPLETE"},
+	// 	Target:     []string{"DELETED"},
+	// 	Refresh:    subnetStateRefreshFunc(conn, d.Id()),
+	// 	Timeout:    10 * time.Minute,
+	// 	Delay:      10 * time.Second,
+	// 	MinTimeout: 3 * time.Second,
+	// }
+
+	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
+
+	// Wait for the VM to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING", "DELETE_IN_PROGRESS", "COMPLETE"},
-		Target:     []string{"DELETED"},
-		Refresh:    subnetStateRefreshFunc(conn, d.Id()),
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -412,10 +449,9 @@ func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceNutanixSubnetExists(conn *v3.Client, name string) (*string, error) {
-	subnetEntities := &v3.DSMetadata{}
 	var subnetUUID *string
 
-	subnetList, err := conn.V3.ListSubnet(subnetEntities)
+	subnetList, err := conn.V3.ListAllSubnet()
 
 	if err != nil {
 		return nil, err
@@ -531,21 +567,6 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 	subnet.IPConfig = ip
 
 	return nil
-}
-
-func subnetStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		v, err := client.V3.GetSubnet(uuid)
-
-		if err != nil {
-			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-				return v, DELETED, nil
-			}
-			return nil, "", err
-		}
-
-		return v, *v.Status.State, nil
-	}
 }
 
 func getSubnetSchema() map[string]*schema.Schema {

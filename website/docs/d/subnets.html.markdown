@@ -50,11 +50,7 @@ resource "nutanix_subnet" "test" {
 
 }
 
-data "nutanix_subnets" "test" {
-    metadata = {
-        length = 1
-    }
-}
+data "nutanix_subnets" "test" {}
 ```
 
 ## Argument Reference

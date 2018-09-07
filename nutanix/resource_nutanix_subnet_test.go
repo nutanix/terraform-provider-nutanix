@@ -71,11 +71,7 @@ func testAccCheckNutanixSubnetDestroy(s *terraform.State) error {
 
 func testAccNutanixSubnetConfig(r int) string {
 	return fmt.Sprintf(`
-data "nutanix_clusters" "clusters" {
-  metadata = {
-    length = 2
-  }
-}
+data "nutanix_clusters" "clusters" {}
 
 output "cluster" {
   value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
@@ -112,11 +108,7 @@ resource "nutanix_subnet" "acctest-managed" {
 
 func testAccNutanixSubnetConfigUpdate(r int) string {
 	return fmt.Sprintf(`
-data "nutanix_clusters" "clusters" {
-  metadata = {
-    length = 2
-  }
-}
+data "nutanix_clusters" "clusters" {}
 
 output "cluster" {
   value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"

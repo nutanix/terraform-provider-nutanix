@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
@@ -103,10 +102,13 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 	// set terraform state
 	d.SetId(UUID)
 
+	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
+
+	// Wait for the Image to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
-		Target:     []string{"COMPLETE"},
-		Refresh:    imageStateRefreshFunc(conn, d.Id()),
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -288,15 +290,18 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 	request.Metadata = metadata
 	request.Spec = spec
 
-	_, errUpdate := conn.V3.UpdateImage(d.Id(), request)
+	resp, errUpdate := conn.V3.UpdateImage(d.Id(), request)
 	if errUpdate != nil {
 		return errUpdate
 	}
 
+	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
+
+	// Wait for the Image to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING"},
-		Target:     []string{"COMPLETE"},
-		Refresh:    imageStateRefreshFunc(conn, d.Id()),
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -315,14 +320,18 @@ func resourceNutanixImageDelete(d *schema.ResourceData, meta interface{}) error 
 	conn := meta.(*Client).API
 	UUID := d.Id()
 
-	if err := conn.V3.DeleteImage(UUID); err != nil {
+	resp, err := conn.V3.DeleteImage(UUID)
+	if err != nil {
 		return err
 	}
 
+	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
+
+	// Wait for the Image to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"PENDING", "RUNNING", "DELETE_IN_PROGRESS", "COMPLETE"},
-		Target:     []string{"DELETED"},
-		Refresh:    imageStateRefreshFunc(conn, d.Id()),
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -616,18 +625,4 @@ func resourceNutanixImageExists(conn *v3.Client, name string) (*string, error) {
 		}
 	}
 	return imageUUID, nil
-}
-
-func imageStateRefreshFunc(client *v3.Client, uuid string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		v, err := client.V3.GetImage(uuid)
-		if err != nil {
-			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-				return v, DELETED, nil
-			}
-			return nil, "", err
-		}
-
-		return v, *v.Status.State, nil
-	}
 }

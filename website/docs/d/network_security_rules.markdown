@@ -100,11 +100,7 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
   ]
 }
 
-data "nutanix_network_security_rules" "test" {
-	metadata = {
-		length = 1
-	}
-}`
+data "nutanix_network_security_rules" "test" {}
 ```
 
 ## Argument Reference

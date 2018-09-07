@@ -507,6 +507,13 @@ type VMDefStatus struct {
 
 	// The state of the vm.
 	State *string `json:"state,omitempty"`
+
+	ExecutionContext *ExecutionContext `json:"execution_context,omitempty"`
+}
+
+//ExecutionContext ...
+type ExecutionContext struct {
+	TaskUUID interface{} `json:"task_uuid,omitempty"`
 }
 
 // VMIntentResponse Response object for intentful operations on a vm
@@ -553,38 +560,13 @@ type VMIntentResource struct {
 	Status *VMDefStatus `json:"status,omitempty"`
 }
 
-// VMListMetadataOutput All api calls that return a list will have this metadata block
-type VMListMetadataOutput struct {
-
-	// The filter used for the results
-	Filter *string `json:"filter,omitempty"`
-
-	// The kind name
-	Kind *string `json:"kind,omitempty"`
-
-	// The number of records retrieved relative to the offset
-	Length *int64 `json:"length,omitempty"`
-
-	// Offset from the start of the entity list
-	Offset *int64 `json:"offset,omitempty"`
-
-	// The attribute to perform sort on
-	SortAttribute *string `json:"sort_attribute,omitempty"`
-
-	// The sort order in which results are returned
-	SortOrder *string `json:"sort_order,omitempty"`
-
-	// Total matches found
-	TotalMatches *int64 `json:"total_matches,omitempty"`
-}
-
 // VMListIntentResponse Response object for intentful operation of vms
 type VMListIntentResponse struct {
 	APIVersion *string `json:"api_version"`
 
 	Entities []*VMIntentResource `json:"entities,omitempty"`
 
-	Metadata *VMListMetadataOutput `json:"metadata"`
+	Metadata *ListMetadataOutput `json:"metadata"`
 }
 
 // SubnetMetadata The subnet kind metadata
@@ -758,6 +740,8 @@ type SubnetDefStatus struct {
 
 	// The state of the subnet.
 	State *string `json:"state,omitempty"`
+
+	ExecutionContext *ExecutionContext `json:"execution_context,omitempty"`
 }
 
 // SubnetIntentResponse represents the response object for intentful operations on a subnet
@@ -782,38 +766,13 @@ type SubnetIntentResource struct {
 	Status *SubnetDefStatus `json:"status,omitempty"`
 }
 
-// SubnetListMetadataOutput All api calls that return a list will have this metadata block
-type SubnetListMetadataOutput struct {
-
-	// The filter used for the results
-	Filter *string `json:"filter,omitempty"`
-
-	// The kind name
-	Kind *string `json:"kind,omitempty"`
-
-	// The number of records retrieved relative to the offset
-	Length *int64 `json:"length,omitempty"`
-
-	// Offset from the start of the entity list
-	Offset *int64 `json:"offset,omitempty"`
-
-	// The attribute to perform sort on
-	SortAttribute *string `json:"sort_attribute,omitempty"`
-
-	// The sort order in which results are returned
-	SortOrder *string `json:"sort_order,omitempty"`
-
-	// Total matches found
-	TotalMatches *int64 `json:"total_matches,omitempty"`
-}
-
 // SubnetListIntentResponse represents the response object for intentful operation of subnets
 type SubnetListIntentResponse struct {
 	APIVersion *string `json:"api_version"`
 
 	Entities []*SubnetIntentResource `json:"entities,omitempty"`
 
-	Metadata *SubnetListMetadataOutput `json:"metadata"`
+	Metadata *ListMetadataOutput `json:"metadata"`
 }
 
 // SubnetListMetadata ...
@@ -998,6 +957,8 @@ type ImageDefStatus struct {
 
 	// The state of the image.
 	State *string `json:"state,omitempty"`
+
+	ExecutionContext *ExecutionContext `json:"execution_context,omitempty"`
 }
 
 // ImageIntentResponse represents the response object for intentful operations on a image
@@ -1044,83 +1005,28 @@ type ImageIntentResource struct {
 	Status *ImageDefStatus `json:"status,omitempty"`
 }
 
-// ImageListMetadataOutput represents metadata block in image list
-type ImageListMetadataOutput struct {
-
-	// The filter used for the results
-	Filter *string `json:"filter,omitempty"`
-
-	// The kind name
-	Kind *string `json:"kind,omitempty"`
-
-	// The number of records retrieved relative to the offset
-	Length *int64 `json:"length,omitempty"`
-
-	// Offset from the start of the entity list
-	Offset *int64 `json:"offset,omitempty"`
-
-	// The attribute to perform sort on
-	SortAttribute *string `json:"sort_attribute,omitempty"`
-
-	// The sort order in which results are returned
-	SortOrder *string `json:"sort_order,omitempty"`
-
-	// Total matches found
-	TotalMatches *int64 `json:"total_matches,omitempty"`
-}
-
 // ImageListIntentResponse represents the response object for intentful operation of images
 type ImageListIntentResponse struct {
 	APIVersion *string `json:"api_version"`
 
 	Entities []*ImageIntentResource `json:"entities,omitempty"`
 
-	Metadata *ImageListMetadataOutput `json:"metadata"`
-}
-
-// ClusterListMetadataOutput ...
-type ClusterListMetadataOutput struct {
-
-	// The filter used for the results
-	Filter *string `json:"filter,omitempty"`
-
-	// The kind name
-	Kind *string `json:"kind,omitempty"`
-
-	// The number of records retrieved relative to the offset
-	Length *int64 `json:"length,omitempty"`
-
-	// Offset from the start of the entity list
-	Offset *int64 `json:"offset,omitempty"`
-
-	// The attribute to perform sort on
-	SortAttribute *string `json:"sort_attribute,omitempty"`
-
-	// The sort order in which results are returned
-	SortOrder *string `json:"sort_order,omitempty"`
-
-	// Total matches found
-	TotalMatches *int64 `json:"total_matches,omitempty"`
+	Metadata *ListMetadataOutput `json:"metadata"`
 }
 
 // ClusterListIntentResponse ...
 type ClusterListIntentResponse struct {
-	APIVersion *string `json:"api_version"`
-
-	Entities []*ClusterIntentResource `json:"entities,omitempty"`
-
-	Metadata *ClusterListMetadataOutput `json:"metadata"`
+	APIVersion *string                  `json:"api_version"`
+	Entities   []*ClusterIntentResource `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput      `json:"metadata"`
 }
 
 // ClusterIntentResource ...
 type ClusterIntentResource struct {
-	APIVersion *string `json:"api_version,omitempty"`
-
-	Metadata *Metadata `json:"metadata"`
-
-	Spec *Cluster `json:"spec,omitempty"`
-
-	Status *ClusterDefStatus `json:"status,omitempty"`
+	APIVersion *string           `json:"api_version,omitempty"`
+	Metadata   *Metadata         `json:"metadata"`
+	Spec       *Cluster          `json:"spec,omitempty"`
+	Status     *ClusterDefStatus `json:"status,omitempty"`
 }
 
 // ClusterIntentResponse ...
@@ -1720,10 +1626,11 @@ type NetworkSecurityRuleIntentInput struct {
 
 // NetworkSecurityRuleDefStatus ... Network security rule status
 type NetworkSecurityRuleDefStatus struct {
-	AppRule        *NetworkSecurityRuleResourcesRule `json:"app_rule,omitempty"`
-	IsolationRule  *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty"`
-	QuarantineRule *NetworkSecurityRuleResourcesRule `json:"quarantine_rule,omitempty"`
-	State          *string                           `json:"state,omitmepty"`
+	AppRule          *NetworkSecurityRuleResourcesRule `json:"app_rule,omitempty"`
+	IsolationRule    *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty"`
+	QuarantineRule   *NetworkSecurityRuleResourcesRule `json:"quarantine_rule,omitempty"`
+	State            *string                           `json:"state,omitmepty"`
+	ExecutionContext *ExecutionContext                 `json:"execution_context,omitempty"`
 }
 
 // NetworkSecurityRuleIntentResponse Response object for intentful operations on a network_security_rule
@@ -1840,4 +1747,37 @@ type VolumeGroupListResponse struct {
 	APIVersion *string                `json:"api_version"`
 	Entities   []*VolumeGroupResponse `json:"entities,omitempty"`
 	Metadata   *ListMetadataOutput    `json:"metadata"`
+}
+
+// TasksResponse ...
+type TasksResponse struct {
+	Status               *string      `json:"status,omitempty"`
+	LastUpdateTime       *time.Time   `json:"last_update_time,omitempty"`
+	LogicalTimestamp     *int64       `json:"logical_timestamp,omitempty"`
+	EntityReferenceList  []*Reference `json:"entity_reference_list,omitempty"`
+	StartTime            *time.Time   `json:"start_time,omitempty"`
+	CreationTime         *time.Time   `json:"creation_time,omitempty"`
+	ClusterReference     *Reference   `json:"cluster_reference,omitempty"`
+	SubtaskReferenceList []*Reference `json:"subtask_reference_list,omitempty"`
+	CompletionTime       *time.Time   `json:"completion_timev"`
+	ProgressMessage      *string      `json:"progress_message,omitempty"`
+	OperationType        *string      `json:"operation_type,omitempty"`
+	PercentageComplete   *int64       `json:"percentage_complete,omitempty"`
+	APIVersion           *string      `json:"api_version,omitempty"`
+	UUID                 *string      `json:"uuid,omitempty"`
+	ErrorDetail          *string      `json:"error_detail,omitempty"`
+}
+
+// DeleteResponse ...
+type DeleteResponse struct {
+	Status     *DeleteStatus `json:"status"`
+	Spec       string        `json:"spec"`
+	APIVersion string        `json:"api_version"`
+	Metadata   *Metadata     `json:"metadata"`
+}
+
+// DeleteStatus ...
+type DeleteStatus struct {
+	State            string            `json:"state"`
+	ExecutionContext *ExecutionContext `json:"execution_context"`
 }

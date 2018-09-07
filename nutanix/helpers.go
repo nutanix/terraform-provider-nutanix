@@ -1,8 +1,11 @@
 package nutanix
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -54,42 +57,6 @@ func getMetadataAttributes(d *schema.ResourceData, metadata *v3.Metadata, kind s
 	}
 
 	return nil
-}
-
-func readListMetadata(d *schema.ResourceData, kind string) (*v3.DSMetadata, error) {
-	metadata := &v3.DSMetadata{
-		Kind: utils.String(kind),
-	}
-
-	if v, ok := d.GetOk("metadata"); ok {
-		m := v.(map[string]interface{})
-
-		if mv, mok := m["sort_attribute"]; mok {
-			metadata.SortAttribute = utils.String(mv.(string))
-		}
-		if mv, mok := m["filter"]; mok {
-			metadata.Filter = utils.String(mv.(string))
-		}
-		if mv, mok := m["length"]; mok {
-			i, err := strconv.Atoi(mv.(string))
-			if err != nil {
-				return nil, err
-			}
-			metadata.Length = utils.Int64(int64(i))
-		}
-		if mv, mok := m["sort_order"]; mok {
-			metadata.SortOrder = utils.String(mv.(string))
-		}
-		if mv, mok := m["offset"]; mok {
-			i, err := strconv.Atoi(mv.(string))
-			if err != nil {
-				return nil, err
-			}
-			metadata.Offset = utils.Int64(int64(i))
-		}
-	}
-
-	return metadata, nil
 }
 
 func setRSEntityMetadata(v *v3.Metadata) (map[string]interface{}, []map[string]interface{}) {
@@ -194,4 +161,23 @@ func validateMapIntValue(value map[string]interface{}, key string) *int64 {
 		return utils.Int64(int64(v.(int)))
 	}
 	return nil
+}
+
+func taskStateRefreshFunc(client *v3.Client, taskUUID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		v, err := client.V3.GetTask(taskUUID)
+
+		if err != nil {
+			if strings.Contains(fmt.Sprint(err), "INVALID_UUID") {
+				return v, "ERROR", nil
+			}
+			return nil, "", err
+		}
+
+		if *v.Status == "INVALID_UUID" || *v.Status == "FAILED" {
+			utils.PrintToJSON(v, "TASKS Validation")
+			return v, *v.Status, fmt.Errorf(utils.StringValue(v.ErrorDetail))
+		}
+		return v, *v.Status, nil
+	}
 }
