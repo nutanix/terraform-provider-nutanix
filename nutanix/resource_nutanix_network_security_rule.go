@@ -29,7 +29,7 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 }
 
 func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	//Get client connection
+	// Get client connection
 	conn := meta.(*Client).API
 
 	// Prepare request
@@ -38,7 +38,7 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 	metadata := &v3.Metadata{}
 	networkSecurityRule := &v3.NetworkSecurityRuleResources{}
 
-	//Read arguments and set request values
+	// Read arguments and set request values
 	name, nok := d.GetOk("name")
 	desc, descok := d.GetOk("description")
 
@@ -51,7 +51,7 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 		request.APIVersion = utils.String(v.(string))
 	}
 
-	//only set kind
+	// only set kind
 	if errMetad := getMetadataAttributes(d, metadata, "network_security_rule"); errMetad != nil {
 		return errMetad
 	}
@@ -60,7 +60,7 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 		spec.Description = utils.String(desc.(string))
 	}
 
-	//get resources
+	// get resources
 	if err := getNetworkSecurityRuleResources(d, networkSecurityRule); err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 			d.Get("name").(string), *networkSecurityRueUUID)
 	}
 
-	//set request
+	// set request
 
 	spec.Resources = networkSecurityRule
 
@@ -223,7 +223,7 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 				qroaList[k] = qroaItem
 			}
 
-			//Set quarantine_rule_outbound_allow_list
+			// Set quarantine_rule_outbound_allow_list
 			if err := d.Set("quarantine_rule_outbound_allow_list", qroaList); err != nil {
 				return err
 			}
@@ -334,7 +334,7 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 				qriaList[k] = qriaItem
 			}
 
-			//Set quarantine_rule_inbound_allow_list
+			// Set quarantine_rule_inbound_allow_list
 			if err := d.Set("quarantine_rule_inbound_allow_list", qriaList); err != nil {
 				return err
 			}
@@ -430,7 +430,7 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 				aroaList[k] = aroaItem
 			}
 
-			//Set app_rule_outbound_allow_list
+			// Set app_rule_outbound_allow_list
 			if err := d.Set("app_rule_outbound_allow_list", aroaList); err != nil {
 				return err
 			}
@@ -533,7 +533,7 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 				ariaList[k] = ariaItem
 			}
 
-			//Set app_rule_inbound_allow_list
+			// Set app_rule_inbound_allow_list
 			if err := d.Set("app_rule_inbound_allow_list", ariaList); err != nil {
 				return err
 			}
@@ -594,7 +594,7 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	//Get client connection
+	// Get client connection
 	conn := meta.(*Client).API
 
 	// Prepare request
@@ -658,7 +658,7 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 		spec.Description = utils.String(d.Get("description").(string))
 	}
 
-	//TODO: Change
+	// TODO: Change
 	if d.HasChange("quarantine_rule_action") ||
 		d.HasChange("quarantine_rule_outbound_allow_list") ||
 		d.HasChange("quarantine_rule_target_group_default_internal_policy") ||

@@ -21,7 +21,7 @@ const (
 	mediaType      = "application/json"
 )
 
-//Client Config Configuration of the client
+// Client Config Configuration of the client
 type Client struct {
 	Credentials *Credentials
 
@@ -55,7 +55,7 @@ type Credentials struct {
 func NewClient(credentials *Credentials) (*Client, error) {
 
 	transCfg := &http.Transport{
-		//nolint:gas
+		// nolint:gas
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: credentials.Insecure}, // ignore expired SSL certificates
 	}
 
@@ -138,7 +138,7 @@ func (c *Client) OnRequestCompleted(rc RequestCompletionCallback) {
 	c.onRequestCompleted = rc
 }
 
-//Do performs request passed
+// Do performs request passed
 func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error {
 	req = req.WithContext(ctx)
 
@@ -185,7 +185,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 	return err
 }
 
-//CheckResponse checks errors if exist errors in request
+// CheckResponse checks errors if exist errors in request
 func CheckResponse(r *http.Response) error {
 	if c := r.StatusCode; c >= 200 && c <= 299 && r.Request.Method == http.MethodDelete {
 		return nil
@@ -201,9 +201,9 @@ func CheckResponse(r *http.Response) error {
 
 	r.Body = rdr2
 
-	//if has entities -> return nil
-	//if has message_list -> check_error["state"]
-	//if has status -> check_error["status.state"]
+	// if has entities -> return nil
+	// if has message_list -> check_error["state"]
+	// if has status -> check_error["status.state"]
 
 	var res map[string]interface{}
 	err = json.Unmarshal(buf, &res)
@@ -234,7 +234,7 @@ func CheckResponse(r *http.Response) error {
 	return fmt.Errorf("error: %s", string(pretty))
 }
 
-//ErrorResponse ...
+// ErrorResponse ...
 type ErrorResponse struct {
 	APIVersion  string            `json:"api_version,omitempty"`
 	Code        int64             `json:"code,omitempty"`
@@ -243,7 +243,7 @@ type ErrorResponse struct {
 	State       string            `json:"state"`
 }
 
-//MessageResource ...
+// MessageResource ...
 type MessageResource struct {
 
 	// Custom key-value details relevant to the status.

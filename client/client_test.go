@@ -64,7 +64,7 @@ func TestNewRequest(t *testing.T) {
 
 	req, _ := c.NewRequest(ctx, http.MethodPost, inURL, inBody)
 
-	//test relative URL was expanded
+	// test relative URL was expanded
 	if req.URL.String() != outURL {
 		t.Errorf("NewRequest(%v) URL = %v, expected %v", inURL, req.URL, outURL)
 	}
@@ -174,7 +174,7 @@ func TestDo_httpError(t *testing.T) {
 	}
 }
 
-/// Test handling of an error caused by the internal http client's Do()
+// / Test handling of an error caused by the internal http client's Do()
 // function.
 func TestDo_redirectLoop(t *testing.T) {
 	setup()
@@ -214,11 +214,11 @@ func TestDo_redirectLoop(t *testing.T) {
 // 	req = req.WithContext(ctx)
 // 	body := new(foo)
 
-// 	//var completedReq *http.Request
+// 	// var completedReq *http.Request
 // 	var completedResp string
 
 // 	client.OnRequestCompleted(func(req *http.Request, resp *http.Response, v interface{}) {
-// 		//completedReq = req
+// 		// completedReq = req
 // 		b, err := httputil.DumpResponse(resp, true)
 // 		if err != nil {
 // 			t.Errorf("Failed to dump response: %s", err)

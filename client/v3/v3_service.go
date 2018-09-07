@@ -11,7 +11,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-//Operations ...
+// Operations ...
 type Operations struct {
 	client *client.Client
 }
@@ -212,7 +212,7 @@ func (op Operations) GetSubnet(UUID string) (*SubnetIntentResponse, error) {
 		return nil, err
 	}
 
-	// //Recheck subnet already exist error
+	// Recheck subnet already exist error
 	// if *subnetIntentResponse.Status.State == "ERROR" {
 	// 	pretty, _ := json.MarshalIndent(subnetIntentResponse.Status.MessageList, "", "  ")
 	// 	return nil, fmt.Errorf("error: %s", string(pretty))
@@ -458,7 +458,7 @@ func (op Operations) ListCluster(getEntitiesRequest *ClusterListMetadataOutput) 
 // 	return imageIntentResponse, nil
 // }
 
-//CreateOrUpdateCategoryKey ...
+// CreateOrUpdateCategoryKey ...
 func (op Operations) CreateOrUpdateCategoryKey(body *CategoryKey) (*CategoryKeyStatus, error) {
 	ctx := context.TODO()
 
@@ -550,7 +550,7 @@ func (op Operations) ListCategoryValues(name string, getEntitiesRequest *Categor
 	return categoryValueListResponse, op.client.Do(ctx, req, categoryValueListResponse)
 }
 
-//CreateOrUpdateCategoryValue ...
+// CreateOrUpdateCategoryValue ...
 func (op Operations) CreateOrUpdateCategoryValue(name string, body *CategoryValue) (*CategoryValueStatus, error) {
 	ctx := context.TODO()
 
