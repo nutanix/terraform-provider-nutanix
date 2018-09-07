@@ -49,7 +49,7 @@ func resourceNutanixCategoryValueCreateOrUpdate(resourceData *schema.ResourceDat
 
 	request.Value = utils.String(value.(string))
 
-	//Make request to the API
+	// Make request to the API
 	resp, err := conn.V3.CreateOrUpdateCategoryValue(name.(string), request)
 
 	if err != nil {

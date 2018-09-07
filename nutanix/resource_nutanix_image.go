@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	//ImageKind Represents kind of resource
+	// ImageKind Represents kind of resource
 	ImageKind = "image"
 	// DELETED ...
 	DELETED = "DELETED"
@@ -93,14 +93,14 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("image already with name %s exists in the given cluster, UUID %s", d.Get("name").(string), *imageUUID)
 	}
 
-	//Make request to the API
+	// Make request to the API
 	resp, err := conn.V3.CreateImage(request)
 	if err != nil {
 		return err
 	}
 
 	UUID := *resp.Metadata.UUID
-	//set terraform state
+	// set terraform state
 	d.SetId(UUID)
 
 	stateConf := &resource.StateChangeConf{

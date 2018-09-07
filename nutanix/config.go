@@ -7,7 +7,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 )
 
-//Version represents api version
+// Version represents api version
 const Version = "3.1"
 
 // Config ...
@@ -42,7 +42,7 @@ func (c *Config) Client() (*Client, error) {
 	return client, nil
 }
 
-//Client represents the nutanix API client
+// Client represents the nutanix API client
 type Client struct {
 	API *v3.Client
 }

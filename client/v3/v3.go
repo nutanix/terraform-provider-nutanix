@@ -4,7 +4,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
 )
 
-//Client manages the V3 API
+// Client manages the V3 API
 type Client struct {
 	client *client.Client
 	V3     Service
@@ -28,7 +28,7 @@ func NewV3Client(credentials client.Credentials) (*Client, error) {
 	// f.client.OnRequestCompleted(func(req *http.Request, resp *http.Response, v interface{}) {
 	// 	if v != nil {
 	// 		utils.PrintToJSON(v, "[Debug] FINISHED REQUEST")
-	// 		//TBD: How to print responses before all requests.
+	// 		// TBD: How to print responses before all requests.
 	// 	}
 	// })
 
