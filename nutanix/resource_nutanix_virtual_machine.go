@@ -31,7 +31,6 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
 	conn := meta.(*Client).API
-	fmt.Println("######CREATE######")
 	// Prepare request
 	request := &v3.VMIntentInput{}
 	spec := &v3.VM{}
@@ -105,7 +104,6 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
 	conn := meta.(*Client).API
-	fmt.Println("######READ######")
 
 	// Make request to the API
 	resp, err := conn.V3.GetVM(d.Id())
@@ -227,18 +225,14 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	d.Set("enable_script_exec", utils.BoolValue(resp.Status.Resources.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec))
 	d.Set("power_state_mechanism", utils.StringValue(resp.Status.Resources.PowerStateMechanism.Mechanism))
 	d.Set("vga_console_enabled", utils.BoolValue(resp.Status.Resources.VgaConsoleEnabled))
-	fmt.Printf("STATEID ->%s\n", d.Id())
 	d.SetId(*resp.Metadata.UUID)
-	fmt.Printf("UUID READ->%s", *resp.Metadata.UUID)
 	return d.Set("disk_list", setDiskList(resp.Status.Resources.DiskList, resp.Status.Resources.GuestCustomization))
 }
 
 func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 
-	fmt.Println("######UPDATE######")
-	log.Printf("Updating VM values %s", d.Id())
-	fmt.Printf("Updating VM values %s", d.Id())
+	log.Printf("[Debug] Updating VM values %s", d.Id())
 
 	request := &v3.VMIntentInput{}
 	metadata := &v3.Metadata{}
@@ -622,23 +616,12 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 
-	fmt.Println("######DELETE######")
-
 	log.Printf("[DEBUG] Deleting Virtual Machine: %s, %s", d.Get("name").(string), d.Id())
 	resp, err := conn.V3.DeleteVM(d.Id())
 	if err != nil {
 		return err
 	}
 
-	// stateConf := &resource.StateChangeConf{
-	// 	Pending:    []string{"PENDING", "RUNNING", "DELETE_IN_PROGRESS", "COMPLETE"},
-	// 	Target:     []string{"DELETED"},
-	// 	Refresh:    vmStateRefreshFunc(conn, d.Id()),
-	// 	Timeout:    10 * time.Minute,
-	// 	Delay:      10 * time.Second,
-	// 	MinTimeout: 3 * time.Second,
-	// }
-	//DELETE_PENDING
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
