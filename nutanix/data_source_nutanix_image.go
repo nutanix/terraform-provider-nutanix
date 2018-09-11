@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -13,8 +14,14 @@ func dataSourceNutanixImage() *schema.Resource {
 		Read: dataSourceNutanixImageRead,
 		Schema: map[string]*schema.Schema{
 			"image_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"image_name"},
+			},
+			"image_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"image_id"},
 			},
 			"api_version": {
 				Type:     schema.TypeString,
@@ -226,16 +233,24 @@ func dataSourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error 
 	// Get client connection
 	conn := meta.(*Client).API
 
-	imageID, ok := d.GetOk("image_id")
+	imageID, iok := d.GetOk("image_id")
+	imageName, nok := d.GetOk("image_name")
 
-	if !ok {
-		return fmt.Errorf("please provide the required attribute vm_id")
+	if !iok && !nok {
+		return fmt.Errorf("please provide one of image_id or image_name attributes")
 	}
 
-	// Make request to the API
-	resp, err := conn.V3.GetImage(imageID.(string))
-	if err != nil {
-		return err
+	var reqErr error
+	var resp *v3.ImageIntentResponse
+
+	if iok {
+		resp, reqErr = findImageByUUID(conn, imageID.(string))
+	} else {
+		resp, reqErr = findImageByName(conn, imageName.(string))
+	}
+
+	if reqErr != nil {
+		return reqErr
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
@@ -269,7 +284,7 @@ func dataSourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("description", utils.StringValue(resp.Status.Description))
 	d.Set("state", utils.StringValue(resp.Status.State))
 	d.Set("image_type", resp.Status.Resources.ImageType)
-	d.Set("source_uri", resp.Status.Resources.SourceURI)
+	d.Set("source_uri", resp.Spec.Resources.SourceURI)
 	d.Set("size_bytes", utils.Int64Value(resp.Status.Resources.SizeBytes))
 
 	uriList := make([]string, 0, len(resp.Status.Resources.RetrievalURIList))
@@ -284,4 +299,35 @@ func dataSourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error 
 	d.SetId(resource.UniqueId())
 
 	return nil
+}
+
+func findImageByUUID(conn *v3.Client, uuid string) (*v3.ImageIntentResponse, error) {
+	return conn.V3.GetImage(uuid)
+}
+
+func findImageByName(conn *v3.Client, name string) (*v3.ImageIntentResponse, error) {
+	resp, err := conn.V3.ListAllImage()
+	if err != nil {
+		return nil, err
+	}
+
+	entities := resp.Entities
+
+	found := make([]*v3.ImageIntentResponse, 0)
+	for _, v := range entities {
+		if *v.Spec.Name == name {
+			found = append(found, v)
+		}
+	}
+
+	if len(found) > 1 {
+		return nil, fmt.Errorf("your query returned more than one result. Please use image_id argument instead")
+	}
+
+	if len(found) == 0 {
+		return nil, fmt.Errorf("image with the given name, not found")
+	}
+
+	return findImageByUUID(conn, *found[0].Metadata.UUID)
+
 }

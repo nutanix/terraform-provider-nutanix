@@ -1009,7 +1009,7 @@ type ImageIntentResource struct {
 type ImageListIntentResponse struct {
 	APIVersion *string `json:"api_version"`
 
-	Entities []*ImageIntentResource `json:"entities,omitempty"`
+	Entities []*ImageIntentResponse `json:"entities,omitempty"`
 
 	Metadata *ListMetadataOutput `json:"metadata"`
 }
