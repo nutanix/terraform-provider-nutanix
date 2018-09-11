@@ -8,8 +8,255 @@ import (
 
 func dataSourceNutanixImages() *schema.Resource {
 	return &schema.Resource{
-		Read:   dataSourceNutanixImagesRead,
-		Schema: getDataSourceImagesSchema(),
+		Read: dataSourceNutanixImagesRead,
+		Schema: map[string]*schema.Schema{
+			"metadata": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"sort_attribute": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"filter": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"length": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"sort_order": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"offset": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"api_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"entities": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"metadata": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"last_update_time": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"kind": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"creation_time": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"spec_version": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"spec_hash": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"api_version": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"categories": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"owner_reference": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"project_reference": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"state": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"availability_zone_reference": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"cluster_reference": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"cluster_reference_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"retrieval_uri_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"image_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"checksum": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"checksum_algorithm": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"checksum_value": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"source_uri": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"version": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"product_version": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"product_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"architecture": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"size_bytes": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -57,255 +304,4 @@ func dataSourceNutanixImagesRead(d *schema.ResourceData, meta interface{}) error
 	d.SetId(resource.UniqueId())
 
 	return nil
-}
-
-func getDataSourceImagesSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"metadata": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"kind": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"sort_attribute": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"filter": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"length": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"sort_order": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"offset": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-				},
-			},
-		},
-		"api_version": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"entities": {
-			Type:     schema.TypeList,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"metadata": {
-						Type:     schema.TypeMap,
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"last_update_time": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-								"kind": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-								"uuid": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-								"creation_time": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-								"spec_version": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-								"spec_hash": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-								"name": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-							},
-						},
-					},
-					"api_version": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"categories": {
-						Type:     schema.TypeList,
-						Optional: true,
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"name": {
-									Type:     schema.TypeString,
-									Required: true,
-								},
-								"value": {
-									Type:     schema.TypeString,
-									Required: true,
-								},
-							},
-						},
-					},
-					"owner_reference": {
-						Type:     schema.TypeMap,
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"kind": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-								"uuid": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-								"name": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-							},
-						},
-					},
-					"project_reference": {
-						Type:     schema.TypeMap,
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"kind": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-								"uuid": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-								"name": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-							},
-						},
-					},
-					"name": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"state": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"description": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"availability_zone_reference": {
-						Type:     schema.TypeMap,
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"kind": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-								"uuid": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-								"name": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-							},
-						},
-					},
-					"cluster_reference": {
-						Type:     schema.TypeMap,
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"kind": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-								"uuid": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-							},
-						},
-					},
-					"cluster_reference_name": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"retrieval_uri_list": {
-						Type:     schema.TypeList,
-						Computed: true,
-						Elem:     &schema.Schema{Type: schema.TypeString},
-					},
-					"image_type": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"checksum": {
-						Type:     schema.TypeMap,
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"checksum_algorithm": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-								"checksum_value": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-							},
-						},
-					},
-					"source_uri": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"version": {
-						Type:     schema.TypeMap,
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"product_version": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-								"product_name": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-							},
-						},
-					},
-					"architecture": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"size_bytes": {
-						Type:     schema.TypeInt,
-						Computed: true,
-					},
-				},
-			},
-		},
-	}
 }
