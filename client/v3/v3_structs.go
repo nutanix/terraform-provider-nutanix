@@ -770,7 +770,7 @@ type SubnetIntentResource struct {
 type SubnetListIntentResponse struct {
 	APIVersion *string `json:"api_version"`
 
-	Entities []*SubnetIntentResource `json:"entities,omitempty"`
+	Entities []*SubnetIntentResponse `json:"entities,omitempty"`
 
 	Metadata *ListMetadataOutput `json:"metadata"`
 }
