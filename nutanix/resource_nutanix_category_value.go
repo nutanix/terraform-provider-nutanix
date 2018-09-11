@@ -18,7 +18,31 @@ func resourceNutanixCategoryValue() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		Schema: getCategoryValueSchema(),
+		Schema: map[string]*schema.Schema{
+			"value": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"system_defined": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"api_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+		},
 	}
 }
 
@@ -107,32 +131,4 @@ func resourceNutanixCategoryValueDelete(d *schema.ResourceData, meta interface{}
 
 	d.SetId("")
 	return nil
-}
-
-func getCategoryValueSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"value": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"system_defined": {
-			Type:     schema.TypeBool,
-			Computed: true,
-		},
-		"description": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"api_version": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"name": {
-			Type:     schema.TypeString,
-			Required: true,
-		},
-	}
 }
