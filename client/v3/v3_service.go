@@ -884,7 +884,7 @@ func (op Operations) ListAllVM() (*VMListIntentResponse, error) {
 
 // ListAllSubnet ...
 func (op Operations) ListAllSubnet() (*SubnetListIntentResponse, error) {
-	entities := make([]*SubnetIntentResource, 0)
+	entities := make([]*SubnetIntentResponse, 0)
 
 	resp, err := op.ListSubnet(&DSMetadata{
 		Kind:   utils.String("subnet"),
