@@ -872,7 +872,7 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 
 	// Read arguments and set request values
 	if v, ok := d.GetOk("api_version"); ok {
-		request.APIVersion = utils.String(v.(string))
+		request.APIVersion = utils.StringPtr(v.(string))
 	}
 
 	// only set kind
@@ -881,7 +881,7 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 	}
 
 	if descok {
-		spec.Description = utils.String(desc.(string))
+		spec.Description = utils.StringPtr(desc.(string))
 	}
 
 	// get resources
@@ -890,7 +890,7 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 	}
 
 	if descok {
-		spec.Description = utils.String(desc.(string))
+		spec.Description = utils.StringPtr(desc.(string))
 	}
 
 	networkSecurityRueUUID, err := resourceNutanixNetworkSecurityRuleExists(conn, d.Get("name").(string))
@@ -909,7 +909,7 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 
 	spec.Resources = networkSecurityRule
 
-	spec.Name = utils.String(name.(string))
+	spec.Name = utils.StringPtr(name.(string))
 
 	// set request attrs
 	request.Metadata = metadata
@@ -1479,10 +1479,10 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("name") {
-		spec.Name = utils.String(d.Get("name").(string))
+		spec.Name = utils.StringPtr(d.Get("name").(string))
 	}
 	if d.HasChange("description") {
-		spec.Description = utils.String(d.Get("description").(string))
+		spec.Description = utils.StringPtr(d.Get("description").(string))
 	}
 
 	// TODO: Change
@@ -1590,7 +1590,7 @@ func resourceNutanixNetworkSecurityRuleExists(conn *v3.Client, name string) (*st
 	}
 
 	for _, nsr := range networkSecurityRuleList.Entities {
-		if nsr.Metadata.Name == utils.String(name) {
+		if nsr.Metadata.Name == utils.StringPtr(name) {
 			nsrUUID = nsr.Metadata.UUID
 		}
 	}
@@ -1609,7 +1609,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	iRuleSecondEntityFilter := &v3.CategoryFilter{}
 
 	if qra, ok := d.GetOk("quarantine_rule_action"); ok && qra.(string) != "" {
-		quarantineRule.Action = utils.String(qra.(string))
+		quarantineRule.Action = utils.StringPtr(qra.(string))
 	}
 
 	if qroal, ok := d.GetOk("quarantine_rule_outbound_allow_list"); ok && qroal != nil {
@@ -1623,16 +1623,16 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			filter := &v3.CategoryFilter{}
 
 			if proto, pok := nr["protocol"]; pok && proto.(string) != "" {
-				nrItem.Protocol = utils.String(proto.(string))
+				nrItem.Protocol = utils.StringPtr(proto.(string))
 			}
 
 			if ip, ipok := nr["ip_subnet"]; ipok && ip.(string) != "" {
-				iPSubnet.IP = utils.String(ip.(string))
+				iPSubnet.IP = utils.StringPtr(ip.(string))
 			}
 
 			if ippl, ipok := nr["ip_subnet_prefix_length"]; ipok && ippl.(string) != "" {
 				if i, err := strconv.Atoi(ippl.(string)); err != nil {
-					iPSubnet.PrefixLength = utils.Int64(int64(i))
+					iPSubnet.PrefixLength = utils.Int64Ptr(int64(i))
 				}
 			}
 
@@ -1646,13 +1646,13 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 
 					if endp, epok := tcpp["end_port"]; epok {
 						if port, err := strconv.Atoi(endp.(string)); err != nil {
-							portRange.EndPort = utils.Int64(int64(port))
+							portRange.EndPort = utils.Int64Ptr(int64(port))
 						}
 					}
 
 					if stp, stpok := tcpp["start_port"]; stpok {
 						if port, err := strconv.Atoi(stp.(string)); err != nil {
-							portRange.StartPort = utils.Int64(int64(port))
+							portRange.StartPort = utils.Int64Ptr(int64(port))
 						}
 					}
 					tcpPorts[i] = portRange
@@ -1670,13 +1670,13 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 
 					if endp, epok := udpp["end_port"]; epok {
 						if port, err := strconv.Atoi(endp.(string)); err != nil {
-							portRange.EndPort = utils.Int64(int64(port))
+							portRange.EndPort = utils.Int64Ptr(int64(port))
 						}
 					}
 
 					if stp, stpok := udpp["start_port"]; stpok {
 						if port, err := strconv.Atoi(stp.(string)); err != nil {
-							portRange.StartPort = utils.Int64(int64(port))
+							portRange.StartPort = utils.Int64Ptr(int64(port))
 						}
 					}
 					udpPorts[i] = portRange
@@ -1688,13 +1688,13 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 				fkl := f.([]interface{})
 				fkList := make([]*string, len(fkl))
 				for k, v := range fkl {
-					fkList[k] = utils.String(v.(string))
+					fkList[k] = utils.StringPtr(v.(string))
 				}
 				filter.KindList = fkList
 			}
 
 			if ft, ftok := nr["filter_type"]; ftok {
-				filter.Type = utils.String(ft.(string))
+				filter.Type = utils.StringPtr(ft.(string))
 			}
 
 			if fp, fpok := nr["filter_params"]; fpok {
@@ -1724,11 +1724,11 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			}
 
 			if pet, petok := nr["peer_specification_type"]; petok && pet.(string) != "" {
-				nrItem.PeerSpecificationType = utils.String(pet.(string))
+				nrItem.PeerSpecificationType = utils.StringPtr(pet.(string))
 			}
 
 			if et, etok := nr["expiration_time"]; etok && et.(string) != "" {
-				nrItem.ExpirationTime = utils.String(et.(string))
+				nrItem.ExpirationTime = utils.StringPtr(et.(string))
 			}
 
 			if nfcr, nfcrok := nr["network_function_chain_reference"]; nfcrok && len(nfcr.(map[string]interface{})) > 0 {
@@ -1749,13 +1749,13 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 						if c, cok := icmpm["code"]; cok && c.(string) != "" {
 
 							if i, err := strconv.Atoi(c.(string)); err != nil {
-								icmpItem.Code = utils.Int64(int64(i))
+								icmpItem.Code = utils.Int64Ptr(int64(i))
 							}
 						}
 
 						if t, tok := icmpm["type"]; tok && t.(string) != "" {
 							if i, err := strconv.Atoi(t.(string)); err != nil {
-								icmpItem.Type = utils.Int64(int64(i))
+								icmpItem.Type = utils.Int64Ptr(int64(i))
 							}
 						}
 						icmpList[k] = icmpItem
@@ -1775,24 +1775,24 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	}
 
 	if qroal, ok := d.GetOk("quarantine_rule_target_group_default_internal_policy"); ok && qroal.(string) != "" {
-		qRuleTargetGroup.DefaultInternalPolicy = utils.String(qroal.(string))
+		qRuleTargetGroup.DefaultInternalPolicy = utils.StringPtr(qroal.(string))
 	}
 
 	if qroal, ok := d.GetOk("quarantine_rule_target_group_peer_specification_type"); ok && qroal.(string) != "" {
-		qRuleTargetGroup.PeerSpecificationType = utils.String(qroal.(string))
+		qRuleTargetGroup.PeerSpecificationType = utils.StringPtr(qroal.(string))
 	}
 
 	if f, fok := d.GetOk("quarantine_rule_target_group_filter_kind_list"); fok && f != nil {
 		fkl := f.([]interface{})
 		fkList := make([]*string, len(fkl))
 		for k, v := range fkl {
-			fkList[k] = utils.String(v.(string))
+			fkList[k] = utils.StringPtr(v.(string))
 		}
 		qRuleTargetGroupFilter.KindList = fkList
 	}
 
 	if ft, ftok := d.GetOk("quarantine_rule_target_group_filter_type"); ftok && ft.(string) != "" {
-		qRuleTargetGroupFilter.Type = utils.String(ft.(string))
+		qRuleTargetGroupFilter.Type = utils.StringPtr(ft.(string))
 	}
 
 	if fp, fpok := d.GetOk("quarantine_rule_target_group_filter_params"); fpok {
@@ -1832,16 +1832,16 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			filter := &v3.CategoryFilter{}
 
 			if proto, pok := nr["protocol"]; pok && proto.(string) != "" {
-				nrItem.Protocol = utils.String(proto.(string))
+				nrItem.Protocol = utils.StringPtr(proto.(string))
 			}
 
 			if ip, ipok := nr["ip_subnet"]; ipok && ip.(string) != "" {
-				iPSubnet.IP = utils.String(ip.(string))
+				iPSubnet.IP = utils.StringPtr(ip.(string))
 			}
 
 			if ippl, ipok := nr["ip_subnet_prefix_length"]; ipok && ippl.(string) != "" {
 				if i, err := strconv.Atoi(ippl.(string)); err != nil {
-					iPSubnet.PrefixLength = utils.Int64(int64(i))
+					iPSubnet.PrefixLength = utils.Int64Ptr(int64(i))
 				}
 			}
 
@@ -1855,13 +1855,13 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 
 					if endp, epok := tcpp["end_port"]; epok {
 						if port, err := strconv.Atoi(endp.(string)); err != nil {
-							portRange.EndPort = utils.Int64(int64(port))
+							portRange.EndPort = utils.Int64Ptr(int64(port))
 						}
 					}
 
 					if stp, stpok := tcpp["start_port"]; stpok {
 						if port, err := strconv.Atoi(stp.(string)); err != nil {
-							portRange.StartPort = utils.Int64(int64(port))
+							portRange.StartPort = utils.Int64Ptr(int64(port))
 						}
 					}
 					tcpPorts[i] = portRange
@@ -1879,13 +1879,13 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 
 					if endp, epok := udpp["end_port"]; epok {
 						if port, err := strconv.Atoi(endp.(string)); err != nil {
-							portRange.EndPort = utils.Int64(int64(port))
+							portRange.EndPort = utils.Int64Ptr(int64(port))
 						}
 					}
 
 					if stp, stpok := udpp["start_port"]; stpok {
 						if port, err := strconv.Atoi(stp.(string)); err != nil {
-							portRange.StartPort = utils.Int64(int64(port))
+							portRange.StartPort = utils.Int64Ptr(int64(port))
 						}
 					}
 					udpPorts[i] = portRange
@@ -1897,13 +1897,13 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 				fkl := f.([]interface{})
 				fkList := make([]*string, len(fkl))
 				for k, v := range fkl {
-					fkList[k] = utils.String(v.(string))
+					fkList[k] = utils.StringPtr(v.(string))
 				}
 				filter.KindList = fkList
 			}
 
 			if ft, ftok := nr["filter_type"]; ftok {
-				filter.Type = utils.String(ft.(string))
+				filter.Type = utils.StringPtr(ft.(string))
 			}
 
 			if fp, fpok := nr["filter_params"]; fpok {
@@ -1933,11 +1933,11 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			}
 
 			if pet, petok := nr["peer_specification_type"]; petok && pet.(string) != "" {
-				nrItem.PeerSpecificationType = utils.String(pet.(string))
+				nrItem.PeerSpecificationType = utils.StringPtr(pet.(string))
 			}
 
 			if et, etok := nr["expiration_time"]; etok && et.(string) != "" {
-				nrItem.ExpirationTime = utils.String(et.(string))
+				nrItem.ExpirationTime = utils.StringPtr(et.(string))
 			}
 
 			if nfcr, nfcrok := nr["network_function_chain_reference"]; nfcrok && nfcr.(string) != "" {
@@ -1958,13 +1958,13 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 						if c, cok := icmpm["code"]; cok && c.(string) != "" {
 
 							if i, err := strconv.Atoi(c.(string)); err != nil {
-								icmpItem.Code = utils.Int64(int64(i))
+								icmpItem.Code = utils.Int64Ptr(int64(i))
 							}
 						}
 
 						if t, tok := icmpm["type"]; tok && t.(string) != "" {
 							if i, err := strconv.Atoi(t.(string)); err != nil {
-								icmpItem.Type = utils.Int64(int64(i))
+								icmpItem.Type = utils.Int64Ptr(int64(i))
 							}
 						}
 						icmpList[k] = icmpItem
@@ -1984,7 +1984,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	}
 
 	if ara, ok := d.GetOk("app_rule_action"); ok && ara.(string) != "" {
-		appRule.Action = utils.String(ara.(string))
+		appRule.Action = utils.StringPtr(ara.(string))
 	}
 
 	if qroal, ok := d.GetOk("app_rule_outbound_allow_list"); ok {
@@ -1998,16 +1998,16 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			filter := &v3.CategoryFilter{}
 
 			if proto, pok := nr["protocol"]; pok && proto.(string) != "" {
-				nrItem.Protocol = utils.String(proto.(string))
+				nrItem.Protocol = utils.StringPtr(proto.(string))
 			}
 
 			if ip, ipok := nr["ip_subnet"]; ipok && ip.(string) != "" {
-				iPSubnet.IP = utils.String(ip.(string))
+				iPSubnet.IP = utils.StringPtr(ip.(string))
 			}
 
 			if ippl, ipok := nr["ip_subnet_prefix_length"]; ipok && ippl.(string) != "" {
 				if i, err := strconv.Atoi(ippl.(string)); err != nil {
-					iPSubnet.PrefixLength = utils.Int64(int64(i))
+					iPSubnet.PrefixLength = utils.Int64Ptr(int64(i))
 				}
 			}
 
@@ -2021,13 +2021,13 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 
 					if endp, epok := tcpp["end_port"]; epok {
 						if port, err := strconv.Atoi(endp.(string)); err != nil {
-							portRange.EndPort = utils.Int64(int64(port))
+							portRange.EndPort = utils.Int64Ptr(int64(port))
 						}
 					}
 
 					if stp, stpok := tcpp["start_port"]; stpok {
 						if port, err := strconv.Atoi(stp.(string)); err != nil {
-							portRange.StartPort = utils.Int64(int64(port))
+							portRange.StartPort = utils.Int64Ptr(int64(port))
 						}
 					}
 					tcpPorts[i] = portRange
@@ -2045,13 +2045,13 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 
 					if endp, epok := udpp["end_port"]; epok {
 						if port, err := strconv.Atoi(endp.(string)); err != nil {
-							portRange.EndPort = utils.Int64(int64(port))
+							portRange.EndPort = utils.Int64Ptr(int64(port))
 						}
 					}
 
 					if stp, stpok := udpp["start_port"]; stpok {
 						if port, err := strconv.Atoi(stp.(string)); err != nil {
-							portRange.StartPort = utils.Int64(int64(port))
+							portRange.StartPort = utils.Int64Ptr(int64(port))
 						}
 					}
 					udpPorts[i] = portRange
@@ -2063,13 +2063,13 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 				fkl := f.([]interface{})
 				fkList := make([]*string, len(fkl))
 				for k, v := range fkl {
-					fkList[k] = utils.String(v.(string))
+					fkList[k] = utils.StringPtr(v.(string))
 				}
 				filter.KindList = fkList
 			}
 
 			if ft, ftok := nr["filter_type"]; ftok {
-				filter.Type = utils.String(ft.(string))
+				filter.Type = utils.StringPtr(ft.(string))
 			}
 
 			if fp, fpok := nr["filter_params"]; fpok {
@@ -2099,11 +2099,11 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			}
 
 			if pet, petok := nr["peer_specification_type"]; petok && pet.(string) != "" {
-				nrItem.PeerSpecificationType = utils.String(pet.(string))
+				nrItem.PeerSpecificationType = utils.StringPtr(pet.(string))
 			}
 
 			if et, etok := nr["expiration_time"]; etok && et.(string) != "" {
-				nrItem.ExpirationTime = utils.String(et.(string))
+				nrItem.ExpirationTime = utils.StringPtr(et.(string))
 			}
 
 			if nfcr, nfcrok := nr["network_function_chain_reference"]; nfcrok && len(nfcr.(map[string]interface{})) > 0 {
@@ -2124,13 +2124,13 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 						if c, cok := icmpm["code"]; cok && c.(string) != "" {
 
 							if i, err := strconv.Atoi(c.(string)); err != nil {
-								icmpItem.Code = utils.Int64(int64(i))
+								icmpItem.Code = utils.Int64Ptr(int64(i))
 							}
 						}
 
 						if t, tok := icmpm["type"]; tok && t.(string) != "" {
 							if i, err := strconv.Atoi(t.(string)); err != nil {
-								icmpItem.Type = utils.Int64(int64(i))
+								icmpItem.Type = utils.Int64Ptr(int64(i))
 							}
 						}
 						icmpList[k] = icmpItem
@@ -2150,24 +2150,24 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	}
 
 	if qroal, ok := d.GetOk("app_rule_target_group_default_internal_policy"); ok && qroal != nil {
-		aRuleTargetGroup.DefaultInternalPolicy = utils.String(qroal.(string))
+		aRuleTargetGroup.DefaultInternalPolicy = utils.StringPtr(qroal.(string))
 	}
 
 	if qroal, ok := d.GetOk("app_rule_target_group_peer_specification_type"); ok && qroal != nil {
-		aRuleTargetGroup.PeerSpecificationType = utils.String(qroal.(string))
+		aRuleTargetGroup.PeerSpecificationType = utils.StringPtr(qroal.(string))
 	}
 
 	if f, fok := d.GetOk("app_rule_target_group_filter_kind_list"); fok && f != nil {
 		fkl := f.([]interface{})
 		fkList := make([]*string, len(fkl))
 		for k, v := range fkl {
-			fkList[k] = utils.String(v.(string))
+			fkList[k] = utils.StringPtr(v.(string))
 		}
 		aRuleTargetGroupFilter.KindList = fkList
 	}
 
 	if ft, ftok := d.GetOk("app_rule_target_group_filter_type"); ftok && ft.(string) != "" {
-		aRuleTargetGroupFilter.Type = utils.String(ft.(string))
+		aRuleTargetGroupFilter.Type = utils.StringPtr(ft.(string))
 	}
 
 	if fp, fpok := d.GetOk("app_rule_target_group_filter_params"); fpok {
@@ -2207,16 +2207,16 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			filter := &v3.CategoryFilter{}
 
 			if proto, pok := nr["protocol"]; pok && proto.(string) != "" {
-				nrItem.Protocol = utils.String(proto.(string))
+				nrItem.Protocol = utils.StringPtr(proto.(string))
 			}
 
 			if ip, ipok := nr["ip_subnet"]; ipok && ip.(string) != "" {
-				iPSubnet.IP = utils.String(ip.(string))
+				iPSubnet.IP = utils.StringPtr(ip.(string))
 			}
 
 			if ippl, ipok := nr["ip_subnet_prefix_length"]; ipok && ippl.(string) != "" {
 				if i, err := strconv.Atoi(ippl.(string)); err != nil {
-					iPSubnet.PrefixLength = utils.Int64(int64(i))
+					iPSubnet.PrefixLength = utils.Int64Ptr(int64(i))
 				}
 			}
 
@@ -2230,13 +2230,13 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 
 					if endp, epok := tcpp["end_port"]; epok {
 						if port, err := strconv.Atoi(endp.(string)); err != nil {
-							portRange.EndPort = utils.Int64(int64(port))
+							portRange.EndPort = utils.Int64Ptr(int64(port))
 						}
 					}
 
 					if stp, stpok := tcpp["start_port"]; stpok {
 						if port, err := strconv.Atoi(stp.(string)); err != nil {
-							portRange.StartPort = utils.Int64(int64(port))
+							portRange.StartPort = utils.Int64Ptr(int64(port))
 						}
 					}
 					tcpPorts[i] = portRange
@@ -2254,13 +2254,13 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 
 					if endp, epok := udpp["end_port"]; epok {
 						if port, err := strconv.Atoi(endp.(string)); err != nil {
-							portRange.EndPort = utils.Int64(int64(port))
+							portRange.EndPort = utils.Int64Ptr(int64(port))
 						}
 					}
 
 					if stp, stpok := udpp["start_port"]; stpok {
 						if port, err := strconv.Atoi(stp.(string)); err != nil {
-							portRange.StartPort = utils.Int64(int64(port))
+							portRange.StartPort = utils.Int64Ptr(int64(port))
 						}
 					}
 					udpPorts[i] = portRange
@@ -2272,13 +2272,13 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 				fkl := f.([]interface{})
 				fkList := make([]*string, len(fkl))
 				for k, v := range fkl {
-					fkList[k] = utils.String(v.(string))
+					fkList[k] = utils.StringPtr(v.(string))
 				}
 				filter.KindList = fkList
 			}
 
 			if ft, ftok := nr["filter_type"]; ftok {
-				filter.Type = utils.String(ft.(string))
+				filter.Type = utils.StringPtr(ft.(string))
 			}
 
 			if fp, fpok := nr["filter_params"]; fpok {
@@ -2308,11 +2308,11 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			}
 
 			if pet, petok := nr["peer_specification_type"]; petok && pet.(string) != "" {
-				nrItem.PeerSpecificationType = utils.String(pet.(string))
+				nrItem.PeerSpecificationType = utils.StringPtr(pet.(string))
 			}
 
 			if et, etok := nr["expiration_time"]; etok && et.(string) != "" {
-				nrItem.ExpirationTime = utils.String(et.(string))
+				nrItem.ExpirationTime = utils.StringPtr(et.(string))
 			}
 
 			if nfcr, nfcrok := nr["network_function_chain_reference"]; nfcrok && len(nfcr.(map[string]interface{})) > 0 {
@@ -2333,13 +2333,13 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 						if c, cok := icmpm["code"]; cok && c.(string) != "" {
 
 							if i, err := strconv.Atoi(c.(string)); err != nil {
-								icmpItem.Code = utils.Int64(int64(i))
+								icmpItem.Code = utils.Int64Ptr(int64(i))
 							}
 						}
 
 						if t, tok := icmpm["type"]; tok && t.(string) != "" {
 							if i, err := strconv.Atoi(t.(string)); err != nil {
-								icmpItem.Type = utils.Int64(int64(i))
+								icmpItem.Type = utils.Int64Ptr(int64(i))
 							}
 						}
 						icmpList[k] = icmpItem
@@ -2359,20 +2359,20 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	}
 
 	if ira, ok := d.GetOk("isolation_rule_action"); ok && ira.(string) != "" {
-		isolationRule.Action = utils.String(ira.(string))
+		isolationRule.Action = utils.StringPtr(ira.(string))
 	}
 
 	if f, fok := d.GetOk("isolation_rule_first_entity_filter_kind_list"); fok && f != nil {
 		fkl := f.([]interface{})
 		fkList := make([]*string, len(fkl))
 		for k, v := range fkl {
-			fkList[k] = utils.String(v.(string))
+			fkList[k] = utils.StringPtr(v.(string))
 		}
 		iRuleFirstEntityFilter.KindList = fkList
 	}
 
 	if ft, ftok := d.GetOk("isolation_rule_first_entity_filter_type"); ftok && ft.(string) != "" {
-		iRuleFirstEntityFilter.Type = utils.String(ft.(string))
+		iRuleFirstEntityFilter.Type = utils.StringPtr(ft.(string))
 	}
 
 	if fp, fpok := d.GetOk("isolation_rule_first_entity_filter_params"); fpok {
@@ -2405,13 +2405,13 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 		fkl := f.([]interface{})
 		fkList := make([]*string, len(fkl))
 		for k, v := range fkl {
-			fkList[k] = utils.String(v.(string))
+			fkList[k] = utils.StringPtr(v.(string))
 		}
 		iRuleSecondEntityFilter.KindList = fkList
 	}
 
 	if ft, ftok := d.GetOk("isolation_rule_second_entity_filter_type"); ftok && ft.(string) != "" {
-		iRuleSecondEntityFilter.Type = utils.String(ft.(string))
+		iRuleSecondEntityFilter.Type = utils.StringPtr(ft.(string))
 	}
 
 	if fp, fpok := d.GetOk("isolation_rule_second_entity_filter_params"); fpok {

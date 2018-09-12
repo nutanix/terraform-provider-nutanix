@@ -98,24 +98,24 @@ func TestOperations_CreateVM(t *testing.T) {
 			},
 			args{
 				&VMIntentInput{
-					APIVersion: utils.String("3.1"),
+					APIVersion: utils.StringPtr("3.1"),
 					Metadata: &Metadata{
-						Kind: utils.String("vm"),
+						Kind: utils.StringPtr("vm"),
 					},
 					Spec: &VM{
 						ClusterReference: &Reference{
-							Kind: utils.String("cluster"),
-							UUID: utils.String("00056024-6c13-4c74-0000-00000000ecb5"),
+							Kind: utils.StringPtr("cluster"),
+							UUID: utils.StringPtr("00056024-6c13-4c74-0000-00000000ecb5"),
 						},
-						Name: utils.String("VM123.create"),
+						Name: utils.StringPtr("VM123.create"),
 					},
 				},
 			},
 			&VMIntentResponse{
-				APIVersion: utils.String("3.1"),
+				APIVersion: utils.StringPtr("3.1"),
 				Metadata: &Metadata{
-					Kind: utils.String("vm"),
-					UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					Kind: utils.StringPtr("vm"),
+					UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
 				},
 			},
 			false,
@@ -212,8 +212,8 @@ func TestOperations_GetVM(t *testing.T) {
 
 	vmResponse := &VMIntentResponse{}
 	vmResponse.Metadata = &Metadata{
-		UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
-		Kind: utils.String("vm"),
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("vm"),
 	}
 
 	type fields struct {
@@ -267,12 +267,12 @@ func TestOperations_ListVM(t *testing.T) {
 	vmList.Entities = make([]*VMIntentResource, 1)
 	vmList.Entities[0] = &VMIntentResource{}
 	vmList.Entities[0].Metadata = &Metadata{
-		UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
-		Kind: utils.String("vm"),
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("vm"),
 	}
 
 	input := &DSMetadata{
-		Length: utils.Int64(1.0),
+		Length: utils.Int64Ptr(1.0),
 	}
 
 	type fields struct {
@@ -376,24 +376,24 @@ func TestOperations_UpdateVM(t *testing.T) {
 			args{
 				"cfde831a-4e87-4a75-960f-89b0148aa2cc",
 				&VMIntentInput{
-					APIVersion: utils.String("3.1"),
+					APIVersion: utils.StringPtr("3.1"),
 					Metadata: &Metadata{
-						Kind: utils.String("vm"),
+						Kind: utils.StringPtr("vm"),
 					},
 					Spec: &VM{
 						ClusterReference: &Reference{
-							Kind: utils.String("cluster"),
-							UUID: utils.String("00056024-6c13-4c74-0000-00000000ecb5"),
+							Kind: utils.StringPtr("cluster"),
+							UUID: utils.StringPtr("00056024-6c13-4c74-0000-00000000ecb5"),
 						},
-						Name: utils.String("VM123.create"),
+						Name: utils.StringPtr("VM123.create"),
 					},
 				},
 			},
 			&VMIntentResponse{
-				APIVersion: utils.String("3.1"),
+				APIVersion: utils.StringPtr("3.1"),
 				Metadata: &Metadata{
-					Kind: utils.String("vm"),
-					UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					Kind: utils.StringPtr("vm"),
+					UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
 				},
 			},
 			false,
@@ -476,24 +476,24 @@ func TestOperations_CreateSubnet(t *testing.T) {
 			},
 			args{
 				&SubnetIntentInput{
-					APIVersion: utils.String("3.1"),
+					APIVersion: utils.StringPtr("3.1"),
 					Metadata: &Metadata{
-						Kind: utils.String("subnet"),
+						Kind: utils.StringPtr("subnet"),
 					},
 					Spec: &Subnet{
 						ClusterReference: &Reference{
-							Kind: utils.String("cluster"),
-							UUID: utils.String("00056024-6c13-4c74-0000-00000000ecb5"),
+							Kind: utils.StringPtr("cluster"),
+							UUID: utils.StringPtr("00056024-6c13-4c74-0000-00000000ecb5"),
 						},
-						Name: utils.String("subnet.create"),
+						Name: utils.StringPtr("subnet.create"),
 					},
 				},
 			},
 			&SubnetIntentResponse{
-				APIVersion: utils.String("3.1"),
+				APIVersion: utils.StringPtr("3.1"),
 				Metadata: &Metadata{
-					Kind: utils.String("subnet"),
-					UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					Kind: utils.StringPtr("subnet"),
+					UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
 				},
 			},
 			false,
@@ -590,8 +590,8 @@ func TestOperations_GetSubnet(t *testing.T) {
 
 	subnetResponse := &SubnetIntentResponse{}
 	subnetResponse.Metadata = &Metadata{
-		UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
-		Kind: utils.String("subnet"),
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("subnet"),
 	}
 
 	type fields struct {
@@ -645,12 +645,12 @@ func TestOperations_ListSubnet(t *testing.T) {
 	subnetList.Entities = make([]*SubnetIntentResponse, 1)
 	subnetList.Entities[0] = &SubnetIntentResponse{}
 	subnetList.Entities[0].Metadata = &Metadata{
-		UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
-		Kind: utils.String("subnet"),
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("subnet"),
 	}
 
 	input := &DSMetadata{
-		Length: utils.Int64(1.0),
+		Length: utils.Int64Ptr(1.0),
 	}
 	type fields struct {
 		client *client.Client
@@ -753,24 +753,24 @@ func TestOperations_UpdateSubnet(t *testing.T) {
 			args{
 				"cfde831a-4e87-4a75-960f-89b0148aa2cc",
 				&SubnetIntentInput{
-					APIVersion: utils.String("3.1"),
+					APIVersion: utils.StringPtr("3.1"),
 					Metadata: &Metadata{
-						Kind: utils.String("subnet"),
+						Kind: utils.StringPtr("subnet"),
 					},
 					Spec: &Subnet{
 						ClusterReference: &Reference{
-							Kind: utils.String("cluster"),
-							UUID: utils.String("00056024-6c13-4c74-0000-00000000ecb5"),
+							Kind: utils.StringPtr("cluster"),
+							UUID: utils.StringPtr("00056024-6c13-4c74-0000-00000000ecb5"),
 						},
-						Name: utils.String("subnet.create"),
+						Name: utils.StringPtr("subnet.create"),
 					},
 				},
 			},
 			&SubnetIntentResponse{
-				APIVersion: utils.String("3.1"),
+				APIVersion: utils.StringPtr("3.1"),
 				Metadata: &Metadata{
-					Kind: utils.String("subnet"),
-					UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					Kind: utils.StringPtr("subnet"),
+					UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
 				},
 			},
 			false,
@@ -852,23 +852,23 @@ func TestOperations_CreateImage(t *testing.T) {
 			},
 			args{
 				&ImageIntentInput{
-					APIVersion: utils.String("3.1"),
+					APIVersion: utils.StringPtr("3.1"),
 					Metadata: &Metadata{
-						Kind: utils.String("image"),
+						Kind: utils.StringPtr("image"),
 					},
 					Spec: &Image{
-						Name: utils.String("image.create"),
+						Name: utils.StringPtr("image.create"),
 						Resources: &ImageResources{
-							ImageType: utils.String("DISK_IMAGE"),
+							ImageType: utils.StringPtr("DISK_IMAGE"),
 						},
 					},
 				},
 			},
 			&ImageIntentResponse{
-				APIVersion: utils.String("3.1"),
+				APIVersion: utils.StringPtr("3.1"),
 				Metadata: &Metadata{
-					Kind: utils.String("image"),
-					UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					Kind: utils.StringPtr("image"),
+					UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
 				},
 			},
 			false,
@@ -998,8 +998,8 @@ func TestOperations_GetImage(t *testing.T) {
 
 	response := &ImageIntentResponse{}
 	response.Metadata = &Metadata{
-		UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
-		Kind: utils.String("image"),
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("image"),
 	}
 
 	type fields struct {
@@ -1053,12 +1053,12 @@ func TestOperations_ListImage(t *testing.T) {
 	list.Entities = make([]*ImageIntentResponse, 1)
 	list.Entities[0] = &ImageIntentResponse{}
 	list.Entities[0].Metadata = &Metadata{
-		UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
-		Kind: utils.String("image"),
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("image"),
 	}
 
 	input := &DSMetadata{
-		Length: utils.Int64(1.0),
+		Length: utils.Int64Ptr(1.0),
 	}
 
 	type fields struct {
@@ -1161,23 +1161,23 @@ func TestOperations_UpdateImage(t *testing.T) {
 			args{
 				"cfde831a-4e87-4a75-960f-89b0148aa2cc",
 				&ImageIntentInput{
-					APIVersion: utils.String("3.1"),
+					APIVersion: utils.StringPtr("3.1"),
 					Metadata: &Metadata{
-						Kind: utils.String("image"),
+						Kind: utils.StringPtr("image"),
 					},
 					Spec: &Image{
 						Resources: &ImageResources{
-							ImageType: utils.String("DISK_IMAGE"),
+							ImageType: utils.StringPtr("DISK_IMAGE"),
 						},
-						Name: utils.String("image.update"),
+						Name: utils.StringPtr("image.update"),
 					},
 				},
 			},
 			&ImageIntentResponse{
-				APIVersion: utils.String("3.1"),
+				APIVersion: utils.StringPtr("3.1"),
 				Metadata: &Metadata{
-					Kind: utils.String("image"),
-					UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					Kind: utils.StringPtr("image"),
+					UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
 				},
 			},
 			false,
@@ -1211,8 +1211,8 @@ func TestOperations_GetCluster(t *testing.T) {
 
 	response := &ClusterIntentResponse{}
 	response.Metadata = &Metadata{
-		UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
-		Kind: utils.String("cluster"),
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("cluster"),
 	}
 
 	type fields struct {
@@ -1266,12 +1266,12 @@ func TestOperations_ListCluster(t *testing.T) {
 	list.Entities = make([]*ClusterIntentResource, 1)
 	list.Entities[0] = &ClusterIntentResource{}
 	list.Entities[0].Metadata = &Metadata{
-		UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
-		Kind: utils.String("cluster"),
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("cluster"),
 	}
 
 	input := &DSMetadata{
-		Length: utils.Int64(1.0),
+		Length: utils.Int64Ptr(1.0),
 	}
 
 	type fields struct {
@@ -1358,12 +1358,12 @@ func TestOperations_CreateOrUpdateCategoryKey(t *testing.T) {
 			"Test CreateOrUpdateCaegoryKey OK",
 			fields{c},
 			args{&CategoryKey{
-				Description: utils.String("Testing Keys"),
-				Name:        utils.String("test_category_key")}},
+				Description: utils.StringPtr("Testing Keys"),
+				Name:        utils.StringPtr("test_category_key")}},
 			&CategoryKeyStatus{
-				Description:   utils.String("Testing Keys"),
-				Name:          utils.String("test_category_key"),
-				SystemDefined: utils.Bool(false)},
+				Description:   utils.StringPtr("Testing Keys"),
+				Name:          utils.StringPtr("test_category_key"),
+				SystemDefined: utils.BoolPtr(false)},
 			false,
 		},
 	}
@@ -1396,12 +1396,12 @@ func TestOperations_ListCategories(t *testing.T) {
 	list := &CategoryKeyListResponse{}
 	list.Entities = make([]*CategoryKeyStatus, 1)
 	list.Entities[0] = &CategoryKeyStatus{
-		Description:   utils.String("Testing Keys"),
-		Name:          utils.String("test_category_key"),
-		SystemDefined: utils.Bool(false)}
+		Description:   utils.StringPtr("Testing Keys"),
+		Name:          utils.StringPtr("test_category_key"),
+		SystemDefined: utils.BoolPtr(false)}
 
 	input := &CategoryListMetadata{
-		Length: utils.Int64(1.0),
+		Length: utils.Int64Ptr(1.0),
 	}
 
 	type fields struct {
@@ -1502,9 +1502,9 @@ func TestOperations_GetCategoryKey(t *testing.T) {
 	})
 
 	response := &CategoryKeyStatus{
-		Description:   utils.String("Testing Keys"),
-		Name:          utils.String("test_category_key"),
-		SystemDefined: utils.Bool(false),
+		Description:   utils.StringPtr("Testing Keys"),
+		Name:          utils.StringPtr("test_category_key"),
+		SystemDefined: utils.BoolPtr(false),
 	}
 
 	type fields struct {
@@ -1557,12 +1557,12 @@ func TestOperations_ListCategoryValues(t *testing.T) {
 	list := &CategoryValueListResponse{}
 	list.Entities = make([]*CategoryValueStatus, 1)
 	list.Entities[0] = &CategoryValueStatus{
-		Description:   utils.String("Testing Keys"),
-		Value:         utils.String("test_category_value"),
-		SystemDefined: utils.Bool(false)}
+		Description:   utils.StringPtr("Testing Keys"),
+		Value:         utils.StringPtr("test_category_value"),
+		SystemDefined: utils.BoolPtr(false)}
 
 	input := &CategoryListMetadata{
-		Length: utils.Int64(1.0),
+		Length: utils.Int64Ptr(1.0),
 	}
 
 	type fields struct {
@@ -1652,13 +1652,13 @@ func TestOperations_CreateOrUpdateCategoryValue(t *testing.T) {
 			"Test CreateOrUpdateCategoryValue OK",
 			fields{c},
 			args{"test_category_key", &CategoryValue{
-				Description: utils.String("Testing Value"),
-				Value:       utils.String("test_category_value")}},
+				Description: utils.StringPtr("Testing Value"),
+				Value:       utils.StringPtr("test_category_value")}},
 			&CategoryValueStatus{
-				Description:   utils.String("Testing Value"),
-				Value:         utils.String("test_category_value"),
-				Name:          utils.String("test_category_key"),
-				SystemDefined: utils.Bool(false)},
+				Description:   utils.StringPtr("Testing Value"),
+				Value:         utils.StringPtr("test_category_value"),
+				Name:          utils.StringPtr("test_category_key"),
+				SystemDefined: utils.BoolPtr(false)},
 			false,
 		},
 	}
@@ -1694,10 +1694,10 @@ func TestOperations_GetCategoryValue(t *testing.T) {
 	})
 
 	response := &CategoryValueStatus{
-		Description:   utils.String("Testing Value"),
-		Name:          utils.String("test_category_key"),
-		Value:         utils.String("test_category_value"),
-		SystemDefined: utils.Bool(false),
+		Description:   utils.StringPtr("Testing Value"),
+		Name:          utils.StringPtr("test_category_key"),
+		Value:         utils.StringPtr("test_category_value"),
+		SystemDefined: utils.BoolPtr(false),
 	}
 
 	type fields struct {
@@ -1798,11 +1798,11 @@ func TestOperations_GetCategoryQuery(t *testing.T) {
 	response := &CategoryQueryResponse{}
 	response.Results = make([]*CategoryQueryResponseResults, 1)
 	response.Results[0] = &CategoryQueryResponseResults{
-		Kind: utils.String("category_result"),
+		Kind: utils.StringPtr("category_result"),
 	}
 
 	input := &CategoryQueryInput{
-		UsageType: utils.String("APPLIED_TO"),
+		UsageType: utils.StringPtr("APPLIED_TO"),
 	}
 
 	type fields struct {
@@ -1900,22 +1900,22 @@ func TestOperations_CreateNetworkSecurityRule(t *testing.T) {
 			},
 			args{
 				&NetworkSecurityRuleIntentInput{
-					APIVersion: utils.String("3.1"),
+					APIVersion: utils.StringPtr("3.1"),
 					Metadata: &Metadata{
-						Kind: utils.String("network_security_rule"),
+						Kind: utils.StringPtr("network_security_rule"),
 					},
 					Spec: &NetworkSecurityRule{
-						Name:        utils.String("network.create"),
-						Description: utils.String("Network Create"),
+						Name:        utils.StringPtr("network.create"),
+						Description: utils.StringPtr("Network Create"),
 						Resources:   nil,
 					},
 				},
 			},
 			&NetworkSecurityRuleIntentResponse{
-				APIVersion: utils.String("3.1"),
+				APIVersion: utils.StringPtr("3.1"),
 				Metadata: &Metadata{
-					Kind: utils.String("network_security_rule"),
-					UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					Kind: utils.StringPtr("network_security_rule"),
+					UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
 				},
 			},
 			false,
@@ -2014,8 +2014,8 @@ func TestOperations_GetNetworkSecurityRule(t *testing.T) {
 
 	response := &NetworkSecurityRuleIntentResponse{}
 	response.Metadata = &Metadata{
-		UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
-		Kind: utils.String("network_security_rule"),
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("network_security_rule"),
 	}
 
 	type fields struct {
@@ -2069,12 +2069,12 @@ func TestOperations_ListNetworkSecurityRule(t *testing.T) {
 	list.Entities = make([]*NetworkSecurityRuleIntentResource, 1)
 	list.Entities[0] = &NetworkSecurityRuleIntentResource{}
 	list.Entities[0].Metadata = &Metadata{
-		UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
-		Kind: utils.String("network_security_rule"),
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("network_security_rule"),
 	}
 
 	input := &DSMetadata{
-		Length: utils.Int64(1.0),
+		Length: utils.Int64Ptr(1.0),
 	}
 
 	type fields struct {
@@ -2176,22 +2176,22 @@ func TestOperations_UpdateNetworkSecurityRule(t *testing.T) {
 			args{
 				"cfde831a-4e87-4a75-960f-89b0148aa2cc",
 				&NetworkSecurityRuleIntentInput{
-					APIVersion: utils.String("3.1"),
+					APIVersion: utils.StringPtr("3.1"),
 					Metadata: &Metadata{
-						Kind: utils.String("network_security_rule"),
+						Kind: utils.StringPtr("network_security_rule"),
 					},
 					Spec: &NetworkSecurityRule{
 						Resources:   nil,
-						Description: utils.String("Network Update"),
-						Name:        utils.String("network.update"),
+						Description: utils.StringPtr("Network Update"),
+						Name:        utils.StringPtr("network.update"),
 					},
 				},
 			},
 			&NetworkSecurityRuleIntentResponse{
-				APIVersion: utils.String("3.1"),
+				APIVersion: utils.StringPtr("3.1"),
 				Metadata: &Metadata{
-					Kind: utils.String("network_security_rule"),
-					UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					Kind: utils.StringPtr("network_security_rule"),
+					UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
 				},
 			},
 			false,
@@ -2271,23 +2271,23 @@ func TestOperations_CreateVolumeGroup(t *testing.T) {
 			fields{c},
 			args{
 				&VolumeGroupInput{
-					APIVersion: utils.String("3.1"),
+					APIVersion: utils.StringPtr("3.1"),
 					Metadata: &Metadata{
-						Kind: utils.String("volume_group"),
+						Kind: utils.StringPtr("volume_group"),
 					},
 					Spec: &VolumeGroup{
-						Name: utils.String("volume.create"),
+						Name: utils.StringPtr("volume.create"),
 						Resources: &VolumeGroupResources{
-							FlashMode: utils.String("ON"),
+							FlashMode: utils.StringPtr("ON"),
 						},
 					},
 				},
 			},
 			&VolumeGroupResponse{
-				APIVersion: utils.String("3.1"),
+				APIVersion: utils.StringPtr("3.1"),
 				Metadata: &Metadata{
-					Kind: utils.String("volume_group"),
-					UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					Kind: utils.StringPtr("volume_group"),
+					UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
 				},
 			},
 			false,
@@ -2367,8 +2367,8 @@ func TestOperations_GetVolumeGroup(t *testing.T) {
 
 	response := &VolumeGroupResponse{}
 	response.Metadata = &Metadata{
-		UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
-		Kind: utils.String("volume_group"),
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("volume_group"),
 	}
 
 	type fields struct {
@@ -2422,12 +2422,12 @@ func TestOperations_ListVolumeGroup(t *testing.T) {
 	list.Entities = make([]*VolumeGroupResponse, 1)
 	list.Entities[0] = &VolumeGroupResponse{}
 	list.Entities[0].Metadata = &Metadata{
-		UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
-		Kind: utils.String("volume_group"),
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("volume_group"),
 	}
 
 	input := &DSMetadata{
-		Length: utils.Int64(1.0),
+		Length: utils.Int64Ptr(1.0),
 	}
 
 	type fields struct {
@@ -2527,23 +2527,23 @@ func TestOperations_UpdateVolumeGroup(t *testing.T) {
 			args{
 				"cfde831a-4e87-4a75-960f-89b0148aa2cc",
 				&VolumeGroupInput{
-					APIVersion: utils.String("3.1"),
+					APIVersion: utils.StringPtr("3.1"),
 					Metadata: &Metadata{
-						Kind: utils.String("volume_group"),
+						Kind: utils.StringPtr("volume_group"),
 					},
 					Spec: &VolumeGroup{
 						Resources: &VolumeGroupResources{
-							FlashMode: utils.String("ON"),
+							FlashMode: utils.StringPtr("ON"),
 						},
-						Name: utils.String("volume.update"),
+						Name: utils.StringPtr("volume.update"),
 					},
 				},
 			},
 			&VolumeGroupResponse{
-				APIVersion: utils.String("3.1"),
+				APIVersion: utils.StringPtr("3.1"),
 				Metadata: &Metadata{
-					Kind: utils.String("volume_group"),
-					UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					Kind: utils.StringPtr("volume_group"),
+					UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
 				},
 			},
 			false,
