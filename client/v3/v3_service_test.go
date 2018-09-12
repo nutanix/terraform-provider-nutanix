@@ -642,8 +642,8 @@ func TestOperations_ListSubnet(t *testing.T) {
 	})
 
 	subnetList := &SubnetListIntentResponse{}
-	subnetList.Entities = make([]*SubnetIntentResource, 1)
-	subnetList.Entities[0] = &SubnetIntentResource{}
+	subnetList.Entities = make([]*SubnetIntentResponse, 1)
+	subnetList.Entities[0] = &SubnetIntentResponse{}
 	subnetList.Entities[0].Metadata = &Metadata{
 		UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
 		Kind: utils.String("subnet"),
@@ -1050,8 +1050,8 @@ func TestOperations_ListImage(t *testing.T) {
 	})
 
 	list := &ImageListIntentResponse{}
-	list.Entities = make([]*ImageIntentResource, 1)
-	list.Entities[0] = &ImageIntentResource{}
+	list.Entities = make([]*ImageIntentResponse, 1)
+	list.Entities[0] = &ImageIntentResponse{}
 	list.Entities[0].Metadata = &Metadata{
 		UUID: utils.String("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
 		Kind: utils.String("image"),

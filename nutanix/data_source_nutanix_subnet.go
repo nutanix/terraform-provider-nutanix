@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -12,8 +13,14 @@ func dataSourceNutanixSubnet() *schema.Resource {
 		Read: dataSourceNutanixSubnetRead,
 		Schema: map[string]*schema.Schema{
 			"subnet_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"subnet_name"},
+			},
+			"subnet_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"subnet_id"},
 			},
 			"api_version": {
 				Type:     schema.TypeString,
@@ -291,21 +298,59 @@ func dataSourceNutanixSubnet() *schema.Resource {
 	}
 }
 
+func findSubnetByUUID(conn *v3.Client, uuid string) (*v3.SubnetIntentResponse, error) {
+	return conn.V3.GetSubnet(uuid)
+}
+
+func findSubnetByName(conn *v3.Client, name string) (*v3.SubnetIntentResponse, error) {
+	resp, err := conn.V3.ListAllSubnet()
+	if err != nil {
+		return nil, err
+	}
+
+	entities := resp.Entities
+
+	found := make([]*v3.SubnetIntentResponse, 0)
+	for _, v := range entities {
+		if *v.Spec.Name == name {
+			found = append(found, v)
+		}
+	}
+
+	if len(found) > 1 {
+		return nil, fmt.Errorf("your query returned more than one result. Please use subnet_id argument instead")
+	}
+
+	if len(found) == 0 {
+		return nil, fmt.Errorf("subnet with the given name, not found")
+	}
+
+	return found[0], nil
+
+}
+
 func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
 	conn := meta.(*Client).API
 
-	subnetID, ok := d.GetOk("subnet_id")
+	subnetID, iok := d.GetOk("subnet_id")
+	subnetName, nok := d.GetOk("subnet_name")
 
-	if !ok {
-		return fmt.Errorf("please provide the required attribute vm_id")
+	if !iok && !nok {
+		return fmt.Errorf("please provide one of subnet_id or subnet_name attributes")
 	}
 
-	// Make request to the API
-	resp, err := conn.V3.GetSubnet(subnetID.(string))
+	var reqErr error
+	var resp *v3.SubnetIntentResponse
 
-	if err != nil {
-		return err
+	if iok {
+		resp, reqErr = findSubnetByUUID(conn, subnetID.(string))
+	} else {
+		resp, reqErr = findSubnetByName(conn, subnetName.(string))
+	}
+
+	if reqErr != nil {
+		return reqErr
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
