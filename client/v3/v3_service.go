@@ -884,7 +884,7 @@ func (op Operations) ListAllVM() (*VMListIntentResponse, error) {
 
 // ListAllSubnet ...
 func (op Operations) ListAllSubnet() (*SubnetListIntentResponse, error) {
-	entities := make([]*SubnetIntentResource, 0)
+	entities := make([]*SubnetIntentResponse, 0)
 
 	resp, err := op.ListSubnet(&DSMetadata{
 		Kind:   utils.String("subnet"),
@@ -964,7 +964,7 @@ func (op Operations) ListAllNetworkSecurityRule() (*NetworkSecurityRuleListInten
 
 // ListAllImage ...
 func (op Operations) ListAllImage() (*ImageListIntentResponse, error) {
-	entities := make([]*ImageIntentResource, 0)
+	entities := make([]*ImageIntentResponse, 0)
 
 	resp, err := op.ListImage(&DSMetadata{
 		Kind:   utils.String("image"),
