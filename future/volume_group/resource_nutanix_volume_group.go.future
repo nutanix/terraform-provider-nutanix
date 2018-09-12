@@ -37,7 +37,7 @@ func resourceNutanixVolumeGroupCreate(d *schema.ResourceData, meta interface{}) 
 	desc, descok := d.GetOk("description")
 
 	if v, ok := d.GetOk("api_version"); ok {
-		request.APIVersion = utils.String(v.(string))
+		request.APIVersion = utils.StringPtr(v.(string))
 	}
 	if !nok {
 		return fmt.Errorf("please provide the required name attribute")
@@ -46,14 +46,14 @@ func resourceNutanixVolumeGroupCreate(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 	if descok {
-		spec.Description = utils.String(desc.(string))
+		spec.Description = utils.StringPtr(desc.(string))
 	}
 
 	if err := getVolumeGroupResources(d, res); err != nil {
 		return err
 	}
 
-	spec.Name = utils.String(n.(string))
+	spec.Name = utils.StringPtr(n.(string))
 	spec.Resources = res
 	request.Metadata = metadata
 	request.Spec = spec
@@ -207,22 +207,22 @@ func resourceNutanixVolumeGroupUpdate(d *schema.ResourceData, meta interface{}) 
 		metadata.ProjectReference = validateRef(pr)
 	}
 	if d.HasChange("name") {
-		spec.Name = utils.String(d.Get("name").(string))
+		spec.Name = utils.StringPtr(d.Get("name").(string))
 	}
 	if d.HasChange("description") {
-		spec.Description = utils.String(d.Get("description").(string))
+		spec.Description = utils.StringPtr(d.Get("description").(string))
 	}
 
 	if d.HasChange("flash_mode") {
-		res.FlashMode = utils.String(d.Get("flash_mode").(string))
+		res.FlashMode = utils.StringPtr(d.Get("flash_mode").(string))
 	}
 
 	if d.HasChange("file_system_type") {
-		res.FileSystemType = utils.String(d.Get("file_system_type").(string))
+		res.FileSystemType = utils.StringPtr(d.Get("file_system_type").(string))
 	}
 
 	if d.HasChange("sharing_status") {
-		res.SharingStatus = utils.String(d.Get("sharing_status").(string))
+		res.SharingStatus = utils.StringPtr(d.Get("sharing_status").(string))
 	}
 
 	if d.HasChange("attachment_list") {
@@ -240,7 +240,7 @@ func resourceNutanixVolumeGroupUpdate(d *schema.ResourceData, meta interface{}) 
 					}
 
 					if value, ok := val["iscsi_initiator_name"]; ok && value.(string) != "" {
-						attachment.IscsiInitiatorName = utils.String(value.(string))
+						attachment.IscsiInitiatorName = utils.StringPtr(value.(string))
 					}
 					attachments[k] = attachment
 				}
@@ -250,7 +250,7 @@ func resourceNutanixVolumeGroupUpdate(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if d.HasChange("iscsi_target_prefix") {
-		res.IscsiTargetPrefix = utils.String(d.Get("iscsi_target_prefix").(string))
+		res.IscsiTargetPrefix = utils.StringPtr(d.Get("iscsi_target_prefix").(string))
 	}
 	spec.Resources = res
 	request.Metadata = metadata
@@ -310,15 +310,15 @@ func resourceNutanixVolumeGroupDelete(d *schema.ResourceData, meta interface{}) 
 
 func getVolumeGroupResources(d *schema.ResourceData, vg *v3.VolumeGroupResources) error {
 	if v, ok := d.GetOk("flash_mode"); ok {
-		vg.FlashMode = utils.String(v.(string))
+		vg.FlashMode = utils.StringPtr(v.(string))
 	}
 
 	if v, ok := d.GetOk("file_system_type"); ok {
-		vg.FileSystemType = utils.String(v.(string))
+		vg.FileSystemType = utils.StringPtr(v.(string))
 	}
 
 	if v, ok := d.GetOk("sharing_status"); ok {
-		vg.SharingStatus = utils.String(v.(string))
+		vg.SharingStatus = utils.StringPtr(v.(string))
 	}
 
 	if v, ok := d.GetOk("attachment_list"); ok {
@@ -335,7 +335,7 @@ func getVolumeGroupResources(d *schema.ResourceData, vg *v3.VolumeGroupResources
 				}
 
 				if value, ok := val["iscsi_initiator_name"]; ok && value.(string) != "" {
-					attachment.IscsiInitiatorName = utils.String(value.(string))
+					attachment.IscsiInitiatorName = utils.StringPtr(value.(string))
 				}
 				attachments[k] = attachment
 			}
@@ -353,11 +353,11 @@ func getVolumeGroupResources(d *schema.ResourceData, vg *v3.VolumeGroupResources
 				disk := &v3.VGDisk{}
 
 				if value, ok := val["vmdisk_uuid"]; ok && value.(string) != "" {
-					disk.VmdiskUUID = utils.String(value.(string))
+					disk.VmdiskUUID = utils.StringPtr(value.(string))
 				}
 
 				if value, ok := val["index"]; ok && value.(int) >= 0 {
-					disk.Index = utils.Int64(int64(value.(int)))
+					disk.Index = utils.Int64Ptr(int64(value.(int)))
 				}
 
 				if value, ok := val["data_source_reference"]; ok && len(value.(map[string]interface{})) != 0 {
@@ -365,11 +365,11 @@ func getVolumeGroupResources(d *schema.ResourceData, vg *v3.VolumeGroupResources
 				}
 
 				if value, ok := val["disk_size_mib"]; ok && value.(int) >= 0 {
-					disk.DiskSizeMib = utils.Int64(int64(value.(int)))
+					disk.DiskSizeMib = utils.Int64Ptr(int64(value.(int)))
 				}
 
 				if value, ok := val["storage_container_uuid"]; ok && value.(string) != "" {
-					disk.StorageContainerUUID = utils.String(value.(string))
+					disk.StorageContainerUUID = utils.StringPtr(value.(string))
 				}
 
 				dl[k] = disk
@@ -379,7 +379,7 @@ func getVolumeGroupResources(d *schema.ResourceData, vg *v3.VolumeGroupResources
 	}
 
 	if v, ok := d.GetOk("iscsi_target_prefix"); ok {
-		vg.IscsiTargetPrefix = utils.String(v.(string))
+		vg.IscsiTargetPrefix = utils.StringPtr(v.(string))
 	}
 
 	return nil

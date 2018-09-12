@@ -329,7 +329,7 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("api_version"); ok {
-		request.APIVersion = utils.String(v.(string))
+		request.APIVersion = utils.StringPtr(v.(string))
 	}
 	if !nok {
 		return fmt.Errorf("please provide the required name attribute")
@@ -351,7 +351,7 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	spec.Description = utils.String(d.Get("description").(string))
+	spec.Description = utils.StringPtr(d.Get("description").(string))
 
 	subnetUUID, err := resourceNutanixSubnetExists(conn, d.Get("name").(string))
 
@@ -363,7 +363,7 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("subnet already with name %s exists in the given cluster, UUID %s", d.Get("name").(string), *subnetUUID)
 	}
 
-	spec.Name = utils.String(n.(string))
+	spec.Name = utils.StringPtr(n.(string))
 	spec.Resources = subnet
 	request.Metadata = metadata
 	request.Spec = spec
@@ -574,10 +574,10 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		metadata.ProjectReference = validateRef(pr)
 	}
 	if d.HasChange("name") {
-		spec.Name = utils.String(d.Get("name").(string))
+		spec.Name = utils.StringPtr(d.Get("name").(string))
 	}
 	if d.HasChange("description") {
-		spec.Description = utils.String(d.Get("description").(string))
+		spec.Description = utils.StringPtr(d.Get("description").(string))
 	}
 	if d.HasChange("availability_zone_reference") {
 		a := d.Get("availability_zone_reference").(map[string]interface{})
@@ -591,7 +591,7 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		dd := d.Get("dhcp_domain_name_server_list").([]interface{})
 		ddn := make([]*string, len(dd))
 		for k, v := range dd {
-			ddn[k] = utils.String(v.(string))
+			ddn[k] = utils.StringPtr(v.(string))
 		}
 		dhcpO.DomainNameServerList = ddn
 	}
@@ -599,7 +599,7 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		dd := d.Get("dhcp_domain_search_list").([]interface{})
 		ddn := make([]*string, len(dd))
 		for k, v := range dd {
-			ddn[k] = utils.String(v.(string))
+			ddn[k] = utils.StringPtr(v.(string))
 		}
 		dhcpO.DomainSearchList = ddn
 	}
@@ -608,7 +608,7 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		ddn := make([]*v3.IPPool, len(dd))
 		for k, v := range dd {
 			i := &v3.IPPool{}
-			i.Range = utils.String(v.(string))
+			i.Range = utils.StringPtr(v.(string))
 			ddn[k] = i
 		}
 		ipcfg.PoolList = ddn
@@ -625,19 +625,19 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		res.NetworkFunctionChainReference = validateRef(a)
 	}
 	if d.HasChange("vswitch_name") {
-		res.VswitchName = utils.String(d.Get("vswitch_name").(string))
+		res.VswitchName = utils.StringPtr(d.Get("vswitch_name").(string))
 	}
 	if d.HasChange("subnet_type") {
-		res.SubnetType = utils.String(d.Get("subnet_type").(string))
+		res.SubnetType = utils.StringPtr(d.Get("subnet_type").(string))
 	}
 	if d.HasChange("default_gateway_ip") {
-		ipcfg.DefaultGatewayIP = utils.String(d.Get("default_gateway_ip").(string))
+		ipcfg.DefaultGatewayIP = utils.StringPtr(d.Get("default_gateway_ip").(string))
 	}
 	if d.HasChange("prefix_length") {
-		ipcfg.PrefixLength = utils.Int64(int64(d.Get("prefix_length").(int)))
+		ipcfg.PrefixLength = utils.Int64Ptr(int64(d.Get("prefix_length").(int)))
 	}
 	if d.HasChange("subnet_ip") {
-		ipcfg.SubnetIP = utils.String(d.Get("subnet_ip").(string))
+		ipcfg.SubnetIP = utils.StringPtr(d.Get("subnet_ip").(string))
 	}
 	if d.HasChange("dhcp_server_address") {
 		dh := d.Get("dhcp_server_address").(map[string]interface{})
@@ -649,10 +649,10 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 	if d.HasChange("dhcp_server_address_port") {
-		ipcfg.DHCPServerAddress.Port = utils.Int64(int64(d.Get("dhcp_server_address_port").(int)))
+		ipcfg.DHCPServerAddress.Port = utils.Int64Ptr(int64(d.Get("dhcp_server_address_port").(int)))
 	}
 	if d.HasChange("vlan_id") {
-		res.VlanID = utils.Int64(int64(d.Get("vlan_id").(int)))
+		res.VlanID = utils.Int64Ptr(int64(d.Get("vlan_id").(int)))
 	}
 
 	ipcfg.DHCPOptions = dhcpO
@@ -746,7 +746,7 @@ func resourceNutanixSubnetExists(conn *v3.Client, name string) (*string, error) 
 	}
 
 	for _, subnet := range subnetList.Entities {
-		if subnet.Status.Name == utils.String(name) {
+		if subnet.Status.Name == utils.StringPtr(name) {
 			subnetUUID = subnet.Metadata.UUID
 		}
 	}
@@ -759,35 +759,35 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 	dhcpo := &v3.DHCPOptions{}
 
 	if v, ok := d.GetOk("vswitch_name"); ok {
-		subnet.VswitchName = utils.String(v.(string))
+		subnet.VswitchName = utils.StringPtr(v.(string))
 	}
 	if st, ok := d.GetOk("subnet_type"); ok {
-		subnet.SubnetType = utils.String(st.(string))
+		subnet.SubnetType = utils.StringPtr(st.(string))
 	}
 	if v, ok := d.GetOk("default_gateway_ip"); ok {
-		ip.DefaultGatewayIP = utils.String(v.(string))
+		ip.DefaultGatewayIP = utils.StringPtr(v.(string))
 	}
 	if v, ok := d.GetOk("prefix_length"); ok {
-		ip.PrefixLength = utils.Int64(int64(v.(int)))
+		ip.PrefixLength = utils.Int64Ptr(int64(v.(int)))
 	}
 	if v, ok := d.GetOk("subnet_ip"); ok {
-		ip.SubnetIP = utils.String(v.(string))
+		ip.SubnetIP = utils.StringPtr(v.(string))
 	}
 	if v, ok := d.GetOk("dhcp_server_address"); ok {
 		dhcpa := v.(map[string]interface{})
 		address := &v3.Address{}
 
 		if ip, ok := dhcpa["ip"]; ok {
-			address.IP = utils.String(ip.(string))
+			address.IP = utils.StringPtr(ip.(string))
 		}
 		if fqdn, ok := dhcpa["fqdn"]; ok {
-			address.FQDN = utils.String(fqdn.(string))
+			address.FQDN = utils.StringPtr(fqdn.(string))
 		}
 		if v, ok := d.GetOk("dhcp_server_address_port"); ok {
-			address.Port = utils.Int64(int64(v.(int)))
+			address.Port = utils.Int64Ptr(int64(v.(int)))
 		}
 		if ipv6, ok := dhcpa["ipv6"]; ok {
-			address.IPV6 = utils.String(ipv6.(string))
+			address.IPV6 = utils.StringPtr(ipv6.(string))
 		}
 
 		ip.DHCPServerAddress = address
@@ -798,7 +798,7 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 
 		for k, v := range p {
 			pItem := &v3.IPPool{}
-			pItem.Range = utils.String(v.(string))
+			pItem.Range = utils.StringPtr(v.(string))
 			pool[k] = pItem
 		}
 
@@ -808,15 +808,15 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 		dop := v.(map[string]interface{})
 
 		if boot, ok := dop["boot_file_name"]; ok {
-			dhcpo.BootFileName = utils.String(boot.(string))
+			dhcpo.BootFileName = utils.StringPtr(boot.(string))
 		}
 
 		if dn, ok := dop["domain_name"]; ok {
-			dhcpo.DomainName = utils.String(dn.(string))
+			dhcpo.DomainName = utils.StringPtr(dn.(string))
 		}
 
 		if tsn, ok := dop["tftp_server_name"]; ok {
-			dhcpo.TFTPServerName = utils.String(tsn.(string))
+			dhcpo.TFTPServerName = utils.StringPtr(tsn.(string))
 		}
 	}
 
@@ -825,7 +825,7 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 		pool := make([]*string, len(p))
 
 		for k, v := range p {
-			pool[k] = utils.String(v.(string))
+			pool[k] = utils.StringPtr(v.(string))
 		}
 
 		dhcpo.DomainNameServerList = pool
@@ -835,7 +835,7 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 		pool := make([]*string, len(p))
 
 		for k, v := range p {
-			pool[k] = utils.String(v.(string))
+			pool[k] = utils.StringPtr(v.(string))
 		}
 
 		dhcpo.DomainSearchList = pool
@@ -843,7 +843,7 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 
 	v, ok := d.GetOk("vlan_id")
 	if v.(int) == 0 || ok {
-		subnet.VlanID = utils.Int64(int64(v.(int)))
+		subnet.VlanID = utils.Int64Ptr(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("network_function_chain_reference"); ok {

@@ -682,7 +682,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	cr, crok := d.GetOk("cluster_reference")
 
 	if v, ok := d.GetOk("api_version"); ok {
-		request.APIVersion = utils.String(v.(string))
+		request.APIVersion = utils.StringPtr(v.(string))
 	}
 	if !nok {
 		return fmt.Errorf("please provide the required name attribute")
@@ -691,7 +691,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		return err
 	}
 	if descok {
-		spec.Description = utils.String(desc.(string))
+		spec.Description = utils.StringPtr(desc.(string))
 	}
 	if azrok {
 		a := azr.(map[string]interface{})
@@ -706,7 +706,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		return err
 	}
 
-	spec.Name = utils.String(n.(string))
+	spec.Name = utils.StringPtr(n.(string))
 	spec.Resources = res
 	request.Metadata = metadata
 	request.Spec = spec
@@ -927,12 +927,12 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	spec.Name = response.Status.Name
 	if d.HasChange("name") {
 		_, n := d.GetChange("name")
-		spec.Name = utils.String(n.(string))
+		spec.Name = utils.StringPtr(n.(string))
 	}
 	spec.Description = response.Status.Description
 	if d.HasChange("description") {
 		_, n := d.GetChange("description")
-		spec.Description = utils.String(n.(string))
+		spec.Description = utils.StringPtr(n.(string))
 	}
 	spec.AvailabilityZoneReference = response.Status.AvailabilityZoneReference
 	if d.HasChange("availability_zone_reference") {
@@ -951,45 +951,45 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("num_vnuma_nodes") {
 		_, n := d.GetChange("num_vnuma_nodes")
 		res.VMVnumaConfig = &v3.VMVnumaConfig{
-			NumVnumaNodes: utils.Int64(int64(n.(int))),
+			NumVnumaNodes: utils.Int64Ptr(int64(n.(int))),
 		}
 	}
 	if d.HasChange("guest_os_id") {
 		_, n := d.GetChange("guest_os_id")
-		res.GuestOsID = utils.String(n.(string))
+		res.GuestOsID = utils.StringPtr(n.(string))
 	}
 	if d.HasChange("power_state") {
 		_, n := d.GetChange("power_state")
 
-		res.PowerState = utils.String(n.(string))
+		res.PowerState = utils.StringPtr(n.(string))
 	}
 	if d.HasChange("num_vcpus_per_socket") {
 		_, n := d.GetChange("num_vcpus_per_socket")
-		res.NumVcpusPerSocket = utils.Int64(int64(n.(int)))
+		res.NumVcpusPerSocket = utils.Int64Ptr(int64(n.(int)))
 	}
 	if d.HasChange("num_sockets") {
 		_, n := d.GetChange("num_sockets")
-		res.NumSockets = utils.Int64(int64(n.(int)))
+		res.NumSockets = utils.Int64Ptr(int64(n.(int)))
 	}
 	if d.HasChange("memory_size_mib") {
 		_, n := d.GetChange("memory_size_mib")
-		res.MemorySizeMib = utils.Int64(int64(n.(int)))
+		res.MemorySizeMib = utils.Int64Ptr(int64(n.(int)))
 	}
 	if d.HasChange("hardware_clock_timezone") {
 		_, n := d.GetChange("hardware_clock_timezone")
-		res.HardwareClockTimezone = utils.String(n.(string))
+		res.HardwareClockTimezone = utils.StringPtr(n.(string))
 	}
 	if d.HasChange("vga_console_enabled") {
 		_, n := d.GetChange("vga_console_enabled")
-		res.VgaConsoleEnabled = utils.Bool(n.(bool))
+		res.VgaConsoleEnabled = utils.BoolPtr(n.(bool))
 	}
 	if d.HasChange("guest_customization_is_overridable") {
 		_, n := d.GetChange("guest_customization_is_overridable")
-		guest.IsOverridable = utils.Bool(n.(bool))
+		guest.IsOverridable = utils.BoolPtr(n.(bool))
 	}
 	if d.HasChange("power_state_mechanism") {
 		_, n := d.GetChange("power_state_mechanism")
-		pw.Mechanism = utils.String(n.(string))
+		pw.Mechanism = utils.StringPtr(n.(string))
 	}
 	if d.HasChange("power_state_guest_transition_config") {
 		_, n := d.GetChange("power_state_guest_transition_config")
@@ -997,10 +997,10 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 
 		p := &v3.VMGuestPowerStateTransitionConfig{}
 		if v, ok := val["enable_script_exec"]; ok {
-			p.EnableScriptExec = utils.Bool(v.(bool))
+			p.EnableScriptExec = utils.BoolPtr(v.(bool))
 		}
 		if v, ok := val["should_fail_on_script_failure"]; ok {
-			p.ShouldFailOnScriptFailure = utils.Bool(v.(bool))
+			p.ShouldFailOnScriptFailure = utils.BoolPtr(v.(bool))
 		}
 		pw.GuestTransitionConfig = p
 	}
@@ -1013,12 +1013,12 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 
 	if d.HasChange("guest_customization_cloud_init_user_data") {
 		_, n := d.GetChange("guest_customization_user_data")
-		cloudInit.UserData = utils.String(n.(string))
+		cloudInit.UserData = utils.StringPtr(n.(string))
 	}
 
 	if d.HasChange("guest_customization_cloud_init_meta_data") {
 		_, n := d.GetChange("guest_customization_meta_data")
-		cloudInit.MetaData = utils.String(n.(string))
+		cloudInit.MetaData = utils.StringPtr(n.(string))
 	}
 
 	if d.HasChange("guest_customization_cloud_init_custom_key_values") {
@@ -1096,7 +1096,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		if val, ok2 := ngt["enabled_capability_list"]; ok2 && val.([]interface{}) != nil {
 			var l []*string
 			for _, list := range val.([]interface{}) {
-				l = append(l, utils.String(list.(string)))
+				l = append(l, utils.StringPtr(list.(string)))
 			}
 			tool.EnabledCapabilityList = l
 		}
@@ -1123,7 +1123,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		_, n := d.GetChange("boot_device_order_list")
 		var b []*string
 		for _, boot := range n.([]interface{}) {
-			b = append(b, utils.String(boot.(string)))
+			b = append(b, utils.StringPtr(boot.(string)))
 		}
 		boot.BootDeviceOrderList = b
 	}
@@ -1140,7 +1140,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 	if d.HasChange("boot_device_mac_address") {
 		_, n := d.GetChange("boot_device_mac_address")
-		bd.MacAddress = utils.String(n.(string))
+		bd.MacAddress = utils.StringPtr(n.(string))
 	}
 	if d.HasChange("disk_list") {
 		_, n := d.GetChange("disk_list")
@@ -1297,7 +1297,7 @@ func resourceNutanixVirtualMachineExists(d *schema.ResourceData, meta interface{
 
 func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	if v, ok := d.GetOk("num_vnuma_nodes"); ok {
-		vm.VMVnumaConfig.NumVnumaNodes = utils.Int64(v.(int64))
+		vm.VMVnumaConfig.NumVnumaNodes = utils.Int64Ptr(v.(int64))
 	}
 	if v, ok := d.GetOk("nic_list"); ok {
 		n := v.([]interface{})
@@ -1309,19 +1309,19 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 				nic := &v3.VMNic{}
 
 				if value, ok := val["nic_type"]; ok && value.(string) != "" {
-					nic.NicType = utils.String(value.(string))
+					nic.NicType = utils.StringPtr(value.(string))
 				}
 				if value, ok := val["uuid"]; ok && value.(string) != "" {
-					nic.UUID = utils.String(value.(string))
+					nic.UUID = utils.StringPtr(value.(string))
 				}
 				if value, ok := val["network_function_nic_type"]; ok && value.(string) != "" {
-					nic.NetworkFunctionNicType = utils.String(value.(string))
+					nic.NetworkFunctionNicType = utils.StringPtr(value.(string))
 				}
 				if value, ok := val["mac_address"]; ok && value.(string) != "" {
-					nic.MacAddress = utils.String(value.(string))
+					nic.MacAddress = utils.StringPtr(value.(string))
 				}
 				if value, ok := val["model"]; ok && value.(string) != "" {
-					nic.Model = utils.String(value.(string))
+					nic.Model = utils.StringPtr(value.(string))
 				}
 				if value, ok := val["ip_endpoint_list"]; ok {
 					ipl := value.([]interface{})
@@ -1332,10 +1332,10 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 							v3ip := &v3.IPAddress{}
 
 							if ipset, ipsetok := v["ip"]; ipsetok {
-								v3ip.IP = utils.String(ipset.(string))
+								v3ip.IP = utils.StringPtr(ipset.(string))
 							}
 							if iptype, iptypeok := v["type"]; iptypeok {
-								v3ip.Type = utils.String(iptype.(string))
+								v3ip.Type = utils.StringPtr(iptype.(string))
 							}
 							ip[k] = v3ip
 						}
@@ -1356,33 +1356,33 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 		}
 	}
 	if v, ok := d.GetOk("guest_os_id"); ok {
-		vm.GuestOsID = utils.String(v.(string))
+		vm.GuestOsID = utils.StringPtr(v.(string))
 	}
 	if v, ok := d.GetOk("power_state"); ok {
-		vm.PowerState = utils.String(v.(string))
+		vm.PowerState = utils.StringPtr(v.(string))
 	}
 	if v, ok := d.GetOk("nutanix_guest_tools"); ok {
 		ngt := v.(map[string]interface{})
 
 		if val, ok2 := ngt["iso_mount_state"]; ok2 {
-			vm.GuestTools.NutanixGuestTools.IsoMountState = utils.String(val.(string))
+			vm.GuestTools.NutanixGuestTools.IsoMountState = utils.StringPtr(val.(string))
 		}
 		if val, ok2 := ngt["state"]; ok2 {
-			vm.GuestTools.NutanixGuestTools.State = utils.String(val.(string))
+			vm.GuestTools.NutanixGuestTools.State = utils.StringPtr(val.(string))
 		}
 		if val, ok2 := ngt["enabled_capability_list"]; ok2 {
 			var l []*string
 			for _, list := range val.([]interface{}) {
-				l = append(l, utils.String(list.(string)))
+				l = append(l, utils.StringPtr(list.(string)))
 			}
 			vm.GuestTools.NutanixGuestTools.EnabledCapabilityList = l
 		}
 	}
 	if v, ok := d.GetOk("num_vcpus_per_socket"); ok {
-		vm.NumVcpusPerSocket = utils.Int64(int64(v.(int)))
+		vm.NumVcpusPerSocket = utils.Int64Ptr(int64(v.(int)))
 	}
 	if v, ok := d.GetOk("num_sockets"); ok {
-		vm.NumSockets = utils.Int64(int64(v.(int)))
+		vm.NumSockets = utils.Int64Ptr(int64(v.(int)))
 	}
 	if v, ok := d.GetOk("gpu_list"); ok {
 		gpl := make([]*v3.VMGpu, len(v.([]interface{})))
@@ -1391,13 +1391,13 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 			val := va.(map[string]interface{})
 			gpu := &v3.VMGpu{}
 			if value, ok1 := val["vendor"]; ok1 {
-				gpu.Vendor = utils.String(value.(string))
+				gpu.Vendor = utils.StringPtr(value.(string))
 			}
 			if value, ok1 := val["device_id"]; ok1 {
-				gpu.DeviceID = utils.Int64(int64(value.(int)))
+				gpu.DeviceID = utils.Int64Ptr(int64(value.(int)))
 			}
 			if value, ok1 := val["mode"]; ok1 {
-				gpu.Mode = utils.String(value.(string))
+				gpu.Mode = utils.StringPtr(value.(string))
 			}
 			gpl[k] = gpu
 		}
@@ -1408,12 +1408,12 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 		vm.ParentReference = validateRef(val)
 	}
 	if v, ok := d.GetOk("memory_size_mib"); ok {
-		vm.MemorySizeMib = utils.Int64(int64(v.(int)))
+		vm.MemorySizeMib = utils.Int64Ptr(int64(v.(int)))
 	}
 	if v, ok := d.GetOk("boot_device_order_list"); ok {
 		var b []*string
 		for _, boot := range v.([]interface{}) {
-			b = append(b, utils.String(boot.(string)))
+			b = append(b, utils.StringPtr(boot.(string)))
 		}
 		vm.BootConfig.BootDeviceOrderList = b
 	}
@@ -1424,10 +1424,10 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 		dai := v.(map[string]interface{})
 
 		if value3, ok3 := dai["device_index"]; ok3 {
-			da.DeviceIndex = utils.Int64(int64(value3.(int)))
+			da.DeviceIndex = utils.Int64Ptr(int64(value3.(int)))
 		}
 		if value3, ok3 := dai["adapter_type"]; ok3 {
-			da.AdapterType = utils.String(value3.(string))
+			da.AdapterType = utils.StringPtr(value3.(string))
 		}
 		bd.DiskAddress = da
 		vm.BootConfig.BootDevice = bd
@@ -1435,23 +1435,23 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 
 	if v, ok := d.GetOk("boot_device_mac_address"); ok {
 		bdi := v.(string)
-		bd.MacAddress = utils.String(bdi)
+		bd.MacAddress = utils.StringPtr(bdi)
 		vm.BootConfig.BootDevice = bd
 	}
 
 	if v, ok := d.GetOk("hardware_clock_timezone"); ok {
-		vm.HardwareClockTimezone = utils.String(v.(string))
+		vm.HardwareClockTimezone = utils.StringPtr(v.(string))
 	}
 
 	guestCustom := &v3.GuestCustomization{}
 	cloudInit := &v3.GuestCustomizationCloudInit{}
 
 	if v, ok := d.GetOk("guest_customization_cloud_init_user_data"); ok {
-		cloudInit.UserData = utils.String(v.(string))
+		cloudInit.UserData = utils.StringPtr(v.(string))
 	}
 
 	if v, ok := d.GetOk("guest_customization_cloud_init_meta_data"); ok {
-		cloudInit.MetaData = utils.String(v.(string))
+		cloudInit.MetaData = utils.StringPtr(v.(string))
 	}
 
 	if v, ok := d.GetOk("guest_customization_cloud_init_custom_key_values"); ok {
@@ -1463,16 +1463,16 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	}
 
 	if v, ok := d.GetOk("guest_customization_is_overridable"); ok {
-		guestCustom.IsOverridable = utils.Bool(v.(bool))
+		guestCustom.IsOverridable = utils.BoolPtr(v.(bool))
 	}
 	if v, ok := d.GetOk("guest_customization_sysprep"); ok {
 		guestCustom.Sysprep = &v3.GuestCustomizationSysprep{}
 		spi := v.(map[string]interface{})
 		if v2, ok2 := spi["install_type"]; ok2 {
-			guestCustom.Sysprep.InstallType = utils.String(v2.(string))
+			guestCustom.Sysprep.InstallType = utils.StringPtr(v2.(string))
 		}
 		if v2, ok2 := spi["unattend_xml"]; ok2 {
-			guestCustom.Sysprep.UnattendXML = utils.String(v2.(string))
+			guestCustom.Sysprep.UnattendXML = utils.StringPtr(v2.(string))
 		}
 	}
 
@@ -1488,16 +1488,16 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	}
 
 	if v, ok := d.GetOk("vga_console_enabled"); ok {
-		vm.VgaConsoleEnabled = utils.Bool(v.(bool))
+		vm.VgaConsoleEnabled = utils.BoolPtr(v.(bool))
 	}
 	if v, ok := d.GetOk("power_state_mechanism"); ok {
-		vm.PowerStateMechanism.Mechanism = utils.String(v.(string))
+		vm.PowerStateMechanism.Mechanism = utils.StringPtr(v.(string))
 	}
 	if v, ok := d.GetOk("should_fail_on_script_failure"); ok {
-		vm.PowerStateMechanism.GuestTransitionConfig.ShouldFailOnScriptFailure = utils.Bool(v.(bool))
+		vm.PowerStateMechanism.GuestTransitionConfig.ShouldFailOnScriptFailure = utils.BoolPtr(v.(bool))
 	}
 	if v, ok := d.GetOk("enable_script_exec"); ok {
-		vm.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec = utils.Bool(v.(bool))
+		vm.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec = utils.BoolPtr(v.(bool))
 	}
 	if v, ok := d.GetOk("disk_list"); ok {
 		dsk := v.([]interface{})
@@ -1508,13 +1508,13 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 				v := val.(map[string]interface{})
 				dl := &v3.VMDisk{}
 				if v1, ok1 := v["uuid"]; ok1 && v1.(string) != "" {
-					dl.UUID = utils.String(v1.(string))
+					dl.UUID = utils.StringPtr(v1.(string))
 				}
 				if v1, ok1 := v["disk_size_bytes"]; ok1 && v1.(int) != 0 {
-					dl.DiskSizeBytes = utils.Int64(int64(v1.(int)))
+					dl.DiskSizeBytes = utils.Int64Ptr(int64(v1.(int)))
 				}
 				if v1, ok := v["disk_size_mib"]; ok && v1.(int) != 0 {
-					dl.DiskSizeMib = utils.Int64(int64(v1.(int)))
+					dl.DiskSizeMib = utils.Int64Ptr(int64(v1.(int)))
 				}
 				if v1, ok1 := v["device_properties"]; ok1 {
 					dvp := v1.([]interface{})
@@ -1522,17 +1522,17 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 						d := dvp[0].(map[string]interface{})
 						dp := &v3.VMDiskDeviceProperties{}
 						if v1, ok := d["device_type"]; ok {
-							dp.DeviceType = utils.String(v1.(string))
+							dp.DeviceType = utils.StringPtr(v1.(string))
 						}
 						if v2, ok := d["disk_address"]; ok {
 							if len(v2.([]interface{})) > 0 {
 								da := v2.([]interface{})[0].(map[string]interface{})
 								v3disk := &v3.DiskAddress{}
 								if di, diok := da["device_index"]; diok {
-									v3disk.DeviceIndex = utils.Int64(int64(di.(int)))
+									v3disk.DeviceIndex = utils.Int64Ptr(int64(di.(int)))
 								}
 								if di, diok := da["adapter_type"]; diok {
-									v3disk.AdapterType = utils.String(di.(string))
+									v3disk.AdapterType = utils.StringPtr(di.(string))
 								}
 								dp.DiskAddress = v3disk
 							}
