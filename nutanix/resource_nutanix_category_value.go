@@ -59,11 +59,11 @@ func resourceNutanixCategoryValueCreateOrUpdate(resourceData *schema.ResourceDat
 
 	// Read Arguments and set request values
 	if v, ok := resourceData.GetOk("api_version"); ok {
-		request.APIVersion = utils.String(v.(string))
+		request.APIVersion = utils.StringPtr(v.(string))
 	}
 
 	if desc, ok := resourceData.GetOk("description"); ok {
-		request.Description = utils.String(desc.(string))
+		request.Description = utils.StringPtr(desc.(string))
 	}
 
 	// validate required fields
@@ -71,7 +71,7 @@ func resourceNutanixCategoryValueCreateOrUpdate(resourceData *schema.ResourceDat
 		return fmt.Errorf("please provide the required attributes name and value")
 	}
 
-	request.Value = utils.String(value.(string))
+	request.Value = utils.StringPtr(value.(string))
 
 	// Make request to the API
 	resp, err := conn.V3.CreateOrUpdateCategoryValue(name.(string), request)
