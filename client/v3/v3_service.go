@@ -848,8 +848,8 @@ func (op Operations) ListAllVM() (*VMListIntentResponse, error) {
 	entities := make([]*VMIntentResource, 0)
 
 	resp, err := op.ListVM(&DSMetadata{
-		Kind:   utils.String("vm"),
-		Length: utils.Int64(itemsPerPage),
+		Kind:   utils.StringPtr("vm"),
+		Length: utils.Int64Ptr(itemsPerPage),
 	})
 
 	if err != nil {
@@ -863,9 +863,9 @@ func (op Operations) ListAllVM() (*VMListIntentResponse, error) {
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
 			resp, err = op.ListVM(&DSMetadata{
-				Kind:   utils.String("vm"),
-				Length: utils.Int64(itemsPerPage),
-				Offset: utils.Int64(offset),
+				Kind:   utils.StringPtr("vm"),
+				Length: utils.Int64Ptr(itemsPerPage),
+				Offset: utils.Int64Ptr(offset),
 			})
 
 			if err != nil {
@@ -887,8 +887,8 @@ func (op Operations) ListAllSubnet() (*SubnetListIntentResponse, error) {
 	entities := make([]*SubnetIntentResponse, 0)
 
 	resp, err := op.ListSubnet(&DSMetadata{
-		Kind:   utils.String("subnet"),
-		Length: utils.Int64(itemsPerPage),
+		Kind:   utils.StringPtr("subnet"),
+		Length: utils.Int64Ptr(itemsPerPage),
 	})
 
 	if err != nil {
@@ -902,9 +902,9 @@ func (op Operations) ListAllSubnet() (*SubnetListIntentResponse, error) {
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
 			resp, err = op.ListSubnet(&DSMetadata{
-				Kind:   utils.String("subnet"),
-				Length: utils.Int64(itemsPerPage),
-				Offset: utils.Int64(offset),
+				Kind:   utils.StringPtr("subnet"),
+				Length: utils.Int64Ptr(itemsPerPage),
+				Offset: utils.Int64Ptr(offset),
 			})
 
 			if err != nil {
@@ -927,8 +927,8 @@ func (op Operations) ListAllNetworkSecurityRule() (*NetworkSecurityRuleListInten
 	entities := make([]*NetworkSecurityRuleIntentResource, 0)
 
 	resp, err := op.ListNetworkSecurityRule(&DSMetadata{
-		Kind:   utils.String("network_security_rule"),
-		Length: utils.Int64(itemsPerPage),
+		Kind:   utils.StringPtr("network_security_rule"),
+		Length: utils.Int64Ptr(itemsPerPage),
 	})
 
 	if err != nil {
@@ -942,9 +942,9 @@ func (op Operations) ListAllNetworkSecurityRule() (*NetworkSecurityRuleListInten
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
 			resp, err = op.ListNetworkSecurityRule(&DSMetadata{
-				Kind:   utils.String("network_security_rule"),
-				Length: utils.Int64(itemsPerPage),
-				Offset: utils.Int64(offset),
+				Kind:   utils.StringPtr("network_security_rule"),
+				Length: utils.Int64Ptr(itemsPerPage),
+				Offset: utils.Int64Ptr(offset),
 			})
 
 			if err != nil {
@@ -967,8 +967,8 @@ func (op Operations) ListAllImage() (*ImageListIntentResponse, error) {
 	entities := make([]*ImageIntentResponse, 0)
 
 	resp, err := op.ListImage(&DSMetadata{
-		Kind:   utils.String("image"),
-		Length: utils.Int64(itemsPerPage),
+		Kind:   utils.StringPtr("image"),
+		Length: utils.Int64Ptr(itemsPerPage),
 	})
 
 	if err != nil {
@@ -982,9 +982,9 @@ func (op Operations) ListAllImage() (*ImageListIntentResponse, error) {
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
 			resp, err = op.ListImage(&DSMetadata{
-				Kind:   utils.String("image"),
-				Length: utils.Int64(itemsPerPage),
-				Offset: utils.Int64(offset),
+				Kind:   utils.StringPtr("image"),
+				Length: utils.Int64Ptr(itemsPerPage),
+				Offset: utils.Int64Ptr(offset),
 			})
 
 			if err != nil {
@@ -1007,8 +1007,8 @@ func (op Operations) ListAllCluster() (*ClusterListIntentResponse, error) {
 	entities := make([]*ClusterIntentResource, 0)
 
 	resp, err := op.ListCluster(&DSMetadata{
-		Kind:   utils.String("cluster"),
-		Length: utils.Int64(itemsPerPage),
+		Kind:   utils.StringPtr("cluster"),
+		Length: utils.Int64Ptr(itemsPerPage),
 	})
 
 	if err != nil {
@@ -1022,9 +1022,9 @@ func (op Operations) ListAllCluster() (*ClusterListIntentResponse, error) {
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
 			resp, err = op.ListCluster(&DSMetadata{
-				Kind:   utils.String("cluster"),
-				Length: utils.Int64(itemsPerPage),
-				Offset: utils.Int64(offset),
+				Kind:   utils.StringPtr("cluster"),
+				Length: utils.Int64Ptr(itemsPerPage),
+				Offset: utils.Int64Ptr(offset),
 			})
 
 			if err != nil {
