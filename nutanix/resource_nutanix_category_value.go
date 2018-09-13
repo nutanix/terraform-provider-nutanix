@@ -123,7 +123,7 @@ func resourceNutanixCategoryValueDelete(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("please provide the required attributes name")
 	}
 
-	log.Printf("[Debug] Destroying the category with the name %s", d.Id())
+	log.Printf("[Debug] Destroying the category with the ID %s", d.Id())
 
 	if err := conn.V3.DeleteCategoryValue(name.(string), d.Id()); err != nil {
 		return err
