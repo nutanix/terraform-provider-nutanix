@@ -348,14 +348,14 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err := getSubnetResources(d, subnet); err != nil {
-		return fmt.Errorf("Error retrieving Nutanix Subnet resources %+v", err)
+		return fmt.Errorf("error retrieving Nutanix Subnet resources %+v", err)
 	}
 
 	spec.Description = utils.StringPtr(d.Get("description").(string))
 
 	subnetUUID, err := resourceNutanixSubnetExists(conn, d.Get("name").(string))
 	if err != nil {
-		return fmt.Errorf("Error checkinf if subnet already exists %+v", err)
+		return fmt.Errorf("error checkinf if subnet already exists %+v", err)
 	}
 
 	if subnetUUID != nil {
@@ -369,7 +369,7 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 
 	resp, err := conn.V3.CreateSubnet(request)
 	if err != nil {
-		return fmt.Errorf("Error creating Nutanix Subnet %s: %+v", utils.StringValue(spec.Name), err)
+		return fmt.Errorf("error creating Nutanix Subnet %s: %+v", utils.StringValue(spec.Name), err)
 	}
 
 	d.SetId(*resp.Metadata.UUID)
@@ -410,7 +410,7 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.V3.GetSubnet(d.Id())
 	if err != nil {
-		return fmt.Errorf("Error subnet id (%s): %+v", d.Id(), err)
+		return fmt.Errorf("error subnet id (%s): %+v", d.Id(), err)
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
@@ -479,19 +479,19 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("dhcp_server_address", dhcpSA); err != nil {
-		return fmt.Errorf("Error setting attribute for subnet id (%s) dhcp_server_address: %s", d.Id(), err)
+		return fmt.Errorf("error setting attribute for subnet id (%s) dhcp_server_address: %s", d.Id(), err)
 	}
 	if err := d.Set("ip_config_pool_list_ranges", ipcpl); err != nil {
-		return fmt.Errorf("Error setting attribute for subnet id (%s) ip_config_pool_list_ranges: %s", d.Id(), err)
+		return fmt.Errorf("error setting attribute for subnet id (%s) ip_config_pool_list_ranges: %s", d.Id(), err)
 	}
 	if err := d.Set("dhcp_options", dOptions); err != nil {
-		return fmt.Errorf("Error setting attribute for subnet id (%s) dhcp_options: %s", d.Id(), err)
+		return fmt.Errorf("error setting attribute for subnet id (%s) dhcp_options: %s", d.Id(), err)
 	}
 	if err := d.Set("dhcp_domain_name_server_list", dnsList); err != nil {
-		return fmt.Errorf("Error setting attribute for subnet id (%s) dhcp_domain_name_server_list: %s", d.Id(), err)
+		return fmt.Errorf("error setting attribute for subnet id (%s) dhcp_domain_name_server_list: %s", d.Id(), err)
 	}
 	if err := d.Set("dhcp_domain_search_list", dsList); err != nil {
-		return fmt.Errorf("Error setting attribute for subnet id (%s) dhcp_domain_search_list: %s", d.Id(), err)
+		return fmt.Errorf("error setting attribute for subnet id (%s) dhcp_domain_search_list: %s", d.Id(), err)
 	}
 
 	d.Set("cluster_reference_name", utils.StringValue(resp.Status.ClusterReference.Name))
@@ -538,7 +538,7 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 	response, err := conn.V3.GetSubnet(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving for subnet id (%s) :%s", d.Id(), err)
+		return fmt.Errorf("error retrieving for subnet id (%s) :%s", d.Id(), err)
 	}
 
 	if response.Metadata != nil {
@@ -674,7 +674,7 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 
 	resp, errUpdate := conn.V3.UpdateSubnet(d.Id(), request)
 	if errUpdate != nil {
-		return fmt.Errorf("Error updating subnet id %s): %s", d.Id(), errUpdate)
+		return fmt.Errorf("error updating subnet id %s): %s", d.Id(), errUpdate)
 	}
 
 	// stateConf := &resource.StateChangeConf{
@@ -714,7 +714,7 @@ func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error
 	resp, err := conn.V3.DeleteSubnet(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("Error deleting subnet id %s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting subnet id %s): %s", d.Id(), err)
 	}
 
 	// stateConf := &resource.StateChangeConf{
