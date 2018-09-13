@@ -49,8 +49,8 @@ resource "nutanix_virtual_machine" "vm2" {
   name = "test-dou-vm2"
 
   cluster_reference = {
-	  kind = "cluster"
-	  UUID = "${data.nutanix_clusters.clusters.entities.0.metadata.UUID}"
+    kind = "cluster"
+    UUID = "${data.nutanix_clusters.clusters.entities.0.metadata.UUID}"
   }
 
   num_vcpus_per_socket = 1
@@ -96,18 +96,12 @@ resource "nutanix_subnet" "test" {
   dhcp_domain_search_list      = ["nutanix.com", "calm.io"]
 }
 
-data "nutanix_virtual_machines" "basic_web" {
-    metadata = {
-        length = 2
-    }
-}
+data "nutanix_virtual_machines" "basic_web" {}
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
-
-* `metadata`: Represents virtual machine UUID
+No arguments are supported.
 
 ### Metadata Argument
 
@@ -164,9 +158,9 @@ The entities attribute supports the following:
 * `vga_console_enabled`: - Indicates whether VGA console should be enabled or not.
 * `disk_list` Disks attached to the VM.
 * `metadata`: - The vm kind metadata.
-* `state`: -
-* `ip_address`: -
-* `host_reference`: -
+* `state`: - The state of the vm.
+* `ip_address`: - An IP address.
+* `host_reference`: - Reference to a host.
 * `hypervisor_type`: - The hypervisor type for the hypervisor the VM is hosted on.
 
 ### Disk List
@@ -176,16 +170,16 @@ The disk_list attribute supports the following:
 * `UUID`: - The device ID which is used to uniquely identify this particular disk.
 * `disk_size_bytes` - Size of the disk in Bytes.
 * `disk_size_mib` - Size of the disk in MiB. Must match the size specified in 'disk_size_bytes' - rounded up to the nearest MiB - when that field is present.
-* `device_properties` -
-* `data_source_reference` - Reference
-* `volume_group_reference` - Reference
+* `device_properties` - Properties to a device.
+* `data_source_reference` - Reference to a data source.
+* `volume_group_reference` - Reference to a volume group.
 
 ### Device Properties
 
 The device_properties attribute supports the following.
 
-* `device_type`: -
-* `disk_address`: -
+* `device_type`: - A Disk type (default: DISK).
+* `disk_address`: - Address of disk to boot from.
 
 ### Sysprep
 
@@ -205,8 +199,8 @@ The guest_customization_cloud_init attribute supports the following:
 
  The boot_device_disk_address attribute supports the following:
 
-* `device_index`: -
-* `adapter_type`: -
+* `device_index`: - The index of the disk address.
+* `adapter_type`: - The adapter type of the disk address.
 
 ### GPU List
 
@@ -241,12 +235,9 @@ The nutanix_guest_tools attribute supports the following:
 
 The nic_list attribute supports the following:
 
-* `nic_type`: - The type of this NIC. Defaults to NORMAL_NIC. (Options : NORMAL_NIC , DIRECT_NIC , NETWORK_FUNCTION_NIC)
- .
-* `UUID`: - The NIC's UUID, which is used to uniquely identify this particular NIC. This UUID may be used to refer to the NIC outside the context of the particular VM it is attached to.
-
-* `floating_ip`: -
-
+* `nic_type`: - The type of this NIC. Defaults to NORMAL_NIC. (Options : NORMAL_NIC , DIRECT_NIC , NETWORK_FUNCTION_NIC).
+* `uuid`: - The NIC's UUID, which is used to uniquely identify this particular NIC. This UUID may be used to refer to the NIC outside the context of the particular VM it is attached to.
+* `floating_ip`: -  The Floating IP associated with the vnic.
 * `model`: - The model of this NIC. (Options : VIRTIO , E1000).
 * `network_function_nic_type`: - The type of this Network function NIC. Defaults to INGRESS. (Options : INGRESS , EGRESS , TAP).
 * `mac_address`: - The MAC address for the adapter.

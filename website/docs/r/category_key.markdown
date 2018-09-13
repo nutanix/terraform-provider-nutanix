@@ -24,7 +24,7 @@ resource "nutanix_category_key" "test"{
 The following arguments are supported:
 
 * `name`: - (Required) The name for the category key.
-* `api_version` - (Optional)
+* `api_version` - (Optional) The version of the API.
 * `description`: - (Optional) A description for category key.
 
 ## Attributes Reference
