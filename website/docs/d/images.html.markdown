@@ -71,7 +71,7 @@ The entities attribute supports the following:
 * `metadata`: - The image kind metadata.
 * `retrieval_uri_list`: - List of URIs where the raw image data can be accessed.
 * `size_bytes`: - The size of the image in bytes.
-* `state`: -
+* `state`: - The state of the image.
 
 ### Metadata
 

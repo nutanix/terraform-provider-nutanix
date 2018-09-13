@@ -65,9 +65,9 @@ The following arguments are supported:
 * `subnet_id`: - (Optional) The ID for the subnet.
 * `subnet_name`: - (Optional) The name for the subnet
 
-
-
 ## Attributes Reference
+
+The following attributes are exported:
 
 * `metadata`: - (Required) The subnet kind metadata.
 * `availability_zone_reference`: - (Optional) The reference to a availability_zone.
@@ -81,7 +81,7 @@ The following arguments are supported:
 * `vswitch_name`: - (Optional).
 * `subnet_type`: - (Optional).
 * `default_gateway_ip`: - (Optional) Default gateway IP address.
-* `prefix_length`: - (Optional).
+* `prefix_length`: - (Optional). IP prefix length of the Subnet.
 * `subnet_ip`: - (Optional) Subnet IP address.
 * `dhcp_server_address`: - (Optional) Host address.
 * `dhcp_server_address_port`: - (Optional) Port Number.
@@ -89,13 +89,7 @@ The following arguments are supported:
 * `dhcp_domain_search_list`: - (Optional).
 * `vlan_id`: - (Optional).
 * `network_function_chain_reference`: - (Optional) The reference to a network_function_chain.
-
-## Attributes Reference
-
-The following attributes are exported:
-
-* `metadata`: - The subnet kind metadata.
-* `state`: -
+* `state`: - The state of the subnet.
 
 ### Metadata
 
