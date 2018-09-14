@@ -12,8 +12,813 @@ import (
 
 func dataSourceNutanixNetworkSecurityRule() *schema.Resource {
 	return &schema.Resource{
-		Read:   dataSourceNutanixNetworkSecurityRuleRead,
-		Schema: getDataSourceNetworkSecurityRuleSchema(),
+		Read: dataSourceNutanixNetworkSecurityRuleRead,
+		Schema: map[string]*schema.Schema{
+			"network_security_rule_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"api_version": {
+				Type: schema.TypeString,
+
+				Computed: true,
+			},
+			"metadata": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"last_update_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"creation_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"spec_version": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"spec_hash": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"categories": {
+				Type: schema.TypeList,
+
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"owner_reference": {
+				Type: schema.TypeMap,
+
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type: schema.TypeString,
+						},
+						"uuid": {
+							Type: schema.TypeString,
+						},
+						"name": {
+							Type: schema.TypeString,
+						},
+					},
+				},
+			},
+			"project_reference": {
+				Type: schema.TypeMap,
+
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type: schema.TypeString,
+						},
+						"uuid": {
+							Type: schema.TypeString,
+						},
+						"name": {
+							Type: schema.TypeString,
+						},
+					},
+				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"description": {
+				Type: schema.TypeString,
+
+				Computed: true,
+			},
+			"quarantine_rule_action": {
+				Type: schema.TypeString,
+
+				Computed: true,
+			},
+			"quarantine_rule_outbound_allow_list": {
+				Type: schema.TypeList,
+
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"protocol": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+						"ip_subnet": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+						"ip_subnet_prefix_length": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+						"tcp_port_range_list": {
+							Type: schema.TypeList,
+
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"end_port": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+									"start_port": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+								},
+							},
+						},
+						"udp_port_range_list": {
+							Type: schema.TypeList,
+
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"end_port": {
+										Type: schema.TypeInt,
+
+										Computed: true,
+									},
+									"start_port": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+								},
+							},
+						},
+						"filter_kind_list": {
+							Type: schema.TypeList,
+
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"filter_type": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+						"filter_params": {
+							Type: schema.TypeList,
+
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"values": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"peer_specification_type": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+
+						"expiration_time": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+						"network_function_chain_reference": {
+							Type: schema.TypeMap,
+
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"name": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+								},
+							},
+						},
+						"icmp_type_code_list": {
+							Type: schema.TypeList,
+
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"code": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+									"type": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"quarantine_rule_target_group_default_internal_policy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"quarantine_rule_target_group_peer_specification_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"quarantine_rule_target_group_filter_kind_list": {
+				Type: schema.TypeList,
+
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"quarantine_rule_target_group_filter_type": {
+				Type: schema.TypeString,
+
+				Computed: true,
+			},
+			"quarantine_rule_target_group_filter_params": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"values": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
+			"quarantine_rule_inbound_allow_list": {
+				Type: schema.TypeList,
+
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"protocol": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+						"ip_subnet": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+						"ip_subnet_prefix_length": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+						"tcp_port_range_list": {
+							Type: schema.TypeList,
+
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"end_port": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+									"start_port": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+								},
+							},
+						},
+						"udp_port_range_list": {
+							Type: schema.TypeList,
+
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"end_port": {
+										Type: schema.TypeInt,
+
+										Computed: true,
+									},
+									"start_port": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+								},
+							},
+						},
+						"filter_kind_list": {
+							Type: schema.TypeList,
+
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"filter_type": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+						"filter_params": {
+							Type: schema.TypeList,
+
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"values": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"peer_specification_type": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+
+						"expiration_time": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+						"network_function_chain_reference": {
+							Type: schema.TypeMap,
+
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"name": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+								},
+							},
+						},
+						"icmp_type_code_list": {
+							Type: schema.TypeList,
+
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"code": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"app_rule_action": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"app_rule_outbound_allow_list": {
+				Type: schema.TypeList,
+
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"protocol": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+						"ip_subnet": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+						"ip_subnet_prefix_length": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+						"tcp_port_range_list": {
+							Type: schema.TypeList,
+
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"end_port": {
+										Type: schema.TypeInt,
+
+										Computed: true,
+									},
+									"start_port": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+								},
+							},
+						},
+						"udp_port_range_list": {
+							Type: schema.TypeList,
+
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"end_port": {
+										Type: schema.TypeInt,
+
+										Computed: true,
+									},
+									"start_port": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+								},
+							},
+						},
+						"filter_kind_list": {
+							Type: schema.TypeList,
+
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"filter_type": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+						"filter_params": {
+							Type: schema.TypeList,
+
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"values": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"peer_specification_type": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+
+						"expiration_time": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+						"network_function_chain_reference": {
+							Type: schema.TypeMap,
+
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"name": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+								},
+							},
+						},
+						"icmp_type_code_list": {
+							Type: schema.TypeList,
+
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"code": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+									"type": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"app_rule_target_group_default_internal_policy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"app_rule_target_group_peer_specification_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"app_rule_target_group_filter_kind_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"app_rule_target_group_filter_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"app_rule_target_group_filter_params": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"values": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
+			"app_rule_inbound_allow_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"protocol": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+						"ip_subnet": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+						"ip_subnet_prefix_length": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+						"tcp_port_range_list": {
+							Type: schema.TypeList,
+
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"end_port": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+									"start_port": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+								},
+							},
+						},
+						"udp_port_range_list": {
+							Type: schema.TypeList,
+
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"end_port": {
+										Type: schema.TypeInt,
+
+										Computed: true,
+									},
+									"start_port": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+								},
+							},
+						},
+						"filter_kind_list": {
+							Type: schema.TypeList,
+
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"filter_type": {
+							Type: schema.TypeString,
+
+							Computed: true,
+						},
+						"filter_params": {
+							Type: schema.TypeList,
+
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"values": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"peer_specification_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"expiration_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"network_function_chain_reference": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"name": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+								},
+							},
+						},
+						"icmp_type_code_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"code": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+									"type": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"isolation_rule_action": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"isolation_rule_first_entity_filter_kind_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"isolation_rule_first_entity_filter_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"isolation_rule_first_entity_filter_params": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"values": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
+			"isolation_rule_second_entity_filter_kind_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"isolation_rule_second_entity_filter_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"isolation_rule_second_entity_filter_params": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"values": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -466,813 +1271,4 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 	d.SetId(*resp.Metadata.UUID)
 
 	return nil
-}
-
-func getDataSourceNetworkSecurityRuleSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"network_security_rule_id": {
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"api_version": {
-			Type: schema.TypeString,
-
-			Computed: true,
-		},
-		"metadata": {
-			Type:     schema.TypeMap,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"last_update_time": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"uuid": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"creation_time": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"spec_version": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"spec_hash": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"name": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-				},
-			},
-		},
-		"categories": {
-			Type: schema.TypeList,
-
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"name": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"value": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-				},
-			},
-		},
-		"owner_reference": {
-			Type: schema.TypeMap,
-
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"kind": {
-						Type: schema.TypeString,
-					},
-					"uuid": {
-						Type: schema.TypeString,
-					},
-					"name": {
-						Type: schema.TypeString,
-					},
-				},
-			},
-		},
-		"project_reference": {
-			Type: schema.TypeMap,
-
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"kind": {
-						Type: schema.TypeString,
-					},
-					"uuid": {
-						Type: schema.TypeString,
-					},
-					"name": {
-						Type: schema.TypeString,
-					},
-				},
-			},
-		},
-		"name": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"description": {
-			Type: schema.TypeString,
-
-			Computed: true,
-		},
-		"quarantine_rule_action": {
-			Type: schema.TypeString,
-
-			Computed: true,
-		},
-		"quarantine_rule_outbound_allow_list": {
-			Type: schema.TypeList,
-
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"protocol": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-					"ip_subnet": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-					"ip_subnet_prefix_length": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-					"tcp_port_range_list": {
-						Type: schema.TypeList,
-
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"end_port": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-								"start_port": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-							},
-						},
-					},
-					"udp_port_range_list": {
-						Type: schema.TypeList,
-
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"end_port": {
-									Type: schema.TypeInt,
-
-									Computed: true,
-								},
-								"start_port": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-							},
-						},
-					},
-					"filter_kind_list": {
-						Type: schema.TypeList,
-
-						Computed: true,
-						Elem:     &schema.Schema{Type: schema.TypeString},
-					},
-					"filter_type": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-					"filter_params": {
-						Type: schema.TypeList,
-
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"name": {
-									Type:     schema.TypeString,
-									Required: true,
-								},
-								"values": {
-									Type:     schema.TypeList,
-									Required: true,
-									Elem:     &schema.Schema{Type: schema.TypeString},
-								},
-							},
-						},
-					},
-					"peer_specification_type": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-
-					"expiration_time": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-					"network_function_chain_reference": {
-						Type: schema.TypeMap,
-
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"kind": {
-									Type:     schema.TypeString,
-									Required: true,
-								},
-								"uuid": {
-									Type:     schema.TypeString,
-									Required: true,
-								},
-								"name": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-							},
-						},
-					},
-					"icmp_type_code_list": {
-						Type: schema.TypeList,
-
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"code": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-								"type": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		"quarantine_rule_target_group_default_internal_policy": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"quarantine_rule_target_group_peer_specification_type": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"quarantine_rule_target_group_filter_kind_list": {
-			Type: schema.TypeList,
-
-			Computed: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-		},
-		"quarantine_rule_target_group_filter_type": {
-			Type: schema.TypeString,
-
-			Computed: true,
-		},
-		"quarantine_rule_target_group_filter_params": {
-			Type:     schema.TypeList,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"name": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"values": {
-						Type:     schema.TypeList,
-						Required: true,
-						Elem:     &schema.Schema{Type: schema.TypeString},
-					},
-				},
-			},
-		},
-		"quarantine_rule_inbound_allow_list": {
-			Type: schema.TypeList,
-
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"protocol": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-					"ip_subnet": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-					"ip_subnet_prefix_length": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-					"tcp_port_range_list": {
-						Type: schema.TypeList,
-
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"end_port": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-								"start_port": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-							},
-						},
-					},
-					"udp_port_range_list": {
-						Type: schema.TypeList,
-
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"end_port": {
-									Type: schema.TypeInt,
-
-									Computed: true,
-								},
-								"start_port": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-							},
-						},
-					},
-					"filter_kind_list": {
-						Type: schema.TypeList,
-
-						Computed: true,
-						Elem:     &schema.Schema{Type: schema.TypeString},
-					},
-					"filter_type": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-					"filter_params": {
-						Type: schema.TypeList,
-
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"name": {
-									Type:     schema.TypeString,
-									Required: true,
-								},
-								"values": {
-									Type:     schema.TypeList,
-									Required: true,
-									Elem:     &schema.Schema{Type: schema.TypeString},
-								},
-							},
-						},
-					},
-					"peer_specification_type": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-
-					"expiration_time": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-					"network_function_chain_reference": {
-						Type: schema.TypeMap,
-
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"kind": {
-									Type:     schema.TypeString,
-									Required: true,
-								},
-								"uuid": {
-									Type:     schema.TypeString,
-									Required: true,
-								},
-								"name": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-							},
-						},
-					},
-					"icmp_type_code_list": {
-						Type: schema.TypeList,
-
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"code": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-								"type": {
-									Type:     schema.TypeString,
-									Computed: true,
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		"app_rule_action": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"app_rule_outbound_allow_list": {
-			Type: schema.TypeList,
-
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"protocol": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-					"ip_subnet": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-					"ip_subnet_prefix_length": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-					"tcp_port_range_list": {
-						Type: schema.TypeList,
-
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"end_port": {
-									Type: schema.TypeInt,
-
-									Computed: true,
-								},
-								"start_port": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-							},
-						},
-					},
-					"udp_port_range_list": {
-						Type: schema.TypeList,
-
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"end_port": {
-									Type: schema.TypeInt,
-
-									Computed: true,
-								},
-								"start_port": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-							},
-						},
-					},
-					"filter_kind_list": {
-						Type: schema.TypeList,
-
-						Computed: true,
-						Elem:     &schema.Schema{Type: schema.TypeString},
-					},
-					"filter_type": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-					"filter_params": {
-						Type: schema.TypeList,
-
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"name": {
-									Type:     schema.TypeString,
-									Required: true,
-								},
-								"values": {
-									Type:     schema.TypeList,
-									Required: true,
-									Elem:     &schema.Schema{Type: schema.TypeString},
-								},
-							},
-						},
-					},
-					"peer_specification_type": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-
-					"expiration_time": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-					"network_function_chain_reference": {
-						Type: schema.TypeMap,
-
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"kind": {
-									Type:     schema.TypeString,
-									Required: true,
-								},
-								"uuid": {
-									Type:     schema.TypeString,
-									Required: true,
-								},
-								"name": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-							},
-						},
-					},
-					"icmp_type_code_list": {
-						Type: schema.TypeList,
-
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"code": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-								"type": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		"app_rule_target_group_default_internal_policy": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"app_rule_target_group_peer_specification_type": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"app_rule_target_group_filter_kind_list": {
-			Type:     schema.TypeList,
-			Computed: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-		},
-		"app_rule_target_group_filter_type": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"app_rule_target_group_filter_params": {
-			Type:     schema.TypeList,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"name": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"values": {
-						Type:     schema.TypeList,
-						Required: true,
-						Elem:     &schema.Schema{Type: schema.TypeString},
-					},
-				},
-			},
-		},
-		"app_rule_inbound_allow_list": {
-			Type:     schema.TypeList,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"protocol": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-					"ip_subnet": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-					"ip_subnet_prefix_length": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-					"tcp_port_range_list": {
-						Type: schema.TypeList,
-
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"end_port": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-								"start_port": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-							},
-						},
-					},
-					"udp_port_range_list": {
-						Type: schema.TypeList,
-
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"end_port": {
-									Type: schema.TypeInt,
-
-									Computed: true,
-								},
-								"start_port": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-							},
-						},
-					},
-					"filter_kind_list": {
-						Type: schema.TypeList,
-
-						Computed: true,
-						Elem:     &schema.Schema{Type: schema.TypeString},
-					},
-					"filter_type": {
-						Type: schema.TypeString,
-
-						Computed: true,
-					},
-					"filter_params": {
-						Type: schema.TypeList,
-
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"name": {
-									Type:     schema.TypeString,
-									Required: true,
-								},
-								"values": {
-									Type:     schema.TypeList,
-									Required: true,
-									Elem:     &schema.Schema{Type: schema.TypeString},
-								},
-							},
-						},
-					},
-					"peer_specification_type": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-
-					"expiration_time": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"network_function_chain_reference": {
-						Type:     schema.TypeMap,
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"kind": {
-									Type:     schema.TypeString,
-									Required: true,
-								},
-								"uuid": {
-									Type:     schema.TypeString,
-									Required: true,
-								},
-								"name": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-							},
-						},
-					},
-					"icmp_type_code_list": {
-						Type:     schema.TypeList,
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"code": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-								"type": {
-									Type: schema.TypeString,
-
-									Computed: true,
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		"isolation_rule_action": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"isolation_rule_first_entity_filter_kind_list": {
-			Type:     schema.TypeList,
-			Computed: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-		},
-		"isolation_rule_first_entity_filter_type": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"isolation_rule_first_entity_filter_params": {
-			Type:     schema.TypeList,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"name": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"values": {
-						Type:     schema.TypeList,
-						Required: true,
-						Elem:     &schema.Schema{Type: schema.TypeString},
-					},
-				},
-			},
-		},
-		"isolation_rule_second_entity_filter_kind_list": {
-			Type:     schema.TypeList,
-			Computed: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-		},
-		"isolation_rule_second_entity_filter_type": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"isolation_rule_second_entity_filter_params": {
-			Type:     schema.TypeList,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"name": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"values": {
-						Type:     schema.TypeList,
-						Computed: true,
-						Elem:     &schema.Schema{Type: schema.TypeString},
-					},
-				},
-			},
-		},
-	}
 }
