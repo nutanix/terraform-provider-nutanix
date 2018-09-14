@@ -497,6 +497,8 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cluster_reference_name", utils.StringValue(resp.Status.ClusterReference.Name))
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
 
+	nfcr := make(map[string]interface{})
+
 	if status := resp.Status; status != nil {
 		d.Set("name", utils.StringValue(status.Name))
 		d.Set("state", utils.StringValue(status.State))
@@ -509,12 +511,12 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("vlan_id", utils.Int64Value(res.VlanID))
 
 			if res.NetworkFunctionChainReference != nil {
-				d.Set("network_function_chain_reference", getReferenceValues(res.NetworkFunctionChainReference))
+				nfcr = getReferenceValues(res.NetworkFunctionChainReference)
 			}
 		}
 
 	}
-
+	d.Set("network_function_chain_reference", nfcr)
 	d.Set("default_gateway_ip", dgIP)
 	d.Set("prefix_length", pl)
 	d.Set("subnet_ip", sIP)
