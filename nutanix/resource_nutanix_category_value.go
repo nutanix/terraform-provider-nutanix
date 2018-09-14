@@ -15,9 +15,6 @@ func resourceNutanixCategoryValue() *schema.Resource {
 		Read:   resourceNutanixCategoryValueRead,
 		Update: resourceNutanixCategoryValueCreateOrUpdate,
 		Delete: resourceNutanixCategoryValueDelete,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
 		Schema: map[string]*schema.Schema{
 			"value": {
 				Type:     schema.TypeString,
