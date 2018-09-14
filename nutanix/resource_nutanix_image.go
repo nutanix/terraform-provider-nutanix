@@ -30,7 +30,224 @@ func resourceNutanixImage() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
-		Schema: getImageSchema(),
+		Schema: map[string]*schema.Schema{
+			"api_version": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"metadata": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"last_update_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"creation_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"spec_version": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"spec_hash": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"categories": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"owner_reference": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"project_reference": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"availability_zone_reference": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"cluster_reference": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"retrieval_uri_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"image_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"checksum": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"checksum_algorithm": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"checksum_value": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"source_uri": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"source_path": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"version": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"product_version": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"product_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"architecture": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"size_bytes": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+		},
 	}
 }
 
@@ -57,7 +274,7 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 
 	// Read Arguments and set request values
 	if v, ok := d.GetOk("api_version"); ok {
-		request.APIVersion = utils.String(v.(string))
+		request.APIVersion = utils.StringPtr(v.(string))
 	}
 
 	if !nok {
@@ -69,14 +286,14 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if descok {
-		spec.Description = utils.String(desc.(string))
+		spec.Description = utils.StringPtr(desc.(string))
 	}
 
 	if err := getImageResource(d, image); err != nil {
 		return err
 	}
 
-	spec.Name = utils.String(n.(string))
+	spec.Name = utils.StringPtr(n.(string))
 	spec.Resources = image
 
 	request.Metadata = metadata
@@ -274,10 +491,10 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if d.HasChange("name") {
-		spec.Name = utils.String(d.Get("name").(string))
+		spec.Name = utils.StringPtr(d.Get("name").(string))
 	}
 	if d.HasChange("description") {
-		spec.Description = utils.String(d.Get("description").(string))
+		spec.Description = utils.StringPtr(d.Get("description").(string))
 	}
 
 	if d.HasChange("source_uri") || d.HasChange("checksum") {
@@ -345,227 +562,6 @@ func resourceNutanixImageDelete(d *schema.ResourceData, meta interface{}) error 
 	return nil
 }
 
-func getImageSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"api_version": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"metadata": {
-			Type:     schema.TypeMap,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"last_update_time": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-
-					"uuid": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"creation_time": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"spec_version": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"spec_hash": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-					"name": {
-						Type:     schema.TypeString,
-						Computed: true,
-					},
-				},
-			},
-		},
-		"categories": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"name": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"value": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-				},
-			},
-		},
-		"owner_reference": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"kind": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"uuid": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"name": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-				},
-			},
-		},
-		"project_reference": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"kind": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"uuid": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-					"name": {
-						Type:     schema.TypeString,
-						Optional: true,
-					},
-				},
-			},
-		},
-		"name": {
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"state": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"description": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"availability_zone_reference": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"kind": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"uuid": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"name": {
-						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
-					},
-				},
-			},
-		},
-		"cluster_reference": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"kind": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"uuid": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"name": {
-						Type:     schema.TypeString,
-						Optional: true,
-						Computed: true,
-					},
-				},
-			},
-		},
-		"retrieval_uri_list": {
-			Type:     schema.TypeList,
-			Computed: true,
-			Elem:     &schema.Schema{Type: schema.TypeString},
-		},
-		"image_type": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"checksum": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"checksum_algorithm": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"checksum_value": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-				},
-			},
-		},
-		"source_uri": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"source_path": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"version": {
-			Type:     schema.TypeMap,
-			Optional: true,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"product_version": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-					"product_name": {
-						Type:     schema.TypeString,
-						Required: true,
-					},
-				},
-			},
-		},
-		"architecture": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"size_bytes": {
-			Type:     schema.TypeInt,
-			Computed: true,
-		},
-	}
-}
-
 func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 	cs, csok := d.GetOk("checksum")
 	checks := &v3.Checksum{}
@@ -573,15 +569,15 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 	if su, suok := d.GetOk("source_uri"); suok {
 		ext := filepath.Ext(su.(string))
 		if ext == ".qcow2" {
-			image.ImageType = utils.String("DISK_IMAGE")
+			image.ImageType = utils.StringPtr("DISK_IMAGE")
 		} else if ext == ".iso" {
-			image.ImageType = utils.String("ISO_IMAGE")
+			image.ImageType = utils.StringPtr("ISO_IMAGE")
 		} else {
 			// By default assuming the image to be raw disk image.
-			image.ImageType = utils.String("DISK_IMAGE")
+			image.ImageType = utils.StringPtr("DISK_IMAGE")
 		}
 		// set source uri
-		image.SourceURI = utils.String(su.(string))
+		image.SourceURI = utils.StringPtr(su.(string))
 	}
 
 	if csok {
@@ -593,13 +589,13 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 			if ca.(string) == "" {
 				return fmt.Errorf("'checksum_algorithm' is not given")
 			}
-			checks.ChecksumAlgorithm = utils.String(ca.(string))
+			checks.ChecksumAlgorithm = utils.StringPtr(ca.(string))
 		}
 		if cvok {
 			if cv.(string) == "" {
 				return fmt.Errorf("'checksum_value' is not given")
 			}
-			checks.ChecksumValue = utils.String(cv.(string))
+			checks.ChecksumValue = utils.StringPtr(cv.(string))
 		}
 		image.Checksum = checks
 	}
@@ -620,7 +616,7 @@ func resourceNutanixImageExists(conn *v3.Client, name string) (*string, error) {
 	}
 
 	for _, image := range imageList.Entities {
-		if image.Status.Name == utils.String(name) {
+		if image.Status.Name == utils.StringPtr(name) {
 			imageUUID = image.Metadata.UUID
 		}
 	}
