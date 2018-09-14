@@ -37,6 +37,29 @@ func TestAccNutanixImage_basic(t *testing.T) {
 	})
 }
 
+func TestAccNutanixImage_importBasic(t *testing.T) {
+	rInt := acctest.RandInt()
+	resourceName := "nutanix_image.acctest-test"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixImageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixImageConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixImageExists(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccNutanixImage_basic_uploadLocal(t *testing.T) {
 	// Skipping as this test needs functional work
 	t.Skip()

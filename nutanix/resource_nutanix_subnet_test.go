@@ -37,6 +37,31 @@ func TestAccNutanixSubnet_basic(t *testing.T) {
 	})
 }
 
+func TestAccNutanixSubnet_importBasic(t *testing.T) {
+	r := acctest.RandIntRange(3500, 3900)
+	resourceName := "nutanix_subnet.acctest-managed"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixSubnetConfig(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixSubnetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "Description of my unit test VLAN"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"description"},
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixSubnetExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
