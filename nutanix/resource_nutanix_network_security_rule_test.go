@@ -39,6 +39,34 @@ func TestAccNutanixNetworkSecurityRule_basic(t *testing.T) {
 	})
 }
 
+func TestAccNutanixNetworkSecurityRule_ImportBasic(t *testing.T) {
+	// Skipped because this test didn't pass in GCP environment
+	if isGCPEnvironment() {
+		t.Skip()
+	}
+
+	rInt := acctest.RandInt()
+	resourceName := "nutanix_network_security_rule.TEST-TIER"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixNetworkSecurityRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixNetworkSecurityRuleConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixNetworkSecurityRuleExists(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixNetworkSecurityRuleExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

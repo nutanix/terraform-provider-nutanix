@@ -28,6 +28,28 @@ func TestAccNutanixCategoryKey_basic(t *testing.T) {
 	})
 }
 
+func TestAccNutanixCategoryKey_importBasic(t *testing.T) {
+	resourceName := "nutanix_category_key.test"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixCategoryKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixCategoryKeyConfig(acctest.RandIntRange(0, 500)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixCategoryKeyExists(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixCategoryKeyExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
