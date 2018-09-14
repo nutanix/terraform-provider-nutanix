@@ -26,8 +26,8 @@ output "cluster" {
 resource "nutanix_subnet" "next-iac-managed" {
   # What cluster will this VLAN live on?
   cluster_reference = {
-	kind = "cluster"
-	UUID = "${data.nutanix_clusters.clusters.entities.0.metadata.UUID}"
+    kind = "cluster"
+    UUID = "${data.nutanix_clusters.clusters.entities.0.metadata.UUID}"
   }
 
   # General Information
@@ -50,8 +50,6 @@ resource "nutanix_subnet" "next-iac-managed" {
 ## Argument Reference
 
 * `metadata`: - (Required) The subnet kind metadata.
-
-
 * `availability_zone_reference`: - (Optional) The reference to a availability_zone.
 * `cluster_reference`: - (Optional) The reference to a cluster.
 * `cluster_name`: - (Optional) The name of a cluster.
