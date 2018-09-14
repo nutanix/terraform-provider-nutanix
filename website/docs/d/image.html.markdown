@@ -55,7 +55,7 @@ The following attributes are exported:
 * `metadata`: - The image kind metadata.
 * `retrieval_uri_list`: - List of URIs where the raw image data can be accessed.
 * `size_bytes`: - The size of the image in bytes.
-* `state`: -
+* `state`: - The state of the image.
 
 ### Metadata
 

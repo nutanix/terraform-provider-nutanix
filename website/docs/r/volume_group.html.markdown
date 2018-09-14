@@ -58,7 +58,7 @@ The attachment_list attribute supports the following:
 The following attributes are exported:
 
 * `metadata`: - The volume_group kind metadata.
-* `state`: -
+* `state`: - The state of the volume group.
 
 ### Metadata
 
