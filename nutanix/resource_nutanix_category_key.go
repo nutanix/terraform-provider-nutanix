@@ -91,6 +91,7 @@ func resourceNutanixCategoryKeyRead(d *schema.ResourceData, meta interface{}) er
 	resp, err := conn.V3.GetCategoryKey(d.Id())
 
 	if err != nil {
+		d.SetId("")
 		return err
 	}
 
