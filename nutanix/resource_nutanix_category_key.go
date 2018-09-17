@@ -3,6 +3,7 @@ package nutanix
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
@@ -86,7 +87,9 @@ func resourceNutanixCategoryKeyRead(d *schema.ResourceData, meta interface{}) er
 	resp, err := conn.V3.GetCategoryKey(d.Id())
 
 	if err != nil {
-		d.SetId("")
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
 		return err
 	}
 

@@ -5,6 +5,7 @@ import (
 	"log"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -948,7 +949,9 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 	// Make request to the API
 	resp, err := conn.V3.GetNetworkSecurityRule(d.Id())
 	if err != nil {
-		d.SetId("")
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
 		return err
 	}
 
@@ -1430,7 +1433,9 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 	response, err := conn.V3.GetNetworkSecurityRule(d.Id())
 
 	if err != nil {
-		d.SetId("")
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
 		return err
 	}
 

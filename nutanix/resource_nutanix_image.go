@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
@@ -358,7 +359,9 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 	// Make request to the API
 	resp, err := conn.V3.GetImage(d.Id())
 	if err != nil {
-		d.SetId("")
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
 		return err
 	}
 
@@ -441,7 +444,9 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 	response, err := conn.V3.GetImage(d.Id())
 
 	if err != nil {
-		d.SetId("")
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
 		return err
 	}
 

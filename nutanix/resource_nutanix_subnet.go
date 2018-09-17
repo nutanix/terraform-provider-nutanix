@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -399,7 +400,9 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	id := d.Id()
 	resp, err := conn.V3.GetSubnet(id)
 	if err != nil {
-		d.SetId("")
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
 		return fmt.Errorf("error subnet id (%s): %+v", id, err)
 	}
 
@@ -531,7 +534,9 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 	response, err := conn.V3.GetSubnet(id)
 
 	if err != nil {
-		d.SetId("")
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
 		return fmt.Errorf("error retrieving for subnet id (%s) :%+v", id, err)
 	}
 

@@ -5,6 +5,7 @@ import (
 	"log"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
@@ -741,8 +742,11 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 
 	// Make request to the API
 	resp, err := conn.V3.GetVM(d.Id())
+
 	if err != nil {
-		d.SetId("")
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
 		return err
 	}
 
@@ -885,7 +889,9 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	preFillPWUpdateRequest(pw, response)
 
 	if err != nil {
-		d.SetId("")
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
 		return err
 	}
 
