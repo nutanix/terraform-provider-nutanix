@@ -746,6 +746,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	// Make request to the API
 	resp, err := conn.V3.GetVM(d.Id())
 	if err != nil {
+		d.SetId("")
 		return err
 	}
 
@@ -888,6 +889,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	preFillPWUpdateRequest(pw, response)
 
 	if err != nil {
+		d.SetId("")
 		return err
 	}
 
@@ -1224,15 +1226,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if err2 != nil {
 		return err2
 	}
-
-	// stateConf := &resource.StateChangeConf{
-	// 	Pending:    []string{"PENDING", "RUNNING"},
-	// 	Target:     []string{"COMPLETE"},
-	// 	Refresh:    vmStateRefreshFunc(conn, d.Id()),
-	// 	Timeout:    10 * time.Minute,
-	// 	Delay:      10 * time.Second,
-	// 	MinTimeout: 3 * time.Second,
-	// }
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"QUEUED", "RUNNING"},

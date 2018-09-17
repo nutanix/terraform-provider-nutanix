@@ -22,6 +22,7 @@ func TestAccNutanixSubnet_basic(t *testing.T) {
 				Config: testAccNutanixSubnetConfig(r),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixSubnetExists("nutanix_subnet.acctest-managed"),
+					resource.TestCheckResourceAttr("nutanix_subnet.acctest-managed", "name", "acctest-managed"),
 					resource.TestCheckResourceAttr("nutanix_subnet.acctest-managed", "description", "Description of my unit test VLAN"),
 				),
 			},
@@ -31,6 +32,7 @@ func TestAccNutanixSubnet_basic(t *testing.T) {
 					testAccCheckNutanixSubnetExists("nutanix_subnet.acctest-managed"),
 					resource.TestCheckResourceAttr("nutanix_subnet.acctest-managed", "name", "acctest-managed-updateName"),
 					resource.TestCheckResourceAttr("nutanix_subnet.acctest-managed", "description", "Description of my unit test VLAN updated"),
+					resource.TestCheckResourceAttr("nutanix_subnet.acctest-managed", "subnet_type", "VLAN"),
 				),
 			},
 		},

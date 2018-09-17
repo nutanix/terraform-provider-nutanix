@@ -374,15 +374,6 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(*resp.Metadata.UUID)
 
-	// stateConf := &resource.StateChangeConf{
-	// 	Pending:    []string{"PENDING", "RUNNING"},
-	// 	Target:     []string{"COMPLETE"},
-	// 	Refresh:    subnetStateRefreshFunc(conn, d.Id()),
-	// 	Timeout:    10 * time.Minute,
-	// 	Delay:      10 * time.Second,
-	// 	MinTimeout: 3 * time.Second,
-	// }
-
 	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
 
 	// Wait for the Subnet to be available
@@ -396,6 +387,7 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
+		d.SetId("")
 		return fmt.Errorf("error waiting for subnet id (%s) to create: %s", d.Id(), err)
 	}
 
@@ -410,6 +402,7 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.V3.GetSubnet(d.Id())
 	if err != nil {
+		d.SetId("")
 		return fmt.Errorf("error subnet id (%s): %+v", d.Id(), err)
 	}
 
@@ -540,6 +533,7 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 	response, err := conn.V3.GetSubnet(d.Id())
 
 	if err != nil {
+		d.SetId("")
 		return fmt.Errorf("error retrieving for subnet id (%s) :%s", d.Id(), err)
 	}
 

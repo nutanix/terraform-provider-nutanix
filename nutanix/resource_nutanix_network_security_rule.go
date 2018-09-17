@@ -952,6 +952,7 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 	// Make request to the API
 	resp, err := conn.V3.GetNetworkSecurityRule(d.Id())
 	if err != nil {
+		d.SetId("")
 		return err
 	}
 
@@ -1433,6 +1434,7 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 	response, err := conn.V3.GetNetworkSecurityRule(d.Id())
 
 	if err != nil {
+		d.SetId("")
 		return err
 	}
 

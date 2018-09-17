@@ -363,6 +363,7 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 	// Make request to the API
 	resp, err := conn.V3.GetImage(d.Id())
 	if err != nil {
+		d.SetId("")
 		return err
 	}
 
@@ -445,6 +446,7 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 	response, err := conn.V3.GetImage(d.Id())
 
 	if err != nil {
+		d.SetId("")
 		return err
 	}
 
