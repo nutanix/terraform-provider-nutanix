@@ -18,6 +18,8 @@ func TestAccNutanixNetworkSecurityRule_basic(t *testing.T) {
 	}
 
 	rInt := acctest.RandInt()
+	resourceName := "nutanix_network_security_rule.TEST-TIER"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -26,34 +28,11 @@ func TestAccNutanixNetworkSecurityRule_basic(t *testing.T) {
 			{
 				Config: testAccNutanixNetworkSecurityRuleConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixNetworkSecurityRuleExists("nutanix_network_security_rule.TEST-TIER"),
+					testAccCheckNutanixNetworkSecurityRuleExists(resourceName),
 				),
 			},
 			{
 				Config: testAccNutanixNetworkSecurityRuleConfigUpdate(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixNetworkSecurityRuleExists("nutanix_network_security_rule.TEST-TIER"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccNutanixNetworkSecurityRule_ImportBasic(t *testing.T) {
-	// Skipped because this test didn't pass in GCP environment
-	if isGCPEnvironment() {
-		t.Skip()
-	}
-
-	rInt := acctest.RandInt()
-	resourceName := "nutanix_network_security_rule.TEST-TIER"
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNutanixNetworkSecurityRuleDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccNutanixNetworkSecurityRuleConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixNetworkSecurityRuleExists(resourceName),
 				),
