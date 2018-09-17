@@ -383,8 +383,9 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
+		id := d.Id()
 		d.SetId("")
-		return fmt.Errorf("error waiting for subnet id (%s) to create: %s", d.Id(), err)
+		return fmt.Errorf("error waiting for subnet id (%s) to create: %+v", id, err)
 	}
 
 	// Setting Description because in Get request is not present.
@@ -395,11 +396,11 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
-
-	resp, err := conn.V3.GetSubnet(d.Id())
+	id := d.Id()
+	resp, err := conn.V3.GetSubnet(id)
 	if err != nil {
 		d.SetId("")
-		return fmt.Errorf("error subnet id (%s): %+v", d.Id(), err)
+		return fmt.Errorf("error subnet id (%s): %+v", id, err)
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
@@ -526,11 +527,12 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 	dhcpO := &v3.DHCPOptions{}
 	spec := &v3.Subnet{}
 
-	response, err := conn.V3.GetSubnet(d.Id())
+	id := d.Id()
+	response, err := conn.V3.GetSubnet(id)
 
 	if err != nil {
 		d.SetId("")
-		return fmt.Errorf("error retrieving for subnet id (%s) :%s", d.Id(), err)
+		return fmt.Errorf("error retrieving for subnet id (%s) :%+v", id, err)
 	}
 
 	if response.Metadata != nil {
@@ -669,15 +671,6 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error updating subnet id %s): %s", d.Id(), errUpdate)
 	}
 
-	// stateConf := &resource.StateChangeConf{
-	// 	Pending:    []string{"PENDING", "RUNNING"},
-	// 	Target:     []string{"COMPLETE"},
-	// 	Refresh:    subnetStateRefreshFunc(conn, d.Id()),
-	// 	Timeout:    10 * time.Minute,
-	// 	Delay:      10 * time.Second,
-	// 	MinTimeout: 3 * time.Second,
-	// }
-
 	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
 
 	// Wait for the VM to be available
@@ -708,15 +701,6 @@ func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error
 	if err != nil {
 		return fmt.Errorf("error deleting subnet id %s): %s", d.Id(), err)
 	}
-
-	// stateConf := &resource.StateChangeConf{
-	// 	Pending:    []string{"PENDING", "RUNNING", "DELETE_IN_PROGRESS", "COMPLETE"},
-	// 	Target:     []string{"DELETED"},
-	// 	Refresh:    subnetStateRefreshFunc(conn, d.Id()),
-	// 	Timeout:    10 * time.Minute,
-	// 	Delay:      10 * time.Second,
-	// 	MinTimeout: 3 * time.Second,
-	// }
 
 	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
 
