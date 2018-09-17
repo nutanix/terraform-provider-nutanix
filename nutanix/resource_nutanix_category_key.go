@@ -30,7 +30,6 @@ func resourceNutanixCategoryKey() *schema.Resource {
 			},
 			"api_version": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"name": {
@@ -51,10 +50,6 @@ func resourceNutanixCategoryKeyCreateOrUpdate(resourceData *schema.ResourceData,
 	name, nameOK := resourceData.GetOk("name")
 
 	// Read Arguments and set request values
-	if v, ok := resourceData.GetOk("api_version"); ok {
-		request.APIVersion = utils.StringPtr(v.(string))
-	}
-
 	if desc, ok := resourceData.GetOk("description"); ok {
 		request.Description = utils.StringPtr(desc.(string))
 	}

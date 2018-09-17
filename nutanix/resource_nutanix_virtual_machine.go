@@ -121,7 +121,6 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 			},
 			"api_version": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"name": {
@@ -681,9 +680,6 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	azr, azrok := d.GetOk("availability_zone_reference")
 	cr, crok := d.GetOk("cluster_reference")
 
-	if v, ok := d.GetOk("api_version"); ok {
-		request.APIVersion = utils.StringPtr(v.(string))
-	}
 	if !nok {
 		return fmt.Errorf("please provide the required name attribute")
 	}

@@ -24,7 +24,6 @@ resource "nutanix_category_key" "test"{
 The following arguments are supported:
 
 * `name`: - (Required) The name for the category key.
-* `api_version` - (Optional) The version of the API.
 * `description`: - (Optional) A description for category key.
 
 ## Attributes Reference
@@ -32,5 +31,6 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `system_defined`: - Specifying whether its a system defined category.
+* `api_version` - (Optional) The version of the API.
 
 See detailed information in [Nutanix Image](https://nutanix.github.io/Automation/experimental/swagger-redoc-sandbox/#tag/category/paths/~1categories~1{name}/get).
