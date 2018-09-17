@@ -18,6 +18,8 @@ func TestAccNutanixNetworkSecurityRule_basic(t *testing.T) {
 	}
 
 	rInt := acctest.RandInt()
+	resourceName := "nutanix_network_security_rule.TEST-TIER"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -26,14 +28,19 @@ func TestAccNutanixNetworkSecurityRule_basic(t *testing.T) {
 			{
 				Config: testAccNutanixNetworkSecurityRuleConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixNetworkSecurityRuleExists("nutanix_network_security_rule.TEST-TIER"),
+					testAccCheckNutanixNetworkSecurityRuleExists(resourceName),
 				),
 			},
 			{
 				Config: testAccNutanixNetworkSecurityRuleConfigUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixNetworkSecurityRuleExists("nutanix_network_security_rule.TEST-TIER"),
+					testAccCheckNutanixNetworkSecurityRuleExists(resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

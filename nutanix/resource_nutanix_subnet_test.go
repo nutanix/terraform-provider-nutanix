@@ -12,7 +12,7 @@ import (
 
 func TestAccNutanixSubnet_basic(t *testing.T) {
 	r := acctest.RandIntRange(3500, 3900)
-
+	resourceName := "nutanix_subnet.acctest-managed"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -21,17 +21,25 @@ func TestAccNutanixSubnet_basic(t *testing.T) {
 			{
 				Config: testAccNutanixSubnetConfig(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixSubnetExists("nutanix_subnet.acctest-managed"),
-					resource.TestCheckResourceAttr("nutanix_subnet.acctest-managed", "description", "Description of my unit test VLAN"),
+					testAccCheckNutanixSubnetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", "acctest-managed"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Description of my unit test VLAN"),
 				),
 			},
 			{
 				Config: testAccNutanixSubnetConfigUpdate(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixSubnetExists("nutanix_subnet.acctest-managed"),
-					resource.TestCheckResourceAttr("nutanix_subnet.acctest-managed", "name", "acctest-managed-updateName"),
-					resource.TestCheckResourceAttr("nutanix_subnet.acctest-managed", "description", "Description of my unit test VLAN updated"),
+					testAccCheckNutanixSubnetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", "acctest-managed-updateName"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Description of my unit test VLAN updated"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_type", "VLAN"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"description"},
 			},
 		},
 	})

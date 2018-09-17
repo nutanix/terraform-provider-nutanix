@@ -109,7 +109,6 @@ The following arguments are supported:
 * `categories`: - (Optional) Categories for the image.
 * `project_reference`: - (Optional) The reference to a project.
 * `owner_reference`: - (Optional) The reference to a user.
-* `api_version` - (Optional)
 * `description`: - (Optional) A description for image.
 * `quarantine_rule_action`: - (Optional) These rules are used for quarantining suspected VMs. Target group is a required attribute. Empty inbound_allow_list will not allow anything into target group. Empty outbound_allow_list will allow everything from target group.
 * `quarantine_rule_outbound_allow_list`: - (Optional)
@@ -144,6 +143,7 @@ The following attributes are exported:
 * `retrieval_uri_list`: - List of URIs where the raw image data can be accessed.
 * `size_bytes`: - The size of the image in bytes.
 * `state`: - The state of the Network Security Rule.
+* `api_version` - The version of the API.
 
 ### Metadata
 

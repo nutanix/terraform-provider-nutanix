@@ -3,6 +3,7 @@ package nutanix
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
@@ -15,9 +16,6 @@ func resourceNutanixCategoryValue() *schema.Resource {
 		Read:   resourceNutanixCategoryValueRead,
 		Update: resourceNutanixCategoryValueCreateOrUpdate,
 		Delete: resourceNutanixCategoryValueDelete,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
 		Schema: map[string]*schema.Schema{
 			"value": {
 				Type:     schema.TypeString,
@@ -35,7 +33,6 @@ func resourceNutanixCategoryValue() *schema.Resource {
 			},
 			"api_version": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"name": {
@@ -58,10 +55,6 @@ func resourceNutanixCategoryValueCreateOrUpdate(resourceData *schema.ResourceDat
 	value, valueOK := resourceData.GetOk("value")
 
 	// Read Arguments and set request values
-	if v, ok := resourceData.GetOk("api_version"); ok {
-		request.APIVersion = utils.StringPtr(v.(string))
-	}
-
 	if desc, ok := resourceData.GetOk("description"); ok {
 		request.Description = utils.StringPtr(desc.(string))
 	}
@@ -104,6 +97,9 @@ func resourceNutanixCategoryValueRead(d *schema.ResourceData, meta interface{}) 
 	resp, err := conn.V3.GetCategoryValue(name.(string), d.Id())
 
 	if err != nil {
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
 		return err
 	}
 
