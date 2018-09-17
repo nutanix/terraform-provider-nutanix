@@ -62,7 +62,6 @@ The following arguments are supported:
 * `project_reference`: - (Optional) The reference to a project.
 * `owner_reference`: - (Optional) The reference to a user.
 * `availability_zone_reference`: - (Optional) The reference to a availability_zone.
-* `api_version`
 * `description`: - (Optional) A description for vm.
 * `num_vnuma_nodes`: - (Optional) Number of vNUMA nodes. 0 means vNUMA is disabled.
 * `nic_list`: - (Optional) NICs attached to the VM.
@@ -184,6 +183,7 @@ The following attributes are exported:
 The following attributes are exported:
 
 * `metadata`: - The vm kind metadata.
+* `api_version` - The version of the API.
 * `state`: - The state of the vm.
 * `ip_address`: - An IP address.
 * `host_reference`: - Reference to a host.

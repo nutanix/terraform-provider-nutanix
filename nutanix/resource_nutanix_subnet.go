@@ -22,7 +22,6 @@ func resourceNutanixSubnet() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"api_version": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"description": {
@@ -328,9 +327,6 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("please provide the required attributes name, subnet_type")
 	}
 
-	if v, ok := d.GetOk("api_version"); ok {
-		request.APIVersion = utils.StringPtr(v.(string))
-	}
 	if !nok {
 		return fmt.Errorf("please provide the required name attribute")
 	}

@@ -33,7 +33,6 @@ func resourceNutanixImage() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"api_version": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"metadata": {
@@ -273,10 +272,6 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	// Read Arguments and set request values
-	if v, ok := d.GetOk("api_version"); ok {
-		request.APIVersion = utils.StringPtr(v.(string))
-	}
-
 	if !nok {
 		return fmt.Errorf("please provide the required attribute name")
 	}
