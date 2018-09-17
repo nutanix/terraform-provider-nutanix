@@ -55,7 +55,7 @@ resource "nutanix_subnet" "next-iac-managed" {
 * `cluster_name`: - (Optional) The name of a cluster.
 * `description`: - (Optional) A description for subnet.
 * `name`: - (Optional) Subnet name (Readonly).
-* `categories`: - (Optional) The API Version.
+* `categories`: - (Optional) The categories of the resource.
 * `owner_reference`: - (Optional) The reference to a user.
 * `project_reference`: - (Optional) The reference to a project.
 * `vswitch_name`: - (Optional).
@@ -75,7 +75,8 @@ resource "nutanix_subnet" "next-iac-managed" {
 The following attributes are exported:
 
 * `metadata`: - The vm kind metadata.
-* `state`: -
+* `state`: - The state of the subnet.
+* `api_version` - The version of the API.
 
 ### Metadata
 

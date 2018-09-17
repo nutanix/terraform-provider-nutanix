@@ -31,8 +31,7 @@ resource "nutanix_category_value" "test"{
 The following arguments are supported:
 
 * `name`: - (Required) The category_key name for the category value.
-* `value` - (Required) The value for the category value. 
-* `api_version` - (Optional) The version of the API.
+* `value` - (Required) The value for the category value.
 * `description`: - (Optional) A description for category value.
 
 ## Attributes Reference
@@ -40,5 +39,6 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `system_defined`: - Specifying whether its a system defined category.
+* `api_version` - (Optional) The version of the API.
 
 See detailed information in [Nutanix Image](http://developer.nutanix.com/reference/prism_central/v3/#category).
