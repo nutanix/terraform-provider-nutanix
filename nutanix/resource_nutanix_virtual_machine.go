@@ -564,50 +564,52 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 			"disk_list": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"uuid": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Computed: true,
+							ForceNew: true,
 						},
 						"disk_size_bytes": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Computed: true,
+							ForceNew: true,
 						},
 						"disk_size_mib": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Computed: true,
+							ForceNew: true,
 						},
 						"device_properties": {
 							Type:     schema.TypeList,
 							Optional: true,
-							Computed: true,
+							ForceNew: true,
+
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"device_type": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
+										ForceNew: true,
 									},
 									"disk_address": {
 										Type:     schema.TypeList,
 										Optional: true,
-										Computed: true,
+										ForceNew: true,
+
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"device_index": {
 													Type:     schema.TypeInt,
 													Optional: true,
-													Computed: true,
+													ForceNew: true,
 												},
 												"adapter_type": {
 													Type:     schema.TypeString,
 													Optional: true,
-													Computed: true,
+													ForceNew: true,
 												},
 											},
 										},
@@ -618,18 +620,19 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 						"data_source_reference": {
 							Type:     schema.TypeList,
 							Optional: true,
-							Computed: true,
+							ForceNew: true,
+
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"kind": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
+										ForceNew: true,
 									},
 									"uuid": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -638,23 +641,24 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 						"volume_group_reference": {
 							Type:     schema.TypeList,
 							Optional: true,
-							Computed: true,
+							ForceNew: true,
+
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"kind": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
+										ForceNew: true,
 									},
 									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
+										ForceNew: true,
 									},
 									"uuid": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -865,7 +869,8 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	d.Set("power_state_mechanism", utils.StringValue(resp.Status.Resources.PowerStateMechanism.Mechanism))
 	d.Set("vga_console_enabled", utils.BoolValue(resp.Status.Resources.VgaConsoleEnabled))
 	d.SetId(*resp.Metadata.UUID)
-	return d.Set("disk_list", setDiskList(resp.Status.Resources.DiskList, resp.Status.Resources.GuestCustomization))
+	return nil
+	//return d.Set("disk_list", setDiskList(resp.Status.Resources.DiskList, resp.Status.Resources.GuestCustomization))
 }
 
 func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -1146,60 +1151,60 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		_, n := d.GetChange("boot_device_mac_address")
 		bd.MacAddress = utils.StringPtr(n.(string))
 	}
-	if d.HasChange("disk_list") {
-		_, n := d.GetChange("disk_list")
-		if dsk, ok := n.([]interface{}); ok && len(dsk) > 0 && dsk != nil {
-			dls := make([]*v3.VMDisk, len(dsk))
+	// if d.HasChange("disk_list") {
+	// 	_, n := d.GetChange("disk_list")
+	// 	if dsk, ok := n.([]interface{}); ok && len(dsk) > 0 && dsk != nil {
+	// 		dls := make([]*v3.VMDisk, len(dsk))
 
-			for k, val := range dsk {
+	// 		for k, val := range dsk {
 
-				if response.Status.Resources.GuestCustomization != nil {
-					if response.Status.Resources.GuestCustomization.CloudInit != nil &&
-						val.(map[string]interface{})["device_properties"].([]interface{})[0].(map[string]interface{})["device_type"].(string) == "CDROM" {
-						continue
-					}
-				}
+	// 			if response.Status.Resources.GuestCustomization != nil {
+	// 				if response.Status.Resources.GuestCustomization.CloudInit != nil &&
+	// 					val.(map[string]interface{})["device_properties"].([]interface{})[0].(map[string]interface{})["device_type"].(string) == "CDROM" {
+	// 					continue
+	// 				}
+	// 			}
 
-				v := val.(map[string]interface{})
-				dl := &v3.VMDisk{
-					UUID:          validateMapStringValue(v, "uuid"),
-					DiskSizeBytes: validateMapIntValue(v, "disk_size_bytes"),
-					DiskSizeMib:   validateMapIntValue(v, "disk_size_mib"),
-				}
-				if v1, ok1 := v["device_properties"]; ok1 && v1.([]interface{}) != nil && len(v1.([]interface{})) > 0 {
-					dvp := v1.([]interface{})
-					d := dvp[0].(map[string]interface{})
-					dp := &v3.VMDiskDeviceProperties{
-						DeviceType: validateMapStringValue(d, "device_type"),
-					}
-					if v2, ok := d["disk_address"]; ok && len(v2.([]interface{})) > 0 && v2.([]interface{})[0] != nil {
-						da := v2.([]interface{})[0].(map[string]interface{})
-						dp.DiskAddress = &v3.DiskAddress{
-							AdapterType: validateMapStringValue(da, "adapter_type"),
-							DeviceIndex: validateMapIntValue(da, "device_index"),
-						}
-					}
-					dl.DeviceProperties = dp
-				}
-				if v1, ok := v["data_source_reference"]; ok {
-					dsref := v1.([]interface{})
-					if len(dsref) > 0 && dsref[0] != nil {
-						dsri := dsref[0].(map[string]interface{})
-						dl.DataSourceReference = validateShortRef(dsri)
-					}
-				}
-				if v1, ok := v["volume_group_reference"]; ok {
-					volgr := v1.([]interface{})
-					if len(volgr) > 0 && volgr[0] != nil {
-						dsri := volgr[0].(map[string]interface{})
-						dl.VolumeGroupReference = validateRef(dsri)
-					}
-				}
-				dls[k] = dl
-			}
-			res.DiskList = dls
-		}
-	}
+	// 			v := val.(map[string]interface{})
+	// 			dl := &v3.VMDisk{
+	// 				UUID:          validateMapStringValue(v, "uuid"),
+	// 				DiskSizeBytes: validateMapIntValue(v, "disk_size_bytes"),
+	// 				DiskSizeMib:   validateMapIntValue(v, "disk_size_mib"),
+	// 			}
+	// 			if v1, ok1 := v["device_properties"]; ok1 && v1.([]interface{}) != nil && len(v1.([]interface{})) > 0 {
+	// 				dvp := v1.([]interface{})
+	// 				d := dvp[0].(map[string]interface{})
+	// 				dp := &v3.VMDiskDeviceProperties{
+	// 					DeviceType: validateMapStringValue(d, "device_type"),
+	// 				}
+	// 				if v2, ok := d["disk_address"]; ok && len(v2.([]interface{})) > 0 && v2.([]interface{})[0] != nil {
+	// 					da := v2.([]interface{})[0].(map[string]interface{})
+	// 					dp.DiskAddress = &v3.DiskAddress{
+	// 						AdapterType: validateMapStringValue(da, "adapter_type"),
+	// 						DeviceIndex: validateMapIntValue(da, "device_index"),
+	// 					}
+	// 				}
+	// 				dl.DeviceProperties = dp
+	// 			}
+	// 			if v1, ok := v["data_source_reference"]; ok {
+	// 				dsref := v1.([]interface{})
+	// 				if len(dsref) > 0 && dsref[0] != nil {
+	// 					dsri := dsref[0].(map[string]interface{})
+	// 					dl.DataSourceReference = validateShortRef(dsri)
+	// 				}
+	// 			}
+	// 			if v1, ok := v["volume_group_reference"]; ok {
+	// 				volgr := v1.([]interface{})
+	// 				if len(volgr) > 0 && volgr[0] != nil {
+	// 					dsri := volgr[0].(map[string]interface{})
+	// 					dl.VolumeGroupReference = validateRef(dsri)
+	// 				}
+	// 			}
+	// 			dls[k] = dl
+	// 		}
+	// 		res.DiskList = dls
+	// 	}
+	// }
 	boot.BootDevice = bd
 
 	if dska.AdapterType == nil && dska.DeviceIndex == nil && bd.MacAddress == nil {
