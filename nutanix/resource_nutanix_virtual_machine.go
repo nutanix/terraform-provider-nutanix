@@ -321,7 +321,6 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 			},
 			"power_state": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"nutanix_guest_tools": {
@@ -967,11 +966,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		_, n := d.GetChange("guest_os_id")
 		res.GuestOsID = utils.StringPtr(n.(string))
 	}
-	if d.HasChange("power_state") {
-		_, n := d.GetChange("power_state")
-
-		res.PowerState = utils.StringPtr(n.(string))
-	}
 	if d.HasChange("num_vcpus_per_socket") {
 		_, n := d.GetChange("num_vcpus_per_socket")
 		res.NumVcpusPerSocket = utils.Int64Ptr(int64(n.(int)))
@@ -1296,6 +1290,8 @@ func resourceNutanixVirtualMachineExists(d *schema.ResourceData, meta interface{
 }
 
 func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
+	vm.PowerState = utils.StringPtr("ON")
+
 	if v, ok := d.GetOk("num_vnuma_nodes"); ok {
 		vm.VMVnumaConfig.NumVnumaNodes = utils.Int64Ptr(v.(int64))
 	}
@@ -1357,9 +1353,6 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	}
 	if v, ok := d.GetOk("guest_os_id"); ok {
 		vm.GuestOsID = utils.StringPtr(v.(string))
-	}
-	if v, ok := d.GetOk("power_state"); ok {
-		vm.PowerState = utils.StringPtr(v.(string))
 	}
 	if v, ok := d.GetOk("nutanix_guest_tools"); ok {
 		ngt := v.(map[string]interface{})
