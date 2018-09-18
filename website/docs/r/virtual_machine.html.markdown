@@ -62,7 +62,6 @@ The following arguments are supported:
 * `project_reference`: - (Optional) The reference to a project.
 * `owner_reference`: - (Optional) The reference to a user.
 * `availability_zone_reference`: - (Optional) The reference to a availability_zone.
-* `api_version`
 * `description`: - (Optional) A description for vm.
 * `num_vnuma_nodes`: - (Optional) Number of vNUMA nodes. 0 means vNUMA is disabled.
 * `nic_list`: - (Optional) NICs attached to the VM.
@@ -95,17 +94,17 @@ The disk_list attribute supports the following:
 
 * `UUID`: - (Optional) The device ID which is used to uniquely identify this particular disk.
 * `disk_size_bytes` - (Optional) Size of the disk in Bytes.
-* `disk_size_mib` - (Optional) Size of the disk in MiB. Must match the size specified in 'disk_size_bytes' - rounded up to the nearest MiB -  when that field is present.
-* `device_properties` - (Optional)
-* `data_source_reference` - (Optional) Reference
-* `volume_group_reference` - (Optional) Reference
+* `disk_size_mib` - Size of the disk in MiB. Must match the size specified in 'disk_size_bytes' - rounded up to the nearest MiB - when that field is present.
+* `device_properties` - Properties to a device.
+* `data_source_reference` - Reference to a data source.
+* `volume_group_reference` - Reference to a volume group.
 
 ### Device Properties
 
 The device_properties attribute supports the following.
 
-* `device_type`: - (Optional)
-* `disk_address`: - (Optional)
+* `device_type`: - A Disk type (default: DISK).
+* `disk_address`: - Address of disk to boot from.
 
 ### Sysprep
 
@@ -125,8 +124,8 @@ The guest_customization_cloud_init attribute supports the following:
 
  The boot_device_disk_address attribute supports the following:
 
-* `device_index`: - (Optional)
-* `adapter_type`: - (Optional)
+* `device_index`: - (Optional) The index of the disk address.
+* `adapter_type`: - (Optional) The adapter type of the disk address.
 
 ### GPU List
 
@@ -161,19 +160,16 @@ The nutanix_guest_tools attribute supports the following:
 
 The nic_list attribute supports the following:
 
-* `nic_type`: - (Optional) The type of this NIC. Defaults to NORMAL_NIC. (Options : NORMAL_NIC , DIRECT_NIC , NETWORK_FUNCTION_NIC)
-  .
-* `UUID`: - (Optional) The NIC's UUID, which is used to uniquely identify this particular NIC. This UUID may be used to refer to the NIC outside the context of the particular VM it is attached to.
-
-* `floating_ip`: - (ReadOnly)
-
-* `model`: - (Optional) The model of this NIC. (Options : VIRTIO , E1000).
-* `network_function_nic_type`: - (Optional) The type of this Network function NIC. Defaults to INGRESS. (Options : INGRESS , EGRESS , TAP).
-* `mac_address`: - (Optional) The MAC address for the adapter.
-* `ip_endpoint_list`: - (Optional) IP endpoints for the adapter. Currently, IPv4 addresses are supported.
-* `network_function_chain_reference`: - (Optional) The reference to a network_function_chain.
-* `subnet_reference`: - (Optional) The reference to a subnet.
-* `subnet_reference_name`: - (Optional) The name of the subnet reference to.
+* `nic_type`: - The type of this NIC. Defaults to NORMAL_NIC. (Options : NORMAL_NIC , DIRECT_NIC , NETWORK_FUNCTION_NIC).
+* `uuid`: - The NIC's UUID, which is used to uniquely identify this particular NIC. This UUID may be used to refer to the NIC outside the context of the particular VM it is attached to.
+* `floating_ip`: -  The Floating IP associated with the vnic.
+* `model`: - The model of this NIC. (Options : VIRTIO , E1000).
+* `network_function_nic_type`: - The type of this Network function NIC. Defaults to INGRESS. (Options : INGRESS , EGRESS , TAP).
+* `mac_address`: - The MAC address for the adapter.
+* `ip_endpoint_list`: - IP endpoints for the adapter. Currently, IPv4 addresses are supported.
+* `network_function_chain_reference`: - The reference to a network_function_chain.
+* `subnet_reference`: - The reference to a subnet.
+* `subnet_reference_name`: - The name of the subnet reference to.
 
 ### ip_endpoint_list
 
@@ -187,9 +183,10 @@ The following attributes are exported:
 The following attributes are exported:
 
 * `metadata`: - The vm kind metadata.
-* `state`: -
-* `ip_address`: -
-* `host_reference`: -
+* `api_version` - The version of the API.
+* `state`: - The state of the vm.
+* `ip_address`: - An IP address.
+* `host_reference`: - Reference to a host.
 * `hypervisor_type`: - The hypervisor type for the hypervisor the VM is hosted on.
 
 ### Metadata

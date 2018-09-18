@@ -13,7 +13,7 @@ import (
 
 func TestAccNutanixVirtualMachine_basic(t *testing.T) {
 	r := acctest.RandInt()
-
+	resourceName := "nutanix_virtual_machine.vm1"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -22,24 +22,29 @@ func TestAccNutanixVirtualMachine_basic(t *testing.T) {
 			{
 				Config: testAccNutanixVMConfig(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.vm1"),
-					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "hardware_clock_timezone", "UTC"),
-					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "power_state", "ON"),
-					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "memory_size_mib", "186"),
-					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "num_sockets", "1"),
-					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "num_vcpus_per_socket", "1"),
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
 				),
 			},
 			{
 				Config: testAccNutanixVMConfigUpdate(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.vm1"),
-					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "hardware_clock_timezone", "UTC"),
-					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "power_state", "ON"),
-					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "memory_size_mib", "186"),
-					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "num_sockets", "2"),
-					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm1", "num_vcpus_per_socket", "1"),
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "2"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

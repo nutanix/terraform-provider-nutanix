@@ -14,33 +14,33 @@ Provides a Nutanix network security rule resource to Create a network security r
 
 ```hcl
 resource "nutanix_category_key" "test-category-key"{
-    name = "TIER-1"
-	  description = "TIER Category Key"
+  name = "TIER-1"
+  description = "TIER Category Key"
 }
 
 
 resource "nutanix_category_value" "WEB"{
-    name = "${nutanix_category_key.test-category-key.id}"
-	  description = "WEB Category Value"
-	 value = "WEB-1"
+  name = "${nutanix_category_key.test-category-key.id}"
+  description = "WEB Category Value"
+  value = "WEB-1"
 }
 
 resource "nutanix_category_value" "APP"{
     name = "${nutanix_category_key.test-category-key.id}"
-	  description = "APP Category Value"
-	 value = "APP-1"
+    description = "APP Category Value"
+    value = "APP-1"
 }
 
 resource "nutanix_category_value" "DB"{
     name = "${nutanix_category_key.test-category-key.id}"
-	  description = "DB Category Value"
-	 value = "DB-1"
+    description = "DB Category Value"
+    value = "DB-1"
 }
 
 resource "nutanix_category_value" "ashwini"{
     name = "${nutanix_category_key.test-category-key.id}"
-	  description = "ashwini Category Value"
-	 value = "ashwini-1"
+    description = "ashwini Category Value"
+    value = "ashwini-1"
 }
 
 
@@ -109,7 +109,6 @@ The following arguments are supported:
 * `categories`: - (Optional) Categories for the image.
 * `project_reference`: - (Optional) The reference to a project.
 * `owner_reference`: - (Optional) The reference to a user.
-* `api_version` - (Optional)
 * `description`: - (Optional) A description for image.
 * `quarantine_rule_action`: - (Optional) These rules are used for quarantining suspected VMs. Target group is a required attribute. Empty inbound_allow_list will not allow anything into target group. Empty outbound_allow_list will allow everything from target group.
 * `quarantine_rule_outbound_allow_list`: - (Optional)
@@ -136,7 +135,6 @@ The following arguments are supported:
 * `isolation_rule_second_entity_filter_type`: - (Optional) - The type of the filter being used.
 * `isolation_rule_second_entity_filter_params`: - (Optional) - A list of category key and list of values.
 
-
 ## Attributes Reference
 
 The following attributes are exported:
@@ -144,7 +142,8 @@ The following attributes are exported:
 * `metadata`: - The image kind metadata.
 * `retrieval_uri_list`: - List of URIs where the raw image data can be accessed.
 * `size_bytes`: - The size of the image in bytes.
-* `state`: -
+* `state`: - The state of the Network Security Rule.
+* `api_version` - The version of the API.
 
 ### Metadata
 

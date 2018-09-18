@@ -15,6 +15,8 @@ import (
 
 func TestAccNutanixImage_basic(t *testing.T) {
 	rInt := acctest.RandInt()
+	resourceName := "nutanix_image.acctest-test"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -23,15 +25,20 @@ func TestAccNutanixImage_basic(t *testing.T) {
 			{
 				Config: testAccNutanixImageConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixImageExists("nutanix_image.acctest-test"),
+					testAccCheckNutanixImageExists(resourceName),
 				),
 			},
 			{
 				Config: testAccNutanixImageConfigUpdate(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixImageExists("nutanix_image.acctest-test"),
-					resource.TestCheckResourceAttr("nutanix_image.acctest-test", "name", fmt.Sprintf("Ubuntu-%d-updated", rInt)),
+					testAccCheckNutanixImageExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("Ubuntu-%d-updated", rInt)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

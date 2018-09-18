@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
@@ -33,7 +34,6 @@ func resourceNutanixImage() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"api_version": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"metadata": {
@@ -273,10 +273,6 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	// Read Arguments and set request values
-	if v, ok := d.GetOk("api_version"); ok {
-		request.APIVersion = utils.StringPtr(v.(string))
-	}
-
 	if !nok {
 		return fmt.Errorf("please provide the required attribute name")
 	}
@@ -363,6 +359,9 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 	// Make request to the API
 	resp, err := conn.V3.GetImage(d.Id())
 	if err != nil {
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
 		return err
 	}
 
@@ -445,6 +444,9 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 	response, err := conn.V3.GetImage(d.Id())
 
 	if err != nil {
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
 		return err
 	}
 
