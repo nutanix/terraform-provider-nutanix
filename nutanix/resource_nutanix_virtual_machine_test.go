@@ -155,12 +155,8 @@ resource "nutanix_virtual_machine" "vm1" {
 			kind = "image"
 			uuid = "${nutanix_image.cirros-034-disk.id}"
 		}]
-
-		# defining an additional entry in the disk_list array will create another
-		# disk in addition to the image we're showing off above.
-		device_properties = [{
-			device_type = "DISK"
-		}]
+	},
+	{
 		disk_size_mib = 5000
 	}]
 }
