@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccNutanixCategoryKey_basic(t *testing.T) {
+	resourceName := "nutanix_category_key.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -21,8 +22,13 @@ func TestAccNutanixCategoryKey_basic(t *testing.T) {
 			{
 				Config: testAccNutanixCategoryKeyConfig(acctest.RandIntRange(0, 500)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixCategoryKeyExists("nutanix_category_key.test"),
+					testAccCheckNutanixCategoryKeyExists(resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

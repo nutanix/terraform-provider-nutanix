@@ -15,32 +15,32 @@ Describes a Network security rule
 ```hcl
 resource "nutanix_category_key" "test-category-key"{
     name = "TIER-1"
-	description = "TIER Category Key"
+  description = "TIER Category Key"
 }
 
 
 resource "nutanix_category_value" "WEB"{
     name = "${nutanix_category_key.test-category-key.id}"
-	  description = "WEB Category Value"
-	 value = "WEB-1"
+    description = "WEB Category Value"
+   value = "WEB-1"
 }
 
 resource "nutanix_category_value" "APP"{
     name = "${nutanix_category_key.test-category-key.id}"
-	  description = "APP Category Value"
-	 value = "APP-1"
+    description = "APP Category Value"
+   value = "APP-1"
 }
 
 resource "nutanix_category_value" "DB"{
     name = "${nutanix_category_key.test-category-key.id}"
-	  description = "DB Category Value"
-	 value = "DB-1"
+    description = "DB Category Value"
+    value = "DB-1"
 }
 
 resource "nutanix_category_value" "ashwini"{
     name = "${nutanix_category_key.test-category-key.id}"
-	  description = "ashwini Category Value"
-	 value = "ashwini-1"
+    description = "ashwini Category Value"
+    value = "ashwini-1"
 }
 
 
@@ -101,7 +101,7 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
 }
 
 data "nutanix_network_security_rule" "test" {
-	network_security_rule_id = "${nutanix_network_security_rule.TEST-TIER.id}"
+  network_security_rule_id = "${nutanix_network_security_rule.TEST-TIER.id}"
 }
 ```
 
@@ -158,7 +158,6 @@ The metadata attribute exports the following:
 * `spec_version`: - Version number of the latest spec.
 * `spec_hash`: - Hash of the spec. This will be returned from server.
 * `name`: - image name.
-
 
 ### Categories
 

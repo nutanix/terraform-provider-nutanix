@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -22,7 +23,6 @@ func resourceNutanixSubnet() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"api_version": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"description": {
@@ -328,9 +328,6 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("please provide the required attributes name, subnet_type")
 	}
 
-	if v, ok := d.GetOk("api_version"); ok {
-		request.APIVersion = utils.StringPtr(v.(string))
-	}
 	if !nok {
 		return fmt.Errorf("please provide the required name attribute")
 	}
@@ -348,15 +345,14 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err := getSubnetResources(d, subnet); err != nil {
-		return err
+		return fmt.Errorf("error retrieving Nutanix Subnet resources %+v", err)
 	}
 
 	spec.Description = utils.StringPtr(d.Get("description").(string))
 
 	subnetUUID, err := resourceNutanixSubnetExists(conn, d.Get("name").(string))
-
 	if err != nil {
-		return err
+		return fmt.Errorf("error checkinf if subnet already exists %+v", err)
 	}
 
 	if subnetUUID != nil {
@@ -370,19 +366,10 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 
 	resp, err := conn.V3.CreateSubnet(request)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating Nutanix Subnet %s: %+v", utils.StringValue(spec.Name), err)
 	}
 
 	d.SetId(*resp.Metadata.UUID)
-
-	// stateConf := &resource.StateChangeConf{
-	// 	Pending:    []string{"PENDING", "RUNNING"},
-	// 	Target:     []string{"COMPLETE"},
-	// 	Refresh:    subnetStateRefreshFunc(conn, d.Id()),
-	// 	Timeout:    10 * time.Minute,
-	// 	Delay:      10 * time.Second,
-	// 	MinTimeout: 3 * time.Second,
-	// }
 
 	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
 
@@ -397,7 +384,9 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("error waiting for subnet (%s) to create: %s", d.Id(), err)
+		id := d.Id()
+		d.SetId("")
+		return fmt.Errorf("error waiting for subnet id (%s) to create: %+v", id, err)
 	}
 
 	// Setting Description because in Get request is not present.
@@ -408,10 +397,13 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
-
-	resp, err := conn.V3.GetSubnet(d.Id())
+	id := d.Id()
+	resp, err := conn.V3.GetSubnet(id)
 	if err != nil {
-		return err
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
+		return fmt.Errorf("error subnet id (%s): %+v", id, err)
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
@@ -480,34 +472,48 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("dhcp_server_address", dhcpSA); err != nil {
-		return nil
+		return fmt.Errorf("error setting attribute for subnet id (%s) dhcp_server_address: %s", d.Id(), err)
 	}
 	if err := d.Set("ip_config_pool_list_ranges", ipcpl); err != nil {
-		return nil
+		return fmt.Errorf("error setting attribute for subnet id (%s) ip_config_pool_list_ranges: %s", d.Id(), err)
 	}
 	if err := d.Set("dhcp_options", dOptions); err != nil {
-		return nil
+		return fmt.Errorf("error setting attribute for subnet id (%s) dhcp_options: %s", d.Id(), err)
 	}
 	if err := d.Set("dhcp_domain_name_server_list", dnsList); err != nil {
-		return nil
+		return fmt.Errorf("error setting attribute for subnet id (%s) dhcp_domain_name_server_list: %s", d.Id(), err)
 	}
 	if err := d.Set("dhcp_domain_search_list", dsList); err != nil {
-		return nil
+		return fmt.Errorf("error setting attribute for subnet id (%s) dhcp_domain_search_list: %s", d.Id(), err)
 	}
 
 	d.Set("cluster_reference_name", utils.StringValue(resp.Status.ClusterReference.Name))
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
-	d.Set("name", utils.StringValue(resp.Status.Name))
-	// d.Set("description", utils.StringValue(resp.Status.Description))
-	d.Set("state", utils.StringValue(resp.Status.State))
-	d.Set("vswitch_name", utils.StringValue(resp.Status.Resources.VswitchName))
-	d.Set("subnet_type", utils.StringValue(resp.Status.Resources.SubnetType))
+
+	nfcr := make(map[string]interface{})
+
+	if status := resp.Status; status != nil {
+		d.Set("name", utils.StringValue(status.Name))
+		d.Set("state", utils.StringValue(status.State))
+
+		if res := status.Resources; res != nil {
+
+			d.Set("vswitch_name", utils.StringValue(res.VswitchName))
+			d.Set("subnet_type", utils.StringValue(res.SubnetType))
+
+			d.Set("vlan_id", utils.Int64Value(res.VlanID))
+
+			if res.NetworkFunctionChainReference != nil {
+				nfcr = getReferenceValues(res.NetworkFunctionChainReference)
+			}
+		}
+
+	}
+	d.Set("network_function_chain_reference", nfcr)
 	d.Set("default_gateway_ip", dgIP)
 	d.Set("prefix_length", pl)
 	d.Set("subnet_ip", sIP)
 	d.Set("dhcp_server_address_port", port)
-	d.Set("vlan_id", utils.Int64Value(resp.Status.Resources.VlanID))
-	d.Set("network_function_chain_reference", getReferenceValues(resp.Status.Resources.NetworkFunctionChainReference))
 
 	d.SetId(*resp.Metadata.UUID)
 
@@ -524,10 +530,14 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 	dhcpO := &v3.DHCPOptions{}
 	spec := &v3.Subnet{}
 
-	response, err := conn.V3.GetSubnet(d.Id())
+	id := d.Id()
+	response, err := conn.V3.GetSubnet(id)
 
 	if err != nil {
-		return err
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
+		return fmt.Errorf("error retrieving for subnet id (%s) :%+v", id, err)
 	}
 
 	if response.Metadata != nil {
@@ -663,17 +673,8 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 
 	resp, errUpdate := conn.V3.UpdateSubnet(d.Id(), request)
 	if errUpdate != nil {
-		return errUpdate
+		return fmt.Errorf("error updating subnet id %s): %s", d.Id(), errUpdate)
 	}
-
-	// stateConf := &resource.StateChangeConf{
-	// 	Pending:    []string{"PENDING", "RUNNING"},
-	// 	Target:     []string{"COMPLETE"},
-	// 	Refresh:    subnetStateRefreshFunc(conn, d.Id()),
-	// 	Timeout:    10 * time.Minute,
-	// 	Delay:      10 * time.Second,
-	// 	MinTimeout: 3 * time.Second,
-	// }
 
 	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
 
@@ -703,17 +704,8 @@ func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error
 	resp, err := conn.V3.DeleteSubnet(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting subnet id %s): %s", d.Id(), err)
 	}
-
-	// stateConf := &resource.StateChangeConf{
-	// 	Pending:    []string{"PENDING", "RUNNING", "DELETE_IN_PROGRESS", "COMPLETE"},
-	// 	Target:     []string{"DELETED"},
-	// 	Refresh:    subnetStateRefreshFunc(conn, d.Id()),
-	// 	Timeout:    10 * time.Minute,
-	// 	Delay:      10 * time.Second,
-	// 	MinTimeout: 3 * time.Second,
-	// }
 
 	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
 

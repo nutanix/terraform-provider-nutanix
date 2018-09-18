@@ -56,9 +56,8 @@ type VMNic struct {
 
 // DiskAddress Disk Address.
 type DiskAddress struct {
-	AdapterType *string `json:"adapter_type"`
-
-	DeviceIndex *int64 `json:"device_index"`
+	AdapterType *string `json:"adapter_type,omitempty"`
+	DeviceIndex *int64  `json:"device_index,omitempty"`
 }
 
 // VMBootDevice Indicates which device a VM should boot from. One of disk_address or mac_address should be provided.
@@ -186,8 +185,7 @@ type VMPowerStateMechanism struct {
 
 // VMDiskDeviceProperties ...
 type VMDiskDeviceProperties struct {
-	DeviceType *string `json:"device_type,omitempty"`
-
+	DeviceType  *string      `json:"device_type,omitempty"`
 	DiskAddress *DiskAddress `json:"disk_address,omitempty"`
 }
 

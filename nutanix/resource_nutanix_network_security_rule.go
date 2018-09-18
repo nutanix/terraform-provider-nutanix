@@ -5,6 +5,7 @@ import (
 	"log"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -26,7 +27,6 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"api_version": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"metadata": {
@@ -871,9 +871,6 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 	}
 
 	// Read arguments and set request values
-	if v, ok := d.GetOk("api_version"); ok {
-		request.APIVersion = utils.StringPtr(v.(string))
-	}
 
 	// only set kind
 	if errMetad := getMetadataAttributes(d, metadata, "network_security_rule"); errMetad != nil {
@@ -952,6 +949,9 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 	// Make request to the API
 	resp, err := conn.V3.GetNetworkSecurityRule(d.Id())
 	if err != nil {
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
 		return err
 	}
 
@@ -1433,6 +1433,9 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 	response, err := conn.V3.GetNetworkSecurityRule(d.Id())
 
 	if err != nil {
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
 		return err
 	}
 
