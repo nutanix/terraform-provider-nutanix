@@ -635,7 +635,6 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
-	n := setNicList(resp.Status.Resources.NicList)
 
 	if err := d.Set("metadata", m); err != nil {
 		return err
@@ -655,7 +654,7 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	if err := d.Set("cluster_reference", getClusterReferenceValues(resp.Status.ClusterReference)); err != nil {
 		return err
 	}
-	if err := d.Set("nic_list", n); err != nil {
+	if err := d.Set("nic_list", flattenNicList(resp.Status.Resources.NicList)); err != nil {
 		return err
 	}
 	if err := d.Set("host_reference", getReferenceValues(resp.Status.Resources.HostReference)); err != nil {
@@ -664,7 +663,7 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	if err := d.Set("nutanix_guest_tools", setNutanixGuestTools(resp.Status.Resources.GuestTools)); err != nil {
 		return err
 	}
-	if err := d.Set("gpu_list", setGPUList(resp.Status.Resources.GpuList)); err != nil {
+	if err := d.Set("gpu_list", flattenGPUList(resp.Status.Resources.GpuList)); err != nil {
 		return err
 	}
 	if err := d.Set("parent_reference", getReferenceValues(resp.Status.Resources.ParentReference)); err != nil {
