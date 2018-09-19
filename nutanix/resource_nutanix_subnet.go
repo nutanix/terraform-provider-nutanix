@@ -598,20 +598,10 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		spec.ClusterReference = validateRef(a)
 	}
 	if d.HasChange("dhcp_domain_name_server_list") {
-		dd := d.Get("dhcp_domain_name_server_list").([]interface{})
-		ddn := make([]*string, len(dd))
-		for k, v := range dd {
-			ddn[k] = utils.StringPtr(v.(string))
-		}
-		dhcpO.DomainNameServerList = ddn
+		dhcpO.DomainNameServerList = expandStringList(d.Get("dhcp_domain_name_server_list").([]interface{}))
 	}
 	if d.HasChange("dhcp_domain_search_list") {
-		dd := d.Get("dhcp_domain_search_list").([]interface{})
-		ddn := make([]*string, len(dd))
-		for k, v := range dd {
-			ddn[k] = utils.StringPtr(v.(string))
-		}
-		dhcpO.DomainSearchList = ddn
+		dhcpO.DomainSearchList = expandStringList(d.Get("dhcp_domain_search_list").([]interface{}))
 	}
 	if d.HasChange("ip_config_pool_list_ranges") {
 		dd := d.Get("ip_config_pool_list_ranges").([]interface{})
@@ -631,8 +621,8 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		dhcpO.TFTPServerName = validateMapStringValue(dOptions, "tftp_server_name")
 	}
 	if d.HasChange("network_function_chain_reference") {
-		a := d.Get("network_function_chain_reference").(map[string]interface{})
-		res.NetworkFunctionChainReference = validateRef(a)
+		res.NetworkFunctionChainReference =
+			validateRef(d.Get("network_function_chain_reference").(map[string]interface{}))
 	}
 	if d.HasChange("vswitch_name") {
 		res.VswitchName = utils.StringPtr(d.Get("vswitch_name").(string))
@@ -813,24 +803,10 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 	}
 
 	if v, ok := d.GetOk("dhcp_domain_name_server_list"); ok {
-		p := v.([]interface{})
-		pool := make([]*string, len(p))
-
-		for k, v := range p {
-			pool[k] = utils.StringPtr(v.(string))
-		}
-
-		dhcpo.DomainNameServerList = pool
+		dhcpo.DomainNameServerList = expandStringList(v.([]interface{}))
 	}
 	if v, ok := d.GetOk("dhcp_domain_search_list"); ok {
-		p := v.([]interface{})
-		pool := make([]*string, len(p))
-
-		for k, v := range p {
-			pool[k] = utils.StringPtr(v.(string))
-		}
-
-		dhcpo.DomainSearchList = pool
+		dhcpo.DomainSearchList = expandStringList(v.([]interface{}))
 	}
 
 	v, ok := d.GetOk("vlan_id")

@@ -666,14 +666,14 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 		entity["cluster_reference_name"] = utils.StringValue(v.Status.ClusterReference.Name)
 		entity["state"] = utils.StringValue(v.Status.State)
 		entity["num_vnuma_nodes"] = utils.Int64Value(v.Status.Resources.VnumaConfig.NumVnumaNodes)
-		entity["nic_list"] = setNicList(v.Status.Resources.NicList)
+		entity["nic_list"] = flattenNicList(v.Status.Resources.NicList)
 		entity["host_reference"] = getReferenceValues(v.Status.Resources.HostReference)
 		entity["guest_os_id"] = utils.StringValue(v.Status.Resources.GuestOsID)
 		entity["power_state"] = utils.StringValue(v.Status.Resources.PowerState)
 		entity["nutanix_guest_tools"] = setNutanixGuestTools(v.Status.Resources.GuestTools)
 		entity["num_vcpus_per_socket"] = utils.Int64Value(v.Status.Resources.NumVcpusPerSocket)
 		entity["num_sockets"] = utils.Int64Value(v.Status.Resources.NumSockets)
-		entity["gpu_list"] = setGPUList(v.Status.Resources.GpuList)
+		entity["gpu_list"] = flattenGPUList(v.Status.Resources.GpuList)
 		entity["parent_reference"] = getReferenceValues(v.Status.Resources.ParentReference)
 		entity["memory_size_mib"] = utils.Int64Value(v.Status.Resources.MemorySizeMib)
 
@@ -794,7 +794,7 @@ func setDiskList(disk []*v3.VMDisk, hasCloudInit *v3.GuestCustomizationStatus) [
 	return diskList
 }
 
-func setGPUList(gpu []*v3.VMGpuOutputStatus) []map[string]interface{} {
+func flattenGPUList(gpu []*v3.VMGpuOutputStatus) []map[string]interface{} {
 	gpuList := make([]map[string]interface{}, 0)
 	if gpu != nil {
 		gpuList = make([]map[string]interface{}, len(gpu))
@@ -833,7 +833,7 @@ func setNutanixGuestTools(guest *v3.GuestToolsStatus) map[string]interface{} {
 	return nutanixGuestTools
 }
 
-func setNicList(nics []*v3.VMNicOutputStatus) []map[string]interface{} {
+func flattenNicList(nics []*v3.VMNicOutputStatus) []map[string]interface{} {
 	nicLists := make([]map[string]interface{}, 0)
 	if nics != nil {
 		nicLists = make([]map[string]interface{}, len(nics))

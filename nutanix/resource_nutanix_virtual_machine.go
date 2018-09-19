@@ -754,7 +754,6 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
-	n := setNicList(resp.Status.Resources.NicList)
 
 	if err := d.Set("metadata", m); err != nil {
 		return err
@@ -774,7 +773,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	if err := d.Set("cluster_reference", getClusterReferenceValues(resp.Status.ClusterReference)); err != nil {
 		return err
 	}
-	if err := d.Set("nic_list", n); err != nil {
+	if err := d.Set("nic_list", flattenNicList(resp.Status.Resources.NicList)); err != nil {
 		return err
 	}
 	if err := d.Set("host_reference", getReferenceValues(resp.Status.Resources.HostReference)); err != nil {
@@ -783,7 +782,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	if err := d.Set("nutanix_guest_tools", setNutanixGuestTools(resp.Status.Resources.GuestTools)); err != nil {
 		return err
 	}
-	if err := d.Set("gpu_list", setGPUList(resp.Status.Resources.GpuList)); err != nil {
+	if err := d.Set("gpu_list", flattenGPUList(resp.Status.Resources.GpuList)); err != nil {
 		return err
 	}
 	if err := d.Set("parent_reference", getReferenceValues(resp.Status.Resources.ParentReference)); err != nil {
@@ -1097,11 +1096,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		tool.State = validateMapStringValue(ngt, "state")
 
 		if val, ok2 := ngt["enabled_capability_list"]; ok2 && val.([]interface{}) != nil {
-			var l []*string
-			for _, list := range val.([]interface{}) {
-				l = append(l, utils.StringPtr(list.(string)))
-			}
-			tool.EnabledCapabilityList = l
+			tool.EnabledCapabilityList = expandStringList(val.([]interface{}))
 		}
 		guestTool.NutanixGuestTools = tool
 	}
@@ -1124,11 +1119,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 	if d.HasChange("boot_device_order_list") {
 		_, n := d.GetChange("boot_device_order_list")
-		var b []*string
-		for _, boot := range n.([]interface{}) {
-			b = append(b, utils.StringPtr(boot.(string)))
-		}
-		boot.BootDeviceOrderList = b
+		boot.BootDeviceOrderList = expandStringList(n.([]interface{}))
 	}
 
 	bd := &v3.VMBootDevice{}
@@ -1295,65 +1286,14 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	if v, ok := d.GetOk("num_vnuma_nodes"); ok {
 		vm.VMVnumaConfig.NumVnumaNodes = utils.Int64Ptr(v.(int64))
 	}
-	if v, ok := d.GetOk("nic_list"); ok {
-		n := v.([]interface{})
-		if len(n) > 0 {
-			nics := make([]*v3.VMNic, len(n))
 
-			for k, nc := range n {
-				val := nc.(map[string]interface{})
-				nic := &v3.VMNic{}
-
-				if value, ok := val["nic_type"]; ok && value.(string) != "" {
-					nic.NicType = utils.StringPtr(value.(string))
-				}
-				if value, ok := val["uuid"]; ok && value.(string) != "" {
-					nic.UUID = utils.StringPtr(value.(string))
-				}
-				if value, ok := val["network_function_nic_type"]; ok && value.(string) != "" {
-					nic.NetworkFunctionNicType = utils.StringPtr(value.(string))
-				}
-				if value, ok := val["mac_address"]; ok && value.(string) != "" {
-					nic.MacAddress = utils.StringPtr(value.(string))
-				}
-				if value, ok := val["model"]; ok && value.(string) != "" {
-					nic.Model = utils.StringPtr(value.(string))
-				}
-				if value, ok := val["ip_endpoint_list"]; ok {
-					ipl := value.([]interface{})
-					if len(ipl) > 0 {
-						ip := make([]*v3.IPAddress, len(ipl))
-						for k, i := range ipl {
-							v := i.(map[string]interface{})
-							v3ip := &v3.IPAddress{}
-
-							if ipset, ipsetok := v["ip"]; ipsetok {
-								v3ip.IP = utils.StringPtr(ipset.(string))
-							}
-							if iptype, iptypeok := v["type"]; iptypeok {
-								v3ip.Type = utils.StringPtr(iptype.(string))
-							}
-							ip[k] = v3ip
-						}
-						nic.IPEndpointList = ip
-					}
-				}
-				if value, ok := val["network_function_chain_reference"]; ok && len(value.(map[string]interface{})) != 0 {
-					v := value.(map[string]interface{})
-					nic.NetworkFunctionChainReference = validateRef(v)
-				}
-				if value, ok := val["subnet_reference"]; ok {
-					v := value.(map[string]interface{})
-					nic.SubnetReference = validateRef(v)
-				}
-				nics[k] = nic
-			}
-			vm.NicList = nics
-		}
-	}
 	if v, ok := d.GetOk("guest_os_id"); ok {
 		vm.GuestOsID = utils.StringPtr(v.(string))
 	}
+
+	vm.NicList = expandNicList(d)
+	vm.GpuList = expandGPUList(d)
+
 	if v, ok := d.GetOk("nutanix_guest_tools"); ok {
 		ngt := v.(map[string]interface{})
 
@@ -1364,11 +1304,7 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 			vm.GuestTools.NutanixGuestTools.State = utils.StringPtr(val.(string))
 		}
 		if val, ok2 := ngt["enabled_capability_list"]; ok2 {
-			var l []*string
-			for _, list := range val.([]interface{}) {
-				l = append(l, utils.StringPtr(list.(string)))
-			}
-			vm.GuestTools.NutanixGuestTools.EnabledCapabilityList = l
+			vm.GuestTools.NutanixGuestTools.EnabledCapabilityList = expandStringList(val.([]interface{}))
 		}
 	}
 	if v, ok := d.GetOk("num_vcpus_per_socket"); ok {
@@ -1377,38 +1313,18 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	if v, ok := d.GetOk("num_sockets"); ok {
 		vm.NumSockets = utils.Int64Ptr(int64(v.(int)))
 	}
-	if v, ok := d.GetOk("gpu_list"); ok {
-		gpl := make([]*v3.VMGpu, len(v.([]interface{})))
 
-		for k, va := range v.([]interface{}) {
-			val := va.(map[string]interface{})
-			gpu := &v3.VMGpu{}
-			if value, ok1 := val["vendor"]; ok1 {
-				gpu.Vendor = utils.StringPtr(value.(string))
-			}
-			if value, ok1 := val["device_id"]; ok1 {
-				gpu.DeviceID = utils.Int64Ptr(int64(value.(int)))
-			}
-			if value, ok1 := val["mode"]; ok1 {
-				gpu.Mode = utils.StringPtr(value.(string))
-			}
-			gpl[k] = gpu
-		}
-		vm.GpuList = gpl
-	}
 	if v, ok := d.GetOk("parent_reference"); ok {
 		val := v.(map[string]interface{})
 		vm.ParentReference = validateRef(val)
 	}
+
 	if v, ok := d.GetOk("memory_size_mib"); ok {
 		vm.MemorySizeMib = utils.Int64Ptr(int64(v.(int)))
 	}
+
 	if v, ok := d.GetOk("boot_device_order_list"); ok {
-		var b []*string
-		for _, boot := range v.([]interface{}) {
-			b = append(b, utils.StringPtr(boot.(string)))
-		}
-		vm.BootConfig.BootDeviceOrderList = b
+		vm.BootConfig.BootDeviceOrderList = expandStringList(v.([]interface{}))
 	}
 
 	bd := &v3.VMBootDevice{}
@@ -1492,6 +1408,72 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	if v, ok := d.GetOk("enable_script_exec"); ok {
 		vm.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec = utils.BoolPtr(v.(bool))
 	}
+
+	vm.DiskList = expandDiskList(d)
+
+	return nil
+}
+
+func expandNicList(d *schema.ResourceData) []*v3.VMNic {
+	if v, ok := d.GetOk("nic_list"); ok {
+		n := v.([]interface{})
+		if len(n) > 0 {
+			nics := make([]*v3.VMNic, 0)
+			for _, nc := range n {
+				val := nc.(map[string]interface{})
+				nic := &v3.VMNic{}
+
+				if value, ok := val["nic_type"]; ok && value.(string) != "" {
+					nic.NicType = utils.StringPtr(value.(string))
+				}
+				if value, ok := val["uuid"]; ok && value.(string) != "" {
+					nic.UUID = utils.StringPtr(value.(string))
+				}
+				if value, ok := val["network_function_nic_type"]; ok && value.(string) != "" {
+					nic.NetworkFunctionNicType = utils.StringPtr(value.(string))
+				}
+				if value, ok := val["mac_address"]; ok && value.(string) != "" {
+					nic.MacAddress = utils.StringPtr(value.(string))
+				}
+				if value, ok := val["model"]; ok && value.(string) != "" {
+					nic.Model = utils.StringPtr(value.(string))
+				}
+				if value, ok := val["ip_endpoint_list"]; ok {
+					ipl := value.([]interface{})
+					if len(ipl) > 0 {
+						ip := make([]*v3.IPAddress, len(ipl))
+						for k, i := range ipl {
+							v := i.(map[string]interface{})
+							v3ip := &v3.IPAddress{}
+
+							if ipset, ipsetok := v["ip"]; ipsetok {
+								v3ip.IP = utils.StringPtr(ipset.(string))
+							}
+							if iptype, iptypeok := v["type"]; iptypeok {
+								v3ip.Type = utils.StringPtr(iptype.(string))
+							}
+							ip[k] = v3ip
+						}
+						nic.IPEndpointList = ip
+					}
+				}
+				if value, ok := val["network_function_chain_reference"]; ok && len(value.(map[string]interface{})) != 0 {
+					v := value.(map[string]interface{})
+					nic.NetworkFunctionChainReference = validateRef(v)
+				}
+				if value, ok := val["subnet_reference"]; ok {
+					v := value.(map[string]interface{})
+					nic.SubnetReference = validateRef(v)
+				}
+				nics = append(nics, nic)
+			}
+			return nics
+		}
+	}
+	return nil
+}
+
+func expandDiskList(d *schema.ResourceData) []*v3.VMDisk {
 	if v, ok := d.GetOk("disk_list"); ok {
 		dsk := v.([]interface{})
 		if len(dsk) > 0 {
@@ -1549,37 +1531,62 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 				}
 				dls[k] = dl
 			}
-			vm.DiskList = dls
+			return dls
 		}
 	}
+	return nil
+}
 
+func expandGPUList(d *schema.ResourceData) []*v3.VMGpu {
+	if v, ok := d.GetOk("gpu_list"); ok {
+		if len(v.([]interface{})) > 0 {
+			gpl := make([]*v3.VMGpu, len(v.([]interface{})))
+
+			for k, va := range v.([]interface{}) {
+				val := va.(map[string]interface{})
+				gpu := &v3.VMGpu{}
+				if value, ok1 := val["vendor"]; ok1 {
+					gpu.Vendor = utils.StringPtr(value.(string))
+				}
+				if value, ok1 := val["device_id"]; ok1 {
+					gpu.DeviceID = utils.Int64Ptr(int64(value.(int)))
+				}
+				if value, ok1 := val["mode"]; ok1 {
+					gpu.Mode = utils.StringPtr(value.(string))
+				}
+				gpl[k] = gpu
+			}
+			return gpl
+		}
+	}
 	return nil
 }
 
 func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse) {
-	res.ParentReference = response.Status.Resources.ParentReference
-	res.VMVnumaConfig = &v3.VMVnumaConfig{NumVnumaNodes: response.Status.Resources.VnumaConfig.NumVnumaNodes}
 	res.GuestOsID = response.Status.Resources.GuestOsID
-	res.PowerState = response.Status.Resources.PowerState
-	res.NumVcpusPerSocket = response.Status.Resources.NumVcpusPerSocket
 	res.NumSockets = response.Status.Resources.NumSockets
+	res.PowerState = response.Status.Resources.PowerState
 	res.MemorySizeMib = response.Status.Resources.MemorySizeMib
-	res.HardwareClockTimezone = response.Status.Resources.HardwareClockTimezone
+	res.VMVnumaConfig = &v3.VMVnumaConfig{NumVnumaNodes: response.Status.Resources.VnumaConfig.NumVnumaNodes}
+	res.ParentReference = response.Status.Resources.ParentReference
+	res.NumVcpusPerSocket = response.Status.Resources.NumVcpusPerSocket
 	res.VgaConsoleEnabled = response.Status.Resources.VgaConsoleEnabled
+	res.HardwareClockTimezone = response.Status.Resources.HardwareClockTimezone
 
 	nold := make([]*v3.VMNic, len(response.Status.Resources.NicList))
 	if len(response.Status.Resources.NicList) > 0 {
 		for k, v := range response.Status.Resources.NicList {
 			nold[k] = &v3.VMNic{
-				NicType: v.NicType,
-				UUID:    v.UUID,
-				NetworkFunctionNicType: v.NetworkFunctionNicType,
-				MacAddress:             v.MacAddress,
-				Model:                  v.Model,
-				NetworkFunctionChainReference: v.NetworkFunctionChainReference,
-				SubnetReference:               v.SubnetReference,
+				UUID:                          v.UUID,
+				Model:                         v.Model,
+				NicType:                       v.NicType,
+				MacAddress:                    v.MacAddress,
 				IPEndpointList:                v.IPEndpointList,
+				SubnetReference:               v.SubnetReference,
+				NetworkFunctionNicType:        v.NetworkFunctionNicType,
+				NetworkFunctionChainReference: v.NetworkFunctionChainReference,
 			}
+
 		}
 	} else {
 		nold = nil
@@ -1590,8 +1597,8 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 	if len(response.Status.Resources.GpuList) > 0 {
 		for k, v := range response.Status.Resources.GpuList {
 			gold[k] = &v3.VMGpu{
-				Vendor:   v.Vendor,
 				Mode:     v.Mode,
+				Vendor:   v.Vendor,
 				DeviceID: v.DeviceID,
 			}
 		}
