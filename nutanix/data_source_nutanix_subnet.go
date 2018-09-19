@@ -361,13 +361,13 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 	if err := d.Set("categories", c); err != nil {
 		return err
 	}
-	if err := d.Set("project_reference", getReferenceValues(resp.Metadata.ProjectReference)); err != nil {
+	if err := d.Set("project_reference", flattenReferenceValues(resp.Metadata.ProjectReference)); err != nil {
 		return err
 	}
-	if err := d.Set("owner_reference", getReferenceValues(resp.Metadata.OwnerReference)); err != nil {
+	if err := d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
 		return err
 	}
-	if err := d.Set("availability_zone_reference", getReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
+	if err := d.Set("availability_zone_reference", flattenReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
 		return err
 	}
 	if err := d.Set("cluster_reference", getClusterReferenceValues(resp.Status.ClusterReference)); err != nil {
@@ -446,7 +446,7 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("subnet_ip", sIP)
 	d.Set("dhcp_server_address_port", port)
 	d.Set("vlan_id", utils.Int64Value(resp.Status.Resources.VlanID))
-	d.Set("network_function_chain_reference", getReferenceValues(resp.Status.Resources.NetworkFunctionChainReference))
+	d.Set("network_function_chain_reference", flattenReferenceValues(resp.Status.Resources.NetworkFunctionChainReference))
 
 	d.SetId(*resp.Metadata.UUID)
 

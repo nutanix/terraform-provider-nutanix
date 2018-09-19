@@ -885,8 +885,8 @@ func dataSourceNutanixNetworkSecurityRulesRead(d *schema.ResourceData, meta inte
 		m, c := setRSEntityMetadata(v.Metadata)
 
 		entity["metadata"] = m
-		entity["project_reference"] = getReferenceValues(v.Metadata.ProjectReference)
-		entity["owner_reference"] = getReferenceValues(v.Metadata.OwnerReference)
+		entity["project_reference"] = flattenReferenceValues(v.Metadata.ProjectReference)
+		entity["owner_reference"] = flattenReferenceValues(v.Metadata.OwnerReference)
 		entity["categories"] = c
 		entity["api_version"] = utils.StringValue(v.APIVersion)
 		entity["name"] = utils.StringValue(v.Spec.Name)
@@ -940,7 +940,7 @@ func dataSourceNutanixNetworkSecurityRulesRead(d *schema.ResourceData, meta inte
 
 					qroaItem["peer_specification_type"] = utils.StringValue(oa.PeerSpecificationType)
 					qroaItem["expiration_time"] = utils.StringValue(oa.ExpirationTime)
-					qroaItem["network_function_chain_reference"] = getReferenceValues(oa.NetworkFunctionChainReference)
+					qroaItem["network_function_chain_reference"] = flattenReferenceValues(oa.NetworkFunctionChainReference)
 
 					if oa.IcmpTypeCodeList != nil {
 						icmptcl := oa.IcmpTypeCodeList
@@ -1018,7 +1018,7 @@ func dataSourceNutanixNetworkSecurityRulesRead(d *schema.ResourceData, meta inte
 
 					qriaItem["peer_specification_type"] = utils.StringValue(ia.PeerSpecificationType)
 					qriaItem["expiration_time"] = utils.StringValue(ia.ExpirationTime)
-					qriaItem["network_function_chain_reference"] = getReferenceValues(ia.NetworkFunctionChainReference)
+					qriaItem["network_function_chain_reference"] = flattenReferenceValues(ia.NetworkFunctionChainReference)
 
 					if ia.IcmpTypeCodeList != nil {
 						icmptcl := ia.IcmpTypeCodeList
@@ -1090,7 +1090,7 @@ func dataSourceNutanixNetworkSecurityRulesRead(d *schema.ResourceData, meta inte
 
 					aroaItem["peer_specification_type"] = utils.StringValue(oa.PeerSpecificationType)
 					aroaItem["expiration_time"] = utils.StringValue(oa.ExpirationTime)
-					aroaItem["network_function_chain_reference"] = getReferenceValues(oa.NetworkFunctionChainReference)
+					aroaItem["network_function_chain_reference"] = flattenReferenceValues(oa.NetworkFunctionChainReference)
 
 					if oa.IcmpTypeCodeList != nil {
 						icmptcl := oa.IcmpTypeCodeList
@@ -1165,7 +1165,7 @@ func dataSourceNutanixNetworkSecurityRulesRead(d *schema.ResourceData, meta inte
 
 					ariaItem["peer_specification_type"] = utils.StringValue(ia.PeerSpecificationType)
 					ariaItem["expiration_time"] = utils.StringValue(ia.ExpirationTime)
-					ariaItem["network_function_chain_reference"] = getReferenceValues(ia.NetworkFunctionChainReference)
+					ariaItem["network_function_chain_reference"] = flattenReferenceValues(ia.NetworkFunctionChainReference)
 
 					if icmptcl := ia.IcmpTypeCodeList; icmptcl != nil {
 						icmptcList := make([]map[string]interface{}, len(icmptcl))

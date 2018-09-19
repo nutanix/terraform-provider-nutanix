@@ -414,13 +414,13 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("categories", c); err != nil {
 		return err
 	}
-	if err := d.Set("project_reference", getReferenceValues(resp.Metadata.ProjectReference)); err != nil {
+	if err := d.Set("project_reference", flattenReferenceValues(resp.Metadata.ProjectReference)); err != nil {
 		return err
 	}
-	if err := d.Set("owner_reference", getReferenceValues(resp.Metadata.OwnerReference)); err != nil {
+	if err := d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
 		return err
 	}
-	if err := d.Set("availability_zone_reference", getReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
+	if err := d.Set("availability_zone_reference", flattenReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
 		return err
 	}
 	if err := d.Set("cluster_reference", getClusterReferenceValues(resp.Status.ClusterReference)); err != nil {
@@ -504,7 +504,7 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("vlan_id", utils.Int64Value(res.VlanID))
 
 			if res.NetworkFunctionChainReference != nil {
-				nfcr = getReferenceValues(res.NetworkFunctionChainReference)
+				nfcr = flattenReferenceValues(res.NetworkFunctionChainReference)
 			}
 		}
 
