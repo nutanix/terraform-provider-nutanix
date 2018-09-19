@@ -137,7 +137,27 @@ resource "nutanix_virtual_machine" "vm1" {
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186
-  power_state          = "ON"
+}
+`, r)
+}
+
+func testAccNutanixVMConfigUpdate(r int) string {
+	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {}
+
+
+output "cluster" {
+  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+}
+resource "nutanix_virtual_machine" "vm1" {
+  name = "test-dou-%d"
+  cluster_reference = {
+	  kind = "cluster"
+	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  }
+  num_vcpus_per_socket = 1
+  num_sockets          = 2
+  memory_size_mib      = 186
 }
 `, r)
 }
@@ -165,7 +185,6 @@ resource "nutanix_virtual_machine" "vm1" {
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186
-  power_state          = "ON"
 
 	disk_list = [{
 		# data_source_reference in the Nutanix API refers to where the source for
@@ -213,7 +232,6 @@ resource "nutanix_virtual_machine" "vm1" {
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186
-  power_state          = "ON"
 
 	disk_list = [{
 		# data_source_reference in the Nutanix API refers to where the source for
@@ -231,28 +249,6 @@ resource "nutanix_virtual_machine" "vm1" {
 	{
 		disk_size_mib = 400
 	}]
-}
-`, r)
-}
-
-func testAccNutanixVMConfigUpdate(r int) string {
-	return fmt.Sprintf(`
-data "nutanix_clusters" "clusters" {}
-
-
-output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-}
-resource "nutanix_virtual_machine" "vm1" {
-  name = "test-dou-%d"
-  cluster_reference = {
-	  kind = "cluster"
-	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
-  num_vcpus_per_socket = 1
-  num_sockets          = 2
-  memory_size_mib      = 186
-  power_state          = "ON"
 }
 `, r)
 }
