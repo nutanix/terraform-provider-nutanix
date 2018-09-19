@@ -655,26 +655,26 @@ func dataSourceNutanixVirtualMachinesRead(d *schema.ResourceData, meta interface
 		m, c := setRSEntityMetadata(v.Metadata)
 
 		entity["metadata"] = m
-		entity["project_reference"] = getReferenceValues(v.Metadata.ProjectReference)
-		entity["owner_reference"] = getReferenceValues(v.Metadata.OwnerReference)
+		entity["project_reference"] = flattenReferenceValues(v.Metadata.ProjectReference)
+		entity["owner_reference"] = flattenReferenceValues(v.Metadata.OwnerReference)
 		entity["categories"] = c
 		entity["api_version"] = utils.StringValue(v.APIVersion)
 		entity["name"] = utils.StringValue(v.Status.Name)
 		entity["description"] = utils.StringValue(v.Status.Description)
-		entity["availability_zone_reference"] = getReferenceValues(v.Status.AvailabilityZoneReference)
+		entity["availability_zone_reference"] = flattenReferenceValues(v.Status.AvailabilityZoneReference)
 		entity["cluster_reference"] = getClusterReferenceValues(v.Status.ClusterReference)
 		entity["cluster_reference_name"] = utils.StringValue(v.Status.ClusterReference.Name)
 		entity["state"] = utils.StringValue(v.Status.State)
 		entity["num_vnuma_nodes"] = utils.Int64Value(v.Status.Resources.VnumaConfig.NumVnumaNodes)
 		entity["nic_list"] = flattenNicList(v.Status.Resources.NicList)
-		entity["host_reference"] = getReferenceValues(v.Status.Resources.HostReference)
+		entity["host_reference"] = flattenReferenceValues(v.Status.Resources.HostReference)
 		entity["guest_os_id"] = utils.StringValue(v.Status.Resources.GuestOsID)
 		entity["power_state"] = utils.StringValue(v.Status.Resources.PowerState)
 		entity["nutanix_guest_tools"] = setNutanixGuestTools(v.Status.Resources.GuestTools)
 		entity["num_vcpus_per_socket"] = utils.Int64Value(v.Status.Resources.NumVcpusPerSocket)
 		entity["num_sockets"] = utils.Int64Value(v.Status.Resources.NumSockets)
 		entity["gpu_list"] = flattenGPUList(v.Status.Resources.GpuList)
-		entity["parent_reference"] = getReferenceValues(v.Status.Resources.ParentReference)
+		entity["parent_reference"] = flattenReferenceValues(v.Status.Resources.ParentReference)
 		entity["memory_size_mib"] = utils.Int64Value(v.Status.Resources.MemorySizeMib)
 
 		diskAddress := make(map[string]interface{})
@@ -765,7 +765,7 @@ func setDiskList(disk []*v3.VMDisk, hasCloudInit *v3.GuestCustomizationStatus) [
 			disk["disk_size_bytes"] = utils.Int64Value(v1.DiskSizeBytes)
 			disk["disk_size_mib"] = utils.Int64Value(v1.DiskSizeMib)
 			disk["data_source_reference"] = []map[string]interface{}{getClusterReferenceValues(v1.DataSourceReference)}
-			disk["volume_group_reference"] = []map[string]interface{}{getReferenceValues(v1.VolumeGroupReference)}
+			disk["volume_group_reference"] = []map[string]interface{}{flattenReferenceValues(v1.VolumeGroupReference)}
 
 			dp := make([]map[string]interface{}, 1)
 			deviceProps := make(map[string]interface{})
@@ -853,7 +853,7 @@ func flattenNicList(nics []*v3.VMNicOutputStatus) []map[string]interface{} {
 				ipEndpointList[k1] = ipEndpoint
 			}
 			nic["ip_endpoint_list"] = ipEndpointList
-			nic["network_function_chain_reference"] = getReferenceValues(v.NetworkFunctionChainReference)
+			nic["network_function_chain_reference"] = flattenReferenceValues(v.NetworkFunctionChainReference)
 			nic["subnet_reference"] = getClusterReferenceValues(v.SubnetReference)
 			nic["subnet_reference_name"] = utils.StringValue(v.SubnetReference.Name)
 

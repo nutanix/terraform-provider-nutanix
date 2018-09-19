@@ -629,8 +629,8 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 		m, c := setRSEntityMetadata(v.Metadata)
 
 		entity["metadata"] = m
-		entity["project_reference"] = getReferenceValues(v.Metadata.ProjectReference)
-		entity["owner_reference"] = getReferenceValues(v.Metadata.OwnerReference)
+		entity["project_reference"] = flattenReferenceValues(v.Metadata.ProjectReference)
+		entity["owner_reference"] = flattenReferenceValues(v.Metadata.OwnerReference)
 		entity["categories"] = c
 		entity["api_version"] = utils.StringValue(v.APIVersion)
 		entity["name"] = utils.StringValue(v.Status.Name)
