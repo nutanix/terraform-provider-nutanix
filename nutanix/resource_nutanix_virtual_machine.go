@@ -868,7 +868,6 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	d.Set("vga_console_enabled", utils.BoolValue(resp.Status.Resources.VgaConsoleEnabled))
 	d.SetId(*resp.Metadata.UUID)
 	return nil
-	//return d.Set("disk_list", setDiskList(resp.Status.Resources.DiskList, resp.Status.Resources.GuestCustomization))
 }
 
 func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -1049,43 +1048,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		guest.Sysprep.CustomKeyValues = n.(map[string]string)
 	}
 	if d.HasChange("nic_list") {
-		_, ne := d.GetChange("nic_list")
-		n := ne.([]interface{})
-		if len(n) > 0 && n != nil {
-			nics := make([]*v3.VMNic, len(n))
-
-			for k, nc := range n {
-				val := nc.(map[string]interface{})
-				net := val["network_function_chain_reference"].(map[string]interface{})
-				sub := val["subnet_reference"].(map[string]interface{})
-
-				nic := &v3.VMNic{
-					UUID:                   validateMapStringValue(val, "uuid"),
-					NicType:                validateMapStringValue(val, "nic_type"),
-					NetworkFunctionNicType: validateMapStringValue(val, "network_function_nic_type"),
-					MacAddress:             validateMapStringValue(val, "mac_address"),
-					Model:                  validateMapStringValue(val, "model"),
-				}
-
-				nic.NetworkFunctionChainReference = validateRef(net)
-				nic.SubnetReference = validateRef(sub)
-
-				if value, ok := val["ip_endpoint_list"]; ok && len(value.([]interface{})) > 0 && value.([]interface{}) != nil {
-					ip := make([]*v3.IPAddress, len(value.([]interface{})))
-					for k, i := range value.([]interface{}) {
-						v := i.(map[string]interface{})
-						ip[k] = &v3.IPAddress{
-							IP:   validateMapStringValue(v, "ip"),
-							Type: validateMapStringValue(v, "type"),
-						}
-					}
-					nic.IPEndpointList = ip
-				}
-
-				nics[k] = nic
-			}
-			res.NicList = nics
-		}
+		res.NicList = expandNicList(d)
 	}
 	if d.HasChange("nutanix_guest_tools") {
 		_, n := d.GetChange("nutanix_guest_tools")
@@ -1101,21 +1064,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		guestTool.NutanixGuestTools = tool
 	}
 	if d.HasChange("gpu_list") {
-		_, n := d.GetChange("gpu_list")
-
-		if v, ok := n.([]interface{}); ok && v != nil {
-			gpl := make([]*v3.VMGpu, len(v))
-
-			for k, va := range v {
-				val := va.(map[string]interface{})
-				gpl[k] = &v3.VMGpu{
-					Vendor:   validateMapStringValue(val, "vendor"),
-					Mode:     validateMapStringValue(val, "mode"),
-					DeviceID: validateMapIntValue(val, "device_id"),
-				}
-			}
-			res.GpuList = gpl
-		}
+		res.GpuList = expandGPUList(d)
 	}
 	if d.HasChange("boot_device_order_list") {
 		_, n := d.GetChange("boot_device_order_list")
@@ -1136,60 +1085,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		_, n := d.GetChange("boot_device_mac_address")
 		bd.MacAddress = utils.StringPtr(n.(string))
 	}
-	// if d.HasChange("disk_list") {
-	// 	_, n := d.GetChange("disk_list")
-	// 	if dsk, ok := n.([]interface{}); ok && len(dsk) > 0 && dsk != nil {
-	// 		dls := make([]*v3.VMDisk, len(dsk))
-
-	// 		for k, val := range dsk {
-
-	// 			if response.Status.Resources.GuestCustomization != nil {
-	// 				if response.Status.Resources.GuestCustomization.CloudInit != nil &&
-	// 					val.(map[string]interface{})["device_properties"].([]interface{})[0].(map[string]interface{})["device_type"].(string) == "CDROM" {
-	// 					continue
-	// 				}
-	// 			}
-
-	// 			v := val.(map[string]interface{})
-	// 			dl := &v3.VMDisk{
-	// 				UUID:          validateMapStringValue(v, "uuid"),
-	// 				DiskSizeBytes: validateMapIntValue(v, "disk_size_bytes"),
-	// 				DiskSizeMib:   validateMapIntValue(v, "disk_size_mib"),
-	// 			}
-	// 			if v1, ok1 := v["device_properties"]; ok1 && v1.([]interface{}) != nil && len(v1.([]interface{})) > 0 {
-	// 				dvp := v1.([]interface{})
-	// 				d := dvp[0].(map[string]interface{})
-	// 				dp := &v3.VMDiskDeviceProperties{
-	// 					DeviceType: validateMapStringValue(d, "device_type"),
-	// 				}
-	// 				if v2, ok := d["disk_address"]; ok && len(v2.([]interface{})) > 0 && v2.([]interface{})[0] != nil {
-	// 					da := v2.([]interface{})[0].(map[string]interface{})
-	// 					dp.DiskAddress = &v3.DiskAddress{
-	// 						AdapterType: validateMapStringValue(da, "adapter_type"),
-	// 						DeviceIndex: validateMapIntValue(da, "device_index"),
-	// 					}
-	// 				}
-	// 				dl.DeviceProperties = dp
-	// 			}
-	// 			if v1, ok := v["data_source_reference"]; ok {
-	// 				dsref := v1.([]interface{})
-	// 				if len(dsref) > 0 && dsref[0] != nil {
-	// 					dsri := dsref[0].(map[string]interface{})
-	// 					dl.DataSourceReference = validateShortRef(dsri)
-	// 				}
-	// 			}
-	// 			if v1, ok := v["volume_group_reference"]; ok {
-	// 				volgr := v1.([]interface{})
-	// 				if len(volgr) > 0 && volgr[0] != nil {
-	// 					dsri := volgr[0].(map[string]interface{})
-	// 					dl.VolumeGroupReference = validateRef(dsri)
-	// 				}
-	// 			}
-	// 			dls[k] = dl
-	// 		}
-	// 		res.DiskList = dls
-	// 	}
-	// }
 	boot.BootDevice = bd
 
 	if dska.AdapterType == nil && dska.DeviceIndex == nil && bd.MacAddress == nil {
@@ -1439,23 +1334,7 @@ func expandNicList(d *schema.ResourceData) []*v3.VMNic {
 					nic.Model = utils.StringPtr(value.(string))
 				}
 				if value, ok := val["ip_endpoint_list"]; ok {
-					ipl := value.([]interface{})
-					if len(ipl) > 0 {
-						ip := make([]*v3.IPAddress, len(ipl))
-						for k, i := range ipl {
-							v := i.(map[string]interface{})
-							v3ip := &v3.IPAddress{}
-
-							if ipset, ipsetok := v["ip"]; ipsetok {
-								v3ip.IP = utils.StringPtr(ipset.(string))
-							}
-							if iptype, iptypeok := v["type"]; iptypeok {
-								v3ip.Type = utils.StringPtr(iptype.(string))
-							}
-							ip[k] = v3ip
-						}
-						nic.IPEndpointList = ip
-					}
+					nic.IPEndpointList = expandIPAddressList(value.([]interface{}))
 				}
 				if value, ok := val["network_function_chain_reference"]; ok && len(value.(map[string]interface{})) != 0 {
 					v := value.(map[string]interface{})
@@ -1469,6 +1348,26 @@ func expandNicList(d *schema.ResourceData) []*v3.VMNic {
 			}
 			return nics
 		}
+	}
+	return nil
+}
+
+func expandIPAddressList(ipl []interface{}) []*v3.IPAddress {
+	if len(ipl) > 0 {
+		ip := make([]*v3.IPAddress, len(ipl))
+		for k, i := range ipl {
+			v := i.(map[string]interface{})
+			v3ip := &v3.IPAddress{}
+
+			if ipset, ipsetok := v["ip"]; ipsetok {
+				v3ip.IP = utils.StringPtr(ipset.(string))
+			}
+			if iptype, iptypeok := v["type"]; iptypeok {
+				v3ip.Type = utils.StringPtr(iptype.(string))
+			}
+			ip[k] = v3ip
+		}
+		return ip
 	}
 	return nil
 }
