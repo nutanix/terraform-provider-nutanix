@@ -345,46 +345,46 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
 		}
-		return err
+		return fmt.Errorf("Error reading image UUID (%s) with error %s", d.Id(), err)
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
 
-	if err := d.Set("metadata", m); err != nil {
-		return err
+	if err = d.Set("metadata", m); err != nil {
+		return fmt.Errorf("Error setting metadata for image UUID(%s), %s", d.Id(), err)
 	}
-	if err := d.Set("categories", c); err != nil {
-		return err
+	if err = d.Set("categories", c); err != nil {
+		return fmt.Errorf("Error setting categories for image UUID(%s), %s", d.Id(), err)
 	}
 
-	if err := d.Set("owner_reference", getReferenceValues(resp.Metadata.OwnerReference)); err != nil {
-		return err
+	if err = d.Set("owner_reference", getReferenceValues(resp.Metadata.OwnerReference)); err != nil {
+		return fmt.Errorf("Error setting owner_reference for image UUID(%s), %s", d.Id(), err)
 	}
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
 	d.Set("name", utils.StringValue(resp.Status.Name))
 	d.Set("description", utils.StringValue(resp.Status.Description))
 
-	if err := d.Set("availability_zone_reference", getReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
-		return err
+	if err = d.Set("availability_zone_reference", getReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
+		return fmt.Errorf("Error setting owner_reference for image UUID(%s), %s", d.Id(), err)
 	}
-	if err := d.Set("cluster_reference", getClusterReferenceValues(resp.Status.ClusterReference)); err != nil {
-		return err
-	}
-
-	if err := d.Set("state", resp.Status.State); err != nil {
-		return err
+	if err = d.Set("cluster_reference", getClusterReferenceValues(resp.Status.ClusterReference)); err != nil {
+		return fmt.Errorf("Error setting cluster_reference for image UUID(%s), %s", d.Id(), err)
 	}
 
-	if err := d.Set("image_type", resp.Status.Resources.ImageType); err != nil {
-		return err
+	if err = d.Set("state", resp.Status.State); err != nil {
+		return fmt.Errorf("Error setting state for image UUID(%s), %s", d.Id(), err)
 	}
 
-	if err := d.Set("source_uri", resp.Status.Resources.SourceURI); err != nil {
-		return err
+	if err = d.Set("image_type", resp.Status.Resources.ImageType); err != nil {
+		return fmt.Errorf("Error setting image_type for image UUID(%s), %s", d.Id(), err)
 	}
 
-	if err := d.Set("size_bytes", resp.Status.Resources.SizeBytes); err != nil {
-		return err
+	if err = d.Set("source_uri", resp.Status.Resources.SourceURI); err != nil {
+		return fmt.Errorf("Error setting source_uri for image UUID(%s), %s", d.Id(), err)
+	}
+
+	if err = d.Set("size_bytes", resp.Status.Resources.SizeBytes); err != nil {
+		return fmt.Errorf("Error setting size_bytes for image UUID(%s), %s", d.Id(), err)
 	}
 
 	checksum := make(map[string]string)
@@ -393,8 +393,8 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 		checksum["checksum_value"] = utils.StringValue(resp.Status.Resources.Checksum.ChecksumValue)
 	}
 
-	if err := d.Set("checksum", checksum); err != nil {
-		return err
+	if err = d.Set("checksum", checksum); err != nil {
+		return fmt.Errorf("Error setting checksum for image UUID(%s), %s", d.Id(), err)
 	}
 
 	version := make(map[string]string)
@@ -403,8 +403,8 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 		version["product_name"] = utils.StringValue(resp.Status.Resources.Version.ProductName)
 	}
 
-	if err := d.Set("version", version); err != nil {
-		return err
+	if err = d.Set("version", version); err != nil {
+		return fmt.Errorf("Error setting version for image UUID(%s), %s", d.Id(), err)
 	}
 
 	uriList := make([]string, 0, len(resp.Status.Resources.RetrievalURIList))
@@ -412,7 +412,11 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 		uriList = append(uriList, utils.StringValue(uri))
 	}
 
-	return d.Set("retrieval_uri_list", uriList)
+	if err = d.Set("retrieval_uri_list", uriList); err != nil {
+		return fmt.Errorf("Error setting retrieval_uri_list for image UUID(%s), %s", d.Id(), err)
+	}
+
+	return nil
 }
 
 func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -448,8 +452,6 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("categories") {
 		catl := d.Get("categories").(map[string]interface{})
 		metadata.Categories = expandCategories(catl)
-	} else {
-		metadata.Categories = nil
 	}
 
 	if d.HasChange("owner_reference") {
