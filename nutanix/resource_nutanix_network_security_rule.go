@@ -61,23 +61,7 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 					},
 				},
 			},
-			"categories": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"value": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
+			"categories": categoriesSchema(),
 			"owner_reference": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -1452,23 +1436,8 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("categories") {
-		catl := d.Get("categories").([]interface{})
-
-		if len(catl) > 0 {
-			cl := make(map[string]string)
-			for _, v := range catl {
-				item := v.(map[string]interface{})
-
-				if i, ok := item["name"]; ok && i.(string) != "" {
-					if k, kok := item["value"]; kok && k.(string) != "" {
-						cl[i.(string)] = k.(string)
-					}
-				}
-			}
-			metadata.Categories = cl
-		} else {
-			metadata.Categories = nil
-		}
+		catl := d.Get("categories").(map[string]interface{})
+		metadata.Categories = expandCategories(catl)
 	}
 
 	if d.HasChange("owner_reference") {
