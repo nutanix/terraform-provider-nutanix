@@ -60,23 +60,7 @@ func dataSourceNutanixSubnets() *schema.Resource {
 								},
 							},
 						},
-						"categories": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"value": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-						},
+						"categories": categoriesSchema(),
 						"owner_reference": {
 							Type:     schema.TypeMap,
 							Computed: true,
