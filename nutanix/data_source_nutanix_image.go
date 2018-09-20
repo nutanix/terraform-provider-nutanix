@@ -262,11 +262,11 @@ func dataSourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	if err := d.Set("owner_reference", getReferenceValues(resp.Metadata.OwnerReference)); err != nil {
+	if err := d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
 		return err
 	}
 
-	if err := d.Set("availability_zone_reference", getReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
+	if err := d.Set("availability_zone_reference", flattenReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
 		return err
 	}
 	cluster := make(map[string]interface{})

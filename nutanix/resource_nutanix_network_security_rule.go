@@ -964,10 +964,10 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 		return err
 	}
 
-	if err := d.Set("project_reference", getReferenceValues(resp.Metadata.ProjectReference)); err != nil {
+	if err := d.Set("project_reference", flattenReferenceValues(resp.Metadata.ProjectReference)); err != nil {
 		return err
 	}
-	if err := d.Set("owner_reference", getReferenceValues(resp.Metadata.OwnerReference)); err != nil {
+	if err := d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
 		return err
 	}
 
@@ -1688,12 +1688,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			}
 
 			if f, fok := nr["filter_kind_list"]; fok {
-				fkl := f.([]interface{})
-				fkList := make([]*string, len(fkl))
-				for k, v := range fkl {
-					fkList[k] = utils.StringPtr(v.(string))
-				}
-				filter.KindList = fkList
+				filter.KindList = expandStringList(f.([]interface{}))
 			}
 
 			if ft, ftok := nr["filter_type"]; ftok {
@@ -1786,12 +1781,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	}
 
 	if f, fok := d.GetOk("quarantine_rule_target_group_filter_kind_list"); fok && f != nil {
-		fkl := f.([]interface{})
-		fkList := make([]*string, len(fkl))
-		for k, v := range fkl {
-			fkList[k] = utils.StringPtr(v.(string))
-		}
-		qRuleTargetGroupFilter.KindList = fkList
+		qRuleTargetGroupFilter.KindList = expandStringList(f.([]interface{}))
 	}
 
 	if ft, ftok := d.GetOk("quarantine_rule_target_group_filter_type"); ftok && ft.(string) != "" {
@@ -1897,12 +1887,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			}
 
 			if f, fok := nr["filter_kind_list"]; fok {
-				fkl := f.([]interface{})
-				fkList := make([]*string, len(fkl))
-				for k, v := range fkl {
-					fkList[k] = utils.StringPtr(v.(string))
-				}
-				filter.KindList = fkList
+				filter.KindList = expandStringList(f.([]interface{}))
 			}
 
 			if ft, ftok := nr["filter_type"]; ftok {
@@ -2063,12 +2048,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			}
 
 			if f, fok := nr["filter_kind_list"]; fok {
-				fkl := f.([]interface{})
-				fkList := make([]*string, len(fkl))
-				for k, v := range fkl {
-					fkList[k] = utils.StringPtr(v.(string))
-				}
-				filter.KindList = fkList
+				filter.KindList = expandStringList(f.([]interface{}))
 			}
 
 			if ft, ftok := nr["filter_type"]; ftok {
@@ -2161,12 +2141,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	}
 
 	if f, fok := d.GetOk("app_rule_target_group_filter_kind_list"); fok && f != nil {
-		fkl := f.([]interface{})
-		fkList := make([]*string, len(fkl))
-		for k, v := range fkl {
-			fkList[k] = utils.StringPtr(v.(string))
-		}
-		aRuleTargetGroupFilter.KindList = fkList
+		aRuleTargetGroupFilter.KindList = expandStringList(f.([]interface{}))
 	}
 
 	if ft, ftok := d.GetOk("app_rule_target_group_filter_type"); ftok && ft.(string) != "" {
@@ -2272,12 +2247,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			}
 
 			if f, fok := nr["filter_kind_list"]; fok {
-				fkl := f.([]interface{})
-				fkList := make([]*string, len(fkl))
-				for k, v := range fkl {
-					fkList[k] = utils.StringPtr(v.(string))
-				}
-				filter.KindList = fkList
+				filter.KindList = expandStringList(f.([]interface{}))
 			}
 
 			if ft, ftok := nr["filter_type"]; ftok {
@@ -2366,12 +2336,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	}
 
 	if f, fok := d.GetOk("isolation_rule_first_entity_filter_kind_list"); fok && f != nil {
-		fkl := f.([]interface{})
-		fkList := make([]*string, len(fkl))
-		for k, v := range fkl {
-			fkList[k] = utils.StringPtr(v.(string))
-		}
-		iRuleFirstEntityFilter.KindList = fkList
+		iRuleFirstEntityFilter.KindList = expandStringList(f.([]interface{}))
 	}
 
 	if ft, ftok := d.GetOk("isolation_rule_first_entity_filter_type"); ftok && ft.(string) != "" {
@@ -2405,12 +2370,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	}
 
 	if f, fok := d.GetOk("isolation_rule_second_entity_filter_kind_list"); fok && f != nil {
-		fkl := f.([]interface{})
-		fkList := make([]*string, len(fkl))
-		for k, v := range fkl {
-			fkList[k] = utils.StringPtr(v.(string))
-		}
-		iRuleSecondEntityFilter.KindList = fkList
+		iRuleSecondEntityFilter.KindList = expandStringList(f.([]interface{}))
 	}
 
 	if ft, ftok := d.GetOk("isolation_rule_second_entity_filter_type"); ftok && ft.(string) != "" {

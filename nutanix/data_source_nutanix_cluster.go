@@ -629,11 +629,11 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	if err := d.Set("project_reference", getReferenceValues(v.Metadata.ProjectReference)); err != nil {
+	if err := d.Set("project_reference", flattenReferenceValues(v.Metadata.ProjectReference)); err != nil {
 		return err
 	}
 
-	if err := d.Set("owner_reference", getReferenceValues(v.Metadata.OwnerReference)); err != nil {
+	if err := d.Set("owner_reference", flattenReferenceValues(v.Metadata.OwnerReference)); err != nil {
 		return err
 	}
 
