@@ -28,6 +28,8 @@ func TestAccNutanixVirtualMachine_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "categories.environment-terraform", "staging"),
 				),
 			},
 			{
@@ -39,6 +41,8 @@ func TestAccNutanixVirtualMachine_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "2"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "categories.environment-terraform", "production"),
 				),
 			},
 			{
@@ -138,6 +142,10 @@ resource "nutanix_virtual_machine" "vm1" {
   num_sockets          = 1
   memory_size_mib      = 186
   power_state          = "ON"
+
+	categories {
+		environment-terraform = "staging"
+	}
 }
 `, r)
 }
@@ -253,6 +261,10 @@ resource "nutanix_virtual_machine" "vm1" {
   num_sockets          = 2
   memory_size_mib      = 186
   power_state          = "ON"
+
+	categories {
+		environment-terraform = "production"
+	}
 }
 `, r)
 }
