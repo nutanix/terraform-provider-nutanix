@@ -44,6 +44,42 @@ func TestAccNutanixImage_basic(t *testing.T) {
 	})
 }
 
+func TestAccNutanixImageWithCategories(t *testing.T) {
+	rInt := acctest.RandInt()
+	resourceName := "nutanix_image.acctest-test-categories"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixImageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixImageConfigWithCategories(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixImageExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "categories.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "categories.os_type", "ubuntu"),
+					resource.TestCheckResourceAttr(resourceName, "categories.os_version", "current"),
+				),
+			},
+			{
+				Config: testAccNutanixImageConfigWithCategoriesUpdated(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixImageExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "categories.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "categories.os_type", "ubuntu"),
+					resource.TestCheckResourceAttr(resourceName, "categories.os_version", "18.04"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccNutanixImage_basic_uploadLocal(t *testing.T) {
 	// Skipping as this test needs functional work
 	t.Skip()
@@ -157,4 +193,38 @@ resource "nutanix_image" "acctest-testLocal" {
   description = "update my description!"
 }
 `, rNumb)
+}
+
+func testAccNutanixImageConfigWithCategories(r int) string {
+	return fmt.Sprintf(`
+resource "nutanix_image" "acctest-test-categories" {
+  name        = "Ubuntu-%d"
+  description = "Ubuntu"
+
+	categories = {
+		os_type = "ubuntu"
+		os_version = "current"
+	}
+
+  source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
+
+}
+`, r)
+}
+
+func testAccNutanixImageConfigWithCategoriesUpdated(r int) string {
+	return fmt.Sprintf(`
+resource "nutanix_image" "acctest-test-categories" {
+  name        = "Ubuntu-%d"
+  description = "Ubuntu"
+
+	categories = {
+		os_type = "ubuntu"
+		os_version = "18.04"
+	}
+
+  source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
+
+}
+`, r)
 }

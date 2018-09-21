@@ -58,23 +58,7 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 					},
 				},
 			},
-			"categories": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"value": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
+			"categories": categoriesSchema(),
 			"project_reference": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -688,7 +672,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("please provide the required name attribute")
 	}
 	if err := getMetadataAttributes(d, metadata, "vm"); err != nil {
-		return err
+		return fmt.Errorf("error reading metadata for Virtual Machine %s", err)
 	}
 	if descok {
 		spec.Description = utils.StringPtr(desc.(string))
@@ -703,7 +687,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if err := getVMResources(d, res); err != nil {
-		return err
+		return fmt.Errorf("error reading resources for Virtual machine %s", err)
 	}
 
 	spec.Name = utils.StringPtr(n.(string))
@@ -749,44 +733,45 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
+			return nil
 		}
-		return err
+		return fmt.Errorf("error reading Virtual Machine %s: %s", d.Id(), err)
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
 
 	if err := d.Set("metadata", m); err != nil {
-		return err
+		return fmt.Errorf("error setting metadata for Virtual Machine %s: %s", d.Id(), err)
 	}
 	if err := d.Set("categories", c); err != nil {
-		return err
+		return fmt.Errorf("error setting categories for Virtual Machine %s: %s", d.Id(), err)
 	}
 	if err := d.Set("project_reference", flattenReferenceValues(resp.Metadata.ProjectReference)); err != nil {
-		return err
+		return fmt.Errorf("error setting project_reference for Virtual Machine %s: %s", d.Id(), err)
 	}
 	if err := d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
-		return err
+		return fmt.Errorf("error setting owner_reference for Virtual Machine %s: %s", d.Id(), err)
 	}
 	if err := d.Set("availability_zone_reference", flattenReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
-		return err
+		return fmt.Errorf("error setting availability_zone_reference for Virtual Machine %s: %s", d.Id(), err)
 	}
 	if err := d.Set("cluster_reference", getClusterReferenceValues(resp.Status.ClusterReference)); err != nil {
-		return err
+		return fmt.Errorf("error setting cluster_reference for Virtual Machine %s: %s", d.Id(), err)
 	}
 	if err := d.Set("nic_list", flattenNicList(resp.Status.Resources.NicList)); err != nil {
-		return err
+		return fmt.Errorf("error setting nic_list for Virtual Machine %s: %s", d.Id(), err)
 	}
 	if err := d.Set("host_reference", flattenReferenceValues(resp.Status.Resources.HostReference)); err != nil {
-		return err
+		return fmt.Errorf("error setting host_reference for Virtual Machine %s: %s", d.Id(), err)
 	}
 	if err := d.Set("nutanix_guest_tools", setNutanixGuestTools(resp.Status.Resources.GuestTools)); err != nil {
-		return err
+		return fmt.Errorf("error setting nutanix_guest_tools for Virtual Machine %s: %s", d.Id(), err)
 	}
 	if err := d.Set("gpu_list", flattenGPUList(resp.Status.Resources.GpuList)); err != nil {
-		return err
+		return fmt.Errorf("error setting gpu_list for Virtual Machine %s: %s", d.Id(), err)
 	}
 	if err := d.Set("parent_reference", flattenReferenceValues(resp.Status.Resources.ParentReference)); err != nil {
-		return err
+		return fmt.Errorf("error setting parent_reference for Virtual Machine %s: %s", d.Id(), err)
 	}
 
 	diskAddress := make(map[string]interface{})
@@ -837,13 +822,13 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		}
 	}
 	if err := d.Set("guest_customization_cloud_init_custom_key_values", cloudInitCV); err != nil {
-		return err
+		return fmt.Errorf("error setting guest_customization_cloud_init_custom_key_values for Virtual Machine %s: %s", d.Id(), err)
 	}
 	if err := d.Set("guest_customization_sysprep_custom_key_values", sysprepCV); err != nil {
-		return err
+		return fmt.Errorf("error setting guest_customization_sysprep_custom_key_values for Virtual Machine %s: %s", d.Id(), err)
 	}
 	if err := d.Set("guest_customization_sysprep", sysprep); err != nil {
-		return err
+		return fmt.Errorf("error setting guest_customization_sysprep for Virtual Machine %s: %s", d.Id(), err)
 	}
 
 	d.Set("guest_customization_cloud_init_user_data", cloudInitUser)
@@ -893,6 +878,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
+			return nil
 		}
 		return err
 	}
@@ -902,23 +888,9 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if d.HasChange("categories") {
-		catl := d.Get("categories").([]interface{})
+		catl := d.Get("categories").(map[string]interface{})
+		metadata.Categories = expandCategories(catl)
 
-		if len(catl) > 0 && catl != nil {
-			cl := make(map[string]string)
-			for _, v := range catl {
-				item := v.(map[string]interface{})
-
-				if i, ok := item["name"]; ok && i.(string) != "" {
-					if k, kok := item["value"]; kok && k.(string) != "" {
-						cl[i.(string)] = k.(string)
-					}
-				}
-			}
-			metadata.Categories = cl
-		} else {
-			metadata.Categories = nil
-		}
 	}
 	metadata.OwnerReference = response.Metadata.OwnerReference
 	if d.HasChange("owner_reference") {
@@ -1111,7 +1083,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 
 	resp, err2 := conn.V3.UpdateVM(d.Id(), request)
 	if err2 != nil {
-		return err2
+		return fmt.Errorf("error updating Virtual Machine UUID(%s): %s", d.Id(), err2)
 	}
 
 	stateConf := &resource.StateChangeConf{
@@ -1137,7 +1109,11 @@ func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, meta interface{
 	log.Printf("[DEBUG] Deleting Virtual Machine: %s, %s", d.Get("name").(string), d.Id())
 	resp, err := conn.V3.DeleteVM(d.Id())
 	if err != nil {
-		return err
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+			return nil
+		}
+		return fmt.Errorf("error while deleting Virtual Machine UUID(%s): %s", d.Id(), err)
 	}
 
 	stateConf := &resource.StateChangeConf{
