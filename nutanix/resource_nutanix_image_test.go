@@ -197,7 +197,7 @@ resource "nutanix_image" "acctest-testLocal" {
 
 func testAccNutanixImageConfigWithCategories(r int) string {
 	return fmt.Sprintf(`
-resource "nutanix_image" "nutanix_image.acctest-test" {
+resource "nutanix_image" "acctest-test-categories" {
   name        = "Ubuntu-%d"
   description = "Ubuntu"
 
@@ -214,7 +214,7 @@ resource "nutanix_image" "nutanix_image.acctest-test" {
 
 func testAccNutanixImageConfigWithCategoriesUpdated(r int) string {
 	return fmt.Sprintf(`
-resource "nutanix_image" "nutanix_image.acctest-test" {
+resource "nutanix_image" "acctest-test-categories" {
   name        = "Ubuntu-%d"
   description = "Ubuntu"
 
