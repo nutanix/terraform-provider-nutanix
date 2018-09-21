@@ -73,23 +73,7 @@ func resourceNutanixSubnet() *schema.Resource {
 					},
 				},
 			},
-			"categories": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"value": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
+			"categories": categoriesSchema(),
 			"owner_reference": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -402,8 +386,9 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
+			return nil
 		}
-		return fmt.Errorf("error subnet id (%s): %+v", id, err)
+		return fmt.Errorf("error reading subnet id (%s): %+v", id, err)
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
@@ -557,23 +542,8 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("categories") {
-		catl := d.Get("categories").([]interface{})
-
-		if len(catl) > 0 {
-			cl := make(map[string]string)
-			for _, v := range catl {
-				item := v.(map[string]interface{})
-
-				if i, ok := item["name"]; ok && i.(string) != "" {
-					if k, kok := item["value"]; kok && k.(string) != "" {
-						cl[i.(string)] = k.(string)
-					}
-				}
-			}
-			metadata.Categories = cl
-		} else {
-			metadata.Categories = nil
-		}
+		catl := d.Get("categories").(map[string]interface{})
+		metadata.Categories = expandCategories(catl)
 	}
 	if d.HasChange("owner_reference") {
 		or := d.Get("owner_reference").(map[string]interface{})

@@ -69,23 +69,7 @@ func resourceNutanixImage() *schema.Resource {
 					},
 				},
 			},
-			"categories": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"value": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
+			"categories": categoriesSchema(),
 			"owner_reference": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -296,13 +280,12 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 	request.Spec = spec
 
 	imageUUID, err := resourceNutanixImageExists(conn, n.(string))
-
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to read image with name(%s): %+v", n.(string), err)
 	}
 
 	if imageUUID != nil {
-		return fmt.Errorf("image already with name %s exists in the given cluster, UUID %s", d.Get("name").(string), *imageUUID)
+		return fmt.Errorf("image already exists with name %s  in the given cluster, UUID %s", d.Get("name").(string), *imageUUID)
 	}
 
 	// Make request to the API
@@ -362,46 +345,46 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
 		}
-		return err
+		return fmt.Errorf("error reading image UUID (%s) with error %s", d.Id(), err)
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
 
-	if err := d.Set("metadata", m); err != nil {
-		return err
+	if err = d.Set("metadata", m); err != nil {
+		return fmt.Errorf("error setting metadata for image UUID(%s), %s", d.Id(), err)
 	}
-	if err := d.Set("categories", c); err != nil {
-		return err
+	if err = d.Set("categories", c); err != nil {
+		return fmt.Errorf("error setting categories for image UUID(%s), %s", d.Id(), err)
 	}
 
-	if err := d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
-		return err
+	if err = d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
+		return fmt.Errorf("error setting owner_reference for image UUID(%s), %s", d.Id(), err)
 	}
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
 	d.Set("name", utils.StringValue(resp.Status.Name))
 	d.Set("description", utils.StringValue(resp.Status.Description))
 
-	if err := d.Set("availability_zone_reference", flattenReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
-		return err
+	if err = d.Set("availability_zone_reference", flattenReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
+		return fmt.Errorf("error setting owner_reference for image UUID(%s), %s", d.Id(), err)
 	}
-	if err := d.Set("cluster_reference", getClusterReferenceValues(resp.Status.ClusterReference)); err != nil {
-		return err
-	}
-
-	if err := d.Set("state", resp.Status.State); err != nil {
-		return err
+	if err = d.Set("cluster_reference", getClusterReferenceValues(resp.Status.ClusterReference)); err != nil {
+		return fmt.Errorf("error setting cluster_reference for image UUID(%s), %s", d.Id(), err)
 	}
 
-	if err := d.Set("image_type", resp.Status.Resources.ImageType); err != nil {
-		return err
+	if err = d.Set("state", resp.Status.State); err != nil {
+		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
 	}
 
-	if err := d.Set("source_uri", resp.Status.Resources.SourceURI); err != nil {
-		return err
+	if err = d.Set("image_type", resp.Status.Resources.ImageType); err != nil {
+		return fmt.Errorf("error setting image_type for image UUID(%s), %s", d.Id(), err)
 	}
 
-	if err := d.Set("size_bytes", resp.Status.Resources.SizeBytes); err != nil {
-		return err
+	if err = d.Set("source_uri", resp.Status.Resources.SourceURI); err != nil {
+		return fmt.Errorf("error setting source_uri for image UUID(%s), %s", d.Id(), err)
+	}
+
+	if err = d.Set("size_bytes", resp.Status.Resources.SizeBytes); err != nil {
+		return fmt.Errorf("error setting size_bytes for image UUID(%s), %s", d.Id(), err)
 	}
 
 	checksum := make(map[string]string)
@@ -410,8 +393,8 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 		checksum["checksum_value"] = utils.StringValue(resp.Status.Resources.Checksum.ChecksumValue)
 	}
 
-	if err := d.Set("checksum", checksum); err != nil {
-		return err
+	if err = d.Set("checksum", checksum); err != nil {
+		return fmt.Errorf("error setting checksum for image UUID(%s), %s", d.Id(), err)
 	}
 
 	version := make(map[string]string)
@@ -420,8 +403,8 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 		version["product_name"] = utils.StringValue(resp.Status.Resources.Version.ProductName)
 	}
 
-	if err := d.Set("version", version); err != nil {
-		return err
+	if err = d.Set("version", version); err != nil {
+		return fmt.Errorf("error setting version for image UUID(%s), %s", d.Id(), err)
 	}
 
 	uriList := make([]string, 0, len(resp.Status.Resources.RetrievalURIList))
@@ -429,7 +412,11 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 		uriList = append(uriList, utils.StringValue(uri))
 	}
 
-	return d.Set("retrieval_uri_list", uriList)
+	if err = d.Set("retrieval_uri_list", uriList); err != nil {
+		return fmt.Errorf("error setting retrieval_uri_list for image UUID(%s), %s", d.Id(), err)
+	}
+
+	return nil
 }
 
 func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -463,23 +450,8 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if d.HasChange("categories") {
-		catl := d.Get("categories").([]interface{})
-
-		if len(catl) > 0 {
-			cl := make(map[string]string)
-			for _, v := range catl {
-				item := v.(map[string]interface{})
-
-				if i, ok := item["name"]; ok && i.(string) != "" {
-					if k, kok := item["value"]; kok && k.(string) != "" {
-						cl[i.(string)] = k.(string)
-					}
-				}
-			}
-			metadata.Categories = cl
-		} else {
-			metadata.Categories = nil
-		}
+		catl := d.Get("categories").(map[string]interface{})
+		metadata.Categories = expandCategories(catl)
 	}
 
 	if d.HasChange("owner_reference") {

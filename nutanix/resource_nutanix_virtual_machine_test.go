@@ -28,6 +28,8 @@ func TestAccNutanixVirtualMachine_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "categories.environment-terraform", "staging"),
 				),
 			},
 			{
@@ -39,6 +41,8 @@ func TestAccNutanixVirtualMachine_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "2"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "categories.environment-terraform", "production"),
 				),
 			},
 			{
@@ -137,27 +141,11 @@ resource "nutanix_virtual_machine" "vm1" {
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186
-}
-`, r)
-}
-
-func testAccNutanixVMConfigUpdate(r int) string {
-	return fmt.Sprintf(`
-data "nutanix_clusters" "clusters" {}
 
 
-output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-}
-resource "nutanix_virtual_machine" "vm1" {
-  name = "test-dou-%d"
-  cluster_reference = {
-	  kind = "cluster"
-	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
-  num_vcpus_per_socket = 1
-  num_sockets          = 2
-  memory_size_mib      = 186
+	categories {
+		environment-terraform = "staging"
+	}
 }
 `, r)
 }
@@ -249,6 +237,31 @@ resource "nutanix_virtual_machine" "vm1" {
 	{
 		disk_size_mib = 400
 	}]
+}
+`, r)
+}
+
+func testAccNutanixVMConfigUpdate(r int) string {
+	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {}
+
+
+output "cluster" {
+  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+}
+resource "nutanix_virtual_machine" "vm1" {
+  name = "test-dou-%d"
+  cluster_reference = {
+	  kind = "cluster"
+	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  }
+  num_vcpus_per_socket = 1
+  num_sockets          = 2
+  memory_size_mib      = 186
+
+	categories {
+		environment-terraform = "production"
+	}
 }
 `, r)
 }
