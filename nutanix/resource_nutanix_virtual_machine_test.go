@@ -141,7 +141,7 @@ resource "nutanix_virtual_machine" "vm1" {
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186
-  power_state          = "ON"
+
 
 	categories {
 		environment-terraform = "staging"
@@ -173,7 +173,6 @@ resource "nutanix_virtual_machine" "vm1" {
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186
-  power_state          = "ON"
 
 	disk_list = [{
 		# data_source_reference in the Nutanix API refers to where the source for
@@ -221,7 +220,6 @@ resource "nutanix_virtual_machine" "vm1" {
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186
-  power_state          = "ON"
 
 	disk_list = [{
 		# data_source_reference in the Nutanix API refers to where the source for
@@ -260,7 +258,6 @@ resource "nutanix_virtual_machine" "vm1" {
   num_vcpus_per_socket = 1
   num_sockets          = 2
   memory_size_mib      = 186
-  power_state          = "ON"
 
 	categories {
 		environment-terraform = "production"

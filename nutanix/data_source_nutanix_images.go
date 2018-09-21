@@ -263,12 +263,12 @@ func dataSourceNutanixImagesRead(d *schema.ResourceData, meta interface{}) error
 		m, c := setRSEntityMetadata(v.Metadata)
 
 		entity["metadata"] = m
-		entity["project_reference"] = getReferenceValues(v.Metadata.ProjectReference)
-		entity["owner_reference"] = getReferenceValues(v.Metadata.OwnerReference)
+		entity["project_reference"] = flattenReferenceValues(v.Metadata.ProjectReference)
+		entity["owner_reference"] = flattenReferenceValues(v.Metadata.OwnerReference)
 		entity["categories"] = c
 		entity["name"] = utils.StringValue(v.Status.Name)
 		entity["description"] = utils.StringValue(v.Status.Description)
-		entity["availability_zone_reference"] = getReferenceValues(v.Status.AvailabilityZoneReference)
+		entity["availability_zone_reference"] = flattenReferenceValues(v.Status.AvailabilityZoneReference)
 		if v.Status.ClusterReference != nil {
 			entity["cluster_reference"] = getClusterReferenceValues(v.Status.ClusterReference)
 			entity["cluster_reference_name"] = utils.StringValue(v.Status.ClusterReference.Name)
