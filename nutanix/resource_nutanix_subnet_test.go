@@ -47,14 +47,14 @@ func TestAccNutanixSubnet_basic(t *testing.T) {
 
 func TestAccNutanixSubnet_WithCategory(t *testing.T) {
 	r := acctest.RandIntRange(3500, 3900)
-	resourceName := "nutanix_subnet.acctest-managed"
+	resourceName := "nutanix_subnet.acctest-managed-categories"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixSubnetConfig_WithCategory(r),
+				Config: testAccNutanixSubnetConfigWithCategory(r),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixSubnetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
@@ -62,7 +62,7 @@ func TestAccNutanixSubnet_WithCategory(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNutanixSubnetConfig_WithCategoryUpdate(r),
+				Config: testAccNutanixSubnetConfigWithCategoryUpdate(r),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixSubnetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
@@ -186,7 +186,7 @@ resource "nutanix_subnet" "acctest-managed" {
 `, r)
 }
 
-func testAccNutanixSubnetConfig_WithCategory(r int) string {
+func testAccNutanixSubnetConfigWithCategory(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
 
@@ -194,7 +194,7 @@ output "cluster" {
   value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 
-resource "nutanix_subnet" "acctest-managed" {
+resource "nutanix_subnet" "nutanix_subnet.acctest-managed-categories" {
   # What cluster will this VLAN live on?
   cluster_reference = {
 	kind = "cluster"
@@ -226,7 +226,7 @@ resource "nutanix_subnet" "acctest-managed" {
 `, r)
 }
 
-func testAccNutanixSubnetConfig_WithCategoryUpdate(r int) string {
+func testAccNutanixSubnetConfigWithCategoryUpdate(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
 
@@ -234,7 +234,7 @@ output "cluster" {
   value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 
-resource "nutanix_subnet" "acctest-managed" {
+resource "nutanix_subnet" "nutanix_subnet.acctest-managed-categories" {
   # What cluster will this VLAN live on?
   cluster_reference = {
 	kind = "cluster"

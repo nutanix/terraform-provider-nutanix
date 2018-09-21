@@ -44,9 +44,9 @@ func TestAccNutanixImage_basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixImage_WithCategories(t *testing.T) {
+func TestAccNutanixImageWithCategories(t *testing.T) {
 	rInt := acctest.RandInt()
-	resourceName := "nutanix_image.acctest-test"
+	resourceName := "nutanix_image.acctest-test-categories"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -54,7 +54,7 @@ func TestAccNutanixImage_WithCategories(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixImageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixImageConfig_WithCategories(rInt),
+				Config: testAccNutanixImageConfigWithCategories(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixImageExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "categories.%", "2"),
@@ -63,7 +63,7 @@ func TestAccNutanixImage_WithCategories(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNutanixImageConfig_WithCategoriesUpdated(rInt),
+				Config: testAccNutanixImageConfigWithCategoriesUpdated(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixImageExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "categories.%", "2"),
@@ -195,9 +195,9 @@ resource "nutanix_image" "acctest-testLocal" {
 `, rNumb)
 }
 
-func testAccNutanixImageConfig_WithCategories(r int) string {
+func testAccNutanixImageConfigWithCategories(r int) string {
 	return fmt.Sprintf(`
-resource "nutanix_image" "acctest-test" {
+resource "nutanix_image" "nutanix_image.acctest-test" {
   name        = "Ubuntu-%d"
   description = "Ubuntu"
 
@@ -212,9 +212,9 @@ resource "nutanix_image" "acctest-test" {
 `, r)
 }
 
-func testAccNutanixImageConfig_WithCategoriesUpdated(r int) string {
+func testAccNutanixImageConfigWithCategoriesUpdated(r int) string {
 	return fmt.Sprintf(`
-resource "nutanix_image" "acctest-test" {
+resource "nutanix_image" "nutanix_image.acctest-test" {
   name        = "Ubuntu-%d"
   description = "Ubuntu"
 
