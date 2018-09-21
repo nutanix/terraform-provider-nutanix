@@ -567,6 +567,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/hashicorp/terraform/flatmap",
     "github.com/hashicorp/terraform/helper/acctest",
     "github.com/hashicorp/terraform/helper/resource",
     "github.com/hashicorp/terraform/helper/schema",

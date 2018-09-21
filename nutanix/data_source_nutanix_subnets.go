@@ -299,12 +299,12 @@ func dataSourceNutanixSubnetsRead(d *schema.ResourceData, meta interface{}) erro
 		m, c := setRSEntityMetadata(v.Metadata)
 
 		entity["metadata"] = m
-		entity["project_reference"] = getReferenceValues(v.Metadata.ProjectReference)
-		entity["owner_reference"] = getReferenceValues(v.Metadata.OwnerReference)
+		entity["project_reference"] = flattenReferenceValues(v.Metadata.ProjectReference)
+		entity["owner_reference"] = flattenReferenceValues(v.Metadata.OwnerReference)
 		entity["categories"] = c
 		entity["name"] = utils.StringValue(v.Status.Name)
 		entity["description"] = utils.StringValue(v.Status.Description)
-		entity["availability_zone_reference"] = getReferenceValues(v.Status.AvailabilityZoneReference)
+		entity["availability_zone_reference"] = flattenReferenceValues(v.Status.AvailabilityZoneReference)
 		entity["cluster_reference"] = getClusterReferenceValues(v.Status.ClusterReference)
 		entity["cluster_reference_name"] = utils.StringValue(v.Status.ClusterReference.Name)
 		entity["state"] = utils.StringValue(v.Status.State)
@@ -372,7 +372,7 @@ func dataSourceNutanixSubnetsRead(d *schema.ResourceData, meta interface{}) erro
 		entity["dhcp_domain_name_server_list"] = dnsList
 		entity["dhcp_domain_search_list"] = dsList
 		entity["vlan_id"] = utils.Int64Value(v.Status.Resources.VlanID)
-		entity["network_function_chain_reference"] = getReferenceValues(v.Status.Resources.NetworkFunctionChainReference)
+		entity["network_function_chain_reference"] = flattenReferenceValues(v.Status.Resources.NetworkFunctionChainReference)
 		entities[k] = entity
 	}
 

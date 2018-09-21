@@ -67,7 +67,7 @@ func setRSEntityMetadata(v *v3.Metadata) (map[string]interface{}, map[string]int
 	return metadata, c
 }
 
-func getReferenceValues(r *v3.Reference) map[string]interface{} {
+func flattenReferenceValues(r *v3.Reference) map[string]interface{} {
 	reference := make(map[string]interface{})
 	if r != nil {
 		reference["kind"] = utils.StringValue(r.Kind)
