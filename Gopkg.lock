@@ -265,7 +265,7 @@
   revision = "0dc08b1671f34c4250ce212759ebd880f743d883"
 
 [[projects]]
-  digest = "1:c5a1d6083649228a90a0d5b1d9138027c70d82dec80767125ce29d92b8980862"
+  digest = "1:97c76ad3f84f9b838e31aeadbdb248c3a25918df42bce6f49961977a45fd3239"
   name = "github.com/hashicorp/terraform"
   packages = [
     "config",
@@ -281,6 +281,8 @@
     "helper/logging",
     "helper/resource",
     "helper/schema",
+    "helper/structure",
+    "helper/validation",
     "httpclient",
     "moduledeps",
     "plugin",
@@ -579,6 +581,7 @@
     "github.com/hashicorp/terraform/helper/acctest",
     "github.com/hashicorp/terraform/helper/resource",
     "github.com/hashicorp/terraform/helper/schema",
+    "github.com/hashicorp/terraform/helper/validation",
     "github.com/hashicorp/terraform/plugin",
     "github.com/hashicorp/terraform/terraform",
     "github.com/satori/go.uuid",
