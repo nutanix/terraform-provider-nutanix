@@ -24,34 +24,37 @@ output "cluster" {
 }
 
 resource "nutanix_subnet" "test" {
-	name = "dou_vlan0_test_%d"
+  name = "dou_vlan0_test_%d"
 
-	cluster_reference = {
-	  kind = "cluster"
-	  UUID = "${data.nutanix_clusters.clusters.entities.0.metadata.UUID}"
-  	}
+  cluster_reference = {
+  kind = "cluster"
+  UUID = "${data.nutanix_clusters.clusters.entities.0.metadata.UUID}"
+}
 
-	vlan_id = 201
-	subnet_type = "VLAN"
+  vlan_id = 201
+  subnet_type = "VLAN"
 
-	prefix_length = 24
-	default_gateway_ip = "192.168.0.1"
-	subnet_ip = "192.168.0.0"
-	#ip_config_pool_list_ranges = ["192.168.0.5", "192.168.0.100"]
+  prefix_length = 24
+  default_gateway_ip = "192.168.0.1"
+  subnet_ip = "192.168.0.0"
+  #ip_config_pool_list_ranges = ["192.168.0.5", "192.168.0.100"]
 
-	dhcp_options {
-		boot_file_name = "bootfile"
-		tftp_server_name = "192.168.0.252"
-		domain_name = "nutanix"
-	}
+  dhcp_options {
+    boot_file_name = "bootfile"
+    tftp_server_name = "192.168.0.252"
+    domain_name = "nutanix"
+  }
 
-	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
-	dhcp_domain_search_list = ["nutanix.com", "calm.io"]
-
+  dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+  dhcp_domain_search_list = ["nutanix.com", "calm.io"]
 }
 
 data "nutanix_subnet" "test" {
-	subnet_id = "${nutanix_subnet.test.id}"
+  subnet_id = "${nutanix_subnet.test.id}"
+}
+
+data "nutanix_subnet" "test-name" {
+  subnet_name = "${nutanix_subnet.test.name}"
 }
 ```
 
@@ -59,9 +62,12 @@ data "nutanix_subnet" "test" {
 
 The following arguments are supported:
 
-* `subnet_id`: - (Required) The name for the subnet.
+* `subnet_id`: - (Optional) The ID for the subnet.
+* `subnet_name`: - (Optional) The name for the subnet
 
 ## Attributes Reference
+
+The following attributes are exported:
 
 * `metadata`: - (Required) The subnet kind metadata.
 * `availability_zone_reference`: - (Optional) The reference to a availability_zone.
@@ -75,7 +81,7 @@ The following arguments are supported:
 * `vswitch_name`: - (Optional).
 * `subnet_type`: - (Optional).
 * `default_gateway_ip`: - (Optional) Default gateway IP address.
-* `prefix_length`: - (Optional).
+* `prefix_length`: - (Optional). IP prefix length of the Subnet.
 * `subnet_ip`: - (Optional) Subnet IP address.
 * `dhcp_server_address`: - (Optional) Host address.
 * `dhcp_server_address_port`: - (Optional) Port Number.
@@ -83,13 +89,7 @@ The following arguments are supported:
 * `dhcp_domain_search_list`: - (Optional).
 * `vlan_id`: - (Optional).
 * `network_function_chain_reference`: - (Optional) The reference to a network_function_chain.
-
-## Attributes Reference
-
-The following attributes are exported:
-
-* `metadata`: - The subnet kind metadata.
-* `state`: -
+* `state`: - The state of the subnet.
 
 ### Metadata
 

@@ -3,6 +3,7 @@ package nutanix
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
@@ -15,10 +16,30 @@ func resourceNutanixCategoryValue() *schema.Resource {
 		Read:   resourceNutanixCategoryValueRead,
 		Update: resourceNutanixCategoryValueCreateOrUpdate,
 		Delete: resourceNutanixCategoryValueDelete,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+		Schema: map[string]*schema.Schema{
+			"value": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"system_defined": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"api_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
-		Schema: getCategoryValueSchema(),
 	}
 }
 
@@ -34,12 +55,8 @@ func resourceNutanixCategoryValueCreateOrUpdate(resourceData *schema.ResourceDat
 	value, valueOK := resourceData.GetOk("value")
 
 	// Read Arguments and set request values
-	if v, ok := resourceData.GetOk("api_version"); ok {
-		request.APIVersion = utils.String(v.(string))
-	}
-
 	if desc, ok := resourceData.GetOk("description"); ok {
-		request.Description = utils.String(desc.(string))
+		request.Description = utils.StringPtr(desc.(string))
 	}
 
 	// validate required fields
@@ -47,7 +64,7 @@ func resourceNutanixCategoryValueCreateOrUpdate(resourceData *schema.ResourceDat
 		return fmt.Errorf("please provide the required attributes name and value")
 	}
 
-	request.Value = utils.String(value.(string))
+	request.Value = utils.StringPtr(value.(string))
 
 	// Make request to the API
 	resp, err := conn.V3.CreateOrUpdateCategoryValue(name.(string), request)
@@ -80,6 +97,9 @@ func resourceNutanixCategoryValueRead(d *schema.ResourceData, meta interface{}) 
 	resp, err := conn.V3.GetCategoryValue(name.(string), d.Id())
 
 	if err != nil {
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
 		return err
 	}
 
@@ -99,7 +119,7 @@ func resourceNutanixCategoryValueDelete(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("please provide the required attributes name")
 	}
 
-	log.Printf("[Debug] Destroying the category with the name %s", d.Id())
+	log.Printf("[Debug] Destroying the category with the ID %s", d.Id())
 
 	if err := conn.V3.DeleteCategoryValue(name.(string), d.Id()); err != nil {
 		return err
@@ -107,32 +127,4 @@ func resourceNutanixCategoryValueDelete(d *schema.ResourceData, meta interface{}
 
 	d.SetId("")
 	return nil
-}
-
-func getCategoryValueSchema() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"value": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"system_defined": {
-			Type:     schema.TypeBool,
-			Computed: true,
-		},
-		"description": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"api_version": {
-			Type:     schema.TypeString,
-			Optional: true,
-			Computed: true,
-		},
-		"name": {
-			Type:     schema.TypeString,
-			Required: true,
-		},
-	}
 }

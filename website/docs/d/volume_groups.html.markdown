@@ -72,7 +72,7 @@ The entities attribute supports the following:
 * `disk_list`: - (Optional) Volume group disk specification.
 * `iscsi_target_prefix`: - (Optional) iSCSI target prefix-name.
 * `metadata`: - The volume_group kind metadata.
-* `state`: -
+* `state`: - The state of Volume Group
 
 ### Disk List
 
