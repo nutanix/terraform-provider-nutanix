@@ -432,7 +432,7 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("vlan_id", utils.Int64Value(resp.Status.Resources.VlanID))
 	d.Set("network_function_chain_reference", flattenReferenceValues(resp.Status.Resources.NetworkFunctionChainReference))
 
-	d.SetId(*resp.Metadata.UUID)
+	d.SetId(utils.StringValue(resp.Metadata.UUID))
 
 	return nil
 }
