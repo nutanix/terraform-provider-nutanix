@@ -21,9 +21,11 @@ resource "nutanix_image" "test" {
 
 
 data "nutanix_image" "test" {
-    metadata = {
-        length = 2
-    }
+    image_id = "${nutanix_image.test.id}"
+}
+
+data "nutanix_image" "testname" {
+    image_name = "${nutanix_image.test.name}"
 }
 ```
 
@@ -31,7 +33,8 @@ data "nutanix_image" "test" {
 
 The following arguments are supported:
 
-* `image_id`: Represents virtual machine UUID
+* `image_id`: Represents image UUID
+* `image_name`: Represents image name
 
 ## Attribute Reference
 
@@ -52,7 +55,7 @@ The following attributes are exported:
 * `metadata`: - The image kind metadata.
 * `retrieval_uri_list`: - List of URIs where the raw image data can be accessed.
 * `size_bytes`: - The size of the image in bytes.
-* `state`: -
+* `state`: - The state of the image.
 
 ### Metadata
 

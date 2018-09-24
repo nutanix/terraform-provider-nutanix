@@ -92,21 +92,15 @@ The entities attribute supports the following:
 * `vswitch_name`: - (Optional).
 * `subnet_type`: - (Optional).
 * `default_gateway_ip`: - (Optional) Default gateway IP address.
-* `prefix_length`: - (Optional).
+* `prefix_length`: - (Optional). IP prefix length of the subnet.
 * `subnet_ip`: - (Optional) Subnet IP address.
 * `dhcp_server_address`: - (Optional) Host address.
 * `dhcp_server_address_port`: - (Optional) Port Number.
 * `dhcp_options`: - (Optional) Spec for defining DHCP options.
 * `dhcp_domain_search_list`: - (Optional).
-* `vlan_id`: - (Optional).
+* `vlan_id`: - (Optional). The VLAN ID of the subnet.
 * `network_function_chain_reference`: - (Optional) The reference to a network_function_chain.
-
-## Attributes Reference
-
-The following attributes are exported:
-
-* `metadata`: - The subnet kind metadata.
-* `state`: -
+* `state`: - The state of the subnet.
 
 ### Metadata
 

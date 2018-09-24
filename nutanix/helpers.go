@@ -12,46 +12,34 @@ import (
 )
 
 func getMetadataAttributes(d *schema.ResourceData, metadata *v3.Metadata, kind string) error {
-	metadata.Kind = utils.String(kind)
+	metadata.Kind = utils.StringPtr(kind)
 
 	if v, ok := d.GetOk("categories"); ok {
-		catl := v.([]interface{})
-
-		if len(catl) > 0 {
-			cl := make(map[string]string)
-			for _, v := range catl {
-				item := v.(map[string]interface{})
-
-				if i, ok := item["name"]; ok && i.(string) != "" {
-					if k, kok := item["value"]; kok && k.(string) != "" {
-						cl[i.(string)] = k.(string)
-					}
-				}
-			}
-			metadata.Categories = cl
-		} else {
-			metadata.Categories = nil
-		}
+		catl := v.(map[string]interface{})
+		metadata.Categories = expandCategories(catl)
+	} else {
+		metadata.Categories = nil
 	}
+
 	if p, ok := d.GetOk("project_reference"); ok {
 		pr := p.(map[string]interface{})
 		r := &v3.Reference{
-			Kind: utils.String(pr["kind"].(string)),
-			UUID: utils.String(pr["uuid"].(string)),
+			Kind: utils.StringPtr(pr["kind"].(string)),
+			UUID: utils.StringPtr(pr["uuid"].(string)),
 		}
 		if v1, ok1 := pr["name"]; ok1 {
-			r.Name = utils.String(v1.(string))
+			r.Name = utils.StringPtr(v1.(string))
 		}
 		metadata.ProjectReference = r
 	}
 	if o, ok := d.GetOk("owner_reference"); ok {
 		or := o.(map[string]interface{})
 		r := &v3.Reference{
-			Kind: utils.String(or["kind"].(string)),
-			UUID: utils.String(or["uuid"].(string)),
+			Kind: utils.StringPtr(or["kind"].(string)),
+			UUID: utils.StringPtr(or["uuid"].(string)),
 		}
 		if v1, ok1 := or["name"]; ok1 {
-			r.Name = utils.String(v1.(string))
+			r.Name = utils.StringPtr(v1.(string))
 		}
 		metadata.OwnerReference = r
 	}
@@ -59,7 +47,7 @@ func getMetadataAttributes(d *schema.ResourceData, metadata *v3.Metadata, kind s
 	return nil
 }
 
-func setRSEntityMetadata(v *v3.Metadata) (map[string]interface{}, []map[string]interface{}) {
+func setRSEntityMetadata(v *v3.Metadata) (map[string]interface{}, map[string]interface{}) {
 	metadata := make(map[string]interface{})
 	metadata["last_update_time"] = utils.TimeValue(v.LastUpdateTime).String()
 	metadata["kind"] = utils.StringValue(v.Kind)
@@ -69,24 +57,17 @@ func setRSEntityMetadata(v *v3.Metadata) (map[string]interface{}, []map[string]i
 	metadata["spec_hash"] = utils.StringValue(v.SpecHash)
 	metadata["name"] = utils.StringValue(v.Name)
 
-	c := make([]map[string]interface{}, 0)
+	c := make(map[string]interface{}, len(v.Categories))
 	if v.Categories != nil {
-		categories := v.Categories
-		var catList []map[string]interface{}
-
-		for name, values := range categories {
-			catItem := make(map[string]interface{})
-			catItem["name"] = name
-			catItem["value"] = values
-			catList = append(catList, catItem)
+		for name, values := range v.Categories {
+			c[name] = values
 		}
-		c = catList
 	}
 
 	return metadata, c
 }
 
-func getReferenceValues(r *v3.Reference) map[string]interface{} {
+func flattenReferenceValues(r *v3.Reference) map[string]interface{} {
 	reference := make(map[string]interface{})
 	if r != nil {
 		reference["kind"] = utils.StringValue(r.Kind)
@@ -111,15 +92,15 @@ func validateRef(ref map[string]interface{}) *v3.Reference {
 	r := &v3.Reference{}
 	hasValue := false
 	if v, ok := ref["kind"]; ok {
-		r.Kind = utils.String(v.(string))
+		r.Kind = utils.StringPtr(v.(string))
 		hasValue = true
 	}
 	if v, ok := ref["uuid"]; ok {
-		r.UUID = utils.String(v.(string))
+		r.UUID = utils.StringPtr(v.(string))
 		hasValue = true
 	}
 	if v, ok := ref["name"]; ok {
-		r.Name = utils.String(v.(string))
+		r.Name = utils.StringPtr(v.(string))
 		hasValue = true
 	}
 
@@ -134,11 +115,11 @@ func validateShortRef(ref map[string]interface{}) *v3.Reference {
 	r := &v3.Reference{}
 	hasValue := false
 	if v, ok := ref["kind"]; ok {
-		r.Kind = utils.String(v.(string))
+		r.Kind = utils.StringPtr(v.(string))
 		hasValue = true
 	}
 	if v, ok := ref["uuid"]; ok {
-		r.UUID = utils.String(v.(string))
+		r.UUID = utils.StringPtr(v.(string))
 		hasValue = true
 	}
 
@@ -151,14 +132,14 @@ func validateShortRef(ref map[string]interface{}) *v3.Reference {
 
 func validateMapStringValue(value map[string]interface{}, key string) *string {
 	if v, ok := value[key]; ok && v != nil && v.(string) != "" {
-		return utils.String(v.(string))
+		return utils.StringPtr(v.(string))
 	}
 	return nil
 }
 
 func validateMapIntValue(value map[string]interface{}, key string) *int64 {
 	if v, ok := value[key]; ok && v != nil && v.(int) != 0 {
-		return utils.Int64(int64(v.(int)))
+		return utils.Int64Ptr(int64(v.(int)))
 	}
 	return nil
 }
