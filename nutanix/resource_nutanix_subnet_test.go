@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -74,6 +75,36 @@ func TestAccNutanixSubnet_WithCategory(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"description"},
+			},
+		},
+	})
+}
+
+func TestAccNutanixSubnet_withIpPoolListRanges(t *testing.T) {
+	r := acctest.RandIntRange(3500, 3900)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:   testAccNutanixSubnetConfigWithIPPoolListRanges(r),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccNutanixSubnet_withIpPoolListRangesErrored(t *testing.T) {
+	r := acctest.RandIntRange(3500, 3900)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccNutanixSubnetConfigWithIPPoolListRangesErrored(r),
+				ExpectError: regexp.MustCompile("please see https://developer.nutanix.com/reference/prism_central/v3/#definitions-ip_pool"),
 			},
 		},
 	})
@@ -262,6 +293,88 @@ resource "nutanix_subnet" "acctest-managed-categories" {
 	categories {
 		environment-terraform = "staging"
 	}
+}
+`, r)
+}
+
+func testAccNutanixSubnetConfigWithIPPoolListRanges(r int) string {
+	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {}
+
+output "cluster" {
+  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+}
+
+resource "nutanix_subnet" "acctest-managed-categories" {
+  # What cluster will this VLAN live on?
+  cluster_reference = {
+	kind = "cluster"
+	uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  }
+
+  # General Information for subnet
+	name        = "acctest-managed"
+  vlan_id     = %d
+	subnet_type = "VLAN"
+
+  # Provision a Managed L3 Network
+  # This bit is only needed if you intend to turn on AHV's IPAM
+	subnet_ip          = "10.250.140.0"
+  default_gateway_ip = "10.250.140.1"
+  prefix_length = 24
+  dhcp_options {
+		boot_file_name   = "bootfile"
+		domain_name      = "nutanix"
+		tftp_server_name = "10.250.140.200"
+	}
+
+	ip_config_pool_list_ranges= [
+    "10.250.140.110 10.250.140.250" 
+  ]
+
+	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
+}
+`, r)
+}
+
+func testAccNutanixSubnetConfigWithIPPoolListRangesErrored(r int) string {
+	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {}
+
+output "cluster" {
+  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+}
+
+resource "nutanix_subnet" "acctest-managed-categories" {
+  # What cluster will this VLAN live on?
+  cluster_reference = {
+	kind = "cluster"
+	uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  }
+
+  # General Information for subnet
+	name        = "acctest-managed"
+  vlan_id     = %d
+	subnet_type = "VLAN"
+
+  # Provision a Managed L3 Network
+  # This bit is only needed if you intend to turn on AHV's IPAM
+	subnet_ip          = "10.250.140.0"
+  default_gateway_ip = "10.250.140.1"
+  prefix_length = 24
+  dhcp_options {
+		boot_file_name   = "bootfile"
+		domain_name      = "nutanix"
+		tftp_server_name = "10.250.140.200"
+	}
+
+	ip_config_pool_list_ranges= [
+    "10.250.140.110" #bad configuration
+  ]
+
+	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
 }
 `, r)
 }
