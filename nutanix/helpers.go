@@ -71,10 +71,12 @@ func flattenReferenceValues(r *v3.Reference) map[string]interface{} {
 	reference := make(map[string]interface{})
 	if r != nil {
 		reference["kind"] = utils.StringValue(r.Kind)
-		reference["name"] = utils.StringValue(r.Name)
 		reference["uuid"] = utils.StringValue(r.UUID)
-	}
 
+		if r.Name != nil {
+			reference["name"] = utils.StringValue(r.Name)
+		}
+	}
 	return reference
 }
 
@@ -156,7 +158,6 @@ func taskStateRefreshFunc(client *v3.Client, taskUUID string) resource.StateRefr
 		}
 
 		if *v.Status == "INVALID_UUID" || *v.Status == "FAILED" {
-			utils.PrintToJSON(v, "TASKS Validation")
 			return v, *v.Status, fmt.Errorf(utils.StringValue(v.ErrorDetail))
 		}
 		return v, *v.Status, nil
