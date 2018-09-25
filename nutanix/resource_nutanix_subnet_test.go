@@ -88,8 +88,9 @@ func TestAccNutanixSubnet_withIpPoolListRanges(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:   testAccNutanixSubnetConfigWithIPPoolListRanges(r),
-				PlanOnly: true,
+				Config:             testAccNutanixSubnetConfigWithIPPoolListRanges(r),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
