@@ -338,14 +338,15 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 
 	// Get client connection
 	conn := meta.(*Client).API
+	uuid := d.Id()
 
 	// Make request to the API
-	resp, err := conn.V3.GetImage(d.Id())
+	resp, err := conn.V3.GetImage(uuid)
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
 		}
-		return fmt.Errorf("error reading image UUID (%s) with error %s", d.Id(), err)
+		return fmt.Errorf("error reading image UUID (%s) with error %s", uuid, err)
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
@@ -513,6 +514,9 @@ func resourceNutanixImageDelete(d *schema.ResourceData, meta interface{}) error 
 
 	resp, err := conn.V3.DeleteImage(UUID)
 	if err != nil {
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
 		return err
 	}
 

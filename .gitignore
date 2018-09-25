@@ -4,7 +4,7 @@
 *.dylib
 **/*.tfstate
 **/*.tfstate.backup
-**/*terraform*
+**/.terraform*
 *.log
 setenv.sh
 request_log

@@ -555,7 +555,7 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 							},
 						},
 						"data_source_reference": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeMap,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -576,7 +576,7 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 						},
 
 						"volume_group_reference": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeMap,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
