@@ -1,30 +1,24 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Create a report for error, failure, or unexpected behavior
 
 ---
 
 **Describe the bug**
 A clear and concise description of what the bug is.
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
-
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+**Logs**
+If you've got any logs/outputs, attach them
 
 **Versions (please complete the following information):**
- - OS
+ - OS that is executing Terraform
  - Terraform
- - Nutanix Cluster
+ - Nutanix Cluster (Prism Element / AOS)
  - Nutanix Prism Central
+ - Terraform provider version (using posted RC1? Compiling yourself? If so, from Develop or Master, and what commit id?
 
 **Additional context**
 Add any other context about the problem here.
