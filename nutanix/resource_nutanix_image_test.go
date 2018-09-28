@@ -2,7 +2,8 @@ package nutanix
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
+	"net/http"
 	"os"
 	"strings"
 	"testing"
@@ -81,21 +82,24 @@ func TestAccNutanixImageWithCategories(t *testing.T) {
 }
 
 func TestAccNutanixImage_basic_uploadLocal(t *testing.T) {
-	// Skipping as this test needs functional work
-	t.Skip()
-	// function guts inspired by resource_aws_s3_bucket_object_test.go
-	tmpFile, err := ioutil.TempFile("", "tf-acc-image-source")
+
+	// Get the Working directory
+	dir, err := os.Getwd()
 	if err != nil {
-		t.Fatal(err)
+		t.Errorf("TestAccNutanixImage_basic_uploadLocal failed to get working directory %s", err)
 	}
-	defer os.Remove(tmpFile.Name())
+
+	filepath := dir + "/alpine.iso"
+
+	// Small Alpine image
+	image := "http://dl-cdn.alpinelinux.org/alpine/v3.8/releases/x86_64/alpine-virt-3.8.1-x86_64.iso"
+	if err := downloadFile(filepath, image); err != nil {
+		t.Errorf("TestAccNutanixImage_basic_uploadLocal failed to download image %s", err)
+	}
+
+	defer os.Remove(filepath)
 
 	rInt := acctest.RandInt()
-	// first write some data to the tempfile just so it's not 0 bytes.
-	err = ioutil.WriteFile(tmpFile.Name(), []byte("{anything will do }"), 0644)
-	if err != nil {
-		t.Fatal(err)
-	}
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -103,20 +107,45 @@ func TestAccNutanixImage_basic_uploadLocal(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixImageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixImageLocalConfig(rInt, tmpFile.Name()),
+				Config: testAccNutanixImageLocalConfig(rInt, filepath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixImageExists("nutanix_image.acctest-testLocal"),
 				),
 			},
 			{
-				Config: testAccNutanixImageLocalConfigUpdate(rInt),
+				Config: testAccNutanixImageLocalConfigUpdate(rInt, filepath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixImageExists("nutanix_image.acctest-testLocal"),
-					resource.TestCheckResourceAttr("nutanix_image.acctest-testLocal", "name", "image-updateName"),
+					resource.TestCheckResourceAttr("nutanix_image.acctest-testLocal", "description", "new description"),
 				),
 			},
 		},
 	})
+}
+
+func downloadFile(filepath string, url string) error {
+
+	// Create the file
+	out, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	// Get the data
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Write the body to file
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func testAccCheckNutanixImageExists(n string) resource.TestCheckFunc {
@@ -186,13 +215,14 @@ resource "nutanix_image" "acctest-testLocal" {
 `, rNumb, rFile)
 }
 
-func testAccNutanixImageLocalConfigUpdate(rNumb int) string {
+func testAccNutanixImageLocalConfigUpdate(rNumb int, rFile string) string {
 	return fmt.Sprintf(`
 resource "nutanix_image" "acctest-testLocal" {
   name        = "random-local-image-%d"
-  description = "update my description!"
+  description = "new description"
+  source_path  = "%s"
 }
-`, rNumb)
+`, rNumb, rFile)
 }
 
 func testAccNutanixImageConfigWithCategories(r int) string {

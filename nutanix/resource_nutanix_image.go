@@ -484,7 +484,7 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 
 	resp, errUpdate := conn.V3.UpdateImage(d.Id(), request)
 	if errUpdate != nil {
-		return errUpdate
+		return fmt.Errorf("error updating image(%s) %s", d.Id(), errUpdate)
 	}
 
 	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
