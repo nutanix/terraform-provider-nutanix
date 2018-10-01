@@ -57,7 +57,6 @@ func TestAccNutanixVirtualMachine_basic(t *testing.T) {
 
 func TestAccNutanixVirtualMachine_WithDisk(t *testing.T) {
 	r := acctest.RandInt()
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -86,6 +85,52 @@ func TestAccNutanixVirtualMachine_WithDisk(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"disk_list"},
 			},
 		}})
+}
+
+func TestAccNutanixVirtualMachine_updateFields(t *testing.T) {
+	r := acctest.RandInt()
+	resourceName := "nutanix_virtual_machine.vm2"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixVMConfigUpdatedFields(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("test-dou-%d", r)),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "categories.environment-terraform", "staging"),
+				),
+			},
+			{
+				Config: testAccNutanixVMConfigUpdatedFieldsUpdated(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("test-dou-%d-updated", r)),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "256"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "2"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "2"),
+					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "categories.environment-terraform", "production"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"disk_list"},
+			},
+		},
+	})
 }
 
 func testAccCheckNutanixVirtualMachineExists(n string) resource.TestCheckFunc {
@@ -258,6 +303,55 @@ resource "nutanix_virtual_machine" "vm1" {
   num_vcpus_per_socket = 1
   num_sockets          = 2
   memory_size_mib      = 186
+
+	categories {
+		environment-terraform = "production"
+	}
+}
+`, r)
+}
+
+func testAccNutanixVMConfigUpdatedFields(r int) string {
+	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {}
+output "cluster" {
+  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+}
+resource "nutanix_virtual_machine" "vm2" {
+  name = "test-dou-%d"
+  cluster_reference = {
+	  kind = "cluster"
+	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  }
+  num_vcpus_per_socket = 1
+  num_sockets          = 1
+  memory_size_mib      = 186
+
+
+	categories {
+		environment-terraform = "staging"
+	}
+}
+`, r)
+}
+
+func testAccNutanixVMConfigUpdatedFieldsUpdated(r int) string {
+	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {}
+
+
+output "cluster" {
+  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+}
+resource "nutanix_virtual_machine" "vm2" {
+  name = "test-dou-%d-updated"
+  cluster_reference = {
+	  kind = "cluster"
+	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  }
+  num_vcpus_per_socket = 2
+  num_sockets          = 2
+  memory_size_mib      = 256
 
 	categories {
 		environment-terraform = "production"
