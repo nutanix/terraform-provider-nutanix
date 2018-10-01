@@ -19,8 +19,8 @@ func resourceNutanixCategoryValue() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"value": {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
+				ForceNew: true,
 			},
 			"system_defined": {
 				Type:     schema.TypeBool,
@@ -82,7 +82,7 @@ func resourceNutanixCategoryValueCreateOrUpdate(resourceData *schema.ResourceDat
 }
 
 func resourceNutanixCategoryValueRead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG] Reading CategoryValue: %s", d.Get("value").(string))
+	log.Printf("[DEBUG] Reading CategoryValue: %s", d.Id())
 
 	name, nameOK := d.GetOk("name")
 

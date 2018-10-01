@@ -20,7 +20,8 @@ const (
 	ImageKind = "image"
 	// DELETED ...
 	DELETED = "DELETED"
-	ERROR   = "ERROR"
+	// ERROR ..
+	ERROR = "ERROR"
 )
 
 func resourceNutanixImage() *schema.Resource {
@@ -484,6 +485,7 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 	request.Spec = spec
 
 	resp, errUpdate := conn.V3.UpdateImage(d.Id(), request)
+
 	if errUpdate != nil {
 		return fmt.Errorf("error updating image(%s) %s", d.Id(), errUpdate)
 	}
