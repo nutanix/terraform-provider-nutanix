@@ -860,6 +860,11 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 
 	log.Printf("[Debug] Updating VM values %s", d.Id())
 
+	//First, shutDown the VM.
+	if err := changePowerState(conn, d.Id(), "OFF"); err != nil {
+		return fmt.Errorf("internal error: cannot shut down the VM with UUID(%s): %s", d.Id(), err)
+	}
+
 	request := &v3.VMIntentInput{}
 	metadata := &v3.Metadata{}
 	res := &v3.VMResources{}
@@ -1100,7 +1105,119 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 			"error waiting for vm (%s) to update: %s", d.Id(), err)
 	}
 
+	//Tehn, Turn On the VM.
+	if err := changePowerState(conn, d.Id(), "ON"); err != nil {
+		return fmt.Errorf("internal error: cannot turn ON the VM with UUID(%s): %s", d.Id(), err)
+	}
+
 	return resourceNutanixVirtualMachineRead(d, meta)
+}
+
+func changePowerState(conn *v3.Client, id string, powerState string) error {
+	request := &v3.VMIntentInput{}
+	metadata := &v3.Metadata{}
+	res := &v3.VMResources{}
+	spec := &v3.VM{}
+	guest := &v3.GuestCustomization{}
+	guestTool := &v3.GuestToolsSpec{}
+	boot := &v3.VMBootConfig{}
+	pw := &v3.VMPowerStateMechanism{}
+
+	response, err := conn.V3.GetVM(id)
+	preFillResUpdateRequest(res, response)
+	preFillGTUpdateRequest(guestTool, response)
+	preFillGUpdateRequest(guest, response)
+	preFillPWUpdateRequest(pw, response)
+
+	if err != nil {
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			return nil
+		}
+		return err
+	}
+
+	if response.Metadata != nil {
+		metadata = response.Metadata
+	}
+
+	if !reflect.DeepEqual(*guestTool, (v3.GuestToolsSpec{})) {
+		res.GuestTools = guestTool
+	}
+
+	if !reflect.DeepEqual(*guest, (v3.GuestCustomization{})) {
+		res.GuestCustomization = guest
+	}
+
+	if !reflect.DeepEqual(*boot, (v3.VMBootConfig{})) {
+		res.BootConfig = boot
+	}
+
+	spec.Name = response.Status.Name
+	spec.Description = response.Status.Description
+	spec.AvailabilityZoneReference = response.Status.AvailabilityZoneReference
+	spec.ClusterReference = response.Status.ClusterReference
+
+	res.PowerStateMechanism = pw
+	spec.Resources = res
+	request.Metadata = metadata
+	request.Spec = spec
+
+	//Set PowerState OFF
+	request.Spec.Resources.PowerState = utils.StringPtr(powerState)
+
+	resp, err2 := conn.V3.UpdateVM(id, request)
+	if err2 != nil {
+		return fmt.Errorf("error updating Virtual Machine UUID(%s): %s", id, err2)
+	}
+
+	//Check update tasks
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, resp.Status.ExecutionContext.TaskUUID.(string)),
+		Timeout:    10 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	if _, err := stateConf.WaitForState(); err != nil {
+		return fmt.Errorf(
+			"error waiting for vm (%s) to update: %s", id, err)
+	}
+
+	//Check Power State
+	stateConfVM := &resource.StateChangeConf{
+		Pending:    []string{"PENDING", "RUNNING"},
+		Target:     []string{"COMPLETE"},
+		Refresh:    taskVMStateRefreshFunc(conn, id, powerState),
+		Timeout:    10 * time.Minute,
+		Delay:      5 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	if _, err := stateConfVM.WaitForState(); err != nil {
+		return fmt.Errorf(
+			"error waiting for vm (%s) to update: %s", id, err)
+	}
+	return nil
+}
+
+func taskVMStateRefreshFunc(client *v3.Client, vmUUID string, powerState string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		v, err := client.V3.GetVM(vmUUID)
+
+		if err != nil {
+			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+				return v, DELETED, nil
+			}
+			return nil, ERROR, err
+		}
+
+		if *v.Status.State == "COMPLETE" && *v.Status.Resources.PowerState == powerState {
+			return v, *v.Status.State, nil
+		}
+		return v, "RUNNING", nil
+	}
 }
 
 func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, meta interface{}) error {
