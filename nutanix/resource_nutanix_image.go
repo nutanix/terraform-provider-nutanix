@@ -20,6 +20,7 @@ const (
 	ImageKind = "image"
 	// DELETED ...
 	DELETED = "DELETED"
+	ERROR   = "ERROR"
 )
 
 func resourceNutanixImage() *schema.Resource {

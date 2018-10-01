@@ -152,7 +152,7 @@ func taskStateRefreshFunc(client *v3.Client, taskUUID string) resource.StateRefr
 
 		if err != nil {
 			if strings.Contains(fmt.Sprint(err), "INVALID_UUID") {
-				return v, "ERROR", nil
+				return v, ERROR, nil
 			}
 			return nil, "", err
 		}
