@@ -170,11 +170,8 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 		} else {
 			err = json.NewDecoder(resp.Body).Decode(v)
 			if err != nil {
-				fmt.Printf("BODY %v", resp.Body)
-				fmt.Printf("Error new decoder %s", err)
-				return err
+				return fmt.Errorf("error unmarshalling json: %s", err)
 			}
-			// utils.PrintToJSON(v, "RESPONSE BODY")
 		}
 	}
 
@@ -204,12 +201,14 @@ func CheckResponse(r *http.Response) error {
 	// if has entities -> return nil
 	// if has message_list -> check_error["state"]
 	// if has status -> check_error["status.state"]
+	if len(buf) == 0 {
+		return nil
+	}
 
 	var res map[string]interface{}
 	err = json.Unmarshal(buf, &res)
-
 	if err != nil {
-		return err
+		return fmt.Errorf("unmarshalling error response %s", err)
 	}
 
 	errRes := &ErrorResponse{}
