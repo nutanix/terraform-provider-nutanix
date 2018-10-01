@@ -11,9 +11,10 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+const resourceNameSubnet = "nutanix_subnet.acctest-managed"
+
 func TestAccNutanixSubnet_basic(t *testing.T) {
 	r := acctest.RandIntRange(3500, 3900)
-	resourceName := "nutanix_subnet.acctest-managed"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -22,22 +23,53 @@ func TestAccNutanixSubnet_basic(t *testing.T) {
 			{
 				Config: testAccNutanixSubnetConfig(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixSubnetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", "acctest-managed"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Description of my unit test VLAN"),
+					testAccCheckNutanixSubnetExists(resourceNameSubnet),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "name", "acctest-managed"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "description", "Description of my unit test VLAN"),
+				),
+			},
+			{
+				ResourceName:            resourceNameSubnet,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"description"},
+			},
+		},
+	})
+}
+
+func TestAccNutanixSubnet_Update(t *testing.T) {
+	r := acctest.RandIntRange(3500, 3900)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixSubnetConfig(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixSubnetExists(resourceNameSubnet),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "name", "acctest-managed"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "description", "Description of my unit test VLAN"),
 				),
 			},
 			{
 				Config: testAccNutanixSubnetConfigUpdate(r),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixSubnetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", "acctest-managed-updateName"),
-					resource.TestCheckResourceAttr(resourceName, "description", "Description of my unit test VLAN updated"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_type", "VLAN"),
+					testAccCheckNutanixSubnetExists(resourceNameSubnet),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "name", "acctest-managed-updateName"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "description", "Description of my unit test VLAN updated"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "subnet_type", "VLAN"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "subnet_ip", "10.250.141.0"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "default_gateway_ip", "10.250.141.1"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "dhcp_options.tftp_server_name", "10.250.141.200"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "dhcp_server_address.ip", "10.250.141.254"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "dhcp_domain_name_server_list.1", "4.2.2.3"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "dhcp_domain_search_list.1", "terraform.uptated.test.com"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
+				ResourceName:            resourceNameSubnet,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"description"},
@@ -203,17 +235,21 @@ resource "nutanix_subnet" "acctest-managed" {
 
   # Provision a Managed L3 Network
   # This bit is only needed if you intend to turn on AHV's IPAM
-	subnet_ip          = "10.250.140.0"
-  default_gateway_ip = "10.250.140.1"
+	subnet_ip          = "10.250.141.0"
+  default_gateway_ip = "10.250.141.1"
   prefix_length = 24
   dhcp_options {
 		boot_file_name   = "bootfile"
 		domain_name      = "nutanix"
-		tftp_server_name = "10.250.140.200"
+		tftp_server_name = "10.250.141.200"
 	}
 
-	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
-	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
+	dhcp_server_address {
+		ip = "10.250.141.254"
+	}
+
+	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.3"]
+	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.uptated.test.com"]
 }
 `, r)
 }
@@ -330,7 +366,7 @@ resource "nutanix_subnet" "acctest-managed-categories" {
 	}
 
 	ip_config_pool_list_ranges= [
-    "10.250.140.110 10.250.140.250" 
+    "10.250.140.110 10.250.140.250"
   ]
 
 	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
