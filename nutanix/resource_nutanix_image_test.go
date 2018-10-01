@@ -14,9 +14,33 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+const resourceName = "nutanix_image.acctest-test"
+
 func TestAccNutanixImage_basic(t *testing.T) {
 	rInt := acctest.RandInt()
-	resourceName := "nutanix_image.acctest-test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixImageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixImageConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixImageExists(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNutanixImage_Update(t *testing.T) {
+	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -34,6 +58,7 @@ func TestAccNutanixImage_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixImageExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("Ubuntu-%d-updated", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "description", "Ubuntu updated"),
 				),
 			},
 			{
