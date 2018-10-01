@@ -436,11 +436,17 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		pl = utils.Int64Value(resp.Status.Resources.IPConfig.PrefixLength)
 		sIP = utils.StringValue(resp.Status.Resources.IPConfig.SubnetIP)
 
-		if resp.Status.Resources.IPConfig.DHCPServerAddress != nil {
-			dhcpSA["ip"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.IP)
-			dhcpSA["fqdn"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.FQDN)
-			dhcpSA["ipv6"] = utils.StringValue(resp.Status.Resources.IPConfig.DHCPServerAddress.IPV6)
-			port = utils.Int64Value(resp.Status.Resources.IPConfig.DHCPServerAddress.Port)
+		if dhcpServerAdd := resp.Status.Resources.IPConfig.DHCPServerAddress; dhcpServerAdd != nil {
+			if dhcpServerAdd.IP != nil {
+				dhcpSA["ip"] = utils.StringValue(dhcpServerAdd.IP)
+			}
+			if dhcpServerAdd.FQDN != nil {
+				dhcpSA["fqdn"] = utils.StringValue(dhcpServerAdd.FQDN)
+			}
+			if dhcpServerAdd.IPV6 != nil {
+				dhcpSA["ipv6"] = utils.StringValue(dhcpServerAdd.IPV6)
+			}
+			port = utils.Int64Value(dhcpServerAdd.Port)
 		}
 
 		if resp.Status.Resources.IPConfig.PoolList != nil {
