@@ -34,6 +34,40 @@ func TestAccNutanixCategoryKey_basic(t *testing.T) {
 	})
 }
 
+func TestAccNutanixCategoryKey_update(t *testing.T) {
+	resourceName := "nutanix_category_key.test_update"
+	rInt := acctest.RandIntRange(0, 500)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixCategoryKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixCategoryKeyConfigToUpdate(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixCategoryKeyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("app-support-%d", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "description", "App Support CategoryKey"),
+				),
+			},
+			{
+				Config: testAccNutanixCategoryKeyConfigUpdated(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixCategoryKeyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("app-support-%d-updated", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "description", "App Support CategoryKey Updated"),
+				),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixCategoryKeyExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -76,6 +110,24 @@ func testAccNutanixCategoryKeyConfig(r int) string {
 resource "nutanix_category_key" "test"{
     name = "app-support-%d"
     description = "App Support CategoryKey"
+}
+`, r)
+}
+
+func testAccNutanixCategoryKeyConfigToUpdate(r int) string {
+	return fmt.Sprintf(`
+resource "nutanix_category_key" "test_update"{
+    name = "app-support-%d"
+    description = "App Support CategoryKey"
+}
+`, r)
+}
+
+func testAccNutanixCategoryKeyConfigUpdated(r int) string {
+	return fmt.Sprintf(`
+resource "nutanix_category_key" "test_update"{
+    name = "app-support-%d-updated"
+    description = "App Support CategoryKey Updated"
 }
 `, r)
 }

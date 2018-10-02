@@ -6,20 +6,57 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform/helper/acctest"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccNutanixCategoryValue_basic(t *testing.T) {
+	rInt := acctest.RandIntRange(0, 200)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixCategoryValueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixCategoryValueConfig(),
+				Config: testAccNutanixCategoryValueConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixCategoryValueExists("nutanix_category_value.test"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNutanixCategoryValue_update(t *testing.T) {
+	rInt := acctest.RandIntRange(201, 500)
+	resourceName := "nutanix_category_value.test_update"
+	description := "Test Category Value"
+	value := "test-value"
+	descriptionUpdated := fmt.Sprintf("%s Updated", description)
+	valueUpdated := fmt.Sprintf("%s-updated", value)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixCategoryValueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixCategoryValueConfigToUpdate(rInt, value, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixCategoryValueExists(resourceName),
+
+					resource.TestCheckResourceAttr(resourceName, "value", value),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+				),
+			},
+			{
+				Config: testAccNutanixCategoryValueConfigToUpdate(rInt, valueUpdated, descriptionUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixCategoryValueExists(resourceName),
+
+					resource.TestCheckResourceAttr(resourceName, "value", valueUpdated),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
 				),
 			},
 		},
@@ -64,18 +101,33 @@ func testAccCheckNutanixCategoryValueDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccNutanixCategoryValueConfig() string {
-	return `
-resource "nutanix_category_key" "test-category-key"{
-    name = "app-suppport-1"
+func getCategoryValueResource(rInt int) string {
+	return fmt.Sprintf(`
+	resource "nutanix_category_key" "test-category-key"{
+    name = "app-suppport-%d"
 	description = "App Support Category Key"
 }
+`, rInt)
+}
 
-
+func testAccNutanixCategoryValueConfig(rInt int) string {
+	return getCategoryValueResource(rInt) +
+		`
 resource "nutanix_category_value" "test"{
     name = "${nutanix_category_key.test-category-key.id}"
 	description = "Test Category Value"
 	value = "test-value"
 }
 `
+}
+
+func testAccNutanixCategoryValueConfigToUpdate(rInt int, value, description string) string {
+	return getCategoryValueResource(rInt) +
+		fmt.Sprintf(`
+resource "nutanix_category_value" "test_update"{
+    name = "${nutanix_category_key.test-category-key.id}"
+	value = "%s"
+	description = "%s"
+}
+`, value, description)
 }
