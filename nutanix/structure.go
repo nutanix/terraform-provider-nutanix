@@ -38,7 +38,11 @@ func flattenNicList(nics []*v3.VMNicOutputStatus) []map[string]interface{} {
 				ipEndpoint := make(map[string]interface{})
 				ipEndpoint["ip"] = utils.StringValue(v1.IP)
 				ipEndpoint["type"] = utils.StringValue(v1.Type)
-				ipEndpointList[k1] = ipEndpoint
+				if ipEndpoint["type"] != "LEARNED" {
+					ipEndpointList[k1] = ipEndpoint
+				} else {
+					ipEndpointList = ipEndpointList[:len(ipEndpointList)-1]
+				}
 			}
 			nic["ip_endpoint_list"] = ipEndpointList
 			nic["network_function_chain_reference"] = flattenReferenceValues(v.NetworkFunctionChainReference)
