@@ -6,7 +6,7 @@ description: |-
  Describes a Network security rule
 ---
 
-# nutanix_virtual_machine
+# nutanix_network_security_rule
 
 Describes a Network security rule
 
