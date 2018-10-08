@@ -6,7 +6,7 @@ description: |-
   Provides a Nutanix Category value resource to Create a category value.
 ---
 
-# nutanix_categiry_value
+# nutanix_category_value
 
 Provides a Nutanix Category value resource to Create a category value.
 
