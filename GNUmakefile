@@ -27,12 +27,12 @@ fmt:
 
 extrasanity:
 	echo "==>sanity: golangci-lint"
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $(GOPATH)/bin v1.9.1
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $(GOPATH)/bin v1.9.3
 	$(GOPATH)/bin/golangci-lint run
 
 deps:
 	go get -u github.com/golang/dep/cmd/dep
-	dep status
+	dep check
 
 website:
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))

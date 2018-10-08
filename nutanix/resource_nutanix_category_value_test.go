@@ -2,26 +2,61 @@ package nutanix
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform/helper/acctest"
+
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
 
 func TestAccNutanixCategoryValue_basic(t *testing.T) {
+	rInt := acctest.RandIntRange(0, 200)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixCategoryValueDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixCategoryValueConfig(),
+				Config: testAccNutanixCategoryValueConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixCategoryValueExists("nutanix_category_value.test"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNutanixCategoryValue_update(t *testing.T) {
+	rInt := acctest.RandIntRange(201, 500)
+	resourceName := "nutanix_category_value.test_update"
+	description := "Test Category Value"
+	value := "test-value"
+	descriptionUpdated := fmt.Sprintf("%s Updated", description)
+	valueUpdated := fmt.Sprintf("%s-updated", value)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixCategoryValueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixCategoryValueConfigToUpdate(rInt, value, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixCategoryValueExists(resourceName),
+
+					resource.TestCheckResourceAttr(resourceName, "value", value),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+				),
+			},
+			{
+				Config: testAccNutanixCategoryValueConfigToUpdate(rInt, valueUpdated, descriptionUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixCategoryValueExists(resourceName),
+
+					resource.TestCheckResourceAttr(resourceName, "value", valueUpdated),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
 				),
 			},
 		},
@@ -66,14 +101,18 @@ func testAccCheckNutanixCategoryValueDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccNutanixCategoryValueConfig() string {
-	return `
-resource "nutanix_category_key" "test-category-key"{
-    name = "app-suppport-1"
+func getCategoryValueResource(rInt int) string {
+	return fmt.Sprintf(`
+	resource "nutanix_category_key" "test-category-key"{
+    name = "app-suppport-%d"
 	description = "App Support Category Key"
 }
+`, rInt)
+}
 
-
+func testAccNutanixCategoryValueConfig(rInt int) string {
+	return getCategoryValueResource(rInt) +
+		`
 resource "nutanix_category_value" "test"{
     name = "${nutanix_category_key.test-category-key.id}"
 	description = "Test Category Value"
@@ -82,153 +121,13 @@ resource "nutanix_category_value" "test"{
 `
 }
 
-func Test_resourceNutanixCategoryValue(t *testing.T) {
-	tests := []struct {
-		name string
-		want *schema.Resource
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := resourceNutanixCategoryValue(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("resourceNutanixCategoryValue() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+func testAccNutanixCategoryValueConfigToUpdate(rInt int, value, description string) string {
+	return getCategoryValueResource(rInt) +
+		fmt.Sprintf(`
+resource "nutanix_category_value" "test_update"{
+    name = "${nutanix_category_key.test-category-key.id}"
+	value = "%s"
+	description = "%s"
 }
-
-func Test_resourceNutanixCategoryValueCreateOrUpdate(t *testing.T) {
-	type args struct {
-		resourceData *schema.ResourceData
-		meta         interface{}
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := resourceNutanixCategoryValueCreateOrUpdate(tt.args.resourceData, tt.args.meta); (err != nil) != tt.wantErr {
-				t.Errorf("resourceNutanixCategoryValueCreateOrUpdate() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func Test_resourceNutanixCategoryValueRead(t *testing.T) {
-	type args struct {
-		d    *schema.ResourceData
-		meta interface{}
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := resourceNutanixCategoryValueRead(tt.args.d, tt.args.meta); (err != nil) != tt.wantErr {
-				t.Errorf("resourceNutanixCategoryValueRead() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func Test_resourceNutanixCategoryValueDelete(t *testing.T) {
-	type args struct {
-		d    *schema.ResourceData
-		meta interface{}
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := resourceNutanixCategoryValueDelete(tt.args.d, tt.args.meta); (err != nil) != tt.wantErr {
-				t.Errorf("resourceNutanixCategoryValueDelete() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func Test_getCategoryValueSchema(t *testing.T) {
-	tests := []struct {
-		name string
-		want map[string]*schema.Schema
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := getCategoryValueSchema(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getCategoryValueSchema() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_testAccCheckNutanixCategoryValueExists(t *testing.T) {
-	type args struct {
-		n string
-	}
-	tests := []struct {
-		name string
-		args args
-		want resource.TestCheckFunc
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := testAccCheckNutanixCategoryValueExists(tt.args.n); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("testAccCheckNutanixCategoryValueExists() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_testAccCheckNutanixCategoryValueDestroy(t *testing.T) {
-	type args struct {
-		s *terraform.State
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := testAccCheckNutanixCategoryValueDestroy(tt.args.s); (err != nil) != tt.wantErr {
-				t.Errorf("testAccCheckNutanixCategoryValueDestroy() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func Test_testAccNutanixCategoryValueConfig(t *testing.T) {
-	tests := []struct {
-		name string
-		want string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := testAccNutanixCategoryValueConfig(); got != tt.want {
-				t.Errorf("testAccNutanixCategoryValueConfig() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+`, value, description)
 }
