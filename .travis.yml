@@ -1,87 +1,32 @@
----
+dist: trusty
+sudo: required
+services:
+  - docker
 language: go
-
-#cache:
-#  directories:
-#    - vendor
-#    - /home/travis/gopath/pkg
+go:
+- "1.11.1"
 
 git:
   depth: 1
 
-go_import_path: github.com/terraform-providers/terraform-provider-nutanix
+install:
+# This script is used by the Travis build to install a cookie for
+# go.googlesource.com so rate limits are higher when using `go get` to fetch
+# packages that live there.
+# See: https://github.com/golang/go/issues/12933
+- bash scripts/gogetcookie.sh
+- make tools
 
 script:
-  - export GOPATH="${TRAVIS_BUILD_DIR}/vendor:$GOPATH"
-  - make cibuild
+- make lint
+- make test
+- make vendor-status
+- make website-lint
+- make website-test
 
-stages:
-  - sanity testing
-  - build go 1.9
-  - build go 1.10
-  - build go master
-  - acceptance testing
-
-jobs:
-  include:
-    - stage: sanity testing
-      script:
-        - make deps
-        - make extrasanity
-      go: 1.10.x
-    # Build Go 1.9.x
-    - stage: build go 1.9
-      go: 1.9.x
-      script: make cibuild
-      env: GOOS=darwin GOARCH=amd64
-    - script: make cibuild
-      go: 1.9.x
-      env: GOOS=windows GOARCH=amd64
-    - script: make cibuild
-      go: 1.9.x
-      env: GOOS=linux GOARCH=amd64
-    - script: make cibuild
-      go: 1.9.x
-      env: GOOS=linux GOARCH=ppc64le
-    # Build Go 1.10.x
-    - stage: build go 1.10
-      go: 1.10.x
-      script: make cibuild
-      env: GOOS=darwin GOARCH=amd64
-    - script: make cibuild
-      go: 1.10.x
-      env: GOOS=windows GOARCH=amd64
-    - script: make cibuild
-      go: 1.10.x
-      env: GOOS=linux GOARCH=amd64
-    - script: make cibuild
-      go: 1.10.x
-      env: GOOS=linux GOARCH=ppc64le
-    # Build Go master (helps hedge against upstream code breaking downstream builds later, acts as a canary)
-    - stage: build go master
-      go: tip
-      script: make cibuild
-      env: GOOS=darwin GOARCH=amd64
-    - script: make cibuild
-      go: tip
-      env: GOOS=windows GOARCH=amd64
-    - script: make cibuild
-      go: tip
-      env: GOOS=linux GOARCH=amd64
-    - script: make cibuild
-      go: tip
-      env: GOOS=linux GOARCH=ppc64le
-    - stage: acceptance testing
-      go: 1.10.x
-      script:
-        - go get github.com/schrej/godacov
-        - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-        - chmod +x ./cc-test-reporter
-        - ./cc-test-reporter before-build
-        - travis_wait make citest
-        - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
-        - godacov -t $CODACY_TOKEN -r ./c.out -c $TRAVIS_COMMIT
-
+branches:
+  only:
+  - master
 matrix:
   fast_finish: true
   allow_failures:
