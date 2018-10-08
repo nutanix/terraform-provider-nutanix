@@ -21,7 +21,7 @@ const (
 	mediaType      = "application/json"
 )
 
-//Client Config Configuration of the client
+// Client Config Configuration of the client
 type Client struct {
 	Credentials *Credentials
 
@@ -55,7 +55,7 @@ type Credentials struct {
 func NewClient(credentials *Credentials) (*Client, error) {
 
 	transCfg := &http.Transport{
-		//nolint:gas
+		// nolint:gas
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: credentials.Insecure}, // ignore expired SSL certificates
 	}
 
@@ -104,16 +104,6 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 	req.Header.Add("Authorization", "Basic "+
 		base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
 
-	// utils.PrintToJSON(req, "REQUEST BODY")
-
-	// requestDump, err := httputil.DumpRequestOut(req, true)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println("################")
-	// fmt.Println("REQUEST")
-	// fmt.Println(string(requestDump))
-
 	return req, nil
 }
 
@@ -148,7 +138,7 @@ func (c *Client) OnRequestCompleted(rc RequestCompletionCallback) {
 	c.onRequestCompleted = rc
 }
 
-//Do performs request passed
+// Do performs request passed
 func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error {
 	req = req.WithContext(ctx)
 
@@ -180,11 +170,8 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 		} else {
 			err = json.NewDecoder(resp.Body).Decode(v)
 			if err != nil {
-				fmt.Printf("BODY %v", resp.Body)
-				fmt.Printf("Error new decoder %s", err)
-				return err
+				return fmt.Errorf("error unmarshalling json: %s", err)
 			}
-			// utils.PrintToJSON(v, "RESPONSE BODY")
 		}
 	}
 
@@ -195,7 +182,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 	return err
 }
 
-//CheckResponse checks errors if exist errors in request
+// CheckResponse checks errors if exist errors in request
 func CheckResponse(r *http.Response) error {
 	if c := r.StatusCode; c >= 200 && c <= 299 && r.Request.Method == http.MethodDelete {
 		return nil
@@ -211,20 +198,27 @@ func CheckResponse(r *http.Response) error {
 
 	r.Body = rdr2
 
-	//if has entities -> return nil
-	//if has message_list -> check_error["state"]
-	//if has status -> check_error["status.state"]
+	// if has entities -> return nil
+	// if has message_list -> check_error["state"]
+	// if has status -> check_error["status.state"]
+	if len(buf) == 0 {
+		return nil
+	}
 
 	var res map[string]interface{}
 	err = json.Unmarshal(buf, &res)
-
 	if err != nil {
-		return err
+		return fmt.Errorf("unmarshalling error response %s", err)
 	}
 
 	errRes := &ErrorResponse{}
 
 	if status, ok := res["status"]; ok {
+		_, sok := status.(string)
+		if sok {
+			return nil
+		}
+
 		err = fillStruct(status.(map[string]interface{}), errRes)
 	} else if _, ok := res["state"]; ok {
 		err = fillStruct(res, errRes)
@@ -244,7 +238,7 @@ func CheckResponse(r *http.Response) error {
 	return fmt.Errorf("error: %s", string(pretty))
 }
 
-//ErrorResponse ...
+// ErrorResponse ...
 type ErrorResponse struct {
 	APIVersion  string            `json:"api_version,omitempty"`
 	Code        int64             `json:"code,omitempty"`
@@ -253,7 +247,7 @@ type ErrorResponse struct {
 	State       string            `json:"state"`
 }
 
-//MessageResource ...
+// MessageResource ...
 type MessageResource struct {
 
 	// Custom key-value details relevant to the status.

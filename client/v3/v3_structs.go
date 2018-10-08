@@ -2,21 +2,21 @@ package v3
 
 import "time"
 
-//Reference ...
+// Reference ...
 type Reference struct {
 	Kind *string `json:"kind"`
 	Name *string `json:"name,omitempty"`
 	UUID *string `json:"uuid"`
 }
 
-//VMVnumaConfig Indicates how VM vNUMA should be configured
+// VMVnumaConfig Indicates how VM vNUMA should be configured
 type VMVnumaConfig struct {
 
 	// Number of vNUMA nodes. 0 means vNUMA is disabled.
 	NumVnumaNodes *int64 `json:"num_vnuma_nodes,omitempty"`
 }
 
-//IPAddress An IP address.
+// IPAddress An IP address.
 type IPAddress struct {
 
 	// Address *string.
@@ -27,7 +27,7 @@ type IPAddress struct {
 	Type *string `json:"type,omitempty"`
 }
 
-//VMNic Virtual Machine NIC.
+// VMNic Virtual Machine NIC.
 type VMNic struct {
 
 	// IP endpoints for the adapter. Currently, IPv4 addresses are supported.
@@ -54,14 +54,13 @@ type VMNic struct {
 	UUID *string `json:"uuid,omitempty"`
 }
 
-//DiskAddress Disk Address.
+// DiskAddress Disk Address.
 type DiskAddress struct {
-	AdapterType *string `json:"adapter_type"`
-
-	DeviceIndex *int64 `json:"device_index"`
+	AdapterType *string `json:"adapter_type,omitempty"`
+	DeviceIndex *int64  `json:"device_index,omitempty"`
 }
 
-//VMBootDevice Indicates which device a VM should boot from. One of disk_address or mac_address should be provided.
+// VMBootDevice Indicates which device a VM should boot from. One of disk_address or mac_address should be provided.
 type VMBootDevice struct {
 
 	// Address of disk to boot from.
@@ -71,7 +70,7 @@ type VMBootDevice struct {
 	MacAddress *string `json:"mac_address,omitempty"`
 }
 
-//VMBootConfig Indicates which device a VM should boot from.
+// VMBootConfig Indicates which device a VM should boot from.
 type VMBootConfig struct {
 
 	// Indicates which device a VM should boot from. Boot device takes precdence over boot device order. If both are
@@ -84,7 +83,7 @@ type VMBootConfig struct {
 	BootDeviceOrderList []*string `json:"boot_device_order_list,omitempty"`
 }
 
-//NutanixGuestToolsSpec Information regarding Nutanix Guest Tools.
+// NutanixGuestToolsSpec Information regarding Nutanix Guest Tools.
 type NutanixGuestToolsSpec struct {
 
 	// Application names that are enabled.
@@ -97,14 +96,14 @@ type NutanixGuestToolsSpec struct {
 	State *string `json:"state,omitempty"`
 }
 
-//GuestToolsSpec Information regarding guest tools.
+// GuestToolsSpec Information regarding guest tools.
 type GuestToolsSpec struct {
 
 	// Nutanix Guest Tools information
 	NutanixGuestTools *NutanixGuestToolsSpec `json:"nutanix_guest_tools,omitempty"`
 }
 
-//VMGpu Graphics resource information for the Virtual Machine.
+// VMGpu Graphics resource information for the Virtual Machine.
 type VMGpu struct {
 
 	// The device ID of the GPU.
@@ -117,9 +116,9 @@ type VMGpu struct {
 	Vendor *string `json:"vendor,omitempty"`
 }
 
-//GuestCustomizationCloudInit If this field is set, the guest will be customized using cloud-init. Either user_data or
-//custom_key_values should be provided. If custom_key_ves are provided then the user data will be generated using these
-//key-value pairs.
+// GuestCustomizationCloudInit If this field is set, the guest will be customized using cloud-init. Either user_data or
+// custom_key_values should be provided. If custom_key_ves are provided then the user data will be generated using these
+// key-value pairs.
 type GuestCustomizationCloudInit struct {
 
 	// Generic key value pair used for custom attributes
@@ -134,9 +133,9 @@ type GuestCustomizationCloudInit struct {
 	UserData *string `json:"user_data,omitempty"`
 }
 
-//GuestCustomizationSysprep If this field is set, the guest will be customized using Sysprep. Either unattend_xml or
-//custom_key_values should be provided. If custom_key_values are provided then the unattended answer file will be
-//generated using these key-value pairs.
+// GuestCustomizationSysprep If this field is set, the guest will be customized using Sysprep. Either unattend_xml or
+// custom_key_values should be provided. If custom_key_values are provided then the unattended answer file will be
+// generated using these key-value pairs.
 type GuestCustomizationSysprep struct {
 
 	// Generic key value pair used for custom attributes
@@ -150,12 +149,12 @@ type GuestCustomizationSysprep struct {
 	UnattendXML *string `json:"unattend_xml,omitempty"`
 }
 
-//GuestCustomization VM guests may be customized at boot time using one of several different methods. Currently,
-//cloud-init w/ ConfigDriveV2 (for Linux VMs) and Sysprep (for Windows VMs) are supported. Only ONE OF sysprep or
-//cloud_init should be provided. Note that guest customization can currently only be set during VM creation. Attempting
-//to change it after creation will result in an error. Additional properties can be specified. For example - in the
-//context of VM template creation if \"override_script\" is set to \"True\" then the deployer can upload their own
-//custom script.
+// GuestCustomization VM guests may be customized at boot time using one of several different methods. Currently,
+// cloud-init w/ ConfigDriveV2 (for Linux VMs) and Sysprep (for Windows VMs) are supported. Only ONE OF sysprep or
+// cloud_init should be provided. Note that guest customization can currently only be set during VM creation. Attempting
+// to change it after creation will result in an error. Additional properties can be specified. For example - in the
+// context of VM template creation if \"override_script\" is set to \"True\" then the deployer can upload their own
+// custom script.
 type GuestCustomization struct {
 	CloudInit *GuestCustomizationCloudInit `json:"cloud_init,omitempty"`
 
@@ -165,7 +164,7 @@ type GuestCustomization struct {
 	Sysprep *GuestCustomizationSysprep `json:"sysprep,omitempty"`
 }
 
-//VMGuestPowerStateTransitionConfig Extra configs related to power state transition.
+// VMGuestPowerStateTransitionConfig Extra configs related to power state transition.
 type VMGuestPowerStateTransitionConfig struct {
 
 	// Indicates whether to execute set script before ngt shutdown/reboot.
@@ -175,8 +174,8 @@ type VMGuestPowerStateTransitionConfig struct {
 	ShouldFailOnScriptFailure *bool `json:"should_fail_on_script_failure,omitempty"`
 }
 
-//VMPowerStateMechanism Indicates the mechanism guiding the VM power state transition. Currently used for the transition
-//to \"OFF\" state.
+// VMPowerStateMechanism Indicates the mechanism guiding the VM power state transition. Currently used for the transition
+// to \"OFF\" state.
 type VMPowerStateMechanism struct {
 	GuestTransitionConfig *VMGuestPowerStateTransitionConfig `json:"guest_transition_config,omitempty"`
 
@@ -184,14 +183,13 @@ type VMPowerStateMechanism struct {
 	Mechanism *string `json:"mechanism,omitempty"`
 }
 
-//VMDiskDeviceProperties ...
+// VMDiskDeviceProperties ...
 type VMDiskDeviceProperties struct {
-	DeviceType *string `json:"device_type,omitempty"`
-
+	DeviceType  *string      `json:"device_type,omitempty"`
 	DiskAddress *DiskAddress `json:"disk_address,omitempty"`
 }
 
-//VMDisk VirtualMachine Disk (VM Disk).
+// VMDisk VirtualMachine Disk (VM Disk).
 type VMDisk struct {
 	DataSourceReference *Reference `json:"data_source_reference,omitempty"`
 
@@ -210,7 +208,7 @@ type VMDisk struct {
 	VolumeGroupReference *Reference `json:"volume_group_reference,omitempty"`
 }
 
-//VMResources VM Resources Definition.
+// VMResources VM Resources Definition.
 type VMResources struct {
 
 	// Indicates which device the VM should boot from.
@@ -262,7 +260,7 @@ type VMResources struct {
 	VMVnumaConfig *VMVnumaConfig `json:"vnuma_config,omitempty"`
 }
 
-//VM An intentful representation of a vm spec
+// VM An intentful representation of a vm spec
 type VM struct {
 	AvailabilityZoneReference *Reference `json:"availability_zone_reference,omitempty"`
 
@@ -277,7 +275,7 @@ type VM struct {
 	Resources *VMResources `json:"resources,omitempty"`
 }
 
-//VMIntentInput ...
+// VMIntentInput ...
 type VMIntentInput struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
@@ -286,7 +284,7 @@ type VMIntentInput struct {
 	Spec *VM `json:"spec"`
 }
 
-//MessageResource ...
+// MessageResource ...
 type MessageResource struct {
 
 	// Custom key-value details relevant to the status.
@@ -299,7 +297,7 @@ type MessageResource struct {
 	Reason *string `json:"reason"`
 }
 
-//VMStatus The status of a REST API call. Only used when there is a failure to report.
+// VMStatus The status of a REST API call. Only used when there is a failure to report.
 type VMStatus struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
@@ -314,7 +312,7 @@ type VMStatus struct {
 	State *string `json:"state,omitempty"`
 }
 
-//VMNicOutputStatus Virtual Machine NIC Status.
+// VMNicOutputStatus Virtual Machine NIC Status.
 type VMNicOutputStatus struct {
 
 	// The Floating IP associated with the vnic.
@@ -344,7 +342,7 @@ type VMNicOutputStatus struct {
 	UUID *string `json:"uuid,omitempty"`
 }
 
-//NutanixGuestToolsStatus Information regarding Nutanix Guest Tools.
+// NutanixGuestToolsStatus Information regarding Nutanix Guest Tools.
 type NutanixGuestToolsStatus struct {
 
 	// Version of Nutanix Guest Tools available on the cluster.
@@ -375,14 +373,14 @@ type NutanixGuestToolsStatus struct {
 	VSSSnapshotCapable *bool `json:"vss_snapshot_capable,omitempty"`
 }
 
-//GuestToolsStatus Information regarding guest tools.
+// GuestToolsStatus Information regarding guest tools.
 type GuestToolsStatus struct {
 
 	// Nutanix Guest Tools information
 	NutanixGuestTools *NutanixGuestToolsStatus `json:"nutanix_guest_tools,omitempty"`
 }
 
-//VMGpuOutputStatus Graphics resource status information for the Virtual Machine.
+// VMGpuOutputStatus Graphics resource status information for the Virtual Machine.
 type VMGpuOutputStatus struct {
 
 	// The device ID of the GPU.
@@ -416,12 +414,12 @@ type VMGpuOutputStatus struct {
 	Vendor *string `json:"vendor,omitempty"`
 }
 
-//GuestCustomizationStatus VM guests may be customized at boot time using one of several different methods. Currently,
-//cloud-init w/ ConfigDriveV2 (for Linux VMs) and Sysprep (for Windows VMs) are supported. Only ONE OF sysprep or
-//cloud_init should be provided. Note that guest customization can currently only be set during VM creation. Attempting
-//to change it after creation will result in an error. Additional properties can be specified. For example - in the
-//context of VM template creation if \"override_script\" is set to \"True\" then the deployer can upload their own
-//custom script.
+// GuestCustomizationStatus VM guests may be customized at boot time using one of several different methods. Currently,
+// cloud-init w/ ConfigDriveV2 (for Linux VMs) and Sysprep (for Windows VMs) are supported. Only ONE OF sysprep or
+// cloud_init should be provided. Note that guest customization can currently only be set during VM creation. Attempting
+// to change it after creation will result in an error. Additional properties can be specified. For example - in the
+// context of VM template creation if \"override_script\" is set to \"True\" then the deployer can upload their own
+// custom script.
 type GuestCustomizationStatus struct {
 	CloudInit *GuestCustomizationCloudInit `json:"cloud_init,omitempty"`
 
@@ -431,7 +429,7 @@ type GuestCustomizationStatus struct {
 	Sysprep *GuestCustomizationSysprep `json:"sysprep,omitempty"`
 }
 
-//VMResourcesDefStatus VM Resources Status Definition.
+// VMResourcesDefStatus VM Resources Status Definition.
 type VMResourcesDefStatus struct {
 
 	// Indicates which device the VM should boot from.
@@ -488,7 +486,7 @@ type VMResourcesDefStatus struct {
 	VnumaConfig *VMVnumaConfig `json:"vnuma_config,omitempty"`
 }
 
-//VMDefStatus An intentful representation of a vm status
+// VMDefStatus An intentful representation of a vm status
 type VMDefStatus struct {
 	AvailabilityZoneReference *Reference `json:"availability_zone_reference,omitempty"`
 
@@ -507,9 +505,16 @@ type VMDefStatus struct {
 
 	// The state of the vm.
 	State *string `json:"state,omitempty"`
+
+	ExecutionContext *ExecutionContext `json:"execution_context,omitempty"`
 }
 
-//VMIntentResponse Response object for intentful operations on a vm
+//ExecutionContext ...
+type ExecutionContext struct {
+	TaskUUID interface{} `json:"task_uuid,omitempty"`
+}
+
+// VMIntentResponse Response object for intentful operations on a vm
 type VMIntentResponse struct {
 	APIVersion *string `json:"api_version"`
 
@@ -520,7 +525,7 @@ type VMIntentResponse struct {
 	Status *VMDefStatus `json:"status,omitempty"`
 }
 
-//DSMetadata All api calls that return a list will have this metadata block as input
+// DSMetadata All api calls that return a list will have this metadata block as input
 type DSMetadata struct {
 
 	// The filter in FIQL syntax used for the results.
@@ -542,7 +547,7 @@ type DSMetadata struct {
 	SortOrder *string `json:"sort_order,omitempty"`
 }
 
-//VMIntentResource Response object for intentful operations on a vm
+// VMIntentResource Response object for intentful operations on a vm
 type VMIntentResource struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
@@ -553,41 +558,16 @@ type VMIntentResource struct {
 	Status *VMDefStatus `json:"status,omitempty"`
 }
 
-//VMListMetadataOutput All api calls that return a list will have this metadata block
-type VMListMetadataOutput struct {
-
-	// The filter used for the results
-	Filter *string `json:"filter,omitempty"`
-
-	// The kind name
-	Kind *string `json:"kind,omitempty"`
-
-	// The number of records retrieved relative to the offset
-	Length *int64 `json:"length,omitempty"`
-
-	// Offset from the start of the entity list
-	Offset *int64 `json:"offset,omitempty"`
-
-	// The attribute to perform sort on
-	SortAttribute *string `json:"sort_attribute,omitempty"`
-
-	// The sort order in which results are returned
-	SortOrder *string `json:"sort_order,omitempty"`
-
-	// Total matches found
-	TotalMatches *int64 `json:"total_matches,omitempty"`
-}
-
-//VMListIntentResponse Response object for intentful operation of vms
+// VMListIntentResponse Response object for intentful operation of vms
 type VMListIntentResponse struct {
 	APIVersion *string `json:"api_version"`
 
 	Entities []*VMIntentResource `json:"entities,omitempty"`
 
-	Metadata *VMListMetadataOutput `json:"metadata"`
+	Metadata *ListMetadataOutput `json:"metadata"`
 }
 
-//SubnetMetadata The subnet kind metadata
+// SubnetMetadata The subnet kind metadata
 type SubnetMetadata struct {
 
 	// Categories for the subnet
@@ -620,7 +600,7 @@ type SubnetMetadata struct {
 	UUID *string `json:"uuid,omitempty"`
 }
 
-//Address represents the Host address.
+// Address represents the Host address.
 type Address struct {
 
 	// Fully qualified domain name.
@@ -636,14 +616,14 @@ type Address struct {
 	Port *int64 `json:"port,omitempty"`
 }
 
-//IPPool represents IP pool.
+// IPPool represents IP pool.
 type IPPool struct {
 
 	// Range of IPs (example: 10.0.0.9 10.0.0.19).
 	Range *string `json:"range,omitempty"`
 }
 
-//DHCPOptions Spec for defining DHCP options.
+// DHCPOptions Spec for defining DHCP options.
 type DHCPOptions struct {
 	BootFileName *string `json:"boot_file_name,omitempty"`
 
@@ -656,7 +636,7 @@ type DHCPOptions struct {
 	TFTPServerName *string `json:"tftp_server_name,omitempty"`
 }
 
-//IPConfig represents the configurtion of IP.
+// IPConfig represents the configurtion of IP.
 type IPConfig struct {
 
 	// Default gateway IP address.
@@ -674,7 +654,7 @@ type IPConfig struct {
 	SubnetIP *string `json:"subnet_ip,omitempty"`
 }
 
-//SubnetResources represents Subnet creation/modification spec.
+// SubnetResources represents Subnet creation/modification spec.
 type SubnetResources struct {
 	IPConfig *IPConfig `json:"ip_config,omitempty"`
 
@@ -687,7 +667,7 @@ type SubnetResources struct {
 	VswitchName *string `json:"vswitch_name,omitempty"`
 }
 
-//Subnet An intentful representation of a subnet spec
+// Subnet An intentful representation of a subnet spec
 type Subnet struct {
 	AvailabilityZoneReference *Reference `json:"availability_zone_reference,omitempty"`
 
@@ -702,7 +682,7 @@ type Subnet struct {
 	Resources *SubnetResources `json:"resources,omitempty"`
 }
 
-//SubnetIntentInput An intentful representation of a subnet
+// SubnetIntentInput An intentful representation of a subnet
 type SubnetIntentInput struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
@@ -711,7 +691,7 @@ type SubnetIntentInput struct {
 	Spec *Subnet `json:"spec"`
 }
 
-//SubnetStatus represents The status of a REST API call. Only used when there is a failure to report.
+// SubnetStatus represents The status of a REST API call. Only used when there is a failure to report.
 type SubnetStatus struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
@@ -726,7 +706,7 @@ type SubnetStatus struct {
 	State *string `json:"state,omitempty"`
 }
 
-//SubnetResourcesDefStatus represents a Subnet creation/modification status.
+// SubnetResourcesDefStatus represents a Subnet creation/modification status.
 type SubnetResourcesDefStatus struct {
 	IPConfig *IPConfig `json:"ip_config,omitempty"`
 
@@ -739,7 +719,7 @@ type SubnetResourcesDefStatus struct {
 	VswitchName *string `json:"vswitch_name,omitempty"`
 }
 
-//SubnetDefStatus An intentful representation of a subnet status
+// SubnetDefStatus An intentful representation of a subnet status
 type SubnetDefStatus struct {
 	AvailabilityZoneReference *Reference `json:"availability_zone_reference,omitempty"`
 
@@ -758,6 +738,8 @@ type SubnetDefStatus struct {
 
 	// The state of the subnet.
 	State *string `json:"state,omitempty"`
+
+	ExecutionContext *ExecutionContext `json:"execution_context,omitempty"`
 }
 
 // SubnetIntentResponse represents the response object for intentful operations on a subnet
@@ -771,7 +753,7 @@ type SubnetIntentResponse struct {
 	Status *SubnetDefStatus `json:"status,omitempty"`
 }
 
-//SubnetIntentResource represents Response object for intentful operations on a subnet
+// SubnetIntentResource represents Response object for intentful operations on a subnet
 type SubnetIntentResource struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
@@ -782,41 +764,16 @@ type SubnetIntentResource struct {
 	Status *SubnetDefStatus `json:"status,omitempty"`
 }
 
-//SubnetListMetadataOutput All api calls that return a list will have this metadata block
-type SubnetListMetadataOutput struct {
-
-	// The filter used for the results
-	Filter *string `json:"filter,omitempty"`
-
-	// The kind name
-	Kind *string `json:"kind,omitempty"`
-
-	// The number of records retrieved relative to the offset
-	Length *int64 `json:"length,omitempty"`
-
-	// Offset from the start of the entity list
-	Offset *int64 `json:"offset,omitempty"`
-
-	// The attribute to perform sort on
-	SortAttribute *string `json:"sort_attribute,omitempty"`
-
-	// The sort order in which results are returned
-	SortOrder *string `json:"sort_order,omitempty"`
-
-	// Total matches found
-	TotalMatches *int64 `json:"total_matches,omitempty"`
-}
-
-//SubnetListIntentResponse represents the response object for intentful operation of subnets
+// SubnetListIntentResponse represents the response object for intentful operation of subnets
 type SubnetListIntentResponse struct {
 	APIVersion *string `json:"api_version"`
 
-	Entities []*SubnetIntentResource `json:"entities,omitempty"`
+	Entities []*SubnetIntentResponse `json:"entities,omitempty"`
 
-	Metadata *SubnetListMetadataOutput `json:"metadata"`
+	Metadata *ListMetadataOutput `json:"metadata"`
 }
 
-//SubnetListMetadata ...
+// SubnetListMetadata ...
 type SubnetListMetadata struct {
 
 	// The filter in FIQL syntax used for the results.
@@ -838,13 +795,13 @@ type SubnetListMetadata struct {
 	SortOrder *string `json:"sort_order,omitempty"`
 }
 
-//Checksum represents the image checksum
+// Checksum represents the image checksum
 type Checksum struct {
 	ChecksumAlgorithm *string `json:"checksum_algorithm"`
 	ChecksumValue     *string `json:"checksum_value"`
 }
 
-//ImageVersionResources The image version, which is composed of a product name and product version.
+// ImageVersionResources The image version, which is composed of a product name and product version.
 type ImageVersionResources struct {
 
 	// Name of the producer/distribution of the image. For example windows or red hat.
@@ -854,7 +811,7 @@ type ImageVersionResources struct {
 	ProductVersion *string `json:"product_version"`
 }
 
-//ImageResources describes the image spec resources object.
+// ImageResources describes the image spec resources object.
 type ImageResources struct {
 
 	// The supported CPU architecture for a disk image.
@@ -874,7 +831,7 @@ type ImageResources struct {
 	Version *ImageVersionResources `json:"version,omitempty"`
 }
 
-//Image An intentful representation of a image spec
+// Image An intentful representation of a image spec
 type Image struct {
 
 	// A description for image.
@@ -886,7 +843,7 @@ type Image struct {
 	Resources *ImageResources `json:"resources"`
 }
 
-//ImageMetadata Metadata The image kind metadata
+// ImageMetadata Metadata The image kind metadata
 type ImageMetadata struct {
 
 	// Categories for the image
@@ -919,7 +876,7 @@ type ImageMetadata struct {
 	UUID *string `json:"uuid,omitempty"`
 }
 
-//ImageIntentInput An intentful representation of a image
+// ImageIntentInput An intentful representation of a image
 type ImageIntentInput struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
@@ -928,7 +885,7 @@ type ImageIntentInput struct {
 	Spec *Image `json:"spec,omitempty"`
 }
 
-//ImageStatus represents the status of a REST API call. Only used when there is a failure to report.
+// ImageStatus represents the status of a REST API call. Only used when there is a failure to report.
 type ImageStatus struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
@@ -943,7 +900,7 @@ type ImageStatus struct {
 	State *string `json:"state,omitempty"`
 }
 
-//ImageVersionStatus represents the image version, which is composed of a product name and product version.
+// ImageVersionStatus represents the image version, which is composed of a product name and product version.
 type ImageVersionStatus struct {
 
 	// Name of the producer/distribution of the image. For example windows or red hat.
@@ -953,7 +910,7 @@ type ImageVersionStatus struct {
 	ProductVersion *string `json:"product_version"`
 }
 
-//ImageResourcesDefStatus describes the image status resources object.
+// ImageResourcesDefStatus describes the image status resources object.
 type ImageResourcesDefStatus struct {
 
 	// The supported CPU architecture for a disk image.
@@ -979,7 +936,7 @@ type ImageResourcesDefStatus struct {
 	Version *ImageVersionStatus `json:"version,omitempty"`
 }
 
-//ImageDefStatus represents an intentful representation of a image status
+// ImageDefStatus represents an intentful representation of a image status
 type ImageDefStatus struct {
 	AvailabilityZoneReference *Reference `json:"availability_zone_reference,omitempty"`
 
@@ -998,9 +955,11 @@ type ImageDefStatus struct {
 
 	// The state of the image.
 	State *string `json:"state,omitempty"`
+
+	ExecutionContext *ExecutionContext `json:"execution_context,omitempty"`
 }
 
-//ImageIntentResponse represents the response object for intentful operations on a image
+// ImageIntentResponse represents the response object for intentful operations on a image
 type ImageIntentResponse struct {
 	APIVersion *string `json:"api_version"`
 
@@ -1011,7 +970,7 @@ type ImageIntentResponse struct {
 	Status *ImageDefStatus `json:"status,omitempty"`
 }
 
-//ImageListMetadata represents metadata input
+// ImageListMetadata represents metadata input
 type ImageListMetadata struct {
 
 	// The filter in FIQL syntax used for the results.
@@ -1033,7 +992,7 @@ type ImageListMetadata struct {
 	SortOrder *string `json:"sort_order,omitempty"`
 }
 
-//ImageIntentResource represents the response object for intentful operations on a image
+// ImageIntentResource represents the response object for intentful operations on a image
 type ImageIntentResource struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
@@ -1044,83 +1003,28 @@ type ImageIntentResource struct {
 	Status *ImageDefStatus `json:"status,omitempty"`
 }
 
-//ImageListMetadataOutput represents metadata block in image list
-type ImageListMetadataOutput struct {
-
-	// The filter used for the results
-	Filter *string `json:"filter,omitempty"`
-
-	// The kind name
-	Kind *string `json:"kind,omitempty"`
-
-	// The number of records retrieved relative to the offset
-	Length *int64 `json:"length,omitempty"`
-
-	// Offset from the start of the entity list
-	Offset *int64 `json:"offset,omitempty"`
-
-	// The attribute to perform sort on
-	SortAttribute *string `json:"sort_attribute,omitempty"`
-
-	// The sort order in which results are returned
-	SortOrder *string `json:"sort_order,omitempty"`
-
-	// Total matches found
-	TotalMatches *int64 `json:"total_matches,omitempty"`
-}
-
-//ImageListIntentResponse represents the response object for intentful operation of images
+// ImageListIntentResponse represents the response object for intentful operation of images
 type ImageListIntentResponse struct {
 	APIVersion *string `json:"api_version"`
 
-	Entities []*ImageIntentResource `json:"entities,omitempty"`
+	Entities []*ImageIntentResponse `json:"entities,omitempty"`
 
-	Metadata *ImageListMetadataOutput `json:"metadata"`
-}
-
-// ClusterListMetadataOutput ...
-type ClusterListMetadataOutput struct {
-
-	// The filter used for the results
-	Filter *string `json:"filter,omitempty"`
-
-	// The kind name
-	Kind *string `json:"kind,omitempty"`
-
-	// The number of records retrieved relative to the offset
-	Length *int64 `json:"length,omitempty"`
-
-	// Offset from the start of the entity list
-	Offset *int64 `json:"offset,omitempty"`
-
-	// The attribute to perform sort on
-	SortAttribute *string `json:"sort_attribute,omitempty"`
-
-	// The sort order in which results are returned
-	SortOrder *string `json:"sort_order,omitempty"`
-
-	// Total matches found
-	TotalMatches *int64 `json:"total_matches,omitempty"`
+	Metadata *ListMetadataOutput `json:"metadata"`
 }
 
 // ClusterListIntentResponse ...
 type ClusterListIntentResponse struct {
-	APIVersion *string `json:"api_version"`
-
-	Entities []*ClusterIntentResource `json:"entities,omitempty"`
-
-	Metadata *ClusterListMetadataOutput `json:"metadata"`
+	APIVersion *string                  `json:"api_version"`
+	Entities   []*ClusterIntentResource `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput      `json:"metadata"`
 }
 
 // ClusterIntentResource ...
 type ClusterIntentResource struct {
-	APIVersion *string `json:"api_version,omitempty"`
-
-	Metadata *Metadata `json:"metadata"`
-
-	Spec *Cluster `json:"spec,omitempty"`
-
-	Status *ClusterDefStatus `json:"status,omitempty"`
+	APIVersion *string           `json:"api_version,omitempty"`
+	Metadata   *Metadata         `json:"metadata"`
+	Spec       *Cluster          `json:"spec,omitempty"`
+	Status     *ClusterDefStatus `json:"status,omitempty"`
 }
 
 // ClusterIntentResponse ...
@@ -1388,7 +1292,7 @@ type ClusterAnalysis struct {
 	VMEfficiencyMap *VMEfficiencyMap `json:"vm_efficiency_map,omitempty"`
 }
 
-//CategoryListMetadata All api calls that return a list will have this metadata block as input
+// CategoryListMetadata All api calls that return a list will have this metadata block as input
 type CategoryListMetadata struct {
 
 	// The filter in FIQL syntax used for the results.
@@ -1410,7 +1314,7 @@ type CategoryListMetadata struct {
 	SortOrder *string `json:"sort_order,omitempty"`
 }
 
-//CategoryKeyStatus represents Category Key Definition.
+// CategoryKeyStatus represents Category Key Definition.
 type CategoryKeyStatus struct {
 
 	// API version.
@@ -1426,7 +1330,7 @@ type CategoryKeyStatus struct {
 	SystemDefined *bool `json:"system_defined,omitempty"`
 }
 
-//CategoryKeyListResponse represents the category key list response.
+// CategoryKeyListResponse represents the category key list response.
 type CategoryKeyListResponse struct {
 
 	// API Version.
@@ -1437,7 +1341,7 @@ type CategoryKeyListResponse struct {
 	Metadata *CategoryListMetadata `json:"metadata,omitempty"`
 }
 
-//CategoryKey represents category key definition.
+// CategoryKey represents category key definition.
 type CategoryKey struct {
 
 	// API version.
@@ -1450,7 +1354,7 @@ type CategoryKey struct {
 	Name *string `json:"name"`
 }
 
-//CategoryStatus represents The status of a REST API call. Only used when there is a failure to report.
+// CategoryStatus represents The status of a REST API call. Only used when there is a failure to report.
 type CategoryStatus struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
@@ -1465,7 +1369,7 @@ type CategoryStatus struct {
 	State *string `json:"state,omitempty"`
 }
 
-//CategoryValueListResponse represents Category Value list response.
+// CategoryValueListResponse represents Category Value list response.
 type CategoryValueListResponse struct {
 	APIVersion *string `json:"api_version,omitempty"`
 
@@ -1474,7 +1378,7 @@ type CategoryValueListResponse struct {
 	Metadata *CategoryListMetadata `json:"metadata,omitempty"`
 }
 
-//CategoryValueStatus represents Category value definition.
+// CategoryValueStatus represents Category value definition.
 type CategoryValueStatus struct {
 
 	// API version.
@@ -1493,7 +1397,7 @@ type CategoryValueStatus struct {
 	Value *string `json:"value,omitempty"`
 }
 
-//CategoryFilter represents A category filter.
+// CategoryFilter represents A category filter.
 type CategoryFilter struct {
 
 	// List of kinds associated with this filter.
@@ -1506,7 +1410,7 @@ type CategoryFilter struct {
 	Type *string `json:"type,omitempty"`
 }
 
-//CategoryQueryInput represents Categories query input object.
+// CategoryQueryInput represents Categories query input object.
 type CategoryQueryInput struct {
 
 	// API version.
@@ -1520,12 +1424,12 @@ type CategoryQueryInput struct {
 	// The offset into the total member set to return per group.
 	GroupMemberOffset *int64 `json:"group_member_offset,omitempty"`
 
-	//TBD: USED_IN - to get policies in which specified categories are used. APPLIED_TO - to get entities attached to
-	//specified categories.
+	// TBD: USED_IN - to get policies in which specified categories are used. APPLIED_TO - to get entities attached to
+	// specified categories.
 	UsageType *string `json:"usage_type,omitempty"`
 }
 
-//CategoryQueryResponseMetadata represents Response metadata.
+// CategoryQueryResponseMetadata represents Response metadata.
 type CategoryQueryResponseMetadata struct {
 
 	// The maximum number of records to return per group.
@@ -1537,11 +1441,11 @@ type CategoryQueryResponseMetadata struct {
 	// Total number of matched results.
 	TotalMatches *int64 `json:"total_matches,omitempty"`
 
-	//TBD: USED_IN - to get policies in which specified categories are used. APPLIED_TO - to get entities attached to specified categories.
+	// TBD: USED_IN - to get policies in which specified categories are used. APPLIED_TO - to get entities attached to specified categories.
 	UsageType *string `json:"usage_type,omitempty"`
 }
 
-//EntityReference Reference to an entity.
+// EntityReference Reference to an entity.
 type EntityReference struct {
 
 	// Categories for the entity.
@@ -1560,7 +1464,7 @@ type EntityReference struct {
 	UUID *string `json:"uuid,omitempty"`
 }
 
-//CategoryQueryResponseResults ...
+// CategoryQueryResponseResults ...
 type CategoryQueryResponseResults struct {
 
 	// List of entity references.
@@ -1576,7 +1480,7 @@ type CategoryQueryResponseResults struct {
 	TotalEntityCount *int64 `json:"total_entity_count,omitempty"`
 }
 
-//CategoryQueryResponse represents Categories query response object.
+// CategoryQueryResponse represents Categories query response object.
 type CategoryQueryResponse struct {
 
 	// API version.
@@ -1587,7 +1491,7 @@ type CategoryQueryResponse struct {
 	Results []*CategoryQueryResponseResults `json:"results,omitempty"`
 }
 
-//CategoryValue represents Category value definition.
+// CategoryValue represents Category value definition.
 type CategoryValue struct {
 
 	// API version.
@@ -1600,14 +1504,14 @@ type CategoryValue struct {
 	Value *string `json:"value,omitempty"`
 }
 
-//PortRange represents Range of TCP/UDP ports.
+// PortRange represents Range of TCP/UDP ports.
 type PortRange struct {
 	EndPort *int64 `json:"end_port,omitempty"`
 
 	StartPort *int64 `json:"start_port,omitempty"`
 }
 
-//IPSubnet IP subnet provided as an address and prefix length.
+// IPSubnet IP subnet provided as an address and prefix length.
 type IPSubnet struct {
 
 	// IPV4 address.
@@ -1616,14 +1520,14 @@ type IPSubnet struct {
 	PrefixLength *int64 `json:"prefix_length,omitempty"`
 }
 
-//NetworkRuleIcmpTypeCodeList ..
+// NetworkRuleIcmpTypeCodeList ..
 type NetworkRuleIcmpTypeCodeList struct {
 	Code *int64 `json:"code,omitempty"`
 
 	Type *int64 `json:"type,omitempty"`
 }
 
-//NetworkRule ...
+// NetworkRule ...
 type NetworkRule struct {
 
 	// Timestamp of expiration time.
@@ -1653,7 +1557,7 @@ type NetworkRule struct {
 	UDPPortRangeList []*PortRange `json:"udp_port_range_list,omitempty"`
 }
 
-//TargetGroup ...
+// TargetGroup ...
 type TargetGroup struct {
 
 	// Default policy for communication within target group.
@@ -1666,9 +1570,9 @@ type TargetGroup struct {
 	PeerSpecificationType *string `json:"peer_specification_type,omitempty"`
 }
 
-//NetworkSecurityRuleResourcesRule These rules are used for quarantining suspected VMs. Target group is a required
-//attribute.  Empty inbound_allow_list will not allow anything into target group. Empty outbound_allow_list will allow
-//everything from target group.
+// NetworkSecurityRuleResourcesRule These rules are used for quarantining suspected VMs. Target group is a required
+// attribute.  Empty inbound_allow_list will not allow anything into target group. Empty outbound_allow_list will allow
+// everything from target group.
 type NetworkSecurityRuleResourcesRule struct {
 	Action            *string        `json:"action,omitempty"`             // Type of action.
 	InboundAllowList  []*NetworkRule `json:"inbound_allow_list,omitempty"` //
@@ -1676,28 +1580,28 @@ type NetworkSecurityRuleResourcesRule struct {
 	TargetGroup       *TargetGroup   `json:"target_group,omitempty"`
 }
 
-//NetworkSecurityRuleIsolationRule These rules are used for environmental isolation.
+// NetworkSecurityRuleIsolationRule These rules are used for environmental isolation.
 type NetworkSecurityRuleIsolationRule struct {
 	Action             *string         `json:"action,omitempty"`               // Type of action.
 	FirstEntityFilter  *CategoryFilter `json:"first_entity_filter,omitempty"`  // The set of categories that matching VMs need to have.
 	SecondEntityFilter *CategoryFilter `json:"second_entity_filter,omitempty"` // The set of categories that matching VMs need to have.
 }
 
-//NetworkSecurityRuleResources ...
+// NetworkSecurityRuleResources ...
 type NetworkSecurityRuleResources struct {
 	AppRule        *NetworkSecurityRuleResourcesRule `json:"app_rule,omitempty"`
 	IsolationRule  *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty"`
 	QuarantineRule *NetworkSecurityRuleResourcesRule `json:"quarantine_rule,omitempty"`
 }
 
-//NetworkSecurityRule ...
+// NetworkSecurityRule ...
 type NetworkSecurityRule struct {
 	Description *string                       `json:"description"`
 	Name        *string                       `json:"name,omitempty"`
 	Resources   *NetworkSecurityRuleResources `json:"resources,omitempty" `
 }
 
-//Metadata Metadata The kind metadata
+// Metadata Metadata The kind metadata
 type Metadata struct {
 	LastUpdateTime   *time.Time        `json:"last_update_time,omitempty"`  //
 	Kind             *string           `json:"kind"`                        //
@@ -1711,22 +1615,23 @@ type Metadata struct {
 	Name             *string           `json:"name,omitempty"`
 }
 
-//NetworkSecurityRuleIntentInput An intentful representation of a network_security_rule
+// NetworkSecurityRuleIntentInput An intentful representation of a network_security_rule
 type NetworkSecurityRuleIntentInput struct {
 	APIVersion *string              `json:"api_version,omitempty"`
 	Metadata   *Metadata            `json:"metadata"`
 	Spec       *NetworkSecurityRule `json:"spec"`
 }
 
-//NetworkSecurityRuleDefStatus ... Network security rule status
+// NetworkSecurityRuleDefStatus ... Network security rule status
 type NetworkSecurityRuleDefStatus struct {
-	AppRule        *NetworkSecurityRuleResourcesRule `json:"app_rule,omitempty"`
-	IsolationRule  *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty"`
-	QuarantineRule *NetworkSecurityRuleResourcesRule `json:"quarantine_rule,omitempty"`
-	State          *string                           `json:"state,omitmepty"`
+	AppRule          *NetworkSecurityRuleResourcesRule `json:"app_rule,omitempty"`
+	IsolationRule    *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty"`
+	QuarantineRule   *NetworkSecurityRuleResourcesRule `json:"quarantine_rule,omitempty"`
+	State            *string                           `json:"state,omitmepty"`
+	ExecutionContext *ExecutionContext                 `json:"execution_context,omitempty"`
 }
 
-//NetworkSecurityRuleIntentResponse Response object for intentful operations on a network_security_rule
+// NetworkSecurityRuleIntentResponse Response object for intentful operations on a network_security_rule
 type NetworkSecurityRuleIntentResponse struct {
 	APIVersion *string                      `json:"api_version,omitempty"`
 	Metadata   *Metadata                    `json:"metadata"`
@@ -1734,7 +1639,7 @@ type NetworkSecurityRuleIntentResponse struct {
 	Status     NetworkSecurityRuleDefStatus `json:"status,omitempty" bson:"status,omitempty"`
 }
 
-//NetworkSecurityRuleStatus The status of a REST API call. Only used when there is a failure to report.
+// NetworkSecurityRuleStatus The status of a REST API call. Only used when there is a failure to report.
 type NetworkSecurityRuleStatus struct {
 	APIVersion  *string            `json:"api_version,omitempty"` //
 	Code        *int64             `json:"code,omitempty"`        // The HTTP error code.
@@ -1743,7 +1648,7 @@ type NetworkSecurityRuleStatus struct {
 	State       *string            `json:"state,omitempty"`
 }
 
-//ListMetadata All api calls that return a list will have this metadata block as input
+// ListMetadata All api calls that return a list will have this metadata block as input
 type ListMetadata struct {
 	Filter        *string `json:"filter,omitempty"`         // The filter in FIQL syntax used for the results.
 	Kind          *string `json:"kind,omitempty"`           // The kind name
@@ -1753,7 +1658,7 @@ type ListMetadata struct {
 	SortOrder     *string `json:"sort_order,omitempty"`     // The sort order in which results are returned
 }
 
-//ListMetadataOutput All api calls that return a list will have this metadata block
+// ListMetadataOutput All api calls that return a list will have this metadata block
 type ListMetadataOutput struct {
 	Filter        *string `json:"filter,omitempty"`         // The filter used for the results
 	Kind          *string `json:"kind,omitempty"`           // The kind name
@@ -1764,7 +1669,7 @@ type ListMetadataOutput struct {
 	TotalMatches  *int64  `json:"total_matches,omitempty"`  // Total matches found
 }
 
-//NetworkSecurityRuleIntentResource ... Response object for intentful operations on a network_security_rule
+// NetworkSecurityRuleIntentResource ... Response object for intentful operations on a network_security_rule
 type NetworkSecurityRuleIntentResource struct {
 	APIVersion *string                       `json:"api_version,omitempty"`
 	Metadata   *Metadata                     `json:"metadata,omitempty"`
@@ -1772,72 +1677,105 @@ type NetworkSecurityRuleIntentResource struct {
 	Status     *NetworkSecurityRuleDefStatus `json:"status,omitempty"`
 }
 
-//NetworkSecurityRuleListIntentResponse Response object for intentful operation of network_security_rules
+// NetworkSecurityRuleListIntentResponse Response object for intentful operation of network_security_rules
 type NetworkSecurityRuleListIntentResponse struct {
 	APIVersion string                               `json:"api_version"`
 	Entities   []*NetworkSecurityRuleIntentResource `json:"entities,omitempty" bson:"entities,omitempty"`
 	Metadata   *ListMetadataOutput                  `json:"metadata"`
 }
 
-//VolumeGroupInput Represents the request body for create volume_grop request
+// VolumeGroupInput Represents the request body for create volume_grop request
 type VolumeGroupInput struct {
-	APIVersion *string      `json:"api_version,omitempty"` //default 3.1.0
-	Metadata   *Metadata    `json:"metadata,omitempty"`    //The volume_group kind metadata.
-	Spec       *VolumeGroup `json:"spec,omitempty"`        //Volume group input spec.
+	APIVersion *string      `json:"api_version,omitempty"` // default 3.1.0
+	Metadata   *Metadata    `json:"metadata,omitempty"`    // The volume_group kind metadata.
+	Spec       *VolumeGroup `json:"spec,omitempty"`        // Volume group input spec.
 }
 
-//VolumeGroup Represents volume group input spec.
+// VolumeGroup Represents volume group input spec.
 type VolumeGroup struct {
-	Name        *string               `json:"name"`                  //Volume Group name (required)
-	Description *string               `json:"description,omitempty"` //Volume Group description.
-	Resources   *VolumeGroupResources `json:"resources"`             //Volume Group resources.
+	Name        *string               `json:"name"`                  // Volume Group name (required)
+	Description *string               `json:"description,omitempty"` // Volume Group description.
+	Resources   *VolumeGroupResources `json:"resources"`             // Volume Group resources.
 }
 
-//VolumeGroupResources Represents the volume group resources
+// VolumeGroupResources Represents the volume group resources
 type VolumeGroupResources struct {
-	FlashMode         *string         `json:"flash_mode,omitempty"`          //Flash Mode, if enabled all disks of the VG are pinned to SSD
-	FileSystemType    *string         `json:"file_system_type,omitempty"`    //File system to be used for volume
-	SharingStatus     *string         `json:"sharing_status,omitempty"`      //Whether the VG can be shared across multiple iSCSI initiators
-	AttachmentList    []*VMAttachment `json:"attachment_list,omitempty"`     //VMs attached to volume group.
-	DiskList          []*VGDisk       `json:"disk_list,omitempty"`           //VGDisk Volume group disk specification.
-	IscsiTargetPrefix *string         `json:"iscsi_target_prefix,omitempty"` //iSCSI target prefix-name.
+	FlashMode         *string         `json:"flash_mode,omitempty"`          // Flash Mode, if enabled all disks of the VG are pinned to SSD
+	FileSystemType    *string         `json:"file_system_type,omitempty"`    // File system to be used for volume
+	SharingStatus     *string         `json:"sharing_status,omitempty"`      // Whether the VG can be shared across multiple iSCSI initiators
+	AttachmentList    []*VMAttachment `json:"attachment_list,omitempty"`     // VMs attached to volume group.
+	DiskList          []*VGDisk       `json:"disk_list,omitempty"`           // VGDisk Volume group disk specification.
+	IscsiTargetPrefix *string         `json:"iscsi_target_prefix,omitempty"` // iSCSI target prefix-name.
 }
 
-//VMAttachment VMs attached to volume group.
+// VMAttachment VMs attached to volume group.
 type VMAttachment struct {
-	VMReference        *Reference `json:"vm_reference"`         //Reference to a kind
-	IscsiInitiatorName *string    `json:"iscsi_initiator_name"` //Name of the iSCSI initiator of the workload outside Nutanix cluster.
+	VMReference        *Reference `json:"vm_reference"`         // Reference to a kind
+	IscsiInitiatorName *string    `json:"iscsi_initiator_name"` // Name of the iSCSI initiator of the workload outside Nutanix cluster.
 }
 
-//VGDisk Volume group disk specification.
+// VGDisk Volume group disk specification.
 type VGDisk struct {
-	VmdiskUUID           *string    `json:"vmdisk_uuid"`            //The UUID of this volume disk
-	Index                *int64     `json:"index"`                  //Index of the volume disk in the group.
-	DataSourceReference  *Reference `json:"data_source_reference"`  //Reference to a kind
-	DiskSizeMib          *int64     `json:"disk_size_mib"`          //Size of the disk in MiB.
-	StorageContainerUUID *string    `json:"storage_container_uuid"` //Container UUID on which to create the disk.
+	VmdiskUUID           *string    `json:"vmdisk_uuid"`            // The UUID of this volume disk
+	Index                *int64     `json:"index"`                  // Index of the volume disk in the group.
+	DataSourceReference  *Reference `json:"data_source_reference"`  // Reference to a kind
+	DiskSizeMib          *int64     `json:"disk_size_mib"`          // Size of the disk in MiB.
+	StorageContainerUUID *string    `json:"storage_container_uuid"` // Container UUID on which to create the disk.
 }
 
-//VolumeGroupResponse Response object for intentful operations on a volume_group
+// VolumeGroupResponse Response object for intentful operations on a volume_group
 type VolumeGroupResponse struct {
 	APIVersion *string               `json:"api_version"`      //
-	Metadata   *Metadata             `json:"metadata"`         //The volume_group kind metadata
-	Spec       *VolumeGroup          `json:"spec,omitempty"`   //Volume group input spec.
-	Status     *VolumeGroupDefStatus `json:"status,omitempty"` //Volume group configuration.
+	Metadata   *Metadata             `json:"metadata"`         // The volume_group kind metadata
+	Spec       *VolumeGroup          `json:"spec,omitempty"`   // Volume group input spec.
+	Status     *VolumeGroupDefStatus `json:"status,omitempty"` // Volume group configuration.
 }
 
-//VolumeGroupDefStatus  Volume group configuration.
+// VolumeGroupDefStatus  Volume group configuration.
 type VolumeGroupDefStatus struct {
-	State       *string               `json:"state"`        //The state of the volume group entity.
-	MessageList []*MessageResource    `json:"message_list"` //Volume group message list.
-	Name        *string               `json:"name"`         //Volume group name.
-	Resources   *VolumeGroupResources `json:"resources"`    //Volume group resources.
-	Description *string               `json:"description"`  //Volume group description.
+	State       *string               `json:"state"`        // The state of the volume group entity.
+	MessageList []*MessageResource    `json:"message_list"` // Volume group message list.
+	Name        *string               `json:"name"`         // Volume group name.
+	Resources   *VolumeGroupResources `json:"resources"`    // Volume group resources.
+	Description *string               `json:"description"`  // Volume group description.
 }
 
-//VolumeGroupListResponse Response object for intentful operation of volume_groups
+// VolumeGroupListResponse Response object for intentful operation of volume_groups
 type VolumeGroupListResponse struct {
 	APIVersion *string                `json:"api_version"`
 	Entities   []*VolumeGroupResponse `json:"entities,omitempty"`
 	Metadata   *ListMetadataOutput    `json:"metadata"`
+}
+
+// TasksResponse ...
+type TasksResponse struct {
+	Status               *string      `json:"status,omitempty"`
+	LastUpdateTime       *time.Time   `json:"last_update_time,omitempty"`
+	LogicalTimestamp     *int64       `json:"logical_timestamp,omitempty"`
+	EntityReferenceList  []*Reference `json:"entity_reference_list,omitempty"`
+	StartTime            *time.Time   `json:"start_time,omitempty"`
+	CreationTime         *time.Time   `json:"creation_time,omitempty"`
+	ClusterReference     *Reference   `json:"cluster_reference,omitempty"`
+	SubtaskReferenceList []*Reference `json:"subtask_reference_list,omitempty"`
+	CompletionTime       *time.Time   `json:"completion_timev"`
+	ProgressMessage      *string      `json:"progress_message,omitempty"`
+	OperationType        *string      `json:"operation_type,omitempty"`
+	PercentageComplete   *int64       `json:"percentage_complete,omitempty"`
+	APIVersion           *string      `json:"api_version,omitempty"`
+	UUID                 *string      `json:"uuid,omitempty"`
+	ErrorDetail          *string      `json:"error_detail,omitempty"`
+}
+
+// DeleteResponse ...
+type DeleteResponse struct {
+	Status     *DeleteStatus `json:"status"`
+	Spec       string        `json:"spec"`
+	APIVersion string        `json:"api_version"`
+	Metadata   *Metadata     `json:"metadata"`
+}
+
+// DeleteStatus ...
+type DeleteStatus struct {
+	State            string            `json:"state"`
+	ExecutionContext *ExecutionContext `json:"execution_context"`
 }

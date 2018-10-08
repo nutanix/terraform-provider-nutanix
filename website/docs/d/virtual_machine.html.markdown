@@ -20,7 +20,7 @@ data "nutanix_clusters" "clusters" {
 }
 
 output "cluster" {
- value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+ value = "${data.nutanix_clusters.clusters.entities.0.metadata.UUID}"
 }
 
 resource "nutanix_virtual_machine" "vm1" {
@@ -28,7 +28,7 @@ resource "nutanix_virtual_machine" "vm1" {
 
  cluster_reference = {
   kind = "cluster"
-  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  UUID = "${data.nutanix_clusters.clusters.entities.0.metadata.UUID}"
  }
 
  num_vcpus_per_socket = 1
@@ -46,11 +46,11 @@ data "nutanix_virtual_machine" "nutanix_virtual_machine" {
 
 The following arguments are supported:
 
-* `vm_id`: Represents virtual machine uuid
+* `vm_id`: Represents virtual machine UUID
 
 ## Attribute Reference
 
-The following attributes are exported: 
+The following attributes are exported:
 
 * `name`: - The name for the vm.
 * `cluster_reference`: - The reference to a cluster.
@@ -59,7 +59,7 @@ The following attributes are exported:
 * `project_reference`: - The reference to a project.
 * `owner_reference`: - The reference to a user.
 * `availability_zone_reference`: - The reference to a availability_zone.
-* `api_version`
+* `api_version` - The version of the API.
 * `description`: - A description for vm.
 * `num_vnuma_nodes`: - Number of vNUMA nodes. 0 means vNUMA is disabled.
 * `nic_list`: - NICs attached to the VM.
@@ -86,28 +86,28 @@ The following attributes are exported:
 * `vga_console_enabled`: - Indicates whether VGA console should be enabled or not.
 * `disk_list` Disks attached to the VM.
 * `metadata`: - The vm kind metadata.
-* `state`: -
-* `ip_address`: -
-* `host_reference`: -
+* `state`: - The state of the vm.
+* `ip_address`: - An IP address.
+* `host_reference`: - Reference to a host.
 * `hypervisor_type`: - The hypervisor type for the hypervisor the VM is hosted on.
 
 ### Disk List
 
 The disk_list attribute supports the following:
 
-* `uuid`: - The device ID which is used to uniquely identify this particular disk.
+* `UUID`: - The device ID which is used to uniquely identify this particular disk.
 * `disk_size_bytes` - Size of the disk in Bytes.
 * `disk_size_mib` - Size of the disk in MiB. Must match the size specified in 'disk_size_bytes' - rounded up to the nearest MiB - when that field is present.
-* `device_properties` - 
-* `data_source_reference` - Reference
-* `volume_group_reference` - Reference
+* `device_properties` - Properties to a device.
+* `data_source_reference` - Reference to a data source.
+* `volume_group_reference` - Reference to a volume group.
 
 ### Device Properties
 
 The device_properties attribute supports the following.
 
-* `device_type`: - 
-* `disk_address`: - 
+* `device_type`: - A Disk type (default: DISK).
+* `disk_address`: - Address of disk to boot from.
 
 ### Sysprep
 
@@ -127,8 +127,8 @@ The guest_customization_cloud_init attribute supports the following:
 
  The boot_device_disk_address attribute supports the following:
 
-* `device_index`: -
-* `adapter_type`: -
+* `device_index`: - The index of the disk address.
+* `adapter_type`: - The adapter type of the disk address.
 
 ### GPU List
 
@@ -136,7 +136,7 @@ The gpu_list attribute supports the following:
 
 * `frame_buffer_size_mib`: - GPU frame buffer size in MiB.
 * `vendor`: - The vendor of the GPU.
-* `uuid`: - UUID of the GPU.
+* `UUID`: - UUID of the GPU.
 * `name`: - Name of the GPU resource.
 * `pci_address` - GPU {segment:bus:device:function} (sbdf) address if assigned.
 * `fraction` - Fraction of the physical GPU assigned.
@@ -163,12 +163,9 @@ The nutanix_guest_tools attribute supports the following:
 
 The nic_list attribute supports the following:
 
-* `nic_type`: - The type of this NIC. Defaults to NORMAL_NIC. (Options : NORMAL_NIC , DIRECT_NIC , NETWORK_FUNCTION_NIC)
- .
+* `nic_type`: - The type of this NIC. Defaults to NORMAL_NIC. (Options : NORMAL_NIC , DIRECT_NIC , NETWORK_FUNCTION_NIC).
 * `uuid`: - The NIC's UUID, which is used to uniquely identify this particular NIC. This UUID may be used to refer to the NIC outside the context of the particular VM it is attached to.
-
-* `floating_ip`: - 
-
+* `floating_ip`: -  The Floating IP associated with the vnic.
 * `model`: - The model of this NIC. (Options : VIRTIO , E1000).
 * `network_function_nic_type`: - The type of this Network function NIC. Defaults to INGRESS. (Options : INGRESS , EGRESS , TAP).
 * `mac_address`: - The MAC address for the adapter.
@@ -189,7 +186,7 @@ The following attributes are exported:
 The metadata attribute exports the following:
 
 * `last_update_time`: - UTC date and time in RFC-3339 format when vm was last updated.
-* `uuid`: - vm uuid.
+* `UUID`: - vm UUID.
 * `creation_time`: - UTC date and time in RFC-3339 format when vm was created.
 * `spec_version`: - Version number of the latest spec.
 * `spec_hash`: - Hash of the spec. This will be returned from server.
@@ -208,7 +205,7 @@ The `project_reference`, `owner_reference`, `availability_zone_reference`, `clus
 
 * `kind`: - The kind name (Default value: project).
 * `name`: - the name.
-* `uuid`: - the uuid.
+* `UUID`: - the UUID.
 
 Note: `cluster_reference`, `subnet_reference` does not support the attribute `name`
 

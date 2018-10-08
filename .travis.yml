@@ -1,10 +1,10 @@
 ---
 language: go
 
-cache:
-  directories:
-    - vendor
-    - /home/travis/gopath/pkg
+#cache:
+#  directories:
+#    - vendor
+#    - /home/travis/gopath/pkg
 
 git:
   depth: 1
@@ -21,8 +21,6 @@ stages:
   - build go 1.10
   - build go master
   - acceptance testing
-  - name: deploy
-    if: branch = master
 
 jobs:
   include:
@@ -34,60 +32,55 @@ jobs:
     # Build Go 1.9.x
     - stage: build go 1.9
       go: 1.9.x
-      script:
-        - make cibuild
+      script: make cibuild
       env: GOOS=darwin GOARCH=amd64
-    - script:
-        - make cibuild
+    - script: make cibuild
       go: 1.9.x
       env: GOOS=windows GOARCH=amd64
-    - script:
-        - make cibuild
+    - script: make cibuild
       go: 1.9.x
       env: GOOS=linux GOARCH=amd64
+    - script: make cibuild
+      go: 1.9.x
+      env: GOOS=linux GOARCH=ppc64le
     # Build Go 1.10.x
     - stage: build go 1.10
       go: 1.10.x
-      script:
-        - make cibuild
+      script: make cibuild
       env: GOOS=darwin GOARCH=amd64
-    - script:
-        - make cibuild
+    - script: make cibuild
       go: 1.10.x
       env: GOOS=windows GOARCH=amd64
-    - script:
-        - make cibuild
+    - script: make cibuild
       go: 1.10.x
       env: GOOS=linux GOARCH=amd64
+    - script: make cibuild
+      go: 1.10.x
+      env: GOOS=linux GOARCH=ppc64le
     # Build Go master (helps hedge against upstream code breaking downstream builds later, acts as a canary)
     - stage: build go master
       go: tip
-      script:
-        - make cibuild
+      script: make cibuild
       env: GOOS=darwin GOARCH=amd64
-    - script:
-        - make cibuild
+    - script: make cibuild
       go: tip
       env: GOOS=windows GOARCH=amd64
-    - script:
-        - make cibuild
+    - script: make cibuild
       go: tip
       env: GOOS=linux GOARCH=amd64
+    - script: make cibuild
+      go: tip
+      env: GOOS=linux GOARCH=ppc64le
     - stage: acceptance testing
       go: 1.10.x
       script:
+        - go get github.com/schrej/godacov
         - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
         - chmod +x ./cc-test-reporter
         - ./cc-test-reporter before-build
-        - make citest
+        - travis_wait make citest
         - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
-    - stage: deploy
-      provider: script
-      skip_cleanup: true
-      script: curl -sL https://git.io/goreleaser | bash
-      on:
-        tags: true
-        condition: $TRAVIS_GO_VERSION =~ ^99\.99\.
+        - godacov -t $CODACY_TOKEN -r ./c.out -c $TRAVIS_COMMIT
 
 matrix:
   fast_finish: true

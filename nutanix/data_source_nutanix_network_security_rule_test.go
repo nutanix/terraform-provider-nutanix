@@ -2,17 +2,15 @@ package nutanix
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func TestAccNutanixNetworkSecurityRuleDataSource_basic(t *testing.T) {
 
-	//Skipped because this test didn't pass in GCP environment
+	// Skipped because this test didn't pass in GCP environment
 	if isGCPEnvironment() {
 		t.Skip()
 	}
@@ -127,77 +125,4 @@ data "nutanix_network_security_rule" "test" {
 	network_security_rule_id = "${nutanix_network_security_rule.TEST-TIER.id}"
 }
 `, r)
-}
-
-func Test_dataSourceNutanixNetworkSecurityRule(t *testing.T) {
-	tests := []struct {
-		name string
-		want *schema.Resource
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := dataSourceNutanixNetworkSecurityRule(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("dataSourceNutanixNetworkSecurityRule() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_dataSourceNutanixNetworkSecurityRuleRead(t *testing.T) {
-	type args struct {
-		d    *schema.ResourceData
-		meta interface{}
-	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := dataSourceNutanixNetworkSecurityRuleRead(tt.args.d, tt.args.meta); (err != nil) != tt.wantErr {
-				t.Errorf("dataSourceNutanixNetworkSecurityRuleRead() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-func Test_getDataSourceNetworkSecurityRuleSchema(t *testing.T) {
-	tests := []struct {
-		name string
-		want map[string]*schema.Schema
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := getDataSourceNetworkSecurityRuleSchema(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getDataSourceNetworkSecurityRuleSchema() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_testAccNetworkSecurityRuleDataSourceConfig(t *testing.T) {
-	type args struct {
-		r int
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := testAccNetworkSecurityRuleDataSourceConfig(tt.args.r); got != tt.want {
-				t.Errorf("testAccNetworkSecurityRuleDataSourceConfig() = %v, want %v", got, tt.want)
-			}
-		})
-	}
 }

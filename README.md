@@ -4,11 +4,11 @@ Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
 NOTE: terraform-provider-nutanix is currently tech preview as of 9 May 2018. See "Current Development Status" below.
 
-#### Project, Build, Quality Status
+#### Build, Quality Status
 
-[![Waffle.io - Columns and their card count](https://badge.waffle.io/b58a88b8face3407eccdc79e19d39058d28754b65f6df7513ed23293ef387491a5f538b65dffd5b12ca0201c6d4b50ce.svg?columns=all)](https://waffle.io/nutanix/terraform-provider-nutanix) [![Go Report Card](https://goreportcard.com/badge/github.com/nutanix/terraform-provider-nutanix)](https://goreportcard.com/report/github.com/nutanix/terraform-provider-nutanix)
-
-[![Maintainability](https://api.codeclimate.com/v1/badges/8b9e61df450276bbdbdb/maintainability)](https://codeclimate.com/github/nutanix/terraform-provider-nutanix/maintainability) [![Test Coverage](https://api.codeclimate.com/v1/badges/8b9e61df450276bbdbdb/test_coverage)](https://codeclimate.com/github/nutanix/terraform-provider-nutanix/test_coverage)
+ [![Go Report Card](https://goreportcard.com/badge/github.com/nutanix/terraform-provider-nutanix)](https://goreportcard.com/report/github.com/nutanix/terraform-provider-nutanix)
+[![Maintainability](https://api.codeclimate.com/v1/badges/8b9e61df450276bbdbdb/maintainability)](https://codeclimate.com/github/nutanix/terraform-provider-nutanix/maintainability) 
+[![Test Coverage](https://api.codeclimate.com/v1/badges/8b9e61df450276bbdbdb/test_coverage)](https://codeclimate.com/github/nutanix/terraform-provider-nutanix/test_coverage)
 
 | Master                                                                                                                                                          | Develop                                                                                                                                                           |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -37,17 +37,17 @@ For a slack invite, please contact terraform@nutanix.com from your business emai
 * [x] Category values resource.
 * [x] Network security rule resource.
 * [x] Network security rule data source.
-
-### Currently working on: (3rd Milestone)
-
 * [x] Network security rules data source.
 * [x] Subnets data source.
 * [x] Images data source.
 * [x] Volume group resource.
 * [x] Volume group datasource.
 * [x] Volume groups datasource.
-* [x] Documentation for Resources.s
+* [x] Documentation for Resources.
 * [x] Documentation for Datasources.
+
+### Currently working on:
+* [ ] Phase 2 scoping for bug cleanup and polish
 
 ### Issues
 
@@ -57,7 +57,7 @@ For a slack invite, please contact terraform@nutanix.com from your business emai
 
 ### Provider Use
 
-* [Terraform](https://www.terraform.io/downloads.html) 0.11.7+
+* [Terraform](https://www.terraform.io/downloads.html) 0.11.8+
 * [Nutanix](https://portal.nutanix.com/#/page/home) Prism Central 5.6.0+
 * Note: Nutanix Community Edition will be supported, when an AOS 5.6 based version is released
 
@@ -177,6 +177,87 @@ to the release builds.
 More Info: https://github.com/golang/dep
 
 ## Install from source
+
+## Building from sources
+
+1. Follow [Go installation instructions](https://golang.org/doc/install)
+
+1. Make sure that `$GOPATH` variable is set (and `$GOROOT` if necessary)
+
+1. Clone the repository:
+
+    ```bash
+    git clone https://github.com/nutanix/terraform-provider-nutanix.git $GOPATH/src/github.com/nutanix/terraform-provider-nutanix
+    ```
+
+1. Install [golang/dep](https://github.com/golang/dep):
+
+    ```bash
+    go get -u github.com/golang/dep/cmd/dep
+    ```
+
+1. Get dependencies:
+
+    ```bash
+    cd $GOPATH/src/github.com/nutanix/terraform-provider-nutanix
+    dep ensure
+    ```
+
+1. Run tests:
+
+    ```bash
+    cd $GOPATH/src/github.com/nutanix/terraform-provider-nutanix
+    (TODO: add test here)
+    ```
+
+1. Build the binary:
+
+    ```bash
+    cd $GOPATH/src/github.com/nutanix/terraform-provider-nutanix
+    go build
+    ```
+
+## Release it
+
+1. Install `goreleaser` tool:
+
+    ```bash
+    go get -v github.com/goreleaser/goreleaser
+    cd $GOPATH/src/github.com/goreleaser/goreleaser
+    go install
+    ```
+
+    Alternatively you can download a latest release from [goreleaser Releases Page](https://github.com/goreleaser/goreleaser/releases)
+
+1. Clean up folder `(builds)` if exists
+
+1. Make sure that the repository state is clean:
+
+    ```bash
+    git status
+    ```
+
+1. Tag the release:
+
+    ```bash
+    git tag v1.1.0
+    ```
+
+1. Run `goreleaser`:
+
+    ```bash
+    cd (TODO: go dir)
+    goreleaser --skip-publish v1.1.0
+    ```
+
+1. Check builds inside `(TODO: build dir)` directory.
+
+1. Publish release tag to GitHub:
+
+    ```bash
+    git push origin v1.1.0
+    ```
+
 
 ## Install from package
 

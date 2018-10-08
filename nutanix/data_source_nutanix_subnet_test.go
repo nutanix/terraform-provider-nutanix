@@ -2,16 +2,14 @@ package nutanix
 
 import (
 	"fmt"
-	"reflect"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
 )
 
 func TestAccNutanixSubnetDataSource_basic(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -29,13 +27,40 @@ func TestAccNutanixSubnetDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccNutanixSubnetDataSource_name(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetDataSourceConfigName(acctest.RandIntRange(0, 500)),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"data.nutanix_subnet.test", "prefix_length", "24"),
+					resource.TestCheckResourceAttr(
+						"data.nutanix_subnet.test", "subnet_type", "VLAN"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNutanixSubnetDataSource_conflicts(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccSubnetDataSourceConfigNameDuplicated(acctest.RandIntRange(0, 500)),
+				ExpectError: regexp.MustCompile("conflicts with"),
+			},
+		},
+	})
+}
+
 func testAccSubnetDataSourceConfig(r int) string {
 	return fmt.Sprintf(`
-data "nutanix_clusters" "clusters" {
-  metadata = {
-    length = 2
-  }
-}
+data "nutanix_clusters" "clusters" {}
 
 output "cluster" {
   value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
@@ -47,7 +72,7 @@ resource "nutanix_subnet" "test" {
 	cluster_reference = {
 	  kind = "cluster"
 	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  	}
+  }
 
 	vlan_id = %d
 	subnet_type = "VLAN"
@@ -58,14 +83,13 @@ resource "nutanix_subnet" "test" {
 	#ip_config_pool_list_ranges = ["192.168.0.5", "192.168.0.100"]
 
 	dhcp_options {
-		boot_file_name = "bootfile"
-		tftp_server_name = "192.168.0.252"
-		domain_name = "nutanix"
+		boot_file_name   = "bootfile"
+		domain_name      = "nutanix"
+		tftp_server_name = "10.250.140.200"
 	}
-
+	
 	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
-	dhcp_domain_search_list = ["nutanix.com", "calm.io"]
-
+	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
 }
 
 data "nutanix_subnet" "test" {
@@ -74,75 +98,109 @@ data "nutanix_subnet" "test" {
 `, r, r)
 }
 
-func Test_dataSourceNutanixSubnet(t *testing.T) {
-	tests := []struct {
-		name string
-		want *schema.Resource
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := dataSourceNutanixSubnet(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("dataSourceNutanixSubnet() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+func testAccSubnetDataSourceConfigName(r int) string {
+	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {}
+
+output "cluster" {
+  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 
-func Test_dataSourceNutanixSubnetRead(t *testing.T) {
-	type args struct {
-		d    *schema.ResourceData
-		meta interface{}
+resource "nutanix_subnet" "test" {
+	name = "dou_vlan0_test_%d"
+
+	cluster_reference = {
+	  kind = "cluster"
+	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  }
+
+	vlan_id = %d
+	subnet_type = "VLAN"
+
+	prefix_length = 24
+	default_gateway_ip = "192.168.0.1"
+	subnet_ip = "192.168.0.0"
+	#ip_config_pool_list_ranges = ["192.168.0.5", "192.168.0.100"]
+
+	dhcp_options {
+		boot_file_name   = "bootfile"
+		domain_name      = "nutanix"
+		tftp_server_name = "10.250.140.200"
 	}
-	tests := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := dataSourceNutanixSubnetRead(tt.args.d, tt.args.meta); (err != nil) != tt.wantErr {
-				t.Errorf("dataSourceNutanixSubnetRead() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
+	
+	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
 }
 
-func Test_getDataSourceSubnetSchema(t *testing.T) {
-	tests := []struct {
-		name string
-		want map[string]*schema.Schema
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := getDataSourceSubnetSchema(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("getDataSourceSubnetSchema() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+data "nutanix_subnet" "test" {
+	subnet_name = "${nutanix_subnet.test.name}"
+}
+`, r, r)
 }
 
-func Test_testAccSubnetDataSourceConfig(t *testing.T) {
-	type args struct {
-		r int
+func testAccSubnetDataSourceConfigNameDuplicated(r int) string {
+	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {}
+
+output "cluster" {
+  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+}
+
+resource "nutanix_subnet" "test" {
+	name = "dou_vlan0_test_%d"
+
+	cluster_reference = {
+	  kind = "cluster"
+	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  }
+
+	vlan_id = %d
+	subnet_type = "VLAN"
+
+	prefix_length = 24
+	default_gateway_ip = "192.168.0.1"
+	subnet_ip = "192.168.0.0"
+	#ip_config_pool_list_ranges = ["192.168.0.5", "192.168.0.100"]
+
+	dhcp_options {
+		boot_file_name   = "bootfile"
+		domain_name      = "nutanix"
+		tftp_server_name = "10.250.140.200"
 	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		// TODO: Add test cases.
+	
+	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
+}
+
+resource "nutanix_subnet" "test1" {
+	name = "${nutanix_subnet.test.name}"
+
+	cluster_reference = {
+	  kind = "cluster"
+	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  }
+
+	vlan_id = %d
+	subnet_type = "VLAN"
+
+	prefix_length = 24
+	default_gateway_ip = "192.168.0.1"
+	subnet_ip = "192.168.0.0"
+	#ip_config_pool_list_ranges = ["192.168.0.5", "192.168.0.100"]
+
+	dhcp_options {
+		boot_file_name   = "bootfile"
+		domain_name      = "nutanix"
+		tftp_server_name = "10.250.140.200"
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := testAccSubnetDataSourceConfig(tt.args.r); got != tt.want {
-				t.Errorf("testAccSubnetDataSourceConfig() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+	
+	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
+}
+
+data "nutanix_subnet" "test" {
+	subnet_id   = "${nutanix_subnet.test1.id}"
+	subnet_name = "${nutanix_subnet.test1.name}"
+}
+`, r, r, r+2)
 }
