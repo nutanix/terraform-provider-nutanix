@@ -1,12 +1,12 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_network_security_rule
-sidebar_current: "docs-nutanix-datasource-network_security_rule
+page_title: "NUTANIX: nutanix_network_security_rule"
+sidebar_current: "docs-nutanix-datasource-network_security_rule"
 description: |-
  Describes a Network security rule
 ---
 
-# nutanix_virtual_machine
+# nutanix_network_security_rule
 
 Describes a Network security rule
 

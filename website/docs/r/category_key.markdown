@@ -6,7 +6,7 @@ description: |-
   Provides a Nutanix Category key resource to Create a category key name.
 ---
 
-# nutanix_categiry_key
+# nutanix_category_key
 
 Provides a Nutanix Category key resource to Create a category key name.
 
