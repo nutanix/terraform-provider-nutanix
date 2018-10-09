@@ -29,13 +29,16 @@ errcheck:
 
 lint:
 	@echo "==> Checking source code against linters..."
-	@gometalinter ./$(PKG_NAME)
+	# @gometalinter ./$(PKG_NAME)
+	$(GOPATH)/bin/golangci-lint run
 
 tools:
 	go get -u github.com/golang/dep/cmd/dep
 	make deps
-	go get -u github.com/alecthomas/gometalinter
-	gometalinter --install
+	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $(GOPATH)/bin v1.9.3
+	# go get -u github.com/alecthomas/gometalinter
+	# gometalinter --install
+	
 
 vet:
 	@echo "go vet ."
