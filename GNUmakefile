@@ -17,15 +17,6 @@ testacc: fmtcheck
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m -coverprofile c.out
 	go tool cover -html=c.out
 
-vet:
-	@echo "go vet ."
-	@go vet $$(go list ./... | grep -v vendor/) ; if [ $$? -eq 1 ]; then \
-		echo ""; \
-		echo "Vet found suspicious constructs. Please check the reported constructs"; \
-		echo "and fix them if necessary before submitting the code for review."; \
-		exit 1; \
-	fi
-
 fmt:
 	@echo "==> Fixing source code with gofmt..."
 	gofmt -s -w ./$(PKG_NAME)
@@ -35,6 +26,25 @@ fmtcheck:
 
 errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
+
+lint:
+	@echo "==> Checking source code against linters..."
+	@gometalinter ./$(PKG_NAME)
+
+tools:
+	go get -u github.com/golang/dep/cmd/dep
+	make deps
+	go get -u github.com/alecthomas/gometalinter
+	gometalinter --install
+
+vet:
+	@echo "go vet ."
+	@go vet $$(go list ./... | grep -v vendor/) ; if [ $$? -eq 1 ]; then \
+		echo ""; \
+		echo "Vet found suspicious constructs. Please check the reported constructs"; \
+		echo "and fix them if necessary before submitting the code for review."; \
+		exit 1; \
+	fi
 
 vendor-status:
 	dep check
@@ -52,7 +62,6 @@ test-compile:
 # 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m -coverprofile c.out
 # 	go tool cover -html=c.out
 
-
 cibuild:
 	go build
 #	env GOOS=darwin GOARCH=amd64 go build
@@ -62,14 +71,6 @@ cibuild:
 
 citest:
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m -coverprofile c.out
-
-
-tools:
-	go get -u github.com/golang/dep/cmd/dep
-	make deps
-	go get -u github.com/alecthomas/gometalinter
-	gometalinter --install
-
 
 extrasanity:
 	echo "==>sanity: golangci-lint"
@@ -86,6 +87,10 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
+website-lint:
+	@echo "==> Checking website against linters..."
+	@misspell -error -source=text website/
+
 website-test:
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 	echo "$(WEBSITE_REPO) not found in your GOPATH (necessary for layouts and assets), get-ting..."
@@ -95,4 +100,4 @@ endif
 
 .NOTPARALLEL:
 
-.PHONY: build test cibuild citest fmt sanity deps tools website website-test
+.PHONY: default build test testacc fmt fmtcheck errcheck lint tools vet vendor-status test-compile cibuild citest extrasanity deps website website-lint website-test
