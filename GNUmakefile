@@ -36,8 +36,8 @@ tools:
 	go get -u github.com/golang/dep/cmd/dep
 	make deps
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $(GOPATH)/bin v1.9.3
-	# go get -u github.com/alecthomas/gometalinter
-	# gometalinter --install
+	go get -u github.com/alecthomas/gometalinter
+	gometalinter --install
 	
 
 vet:
