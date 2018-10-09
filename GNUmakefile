@@ -64,8 +64,9 @@ citest:
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m -coverprofile c.out
 
 
-tools: deps
+tools:
 	go get -u github.com/golang/dep/cmd/dep
+	make deps
 	go get -u github.com/alecthomas/gometalinter
 	gometalinter --install
 
