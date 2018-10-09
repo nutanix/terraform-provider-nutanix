@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_clusters"
-sidebar_current: "docs-nutanix-datasource-clusters"
+sidebar_current: "docs-nutanix-datasource-clusters-x"
 description: |-
  Describes a Clusters
 ---
