@@ -27,9 +27,10 @@ script:
 - make website-lint
 - make website-test
 
-branches:
-  only:
-  - master
+#branches:
+#  only:
+#  - master
+  
 matrix:
   fast_finish: true
   allow_failures:
