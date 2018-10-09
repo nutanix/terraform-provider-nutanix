@@ -1,6 +1,4 @@
-# Change Log
-
-## [1.0.0 Unreleased](https://github.com/nutanix/terraform-provider-nutanix/tree/HEAD)
+## 1.0.0 (Unreleased)
 
 **Implemented enhancements:**
 
