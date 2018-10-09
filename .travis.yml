@@ -9,6 +9,9 @@ go:
 git:
   depth: 1
 
+
+go_import_path: github.com/terraform-providers/terraform-provider-nutanix
+
 install:
 # This script is used by the Travis build to install a cookie for
 # go.googlesource.com so rate limits are higher when using `go get` to fetch
