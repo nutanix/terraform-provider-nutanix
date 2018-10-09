@@ -277,16 +277,16 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
 									"uuid": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
 							},
+						},
+						"subnet_reference_name": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
