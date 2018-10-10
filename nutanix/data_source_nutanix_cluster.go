@@ -834,9 +834,11 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 			http := make(map[string]interface{})
 			creds := make(map[string]interface{})
 			addr := make(map[string]interface{})
-			creds["username"] = utils.StringValue(v.Credentials.Username)
-			creds["password"] = utils.StringValue(v.Credentials.Password)
-			http["credentials"] = creds
+			if v.Credentials != nil {
+				creds["username"] = utils.StringValue(v.Credentials.Username)
+				creds["password"] = utils.StringValue(v.Credentials.Password)
+				http["credentials"] = creds
+			}
 			http["proxy_type_list"] = utils.StringValueSlice(v.ProxyTypeList)
 			addr["ip"] = utils.StringValue(v.Address.IP)
 			addr["fqdn"] = utils.StringValue(v.Address.FQDN)
@@ -862,9 +864,10 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		if network.SMTPServer != nil {
-			smtpServCreds["username"] = utils.StringValue(network.SMTPServer.Server.Credentials.Username)
-			smtpServCreds["password"] = utils.StringValue(network.SMTPServer.Server.Credentials.Password)
-
+			if network.SMTPServer.Server.Credentials != nil {
+				smtpServCreds["username"] = utils.StringValue(network.SMTPServer.Server.Credentials.Username)
+				smtpServCreds["password"] = utils.StringValue(network.SMTPServer.Server.Credentials.Password)
+			}
 			smtpServAddr["ip"] = utils.StringValue(network.SMTPServer.Server.Address.IP)
 			smtpServAddr["fqdn"] = utils.StringValue(network.SMTPServer.Server.Address.FQDN)
 			smtpServAddr["port"] = strconv.Itoa(int(utils.Int64Value(network.SMTPServer.Server.Address.Port)))
