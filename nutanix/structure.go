@@ -92,7 +92,9 @@ func setDiskList(disk []*v3.VMDisk, hasCloudInit *v3.GuestCustomizationStatus) [
 			disk["disk_size_bytes"] = utils.Int64Value(v1.DiskSizeBytes)
 			disk["disk_size_mib"] = utils.Int64Value(v1.DiskSizeMib)
 			if v1.DataSourceReference != nil {
-				disk["data_source_reference"] = flattenReferenceValues(v1.DataSourceReference)
+				dr := make([]map[string]interface{}, 1)
+				dr[0] = flattenReferenceValues(v1.DataSourceReference)
+				disk["data_source_reference"] = dr
 			}
 
 			if v1.VolumeGroupReference != nil {

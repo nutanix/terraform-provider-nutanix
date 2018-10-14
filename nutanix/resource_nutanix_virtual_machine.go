@@ -547,52 +547,52 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 			"disk_list": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"uuid": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ForceNew: true,
+							Computed: true,
 						},
 						"disk_size_bytes": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							ForceNew: true,
+							Computed: true,
 						},
 						"disk_size_mib": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							ForceNew: true,
+							Computed: true,
 						},
 						"device_properties": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
+							Computed: true,
 
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"device_type": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
+										Computed: true,
 									},
 									"disk_address": {
 										Type:     schema.TypeList,
 										Optional: true,
-										ForceNew: true,
+										Computed: true,
 
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"device_index": {
 													Type:     schema.TypeInt,
 													Optional: true,
-													ForceNew: true,
+													Computed: true,
 												},
 												"adapter_type": {
 													Type:     schema.TypeString,
 													Optional: true,
-													ForceNew: true,
+													Computed: true,
 												},
 											},
 										},
@@ -603,19 +603,19 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 						"data_source_reference": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
+							Computed: true,
 
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"kind": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
+										Computed: true,
 									},
 									"uuid": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
+										Computed: true,
 									},
 								},
 							},
@@ -624,24 +624,24 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 						"volume_group_reference": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
+							Computed: true,
 
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"kind": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
+										Computed: true,
 									},
 									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
+										Computed: true,
 									},
 									"uuid": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
+										Computed: true,
 									},
 								},
 							},
@@ -761,6 +761,9 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	if err := d.Set("nic_list", flattenNicList(resp.Status.Resources.NicList)); err != nil {
 		return fmt.Errorf("error setting nic_list for Virtual Machine %s: %s", d.Id(), err)
 	}
+	if err := d.Set("disk_list", setDiskList(resp.Status.Resources.DiskList, resp.Status.Resources.GuestCustomization)); err != nil {
+		return fmt.Errorf("error setting disk_list for Virtual Machine %s: %s", d.Id(), err)
+	}
 	if err := d.Set("host_reference", flattenReferenceValues(resp.Status.Resources.HostReference)); err != nil {
 		return fmt.Errorf("error setting host_reference for Virtual Machine %s: %s", d.Id(), err)
 	}
@@ -852,18 +855,17 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	d.Set("power_state_mechanism", utils.StringValue(resp.Status.Resources.PowerStateMechanism.Mechanism))
 	d.Set("vga_console_enabled", utils.BoolValue(resp.Status.Resources.VgaConsoleEnabled))
 	d.SetId(*resp.Metadata.UUID)
+
 	return nil
 }
 
 func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 
-	log.Printf("[Debug] Updating VM values %s", d.Id())
-
 	//First, shutDown the VM.
-	if err := changePowerState(conn, d.Id(), "OFF"); err != nil {
-		return fmt.Errorf("internal error: cannot shut down the VM with UUID(%s): %s", d.Id(), err)
-	}
+	//If err := changePowerState(conn, d.Id(), "OFF"); err != nil {
+	//	return fmt.Errorf("internal error: cannot shut down the VM with UUID(%s): %s", d.Id(), err)
+	//}
 
 	request := &v3.VMIntentInput{}
 	metadata := &v3.Metadata{}
@@ -1027,6 +1029,9 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("nic_list") {
 		res.NicList = expandNicList(d)
 	}
+	if d.HasChange("disk_list") {
+		res.DiskList = expandDiskList(d)
+	}
 	if d.HasChange("nutanix_guest_tools") {
 		_, n := d.GetChange("nutanix_guest_tools")
 		ngt := n.(map[string]interface{})
@@ -1106,9 +1111,9 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	//Tehn, Turn On the VM.
-	if err := changePowerState(conn, d.Id(), "ON"); err != nil {
-		return fmt.Errorf("internal error: cannot turn ON the VM with UUID(%s): %s", d.Id(), err)
-	}
+	//if err := changePowerState(conn, d.Id(), "ON"); err != nil {
+	//	return fmt.Errorf("internal error: cannot turn ON the VM with UUID(%s): %s", d.Id(), err)
+	//}
 
 	return resourceNutanixVirtualMachineRead(d, meta)
 }
@@ -1584,6 +1589,24 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 		nold = nil
 	}
 	res.NicList = nold
+
+	sold := make([]*v3.VMDisk, len(response.Status.Resources.DiskList))
+	if len(response.Status.Resources.DiskList) > 0 {
+		for k, v := range response.Status.Resources.DiskList {
+			sold[k] = &v3.VMDisk{
+				UUID:                 v.UUID,
+				DiskSizeMib:          v.DiskSizeMib,
+				DiskSizeBytes:        v.DiskSizeBytes,
+				DataSourceReference:  v.DataSourceReference,
+				DeviceProperties:     v.DeviceProperties,
+				VolumeGroupReference: v.VolumeGroupReference,
+			}
+
+		}
+	} else {
+		sold = nil
+	}
+	res.DiskList = sold
 
 	gold := make([]*v3.VMGpu, len(response.Status.Resources.GpuList))
 	if len(response.Status.Resources.GpuList) > 0 {
