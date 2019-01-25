@@ -35,7 +35,6 @@ For a slack invite, please contact terraform@nutanix.com from your business emai
 * [x] Virtual Machines data source.
 * [x] Category keys resource.
 * [x] Category values resource.
-* [x] Network security rule resource.
 * [x] Network security rule data source.
 * [x] Network security rules data source.
 * [x] Subnets data source.
@@ -94,7 +93,6 @@ The following keys can be used to configure the provider.
 * nutanix_subnet
 * nutanix_category_key
 * nutanix_category_value
-* nutanix_network_security_rule
 * nutanix_volume_group
 
 ## Data Sources
