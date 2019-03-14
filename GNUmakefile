@@ -33,10 +33,9 @@ lint:
 	$(GOPATH)/bin/golangci-lint run
 
 tools:
-	make deps
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $(GOPATH)/bin v1.9.3
-	go get -u github.com/alecthomas/gometalinter
-	gometalinter --install
+	GO111MODULE=off curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $(GOPATH)/bin v1.9.3
+	GO111MODULE=off go get -u github.com/alecthomas/gometalinter
+	GO111MODULE=off gometalinter --install
 	
 
 vet:
@@ -48,8 +47,6 @@ vet:
 		exit 1; \
 	fi
 
-	dep status
-
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
 		echo "ERROR: Set TEST to a specific package. For example,"; \
@@ -58,7 +55,7 @@ test-compile:
 	fi
 	go test -c $(TEST) $(TESTARGS)
 
-# test: deps
+# test:
 # 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m -coverprofile c.out
 # 	go tool cover -html=c.out
 
@@ -76,9 +73,6 @@ extrasanity:
 	echo "==>sanity: golangci-lint"
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $(GOPATH)/bin v1.9.3
 	$(GOPATH)/bin/golangci-lint run
-
-deps:
-	dep check
 
 website:
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
@@ -100,4 +94,4 @@ endif
 
 .NOTPARALLEL:
 
-.PHONY: default build test testacc fmt fmtcheck errcheck lint tools vet test-compile cibuild citest extrasanity deps website website-lint website-test
+.PHONY: default build test testacc fmt fmtcheck errcheck lint tools vet test-compile cibuild citest extrasanity website website-lint website-test
