@@ -33,7 +33,6 @@ lint:
 	$(GOPATH)/bin/golangci-lint run
 
 tools:
-	go get -u github.com/golang/dep/cmd/dep
 	make deps
 	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $(GOPATH)/bin v1.9.3
 	go get -u github.com/alecthomas/gometalinter
@@ -49,8 +48,6 @@ vet:
 		exit 1; \
 	fi
 
-vendor-status:
-	dep check
 	dep status
 
 test-compile:
@@ -103,4 +100,4 @@ endif
 
 .NOTPARALLEL:
 
-.PHONY: default build test testacc fmt fmtcheck errcheck lint tools vet vendor-status test-compile cibuild citest extrasanity deps website website-lint website-test
+.PHONY: default build test testacc fmt fmtcheck errcheck lint tools vet test-compile cibuild citest extrasanity deps website website-lint website-test
