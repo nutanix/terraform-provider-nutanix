@@ -56,13 +56,13 @@ For a slack invite, please contact terraform@nutanix.com from your business emai
 
 ### Provider Use
 
-* [Terraform](https://www.terraform.io/downloads.html) 0.11.8+
+* [Terraform](https://www.terraform.io/downloads.html) 0.11.11+
 * [Nutanix](https://portal.nutanix.com/#/page/home) Prism Central 5.6.0+
 * Note: Nutanix Community Edition will be supported, when an AOS 5.6 based version is released
 
 ### Provider Development
 
-* [Go](https://golang.org/doc/install) 1.9+ (to build the provider plugin)
+* [Go](https://golang.org/doc/install) 1.11+ (to build the provider plugin)
 
 ### Provider Use
 
