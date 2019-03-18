@@ -179,10 +179,8 @@ output "cluster" {
 }
 resource "nutanix_virtual_machine" "vm1" {
   name = "test-dou-%d"
-  cluster_reference = {
-	  kind = "cluster"
-	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
+  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186
@@ -211,10 +209,7 @@ resource "nutanix_image" "cirros-034-disk" {
 
 resource "nutanix_virtual_machine" "vm1" {
   name = "test-dou-vm-%[1]d"
-  cluster_reference = {
-	  kind = "cluster"
-	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
+  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186
@@ -258,10 +253,7 @@ resource "nutanix_image" "cirros-034-disk" {
 
 resource "nutanix_virtual_machine" "vm1" {
   name = "test-dou-vm-%[1]d"
-  cluster_reference = {
-	  kind = "cluster"
-	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
+  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186
@@ -296,10 +288,7 @@ output "cluster" {
 }
 resource "nutanix_virtual_machine" "vm1" {
   name = "test-dou-%d"
-  cluster_reference = {
-	  kind = "cluster"
-	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
+  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   num_vcpus_per_socket = 1
   num_sockets          = 2
   memory_size_mib      = 186
@@ -319,10 +308,7 @@ output "cluster" {
 }
 resource "nutanix_virtual_machine" "vm2" {
   name = "test-dou-%d"
-  cluster_reference = {
-	  kind = "cluster"
-	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
+  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186
@@ -345,10 +331,7 @@ output "cluster" {
 }
 resource "nutanix_virtual_machine" "vm2" {
   name = "test-dou-%d-updated"
-  cluster_reference = {
-	  kind = "cluster"
-	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
+  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   num_vcpus_per_socket = 2
   num_sockets          = 2
   memory_size_mib      = 256

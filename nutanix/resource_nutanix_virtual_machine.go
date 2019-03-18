@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceNutanixVirtualMachine() *schema.Resource {
@@ -139,26 +141,16 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 					},
 				},
 			},
-			"cluster_reference": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
+			"cluster_uuid": {
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringMatch(
+					regexp.MustCompile(
+						"^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"),
+					"please see http://developer.nutanix.com/reference/prism_central/v3/api/models/cluster-reference"),
 			},
 			"cluster_name": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"state": {
@@ -666,7 +658,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	n, nok := d.GetOk("name")
 	desc, descok := d.GetOk("description")
 	azr, azrok := d.GetOk("availability_zone_reference")
-	cr, crok := d.GetOk("cluster_reference")
+	clusterUUID, crok := d.GetOk("cluster_uuid")
 
 	if !nok {
 		return fmt.Errorf("please provide the required name attribute")
@@ -682,8 +674,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		spec.AvailabilityZoneReference = validateRef(a)
 	}
 	if crok {
-		a := cr.(map[string]interface{})
-		spec.ClusterReference = validateRef(a)
+		spec.ClusterReference = buildReference(clusterUUID.(string), "cluster")
 	}
 
 	if err := getVMResources(d, res); err != nil {
@@ -738,6 +729,10 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error reading Virtual Machine %s: %s", d.Id(), err)
 	}
 
+	if err := flattenClusterReference(resp.Status.ClusterReference, d); err != nil {
+		return fmt.Errorf("error setting cluster information for Virtual Machine %s: %s", d.Id(), err)
+	}
+
 	m, c := setRSEntityMetadata(resp.Metadata)
 
 	if err := d.Set("metadata", m); err != nil {
@@ -754,9 +749,6 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	}
 	if err := d.Set("availability_zone_reference", flattenReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
 		return fmt.Errorf("error setting availability_zone_reference for Virtual Machine %s: %s", d.Id(), err)
-	}
-	if err := d.Set("cluster_reference", getClusterReferenceValues(resp.Status.ClusterReference)); err != nil {
-		return fmt.Errorf("error setting cluster_reference for Virtual Machine %s: %s", d.Id(), err)
 	}
 	if err := d.Set("nic_list", flattenNicList(resp.Status.Resources.NicList)); err != nil {
 		return fmt.Errorf("error setting nic_list for Virtual Machine %s: %s", d.Id(), err)
