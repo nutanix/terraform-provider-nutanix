@@ -39,15 +39,11 @@ resource "nutanix_virtual_machine" "vm1" {
       value = "${nutanix_category_value.test.id}"
   }]
 
-  cluster_reference = {
-      kind = "cluster"
-      UUID = "${data.nutanix_clusters.clusters.entities.0.metadata.UUID}"
-  }
+  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 2048
-  power_state          = "ON"
 }
 ```
 
@@ -56,8 +52,7 @@ resource "nutanix_virtual_machine" "vm1" {
 The following arguments are supported:
 
 * `name`: - (Required) The name for the vm.
-* `cluster_reference`: - (Required) The reference to a cluster.
-* `cluster_name`: - (Optional) The name of the reference to the cluster.
+* `cluster_uuid`: - (Required) The UUID of the cluster.
 * `categories`: - (Optional) Categories for the vm.
 * `project_reference`: - (Optional) The reference to a project.
 * `owner_reference`: - (Optional) The reference to a user.
@@ -179,7 +174,7 @@ The following attributes are exported:
 * `metadata`: - The vm kind metadata.
 * `api_version` - The version of the API.
 * `state`: - The state of the vm.
-* `ip_address`: - An IP address.
+* `cluster_name`: - The name of the cluster.
 * `host_reference`: - Reference to a host.
 * `hypervisor_type`: - The hypervisor type for the hypervisor the VM is hosted on.
 
@@ -203,12 +198,12 @@ The categories attribute supports the following:
 
 ### Reference
 
-The `project_reference`, `owner_reference`, `availability_zone_reference`, `cluster_reference`, `network_function_chain_reference`, `subnet_reference`, `data_source_reference`, `volume_group_reference` attributes supports the following:
+The `project_reference`, `owner_reference`, `availability_zone_reference`, `network_function_chain_reference`, `subnet_reference`, `data_source_reference`, `volume_group_reference` attributes supports the following:
 
 * `kind`: - The kind name (Default value: project)(Required).
 * `name`: - the name(Optional).
-* `UUID`: - the UUID(Required).
+* `uuid`: - the UUID(Required).
 
-Note: `cluster_reference`, `subnet_reference` does not support the attribute `name`
+Note: `subnet_reference` does not support the attribute `name`
 
 See detailed information in [Nutanix Virtual Machine](http://developer.nutanix.com/reference/prism_central/v3/#vms).
