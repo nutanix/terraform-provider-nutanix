@@ -133,6 +133,32 @@ func TestAccNutanixVirtualMachine_updateFields(t *testing.T) {
 	})
 }
 
+func TestAccNutanixVirtualMachine_wiithSubnet(t *testing.T) {
+	r := acctest.RandInt()
+	resourceName := "nutanix_virtual_machine.vm1"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixVMConfigWithSubnet(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "categories.environment-terraform", "staging"),
+					resource.TestCheckResourceAttrSet(resourceName, "nic_list.0.ip_endpoint_list.0.ip"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixVirtualMachineExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -339,6 +365,76 @@ resource "nutanix_virtual_machine" "vm2" {
 	categories {
 		environment-terraform = "production"
 	}
+}
+`, r)
+}
+
+func testAccNutanixVMConfigWithSubnet(r int) string {
+	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {}
+
+resource "nutanix_subnet" "sub" {
+  cluster_reference = {
+		kind = "cluster"
+		uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  }
+
+  # General Information for subnet
+	name        = "acctest-managed-%[1]d"
+	description = "Description of my unit test VLAN"
+  vlan_id     = 50
+	subnet_type = "VLAN"
+
+  # Provision a Managed L3 Network
+  # This bit is only needed if you intend to turn on AHV's IPAM
+	subnet_ip          = "10.250.140.0"
+  default_gateway_ip = "10.250.140.1"
+  prefix_length = 24
+  dhcp_options {
+		boot_file_name   = "bootfile"
+		domain_name      = "nutanix"
+		tftp_server_name = "10.250.140.200"
+	}
+	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
+  ip_config_pool_list_ranges   = ["10.250.140.20 10.250.140.100"]
+}
+
+resource "nutanix_image" "cirros-034-disk" {
+    name        = "test-image-dou-%[1]d"
+    source_uri  = "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+    description = "heres a tiny linux image, not an iso, but a real disk!"
+}
+
+resource "nutanix_virtual_machine" "vm1" {
+	name = "test-dou-vm-%[1]d"
+	
+	categories {
+		environment-terraform = "staging"
+	}
+
+  cluster_reference = {
+	  kind = "cluster"
+	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  }
+  num_vcpus_per_socket = 1
+  num_sockets          = 1
+  memory_size_mib      = 186
+
+	disk_list = [{
+		data_source_reference = [{
+			kind = "image"
+			uuid = "${nutanix_image.cirros-034-disk.id}"
+		}]
+		disk_size_mib = 44
+	}]
+
+	nic_list = [{
+		subnet_reference = {
+			kind = "subnet"
+			uuid = "${nutanix_subnet.sub.id}"
+		}
+	}]
 }
 `, r)
 }
