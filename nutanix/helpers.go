@@ -80,6 +80,20 @@ func flattenReferenceValues(r *v3.Reference) map[string]interface{} {
 	return reference
 }
 
+func flattenClusterReference(r *v3.Reference, d *schema.ResourceData) error {
+	if r != nil {
+
+		if err := d.Set("cluster_uuid", utils.StringValue(r.UUID)); err != nil {
+			return err
+		}
+
+		if err := d.Set("cluster_name", utils.StringValue(r.Name)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func getClusterReferenceValues(r *v3.Reference) map[string]interface{} {
 	reference := make(map[string]interface{})
 	if r != nil {
@@ -97,6 +111,7 @@ func validateRef(ref map[string]interface{}) *v3.Reference {
 		r.Kind = utils.StringPtr(v.(string))
 		hasValue = true
 	}
+
 	if v, ok := ref["uuid"]; ok {
 		r.UUID = utils.StringPtr(v.(string))
 		hasValue = true
@@ -111,6 +126,13 @@ func validateRef(ref map[string]interface{}) *v3.Reference {
 	}
 
 	return nil
+}
+
+func buildReference(uuid, kind string) *v3.Reference {
+	return &v3.Reference{
+		Kind: utils.StringPtr(kind),
+		UUID: utils.StringPtr(uuid),
+	}
 }
 
 func validateShortRef(ref map[string]interface{}) *v3.Reference {
