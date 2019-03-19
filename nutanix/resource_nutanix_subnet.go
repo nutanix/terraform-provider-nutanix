@@ -148,27 +148,13 @@ func resourceNutanixSubnet() *schema.Resource {
 					},
 				},
 			},
-			"cluster_reference": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
+			"cluster_uuid": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"cluster_name": {
 				Type:     schema.TypeString,
 				Computed: true,
-				Optional: true,
 			},
 			"vswitch_name": {
 				Type:     schema.TypeString,
@@ -314,7 +300,7 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 
 	n, nok := d.GetOk("name")
 	azr, azrok := d.GetOk("availability_zone_reference")
-	cr, crok := d.GetOk("cluster_reference")
+	clusterUUID, crok := d.GetOk("cluster_uuid")
 	_, stok := d.GetOk("subnet_type")
 
 	if !stok && !nok {
@@ -333,8 +319,7 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 		spec.AvailabilityZoneReference = validateRef(a)
 	}
 	if crok {
-		a := cr.(map[string]interface{})
-		spec.ClusterReference = validateRef(a)
+		spec.ClusterReference = buildReference(clusterUUID.(string), "cluster")
 	}
 
 	if err := getSubnetResources(d, subnet); err != nil {
@@ -417,7 +402,7 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("availability_zone_reference", flattenReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
 		return err
 	}
-	if err := d.Set("cluster_reference", getClusterReferenceValues(resp.Status.ClusterReference)); err != nil {
+	if err := flattenClusterReference(resp.Status.ClusterReference, d); err != nil {
 		return err
 	}
 
@@ -487,7 +472,6 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting attribute for subnet id (%s) dhcp_domain_search_list: %s", d.Id(), err)
 	}
 
-	d.Set("cluster_reference_name", utils.StringValue(resp.Status.ClusterReference.Name))
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
 
 	nfcr := make(map[string]interface{})
@@ -578,9 +562,9 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		a := d.Get("availability_zone_reference").(map[string]interface{})
 		spec.AvailabilityZoneReference = validateRef(a)
 	}
-	if d.HasChange("cluster_reference") {
-		a := d.Get("cluster_reference").(map[string]interface{})
-		spec.ClusterReference = validateRef(a)
+	if d.HasChange("cluster_uuid") {
+		uuid := d.Get("cluster_uuid").(string)
+		spec.ClusterReference = buildReference(uuid, "cluster")
 	}
 	if d.HasChange("dhcp_domain_name_server_list") {
 		dhcpO.DomainNameServerList = expandStringList(d.Get("dhcp_domain_name_server_list").([]interface{}))
