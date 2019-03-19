@@ -826,7 +826,6 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	d.Set("guest_customization_cloud_init_user_data", cloudInitUser)
 	d.Set("guest_customization_cloud_init_meta_data", cloudInitMeta)
 	d.Set("hardware_clock_timezone", utils.StringValue(resp.Status.Resources.HardwareClockTimezone))
-	d.Set("cluster_reference_name", utils.StringValue(resp.Status.ClusterReference.Name))
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
 	d.Set("name", utils.StringValue(resp.Status.Name))
 	d.Set("description", utils.StringValue(resp.Status.Description))
@@ -915,9 +914,9 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		spec.AvailabilityZoneReference = validateRef(n.(map[string]interface{}))
 	}
 	spec.ClusterReference = response.Status.ClusterReference
-	if d.HasChange("cluster_reference") {
-		_, n := d.GetChange("cluster_reference")
-		spec.ClusterReference = validateRef(n.(map[string]interface{}))
+	if d.HasChange("cluster_uuid") {
+		_, n := d.GetChange("cluster_uuid")
+		spec.ClusterReference = buildReference(n.(string), "cluster")
 	}
 	if d.HasChange("parent_reference") {
 		_, n := d.GetChange("parent_reference")
