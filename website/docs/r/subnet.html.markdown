@@ -12,7 +12,7 @@ Provides a resource to create a subnet based on the input parameters. A subnet i
 
 ## Example Usage
 
-```hcl
+``` hcl
 data "nutanix_clusters" "clusters" {
   metadata = {
     length = 2
@@ -20,15 +20,12 @@ data "nutanix_clusters" "clusters" {
 }
 
 output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.UUID}"
+  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 
 resource "nutanix_subnet" "next-iac-managed" {
   # What cluster will this VLAN live on?
-  cluster_reference = {
-    kind = "cluster"
-    UUID = "${data.nutanix_clusters.clusters.entities.0.metadata.UUID}"
-  }
+  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 
   # General Information
   name        = "next-iac-managed-%d"
@@ -51,8 +48,7 @@ resource "nutanix_subnet" "next-iac-managed" {
 
 * `metadata`: - (Required) The subnet kind metadata.
 * `availability_zone_reference`: - (Optional) The reference to a availability_zone.
-* `cluster_reference`: - (Optional) The reference to a cluster.
-* `cluster_name`: - (Optional) The name of a cluster.
+* `cluster_uuid`: - (Required) The UUID of the cluster.
 * `description`: - (Optional) A description for subnet.
 * `name`: - (Optional) Subnet name (Readonly).
 * `categories`: - (Optional) The categories of the resource.
@@ -83,7 +79,7 @@ The following attributes are exported:
 The metadata attribute exports the following:
 
 * `last_update_time`: - UTC date and time in RFC-3339 format when subnet was last updated.
-* `UUID`: - subnet UUID.
+* `uuid`: - The subnet UUID.
 * `creation_time`: - UTC date and time in RFC-3339 format when subnet was created.
 * `spec_version`: - Version number of the latest spec.
 * `spec_hash`: - Hash of the spec. This will be returned from server.
@@ -98,14 +94,14 @@ The categories attribute supports the following:
 
 ### Reference
 
-The `project_reference`, `owner_reference`, `availability_zone_reference`, `cluster_reference`, `network_function_chain_reference`, `subnet_reference`.
+The `project_reference`, `owner_reference`, `availability_zone_reference`, `network_function_chain_reference`, `subnet_reference`.
 
 attributes supports the following:
 
 * `kind`: - The kind name (Default value: project)(Required).
 * `name`: - the name(Optional).
-* `UUID`: - the UUID(Required).
+* `uuid`: - the UUID(Required).
 
-Note: `cluster_reference`, `subnet_reference` does not support the attribute `name`
+Note: `subnet_reference` does not support the attribute `name`
 
 See detailed information in [Nutanix Subnet](http://developer.nutanix.com/reference/prism_central/v3/#definitions-subnet_resources).
