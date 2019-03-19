@@ -185,10 +185,8 @@ output "cluster" {
 
 resource "nutanix_subnet" "acctest-managed" {
   # What cluster will this VLAN live on?
-  cluster_reference = {
-	kind = "cluster"
-	uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
+  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+
 
   # General Information for subnet
 	name        = "acctest-managed"
@@ -222,10 +220,8 @@ output "cluster" {
 
 resource "nutanix_subnet" "acctest-managed" {
   # What cluster will this VLAN live on?
-  cluster_reference = {
-	kind = "cluster"
-	uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
+  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+
 
   # General Information for subnet
 	name        = "acctest-managed-updateName"
@@ -264,10 +260,8 @@ output "cluster" {
 
 resource "nutanix_subnet" "acctest-managed-categories" {
   # What cluster will this VLAN live on?
-  cluster_reference = {
-	kind = "cluster"
-	uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
+  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+
 
   # General Information for subnet
 	name        = "acctest-managed"
@@ -304,10 +298,8 @@ output "cluster" {
 
 resource "nutanix_subnet" "acctest-managed-categories" {
   # What cluster will this VLAN live on?
-  cluster_reference = {
-	kind = "cluster"
-	uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
+  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+
 
   # General Information for subnet
 	name        = "acctest-managed"
@@ -344,10 +336,8 @@ output "cluster" {
 
 resource "nutanix_subnet" "acctest-managed-categories" {
   # What cluster will this VLAN live on?
-  cluster_reference = {
-	kind = "cluster"
-	uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
+  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+
 
   # General Information for subnet
 	name        = "acctest-managed"
@@ -385,10 +375,8 @@ output "cluster" {
 
 resource "nutanix_subnet" "acctest-managed-categories" {
   # What cluster will this VLAN live on?
-  cluster_reference = {
-	kind = "cluster"
-	uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
+  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+
 
   # General Information for subnet
 	name        = "acctest-managed"
