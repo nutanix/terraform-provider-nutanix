@@ -68,11 +68,7 @@ output "cluster" {
 
 resource "nutanix_subnet" "test" {
 	name = "dou_vlan0_test_%d"
-
-	cluster_reference = {
-	  kind = "cluster"
-	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
+	cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 
 	vlan_id = %d
 	subnet_type = "VLAN"
@@ -108,12 +104,7 @@ output "cluster" {
 
 resource "nutanix_subnet" "test" {
 	name = "dou_vlan0_test_%d"
-
-	cluster_reference = {
-	  kind = "cluster"
-	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
-
+	cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 	vlan_id = %d
 	subnet_type = "VLAN"
 
@@ -148,12 +139,7 @@ output "cluster" {
 
 resource "nutanix_subnet" "test" {
 	name = "dou_vlan0_test_%d"
-
-	cluster_reference = {
-	  kind = "cluster"
-	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
-
+	cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 	vlan_id = %d
 	subnet_type = "VLAN"
 
@@ -174,15 +160,9 @@ resource "nutanix_subnet" "test" {
 
 resource "nutanix_subnet" "test1" {
 	name = "${nutanix_subnet.test.name}"
-
-	cluster_reference = {
-	  kind = "cluster"
-	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
-
+	cluster_uuid= "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 	vlan_id = %d
 	subnet_type = "VLAN"
-
 	prefix_length = 24
 	default_gateway_ip = "192.168.0.1"
 	subnet_ip = "192.168.0.0"
