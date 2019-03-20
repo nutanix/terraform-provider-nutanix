@@ -33,13 +33,13 @@ data "nutanix_clusters" "clusters" {
 
 resource "nutanix_virtual_machine" "vm1" {
   name = "test-dou"
+  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 
   categories = [{
       name   = "${nutanix_category_key.test-category-key.id}"
       value = "${nutanix_category_value.test.id}"
   }]
 
-  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 
   num_vcpus_per_socket = 1
   num_sockets          = 1
@@ -88,7 +88,7 @@ The following arguments are supported:
 
 The disk_list attribute supports the following:
 
-* `UUID`: - (Optional) The device ID which is used to uniquely identify this particular disk.
+* `uuid`: - (Optional) The device ID which is used to uniquely identify this particular disk.
 * `disk_size_bytes` - (Optional) Size of the disk in Bytes.
 * `disk_size_mib` - Size of the disk in MiB. Must match the size specified in 'disk_size_bytes' - rounded up to the nearest MiB - when that field is present.
 * `device_properties` - Properties to a device.
@@ -122,7 +122,7 @@ The gpu_list attribute supports the following:
 
 * `frame_buffer_size_mib`: - (ReadOnly) GPU frame buffer size in MiB.
 * `vendor`: - (Optional) The vendor of the GPU.
-* `UUID`: - (ReadOnly) UUID of the GPU.
+* `uuid`: - (ReadOnly) UUID of the GPU.
 * `name`: - (ReadOnly) Name of the GPU resource.
 * `pci_address` - (ReadOnly) GPU {segment:bus:device:function} (sbdf) address if assigned.
 * `fraction` - (ReadOnly) Fraction of the physical GPU assigned.
@@ -157,8 +157,8 @@ The nic_list attribute supports the following:
 * `mac_address`: - The MAC address for the adapter.
 * `ip_endpoint_list`: - IP endpoints for the adapter. Currently, IPv4 addresses are supported.
 * `network_function_chain_reference`: - The reference to a network_function_chain.
-* `subnet_reference`: - The reference to a subnet.
-* `subnet_reference_name`: - The name of the subnet reference to.
+* `subnet_uuid`: - The reference to a subnet.
+* `subnet_name`: - The name of the subnet reference to.
 
 ### ip_endpoint_list
 
@@ -183,7 +183,7 @@ The following attributes are exported:
 The metadata attribute exports the following:
 
 * `last_update_time`: - UTC date and time in RFC-3339 format when vm was last updated.
-* `UUID`: - vm UUID.
+* `uuid`: - vm UUID.
 * `creation_time`: - UTC date and time in RFC-3339 format when vm was created.
 * `spec_version`: - Version number of the latest spec.
 * `spec_hash`: - Hash of the spec. This will be returned from server.
@@ -198,12 +198,10 @@ The categories attribute supports the following:
 
 ### Reference
 
-The `project_reference`, `owner_reference`, `availability_zone_reference`, `network_function_chain_reference`, `subnet_reference`, `data_source_reference`, `volume_group_reference` attributes supports the following:
+The `project_reference`, `owner_reference`, `availability_zone_reference`, `network_function_chain_reference`, `data_source_reference`, `volume_group_reference` attributes supports the following:
 
 * `kind`: - The kind name (Default value: project)(Required).
 * `name`: - the name(Optional).
 * `uuid`: - the UUID(Required).
-
-Note: `subnet_reference` does not support the attribute `name`
 
 See detailed information in [Nutanix Virtual Machine](http://developer.nutanix.com/reference/prism_central/v3/#vms).
