@@ -20,16 +20,12 @@ data "nutanix_clusters" "clusters" {
 }
 
 output "cluster" {
- value = "${data.nutanix_clusters.clusters.entities.0.metadata.UUID}"
+ value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 
 resource "nutanix_virtual_machine" "vm1" {
  name = "test-dou-%d"
-
- cluster_reference = {
-  kind = "cluster"
-  UUID = "${data.nutanix_clusters.clusters.entities.0.metadata.UUID}"
- }
+ cluster_uuid= "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 
  num_vcpus_per_socket = 1
  num_sockets     = 1
@@ -165,8 +161,8 @@ The nic_list attribute supports the following:
 * `mac_address`: - The MAC address for the adapter.
 * `ip_endpoint_list`: - IP endpoints for the adapter. Currently, IPv4 addresses are supported.
 * `network_function_chain_reference`: - The reference to a network_function_chain.
-* `subnet_reference`: - The reference to a subnet.
-* `subnet_reference_name`: - The name of the subnet reference to.
+* `subnet_uuid`: - The reference to a subnet.
+* `subnet_name`: - The name of the subnet reference to.
 
 ### ip_endpoint_list
 
@@ -195,12 +191,10 @@ The categories attribute supports the following:
 
 ### Reference
 
-The `project_reference`, `owner_reference`, `availability_zone_reference`, `cluster_reference`, `network_function_chain_reference`, `subnet_reference`, `data_source_reference`, `volume_group_reference` attributes supports the following:
+The `project_reference`, `owner_reference`, `availability_zone_reference`, `network_function_chain_reference`, `data_source_reference`, `volume_group_reference` attributes supports the following:
 
 * `kind`: - The kind name (Default value: project).
 * `name`: - the name.
-* `UUID`: - the UUID.
-
-Note: `cluster_reference`, `subnet_reference` does not support the attribute `name`
+* `uud`: - the UUID.
 
 See detailed information in [Nutanix Virtual Machine](http://developer.nutanix.com/reference/prism_central/v3/#vms).
