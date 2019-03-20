@@ -44,8 +44,12 @@ func flattenNicList(nics []*v3.VMNicOutputStatus) []map[string]interface{} {
 			}
 			nic["ip_endpoint_list"] = ipEndpointList
 			nic["network_function_chain_reference"] = flattenReferenceValues(v.NetworkFunctionChainReference)
-			nic["subnet_reference"] = getClusterReferenceValues(v.SubnetReference)
-			nic["subnet_reference_name"] = utils.StringValue(v.SubnetReference.Name)
+
+			if v.SubnetReference != nil {
+				nic["subnet_uuid"] = utils.StringValue(v.SubnetReference.UUID)
+				nic["subnet_name"] = utils.StringValue(v.SubnetReference.Name)
+
+			}
 
 			nicLists[k] = nic
 		}
