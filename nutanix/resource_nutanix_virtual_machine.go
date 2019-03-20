@@ -265,24 +265,11 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 								},
 							},
 						},
-						"subnet_reference": {
-							Type:     schema.TypeMap,
+						"subnet_uuid": {
+							Type:     schema.TypeString,
 							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kind": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"uuid": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
 						},
-						"subnet_reference_name": {
+						"subnet_name": {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
@@ -1424,9 +1411,9 @@ func expandNicList(d *schema.ResourceData) []*v3.VMNic {
 					v := value.(map[string]interface{})
 					nic.NetworkFunctionChainReference = validateRef(v)
 				}
-				if value, ok := val["subnet_reference"]; ok {
-					v := value.(map[string]interface{})
-					nic.SubnetReference = validateRef(v)
+				if value, ok := val["subnet_uuid"]; ok {
+					v := value.(string)
+					nic.SubnetReference = buildReference(v, "subnet")
 				}
 				nics = append(nics, nic)
 			}
