@@ -148,27 +148,13 @@ func resourceNutanixImage() *schema.Resource {
 					},
 				},
 			},
-			"cluster_reference": {
-				Type:     schema.TypeMap,
-				Optional: true,
+			"cluster_uuid": {
+				Type:     schema.TypeString,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-					},
-				},
+			},
+			"cluster_name": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"retrieval_uri_list": {
 				Type:     schema.TypeList,
@@ -370,8 +356,8 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 	if err = d.Set("availability_zone_reference", flattenReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
 		return fmt.Errorf("error setting owner_reference for image UUID(%s), %s", d.Id(), err)
 	}
-	if err = d.Set("cluster_reference", getClusterReferenceValues(resp.Status.ClusterReference)); err != nil {
-		return fmt.Errorf("error setting cluster_reference for image UUID(%s), %s", d.Id(), err)
+	if err = flattenClusterReference(resp.Status.ClusterReference, d); err != nil {
+		return fmt.Errorf("error setting cluster_uuid or cluster_name for image UUID(%s), %s", d.Id(), err)
 	}
 
 	if err = d.Set("state", resp.Status.State); err != nil {
