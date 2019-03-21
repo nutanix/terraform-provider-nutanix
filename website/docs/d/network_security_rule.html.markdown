@@ -172,7 +172,7 @@ The `project_reference`, `owner_reference`, `availability_zone_reference`, `clus
 
 * `kind`: - The kind name (Default value: project).
 * `name`: - the name.
-* `UUID`: - the UUID.
+* `uuid`: - the UUID.
 
 ### Version
 

@@ -117,7 +117,7 @@ attributes supports the following:
 
 * `kind`: - The kind name (Default value: project)(Required).
 * `name`: - the name(Optional).
-* `UUID`: - the UUID(Required).
+* `uuid`: - the UUID(Required).
 
 Note: `cluster_reference`, `subnet_reference` does not support the attribute `name`
 
