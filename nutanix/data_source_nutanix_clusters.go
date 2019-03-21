@@ -797,7 +797,9 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 			entity["smtp_server_type"] = utils.StringValue(network.SMTPServer.Type)
 			entity["smtp_server_email_address"] = utils.StringValue(network.SMTPServer.EmailAddress)
 
-			if network.SMTPServer != nil {
+			if network.SMTPServer.Server != nil {
+				entity["smtp_server_proxy_type_list"] = utils.StringValueSlice(network.SMTPServer.Server.ProxyTypeList)
+
 				if network.SMTPServer.Server.Credentials != nil {
 					smtpServCreds["username"] = utils.StringValue(network.SMTPServer.Server.Credentials.Username)
 					smtpServCreds["password"] = utils.StringValue(network.SMTPServer.Server.Credentials.Password)
@@ -808,7 +810,6 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 				smtpServAddr["ipv6"] = utils.StringValue(network.SMTPServer.Server.Address.IPV6)
 			}
 			entity["smtp_server_credentials"] = smtpServCreds
-			entity["smtp_server_proxy_type_list"] = utils.StringValueSlice(network.SMTPServer.Server.ProxyTypeList)
 			entity["smtp_server_address"] = smtpServAddr
 		} else {
 			entity["smtp_server_type"] = ""
