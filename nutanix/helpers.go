@@ -50,7 +50,6 @@ func getMetadataAttributes(d *schema.ResourceData, metadata *v3.Metadata, kind s
 func setRSEntityMetadata(v *v3.Metadata) (map[string]interface{}, map[string]interface{}) {
 	metadata := make(map[string]interface{})
 	metadata["last_update_time"] = utils.TimeValue(v.LastUpdateTime).String()
-	metadata["kind"] = utils.StringValue(v.Kind)
 	metadata["uuid"] = utils.StringValue(v.UUID)
 	metadata["creation_time"] = utils.TimeValue(v.CreationTime).String()
 	metadata["spec_version"] = strconv.Itoa(int(utils.Int64Value(v.SpecVersion)))
