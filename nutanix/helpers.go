@@ -93,16 +93,6 @@ func flattenClusterReference(r *v3.Reference, d *schema.ResourceData) error {
 	return nil
 }
 
-func getClusterReferenceValues(r *v3.Reference) map[string]interface{} {
-	reference := make(map[string]interface{})
-	if r != nil {
-		reference["kind"] = utils.StringValue(r.Kind)
-		reference["uuid"] = utils.StringValue(r.UUID)
-	}
-
-	return reference
-}
-
 func validateRef(ref map[string]interface{}) *v3.Reference {
 	r := &v3.Reference{}
 	hasValue := false
