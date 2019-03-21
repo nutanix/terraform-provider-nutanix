@@ -155,25 +155,13 @@ func dataSourceNutanixSubnet() *schema.Resource {
 					},
 				},
 			},
-			"cluster_reference": {
-				Type:     schema.TypeMap,
+			"cluster_uuid": {
+				Type:     schema.TypeString,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
+			},
+			"cluster_name": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"vswitch_name": {
 				Type:     schema.TypeString,
@@ -354,7 +342,7 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 	if err := d.Set("availability_zone_reference", flattenReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
 		return err
 	}
-	if err := d.Set("cluster_reference", getClusterReferenceValues(resp.Status.ClusterReference)); err != nil {
+	if err := flattenClusterReference(resp.Status.ClusterReference, d); err != nil {
 		return err
 	}
 
