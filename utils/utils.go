@@ -19,20 +19,16 @@ func PrintToJSON(v interface{}, msg string) {
 func DebugRequest(req *http.Request) {
 	requestDump, err := httputil.DumpRequest(req, true)
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("[WARN] Error getting request's dump: %s", err)
 	}
-	fmt.Println(string("####################"))
-	fmt.Println(string("###### REQUEST #######"))
-	fmt.Println(string(requestDump))
+	log.Printf("[DEBUG] %s", string(requestDump))
 }
 
 // DebugResponse ...
-func DebugResponse(req *http.Response) {
-	requestDump, err := httputil.DumpResponse(req, true)
+func DebugResponse(res *http.Response) {
+	requestDump, err := httputil.DumpResponse(res, true)
 	if err != nil {
-		fmt.Println(err)
+		log.Printf("[WARN] Error getting response's dump: %s", err)
 	}
-	fmt.Println(string("####################"))
-	fmt.Println(string("###### RESPONSE #######"))
-	fmt.Println(string(requestDump))
+	fmt.Printf("[DEBUG] %s", string(requestDump))
 }
