@@ -25,7 +25,7 @@ No arguments are supported:
 The metadata attribute exports the following:
 
 * `last_update_time`: - UTC date and time in RFC-3339 format when image was last updated.
-* `UUID`: - image UUID.
+* `uuid`: - image UUID.
 * `creation_time`: - UTC date and time in RFC-3339 format when image was created.
 * `spec_version`: - Version number of the latest spec.
 * `spec_hash`: - Hash of the spec. This will be returned from server.

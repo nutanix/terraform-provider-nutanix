@@ -98,7 +98,7 @@ The following attributes are exported:
 
 ### Reference
 
-The `project_reference`, `owner_reference`, `availability_zone_reference`, `cluster_reference`, attributes supports the following:
+The `project_reference`, `owner_reference`, `availability_zone_reference`, attributes supports the following:
 
 * `kind`: - The kind name (Default value: project).
 * `name`: - the name.
