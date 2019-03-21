@@ -868,7 +868,12 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 			return err
 		}
 
-		if network.SMTPServer != nil {
+		if network.SMTPServer.Server != nil {
+
+			if err := d.Set("smtp_server_proxy_type_list", utils.StringValueSlice(network.SMTPServer.Server.ProxyTypeList)); err != nil {
+				return err
+			}
+
 			if network.SMTPServer.Server.Credentials != nil {
 				smtpServCreds["username"] = utils.StringValue(network.SMTPServer.Server.Credentials.Username)
 				smtpServCreds["password"] = utils.StringValue(network.SMTPServer.Server.Credentials.Password)
@@ -881,9 +886,7 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 		if err := d.Set("smtp_server_credentials", smtpServCreds); err != nil {
 			return err
 		}
-		if err := d.Set("smtp_server_proxy_type_list", utils.StringValueSlice(network.SMTPServer.Server.ProxyTypeList)); err != nil {
-			return err
-		}
+
 		if err := d.Set("smtp_server_address", smtpServAddr); err != nil {
 			return err
 		}
