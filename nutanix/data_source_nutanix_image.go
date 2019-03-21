@@ -135,23 +135,11 @@ func dataSourceNutanixImage() *schema.Resource {
 					},
 				},
 			},
-			"cluster_reference": {
-				Type:     schema.TypeMap,
+			"cluster_uuid": {
+				Type:     schema.TypeString,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
 			},
-			"cluster_reference_name": {
+			"cluster_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -252,16 +240,9 @@ func dataSourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error 
 	if err := d.Set("availability_zone_reference", flattenReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
 		return err
 	}
-	cluster := make(map[string]interface{})
-	cl := ""
-	if resp.Status.ClusterReference != nil {
-		cluster = getClusterReferenceValues(resp.Status.ClusterReference)
-		cl = utils.StringValue(resp.Status.ClusterReference.Name)
-	}
-	if err := d.Set("cluster_reference", cluster); err != nil {
+	if err := flattenClusterReference(resp.Status.ClusterReference, d); err != nil {
 		return err
 	}
-	d.Set("cluster_reference_name", cl)
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
 	d.Set("name", utils.StringValue(resp.Status.Name))
 	d.Set("description", utils.StringValue(resp.Status.Description))
