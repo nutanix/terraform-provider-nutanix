@@ -662,12 +662,17 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 		ncc := make(map[string]interface{})
 		nos := make(map[string]interface{})
 		if config.SoftwareMap != nil {
-			ncc["software_type"] = utils.StringValue(config.SoftwareMap.NCC.SoftwareType)
-			ncc["status"] = utils.StringValue(config.SoftwareMap.NCC.Status)
-			ncc["version"] = utils.StringValue(config.SoftwareMap.NCC.Version)
-			nos["software_type"] = utils.StringValue(config.SoftwareMap.NOS.SoftwareType)
-			nos["status"] = utils.StringValue(config.SoftwareMap.NOS.Status)
-			nos["version"] = utils.StringValue(config.SoftwareMap.NOS.Version)
+			if config.SoftwareMap.NCC != nil {
+				ncc["software_type"] = utils.StringValue(config.SoftwareMap.NCC.SoftwareType)
+				ncc["status"] = utils.StringValue(config.SoftwareMap.NCC.Status)
+				ncc["version"] = utils.StringValue(config.SoftwareMap.NCC.Version)
+			}
+
+			if config.SoftwareMap.NOS != nil {
+				nos["software_type"] = utils.StringValue(config.SoftwareMap.NOS.SoftwareType)
+				nos["status"] = utils.StringValue(config.SoftwareMap.NOS.Status)
+				nos["version"] = utils.StringValue(config.SoftwareMap.NOS.Version)
+			}
 		}
 		entity["software_map_ncc"] = ncc
 		entity["software_map_nos"] = nos
