@@ -181,6 +181,86 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"nic_list_status": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"nic_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"floating_ip": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"model": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"network_function_nic_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"mac_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ip_endpoint_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ip": {
+										Type: schema.TypeString,
+
+										Computed: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"network_function_chain_reference": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"subnet_uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"subnet_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 
 			// RESOURCES ARGUMENTS
 
@@ -203,10 +283,6 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 						"uuid": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Computed: true,
-						},
-						"floating_ip": {
-							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"model": {
@@ -737,7 +813,10 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	if err := d.Set("availability_zone_reference", flattenReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
 		return fmt.Errorf("error setting availability_zone_reference for Virtual Machine %s: %s", d.Id(), err)
 	}
-	if err := d.Set("nic_list", flattenNicList(resp.Status.Resources.NicList)); err != nil {
+	if err := d.Set("nic_list", flattenNicList(resp.Spec.Resources.NicList)); err != nil {
+		return fmt.Errorf("error setting nic_list for Virtual Machine %s: %s", d.Id(), err)
+	}
+	if err := d.Set("nic_list_status", flattenNicListStatus(resp.Status.Resources.NicList)); err != nil {
 		return fmt.Errorf("error setting nic_list for Virtual Machine %s: %s", d.Id(), err)
 	}
 	if err := d.Set("host_reference", flattenReferenceValues(resp.Status.Resources.HostReference)); err != nil {
