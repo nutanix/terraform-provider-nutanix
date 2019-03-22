@@ -59,7 +59,7 @@ The following arguments are supported:
 * `availability_zone_reference`: - (Optional) The reference to a availability_zone.
 * `description`: - (Optional) A description for vm.
 * `num_vnuma_nodes`: - (Optional) Number of vNUMA nodes. 0 means vNUMA is disabled.
-* `nic_list`: - (Optional) NICs attached to the VM.
+* `nic_list`: - (Optional) Spec NICs attached to the VM.
 * `guest_os_id`: - (Optional) Guest OS Identifier. For ESX, refer to VMware documentation [link](https://www.vmware.com/support/developer/converter-sdk/conv43_apireference/vim.vm.GuestOsDescriptor.GuestOsIdentifier.html) for the list of guest OS identifiers.
 * `power_state`: - (Optional) The current or desired power state of the VM. (Options : ON , OFF)
 * `nutanix_guest_tools`: - (Optional) Information regarding Nutanix Guest Tools.
@@ -151,7 +151,6 @@ The nic_list attribute supports the following:
 
 * `nic_type`: - The type of this NIC. Defaults to NORMAL_NIC. (Options : NORMAL_NIC , DIRECT_NIC , NETWORK_FUNCTION_NIC).
 * `uuid`: - The NIC's UUID, which is used to uniquely identify this particular NIC. This UUID may be used to refer to the NIC outside the context of the particular VM it is attached to.
-* `floating_ip`: -  The Floating IP associated with the vnic.
 * `model`: - The model of this NIC. (Options : VIRTIO , E1000).
 * `network_function_nic_type`: - The type of this Network function NIC. Defaults to INGRESS. (Options : INGRESS , EGRESS , TAP).
 * `mac_address`: - The MAC address for the adapter.
@@ -159,6 +158,7 @@ The nic_list attribute supports the following:
 * `network_function_chain_reference`: - The reference to a network_function_chain.
 * `subnet_uuid`: - The reference to a subnet.
 * `subnet_name`: - The name of the subnet reference to.
+* `floating_ip`: -  The Floating IP associated with the vnic. (Only in `nic_list_status`)
 
 ### ip_endpoint_list
 
@@ -177,6 +177,7 @@ The following attributes are exported:
 * `cluster_name`: - The name of the cluster.
 * `host_reference`: - Reference to a host.
 * `hypervisor_type`: - The hypervisor type for the hypervisor the VM is hosted on.
+* `nic_list_status`: - Status NICs attached to the VM.
 
 ### Metadata
 
