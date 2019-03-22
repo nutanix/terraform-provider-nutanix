@@ -21,7 +21,7 @@ func expandStringList(configured []interface{}) []*string {
 	return vs
 }
 
-func flattenNicList(nics []*v3.VMNicOutputStatus) []map[string]interface{} {
+func flattenNicListStatus(nics []*v3.VMNicOutputStatus) []map[string]interface{} {
 	nicLists := make([]map[string]interface{}, 0)
 	if nics != nil {
 		nicLists = make([]map[string]interface{}, len(nics))
@@ -38,9 +38,41 @@ func flattenNicList(nics []*v3.VMNicOutputStatus) []map[string]interface{} {
 				ipEndpoint := make(map[string]interface{})
 				ipEndpoint["ip"] = utils.StringValue(v1.IP)
 				ipEndpoint["type"] = utils.StringValue(v1.Type)
-				if ipEndpoint["type"] != "LEARNED" {
-					ipEndpointList = append(ipEndpointList, ipEndpoint)
-				}
+				ipEndpointList = append(ipEndpointList, ipEndpoint)
+			}
+			nic["ip_endpoint_list"] = ipEndpointList
+			nic["network_function_chain_reference"] = flattenReferenceValues(v.NetworkFunctionChainReference)
+
+			if v.SubnetReference != nil {
+				nic["subnet_uuid"] = utils.StringValue(v.SubnetReference.UUID)
+				nic["subnet_name"] = utils.StringValue(v.SubnetReference.Name)
+
+			}
+
+			nicLists[k] = nic
+		}
+	}
+
+	return nicLists
+}
+
+func flattenNicList(nics []*v3.VMNic) []map[string]interface{} {
+	nicLists := make([]map[string]interface{}, 0)
+	if nics != nil {
+		nicLists = make([]map[string]interface{}, len(nics))
+		for k, v := range nics {
+			nic := make(map[string]interface{})
+			nic["nic_type"] = utils.StringValue(v.NicType)
+			nic["uuid"] = utils.StringValue(v.UUID)
+			nic["network_function_nic_type"] = utils.StringValue(v.NetworkFunctionNicType)
+			nic["mac_address"] = utils.StringValue(v.MacAddress)
+			nic["model"] = utils.StringValue(v.Model)
+			var ipEndpointList []map[string]interface{}
+			for _, v1 := range v.IPEndpointList {
+				ipEndpoint := make(map[string]interface{})
+				ipEndpoint["ip"] = utils.StringValue(v1.IP)
+				ipEndpoint["type"] = utils.StringValue(v1.Type)
+				ipEndpointList = append(ipEndpointList, ipEndpoint)
 			}
 			nic["ip_endpoint_list"] = ipEndpointList
 			nic["network_function_chain_reference"] = flattenReferenceValues(v.NetworkFunctionChainReference)

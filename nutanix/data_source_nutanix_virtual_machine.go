@@ -614,7 +614,7 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	if err := flattenClusterReference(resp.Status.ClusterReference, d); err != nil {
 		return err
 	}
-	if err := d.Set("nic_list", flattenNicList(resp.Status.Resources.NicList)); err != nil {
+	if err := d.Set("nic_list", flattenNicListStatus(resp.Status.Resources.NicList)); err != nil {
 		return err
 	}
 	if err := d.Set("host_reference", flattenReferenceValues(resp.Status.Resources.HostReference)); err != nil {
