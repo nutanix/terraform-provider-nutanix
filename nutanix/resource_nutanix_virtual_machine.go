@@ -216,8 +216,7 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ip": {
-										Type: schema.TypeString,
-
+										Type:     schema.TypeString,
 										Computed: true,
 									},
 									"type": {
