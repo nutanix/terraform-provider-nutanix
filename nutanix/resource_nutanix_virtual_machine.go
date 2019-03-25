@@ -228,33 +228,30 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 						},
 						"network_function_chain_reference": {
 							Type:     schema.TypeMap,
-							Optional: true,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"kind": {
 										Type:     schema.TypeString,
-										Required: true,
+										Computed: true,
 									},
 									"name": {
 										Type:     schema.TypeString,
-										Optional: true,
 										Computed: true,
 									},
 									"uuid": {
 										Type:     schema.TypeString,
-										Required: true,
+										Computed: true,
 									},
 								},
 							},
 						},
 						"subnet_uuid": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"subnet_name": {
 							Type:     schema.TypeString,
-							Optional: true,
 							Computed: true,
 						},
 					},
