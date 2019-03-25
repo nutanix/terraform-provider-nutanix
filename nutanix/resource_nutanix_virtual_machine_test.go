@@ -133,9 +133,9 @@ func TestAccNutanixVirtualMachine_updateFields(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVirtualMachine_wiithSubnet(t *testing.T) {
+func TestAccNutanixVirtualMachine_WithSubnet(t *testing.T) {
 	r := acctest.RandInt()
-	resourceName := "nutanix_virtual_machine.vm1"
+	resourceName := "nutanix_virtual_machine.vm3"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -152,7 +152,7 @@ func TestAccNutanixVirtualMachine_wiithSubnet(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
 					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "categories.environment-terraform", "staging"),
-					resource.TestCheckResourceAttrSet(resourceName, "nic_list.0.ip_endpoint_list.0.ip"),
+					resource.TestCheckResourceAttrSet(resourceName, "nic_list_status.0.ip_endpoint_list.0.ip"),
 				),
 			},
 		},
@@ -374,10 +374,7 @@ func testAccNutanixVMConfigWithSubnet(r int) string {
 data "nutanix_clusters" "clusters" {}
 
 resource "nutanix_subnet" "sub" {
-  cluster_reference = {
-		kind = "cluster"
-		uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
+  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 
   # General Information for subnet
 	name        = "acctest-managed-%[1]d"
@@ -406,17 +403,14 @@ resource "nutanix_image" "cirros-034-disk" {
     description = "heres a tiny linux image, not an iso, but a real disk!"
 }
 
-resource "nutanix_virtual_machine" "vm1" {
+resource "nutanix_virtual_machine" "vm3" {
 	name = "test-dou-vm-%[1]d"
 	
 	categories {
 		environment-terraform = "staging"
 	}
 
-  cluster_reference = {
-	  kind = "cluster"
-	  uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-  }
+  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186
@@ -430,10 +424,7 @@ resource "nutanix_virtual_machine" "vm1" {
 	}]
 
 	nic_list = [{
-		subnet_reference = {
-			kind = "subnet"
-			uuid = "${nutanix_subnet.sub.id}"
-		}
+		subnet_uuid = "${nutanix_subnet.sub.id}"
 	}]
 }
 `, r)
