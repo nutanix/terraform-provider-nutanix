@@ -3,11 +3,9 @@ package nutanix
 import (
 	"strconv"
 
-	uuid "github.com/satori/go.uuid"
-
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-
 	"github.com/hashicorp/terraform/helper/schema"
+	uuid "github.com/satori/go.uuid"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func dataSourceNutanixClusters() *schema.Resource {

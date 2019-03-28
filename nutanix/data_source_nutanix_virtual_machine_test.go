@@ -31,13 +31,14 @@ func testAccVMDataSourceConfig(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
 
-output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+locals {
+		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 
 resource "nutanix_virtual_machine" "vm1" {
   name = "test-dou-%d"
-  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  cluster_uuid = "${local.cluster1}"
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186

@@ -770,16 +770,16 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 
 	//Wait for IP available
 	waitIPConf := &resource.StateChangeConf{
-		Pending:    []string{"WAITING"},
+		Pending:    []string{WAITING},
 		Target:     []string{"AVAILABLE"},
 		Refresh:    waitForIPRefreshFunc(conn, uuid),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
+		Timeout:    1 * time.Minute,
+		Delay:      3 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
 
 	if _, err := waitIPConf.WaitForState(); err != nil {
-		return fmt.Errorf("error waiting for vm (%s) to get IP Available: %s", uuid, err)
+		log.Printf("[WARN] could not get the IP for VM(%s): %s", uuid, err)
 	}
 
 	// Set terraform state id
@@ -1707,6 +1707,8 @@ func waitForIPRefreshFunc(client *v3.Client, vmUUID string) resource.StateRefres
 	return func() (interface{}, string, error) {
 		resp, err := client.V3.GetVM(vmUUID)
 
+		log.Printf("[DEBUG] GetVM Response %+v", resp)
+
 		if err != nil {
 			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 				return resp, ERROR, nil
@@ -1714,7 +1716,15 @@ func waitForIPRefreshFunc(client *v3.Client, vmUUID string) resource.StateRefres
 			return nil, "", err
 		}
 
-		if len(resp.Status.Resources.NicList) != 0 {
+		if resp.Status == nil {
+			return resp, WAITING, nil
+		}
+
+		if resp.Status.Resources == nil {
+			return resp, WAITING, nil
+		}
+
+		if resp.Status.Resources.NicList != nil && len(resp.Status.Resources.NicList) != 0 {
 			for _, v := range resp.Status.Resources.NicList {
 				if len(v.IPEndpointList) > 0 {
 					for _, v2 := range v.IPEndpointList {
@@ -1725,7 +1735,6 @@ func waitForIPRefreshFunc(client *v3.Client, vmUUID string) resource.StateRefres
 				}
 			}
 		}
-
-		return resp, "WAITING", nil
+		return resp, WAITING, nil
 	}
 }

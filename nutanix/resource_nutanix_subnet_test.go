@@ -2,11 +2,11 @@ package nutanix
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -14,7 +14,8 @@ import (
 const resourceNameSubnet = "nutanix_subnet.acctest-managed"
 
 func TestAccNutanixSubnet_basic(t *testing.T) {
-	r := acctest.RandIntRange(3500, 3900)
+	r := randIntBetween(31, 40)
+	log.Printf("[DEBUG] VLAN-ID: %d", r)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -39,7 +40,7 @@ func TestAccNutanixSubnet_basic(t *testing.T) {
 }
 
 func TestAccNutanixSubnet_Update(t *testing.T) {
-	r := acctest.RandIntRange(3500, 3900)
+	r := randIntBetween(41, 50)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -79,7 +80,7 @@ func TestAccNutanixSubnet_Update(t *testing.T) {
 }
 
 func TestAccNutanixSubnet_WithCategory(t *testing.T) {
-	r := acctest.RandIntRange(3500, 3900)
+	r := randIntBetween(51, 60)
 	resourceName := "nutanix_subnet.acctest-managed-categories"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -91,7 +92,7 @@ func TestAccNutanixSubnet_WithCategory(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixSubnetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.environment-terraform", "production"),
+					resource.TestCheckResourceAttr(resourceName, "categories.Environment", "Production"),
 				),
 			},
 			{
@@ -99,7 +100,7 @@ func TestAccNutanixSubnet_WithCategory(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixSubnetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.environment-terraform", "staging"),
+					resource.TestCheckResourceAttr(resourceName, "categories.Environment", "Staging"),
 				),
 			},
 			{
@@ -113,7 +114,7 @@ func TestAccNutanixSubnet_WithCategory(t *testing.T) {
 }
 
 func TestAccNutanixSubnet_withIpPoolListRanges(t *testing.T) {
-	r := acctest.RandIntRange(3500, 3900)
+	r := randIntBetween(61, 70)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -129,7 +130,7 @@ func TestAccNutanixSubnet_withIpPoolListRanges(t *testing.T) {
 }
 
 func TestAccNutanixSubnet_withIpPoolListRangesErrored(t *testing.T) {
-	r := acctest.RandIntRange(3500, 3900)
+	r := randIntBetween(71, 80)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -179,13 +180,14 @@ func testAccNutanixSubnetConfig(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
 
-output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+locals {
+		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 
 resource "nutanix_subnet" "acctest-managed" {
   # What cluster will this VLAN live on?
-  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  cluster_uuid = "${local.cluster1}"
 
 
   # General Information for subnet
@@ -214,13 +216,14 @@ func testAccNutanixSubnetConfigUpdate(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
 
-output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+locals {
+		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}" 
 }
 
 resource "nutanix_subnet" "acctest-managed" {
   # What cluster will this VLAN live on?
-  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  cluster_uuid = "${local.cluster1}"
 
 
   # General Information for subnet
@@ -254,13 +257,14 @@ func testAccNutanixSubnetConfigWithCategory(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
 
-output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+locals {
+		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}" 
 }
 
 resource "nutanix_subnet" "acctest-managed-categories" {
   # What cluster will this VLAN live on?
-  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  cluster_uuid = "${local.cluster1}"
 
 
   # General Information for subnet
@@ -282,7 +286,7 @@ resource "nutanix_subnet" "acctest-managed-categories" {
 	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
 
 	categories {
-		environment-terraform = "production"
+		Environment = "Production"
 	}
 }
 `, r)
@@ -292,13 +296,14 @@ func testAccNutanixSubnetConfigWithCategoryUpdate(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
 
-output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+locals {
+		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}" 
 }
 
 resource "nutanix_subnet" "acctest-managed-categories" {
   # What cluster will this VLAN live on?
-  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  cluster_uuid = "${local.cluster1}"
 
 
   # General Information for subnet
@@ -320,7 +325,7 @@ resource "nutanix_subnet" "acctest-managed-categories" {
 	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
 
 	categories {
-		environment-terraform = "staging"
+		Environment = "Staging"
 	}
 }
 `, r)
@@ -330,13 +335,14 @@ func testAccNutanixSubnetConfigWithIPPoolListRanges(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
 
-output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+locals {
+		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 
 resource "nutanix_subnet" "acctest-managed-categories" {
   # What cluster will this VLAN live on?
-  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  cluster_uuid = "${local.cluster1}"
 
 
   # General Information for subnet
@@ -369,13 +375,14 @@ func testAccNutanixSubnetConfigWithIPPoolListRangesErrored(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
 
-output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+locals {
+		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 
 resource "nutanix_subnet" "acctest-managed-categories" {
   # What cluster will this VLAN live on?
-  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  cluster_uuid = "${local.cluster1}"
 
 
   # General Information for subnet

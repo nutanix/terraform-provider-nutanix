@@ -29,7 +29,7 @@ func TestAccNutanixVirtualMachine_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
 					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.environment-terraform", "staging"),
+					resource.TestCheckResourceAttr(resourceName, "categories.Environment", "Staging"),
 				),
 			},
 			{
@@ -42,7 +42,7 @@ func TestAccNutanixVirtualMachine_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "2"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
 					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.environment-terraform", "production"),
+					resource.TestCheckResourceAttr(resourceName, "categories.Environment", "Production"),
 				),
 			},
 			{
@@ -106,7 +106,7 @@ func TestAccNutanixVirtualMachine_updateFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
 					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.environment-terraform", "staging"),
+					resource.TestCheckResourceAttr(resourceName, "categories.Environment", "Staging"),
 				),
 			},
 			{
@@ -120,7 +120,7 @@ func TestAccNutanixVirtualMachine_updateFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "2"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "2"),
 					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.environment-terraform", "production"),
+					resource.TestCheckResourceAttr(resourceName, "categories.Environment", "Production"),
 				),
 			},
 			{
@@ -134,7 +134,7 @@ func TestAccNutanixVirtualMachine_updateFields(t *testing.T) {
 }
 
 func TestAccNutanixVirtualMachine_WithSubnet(t *testing.T) {
-	r := acctest.RandInt()
+	r := acctest.RandIntRange(101, 110)
 	resourceName := "nutanix_virtual_machine.vm3"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -151,7 +151,7 @@ func TestAccNutanixVirtualMachine_WithSubnet(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
 					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.environment-terraform", "staging"),
+					resource.TestCheckResourceAttr(resourceName, "categories.Environment", "Staging"),
 					resource.TestCheckResourceAttrSet(resourceName, "nic_list_status.0.ip_endpoint_list.0.ip"),
 				),
 			},
@@ -200,12 +200,15 @@ func testAccCheckNutanixVirtualMachineDestroy(s *terraform.State) error {
 func testAccNutanixVMConfig(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
-output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+
+locals {
+		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
+
 resource "nutanix_virtual_machine" "vm1" {
   name = "test-dou-%d"
-  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  cluster_uuid = "${local.cluster1}"
   
   num_vcpus_per_socket = 1
   num_sockets          = 1
@@ -213,7 +216,7 @@ resource "nutanix_virtual_machine" "vm1" {
 
 
 	categories {
-		environment-terraform = "staging"
+		Environment = "Staging"
 	}
 }
 `, r)
@@ -223,8 +226,9 @@ func testAccNutanixVMConfigWithDisk(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
 
-output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+locals {
+		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 
 resource "nutanix_image" "cirros-034-disk" {
@@ -235,7 +239,7 @@ resource "nutanix_image" "cirros-034-disk" {
 
 resource "nutanix_virtual_machine" "vm1" {
   name = "test-dou-vm-%[1]d"
-  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  cluster_uuid = "${local.cluster1}"
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186
@@ -267,9 +271,11 @@ func testAccNutanixVMConfigWithDiskUpdate(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
 
-output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+locals {
+		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
+
 
 resource "nutanix_image" "cirros-034-disk" {
     name        = "test-image-dou-%[1]d"
@@ -279,7 +285,7 @@ resource "nutanix_image" "cirros-034-disk" {
 
 resource "nutanix_virtual_machine" "vm1" {
   name = "test-dou-vm-%[1]d"
-  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  cluster_uuid = "${local.cluster1}"
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186
@@ -308,19 +314,20 @@ func testAccNutanixVMConfigUpdate(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
 
-
-output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+locals {
+		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
+
 resource "nutanix_virtual_machine" "vm1" {
   name = "test-dou-%d"
-  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  cluster_uuid = "${local.cluster1}"
   num_vcpus_per_socket = 1
   num_sockets          = 2
   memory_size_mib      = 186
 
 	categories {
-		environment-terraform = "production"
+		Environment = "Production"
 	}
 }
 `, r)
@@ -329,19 +336,21 @@ resource "nutanix_virtual_machine" "vm1" {
 func testAccNutanixVMConfigUpdatedFields(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
-output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+
+locals {
+		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 resource "nutanix_virtual_machine" "vm2" {
   name = "test-dou-%d"
-  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  cluster_uuid = "${local.cluster1}"
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186
 
 
 	categories {
-		environment-terraform = "staging"
+		Environment = "Staging"
 	}
 }
 `, r)
@@ -351,19 +360,21 @@ func testAccNutanixVMConfigUpdatedFieldsUpdated(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
 
-
-output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+locals {
+		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
+
+
 resource "nutanix_virtual_machine" "vm2" {
   name = "test-dou-%d-updated"
-  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  cluster_uuid = "${local.cluster1}"
   num_vcpus_per_socket = 2
   num_sockets          = 2
   memory_size_mib      = 256
 
 	categories {
-		environment-terraform = "production"
+		Environment = "Production"
 	}
 }
 `, r)
@@ -373,13 +384,18 @@ func testAccNutanixVMConfigWithSubnet(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
 
+locals {
+		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}" 
+}
+
 resource "nutanix_subnet" "sub" {
-  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  cluster_uuid = "${local.cluster1}"
 
   # General Information for subnet
-	name        = "acctest-managed-%[1]d"
+	name        = "terraform-vm-with-subnet-%[1]d"
 	description = "Description of my unit test VLAN"
-  vlan_id     = 50
+  vlan_id     = %[1]d
 	subnet_type = "VLAN"
 
   # Provision a Managed L3 Network
@@ -407,10 +423,10 @@ resource "nutanix_virtual_machine" "vm3" {
 	name = "test-dou-vm-%[1]d"
 	
 	categories {
-		environment-terraform = "staging"
+		Environment = "Staging"
 	}
 
-  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  cluster_uuid = "${local.cluster1}"
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186
@@ -426,6 +442,10 @@ resource "nutanix_virtual_machine" "vm3" {
 	nic_list = [{
 		subnet_uuid = "${nutanix_subnet.sub.id}"
 	}]
+}
+
+output "ip_address" {
+  value = "${lookup(nutanix_virtual_machine.vm3.nic_list_status.0.ip_endpoint_list[0], "ip")}"
 }
 `, r)
 }

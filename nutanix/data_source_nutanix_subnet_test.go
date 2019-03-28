@@ -5,7 +5,6 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
@@ -15,7 +14,7 @@ func TestAccNutanixSubnetDataSource_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetDataSourceConfig(acctest.RandIntRange(0, 500)),
+				Config: testAccSubnetDataSourceConfig(randIntBetween(1, 10)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.nutanix_subnet.test", "prefix_length", "24"),
@@ -34,7 +33,7 @@ func TestAccNutanixSubnetDataSource_name(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetDataSourceConfigName(acctest.RandIntRange(0, 500)),
+				Config: testAccSubnetDataSourceConfigName(randIntBetween(11, 20)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.nutanix_subnet.test", "prefix_length", "24"),
@@ -52,7 +51,7 @@ func TestAccNutanixSubnetDataSource_conflicts(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSubnetDataSourceConfigNameDuplicated(acctest.RandIntRange(0, 500)),
+				Config:      testAccSubnetDataSourceConfigNameDuplicated(randIntBetween(21, 30)),
 				ExpectError: regexp.MustCompile("conflicts with"),
 			},
 		},
@@ -63,13 +62,14 @@ func testAccSubnetDataSourceConfig(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
 
-output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+locals {
+	cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+	? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 
 resource "nutanix_subnet" "test" {
 	name = "dou_vlan0_test_%d"
-	cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+	cluster_uuid = "${local.cluster1}"
 
 	vlan_id = %d
 	subnet_type = "VLAN"
@@ -99,13 +99,14 @@ func testAccSubnetDataSourceConfigName(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
 
-output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+locals {
+	cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+	? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 
 resource "nutanix_subnet" "test" {
 	name = "dou_vlan0_test_%d"
-	cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+	cluster_uuid = "${local.cluster1}"
 	vlan_id = %d
 	subnet_type = "VLAN"
 
@@ -134,13 +135,14 @@ func testAccSubnetDataSourceConfigNameDuplicated(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
 
-output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+locals {
+	cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+	? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 }
 
 resource "nutanix_subnet" "test" {
 	name = "dou_vlan0_test_%d"
-	cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+	cluster_uuid = "${local.cluster1}"
 	vlan_id = %d
 	subnet_type = "VLAN"
 
@@ -161,7 +163,7 @@ resource "nutanix_subnet" "test" {
 
 resource "nutanix_subnet" "test1" {
 	name = "${nutanix_subnet.test.name}"
-	cluster_uuid= "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+	cluster_uuid= "${data.nutanix_clusters.clusters.entities.1.metadata.uuid}"
 	vlan_id = %d
 	subnet_type = "VLAN"
 	prefix_length = 24
