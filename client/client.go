@@ -11,6 +11,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 const (
@@ -141,13 +143,13 @@ func (c *Client) OnRequestCompleted(rc RequestCompletionCallback) {
 // Do performs request passed
 func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error {
 	req = req.WithContext(ctx)
-
+	utils.DebugRequest(req)
 	resp, err := c.client.Do(req)
-
 	if err != nil {
 		return err
 	}
 
+	utils.DebugResponse(resp)
 	defer func() {
 		if rerr := resp.Body.Close(); err == nil {
 			err = rerr
