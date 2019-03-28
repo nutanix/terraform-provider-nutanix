@@ -22,6 +22,8 @@ const (
 	DELETED = "DELETED"
 	// ERROR ..
 	ERROR = "ERROR"
+	// WAITING ...
+	WAITING = "WAITING"
 )
 
 func resourceNutanixImage() *schema.Resource {
