@@ -12,11 +12,12 @@ const Version = "3.1"
 
 // Config ...
 type Config struct {
-	Endpoint string
-	Username string
-	Password string
-	Port     string
-	Insecure bool
+	Endpoint    string
+	Username    string
+	Password    string
+	Port        string
+	Insecure    bool
+	WaitTimeout int64
 }
 
 // Client ...
@@ -36,13 +37,14 @@ func (c *Config) Client() (*Client, error) {
 		return nil, err
 	}
 	client := &Client{
-		API: v3,
+		API:         v3,
+		WaitTimeout: c.WaitTimeout,
 	}
-
 	return client, nil
 }
 
 // Client represents the nutanix API client
 type Client struct {
-	API *v3.Client
+	API         *v3.Client
+	WaitTimeout int64
 }
