@@ -1,6 +1,8 @@
 package nutanix
 
 import (
+	"log"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
 )
@@ -41,6 +43,12 @@ func Provider() terraform.ResourceProvider {
 				Required:    true,
 				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_ENDPOINT", nil),
 				Description: descriptions["endpoint"],
+			},
+			"wait_timeout": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_WAIT_TIMEOUT", nil),
+				Description: descriptions["wait_timeout"],
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
@@ -85,18 +93,23 @@ func init() {
 			"note, this is never the data services VIP, and should not be an\n" +
 			"individual CVM address, as this would cause calls to fail during\n" +
 			"cluster lifecycle management operations, such as AOS upgrades.",
+
+		"wait_timeout": "Set if you know that the creation o update of a resource may take long time (minutes)",
 	}
 }
 
 // This function used to fetch the configuration params given to our provider which
 // we will use to initialize a dummy client that interacts with API.
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
+	log.Printf("[DEBUG] config wait_timeout %d", d.Get("wait_timeout").(int))
+
 	config := Config{
-		Endpoint: d.Get("endpoint").(string),
-		Username: d.Get("username").(string),
-		Password: d.Get("password").(string),
-		Insecure: d.Get("insecure").(bool),
-		Port:     d.Get("port").(string),
+		Endpoint:    d.Get("endpoint").(string),
+		Username:    d.Get("username").(string),
+		Password:    d.Get("password").(string),
+		Insecure:    d.Get("insecure").(bool),
+		Port:        d.Get("port").(string),
+		WaitTimeout: int64(d.Get("wait_timeout").(int)),
 	}
 
 	return config.Client()
