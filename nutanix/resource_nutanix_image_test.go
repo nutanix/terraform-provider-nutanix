@@ -70,7 +70,7 @@ func TestAccNutanixImage_Update(t *testing.T) {
 	})
 }
 
-func TestAccNutanixImageWithCategories(t *testing.T) {
+func TestAccNutanixImage_WithCategories(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "nutanix_image.acctest-test-categories"
 
@@ -101,6 +101,25 @@ func TestAccNutanixImageWithCategories(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNutanixImage_WithLargeImageURL(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixImageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixImageConfigWithLargeImageURL(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("Ubuntu-%d-server", rInt)),
+					testAccCheckNutanixImageExists(resourceName),
+				),
 			},
 		},
 	})
@@ -284,6 +303,20 @@ resource "nutanix_image" "acctest-test-categories" {
 
   source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
 
+}
+`, r)
+}
+
+func testAccNutanixImageConfigWithLargeImageURL(r int) string {
+	return fmt.Sprintf(`
+provider "nutanix" {
+	wait_timeout = 50
+}
+
+resource "nutanix_image" "acctest-test" {
+  name        = "Ubuntu-%d-server"
+  description = "Ubuntu Server"
+  source_uri  = "http://releases.ubuntu.com/18.04/ubuntu-18.04.2-live-server-amd64.iso"
 }
 `, r)
 }
