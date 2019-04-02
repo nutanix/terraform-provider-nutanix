@@ -90,15 +90,12 @@ type VMBootConfig struct {
 
 // NutanixGuestToolsSpec Information regarding Nutanix Guest Tools.
 type NutanixGuestToolsSpec struct {
-
-	// Application names that are enabled.
-	EnabledCapabilityList []*string `json:"enabled_capability_list,omitempty"`
-
-	// Desired mount state of Nutanix Guest Tools ISO.
-	IsoMountState *string `json:"iso_mount_state,omitempty"`
-
-	// Nutanix Guest Tools is enabled or not.
-	State *string `json:"state,omitempty"`
+	State                 *string           `json:"state,omitempty"`                   // Nutanix Guest Tools is enabled or not.
+	Version               *string           `json:"version,omitempty"`                 // Version of Nutanix Guest Tools installed on the VM.
+	NgtState              *string           `json:"ngt_state,omitempty"`               //Nutanix Guest Tools installed or not.
+	Credentials           map[string]string `json:"credentials,omitempty"`             //Credentials to login server
+	IsoMountState         *string           `json:"iso_mount_state,omitempty"`         // Desired mount state of Nutanix Guest Tools ISO.
+	EnabledCapabilityList []*string         `json:"enabled_capability_list,omitempty"` // Application names that are enabled.
 }
 
 // GuestToolsSpec Information regarding guest tools.
@@ -351,33 +348,28 @@ type VMNicOutputStatus struct {
 
 // NutanixGuestToolsStatus Information regarding Nutanix Guest Tools.
 type NutanixGuestToolsStatus struct {
-
 	// Version of Nutanix Guest Tools available on the cluster.
 	AvailableVersion *string `json:"available_version,omitempty"`
-
-	// Application names that are enabled.
-	EnabledCapabilityList []*string `json:"enabled_capability_list,omitempty"`
-
-	// Version of the operating system on the VM.
-	GuestOsVersion *string `json:"guest_os_version,omitempty"`
-
-	// Communication from VM to CVM is active or not.
-	IsReachable *bool `json:"is_reachable,omitempty"`
-
+	//Nutanix Guest Tools installed or not.
+	NgtState *string `json:"ngt_state,omitempty"`
 	// Desired mount state of Nutanix Guest Tools ISO.
 	IsoMountState *string `json:"iso_mount_state,omitempty"`
-
 	// Nutanix Guest Tools is enabled or not.
 	State *string `json:"state,omitempty"`
-
 	// Version of Nutanix Guest Tools installed on the VM.
 	Version *string `json:"version,omitempty"`
-
-	// Whether VM mobility drivers are installed in the VM.
-	VMMobilityDriversInstalled *bool `json:"vm_mobility_drivers_installed,omitempty"`
-
+	// Application names that are enabled.
+	EnabledCapabilityList []*string `json:"enabled_capability_list,omitempty"`
+	//Credentials to login server
+	Credentials map[string]string `json:"credentials,omitempty"`
+	// Version of the operating system on the VM.
+	GuestOsVersion *string `json:"guest_os_version,omitempty"`
 	// Whether the VM is configured to take VSS snapshots through NGT.
 	VSSSnapshotCapable *bool `json:"vss_snapshot_capable,omitempty"`
+	// Communication from VM to CVM is active or not.
+	IsReachable *bool `json:"is_reachable,omitempty"`
+	// Whether VM mobility drivers are installed in the VM.
+	VMMobilityDriversInstalled *bool `json:"vm_mobility_drivers_installed,omitempty"`
 }
 
 // GuestToolsStatus Information regarding guest tools.

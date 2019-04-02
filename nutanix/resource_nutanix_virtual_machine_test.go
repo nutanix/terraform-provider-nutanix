@@ -265,7 +265,7 @@ locals {
 }
 
 resource "nutanix_image" "cirros-034-disk" {
-    name        = "test-image-dou-%[1]d"
+    name        = "test-image-dou-vm-create-%[1]d"
     source_uri  = "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
     description = "heres a tiny linux image, not an iso, but a real disk!"
 }

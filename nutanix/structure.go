@@ -1,6 +1,9 @@
 package nutanix
 
 import (
+	"strconv"
+
+	"github.com/hashicorp/terraform/helper/schema"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -176,19 +179,37 @@ func setDiskList(disk []*v3.VMDisk, hasCloudInit *v3.GuestCustomizationStatus) [
 	return diskList
 }
 
-func setNutanixGuestTools(guest *v3.GuestToolsStatus) map[string]interface{} {
+func flattenNutanixGuestTools(d *schema.ResourceData, guest *v3.GuestToolsStatus) error {
 	nutanixGuestTools := make(map[string]interface{})
-	if guest != nil {
+	ngtCredentials := make(map[string]string)
+	ngtEnabledCapabilityList := make([]string, 0)
+
+	if guest != nil && guest.NutanixGuestTools != nil {
 		tools := guest.NutanixGuestTools
+		ngtCredentials = tools.Credentials
+		ngtEnabledCapabilityList = utils.StringValueSlice(tools.EnabledCapabilityList)
+
 		nutanixGuestTools["available_version"] = utils.StringValue(tools.AvailableVersion)
 		nutanixGuestTools["iso_mount_state"] = utils.StringValue(tools.IsoMountState)
+		nutanixGuestTools["ngt_state"] = utils.StringValue(tools.NgtState)
 		nutanixGuestTools["state"] = utils.StringValue(tools.State)
 		nutanixGuestTools["version"] = utils.StringValue(tools.Version)
 		nutanixGuestTools["guest_os_version"] = utils.StringValue(tools.GuestOsVersion)
-		nutanixGuestTools["enabled_capability_list"] = utils.StringValueSlice(tools.EnabledCapabilityList)
-		nutanixGuestTools["vss_snapshot_capable"] = utils.BoolValue(tools.VSSSnapshotCapable)
-		nutanixGuestTools["is_reachable"] = utils.BoolValue(tools.IsReachable)
-		nutanixGuestTools["vm_mobility_drivers_installed"] = utils.BoolValue(tools.VMMobilityDriversInstalled)
+		nutanixGuestTools["vss_snapshot_capable"] = strconv.FormatBool(utils.BoolValue(tools.VSSSnapshotCapable))
+		nutanixGuestTools["is_reachable"] = strconv.FormatBool(utils.BoolValue(tools.IsReachable))
+		nutanixGuestTools["vm_mobility_drivers_installed"] = strconv.FormatBool(utils.BoolValue(tools.VMMobilityDriversInstalled))
 	}
-	return nutanixGuestTools
+
+	if err := d.Set("ngt_enabled_capability_list", ngtEnabledCapabilityList); err != nil {
+		return err
+	}
+
+	if err := d.Set("ngt_credentials", ngtCredentials); err != nil {
+		return err
+	}
+
+	if err := d.Set("nutanix_guest_tools", nutanixGuestTools); err != nil {
+		return err
+	}
+	return nil
 }
