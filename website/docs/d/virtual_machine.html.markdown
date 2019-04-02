@@ -63,6 +63,8 @@ The following attributes are exported:
 * `guest_os_id`: - Guest OS Identifier. For ESX, refer to VMware documentation [link](https://www.vmware.com/support/developer/converter-sdk/conv43_apireference/vim.vm.GuestOsDescriptor.GuestOsIdentifier.html) for the list of guest OS identifiers.
 * `power_state`: - The current or desired power state of the VM. (Options : ON , OFF)
 * `nutanix_guest_tools`: - Information regarding Nutanix Guest Tools.
+* `ngt_credentials`: - Credentials to login server.
+* `ngt_enabled_capability_list` - Application names that are enabled.
 * `num_vcpus_per_socket`: - Number of vCPUs per socket.
 * `num_sockets`: - Number of vCPU sockets.
 * `gpu_list`: - GPUs attached to the VM.
@@ -72,12 +74,12 @@ The following attributes are exported:
 * `boot_device_disk_address`: - Address of disk to boot from.
 * `boot_device_mac_address`: - MAC address of nic to boot from.
 * `hardware_clock_timezone`: - VM's hardware clock timezone in IANA TZDB format (America/Los_Angeles).
-* `guest_customization_cloud_init_user_data`: - (Optional) The contents of the user_data configuration for cloud-init. This can be formatted as YAML, JSON, or could be a shell script. The value must be base64 encoded.
-* `guest_customization_cloud_init_meta_data` - (Optional) The contents of the meta_data configuration for cloud-init. This can be formatted as YAML or JSON. The value must be base64 encoded.
+* `guest_customization_cloud_init_user_data`: - The contents of the user_data configuration for cloud-init. This can be formatted as YAML, JSON, or could be a shell script. The value must be base64 encoded.
+* `guest_customization_cloud_init_meta_data` - The contents of the meta_data configuration for cloud-init. This can be formatted as YAML or JSON. The value must be base64 encoded.
 * `guest_customization_is_overridable`: - Flag to allow override of customization by deployer.
-* `guest_customization_cloud_init_custom_key_values`: - (Optional) Generic key value pair used for custom attributes in cloud init.
+* `guest_customization_cloud_init_custom_key_values`: - Generic key value pair used for custom attributes in cloud init.
 * `guest_customization_sysprep`: - VM guests may be customized at boot time using one of several different methods. Currently, cloud-init w/ ConfigDriveV2 (for Linux VMs) and Sysprep (for Windows VMs) are supported. Only ONE OF sysprep or cloud_init should be provided. Note that guest customization can currently only be set during VM creation. Attempting to change it after creation will result in an error. Additional properties can be specified. For example - in the context of VM template creation if \"override_script\" is set to \"True\" then the deployer can upload their own custom script.
-* `guest_customization_sysrep_custom_key_values`: - (Optional) Generic key value pair used for custom attributes in sysrep.
+* `guest_customization_sysrep_custom_key_values`: - Generic key value pair used for custom attributes in sysrep.
 * `should_fail_on_script_failure`: -  Extra configs related to power state transition. Indicates whether to abort ngt shutdown/reboot if script fails.
 * `enable_script_exec`: - Extra configs related to power state transition. Indicates whether to execute set script before ngt shutdown/reboot.
 * `power_state_mechanism`: - Indicates the mechanism guiding the VM power state transition. Currently used for the transition to \"OFF\" state. Power state mechanism (ACPI/GUEST/HARD).
@@ -140,12 +142,12 @@ The gpu_list attribute supports the following:
 
 The nutanix_guest_tools attribute supports the following:
 
-* `available_version`: - Version of Nutanix Guest Tools available on the cluster.
-* `iso_mount_state`: - (Optioinal) Desired mount state of Nutanix Guest Tools ISO.
 * `state`: - Nutanix Guest Tools is enabled or not.
+* `ngt_state`: - Nutanix Guest Tools is enabled or not.
+* `iso_mount_state`: - Desired mount state of Nutanix Guest Tools ISO.
 * `version`: - Version of Nutanix Guest Tools installed on the VM.
+* `available_version`: - Version of Nutanix Guest Tools available on the cluster.
 * `guest_os_version`: - Version of the operating system on the VM.
-* `enabled_capability_list`: - Application names that are enabled.
 * `vss_snapshot_capable`: - Whether the VM is configured to take VSS snapshots through NGT.
 * `is_reachable`: - Communication from VM to CVM is active or not.
 * `vm_mobility_drivers_installed`: - Whether VM mobility drivers are installed in the VM.

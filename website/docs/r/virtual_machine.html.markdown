@@ -64,6 +64,8 @@ The following arguments are supported:
 * `guest_os_id`: - (Optional) Guest OS Identifier. For ESX, refer to VMware documentation [link](https://www.vmware.com/support/developer/converter-sdk/conv43_apireference/vim.vm.GuestOsDescriptor.GuestOsIdentifier.html) for the list of guest OS identifiers.
 * `power_state`: - (Optional) The current or desired power state of the VM. (Options : ON , OFF)
 * `nutanix_guest_tools`: - (Optional) Information regarding Nutanix Guest Tools.
+* `ngt_credentials`: - (Ooptional) Credentials to login server.
+* `ngt_enabled_capability_list` - (Optional) Application names that are enabled.
 * `num_vcpus_per_socket`: - (Optional) Number of vCPUs per socket.
 * `num_sockets`: - (Optional) Number of vCPU sockets.
 * `gpu_list`: - (Optional) GPUs attached to the VM.
@@ -136,12 +138,12 @@ The gpu_list attribute supports the following:
 
 The nutanix_guest_tools attribute supports the following:
 
-* `available_version`: - (ReadOnly) Version of Nutanix Guest Tools available on the cluster.
-* `iso_mount_state`: - (Optioinal) Desired mount state of Nutanix Guest Tools ISO.
 * `state`: - (Optional) Nutanix Guest Tools is enabled or not.
+* `ngt_state`: - (Optional) Nutanix Guest Tools is enabled or not.
+* `iso_mount_state`: - (Optional) Desired mount state of Nutanix Guest Tools ISO.
 * `version`: - (ReadOnly) Version of Nutanix Guest Tools installed on the VM.
+* `available_version`: - (ReadOnly) Version of Nutanix Guest Tools available on the cluster.
 * `guest_os_version`: - (ReadOnly) Version of the operating system on the VM.
-* `enabled_capability_list`: - (Optional) Application names that are enabled.
 * `vss_snapshot_capable`: - (ReadOnly) Whether the VM is configured to take VSS snapshots through NGT.
 * `is_reachable`: - (ReadOnly) Communication from VM to CVM is active or not.
 * `vm_mobility_drivers_installed`: - (ReadOnly) Whether VM mobility drivers are installed in the VM.
