@@ -364,8 +364,19 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"available_version": {
+						"state": {
 							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"ngt_state": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"version": {
+							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 						"iso_mount_state": {
@@ -373,12 +384,7 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"state": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"version": {
+						"available_version": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -386,26 +392,31 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"enabled_capability_list": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
 						"vss_snapshot_capable": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"is_reachable": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"vm_mobility_drivers_installed": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
+			},
+			"ngt_credentials": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+			},
+			"ngt_enabled_capability_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"num_vcpus_per_socket": {
 				Type:     schema.TypeInt,
@@ -855,7 +866,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	if err := d.Set("host_reference", flattenReferenceValues(resp.Status.Resources.HostReference)); err != nil {
 		return fmt.Errorf("error setting host_reference for Virtual Machine %s: %s", d.Id(), err)
 	}
-	if err := d.Set("nutanix_guest_tools", setNutanixGuestTools(resp.Status.Resources.GuestTools)); err != nil {
+	if err := flattenNutanixGuestTools(d, resp.Status.Resources.GuestTools); err != nil {
 		return fmt.Errorf("error setting nutanix_guest_tools for Virtual Machine %s: %s", d.Id(), err)
 	}
 	if err := d.Set("gpu_list", flattenGPUList(resp.Status.Resources.GpuList)); err != nil {
@@ -1122,19 +1133,10 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		res.SerialPortList = expandSerialPortList(d)
 	}
 
-	if d.HasChange("nutanix_guest_tools") {
-		_, n := d.GetChange("nutanix_guest_tools")
-		ngt := n.(map[string]interface{})
-
-		tool := &v3.NutanixGuestToolsSpec{}
-		tool.IsoMountState = validateMapStringValue(ngt, "iso_mount_state")
-		tool.State = validateMapStringValue(ngt, "state")
-
-		if val, ok2 := ngt["enabled_capability_list"]; ok2 && val.([]interface{}) != nil {
-			tool.EnabledCapabilityList = expandStringList(val.([]interface{}))
-		}
-		guestTool.NutanixGuestTools = tool
+	if d.HasChange("nutanix_guest_tools") || d.HasChange("ngt_credentials") || d.HasChange("ngt_enabled_capability_list") {
+		res.GuestTools = expandNGT(d)
 	}
+
 	if d.HasChange("gpu_list") {
 		res.GpuList = expandGPUList(d)
 	}
@@ -1376,20 +1378,8 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 
 	vm.NicList = expandNicList(d)
 	vm.GpuList = expandGPUList(d)
+	vm.GuestTools = expandNGT(d)
 
-	if v, ok := d.GetOk("nutanix_guest_tools"); ok {
-		ngt := v.(map[string]interface{})
-
-		if val, ok2 := ngt["iso_mount_state"]; ok2 {
-			vm.GuestTools.NutanixGuestTools.IsoMountState = utils.StringPtr(val.(string))
-		}
-		if val, ok2 := ngt["state"]; ok2 {
-			vm.GuestTools.NutanixGuestTools.State = utils.StringPtr(val.(string))
-		}
-		if val, ok2 := ngt["enabled_capability_list"]; ok2 {
-			vm.GuestTools.NutanixGuestTools.EnabledCapabilityList = expandStringList(val.([]interface{}))
-		}
-	}
 	if v, ok := d.GetOk("num_vcpus_per_socket"); ok {
 		vm.NumVcpusPerSocket = utils.Int64Ptr(int64(v.(int)))
 	}
@@ -1671,6 +1661,42 @@ func expandGPUList(d *schema.ResourceData) []*v3.VMGpu {
 		}
 	}
 	return nil
+}
+
+func expandNGT(d *schema.ResourceData) *v3.GuestToolsSpec {
+	guestTools := &v3.GuestToolsSpec{
+		NutanixGuestTools: &v3.NutanixGuestToolsSpec{},
+	}
+
+	if v, ok := d.GetOk("nutanix_guest_tools"); ok {
+		ngt := v.(map[string]interface{})
+		if val, ok2 := ngt["state"]; ok2 {
+			guestTools.NutanixGuestTools.State = utils.StringPtr(val.(string))
+		}
+		if val, ok2 := ngt["version"]; ok2 {
+			guestTools.NutanixGuestTools.Version = utils.StringPtr(val.(string))
+		}
+		if val, ok2 := ngt["ngt_state"]; ok2 {
+			guestTools.NutanixGuestTools.NgtState = utils.StringPtr(val.(string))
+		}
+		if val, ok2 := ngt["iso_mount_state"]; ok2 {
+			guestTools.NutanixGuestTools.IsoMountState = utils.StringPtr(val.(string))
+		}
+	}
+
+	if val, ok2 := d.GetOk("ngt_enabled_capability_list"); ok2 {
+		guestTools.NutanixGuestTools.EnabledCapabilityList = expandStringList(val.([]interface{}))
+	}
+
+	if val, ok := d.GetOk("ngt_credentials"); ok {
+		guestTools.NutanixGuestTools.Credentials = val.(map[string]string)
+	}
+
+	if reflect.DeepEqual(guestTools.NutanixGuestTools, &v3.NutanixGuestToolsSpec{}) {
+		return nil
+	}
+
+	return guestTools
 }
 
 func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse) {
