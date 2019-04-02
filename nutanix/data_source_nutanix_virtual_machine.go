@@ -284,6 +284,10 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"ngt_state": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"iso_mount_state": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -300,25 +304,29 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"enabled_capability_list": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
 						"vss_snapshot_capable": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeString, //Bool
 							Computed: true,
 						},
 						"is_reachable": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeString, //Bool
 							Computed: true,
 						},
 						"vm_mobility_drivers_installed": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeString, //Bool
 							Computed: true,
 						},
 					},
 				},
+			},
+			"ngt_enabled_capability_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"ngt_credentials": {
+				Type:     schema.TypeMap,
+				Computed: true,
 			},
 			"num_vcpus_per_socket": {
 				Type:     schema.TypeInt,
@@ -637,7 +645,7 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	if err := d.Set("host_reference", flattenReferenceValues(resp.Status.Resources.HostReference)); err != nil {
 		return err
 	}
-	if err := d.Set("nutanix_guest_tools", setNutanixGuestTools(resp.Status.Resources.GuestTools)); err != nil {
+	if err := flattenNutanixGuestTools(d, resp.Status.Resources.GuestTools); err != nil {
 		return err
 	}
 	if err := d.Set("gpu_list", flattenGPUList(resp.Status.Resources.GpuList)); err != nil {
