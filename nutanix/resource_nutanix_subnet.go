@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
-	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -322,9 +322,7 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 		spec.ClusterReference = buildReference(clusterUUID.(string), "cluster")
 	}
 
-	if err := getSubnetResources(d, subnet); err != nil {
-		return fmt.Errorf("error retrieving Nutanix Subnet resources %+v", err)
-	}
+	getSubnetResources(d, subnet)
 
 	spec.Description = utils.StringPtr(d.Get("description").(string))
 
@@ -704,7 +702,7 @@ func resourceNutanixSubnetExists(conn *v3.Client, name string) (*string, error) 
 	return subnetUUID, nil
 }
 
-func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) error {
+func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) {
 
 	ip := &v3.IPConfig{}
 	dhcpo := &v3.DHCPOptions{}
@@ -790,6 +788,4 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) erro
 	ip.DHCPOptions = dhcpo
 
 	subnet.IPConfig = ip
-
-	return nil
 }

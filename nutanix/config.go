@@ -34,13 +34,13 @@ func (c *Config) Client() (*Client, error) {
 		ProxyURL: c.ProxyURL,
 	}
 
-	v3, err := v3.NewV3Client(configCreds)
+	v3Client, err := v3.NewV3Client(configCreds)
 	if err != nil {
 		return nil, err
 	}
 	client := &Client{
-		API:         v3,
 		WaitTimeout: c.WaitTimeout,
+		API:         v3Client,
 	}
 	return client, nil
 }

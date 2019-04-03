@@ -37,6 +37,7 @@ func TestNewV3Client(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := NewV3Client(tt.args.credentials)
 			if (err != nil) != tt.wantErr {

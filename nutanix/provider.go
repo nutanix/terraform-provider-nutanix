@@ -9,6 +9,25 @@ import (
 
 // Provider function returns the object that implements the terraform.ResourceProvider interface, specifically a schema.Provider
 func Provider() terraform.ResourceProvider {
+	// defines descriptions for ResourceProvider schema definitions
+	descriptions := map[string]string{
+		"username": "User name for Nutanix Prism. Could be\n" +
+			"local cluster auth (e.g. 'admin') or directory auth.",
+
+		"password": "Password for provided user name.",
+
+		"insecure": "Explicitly allow the provider to perform \"insecure\" SSL requests. If omitted," +
+			"default value is `false`",
+
+		"port": "Port for Nutanix Prism.",
+
+		"wait_timeout": "Set if you know that the creation o update of a resource may take long time (minutes)",
+
+		"endpoint": "URL for Nutanix Prism (e.g IP or FQDN for cluster VIP\n" +
+			"note, this is never the data services VIP, and should not be an\n" +
+			"individual CVM address, as this would cause calls to fail during\n" +
+			"cluster lifecycle management operations, such as AOS upgrades.",
+	}
 
 	// Nutanix provider schema
 	return &schema.Provider{
@@ -77,32 +96,6 @@ func Provider() terraform.ResourceProvider {
 			// "nutanix_volume_group":          resourceNutanixVolumeGroup(),
 		},
 		ConfigureFunc: providerConfigure,
-	}
-}
-
-// defines descriptions for ResourceProvider schema definitions
-var descriptions map[string]string
-
-func init() {
-	descriptions = map[string]string{
-		"username": "User name for Nutanix Prism. Could be\n" +
-			"local cluster auth (e.g. 'admin') or directory auth.",
-
-		"password": "Password for provided user name.",
-
-		"insecure": "Explicitly allow the provider to perform \"insecure\" SSL requests. If omitted," +
-			"default value is `false`",
-
-		"port": "Port for Nutanix Prism.",
-
-		"endpoint": "URL for Nutanix Prism (e.g IP or FQDN for cluster VIP\n" +
-			"note, this is never the data services VIP, and should not be an\n" +
-			"individual CVM address, as this would cause calls to fail during\n" +
-			"cluster lifecycle management operations, such as AOS upgrades.",
-
-		"wait_timeout": "Set if you know that the creation o update of a resource may take long time (minutes)",
-
-		"proxy_url": "Use this to connect Nutanix API through the proxy server.",
 	}
 }
 
