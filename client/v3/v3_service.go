@@ -20,21 +20,21 @@ type Operations struct {
 // Service ...
 type Service interface {
 	CreateVM(createRequest *VMIntentInput) (*VMIntentResponse, error)
-	DeleteVM(UUID string) (*DeleteResponse, error)
-	GetVM(UUID string) (*VMIntentResponse, error)
+	DeleteVM(uuid string) (*DeleteResponse, error)
+	GetVM(uuid string) (*VMIntentResponse, error)
 	ListVM(getEntitiesRequest *DSMetadata) (*VMListIntentResponse, error)
-	UpdateVM(UUID string, body *VMIntentInput) (*VMIntentResponse, error)
+	UpdateVM(uuid string, body *VMIntentInput) (*VMIntentResponse, error)
 	CreateSubnet(createRequest *SubnetIntentInput) (*SubnetIntentResponse, error)
-	DeleteSubnet(UUID string) (*DeleteResponse, error)
-	GetSubnet(UUID string) (*SubnetIntentResponse, error)
+	DeleteSubnet(uuid string) (*DeleteResponse, error)
+	GetSubnet(uuid string) (*SubnetIntentResponse, error)
 	ListSubnet(getEntitiesRequest *DSMetadata) (*SubnetListIntentResponse, error)
-	UpdateSubnet(UUID string, body *SubnetIntentInput) (*SubnetIntentResponse, error)
+	UpdateSubnet(uuid string, body *SubnetIntentInput) (*SubnetIntentResponse, error)
 	CreateImage(createRequest *ImageIntentInput) (*ImageIntentResponse, error)
-	DeleteImage(UUID string) (*DeleteResponse, error)
-	GetImage(UUID string) (*ImageIntentResponse, error)
+	DeleteImage(uuid string) (*DeleteResponse, error)
+	GetImage(uuid string) (*ImageIntentResponse, error)
 	ListImage(getEntitiesRequest *DSMetadata) (*ImageListIntentResponse, error)
-	UpdateImage(UUID string, body *ImageIntentInput) (*ImageIntentResponse, error)
-	UploadImage(UUID, filepath string) error
+	UpdateImage(uuid string, body *ImageIntentInput) (*ImageIntentResponse, error)
+	UploadImage(uuid, filepath string) error
 	CreateOrUpdateCategoryKey(body *CategoryKey) (*CategoryKeyStatus, error)
 	ListCategories(getEntitiesRequest *CategoryListMetadata) (*CategoryKeyListResponse, error)
 	DeleteCategoryKey(name string) error
@@ -44,24 +44,24 @@ type Service interface {
 	GetCategoryValue(name string, value string) (*CategoryValueStatus, error)
 	DeleteCategoryValue(name string, value string) error
 	GetCategoryQuery(query *CategoryQueryInput) (*CategoryQueryResponse, error)
-	UpdateNetworkSecurityRule(UUID string, body *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error)
+	UpdateNetworkSecurityRule(uuid string, body *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error)
 	ListNetworkSecurityRule(getEntitiesRequest *DSMetadata) (*NetworkSecurityRuleListIntentResponse, error)
-	GetNetworkSecurityRule(UUID string) (*NetworkSecurityRuleIntentResponse, error)
-	DeleteNetworkSecurityRule(UUID string) (*DeleteResponse, error)
+	GetNetworkSecurityRule(uuid string) (*NetworkSecurityRuleIntentResponse, error)
+	DeleteNetworkSecurityRule(uuid string) (*DeleteResponse, error)
 	CreateNetworkSecurityRule(request *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error)
 	ListCluster(getEntitiesRequest *DSMetadata) (*ClusterListIntentResponse, error)
-	GetCluster(UUID string) (*ClusterIntentResponse, error)
-	UpdateVolumeGroup(UUID string, body *VolumeGroupInput) (*VolumeGroupResponse, error)
+	GetCluster(uuid string) (*ClusterIntentResponse, error)
+	UpdateVolumeGroup(uuid string, body *VolumeGroupInput) (*VolumeGroupResponse, error)
 	ListVolumeGroup(getEntitiesRequest *DSMetadata) (*VolumeGroupListResponse, error)
-	GetVolumeGroup(UUID string) (*VolumeGroupResponse, error)
-	DeleteVolumeGroup(UUID string) error
+	GetVolumeGroup(uuid string) (*VolumeGroupResponse, error)
+	DeleteVolumeGroup(uuid string) error
 	CreateVolumeGroup(request *VolumeGroupInput) (*VolumeGroupResponse, error)
 	ListAllVM() (*VMListIntentResponse, error)
 	ListAllSubnet() (*SubnetListIntentResponse, error)
 	ListAllNetworkSecurityRule() (*NetworkSecurityRuleListIntentResponse, error)
 	ListAllImage() (*ImageListIntentResponse, error)
 	ListAllCluster() (*ClusterListIntentResponse, error)
-	GetTask(TaskUUID string) (*TasksResponse, error)
+	GetTask(taskUUID string) (*TasksResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -86,13 +86,13 @@ func (op Operations) CreateVM(createRequest *VMIntentInput) (*VMIntentResponse, 
 /*DeleteVM Deletes a VM
  * This operation submits a request to delete a op.
  *
- * @param UUID The UUID of the entity.
+ * @param uuid The uuid of the entity.
  * @return error
  */
-func (op Operations) DeleteVM(UUID string) (*DeleteResponse, error) {
+func (op Operations) DeleteVM(uuid string) (*DeleteResponse, error) {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/vms/%s", UUID)
+	path := fmt.Sprintf("/vms/%s", uuid)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	deleteResponse := new(DeleteResponse)
@@ -106,13 +106,13 @@ func (op Operations) DeleteVM(UUID string) (*DeleteResponse, error) {
 /*GetVM Gets a VM
  * This operation gets a op.
  *
- * @param UUID The UUID of the entity.
+ * @param uuid The uuid of the entity.
  * @return *VMIntentResponse
  */
-func (op Operations) GetVM(UUID string) (*VMIntentResponse, error) {
+func (op Operations) GetVM(uuid string) (*VMIntentResponse, error) {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/vms/%s", UUID)
+	path := fmt.Sprintf("/vms/%s", uuid)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
 	vmIntentResponse := new(VMIntentResponse)
@@ -146,14 +146,14 @@ func (op Operations) ListVM(getEntitiesRequest *DSMetadata) (*VMListIntentRespon
 /*UpdateVM Updates a VM
  * This operation submits a request to update a VM based on the input parameters.
  *
- * @param uuid The UUID of the entity.
+ * @param uuid The uuid of the entity.
  * @param body
  * @return *VMIntentResponse
  */
-func (op Operations) UpdateVM(UUID string, body *VMIntentInput) (*VMIntentResponse, error) {
+func (op Operations) UpdateVM(uuid string, body *VMIntentInput) (*VMIntentResponse, error) {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/vms/%s", UUID)
+	path := fmt.Sprintf("/vms/%s", uuid)
 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
 	vmIntentResponse := new(VMIntentResponse)
 
@@ -186,13 +186,13 @@ func (op Operations) CreateSubnet(createRequest *SubnetIntentInput) (*SubnetInte
 /*DeleteSubnet Deletes a subnet
  * This operation submits a request to delete a subnet.
  *
- * @param uuid The UUID of the entity.
+ * @param uuid The uuid of the entity.
  * @return error if exist error
  */
-func (op Operations) DeleteSubnet(UUID string) (*DeleteResponse, error) {
+func (op Operations) DeleteSubnet(uuid string) (*DeleteResponse, error) {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/subnets/%s", UUID)
+	path := fmt.Sprintf("/subnets/%s", uuid)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	deleteResponse := new(DeleteResponse)
@@ -206,13 +206,13 @@ func (op Operations) DeleteSubnet(UUID string) (*DeleteResponse, error) {
 /*GetSubnet Gets a subnet entity
  * This operation gets a subnet.
  *
- * @param uuid The UUID of the entity.
+ * @param uuid The uuid of the entity.
  * @return *SubnetIntentResponse
  */
-func (op Operations) GetSubnet(UUID string) (*SubnetIntentResponse, error) {
+func (op Operations) GetSubnet(uuid string) (*SubnetIntentResponse, error) {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/subnets/%s", UUID)
+	path := fmt.Sprintf("/subnets/%s", uuid)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
 	subnetIntentResponse := new(SubnetIntentResponse)
@@ -252,14 +252,14 @@ func (op Operations) ListSubnet(getEntitiesRequest *DSMetadata) (*SubnetListInte
 /*UpdateSubnet Updates a subnet
  * This operation submits a request to update a subnet based on the input parameters.
  *
- * @param uuid The UUID of the entity.
+ * @param uuid The uuid of the entity.
  * @param body
  * @return *SubnetIntentResponse
  */
-func (op Operations) UpdateSubnet(UUID string, body *SubnetIntentInput) (*SubnetIntentResponse, error) {
+func (op Operations) UpdateSubnet(uuid string, body *SubnetIntentInput) (*SubnetIntentResponse, error) {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/subnets/%s", UUID)
+	path := fmt.Sprintf("/subnets/%s", uuid)
 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
 	subnetIntentResponse := new(SubnetIntentResponse)
 
@@ -293,12 +293,12 @@ func (op Operations) CreateImage(body *ImageIntentInput) (*ImageIntentResponse, 
  * ISO image is attached as a virtual CD-ROM drive, and QCOW2 and VMDK files are attached as SCSI disks. An image has to be explicitly added
  * to the self-service catalog before users can create VMs from it.
  *
- * @param UUID @param filepath
+ * @param uuid @param filepath
  */
-func (op Operations) UploadImage(UUID, filepath string) error {
+func (op Operations) UploadImage(uuid, filepath string) error {
 	ctx := context.Background()
 
-	path := fmt.Sprintf("/images/%s/file", UUID)
+	path := fmt.Sprintf("/images/%s/file", uuid)
 
 	file, err := os.Open(filepath)
 	if err != nil {
@@ -324,13 +324,13 @@ func (op Operations) UploadImage(UUID, filepath string) error {
 /*DeleteImage deletes a IMAGE
  * This operation submits a request to delete a IMAGE.
  *
- * @param uuid The UUID of the entity.
+ * @param uuid The uuid of the entity.
  * @return error if error exists
  */
-func (op Operations) DeleteImage(UUID string) (*DeleteResponse, error) {
+func (op Operations) DeleteImage(uuid string) (*DeleteResponse, error) {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/images/%s", UUID)
+	path := fmt.Sprintf("/images/%s", uuid)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	deleteResponse := new(DeleteResponse)
@@ -344,13 +344,13 @@ func (op Operations) DeleteImage(UUID string) (*DeleteResponse, error) {
 /*GetImage gets a IMAGE
  * This operation gets a IMAGE.
  *
- * @param uuid The UUID of the entity.
+ * @param uuid The uuid of the entity.
  * @return *ImageIntentResponse
  */
-func (op Operations) GetImage(UUID string) (*ImageIntentResponse, error) {
+func (op Operations) GetImage(uuid string) (*ImageIntentResponse, error) {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/images/%s", UUID)
+	path := fmt.Sprintf("/images/%s", uuid)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
 	imageIntentResponse := new(ImageIntentResponse)
@@ -383,14 +383,14 @@ func (op Operations) ListImage(getEntitiesRequest *DSMetadata) (*ImageListIntent
 /*UpdateImage updates a IMAGE
  * This operation submits a request to update a IMAGE based on the input parameters.
  *
- * @param uuid The UUID of the entity.
+ * @param uuid The uuid of the entity.
  * @param body
  * @return *ImageIntentResponse
  */
-func (op Operations) UpdateImage(UUID string, body *ImageIntentInput) (*ImageIntentResponse, error) {
+func (op Operations) UpdateImage(uuid string, body *ImageIntentInput) (*ImageIntentResponse, error) {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/images/%s", UUID)
+	path := fmt.Sprintf("/images/%s", uuid)
 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
 	imageIntentResponse := new(ImageIntentResponse)
 
@@ -404,13 +404,13 @@ func (op Operations) UpdateImage(UUID string, body *ImageIntentInput) (*ImageInt
 /*GetCluster gets a CLUSTER
  * This operation gets a CLUSTER.
  *
- * @param uuid The UUID of the entity.
+ * @param uuid The uuid of the entity.
  * @return *ImageIntentResponse
  */
-func (op Operations) GetCluster(UUID string) (*ClusterIntentResponse, error) {
+func (op Operations) GetCluster(uuid string) (*ClusterIntentResponse, error) {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/clusters/%s", UUID)
+	path := fmt.Sprintf("/clusters/%s", uuid)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
 	clusterIntentResponse := new(ClusterIntentResponse)
@@ -444,14 +444,14 @@ func (op Operations) ListCluster(getEntitiesRequest *DSMetadata) (*ClusterListIn
 /*UpdateImage updates a CLUSTER
  * This operation submits a request to update a CLUSTER based on the input parameters.
  *
- * @param uuid The UUID of the entity.
+ * @param uuid The uuid of the entity.
  * @param body
  * @return *ImageIntentResponse
  */
-// func (op Operations) UpdateImage(UUID string, body *ImageIntentInput) (*ImageIntentResponse, error) {
+// func (op Operations) UpdateImage(uuid string, body *ImageIntentInput) (*ImageIntentResponse, error) {
 // 	ctx := context.TODO()
 
-// 	path := fmt.Sprintf("/images/%s", UUID)
+// 	path := fmt.Sprintf("/images/%s", uuid)
 
 // 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
 // 	if err != nil {
@@ -659,13 +659,13 @@ func (op Operations) CreateNetworkSecurityRule(request *NetworkSecurityRuleInten
 /*DeleteNetworkSecurityRule Deletes a Network security rule
  * This operation submits a request to delete a Network security rule.
  *
- * @param UUID The UUID of the entity.
+ * @param uuid The uuid of the entity.
  * @return void
  */
-func (op Operations) DeleteNetworkSecurityRule(UUID string) (*DeleteResponse, error) {
+func (op Operations) DeleteNetworkSecurityRule(uuid string) (*DeleteResponse, error) {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/network_security_rules/%s", UUID)
+	path := fmt.Sprintf("/network_security_rules/%s", uuid)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	deleteResponse := new(DeleteResponse)
@@ -679,13 +679,13 @@ func (op Operations) DeleteNetworkSecurityRule(UUID string) (*DeleteResponse, er
 /*GetNetworkSecurityRule Gets a Network security rule
  * This operation gets a Network security rule.
  *
- * @param UUID The UUID of the entity.
+ * @param uuid The uuid of the entity.
  * @return *NetworkSecurityRuleIntentResponse
  */
-func (op Operations) GetNetworkSecurityRule(UUID string) (*NetworkSecurityRuleIntentResponse, error) {
+func (op Operations) GetNetworkSecurityRule(uuid string) (*NetworkSecurityRuleIntentResponse, error) {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/network_security_rules/%s", UUID)
+	path := fmt.Sprintf("/network_security_rules/%s", uuid)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
 	networkSecurityRuleIntentResponse := new(NetworkSecurityRuleIntentResponse)
@@ -719,16 +719,16 @@ func (op Operations) ListNetworkSecurityRule(getEntitiesRequest *DSMetadata) (*N
 /*UpdateNetworkSecurityRule Updates a Network security rule
  * This operation submits a request to update a Network security rule based on the input parameters.
  *
- * @param uuid The UUID of the entity.
+ * @param uuid The uuid of the entity.
  * @param body
  * @return void
  */
 func (op Operations) UpdateNetworkSecurityRule(
-	UUID string,
+	uuid string,
 	body *NetworkSecurityRuleIntentInput) (*NetworkSecurityRuleIntentResponse, error) {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/network_security_rules/%s", UUID)
+	path := fmt.Sprintf("/network_security_rules/%s", uuid)
 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
 	networkSecurityRuleIntentResponse := new(NetworkSecurityRuleIntentResponse)
 
@@ -761,13 +761,13 @@ func (op Operations) CreateVolumeGroup(request *VolumeGroupInput) (*VolumeGroupR
 /*DeleteVolumeGroup Deletes a Volume group
  * This operation submits a request to delete a Volume group.
  *
- * @param UUID The UUID of the entity.
+ * @param uuid The uuid of the entity.
  * @return void
  */
-func (op Operations) DeleteVolumeGroup(UUID string) error {
+func (op Operations) DeleteVolumeGroup(uuid string) error {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/volume_groups/%s", UUID)
+	path := fmt.Sprintf("/volume_groups/%s", uuid)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	if err != nil {
@@ -780,13 +780,13 @@ func (op Operations) DeleteVolumeGroup(UUID string) error {
 /*GetVolumeGroup Gets a Volume group
  * This operation gets a Volume group.
  *
- * @param UUID The UUID of the entity.
+ * @param uuid The uuid of the entity.
  * @return *VolumeGroupResponse
  */
-func (op Operations) GetVolumeGroup(UUID string) (*VolumeGroupResponse, error) {
+func (op Operations) GetVolumeGroup(uuid string) (*VolumeGroupResponse, error) {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/volume_groups/%s", UUID)
+	path := fmt.Sprintf("/volume_groups/%s", uuid)
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
 	networkSecurityRuleResponse := new(VolumeGroupResponse)
 
@@ -818,14 +818,14 @@ func (op Operations) ListVolumeGroup(getEntitiesRequest *DSMetadata) (*VolumeGro
 /*UpdateVolumeGroup Updates a Volume group
  * This operation submits a request to update a Volume group based on the input parameters.
  *
- * @param uuid The UUID of the entity.
+ * @param uuid The uuid of the entity.
  * @param body
  * @return void
  */
-func (op Operations) UpdateVolumeGroup(UUID string, body *VolumeGroupInput) (*VolumeGroupResponse, error) {
+func (op Operations) UpdateVolumeGroup(uuid string, body *VolumeGroupInput) (*VolumeGroupResponse, error) {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/volume_groups/%s", UUID)
+	path := fmt.Sprintf("/volume_groups/%s", uuid)
 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
 	networkSecurityRuleResponse := new(VolumeGroupResponse)
 
@@ -839,7 +839,7 @@ func (op Operations) UpdateVolumeGroup(UUID string, body *VolumeGroupInput) (*Vo
 const itemsPerPage = int64(100)
 
 func hasNext(ri *int64) bool {
-	*ri = *ri - itemsPerPage
+	*ri -= itemsPerPage
 	return *ri >= (0 - itemsPerPage)
 }
 
@@ -1043,10 +1043,10 @@ func (op Operations) ListAllCluster() (*ClusterListIntentResponse, error) {
 }
 
 //GetTask ...
-func (op Operations) GetTask(TaskUUID string) (*TasksResponse, error) {
+func (op Operations) GetTask(taskUUID string) (*TasksResponse, error) {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/tasks/%s", TaskUUID)
+	path := fmt.Sprintf("/tasks/%s", taskUUID)
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
 	tasksTesponse := new(TasksResponse)
 

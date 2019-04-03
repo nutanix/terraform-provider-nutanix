@@ -9,9 +9,7 @@ build: fmtcheck
 	go install
 
 test: fmtcheck
-	go test -i $(TEST) || exit 1
-	echo $(TEST) | \
-		xargs -t -n4 go test $(TESTARGS) -timeout=30s -parallel=4
+	go test $(TEST) -timeout=30s -parallel=4
 	
 testacc: fmtcheck
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m -coverprofile c.out
@@ -19,7 +17,9 @@ testacc: fmtcheck
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
-	gofmt -s -w ./$(PKG_NAME)
+	goimports -s -w ./$(PKG_NAME)
+	goimports -s -w ./client
+	goimports -s -w ./utils
 
 fmtcheck:
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
@@ -27,15 +27,13 @@ fmtcheck:
 errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"
 
-lint:
+lint: fmtcheck
 	@echo "==> Checking source code against linters..."
-	# @gometalinter ./$(PKG_NAME)
-	$(GOPATH)/bin/golangci-lint run
+	@GOGC=30 golangci-lint run
 
 tools:
-	GO111MODULE=off curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $(GOPATH)/bin v1.9.3
-	GO111MODULE=off go get -u github.com/alecthomas/gometalinter
-	GO111MODULE=off gometalinter --install
+	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
+	GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
 	
 
 vet:
@@ -69,10 +67,6 @@ cibuild:
 citest:
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m -coverprofile c.out
 
-extrasanity:
-	echo "==>sanity: golangci-lint"
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b $(GOPATH)/bin v1.9.3
-	$(GOPATH)/bin/golangci-lint run
 
 website:
 ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
@@ -94,4 +88,4 @@ endif
 
 .NOTPARALLEL:
 
-.PHONY: default build test testacc fmt fmtcheck errcheck lint tools vet test-compile cibuild citest extrasanity website website-lint website-test
+.PHONY: default build test testacc fmt fmtcheck errcheck lint tools vet test-compile cibuild citest website website-lint website-test
