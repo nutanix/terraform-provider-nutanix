@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -305,7 +305,7 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 		MinTimeout: 3 * time.Second,
 	}
 
-	if _, errw := stateConf.WaitForState(); err != nil {
+	if _, errw := stateConf.WaitForState(); errw != nil {
 		return fmt.Errorf("error waiting for image (%s) to create: %s", d.Id(), errw)
 	}
 
@@ -554,12 +554,12 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 	checks := &v3.Checksum{}
 
 	if su, suok := d.GetOk("source_uri"); suok {
-		ext := filepath.Ext(su.(string))
-		if ext == ".qcow2" {
+		switch ext := filepath.Ext(su.(string)); ext {
+		case ".qcow2":
 			image.ImageType = utils.StringPtr("DISK_IMAGE")
-		} else if ext == ".iso" {
+		case ".iso":
 			image.ImageType = utils.StringPtr("ISO_IMAGE")
-		} else {
+		default:
 			// By default assuming the image to be raw disk image.
 			image.ImageType = utils.StringPtr("DISK_IMAGE")
 		}

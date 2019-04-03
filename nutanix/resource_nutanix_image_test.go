@@ -125,7 +125,7 @@ func TestAccNutanixImage_WithLargeImageURL(t *testing.T) {
 	})
 }
 
-func TestAccNutanixImage_basic_uploadLocal(t *testing.T) {
+func TestAccNutanixImage_uploadLocal(t *testing.T) {
 	//Skipping Because in GCP still failing
 	if os.Getenv("NUTANIX_GCP") == "true" {
 		t.Skip()
@@ -134,25 +134,27 @@ func TestAccNutanixImage_basic_uploadLocal(t *testing.T) {
 	// Get the Working directory
 	dir, err := os.Getwd()
 	if err != nil {
-		t.Errorf("TestAccNutanixImage_basic_uploadLocal failed to get working directory %s", err)
+		t.Errorf("TestAccNutanixImage_uploadLocal failed to get working directory %s", err)
 	}
 
 	filepath := dir + "/alpine.iso"
 
-	// Small Alpine image
-	image := "http://dl-cdn.alpinelinux.org/alpine/v3.8/releases/x86_64/alpine-virt-3.8.1-x86_64.iso"
-	if err := downloadFile(filepath, image); err != nil {
-		t.Errorf("TestAccNutanixImage_basic_uploadLocal failed to download image %s", err)
-	}
-
 	defer os.Remove(filepath)
+	//Small Alpine image
+	image := "http://dl-cdn.alpinelinux.org/alpine/v3.8/releases/x86_64/alpine-virt-3.8.1-x86_64.iso"
 
 	rInt := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			if err := downloadFile(filepath, image); err != nil {
+				t.Errorf("TestAccNutanixImage_uploadLocal failed to download image %s", err)
+			}
+			testAccPreCheck(t)
+		},
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixImageDestroy,
+
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNutanixImageLocalConfig(rInt, filepath),

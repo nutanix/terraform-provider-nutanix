@@ -766,9 +766,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		spec.ClusterReference = buildReference(clusterUUID.(string), "cluster")
 	}
 
-	if err := getVMResources(d, res); err != nil {
-		return fmt.Errorf("error reading resources for Virtual machine %s", err)
-	}
+	getVMResources(d, res)
 
 	spec.Name = utils.StringPtr(n.(string))
 	spec.Resources = res
@@ -1365,7 +1363,7 @@ func resourceNutanixVirtualMachineExists(d *schema.ResourceData, meta interface{
 	return false, nil
 }
 
-func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
+func getVMResources(d *schema.ResourceData, vm *v3.VMResources) {
 	vm.PowerState = utils.StringPtr("ON")
 
 	if v, ok := d.GetOk("num_vnuma_nodes"); ok {
@@ -1484,8 +1482,6 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 
 	vm.DiskList = expandDiskList(d)
 	vm.SerialPortList = expandSerialPortList(d)
-
-	return nil
 }
 
 func expandNicList(d *schema.ResourceData) []*v3.VMNic {

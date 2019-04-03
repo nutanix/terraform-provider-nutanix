@@ -14,16 +14,10 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-var (
-	mux    *http.ServeMux
-	c      *client.Client
-	server *httptest.Server
-)
-
-func setup() {
-	mux = http.NewServeMux()
-	server = httptest.NewServer(mux)
-	c, _ = client.NewClient(&client.Credentials{
+func setup() (*http.ServeMux, *client.Client, *httptest.Server) {
+	mux := http.NewServeMux()
+	server := httptest.NewServer(mux)
+	c, _ := client.NewClient(&client.Credentials{
 		URL:      "",
 		Username: "username",
 		Password: "password",
@@ -31,15 +25,13 @@ func setup() {
 		Endpoint: "",
 		Insecure: true})
 	c.BaseURL, _ = url.Parse(server.URL)
-}
 
-func teardown() {
-	server.Close()
+	return mux, c, server
 }
 
 func TestOperations_CreateVM(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/vms", func(w http.ResponseWriter, r *http.Request) {
 		if m := http.MethodPost; m != r.Method {
@@ -123,7 +115,9 @@ func TestOperations_CreateVM(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -140,8 +134,8 @@ func TestOperations_CreateVM(t *testing.T) {
 }
 
 func TestOperations_DeleteVM(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/vms/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodDelete)
@@ -191,7 +185,9 @@ func TestOperations_DeleteVM(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -203,8 +199,8 @@ func TestOperations_DeleteVM(t *testing.T) {
 }
 
 func TestOperations_GetVM(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/vms/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodGet)
@@ -239,7 +235,9 @@ func TestOperations_GetVM(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -256,8 +254,8 @@ func TestOperations_GetVM(t *testing.T) {
 }
 
 func TestOperations_ListVM(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/vms/list", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPost)
@@ -298,6 +296,7 @@ func TestOperations_ListVM(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
@@ -315,8 +314,8 @@ func TestOperations_ListVM(t *testing.T) {
 }
 
 func TestOperations_UpdateVM(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/vms/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPut)
@@ -401,6 +400,7 @@ func TestOperations_UpdateVM(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
@@ -418,8 +418,9 @@ func TestOperations_UpdateVM(t *testing.T) {
 }
 
 func TestOperations_CreateSubnet(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/subnets", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPost)
@@ -501,6 +502,7 @@ func TestOperations_CreateSubnet(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
@@ -518,8 +520,9 @@ func TestOperations_CreateSubnet(t *testing.T) {
 }
 
 func TestOperations_DeleteSubnet(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/subnets/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodDelete)
@@ -569,6 +572,7 @@ func TestOperations_DeleteSubnet(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
@@ -581,8 +585,9 @@ func TestOperations_DeleteSubnet(t *testing.T) {
 }
 
 func TestOperations_GetSubnet(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/subnets/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodGet)
@@ -617,6 +622,7 @@ func TestOperations_GetSubnet(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
@@ -634,8 +640,9 @@ func TestOperations_GetSubnet(t *testing.T) {
 }
 
 func TestOperations_ListSubnet(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/subnets/list", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPost)
@@ -675,6 +682,7 @@ func TestOperations_ListSubnet(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
@@ -692,8 +700,9 @@ func TestOperations_ListSubnet(t *testing.T) {
 }
 
 func TestOperations_UpdateSubnet(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/subnets/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPut)
@@ -778,7 +787,9 @@ func TestOperations_UpdateSubnet(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -795,8 +806,9 @@ func TestOperations_UpdateSubnet(t *testing.T) {
 }
 
 func TestOperations_CreateImage(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/images", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPost)
@@ -876,7 +888,9 @@ func TestOperations_CreateImage(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -893,6 +907,10 @@ func TestOperations_CreateImage(t *testing.T) {
 }
 
 func TestOperations_UploadImageError(t *testing.T) {
+	_, c, server := setup()
+
+	defer server.Close()
+
 	type fields struct {
 		client *client.Client
 	}
@@ -914,7 +932,9 @@ func TestOperations_UploadImageError(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -926,8 +946,9 @@ func TestOperations_UploadImageError(t *testing.T) {
 }
 
 func TestOperations_UploadImage(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/images/cfde831a-4e87-4a75-960f-89b0148aa2cc/file", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPut)
@@ -960,7 +981,9 @@ func TestOperations_UploadImage(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -973,8 +996,9 @@ func TestOperations_UploadImage(t *testing.T) {
 }
 
 func TestOperations_DeleteImage(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/images/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodDelete)
@@ -1024,7 +1048,9 @@ func TestOperations_DeleteImage(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1036,8 +1062,9 @@ func TestOperations_DeleteImage(t *testing.T) {
 }
 
 func TestOperations_GetImage(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/images/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodGet)
@@ -1072,7 +1099,9 @@ func TestOperations_GetImage(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1089,8 +1118,9 @@ func TestOperations_GetImage(t *testing.T) {
 }
 
 func TestOperations_ListImage(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/images/list", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPost)
@@ -1131,7 +1161,9 @@ func TestOperations_ListImage(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1148,8 +1180,9 @@ func TestOperations_ListImage(t *testing.T) {
 }
 
 func TestOperations_UpdateImage(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/images/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPut)
@@ -1232,7 +1265,9 @@ func TestOperations_UpdateImage(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1249,8 +1284,9 @@ func TestOperations_UpdateImage(t *testing.T) {
 }
 
 func TestOperations_GetCluster(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/clusters/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodGet)
@@ -1285,7 +1321,9 @@ func TestOperations_GetCluster(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1302,8 +1340,9 @@ func TestOperations_GetCluster(t *testing.T) {
 }
 
 func TestOperations_ListCluster(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/clusters/list", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPost)
@@ -1344,7 +1383,9 @@ func TestOperations_ListCluster(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1361,8 +1402,9 @@ func TestOperations_ListCluster(t *testing.T) {
 }
 
 func TestOperations_CreateOrUpdateCategoryKey(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/categories/test_category_key", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPut)
@@ -1416,7 +1458,9 @@ func TestOperations_CreateOrUpdateCategoryKey(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1433,8 +1477,9 @@ func TestOperations_CreateOrUpdateCategoryKey(t *testing.T) {
 }
 
 func TestOperations_ListCategories(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/categories/list", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPost)
@@ -1474,7 +1519,9 @@ func TestOperations_ListCategories(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1491,8 +1538,9 @@ func TestOperations_ListCategories(t *testing.T) {
 }
 
 func TestOperations_DeleteCategoryKey(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/categories/test_category_key", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodDelete)
@@ -1525,7 +1573,9 @@ func TestOperations_DeleteCategoryKey(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1537,8 +1587,9 @@ func TestOperations_DeleteCategoryKey(t *testing.T) {
 }
 
 func TestOperations_GetCategoryKey(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/categories/test_category_key", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodGet)
@@ -1577,7 +1628,9 @@ func TestOperations_GetCategoryKey(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1594,8 +1647,9 @@ func TestOperations_GetCategoryKey(t *testing.T) {
 }
 
 func TestOperations_ListCategoryValues(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/categories/test_category_key/list", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPost)
@@ -1636,7 +1690,9 @@ func TestOperations_ListCategoryValues(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1653,8 +1709,9 @@ func TestOperations_ListCategoryValues(t *testing.T) {
 }
 
 func TestOperations_CreateOrUpdateCategoryValue(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/categories/test_category_key/test_category_value", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPut)
@@ -1711,7 +1768,9 @@ func TestOperations_CreateOrUpdateCategoryValue(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1728,8 +1787,9 @@ func TestOperations_CreateOrUpdateCategoryValue(t *testing.T) {
 }
 
 func TestOperations_GetCategoryValue(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/categories/test_category_key/test_category_value", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodGet)
@@ -1771,7 +1831,9 @@ func TestOperations_GetCategoryValue(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1788,8 +1850,9 @@ func TestOperations_GetCategoryValue(t *testing.T) {
 }
 
 func TestOperations_DeleteCategoryValue(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/categories/test_category_key/test_category_value", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodDelete)
@@ -1823,7 +1886,9 @@ func TestOperations_DeleteCategoryValue(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1835,8 +1900,9 @@ func TestOperations_DeleteCategoryValue(t *testing.T) {
 }
 
 func TestOperations_GetCategoryQuery(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/categories/query", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPost)
@@ -1875,7 +1941,9 @@ func TestOperations_GetCategoryQuery(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1892,8 +1960,9 @@ func TestOperations_GetCategoryQuery(t *testing.T) {
 }
 
 func TestOperations_CreateNetworkSecurityRule(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/network_security_rules", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPost)
@@ -1970,7 +2039,9 @@ func TestOperations_CreateNetworkSecurityRule(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1987,8 +2058,9 @@ func TestOperations_CreateNetworkSecurityRule(t *testing.T) {
 }
 
 func TestOperations_DeleteNetworkSecurityRule(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/network_security_rules/cfde831a-4e87-4a75-960f-89b0148aa2cc",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -2039,7 +2111,9 @@ func TestOperations_DeleteNetworkSecurityRule(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -2051,8 +2125,9 @@ func TestOperations_DeleteNetworkSecurityRule(t *testing.T) {
 }
 
 func TestOperations_GetNetworkSecurityRule(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/network_security_rules/cfde831a-4e87-4a75-960f-89b0148aa2cc",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -2088,7 +2163,9 @@ func TestOperations_GetNetworkSecurityRule(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -2105,8 +2182,9 @@ func TestOperations_GetNetworkSecurityRule(t *testing.T) {
 }
 
 func TestOperations_ListNetworkSecurityRule(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/network_security_rules/list", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPost)
@@ -2147,7 +2225,9 @@ func TestOperations_ListNetworkSecurityRule(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -2164,8 +2244,9 @@ func TestOperations_ListNetworkSecurityRule(t *testing.T) {
 }
 
 func TestOperations_UpdateNetworkSecurityRule(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/network_security_rules/cfde831a-4e87-4a75-960f-89b0148aa2cc",
 		func(w http.ResponseWriter, r *http.Request) {
@@ -2246,7 +2327,9 @@ func TestOperations_UpdateNetworkSecurityRule(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -2263,8 +2346,9 @@ func TestOperations_UpdateNetworkSecurityRule(t *testing.T) {
 }
 
 func TestOperations_CreateVolumeGroup(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/volume_groups", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPost)
@@ -2342,7 +2426,9 @@ func TestOperations_CreateVolumeGroup(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -2359,8 +2445,9 @@ func TestOperations_CreateVolumeGroup(t *testing.T) {
 }
 
 func TestOperations_DeleteVolumeGroup(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/volume_groups/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodDelete)
@@ -2393,7 +2480,9 @@ func TestOperations_DeleteVolumeGroup(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -2405,8 +2494,9 @@ func TestOperations_DeleteVolumeGroup(t *testing.T) {
 }
 
 func TestOperations_GetVolumeGroup(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/volume_groups/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodGet)
@@ -2441,7 +2531,9 @@ func TestOperations_GetVolumeGroup(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -2458,8 +2550,9 @@ func TestOperations_GetVolumeGroup(t *testing.T) {
 }
 
 func TestOperations_ListVolumeGroup(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/volume_groups/list", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPost)
@@ -2500,7 +2593,9 @@ func TestOperations_ListVolumeGroup(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -2517,8 +2612,9 @@ func TestOperations_ListVolumeGroup(t *testing.T) {
 }
 
 func TestOperations_UpdateVolumeGroup(t *testing.T) {
-	setup()
-	defer teardown()
+	mux, c, server := setup()
+
+	defer server.Close()
 
 	mux.HandleFunc("/api/nutanix/v3/volume_groups/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPut)
@@ -2598,7 +2694,9 @@ func TestOperations_UpdateVolumeGroup(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+
 			op := Operations{
 				client: tt.fields.client,
 			}
