@@ -1,33 +1,73 @@
 module github.com/terraform-providers/terraform-provider-nutanix
 
 require (
+	github.com/OpenPeeDeeP/depguard v0.0.0-20181229194401-1f388ab2d810 // indirect
+	github.com/StackExchange/wmi v0.0.0-20181212234831-e0a55b97c705 // indirect
 	github.com/apparentlymart/go-dump v0.0.0-20190214190832-042adf3cf4a0 // indirect
 	github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/blang/semver v3.5.1+incompatible // indirect
+	github.com/client9/misspell v0.3.4 // indirect
+	github.com/coreos/etcd v3.3.12+incompatible // indirect
 	github.com/fatih/color v1.7.0 // indirect
+	github.com/go-critic/go-critic v0.3.4 // indirect
+	github.com/go-ole/go-ole v1.2.4 // indirect
+	github.com/go-toolsmith/astcast v1.0.0 // indirect
+	github.com/go-toolsmith/astcopy v1.0.0 // indirect
+	github.com/go-toolsmith/astfmt v1.0.0 // indirect
+	github.com/go-toolsmith/astp v1.0.0 // indirect
+	github.com/go-toolsmith/pkgload v1.0.0 // indirect
+	github.com/go-toolsmith/typep v1.0.0 // indirect
+	github.com/gogo/protobuf v1.2.1 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
+	github.com/golang/mock v1.2.0 // indirect
+	github.com/golang/protobuf v1.3.1 // indirect
+	github.com/golangci/errcheck v0.0.0-20181223084120-ef45e06d44b6 // indirect
+	github.com/golangci/go-tools v0.0.0-20190124090046-35a9f45a5db0 // indirect
+	github.com/golangci/gocyclo v0.0.0-20180528144436-0a533e8fa43d // indirect
+	github.com/golangci/gofmt v0.0.0-20181222123516-0b8337e80d98 // indirect
+	github.com/golangci/golangci-lint v1.16.0 // indirect
+	github.com/golangci/gosec v0.0.0-20180901114220-8afd9cbb6cfb // indirect
+	github.com/golangci/lint-1 v0.0.0-20181222135242-d2cdd8c08219 // indirect
+	github.com/golangci/revgrep v0.0.0-20180812185044-276a5c0a1039 // indirect
 	github.com/hashicorp/go-getter v0.0.0-20180809191950-4bda8fa99001 // indirect
 	github.com/hashicorp/go-hclog v0.0.0-20180709165350-ff2cf002a8dd // indirect
 	github.com/hashicorp/go-plugin v0.0.0-20180331002553-e8d22c780116 // indirect
-	github.com/hashicorp/hcl v0.0.0-20180404174102-ef8a98b0bbce // indirect
 	github.com/hashicorp/hcl2 v0.0.0-20180810011014-6743a2254ba3 // indirect
 	github.com/hashicorp/terraform v0.11.14-0.20190313165547-28810e6c0c0a
 	github.com/hashicorp/yamux v0.0.0-20180604194846-3520598351bb // indirect
-	github.com/kr/pretty v0.1.0 // indirect
-	github.com/mattn/go-colorable v0.0.9 // indirect
-	github.com/mattn/go-isatty v0.0.3 // indirect
+	github.com/kisielk/errcheck v1.2.0 // indirect
+	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
+	github.com/kr/pty v1.1.4 // indirect
+	github.com/mattn/go-colorable v0.1.1 // indirect
+	github.com/mattn/go-isatty v0.0.7 // indirect
 	github.com/mitchellh/cli v0.0.0-20180414170447-c48282d14eba // indirect
-	github.com/mitchellh/go-homedir v0.0.0-20180801233206-58046073cbff // indirect
+	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v0.0.0-20171004221916-a61a99592b77 // indirect
 	github.com/mitchellh/hashstructure v0.0.0-20170609045927-2bca23e0e452 // indirect
-	github.com/mitchellh/mapstructure v0.0.0-20180715050151-f15292f7a699 // indirect
+	github.com/nbutton23/zxcvbn-go v0.0.0-20180912185939-ae427f1e4c1d // indirect
+	github.com/onsi/ginkgo v1.8.0 // indirect
+	github.com/onsi/gomega v1.5.0 // indirect
+	github.com/pelletier/go-toml v1.3.0 // indirect
+	github.com/pkg/errors v0.8.1 // indirect
 	github.com/posener/complete v1.1.1 // indirect
+	github.com/rogpeppe/go-internal v1.3.0 // indirect
 	github.com/satori/go.uuid v1.2.0
+	github.com/shirou/gopsutil v2.18.12+incompatible // indirect
+	github.com/shurcooL/go v0.0.0-20190330031554-6713ea532688 // indirect
+	github.com/sirupsen/logrus v1.4.1 // indirect
+	github.com/spf13/afero v1.2.2 // indirect
+	github.com/spf13/cobra v0.0.3 // indirect
+	github.com/spf13/jwalterweatherman v1.1.0 // indirect
+	github.com/spf13/viper v1.3.2 // indirect
+	github.com/ugorji/go/codec v0.0.0-20190320090025-2dc34c0b8780 // indirect
 	github.com/zclconf/go-cty v0.0.0-20180718220526-02bd58e97b57 // indirect
-	golang.org/x/crypto v0.0.0-20180808211826-de0752318171 // indirect
+	golang.org/x/crypto v0.0.0-20190404164418-38d8ce5564a5 // indirect
+	golang.org/x/net v0.0.0-20190403144856-b630fd6fe46b // indirect
 	golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6 // indirect
+	golang.org/x/tools v0.0.0-20190404132500-923d25813098 // indirect
 	google.golang.org/genproto v0.0.0-20180808183934-383e8b2c3b9e // indirect
 	google.golang.org/grpc v1.14.0 // indirect
-	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
+	mvdan.cc/unparam v0.0.0-20190310220240-1b9ccfa71afe // indirect
+	sourcegraph.com/sqs/pbtypes v1.0.0 // indirect
 )
