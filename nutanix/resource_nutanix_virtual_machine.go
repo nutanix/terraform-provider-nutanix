@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -700,6 +700,25 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 					},
 				},
 			},
+			"serial_port_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"index": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"is_connected": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -828,6 +847,10 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	}
 	if err := d.Set("nic_list_status", flattenNicListStatus(resp.Status.Resources.NicList)); err != nil {
 		return fmt.Errorf("error setting nic_list for Virtual Machine %s: %s", d.Id(), err)
+	}
+
+	if err := d.Set("serial_port_list", flattenSerialPortList(resp.Status.Resources.SerialPortList)); err != nil {
+		return fmt.Errorf("error setting serial_port_list for Virtual Machine %s: %s", d.Id(), err)
 	}
 	if err := d.Set("host_reference", flattenReferenceValues(resp.Status.Resources.HostReference)); err != nil {
 		return fmt.Errorf("error setting host_reference for Virtual Machine %s: %s", d.Id(), err)
@@ -1094,6 +1117,11 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("nic_list") {
 		res.NicList = expandNicList(d)
 	}
+
+	if d.HasChange("serial_port_list") {
+		res.SerialPortList = expandSerialPortList(d)
+	}
+
 	if d.HasChange("nutanix_guest_tools") {
 		_, n := d.GetChange("nutanix_guest_tools")
 		ngt := n.(map[string]interface{})
@@ -1465,6 +1493,7 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	}
 
 	vm.DiskList = expandDiskList(d)
+	vm.SerialPortList = expandSerialPortList(d)
 
 	return nil
 }
@@ -1596,6 +1625,29 @@ func expandDiskList(d *schema.ResourceData) []*v3.VMDisk {
 	return nil
 }
 
+func expandSerialPortList(d *schema.ResourceData) []*v3.VMSerialPort {
+	if v, ok := d.GetOk("serial_port_list"); ok {
+		spl := v.([]interface{})
+
+		if len(spl) > 0 {
+			serialPortList := make([]*v3.VMSerialPort, len(spl))
+			for k, val := range spl {
+				v1 := val.(map[string]interface{})
+				serialPort := &v3.VMSerialPort{}
+				if v1, ok1 := v1["index"]; ok1 {
+					serialPort.Index = utils.Int64Ptr(int64(v1.(int)))
+				}
+				if v1, ok1 := v1["is_connected"]; ok1 {
+					serialPort.IsConnected = utils.BoolPtr(v1.(bool))
+				}
+				serialPortList[k] = serialPort
+			}
+			return serialPortList
+		}
+	}
+	return nil
+}
+
 func expandGPUList(d *schema.ResourceData) []*v3.VMGpu {
 	if v, ok := d.GetOk("gpu_list"); ok {
 		if len(v.([]interface{})) > 0 {
@@ -1651,6 +1703,20 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 		nold = nil
 	}
 	res.NicList = nold
+
+	spl := make([]*v3.VMSerialPort, len(response.Status.Resources.SerialPortList))
+	if len(response.Status.Resources.SerialPortList) > 0 {
+		for k, v := range response.Status.Resources.SerialPortList {
+			spl[k] = &v3.VMSerialPort{
+				Index:       v.Index,
+				IsConnected: v.IsConnected,
+			}
+
+		}
+	} else {
+		spl = nil
+	}
+	res.SerialPortList = spl
 
 	gold := make([]*v3.VMGpu, len(response.Status.Resources.GpuList))
 	if len(response.Status.Resources.GpuList) > 0 {

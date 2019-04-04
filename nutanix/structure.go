@@ -1,7 +1,7 @@
 package nutanix
 
 import (
-	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -88,6 +88,20 @@ func flattenNicList(nics []*v3.VMNic) []map[string]interface{} {
 	}
 
 	return nicLists
+}
+
+func flattenSerialPortList(serialPorts []*v3.VMSerialPort) []map[string]interface{} {
+	serialPortList := make([]map[string]interface{}, 0)
+	if serialPorts != nil {
+		serialPortList = make([]map[string]interface{}, len(serialPorts))
+		for k, v := range serialPorts {
+			serialPort := make(map[string]interface{})
+			serialPort["index"] = utils.Int64Value(v.Index)
+			serialPort["is_connected"] = utils.BoolValue(v.IsConnected)
+			serialPortList[k] = serialPort
+		}
+	}
+	return serialPortList
 }
 
 func flattenGPUList(gpu []*v3.VMGpuOutputStatus) []map[string]interface{} {
