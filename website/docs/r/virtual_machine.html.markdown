@@ -60,6 +60,7 @@ The following arguments are supported:
 * `description`: - (Optional) A description for vm.
 * `num_vnuma_nodes`: - (Optional) Number of vNUMA nodes. 0 means vNUMA is disabled.
 * `nic_list`: - (Optional) Spec NICs attached to the VM.
+* `serial_port_list`: - (Optional) Serial Ports configured on the VM.
 * `guest_os_id`: - (Optional) Guest OS Identifier. For ESX, refer to VMware documentation [link](https://www.vmware.com/support/developer/converter-sdk/conv43_apireference/vim.vm.GuestOsDescriptor.GuestOsIdentifier.html) for the list of guest OS identifiers.
 * `power_state`: - (Optional) The current or desired power state of the VM. (Options : ON , OFF)
 * `nutanix_guest_tools`: - (Optional) Information regarding Nutanix Guest Tools.
@@ -159,6 +160,13 @@ The nic_list attribute supports the following:
 * `subnet_uuid`: - The reference to a subnet.
 * `subnet_name`: - The name of the subnet reference to.
 * `floating_ip`: -  The Floating IP associated with the vnic. (Only in `nic_list_status`)
+
+### Serial Port List
+
+The `serial_port_list` attribute supports the following:
+
+* `index`: - Index of the serial port (int).
+* `is_connected`: - Indicates whether the serial port connection is connected or not (`true` or `false`).
 
 ### ip_endpoint_list
 
