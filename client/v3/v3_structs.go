@@ -16,6 +16,11 @@ type VMVnumaConfig struct {
 	NumVnumaNodes *int64 `json:"num_vnuma_nodes,omitempty"`
 }
 
+type VMSerialPort struct {
+	Index       *int64 `json:"index,omitempty"`
+	IsConnected *bool  `json:"is_connected,omitempty"`
+}
+
 // IPAddress An IP address.
 type IPAddress struct {
 
@@ -258,6 +263,8 @@ type VMResources struct {
 
 	// Information regarding vNUMA configuration.
 	VMVnumaConfig *VMVnumaConfig `json:"vnuma_config,omitempty"`
+
+	SerialPortList []*VMSerialPort `json:"serial_port_list,omitempty"`
 }
 
 // VM An intentful representation of a vm spec
@@ -484,6 +491,8 @@ type VMResourcesDefStatus struct {
 
 	// Information regarding vNUMA configuration.
 	VnumaConfig *VMVnumaConfig `json:"vnuma_config,omitempty"`
+
+	SerialPortList []*VMSerialPort `json:"serial_port_list,omitempty"`
 }
 
 // VMDefStatus An intentful representation of a vm status
