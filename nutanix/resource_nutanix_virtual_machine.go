@@ -1704,8 +1704,9 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 	}
 	res.NicList = nold
 
-	spl := make([]*v3.VMSerialPort, len(response.Status.Resources.SerialPortList))
+	var spl []*v3.VMSerialPort
 	if len(response.Status.Resources.SerialPortList) > 0 {
+		spl = make([]*v3.VMSerialPort, len(response.Status.Resources.SerialPortList))
 		for k, v := range response.Status.Resources.SerialPortList {
 			spl[k] = &v3.VMSerialPort{
 				Index:       v.Index,
@@ -1713,8 +1714,6 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 			}
 
 		}
-	} else {
-		spl = nil
 	}
 	res.SerialPortList = spl
 
