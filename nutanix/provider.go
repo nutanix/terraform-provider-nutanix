@@ -50,6 +50,12 @@ func Provider() terraform.ResourceProvider {
 				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_WAIT_TIMEOUT", nil),
 				Description: descriptions["wait_timeout"],
 			},
+			"proxy_url": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_PROXY_URL", nil),
+				Description: descriptions["proxy_url"],
+			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"nutanix_image":           dataSourceNutanixImage(),
@@ -95,6 +101,8 @@ func init() {
 			"cluster lifecycle management operations, such as AOS upgrades.",
 
 		"wait_timeout": "Set if you know that the creation o update of a resource may take long time (minutes)",
+
+		"proxy_url": "Use this to connect Nutanix API through the proxy server.",
 	}
 }
 
@@ -110,6 +118,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Insecure:    d.Get("insecure").(bool),
 		Port:        d.Get("port").(string),
 		WaitTimeout: int64(d.Get("wait_timeout").(int)),
+		ProxyURL:    d.Get("proxy_url").(string),
 	}
 
 	return config.Client()

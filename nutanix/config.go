@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
-	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 )
 
 // Version represents api version
@@ -18,6 +18,7 @@ type Config struct {
 	Port        string
 	Insecure    bool
 	WaitTimeout int64
+	ProxyURL    string
 }
 
 // Client ...
@@ -30,6 +31,7 @@ func (c *Config) Client() (*Client, error) {
 		Password: c.Password,
 		Port:     c.Port,
 		Insecure: c.Insecure,
+		ProxyURL: c.ProxyURL,
 	}
 
 	v3, err := v3.NewV3Client(configCreds)
