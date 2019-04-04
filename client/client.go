@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 
@@ -51,6 +52,7 @@ type Credentials struct {
 	Endpoint string
 	Port     string
 	Insecure bool
+	ProxyURL string
 }
 
 // NewClient returns a new Nutanix API client.
@@ -59,6 +61,16 @@ func NewClient(credentials *Credentials) (*Client, error) {
 	transCfg := &http.Transport{
 		// nolint:gas
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: credentials.Insecure}, // ignore expired SSL certificates
+	}
+
+	if credentials.ProxyURL != "" {
+		log.Printf("[DEBUG] Using proxy: %s\n", credentials.ProxyURL)
+		proxy, err := url.Parse(credentials.ProxyURL)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing proxy url: %s", err)
+		}
+
+		transCfg.Proxy = http.ProxyURL(proxy)
 	}
 
 	httpClient := http.DefaultClient
