@@ -574,6 +574,23 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 					},
 				},
 			},
+
+			"serial_port_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"index": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"is_connected": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -689,6 +706,10 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	}
 
 	if err := flattenClusterReference(resp.Status.ClusterReference, d); err != nil {
+		return err
+	}
+
+	if err := d.Set("serial_port_list", resp.Status.Resources.SerialPortList); err != nil {
 		return err
 	}
 
