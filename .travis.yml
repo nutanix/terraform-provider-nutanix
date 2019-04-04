@@ -1,16 +1,14 @@
-dist: trusty
+dist: xenial
 sudo: required
 services:
   - docker
 language: go
 go:
-  - "1.11.x"
+  - "1.12.x"
 
 git:
   depth: 1
 
-
-go_import_path: github.com/terraform-providers/terraform-provider-nutanix
 
 install:
 # This script is used by the Travis build to install a cookie for
