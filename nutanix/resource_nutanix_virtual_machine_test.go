@@ -159,6 +159,39 @@ func TestAccNutanixVirtualMachine_WithSubnet(t *testing.T) {
 	})
 }
 
+func TestAccNutanixVirtualMachine_WithSerialPortList(t *testing.T) {
+	r := acctest.RandInt()
+	resourceName := "nutanix_virtual_machine.vm5"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixVMConfigWithSerialPortList(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "categories.Environment", "Staging"),
+					resource.TestCheckResourceAttr(resourceName, "serial_port_list.0.index", "1"),
+					resource.TestCheckResourceAttr(resourceName, "serial_port_list.0.is_connected", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"disk_list"},
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixVirtualMachineExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -446,6 +479,36 @@ resource "nutanix_virtual_machine" "vm3" {
 
 output "ip_address" {
   value = "${lookup(nutanix_virtual_machine.vm3.nic_list_status.0.ip_endpoint_list[0], "ip")}"
+}
+`, r)
+}
+
+func testAccNutanixVMConfigWithSerialPortList(r int) string {
+	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {}
+
+locals {
+		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+}
+
+resource "nutanix_virtual_machine" "vm5" {
+  name = "test-dou-%d"
+  cluster_uuid = "${local.cluster1}"
+  
+  num_vcpus_per_socket = 1
+  num_sockets          = 1
+	memory_size_mib      = 186
+	
+	serial_port_list = [{
+		index = 1
+		is_connected = true
+	}]
+
+
+	categories {
+		Environment = "Staging"
+	}
 }
 `, r)
 }
