@@ -1557,6 +1557,8 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 		vm.MemorySizeMib = utils.Int64Ptr(int64(v.(int)))
 	}
 
+	vm.BootConfig = &v3.VMBootConfig{}
+
 	if v, ok := d.GetOk("boot_device_order_list"); ok {
 		vm.BootConfig.BootDeviceOrderList = expandStringList(v.([]interface{}))
 	}

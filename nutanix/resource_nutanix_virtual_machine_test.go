@@ -477,7 +477,8 @@ func testAccNutanixVMConfig(r int) string {
 		resource "nutanix_virtual_machine" "vm1" {
 			name         = "test-dou-%d"
 			cluster_uuid = "${local.cluster1}"
-
+			
+			boot_device_order_list = ["DISK", "CDROM"]
 			num_vcpus_per_socket = 1
 			num_sockets          = 1
 			memory_size_mib      = 186
@@ -610,6 +611,8 @@ func testAccNutanixVMConfigUpdate(r int) string {
 			num_vcpus_per_socket = 1
 			num_sockets          = 2
 			memory_size_mib      = 186
+
+			boot_device_order_list = ["DISK", "CDROM"]
 
 			categories {
 				name  = "Environment"
