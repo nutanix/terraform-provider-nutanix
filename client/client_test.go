@@ -12,26 +12,14 @@ import (
 	"testing"
 )
 
-var (
-	mux *http.ServeMux
+func setup() (*http.ServeMux, *Client, *httptest.Server) {
+	mux := http.NewServeMux()
+	server := httptest.NewServer(mux)
 
-	ctx = context.TODO()
-
-	client *Client
-
-	server *httptest.Server
-)
-
-func setup() {
-	mux = http.NewServeMux()
-	server = httptest.NewServer(mux)
-
-	client, _ = NewClient(&Credentials{"", "username", "password", "", "", true, ""})
+	client, _ := NewClient(&Credentials{"", "username", "password", "", "", true, ""})
 	client.BaseURL, _ = url.Parse(server.URL)
-}
 
-func teardown() {
-	server.Close()
+	return mux, client, server
 }
 
 func TestNewClient(t *testing.T) {
@@ -62,7 +50,7 @@ func TestNewRequest(t *testing.T) {
 	inURL, outURL := "/foo", fmt.Sprintf(defaultBaseURL+absolutePath+"/foo", "foo.com")
 	inBody, outBody := map[string]interface{}{"name": "bar"}, `{"name":"bar"}`+"\n"
 
-	req, _ := c.NewRequest(ctx, http.MethodPost, inURL, inBody)
+	req, _ := c.NewRequest(context.TODO(), http.MethodPost, inURL, inBody)
 
 	// test relative URL was expanded
 	if req.URL.String() != outURL {
@@ -128,8 +116,9 @@ func TestCheckResponse(t *testing.T) {
 }
 
 func TestDo(t *testing.T) {
-	setup()
-	defer teardown()
+	ctx := context.TODO()
+	mux, client, server := setup()
+	defer server.Close()
 
 	type foo struct {
 		A string
@@ -159,8 +148,9 @@ func TestDo(t *testing.T) {
 }
 
 func TestDo_httpError(t *testing.T) {
-	setup()
-	defer teardown()
+	ctx := context.TODO()
+	mux, client, server := setup()
+	defer server.Close()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Bad Request", 400)
@@ -177,8 +167,9 @@ func TestDo_httpError(t *testing.T) {
 // / Test handling of an error caused by the internal http client's Do()
 // function.
 func TestDo_redirectLoop(t *testing.T) {
-	setup()
-	defer teardown()
+	ctx := context.TODO()
+	mux, client, server := setup()
+	defer server.Close()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusFound)
@@ -266,6 +257,7 @@ func TestClient_NewRequest(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Client{
 				Credentials:        tt.fields.Credentials,
@@ -310,6 +302,7 @@ func TestClient_NewUploadRequest(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Client{
 				Credentials:        tt.fields.Credentials,
@@ -349,6 +342,7 @@ func TestClient_OnRequestCompleted(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Client{
 				Credentials:        tt.fields.Credentials,
@@ -384,6 +378,7 @@ func TestClient_Do(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Client{
 				Credentials:        tt.fields.Credentials,
@@ -412,6 +407,7 @@ func Test_fillStruct(t *testing.T) {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			if err := fillStruct(tt.args.data, tt.args.result); (err != nil) != tt.wantErr {
 				t.Errorf("fillStruct() error = %v, wantErr %v", err, tt.wantErr)
