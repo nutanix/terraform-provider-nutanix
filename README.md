@@ -4,15 +4,15 @@ Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
 NOTE: terraform-provider-nutanix is currently tech preview as of 9 May 2018. See "Current Development Status" below.
 
-#### Build, Quality Status
+## Build, Quality Status
 
- [![Go Report Card](https://goreportcard.com/badge/github.com/nutanix/terraform-provider-nutanix)](https://goreportcard.com/report/github.com/nutanix/terraform-provider-nutanix)
-[![Maintainability](https://api.codeclimate.com/v1/badges/8b9e61df450276bbdbdb/maintainability)](https://codeclimate.com/github/nutanix/terraform-provider-nutanix/maintainability) 
-[![Test Coverage](https://api.codeclimate.com/v1/badges/8b9e61df450276bbdbdb/test_coverage)](https://codeclimate.com/github/nutanix/terraform-provider-nutanix/test_coverage)
+ [![Go Report Card](https://goreportcard.com/badge/github.com/terraform-providers/terraform-provider-nutanix)](https://goreportcard.com/report/github.com/terraform-providers/terraform-provider-nutanix)
+<!-- [![Maintainability](https://api.codeclimate.com/v1/badges/8b9e61df450276bbdbdb/maintainability)](https://codeclimate.com/github/nutanix/terraform-provider-nutanix/maintainability) 
+[![Test Coverage](https://api.codeclimate.com/v1/badges/8b9e61df450276bbdbdb/test_coverage)](https://codeclimate.com/github/nutanix/terraform-provider-nutanix/test_coverage) -->
 
 | Master                                                                                                                                                          | Develop                                                                                                                                                           |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [![Build Status: master](https://travis-ci.com/nutanix/terraform-provider-nutanix.svg?branch=master)](https://travis-ci.com/nutanix/terraform-provider-nutanix) | [![Build Status: develop](https://travis-ci.com/nutanix/terraform-provider-nutanix.svg?branch=develop)](https://travis-ci.com/nutanix/terraform-provider-nutanix) |
+| [![Build Status](https://travis-ci.org/terraform-providers/terraform-provider-nutanix.svg?branch=master)](https://travis-ci.org/terraform-providers/terraform-provider-nutanix) | [![Build Status](https://travis-ci.org/terraform-providers/terraform-provider-nutanix.svg?branch=develop)](https://travis-ci.org/terraform-providers/terraform-provider-nutanix) |
 
 ## Community
 
@@ -93,7 +93,10 @@ The following keys can be used to configure the provider.
 * nutanix_subnet
 * nutanix_category_key
 * nutanix_category_value
+  
+<!-- //To be available
 * nutanix_volume_group
+-->
 
 ## Data Sources
 
@@ -104,11 +107,14 @@ The following keys can be used to configure the provider.
 * nutanix_subnet
 * nutanix_subnets
 * nutanix_clusters
+* nutanix_cluster
+
+<!-- To be avaiable
 * nutanix_network_security_rule
 * nutanix_network_security_rules
-* nutanix_cluster
-* nutanix_volume_group
+* nutanix_volume_group 
 * nutanix_volume_groups
+-->
 
 ## Additional Resources
 
@@ -118,7 +124,7 @@ We've got a handful of resources outside of this repository that will help users
   _ Overview Video: [](https://www.youtube.com/watch?v=V8_Lu1mxV6g)
   _ Working with images: [](https://www.youtube.com/watch?v=IW0eQevZ73I)
 * Nutanix GitHub
-  _ [](https://github.com/nutanix/terraform-provider-nutanix)
+  _ [](https://github.com/terraform-providers/terraform-provider-nutanix)
   _ Private repo until code goes upstream
 * Jon’s GitHub
   _ [](https://github.com/JonKohler/ThisOldCloud/tree/master/Terraform-Nutanix)
@@ -180,38 +186,39 @@ More Info: https://github.com/golang/dep
 
 1. Follow [Go installation instructions](https://golang.org/doc/install)
 
-1. Make sure that `$GOPATH` variable is set (and `$GOROOT` if necessary)
+2. Make sure that `$GOPATH` variable is set (and `$GOROOT` if necessary)
 
-1. Clone the repository:
+3. Clone the repository:
 
     ```bash
-    git clone https://github.com/nutanix/terraform-provider-nutanix.git $GOPATH/src/github.com/nutanix/terraform-provider-nutanix
+    git clone terraform-providers/terraform-provider-nutanix.git $GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix
     ```
 
-1. Install [golang/dep](https://github.com/golang/dep):
+4. Install [golang/dep](https://github.com/golang/dep):
 
     ```bash
     go get -u github.com/golang/dep/cmd/dep
     ```
 
-1. Get dependencies:
+5. Get dependencies:
 
     ```bash
-    cd $GOPATH/src/github.com/nutanix/terraform-provider-nutanix
+    cd $GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix
     dep ensure
     ```
 
-1. Run tests:
+6. Run tests:
 
     ```bash
-    cd $GOPATH/src/github.com/nutanix/terraform-provider-nutanix
-    (TODO: add test here)
+    cd $GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix
+    make test
+    make testacc
     ```
 
-1. Build the binary:
+7. Build the binary:
 
     ```bash
-    cd $GOPATH/src/github.com/nutanix/terraform-provider-nutanix
+    cd $GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix
     go build
     ```
 
@@ -266,7 +273,7 @@ Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provi
 ```sh
 $ mkdir $GOPATH/src/github.com/terraform-providers && cd "$_" #if you already created it only change directory
 
-$ git clone https://github.com/nutanix/terraform-provider-nutanix.git
+$ git clone https://github.com/terraform-providers/terraform-provider-nutanix.git
 ```
 
 Enter the provider directory and build the provider
