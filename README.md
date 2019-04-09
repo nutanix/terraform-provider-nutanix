@@ -191,7 +191,11 @@ More Info: https://github.com/golang/dep
 3. Clone the repository:
 
     ```bash
+<<<<<<< HEAD
     git clone terraform-providers/terraform-provider-nutanix.git $GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix
+=======
+    git clone https://github.com/terraform-providers/terraform-provider-nutanix.git $GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix
+>>>>>>> chore: fix bad urls in readme.md file
     ```
 
 4. Install [golang/dep](https://github.com/golang/dep):
@@ -263,7 +267,6 @@ More Info: https://github.com/golang/dep
     git push origin v1.1.0
     ```
 
-
 ## Install from package
 
 ## Building/Developing Provider
@@ -272,7 +275,11 @@ Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provi
 
 ```sh
 $ mkdir $GOPATH/src/github.com/terraform-providers && cd "$_" #if you already created it only change directory
+<<<<<<< HEAD
 
+=======
+$
+>>>>>>> chore: fix bad urls in readme.md file
 $ git clone https://github.com/terraform-providers/terraform-provider-nutanix.git
 ```
 
