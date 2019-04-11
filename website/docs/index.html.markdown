@@ -46,7 +46,8 @@ provider "nutanix" {
   endpoint     = "xxxx"
   insecure     = true
   port         = 9440
-  wait_timeout = 10
+  wait_timeout = 10 //Optional
+  proxy_url    =  "xxxx" //Optional
 }
 ```
 
@@ -68,6 +69,7 @@ $ export NUTANIX_INSECURE="xxxx"
 $ export NUTANIX_PORT="xxxx"
 $ export NUTANIX_ENDPOINT="xxxx"
 $ export NUTANIX_WAIT_TIMEOUT = "xxx"
+$ export NUTANIX_PROXY_URL = "xxx"
 
 $ terraform plan
 ```
