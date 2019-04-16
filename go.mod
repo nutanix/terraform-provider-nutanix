@@ -44,6 +44,7 @@ require (
 	github.com/mitchellh/cli v0.0.0-20180414170447-c48282d14eba // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v0.0.0-20171004221916-a61a99592b77 // indirect
+	github.com/mitchellh/gox v1.0.1 // indirect
 	github.com/mitchellh/hashstructure v0.0.0-20170609045927-2bca23e0e452 // indirect
 	github.com/nbutton23/zxcvbn-go v0.0.0-20180912185939-ae427f1e4c1d // indirect
 	github.com/onsi/ginkgo v1.8.0 // indirect
