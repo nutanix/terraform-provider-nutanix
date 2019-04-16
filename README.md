@@ -191,11 +191,7 @@ More Info: https://github.com/golang/dep
 3. Clone the repository:
 
     ```bash
-<<<<<<< HEAD
-    git clone terraform-providers/terraform-provider-nutanix.git $GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix
-=======
     git clone https://github.com/terraform-providers/terraform-provider-nutanix.git $GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix
->>>>>>> chore: fix bad urls in readme.md file
     ```
 
 4. Install [golang/dep](https://github.com/golang/dep):
@@ -215,15 +211,15 @@ More Info: https://github.com/golang/dep
 
     ```bash
     cd $GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix
-    make test
-    make testacc
+    make test #unit tests
+    make testacc #acceptance tests
     ```
 
 7. Build the binary:
 
     ```bash
     cd $GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix
-    go build
+    make cibuild #it will create a pkg folder with the binaries for all OS including linux, windows, macOS
     ```
 
 ## Release it

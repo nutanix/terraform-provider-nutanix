@@ -58,11 +58,10 @@ test-compile:
 # 	go tool cover -html=c.out
 
 cibuild:
-	go build
-#	env GOOS=darwin GOARCH=amd64 go build
-#	env GOOS=windows GOARCH=amd64 go build
-#	env GOOS=linux GOARCH=amd64 go build
-#	env GOOS=linux GOARCH=ppc64 go build
+	go get github.com/mitchellh/gox
+	rm -rf pkg/
+	gox -output "pkg/{{.OS}}_{{.Arch}}/terraform-provider-nutanix"
+
 
 citest:
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m -coverprofile c.out

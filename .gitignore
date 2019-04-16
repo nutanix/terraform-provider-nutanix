@@ -10,6 +10,7 @@ setenv.sh
 request_log
 .DS_Store
 dist/
+pkg/
 terraform-provider-nutanix
 
 # Test binary, build with `go test -c`
