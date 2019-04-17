@@ -82,6 +82,7 @@ func Provider() terraform.ResourceProvider {
 			"nutanix_cluster":         dataSourceNutanixCluster(),
 			"nutanix_clusters":        dataSourceNutanixClusters(),
 			"nutanix_virtual_machine": dataSourceNutanixVirtualMachine(),
+			"nutanix_category_key":    dataSourceNutanixCategoryKey(),
 			// "nutanix_network_security_rule": dataSourceNutanixNetworkSecurityRule(),
 			// "nutanix_volume_group":           dataSourceNutanixVolumeGroup(),
 			// "nutanix_volume_groups":          dataSourceNutanixVolumeGroups(),
