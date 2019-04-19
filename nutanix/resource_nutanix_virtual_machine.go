@@ -254,6 +254,10 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"is_connected": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -345,6 +349,11 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
+						},
+						"is_connected": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
 						},
 					},
 				},
@@ -666,7 +675,6 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							ForceNew: true,
-
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"kind": {
@@ -855,7 +863,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting nic_list for Virtual Machine %s: %s", d.Id(), err)
 	}
 	if err := d.Set("nic_list_status", flattenNicListStatus(resp.Status.Resources.NicList)); err != nil {
-		return fmt.Errorf("error setting nic_list for Virtual Machine %s: %s", d.Id(), err)
+		return fmt.Errorf("error setting nic_list_status for Virtual Machine %s: %s", d.Id(), err)
 	}
 
 	if err := d.Set("serial_port_list", flattenSerialPortList(resp.Status.Resources.SerialPortList)); err != nil {
@@ -1518,6 +1526,10 @@ func expandNicList(d *schema.ResourceData) []*v3.VMNic {
 				if value, ok := val["subnet_uuid"]; ok {
 					v := value.(string)
 					nic.SubnetReference = buildReference(v, "subnet")
+				}
+				if value, ok := val["is_connected"]; ok {
+					v := value.(bool)
+					nic.IsConnected = utils.BoolPtr(v)
 				}
 				nics = append(nics, nic)
 			}

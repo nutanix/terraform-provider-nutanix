@@ -57,6 +57,8 @@ type VMNic struct {
 	// The NIC's UUID, which is used to uniquely identify this particular NIC. This UUID may be used to refer to the NIC
 	// outside the context of the particular VM it is attached to.
 	UUID *string `json:"uuid,omitempty"`
+
+	IsConnected *bool `json:"is_connected,omitempty"`
 }
 
 // DiskAddress Disk Address.
@@ -344,6 +346,8 @@ type VMNicOutputStatus struct {
 	// The NIC's UUID, which is used to uniquely identify this particular NIC. This UUID may be used to refer to the NIC
 	// outside the context of the particular VM it is attached to.
 	UUID *string `json:"uuid,omitempty"`
+
+	IsConnected *bool `json:"is_connected,omitempty"`
 }
 
 // NutanixGuestToolsStatus Information regarding Nutanix Guest Tools.

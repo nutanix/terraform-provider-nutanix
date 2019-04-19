@@ -52,6 +52,10 @@ func flattenNicListStatus(nics []*v3.VMNicOutputStatus) []map[string]interface{}
 
 			}
 
+			if v.IsConnected != nil {
+				nic["is_connected"] = strconv.FormatBool(utils.BoolValue(v.IsConnected))
+			}
+
 			nicLists[k] = nic
 		}
 	}
@@ -84,6 +88,10 @@ func flattenNicList(nics []*v3.VMNic) []map[string]interface{} {
 				nic["subnet_uuid"] = utils.StringValue(v.SubnetReference.UUID)
 				nic["subnet_name"] = utils.StringValue(v.SubnetReference.Name)
 
+			}
+
+			if v.IsConnected != nil {
+				nic["is_connected"] = strconv.FormatBool(utils.BoolValue(v.IsConnected))
 			}
 
 			nicLists[k] = nic
