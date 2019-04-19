@@ -158,28 +158,6 @@ We'll be working with HashiCorp as code stabilizes to upstream this properly, at
 
 [](https://github.com/golang/go)
 
-#### Dep: Go dependency management tool
-
-On MacOS you can install or upgrade to the latest released version with Homebrew:
-
-```sh
-$ brew install dep
-$ brew upgrade dep
-```
-
-On other platforms you can use the `install.sh` script:
-
-```sh
-$ curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-```
-
-It will install into your `$GOPATH/bin` directory by default or any other directory you specify using the `INSTALL_DIRECTORY` environment variable.
-
-If your platform is not supported, you'll need to build it manually or let the team (go/dep team) know and we'll consider adding your platform
-to the release builds.
-
-More Info: https://github.com/golang/dep
-
 ## Install from source
 
 ## Building from sources
@@ -200,14 +178,7 @@ More Info: https://github.com/golang/dep
     go get -u github.com/golang/dep/cmd/dep
     ```
 
-5. Get dependencies:
-
-    ```bash
-    cd $GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix
-    dep ensure
-    ```
-
-6. Run tests:
+5. Run tests:
 
     ```bash
     cd $GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix
@@ -215,7 +186,7 @@ More Info: https://github.com/golang/dep
     make testacc #acceptance tests
     ```
 
-7. Build the binary:
+6. Build the binary:
 
     ```bash
     cd $GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix
@@ -271,11 +242,6 @@ Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provi
 
 ```sh
 $ mkdir $GOPATH/src/github.com/terraform-providers && cd "$_" #if you already created it only change directory
-<<<<<<< HEAD
-
-=======
-$
->>>>>>> chore: fix bad urls in readme.md file
 $ git clone https://github.com/terraform-providers/terraform-provider-nutanix.git
 ```
 
