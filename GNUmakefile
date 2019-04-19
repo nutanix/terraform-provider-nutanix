@@ -34,7 +34,7 @@ lint: fmtcheck
 tools:
 	GO111MODULE=off go get -u github.com/client9/misspell/cmd/misspell
 	GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
-	
+	go get github.com/mitchellh/gox	
 
 vet:
 	@echo "go vet ."
@@ -57,8 +57,7 @@ test-compile:
 # 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m -coverprofile c.out
 # 	go tool cover -html=c.out
 
-cibuild:
-	go get github.com/mitchellh/gox
+cibuild: tools
 	rm -rf pkg/
 	gox -output "pkg/{{.OS}}_{{.Arch}}/terraform-provider-nutanix"
 
