@@ -101,6 +101,29 @@ func flattenNicList(nics []*v3.VMNic) []map[string]interface{} {
 	return nicLists
 }
 
+func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
+	diskList := make([]map[string]interface{}, 0)
+	if disks != nil {
+		diskList = make([]map[string]interface{}, len(disks))
+		for k, v := range disks {
+			disk := make(map[string]interface{})
+
+			disk["uuid"] = utils.StringValue(v.UUID)
+			disk["disk_size_bytes"] = utils.Int64Value(v.DiskSizeBytes)
+			disk["disk_size_mib"] = utils.Int64Value(v.DiskSizeMib)
+
+			if v.DeviceProperties != nil {
+				deviceProps := make([]map[string]interface{}, 1)
+				deviceProp := make(map[string]interface{})
+				deviceProp["device_type"] = v.DeviceProperties.DeviceType
+			}
+
+			diskList[k] = disk
+		}
+	}
+	return diskList
+}
+
 func flattenSerialPortList(serialPorts []*v3.VMSerialPort) []map[string]interface{} {
 	serialPortList := make([]map[string]interface{}, 0)
 	if serialPorts != nil {
