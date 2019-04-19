@@ -34,7 +34,7 @@ lint: fmtcheck
 tools:
 	GO111MODULE=off go get -u github.com/client9/misspell/cmd/misspell
 	GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
-	go get github.com/mitchellh/gox	
+	GO111MODULE=off go get github.com/mitchellh/gox	
 
 vet:
 	@echo "go vet ."
