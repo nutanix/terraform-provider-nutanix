@@ -355,7 +355,7 @@ resource "nutanix_virtual_machine" "vm1" {
 		disk_size_mib = 100
 	},
 	{
-		disk_size_mib = 400
+		disk_size_mib = 200
 	}]
 }
 `, r)
