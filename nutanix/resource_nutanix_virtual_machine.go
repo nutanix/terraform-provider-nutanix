@@ -1141,7 +1141,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if d.HasChange("disk_list") {
-		if res.DiskList, err = expandDiskList(d); err != nil {
+		if res.DiskList, err = expandDiskList(d, false); err != nil {
 			return err
 		}
 	}
@@ -1500,7 +1500,7 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	}
 	vm.SerialPortList = expandSerialPortList(d)
 
-	vmDiskList, err := expandDiskList(d)
+	vmDiskList, err := expandDiskList(d, true)
 
 	vm.DiskList = vmDiskList
 
@@ -1574,7 +1574,7 @@ func expandIPAddressList(ipl []interface{}) []*v3.IPAddress {
 	return nil
 }
 
-func expandDiskList(d *schema.ResourceData) ([]*v3.VMDisk, error) {
+func expandDiskList(d *schema.ResourceData, isCreation bool) ([]*v3.VMDisk, error) {
 	if v, ok := d.GetOk("disk_list"); ok {
 		dsk := v.([]interface{})
 		if len(dsk) > 0 {
@@ -1624,13 +1624,13 @@ func expandDiskList(d *schema.ResourceData) ([]*v3.VMDisk, error) {
 				}
 
 				if v1, ok1 := v["disk_size_bytes"]; ok1 && v1.(int) != 0 {
-					if hasDSRef {
+					if hasDSRef && isCreation {
 						return nil, fmt.Errorf(`"disk_list.%[1]d.disk_size_bytes": conflicts with disk_list.%[1]d.data_source_reference`, k)
 					}
 					dl.DiskSizeBytes = utils.Int64Ptr(int64(v1.(int)))
 				}
 				if v1, ok := v["disk_size_mib"]; ok && v1.(int) != 0 {
-					if hasDSRef {
+					if hasDSRef && isCreation {
 						return nil, fmt.Errorf(`"disk_list.%[1]d.disk_size_mib": conflicts with disk_list.%[1]d.data_source_reference`, k)
 					}
 					dl.DiskSizeMib = utils.Int64Ptr(int64(v1.(int)))
@@ -1738,6 +1738,7 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 	res.NumVcpusPerSocket = response.Status.Resources.NumVcpusPerSocket
 	res.VgaConsoleEnabled = response.Status.Resources.VgaConsoleEnabled
 	res.HardwareClockTimezone = response.Status.Resources.HardwareClockTimezone
+	res.DiskList = response.Spec.Resources.DiskList
 
 	nold := make([]*v3.VMNic, len(response.Status.Resources.NicList))
 	if len(response.Status.Resources.NicList) > 0 {
