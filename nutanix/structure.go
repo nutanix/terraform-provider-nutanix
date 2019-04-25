@@ -1,6 +1,7 @@
 package nutanix
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/hashicorp/terraform/helper/schema"
@@ -112,11 +113,24 @@ func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
 			disk["disk_size_bytes"] = utils.Int64Value(v.DiskSizeBytes)
 			disk["disk_size_mib"] = utils.Int64Value(v.DiskSizeMib)
 
+			var deviceProps []map[string]interface{}
 			if v.DeviceProperties != nil {
-				deviceProps := make([]map[string]interface{}, 1)
+				deviceProps = make([]map[string]interface{}, 1)
 				deviceProp := make(map[string]interface{})
+
+				diskAddress := map[string]interface{}{
+					"device_index": fmt.Sprintf("%d", utils.Int64Value(v.DeviceProperties.DiskAddress.DeviceIndex)),
+					"adapter_type": v.DeviceProperties.DiskAddress.AdapterType,
+				}
+
+				deviceProp["disk_address"] = diskAddress
 				deviceProp["device_type"] = v.DeviceProperties.DeviceType
+
+				deviceProps[0] = deviceProp
 			}
+			disk["device_properties"] = deviceProps
+			disk["data_source_reference"] = flattenReferenceValues(v.DataSourceReference)
+			disk["volume_group_reference"] = flattenReferenceValues(v.VolumeGroupReference)
 
 			diskList[k] = disk
 		}

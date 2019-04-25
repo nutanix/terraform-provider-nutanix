@@ -618,53 +618,52 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 			"disk_list": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"uuid": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ForceNew: true,
+							Computed: true,
 						},
 						"disk_size_bytes": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							ForceNew: true,
+							Computed: true,
+							//ConflictsWith: []string{"disk_list.0.data_source_reference"},
 						},
 						"disk_size_mib": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							ForceNew: true,
+							Computed: true,
+							//ConflictsWith: []string{"disk_list.0.data_source_reference"},
 						},
 						"device_properties": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
+							Computed: true,
 							MaxItems: 1,
-
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"device_type": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
+										Computed: true,
 									},
 									"disk_address": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeMap,
 										Optional: true,
-										ForceNew: true,
-
+										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"device_index": {
 													Type:     schema.TypeInt,
 													Optional: true,
-													ForceNew: true,
+													Computed: true,
 												},
 												"adapter_type": {
 													Type:     schema.TypeString,
 													Optional: true,
-													ForceNew: true,
+													Computed: true,
 												},
 											},
 										},
@@ -673,46 +672,45 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 							},
 						},
 						"data_source_reference": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeMap,
 							Optional: true,
-							ForceNew: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"kind": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
+										Computed: true,
 									},
 									"uuid": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
+										Computed: true,
 									},
 								},
 							},
 						},
-
 						"volume_group_reference": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeMap,
 							Optional: true,
-							ForceNew: true,
+							Computed: true,
 
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"kind": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
+										Computed: true,
 									},
 									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
+										Computed: true,
 									},
 									"uuid": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
+										Computed: true,
 									},
 								},
 							},
@@ -775,7 +773,9 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		spec.ClusterReference = buildReference(clusterUUID.(string), "cluster")
 	}
 
-	getVMResources(d, res)
+	if err := getVMResources(d, res); err != nil {
+		return err
+	}
 
 	spec.Name = utils.StringPtr(n.(string))
 	spec.Resources = res
@@ -865,6 +865,10 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	}
 	if err := d.Set("nic_list_status", flattenNicListStatus(resp.Status.Resources.NicList)); err != nil {
 		return fmt.Errorf("error setting nic_list_status for Virtual Machine %s: %s", d.Id(), err)
+	}
+
+	if err := d.Set("disk_list", flattenDiskList(resp.Spec.Resources.DiskList)); err != nil {
+		return fmt.Errorf("error setting disk_list for Virtual Machine %s: %s", d.Id(), err)
 	}
 
 	if err := d.Set("serial_port_list", flattenSerialPortList(resp.Status.Resources.SerialPortList)); err != nil {
@@ -1136,6 +1140,12 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		res.NicList = expandNicList(d)
 	}
 
+	if d.HasChange("disk_list") {
+		if res.DiskList, err = expandDiskList(d); err != nil {
+			return err
+		}
+	}
+
 	if d.HasChange("serial_port_list") {
 		res.SerialPortList = expandSerialPortList(d)
 	}
@@ -1372,7 +1382,7 @@ func resourceNutanixVirtualMachineExists(d *schema.ResourceData, meta interface{
 	return false, nil
 }
 
-func getVMResources(d *schema.ResourceData, vm *v3.VMResources) {
+func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	vm.PowerState = utils.StringPtr("ON")
 
 	if v, ok := d.GetOk("num_vnuma_nodes"); ok {
@@ -1488,9 +1498,13 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) {
 	if v, ok := d.GetOk("enable_script_exec"); ok {
 		vm.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec = utils.BoolPtr(v.(bool))
 	}
-
-	vm.DiskList = expandDiskList(d)
 	vm.SerialPortList = expandSerialPortList(d)
+
+	vmDiskList, err := expandDiskList(d)
+
+	vm.DiskList = vmDiskList
+
+	return err
 }
 
 func expandNicList(d *schema.ResourceData) []*v3.VMNic {
@@ -1560,23 +1574,17 @@ func expandIPAddressList(ipl []interface{}) []*v3.IPAddress {
 	return nil
 }
 
-func expandDiskList(d *schema.ResourceData) []*v3.VMDisk {
+func expandDiskList(d *schema.ResourceData) ([]*v3.VMDisk, error) {
 	if v, ok := d.GetOk("disk_list"); ok {
 		dsk := v.([]interface{})
 		if len(dsk) > 0 {
 			dls := make([]*v3.VMDisk, len(dsk))
-
 			for k, val := range dsk {
+				hasDSRef := false
 				v := val.(map[string]interface{})
 				dl := &v3.VMDisk{}
 				if v1, ok1 := v["uuid"]; ok1 && v1.(string) != "" {
 					dl.UUID = utils.StringPtr(v1.(string))
-				}
-				if v1, ok1 := v["disk_size_bytes"]; ok1 && v1.(int) != 0 {
-					dl.DiskSizeBytes = utils.Int64Ptr(int64(v1.(int)))
-				}
-				if v1, ok := v["disk_size_mib"]; ok && v1.(int) != 0 {
-					dl.DiskSizeMib = utils.Int64Ptr(int64(v1.(int)))
 				}
 				if v1, ok1 := v["device_properties"]; ok1 {
 					dvp := v1.([]interface{})
@@ -1587,41 +1595,53 @@ func expandDiskList(d *schema.ResourceData) []*v3.VMDisk {
 							dp.DeviceType = utils.StringPtr(v1.(string))
 						}
 						if v2, ok := d["disk_address"]; ok {
-							if len(v2.([]interface{})) > 0 {
-								da := v2.([]interface{})[0].(map[string]interface{})
-								v3disk := &v3.DiskAddress{}
-								if di, diok := da["device_index"]; diok {
-									v3disk.DeviceIndex = utils.Int64Ptr(int64(di.(int)))
-								}
-								if di, diok := da["adapter_type"]; diok {
-									v3disk.AdapterType = utils.StringPtr(di.(string))
-								}
-								dp.DiskAddress = v3disk
+							da := v2.(map[string]interface{})
+							v3disk := &v3.DiskAddress{}
+							if di, diok := da["device_index"]; diok {
+								index, _ := strconv.Atoi(di.(string))
+								v3disk.DeviceIndex = utils.Int64Ptr(int64(index))
 							}
+							if di, diok := da["adapter_type"]; diok {
+								v3disk.AdapterType = utils.StringPtr(di.(string))
+							}
+							dp.DiskAddress = v3disk
+
 						}
 						dl.DeviceProperties = dp
 					}
 				}
-				if v1, ok := v["data_source_reference"]; ok {
-					dsref := v1.([]interface{})
-					if len(dsref) > 0 {
-						dsri := dsref[0].(map[string]interface{})
-						dl.DataSourceReference = validateShortRef(dsri)
-					}
+				if v1, ok := v["data_source_reference"]; ok && len(v1.(map[string]interface{})) != 0 {
+					fmt.Printf("%+v\n", v1)
+					hasDSRef = true
+					dsref := v1.(map[string]interface{})
+					fmt.Printf("len(%d)\n", len(dsref))
+					dl.DataSourceReference = validateShortRef(dsref)
+
 				}
 				if v1, ok := v["volume_group_reference"]; ok {
-					volgr := v1.([]interface{})
-					if len(volgr) > 0 {
-						dsri := volgr[0].(map[string]interface{})
-						dl.VolumeGroupReference = validateRef(dsri)
-					}
+					volgr := v1.(map[string]interface{})
+					dl.VolumeGroupReference = validateRef(volgr)
 				}
+
+				if v1, ok1 := v["disk_size_bytes"]; ok1 && v1.(int) != 0 {
+					if hasDSRef {
+						return nil, fmt.Errorf(`"disk_list.%[1]d.disk_size_bytes": conflicts with disk_list.%[1]d.data_source_reference`, k)
+					}
+					dl.DiskSizeBytes = utils.Int64Ptr(int64(v1.(int)))
+				}
+				if v1, ok := v["disk_size_mib"]; ok && v1.(int) != 0 {
+					if hasDSRef {
+						return nil, fmt.Errorf(`"disk_list.%[1]d.disk_size_mib": conflicts with disk_list.%[1]d.data_source_reference`, k)
+					}
+					dl.DiskSizeMib = utils.Int64Ptr(int64(v1.(int)))
+				}
+
 				dls[k] = dl
 			}
-			return dls
+			return dls, nil
 		}
 	}
-	return nil
+	return nil, nil
 }
 
 func expandSerialPortList(d *schema.ResourceData) []*v3.VMSerialPort {

@@ -65,24 +65,24 @@ func TestAccNutanixVirtualMachine_WithDisk(t *testing.T) {
 			{
 				Config: testAccNutanixVMConfigWithDisk(r),
 			},
-			{
-				Config:             testAccNutanixVMConfigWithDisk(r),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
-			},
+			// {
+			// 	Config:             testAccNutanixVMConfigWithDisk(r),
+			// 	PlanOnly:           true,
+			// 	ExpectNonEmptyPlan: false,
+			// },
 			{
 				Config: testAccNutanixVMConfigWithDiskUpdate(r),
 			},
+			// {
+			// 	Config:             testAccNutanixVMConfigWithDiskUpdate(r),
+			// 	PlanOnly:           true,
+			// 	ExpectNonEmptyPlan: false,
+			// },
 			{
-				Config:             testAccNutanixVMConfigWithDiskUpdate(r),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
-			},
-			{
-				ResourceName:            "nutanix_virtual_machine.vm1",
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"disk_list"},
+				ResourceName:      "nutanix_virtual_machine.vm1",
+				ImportState:       true,
+				ImportStateVerify: true,
+				//ImportStateVerifyIgnore: []string{"disk_list"},
 			},
 		}})
 }
@@ -285,7 +285,16 @@ resource "nutanix_virtual_machine" "vm1" {
 			kind = "image"
 			uuid = "${nutanix_image.cirros-034-disk.id}"
 		}]
-		disk_size_mib = 44
+
+		device_properties = [{
+			disk_address {
+				device_index = 0,
+				adapter_type = "SCSI"
+			}
+			device_type = "DISK"
+		}]
+		#disk_size_bytes = 42950144
+		#disk_size_mib   = 41
 	},
 	{
 		disk_size_mib = 100
@@ -331,7 +340,16 @@ resource "nutanix_virtual_machine" "vm1" {
 			kind = "image"
 			uuid = "${nutanix_image.cirros-034-disk.id}"
 		}]
-		disk_size_mib = 44
+
+		device_properties = [{
+			disk_address {
+				device_index = 0,
+				adapter_type = "SCSI"
+			}
+			device_type = "DISK"
+		}]
+		disk_size_bytes = 68157440
+		disk_size_mib   = 65
 	},
 	{
 		disk_size_mib = 100
