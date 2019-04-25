@@ -17,9 +17,9 @@ testacc: fmtcheck
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
-	goimports -s -w ./$(PKG_NAME)
-	goimports -s -w ./client
-	goimports -s -w ./utils
+	goimports -w ./$(PKG_NAME)
+	goimports -w ./client
+	goimports -w ./utils
 
 fmtcheck:
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
