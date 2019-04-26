@@ -520,7 +520,7 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 										Computed: true,
 									},
 									"disk_address": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeMap,
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -582,7 +582,6 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 					},
 				},
 			},
-
 			"serial_port_list": {
 				Type:     schema.TypeList,
 				Computed: true,
