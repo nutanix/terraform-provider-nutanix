@@ -202,14 +202,12 @@ func setDiskList(disk []*v3.VMDisk, hasCloudInit *v3.GuestCustomizationStatus) [
 			deviceProps["device_type"] = utils.StringValue(v1.DeviceProperties.DeviceType)
 			dp[0] = deviceProps
 
-			da := make([]map[string]interface{}, 1)
 			diskAddress := make(map[string]interface{})
 			if v1.DeviceProperties.DiskAddress != nil {
-				diskAddress["device_index"] = utils.Int64Value(v1.DeviceProperties.DiskAddress.DeviceIndex)
+				diskAddress["device_index"] = fmt.Sprintf("%d", utils.Int64Value(v1.DeviceProperties.DiskAddress.DeviceIndex))
 				diskAddress["adapter_type"] = utils.StringValue(v1.DeviceProperties.DiskAddress.AdapterType)
 			}
-			da[0] = diskAddress
-			deviceProps["disk_address"] = da
+			deviceProps["disk_address"] = diskAddress
 
 			disk["device_properties"] = dp
 

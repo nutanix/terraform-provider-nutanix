@@ -629,13 +629,11 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
-							//ConflictsWith: []string{"disk_list.0.data_source_reference"},
 						},
 						"disk_size_mib": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
-							//ConflictsWith: []string{"disk_list.0.data_source_reference"},
 						},
 						"device_properties": {
 							Type:     schema.TypeList,
