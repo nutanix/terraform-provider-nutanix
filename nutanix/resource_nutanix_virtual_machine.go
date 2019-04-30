@@ -351,9 +351,9 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 							Computed: true,
 						},
 						"is_connected": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeString,
 							Optional: true,
-							Default:  true,
+							Default:  "true",
 						},
 					},
 				},
@@ -813,8 +813,18 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		MinTimeout: 3 * time.Second,
 	}
 
-	if _, err := waitIPConf.WaitForState(); err != nil {
+	vmIntentResponse, err := waitIPConf.WaitForState()
+	if err != nil {
 		log.Printf("[WARN] could not get the IP for VM(%s): %s", uuid, err)
+	} else {
+		vm := vmIntentResponse.(*v3.VMIntentResponse)
+
+		if len(vm.Status.Resources.NicList) > 0 && len(vm.Status.Resources.NicList[0].IPEndpointList) != 0 {
+			d.SetConnInfo(map[string]string{
+				"type": "ssh",
+				"host": *vm.Status.Resources.NicList[0].IPEndpointList[0].IP,
+			})
+		}
 	}
 
 	// Set terraform state id
@@ -1541,8 +1551,10 @@ func expandNicList(d *schema.ResourceData) []*v3.VMNic {
 					nic.SubnetReference = buildReference(v, "subnet")
 				}
 				if value, ok := val["is_connected"]; ok {
-					v := value.(bool)
-					nic.IsConnected = utils.BoolPtr(v)
+					v := value.(string)
+					IsConnected, _ := strconv.ParseBool(v)
+					nic.IsConnected = utils.BoolPtr(IsConnected)
+
 				}
 				nics = append(nics, nic)
 			}
