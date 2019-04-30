@@ -50,7 +50,7 @@ resource "nutanix_category_key" "test_key"{
 
 
 data "nutanix_category_key" "test_key" {
-	name = "${nutanix_category_key.test_update.name}"
+	name = "${nutanix_category_key.test_key.name}"
 }`
 
 const testAccCategoryKeyDataSourceConfigWithValues = `
