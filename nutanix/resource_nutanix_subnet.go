@@ -380,6 +380,11 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
+		errDel := resourceNutanixSubnetDelete(d, meta)
+		if errDel != nil {
+			return fmt.Errorf("error deleting subnet (%s) after read error: %+v", id, errDel)
+		}
+		d.SetId("")
 		return fmt.Errorf("error reading subnet id (%s): %+v", id, err)
 	}
 
