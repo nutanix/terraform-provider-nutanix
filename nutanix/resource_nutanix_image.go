@@ -306,7 +306,12 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if _, errw := stateConf.WaitForState(); errw != nil {
-		return fmt.Errorf("error waiting for image (%s) to create: %s", d.Id(), errw)
+		delErr := resourceNutanixImageDelete(d, meta)
+		if delErr != nil {
+			return fmt.Errorf("error waiting for image (%s) to delete in creation: %s", d.Id(), delErr)
+		}
+		d.SetId("")
+		return fmt.Errorf("error waiting for image (%s) to create: %s", UUID, errw)
 	}
 
 	// if we need to upload an image, we do it now
@@ -502,7 +507,13 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("error waiting for image (%s) to update: %s", d.Id(), err)
+		delErr := resourceNutanixImageDelete(d, meta)
+		if delErr != nil {
+			return fmt.Errorf("error waiting for image (%s) to delete in update: %s", d.Id(), delErr)
+		}
+		uuid := d.Id()
+		d.SetId("")
+		return fmt.Errorf("error waiting for image (%s) to update: %s", uuid, err)
 	}
 
 	return resourceNutanixImageRead(d, meta)
@@ -542,6 +553,7 @@ func resourceNutanixImageDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
+		d.SetId("")
 		return fmt.Errorf("error waiting for image (%s) to delete: %s", d.Id(), err)
 	}
 
