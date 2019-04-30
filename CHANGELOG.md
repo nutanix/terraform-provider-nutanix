@@ -1,4 +1,53 @@
 ## 1.0.1 (Unreleased)
+
+[Full Changelog](https://github.com/terraform-providers/terraform-provider-nutanix/compare/v1.0.0...HEAD)
+
+**Implemented enhancements:**
+
+- Ability to resize a vdisk when deploying from image resource [\#23](https://github.com/terraform-providers/terraform-provider-nutanix/issues/23)
+- nutanix\_image: long running image create completes successfully at 10 minutes, without getting success call from API [\#20](https://github.com/terraform-providers/terraform-provider-nutanix/issues/20)
+- Datasources for categories [\#8](https://github.com/terraform-providers/terraform-provider-nutanix/issues/8)
+
+**Fixed bugs:**
+
+- nutanix\\_image: long running image create completes successfully at 10 minutes, without getting success call from API [\#20](https://github.com/terraform-providers/terraform-provider-nutanix/issues/20)
+- nutanix\_virtual\_machine, ip\_endpoint\_list not correctly working [\#12](https://github.com/terraform-providers/terraform-provider-nutanix/issues/12)
+- nutanix\_clusters data source makes Terraform crash [\#10](https://github.com/terraform-providers/terraform-provider-nutanix/issues/10)
+
+**Closed issues:**
+
+- Terraform error trying to use nutanix\_virtual\_machine data source [\#30](https://github.com/terraform-providers/terraform-provider-nutanix/issues/30)
+- \[PROPOSAL\] Switch to Go Modules [\#29](https://github.com/terraform-providers/terraform-provider-nutanix/issues/29)
+- hard code \(kind\) to be appropriate kind for each resource [\#27](https://github.com/terraform-providers/terraform-provider-nutanix/issues/27)
+- Implement HTTP proxy capability at provider level [\#26](https://github.com/terraform-providers/terraform-provider-nutanix/issues/26)
+- Ability to add a serial port to a VM [\#25](https://github.com/terraform-providers/terraform-provider-nutanix/issues/25)
+- Add additional acceptance test configurations for nutanix resources and data sources [\#24](https://github.com/terraform-providers/terraform-provider-nutanix/issues/24)
+- Example main.tf - guest\_customization\_cloud\_init does not work [\#21](https://github.com/terraform-providers/terraform-provider-nutanix/issues/21)
+- Can't apply just a single resource "nutanix\_image" [\#18](https://github.com/terraform-providers/terraform-provider-nutanix/issues/18)
+
+**Merged pull requests:**
+
+- fix category key data source basic test [\#55](https://github.com/terraform-providers/terraform-provider-nutanix/pull/55) ([marinsalinas](https://github.com/marinsalinas))
+- Vdisk update \#23 [\#54](https://github.com/terraform-providers/terraform-provider-nutanix/pull/54) ([marinsalinas](https://github.com/marinsalinas))
+- Data Source for categories [\#51](https://github.com/terraform-providers/terraform-provider-nutanix/pull/51) ([marinsalinas](https://github.com/marinsalinas))
+- chore: update cibuild make formula to build for any OS \(windows, linu… [\#50](https://github.com/terraform-providers/terraform-provider-nutanix/pull/50) ([marinsalinas](https://github.com/marinsalinas))
+- chore: fix bad urls in readme.md file [\#48](https://github.com/terraform-providers/terraform-provider-nutanix/pull/48) ([marinsalinas](https://github.com/marinsalinas))
+- chore: fix bad urls in readme.md file [\#47](https://github.com/terraform-providers/terraform-provider-nutanix/pull/47) ([marinsalinas](https://github.com/marinsalinas))
+- Add HTTP Proxy capability [\#46](https://github.com/terraform-providers/terraform-provider-nutanix/pull/46) ([marinsalinas](https://github.com/marinsalinas))
+- Add Serial Port support in VM resource and data source [\#45](https://github.com/terraform-providers/terraform-provider-nutanix/pull/45) ([marinsalinas](https://github.com/marinsalinas))
+- Fix: nutanix\_guest\_tools attributes [\#43](https://github.com/terraform-providers/terraform-provider-nutanix/pull/43) ([marinsalinas](https://github.com/marinsalinas))
+- Image wait timeout \#20 [\#42](https://github.com/terraform-providers/terraform-provider-nutanix/pull/42) ([marinsalinas](https://github.com/marinsalinas))
+- refactor: add nic\_list\_status to separate the computed values [\#40](https://github.com/terraform-providers/terraform-provider-nutanix/pull/40) ([marinsalinas](https://github.com/marinsalinas))
+- Remove kind as a argument in cluster\_reference and metadata. [\#39](https://github.com/terraform-providers/terraform-provider-nutanix/pull/39) ([marinsalinas](https://github.com/marinsalinas))
+- Fix clusters Data Source makes tf crash \#10 [\#38](https://github.com/terraform-providers/terraform-provider-nutanix/pull/38) ([marinsalinas](https://github.com/marinsalinas))
+- \[MODULES\] Switch to Go Modules [\#37](https://github.com/terraform-providers/terraform-provider-nutanix/pull/37) ([appilon](https://github.com/appilon))
+- website: change guest\_customization\_cloud\_init argument reference [\#32](https://github.com/terraform-providers/terraform-provider-nutanix/pull/32) ([marinsalinas](https://github.com/marinsalinas))
+- \[AUTOMATED\] Upgrade to Go 1.11 [\#16](https://github.com/terraform-providers/terraform-provider-nutanix/pull/16) ([appilon](https://github.com/appilon))
+- Update docs to reflect removal of network security rule resource [\#14](https://github.com/terraform-providers/terraform-provider-nutanix/pull/14) ([alias-dev](https://github.com/alias-dev))
+- correcting example [\#7](https://github.com/terraform-providers/terraform-provider-nutanix/pull/7) ([olljanat](https://github.com/olljanat))
+- Fix Spell and style [\#3](https://github.com/terraform-providers/terraform-provider-nutanix/pull/3) ([ryujisnote](https://github.com/ryujisnote))
+- fix cluster datasource\(s\) if no http/smtp credentials are configured [\#1](https://github.com/terraform-providers/terraform-provider-nutanix/pull/1) ([simonfuhrer](https://github.com/simonfuhrer))
+
 ## 1.0.0 (October 09, 2018)
 
 **Implemented enhancements:**
