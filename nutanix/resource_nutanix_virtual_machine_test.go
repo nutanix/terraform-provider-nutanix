@@ -487,7 +487,6 @@ resource "nutanix_virtual_machine" "vm3" {
 			kind = "image"
 			uuid = "${nutanix_image.cirros-034-disk.id}"
 		}]
-		disk_size_mib = 44
 	}]
 
 	nic_list = [{
