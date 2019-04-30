@@ -799,8 +799,8 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		MinTimeout: 3 * time.Second,
 	}
 
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("error waiting for vm (%s) to create: %s", d.Id(), err)
+	if _, errWaitTask := stateConf.WaitForState(); errWaitTask != nil {
+		return fmt.Errorf("error waiting for vm (%s) to create: %s", d.Id(), errWaitTask)
 	}
 
 	//Wait for IP available
