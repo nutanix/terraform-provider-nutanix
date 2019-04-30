@@ -11,7 +11,7 @@
 #     - nutanix_subnet
 #     - nutanix_image
 # - data sources
-#     -
+#     - nutanix_clusters
 #     -
 #     -
 # - script Variables
@@ -27,13 +27,15 @@
 ###   While it may be possible to use Prism Element directly, Nutanix's
 ###   provider is not structured or tested for this. Using Prism Central will
 ###   give the broadest capabilities across the board
-provider "nutanix" {
+/*  provider "nutanix" {
   username  = "admin"
   password  = "Nutanix/1234"
   endpoint  = "10.5.80.255"
   insecure  = true
   port      = 9440
-}
+}  */
+
+data "nutanix_clusters" "clusters" {}
 
 ### Define Script Local Variables
 ### This can be used for any manner of things, but is useful for like clusterid,
@@ -41,7 +43,7 @@ provider "nutanix" {
 ### TODO: Need to make clusters a data source object, such that consumers do
 ###       not need to manually provision cluster ID
 locals {
-  cluster1   = "00054051-250f-5ccc-0000-00000000cf0d"
+  cluster1 = "${data.nutanix_clusters.clusters.entities.1.metadata.uuid}"
 }
 
 ##########################
@@ -97,9 +99,11 @@ locals {
 #   called in as data sources, which you can see in the data sources section
 #   above.
 resource "nutanix_image" "cirros-034-disk" {
-    name        = "cirros-034-disk"
-    source_uri  = "http://endor.dyn.nutanix.com/acro_images/DISKs/cirros-0.3.4-x86_64-disk.img"
-    description = "heres a tiny linux image, not an iso, but a real disk!"
+  name = "cirros-034-disk"
+
+  #source_uri  = "http://endor.dyn.nutanix.com/acro_images/DISKs/cirros-0.3.4-x86_64-disk.img"
+  source_uri  = "http://download.cirros-cloud.net/0.3.4/cirros-0.3.4-x86_64-disk.img"
+  description = "heres a tiny linux image, not an iso, but a real disk!"
 }
 
 ### Subnet Resources (Virtual Networks within AHV)
@@ -143,28 +147,33 @@ resource "nutanix_image" "cirros-034-disk" {
 # ### Define Terraform Managed Subnets
 resource "nutanix_subnet" "infra-managed-network-140" {
   # What cluster will this VLAN live on?
-  cluster_reference = {
-    kind = "cluster"
-    uuid = "${local.cluster1}"
-  }
+  cluster_uuid = "${local.cluster1}"
 
   # General Information
   name        = "infra-managed-network-140"
   vlan_id     = 140
   subnet_type = "VLAN"
 
-#   # Provision a Managed L3 Network
-#   # This bit is only needed if you intend to turn on AHV's IPAM
-# 	subnet_ip          = "10.250.140.0"
-#   default_gateway_ip = "10.250.140.1"
-#   prefix_length      = 24
-#   dhcp_options {
-# 		boot_file_name   = "bootfile"
-# 		domain_name      = "nutanix"
-# 		domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
-# 		domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
-# 		tftp_server_name = "10.250.140.200"
-#   }
+  # Provision a Managed L3 Network
+  # This bit is only needed if you intend to turn on AHV's IPAM
+    subnet_ip = "172.21.32.0"
+
+  default_gateway_ip = "172.21.32.1"
+  prefix_length      = 24
+
+  dhcp_options {
+    boot_file_name   = "bootfile"
+    domain_name      = "ntnxlab"
+    tftp_server_name = "172.21.32.200"
+  }
+
+  dhcp_server_address {
+    ip = "172.21.32.254"
+  }
+
+  dhcp_domain_name_server_list = ["172.21.30.223"]
+  dhcp_domain_search_list      = ["ntnxlab.local"]
+  #ip_config_pool_list_ranges   = ["172.21.32.3 172.21.32.253"] 
 }
 
 ### Virtual Machine Resources
@@ -186,23 +195,18 @@ resource "nutanix_virtual_machine" "demo-01-web" {
   memory_size_mib      = 4096
 
   # What cluster will this VLAN live on?
-  cluster_reference = {
-    kind = "cluster"
-    uuid = "${local.cluster1}"
-  }
+  cluster_uuid = "${local.cluster1}"
 
   # What networks will this be attached to?
   nic_list = [{
     # subnet_reference is saying, which VLAN/network do you want to attach here?
-    subnet_reference = {
-      kind = "subnet"
-      uuid = "${nutanix_subnet.infra-managed-network-140.id}"
-    }
+    subnet_uuid = "${nutanix_subnet.infra-managed-network-140.id}"
 
-  #   ip_endpoint_list = {
-  #     ip   = "${local.ip_haproxy}"
-  #     type = "ASSIGNED"
-  #   }
+    # Used to set static IP.
+      # ip_endpoint_list = {
+      #   ip   = "172.21.32.20"
+      #   type = "ASSIGNED"
+      # }
   }]
 
   # What disk/cdrom configuration will this have?
@@ -215,11 +219,41 @@ resource "nutanix_virtual_machine" "demo-01-web" {
       uuid = "${nutanix_image.cirros-034-disk.id}"
     }]
 
-    # defining an additional entry in the disk_list array will create another
-    # disk in addition to the image we're showing off above.
     device_properties = [{
+      disk_address {
+        device_index = 0
+        adapter_type = "SCSI"
+      }
+
       device_type = "DISK"
     }]
-    disk_size_mib = 5000
-  }]
+  },
+    {
+      # defining an additional entry in the disk_list array will create another.
+
+      #disk_size_mib and disk_size_bytes must be set together.
+      disk_size_mib   = 100000
+      disk_size_bytes = 104857600000
+    },
+  ]
+
+  #Using provisioners
+  #Use as the following provisioner block if you know that you are geeting an reachable IP address.
+  #Get ssh connection and execute commands.
+  # provisioner "remote-exec" {
+  #   connection {
+  #     user     = "cirros"    # user from the image attached
+  #     password = "cubswin:)" #password from the user 
+  #     #host    = "172.21.32.20" #Set if you know 
+  #   }
+
+  #   inline = [
+  #     "echo \"Hello World\"",
+  #   ]
+  # }
 }
+
+# Show IP address
+  output "ip_address" {
+   value = "${lookup(nutanix_virtual_machine.demo-01-web.nic_list_status.0.ip_endpoint_list[0], "ip")}"
+ }
