@@ -1,4 +1,4 @@
-## 1.0.1 (Unreleased)
+## 1.0.1 (May 01, 2019)
 
 [Full Changelog](https://github.com/terraform-providers/terraform-provider-nutanix/compare/v1.0.0...HEAD)
 
