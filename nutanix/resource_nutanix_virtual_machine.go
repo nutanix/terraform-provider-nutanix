@@ -1762,6 +1762,7 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 				SubnetReference:               v.SubnetReference,
 				NetworkFunctionNicType:        v.NetworkFunctionNicType,
 				NetworkFunctionChainReference: v.NetworkFunctionChainReference,
+				IsConnected:                   v.IsConnected,
 			}
 
 		}
