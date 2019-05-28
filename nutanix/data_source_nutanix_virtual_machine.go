@@ -264,6 +264,10 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+                                                "is_connected": {
+                                                        Type:     schema.TypeString,
+                                                        Computed: true,
+                                                },
 					},
 				},
 			},
