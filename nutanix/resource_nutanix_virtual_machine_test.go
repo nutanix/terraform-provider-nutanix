@@ -57,6 +57,8 @@ func TestAccNutanixVirtualMachine_basic(t *testing.T) {
 
 func TestAccNutanixVirtualMachine_WithDisk(t *testing.T) {
 	r := acctest.RandInt()
+
+	resourceName := "nutanix_virtual_machine.vm-disk"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -64,25 +66,22 @@ func TestAccNutanixVirtualMachine_WithDisk(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNutanixVMConfigWithDisk(r),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "disk_list.#"),
+					resource.TestCheckResourceAttr(resourceName, "disk_list.#", "4"),
+				),
 			},
-			// {
-			// 	Config:             testAccNutanixVMConfigWithDisk(r),
-			// 	PlanOnly:           true,
-			// 	ExpectNonEmptyPlan: false,
-			// },
 			{
 				Config: testAccNutanixVMConfigWithDiskUpdate(r),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "disk_list.#"),
+					resource.TestCheckResourceAttr(resourceName, "disk_list.#", "3"),
+				),
 			},
-			// {
-			// 	Config:             testAccNutanixVMConfigWithDiskUpdate(r),
-			// 	PlanOnly:           true,
-			// 	ExpectNonEmptyPlan: false,
-			// },
 			{
-				ResourceName:      "nutanix_virtual_machine.vm1",
+				ResourceName:      "nutanix_virtual_machine.vm-disk",
 				ImportState:       true,
 				ImportStateVerify: true,
-				//ImportStateVerifyIgnore: []string{"disk_list"},
 			},
 		}})
 }
@@ -270,7 +269,7 @@ resource "nutanix_image" "cirros-034-disk" {
     description = "heres a tiny linux image, not an iso, but a real disk!"
 }
 
-resource "nutanix_virtual_machine" "vm1" {
+resource "nutanix_virtual_machine" "vm-disk" {
   name = "test-dou-vm-%[1]d"
   cluster_uuid = "${local.cluster1}"
   num_vcpus_per_socket = 1
@@ -325,7 +324,7 @@ resource "nutanix_image" "cirros-034-disk" {
     description = "heres a tiny linux image, not an iso, but a real disk!"
 }
 
-resource "nutanix_virtual_machine" "vm1" {
+resource "nutanix_virtual_machine" "vm-disk" {
   name = "test-dou-vm-%[1]d"
   cluster_uuid = "${local.cluster1}"
   num_vcpus_per_socket = 1
