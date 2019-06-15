@@ -995,6 +995,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	pw := &v3.VMPowerStateMechanism{}
 
 	response, err := conn.V3.GetVM(d.Id())
+
 	preFillResUpdateRequest(res, response)
 	preFillGTUpdateRequest(guestTool, response)
 	preFillGUpdateRequest(guest, response)
@@ -1739,20 +1740,20 @@ func expandNGT(d *schema.ResourceData) *v3.GuestToolsSpec {
 }
 
 func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse) {
-	res.GuestOsID = response.Status.Resources.GuestOsID
-	res.NumSockets = response.Status.Resources.NumSockets
-	res.PowerState = response.Status.Resources.PowerState
-	res.MemorySizeMib = response.Status.Resources.MemorySizeMib
-	res.VMVnumaConfig = &v3.VMVnumaConfig{NumVnumaNodes: response.Status.Resources.VnumaConfig.NumVnumaNodes}
-	res.ParentReference = response.Status.Resources.ParentReference
-	res.NumVcpusPerSocket = response.Status.Resources.NumVcpusPerSocket
-	res.VgaConsoleEnabled = response.Status.Resources.VgaConsoleEnabled
-	res.HardwareClockTimezone = response.Status.Resources.HardwareClockTimezone
+	res.GuestOsID = response.Spec.Resources.GuestOsID
+	res.NumSockets = response.Spec.Resources.NumSockets
+	res.PowerState = response.Spec.Resources.PowerState
+	res.MemorySizeMib = response.Spec.Resources.MemorySizeMib
+	res.VMVnumaConfig = &v3.VMVnumaConfig{NumVnumaNodes: response.Spec.Resources.VMVnumaConfig.NumVnumaNodes}
+	res.ParentReference = response.Spec.Resources.ParentReference
+	res.NumVcpusPerSocket = response.Spec.Resources.NumVcpusPerSocket
+	res.VgaConsoleEnabled = response.Spec.Resources.VgaConsoleEnabled
+	res.HardwareClockTimezone = response.Spec.Resources.HardwareClockTimezone
 	res.DiskList = response.Spec.Resources.DiskList
 
-	nold := make([]*v3.VMNic, len(response.Status.Resources.NicList))
-	if len(response.Status.Resources.NicList) > 0 {
-		for k, v := range response.Status.Resources.NicList {
+	nold := make([]*v3.VMNic, len(response.Spec.Resources.NicList))
+	if len(response.Spec.Resources.NicList) > 0 {
+		for k, v := range response.Spec.Resources.NicList {
 			nold[k] = &v3.VMNic{
 				UUID:                          v.UUID,
 				Model:                         v.Model,
@@ -1772,9 +1773,9 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 	res.NicList = nold
 
 	var spl []*v3.VMSerialPort
-	if len(response.Status.Resources.SerialPortList) > 0 {
-		spl = make([]*v3.VMSerialPort, len(response.Status.Resources.SerialPortList))
-		for k, v := range response.Status.Resources.SerialPortList {
+	if len(response.Spec.Resources.SerialPortList) > 0 {
+		spl = make([]*v3.VMSerialPort, len(response.Spec.Resources.SerialPortList))
+		for k, v := range response.Spec.Resources.SerialPortList {
 			spl[k] = &v3.VMSerialPort{
 				Index:       v.Index,
 				IsConnected: v.IsConnected,
@@ -1784,9 +1785,9 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 	}
 	res.SerialPortList = spl
 
-	gold := make([]*v3.VMGpu, len(response.Status.Resources.GpuList))
-	if len(response.Status.Resources.GpuList) > 0 {
-		for k, v := range response.Status.Resources.GpuList {
+	gold := make([]*v3.VMGpu, len(response.Spec.Resources.GpuList))
+	if len(response.Spec.Resources.GpuList) > 0 {
+		for k, v := range response.Spec.Resources.GpuList {
 			gold[k] = &v3.VMGpu{
 				Mode:     v.Mode,
 				Vendor:   v.Vendor,
@@ -1797,19 +1798,19 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 		gold = nil
 	}
 	res.GpuList = gold
-	if response.Status.Resources.BootConfig != nil {
-		res.BootConfig = response.Status.Resources.BootConfig
+	if response.Spec.Resources.BootConfig != nil {
+		res.BootConfig = response.Spec.Resources.BootConfig
 	} else {
 		res.BootConfig = nil
 	}
 }
 
 func preFillGTUpdateRequest(guestTool *v3.GuestToolsSpec, response *v3.VMIntentResponse) {
-	if response.Status.Resources.GuestTools != nil {
+	if response.Spec.Resources.GuestTools != nil {
 		guestTool.NutanixGuestTools = &v3.NutanixGuestToolsSpec{
-			EnabledCapabilityList: response.Status.Resources.GuestTools.NutanixGuestTools.EnabledCapabilityList,
-			IsoMountState:         response.Status.Resources.GuestTools.NutanixGuestTools.IsoMountState,
-			State:                 response.Status.Resources.GuestTools.NutanixGuestTools.State,
+			EnabledCapabilityList: response.Spec.Resources.GuestTools.NutanixGuestTools.EnabledCapabilityList,
+			IsoMountState:         response.Spec.Resources.GuestTools.NutanixGuestTools.IsoMountState,
+			State:                 response.Spec.Resources.GuestTools.NutanixGuestTools.State,
 		}
 	} else {
 		guestTool = nil
@@ -1817,19 +1818,19 @@ func preFillGTUpdateRequest(guestTool *v3.GuestToolsSpec, response *v3.VMIntentR
 }
 
 func preFillGUpdateRequest(guest *v3.GuestCustomization, response *v3.VMIntentResponse) {
-	if response.Status.Resources.GuestCustomization != nil {
-		guest.CloudInit = response.Status.Resources.GuestCustomization.CloudInit
-		guest.Sysprep = response.Status.Resources.GuestCustomization.Sysprep
-		guest.IsOverridable = response.Status.Resources.GuestCustomization.IsOverridable
+	if response.Spec.Resources.GuestCustomization != nil {
+		guest.CloudInit = response.Spec.Resources.GuestCustomization.CloudInit
+		guest.Sysprep = response.Spec.Resources.GuestCustomization.Sysprep
+		guest.IsOverridable = response.Spec.Resources.GuestCustomization.IsOverridable
 	} else {
 		guest = nil
 	}
 }
 
 func preFillPWUpdateRequest(pw *v3.VMPowerStateMechanism, response *v3.VMIntentResponse) {
-	if response.Status.Resources.PowerStateMechanism != nil {
-		pw.Mechanism = response.Status.Resources.PowerStateMechanism.Mechanism
-		pw.GuestTransitionConfig = response.Status.Resources.PowerStateMechanism.GuestTransitionConfig
+	if response.Spec.Resources.PowerStateMechanism != nil {
+		pw.Mechanism = response.Spec.Resources.PowerStateMechanism.Mechanism
+		pw.GuestTransitionConfig = response.Spec.Resources.PowerStateMechanism.GuestTransitionConfig
 	} else {
 		pw = nil
 	}
