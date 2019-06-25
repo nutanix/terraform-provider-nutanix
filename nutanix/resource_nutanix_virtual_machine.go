@@ -555,11 +555,13 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"guest_customization_cloud_init_meta_data": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"guest_customization_cloud_init_custom_key_values": {
 				Type:     schema.TypeMap,
@@ -575,6 +577,7 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"install_type": {
@@ -594,6 +597,7 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"should_fail_on_script_failure": {
 				Type:     schema.TypeBool,
@@ -1111,12 +1115,12 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if d.HasChange("guest_customization_cloud_init_user_data") {
-		_, n := d.GetChange("guest_customization_user_data")
+		_, n := d.GetChange("guest_customization_cloud_init_user_data")
 		cloudInit.UserData = utils.StringPtr(n.(string))
 	}
 
 	if d.HasChange("guest_customization_cloud_init_meta_data") {
-		_, n := d.GetChange("guest_customization_meta_data")
+		_, n := d.GetChange("guest_customization_cloud_init_meta_data")
 		cloudInit.MetaData = utils.StringPtr(n.(string))
 	}
 
