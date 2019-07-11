@@ -79,7 +79,7 @@ resource "nutanix_subnet" "test" {
 	subnet_ip = "192.168.0.0"
 	#ip_config_pool_list_ranges = ["192.168.0.5", "192.168.0.100"]
 
-	dhcp_options {
+	dhcp_options = {
 		boot_file_name   = "bootfile"
 		domain_name      = "nutanix"
 		tftp_server_name = "10.250.140.200"
@@ -115,7 +115,7 @@ resource "nutanix_subnet" "test" {
 	subnet_ip = "192.168.0.0"
 	ip_config_pool_list_ranges = ["192.168.0.10 192.168.0.100"]
 
-	dhcp_options {
+	dhcp_options = {
 		boot_file_name   = "bootfile"
 		domain_name      = "nutanix"
 		tftp_server_name = "10.250.140.200"
@@ -136,13 +136,12 @@ func testAccSubnetDataSourceConfigNameDuplicated(r int) string {
 data "nutanix_clusters" "clusters" {}
 
 locals {
-	cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
-	? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+	cluster1 = data.nutanix_clusters.clusters.entities[0].service_list[0] == "PRISM_CENTRAL" ? data.nutanix_clusters.clusters.entities[1].metadata.uuid : data.nutanix_clusters.clusters.entities[0].metadata.uuid
 }
 
 resource "nutanix_subnet" "test" {
 	name = "dou_vlan0_test_%d"
-	cluster_uuid = "${local.cluster1}"
+	cluster_uuid = "local.cluster1"
 	vlan_id = %d
 	subnet_type = "VLAN"
 
@@ -151,7 +150,7 @@ resource "nutanix_subnet" "test" {
 	subnet_ip = "192.168.0.0"
 	ip_config_pool_list_ranges = ["192.168.0.10 192.168.0.100"]
 
-	dhcp_options {
+	dhcp_options = {
 		boot_file_name   = "bootfile"
 		domain_name      = "nutanix"
 		tftp_server_name = "10.250.140.200"
@@ -163,7 +162,7 @@ resource "nutanix_subnet" "test" {
 
 resource "nutanix_subnet" "test1" {
 	name = "${nutanix_subnet.test.name}"
-	cluster_uuid= "${data.nutanix_clusters.clusters.entities.1.metadata.uuid}"
+	cluster_uuid= local.cluster1
 	vlan_id = %d
 	subnet_type = "VLAN"
 	prefix_length = 24
@@ -171,7 +170,7 @@ resource "nutanix_subnet" "test1" {
 	subnet_ip = "192.168.0.0"
 	#ip_config_pool_list_ranges = ["192.168.0.5", "192.168.0.100"]
 
-	dhcp_options {
+	dhcp_options = {
 		boot_file_name   = "bootfile"
 		domain_name      = "nutanix"
 		tftp_server_name = "10.250.140.200"
@@ -182,8 +181,8 @@ resource "nutanix_subnet" "test1" {
 }
 
 data "nutanix_subnet" "test" {
-	subnet_id   = "${nutanix_subnet.test1.id}"
-	subnet_name = "${nutanix_subnet.test1.name}"
+	subnet_id   = "nutanix_subnet.test1.id"
+	subnet_name = "nutanix_subnet.test1.name"
 }
 `, r, r, r+2)
 }
