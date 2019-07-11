@@ -201,7 +201,7 @@ resource "nutanix_subnet" "acctest-managed" {
 	subnet_ip          = "10.250.140.0"
   default_gateway_ip = "10.250.140.1"
   prefix_length = 24
-  dhcp_options {
+  dhcp_options = {
 		boot_file_name   = "bootfile"
 		domain_name      = "nutanix"
 		tftp_server_name = "10.250.140.200"
@@ -237,13 +237,13 @@ resource "nutanix_subnet" "acctest-managed" {
 	subnet_ip          = "10.250.141.0"
   default_gateway_ip = "10.250.141.1"
   prefix_length = 24
-  dhcp_options {
+  dhcp_options = {
 		boot_file_name   = "bootfile"
 		domain_name      = "nutanix"
 		tftp_server_name = "10.250.141.200"
 	}
 
-	dhcp_server_address {
+	dhcp_server_address = {
 		ip = "10.250.141.254"
 	}
 
@@ -277,7 +277,7 @@ resource "nutanix_subnet" "acctest-managed-categories" {
 	subnet_ip          = "10.250.140.0"
   default_gateway_ip = "10.250.140.1"
   prefix_length = 24
-  dhcp_options {
+  dhcp_options = {
 		boot_file_name   = "bootfile"
 		domain_name      = "nutanix"
 		tftp_server_name = "10.250.140.200"
@@ -285,7 +285,7 @@ resource "nutanix_subnet" "acctest-managed-categories" {
 	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
 	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
 
-	categories {
+	categories = {
 		Environment = "Production"
 	}
 }
@@ -316,7 +316,7 @@ resource "nutanix_subnet" "acctest-managed-categories" {
 	subnet_ip          = "10.250.140.0"
   default_gateway_ip = "10.250.140.1"
   prefix_length = 24
-  dhcp_options {
+  dhcp_options = {
 		boot_file_name   = "bootfile"
 		domain_name      = "nutanix"
 		tftp_server_name = "10.250.140.200"
@@ -324,7 +324,7 @@ resource "nutanix_subnet" "acctest-managed-categories" {
 	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
 	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
 
-	categories {
+	categories = {
 		Environment = "Staging"
 	}
 }
@@ -355,7 +355,7 @@ resource "nutanix_subnet" "acctest-managed-categories" {
 	subnet_ip          = "10.250.140.0"
   default_gateway_ip = "10.250.140.1"
   prefix_length = 24
-  dhcp_options {
+  dhcp_options = {
 		boot_file_name   = "bootfile"
 		domain_name      = "nutanix"
 		tftp_server_name = "10.250.140.200"
@@ -395,14 +395,14 @@ resource "nutanix_subnet" "acctest-managed-categories" {
 	subnet_ip          = "10.250.140.0"
   default_gateway_ip = "10.250.140.1"
   prefix_length = 24
-  dhcp_options {
+  dhcp_options = {
 		boot_file_name   = "bootfile"
 		domain_name      = "nutanix"
 		tftp_server_name = "10.250.140.200"
 	}
 
 	ip_config_pool_list_ranges= [
-    "10.250.140.110" #bad configuration
+    	"10.250.140.110" #bad configuration
   ]
 
 	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
