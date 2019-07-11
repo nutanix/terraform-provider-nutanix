@@ -13,7 +13,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+	"github.com/hashicorp/terraform/helper/logging"
 )
 
 const (
@@ -75,7 +75,7 @@ func NewClient(credentials *Credentials) (*Client, error) {
 
 	httpClient := http.DefaultClient
 
-	httpClient.Transport = transCfg
+	httpClient.Transport = logging.NewTransport("Nutanix", transCfg)
 
 	baseURL, err := url.Parse(fmt.Sprintf(defaultBaseURL, credentials.URL))
 
@@ -155,13 +155,10 @@ func (c *Client) OnRequestCompleted(rc RequestCompletionCallback) {
 // Do performs request passed
 func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error {
 	req = req.WithContext(ctx)
-	utils.DebugRequest(req)
 	resp, err := c.client.Do(req)
 	if err != nil {
 		return err
 	}
-
-	utils.DebugResponse(resp)
 	defer func() {
 		if rerr := resp.Body.Close(); err == nil {
 			err = rerr
