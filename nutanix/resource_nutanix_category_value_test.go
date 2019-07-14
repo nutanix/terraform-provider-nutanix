@@ -114,7 +114,7 @@ func testAccNutanixCategoryValueConfig(rInt int) string {
 	return getCategoryValueResource(rInt) +
 		`
 resource "nutanix_category_value" "test"{
-    name = "${nutanix_category_key.test-category-key.id}"
+    name = nutanix_category_key.test-category-key.id
 	description = "Test Category Value"
 	value = "test-value"
 }
@@ -125,7 +125,7 @@ func testAccNutanixCategoryValueConfigToUpdate(rInt int, value, description stri
 	return getCategoryValueResource(rInt) +
 		fmt.Sprintf(`
 resource "nutanix_category_value" "test_update"{
-    name = "${nutanix_category_key.test-category-key.id}"
+    name = nutanix_category_key.test-category-key.id
 	value = "%s"
 	description = "%s"
 }
