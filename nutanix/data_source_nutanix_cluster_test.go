@@ -27,5 +27,5 @@ data "nutanix_clusters" "clusters" {}
 
 
 data "nutanix_cluster" "cluster" {
-	cluster_id = "${data.nutanix_clusters.clusters.entities.1.metadata.uuid}"
+	cluster_id = data.nutanix_clusters.clusters.entities.1.metadata.uuid
 }`
