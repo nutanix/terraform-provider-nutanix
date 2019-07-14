@@ -328,7 +328,7 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 
 	subnetUUID, err := resourceNutanixSubnetExists(conn, d.Get("name").(string))
 	if err != nil {
-		return fmt.Errorf("error checkinf if subnet already exists %+v", err)
+		return fmt.Errorf("error checking if subnet already exists %+v", err)
 	}
 
 	if subnetUUID != nil {
@@ -700,7 +700,7 @@ func resourceNutanixSubnetExists(conn *v3.Client, name string) (*string, error) 
 	}
 
 	for _, subnet := range subnetList.Entities {
-		if subnet.Status.Name == utils.StringPtr(name) {
+		if utils.StringValue(subnet.Status.Name) == name {
 			subnetUUID = subnet.Metadata.UUID
 		}
 	}
