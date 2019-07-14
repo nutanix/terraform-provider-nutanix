@@ -247,7 +247,7 @@ resource "nutanix_virtual_machine" "vm1" {
   memory_size_mib      = 186
 
 
-	categories {
+	categories = {
 		Environment = "Staging"
 	}
 }
@@ -259,51 +259,49 @@ func testAccNutanixVMConfigWithDisk(r int) string {
 data "nutanix_clusters" "clusters" {}
 
 locals {
-		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
-		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
 }
 
+
 resource "nutanix_image" "cirros-034-disk" {
-    name        = "test-image-dou-vm-create-%[1]d"
-    source_uri  = "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
-    description = "heres a tiny linux image, not an iso, but a real disk!"
+	name        = "test-image-dou-vm-create-%[1]d"
+	source_uri  = "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+	description = "heres a tiny linux image, not an iso, but a real disk!"
 }
 
 resource "nutanix_virtual_machine" "vm-disk" {
-  name = "test-dou-vm-%[1]d"
-  cluster_uuid = "${local.cluster1}"
-  num_vcpus_per_socket = 1
-  num_sockets          = 1
-  memory_size_mib      = 186
+	name                 = "test-dou-vm-%[1]d"
+	cluster_uuid         = local.cluster1
+	num_vcpus_per_socket = 1
+	num_sockets          = 1
+	memory_size_mib      = 186
 
-	disk_list = [{
-		# data_source_reference in the Nutanix API refers to where the source for
-		# the disk device will come from. Could be a clone of a different VM or a
-		# image like we're doing here
-		data_source_reference = [{
-			kind = "image"
-			uuid = "${nutanix_image.cirros-034-disk.id}"
-		}]
+	disk_list {
+	data_source_reference = {
+		kind = "image"
+		uuid = nutanix_image.cirros-034-disk.id
+	}
 
-		device_properties = [{
-			disk_address {
-				device_index = 0,
-				adapter_type = "SCSI"
-			}
-			device_type = "DISK"
-		}]
-		#disk_size_bytes = 42950144
-		#disk_size_mib   = 41
-	},
-	{
-		disk_size_mib = 100
-	},
-	{
-		disk_size_mib = 200
-	},
-	{
-		disk_size_mib = 300
-	}]
+	device_properties {
+		disk_address = {
+		device_index = 0
+		adapter_type = "SCSI"
+		}
+		device_type = "DISK"
+	}
+	}
+	disk_list {
+	disk_size_mib = 100
+	}
+	disk_list {
+	disk_size_mib = 200
+	}
+	disk_list {
+	disk_size_mib = 300
+	}
 }
 `, r)
 }
@@ -313,50 +311,48 @@ func testAccNutanixVMConfigWithDiskUpdate(r int) string {
 data "nutanix_clusters" "clusters" {}
 
 locals {
-		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
-		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
 }
 
-
 resource "nutanix_image" "cirros-034-disk" {
-    name        = "test-image-dou-%[1]d"
-    source_uri  = "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
-    description = "heres a tiny linux image, not an iso, but a real disk!"
+	name        = "test-image-dou-%[1]d"
+	source_uri  = "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+	description = "heres a tiny linux image, not an iso, but a real disk!"
 }
 
 resource "nutanix_virtual_machine" "vm-disk" {
-  name = "test-dou-vm-%[1]d"
-  cluster_uuid = "${local.cluster1}"
-  num_vcpus_per_socket = 1
-  num_sockets          = 1
-  memory_size_mib      = 186
+	name                 = "test-dou-vm-%[1]d"
+	cluster_uuid         = local.cluster1
+	num_vcpus_per_socket = 1
+	num_sockets          = 1
+	memory_size_mib      = 186
 
-	disk_list = [{
-		# data_source_reference in the Nutanix API refers to where the source for
-		# the disk device will come from. Could be a clone of a different VM or a
-		# image like we're doing here
-		data_source_reference = [{
-			kind = "image"
-			uuid = "${nutanix_image.cirros-034-disk.id}"
-		}]
+	disk_list {
+	data_source_reference = {
+		kind = "image"
+		uuid = nutanix_image.cirros-034-disk.id
+	}
 
-		device_properties = [{
-			disk_address {
-				device_index = 0,
-				adapter_type = "SCSI"
-			}
-			device_type = "DISK"
-		}]
-		disk_size_bytes = 68157440
-		disk_size_mib   = 65
-	},
-	{
-		disk_size_mib = 100
-	},
-	{
-		disk_size_mib = 200
-	}]
-}
+	device_properties {
+		disk_address = {
+		device_index = 0
+		adapter_type = "SCSI"
+		}
+		device_type = "DISK"
+	}
+	disk_size_bytes = 68157440
+	disk_size_mib   = 65
+	}
+	disk_list {
+	disk_size_mib = 100
+	}
+	disk_list {
+	disk_size_mib = 200
+	}
+}	
 `, r)
 }
 
@@ -365,8 +361,10 @@ func testAccNutanixVMConfigUpdate(r int) string {
 data "nutanix_clusters" "clusters" {}
 
 locals {
-		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
-		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
 }
 
 resource "nutanix_virtual_machine" "vm1" {
@@ -376,7 +374,7 @@ resource "nutanix_virtual_machine" "vm1" {
   num_sockets          = 2
   memory_size_mib      = 186
 
-	categories {
+	categories = {
 		Environment = "Production"
 	}
 }
@@ -388,18 +386,21 @@ func testAccNutanixVMConfigUpdatedFields(r int) string {
 data "nutanix_clusters" "clusters" {}
 
 locals {
-		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
-		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
 }
+
 resource "nutanix_virtual_machine" "vm2" {
   name = "test-dou-%d"
-  cluster_uuid = "${local.cluster1}"
+  cluster_uuid = local.cluster1
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186
 
 
-	categories {
+	categories = {
 		Environment = "Staging"
 	}
 }
@@ -411,19 +412,20 @@ func testAccNutanixVMConfigUpdatedFieldsUpdated(r int) string {
 data "nutanix_clusters" "clusters" {}
 
 locals {
-		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
-		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
 }
-
 
 resource "nutanix_virtual_machine" "vm2" {
   name = "test-dou-%d-updated"
-  cluster_uuid = "${local.cluster1}"
+  cluster_uuid = local.cluster1
   num_vcpus_per_socket = 2
   num_sockets          = 2
   memory_size_mib      = 256
 
-	categories {
+	categories = {
 		Environment = "Production"
 	}
 }
@@ -435,12 +437,14 @@ func testAccNutanixVMConfigWithSubnet(r int) string {
 data "nutanix_clusters" "clusters" {}
 
 locals {
-		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
-		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}" 
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
 }
 
 resource "nutanix_subnet" "sub" {
-  cluster_uuid = "${local.cluster1}"
+  cluster_uuid = local.cluster1
 
   # General Information for subnet
 	name        = "terraform-vm-with-subnet-%[1]d"
@@ -453,7 +457,7 @@ resource "nutanix_subnet" "sub" {
 	subnet_ip          = "10.250.140.0"
   default_gateway_ip = "10.250.140.1"
   prefix_length = 24
-  dhcp_options {
+  dhcp_options = {
 		boot_file_name   = "bootfile"
 		domain_name      = "nutanix"
 		tftp_server_name = "10.250.140.200"
@@ -472,7 +476,7 @@ resource "nutanix_image" "cirros-034-disk" {
 resource "nutanix_virtual_machine" "vm3" {
 	name = "test-dou-vm-%[1]d"
 	
-	categories {
+	categories = {
 		Environment = "Staging"
 	}
 
@@ -481,16 +485,16 @@ resource "nutanix_virtual_machine" "vm3" {
   num_sockets          = 1
   memory_size_mib      = 186
 
-	disk_list = [{
-		data_source_reference = [{
+	disk_list {
+		data_source_reference = {
 			kind = "image"
 			uuid = "${nutanix_image.cirros-034-disk.id}"
-		}]
-	}]
+		}
+	}
 
-	nic_list = [{
+	nic_list {
 		subnet_uuid = "${nutanix_subnet.sub.id}"
-	}]
+	}
 }
 
 output "ip_address" {
@@ -504,8 +508,10 @@ func testAccNutanixVMConfigWithSerialPortList(r int) string {
 data "nutanix_clusters" "clusters" {}
 
 locals {
-		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
-		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
 }
 
 resource "nutanix_virtual_machine" "vm5" {
@@ -516,13 +522,13 @@ resource "nutanix_virtual_machine" "vm5" {
   num_sockets          = 1
 	memory_size_mib      = 186
 	
-	serial_port_list = [{
+	serial_port_list {
 		index = 1
 		is_connected = true
-	}]
+	}
 
 
-	categories {
+	categories = {
 		Environment = "Staging"
 	}
 }

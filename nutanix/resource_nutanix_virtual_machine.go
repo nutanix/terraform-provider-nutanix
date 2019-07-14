@@ -1248,7 +1248,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	request.Spec = spec
 
 	log.Printf("[DEBUG] Updating Virtual Machine: %s, %s", d.Get("name").(string), d.Id())
-	fmt.Printf("[DEBUG] Updating Virtual Machine: %s, %s", d.Get("name").(string), d.Id())
 
 	resp, err2 := conn.V3.UpdateVM(d.Id(), request)
 	if err2 != nil {
@@ -1663,10 +1662,8 @@ func expandDiskList(d *schema.ResourceData, isCreation bool) ([]*v3.VMDisk, erro
 					}
 				}
 				if v1, ok := v["data_source_reference"]; ok && len(v1.(map[string]interface{})) != 0 {
-					fmt.Printf("%+v\n", v1)
 					hasDSRef = true
 					dsref := v1.(map[string]interface{})
-					fmt.Printf("len(%d)\n", len(dsref))
 					dl.DataSourceReference = validateShortRef(dsref)
 
 				}
