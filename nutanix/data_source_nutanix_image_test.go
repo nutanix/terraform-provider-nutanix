@@ -54,14 +54,12 @@ func TestAccNutanixImageDataSource_name(t *testing.T) {
 }
 
 func TestAccNutanixImageDataSource_conflicts(t *testing.T) {
-
-	rInt := acctest.RandInt()
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccImageDataSourceConfigConflicts(rInt),
+				Config:      testAccImageDataSourceConfigConflicts(),
 				ExpectError: regexp.MustCompile("conflicts with"),
 			},
 		},
@@ -78,7 +76,7 @@ resource "nutanix_image" "test" {
 
 
 data "nutanix_image" "test" {
-	image_id = "${nutanix_image.test.id}"
+	image_id = nutanix_image.test.id
 }
 `, rNumber)
 }
@@ -93,23 +91,16 @@ resource "nutanix_image" "test" {
 
 
 data "nutanix_image" "test" {
-	image_name = "${nutanix_image.test.name}"
+	image_name = nutanix_image.test.name
 }
 `, rNumber)
 }
 
-func testAccImageDataSourceConfigConflicts(rNumber int) string {
-	return fmt.Sprintf(`
-resource "nutanix_image" "test" {
-  name        = "Ubuntu-%d"
-  description = "Ubuntu mini ISO"
-  source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
-}
-
-
+func testAccImageDataSourceConfigConflicts() string {
+	return `
 data "nutanix_image" "test" {
-	image_name = "${nutanix_image.test.name}"
-	image_id   = "${nutanix_image.test.id}"
+	image_name = "test-name"
+	image_id   = "test-id"
 }
-`, rNumber)
+`
 }
