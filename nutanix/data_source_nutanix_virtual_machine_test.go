@@ -51,20 +51,22 @@ func testAccVMDataSourceConfig(r int) string {
 data "nutanix_clusters" "clusters" {}
 
 locals {
-		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
-		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
 }
 
 resource "nutanix_virtual_machine" "vm1" {
   name = "test-dou-%d"
-  cluster_uuid = "${local.cluster1}"
+  cluster_uuid = local.cluster1
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186
 }
 
 data "nutanix_virtual_machine" "nutanix_virtual_machine" {
-	vm_id = "${nutanix_virtual_machine.vm1.id}"
+	vm_id = nutanix_virtual_machine.vm1.id
 }
 `, r)
 }
@@ -91,34 +93,32 @@ func testAccVMDataSourceConfigWithDisk(r int) string {
 	  num_sockets          = 1
 	  memory_size_mib      = 186
 	
-		disk_list = [{
-			# data_source_reference in the Nutanix API refers to where the source for
-			# the disk device will come from. Could be a clone of a different VM or a
-			# image like we're doing here
-			data_source_reference = [{
+		disk_list {
+			data_source_reference = {
 				kind = "image"
 				uuid = "${nutanix_image.cirros-034-disk.id}"
-			}]
-	
-			device_properties = [{
-				disk_address {
+			}
+
+			device_properties {
+				disk_address = {
 					device_index = 0,
 					adapter_type = "SCSI"
 				}
 				device_type = "DISK"
-			}]
-			#disk_size_bytes = 42950144
-			#disk_size_mib   = 41
-		},
-		{
+			}
+		}
+
+		disk_list {
 			disk_size_mib = 100
-		},
-		{
+		}
+
+		disk_list {
 			disk_size_mib = 200
-		},
-		{
+		}
+
+		disk_list {
 			disk_size_mib = 300
-		}]
+		}
 	}
 
 	data "nutanix_virtual_machine" "nutanix_virtual_machine" {
