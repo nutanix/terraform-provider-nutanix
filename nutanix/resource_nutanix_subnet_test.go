@@ -2,7 +2,6 @@ package nutanix
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 	"testing"
@@ -15,7 +14,7 @@ const resourceNameSubnet = "nutanix_subnet.acctest-managed"
 
 func TestAccNutanixSubnet_basic(t *testing.T) {
 	r := randIntBetween(31, 40)
-	log.Printf("[DEBUG] VLAN-ID: %d", r)
+	subnetName := fmt.Sprintf("acctest-managed-%d", r)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -25,7 +24,7 @@ func TestAccNutanixSubnet_basic(t *testing.T) {
 				Config: testAccNutanixSubnetConfig(r),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixSubnetExists(resourceNameSubnet),
-					resource.TestCheckResourceAttr(resourceNameSubnet, "name", "acctest-managed"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "name", subnetName),
 					resource.TestCheckResourceAttr(resourceNameSubnet, "description", "Description of my unit test VLAN"),
 				),
 			},
@@ -41,6 +40,7 @@ func TestAccNutanixSubnet_basic(t *testing.T) {
 
 func TestAccNutanixSubnet_Update(t *testing.T) {
 	r := randIntBetween(41, 50)
+	subnetName := fmt.Sprintf("acctest-managed-%d", r)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -50,7 +50,7 @@ func TestAccNutanixSubnet_Update(t *testing.T) {
 				Config: testAccNutanixSubnetConfig(r),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixSubnetExists(resourceNameSubnet),
-					resource.TestCheckResourceAttr(resourceNameSubnet, "name", "acctest-managed"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "name", subnetName),
 					resource.TestCheckResourceAttr(resourceNameSubnet, "description", "Description of my unit test VLAN"),
 				),
 			},
@@ -58,7 +58,7 @@ func TestAccNutanixSubnet_Update(t *testing.T) {
 				Config: testAccNutanixSubnetConfigUpdate(r),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixSubnetExists(resourceNameSubnet),
-					resource.TestCheckResourceAttr(resourceNameSubnet, "name", "acctest-managed-updateName"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "name", fmt.Sprintf("acctest-managed-updateName-%d", r)),
 					resource.TestCheckResourceAttr(resourceNameSubnet, "description", "Description of my unit test VLAN updated"),
 					resource.TestCheckResourceAttr(resourceNameSubnet, "subnet_type", "VLAN"),
 					resource.TestCheckResourceAttr(resourceNameSubnet, "subnet_ip", "10.250.141.0"),
@@ -144,6 +144,19 @@ func TestAccNutanixSubnet_withIpPoolListRangesErrored(t *testing.T) {
 	})
 }
 
+func TestAccNutanixSubnet_nameDuplicated(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccSubnetResourceConfigNameDuplicated(randIntBetween(21, 30)),
+				ExpectError: regexp.MustCompile("subnet already with name"),
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixSubnetExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -181,23 +194,18 @@ func testAccNutanixSubnetConfig(r int) string {
 data "nutanix_clusters" "clusters" {}
 
 locals {
-		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
-		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
 }
 
 resource "nutanix_subnet" "acctest-managed" {
-  # What cluster will this VLAN live on?
-  cluster_uuid = "${local.cluster1}"
-
-
-  # General Information for subnet
-	name        = "acctest-managed"
+  	cluster_uuid = local.cluster1
+	name        = "acctest-managed-%[1]d"
 	description = "Description of my unit test VLAN"
-  vlan_id     = %d
+	vlan_id     = %[1]d
 	subnet_type = "VLAN"
-
-  # Provision a Managed L3 Network
-  # This bit is only needed if you intend to turn on AHV's IPAM
 	subnet_ip          = "10.250.140.0"
   default_gateway_ip = "10.250.140.1"
   prefix_length = 24
@@ -217,19 +225,20 @@ func testAccNutanixSubnetConfigUpdate(r int) string {
 data "nutanix_clusters" "clusters" {}
 
 locals {
-		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
-		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}" 
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
 }
-
 resource "nutanix_subnet" "acctest-managed" {
   # What cluster will this VLAN live on?
-  cluster_uuid = "${local.cluster1}"
+  cluster_uuid = local.cluster1
 
 
   # General Information for subnet
-	name        = "acctest-managed-updateName"
+	name        = "acctest-managed-updateName-%[1]d"
 	description = "Description of my unit test VLAN updated"
-  vlan_id     = %d
+  vlan_id     = %[1]d
 	subnet_type = "VLAN"
 
   # Provision a Managed L3 Network
@@ -258,18 +267,20 @@ func testAccNutanixSubnetConfigWithCategory(r int) string {
 data "nutanix_clusters" "clusters" {}
 
 locals {
-		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
-		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}" 
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
 }
 
 resource "nutanix_subnet" "acctest-managed-categories" {
   # What cluster will this VLAN live on?
-  cluster_uuid = "${local.cluster1}"
+  cluster_uuid = local.cluster1
 
 
   # General Information for subnet
-	name        = "acctest-managed"
-  vlan_id     = %d
+	name        = "acctest-managed-%[1]d"
+    vlan_id     = %[1]d
 	subnet_type = "VLAN"
 
   # Provision a Managed L3 Network
@@ -297,18 +308,20 @@ func testAccNutanixSubnetConfigWithCategoryUpdate(r int) string {
 data "nutanix_clusters" "clusters" {}
 
 locals {
-		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
-		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}" 
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
 }
 
 resource "nutanix_subnet" "acctest-managed-categories" {
   # What cluster will this VLAN live on?
-  cluster_uuid = "${local.cluster1}"
+  cluster_uuid = local.cluster1
 
 
   # General Information for subnet
-	name        = "acctest-managed"
-  vlan_id     = %d
+	name        = "acctest-managed-%[1]d"
+    vlan_id     = %[1]d
 	subnet_type = "VLAN"
 
   # Provision a Managed L3 Network
@@ -336,18 +349,20 @@ func testAccNutanixSubnetConfigWithIPPoolListRanges(r int) string {
 data "nutanix_clusters" "clusters" {}
 
 locals {
-		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
-		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
 }
 
 resource "nutanix_subnet" "acctest-managed-categories" {
   # What cluster will this VLAN live on?
-  cluster_uuid = "${local.cluster1}"
+  cluster_uuid = local.cluster1
 
 
   # General Information for subnet
 	name        = "acctest-managed"
-  vlan_id     = %d
+    vlan_id     = %d
 	subnet_type = "VLAN"
 
   # Provision a Managed L3 Network
@@ -376,13 +391,15 @@ func testAccNutanixSubnetConfigWithIPPoolListRangesErrored(r int) string {
 data "nutanix_clusters" "clusters" {}
 
 locals {
-		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
-		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
 }
 
 resource "nutanix_subnet" "acctest-managed-categories" {
   # What cluster will this VLAN live on?
-  cluster_uuid = "${local.cluster1}"
+  cluster_uuid = local.cluster1
 
 
   # General Information for subnet
@@ -409,4 +426,58 @@ resource "nutanix_subnet" "acctest-managed-categories" {
 	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
 }
 `, r)
+}
+
+func testAccSubnetResourceConfigNameDuplicated(r int) string {
+	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {}
+
+locals {
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
+}
+
+resource "nutanix_subnet" "test" {
+	name = "dou_vlan0_test_%d"
+	cluster_uuid = local.cluster1
+	vlan_id = %d
+	subnet_type = "VLAN"
+
+	prefix_length = 24
+	default_gateway_ip = "192.168.0.1"
+	subnet_ip = "192.168.0.0"
+	ip_config_pool_list_ranges = ["192.168.0.10 192.168.0.100"]
+
+	dhcp_options = {
+		boot_file_name   = "bootfile"
+		domain_name      = "nutanix"
+		tftp_server_name = "10.250.140.200"
+	}
+	
+	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
+}
+
+resource "nutanix_subnet" "test1" {
+	name = nutanix_subnet.test.name
+	cluster_uuid= local.cluster1
+	vlan_id = %d
+	subnet_type = "VLAN"
+	prefix_length = 24
+	default_gateway_ip = "192.168.0.1"
+	subnet_ip = "192.168.0.0"
+	#ip_config_pool_list_ranges = ["192.168.0.5", "192.168.0.100"]
+
+	dhcp_options = {
+		boot_file_name   = "bootfile"
+		domain_name      = "nutanix"
+		tftp_server_name = "10.250.140.200"
+	}
+	
+	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
+}
+`, r, r, r+2)
 }
