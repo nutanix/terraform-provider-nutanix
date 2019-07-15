@@ -20,7 +20,7 @@ data "nutanix_clusters" "clusters" {
 }
 
 output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  value = data.nutanix_clusters.clusters.entities.0.metadata.uuid
 }
 
 resource "nutanix_subnet" "next-iac-managed" {
@@ -28,7 +28,7 @@ resource "nutanix_subnet" "next-iac-managed" {
   cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 
   # General Information
-  name        = "next-iac-managed-%d"
+  name        = "next-iac-managed-example"
   vlan_id     = 101
   subnet_type = "VLAN"
 

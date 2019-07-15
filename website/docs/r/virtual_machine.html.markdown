@@ -13,32 +13,15 @@ Provides a Nutanix Virtual Machine resource to Create a virtual machine.
 ## Example Usage
 
 ```hcl
-resource "nutanix_category_key" "test-category-key"{
-    name        = "app-suppport-1"
-    description = "App Support Category Key"
-}
-
-
-resource "nutanix_category_value" "test"{
-    name        = "${nutanix_category_key.test-category-key.id}"
-    description = "Test Category Value"
-    value       = "test-value"
-}
-
-data "nutanix_clusters" "clusters" {
-  metadata = {
-    length = 2
-  }
-}
+data "nutanix_clusters" "clusters" {}
 
 resource "nutanix_virtual_machine" "vm1" {
   name = "test-dou"
-  cluster_uuid = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+  cluster_uuid = data.nutanix_clusters.clusters.entities.0.metadata.uuid
 
-  categories = [{
-      name   = "${nutanix_category_key.test-category-key.id}"
-      value = "${nutanix_category_value.test.id}"
-  }]
+  categories = {
+		Environment = "Staging"
+	}
 
 
   num_vcpus_per_socket = 1

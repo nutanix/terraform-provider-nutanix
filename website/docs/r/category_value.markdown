@@ -20,7 +20,7 @@ resource "nutanix_category_key" "test-category-key"{
 
 
 resource "nutanix_category_value" "test"{
-    name = "${nutanix_category_key.test-category-key.id}"
+    name = nutanix_category_key.test-category-key.id
     description = "Test Category Value"
     value = "test-value"
 }

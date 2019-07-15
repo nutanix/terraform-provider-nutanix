@@ -20,15 +20,15 @@ data "nutanix_clusters" "clusters" {
 }
 
 output "cluster" {
-  value = "${data.nutanix_clusters.clusters.entities.0.metadata.UUID}"
+  value = data.nutanix_clusters.clusters.entities.0.metadata.uuid
 }
 
 resource "nutanix_subnet" "test" {
-  name = "dou_vlan0_test_%d"
+  name = "example-subnet"
 
   cluster_reference = {
   kind = "cluster"
-  UUID = "${data.nutanix_clusters.clusters.entities.0.metadata.UUID}"
+  UUID = data.nutanix_clusters.clusters.entities.0.metadata.uuid
 }
 
   vlan_id = 201
@@ -50,11 +50,11 @@ resource "nutanix_subnet" "test" {
 }
 
 data "nutanix_subnet" "test" {
-  subnet_id = "${nutanix_subnet.test.id}"
+  subnet_id = nutanix_subnet.test.id
 }
 
 data "nutanix_subnet" "test-name" {
-  subnet_name = "${nutanix_subnet.test.name}"
+  subnet_name = nutanix_subnet.test.name
 }
 ```
 
