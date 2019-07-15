@@ -35,7 +35,8 @@
   port      = 9440
 }  */
 
-data "nutanix_clusters" "clusters" {}
+data "nutanix_clusters" "clusters" {
+}
 
 ### Define Script Local Variables
 ### This can be used for any manner of things, but is useful for like clusterid,
@@ -43,7 +44,7 @@ data "nutanix_clusters" "clusters" {}
 ### TODO: Need to make clusters a data source object, such that consumers do
 ###       not need to manually provision cluster ID
 locals {
-  cluster1 = "${data.nutanix_clusters.clusters.entities.1.metadata.uuid}"
+  cluster1 = data.nutanix_clusters.clusters.entities[1].metadata.uuid
 }
 
 ##########################
@@ -55,28 +56,28 @@ locals {
 ### state files, or deploying terraform into an existing / brownfield environment
 ### Virtual Machine Data Sources
 # data "nutanix_virtual_machine" "nutanix_virtual_machine" {
-#   vm_id = "${nutanix_virtual_machine.vm1.id}"
+#   vm_id = nutanix_virtual_machine.vm1.id
 # }
 ### Image Data Sources
 # data "nutanix_image" "test" {
 #     metadata = {
 #         kind = "image"
 #     }
-#     image_id = "${nutanix_image.test.id}"
+#     image_id = nutanix_image.test.id
 # }
 ### Subnet Data Sources
 # data "nutanix_subnet" "next-iac-managed" {
 #     metadata = {
 #         kind = "subnet"
 #     }
-#    image_id = "${nutanix_subnet.next-iac-managed.id}"
+#    image_id = nutanix_subnet.next-iac-managed.id
 #}
 ### Cluster Data Sources
 #data "nutanix_image" "test" {
 #    metadata = {
 #        kind = "image"
 #    }
-#    image_id = "${nutanix_image.test.id}"
+#    image_id = nutanix_image.test.id
 #}
 ##########################
 ### Resources
@@ -147,7 +148,7 @@ resource "nutanix_image" "cirros-034-disk" {
 # ### Define Terraform Managed Subnets
 resource "nutanix_subnet" "infra-managed-network-140" {
   # What cluster will this VLAN live on?
-  cluster_uuid = "${local.cluster1}"
+  cluster_uuid = local.cluster1
 
   # General Information
   name        = "infra-managed-network-140"
@@ -156,18 +157,18 @@ resource "nutanix_subnet" "infra-managed-network-140" {
 
   # Provision a Managed L3 Network
   # This bit is only needed if you intend to turn on AHV's IPAM
-    subnet_ip = "172.21.32.0"
+  subnet_ip = "172.21.32.0"
 
   default_gateway_ip = "172.21.32.1"
   prefix_length      = 24
 
-  dhcp_options {
+  dhcp_options = {
     boot_file_name   = "bootfile"
     domain_name      = "ntnxlab"
     tftp_server_name = "172.21.32.200"
   }
 
-  dhcp_server_address {
+  dhcp_server_address = {
     ip = "172.21.32.254"
   }
 
@@ -195,48 +196,46 @@ resource "nutanix_virtual_machine" "demo-01-web" {
   memory_size_mib      = 4096
 
   # What cluster will this VLAN live on?
-  cluster_uuid = "${local.cluster1}"
+  cluster_uuid = local.cluster1
 
   # What networks will this be attached to?
-  nic_list = [{
+  nic_list {
     # subnet_reference is saying, which VLAN/network do you want to attach here?
-    subnet_uuid = "${nutanix_subnet.infra-managed-network-140.id}"
-
+    subnet_uuid = nutanix_subnet.infra-managed-network-140.id
     # Used to set static IP.
-      # ip_endpoint_list = {
-      #   ip   = "172.21.32.20"
-      #   type = "ASSIGNED"
-      # }
-  }]
+    # ip_endpoint_list {
+    #   ip   = "172.21.32.20"
+    #   type = "ASSIGNED"
+    # }
+  }
 
   # What disk/cdrom configuration will this have?
-  disk_list = [{
+  disk_list {
     # data_source_reference in the Nutanix API refers to where the source for
     # the disk device will come from. Could be a clone of a different VM or a
     # image like we're doing here
-    data_source_reference = [{
-      kind = "image"
-      uuid = "${nutanix_image.cirros-034-disk.id}"
-    }]
+    data_source_reference = {
+        kind = "image"
+        uuid = nutanix_image.cirros-034-disk.id
+      }
+      
 
-    device_properties = [{
-      disk_address {
+    device_properties {
+      disk_address = {
         device_index = 0
         adapter_type = "SCSI"
       }
 
       device_type = "DISK"
-    }]
-  },
-    {
-      # defining an additional entry in the disk_list array will create another.
+    }
+  }
+  disk_list {
+    # defining an additional entry in the disk_list array will create another.
 
-      #disk_size_mib and disk_size_bytes must be set together.
-      disk_size_mib   = 100000
-      disk_size_bytes = 104857600000
-    },
-  ]
-
+    #disk_size_mib and disk_size_bytes must be set together.
+    disk_size_mib   = 100000
+    disk_size_bytes = 104857600000
+  }
   #Using provisioners
   #Use as the following provisioner block if you know that you are geeting an reachable IP address.
   #Get ssh connection and execute commands.
@@ -244,7 +243,7 @@ resource "nutanix_virtual_machine" "demo-01-web" {
   #   connection {
   #     user     = "cirros"    # user from the image attached
   #     password = "cubswin:)" #password from the user 
-  #     #host    = "172.21.32.20" #Set if you know 
+  #     host    = "172.21.32.20" #host is now a required value for connection, you can use `self.nic_list_status[0].ip_endpoint_list[0].ip` to set the IP or if you know the IP you could set manually.
   #   }
 
   #   inline = [
@@ -254,6 +253,7 @@ resource "nutanix_virtual_machine" "demo-01-web" {
 }
 
 # Show IP address
-  output "ip_address" {
-   value = "${lookup(nutanix_virtual_machine.demo-01-web.nic_list_status.0.ip_endpoint_list[0], "ip")}"
- }
+output "ip_address" {
+  value = nutanix_virtual_machine.demo-01-web.nic_list_status.0.ip_endpoint_list[0]["ip"]
+}
+
