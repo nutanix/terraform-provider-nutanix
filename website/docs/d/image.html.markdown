@@ -21,11 +21,11 @@ resource "nutanix_image" "test" {
 
 
 data "nutanix_image" "test" {
-    image_id = "${nutanix_image.test.id}"
+    image_id = nutanix_image.test.id
 }
 
 data "nutanix_image" "testname" {
-    image_name = "${nutanix_image.test.name}"
+    image_name = nutanix_image.test.name
 }
 ```
 

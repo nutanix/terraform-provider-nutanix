@@ -19,14 +19,14 @@ resource "nutanix_category_key" "test_key_value"{
 }
 
 resource "nutanix_category_value" "test_value"{
-    name = "${nutanix_category_key.test_key_value.name}"
+    name = nutanix_category_key.test_key_value.name
     value = "test_category_value_data_source"
     description = "Data Source CategoryValue Test with Values"
 }
 
 
 data "nutanix_category_key" "test_key_value" {
-    name = "${nutanix_category_key.test_key_value.name}"
+    name = nutanix_category_key.test_key_value.name
 }
 ```
 

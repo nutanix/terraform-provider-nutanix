@@ -14,7 +14,7 @@ Provides a Nutanix Category key resource to Create a category key name.
 
 ```hcl
 resource "nutanix_category_key" "test"{
-    name = "app-support-%d"
+    name = "app-support-example"
     description = "App Support Category Key"
 }
 ```

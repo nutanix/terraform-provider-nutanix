@@ -20,12 +20,12 @@ data "nutanix_clusters" "clusters" {
 }
 
 output "cluster" {
- value = "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+ value = data.nutanix_clusters.clusters.entities.0.metadata.uuid
 }
 
 resource "nutanix_virtual_machine" "vm1" {
  name = "test-dou-%d"
- cluster_uuid= "${data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+ cluster_uuid= data.nutanix_clusters.clusters.entities.0.metadata.uuid
 
  num_vcpus_per_socket = 1
  num_sockets     = 1
@@ -34,7 +34,7 @@ resource "nutanix_virtual_machine" "vm1" {
 }
 
 data "nutanix_virtual_machine" "nutanix_virtual_machine" {
- vm_id = "${nutanix_virtual_machine.vm1.id}"
+ vm_id = nutanix_virtual_machine.vm1.id
 }
 ```
 
