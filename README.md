@@ -238,18 +238,16 @@ We'll be working with HashiCorp as code stabilizes to upstream this properly, at
 
 ## Building/Developing Provider
 
-Clone repository to: `$GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix`
+We recomment to use Go 1.12+ to be able to use `go modules`
 
 ```sh
-$ mkdir $GOPATH/src/github.com/terraform-providers && cd "$_" #if you already created it only change directory
 $ git clone https://github.com/terraform-providers/terraform-provider-nutanix.git
 ```
 
 Enter the provider directory and build the provider
 
 ```sh
-$ cd $GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix
-$ make deps
+$ make tools
 $ make build
 ```
 
@@ -258,9 +256,39 @@ This will create a binary file `terraform-provider-nutanix` you can copy to your
 Alternative build: with our demo
 
 ```sh
-$ cd $GOPATH/src/github.com/terraform-providers/terraform-provider-nutanix
-$ make deps
+$ make tools
 $ go build -o examples/terraform-provider-nutanix
 $ cd examples
 $ terraform init #to try out our demo
 ```
+
+If you need multi-OS binaries such as Linux, macOS, Windows. Run the following command.
+
+```sh
+$ make tools
+$ make cibuild
+```
+
+This coommand will create a `pkg/` directory with all the binaries for the most popular OS.
+
+
+### Common Issues using the development binary.
+
+Terraform download the released binary instead developent one.
+
+Just follow this steps to get the development binary:
+
+1. Copy the development terraform binary in the root folder of the project (i.e. where your main.tf is), this should be named `terraform-provider-nutanix`
+2. Remove the entire “.terraform” directory.
+    ```sh
+    rm -rf .terraform/
+    ```
+
+3. Run the following command in the same folder where you have copied the development terraform binary.
+    ```sh
+    terraform init -upgrade
+    terraform providers -version
+    ```
+
+4. You should see version as “nutanix (unversioned)”
+5. Then run your main.tf
