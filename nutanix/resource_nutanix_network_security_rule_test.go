@@ -13,9 +13,9 @@ import (
 
 func TestAccNutanixNetworkSecurityRule_basic(t *testing.T) {
 	// Skipped because this test didn't pass in GCP environment
-	if isGCPEnvironment() {
-		t.Skip()
-	}
+	// if isGCPEnvironment() {
+	// 	t.Skip()
+	// }
 
 	rInt := acctest.RandInt()
 	resourceName := "nutanix_network_security_rule.TEST-TIER"
@@ -99,7 +99,7 @@ resource "nutanix_category_key" "USER"{
 resource "nutanix_category_value" "WEB"{
     name = "${nutanix_category_key.test-category-key.id}"
 	  description = "WEB Category Value"
-	 value = "WEB-1"
+	  value = "WEB-1"
 }
 
 resource "nutanix_category_value" "APP"{
@@ -127,20 +127,16 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
 
   app_rule_action = "APPLY"
 
-  app_rule_inbound_allow_list = [
-    {
-      peer_specification_type = "FILTER"
-      filter_type             = "CATEGORIES_MATCH_ALL"
-      filter_kind_list        = ["vm"]
+  app_rule_inbound_allow_list {
+    peer_specification_type = "FILTER"
+    filter_type             = "CATEGORIES_MATCH_ALL"
+    filter_kind_list        = ["vm"]
 
-      filter_params = [
-        {
-          name   = "${nutanix_category_key.test-category-key.id}"
-          values = ["${nutanix_category_value.WEB.id}"]
-        },
-      ]
-    },
-  ]
+    filter_params {
+      name   = "${nutanix_category_key.test-category-key.id}"
+      values = ["${nutanix_category_value.WEB.id}"]
+    }
+  }
 
   app_rule_target_group_default_internal_policy = "DENY_ALL"
 
@@ -150,31 +146,26 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
 
   app_rule_target_group_filter_kind_list = ["vm"]
 
-  app_rule_target_group_filter_params = [
-    {
+  app_rule_target_group_filter_params {
+    name   = "${nutanix_category_key.test-category-key.id}"
+    values = ["${nutanix_category_value.APP.id}"]
+  }
+  
+  app_rule_target_group_filter_params {
+    name   = "${nutanix_category_key.USER.id}"
+    values = ["${nutanix_category_value.ashwini.id}"]
+  }
+
+  app_rule_outbound_allow_list {
+    peer_specification_type = "FILTER"
+    filter_type             = "CATEGORIES_MATCH_ALL"
+    filter_kind_list        = ["vm"]
+
+    filter_params {
       name   = "${nutanix_category_key.test-category-key.id}"
-      values = ["${nutanix_category_value.APP.id}"]
-    },
-    {
-      name   = "${nutanix_category_key.USER.id}"
-      values = ["${nutanix_category_value.ashwini.id}"]
-    },
-  ]
-
-  app_rule_outbound_allow_list = [
-    {
-      peer_specification_type = "FILTER"
-      filter_type             = "CATEGORIES_MATCH_ALL"
-      filter_kind_list        = ["vm"]
-
-      filter_params = [
-        {
-          name   = "${nutanix_category_key.test-category-key.id}"
-          values = ["${nutanix_category_value.DB.id}"]
-        },
-      ]
-    },
-  ]
+      values = ["${nutanix_category_value.DB.id}"]
+    }
+  }
 }
 `, r)
 }
@@ -222,20 +213,16 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
 
   app_rule_action = "APPLY"
 
-  app_rule_inbound_allow_list = [
-    {
-      peer_specification_type = "FILTER"
-      filter_type             = "CATEGORIES_MATCH_ALL"
-      filter_kind_list        = ["vm"]
+  app_rule_inbound_allow_list {
+    peer_specification_type = "FILTER"
+    filter_type             = "CATEGORIES_MATCH_ALL"
+    filter_kind_list        = ["vm"]
 
-      filter_params = [
-        {
-          name   = "${nutanix_category_key.test-category-key.id}"
-          values = ["${nutanix_category_value.WEB.id}"]
-        },
-      ]
-    },
-  ]
+    filter_params {
+      name   = "${nutanix_category_key.test-category-key.id}"
+      values = ["${nutanix_category_value.WEB.id}"]
+    }
+  }
 
   app_rule_target_group_default_internal_policy = "DENY_ALL"
 
@@ -245,31 +232,27 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
 
   app_rule_target_group_filter_kind_list = ["vm"]
 
-  app_rule_target_group_filter_params = {
+  app_rule_target_group_filter_params {
       name   = "${nutanix_category_key.test-category-key.id}"
       values = ["${nutanix_category_value.APP.id}"]
   }
 
-  app_rule_target_group_filter_params = {
+  app_rule_target_group_filter_params {
       name   = "${nutanix_category_key.USER.id}"
       values = ["${nutanix_category_value.ashwini.id}"]
   }
 
 
-  app_rule_outbound_allow_list = [
-    {
-      peer_specification_type = "FILTER"
-      filter_type             = "CATEGORIES_MATCH_ALL"
-      filter_kind_list        = ["vm"]
+  app_rule_outbound_allow_list {
+    peer_specification_type = "FILTER"
+    filter_type             = "CATEGORIES_MATCH_ALL"
+    filter_kind_list        = ["vm"]
 
-      filter_params = [
-        {
-          name   = "${nutanix_category_key.test-category-key.id}"
-          values = ["${nutanix_category_value.DB.id}"]
-        },
-      ]
-    },
-  ]
+    filter_params {
+      name   = "${nutanix_category_key.test-category-key.id}"
+      values = ["${nutanix_category_value.DB.id}"]
+    }
+  }
 }
 `, r)
 }
