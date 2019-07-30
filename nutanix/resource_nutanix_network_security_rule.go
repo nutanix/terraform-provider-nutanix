@@ -10,9 +10,10 @@ import (
 
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
+	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/terraform-providers/terraform-provider-nutanix/client/v3"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 )
 
 func resourceNutanixNetworkSecurityRule() *schema.Resource {
@@ -189,9 +190,10 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 							Computed: true,
 						},
 						"filter_params": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
+							Set:      filterParamsHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
@@ -369,9 +371,10 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 							Computed: true,
 						},
 						"filter_params": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
+							Set:      filterParamsHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
@@ -517,9 +520,10 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 							Computed: true,
 						},
 						"filter_params": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
+							Set:      filterParamsHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
@@ -609,9 +613,10 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 				Computed: true,
 			},
 			"app_rule_target_group_filter_params": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
+				Set:      filterParamsHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -697,9 +702,10 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 							Computed: true,
 						},
 						"filter_params": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
+							Set:      filterParamsHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
@@ -786,9 +792,10 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 				Computed: true,
 			},
 			"isolation_rule_first_entity_filter_params": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
+				Set:      filterParamsHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -815,9 +822,10 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 				Computed: true,
 			},
 			"isolation_rule_second_entity_filter_params": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
+				Set:      filterParamsHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -1167,11 +1175,13 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 	}
 
 	if resp.Status.AppRule != nil {
+
 		if err := d.Set("app_rule_action", utils.StringValue(resp.Status.AppRule.Action)); err != nil {
 			return err
 		}
 
 		if resp.Status.AppRule.OutboundAllowList != nil {
+			log.Printf("[DEBUG] resp.Status.AppRule.OutboundAllowList is diff to nil: %+v", resp.Status.AppRule.OutboundAllowList)
 			oal := resp.Status.AppRule.OutboundAllowList
 			aroaList := make([]map[string]interface{}, len(oal))
 			for k, v := range oal {
@@ -1208,6 +1218,7 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 				}
 
 				if v.Filter != nil {
+					log.Printf("[DEBUG] OutboundAllowList.%d.Filter is diff to nil: %+v", k, v.Filter)
 					aroaItem["filter_kind_list"] = utils.StringValueSlice(v.Filter.KindList)
 					aroaItem["filter_type"] = utils.StringValue(v.Filter.Type)
 					aroaItem["filter_params"] = expandFilterParams(v.Filter.Params)
@@ -1665,7 +1676,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			}
 
 			if fp, fpok := nr["filter_params"]; fpok {
-				fpl := fp.([]interface{})
+				fpl := fp.(*schema.Set).List()
 
 				if len(fpl) > 0 {
 					fl := make(map[string][]string)
@@ -1758,7 +1769,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	}
 
 	if fp, fpok := d.GetOk("quarantine_rule_target_group_filter_params"); fpok {
-		fpl := fp.([]interface{})
+		fpl := fp.(*schema.Set).List()
 
 		if len(fpl) > 0 {
 			fl := make(map[string][]string)
@@ -1864,7 +1875,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			}
 
 			if fp, fpok := nr["filter_params"]; fpok {
-				fpl := fp.([]interface{})
+				fpl := fp.(*schema.Set).List()
 
 				if len(fpl) > 0 {
 					fl := make(map[string][]string)
@@ -2025,7 +2036,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			}
 
 			if fp, fpok := nr["filter_params"]; fpok {
-				fpl := fp.([]interface{})
+				fpl := fp.(*schema.Set).List()
 
 				if len(fpl) > 0 {
 					fl := make(map[string][]string)
@@ -2118,7 +2129,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	}
 
 	if fp, fpok := d.GetOk("app_rule_target_group_filter_params"); fpok {
-		fpl := fp.([]interface{})
+		fpl := fp.(*schema.Set).List()
 
 		if len(fpl) > 0 {
 			fl := make(map[string][]string)
@@ -2224,7 +2235,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			}
 
 			if fp, fpok := nr["filter_params"]; fpok {
-				fpl := fp.([]interface{})
+				fpl := fp.(*schema.Set).List()
 
 				if len(fpl) > 0 {
 					fl := make(map[string][]string)
@@ -2313,7 +2324,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	}
 
 	if fp, fpok := d.GetOk("isolation_rule_first_entity_filter_params"); fpok {
-		fpl := fp.([]interface{})
+		fpl := fp.(*schema.Set).List()
 
 		if len(fpl) > 0 {
 			fl := make(map[string][]string)
@@ -2347,7 +2358,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	}
 
 	if fp, fpok := d.GetOk("isolation_rule_second_entity_filter_params"); fpok {
-		fpl := fp.([]interface{})
+		fpl := fp.(*schema.Set).List()
 
 		if len(fpl) > 0 {
 			fl := make(map[string][]string)
@@ -2412,8 +2423,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 
 func expandFilterParams(fp map[string][]string) []map[string]interface{} {
 	fpList := make([]map[string]interface{}, 0)
-	if fp != nil {
-		fpList = make([]map[string]interface{}, len(fp))
+	if len(fp) > 0 {
 		for name, values := range fp {
 			fpItem := make(map[string]interface{})
 			fpItem["name"] = name
@@ -2422,4 +2432,9 @@ func expandFilterParams(fp map[string][]string) []map[string]interface{} {
 		}
 	}
 	return fpList
+}
+
+func filterParamsHash(v interface{}) int {
+	params := v.(map[string]interface{})
+	return hashcode.String(params["name"].(string))
 }
