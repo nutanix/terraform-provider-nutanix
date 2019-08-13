@@ -939,12 +939,12 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 	conn := meta.(*Client).API
 
 	// Make request to the API
-	resp, err := conn.V3.GetNetworkSecurityRule(d.Id())
-	if err != nil {
-		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+	resp, errNet := conn.V3.GetNetworkSecurityRule(d.Id())
+	if errNet != nil {
+		if strings.Contains(fmt.Sprint(errNet), "ENTITY_NOT_FOUND") {
 			d.SetId("")
 		}
-		return err
+		return errNet
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
@@ -963,17 +963,27 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 		return err
 	}
 
-	d.Set("api_version", utils.StringValue(resp.APIVersion))
-	d.Set("name", utils.StringValue(resp.Spec.Name))
-	d.Set("description", utils.StringValue(resp.Spec.Description))
+	if resp.Status == nil {
+		return fmt.Errorf("error reading Status from network security rule %s", d.Id())
+	}
 
-	if resp.Status.QuarantineRule != nil {
-		if err := d.Set("quarantine_rule_action", utils.StringValue(resp.Status.QuarantineRule.Action)); err != nil {
+	if resp.Status.Resources == nil {
+		return fmt.Errorf("error reading Status.Resources from network security rule %s", d.Id())
+	}
+
+	d.Set("api_version", utils.StringValue(resp.APIVersion))
+	d.Set("name", utils.StringValue(resp.Status.Name))
+	d.Set("description", utils.StringValue(resp.Status.Description))
+
+	rules := resp.Status.Resources
+
+	if rules.QuarantineRule != nil {
+		if err := d.Set("quarantine_rule_action", utils.StringValue(rules.QuarantineRule.Action)); err != nil {
 			return err
 		}
 
-		if resp.Status.QuarantineRule.OutboundAllowList != nil {
-			oal := resp.Status.QuarantineRule.OutboundAllowList
+		if rules.QuarantineRule.OutboundAllowList != nil {
+			oal := rules.QuarantineRule.OutboundAllowList
 			qroaList := make([]map[string]interface{}, len(oal))
 			for k, v := range oal {
 				qroaItem := make(map[string]interface{})
@@ -1048,18 +1058,18 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 			}
 		}
 
-		if resp.Status.QuarantineRule.TargetGroup != nil {
+		if rules.QuarantineRule.TargetGroup != nil {
 			if err := d.Set("quarantine_rule_target_group_default_internal_policy",
-				utils.StringValue(resp.Status.QuarantineRule.TargetGroup.DefaultInternalPolicy)); err != nil {
+				utils.StringValue(rules.QuarantineRule.TargetGroup.DefaultInternalPolicy)); err != nil {
 				return err
 			}
 			if err := d.Set("quarantine_rule_target_group_peer_specification_type",
-				utils.StringValue(resp.Status.QuarantineRule.TargetGroup.PeerSpecificationType)); err != nil {
+				utils.StringValue(rules.QuarantineRule.TargetGroup.PeerSpecificationType)); err != nil {
 				return err
 			}
 
-			if resp.Status.QuarantineRule.TargetGroup.Filter != nil {
-				v := resp.Status.QuarantineRule.TargetGroup
+			if rules.QuarantineRule.TargetGroup.Filter != nil {
+				v := rules.QuarantineRule.TargetGroup
 				if v.Filter != nil {
 					if err := d.Set("quarantine_rule_target_group_filter_kind_list", utils.StringValueSlice(v.Filter.KindList)); err != nil {
 						return err
@@ -1076,8 +1086,8 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 
 		}
 
-		if resp.Status.QuarantineRule.InboundAllowList != nil {
-			ial := resp.Status.QuarantineRule.InboundAllowList
+		if rules.QuarantineRule.InboundAllowList != nil {
+			ial := rules.QuarantineRule.InboundAllowList
 			qriaList := make([]map[string]interface{}, len(ial))
 			for k, v := range ial {
 				qriaItem := make(map[string]interface{})
@@ -1174,102 +1184,24 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 		}
 	}
 
-	if resp.Status.AppRule != nil {
+	if rules.AppRule != nil {
 
-		if err := d.Set("app_rule_action", utils.StringValue(resp.Status.AppRule.Action)); err != nil {
+		if err := d.Set("app_rule_action", utils.StringValue(rules.AppRule.Action)); err != nil {
 			return err
 		}
 
-		if resp.Status.AppRule.OutboundAllowList != nil {
-			log.Printf("[DEBUG] resp.Status.AppRule.OutboundAllowList is diff to nil: %+v", resp.Status.AppRule.OutboundAllowList)
-			oal := resp.Status.AppRule.OutboundAllowList
-			aroaList := make([]map[string]interface{}, len(oal))
-			for k, v := range oal {
-				aroaItem := make(map[string]interface{})
-				aroaItem["protocol"] = utils.StringValue(v.Protocol)
-
-				if v.IPSubnet != nil {
-					aroaItem["ip_subnet"] = utils.StringValue(v.IPSubnet.IP)
-					aroaItem["ip_subnet_prefix_length"] = strconv.FormatInt(utils.Int64Value(v.IPSubnet.PrefixLength), 10)
-				}
-
-				if v.TCPPortRangeList != nil {
-					tcpprl := v.TCPPortRangeList
-					tcpprList := make([]map[string]interface{}, len(tcpprl))
-					for i, tcp := range tcpprl {
-						tcpItem := make(map[string]interface{})
-						tcpItem["end_port"] = strconv.FormatInt(utils.Int64Value(tcp.EndPort), 10)
-						tcpItem["start_port"] = strconv.FormatInt(utils.Int64Value(tcp.StartPort), 10)
-						tcpprList[i] = tcpItem
-					}
-					aroaItem["tcp_port_range_list"] = tcpprList
-				}
-
-				if v.UDPPortRangeList != nil {
-					udpprl := v.UDPPortRangeList
-					udpprList := make([]map[string]interface{}, len(udpprl))
-					for i, udp := range udpprl {
-						udpItem := make(map[string]interface{})
-						udpItem["end_port"] = strconv.FormatInt(utils.Int64Value(udp.EndPort), 10)
-						udpItem["start_port"] = strconv.FormatInt(utils.Int64Value(udp.StartPort), 10)
-						udpprList[i] = udpItem
-					}
-					aroaItem["udp_port_range_list"] = udpprList
-				}
-
-				if v.Filter != nil {
-					log.Printf("[DEBUG] OutboundAllowList.%d.Filter is diff to nil: %+v", k, v.Filter)
-					aroaItem["filter_kind_list"] = utils.StringValueSlice(v.Filter.KindList)
-					aroaItem["filter_type"] = utils.StringValue(v.Filter.Type)
-					aroaItem["filter_params"] = expandFilterParams(v.Filter.Params)
-
-				}
-
-				aroaItem["peer_specification_type"] = utils.StringValue(v.PeerSpecificationType)
-				aroaItem["expiration_time"] = utils.StringValue(v.ExpirationTime)
-
-				// set network_function_chain_reference
-				if v.NetworkFunctionChainReference != nil {
-					nfcr := make(map[string]interface{})
-					nfcr["kind"] = utils.StringValue(v.NetworkFunctionChainReference.Kind)
-					nfcr["name"] = utils.StringValue(v.NetworkFunctionChainReference.Name)
-					nfcr["uuid"] = utils.StringValue(v.NetworkFunctionChainReference.UUID)
-					aroaItem["network_function_chain_reference"] = nfcr
-				}
-
-				if v.IcmpTypeCodeList != nil {
-					icmptcl := v.IcmpTypeCodeList
-					icmptcList := make([]map[string]interface{}, len(icmptcl))
-					for i, icmp := range icmptcl {
-						icmpItem := make(map[string]interface{})
-						icmpItem["end_port"] = strconv.FormatInt(utils.Int64Value(icmp.Code), 10)
-						icmpItem["start_port"] = strconv.FormatInt(utils.Int64Value(icmp.Type), 10)
-						icmptcList[i] = icmpItem
-					}
-					aroaItem["icmp_type_code_list"] = icmptcList
-				}
-
-				aroaList[k] = aroaItem
-			}
-
-			// Set app_rule_outbound_allow_list
-			if err := d.Set("app_rule_outbound_allow_list", aroaList); err != nil {
-				return err
-			}
-		}
-
-		if resp.Status.AppRule.TargetGroup != nil {
+		if rules.AppRule.TargetGroup != nil {
 			if err := d.Set("app_rule_target_group_default_internal_policy",
-				utils.StringValue(resp.Status.AppRule.TargetGroup.DefaultInternalPolicy)); err != nil {
+				utils.StringValue(rules.AppRule.TargetGroup.DefaultInternalPolicy)); err != nil {
 				return err
 			}
 			if err := d.Set("app_rule_target_group_peer_specification_type",
-				utils.StringValue(resp.Status.AppRule.TargetGroup.PeerSpecificationType)); err != nil {
+				utils.StringValue(rules.AppRule.TargetGroup.PeerSpecificationType)); err != nil {
 				return err
 			}
 
-			if resp.Status.AppRule.TargetGroup.Filter != nil {
-				v := resp.Status.AppRule.TargetGroup
+			if rules.AppRule.TargetGroup.Filter != nil {
+				v := rules.AppRule.TargetGroup
 				if v.Filter != nil {
 					if err := d.Set("app_rule_target_group_filter_kind_list", utils.StringValueSlice(v.Filter.KindList)); err != nil {
 						return err
@@ -1286,90 +1218,27 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 			}
 		}
 
-		if resp.Status.AppRule.InboundAllowList != nil {
-			ial := resp.Status.AppRule.InboundAllowList
-			ariaList := make([]map[string]interface{}, len(ial))
-			for k, v := range ial {
-				ariaItem := make(map[string]interface{})
-				ariaItem["protocol"] = utils.StringValue(v.Protocol)
-
-				if v.IPSubnet != nil {
-					ariaItem["ip_subnet"] = utils.StringValue(v.IPSubnet.IP)
-					ariaItem["ip_subnet_prefix_length"] = strconv.FormatInt(utils.Int64Value(v.IPSubnet.PrefixLength), 10)
-				}
-
-				if v.TCPPortRangeList != nil {
-					tcpprl := v.TCPPortRangeList
-					tcpprList := make([]map[string]interface{}, len(tcpprl))
-					for i, tcp := range tcpprl {
-						tcpItem := make(map[string]interface{})
-						tcpItem["end_port"] = strconv.FormatInt(utils.Int64Value(tcp.EndPort), 10)
-						tcpItem["start_port"] = strconv.FormatInt(utils.Int64Value(tcp.StartPort), 10)
-						tcpprList[i] = tcpItem
-					}
-					ariaItem["tcp_port_range_list"] = tcpprList
-				}
-
-				if v.UDPPortRangeList != nil {
-					udpprl := v.UDPPortRangeList
-					udpprList := make([]map[string]interface{}, len(udpprl))
-					for i, udp := range udpprl {
-						udpItem := make(map[string]interface{})
-						udpItem["end_port"] = strconv.FormatInt(utils.Int64Value(udp.EndPort), 10)
-						udpItem["start_port"] = strconv.FormatInt(utils.Int64Value(udp.StartPort), 10)
-						udpprList[i] = udpItem
-					}
-					ariaItem["udp_port_range_list"] = udpprList
-				}
-
-				if v.Filter != nil {
-					ariaItem["filter_kind_list"] = utils.StringValueSlice(v.Filter.KindList)
-					ariaItem["filter_type"] = utils.StringValue(v.Filter.Type)
-					ariaItem["filter_params"] = expandFilterParams(v.Filter.Params)
-				}
-
-				ariaItem["peer_specification_type"] = utils.StringValue(v.PeerSpecificationType)
-				ariaItem["expiration_time"] = utils.StringValue(v.ExpirationTime)
-
-				// set network_function_chain_reference
-				if v.NetworkFunctionChainReference != nil {
-					nfcr := make(map[string]interface{})
-					nfcr["kind"] = utils.StringValue(v.NetworkFunctionChainReference.Kind)
-					nfcr["name"] = utils.StringValue(v.NetworkFunctionChainReference.Name)
-					nfcr["uuid"] = utils.StringValue(v.NetworkFunctionChainReference.UUID)
-					ariaItem["network_function_chain_reference"] = nfcr
-				}
-
-				if v.IcmpTypeCodeList != nil {
-					icmptcl := v.IcmpTypeCodeList
-					icmptcList := make([]map[string]interface{}, len(icmptcl))
-					for i, icmp := range icmptcl {
-						icmpItem := make(map[string]interface{})
-						icmpItem["end_port"] = strconv.FormatInt(utils.Int64Value(icmp.Code), 10)
-						icmpItem["start_port"] = strconv.FormatInt(utils.Int64Value(icmp.Type), 10)
-						icmptcList[i] = icmpItem
-					}
-					ariaItem["icmp_type_code_list"] = icmptcList
-				}
-
-				ariaList[k] = ariaItem
-			}
-
-			// Set app_rule_inbound_allow_list
-			if err := d.Set("app_rule_inbound_allow_list", ariaList); err != nil {
-				return err
-			}
-		}
-
-	}
-
-	if resp.Status.IsolationRule != nil {
-		if err := d.Set("isolation_rule_action", utils.StringValue(resp.Status.IsolationRule.Action)); err != nil {
+		// Set app_rule_outbound_allow_list
+		if err := d.Set("app_rule_outbound_allow_list", flattenNetworkRuleList(rules.AppRule.OutboundAllowList)); err != nil {
 			return err
 		}
 
-		if resp.Status.IsolationRule.FirstEntityFilter != nil {
-			firstFilter := resp.Status.IsolationRule.FirstEntityFilter
+		// Set app_rule_inbound_allow_list
+		if err := d.Set("app_rule_inbound_allow_list", flattenNetworkRuleList(rules.AppRule.InboundAllowList)); err != nil {
+			return err
+		}
+
+	} else if err := d.Set("app_rule_target_group_filter_kind_list", make([]string, 0)); err != nil {
+		return err
+	}
+
+	if rules.IsolationRule != nil {
+		if err := d.Set("isolation_rule_action", utils.StringValue(rules.IsolationRule.Action)); err != nil {
+			return err
+		}
+
+		if rules.IsolationRule.FirstEntityFilter != nil {
+			firstFilter := rules.IsolationRule.FirstEntityFilter
 			if err := d.Set("isolation_rule_first_entity_filter_kind_list", utils.StringValueSlice(firstFilter.KindList)); err != nil {
 				return err
 			}
@@ -1383,8 +1252,8 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 			}
 		}
 
-		if resp.Status.IsolationRule.SecondEntityFilter != nil {
-			secondFilter := resp.Status.IsolationRule.SecondEntityFilter
+		if rules.IsolationRule.SecondEntityFilter != nil {
+			secondFilter := rules.IsolationRule.SecondEntityFilter
 
 			if err := d.Set("isolation_rule_second_entity_filter_kind_list", utils.StringValueSlice(secondFilter.KindList)); err != nil {
 				return err
@@ -2437,4 +2306,73 @@ func expandFilterParams(fp map[string][]string) []map[string]interface{} {
 func filterParamsHash(v interface{}) int {
 	params := v.(map[string]interface{})
 	return hashcode.String(params["name"].(string))
+}
+
+func flattenNetworkRuleList(networkRules []*v3.NetworkRule) []map[string]interface{} {
+	ruleList := make([]map[string]interface{}, 0)
+	for _, v := range networkRules {
+		ruleItem := make(map[string]interface{})
+		ruleItem["protocol"] = utils.StringValue(v.Protocol)
+
+		if v.IPSubnet != nil {
+			ruleItem["ip_subnet"] = utils.StringValue(v.IPSubnet.IP)
+			ruleItem["ip_subnet_prefix_length"] = strconv.FormatInt(utils.Int64Value(v.IPSubnet.PrefixLength), 10)
+		}
+
+		if v.TCPPortRangeList != nil {
+			tcpprl := v.TCPPortRangeList
+			tcpprList := make([]map[string]interface{}, len(tcpprl))
+			for i, tcp := range tcpprl {
+				tcpItem := make(map[string]interface{})
+				tcpItem["end_port"] = strconv.FormatInt(utils.Int64Value(tcp.EndPort), 10)
+				tcpItem["start_port"] = strconv.FormatInt(utils.Int64Value(tcp.StartPort), 10)
+				tcpprList[i] = tcpItem
+			}
+			ruleItem["tcp_port_range_list"] = tcpprList
+		}
+
+		if v.UDPPortRangeList != nil {
+			udpprl := v.UDPPortRangeList
+			udpprList := make([]map[string]interface{}, len(udpprl))
+			for i, udp := range udpprl {
+				udpItem := make(map[string]interface{})
+				udpItem["end_port"] = strconv.FormatInt(utils.Int64Value(udp.EndPort), 10)
+				udpItem["start_port"] = strconv.FormatInt(utils.Int64Value(udp.StartPort), 10)
+				udpprList[i] = udpItem
+			}
+			ruleItem["udp_port_range_list"] = udpprList
+		}
+
+		if v.Filter != nil {
+			ruleItem["filter_kind_list"] = utils.StringValueSlice(v.Filter.KindList)
+			ruleItem["filter_type"] = utils.StringValue(v.Filter.Type)
+			ruleItem["filter_params"] = expandFilterParams(v.Filter.Params)
+		}
+
+		ruleItem["peer_specification_type"] = utils.StringValue(v.PeerSpecificationType)
+		ruleItem["expiration_time"] = utils.StringValue(v.ExpirationTime)
+
+		// set network_function_chain_reference
+		if v.NetworkFunctionChainReference != nil {
+			nfcr := make(map[string]interface{})
+			nfcr["kind"] = utils.StringValue(v.NetworkFunctionChainReference.Kind)
+			nfcr["name"] = utils.StringValue(v.NetworkFunctionChainReference.Name)
+			nfcr["uuid"] = utils.StringValue(v.NetworkFunctionChainReference.UUID)
+			ruleItem["network_function_chain_reference"] = nfcr
+		}
+
+		if v.IcmpTypeCodeList != nil {
+			icmptcl := v.IcmpTypeCodeList
+			icmptcList := make([]map[string]interface{}, len(icmptcl))
+			for i, icmp := range icmptcl {
+				icmpItem := make(map[string]interface{})
+				icmpItem["end_port"] = strconv.FormatInt(utils.Int64Value(icmp.Code), 10)
+				icmpItem["start_port"] = strconv.FormatInt(utils.Int64Value(icmp.Type), 10)
+				icmptcList[i] = icmpItem
+			}
+			ruleItem["icmp_type_code_list"] = icmptcList
+		}
+		ruleList = append(ruleList, ruleItem)
+	}
+	return ruleList
 }
