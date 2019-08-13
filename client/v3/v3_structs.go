@@ -1,6 +1,8 @@
 package v3
 
-import "time"
+import (
+	"time"
+)
 
 // Reference ...
 type Reference struct {
