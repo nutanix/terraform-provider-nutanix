@@ -1629,19 +1629,19 @@ type NetworkSecurityRuleIntentInput struct {
 
 // NetworkSecurityRuleDefStatus ... Network security rule status
 type NetworkSecurityRuleDefStatus struct {
-	NetworkSecurityRuleResources `json:"resources,omitmepty"`
-	IsolationRule                *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty"`
-	QuarantineRule               *NetworkSecurityRuleResourcesRule `json:"quarantine_rule,omitempty"`
-	State                        *string                           `json:"state,omitmepty"`
-	ExecutionContext             *ExecutionContext                 `json:"execution_context,omitempty"`
+	Resources        *NetworkSecurityRuleResources `json:"resources,omitmepty"`
+	State            *string                       `json:"state,omitempty"`
+	ExecutionContext *ExecutionContext             `json:"execution_context,omitempty"`
+	Name             *string                       `json:"name,omitempty"`
+	Description      *string                       `json:"description,omitempty"`
 }
 
 // NetworkSecurityRuleIntentResponse Response object for intentful operations on a network_security_rule
 type NetworkSecurityRuleIntentResponse struct {
-	APIVersion *string                      `json:"api_version,omitempty"`
-	Metadata   *Metadata                    `json:"metadata"`
-	Spec       *NetworkSecurityRule         `json:"spec,omitempty"`
-	Status     NetworkSecurityRuleDefStatus `json:"status,omitempty" bson:"status,omitempty"`
+	APIVersion *string                       `json:"api_version,omitempty"`
+	Metadata   *Metadata                     `json:"metadata"`
+	Spec       *NetworkSecurityRule          `json:"spec,omitempty"`
+	Status     *NetworkSecurityRuleDefStatus `json:"status,omitempty"`
 }
 
 // NetworkSecurityRuleStatus The status of a REST API call. Only used when there is a failure to report.
