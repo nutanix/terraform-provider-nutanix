@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -38,4 +39,8 @@ func testAccPreCheck(t *testing.T) {
 func randIntBetween(min, max int) int {
 	rand.Seed(time.Now().UnixNano())
 	return rand.Intn(max-min) + min
+}
+
+func isGCPEnvironment() bool {
+	return os.Getenv("NUTANIX_GCP") == "true"
 }
