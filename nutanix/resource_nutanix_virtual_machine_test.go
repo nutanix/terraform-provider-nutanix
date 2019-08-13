@@ -28,8 +28,7 @@ func TestAccNutanixVirtualMachine_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.Environment", "Staging"),
+					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 				),
 			},
 			{
@@ -41,8 +40,7 @@ func TestAccNutanixVirtualMachine_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "2"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.Environment", "Production"),
+					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 				),
 			},
 			{
@@ -104,8 +102,7 @@ func TestAccNutanixVirtualMachine_updateFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.Environment", "Staging"),
+					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 				),
 			},
 			{
@@ -118,8 +115,7 @@ func TestAccNutanixVirtualMachine_updateFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "256"),
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "2"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "2"),
-					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.Environment", "Production"),
+					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 				),
 			},
 			{
@@ -149,8 +145,7 @@ func TestAccNutanixVirtualMachine_WithSubnet(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.Environment", "Staging"),
+					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "nic_list_status.0.ip_endpoint_list.0.ip"),
 				),
 			},
@@ -175,8 +170,7 @@ func TestAccNutanixVirtualMachine_WithSerialPortList(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.Environment", "Staging"),
+					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serial_port_list.0.index", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serial_port_list.0.is_connected", "true"),
 				),
@@ -247,8 +241,9 @@ resource "nutanix_virtual_machine" "vm1" {
   memory_size_mib      = 186
 
 
-	categories = {
-		Environment = "Staging"
+	categories  {
+		name  = "Environment"
+		value = "Staging"
 	}
 }
 `, r)
@@ -374,8 +369,9 @@ resource "nutanix_virtual_machine" "vm1" {
   num_sockets          = 2
   memory_size_mib      = 186
 
-	categories = {
-		Environment = "Production"
+	categories {
+		name  = "Environment"
+		value = "Production"
 	}
 }
 `, r)
@@ -400,8 +396,9 @@ resource "nutanix_virtual_machine" "vm2" {
   memory_size_mib      = 186
 
 
-	categories = {
-		Environment = "Staging"
+	categories {
+		name  = "Environment"
+		value = "Staging"
 	}
 }
 `, r)
@@ -425,8 +422,9 @@ resource "nutanix_virtual_machine" "vm2" {
   num_sockets          = 2
   memory_size_mib      = 256
 
-	categories = {
-		Environment = "Production"
+	categories {
+		name = "Environment"
+		value = "Production"
 	}
 }
 `, r)
@@ -476,8 +474,9 @@ resource "nutanix_image" "cirros-034-disk" {
 resource "nutanix_virtual_machine" "vm3" {
 	name = "test-dou-vm-%[1]d"
 	
-	categories = {
-		Environment = "Staging"
+	categories {
+		name  = "Environment"
+		value = "Staging"
 	}
 
   cluster_uuid = "${local.cluster1}"
@@ -527,9 +526,9 @@ resource "nutanix_virtual_machine" "vm5" {
 		is_connected = true
 	}
 
-
-	categories = {
-		Environment = "Staging"
+	categories {
+		name  = "Environment"
+		value = "Staging"
 	}
 }
 `, r)

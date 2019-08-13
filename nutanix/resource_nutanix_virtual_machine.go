@@ -1014,8 +1014,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if d.HasChange("categories") {
-		catl := d.Get("categories").(map[string]interface{})
-		metadata.Categories = expandCategories(catl)
+		metadata.Categories = expandCategories(d.Get("categories"))
 		hotPlugChange = false
 	}
 	metadata.OwnerReference = response.Metadata.OwnerReference
