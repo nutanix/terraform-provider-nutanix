@@ -13,9 +13,9 @@ import (
 
 func TestAccNutanixNetworkSecurityRule_basic(t *testing.T) {
 	// Skipped because this test didn't pass in GCP environment
-	// if isGCPEnvironment() {
-	// 	t.Skip()
-	// }
+	if isGCPEnvironment() {
+		t.Skip()
+	}
 
 	rInt := acctest.RandInt()
 	resourceName := "nutanix_network_security_rule.TEST-TIER"
@@ -33,6 +33,34 @@ func TestAccNutanixNetworkSecurityRule_basic(t *testing.T) {
 			},
 			{
 				Config: testAccNutanixNetworkSecurityRuleConfigUpdate(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixNetworkSecurityRuleExists(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+func TestAccNutanixNetworkSecurityRule_isolation(t *testing.T) {
+	// Skipped because this test didn't pass in GCP environment
+	if isGCPEnvironment() {
+		t.Skip()
+	}
+
+	rInt := acctest.RandInt()
+	resourceName := "nutanix_network_security_rule.isolation"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixNetworkSecurityRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixNetworkSecurityRuleIsolationConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixNetworkSecurityRuleExists(resourceName),
 				),
@@ -81,6 +109,31 @@ func testAccCheckNutanixNetworkSecurityRuleDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccNutanixNetworkSecurityRuleIsolationConfig(r int) string {
+	return fmt.Sprintf(`
+resource "nutanix_network_security_rule" "isolation" {
+	name        = "test-acc-isolation-rule-%d"
+	description = "Isolation Test Acc"
+	
+	isolation_rule_action = "APPLY"
+	
+	isolation_rule_first_entity_filter_kind_list = ["vm"]
+	isolation_rule_first_entity_filter_type      = "CATEGORIES_MATCH_ALL"
+	isolation_rule_first_entity_filter_params {
+		name   = "Environment"
+		values = ["Dev"]
+	}
+	
+	isolation_rule_second_entity_filter_kind_list = ["vm"]
+	isolation_rule_second_entity_filter_type      = "CATEGORIES_MATCH_ALL"
+	isolation_rule_second_entity_filter_params {
+		name   = "Environment"
+		values = ["Production"]
+	}
+}
+`, r)
 }
 
 func testAccNutanixNetworkSecurityRuleConfig(r int) string {

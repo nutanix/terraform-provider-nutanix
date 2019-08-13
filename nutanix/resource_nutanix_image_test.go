@@ -127,7 +127,7 @@ func TestAccNutanixImage_WithLargeImageURL(t *testing.T) {
 
 func TestAccNutanixImage_uploadLocal(t *testing.T) {
 	//Skipping Because in GCP still failing
-	if os.Getenv("NUTANIX_GCP") == "true" {
+	if isGCPEnvironment() {
 		t.Skip()
 	}
 
