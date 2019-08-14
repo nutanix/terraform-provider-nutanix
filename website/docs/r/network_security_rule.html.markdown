@@ -12,92 +12,238 @@ Provides a Nutanix network security rule resource to Create a network security r
 
 ## Example Usage
 
+### Isolation Rule Example
+
 ```hcl
-resource "nutanix_category_key" "test-category-key"{
-  name = "TIER-1"
+resource "nutanix_network_security_rule" "isolation" {
+	name        = "example-isolation-rule"
+	description = "Isolation Rule Example"
+	
+	isolation_rule_action = "APPLY"
+	
+	isolation_rule_first_entity_filter_kind_list = ["vm"]
+	isolation_rule_first_entity_filter_type      = "CATEGORIES_MATCH_ALL"
+	isolation_rule_first_entity_filter_params {
+		name   = "Environment"
+		values = ["Dev"]
+	}
+	
+	isolation_rule_second_entity_filter_kind_list = ["vm"]
+	isolation_rule_second_entity_filter_type      = "CATEGORIES_MATCH_ALL"
+	isolation_rule_second_entity_filter_params {
+		name   = "Environment"
+		values = ["Production"]
+	}
+}
+```
+
+### App Rule Example with associated VMs.
+```hcl
+data "nutanix_clusters" "clusters" {}
+
+locals {
+  cluster_uuid = [
+    for cluster in data.nutanix_clusters.clusters.entities :
+    cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+  ][0]
+}
+
+//Create categories.
+resource "nutanix_category_key" "test-category-key" {
+  name        = "TIER-1"
   description = "TIER Category Key"
 }
 
+resource "nutanix_category_key" "USER" {
+  name        = "user"
+  description = "user Category Key"
+}
 
-resource "nutanix_category_value" "WEB"{
-  name = "${nutanix_category_key.test-category-key.id}"
+
+resource "nutanix_category_value" "WEB" {
+  name        = "${nutanix_category_key.test-category-key.id}"
   description = "WEB Category Value"
-  value = "WEB-1"
+  value       = "WEB-1"
 }
 
-resource "nutanix_category_value" "APP"{
-    name = "${nutanix_category_key.test-category-key.id}"
-    description = "APP Category Value"
-    value = "APP-1"
+resource "nutanix_category_value" "APP" {
+  name        = "${nutanix_category_key.test-category-key.id}"
+  description = "APP Category Value"
+  value       = "APP-1"
 }
 
-resource "nutanix_category_value" "DB"{
-    name = "${nutanix_category_key.test-category-key.id}"
-    description = "DB Category Value"
-    value = "DB-1"
+resource "nutanix_category_value" "DB" {
+  name        = "${nutanix_category_key.test-category-key.id}"
+  description = "DB Category Value"
+  value       = "DB-1"
 }
 
-resource "nutanix_category_value" "ashwini"{
-    name = "${nutanix_category_key.test-category-key.id}"
-    description = "ashwini Category Value"
-    value = "ashwini-1"
+resource "nutanix_category_value" "group" {
+  name        = "${nutanix_category_key.USER.id}"
+  description = "group Category Value"
+  value       = "group-1"
 }
 
 
+//Create a cirros image
+resource "nutanix_image" "cirros-034-disk" {
+  name        = "test-image-vm-create-flow"
+  source_uri  = "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+  description = "heres a tiny linux image, not an iso, but a real disk!"
+}
+
+//APP-1 VM.
+resource "nutanix_virtual_machine" "vm-app" {
+  name                 = "test-dou-vm-flow-APP-1"
+  cluster_uuid         = local.cluster_uuid
+  num_vcpus_per_socket = 1
+  num_sockets          = 1
+  memory_size_mib      = 186
+
+  nic_list {
+    subnet_uuid = "c56b535c-8aff-4435-ae85-78e64a07f76d"
+  }
+
+  disk_list {
+    data_source_reference = {
+      kind = "image"
+      uuid = nutanix_image.cirros-034-disk.id
+    }
+
+    device_properties {
+      disk_address = {
+        device_index = 0
+        adapter_type = "SCSI"
+      }
+      device_type = "DISK"
+    }
+  }
+
+  categories = {
+    Environment = "Staging"
+    TIER-1      = nutanix_category_value.APP.id
+  }
+}
+
+#WEB-1 VM
+resource "nutanix_virtual_machine" "vm-web" {
+  name                 = "test-dou-vm-flow-WEB-1"
+  cluster_uuid         = local.cluster_uuid
+  num_vcpus_per_socket = 1
+  num_sockets          = 1
+  memory_size_mib      = 186
+
+  nic_list {
+    subnet_uuid = "c56b535c-8aff-4435-ae85-78e64a07f76d"
+  }
+
+  disk_list {
+    data_source_reference = {
+      kind = "image"
+      uuid = nutanix_image.cirros-034-disk.id
+    }
+
+    device_properties {
+      disk_address = {
+        device_index = 0
+        adapter_type = "SCSI"
+      }
+      device_type = "DISK"
+    }
+  }
+
+  categories = {
+    Environment = "Staging"
+    TIER-1      = nutanix_category_value.WEB.id
+  }
+}
+
+#DB-1 VM
+resource "nutanix_virtual_machine" "vm-db" {
+  name                 = "test-dou-vm-flow-DB-1"
+  cluster_uuid         = local.cluster_uuid
+  num_vcpus_per_socket = 1
+  num_sockets          = 1
+  memory_size_mib      = 186
+
+  nic_list {
+    subnet_uuid = "c56b535c-8aff-4435-ae85-78e64a07f76d"
+  }
+
+  disk_list {
+    data_source_reference = {
+      kind = "image"
+      uuid = nutanix_image.cirros-034-disk.id
+    }
+
+    device_properties {
+      disk_address = {
+        device_index = 0
+        adapter_type = "SCSI"
+      }
+      device_type = "DISK"
+    }
+  }
+
+  categories = {
+    Environment = "Staging"
+    TIER-1      = nutanix_category_value.DB.id
+  }
+}
+
+//Create Application Network Policy.
 resource "nutanix_network_security_rule" "TEST-TIER" {
   name        = "RULE-1-TIERS"
   description = "rule 1 tiers"
 
   app_rule_action = "APPLY"
 
-  app_rule_inbound_allow_list = [
-    {
-      peer_specification_type = "FILTER"
-      filter_type             = "CATEGORIES_MATCH_ALL"
-      filter_kind_list        = ["vm"]
+  app_rule_inbound_allow_list {
+    peer_specification_type = "FILTER"
+    filter_type             = "CATEGORIES_MATCH_ALL"
+    filter_kind_list        = ["vm"]
 
-      filter_params = [
-        {
-          name   = "${nutanix_category_key.test-category-key.id}"
-          values = ["${nutanix_category_value.WEB.id}"]
-        },
-      ]
-    },
-  ]
+    filter_params {
+      name   = "${nutanix_category_key.test-category-key.id}"
+      values = ["${nutanix_category_value.WEB.id}"]
+    }
+  }
 
+  
   app_rule_target_group_default_internal_policy = "DENY_ALL"
-
+  
   app_rule_target_group_peer_specification_type = "FILTER"
-
+  
   app_rule_target_group_filter_type = "CATEGORIES_MATCH_ALL"
-
+  
   app_rule_target_group_filter_kind_list = ["vm"]
+  
+  app_rule_target_group_filter_params {
+    name   = "${nutanix_category_key.test-category-key.id}"
+    values = ["${nutanix_category_value.APP.id}"]
+  }
+  app_rule_target_group_filter_params {
+    name   = "${nutanix_category_key.USER.id}"
+    values = ["${nutanix_category_value.group.id}"]
+  }
 
-  app_rule_target_group_filter_params = [
-    {
+  app_rule_target_group_filter_params {
+    name   = "AppType"
+    values = ["Default"]
+  }
+
+  app_rule_outbound_allow_list {
+    peer_specification_type = "FILTER"
+    filter_type             = "CATEGORIES_MATCH_ALL"
+    filter_kind_list        = ["vm"]
+
+    filter_params {
       name   = "${nutanix_category_key.test-category-key.id}"
-      values = ["${nutanix_category_value.APP.id}"]
-    },
-    {
-      name   = "${nutanix_category_key.test-category-key.id}"
-      values = ["${nutanix_category_value.ashwini.id}"]
-    },
-  ]
+      values = ["${nutanix_category_value.DB.id}"]
+    }
+  }
 
-  app_rule_outbound_allow_list = [
-    {
-      peer_specification_type = "FILTER"
-      filter_type             = "CATEGORIES_MATCH_ALL"
-      filter_kind_list        = ["vm"]
-
-      filter_params = [
-        {
-          name   = "${nutanix_category_key.test-category-key.id}"
-          values = ["${nutanix_category_value.DB.id}"]
-        },
-      ]
-    },
-  ]
+  depends_on = [nutanix_virtual_machine.vm-app, nutanix_virtual_machine.vm-web, nutanix_virtual_machine.vm-db]
 }
 ```
 
