@@ -15,15 +15,17 @@ func TestAccNutanixNetworkSecurityRuleDataSource_basic(t *testing.T) {
 		t.Skip()
 	}
 
+	r := acctest.RandIntRange(0, 500)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNetworkSecurityRuleDataSourceConfig(acctest.RandIntRange(0, 500)),
+				Config: testAccNetworkSecurityRuleDataSourceConfig(r),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"data.nutanix_network_security_rule.test", "name", "RULE-1-TIERS"),
+						"data.nutanix_network_security_rule.test", "name", fmt.Sprintf("RULE-1-TIERS-%d", r)),
 					resource.TestCheckResourceAttr(
 						"data.nutanix_network_security_rule.test", "app_rule_action", "APPLY"),
 				),
@@ -34,16 +36,21 @@ func TestAccNutanixNetworkSecurityRuleDataSource_basic(t *testing.T) {
 
 func testAccNetworkSecurityRuleDataSourceConfig(r int) string {
 	return fmt.Sprintf(`
-resource "nutanix_category_key" "test-category-key"{
+  resource "nutanix_category_key" "test-category-key"{
     name = "TIER-1"
-	description = "TIER Category Key"
+	  description = "TIER Category Key"
+}
+
+resource "nutanix_category_key" "USER"{
+    name = "user"
+	  description = "user Category Key"
 }
 
 
 resource "nutanix_category_value" "WEB"{
     name = "${nutanix_category_key.test-category-key.id}"
 	  description = "WEB Category Value"
-	 value = "WEB-1"
+	  value = "WEB-1"
 }
 
 resource "nutanix_category_value" "APP"{
@@ -58,10 +65,10 @@ resource "nutanix_category_value" "DB"{
 	 value = "DB-1"
 }
 
-resource "nutanix_category_value" "ashwini"{
-    name = "${nutanix_category_key.test-category-key.id}"
-	  description = "ashwini Category Value"
-	 value = "ashwini-1"
+resource "nutanix_category_value" "group"{
+    name = "${nutanix_category_key.USER.id}"
+	  description = "group Category Value"
+	 value = "group-1"
 }
 
 
@@ -71,20 +78,16 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
 
   app_rule_action = "APPLY"
 
-  app_rule_inbound_allow_list = [
-    {
-      peer_specification_type = "FILTER"
-      filter_type             = "CATEGORIES_MATCH_ALL"
-      filter_kind_list        = ["vm"]
+  app_rule_inbound_allow_list {
+    peer_specification_type = "FILTER"
+    filter_type             = "CATEGORIES_MATCH_ALL"
+    filter_kind_list        = ["vm"]
 
-      filter_params = [
-        {
-          name   = "${nutanix_category_key.test-category-key.id}"
-          values = ["${nutanix_category_value.WEB.id}"]
-        },
-      ]
-    },
-  ]
+    filter_params {
+      name   = "${nutanix_category_key.test-category-key.id}"
+      values = ["${nutanix_category_value.WEB.id}"]
+    }
+  }
 
   app_rule_target_group_default_internal_policy = "DENY_ALL"
 
@@ -94,31 +97,26 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
 
   app_rule_target_group_filter_kind_list = ["vm"]
 
-  app_rule_target_group_filter_params = [
-    {
-      name   = "${nutanix_category_key.test-category-key.id}"
-      values = ["${nutanix_category_value.APP.id}"]
-    },
-    {
-      name   = "${nutanix_category_key.test-category-key.id}"
-      values = ["${nutanix_category_value.ashwini.id}"]
-    },
-  ]
+  app_rule_target_group_filter_params {
+    name   = "${nutanix_category_key.test-category-key.id}"
+    values = ["${nutanix_category_value.APP.id}"]
+  }
+  
+  app_rule_target_group_filter_params {
+    name   = "${nutanix_category_key.USER.id}"
+    values = ["${nutanix_category_value.group.id}"]
+  }
 
-  app_rule_outbound_allow_list = [
-    {
-      peer_specification_type = "FILTER"
-      filter_type             = "CATEGORIES_MATCH_ALL"
-      filter_kind_list        = ["vm"]
+  app_rule_outbound_allow_list {
+    peer_specification_type = "FILTER"
+    filter_type             = "CATEGORIES_MATCH_ALL"
+    filter_kind_list        = ["vm"]
 
-      filter_params = [
-        {
-          name   = "${nutanix_category_key.test-category-key.id}"
-          values = ["${nutanix_category_value.DB.id}"]
-        },
-      ]
-    },
-  ]
+    filter_params {
+      name   = "${nutanix_category_key.test-category-key.id}"
+      values = ["${nutanix_category_value.DB.id}"]
+    }
+  }
 }
 
 data "nutanix_network_security_rule" "test" {
