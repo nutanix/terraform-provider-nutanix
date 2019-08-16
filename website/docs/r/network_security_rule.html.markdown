@@ -308,6 +308,6 @@ The `project_reference`, `owner_reference`, `availability_zone_reference`, `clus
 
 * `kind`: - The kind name (Default value: project)(Required).
 * `name`: - the name(Optional).
-* `UUID`: - the UUID(Required).
+* `uuid`: - the UUID(Required).
 
 See detailed information in [Nutanix Image](https://nutanix.github.io/Automation/experimental/swagger-redoc-sandbox/#tag/network_security_rules/paths/~1network_security_rules~1{UUID}/put).
