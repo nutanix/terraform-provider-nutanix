@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+	v3 "github.com/Jorge-Holgado/terraform-provider-nutanix/client/v3"
+	"github.com/Jorge-Holgado/terraform-provider-nutanix/utils"
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -981,13 +981,17 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 
 func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
+	var hotPlugChange = true
+	var oldValue = 0
+	var newValue = 0
 
 	log.Printf("[Debug] Updating VM values %s", d.Id())
 
 	//First, shutDown the VM.
-	if err := changePowerState(conn, d.Id(), "OFF"); err != nil {
-		return fmt.Errorf("internal error: cannot shut down the VM with UUID(%s): %s", d.Id(), err)
-	}
+	//skip it here, It will depend on the changes
+	//if err := changePowerState(conn, d.Id(), "OFF"); err != nil {
+	//	return fmt.Errorf("internal error: cannot shut down the VM with UUID(%s): %s", d.Id(), err)
+	//}
 
 	request := &v3.VMIntentInput{}
 	metadata := &v3.Metadata{}
@@ -1020,7 +1024,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("categories") {
 		catl := d.Get("categories").(map[string]interface{})
 		metadata.Categories = expandCategories(catl)
-
+		hotPlugChange = false
 	}
 	metadata.OwnerReference = response.Metadata.OwnerReference
 	if d.HasChange("owner_reference") {
@@ -1031,12 +1035,15 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("project_reference") {
 		_, n := d.GetChange("project_reference")
 		metadata.ProjectReference = validateRef(n.(map[string]interface{}))
+		hotPlugChange = false
 	}
+	// hotplug option
 	spec.Name = response.Status.Name
 	if d.HasChange("name") {
 		_, n := d.GetChange("name")
 		spec.Name = utils.StringPtr(n.(string))
 	}
+	// hotplug option
 	spec.Description = response.Status.Description
 	if d.HasChange("description") {
 		_, n := d.GetChange("description")
@@ -1046,53 +1053,80 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("availability_zone_reference") {
 		_, n := d.GetChange("availability_zone_reference")
 		spec.AvailabilityZoneReference = validateRef(n.(map[string]interface{}))
+		hotPlugChange = false
 	}
 	spec.ClusterReference = response.Status.ClusterReference
 	if d.HasChange("cluster_uuid") {
 		_, n := d.GetChange("cluster_uuid")
 		spec.ClusterReference = buildReference(n.(string), "cluster")
+		hotPlugChange = false
 	}
 	if d.HasChange("parent_reference") {
 		_, n := d.GetChange("parent_reference")
 		res.ParentReference = validateRef(n.(map[string]interface{}))
+		hotPlugChange = false
 	}
 	if d.HasChange("num_vnuma_nodes") {
 		_, n := d.GetChange("num_vnuma_nodes")
 		res.VMVnumaConfig = &v3.VMVnumaConfig{
 			NumVnumaNodes: utils.Int64Ptr(int64(n.(int))),
 		}
+		hotPlugChange = false
 	}
 	if d.HasChange("guest_os_id") {
 		_, n := d.GetChange("guest_os_id")
 		res.GuestOsID = utils.StringPtr(n.(string))
+		hotPlugChange = false
 	}
+	// hotplug option just in case of higher value being applied
 	if d.HasChange("num_vcpus_per_socket") {
-		_, n := d.GetChange("num_vcpus_per_socket")
+		o, n := d.GetChange("num_vcpus_per_socket")
 		res.NumVcpusPerSocket = utils.Int64Ptr(int64(n.(int)))
+		newValue = n.(int)
+		oldValue = o.(int)
+		if newValue < oldValue {
+			hotPlugChange = false
+		}
 	}
+	// hotplug option just in case of higher value being applied
 	if d.HasChange("num_sockets") {
-		_, n := d.GetChange("num_sockets")
+		o, n := d.GetChange("num_sockets")
 		res.NumSockets = utils.Int64Ptr(int64(n.(int)))
+		newValue = n.(int)
+		oldValue = o.(int)
+		if newValue < oldValue {
+			hotPlugChange = false
+		}
 	}
+	// hotplug option just in case of higher value being applied
 	if d.HasChange("memory_size_mib") {
-		_, n := d.GetChange("memory_size_mib")
+		o, n := d.GetChange("memory_size_mib")
 		res.MemorySizeMib = utils.Int64Ptr(int64(n.(int)))
+		newValue = n.(int)
+		oldValue = o.(int)
+		if newValue < oldValue {
+			hotPlugChange = false
+		}
 	}
 	if d.HasChange("hardware_clock_timezone") {
 		_, n := d.GetChange("hardware_clock_timezone")
 		res.HardwareClockTimezone = utils.StringPtr(n.(string))
+		hotPlugChange = false
 	}
 	if d.HasChange("vga_console_enabled") {
 		_, n := d.GetChange("vga_console_enabled")
 		res.VgaConsoleEnabled = utils.BoolPtr(n.(bool))
+		hotPlugChange = false
 	}
 	if d.HasChange("guest_customization_is_overridable") {
 		_, n := d.GetChange("guest_customization_is_overridable")
 		guest.IsOverridable = utils.BoolPtr(n.(bool))
+		hotPlugChange = false
 	}
 	if d.HasChange("power_state_mechanism") {
 		_, n := d.GetChange("power_state_mechanism")
 		pw.Mechanism = utils.StringPtr(n.(string))
+		hotPlugChange = false
 	}
 	if d.HasChange("power_state_guest_transition_config") {
 		_, n := d.GetChange("power_state_guest_transition_config")
@@ -1106,6 +1140,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 			p.ShouldFailOnScriptFailure = utils.BoolPtr(v.(bool))
 		}
 		pw.GuestTransitionConfig = p
+		hotPlugChange = false
 	}
 
 	cloudInit := guest.CloudInit
@@ -1117,16 +1152,19 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("guest_customization_cloud_init_user_data") {
 		_, n := d.GetChange("guest_customization_cloud_init_user_data")
 		cloudInit.UserData = utils.StringPtr(n.(string))
+		hotPlugChange = false
 	}
 
 	if d.HasChange("guest_customization_cloud_init_meta_data") {
 		_, n := d.GetChange("guest_customization_cloud_init_meta_data")
 		cloudInit.MetaData = utils.StringPtr(n.(string))
+		hotPlugChange = false
 	}
 
 	if d.HasChange("guest_customization_cloud_init_custom_key_values") {
 		_, n := d.GetChange("guest_customization_cloud_init_custom_key_values")
 		cloudInit.CustomKeyValues = n.(map[string]string)
+		hotPlugChange = false
 	}
 
 	if !reflect.DeepEqual(*cloudInit, (v3.GuestCustomizationCloudInit{})) {
@@ -1141,6 +1179,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 			InstallType: validateMapStringValue(a, "install_type"),
 			UnattendXML: validateMapStringValue(a, "unattend_xml"),
 		}
+		hotPlugChange = false
 	}
 	if d.HasChange("guest_customization_sysprep_custom_key_values") {
 		if guest.Sysprep == nil {
@@ -1148,6 +1187,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		}
 		_, n := d.GetChange("guest_customization_sysprep_custom_key_values")
 		guest.Sysprep.CustomKeyValues = n.(map[string]string)
+		hotPlugChange = false
 	}
 	if d.HasChange("nic_list") {
 		res.NicList = expandNicList(d)
@@ -1161,6 +1201,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 
 	if d.HasChange("serial_port_list") {
 		res.SerialPortList = expandSerialPortList(d)
+		hotPlugChange = false
 	}
 
 	if d.HasChange("nutanix_guest_tools") || d.HasChange("ngt_credentials") || d.HasChange("ngt_enabled_capability_list") {
@@ -1169,10 +1210,12 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 
 	if d.HasChange("gpu_list") {
 		res.GpuList = expandGPUList(d)
+		hotPlugChange = false
 	}
 	if d.HasChange("boot_device_order_list") {
 		_, n := d.GetChange("boot_device_order_list")
 		boot.BootDeviceOrderList = expandStringList(n.([]interface{}))
+		hotPlugChange = false
 	}
 
 	bd := &v3.VMBootDevice{}
@@ -1184,10 +1227,12 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 			DeviceIndex: validateMapIntValue(dai, "device_index"),
 			AdapterType: validateMapStringValue(dai, "adapter_type"),
 		}
+		hotPlugChange = false
 	}
 	if d.HasChange("boot_device_mac_address") {
 		_, n := d.GetChange("boot_device_mac_address")
 		bd.MacAddress = utils.StringPtr(n.(string))
+		hotPlugChange = false
 	}
 	boot.BootDevice = bd
 
@@ -1204,6 +1249,19 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 
 	if !reflect.DeepEqual(*guest, (v3.GuestCustomization{})) {
 		res.GuestCustomization = guest
+	}
+
+	// If there are non-hotPlug changes, then poweroff is needed
+	if hotPlugChange == false {
+		if err := changePowerState(conn, d.Id(), "OFF"); err != nil {
+			return fmt.Errorf("internal error: cannot shut down the VM with UUID(%s): %s", d.Id(), err)
+		} else {
+			// SpecVersion has changed due previous poweroff, increasing it manually (without reading the value again)
+			var mySpec int64
+			mySpec = *metadata.SpecVersion
+			mySpec += 2
+			metadata.SpecVersion = &mySpec
+		}
 	}
 
 	spec.Resources = res
