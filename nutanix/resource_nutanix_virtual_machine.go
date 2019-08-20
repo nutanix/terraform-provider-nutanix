@@ -1080,9 +1080,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("num_vcpus_per_socket") {
 		o, n := d.GetChange("num_vcpus_per_socket")
 		res.NumVcpusPerSocket = utils.Int64Ptr(int64(n.(int)))
-		// newValue = n.(int)
-		// oldValue = o.(int)
-		// if newValue < oldValue {
 		if n.(int) < o.(int) {
 			hotPlugChange = false
 		}
@@ -1091,9 +1088,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("num_sockets") {
 		o, n := d.GetChange("num_sockets")
 		res.NumSockets = utils.Int64Ptr(int64(n.(int)))
-		// newValue = n.(int)
-		// oldValue = o.(int)
-		// if newValue < oldValue {
 		if n.(int) < o.(int) {
 			hotPlugChange = false
 		}
@@ -1102,9 +1096,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("memory_size_mib") {
 		o, n := d.GetChange("memory_size_mib")
 		res.MemorySizeMib = utils.Int64Ptr(int64(n.(int)))
-		// newValue = n.(int)
-		// oldValue = o.(int)
-		// if newValue < oldValue {
 		if n.(int) < o.(int) {
 			hotPlugChange = false
 		}
@@ -1258,7 +1249,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 			return fmt.Errorf("internal error: cannot shut down the VM with UUID(%s): %s", d.Id(), err)
 		}
 		// SpecVersion has changed due previous poweroff, increasing it manually (without reading the value again)
-		//var mySpec int64
 		mySpec := *metadata.SpecVersion
 		mySpec += 2
 		metadata.SpecVersion = &mySpec
