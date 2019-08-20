@@ -318,7 +318,7 @@ provider "nutanix" {
 resource "nutanix_image" "acctest-test" {
   name        = "Ubuntu-%d-server"
   description = "Ubuntu Server"
-  source_uri  = "http://releases.ubuntu.com/18.04/ubuntu-18.04.2-live-server-amd64.iso"
+  source_uri  = "http://releases.ubuntu.com/18.04/ubuntu-18.04.3-live-server-amd64.iso"
 }
 `, r)
 }
