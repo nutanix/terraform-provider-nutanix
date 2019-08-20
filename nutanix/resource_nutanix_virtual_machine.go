@@ -982,8 +982,6 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 	var hotPlugChange = true
-	var oldValue = 0
-	var newValue = 0
 
 	log.Printf("[Debug] Updating VM values %s", d.Id())
 
@@ -1082,9 +1080,10 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("num_vcpus_per_socket") {
 		o, n := d.GetChange("num_vcpus_per_socket")
 		res.NumVcpusPerSocket = utils.Int64Ptr(int64(n.(int)))
-		newValue = n.(int)
-		oldValue = o.(int)
-		if newValue < oldValue {
+		// newValue = n.(int)
+		// oldValue = o.(int)
+		// if newValue < oldValue {
+		if n.(int) < o.(int) {
 			hotPlugChange = false
 		}
 	}
@@ -1092,9 +1091,10 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("num_sockets") {
 		o, n := d.GetChange("num_sockets")
 		res.NumSockets = utils.Int64Ptr(int64(n.(int)))
-		newValue = n.(int)
-		oldValue = o.(int)
-		if newValue < oldValue {
+		// newValue = n.(int)
+		// oldValue = o.(int)
+		// if newValue < oldValue {
+		if n.(int) < o.(int) {
 			hotPlugChange = false
 		}
 	}
@@ -1102,9 +1102,10 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("memory_size_mib") {
 		o, n := d.GetChange("memory_size_mib")
 		res.MemorySizeMib = utils.Int64Ptr(int64(n.(int)))
-		newValue = n.(int)
-		oldValue = o.(int)
-		if newValue < oldValue {
+		// newValue = n.(int)
+		// oldValue = o.(int)
+		// if newValue < oldValue {
+		if n.(int) < o.(int) {
 			hotPlugChange = false
 		}
 	}
@@ -1252,16 +1253,15 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	// If there are non-hotPlug changes, then poweroff is needed
-	if hotPlugChange == false {
+	if !hotPlugChange {
 		if err := changePowerState(conn, d.Id(), "OFF"); err != nil {
 			return fmt.Errorf("internal error: cannot shut down the VM with UUID(%s): %s", d.Id(), err)
-		} else {
-			// SpecVersion has changed due previous poweroff, increasing it manually (without reading the value again)
-			var mySpec int64
-			mySpec = *metadata.SpecVersion
-			mySpec += 2
-			metadata.SpecVersion = &mySpec
 		}
+		// SpecVersion has changed due previous poweroff, increasing it manually (without reading the value again)
+		//var mySpec int64
+		mySpec := *metadata.SpecVersion
+		mySpec += 2
+		metadata.SpecVersion = &mySpec
 	}
 
 	spec.Resources = res
