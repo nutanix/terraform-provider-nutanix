@@ -985,12 +985,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 
 	log.Printf("[Debug] Updating VM values %s", d.Id())
 
-	//First, shutDown the VM.
-	//skip it here, It will depend on the changes
-	//if err := changePowerState(conn, d.Id(), "OFF"); err != nil {
-	//	return fmt.Errorf("internal error: cannot shut down the VM with UUID(%s): %s", d.Id(), err)
-	//}
-
 	request := &v3.VMIntentInput{}
 	metadata := &v3.Metadata{}
 	res := &v3.VMResources{}
@@ -1035,13 +1029,11 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		metadata.ProjectReference = validateRef(n.(map[string]interface{}))
 		hotPlugChange = false
 	}
-	// hotplug option
 	spec.Name = response.Status.Name
 	if d.HasChange("name") {
 		_, n := d.GetChange("name")
 		spec.Name = utils.StringPtr(n.(string))
 	}
-	// hotplug option
 	spec.Description = response.Status.Description
 	if d.HasChange("description") {
 		_, n := d.GetChange("description")
@@ -1076,7 +1068,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		res.GuestOsID = utils.StringPtr(n.(string))
 		hotPlugChange = false
 	}
-	// hotplug option just in case of higher value being applied
 	if d.HasChange("num_vcpus_per_socket") {
 		o, n := d.GetChange("num_vcpus_per_socket")
 		res.NumVcpusPerSocket = utils.Int64Ptr(int64(n.(int)))
@@ -1084,7 +1075,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 			hotPlugChange = false
 		}
 	}
-	// hotplug option just in case of higher value being applied
 	if d.HasChange("num_sockets") {
 		o, n := d.GetChange("num_sockets")
 		res.NumSockets = utils.Int64Ptr(int64(n.(int)))
@@ -1092,7 +1082,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 			hotPlugChange = false
 		}
 	}
-	// hotplug option just in case of higher value being applied
 	if d.HasChange("memory_size_mib") {
 		o, n := d.GetChange("memory_size_mib")
 		res.MemorySizeMib = utils.Int64Ptr(int64(n.(int)))
