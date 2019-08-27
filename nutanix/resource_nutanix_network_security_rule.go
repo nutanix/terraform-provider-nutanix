@@ -16,6 +16,28 @@ import (
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 )
 
+func portRangeSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"end_port": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"start_port": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+			},
+		},
+	}
+}
+
 func resourceNutanixNetworkSecurityRule() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceNutanixNetworkSecurityRuleCreate,
@@ -140,44 +162,8 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"tcp_port_range_list": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"end_port": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Computed: true,
-									},
-									"start_port": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"udp_port_range_list": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"end_port": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Computed: true,
-									},
-									"start_port": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-								},
-							},
-						},
+						"tcp_port_range_list": portRangeSchema(),
+						"udp_port_range_list": portRangeSchema(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -322,44 +308,8 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"tcp_port_range_list": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"end_port": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-									"start_port": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"udp_port_range_list": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"end_port": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										Computed: true,
-									},
-									"start_port": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-								},
-							},
-						},
+						"tcp_port_range_list": portRangeSchema(),
+						"udp_port_range_list": portRangeSchema(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -645,7 +595,7 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 	d.Set("name", utils.StringValue(resp.Status.Name))
 	d.Set("description", utils.StringValue(resp.Status.Description))
 
-	rules := resp.Status.Resources
+	rules := resp.Spec.Resources
 
 	if rules.AppRule != nil {
 
@@ -941,51 +891,11 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			}
 
 			if t, tcpok := nr["tcp_port_range_list"]; tcpok {
-				tcplist := t.([]interface{})
-				tcpPorts := make([]*v3.PortRange, len(tcplist))
-
-				for i, p := range tcplist {
-					tcpp := p.(map[string]interface{})
-					portRange := &v3.PortRange{}
-
-					if endp, epok := tcpp["end_port"]; epok {
-						if port, err := strconv.Atoi(endp.(string)); err != nil {
-							portRange.EndPort = utils.Int64Ptr(int64(port))
-						}
-					}
-
-					if stp, stpok := tcpp["start_port"]; stpok {
-						if port, err := strconv.Atoi(stp.(string)); err != nil {
-							portRange.StartPort = utils.Int64Ptr(int64(port))
-						}
-					}
-					tcpPorts[i] = portRange
-				}
-				nrItem.TCPPortRangeList = tcpPorts
+				nrItem.TCPPortRangeList = expandPortRangeList(t)
 			}
 
 			if u, udpok := nr["udp_port_range_list"]; udpok {
-				udplist := u.([]interface{})
-				udpPorts := make([]*v3.PortRange, len(udplist))
-
-				for i, p := range udplist {
-					udpp := p.(map[string]interface{})
-					portRange := &v3.PortRange{}
-
-					if endp, epok := udpp["end_port"]; epok {
-						if port, err := strconv.Atoi(endp.(string)); err != nil {
-							portRange.EndPort = utils.Int64Ptr(int64(port))
-						}
-					}
-
-					if stp, stpok := udpp["start_port"]; stpok {
-						if port, err := strconv.Atoi(stp.(string)); err != nil {
-							portRange.StartPort = utils.Int64Ptr(int64(port))
-						}
-					}
-					udpPorts[i] = portRange
-				}
-				nrItem.UDPPortRangeList = udpPorts
+				nrItem.UDPPortRangeList = expandPortRangeList(u)
 			}
 
 			if f, fok := nr["filter_kind_list"]; fok {
@@ -1036,34 +946,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			}
 
 			if icmp, icmpok := nr["icmp_type_code_list"]; icmpok {
-				ic := icmp.([]interface{})
-
-				if len(ic) > 0 {
-					icmpList := make([]*v3.NetworkRuleIcmpTypeCodeList, len(ic))
-
-					for k, v := range ic {
-						icmpm := v.(map[string]interface{})
-						icmpItem := &v3.NetworkRuleIcmpTypeCodeList{}
-
-						if c, cok := icmpm["code"]; cok && c.(string) != "" {
-
-							if i, err := strconv.Atoi(c.(string)); err != nil {
-								icmpItem.Code = utils.Int64Ptr(int64(i))
-							}
-						}
-
-						if t, tok := icmpm["type"]; tok && t.(string) != "" {
-							if i, err := strconv.Atoi(t.(string)); err != nil {
-								icmpItem.Type = utils.Int64Ptr(int64(i))
-							}
-						}
-						icmpList[k] = icmpItem
-					}
-					nrItem.IcmpTypeCodeList = icmpList
-				} else {
-					nrItem.IcmpTypeCodeList = nil
-				}
-
+				nrItem.IcmpTypeCodeList = expandIcmpTypeCodeList(icmp)
 			}
 
 			nrItem.IPSubnet = iPSubnet
@@ -1140,51 +1023,11 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			}
 
 			if t, tcpok := nr["tcp_port_range_list"]; tcpok {
-				tcplist := t.([]interface{})
-				tcpPorts := make([]*v3.PortRange, len(tcplist))
-
-				for i, p := range tcplist {
-					tcpp := p.(map[string]interface{})
-					portRange := &v3.PortRange{}
-
-					if endp, epok := tcpp["end_port"]; epok {
-						if port, err := strconv.Atoi(endp.(string)); err != nil {
-							portRange.EndPort = utils.Int64Ptr(int64(port))
-						}
-					}
-
-					if stp, stpok := tcpp["start_port"]; stpok {
-						if port, err := strconv.Atoi(stp.(string)); err != nil {
-							portRange.StartPort = utils.Int64Ptr(int64(port))
-						}
-					}
-					tcpPorts[i] = portRange
-				}
-				nrItem.TCPPortRangeList = tcpPorts
+				nrItem.TCPPortRangeList = expandPortRangeList(t)
 			}
 
 			if u, udpok := nr["udp_port_range_list"]; udpok {
-				udplist := u.([]interface{})
-				udpPorts := make([]*v3.PortRange, len(udplist))
-
-				for i, p := range udplist {
-					udpp := p.(map[string]interface{})
-					portRange := &v3.PortRange{}
-
-					if endp, epok := udpp["end_port"]; epok {
-						if port, err := strconv.Atoi(endp.(string)); err != nil {
-							portRange.EndPort = utils.Int64Ptr(int64(port))
-						}
-					}
-
-					if stp, stpok := udpp["start_port"]; stpok {
-						if port, err := strconv.Atoi(stp.(string)); err != nil {
-							portRange.StartPort = utils.Int64Ptr(int64(port))
-						}
-					}
-					udpPorts[i] = portRange
-				}
-				nrItem.UDPPortRangeList = udpPorts
+				nrItem.UDPPortRangeList = expandPortRangeList(u)
 			}
 
 			if f, fok := nr["filter_kind_list"]; fok {
@@ -1235,34 +1078,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			}
 
 			if icmp, icmpok := nr["icmp_type_code_list"]; icmpok {
-				ic := icmp.([]interface{})
-
-				if len(ic) > 0 {
-					icmpList := make([]*v3.NetworkRuleIcmpTypeCodeList, len(ic))
-
-					for k, v := range ic {
-						icmpm := v.(map[string]interface{})
-						icmpItem := &v3.NetworkRuleIcmpTypeCodeList{}
-
-						if c, cok := icmpm["code"]; cok && c.(string) != "" {
-
-							if i, err := strconv.Atoi(c.(string)); err != nil {
-								icmpItem.Code = utils.Int64Ptr(int64(i))
-							}
-						}
-
-						if t, tok := icmpm["type"]; tok && t.(string) != "" {
-							if i, err := strconv.Atoi(t.(string)); err != nil {
-								icmpItem.Type = utils.Int64Ptr(int64(i))
-							}
-						}
-						icmpList[k] = icmpItem
-					}
-					nrItem.IcmpTypeCodeList = icmpList
-				} else {
-					nrItem.IcmpTypeCodeList = nil
-				}
-
+				nrItem.IcmpTypeCodeList = expandIcmpTypeCodeList(icmp)
 			}
 
 			nrItem.IPSubnet = iPSubnet
@@ -1383,6 +1199,49 @@ func expandFilterParams(fp map[string][]string) []map[string]interface{} {
 	return fpList
 }
 
+func expandPortRangeList(pr interface{}) []*v3.PortRange {
+	portRange := pr.([]interface{})
+	ports := make([]*v3.PortRange, len(portRange))
+
+	for i, p := range portRange {
+		port := p.(map[string]interface{})
+		portRange := &v3.PortRange{}
+
+		if endp, epok := port["end_port"]; epok {
+			portRange.EndPort = utils.Int64Ptr(int64(endp.(int)))
+		}
+
+		if stp, stpok := port["start_port"]; stpok {
+			portRange.StartPort = utils.Int64Ptr(int64(stp.(int)))
+		}
+		ports[i] = portRange
+	}
+	return ports
+}
+
+func expandIcmpTypeCodeList(icmp interface{}) []*v3.NetworkRuleIcmpTypeCodeList {
+	ic := icmp.([]interface{})
+	icmpList := make([]*v3.NetworkRuleIcmpTypeCodeList, 0)
+	for _, v := range ic {
+		icmpm := v.(map[string]interface{})
+		icmpItem := &v3.NetworkRuleIcmpTypeCodeList{}
+
+		if c, cok := icmpm["code"]; cok && c.(string) != "" {
+			if i, err := strconv.ParseInt(c.(string), 10, 64); err == nil {
+				icmpItem.Code = utils.Int64Ptr(i)
+			}
+		}
+
+		if t, tok := icmpm["type"]; tok && t.(string) != "" {
+			if i, err := strconv.Atoi(t.(string)); err == nil {
+				icmpItem.Type = utils.Int64Ptr(int64(i))
+			}
+		}
+		icmpList = append(icmpList, icmpItem)
+	}
+	return icmpList
+}
+
 func filterParamsHash(v interface{}) int {
 	params := v.(map[string]interface{})
 	return hashcode.String(params["name"].(string))
@@ -1404,8 +1263,8 @@ func flattenNetworkRuleList(networkRules []*v3.NetworkRule) []map[string]interfa
 			tcpprList := make([]map[string]interface{}, len(tcpprl))
 			for i, tcp := range tcpprl {
 				tcpItem := make(map[string]interface{})
-				tcpItem["end_port"] = strconv.FormatInt(utils.Int64Value(tcp.EndPort), 10)
-				tcpItem["start_port"] = strconv.FormatInt(utils.Int64Value(tcp.StartPort), 10)
+				tcpItem["end_port"] = utils.Int64Value(tcp.EndPort)
+				tcpItem["start_port"] = utils.Int64Value(tcp.StartPort)
 				tcpprList[i] = tcpItem
 			}
 			ruleItem["tcp_port_range_list"] = tcpprList
@@ -1416,8 +1275,8 @@ func flattenNetworkRuleList(networkRules []*v3.NetworkRule) []map[string]interfa
 			udpprList := make([]map[string]interface{}, len(udpprl))
 			for i, udp := range udpprl {
 				udpItem := make(map[string]interface{})
-				udpItem["end_port"] = strconv.FormatInt(utils.Int64Value(udp.EndPort), 10)
-				udpItem["start_port"] = strconv.FormatInt(utils.Int64Value(udp.StartPort), 10)
+				udpItem["end_port"] = utils.Int64Value(udp.EndPort)
+				udpItem["start_port"] = utils.Int64Value(udp.StartPort)
 				udpprList[i] = udpItem
 			}
 			ruleItem["udp_port_range_list"] = udpprList
@@ -1446,8 +1305,8 @@ func flattenNetworkRuleList(networkRules []*v3.NetworkRule) []map[string]interfa
 			icmptcList := make([]map[string]interface{}, len(icmptcl))
 			for i, icmp := range icmptcl {
 				icmpItem := make(map[string]interface{})
-				icmpItem["end_port"] = strconv.FormatInt(utils.Int64Value(icmp.Code), 10)
-				icmpItem["start_port"] = strconv.FormatInt(utils.Int64Value(icmp.Type), 10)
+				icmpItem["code"] = strconv.FormatInt(utils.Int64Value(icmp.Code), 10)
+				icmpItem["type"] = strconv.FormatInt(utils.Int64Value(icmp.Type), 10)
 				icmptcList[i] = icmpItem
 			}
 			ruleItem["icmp_type_code_list"] = icmptcList
