@@ -188,7 +188,22 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
     filter_params {
       name   = "${nutanix_category_key.test-category-key.id}"
       values = ["${nutanix_category_value.WEB.id}"]
-    }
+	}
+	
+	icmp_type_code_list {
+		code = 1
+		type = 1
+	}
+	
+	tcp_port_range_list {
+		end_port = 22
+		start_port = 80
+	}
+
+	udp_port_range_list {
+		end_port = 82
+		start_port = 8080
+	}
   }
 
   app_rule_target_group_default_internal_policy = "DENY_ALL"
@@ -274,7 +289,22 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
     filter_params {
       name   = "${nutanix_category_key.test-category-key.id}"
       values = ["${nutanix_category_value.WEB.id}"]
-    }
+	}
+	
+	icmp_type_code_list {
+		code = 1
+		type = 1
+	}
+
+	tcp_port_range_list {
+		end_port = 22
+		start_port = 80
+	}
+
+	udp_port_range_list {
+		end_port = 82
+		start_port = 8080
+	}
   }
 
   app_rule_target_group_default_internal_policy = "DENY_ALL"
