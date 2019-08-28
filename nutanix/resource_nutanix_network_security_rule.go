@@ -16,28 +16,6 @@ import (
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 )
 
-func portRangeSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		Computed: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"end_port": {
-					Type:     schema.TypeInt,
-					Optional: true,
-					Computed: true,
-				},
-				"start_port": {
-					Type:     schema.TypeInt,
-					Optional: true,
-					Computed: true,
-				},
-			},
-		},
-	}
-}
-
 func resourceNutanixNetworkSecurityRule() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceNutanixNetworkSecurityRuleCreate,
@@ -1314,4 +1292,26 @@ func flattenNetworkRuleList(networkRules []*v3.NetworkRule) []map[string]interfa
 		ruleList = append(ruleList, ruleItem)
 	}
 	return ruleList
+}
+
+func portRangeSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"end_port": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"start_port": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+			},
+		},
+	}
 }
