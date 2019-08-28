@@ -10,7 +10,7 @@ description: |-
 
 Describes a Network security rule
 
-## Example Usage
+## Example Usage (Isolate Development VMs from Production VMs and get its information)
 
 ```hcl
 resource "nutanix_network_security_rule" "isolation" {
@@ -115,4 +115,4 @@ The version attribute supports the following:
 * `product_name`: - Name of the producer/distribution of the image. For example windows or red hat.
 * `product_version`: - Version string for the disk image.
 
-See detailed information in [Nutanix Image](https://nutanix.github.io/Automation/experimental/swagger-redoc-sandbox/#tag/network_security_rules/paths/~1network_security_rules~1{UUID}/put).
+See detailed information in [Nutanix Security Rules](https://www.nutanix.dev/reference/prism_central/v3/api/network-security-rules/getnetworksecurityrulesuuid).
