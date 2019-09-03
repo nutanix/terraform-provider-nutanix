@@ -1,6 +1,7 @@
 package nutanix
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -91,16 +92,23 @@ func TestAccNutanixSubnet_WithCategory(t *testing.T) {
 				Config: testAccNutanixSubnetConfigWithCategory(r),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixSubnetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.Environment", "Production"),
+					testAccCheckNutanixCategories(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "categories.2228745532.name"),
+					resource.TestCheckResourceAttrSet(resourceName, "categories.2228745532.value"),
+					resource.TestCheckResourceAttr(resourceName, "categories.2228745532.name", "Environment"),
+					resource.TestCheckResourceAttr(resourceName, "categories.2228745532.value", "Production"),
 				),
 			},
 			{
 				Config: testAccNutanixSubnetConfigWithCategoryUpdate(r),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixSubnetExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "categories.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.Environment", "Staging"),
+					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "categories.2940305446.name"),
+					resource.TestCheckResourceAttrSet(resourceName, "categories.2940305446.value"),
+					resource.TestCheckResourceAttr(resourceName, "categories.2940305446.name", "Environment"),
+					resource.TestCheckResourceAttr(resourceName, "categories.2940305446.value", "Staging"),
 				),
 			},
 			{
@@ -163,8 +171,31 @@ func testAccCheckNutanixSubnetExists(n string) resource.TestCheckFunc {
 		if !ok {
 			return fmt.Errorf("not found: %s", n)
 		}
+
+		pretty, _ := json.MarshalIndent(rs, "", "  ")
+		fmt.Print("\n\n[DEBUG] State of Subnet", string(pretty))
+
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no ID is set")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckNutanixCategories(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("no ID is set")
+		}
+
+		if val, ok := rs.Primary.Attributes["categories.2228745532.name"]; !ok || val == "" {
+			return fmt.Errorf("%s: manual Attribute '%s' expected to be set", n, "categories.2228745532.name")
 		}
 
 		return nil
@@ -296,8 +327,9 @@ resource "nutanix_subnet" "acctest-managed-categories" {
 	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
 	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
 
-	categories = {
-		Environment = "Production"
+	categories {
+		name = "Environment" 
+		value = "Production"
 	}
 }
 `, r)
@@ -337,8 +369,9 @@ resource "nutanix_subnet" "acctest-managed-categories" {
 	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
 	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
 
-	categories = {
-		Environment = "Staging"
+	categories {
+		name = "Environment"
+		value = "Staging"
 	}
 }
 `, r)
