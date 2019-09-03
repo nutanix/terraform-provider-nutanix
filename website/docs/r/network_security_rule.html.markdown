@@ -119,9 +119,14 @@ resource "nutanix_virtual_machine" "vm-app" {
     }
   }
 
-  categories = {
-    Environment = "Staging"
-    TIER-1      = nutanix_category_value.APP.id
+  categories {
+    name  = "Environment"
+    value = "Staging"
+  }
+
+  categories {
+    name  = "TIER-1"
+    value = nutanix_category_value.APP.id
   }
 }
 
@@ -152,9 +157,14 @@ resource "nutanix_virtual_machine" "vm-web" {
     }
   }
 
-  categories = {
-    Environment = "Staging"
-    TIER-1      = nutanix_category_value.WEB.id
+  categories {
+    name  = "Environment"
+    value = "Staging"
+  }
+
+  categories {
+    name  = "TIER-1"
+    value = nutanix_category_value.WEB.id 
   }
 }
 
@@ -184,10 +194,15 @@ resource "nutanix_virtual_machine" "vm-db" {
       device_type = "DISK"
     }
   }
+  
+  categories {
+    name  = "Environment"
+    value = "Staging"
+  }
 
-  categories = {
-    Environment = "Staging"
-    TIER-1      = nutanix_category_value.DB.id
+  categories {
+    name  = "TIER-1"
+    value = nutanix_category_value.DB.id
   }
 }
 
