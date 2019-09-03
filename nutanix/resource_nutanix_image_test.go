@@ -277,19 +277,41 @@ resource "nutanix_image" "acctest-testLocal" {
 
 func testAccNutanixImageConfigWithCategories(r int) string {
 	return fmt.Sprintf(`
+resource "nutanix_category_key" "os_version"{
+	name = "os_version"
+	description = "testacc-os-version"
+}
+
+resource "nutanix_category_value" "os_version_value"{
+	name = nutanix_category_key.os_version.id
+	description = "testacc-os-current"
+	value = "os_current"
+}
+
+resource "nutanix_category_key" "os_type"{
+	name = "os_type"
+	description = "testacc-os-type"
+}
+
+resource "nutanix_category_value" "ubuntu"{
+	name = nutanix_category_key.os_type.id
+	description = "testacc-ubuntu"
+	value = "ubuntu"
+}
+
 resource "nutanix_image" "acctest-test-categories" {
   name        = "Ubuntu-%d"
   description = "Ubuntu"
 
-	categories {
-		name  = "os_type"
-		value = "ubuntu"
-	}
+ categories {
+	name  = nutanix_category_key.os_type.id
+	value =	nutanix_category_value.ubuntu.id
+ }
 
-	categories {
-		name  = "os_version"
-		value = "current"
-	}
+ categories {
+	name  = nutanix_category_key.os_version.id
+	value =	nutanix_category_value.os_version_value.id
+ }
 
   source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
 
@@ -299,18 +321,47 @@ resource "nutanix_image" "acctest-test-categories" {
 
 func testAccNutanixImageConfigWithCategoriesUpdated(r int) string {
 	return fmt.Sprintf(`
+resource "nutanix_category_key" "os_version"{
+	name = "os_version"
+	description = "testacc-os-version"
+}
+
+resource "nutanix_category_value" "os_version_value"{
+	name = nutanix_category_key.os_version.id
+	description = "testacc-os-current"
+	value = "os_current"
+}
+
+resource "nutanix_category_value" "os_version_value_updated"{
+	name = nutanix_category_key.os_version.id
+	description = "testacc-ubuntu18"
+	value = "18.08"
+}
+
+resource "nutanix_category_key" "os_type"{
+	name = "os_type"
+	description = "testacc-os-type"
+}
+
+resource "nutanix_category_value" "ubuntu"{
+	name = nutanix_category_key.os_type.id
+	description = "testacc-ubuntu"
+	value = "ubuntu"
+}
+
+
 resource "nutanix_image" "acctest-test-categories" {
   	name        = "Ubuntu-%d"
   	description = "Ubuntu"
 
 	categories {
-		name  = "os_type"
-		value = "ubuntu"
+	   name  = nutanix_category_key.os_type.id
+	   value =	nutanix_category_value.ubuntu.id
 	}
-
+	
 	categories {
-		name  = "os_version"
-		value = "18.04"
+	   name  = nutanix_category_key.os_version.id
+	   value = nutanix_category_value.os_version_value_updated.id
 	}
 
   	source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
