@@ -1,6 +1,7 @@
 package nutanix
 
 import (
+	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
@@ -9,6 +10,10 @@ func categoriesSchema() *schema.Schema {
 		Type:     schema.TypeSet,
 		Optional: true,
 		Computed: true,
+		Set: func(v interface{}) int {
+			category := v.(map[string]interface{})
+			return hashcode.String(category["name"].(string) + category["value"].(string))
+		},
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"name": {
