@@ -1,4 +1,4 @@
-## 1.0.2 (Unreleased)
+## 1.0.2 (September 05, 2019)
 **Fixed bugs:**
 
 - user\_data typos cause panic, ForceNew for guest\_customization fields [\#67](https://github.com/terraform-providers/terraform-provider-nutanix/issues/67)
