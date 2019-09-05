@@ -1,7 +1,35 @@
 ## 1.0.2 (Unreleased)
-## 1.0.1 (May 01, 2019)
+**Fixed bugs:**
 
-[Full Changelog](https://github.com/terraform-providers/terraform-provider-nutanix/compare/v1.0.0...HEAD)
+- user\_data typos cause panic, ForceNew for guest\_customization fields [\#67](https://github.com/terraform-providers/terraform-provider-nutanix/issues/67)
+- Example config is not valid for power\_state [\#9](https://github.com/terraform-providers/terraform-provider-nutanix/issues/9)
+
+**Closed issues:**
+
+- Do not shutdown machine on certain changes [\#74](https://github.com/terraform-providers/terraform-provider-nutanix/issues/74)
+- Update compatibility matrix for TF provider [\#71](https://github.com/terraform-providers/terraform-provider-nutanix/issues/71)
+- Terraform 0.12 compatibility [\#66](https://github.com/terraform-providers/terraform-provider-nutanix/issues/66)
+- Unable to specify category key names dynamically in resource:nutanix\_virtual\_machine [\#61](https://github.com/terraform-providers/terraform-provider-nutanix/issues/61)
+- data source nutanix\_virtual\_machine fails with "Invalid address to set: \[\]string{"nic\_list", "0", "is\_connected"}" [\#57](https://github.com/terraform-providers/terraform-provider-nutanix/issues/57)
+- cannot unmarshal string into GO struct field MessageResource.details of the type map \[string\]interface{} [\#44](https://github.com/terraform-providers/terraform-provider-nutanix/issues/44)
+- Error when re-applying a plan [\#41](https://github.com/terraform-providers/terraform-provider-nutanix/issues/41)
+- unable to spin vm with error "'api\_version' is a required property" [\#36](https://github.com/terraform-providers/terraform-provider-nutanix/issues/36)
+- Change VM caused disk being deleted [\#34](https://github.com/terraform-providers/terraform-provider-nutanix/issues/34)
+- Unable to change VM resources when it has a network connected [\#33](https://github.com/terraform-providers/terraform-provider-nutanix/issues/33)
+- Consider replacing satori/go.uuid [\#31](https://github.com/terraform-providers/terraform-provider-nutanix/issues/31)
+
+**Merged pull requests:**
+
+- Dynamic category name support [\#76](https://github.com/terraform-providers/terraform-provider-nutanix/pull/76) ([marinsalinas](https://github.com/marinsalinas))
+- Patch to allow some changes to be hotplug [\#75](https://github.com/terraform-providers/terraform-provider-nutanix/pull/75) ([Jorge-Holgado](https://github.com/Jorge-Holgado))
+- Terraform 0.12 Provider Support. [\#72](https://github.com/terraform-providers/terraform-provider-nutanix/pull/72) ([marinsalinas](https://github.com/marinsalinas))
+- Fix typos causing panic on userdata change, ForceNew on change [\#68](https://github.com/terraform-providers/terraform-provider-nutanix/pull/68) ([rxacevedo](https://github.com/rxacevedo))
+- Refactor: change update workflow to use spec instead status in virtual machine resource. [\#62](https://github.com/terraform-providers/terraform-provider-nutanix/pull/62) ([marinsalinas](https://github.com/marinsalinas))
+- Added fix for Issue \#57 [\#60](https://github.com/terraform-providers/terraform-provider-nutanix/pull/60) ([chandru-tkc](https://github.com/chandru-tkc))
+- added VMNic.IsConnected to preFillResUpdateRequest [\#59](https://github.com/terraform-providers/terraform-provider-nutanix/pull/59) ([switchboardOp](https://github.com/switchboardOp))
+
+
+## 1.0.1 (May 01, 2019)
 
 **Implemented enhancements:**
 
