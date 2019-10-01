@@ -1616,17 +1616,19 @@ type NetworkSecurityRule struct {
 
 // Metadata Metadata The kind metadata
 type Metadata struct {
-	LastUpdateTime       *time.Time        `json:"last_update_time,omitempty"`  //
-	Kind                 *string           `json:"kind"`                        //
-	UUID                 *string           `json:"uuid,omitempty"`              //
-	ProjectReference     *Reference        `json:"project_reference,omitempty"` // project reference
-	CreationTime         *time.Time        `json:"creation_time,omitempty"`
-	SpecVersion          *int64            `json:"spec_version,omitempty"`
-	SpecHash             *string           `json:"spec_hash,omitempty"`
-	OwnerReference       *Reference        `json:"owner_reference,omitempty"`
-	Categories           map[string]string `json:"categories,omitempty"`
-	Name                 *string           `json:"name,omitempty"`
-	ShouldForceTranslate *bool             `json:"should_force_translate,omitempty"` // Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
+	LastUpdateTime   *time.Time        `json:"last_update_time,omitempty"`  //
+	Kind             *string           `json:"kind"`                        //
+	UUID             *string           `json:"uuid,omitempty"`              //
+	ProjectReference *Reference        `json:"project_reference,omitempty"` // project reference
+	CreationTime     *time.Time        `json:"creation_time,omitempty"`
+	SpecVersion      *int64            `json:"spec_version,omitempty"`
+	SpecHash         *string           `json:"spec_hash,omitempty"`
+	OwnerReference   *Reference        `json:"owner_reference,omitempty"`
+	Categories       map[string]string `json:"categories,omitempty"`
+	Name             *string           `json:"name,omitempty"`
+
+	// Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
+	ShouldForceTranslate *bool `json:"should_force_translate,omitempty"`
 }
 
 // NetworkSecurityRuleIntentInput An intentful representation of a network_security_rule
@@ -1638,7 +1640,7 @@ type NetworkSecurityRuleIntentInput struct {
 
 // NetworkSecurityRuleDefStatus ... Network security rule status
 type NetworkSecurityRuleDefStatus struct {
-	Resources        *NetworkSecurityRuleResources `json:"resources,omitmepty"`
+	Resources        *NetworkSecurityRuleResources `json:"resources,omitempty"`
 	State            *string                       `json:"state,omitempty"`
 	ExecutionContext *ExecutionContext             `json:"execution_context,omitempty"`
 	Name             *string                       `json:"name,omitempty"`
