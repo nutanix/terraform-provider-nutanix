@@ -245,6 +245,9 @@ type VMResources struct {
 	// NICs attached to the VM.
 	NicList []*VMNic `json:"nic_list,omitempty"`
 
+	// Number of threads per core
+	NumThreads *int64 `json:"num_threads_per_core,omitempty"`
+
 	// Number of vCPU sockets.
 	NumSockets *int64 `json:"num_sockets,omitempty"`
 
@@ -836,6 +839,9 @@ type ImageResources struct {
 
 	// The image version
 	Version *ImageVersionResources `json:"version,omitempty"`
+
+	// Reference to the source image such as 'vm_disk
+	DataSourceReference *Reference `json:"data_source_reference,omitempty"`
 }
 
 // Image An intentful representation of a image spec
@@ -1610,16 +1616,17 @@ type NetworkSecurityRule struct {
 
 // Metadata Metadata The kind metadata
 type Metadata struct {
-	LastUpdateTime   *time.Time        `json:"last_update_time,omitempty"`  //
-	Kind             *string           `json:"kind"`                        //
-	UUID             *string           `json:"uuid,omitempty"`              //
-	ProjectReference *Reference        `json:"project_reference,omitempty"` // project reference
-	CreationTime     *time.Time        `json:"creation_time,omitempty"`
-	SpecVersion      *int64            `json:"spec_version,omitempty"`
-	SpecHash         *string           `json:"spec_hash,omitempty"`
-	OwnerReference   *Reference        `json:"owner_reference,omitempty"`
-	Categories       map[string]string `json:"categories,omitempty"`
-	Name             *string           `json:"name,omitempty"`
+	LastUpdateTime       *time.Time        `json:"last_update_time,omitempty"`  //
+	Kind                 *string           `json:"kind"`                        //
+	UUID                 *string           `json:"uuid,omitempty"`              //
+	ProjectReference     *Reference        `json:"project_reference,omitempty"` // project reference
+	CreationTime         *time.Time        `json:"creation_time,omitempty"`
+	SpecVersion          *int64            `json:"spec_version,omitempty"`
+	SpecHash             *string           `json:"spec_hash,omitempty"`
+	OwnerReference       *Reference        `json:"owner_reference,omitempty"`
+	Categories           map[string]string `json:"categories,omitempty"`
+	Name                 *string           `json:"name,omitempty"`
+	ShouldForceTranslate *bool             `json:"should_force_translate,omitempty"` // Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
 }
 
 // NetworkSecurityRuleIntentInput An intentful representation of a network_security_rule
