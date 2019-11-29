@@ -19,6 +19,8 @@ func Provider() terraform.ResourceProvider {
 		"insecure": "Explicitly allow the provider to perform \"insecure\" SSL requests. If omitted," +
 			"default value is `false`",
 
+		"session_auth": "Use session authentification instead of basic auth for each request",
+
 		"port": "Port for Nutanix Prism.",
 
 		"wait_timeout": "Set if you know that the creation o update of a resource may take long time (minutes)",
@@ -49,6 +51,12 @@ func Provider() terraform.ResourceProvider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_INSECURE", false),
 				Description: descriptions["insecure"],
+			},
+			"session_auth": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_SESSION_AUTH", false),
+				Description: descriptions["session_auth"],
 			},
 			"port": {
 				Type:        schema.TypeString,
@@ -110,6 +118,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		Username:    d.Get("username").(string),
 		Password:    d.Get("password").(string),
 		Insecure:    d.Get("insecure").(bool),
+		SessionAuth: d.Get("session_auth").(bool),
 		Port:        d.Get("port").(string),
 		WaitTimeout: int64(d.Get("wait_timeout").(int)),
 		ProxyURL:    d.Get("proxy_url").(string),
