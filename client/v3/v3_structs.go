@@ -1022,16 +1022,8 @@ type ImageListIntentResponse struct {
 // ClusterListIntentResponse ...
 type ClusterListIntentResponse struct {
 	APIVersion *string                  `json:"api_version"`
-	Entities   []*ClusterIntentResource `json:"entities,omitempty"`
+	Entities   []*ClusterIntentResponse `json:"entities,omitempty"`
 	Metadata   *ListMetadataOutput      `json:"metadata"`
-}
-
-// ClusterIntentResource ...
-type ClusterIntentResource struct {
-	APIVersion *string           `json:"api_version,omitempty"`
-	Metadata   *Metadata         `json:"metadata"`
-	Spec       *Cluster          `json:"spec,omitempty"`
-	Status     *ClusterDefStatus `json:"status,omitempty"`
 }
 
 // ClusterIntentResponse ...

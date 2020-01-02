@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-
 	"github.com/hashicorp/terraform/helper/schema"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func dataSourceNutanixCluster() *schema.Resource {
@@ -15,7 +15,7 @@ func dataSourceNutanixCluster() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"metadata": {
 				Type:     schema.TypeMap,
@@ -100,7 +100,7 @@ func dataSourceNutanixCluster() *schema.Resource {
 			},
 			"name": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
 			},
 
 			// COMPUTED
@@ -584,23 +584,60 @@ func dataSourceNutanixCluster() *schema.Resource {
 	}
 }
 
+func findClusterByUUID(conn *v3.Client, uuid string) (*v3.ClusterIntentResponse, error) {
+	return conn.V3.GetCluster(uuid)
+}
+
+func findClusterByName(conn *v3.Client, name string) (*v3.ClusterIntentResponse, error) {
+	resp, err := conn.V3.ListAllCluster()
+	if err != nil {
+		return nil, err
+	}
+
+	entities := resp.Entities
+
+	found := make([]*v3.ClusterIntentResponse, 0)
+	for _, v := range entities {
+		if *v.Spec.Name == name {
+			found = append(found, v)
+		}
+	}
+
+	if len(found) > 1 {
+		return nil, fmt.Errorf("your query returned more than one result. Please use image_id argument instead")
+	}
+
+	if len(found) == 0 {
+		return nil, fmt.Errorf("image with the given name not found")
+	}
+
+	return found[0], nil
+}
+
 func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
 	conn := meta.(*Client).API
 
-	c, ok := d.GetOk("cluster_id")
+	cID, cok := d.GetOk("cluster_id")
+	cName, nok := d.GetOk("name")
 
-	if !ok {
-		return fmt.Errorf("please provide the cluster_id attribute")
+	if !cok && !nok {
+		return fmt.Errorf("please provide one of cluster_id or metadata.name attribute")
 	}
 
-	// Make request to the API
-	v, err := conn.V3.GetCluster(c.(string))
-	if err != nil {
-		return err
+	var reqErr error
+	var resp *v3.ClusterIntentResponse
+	if cok {
+		resp, reqErr = findClusterByUUID(conn, cID.(string))
+	} else {
+		resp, reqErr = findClusterByName(conn, cName.(string))
 	}
 
-	m, c := setRSEntityMetadata(v.Metadata)
+	if reqErr != nil {
+		return reqErr
+	}
+
+	m, c := setRSEntityMetadata(resp.Metadata)
 
 	if err := d.Set("metadata", m); err != nil {
 		return err
@@ -609,30 +646,30 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	if err := d.Set("api_version", utils.StringValue(v.APIVersion)); err != nil {
+	if err := d.Set("api_version", utils.StringValue(resp.APIVersion)); err != nil {
 		return err
 	}
 
-	if err := d.Set("project_reference", flattenReferenceValues(v.Metadata.ProjectReference)); err != nil {
+	if err := d.Set("project_reference", flattenReferenceValues(resp.Metadata.ProjectReference)); err != nil {
 		return err
 	}
 
-	if err := d.Set("owner_reference", flattenReferenceValues(v.Metadata.OwnerReference)); err != nil {
+	if err := d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
 		return err
 	}
 
-	if err := d.Set("name", utils.StringValue(v.Status.Name)); err != nil {
+	if err := d.Set("name", utils.StringValue(resp.Status.Name)); err != nil {
 		return err
 	}
-	if err := d.Set("state", utils.StringValue(v.Status.State)); err != nil {
+	if err := d.Set("state", utils.StringValue(resp.Status.State)); err != nil {
 		return err
 	}
 
 	nodes := make([]map[string]interface{}, 0)
-	if v.Status.Resources.Nodes != nil {
-		if v.Status.Resources.Nodes.HypervisorServerList != nil {
-			nodes = make([]map[string]interface{}, len(v.Status.Resources.Nodes.HypervisorServerList))
-			for k, v := range v.Status.Resources.Nodes.HypervisorServerList {
+	if resp.Status.Resources.Nodes != nil {
+		if resp.Status.Resources.Nodes.HypervisorServerList != nil {
+			nodes = make([]map[string]interface{}, len(resp.Status.Resources.Nodes.HypervisorServerList))
+			for k, v := range resp.Status.Resources.Nodes.HypervisorServerList {
 				node := make(map[string]interface{})
 				node["ip"] = utils.StringValue(v.IP)
 				node["version"] = utils.StringValue(v.Version)
@@ -645,7 +682,7 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	config := v.Status.Resources.Config
+	config := resp.Status.Resources.Config
 	if err := d.Set("gpu_driver_version", utils.StringValue(config.GpuDriverVersion)); err != nil {
 		return err
 	}
@@ -821,7 +858,7 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	network := v.Status.Resources.Network
+	network := resp.Status.Resources.Network
 	if err := d.Set("masquerading_port", utils.Int64Value(network.MasqueradingPort)); err != nil {
 		return err
 	}
@@ -972,18 +1009,18 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	analysis := make(map[string]interface{})
-	if v.Status.Resources.Analysis != nil {
-		analysis["bully_vm_num"] = utils.StringValue(v.Status.Resources.Analysis.VMEfficiencyMap.BullyVMNum)
-		analysis["constrained_vm_num"] = utils.StringValue(v.Status.Resources.Analysis.VMEfficiencyMap.ConstrainedVMNum)
-		analysis["dead_vm_num"] = utils.StringValue(v.Status.Resources.Analysis.VMEfficiencyMap.DeadVMNum)
-		analysis["inefficient_vm_num"] = utils.StringValue(v.Status.Resources.Analysis.VMEfficiencyMap.InefficientVMNum)
-		analysis["overprovisioned_vm_num"] = utils.StringValue(v.Status.Resources.Analysis.VMEfficiencyMap.OverprovisionedVMNum)
+	if resp.Status.Resources.Analysis != nil {
+		analysis["bully_vm_num"] = utils.StringValue(resp.Status.Resources.Analysis.VMEfficiencyMap.BullyVMNum)
+		analysis["constrained_vm_num"] = utils.StringValue(resp.Status.Resources.Analysis.VMEfficiencyMap.ConstrainedVMNum)
+		analysis["dead_vm_num"] = utils.StringValue(resp.Status.Resources.Analysis.VMEfficiencyMap.DeadVMNum)
+		analysis["inefficient_vm_num"] = utils.StringValue(resp.Status.Resources.Analysis.VMEfficiencyMap.InefficientVMNum)
+		analysis["overprovisioned_vm_num"] = utils.StringValue(resp.Status.Resources.Analysis.VMEfficiencyMap.OverprovisionedVMNum)
 	}
 	if err := d.Set("analysis_vm_efficiency_map", analysis); err != nil {
 		return err
 	}
 
-	d.SetId(utils.StringValue(v.Metadata.UUID))
+	d.SetId(utils.StringValue(resp.Metadata.UUID))
 
 	return nil
 }
