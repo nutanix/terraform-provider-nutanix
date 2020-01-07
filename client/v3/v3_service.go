@@ -1013,8 +1013,8 @@ func (op Operations) ListAllImage() (*ImageListIntentResponse, error) {
 }
 
 // ListAllCluster ...
-func (op Operations) ListAllCluster() (*ClusterListIntentResponse, error) {
-	entities := make([]*ClusterIntentResource, 0)
+func (op Operations) ListAllCluster(filter string) (*ClusterListIntentResponse, error) {
+	entities := make([]*ClusterIntentResponse, 0)
 
 	resp, err := op.ListCluster(&DSMetadata{
 		Kind:   utils.StringPtr("cluster"),

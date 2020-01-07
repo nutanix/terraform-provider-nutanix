@@ -1391,8 +1391,8 @@ func TestOperations_ListCluster(t *testing.T) {
 	})
 
 	list := &ClusterListIntentResponse{}
-	list.Entities = make([]*ClusterIntentResource, 1)
-	list.Entities[0] = &ClusterIntentResource{}
+	list.Entities = make([]*ClusterIntentResponse, 1)
+	list.Entities[0] = &ClusterIntentResponse{}
 	list.Entities[0].Metadata = &Metadata{
 		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
 		Kind: utils.StringPtr("cluster"),
