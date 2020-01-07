@@ -1449,18 +1449,13 @@ func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, meta interface{
 func resourceNutanixVirtualMachineExists(d *schema.ResourceData, meta interface{}) (bool, error) {
 	conn := meta.(*Client).API
 
-	resp, err := conn.V3.ListAllVM()
+	_, err := conn.V3.GetVM(d.Id())
 
 	if err != nil {
 		return false, err
 	}
 
-	for i := range resp.Entities {
-		if *resp.Entities[i].Metadata.UUID == d.Id() {
-			return true, nil
-		}
-	}
-	return false, nil
+	return true, nil
 }
 
 func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
