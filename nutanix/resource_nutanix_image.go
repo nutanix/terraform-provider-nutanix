@@ -290,7 +290,7 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 	// Make request to the API
 	resp, err := conn.V3.CreateImage(request)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating Nutanix Image %s: %+v", utils.StringValue(spec.Name), err)
 	}
 
 	UUID := *resp.Metadata.UUID
