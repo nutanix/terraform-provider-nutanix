@@ -508,7 +508,7 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 	resp, err := conn.V3.CreateNetworkSecurityRule(request)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating Nutanix Network Security Rule %s: %+v", utils.StringValue(spec.Name), err)
 	}
 
 	d.SetId(*resp.Metadata.UUID)
