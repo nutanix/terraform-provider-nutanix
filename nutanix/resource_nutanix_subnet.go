@@ -697,7 +697,8 @@ func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error
 func resourceNutanixSubnetExists(conn *v3.Client, name string) (*string, error) {
 	var subnetUUID *string
 
-	subnetList, err := conn.V3.ListAllSubnet()
+	filter := fmt.Sprintf("name==%s", name)
+	subnetList, err := conn.V3.ListAllSubnet(filter)
 
 	if err != nil {
 		return nil, err
