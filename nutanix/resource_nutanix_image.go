@@ -287,15 +287,6 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 	request.Metadata = metadata
 	request.Spec = spec
 
-	imageUUID, err := resourceNutanixImageExists(conn, n.(string))
-	if err != nil {
-		return fmt.Errorf("failed to read image with name(%s): %+v", n.(string), err)
-	}
-
-	if imageUUID != nil {
-		return fmt.Errorf("image already exists with name %s  in the given cluster, UUID %s", d.Get("name").(string), *imageUUID)
-	}
-
 	// Make request to the API
 	resp, err := conn.V3.CreateImage(request)
 	if err != nil {

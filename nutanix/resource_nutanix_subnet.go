@@ -341,15 +341,6 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 
 	spec.Description = utils.StringPtr(d.Get("description").(string))
 
-	subnetUUID, err := resourceNutanixSubnetExists(conn, d.Get("name").(string))
-	if err != nil {
-		return fmt.Errorf("error checking if subnet already exists %+v", err)
-	}
-
-	if subnetUUID != nil {
-		return fmt.Errorf("subnet already with name %s exists in the given cluster, UUID %s", d.Get("name").(string), *subnetUUID)
-	}
-
 	spec.Name = utils.StringPtr(n.(string))
 	spec.Resources = subnet
 	request.Metadata = metadata
