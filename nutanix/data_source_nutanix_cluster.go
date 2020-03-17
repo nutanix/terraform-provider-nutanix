@@ -2,11 +2,10 @@ package nutanix
 
 import (
 	"fmt"
-	"strconv"
-
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-
 	"github.com/hashicorp/terraform/helper/schema"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+	"strconv"
 )
 
 func dataSourceNutanixCluster() *schema.Resource {
@@ -14,8 +13,9 @@ func dataSourceNutanixCluster() *schema.Resource {
 		Read: dataSourceNutanixClusterRead,
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type: schema.TypeString,
+				// Required: true,
+				Optional: true,
 			},
 			"metadata": {
 				Type:     schema.TypeMap,
@@ -99,8 +99,9 @@ func dataSourceNutanixCluster() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type: schema.TypeString,
+				// Computed: true,
+				Optional: true,
 			},
 
 			// COMPUTED
@@ -589,15 +590,37 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*Client).API
 
 	c, ok := d.GetOk("cluster_id")
-
-	if !ok {
-		return fmt.Errorf("please provide the cluster_id attribute")
-	}
-
-	// Make request to the API
-	v, err := conn.V3.GetCluster(c.(string))
-	if err != nil {
-		return err
+	var v *v3.ClusterIntentResponse
+	var err error
+	if ok {
+		// Make request to the API
+		v, err = conn.V3.GetCluster(c.(string))
+		if err != nil {
+			return err
+		}
+	} else {
+		n, ok := d.GetOk("name")
+		if !ok {
+			return fmt.Errorf("please provide the cluster_id or name attribute")
+		}
+		clusterEntitiesMetadata := &v3.DSMetadata{}
+		allClusters, err := conn.V3.ListCluster(clusterEntitiesMetadata)
+		if err != nil {
+			return fmt.Errorf("Error occured: %s", err)
+		}
+		for _, cluster := range allClusters.Entities {
+			if *cluster.Status.Name == n.(string) {
+				v = &v3.ClusterIntentResponse{
+					Status:     cluster.Status,
+					Spec:       cluster.Spec,
+					Metadata:   cluster.Metadata,
+					APIVersion: cluster.APIVersion,
+				}
+			}
+		}
+		if v == nil {
+			return fmt.Errorf("Did not find cluster with name %s", n.(string))
+		}
 	}
 
 	m, c := setRSEntityMetadata(v.Metadata)
