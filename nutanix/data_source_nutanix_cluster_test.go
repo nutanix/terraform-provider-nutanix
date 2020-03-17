@@ -23,32 +23,47 @@ func TestAccNutanixClusterDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixClusterByNameDataSource_basic(t *testing.T) {
+func TestAccNutanixClusterDataSource_ByName(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterByNameDataSourceConfig,
+				Config: testAccClusterDataSourceConfigByName,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
 						"data.nutanix_cluster.cluster", "id"),
 					resource.TestCheckResourceAttrSet(
 						"data.nutanix_cluster.cluster", "name"),
+					resource.TestCheckResourceAttrSet(
+						"data.nutanix_cluster.cluster", "cluster_id"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccNutanixClusterByNameNotExistingDataSource_basic(t *testing.T) {
+func TestAccNutanixClusterDataSource_ByNameNotExisting(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccClusterByNameNotExistingDataSourceConfig,
-				ExpectError: regexp.MustCompile("Did not find cluster with name *"),
+				Config:      testAccClusterDataSourceConfigByNameNotExisting,
+				ExpectError: regexp.MustCompile("did not find cluster with name *"),
+			},
+		},
+	})
+}
+
+func TestAccNutanixClusterDataSource_NameUuidConflict(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterDataSourceConfigNameUUIDConflict,
+				ExpectError: regexp.MustCompile(" * conflicts with *"),
 			},
 		},
 	})
@@ -62,7 +77,7 @@ data "nutanix_cluster" "cluster" {
 	cluster_id = data.nutanix_clusters.clusters.entities.0.metadata.uuid
 }`
 
-const testAccClusterByNameDataSourceConfig = `
+const testAccClusterDataSourceConfigByName = `
 data "nutanix_clusters" "clusters" {}
 
 
@@ -70,10 +85,19 @@ data "nutanix_cluster" "cluster" {
 	name = data.nutanix_clusters.clusters.entities.0.name
 }`
 
-const testAccClusterByNameNotExistingDataSourceConfig = `
+const testAccClusterDataSourceConfigByNameNotExisting = `
 data "nutanix_clusters" "clusters" {}
 
 
 data "nutanix_cluster" "cluster" {
 	name = "ThisDoesNotExist"
+}`
+
+const testAccClusterDataSourceConfigNameUUIDConflict = `
+data "nutanix_clusters" "clusters" {}
+
+
+data "nutanix_cluster" "cluster" {
+	cluster_id = data.nutanix_clusters.clusters.entities.0.metadata.uuid
+	name = data.nutanix_clusters.clusters.entities.0.name
 }`

@@ -2,10 +2,11 @@ package nutanix
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-	"strconv"
 )
 
 func dataSourceNutanixCluster() *schema.Resource {
@@ -13,9 +14,10 @@ func dataSourceNutanixCluster() *schema.Resource {
 		Read: dataSourceNutanixClusterRead,
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
-				Type: schema.TypeString,
-				// Required: true,
-				Optional: true,
+				Type:          schema.TypeString,
+				Computed:      true,
+				Optional:      true,
+				ConflictsWith: []string{"name"},
 			},
 			"metadata": {
 				Type:     schema.TypeMap,
@@ -99,9 +101,10 @@ func dataSourceNutanixCluster() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type: schema.TypeString,
-				// Computed: true,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"cluster_id"},
 			},
 
 			// COMPUTED
@@ -607,24 +610,6 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 		if err != nil {
 			return err
 		}
-		// clusterEntitiesMetadata := &v3.DSMetadata{}
-		// allClusters, err := conn.V3.ListCluster(clusterEntitiesMetadata)
-		// if err != nil {
-		// 	return fmt.Errorf("Error occured: %s", err)
-		// }
-		// for _, cluster := range allClusters.Entities {
-		// 	if *cluster.Status.Name == n.(string) {
-		// 		v = &v3.ClusterIntentResponse{
-		// 			Status:     cluster.Status,
-		// 			Spec:       cluster.Spec,
-		// 			Metadata:   cluster.Metadata,
-		// 			APIVersion: cluster.APIVersion,
-		// 		}
-		// 	}
-		// }
-		// if v == nil {
-		// 	return fmt.Errorf("Did not find cluster with name %s", n.(string))
-		// }
 	}
 
 	m, c := setRSEntityMetadata(v.Metadata)
@@ -1057,8 +1042,12 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	d.SetId(utils.StringValue(v.Metadata.UUID))
+	cUUID := utils.StringValue(v.Metadata.UUID)
+	if err := d.Set("cluster_id", cUUID); err != nil {
+		return err
+	}
 
+	d.SetId(cUUID)
 	return nil
 }
 
@@ -1087,9 +1076,8 @@ func findClusterByName(conn *v3.Client, name string) (*v3.ClusterIntentResponse,
 	}
 
 	if len(found) == 0 {
-		return nil, fmt.Errorf("Did not find cluster with name %s", name)
+		return nil, fmt.Errorf("did not find cluster with name %s", name)
 	}
 
 	return found[0], nil
-
 }

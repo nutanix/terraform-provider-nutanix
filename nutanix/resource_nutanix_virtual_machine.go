@@ -1183,10 +1183,16 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 
 	if d.HasChange("disk_list") {
 		preCdromCount, err := CountDiskListCdrom(res.DiskList)
+		if err != nil {
+			return err
+		}
 		if res.DiskList, err = expandDiskList(d, false); err != nil {
 			return err
 		}
 		postCdromCount, err := CountDiskListCdrom(res.DiskList)
+		if err != nil {
+			return err
+		}
 		if preCdromCount != postCdromCount {
 			hotPlugChange = false
 		}
@@ -1924,13 +1930,11 @@ func waitForIPRefreshFunc(client *v3.Client, vmUUID string) resource.StateRefres
 }
 
 func CountDiskListCdrom(dl []*v3.VMDisk) (int, error) {
-	log.Printf("=====")
 	counter := 0
 	for _, v := range dl {
 		if *v.DeviceProperties.DeviceType == "CDROM" {
 			counter++
 		}
 	}
-	log.Printf("=====")
 	return counter, nil
 }
