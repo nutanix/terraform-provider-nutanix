@@ -1,6 +1,7 @@
 package nutanix
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -40,6 +41,19 @@ func TestAccNutanixClusterByNameDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccNutanixClusterByNameNotExistingDataSource_basic(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccClusterByNameNotExistingDataSourceConfig,
+				ExpectError: regexp.MustCompile("Did not find cluster with name *"),
+			},
+		},
+	})
+}
+
 const testAccClusterDataSourceConfig = `
 data "nutanix_clusters" "clusters" {}
 
@@ -54,4 +68,12 @@ data "nutanix_clusters" "clusters" {}
 
 data "nutanix_cluster" "cluster" {
 	name = data.nutanix_clusters.clusters.entities.0.name
+}`
+
+const testAccClusterByNameNotExistingDataSourceConfig = `
+data "nutanix_clusters" "clusters" {}
+
+
+data "nutanix_cluster" "cluster" {
+	name = "ThisDoesNotExist"
 }`
