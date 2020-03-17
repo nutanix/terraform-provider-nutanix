@@ -185,6 +185,31 @@ func TestAccNutanixVirtualMachine_WithSerialPortList(t *testing.T) {
 	})
 }
 
+func TestAccNutanixVirtualMachine_PowerStateMechanism(t *testing.T) {
+	r := acctest.RandInt()
+	resourceName := "nutanix_virtual_machine.vm6"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixVMConfigPowerStateMechanism(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "power_state_mechanism", "ACPI"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"disk_list"},
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixVirtualMachineExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -528,6 +553,27 @@ resource "nutanix_virtual_machine" "vm5" {
 		name  = "Environment"
 		value = "Staging"
 	}
+}
+`, r)
+}
+
+func testAccNutanixVMConfigPowerStateMechanism(r int) string {
+	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {}
+
+locals {
+		cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+		? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+}
+
+resource "nutanix_virtual_machine" "vm6" {
+  name = "test-dou-%d"
+  cluster_uuid = "${local.cluster1}"
+  
+  num_vcpus_per_socket = 1
+  num_sockets          = 1
+  memory_size_mib      = 186
+  power_state_mechanism = "ACPI"
 }
 `, r)
 }
