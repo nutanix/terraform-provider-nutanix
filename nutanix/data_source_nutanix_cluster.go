@@ -603,24 +603,28 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 		if !ok {
 			return fmt.Errorf("please provide the cluster_id or name attribute")
 		}
-		clusterEntitiesMetadata := &v3.DSMetadata{}
-		allClusters, err := conn.V3.ListCluster(clusterEntitiesMetadata)
+		v, err = findClusterByName(conn, n.(string))
 		if err != nil {
-			return fmt.Errorf("Error occured: %s", err)
+			return err
 		}
-		for _, cluster := range allClusters.Entities {
-			if *cluster.Status.Name == n.(string) {
-				v = &v3.ClusterIntentResponse{
-					Status:     cluster.Status,
-					Spec:       cluster.Spec,
-					Metadata:   cluster.Metadata,
-					APIVersion: cluster.APIVersion,
-				}
-			}
-		}
-		if v == nil {
-			return fmt.Errorf("Did not find cluster with name %s", n.(string))
-		}
+		// clusterEntitiesMetadata := &v3.DSMetadata{}
+		// allClusters, err := conn.V3.ListCluster(clusterEntitiesMetadata)
+		// if err != nil {
+		// 	return fmt.Errorf("Error occured: %s", err)
+		// }
+		// for _, cluster := range allClusters.Entities {
+		// 	if *cluster.Status.Name == n.(string) {
+		// 		v = &v3.ClusterIntentResponse{
+		// 			Status:     cluster.Status,
+		// 			Spec:       cluster.Spec,
+		// 			Metadata:   cluster.Metadata,
+		// 			APIVersion: cluster.APIVersion,
+		// 		}
+		// 	}
+		// }
+		// if v == nil {
+		// 	return fmt.Errorf("Did not find cluster with name %s", n.(string))
+		// }
 	}
 
 	m, c := setRSEntityMetadata(v.Metadata)
@@ -1056,4 +1060,36 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 	d.SetId(utils.StringValue(v.Metadata.UUID))
 
 	return nil
+}
+
+func findClusterByName(conn *v3.Client, name string) (*v3.ClusterIntentResponse, error) {
+	clusterEntitiesMetadata := &v3.DSMetadata{}
+	resp, err := conn.V3.ListCluster(clusterEntitiesMetadata)
+	if err != nil {
+		return nil, err
+	}
+	entities := resp.Entities
+
+	found := make([]*v3.ClusterIntentResponse, 0)
+	for _, v := range entities {
+		if *v.Status.Name == name {
+			found = append(found, &v3.ClusterIntentResponse{
+				Status:     v.Status,
+				Spec:       v.Spec,
+				Metadata:   v.Metadata,
+				APIVersion: v.APIVersion,
+			})
+		}
+	}
+
+	if len(found) > 1 {
+		return nil, fmt.Errorf("your query returned more than one result. Please use cluster_id argument instead")
+	}
+
+	if len(found) == 0 {
+		return nil, fmt.Errorf("Did not find cluster with name %s", name)
+	}
+
+	return found[0], nil
+
 }
