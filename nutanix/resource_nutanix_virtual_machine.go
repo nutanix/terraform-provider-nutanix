@@ -1182,8 +1182,13 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if d.HasChange("disk_list") {
+		preCdromCount, err := CountDiskListCdrom(res.DiskList)
 		if res.DiskList, err = expandDiskList(d, false); err != nil {
 			return err
+		}
+		postCdromCount, err := CountDiskListCdrom(res.DiskList)
+		if preCdromCount != postCdromCount {
+			hotPlugChange = false
 		}
 	}
 
@@ -1546,6 +1551,10 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 		vm.VgaConsoleEnabled = utils.BoolPtr(v.(bool))
 	}
 	if v, ok := d.GetOk("power_state_mechanism"); ok {
+		if vm.PowerStateMechanism == nil {
+			log.Printf("m.PowerStateMechanism was nil, setting correct value!")
+			vm.PowerStateMechanism = &v3.VMPowerStateMechanism{}
+		}
 		vm.PowerStateMechanism.Mechanism = utils.StringPtr(v.(string))
 	}
 	if v, ok := d.GetOk("should_fail_on_script_failure"); ok {
@@ -1912,4 +1921,16 @@ func waitForIPRefreshFunc(client *v3.Client, vmUUID string) resource.StateRefres
 		}
 		return resp, WAITING, nil
 	}
+}
+
+func CountDiskListCdrom(dl []*v3.VMDisk) (int, error) {
+	log.Printf("=====")
+	counter := 0
+	for _, v := range dl {
+		if *v.DeviceProperties.DeviceType == "CDROM" {
+			counter++
+		}
+	}
+	log.Printf("=====")
+	return counter, nil
 }
