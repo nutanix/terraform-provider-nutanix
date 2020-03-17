@@ -1183,10 +1183,16 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 
 	if d.HasChange("disk_list") {
 		preCdromCount, err := CountDiskListCdrom(res.DiskList)
+		if err != nil {
+			return err
+		}
 		if res.DiskList, err = expandDiskList(d, false); err != nil {
 			return err
 		}
 		postCdromCount, err := CountDiskListCdrom(res.DiskList)
+		if err != nil {
+			return err
+		}
 		if preCdromCount != postCdromCount {
 			hotPlugChange = false
 		}
