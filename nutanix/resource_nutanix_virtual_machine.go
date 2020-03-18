@@ -17,6 +17,12 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
+var (
+	vmTimeout    = 1 * time.Minute
+	vmDelay      = 3 * time.Second
+	vmMinTimeout = 3 * time.Second
+)
+
 func resourceNutanixVirtualMachine() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceNutanixVirtualMachineCreate,
@@ -798,9 +804,9 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Timeout:    vmTimeout,
+		Delay:      vmDelay,
+		MinTimeout: vmMinTimeout,
 	}
 
 	if _, errWaitTask := stateConf.WaitForState(); errWaitTask != nil {
@@ -812,9 +818,9 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		Pending:    []string{WAITING},
 		Target:     []string{"AVAILABLE"},
 		Refresh:    waitForIPRefreshFunc(conn, uuid),
-		Timeout:    1 * time.Minute,
-		Delay:      3 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Timeout:    vmTimeout,
+		Delay:      vmDelay,
+		MinTimeout: vmMinTimeout,
 	}
 
 	vmIntentResponse, err := waitIPConf.WaitForState()
@@ -927,6 +933,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	isOv := false
 	if resp.Status.Resources.GuestCustomization != nil {
 		isOv = utils.BoolValue(resp.Status.Resources.GuestCustomization.IsOverridable)
+
 		if resp.Status.Resources.GuestCustomization.CloudInit != nil {
 			cloudInitMeta = utils.StringValue(resp.Status.Resources.GuestCustomization.CloudInit.MetaData)
 			cloudInitUser = utils.StringValue(resp.Status.Resources.GuestCustomization.CloudInit.UserData)
@@ -936,6 +943,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 				}
 			}
 		}
+
 		if resp.Status.Resources.GuestCustomization.Sysprep != nil {
 			sysprep["install_type"] = utils.StringValue(resp.Status.Resources.GuestCustomization.Sysprep.InstallType)
 			sysprep["unattend_xml"] = utils.StringValue(resp.Status.Resources.GuestCustomization.Sysprep.UnattendXML)
@@ -1257,9 +1265,9 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, resp.Status.ExecutionContext.TaskUUID.(string)),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Timeout:    vmTimeout,
+		Delay:      vmDelay,
+		MinTimeout: vmMinTimeout,
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
@@ -1337,9 +1345,9 @@ func changePowerState(conn *v3.Client, id string, powerState string) error {
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, resp.Status.ExecutionContext.TaskUUID.(string)),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Timeout:    vmTimeout,
+		Delay:      vmDelay,
+		MinTimeout: vmMinTimeout,
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
@@ -1352,9 +1360,9 @@ func changePowerState(conn *v3.Client, id string, powerState string) error {
 		Pending:    []string{"PENDING", "RUNNING"},
 		Target:     []string{"COMPLETE"},
 		Refresh:    taskVMStateRefreshFunc(conn, id, powerState),
-		Timeout:    10 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Timeout:    vmTimeout,
+		Delay:      vmDelay,
+		MinTimeout: vmMinTimeout,
 	}
 
 	if _, err := stateConfVM.WaitForState(); err != nil {
@@ -1399,9 +1407,9 @@ func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, meta interface{
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, resp.Status.ExecutionContext.TaskUUID.(string)),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Timeout:    vmTimeout,
+		Delay:      vmDelay,
+		MinTimeout: vmMinTimeout,
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
@@ -1594,8 +1602,8 @@ func expandNicList(d *schema.ResourceData) []*v3.VMNic {
 					v := value.(string)
 					IsConnected, _ := strconv.ParseBool(v)
 					nic.IsConnected = utils.BoolPtr(IsConnected)
-
 				}
+
 				nics = append(nics, nic)
 			}
 			return nics
@@ -1655,7 +1663,6 @@ func expandDiskList(d *schema.ResourceData, isCreation bool) ([]*v3.VMDisk, erro
 								v3disk.AdapterType = utils.StringPtr(di.(string))
 							}
 							dp.DiskAddress = v3disk
-
 						}
 						dl.DeviceProperties = dp
 					}
@@ -1664,7 +1671,6 @@ func expandDiskList(d *schema.ResourceData, isCreation bool) ([]*v3.VMDisk, erro
 					hasDSRef = true
 					dsref := v1.(map[string]interface{})
 					dl.DataSourceReference = validateShortRef(dsref)
-
 				}
 				if v1, ok := v["volume_group_reference"]; ok {
 					volgr := v1.(map[string]interface{})
@@ -1789,6 +1795,7 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 	res.DiskList = response.Spec.Resources.DiskList
 
 	nold := make([]*v3.VMNic, len(response.Spec.Resources.NicList))
+
 	if len(response.Spec.Resources.NicList) > 0 {
 		for k, v := range response.Spec.Resources.NicList {
 			nold[k] = &v3.VMNic{
@@ -1802,7 +1809,6 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 				NetworkFunctionChainReference: v.NetworkFunctionChainReference,
 				IsConnected:                   v.IsConnected,
 			}
-
 		}
 	} else {
 		nold = nil
@@ -1817,7 +1823,6 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 				Index:       v.Index,
 				IsConnected: v.IsConnected,
 			}
-
 		}
 	}
 	res.SerialPortList = spl

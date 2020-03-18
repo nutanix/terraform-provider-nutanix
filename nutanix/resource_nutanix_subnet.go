@@ -13,6 +13,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
+var (
+	subnetTimeout    = 10 * time.Minute
+	subnetDelay      = 10 * time.Second
+	subnetMinTimeout = 3 * time.Second
+)
+
 func resourceNutanixSubnet() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceNutanixSubnetCreate,
@@ -354,9 +360,9 @@ func resourceNutanixSubnetCreate(d *schema.ResourceData, meta interface{}) error
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Timeout:    subnetTimeout,
+		Delay:      subnetDelay,
+		MinTimeout: subnetMinTimeout,
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
@@ -484,7 +490,6 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("state", utils.StringValue(status.State))
 
 		if res := status.Resources; res != nil {
-
 			d.Set("vswitch_name", utils.StringValue(res.VswitchName))
 			d.Set("subnet_type", utils.StringValue(res.SubnetType))
 
@@ -494,8 +499,8 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 				nfcr = flattenReferenceValues(res.NetworkFunctionChainReference)
 			}
 		}
-
 	}
+
 	d.Set("network_function_chain_reference", nfcr)
 	d.Set("default_gateway_ip", dgIP)
 	d.Set("prefix_length", pl)
@@ -644,9 +649,9 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Timeout:    subnetTimeout,
+		Delay:      subnetDelay,
+		MinTimeout: subnetMinTimeout,
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
@@ -675,9 +680,9 @@ func resourceNutanixSubnetDelete(d *schema.ResourceData, meta interface{}) error
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Timeout:    subnetTimeout,
+		Delay:      subnetDelay,
+		MinTimeout: subnetMinTimeout,
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
@@ -707,7 +712,6 @@ func resourceNutanixSubnetExists(conn *v3.Client, name string) (*string, error) 
 }
 
 func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) {
-
 	ip := &v3.IPConfig{}
 	dhcpo := &v3.DHCPOptions{}
 

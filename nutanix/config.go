@@ -23,7 +23,6 @@ type Config struct {
 
 // Client ...
 func (c *Config) Client() (*Client, error) {
-
 	configCreds := client.Credentials{
 		URL:      fmt.Sprintf("%s:%s", c.Endpoint, c.Port),
 		Endpoint: c.Endpoint,
@@ -38,11 +37,11 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	client := &Client{
+
+	return &Client{
 		WaitTimeout: c.WaitTimeout,
 		API:         v3Client,
-	}
-	return client, nil
+	}, nil
 }
 
 // Client represents the nutanix API client

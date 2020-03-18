@@ -831,7 +831,6 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 					qroaItem["filter_kind_list"] = utils.StringValueSlice(v.Filter.KindList)
 					qroaItem["filter_type"] = utils.StringValue(v.Filter.Type)
 					qroaItem["filter_params"] = expandFilterParams(v.Filter.Params)
-
 				}
 
 				qroaItem["peer_specification_type"] = utils.StringValue(v.PeerSpecificationType)
@@ -892,7 +891,6 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 					}
 				}
 			}
-
 		}
 
 		if rules.QuarantineRule.InboundAllowList != nil {
@@ -977,7 +975,6 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 				return err
 			}
 		}
-
 	} else {
 		if err := d.Set("quarantine_rule_inbound_allow_list", make([]string, 0)); err != nil {
 			return err
@@ -994,7 +991,6 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 	}
 
 	if rules.AppRule != nil {
-
 		if err := d.Set("app_rule_action", utils.StringValue(rules.AppRule.Action)); err != nil {
 			return err
 		}
@@ -1036,7 +1032,6 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 		if err := d.Set("app_rule_inbound_allow_list", flattenNetworkRuleList(rules.AppRule.InboundAllowList)); err != nil {
 			return err
 		}
-
 	} else if err := d.Set("app_rule_target_group_filter_kind_list", make([]string, 0)); err != nil {
 		return err
 	}
@@ -1074,7 +1069,6 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 				return err
 			}
 		}
-
 	} else {
 		if err := d.Set("isolation_rule_first_entity_filter_kind_list", make([]string, 0)); err != nil {
 			return err

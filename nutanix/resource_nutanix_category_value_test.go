@@ -78,13 +78,13 @@ func testAccCheckNutanixCategoryValueExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckNutanixCategoryValueDestroy(s *terraform.State) error {
-
 	conn := testAccProvider.Meta().(*Client)
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "nutanix_category_value" {
 			continue
 		}
+
 		for {
 			_, err := conn.API.V3.GetCategoryValue(rs.Primary.Attributes["name"], rs.Primary.ID)
 			if err != nil {
@@ -95,7 +95,6 @@ func testAccCheckNutanixCategoryValueDestroy(s *terraform.State) error {
 			}
 			time.Sleep(3000 * time.Millisecond)
 		}
-
 	}
 
 	return nil

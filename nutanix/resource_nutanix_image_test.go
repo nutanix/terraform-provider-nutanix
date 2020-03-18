@@ -174,7 +174,6 @@ func TestAccNutanixImage_uploadLocal(t *testing.T) {
 }
 
 func downloadFile(filepath string, url string) error {
-
 	// Create the file
 	out, err := os.Create(filepath)
 	if err != nil {
@@ -219,6 +218,7 @@ func testAccCheckNutanixImageDestroy(s *terraform.State) error {
 		if rs.Type != "nutanix_image" {
 			continue
 		}
+
 		for {
 			_, err := conn.API.V3.GetImage(rs.Primary.ID)
 			if err != nil {
@@ -229,7 +229,6 @@ func testAccCheckNutanixImageDestroy(s *terraform.State) error {
 			}
 			time.Sleep(3000 * time.Millisecond)
 		}
-
 	}
 
 	return nil

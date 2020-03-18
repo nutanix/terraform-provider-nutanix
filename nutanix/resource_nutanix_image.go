@@ -26,6 +26,11 @@ const (
 	WAITING = "WAITING"
 )
 
+var (
+	imageDelay      = 10 * time.Second
+	imageMinTimeout = 3 * time.Second
+)
+
 func resourceNutanixImage() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceNutanixImageCreate,
@@ -301,8 +306,8 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    time.Duration(timeout) * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Delay:      imageDelay,
+		MinTimeout: imageMinTimeout,
 	}
 
 	if _, errw := stateConf.WaitForState(); errw != nil {
@@ -320,7 +325,6 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 
 		err = conn.V3.UploadImage(UUID, path.(string))
 		if err != nil {
-
 			delErr := resourceNutanixImageDelete(d, meta)
 			if delErr != nil {
 				return delErr
@@ -501,8 +505,8 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    time.Duration(timeout) * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Delay:      imageDelay,
+		MinTimeout: imageMinTimeout,
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
@@ -547,8 +551,8 @@ func resourceNutanixImageDelete(d *schema.ResourceData, meta interface{}) error 
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    time.Duration(timeout) * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Delay:      imageDelay,
+		MinTimeout: imageMinTimeout,
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {

@@ -50,7 +50,6 @@ func flattenNicListStatus(nics []*v3.VMNicOutputStatus) []map[string]interface{}
 			if v.SubnetReference != nil {
 				nic["subnet_uuid"] = utils.StringValue(v.SubnetReference.UUID)
 				nic["subnet_name"] = utils.StringValue(v.SubnetReference.Name)
-
 			}
 
 			if v.IsConnected != nil {
@@ -88,7 +87,6 @@ func flattenNicList(nics []*v3.VMNic) []map[string]interface{} {
 			if v.SubnetReference != nil {
 				nic["subnet_uuid"] = utils.StringValue(v.SubnetReference.UUID)
 				nic["subnet_name"] = utils.StringValue(v.SubnetReference.Name)
-
 			}
 
 			if v.IsConnected != nil {
@@ -178,7 +176,6 @@ func setDiskList(disk []*v3.VMDisk, hasCloudInit *v3.GuestCustomizationStatus) [
 	var diskList []map[string]interface{}
 	if len(disk) > 0 {
 		for _, v1 := range disk {
-
 			if hasCloudInit != nil {
 				if hasCloudInit.CloudInit != nil && utils.StringValue(v1.DeviceProperties.DeviceType) == CDROM {
 					continue
