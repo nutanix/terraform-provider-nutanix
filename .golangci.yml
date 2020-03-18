@@ -42,6 +42,10 @@ linters:
     - gosec
     - gochecknoinits
     - gochecknoglobals
+    - funlen
+    - gocognit
+    - godox
+    - wsl
 
 issues:
   exclude:
