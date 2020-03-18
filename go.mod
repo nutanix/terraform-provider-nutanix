@@ -8,3 +8,5 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/spf13/afero v1.2.2 // indirect
 )
+
+go 1.13
