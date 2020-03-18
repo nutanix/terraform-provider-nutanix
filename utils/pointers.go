@@ -13,6 +13,7 @@ func StringValue(v *string) string {
 	if v != nil {
 		return *v
 	}
+
 	return ""
 }
 
@@ -23,6 +24,7 @@ func StringSlice(src []string) []*string {
 	for i := 0; i < len(src); i++ {
 		dst[i] = &(src[i])
 	}
+
 	return dst
 }
 
@@ -30,11 +32,13 @@ func StringSlice(src []string) []*string {
 // string values
 func StringValueSlice(src []*string) []string {
 	dst := make([]string, len(src))
+
 	for i := 0; i < len(src); i++ {
 		if src[i] != nil {
 			dst[i] = *(src[i])
 		}
 	}
+
 	return dst
 }
 
@@ -42,10 +46,12 @@ func StringValueSlice(src []*string) []string {
 // map of string pointers
 func StringMap(src map[string]string) map[string]*string {
 	dst := make(map[string]*string)
+
 	for k, val := range src {
 		v := val
 		dst[k] = &v
 	}
+
 	return dst
 }
 
@@ -53,11 +59,13 @@ func StringMap(src map[string]string) map[string]*string {
 // map of string values
 func StringValueMap(src map[string]*string) map[string]string {
 	dst := make(map[string]string)
+
 	for k, val := range src {
 		if val != nil {
 			dst[k] = *val
 		}
 	}
+
 	return dst
 }
 
@@ -72,6 +80,7 @@ func BoolValue(v *bool) bool {
 	if v != nil {
 		return *v
 	}
+
 	return false
 }
 
@@ -79,9 +88,11 @@ func BoolValue(v *bool) bool {
 // bool pointers
 func BoolSlice(src []bool) []*bool {
 	dst := make([]*bool, len(src))
+
 	for i := 0; i < len(src); i++ {
 		dst[i] = &(src[i])
 	}
+
 	return dst
 }
 
@@ -89,11 +100,13 @@ func BoolSlice(src []bool) []*bool {
 // bool values
 func BoolValueSlice(src []*bool) []bool {
 	dst := make([]bool, len(src))
+
 	for i := 0; i < len(src); i++ {
 		if src[i] != nil {
 			dst[i] = *(src[i])
 		}
 	}
+
 	return dst
 }
 
@@ -101,10 +114,12 @@ func BoolValueSlice(src []*bool) []bool {
 // map of bool pointers
 func BoolMap(src map[string]bool) map[string]*bool {
 	dst := make(map[string]*bool)
+
 	for k, val := range src {
 		v := val
 		dst[k] = &v
 	}
+
 	return dst
 }
 
@@ -112,11 +127,13 @@ func BoolMap(src map[string]bool) map[string]*bool {
 // map of bool values
 func BoolValueMap(src map[string]*bool) map[string]bool {
 	dst := make(map[string]bool)
+
 	for k, val := range src {
 		if val != nil {
 			dst[k] = *val
 		}
 	}
+
 	return dst
 }
 
@@ -131,6 +148,7 @@ func IntValue(v *int) int {
 	if v != nil {
 		return *v
 	}
+
 	return 0
 }
 
@@ -138,9 +156,11 @@ func IntValue(v *int) int {
 // int pointers
 func IntSlice(src []int) []*int {
 	dst := make([]*int, len(src))
+
 	for i := 0; i < len(src); i++ {
 		dst[i] = &(src[i])
 	}
+
 	return dst
 }
 
@@ -148,11 +168,13 @@ func IntSlice(src []int) []*int {
 // int values
 func IntValueSlice(src []*int) []int {
 	dst := make([]int, len(src))
+
 	for i := 0; i < len(src); i++ {
 		if src[i] != nil {
 			dst[i] = *(src[i])
 		}
 	}
+
 	return dst
 }
 
@@ -160,10 +182,12 @@ func IntValueSlice(src []*int) []int {
 // map of int pointers
 func IntMap(src map[string]int) map[string]*int {
 	dst := make(map[string]*int)
+
 	for k, val := range src {
 		v := val
 		dst[k] = &v
 	}
+
 	return dst
 }
 
@@ -171,11 +195,13 @@ func IntMap(src map[string]int) map[string]*int {
 // map of int values
 func IntValueMap(src map[string]*int) map[string]int {
 	dst := make(map[string]int)
+
 	for k, val := range src {
 		if val != nil {
 			dst[k] = *val
 		}
 	}
+
 	return dst
 }
 
@@ -190,6 +216,7 @@ func Int64Value(v *int64) int64 {
 	if v != nil {
 		return *v
 	}
+
 	return 0
 }
 
@@ -197,9 +224,11 @@ func Int64Value(v *int64) int64 {
 // int64 pointers
 func Int64Slice(src []int64) []*int64 {
 	dst := make([]*int64, len(src))
+
 	for i := 0; i < len(src); i++ {
 		dst[i] = &(src[i])
 	}
+
 	return dst
 }
 
@@ -207,11 +236,13 @@ func Int64Slice(src []int64) []*int64 {
 // int64 values
 func Int64ValueSlice(src []*int64) []int64 {
 	dst := make([]int64, len(src))
+
 	for i := 0; i < len(src); i++ {
 		if src[i] != nil {
 			dst[i] = *(src[i])
 		}
 	}
+
 	return dst
 }
 
@@ -219,10 +250,12 @@ func Int64ValueSlice(src []*int64) []int64 {
 // map of int64 pointers
 func Int64Map(src map[string]int64) map[string]*int64 {
 	dst := make(map[string]*int64)
+
 	for k, val := range src {
 		v := val
 		dst[k] = &v
 	}
+
 	return dst
 }
 
@@ -230,11 +263,13 @@ func Int64Map(src map[string]int64) map[string]*int64 {
 // map of int64 values
 func Int64ValueMap(src map[string]*int64) map[string]int64 {
 	dst := make(map[string]int64)
+
 	for k, val := range src {
 		if val != nil {
 			dst[k] = *val
 		}
 	}
+
 	return dst
 }
 
@@ -249,6 +284,7 @@ func Float64Value(v *float64) float64 {
 	if v != nil {
 		return *v
 	}
+
 	return 0
 }
 
@@ -256,9 +292,11 @@ func Float64Value(v *float64) float64 {
 // float64 pointers
 func Float64Slice(src []float64) []*float64 {
 	dst := make([]*float64, len(src))
+
 	for i := 0; i < len(src); i++ {
 		dst[i] = &(src[i])
 	}
+
 	return dst
 }
 
@@ -266,11 +304,13 @@ func Float64Slice(src []float64) []*float64 {
 // float64 values
 func Float64ValueSlice(src []*float64) []float64 {
 	dst := make([]float64, len(src))
+
 	for i := 0; i < len(src); i++ {
 		if src[i] != nil {
 			dst[i] = *(src[i])
 		}
 	}
+
 	return dst
 }
 
@@ -278,10 +318,12 @@ func Float64ValueSlice(src []*float64) []float64 {
 // map of float64 pointers
 func Float64Map(src map[string]float64) map[string]*float64 {
 	dst := make(map[string]*float64)
+
 	for k, val := range src {
 		v := val
 		dst[k] = &v
 	}
+
 	return dst
 }
 
@@ -289,11 +331,13 @@ func Float64Map(src map[string]float64) map[string]*float64 {
 // map of float64 values
 func Float64ValueMap(src map[string]*float64) map[string]float64 {
 	dst := make(map[string]float64)
+
 	for k, val := range src {
 		if val != nil {
 			dst[k] = *val
 		}
 	}
+
 	return dst
 }
 
@@ -308,6 +352,7 @@ func TimeValue(v *time.Time) time.Time {
 	if v != nil {
 		return *v
 	}
+
 	return time.Time{}
 }
 
@@ -317,6 +362,7 @@ func SecondsTimeValue(v *int64) time.Time {
 	if v != nil {
 		return time.Unix((*v / 1000), 0)
 	}
+
 	return time.Time{}
 }
 
@@ -326,6 +372,7 @@ func MillisecondsTimeValue(v *int64) time.Time {
 	if v != nil {
 		return time.Unix(0, (*v * 1000000))
 	}
+
 	return time.Time{}
 }
 
@@ -345,9 +392,11 @@ func TimeUnixMilli(t time.Time) int64 {
 // time.Time pointers
 func TimeSlice(src []time.Time) []*time.Time {
 	dst := make([]*time.Time, len(src))
+
 	for i := 0; i < len(src); i++ {
 		dst[i] = &(src[i])
 	}
+
 	return dst
 }
 
@@ -355,11 +404,13 @@ func TimeSlice(src []time.Time) []*time.Time {
 // time.Time values
 func TimeValueSlice(src []*time.Time) []time.Time {
 	dst := make([]time.Time, len(src))
+
 	for i := 0; i < len(src); i++ {
 		if src[i] != nil {
 			dst[i] = *(src[i])
 		}
 	}
+
 	return dst
 }
 
@@ -367,10 +418,12 @@ func TimeValueSlice(src []*time.Time) []time.Time {
 // map of time.Time pointers
 func TimeMap(src map[string]time.Time) map[string]*time.Time {
 	dst := make(map[string]*time.Time)
+
 	for k, val := range src {
 		v := val
 		dst[k] = &v
 	}
+
 	return dst
 }
 
@@ -378,10 +431,12 @@ func TimeMap(src map[string]time.Time) map[string]*time.Time {
 // map of time.Time values
 func TimeValueMap(src map[string]*time.Time) map[string]time.Time {
 	dst := make(map[string]time.Time)
+
 	for k, val := range src {
 		if val != nil {
 			dst[k] = *val
 		}
 	}
+
 	return dst
 }

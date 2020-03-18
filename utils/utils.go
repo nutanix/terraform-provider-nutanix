@@ -21,6 +21,7 @@ func DebugRequest(req *http.Request) {
 	if err != nil {
 		log.Printf("[WARN] Error getting request's dump: %s\n", err)
 	}
+
 	log.Printf("[DEBUG] %s\n", string(requestDump))
 }
 
@@ -30,5 +31,6 @@ func DebugResponse(res *http.Response) {
 	if err != nil {
 		log.Printf("[WARN] Error getting response's dump: %s\n", err)
 	}
+
 	log.Printf("[DEBUG] %s\n", string(requestDump))
 }
