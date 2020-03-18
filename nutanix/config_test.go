@@ -13,14 +13,39 @@ func TestConfig_Client(t *testing.T) {
 		Port     string
 		Insecure bool
 	}
+	config := &Config{
+		Endpoint: "http://localhost",
+		Username: "test",
+		Password: "test",
+		Port:     "8080",
+		Insecure: true,
+	}
+
+	client, err := config.Client()
+	if err != nil {
+		t.Errorf("failed to create wanted client: %s", err)
+	}
+
 	tests := []struct {
 		name    string
 		fields  fields
 		want    *Client
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "new client",
+			fields: fields{
+				Endpoint: "http://localhost",
+				Username: "test",
+				Password: "test",
+				Port:     "8080",
+				Insecure: true,
+			},
+			want:    client,
+			wantErr: false,
+		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {

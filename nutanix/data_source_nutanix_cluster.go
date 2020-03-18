@@ -605,6 +605,7 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 	if err := d.Set("metadata", m); err != nil {
 		return err
 	}
+
 	if err := d.Set("categories", c); err != nil {
 		return err
 	}
@@ -624,14 +625,17 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 	if err := d.Set("name", utils.StringValue(v.Status.Name)); err != nil {
 		return err
 	}
+
 	if err := d.Set("state", utils.StringValue(v.Status.State)); err != nil {
 		return err
 	}
 
 	nodes := make([]map[string]interface{}, 0)
+
 	if v.Status.Resources.Nodes != nil {
 		if v.Status.Resources.Nodes.HypervisorServerList != nil {
 			nodes = make([]map[string]interface{}, len(v.Status.Resources.Nodes.HypervisorServerList))
+
 			for k, v := range v.Status.Resources.Nodes.HypervisorServerList {
 				node := make(map[string]interface{})
 				node["ip"] = utils.StringValue(v.IP)
@@ -641,6 +645,7 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 			}
 		}
 	}
+
 	if err := d.Set("nodes", nodes); err != nil {
 		return err
 	}
@@ -656,6 +661,7 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 		clientAuth["ca_chain"] = utils.StringValue(config.ClientAuth.CaChain)
 		clientAuth["name"] = utils.StringValue(config.ClientAuth.Name)
 	}
+
 	if err := d.Set("client_auth", clientAuth); err != nil {
 		return err
 	}
@@ -663,6 +669,7 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 	authPublicKey := make([]map[string]interface{}, 0)
 	if config.AuthorizedPublicKeyList != nil {
 		authPublicKey = make([]map[string]interface{}, len(config.AuthorizedPublicKeyList))
+
 		for k, v := range config.AuthorizedPublicKeyList {
 			auth := make(map[string]interface{})
 			auth["key"] = utils.StringValue(v.Key)
@@ -670,12 +677,14 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 			authPublicKey[k] = auth
 		}
 	}
+
 	if err := d.Set("authorized_public_key_list", authPublicKey); err != nil {
 		return err
 	}
 
 	ncc := make(map[string]interface{})
 	nos := make(map[string]interface{})
+
 	if config.SoftwareMap != nil {
 		if config.SoftwareMap.NCC != nil {
 			ncc["software_type"] = utils.StringValue(config.SoftwareMap.NCC.SoftwareType)
@@ -689,22 +698,26 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 			nos["version"] = utils.StringValue(config.SoftwareMap.NOS.Version)
 		}
 	}
+
 	if err := d.Set("software_map_ncc", ncc); err != nil {
 		return err
 	}
+
 	if err := d.Set("software_map_nos", nos); err != nil {
 		return err
 	}
+
 	if err := d.Set("encryption_status", utils.StringValue(config.EncryptionStatus)); err != nil {
 		return err
 	}
 
 	signingInfo := make(map[string]interface{})
-	if config.SslKey != nil {
 
+	if config.SslKey != nil {
 		if err := d.Set("ssl_key_type", utils.StringValue(config.SslKey.KeyType)); err != nil {
 			return err
 		}
+
 		if err := d.Set("ssl_key_name", utils.StringValue(config.SslKey.KeyName)); err != nil {
 			return err
 		}
@@ -718,27 +731,30 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 			signingInfo["organization"] = utils.StringValue(config.SslKey.SigningInfo.Organization)
 			signingInfo["email_address"] = utils.StringValue(config.SslKey.SigningInfo.EmailAddress)
 		}
+
 		if err := d.Set("ssl_key_signing_info", signingInfo); err != nil {
 			return err
 		}
+
 		if err := d.Set("ssl_key_expire_datetime", utils.StringValue(config.SslKey.ExpireDatetime)); err != nil {
 			return err
 		}
-
 	} else {
 		if err := d.Set("ssl_key_type", ""); err != nil {
 			return err
 		}
+
 		if err := d.Set("ssl_key_name", ""); err != nil {
 			return err
 		}
+
 		if err := d.Set("ssl_key_signing_info", signingInfo); err != nil {
 			return err
 		}
+
 		if err := d.Set("ssl_key_expire_datetime", ""); err != nil {
 			return err
 		}
-
 	}
 
 	if err := d.Set("service_list", utils.StringValueSlice(config.ServiceList)); err != nil {
@@ -759,16 +775,20 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 		certSigning["organization"] = utils.StringValue(config.CertificationSigningInfo.Organization)
 		certSigning["email_address"] = utils.StringValue(config.CertificationSigningInfo.EmailAddress)
 	}
+
 	if err := d.Set("certification_signing_info", certSigning); err != nil {
 		return err
 	}
+
 	if err := d.Set("operation_mode", utils.StringValue(config.OperationMode)); err != nil {
 		return err
 	}
 
 	caCert := make([]map[string]interface{}, 0)
+
 	if config.CaCertificateList != nil {
 		caCert = make([]map[string]interface{}, len(config.CaCertificateList))
+
 		for k, v := range config.CaCertificateList {
 			ca := make(map[string]interface{})
 			ca["ca_name"] = utils.StringValue(v.CaName)
@@ -776,12 +796,15 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 			caCert[k] = ca
 		}
 	}
+
 	if err := d.Set("ca_certificate_list", caCert); err != nil {
 		return err
 	}
+
 	if err := d.Set("enabled_feature_list", utils.StringValueSlice(config.EnabledFeatureList)); err != nil {
 		return err
 	}
+
 	if err := d.Set("is_available", utils.BoolValue(config.IsAvailable)); err != nil {
 		return err
 	}
@@ -795,19 +818,24 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 		build["short_commit_id"] = utils.StringValue(config.Build.ShortCommitID)
 		build["build_type"] = utils.StringValue(config.Build.BuildType)
 	}
+
 	if err := d.Set("build", build); err != nil {
 		return err
 	}
+
 	if err := d.Set("timezone", utils.StringValue(config.Timezone)); err != nil {
 		return err
 	}
+
 	if err := d.Set("cluster_arch", utils.StringValue(config.ClusterArch)); err != nil {
 		return err
 	}
 
 	managementServer := make([]map[string]interface{}, 0)
+
 	if config.ManagementServerList != nil {
 		managementServer = make([]map[string]interface{}, len(config.ManagementServerList))
+
 		for k, v := range config.ManagementServerList {
 			manage := make(map[string]interface{})
 			manage["ip"] = utils.StringValue(v.IP)
@@ -817,6 +845,7 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 			managementServer[k] = manage
 		}
 	}
+
 	if err := d.Set("management_server_list", managementServer); err != nil {
 		return err
 	}
@@ -825,25 +854,31 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 	if err := d.Set("masquerading_port", utils.Int64Value(network.MasqueradingPort)); err != nil {
 		return err
 	}
+
 	if err := d.Set("masquerading_ip", utils.StringValue(network.MasqueradingIP)); err != nil {
 		return err
 	}
+
 	if err := d.Set("external_ip", utils.StringValue(network.ExternalIP)); err != nil {
 		return err
 	}
 
 	httpProxy := make([]map[string]interface{}, 0)
+
 	if network.HTTPProxyList != nil {
 		httpProxy = make([]map[string]interface{}, len(network.HTTPProxyList))
+
 		for k, v := range network.HTTPProxyList {
 			http := make(map[string]interface{})
 			creds := make(map[string]interface{})
 			addr := make(map[string]interface{})
+
 			if v.Credentials != nil {
 				creds["username"] = utils.StringValue(v.Credentials.Username)
 				creds["password"] = utils.StringValue(v.Credentials.Password)
 				http["credentials"] = creds
 			}
+
 			http["proxy_type_list"] = utils.StringValueSlice(v.ProxyTypeList)
 			addr["ip"] = utils.StringValue(v.Address.IP)
 			addr["fqdn"] = utils.StringValue(v.Address.FQDN)
@@ -854,22 +889,24 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 			httpProxy[k] = http
 		}
 	}
+
 	if err := d.Set("http_proxy_list", httpProxy); err != nil {
 		return err
 	}
 
 	smtpServCreds := make(map[string]interface{})
 	smtpServAddr := make(map[string]interface{})
+
 	if network.SMTPServer != nil {
 		if err := d.Set("smtp_server_type", utils.StringValue(network.SMTPServer.Type)); err != nil {
 			return err
 		}
+
 		if err := d.Set("smtp_server_email_address", utils.StringValue(network.SMTPServer.EmailAddress)); err != nil {
 			return err
 		}
 
 		if network.SMTPServer.Server != nil {
-
 			if err := d.Set("smtp_server_proxy_type_list", utils.StringValueSlice(network.SMTPServer.Server.ProxyTypeList)); err != nil {
 				return err
 			}
@@ -878,11 +915,13 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 				smtpServCreds["username"] = utils.StringValue(network.SMTPServer.Server.Credentials.Username)
 				smtpServCreds["password"] = utils.StringValue(network.SMTPServer.Server.Credentials.Password)
 			}
+
 			smtpServAddr["ip"] = utils.StringValue(network.SMTPServer.Server.Address.IP)
 			smtpServAddr["fqdn"] = utils.StringValue(network.SMTPServer.Server.Address.FQDN)
 			smtpServAddr["port"] = strconv.Itoa(int(utils.Int64Value(network.SMTPServer.Server.Address.Port)))
 			smtpServAddr["ipv6"] = utils.StringValue(network.SMTPServer.Server.Address.IPV6)
 		}
+
 		if err := d.Set("smtp_server_credentials", smtpServCreds); err != nil {
 			return err
 		}
@@ -890,7 +929,6 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 		if err := d.Set("smtp_server_address", smtpServAddr); err != nil {
 			return err
 		}
-
 	} else {
 		if err := d.Set("smtp_server_type", ""); err != nil {
 			return err
@@ -907,34 +945,39 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 		if err := d.Set("smtp_server_address", smtpServAddr); err != nil {
 			return err
 		}
-
 	}
 
 	if err := d.Set("ntp_server_ip_list", utils.StringValueSlice(network.NameServerIPList)); err != nil {
 		return err
 	}
+
 	if err := d.Set("external_subnet", utils.StringValue(network.ExternalSubnet)); err != nil {
 		return err
 	}
+
 	if err := d.Set("external_data_services_ip", utils.StringValue(network.ExternalDataServicesIP)); err != nil {
 		return err
 	}
+
 	if err := d.Set("internal_subnet", utils.StringValue(network.InternalSubnet)); err != nil {
 		return err
 	}
 
 	domain := network.DomainServer
 	domServCreds := make(map[string]interface{})
+
 	if domain != nil {
 		if err := d.Set("domain_server_nameserver", utils.StringValue(domain.Nameserver)); err != nil {
 			return err
 		}
+
 		if err := d.Set("domain_server_name", utils.StringValue(domain.Name)); err != nil {
 			return err
 		}
 
 		domServCreds["username"] = utils.StringValue(domain.DomainCredentials.Username)
 		domServCreds["password"] = utils.StringValue(domain.DomainCredentials.Password)
+
 		if err := d.Set("domain_server_credentials", domServCreds); err != nil {
 			return err
 		}
@@ -953,6 +996,7 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 	if err := d.Set("nfs_subnet_whitelist", utils.StringValueSlice(network.NFSSubnetWhitelist)); err != nil {
 		return err
 	}
+
 	if err := d.Set("name_server_ip_list", utils.StringValueSlice(network.NameServerIPList)); err != nil {
 		return err
 	}
@@ -960,6 +1004,7 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 	httpWhiteList := make([]map[string]interface{}, 0)
 	if network.HTTPProxyWhitelist != nil {
 		httpWhiteList = make([]map[string]interface{}, len(network.HTTPProxyWhitelist))
+
 		for k, v := range network.HTTPProxyWhitelist {
 			http := make(map[string]interface{})
 			http["target"] = utils.StringValue(v.Target)
@@ -967,6 +1012,7 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 			httpWhiteList[k] = http
 		}
 	}
+
 	if err := d.Set("http_proxy_whitelist", httpWhiteList); err != nil {
 		return err
 	}
@@ -979,6 +1025,7 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 		analysis["inefficient_vm_num"] = utils.StringValue(v.Status.Resources.Analysis.VMEfficiencyMap.InefficientVMNum)
 		analysis["overprovisioned_vm_num"] = utils.StringValue(v.Status.Resources.Analysis.VMEfficiencyMap.OverprovisionedVMNum)
 	}
+
 	if err := d.Set("analysis_vm_efficiency_map", analysis); err != nil {
 		return err
 	}

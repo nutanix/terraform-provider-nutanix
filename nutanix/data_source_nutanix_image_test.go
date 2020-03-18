@@ -10,7 +10,6 @@ import (
 )
 
 func TestAccNutanixImageDataSource_basic(t *testing.T) {
-
 	rInt := acctest.RandInt()
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -32,7 +31,6 @@ func TestAccNutanixImageDataSource_basic(t *testing.T) {
 }
 
 func TestAccNutanixImageDataSource_name(t *testing.T) {
-
 	rInt := acctest.RandInt()
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
