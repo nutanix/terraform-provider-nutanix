@@ -96,6 +96,7 @@ func (op Operations) DeleteVM(uuid string) (*DeleteResponse, error) {
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	deleteResponse := new(DeleteResponse)
+
 	if err != nil {
 		return nil, err
 	}
@@ -196,6 +197,7 @@ func (op Operations) DeleteSubnet(uuid string) (*DeleteResponse, error) {
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	deleteResponse := new(DeleteResponse)
+
 	if err != nil {
 		return nil, err
 	}
@@ -312,13 +314,14 @@ func (op Operations) UploadImage(uuid, filepath string) error {
 	}
 
 	req, err := op.client.NewUploadRequest(ctx, http.MethodPut, path, fileContents)
+
 	if err != nil {
 		return fmt.Errorf("error: Creating request %s", err)
 	}
+
 	err = op.client.Do(ctx, req, nil)
 
 	return err
-
 }
 
 /*DeleteImage deletes a IMAGE
@@ -334,6 +337,7 @@ func (op Operations) DeleteImage(uuid string) (*DeleteResponse, error) {
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	deleteResponse := new(DeleteResponse)
+
 	if err != nil {
 		return nil, err
 	}
@@ -358,6 +362,7 @@ func (op Operations) GetImage(uuid string) (*ImageIntentResponse, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return imageIntentResponse, op.client.Do(ctx, req, imageIntentResponse)
 }
 
@@ -669,6 +674,7 @@ func (op Operations) DeleteNetworkSecurityRule(uuid string) (*DeleteResponse, er
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	deleteResponse := new(DeleteResponse)
+
 	if err != nil {
 		return nil, err
 	}
@@ -836,7 +842,7 @@ func (op Operations) UpdateVolumeGroup(uuid string, body *VolumeGroupInput) (*Vo
 	return networkSecurityRuleResponse, op.client.Do(ctx, req, networkSecurityRuleResponse)
 }
 
-const itemsPerPage = int64(100)
+const itemsPerPage int64 = 100
 
 func hasNext(ri *int64) bool {
 	*ri -= itemsPerPage
@@ -876,6 +882,7 @@ func (op Operations) ListAllVM() (*VMListIntentResponse, error) {
 
 			offset += itemsPerPage
 		}
+
 		resp.Entities = entities
 	}
 
@@ -916,6 +923,7 @@ func (op Operations) ListAllSubnet() (*SubnetListIntentResponse, error) {
 			offset += itemsPerPage
 			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
 		}
+
 		resp.Entities = entities
 	}
 
@@ -956,6 +964,7 @@ func (op Operations) ListAllNetworkSecurityRule() (*NetworkSecurityRuleListInten
 			offset += itemsPerPage
 			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
 		}
+
 		resp.Entities = entities
 	}
 
@@ -996,6 +1005,7 @@ func (op Operations) ListAllImage() (*ImageListIntentResponse, error) {
 			offset += itemsPerPage
 			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
 		}
+
 		resp.Entities = entities
 	}
 
@@ -1036,6 +1046,7 @@ func (op Operations) ListAllCluster() (*ClusterListIntentResponse, error) {
 			offset += itemsPerPage
 			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
 		}
+
 		resp.Entities = entities
 	}
 

@@ -57,7 +57,6 @@ type Credentials struct {
 
 // NewClient returns a new Nutanix API client.
 func NewClient(credentials *Credentials) (*Client, error) {
-
 	transCfg := &http.Transport{
 		// nolint:gas
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: credentials.Insecure}, // ignore expired SSL certificates
@@ -156,9 +155,11 @@ func (c *Client) OnRequestCompleted(rc RequestCompletionCallback) {
 func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error {
 	req = req.WithContext(ctx)
 	resp, err := c.client.Do(req)
+
 	if err != nil {
 		return err
 	}
+
 	defer func() {
 		if rerr := resp.Body.Close(); err == nil {
 			err = rerr
