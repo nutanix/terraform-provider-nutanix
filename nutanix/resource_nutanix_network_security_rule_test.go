@@ -105,7 +105,6 @@ func testAccCheckNutanixNetworkSecurityRuleDestroy(s *terraform.State) error {
 			}
 			time.Sleep(3000 * time.Millisecond)
 		}
-
 	}
 
 	return nil

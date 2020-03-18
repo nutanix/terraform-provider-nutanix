@@ -293,5 +293,4 @@ func findImageByName(conn *v3.Client, name string) (*v3.ImageIntentResponse, err
 	}
 
 	return findImageByUUID(conn, *found[0].Metadata.UUID)
-
 }

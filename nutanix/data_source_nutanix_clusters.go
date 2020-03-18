@@ -607,6 +607,7 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	entities := make([]map[string]interface{}, len(resp.Entities))
+
 	for k, v := range resp.Entities {
 		entity := make(map[string]interface{})
 		m, c := setRSEntityMetadata(v.Metadata)
@@ -620,9 +621,11 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 		entity["state"] = utils.StringValue(v.Status.State)
 
 		nodes := make([]map[string]interface{}, 0)
+
 		if v.Status.Resources.Nodes != nil {
 			if v.Status.Resources.Nodes.HypervisorServerList != nil {
 				nodes = make([]map[string]interface{}, len(v.Status.Resources.Nodes.HypervisorServerList))
+
 				for k, v := range v.Status.Resources.Nodes.HypervisorServerList {
 					node := make(map[string]interface{})
 					node["ip"] = utils.StringValue(v.IP)
@@ -632,6 +635,7 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 				}
 			}
 		}
+
 		entity["nodes"] = nodes
 
 		config := v.Status.Resources.Config
@@ -643,11 +647,13 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 			clientAuth["ca_chain"] = utils.StringValue(config.ClientAuth.CaChain)
 			clientAuth["name"] = utils.StringValue(config.ClientAuth.Name)
 		}
+
 		entity["client_auth"] = clientAuth
 
 		authPublicKey := make([]map[string]interface{}, 0)
 		if config.AuthorizedPublicKeyList != nil {
 			authPublicKey = make([]map[string]interface{}, len(config.AuthorizedPublicKeyList))
+
 			for k, v := range config.AuthorizedPublicKeyList {
 				auth := make(map[string]interface{})
 				auth["key"] = utils.StringValue(v.Key)
@@ -655,10 +661,12 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 				authPublicKey[k] = auth
 			}
 		}
+
 		entity["authorized_public_key_list"] = authPublicKey
 
 		ncc := make(map[string]interface{})
 		nos := make(map[string]interface{})
+
 		if config.SoftwareMap != nil {
 			if config.SoftwareMap.NCC != nil {
 				ncc["software_type"] = utils.StringValue(config.SoftwareMap.NCC.SoftwareType)
@@ -672,12 +680,14 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 				nos["version"] = utils.StringValue(config.SoftwareMap.NOS.Version)
 			}
 		}
+
 		entity["software_map_ncc"] = ncc
 		entity["software_map_nos"] = nos
 
 		entity["encryption_status"] = utils.StringValue(config.EncryptionStatus)
 
 		signingInfo := make(map[string]interface{})
+
 		if config.SslKey != nil {
 			entity["ssl_key_type"] = utils.StringValue(config.SslKey.KeyType)
 			entity["ssl_key_name"] = utils.StringValue(config.SslKey.KeyName)
@@ -691,6 +701,7 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 				signingInfo["organization"] = utils.StringValue(config.SslKey.SigningInfo.Organization)
 				signingInfo["email_address"] = utils.StringValue(config.SslKey.SigningInfo.EmailAddress)
 			}
+
 			entity["ssl_key_signing_info"] = signingInfo
 			entity["ssl_key_expire_datetime"] = utils.StringValue(config.SslKey.ExpireDatetime)
 		} else {
@@ -698,7 +709,6 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 			entity["ssl_key_name"] = ""
 			entity["ssl_key_signing_info"] = signingInfo
 			entity["ssl_key_expire_datetime"] = ""
-
 		}
 
 		entity["service_list"] = utils.StringValueSlice(config.ServiceList)
@@ -714,12 +724,14 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 			certSigning["organization"] = utils.StringValue(config.CertificationSigningInfo.Organization)
 			certSigning["email_address"] = utils.StringValue(config.CertificationSigningInfo.EmailAddress)
 		}
+
 		entity["certification_signing_info"] = certSigning
 		entity["operation_mode"] = utils.StringValue(config.OperationMode)
 
 		caCert := make([]map[string]interface{}, 0)
 		if config.CaCertificateList != nil {
 			caCert = make([]map[string]interface{}, len(config.CaCertificateList))
+
 			for k, v := range config.CaCertificateList {
 				ca := make(map[string]interface{})
 				ca["ca_name"] = utils.StringValue(v.CaName)
@@ -727,6 +739,7 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 				caCert[k] = ca
 			}
 		}
+
 		entity["ca_certificate_list"] = caCert
 
 		entity["enabled_feature_list"] = utils.StringValueSlice(config.EnabledFeatureList)
@@ -741,6 +754,7 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 			build["short_commit_id"] = utils.StringValue(config.Build.ShortCommitID)
 			build["build_type"] = utils.StringValue(config.Build.BuildType)
 		}
+
 		entity["build"] = build
 
 		entity["timezone"] = utils.StringValue(config.Timezone)
@@ -749,6 +763,7 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 		managementServer := make([]map[string]interface{}, 0)
 		if config.ManagementServerList != nil {
 			managementServer = make([]map[string]interface{}, len(config.ManagementServerList))
+
 			for k, v := range config.ManagementServerList {
 				manage := make(map[string]interface{})
 				manage["ip"] = utils.StringValue(v.IP)
@@ -768,10 +783,12 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 		httpProxy := make([]map[string]interface{}, 0)
 		if network.HTTPProxyList != nil {
 			httpProxy = make([]map[string]interface{}, len(network.HTTPProxyList))
+
 			for k, v := range network.HTTPProxyList {
 				http := make(map[string]interface{})
 				creds := make(map[string]interface{})
 				addr := make(map[string]interface{})
+
 				if v.Credentials != nil {
 					creds["username"] = utils.StringValue(v.Credentials.Username)
 					creds["password"] = utils.StringValue(v.Credentials.Password)
@@ -824,6 +841,7 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 
 		domain := network.DomainServer
 		domServCreds := make(map[string]interface{})
+
 		if domain != nil {
 			entity["domain_server_nameserver"] = utils.StringValue(domain.Nameserver)
 			entity["domain_server_name"] = utils.StringValue(domain.Name)

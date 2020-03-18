@@ -20,7 +20,6 @@ func init() {
 	testAccProviders = map[string]terraform.ResourceProvider{
 		"nutanix": testAccProvider,
 	}
-
 }
 
 func TestProvider(t *testing.T) {

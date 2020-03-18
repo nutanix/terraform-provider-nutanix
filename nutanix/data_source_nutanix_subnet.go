@@ -298,7 +298,6 @@ func findSubnetByName(conn *v3.Client, name string) (*v3.SubnetIntentResponse, e
 	}
 
 	return found[0], nil
-
 }
 
 func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {

@@ -9,7 +9,6 @@ import (
 )
 
 func TestAccNutanixVirtualMachineDataSource_basic(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -28,7 +27,6 @@ func TestAccNutanixVirtualMachineDataSource_basic(t *testing.T) {
 }
 
 func TestAccNutanixVirtualMachineDataSource_WithDisk(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,

@@ -16,6 +16,12 @@ import (
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 )
 
+var (
+	netTimeout    = 10 * time.Minute
+	netDelay      = 10 * time.Second
+	netMinTimeout = 3 * time.Second
+)
+
 func resourceNutanixNetworkSecurityRule() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceNutanixNetworkSecurityRuleCreate,
@@ -518,9 +524,9 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Timeout:    netTimeout,
+		Delay:      netDelay,
+		MinTimeout: netMinTimeout,
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
@@ -576,7 +582,6 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 	rules := resp.Spec.Resources
 
 	if rules.AppRule != nil {
-
 		if err := d.Set("app_rule_action", utils.StringValue(rules.AppRule.Action)); err != nil {
 			return err
 		}
@@ -618,7 +623,6 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 		if err := d.Set("app_rule_inbound_allow_list", flattenNetworkRuleList(rules.AppRule.InboundAllowList)); err != nil {
 			return err
 		}
-
 	} else if err := d.Set("app_rule_target_group_filter_kind_list", make([]string, 0)); err != nil {
 		return err
 	}
@@ -656,7 +660,6 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 				return err
 			}
 		}
-
 	} else {
 		if err := d.Set("isolation_rule_first_entity_filter_kind_list", make([]string, 0)); err != nil {
 			return err
@@ -743,7 +746,6 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 		d.HasChange("isolation_rule_second_entity_filter_kind_list") ||
 		d.HasChange("isolation_rule_second_entity_filter_type") ||
 		d.HasChange("isolation_rule_second_entity_filter_params") {
-
 		if err := getNetworkSecurityRuleResources(d, networkSecurityRule); err != nil {
 			return err
 		}
@@ -766,9 +768,9 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Timeout:    netTimeout,
+		Delay:      netDelay,
+		MinTimeout: netMinTimeout,
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
@@ -777,7 +779,6 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 	}
 
 	return resourceNutanixNetworkSecurityRuleRead(d, meta)
-
 }
 
 func resourceNutanixNetworkSecurityRuleDelete(d *schema.ResourceData, meta interface{}) error {
@@ -798,9 +799,9 @@ func resourceNutanixNetworkSecurityRuleDelete(d *schema.ResourceData, meta inter
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Timeout:    netTimeout,
+		Delay:      netDelay,
+		MinTimeout: netMinTimeout,
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
@@ -899,14 +900,12 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 								}
 								fl[i.(string)] = values
 							}
-
 						}
 					}
 					filter.Params = fl
 				} else {
 					filter.Params = nil
 				}
-
 			}
 
 			if pet, petok := nr["peer_specification_type"]; petok && pet.(string) != "" {
@@ -965,14 +964,12 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 						}
 						fl[i.(string)] = values
 					}
-
 				}
 			}
 			aRuleTargetGroupFilter.Params = fl
 		} else {
 			aRuleTargetGroupFilter.Params = nil
 		}
-
 	}
 
 	if qrial, ok := d.GetOk("app_rule_inbound_allow_list"); ok {
@@ -1031,14 +1028,12 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 								}
 								fl[i.(string)] = values
 							}
-
 						}
 					}
 					filter.Params = fl
 				} else {
 					filter.Params = nil
 				}
-
 			}
 
 			if pet, petok := nr["peer_specification_type"]; petok && pet.(string) != "" {
@@ -1093,14 +1088,12 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 						}
 						fl[i.(string)] = values
 					}
-
 				}
 			}
 			iRuleFirstEntityFilter.Params = fl
 		} else {
 			iRuleFirstEntityFilter.Params = nil
 		}
-
 	}
 
 	if f, fok := d.GetOk("isolation_rule_second_entity_filter_kind_list"); fok && f != nil {
@@ -1127,14 +1120,12 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 						}
 						fl[i.(string)] = values
 					}
-
 				}
 			}
 			iRuleSecondEntityFilter.Params = fl
 		} else {
 			iRuleSecondEntityFilter.Params = nil
 		}
-
 	}
 
 	if !reflect.DeepEqual(*aRuleTargetGroupFilter, (v3.CategoryFilter{})) {
