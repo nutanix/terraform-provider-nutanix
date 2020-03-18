@@ -1631,7 +1631,7 @@ type NetworkSecurityRuleIntentInput struct {
 
 // NetworkSecurityRuleDefStatus ... Network security rule status
 type NetworkSecurityRuleDefStatus struct {
-	Resources        *NetworkSecurityRuleResources `json:"resources,omitmepty"`
+	Resources        *NetworkSecurityRuleResources `json:"resources,omitempty"`
 	State            *string                       `json:"state,omitempty"`
 	ExecutionContext *ExecutionContext             `json:"execution_context,omitempty"`
 	Name             *string                       `json:"name,omitempty"`
