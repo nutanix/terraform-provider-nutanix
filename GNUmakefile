@@ -29,7 +29,7 @@ errcheck:
 
 lint: fmtcheck
 	@echo "==> Checking source code against linters..."
-	@GOGC=30 golangci-lint run
+	@GOGC=30 golangci-lint run --timeout=30m
 
 tools:
 	GO111MODULE=off go get -u github.com/client9/misspell/cmd/misspell
