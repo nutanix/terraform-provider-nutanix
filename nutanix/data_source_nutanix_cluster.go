@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-
 	"github.com/hashicorp/terraform/helper/schema"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func dataSourceNutanixCluster() *schema.Resource {
@@ -14,8 +14,10 @@ func dataSourceNutanixCluster() *schema.Resource {
 		Read: dataSourceNutanixClusterRead,
 		Schema: map[string]*schema.Schema{
 			"cluster_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:          schema.TypeString,
+				Computed:      true,
+				Optional:      true,
+				ConflictsWith: []string{"name"},
 			},
 			"metadata": {
 				Type:     schema.TypeMap,
@@ -99,8 +101,10 @@ func dataSourceNutanixCluster() *schema.Resource {
 				Computed: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"cluster_id"},
 			},
 
 			// COMPUTED
@@ -589,15 +593,23 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*Client).API
 
 	c, ok := d.GetOk("cluster_id")
-
-	if !ok {
-		return fmt.Errorf("please provide the cluster_id attribute")
-	}
-
-	// Make request to the API
-	v, err := conn.V3.GetCluster(c.(string))
-	if err != nil {
-		return err
+	var v *v3.ClusterIntentResponse
+	var err error
+	if ok {
+		// Make request to the API
+		v, err = conn.V3.GetCluster(c.(string))
+		if err != nil {
+			return err
+		}
+	} else {
+		n, ok := d.GetOk("name")
+		if !ok {
+			return fmt.Errorf("please provide the cluster_id or name attribute")
+		}
+		v, err = findClusterByName(conn, n.(string))
+		if err != nil {
+			return err
+		}
 	}
 
 	m, c := setRSEntityMetadata(v.Metadata)
@@ -1030,7 +1042,42 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	d.SetId(utils.StringValue(v.Metadata.UUID))
+	cUUID := utils.StringValue(v.Metadata.UUID)
+	if err := d.Set("cluster_id", cUUID); err != nil {
+		return err
+	}
 
+	d.SetId(cUUID)
 	return nil
+}
+
+func findClusterByName(conn *v3.Client, name string) (*v3.ClusterIntentResponse, error) {
+	clusterEntitiesMetadata := &v3.DSMetadata{}
+	resp, err := conn.V3.ListCluster(clusterEntitiesMetadata)
+	if err != nil {
+		return nil, err
+	}
+	entities := resp.Entities
+
+	found := make([]*v3.ClusterIntentResponse, 0)
+	for _, v := range entities {
+		if *v.Status.Name == name {
+			found = append(found, &v3.ClusterIntentResponse{
+				Status:     v.Status,
+				Spec:       v.Spec,
+				Metadata:   v.Metadata,
+				APIVersion: v.APIVersion,
+			})
+		}
+	}
+
+	if len(found) > 1 {
+		return nil, fmt.Errorf("your query returned more than one result. Please use cluster_id argument instead")
+	}
+
+	if len(found) == 0 {
+		return nil, fmt.Errorf("did not find cluster with name %s", name)
+	}
+
+	return found[0], nil
 }
