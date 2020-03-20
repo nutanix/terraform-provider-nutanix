@@ -570,7 +570,10 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 				ForceNew: true,
 			},
 			"guest_customization_cloud_init_custom_key_values": {
-				Type:     schema.TypeMap,
+				Type: schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 				Optional: true,
 				Computed: true,
 			},
@@ -1521,7 +1524,7 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	}
 
 	if v, ok := d.GetOk("guest_customization_cloud_init_custom_key_values"); ok {
-		cloudInit.CustomKeyValues = v.(map[string]string)
+		cloudInit.CustomKeyValues = utils.ConvertMapString(v.(map[string]interface{}))
 	}
 
 	if !reflect.DeepEqual(*cloudInit, (v3.GuestCustomizationCloudInit{})) {
