@@ -33,6 +33,13 @@ func TestProvider_impl(t *testing.T) {
 }
 
 func testAccPreCheck(t *testing.T) {
+	if os.Getenv("NUTANIX_USERNAME") == "" ||
+		os.Getenv("NUTANIX_PASSWORD") == "" ||
+		os.Getenv("NUTANIX_INSECURE") == "" ||
+		os.Getenv("NUTANIX_PORT") == "" ||
+		os.Getenv("NUTANIX_ENDPOINT") == "" {
+		t.Fatal("`NUTANIX_USERNAME`,`NUTANIX_PASSWORD`,`NUTANIX_INSECURE`,`NUTANIX_PORT`,`NUTANIX_ENDPOINT` must be set for acceptance testing")
+	}
 }
 
 func randIntBetween(min, max int) int {
