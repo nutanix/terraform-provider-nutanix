@@ -87,7 +87,7 @@ func NewClient(credentials *Credentials) (*Client, error) {
 
 	c := &Client{credentials, httpClient, baseURL, userAgent, nil, nil}
 
-	if credentials.SessionAuth == true {
+	if credentials.SessionAuth {
 		log.Printf("[DEBUG] Using session_auth\n")
 
 		ctx := context.TODO()
