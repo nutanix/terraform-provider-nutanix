@@ -809,26 +809,6 @@ func resourceNutanixNetworkSecurityRuleDelete(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceNutanixNetworkSecurityRuleExists(conn *v3.Client, name string) (*string, error) {
-	log.Printf("[DEBUG] Get Network Security Rule Existence : %s", name)
-
-	var nsrUUID *string
-
-	filter := fmt.Sprintf("name==%s", name)
-	networkSecurityRuleList, err := conn.V3.ListAllNetworkSecurityRule(filter)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, nsr := range networkSecurityRuleList.Entities {
-		if nsr.Metadata.Name == utils.StringPtr(name) {
-			nsrUUID = nsr.Metadata.UUID
-		}
-	}
-	return nsrUUID, nil
-}
-
 func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule *v3.NetworkSecurityRuleResources) error {
 	isolationRule := &v3.NetworkSecurityRuleIsolationRule{}
 	appRule := &v3.NetworkSecurityRuleResourcesRule{}
