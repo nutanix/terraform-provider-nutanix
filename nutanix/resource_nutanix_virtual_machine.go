@@ -1670,7 +1670,7 @@ func expandDiskList(d *schema.ResourceData, isCreation bool) ([]*v3.VMDisk, erro
 						if v1, ok := d["device_type"]; ok {
 							dp.DeviceType = utils.StringPtr(v1.(string))
 						}
-						if v2, ok := d["disk_address"]; ok {
+						if v2, ok := d["disk_address"]; ok && len(v2.(map[string]interface{})) > 0 {
 							da := v2.(map[string]interface{})
 							v3disk := &v3.DiskAddress{}
 							if di, diok := da["device_index"]; diok {

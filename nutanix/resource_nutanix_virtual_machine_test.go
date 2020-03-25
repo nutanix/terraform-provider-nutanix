@@ -282,6 +282,30 @@ func TestAccNutanixVirtualMachine_CloudInitCustomKeyValues(t *testing.T) {
 	})
 }
 
+func TestAccNutanixVirtualMachine_DeviceProperties(t *testing.T) {
+	r := acctest.RandInt()
+
+	resourceName := "nutanix_virtual_machine.vm9"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixVMConfigWithDeviceProperties(r),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "disk_list.#"),
+					resource.TestCheckResourceAttr(resourceName, "disk_list.#", "1"),
+				),
+			},
+			{
+				ResourceName:      "nutanix_virtual_machine.vm9",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		}})
+}
+
 func testAccCheckNutanixVirtualMachineExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -693,6 +717,45 @@ resource "nutanix_virtual_machine" "vm8" {
     "password" = "mypassword"
   }
 
+}
+`, r)
+}
+
+func testAccNutanixVMConfigWithDeviceProperties(r int) string {
+	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {}
+
+locals {
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
+}
+
+
+resource "nutanix_image" "cirros-034-disk" {
+	name        = "test-image-dou-vm-create-%[1]d"
+	source_uri  = "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+	description = "heres a tiny linux image, not an iso, but a real disk!"
+}
+
+resource "nutanix_virtual_machine" "vm9" {
+	name                 = "test-dou-vm-%[1]d"
+	cluster_uuid         = local.cluster1
+	num_vcpus_per_socket = 1
+	num_sockets          = 1
+	memory_size_mib      = 186
+
+	disk_list {
+		data_source_reference = {
+			kind = "image"
+			uuid = nutanix_image.cirros-034-disk.id
+		}
+
+		device_properties {
+			device_type = "DISK"
+		}
+	}
 }
 `, r)
 }
