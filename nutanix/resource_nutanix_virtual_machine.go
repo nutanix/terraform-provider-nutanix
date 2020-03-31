@@ -1935,7 +1935,7 @@ func waitForIPRefreshFunc(client *v3.Client, vmUUID string) resource.StateRefres
 func CountDiskListCdrom(dl []*v3.VMDisk) (int, error) {
 	counter := 0
 	for _, v := range dl {
-		if *v.DeviceProperties.DeviceType == "CDROM" {
+		if v.DeviceProperties != nil && *v.DeviceProperties.DeviceType == "CDROM" {
 			counter++
 		}
 	}
