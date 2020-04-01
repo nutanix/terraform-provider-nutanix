@@ -1,6 +1,7 @@
 module github.com/terraform-providers/terraform-provider-nutanix
 
 require (
+	github.com/gogo/protobuf v1.2.0
 	github.com/golang/protobuf v1.3.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/terraform v0.12.3
