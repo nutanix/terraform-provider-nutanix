@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform/terraform"
 )
 
 var (
@@ -33,6 +34,8 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
+		SchemaVersion: 1,
+		MigrateState:  resourceVirtualMachineInstanceStateUpgradeV0,
 		Schema: map[string]*schema.Schema{
 			"metadata": {
 				Type:     schema.TypeMap,
@@ -1940,4 +1943,8 @@ func CountDiskListCdrom(dl []*v3.VMDisk) (int, error) {
 		}
 	}
 	return counter, nil
+}
+
+func resourceVirtualMachineInstanceStateUpgradeV0(v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
+	return resourceNutanixCategoriesMigrateState(v, is, meta)
 }
