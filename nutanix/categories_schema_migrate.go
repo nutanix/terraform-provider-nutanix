@@ -4,79 +4,49 @@ import (
 	"fmt"
 	"log"
 	"sort"
-	"strings"
-
-	"github.com/hashicorp/terraform/terraform"
 )
 
-func resourceNutanixCategoriesMigrateState(
-	v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
-	switch v {
-	case 0:
-		log.Println("[INFO] Found Nutanix State v0; migrating to v1")
-		return migrateNutanixCategoriesV0toV1(is)
-	default:
-		return is, fmt.Errorf("Unexpected schema version: %d", v)
-	}
-}
-
-func migrateNutanixCategoriesV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error) {
-	if is.Empty() || is.Attributes == nil {
+func resourceNutanixCategoriesMigrateState(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	if len(rawState) == 0 || rawState == nil {
 		log.Println("[DEBUG] Empty InstanceState; nothing to migrate.")
-		return is, nil
+		return rawState, nil
 	}
 
-	keys := make([]string, 0, len(is.Attributes))
-	for k := range is.Attributes {
+	keys := make([]string, 0, len(rawState))
+	for k := range rawState {
 		keys = append(keys, k)
 	}
 
 	sort.Strings(keys)
 
-	log.Printf("[DEBUG] Attributes before migration: %#v", is.Attributes)
+	log.Printf("[DEBUG] Attributes before migration: %#v", rawState)
 
-	if l, ok := is.Attributes["categories.%"]; ok && l != "" {
-		var tempCat []map[string]string
-
-		for _, k := range keys {
-			v := is.Attributes[k]
-
-			if k == "categories.%" {
-				is.Attributes["categories.#"] = v
-				delete(is.Attributes, "categories.%")
-				continue
+	if l, ok := rawState["categories"]; ok {
+		if asserted_l, ok := l.(map[string]interface{}); ok {
+			c := make([]interface{}, 0)
+			keys := make([]string, 0, len(asserted_l))
+			for k := range asserted_l {
+				keys = append(keys, k)
 			}
-
-			if strings.HasPrefix(k, "categories.") {
-				path := strings.Split(k, ".")
-				if len(path) != 2 {
-					return is, fmt.Errorf("found unexpected categories field: %#v", k)
-				}
-
-				if path[1] == "#" {
-					continue
-				}
-
-				log.Printf("[DEBUG] key=%s", k)
-
-				tempCat = append(tempCat, map[string]string{
-					"name":  path[1],
-					"value": v,
+			sort.Strings(keys)
+			for _, name := range keys {
+				value := asserted_l[name]
+				c = append(c, map[string]interface{}{
+					"name":  name,
+					"value": value.(string),
 				})
-
-				delete(is.Attributes, k)
 			}
+			rawState["categories"] = c
 		}
-		flattenTempCategories(tempCat, is)
 	}
-	log.Printf("[DEBUG] Attributes after migration: %#v", is.Attributes)
-	return is, nil
+	log.Printf("[DEBUG] Attributes after migration: %#v", rawState)
+	return rawState, nil
 }
 
-func flattenTempCategories(categories []map[string]string, is *terraform.InstanceState) {
+func flattenTempCategories(categories []map[string]string, rawState map[string]interface{}) {
 	for index, category := range categories {
 		for key, value := range category {
-			is.Attributes[fmt.Sprintf("categories.%d.%s", index, key)] = value
+			rawState[fmt.Sprintf("categories.%d.%s", index, key)] = value
 		}
 	}
 }

@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
-	"github.com/hashicorp/terraform/terraform"
 )
 
 var (
@@ -35,7 +34,13 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 			State: schema.ImportStatePassthrough,
 		},
 		SchemaVersion: 1,
-		MigrateState:  resourceVirtualMachineInstanceStateUpgradeV0,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceNutanixVirtualMachineInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceVirtualMachineInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
 		Schema: map[string]*schema.Schema{
 			"metadata": {
 				Type:     schema.TypeMap,
@@ -1945,6 +1950,732 @@ func CountDiskListCdrom(dl []*v3.VMDisk) (int, error) {
 	return counter, nil
 }
 
-func resourceVirtualMachineInstanceStateUpgradeV0(v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
-	return resourceNutanixCategoriesMigrateState(v, is, meta)
+func resourceVirtualMachineInstanceStateUpgradeV0(is map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	log.Printf("[DEBUG] Entering resourceVirtualMachineInstanceStateUpgradeV0")
+	return resourceNutanixCategoriesMigrateState(is, meta)
+}
+
+func resourceNutanixVirtualMachineInstanceResourceV0() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"metadata": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"last_update_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"creation_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"spec_version": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"spec_hash": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"categories": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+			},
+			"project_reference": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"owner_reference": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"api_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"availability_zone_reference": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"cluster_uuid": {
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringMatch(
+					regexp.MustCompile(
+						"^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"),
+					"please see http://developer.nutanix.com/reference/prism_central/v3/api/models/cluster-reference"),
+			},
+			"cluster_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"host_reference": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"hypervisor_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"nic_list_status": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"nic_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"floating_ip": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"model": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"network_function_nic_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"mac_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ip_endpoint_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ip": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"network_function_chain_reference": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"subnet_uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"subnet_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"is_connected": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+
+			// RESOURCES ARGUMENTS
+
+			"num_vnuma_nodes": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"nic_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"nic_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"model": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"network_function_nic_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"mac_address": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"ip_endpoint_list": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ip": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"network_function_chain_reference": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"subnet_uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"subnet_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"is_connected": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "true",
+						},
+					},
+				},
+			},
+			"guest_os_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"power_state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"nutanix_guest_tools": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"state": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"ngt_state": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"version": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"iso_mount_state": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"available_version": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"guest_os_version": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"vss_snapshot_capable": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"is_reachable": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"vm_mobility_drivers_installed": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"ngt_credentials": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+			},
+			"ngt_enabled_capability_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"num_vcpus_per_socket": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"num_sockets": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"gpu_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"frame_buffer_size_mib": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"vendor": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"pci_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"fraction": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"mode": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"num_virtual_display_heads": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"guest_driver_version": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"device_id": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"parent_reference": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"memory_size_mib": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"boot_device_order_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"boot_device_disk_address": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"device_index": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"adapter_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"boot_device_mac_address": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"hardware_clock_timezone": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"guest_customization_cloud_init_user_data": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"guest_customization_cloud_init_meta_data": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"guest_customization_cloud_init_custom_key_values": {
+				Type: schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+				Computed: true,
+			},
+			"guest_customization_is_overridable": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"guest_customization_sysprep": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"install_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"unattend_xml": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"guest_customization_sysprep_custom_key_values": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"should_fail_on_script_failure": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"enable_script_exec": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"power_state_mechanism": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"vga_console_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"disk_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"disk_size_bytes": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"disk_size_mib": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"device_properties": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"device_type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"disk_address": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"device_index": {
+													Type:     schema.TypeInt,
+													Optional: true,
+													Computed: true,
+												},
+												"adapter_type": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"data_source_reference": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"volume_group_reference": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Computed: true,
+
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"serial_port_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"index": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"is_connected": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+		},
+	}
 }
