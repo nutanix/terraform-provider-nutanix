@@ -1,7 +1,6 @@
 package nutanix
 
 import (
-	"fmt"
 	"log"
 	"sort"
 )
@@ -19,18 +18,19 @@ func resourceNutanixCategoriesMigrateState(rawState map[string]interface{}, meta
 
 	sort.Strings(keys)
 
+	log.Printf("[DEBUG] meta: %#v", meta)
 	log.Printf("[DEBUG] Attributes before migration: %#v", rawState)
 
 	if l, ok := rawState["categories"]; ok {
-		if asserted_l, ok := l.(map[string]interface{}); ok {
+		if assertedL, ok := l.(map[string]interface{}); ok {
 			c := make([]interface{}, 0)
-			keys := make([]string, 0, len(asserted_l))
-			for k := range asserted_l {
+			keys := make([]string, 0, len(assertedL))
+			for k := range assertedL {
 				keys = append(keys, k)
 			}
 			sort.Strings(keys)
 			for _, name := range keys {
-				value := asserted_l[name]
+				value := assertedL[name]
 				c = append(c, map[string]interface{}{
 					"name":  name,
 					"value": value.(string),
@@ -41,12 +41,4 @@ func resourceNutanixCategoriesMigrateState(rawState map[string]interface{}, meta
 	}
 	log.Printf("[DEBUG] Attributes after migration: %#v", rawState)
 	return rawState, nil
-}
-
-func flattenTempCategories(categories []map[string]string, rawState map[string]interface{}) {
-	for index, category := range categories {
-		for key, value := range category {
-			rawState[fmt.Sprintf("categories.%d.%s", index, key)] = value
-		}
-	}
 }
