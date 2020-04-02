@@ -21,6 +21,7 @@ var (
 	vmTimeout    = 1 * time.Minute
 	vmDelay      = 3 * time.Second
 	vmMinTimeout = 3 * time.Second
+	IDE          = "IDE"
 )
 
 func resourceNutanixVirtualMachine() *schema.Resource {
@@ -1197,7 +1198,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		if err != nil {
 			return err
 		}
-		if res.DiskList, err = expandDiskList(d, false); err != nil {
+		if res.DiskList, err = expandDiskListUpdate(d, response); err != nil {
 			return err
 		}
 		postCdromCount, err := CountDiskListCdrom(res.DiskList)
@@ -1656,6 +1657,26 @@ func expandIPAddressList(ipl []interface{}) []*v3.IPAddress {
 		return ip
 	}
 	return nil
+}
+
+func expandDiskListUpdate(d *schema.ResourceData, vm *v3.VMIntentResponse) ([]*v3.VMDisk, error) {
+	var eDiskList []*v3.VMDisk
+	var err error
+	if eDiskList, err = expandDiskList(d, false); err != nil {
+		return eDiskList, err
+	}
+	if vm.Spec != nil && vm.Spec.Resources != nil {
+		for _, disk := range vm.Spec.Resources.DiskList {
+			if disk.DeviceProperties != nil && disk.DeviceProperties.DiskAddress != nil {
+				index := disk.DeviceProperties.DiskAddress.DeviceIndex
+				adapterType := disk.DeviceProperties.DiskAddress.AdapterType
+				if *index == 3 && *adapterType == IDE {
+					eDiskList = append(eDiskList, disk)
+				}
+			}
+		}
+	}
+	return eDiskList, nil
 }
 
 func expandDiskList(d *schema.ResourceData, isCreation bool) ([]*v3.VMDisk, error) {
