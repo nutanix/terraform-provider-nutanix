@@ -245,6 +245,9 @@ type VMResources struct {
 	// NICs attached to the VM.
 	NicList []*VMNic `json:"nic_list,omitempty"`
 
+	// Number of threads per core
+	NumThreads *int64 `json:"num_threads_per_core,omitempty"`
+
 	// Number of vCPU sockets.
 	NumSockets *int64 `json:"num_sockets,omitempty"`
 
@@ -836,6 +839,9 @@ type ImageResources struct {
 
 	// The image version
 	Version *ImageVersionResources `json:"version,omitempty"`
+
+	// Reference to the source image such as 'vm_disk
+	DataSourceReference *Reference `json:"data_source_reference,omitempty"`
 }
 
 // Image An intentful representation of a image spec
@@ -1620,6 +1626,9 @@ type Metadata struct {
 	OwnerReference   *Reference        `json:"owner_reference,omitempty"`
 	Categories       map[string]string `json:"categories,omitempty"`
 	Name             *string           `json:"name,omitempty"`
+
+	// Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
+	ShouldForceTranslate *bool `json:"should_force_translate,omitempty"`
 }
 
 // NetworkSecurityRuleIntentInput An intentful representation of a network_security_rule
