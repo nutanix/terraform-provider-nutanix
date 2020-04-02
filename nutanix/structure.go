@@ -105,8 +105,8 @@ func flattenNicList(nics []*v3.VMNic) []map[string]interface{} {
 func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
 	diskList := make([]map[string]interface{}, 0)
 	if disks != nil {
-		diskList = make([]map[string]interface{}, len(disks))
-		for k, v := range disks {
+		diskList = make([]map[string]interface{}, 0)
+		for _, v := range disks {
 			disk := make(map[string]interface{})
 
 			disk["uuid"] = utils.StringValue(v.UUID)
@@ -117,10 +117,14 @@ func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
 			if v.DeviceProperties != nil {
 				deviceProps = make([]map[string]interface{}, 1)
 				deviceProp := make(map[string]interface{})
-
+				index := fmt.Sprintf("%d", utils.Int64Value(v.DeviceProperties.DiskAddress.DeviceIndex))
+				adapter := v.DeviceProperties.DiskAddress.AdapterType
+				if index == "3" && *adapter == IDE {
+					continue
+				}
 				diskAddress := map[string]interface{}{
-					"device_index": fmt.Sprintf("%d", utils.Int64Value(v.DeviceProperties.DiskAddress.DeviceIndex)),
-					"adapter_type": v.DeviceProperties.DiskAddress.AdapterType,
+					"device_index": index,
+					"adapter_type": adapter,
 				}
 
 				deviceProp["disk_address"] = diskAddress
@@ -132,7 +136,7 @@ func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
 			disk["data_source_reference"] = flattenReferenceValues(v.DataSourceReference)
 			disk["volume_group_reference"] = flattenReferenceValues(v.VolumeGroupReference)
 
-			diskList[k] = disk
+			diskList = append(diskList, disk)
 		}
 	}
 	return diskList
