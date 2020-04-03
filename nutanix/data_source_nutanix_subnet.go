@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
@@ -10,7 +11,15 @@ import (
 
 func dataSourceNutanixSubnet() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceNutanixSubnetRead,
+		Read:          dataSourceNutanixSubnetRead,
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceNutanixDatasourceSubnetResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceDatasourceSubnetStateUpgradeV0,
+				Version: 0,
+			},
+		},
 		Schema: map[string]*schema.Schema{
 			"subnet_id": {
 				Type:          schema.TypeString,
@@ -422,4 +431,274 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 	d.SetId(utils.StringValue(resp.Metadata.UUID))
 
 	return nil
+}
+
+func resourceDatasourceSubnetStateUpgradeV0(is map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	log.Printf("[DEBUG] Entering resourceDatasourceSubnetStateUpgradeV0")
+	return resourceNutanixCategoriesMigrateState(is, meta)
+}
+
+func resourceNutanixDatasourceSubnetResourceV0() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"subnet_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"subnet_name"},
+			},
+			"subnet_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"subnet_id"},
+			},
+			"api_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"metadata": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"last_update_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"creation_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"spec_version": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"spec_hash": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"categories": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+			},
+			"owner_reference": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"project_reference": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"availability_zone_reference": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"message_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"message": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"reason": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"details": {
+							Type:     schema.TypeMap,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"cluster_uuid": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"cluster_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"vswitch_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"subnet_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"default_gateway_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"prefix_length": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"subnet_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"dhcp_server_address": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ip": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"fqdn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ipv6": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"dhcp_server_address_port": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"ip_config_pool_list_ranges": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"dhcp_options": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"boot_file_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"domain_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"tftp_server_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"dhcp_domain_name_server_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"dhcp_domain_search_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"vlan_id": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"network_function_chain_reference": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+		},
+	}
 }
