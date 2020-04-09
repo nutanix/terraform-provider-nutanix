@@ -223,13 +223,6 @@ func TestAccNutanixVirtualMachine_CdromGuestCustomisationReboot(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixVirtualMachineExists(resourceName),
 				),
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				Config: testAccNutanixVMConfigCdromGuestCustomisationReboot(r),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixVirtualMachineExists(resourceName),
-				),
 			},
 			{
 				ResourceName:            resourceName,
@@ -249,18 +242,6 @@ func TestAccNutanixVirtualMachine_CloudInitCustomKeyValues(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
 		Steps: []resource.TestStep{
-			{
-				Config: testAccNutanixVMConfigCloudInitCustomKeyValues(r),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixVirtualMachineExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
-					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
-					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
-					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
-					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
-				),
-				ExpectNonEmptyPlan: true,
-			},
 			{
 				Config: testAccNutanixVMConfigCloudInitCustomKeyValues(r),
 				Check: resource.ComposeTestCheckFunc(

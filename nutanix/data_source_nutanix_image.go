@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
@@ -10,7 +11,15 @@ import (
 
 func dataSourceNutanixImage() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceNutanixImageRead,
+		Read:          dataSourceNutanixImageRead,
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceNutanixDatasourceImageInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceDatasourceImageInstanceStateUpgradeV0,
+				Version: 0,
+			},
+		},
 		Schema: map[string]*schema.Schema{
 			"image_id": {
 				Type:          schema.TypeString,
@@ -293,4 +302,204 @@ func findImageByName(conn *v3.Client, name string) (*v3.ImageIntentResponse, err
 	}
 
 	return findImageByUUID(conn, *found[0].Metadata.UUID)
+}
+
+func resourceDatasourceImageInstanceStateUpgradeV0(is map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	log.Printf("[DEBUG] Entering resourceDatasourceImageInstanceStateUpgradeV0")
+	return resourceNutanixCategoriesMigrateState(is, meta)
+}
+
+func resourceNutanixDatasourceImageInstanceResourceV0() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"image_id": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"image_name"},
+			},
+			"image_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"image_id"},
+			},
+			"api_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"metadata": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"last_update_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"creation_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"spec_version": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"spec_hash": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"categories": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+			},
+			"owner_reference": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"project_reference": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"availability_zone_reference": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"cluster_uuid": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"cluster_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"retrieval_uri_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"image_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"checksum_algorithm": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"checksum_value": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"source_uri": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"version": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"product_version": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"product_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"architecture": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"size_bytes": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+		},
+	}
 }
