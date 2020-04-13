@@ -18,6 +18,7 @@ terraform-provider-nutanix
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+log.*
 
 #exclude vendor
 !vendor/**
