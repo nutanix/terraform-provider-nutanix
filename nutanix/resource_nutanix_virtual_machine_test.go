@@ -287,6 +287,28 @@ func TestAccNutanixVirtualMachine_DeviceProperties(t *testing.T) {
 		}})
 }
 
+func TestAccNutanixVirtualMachine_cloningVM(t *testing.T) {
+	r := acctest.RandInt()
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixVMConfigCloningVM(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists("nutanix_virtual_machine.vm2"),
+					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm2", "hardware_clock_timezone", "UTC"),
+					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm2", "power_state", "ON"),
+					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm2", "memory_size_mib", "186"),
+					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm2", "num_sockets", "1"),
+					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm2", "num_vcpus_per_socket", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixVirtualMachineExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -733,6 +755,76 @@ func testAccNutanixVMConfigWithDeviceProperties(r int) string {
 
 				device_properties {
 					device_type = "DISK"
+				}
+			}
+		}
+	`, r)
+}
+
+func testAccNutanixVMConfigCloningVM(r int) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+			? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+		}
+
+		resource "nutanix_image" "cirros-034-disk" {
+			name        = "test-image-dou-vm-create-%[1]d"
+			source_uri  = "http://packages.oit.ncsu.edu/centos/7.7.1908/isos/x86_64/CentOS-7-x86_64-NetInstall-1908.iso"
+			description = "heres a tiny linux image, not an iso, but a real disk!"
+		}
+
+		resource "nutanix_virtual_machine" "vm1" {
+			name         = "test-dou-%[1]d-vm1"
+			num_vcpus_per_socket = 1
+			num_sockets          = 1
+			memory_size_mib      = 186
+			cluster_uuid = "${local.cluster1}"
+
+
+			disk_list {
+				data_source_reference = {
+					kind = "image"
+					uuid = nutanix_image.cirros-034-disk.id
+				}
+
+				device_properties {
+					disk_address = {
+						device_index = 0
+						adapter_type = "IDE"
+					}
+					device_type = "CDROM"
+				}
+			}
+			disk_list {
+				disk_size_mib = 100
+			}
+			disk_list {
+				disk_size_mib = 200
+			}
+			disk_list {
+				disk_size_mib = 300
+			}
+		}
+
+		data "nutanix_virtual_machine" "vmds" {
+			vm_id = "${nutanix_virtual_machine.vm1.id}"
+		}
+
+		resource "nutanix_virtual_machine" "vm2" {
+			name         = "test-dou-%[1]d-vm2"
+			num_vcpus_per_socket = 1
+			num_sockets          = 1
+			memory_size_mib      = 186
+			cluster_uuid = "${local.cluster1}"
+
+
+			disk_list {
+				data_source_reference = {
+					kind = "image"
+					uuid = "${data.nutanix_virtual_machine.vmds.disk_list.0.data_source_reference.uuid}"
 				}
 			}
 		}
