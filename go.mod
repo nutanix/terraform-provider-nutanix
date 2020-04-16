@@ -7,6 +7,7 @@ require (
 	github.com/mitchellh/gox v1.0.1
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cast v1.3.1
+	golang.org/x/tools v0.0.0-20200416061724-5744cfde56ed // indirect
 )
 
 go 1.13
