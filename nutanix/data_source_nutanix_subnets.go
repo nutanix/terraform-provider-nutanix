@@ -1,11 +1,9 @@
 package nutanix
 
 import (
-	"log"
-
 	"github.com/hashicorp/terraform/helper/resource"
-
 	"github.com/hashicorp/terraform/helper/schema"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -13,13 +11,6 @@ func dataSourceNutanixSubnets() *schema.Resource {
 	return &schema.Resource{
 		Read:          dataSourceNutanixSubnetsRead,
 		SchemaVersion: 1,
-		StateUpgraders: []schema.StateUpgrader{
-			{
-				Type:    resourceNutanixDatasourceSubnetsResourceV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: resourceDatasourceSubnetsStateUpgradeV0,
-				Version: 0,
-			},
-		},
 		Schema: map[string]*schema.Schema{
 			"api_version": {
 				Type:     schema.TypeString,
@@ -306,32 +297,39 @@ func dataSourceNutanixSubnets() *schema.Resource {
 				},
 			},
 			"metadata": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeSet,
+				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"filter": {
 							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 						"kind": {
 							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 						"sort_order": {
 							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 						"offset": {
 							Type:     schema.TypeInt,
+							Optional: true,
 							Computed: true,
 						},
 						"length": {
 							Type:     schema.TypeInt,
+							Optional: true,
 							Computed: true,
 						},
 						"sort_attribute": {
 							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 					},
@@ -344,8 +342,14 @@ func dataSourceNutanixSubnets() *schema.Resource {
 func dataSourceNutanixSubnetsRead(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
 	conn := meta.(*Client).API
+	req := &v3.DSMetadata{}
 
-	resp, err := conn.V3.ListAllSubnet()
+	metadata, filtersOk := d.GetOk("metadata")
+	if filtersOk {
+		req = buildDataSourceSubnetsMetadata(metadata.(*schema.Set))
+	}
+
+	resp, err := conn.V3.ListSubnet(req)
 	if err != nil {
 		return err
 	}
@@ -445,304 +449,29 @@ func dataSourceNutanixSubnetsRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceDatasourceSubnetsStateUpgradeV0(is map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
-	log.Printf("[DEBUG] Entering resourceDatasourceSubnetStateUpgradeV0")
-	return resourceNutanixCategoriesMigrateState(is, meta)
-}
+func buildDataSourceSubnetsMetadata(set *schema.Set) *v3.DSMetadata {
+	filters := v3.DSMetadata{}
+	for _, v := range set.List() {
+		m := v.(map[string]interface{})
 
-func resourceNutanixDatasourceSubnetsResourceV0() *schema.Resource {
-	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"api_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"entities": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"subnet_id": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ConflictsWith: []string{"subnet_name"},
-						},
-						"subnet_name": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ConflictsWith: []string{"subnet_id"},
-						},
-						"api_version": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"metadata": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"last_update_time": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"kind": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"uuid": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"creation_time": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"spec_version": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"spec_hash": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"categories": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Computed: true,
-						},
-						"owner_reference": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kind": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"uuid": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"project_reference": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kind": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"uuid": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"state": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"description": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"availability_zone_reference": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kind": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"uuid": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"cluster_reference": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kind": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"uuid": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"message_list": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"message": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"reason": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"details": {
-										Type:     schema.TypeMap,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"cluster_uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"cluster_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"vswitch_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"subnet_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"default_gateway_ip": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"prefix_length": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"subnet_ip": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"dhcp_server_address": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"ip": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"fqdn": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"ipv6": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"dhcp_server_address_port": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"ip_config_pool_list_ranges": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"dhcp_options": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"boot_file_name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"domain_name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"tftp_server_name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"dhcp_domain_name_server_list": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"dhcp_domain_search_list": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"vlan_id": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"network_function_chain_reference": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kind": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"uuid": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
+		if m["filter"].(string) != "" {
+			filters.Filter = utils.StringPtr(m["filter"].(string))
+		}
+		if m["kind"].(string) != "" {
+			filters.Kind = utils.StringPtr(m["kind"].(string))
+		}
+		if m["sort_order"].(string) != "" {
+			filters.SortOrder = utils.StringPtr(m["sort_order"].(string))
+		}
+		if m["offset"].(int) != 0 {
+			filters.Offset = utils.Int64Ptr(int64(m["offset"].(int)))
+		}
+		if m["length"].(int) != 0 {
+			filters.Length = utils.Int64Ptr(int64(m["length"].(int)))
+		}
+		if m["sort_attribute"].(string) != "" {
+			filters.SortAttribute = utils.StringPtr(m["sort_attribute"].(string))
+		}
 	}
+	return &filters
 }
