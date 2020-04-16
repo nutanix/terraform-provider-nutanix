@@ -1,7 +1,6 @@
 package nutanix
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/resource"
@@ -22,8 +21,5 @@ func TestAccNutanixSubnetsDataSource_basic(t *testing.T) {
 	})
 }
 func testAccSubnetsDataSourceConfig() string {
-	return fmt.Sprintf(`
-data "nutanix_subnets" "test" {
-}
-`)
+	return `data "nutanix_subnets" "test" {}`
 }
