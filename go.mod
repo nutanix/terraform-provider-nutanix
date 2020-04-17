@@ -6,6 +6,7 @@ require (
 	github.com/hashicorp/terraform v0.12.3
 	github.com/mitchellh/gox v1.0.1
 	github.com/spf13/afero v1.2.2 // indirect
+	github.com/spf13/cast v1.3.1
 )
 
 go 1.13
