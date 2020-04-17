@@ -664,16 +664,6 @@ func flattenHypervisor(hypervisor *v3.Hypervisor) map[string]interface{} {
 	return map[string]interface{}{}
 }
 
-func flattenOplogUsage(oplogUsage *v3.OplogUsage) map[string]interface{} {
-	if oplogUsage != nil {
-		return map[string]interface{}{
-			"opolog_disk_pct":  cast.ToString(oplogUsage.OplogDiskPct),
-			"opolog_disk_size": cast.ToString(oplogUsage.OplogDiskSize),
-		}
-	}
-	return map[string]interface{}{}
-}
-
 func flattenControllerVM(controllerVM *v3.ControllerVM) map[string]interface{} {
 	if controllerVM != nil {
 		return map[string]interface{}{
