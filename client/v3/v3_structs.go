@@ -1795,3 +1795,142 @@ type DeleteStatus struct {
 	State            string            `json:"state"`
 	ExecutionContext *ExecutionContext `json:"execution_context"`
 }
+
+/* Host Resource */
+
+// DomainCredencial represents the way to login server
+type DomainCredencial struct {
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+}
+
+// WindowsDomain means Hyper-V node domain
+type WindowsDomain struct {
+	Name                 string            `json:"name,omitempty"`
+	NameServerIP         string            `json:"name_server_ip,omitempty"`
+	OrganizationUnitPath string            `json:"organization_unit_path,omitempty"`
+	NamePrefix           string            `json:"name_prefix,omitempty"`
+	DomainName           string            `json:"domain_name,omitempty"`
+	DomainCredencial     *DomainCredencial `json:"domain_credencial,omitempty"`
+}
+
+// OplogUsage represents oplog disk usage
+type OplogUsage struct {
+	OplogDiskPct  *float64 `json:"oplog_disk_pct,omitempty"`
+	OplogDiskSize *int64   `json:"oplog_disk_size,omitempty"`
+}
+
+// ControllerVM means Hyper-V node domain
+type ControllerVM struct {
+	IP         string      `json:"ip,omitempty"`
+	NatIP      string      `json:"nat_ip,omitempty"`
+	NatPort    *int64      `json:"nat_port,omitempty"`
+	OplogUsage *OplogUsage `json:"oplog_usage,omitempty"`
+}
+
+// FailoverCluster means Hiper-V failover cluster
+type FailoverCluster struct {
+	IP               string            `json:"ip,omitempty"`
+	Name             string            `json:"name,omitempty"`
+	DomainCredencial *DomainCredencial `json:"domain_credencial,omitempty"`
+}
+
+// IPMI means Host IPMI Information
+type IPMI struct {
+	IP string `json:"ip,omitempty"`
+}
+
+// ReferenceValues references to a kind
+type ReferenceValues struct {
+	Kind string `json:"kind,omitempty"`
+	UUID string `json:"uuid,omitempty"`
+	Name string `json:"name,omitempty"`
+}
+
+// GPU represnts list of GPUs on the host
+type GPU struct {
+	Status                 string           `json:"status,omitempty"`
+	Vendor                 string           `json:"vendor,omitempty"`
+	NumVirtualDisplayHeads *int64           `json:"num_virtual_display_heads,omitempty"`
+	Assignable             bool             `json:"assignable,omitempty"`
+	LicenseList            []*string        `json:"license_list,omitempty"`
+	NumVgpusAllocated      *int64           `json:"num_vgpus_allocated,omitempty"`
+	PciAddress             string           `json:"pci_address,omitempty"`
+	Name                   string           `json:"name,omitempty"`
+	FrameBufferSizeMib     *int64           `json:"frame_buffer_size_mib,omitempty"`
+	Index                  *int64           `json:"index,omitempty"`
+	UUID                   string           `json:"uuid,omitempty"`
+	NumaNode               *int64           `json:"numa_node,omitempty"`
+	MaxResoution           string           `json:"max_resolution,omitempty"`
+	ConsumerReference      *ReferenceValues `json:"consumer_reference,omitempty"`
+	Mode                   string           `json:"mode,omitempty"`
+	Fraction               *int64           `json:"fraction,omitempty"`
+	GuestDriverVersion     string           `json:"guest_driver_version,omitempty"`
+	DeviceID               *int64           `json:"device_id,omitempty"`
+}
+
+// Hypervisor Full name of hypervisor running on Host
+type Hypervisor struct {
+	NumVms             *int64 `json:"num_vms,omitempty"`
+	IP                 string `json:"ip,omitempty"`
+	HypervisorFullName string `json:"hypervisor_full_name,omitempty"`
+}
+
+// Block represents Host block config info.
+type Block struct {
+	BlockSerialNumber string `json:"block_serial_number,omitempty"`
+	BlockModel        string `json:"block_model,omitempty"`
+}
+
+// HostResources represents the host resources
+type HostResources struct {
+	GPUDriverVersion       string             `json:"gpu_driver_version,omitempty"`
+	FailoverCluster        *FailoverCluster   `json:"failover_cluster,omitempty"`
+	IPMI                   *IPMI              `json:"ipmi,omitempty"`
+	CPUModel               string             `json:"cpu_model,omitempty"`
+	HostNicsIDList         []*string          `json:"host_nics_id_list,omitempty"`
+	NumCPUSockets          *int64             `json:"num_cpu_sockets,omitempty"`
+	WindowsDomain          *WindowsDomain     `json:"windows_domain,omitempty"`
+	GPUList                []*GPU             `json:"gpu_list,omitempty"`
+	SerialNumber           string             `json:"serial_number,omitempty"`
+	CPUCapacityHZ          *int64             `json:"cpu_capacity_hz,omitempty"`
+	MemoryVapacityMib      *int64             `json:"memory_capacity_mib,omitempty"`
+	HostDisksReferenceList []*ReferenceValues `json:"host_disks_reference_list,omitempty"`
+	MonitoringState        string             `json:"monitoring_state,omitempty"`
+	Hypervisor             *Hypervisor        `json:"hypervisor,omitempty"`
+	HostType               string             `json:"host_type,omitempty"`
+	NumCPUCores            *int64             `json:"num_cpu_cores,omitempty"`
+	RackableUnitReference  *ReferenceValues   `json:"rackable_unit_reference,omitempty"`
+	ControllerVM           *ControllerVM      `json:"controller_vm,omitempty"`
+	Block                  *Block             `json:"block,omitempty"`
+}
+
+// HostSpec Represents volume group input spec.
+type HostSpec struct {
+	Name      string         `json:"name,omitempty"`
+	Resources *HostResources `json:"resources,omitempty"`
+}
+
+// HostStatus  Volume group configuration.
+type HostStatus struct {
+	State            string             `json:"state,omitempty"`
+	MessageList      []*MessageResource `json:"message_list,omitempty"`
+	Name             string             `json:"name,omitempty"`
+	Resources        *HostResources     `json:"resources,omitempty"`
+	ClusterReference *ReferenceValues   `json:"cluster_reference,omitempty"`
+}
+
+// HostResponse Response object for intentful operations on a Host
+type HostResponse struct {
+	APIVersion string      `json:"api_version,omitempty"`
+	Metadata   *Metadata   `json:"metadata,omitempty"`
+	Spec       *HostSpec   `json:"spec,omitempty"`
+	Status     *HostStatus `json:"status,omitempty"`
+}
+
+// HostListResponse Response object for intentful operation of Host
+type HostListResponse struct {
+	APIVersion string              `json:"api_version,omitempty"`
+	Entities   []*HostResponse     `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput `json:"metadata,omitempty"`
+}
