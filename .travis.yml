@@ -22,7 +22,7 @@ matrix:
 
 env:
   global:
-    - GOFLAGS=-mod=vendor GO111MODULE=on
+    - GOFLAGS=-mod=vendor
 
 install:
 - make tools
