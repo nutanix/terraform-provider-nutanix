@@ -604,26 +604,6 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 	return nil
 }
 
-func resourceNutanixImageExists(conn *v3.Client, name string) (*string, error) {
-	log.Printf("[DEBUG] Get Image Existence : %s", name)
-
-	imageEntities := &v3.DSMetadata{}
-	var imageUUID *string
-
-	imageList, err := conn.V3.ListImage(imageEntities)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, image := range imageList.Entities {
-		if image.Status.Name == utils.StringPtr(name) {
-			imageUUID = image.Metadata.UUID
-		}
-	}
-	return imageUUID, nil
-}
-
 func resourceImageInstanceStateUpgradeV0(is map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	log.Printf("[DEBUG] Entering resourceImageInstanceStateUpgradeV0")
 	return resourceNutanixCategoriesMigrateState(is, meta)
