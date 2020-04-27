@@ -2919,3 +2919,418 @@ func TestOperations_ListHost(t *testing.T) {
 		})
 	}
 }
+
+func TestOperations_CreateProject(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/projects", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodPost)
+
+		expected := map[string]interface{}{
+			"api_version": "3.1",
+			"metadata": map[string]interface{}{
+				"name": "project_test_name",
+				"kind": "project",
+				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc",
+			},
+			"spec": map[string]interface{}{
+				"resources": map[string]interface{}{
+					"resource_domain": map[string]interface{}{
+						"resources": []interface{}{
+							map[string]interface{}{
+								"limit":         float64(4),
+								"resource_type": "resource_type_test",
+							},
+						},
+					},
+				},
+				"name":        "project_name",
+				"description": "description_test",
+			},
+		}
+
+		var v map[string]interface{}
+		err := json.NewDecoder(r.Body).Decode(&v)
+		if err != nil {
+			t.Fatalf("decode json: %v", err)
+		}
+
+		if !reflect.DeepEqual(v, expected) {
+			t.Errorf("Request body\n got=%#v\nwant=%#v", v, expected)
+		}
+
+		fmt.Fprintf(w, `{
+			"api_version": "3.1",
+			"metadata": {
+				"kind": "project",
+				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
+			}
+		}`)
+	})
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		request *Project
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *Project
+		wantErr bool
+	}{
+		{
+			"Test CreateProject",
+			fields{c},
+			args{
+				&Project{
+					APIVersion: "3.1",
+					Metadata: &Metadata{
+						Name: utils.StringPtr("project_test_name"),
+						Kind: utils.StringPtr("project"),
+						UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					},
+					Spec: &ProjectSpec{
+						Name:       "project_name",
+						Descripion: "description_test",
+						Resources: &ProjectResources{
+							ResourceDomain: &ResourceDomain{
+								Resources: []*Resources{
+									{
+										Limit:        utils.Int64Ptr(4),
+										ResourceType: "resource_type_test",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			&Project{
+				APIVersion: "3.1",
+				Metadata: &Metadata{
+					Kind: utils.StringPtr("project"),
+					UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+				},
+			},
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.CreateProject(tt.args.request)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.CreateProject() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.CreateProject() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOperations_GetProject(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/projects/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodGet)
+		fmt.Fprint(w, `{"metadata": {"kind":"host","uuid":"cfde831a-4e87-4a75-960f-89b0148aa2cc"}}`)
+	})
+
+	hostResponse := &Project{}
+	hostResponse.Metadata = &Metadata{
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("host"),
+	}
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		UUID string
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *Project
+		wantErr bool
+	}{
+		{
+			"Test GetProject OK",
+			fields{c},
+			args{"cfde831a-4e87-4a75-960f-89b0148aa2cc"},
+			hostResponse,
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.GetProject(tt.args.UUID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.GetProject() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.GetProject() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOperations_ListProject(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/projects/list", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodPost)
+		fmt.Fprint(w, `{"entities":[{"metadata": {"kind":"host","uuid":"cfde831a-4e87-4a75-960f-89b0148aa2cc"}}]}`)
+	})
+
+	hostList := &ProjectListResponse{}
+	hostList.Entities = make([]*Project, 1)
+	hostList.Entities[0] = &Project{}
+	hostList.Entities[0].Metadata = &Metadata{
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("host"),
+	}
+
+	input := &DSMetadata{
+		Length: utils.Int64Ptr(1.0),
+	}
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		getEntitiesRequest *DSMetadata
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *ProjectListResponse
+		wantErr bool
+	}{
+		{
+			"Test ListSubnet OK",
+			fields{c},
+			args{input},
+			hostList,
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.ListProject(tt.args.getEntitiesRequest)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.ListProject() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.ListProject() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOperations_UpdateProject(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/projects/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodPut)
+
+		expected := map[string]interface{}{
+			"metadata": map[string]interface{}{
+				"name": "project_test_name",
+				"kind": "project",
+				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc",
+			},
+			"spec": map[string]interface{}{
+				"resources": map[string]interface{}{
+					"resource_domain": map[string]interface{}{
+						"resources": []interface{}{
+							map[string]interface{}{
+								"limit":         float64(4),
+								"resource_type": "resource_type_test",
+							},
+						},
+					},
+				},
+				"name":        "project_name",
+				"description": "description_test",
+			},
+		}
+
+		var v map[string]interface{}
+		err := json.NewDecoder(r.Body).Decode(&v)
+		if err != nil {
+			t.Fatalf("decode json: %v", err)
+		}
+
+		if !reflect.DeepEqual(v, expected) {
+			t.Errorf("Request body\n got=%#v\nwant=%#v", v, expected)
+		}
+
+		fmt.Fprintf(w, `{
+			"api_version": "3.1",
+			"metadata": {
+				"kind": "project",
+				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
+			}
+		}`)
+	})
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		UUID string
+		body *Project
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *Project
+		wantErr bool
+	}{
+		{
+			"Test CreateProject",
+			fields{c},
+			args{
+				"cfde831a-4e87-4a75-960f-89b0148aa2cc",
+				&Project{
+					Metadata: &Metadata{
+						Name: utils.StringPtr("project_test_name"),
+						Kind: utils.StringPtr("project"),
+						UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					},
+					Spec: &ProjectSpec{
+						Name:       "project_name",
+						Descripion: "description_test",
+						Resources: &ProjectResources{
+							ResourceDomain: &ResourceDomain{
+								Resources: []*Resources{
+									{
+										Limit:        utils.Int64Ptr(4),
+										ResourceType: "resource_type_test",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			&Project{
+				APIVersion: "3.1",
+				Metadata: &Metadata{
+					Kind: utils.StringPtr("project"),
+					UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+				},
+			},
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.UpdateProject(tt.args.UUID, tt.args.body)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.UpdateProject() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.UpdateProject() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOperations_DeleteProject(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/projects/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodDelete)
+	})
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		UUID string
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			"Test DeleteProject OK",
+			fields{c},
+			args{"cfde831a-4e87-4a75-960f-89b0148aa2cc"},
+			false,
+		},
+
+		{
+			"Test DeleteProject Errored",
+			fields{c},
+			args{},
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			if err := op.DeleteProject(tt.args.UUID); (err != nil) != tt.wantErr {
+				t.Errorf("Operations.DeleteProject() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
