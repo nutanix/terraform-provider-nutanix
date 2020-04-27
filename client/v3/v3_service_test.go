@@ -2797,3 +2797,125 @@ func testHTTPMethod(t *testing.T, r *http.Request, expected string) {
 		t.Errorf("Request method = %v, expected %v", r.Method, expected)
 	}
 }
+
+func TestOperations_GetHost(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/hosts/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodGet)
+		fmt.Fprint(w, `{"metadata": {"kind":"host","uuid":"cfde831a-4e87-4a75-960f-89b0148aa2cc"}}`)
+	})
+
+	hostResponse := &HostResponse{}
+	hostResponse.Metadata = &Metadata{
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("host"),
+	}
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		UUID string
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *HostResponse
+		wantErr bool
+	}{
+		{
+			"Test GetHost OK",
+			fields{c},
+			args{"cfde831a-4e87-4a75-960f-89b0148aa2cc"},
+			hostResponse,
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.GetHost(tt.args.UUID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.GetHost() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.GetHost() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOperations_ListHost(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/hosts/list", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodPost)
+		fmt.Fprint(w, `{"entities":[{"metadata": {"kind":"host","uuid":"cfde831a-4e87-4a75-960f-89b0148aa2cc"}}]}`)
+	})
+
+	hostList := &HostListResponse{}
+	hostList.Entities = make([]*HostResponse, 1)
+	hostList.Entities[0] = &HostResponse{}
+	hostList.Entities[0].Metadata = &Metadata{
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("host"),
+	}
+
+	input := &DSMetadata{
+		Length: utils.Int64Ptr(1.0),
+	}
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		getEntitiesRequest *DSMetadata
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *HostListResponse
+		wantErr bool
+	}{
+		{
+			"Test ListSubnet OK",
+			fields{c},
+			args{input},
+			hostList,
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.ListHost(tt.args.getEntitiesRequest)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.ListHost() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.ListHost() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
