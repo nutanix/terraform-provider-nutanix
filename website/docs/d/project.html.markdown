@@ -88,7 +88,7 @@ The following attributes are exported:
 * `account_reference_list.#.uuid`
 * `account_reference_list.#.name`
 
-### Enviroment Reference List
+### Environment Reference List
 * `environment_reference_list`
 * `environment_reference_list.#.kind`
 * `environment_reference_list.#.uuid`
