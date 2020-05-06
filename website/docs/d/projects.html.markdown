@@ -1,75 +1,32 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_project"
-sidebar_current: "docs-nutanix-datasource-project"
+page_title: "NUTANIX: nutanix_projects"
+sidebar_current: "docs-nutanix-datasource-projects"
 description: |-
-  Describe a Nutanix Project and its values (if it has them).
+ Describes a Projects
 ---
 
-# nutanix_project
+# nutanix_projects
 
-Describe a Nutanix Project and its values (if it has them).
+Describes Projects
 
 ## Example Usage
 
 ```hcl
-resource "nutanix_subnet" "subnet" {
-  cluster_uuid       = "<YOUR_CLUSTER_ID>"
-  name               = "sunet_test_name"
-  description        = "Description of my unit test VLAN"
-  vlan_id            = 31
-  subnet_type        = "VLAN"
-  subnet_ip          = "10.250.140.0"
-  default_gateway_ip = "10.250.140.1"
-  prefix_length      = 24
-
-  dhcp_options = {
-    boot_file_name   = "bootfile"
-    domain_name      = "nutanix"
-    tftp_server_name = "10.250.140.200"
-  }
-
-  dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
-  dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
-}
-
-resource "nutanix_project" "project_test" {
-  name        = "my-project"
-  description = "This is my project"
-
-  categories {
-    name  = "Environment"
-    value = "Staging"
-  }
-
-  resource_domain {
-    resources {
-      limit         = 4
-      resource_type = "STORAGE"
-    }
-  }
-
-  default_subnet_reference {
-    uuid = nutanix_subnet.subnet.metadata.uuid
-  }
-
-  api_version = "3.1"
-}
-
-data "nutanix_project" "test" {
-    project_id = nutanix_project.project_test.id
-}
+data "nutanix_projects" "projects" {}
 ```
 
-## Argument Reference
 
-The following arguments are supported:
-
-* `project_id`: - (Required) The `id` of the project.
-
-## Attributes Reference
+## Attribute Reference
 
 The following attributes are exported:
+
+* `api_version`: version of the API
+* `entities`: List of Projects
+
+# Entities
+
+The entities attribute element contains the followings attributes:
 
 * `name` The name for the project.
 * `description` A description for project.
@@ -150,4 +107,5 @@ The `project_reference`, `owner_reference` attributes supports the following:
 * `name` - (Optional) the name.
 * `uuid` - (Required) the UUID.
 
-See detailed information in [Nutanix Project](https://www.nutanix.dev/reference/prism_central/v3/api/projects/getprojectsuuid/).
+
+See detailed information in [Nutanix Projects](https://www.nutanix.dev/reference/prism_central/v3/api/projects/postprojectslist).

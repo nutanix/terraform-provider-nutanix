@@ -76,9 +76,9 @@ The following arguments are supported:
 * `account_reference_list.#.uuid` - (Required)
 * `account_reference_list.#.name` - (Optional/Computed)
 
-### Enviroment Reference List
+### Environment Reference List
 * `environment_reference_list` - (Optional/Computed)
-* `environment_reference_list.#.kind` - (Optional) The efault value is `enviroment`
+* `environment_reference_list.#.kind` - (Optional) The efault value is `environment`
 * `environment_reference_list.#.uuid` - (Required)
 * `environment_reference_list.#.name` - (Optional/Computed)
 
