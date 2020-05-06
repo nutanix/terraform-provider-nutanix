@@ -48,6 +48,7 @@ linters:
     - wsl
     - nestif
     - godot
+    - goconst
 
 issues:
   exclude:
