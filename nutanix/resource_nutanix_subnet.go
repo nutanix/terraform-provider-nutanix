@@ -523,7 +523,6 @@ func resourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
-
 	request := &v3.SubnetIntentInput{}
 	metadata := &v3.Metadata{}
 	res := &v3.SubnetResources{}
@@ -550,7 +549,10 @@ func resourceNutanixSubnetUpdate(d *schema.ResourceData, meta interface{}) error
 
 		if response.Spec.Resources != nil {
 			res = response.Spec.Resources
-			ipcfg = res.IPConfig
+
+			if res.IPConfig != nil {
+				ipcfg = res.IPConfig
+			}
 			if ipcfg != nil {
 				dhcpO = ipcfg.DHCPOptions
 			}
