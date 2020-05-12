@@ -49,6 +49,7 @@ linters:
     - nestif
     - godot
     - goconst
+    - goerr113
 
 issues:
   exclude:

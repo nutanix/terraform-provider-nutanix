@@ -54,7 +54,7 @@ func NewGomodguard() *goanalysis.Linter {
 			}
 
 			for _, file := range pass.Files {
-				files = append(files, pass.Fset.Position(file.Pos()).Filename)
+				files = append(files, pass.Fset.PositionFor(file.Pos(), false).Filename)
 			}
 
 			processor, err := gomodguard.NewProcessor(processorCfg, log.New(os.Stderr, "", 0))
@@ -73,7 +73,7 @@ func NewGomodguard() *goanalysis.Linter {
 			defer mu.Unlock()
 
 			for _, err := range gomodguardErrors {
-				issues = append(issues, goanalysis.NewIssue(&result.Issue{ //nolint:scopelint
+				issues = append(issues, goanalysis.NewIssue(&result.Issue{
 					FromLinter: gomodguardName,
 					Pos:        err.Position,
 					Text:       err.Reason,

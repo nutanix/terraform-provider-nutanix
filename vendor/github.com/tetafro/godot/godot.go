@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+const noPeriodMessage = "Top level comment should end in a period"
+
 // Message contains a message of linting error.
 type Message struct {
 	Pos     token.Position
@@ -27,6 +29,9 @@ var (
 
 	// Special tags in comments like "nolint" or "build".
 	tags = regexp.MustCompile("^[a-z]+:")
+
+	// Special hashtags in comments like "#nosec".
+	hashtags = regexp.MustCompile("^#[a-z]+ ")
 
 	// URL at the end of the line.
 	endURL = regexp.MustCompile(`[a-z]+://[^\s]+$`)
@@ -50,6 +55,9 @@ func Run(file *ast.File, fset *token.FileSet, settings Settings) []Message {
 	for _, decl := range file.Decls {
 		switch d := decl.(type) {
 		case *ast.GenDecl:
+			if ok, msg := check(fset, d.Doc); !ok {
+				msgs = append(msgs, msg)
+			}
 		case *ast.FuncDecl:
 			if ok, msg := check(fset, d.Doc); !ok {
 				msgs = append(msgs, msg)
@@ -82,7 +90,7 @@ func check(fset *token.FileSet, group *ast.CommentGroup) (ok bool, msg Message) 
 	pos.Line += line
 	return false, Message{
 		Pos:     pos,
-		Message: "Top level comment should end in a period",
+		Message: noPeriodMessage,
 	}
 }
 
@@ -93,7 +101,13 @@ func checkComment(comment string) (line int, ok bool) {
 		return 0, checkLastChar(comment)
 	}
 
-	// Check multiline "/*"-comment block
+	// Skip cgo code blocks
+	// TODO: Find a better way to detect cgo code.
+	if strings.Contains(comment, "#include") || strings.Contains(comment, "#define") {
+		return 0, true
+	}
+
+	// Check last non-empty line in multiline "/*"-comment block
 	lines := strings.Split(comment, "\n")
 	var i int
 	for i = len(lines) - 1; i >= 0; i-- {
@@ -110,11 +124,18 @@ func checkComment(comment string) (line int, ok bool) {
 func checkLastChar(s string) bool {
 	// Don't check comments starting with space indentation - they may
 	// contain code examples, which shouldn't end with period
-	if strings.HasPrefix(s, "  ") || strings.HasPrefix(s, "\t") {
+	if strings.HasPrefix(s, "  ") || strings.HasPrefix(s, " \t") || strings.HasPrefix(s, "\t") {
+		return true
+	}
+	// Skip cgo export tags: https://golang.org/cmd/cgo/#hdr-C_references_to_Go
+	if strings.HasPrefix(s, "export") {
 		return true
 	}
 	s = strings.TrimSpace(s)
-	if tags.MatchString(s) || endURL.MatchString(s) || strings.HasPrefix(s, "+build") {
+	if tags.MatchString(s) ||
+		hashtags.MatchString(s) ||
+		endURL.MatchString(s) ||
+		strings.HasPrefix(s, "+build") {
 		return true
 	}
 	// Don't check empty lines
