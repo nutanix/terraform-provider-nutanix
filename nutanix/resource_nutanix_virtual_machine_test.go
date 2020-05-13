@@ -257,7 +257,7 @@ func TestAccNutanixVirtualMachine_PowerStateMechanism(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"disk_list"},
+				ImportStateVerifyIgnore: []string{"power_state_mechanism_config", "power_state_mechanism"},
 			},
 		},
 	})
@@ -342,6 +342,7 @@ func TestAccNutanixVirtualMachine_DeviceProperties(t *testing.T) {
 
 func TestAccNutanixVirtualMachine_cloningVM(t *testing.T) {
 	r := acctest.RandInt()
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -357,6 +358,69 @@ func TestAccNutanixVirtualMachine_cloningVM(t *testing.T) {
 					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm2", "num_sockets", "1"),
 					resource.TestCheckResourceAttr("nutanix_virtual_machine.vm2", "num_vcpus_per_socket", "1"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccNutanixVirtualMachine_withPowerMechanism(t *testing.T) {
+	resourceName := "nutanix_virtual_machine.myvm"
+
+	vmName := acctest.RandomWithPrefix("vm_name_dou_")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixVMConfigWithPowerMechanism(vmName, "true", "", "GUEST"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+				),
+			},
+			{
+				Config: testAccNutanixVMConfigWithPowerMechanism(vmName, "", "false", "ACPI"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+				),
+			},
+			{
+				Config: testAccNutanixVMConfigWithPowerMechanism(vmName, "false", "", ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+				),
+			},
+			{
+				Config: testAccNutanixVMConfigWithPowerMechanism(vmName, "true", "true", "HARD"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -408,19 +472,23 @@ func testAccNutanixVMConfig(r int) string {
 		}
 
 		resource "nutanix_virtual_machine" "vm1" {
-			name         = "test-dou-%d"
+			name = "test-dou-%d"
 			cluster_uuid = "${local.cluster1}"
 
 			num_vcpus_per_socket = 1
 			num_sockets          = 1
 			memory_size_mib      = 186
 
+					num_vcpus_per_socket = 1
+					num_sockets          = 1
+					memory_size_mib      = 186
 
-			categories {
-				name  = "Environment"
-				value = "Staging"
-			}
-		}
+
+					categories {
+						name  = "Environment"
+						value = "Staging"
+					}
+				}
 	`, r)
 }
 
@@ -689,8 +757,17 @@ func testAccNutanixVMConfigWithSerialPortList(r int) string {
 		}
 
 		resource "nutanix_virtual_machine" "vm5" {
-			name         = "test-dou-%d"
+			name = "test-dou-%d"
 			cluster_uuid = "${local.cluster1}"
+
+			num_vcpus_per_socket = 1
+			num_sockets          = 1
+			memory_size_mib      = 186
+
+			serial_port_list {
+				index = 1
+				is_connected = true
+			}
 
 			num_vcpus_per_socket = 1
 			num_sockets          = 1
@@ -761,7 +838,7 @@ func testAccNutanixVMConfigCloudInitCustomKeyValues(r int) string {
 		}
 
 		resource "nutanix_virtual_machine" "vm8" {
-			name         = "test-dou-%d"
+			name = "test-dou-%d"
 			cluster_uuid = "${local.cluster1}"
 
 			num_vcpus_per_socket = 1
@@ -926,4 +1003,50 @@ func testAccNutanixVMConfigHotAdd(vmName string, cpus, sockets, memory int, hotA
 			}
 		}
 	`, vmName, cpus, sockets, memory, hotAdd, imageName)
+}
+
+func testAccNutanixVMConfigWithPowerMechanism(vmName, scriptFail, scriptExec, mechanism string) string {
+	var comFail, comExec, comMec, transitionConfig string
+	if scriptFail != "" {
+		comFail = fmt.Sprintf("should_fail_on_script_failure = %s", scriptFail)
+	}
+	if scriptExec != "" {
+		comExec = fmt.Sprintf("enable_script_exec            = %s", scriptExec)
+	}
+	if scriptFail != "" || scriptExec != "" {
+		transitionConfig = fmt.Sprintf(`
+		guest_transition_config {
+			%s
+			%s
+		}
+			`, comFail, comExec)
+	}
+	if mechanism != "" {
+		comMec = fmt.Sprintf(`mechanism = "%s"`, mechanism)
+	}
+
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+				cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+				? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+		}
+
+		resource "nutanix_virtual_machine" "myvm" {
+			name         = "%[1]s"
+			cluster_uuid = "${local.cluster1}"
+
+			num_vcpus_per_socket = 1
+			num_sockets          = 1
+			memory_size_mib      = 186
+
+			power_state_mechanism_config {
+				%s
+
+				%s
+			}
+
+		}
+	`, vmName, transitionConfig, comMec)
 }
