@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/cast"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
@@ -623,19 +624,25 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 				ForceNew: true,
 			},
 			"should_fail_on_script_failure": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"power_state_mechanism_config"},
+				Deprecated:    "use power_state_mechanism_config instead",
 			},
 			"enable_script_exec": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"power_state_mechanism_config"},
+				Deprecated:    "use power_state_mechanism_config instead",
 			},
 			"power_state_mechanism": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"power_state_mechanism_config"},
+				Deprecated:    "use power_state_mechanism_config instead",
 			},
 			"vga_console_enabled": {
 				Type:     schema.TypeBool,
@@ -762,6 +769,41 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 					},
 				},
 			},
+			"power_state_mechanism_config": {
+				Type:          schema.TypeList,
+				MaxItems:      1,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"should_fail_on_script_failure", "enable_script_exec", "power_state_mechanism"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"mechanism": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"guest_transition_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"should_fail_on_script_failure": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+									"enable_script_exec": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -858,6 +900,31 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	// Set terraform state id
 	d.SetId(uuid)
 	return resourceNutanixVirtualMachineRead(d, meta)
+}
+
+func expandPowerStateMechanism(powerState interface{}) *v3.VMPowerStateMechanism {
+	powerStateMechanism := &v3.VMPowerStateMechanism{}
+
+	p := powerState.([]interface{})[0].(map[string]interface{})
+
+	if guest, ok := p["guest_transition_config"]; ok {
+		g := guest.([]interface{})[0].(map[string]interface{})
+
+		powerStateMechanism.GuestTransitionConfig = &v3.VMGuestPowerStateTransitionConfig{}
+
+		if shouldFailOnScriptFailure, ok := g["should_fail_on_script_failure"]; ok {
+			powerStateMechanism.GuestTransitionConfig.ShouldFailOnScriptFailure = utils.BoolPtr(cast.ToBool(shouldFailOnScriptFailure))
+		}
+		if enabledScriptExec, ok := g["enable_script_exec"]; ok {
+			powerStateMechanism.GuestTransitionConfig.EnableScriptExec = utils.BoolPtr(cast.ToBool(enabledScriptExec))
+		}
+	}
+
+	if mechanism, ok := p["mechanism"]; ok && mechanism.(string) != "" {
+		powerStateMechanism.Mechanism = utils.StringPtr(mechanism.(string))
+	}
+
+	return powerStateMechanism
 }
 
 func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{}) error {
@@ -1001,11 +1068,28 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	d.Set("num_sockets", utils.Int64Value(resp.Status.Resources.NumSockets))
 	d.Set("memory_size_mib", utils.Int64Value(resp.Status.Resources.MemorySizeMib))
 	d.Set("guest_customization_is_overridable", isOv)
-	d.Set("should_fail_on_script_failure", utils.BoolValue(
-		resp.Status.Resources.PowerStateMechanism.GuestTransitionConfig.ShouldFailOnScriptFailure))
-	d.Set("enable_script_exec", utils.BoolValue(resp.Status.Resources.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec))
-	d.Set("power_state_mechanism", utils.StringValue(resp.Status.Resources.PowerStateMechanism.Mechanism))
 	d.Set("vga_console_enabled", utils.BoolValue(resp.Status.Resources.VgaConsoleEnabled))
+
+	_, powerStateOk := d.GetOkExists("power_state_mechanism")
+	_, scriptFailOk := d.GetOk("should_fail_on_script_failure")
+	_, scriptExecOk := d.GetOk("enable_script_exec")
+	if powerStateOk {
+		d.Set("power_state_mechanism", utils.StringValue(resp.Status.Resources.PowerStateMechanism.Mechanism))
+	}
+	if scriptFailOk {
+		d.Set("should_fail_on_script_failure", utils.BoolValue(
+			resp.Status.Resources.PowerStateMechanism.GuestTransitionConfig.ShouldFailOnScriptFailure))
+	}
+	if scriptExecOk {
+		d.Set("enable_script_exec", utils.BoolValue(resp.Status.Resources.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec))
+	}
+
+	if !powerStateOk && !scriptFailOk && !scriptExecOk {
+		if err := d.Set("power_state_mechanism_config", flattenPowerStateMechanism(resp.Status.Resources.PowerStateMechanism)); err != nil {
+			return fmt.Errorf("error setting power_state_mechanism_config for Virtual Machine %s: %s", d.Id(), err)
+		}
+	}
+
 	d.SetId(*resp.Metadata.UUID)
 	return nil
 }
@@ -1138,25 +1222,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		guest.IsOverridable = utils.BoolPtr(n.(bool))
 		hotPlugChange = false
 	}
-	if d.HasChange("power_state_mechanism") {
-		_, n := d.GetChange("power_state_mechanism")
-		pw.Mechanism = utils.StringPtr(n.(string))
-		hotPlugChange = false
-	}
-	if d.HasChange("power_state_guest_transition_config") {
-		_, n := d.GetChange("power_state_guest_transition_config")
-		val := n.(map[string]interface{})
-
-		p := &v3.VMGuestPowerStateTransitionConfig{}
-		if v, ok := val["enable_script_exec"]; ok {
-			p.EnableScriptExec = utils.BoolPtr(v.(bool))
-		}
-		if v, ok := val["should_fail_on_script_failure"]; ok {
-			p.ShouldFailOnScriptFailure = utils.BoolPtr(v.(bool))
-		}
-		pw.GuestTransitionConfig = p
-		hotPlugChange = false
-	}
 
 	cloudInit := guest.CloudInit
 
@@ -1266,7 +1331,30 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		boot = nil
 	}
 
-	res.PowerStateMechanism = pw
+	powerState, powerStateOk := d.GetOk("power_state_mechanism")
+	scriptFail, scriptFailOk := d.GetOk("should_fail_on_script_failure")
+	scriptExec, scriptExecOk := d.GetOk("enable_script_exec")
+	if powerStateOk {
+		pw.Mechanism = utils.StringPtr(powerState.(string))
+		hotPlugChange = false
+	}
+
+	p := &v3.VMGuestPowerStateTransitionConfig{}
+	if scriptFailOk {
+		p.ShouldFailOnScriptFailure = utils.BoolPtr(scriptFail.(bool))
+	}
+	if scriptExecOk {
+		p.EnableScriptExec = utils.BoolPtr(scriptExec.(bool))
+	}
+
+	if !powerStateOk && !scriptFailOk && !scriptExecOk {
+		if v, ok := d.GetOk("power_state_mechanism_config"); ok {
+			res.PowerStateMechanism = expandPowerStateMechanism(v)
+		}
+	} else {
+		res.PowerStateMechanism = pw
+	}
+
 	res.BootConfig = boot
 
 	if !reflect.DeepEqual(*guestTool, (v3.GuestToolsSpec{})) {
@@ -1578,19 +1666,32 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	if v, ok := d.GetOk("vga_console_enabled"); ok {
 		vm.VgaConsoleEnabled = utils.BoolPtr(v.(bool))
 	}
-	if v, ok := d.GetOk("power_state_mechanism"); ok {
+
+	powerState, powerStateOk := d.GetOk("power_state_mechanism")
+	scriptFail, scriptFailOk := d.GetOk("should_fail_on_script_failure")
+	scriptExec, scriptExecOk := d.GetOk("enable_script_exec")
+	if powerStateOk {
 		if vm.PowerStateMechanism == nil {
 			log.Printf("m.PowerStateMechanism was nil, setting correct value!")
 			vm.PowerStateMechanism = &v3.VMPowerStateMechanism{}
 		}
-		vm.PowerStateMechanism.Mechanism = utils.StringPtr(v.(string))
+		vm.PowerStateMechanism.Mechanism = utils.StringPtr(powerState.(string))
 	}
-	if v, ok := d.GetOk("should_fail_on_script_failure"); ok {
-		vm.PowerStateMechanism.GuestTransitionConfig.ShouldFailOnScriptFailure = utils.BoolPtr(v.(bool))
+	if scriptFailOk {
+		vm.PowerStateMechanism.GuestTransitionConfig.ShouldFailOnScriptFailure = utils.BoolPtr(scriptFail.(bool))
 	}
-	if v, ok := d.GetOk("enable_script_exec"); ok {
-		vm.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec = utils.BoolPtr(v.(bool))
+	if scriptExecOk {
+		vm.PowerStateMechanism.GuestTransitionConfig.EnableScriptExec = utils.BoolPtr(scriptExec.(bool))
 	}
+
+	if !powerStateOk && !scriptFailOk && !scriptExecOk {
+		if v, ok := d.GetOk("power_state_mechanism_config"); ok {
+			if vm.PowerStateMechanism == nil {
+				vm.PowerStateMechanism = expandPowerStateMechanism(v)
+			}
+		}
+	}
+
 	vm.SerialPortList = expandSerialPortList(d)
 
 	vmDiskList, err := expandDiskList(d, true)
@@ -1979,6 +2080,23 @@ func CountDiskListCdrom(dl []*v3.VMDisk) (int, error) {
 		}
 	}
 	return counter, nil
+}
+
+func flattenPowerStateMechanism(p *v3.VMPowerStateMechanism) []interface{} {
+	if p != nil {
+		return []interface{}{
+			map[string]interface{}{
+				"mechanism": p.Mechanism,
+				"guest_transition_config": []interface{}{
+					map[string]interface{}{
+						"should_fail_on_script_failure": p.GuestTransitionConfig.ShouldFailOnScriptFailure,
+						"enable_script_exec":            p.GuestTransitionConfig.EnableScriptExec,
+					},
+				},
+			},
+		}
+	}
+	return []interface{}{}
 }
 
 func resourceVirtualMachineInstanceStateUpgradeV0(is map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
@@ -2575,19 +2693,25 @@ func resourceNutanixVirtualMachineInstanceResourceV0() *schema.Resource {
 				ForceNew: true,
 			},
 			"should_fail_on_script_failure": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"power_state_mechanism_config"},
+				Deprecated:    "use power_state_mechanism_config instead",
 			},
 			"enable_script_exec": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"power_state_mechanism_config"},
+				Deprecated:    "use power_state_mechanism_config instead",
 			},
 			"power_state_mechanism": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"power_state_mechanism_config"},
+				Deprecated:    "use power_state_mechanism_config instead",
 			},
 			"vga_console_enabled": {
 				Type:     schema.TypeBool,
