@@ -74,9 +74,11 @@ func TestOperations_CreateVM(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		createRequest *VMIntentInput
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -114,10 +116,10 @@ func TestOperations_CreateVM(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -161,9 +163,11 @@ func TestOperations_DeleteVM(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		UUID string
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -184,10 +188,10 @@ func TestOperations_DeleteVM(t *testing.T) {
 			true,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -216,9 +220,11 @@ func TestOperations_GetVM(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		UUID string
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -234,10 +240,10 @@ func TestOperations_GetVM(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -277,9 +283,11 @@ func TestOperations_ListVM(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		getEntitiesRequest *DSMetadata
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -295,6 +303,7 @@ func TestOperations_ListVM(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
@@ -351,16 +360,17 @@ func TestOperations_UpdateVM(t *testing.T) {
 				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
 			}
 		}`)
-
 	})
 
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		UUID string
 		body *VMIntentInput
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -399,6 +409,7 @@ func TestOperations_UpdateVM(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
@@ -461,9 +472,11 @@ func TestOperations_CreateSubnet(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		createRequest *SubnetIntentInput
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -501,6 +514,7 @@ func TestOperations_CreateSubnet(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
@@ -548,9 +562,11 @@ func TestOperations_DeleteSubnet(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		UUID string
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -571,6 +587,7 @@ func TestOperations_DeleteSubnet(t *testing.T) {
 			true,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
@@ -603,9 +620,11 @@ func TestOperations_GetSubnet(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		UUID string
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -621,6 +640,7 @@ func TestOperations_GetSubnet(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
@@ -660,12 +680,15 @@ func TestOperations_ListSubnet(t *testing.T) {
 	input := &DSMetadata{
 		Length: utils.Int64Ptr(1.0),
 	}
+
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		getEntitiesRequest *DSMetadata
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -681,6 +704,7 @@ func TestOperations_ListSubnet(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
@@ -738,16 +762,17 @@ func TestOperations_UpdateSubnet(t *testing.T) {
 				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
 			}
 		}`)
-
 	})
 
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		UUID string
 		body *SubnetIntentInput
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -786,10 +811,11 @@ func TestOperations_UpdateSubnet(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
 
+		t.Run(tt.name, func(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -848,9 +874,11 @@ func TestOperations_CreateImage(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		body *ImageIntentInput
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -887,10 +915,11 @@ func TestOperations_CreateImage(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
 
+		t.Run(tt.name, func(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -914,10 +943,12 @@ func TestOperations_UploadImageError(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		UUID     string
 		filepath string
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -931,10 +962,11 @@ func TestOperations_UploadImageError(t *testing.T) {
 			true,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
 
+		t.Run(tt.name, func(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -959,16 +991,17 @@ func TestOperations_UploadImage(t *testing.T) {
 		if reflect.DeepEqual(bodyBytes, file) {
 			t.Errorf("Operations.UploadImage() error: different uploaded files")
 		}
-
 	})
 
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		UUID     string
 		filepath string
 	}
+
 	tests := []struct {
 		name   string
 		fields fields
@@ -980,10 +1013,10 @@ func TestOperations_UploadImage(t *testing.T) {
 			args{"cfde831a-4e87-4a75-960f-89b0148aa2cc", "./v3.go"},
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -992,7 +1025,6 @@ func TestOperations_UploadImage(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestOperations_DeleteImage(t *testing.T) {
@@ -1024,9 +1056,11 @@ func TestOperations_DeleteImage(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		UUID string
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -1047,10 +1081,10 @@ func TestOperations_DeleteImage(t *testing.T) {
 			true,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1080,9 +1114,11 @@ func TestOperations_GetImage(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		UUID string
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -1098,10 +1134,10 @@ func TestOperations_GetImage(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1142,9 +1178,11 @@ func TestOperations_ListImage(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		getEntitiesRequest *DSMetadata
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -1160,10 +1198,10 @@ func TestOperations_ListImage(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1217,16 +1255,17 @@ func TestOperations_UpdateImage(t *testing.T) {
 				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
 			}
 		}`)
-
 	})
 
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		UUID string
 		body *ImageIntentInput
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -1264,10 +1303,10 @@ func TestOperations_UpdateImage(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1302,9 +1341,11 @@ func TestOperations_GetCluster(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		UUID string
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -1320,10 +1361,10 @@ func TestOperations_GetCluster(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1364,9 +1405,11 @@ func TestOperations_ListCluster(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		getEntitiesRequest *DSMetadata
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -1382,10 +1425,10 @@ func TestOperations_ListCluster(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1434,9 +1477,11 @@ func TestOperations_CreateOrUpdateCategoryKey(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		body *CategoryKey
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -1457,10 +1502,10 @@ func TestOperations_CreateOrUpdateCategoryKey(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1500,9 +1545,11 @@ func TestOperations_ListCategories(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		getEntitiesRequest *CategoryListMetadata
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -1518,10 +1565,10 @@ func TestOperations_ListCategories(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1549,9 +1596,11 @@ func TestOperations_DeleteCategoryKey(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		name string
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -1572,10 +1621,10 @@ func TestOperations_DeleteCategoryKey(t *testing.T) {
 			true,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1609,9 +1658,11 @@ func TestOperations_GetCategoryKey(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		name string
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -1627,10 +1678,10 @@ func TestOperations_GetCategoryKey(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1670,10 +1721,12 @@ func TestOperations_ListCategoryValues(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		name               string
 		getEntitiesRequest *CategoryListMetadata
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -1689,10 +1742,10 @@ func TestOperations_ListCategoryValues(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1742,10 +1795,12 @@ func TestOperations_CreateOrUpdateCategoryValue(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		name string
 		body *CategoryValue
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -1767,10 +1822,10 @@ func TestOperations_CreateOrUpdateCategoryValue(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1811,10 +1866,12 @@ func TestOperations_GetCategoryValue(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		name  string
 		value string
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -1830,10 +1887,10 @@ func TestOperations_GetCategoryValue(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1861,10 +1918,12 @@ func TestOperations_DeleteCategoryValue(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		name  string
 		value string
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -1885,10 +1944,10 @@ func TestOperations_DeleteCategoryValue(t *testing.T) {
 			true,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -1922,9 +1981,11 @@ func TestOperations_GetCategoryQuery(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		query *CategoryQueryInput
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -1940,10 +2001,10 @@ func TestOperations_GetCategoryQuery(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -2000,9 +2061,11 @@ func TestOperations_CreateNetworkSecurityRule(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		request *NetworkSecurityRuleIntentInput
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -2038,10 +2101,10 @@ func TestOperations_CreateNetworkSecurityRule(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -2087,9 +2150,11 @@ func TestOperations_DeleteNetworkSecurityRule(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		UUID string
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -2110,10 +2175,10 @@ func TestOperations_DeleteNetworkSecurityRule(t *testing.T) {
 			true,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -2144,9 +2209,11 @@ func TestOperations_GetNetworkSecurityRule(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		UUID string
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -2162,10 +2229,10 @@ func TestOperations_GetNetworkSecurityRule(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -2206,9 +2273,11 @@ func TestOperations_ListNetworkSecurityRule(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		getEntitiesRequest *DSMetadata
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -2224,10 +2293,10 @@ func TestOperations_ListNetworkSecurityRule(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -2280,16 +2349,17 @@ func TestOperations_UpdateNetworkSecurityRule(t *testing.T) {
 				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
 			}
 		}`)
-
 		})
 
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		UUID string
 		body *NetworkSecurityRuleIntentInput
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -2326,10 +2396,10 @@ func TestOperations_UpdateNetworkSecurityRule(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -2388,9 +2458,11 @@ func TestOperations_CreateVolumeGroup(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		request *VolumeGroupInput
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -2425,10 +2497,10 @@ func TestOperations_CreateVolumeGroup(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -2456,9 +2528,11 @@ func TestOperations_DeleteVolumeGroup(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		UUID string
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -2479,10 +2553,10 @@ func TestOperations_DeleteVolumeGroup(t *testing.T) {
 			true,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -2512,9 +2586,11 @@ func TestOperations_GetVolumeGroup(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		UUID string
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -2530,10 +2606,10 @@ func TestOperations_GetVolumeGroup(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -2574,9 +2650,11 @@ func TestOperations_ListVolumeGroup(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		getEntitiesRequest *DSMetadata
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -2592,10 +2670,10 @@ func TestOperations_ListVolumeGroup(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -2654,10 +2732,12 @@ func TestOperations_UpdateVolumeGroup(t *testing.T) {
 	type fields struct {
 		client *client.Client
 	}
+
 	type args struct {
 		UUID string
 		body *VolumeGroupInput
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -2693,10 +2773,10 @@ func TestOperations_UpdateVolumeGroup(t *testing.T) {
 			false,
 		},
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
 			op := Operations{
 				client: tt.fields.client,
 			}
@@ -2715,5 +2795,127 @@ func TestOperations_UpdateVolumeGroup(t *testing.T) {
 func testHTTPMethod(t *testing.T, r *http.Request, expected string) {
 	if expected != r.Method {
 		t.Errorf("Request method = %v, expected %v", r.Method, expected)
+	}
+}
+
+func TestOperations_GetHost(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/hosts/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodGet)
+		fmt.Fprint(w, `{"metadata": {"kind":"host","uuid":"cfde831a-4e87-4a75-960f-89b0148aa2cc"}}`)
+	})
+
+	hostResponse := &HostResponse{}
+	hostResponse.Metadata = &Metadata{
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("host"),
+	}
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		UUID string
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *HostResponse
+		wantErr bool
+	}{
+		{
+			"Test GetHost OK",
+			fields{c},
+			args{"cfde831a-4e87-4a75-960f-89b0148aa2cc"},
+			hostResponse,
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.GetHost(tt.args.UUID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.GetHost() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.GetHost() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOperations_ListHost(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/hosts/list", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodPost)
+		fmt.Fprint(w, `{"entities":[{"metadata": {"kind":"host","uuid":"cfde831a-4e87-4a75-960f-89b0148aa2cc"}}]}`)
+	})
+
+	hostList := &HostListResponse{}
+	hostList.Entities = make([]*HostResponse, 1)
+	hostList.Entities[0] = &HostResponse{}
+	hostList.Entities[0].Metadata = &Metadata{
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("host"),
+	}
+
+	input := &DSMetadata{
+		Length: utils.Int64Ptr(1.0),
+	}
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		getEntitiesRequest *DSMetadata
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *HostListResponse
+		wantErr bool
+	}{
+		{
+			"Test ListSubnet OK",
+			fields{c},
+			args{input},
+			hostList,
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.ListHost(tt.args.getEntitiesRequest)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.ListHost() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.ListHost() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

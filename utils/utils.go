@@ -21,6 +21,7 @@ func DebugRequest(req *http.Request) {
 	if err != nil {
 		log.Printf("[WARN] Error getting request's dump: %s\n", err)
 	}
+
 	log.Printf("[DEBUG] %s\n", string(requestDump))
 }
 
@@ -30,5 +31,14 @@ func DebugResponse(res *http.Response) {
 	if err != nil {
 		log.Printf("[WARN] Error getting response's dump: %s\n", err)
 	}
+
 	log.Printf("[DEBUG] %s\n", string(requestDump))
+}
+
+func ConvertMapString(o map[string]interface{}) map[string]string {
+	converted := make(map[string]string)
+	for k, v := range o {
+		converted[k] = fmt.Sprintf(v.(string))
+	}
+	return converted
 }
