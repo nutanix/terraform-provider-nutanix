@@ -16,14 +16,14 @@ func setup() (*http.ServeMux, *Client, *httptest.Server) {
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
 
-	client, _ := NewClient(&Credentials{"", "username", "password", "", "", true, ""})
+	client, _ := NewClient(&Credentials{"", "username", "password", "", "", true, false, ""})
 	client.BaseURL, _ = url.Parse(server.URL)
 
 	return mux, client, server
 }
 
 func TestNewClient(t *testing.T) {
-	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, ""})
+	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, ""})
 
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
@@ -41,7 +41,7 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestNewRequest(t *testing.T) {
-	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, ""})
+	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, ""})
 
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
@@ -118,6 +118,7 @@ func TestCheckResponse(t *testing.T) {
 func TestDo(t *testing.T) {
 	ctx := context.TODO()
 	mux, client, server := setup()
+
 	defer server.Close()
 
 	type foo struct {
@@ -150,6 +151,7 @@ func TestDo(t *testing.T) {
 func TestDo_httpError(t *testing.T) {
 	ctx := context.TODO()
 	mux, client, server := setup()
+
 	defer server.Close()
 
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -247,6 +249,7 @@ func TestClient_NewRequest(t *testing.T) {
 		urlStr string
 		body   interface{}
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -256,6 +259,7 @@ func TestClient_NewRequest(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
@@ -292,6 +296,7 @@ func TestClient_NewUploadRequest(t *testing.T) {
 		urlStr string
 		body   []byte
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -301,6 +306,7 @@ func TestClient_NewUploadRequest(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
@@ -341,6 +347,7 @@ func TestClient_OnRequestCompleted(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
@@ -369,6 +376,7 @@ func TestClient_Do(t *testing.T) {
 		req *http.Request
 		v   interface{}
 	}
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -377,6 +385,7 @@ func TestClient_Do(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
@@ -399,6 +408,7 @@ func Test_fillStruct(t *testing.T) {
 		data   map[string]interface{}
 		result interface{}
 	}
+
 	tests := []struct {
 		name    string
 		args    args
@@ -406,6 +416,7 @@ func Test_fillStruct(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 	}
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {

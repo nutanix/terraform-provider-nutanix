@@ -62,6 +62,9 @@ type Service interface {
 	ListAllImage() (*ImageListIntentResponse, error)
 	ListAllCluster() (*ClusterListIntentResponse, error)
 	GetTask(taskUUID string) (*TasksResponse, error)
+	GetHost(taskUUID string) (*HostResponse, error)
+	ListHost(getEntitiesRequest *DSMetadata) (*HostListResponse, error)
+	ListAllHost() (*HostListResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -96,6 +99,7 @@ func (op Operations) DeleteVM(uuid string) (*DeleteResponse, error) {
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	deleteResponse := new(DeleteResponse)
+
 	if err != nil {
 		return nil, err
 	}
@@ -196,6 +200,7 @@ func (op Operations) DeleteSubnet(uuid string) (*DeleteResponse, error) {
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	deleteResponse := new(DeleteResponse)
+
 	if err != nil {
 		return nil, err
 	}
@@ -312,13 +317,14 @@ func (op Operations) UploadImage(uuid, filepath string) error {
 	}
 
 	req, err := op.client.NewUploadRequest(ctx, http.MethodPut, path, fileContents)
+
 	if err != nil {
 		return fmt.Errorf("error: Creating request %s", err)
 	}
+
 	err = op.client.Do(ctx, req, nil)
 
 	return err
-
 }
 
 /*DeleteImage deletes a IMAGE
@@ -334,6 +340,7 @@ func (op Operations) DeleteImage(uuid string) (*DeleteResponse, error) {
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	deleteResponse := new(DeleteResponse)
+
 	if err != nil {
 		return nil, err
 	}
@@ -358,6 +365,7 @@ func (op Operations) GetImage(uuid string) (*ImageIntentResponse, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return imageIntentResponse, op.client.Do(ctx, req, imageIntentResponse)
 }
 
@@ -669,6 +677,7 @@ func (op Operations) DeleteNetworkSecurityRule(uuid string) (*DeleteResponse, er
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	deleteResponse := new(DeleteResponse)
+
 	if err != nil {
 		return nil, err
 	}
@@ -836,7 +845,7 @@ func (op Operations) UpdateVolumeGroup(uuid string, body *VolumeGroupInput) (*Vo
 	return networkSecurityRuleResponse, op.client.Do(ctx, req, networkSecurityRuleResponse)
 }
 
-const itemsPerPage = int64(100)
+const itemsPerPage int64 = 100
 
 func hasNext(ri *int64) bool {
 	*ri -= itemsPerPage
@@ -876,6 +885,7 @@ func (op Operations) ListAllVM() (*VMListIntentResponse, error) {
 
 			offset += itemsPerPage
 		}
+
 		resp.Entities = entities
 	}
 
@@ -916,6 +926,7 @@ func (op Operations) ListAllSubnet() (*SubnetListIntentResponse, error) {
 			offset += itemsPerPage
 			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
 		}
+
 		resp.Entities = entities
 	}
 
@@ -956,6 +967,7 @@ func (op Operations) ListAllNetworkSecurityRule() (*NetworkSecurityRuleListInten
 			offset += itemsPerPage
 			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
 		}
+
 		resp.Entities = entities
 	}
 
@@ -996,6 +1008,7 @@ func (op Operations) ListAllImage() (*ImageListIntentResponse, error) {
 			offset += itemsPerPage
 			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
 		}
+
 		resp.Entities = entities
 	}
 
@@ -1036,6 +1049,7 @@ func (op Operations) ListAllCluster() (*ClusterListIntentResponse, error) {
 			offset += itemsPerPage
 			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
 		}
+
 		resp.Entities = entities
 	}
 
@@ -1055,4 +1069,74 @@ func (op Operations) GetTask(taskUUID string) (*TasksResponse, error) {
 	}
 
 	return tasksTesponse, op.client.Do(ctx, req, tasksTesponse)
+}
+
+//GetHost ...
+func (op Operations) GetHost(hostUUID string) (*HostResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/hosts/%s", hostUUID)
+	host := new(HostResponse)
+
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return host, op.client.Do(ctx, req, host)
+}
+
+//ListHost ...
+func (op Operations) ListHost(getEntitiesRequest *DSMetadata) (*HostListResponse, error) {
+	ctx := context.TODO()
+	path := "/hosts/list"
+
+	hostList := new(HostListResponse)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return hostList, op.client.Do(ctx, req, hostList)
+}
+
+// ListAllHost ...
+func (op Operations) ListAllHost() (*HostListResponse, error) {
+	entities := make([]*HostResponse, 0)
+
+	resp, err := op.ListHost(&DSMetadata{
+		Kind:   utils.StringPtr("host"),
+		Length: utils.Int64Ptr(itemsPerPage),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining) {
+			resp, err = op.ListHost(&DSMetadata{
+				Kind:   utils.StringPtr("cluster"),
+				Length: utils.Int64Ptr(itemsPerPage),
+				Offset: utils.Int64Ptr(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
+		}
+
+		resp.Entities = entities
+	}
+
+	return resp, nil
 }

@@ -42,10 +42,20 @@ linters:
     - gosec
     - gochecknoinits
     - gochecknoglobals
+    - funlen
+    - gocognit
+    - godox
+    - wsl
+    - nestif
+    - godot
 
 issues:
   exclude:
     - composite literal uses unkeyed fields
+  exclude-rules:
+    - path: _test\.go
+      linters:
+          - testpackage
       # part of the golangci govet package is picking up things that go vet doesn't. Seems flaky, shutting that specific error off
 
 run:

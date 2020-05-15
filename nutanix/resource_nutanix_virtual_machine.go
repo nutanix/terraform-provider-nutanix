@@ -17,6 +17,13 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
+var (
+	vmTimeout    = 1 * time.Minute
+	vmDelay      = 3 * time.Second
+	vmMinTimeout = 3 * time.Second
+	IDE          = "IDE"
+)
+
 func resourceNutanixVirtualMachine() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceNutanixVirtualMachineCreate,
@@ -26,6 +33,14 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 		Exists: resourceNutanixVirtualMachineExists,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
+		},
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceNutanixVirtualMachineInstanceResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceVirtualMachineInstanceStateUpgradeV0,
+				Version: 0,
+			},
 		},
 		Schema: map[string]*schema.Schema{
 			"metadata": {
@@ -564,7 +579,10 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 				ForceNew: true,
 			},
 			"guest_customization_cloud_init_custom_key_values": {
-				Type:     schema.TypeMap,
+				Type: schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 				Optional: true,
 				Computed: true,
 			},
@@ -746,6 +764,7 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
 	conn := meta.(*Client).API
+	setVMTimeout(meta)
 	// Prepare request
 	request := &v3.VMIntentInput{}
 	spec := &v3.VM{}
@@ -798,9 +817,9 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Timeout:    vmTimeout,
+		Delay:      vmDelay,
+		MinTimeout: vmMinTimeout,
 	}
 
 	if _, errWaitTask := stateConf.WaitForState(); errWaitTask != nil {
@@ -812,9 +831,9 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		Pending:    []string{WAITING},
 		Target:     []string{"AVAILABLE"},
 		Refresh:    waitForIPRefreshFunc(conn, uuid),
-		Timeout:    1 * time.Minute,
-		Delay:      3 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Timeout:    vmTimeout,
+		Delay:      vmDelay,
+		MinTimeout: vmMinTimeout,
 	}
 
 	vmIntentResponse, err := waitIPConf.WaitForState()
@@ -839,7 +858,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
 	conn := meta.(*Client).API
-
+	setVMTimeout(meta)
 	// Make request to the API
 	resp, err := conn.V3.GetVM(d.Id())
 
@@ -904,15 +923,17 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	b := make([]string, 0)
 
 	if resp.Status.Resources.BootConfig != nil {
-		if resp.Status.Resources.BootConfig.BootDevice.DiskAddress != nil {
-			i := strconv.Itoa(int(utils.Int64Value(resp.Status.Resources.BootConfig.BootDevice.DiskAddress.DeviceIndex)))
-			diskAddress["device_index"] = i
-			diskAddress["adapter_type"] = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.DiskAddress.AdapterType)
+		if resp.Status.Resources.BootConfig.BootDevice != nil {
+			if resp.Status.Resources.BootConfig.BootDevice.DiskAddress != nil {
+				i := strconv.Itoa(int(utils.Int64Value(resp.Status.Resources.BootConfig.BootDevice.DiskAddress.DeviceIndex)))
+				diskAddress["device_index"] = i
+				diskAddress["adapter_type"] = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.DiskAddress.AdapterType)
+			}
+			mac = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.MacAddress)
 		}
 		if resp.Status.Resources.BootConfig.BootDeviceOrderList != nil {
 			b = utils.StringValueSlice(resp.Status.Resources.BootConfig.BootDeviceOrderList)
 		}
-		mac = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.MacAddress)
 	}
 
 	d.Set("boot_device_order_list", b)
@@ -927,6 +948,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	isOv := false
 	if resp.Status.Resources.GuestCustomization != nil {
 		isOv = utils.BoolValue(resp.Status.Resources.GuestCustomization.IsOverridable)
+
 		if resp.Status.Resources.GuestCustomization.CloudInit != nil {
 			cloudInitMeta = utils.StringValue(resp.Status.Resources.GuestCustomization.CloudInit.MetaData)
 			cloudInitUser = utils.StringValue(resp.Status.Resources.GuestCustomization.CloudInit.UserData)
@@ -936,6 +958,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 				}
 			}
 		}
+
 		if resp.Status.Resources.GuestCustomization.Sysprep != nil {
 			sysprep["install_type"] = utils.StringValue(resp.Status.Resources.GuestCustomization.Sysprep.InstallType)
 			sysprep["unattend_xml"] = utils.StringValue(resp.Status.Resources.GuestCustomization.Sysprep.UnattendXML)
@@ -981,6 +1004,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 
 func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
+	setVMTimeout(meta)
 	var hotPlugChange = true
 
 	log.Printf("[Debug] Updating VM values %s", d.Id())
@@ -1015,7 +1039,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 
 	if d.HasChange("categories") {
 		metadata.Categories = expandCategories(d.Get("categories"))
-		hotPlugChange = false
 	}
 	metadata.OwnerReference = response.Metadata.OwnerReference
 	if d.HasChange("owner_reference") {
@@ -1070,7 +1093,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("num_vcpus_per_socket") {
 		o, n := d.GetChange("num_vcpus_per_socket")
 		res.NumVcpusPerSocket = utils.Int64Ptr(int64(n.(int)))
-		if n.(int) < o.(int) {
+		if n.(int) < o.(int) || n.(int) > o.(int) {
 			hotPlugChange = false
 		}
 	}
@@ -1174,8 +1197,19 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	if d.HasChange("disk_list") {
-		if res.DiskList, err = expandDiskList(d, false); err != nil {
+		preCdromCount, err := CountDiskListCdrom(res.DiskList)
+		if err != nil {
 			return err
+		}
+		if res.DiskList, err = expandDiskListUpdate(d, response); err != nil {
+			return err
+		}
+		postCdromCount, err := CountDiskListCdrom(res.DiskList)
+		if err != nil {
+			return err
+		}
+		if preCdromCount != postCdromCount {
+			hotPlugChange = false
 		}
 	}
 
@@ -1257,9 +1291,9 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, resp.Status.ExecutionContext.TaskUUID.(string)),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Timeout:    vmTimeout,
+		Delay:      vmDelay,
+		MinTimeout: vmMinTimeout,
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
@@ -1337,9 +1371,9 @@ func changePowerState(conn *v3.Client, id string, powerState string) error {
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, resp.Status.ExecutionContext.TaskUUID.(string)),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Timeout:    vmTimeout,
+		Delay:      vmDelay,
+		MinTimeout: vmMinTimeout,
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
@@ -1352,9 +1386,9 @@ func changePowerState(conn *v3.Client, id string, powerState string) error {
 		Pending:    []string{"PENDING", "RUNNING"},
 		Target:     []string{"COMPLETE"},
 		Refresh:    taskVMStateRefreshFunc(conn, id, powerState),
-		Timeout:    10 * time.Minute,
-		Delay:      5 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Timeout:    vmTimeout,
+		Delay:      vmDelay,
+		MinTimeout: vmMinTimeout,
 	}
 
 	if _, err := stateConfVM.WaitForState(); err != nil {
@@ -1384,7 +1418,7 @@ func taskVMStateRefreshFunc(client *v3.Client, vmUUID string, powerState string)
 
 func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
-
+	setVMTimeout(meta)
 	log.Printf("[DEBUG] Deleting Virtual Machine: %s, %s", d.Get("name").(string), d.Id())
 	resp, err := conn.V3.DeleteVM(d.Id())
 	if err != nil {
@@ -1399,9 +1433,9 @@ func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, meta interface{
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, resp.Status.ExecutionContext.TaskUUID.(string)),
-		Timeout:    10 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Timeout:    vmTimeout,
+		Delay:      vmDelay,
+		MinTimeout: vmMinTimeout,
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
@@ -1502,7 +1536,7 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	}
 
 	if v, ok := d.GetOk("guest_customization_cloud_init_custom_key_values"); ok {
-		cloudInit.CustomKeyValues = v.(map[string]string)
+		cloudInit.CustomKeyValues = utils.ConvertMapString(v.(map[string]interface{}))
 	}
 
 	if !reflect.DeepEqual(*cloudInit, (v3.GuestCustomizationCloudInit{})) {
@@ -1538,6 +1572,10 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 		vm.VgaConsoleEnabled = utils.BoolPtr(v.(bool))
 	}
 	if v, ok := d.GetOk("power_state_mechanism"); ok {
+		if vm.PowerStateMechanism == nil {
+			log.Printf("m.PowerStateMechanism was nil, setting correct value!")
+			vm.PowerStateMechanism = &v3.VMPowerStateMechanism{}
+		}
 		vm.PowerStateMechanism.Mechanism = utils.StringPtr(v.(string))
 	}
 	if v, ok := d.GetOk("should_fail_on_script_failure"); ok {
@@ -1594,8 +1632,8 @@ func expandNicList(d *schema.ResourceData) []*v3.VMNic {
 					v := value.(string)
 					IsConnected, _ := strconv.ParseBool(v)
 					nic.IsConnected = utils.BoolPtr(IsConnected)
-
 				}
+
 				nics = append(nics, nic)
 			}
 			return nics
@@ -1624,6 +1662,26 @@ func expandIPAddressList(ipl []interface{}) []*v3.IPAddress {
 	return nil
 }
 
+func expandDiskListUpdate(d *schema.ResourceData, vm *v3.VMIntentResponse) ([]*v3.VMDisk, error) {
+	var eDiskList []*v3.VMDisk
+	var err error
+	if eDiskList, err = expandDiskList(d, false); err != nil {
+		return eDiskList, err
+	}
+	if vm.Spec != nil && vm.Spec.Resources != nil {
+		for _, disk := range vm.Spec.Resources.DiskList {
+			if disk.DeviceProperties != nil && disk.DeviceProperties.DiskAddress != nil {
+				index := disk.DeviceProperties.DiskAddress.DeviceIndex
+				adapterType := disk.DeviceProperties.DiskAddress.AdapterType
+				if *index == 3 && *adapterType == IDE {
+					eDiskList = append(eDiskList, disk)
+				}
+			}
+		}
+	}
+	return eDiskList, nil
+}
+
 func expandDiskList(d *schema.ResourceData, isCreation bool) ([]*v3.VMDisk, error) {
 	if v, ok := d.GetOk("disk_list"); ok {
 		dsk := v.([]interface{})
@@ -1644,7 +1702,7 @@ func expandDiskList(d *schema.ResourceData, isCreation bool) ([]*v3.VMDisk, erro
 						if v1, ok := d["device_type"]; ok {
 							dp.DeviceType = utils.StringPtr(v1.(string))
 						}
-						if v2, ok := d["disk_address"]; ok {
+						if v2, ok := d["disk_address"]; ok && len(v2.(map[string]interface{})) > 0 {
 							da := v2.(map[string]interface{})
 							v3disk := &v3.DiskAddress{}
 							if di, diok := da["device_index"]; diok {
@@ -1655,7 +1713,6 @@ func expandDiskList(d *schema.ResourceData, isCreation bool) ([]*v3.VMDisk, erro
 								v3disk.AdapterType = utils.StringPtr(di.(string))
 							}
 							dp.DiskAddress = v3disk
-
 						}
 						dl.DeviceProperties = dp
 					}
@@ -1664,7 +1721,6 @@ func expandDiskList(d *schema.ResourceData, isCreation bool) ([]*v3.VMDisk, erro
 					hasDSRef = true
 					dsref := v1.(map[string]interface{})
 					dl.DataSourceReference = validateShortRef(dsref)
-
 				}
 				if v1, ok := v["volume_group_reference"]; ok {
 					volgr := v1.(map[string]interface{})
@@ -1789,6 +1845,7 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 	res.DiskList = response.Spec.Resources.DiskList
 
 	nold := make([]*v3.VMNic, len(response.Spec.Resources.NicList))
+
 	if len(response.Spec.Resources.NicList) > 0 {
 		for k, v := range response.Spec.Resources.NicList {
 			nold[k] = &v3.VMNic{
@@ -1802,7 +1859,6 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 				NetworkFunctionChainReference: v.NetworkFunctionChainReference,
 				IsConnected:                   v.IsConnected,
 			}
-
 		}
 	} else {
 		nold = nil
@@ -1817,7 +1873,6 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 				Index:       v.Index,
 				IsConnected: v.IsConnected,
 			}
-
 		}
 	}
 	res.SerialPortList = spl
@@ -1906,5 +1961,752 @@ func waitForIPRefreshFunc(client *v3.Client, vmUUID string) resource.StateRefres
 			}
 		}
 		return resp, WAITING, nil
+	}
+}
+
+func CountDiskListCdrom(dl []*v3.VMDisk) (int, error) {
+	counter := 0
+	for _, v := range dl {
+		if v.DeviceProperties != nil && *v.DeviceProperties.DeviceType == "CDROM" {
+			counter++
+		}
+	}
+	return counter, nil
+}
+
+func resourceVirtualMachineInstanceStateUpgradeV0(is map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+	log.Printf("[DEBUG] Entering resourceVirtualMachineInstanceStateUpgradeV0")
+	return resourceNutanixCategoriesMigrateState(is, meta)
+}
+
+func setVMTimeout(meta interface{}) {
+	client := meta.(*Client)
+	if client.WaitTimeout != 0 {
+		vmTimeout = time.Duration(client.WaitTimeout) * time.Minute
+	}
+}
+
+func resourceNutanixVirtualMachineInstanceResourceV0() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"metadata": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"last_update_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"creation_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"spec_version": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"spec_hash": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"categories": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+			},
+			"project_reference": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"owner_reference": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"api_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"availability_zone_reference": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"cluster_uuid": {
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringMatch(
+					regexp.MustCompile(
+						"^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$"),
+					"please see http://developer.nutanix.com/reference/prism_central/v3/api/models/cluster-reference"),
+			},
+			"cluster_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"host_reference": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"hypervisor_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"nic_list_status": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"nic_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"floating_ip": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"model": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"network_function_nic_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"mac_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ip_endpoint_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ip": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"network_function_chain_reference": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"subnet_uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"subnet_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"is_connected": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+
+			// RESOURCES ARGUMENTS
+
+			"num_vnuma_nodes": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"nic_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"nic_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"model": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"network_function_nic_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"mac_address": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"ip_endpoint_list": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ip": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"network_function_chain_reference": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"subnet_uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"subnet_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"is_connected": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "true",
+						},
+					},
+				},
+			},
+			"guest_os_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"power_state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"nutanix_guest_tools": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"state": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"ngt_state": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"version": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"iso_mount_state": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"available_version": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"guest_os_version": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"vss_snapshot_capable": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"is_reachable": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"vm_mobility_drivers_installed": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"ngt_credentials": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+			},
+			"ngt_enabled_capability_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"num_vcpus_per_socket": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"num_sockets": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"gpu_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"frame_buffer_size_mib": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"vendor": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"pci_address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"fraction": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"mode": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"num_virtual_display_heads": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"guest_driver_version": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"device_id": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"parent_reference": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"memory_size_mib": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"boot_device_order_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"boot_device_disk_address": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"device_index": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"adapter_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"boot_device_mac_address": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"hardware_clock_timezone": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"guest_customization_cloud_init_user_data": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"guest_customization_cloud_init_meta_data": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"guest_customization_cloud_init_custom_key_values": {
+				Type: schema.TypeMap,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				Optional: true,
+				Computed: true,
+			},
+			"guest_customization_is_overridable": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"guest_customization_sysprep": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"install_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"unattend_xml": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"guest_customization_sysprep_custom_key_values": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
+			"should_fail_on_script_failure": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"enable_script_exec": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"power_state_mechanism": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"vga_console_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"disk_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"disk_size_bytes": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"disk_size_mib": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"device_properties": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"device_type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"disk_address": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"device_index": {
+													Type:     schema.TypeInt,
+													Optional: true,
+													Computed: true,
+												},
+												"adapter_type": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"data_source_reference": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"volume_group_reference": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Computed: true,
+
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"serial_port_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"index": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"is_connected": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+		},
 	}
 }

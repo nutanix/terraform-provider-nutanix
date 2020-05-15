@@ -73,7 +73,6 @@ func flattenReferenceValues(r *v3.Reference) map[string]interface{} {
 
 func flattenClusterReference(r *v3.Reference, d *schema.ResourceData) error {
 	if r != nil {
-
 		if err := d.Set("cluster_uuid", utils.StringValue(r.UUID)); err != nil {
 			return err
 		}

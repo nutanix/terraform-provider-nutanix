@@ -17,32 +17,33 @@ type Config struct {
 	Password    string
 	Port        string
 	Insecure    bool
+	SessionAuth bool
 	WaitTimeout int64
 	ProxyURL    string
 }
 
 // Client ...
 func (c *Config) Client() (*Client, error) {
-
 	configCreds := client.Credentials{
-		URL:      fmt.Sprintf("%s:%s", c.Endpoint, c.Port),
-		Endpoint: c.Endpoint,
-		Username: c.Username,
-		Password: c.Password,
-		Port:     c.Port,
-		Insecure: c.Insecure,
-		ProxyURL: c.ProxyURL,
+		URL:         fmt.Sprintf("%s:%s", c.Endpoint, c.Port),
+		Endpoint:    c.Endpoint,
+		Username:    c.Username,
+		Password:    c.Password,
+		Port:        c.Port,
+		Insecure:    c.Insecure,
+		SessionAuth: c.SessionAuth,
+		ProxyURL:    c.ProxyURL,
 	}
 
 	v3Client, err := v3.NewV3Client(configCreds)
 	if err != nil {
 		return nil, err
 	}
-	client := &Client{
+
+	return &Client{
 		WaitTimeout: c.WaitTimeout,
 		API:         v3Client,
-	}
-	return client, nil
+	}, nil
 }
 
 // Client represents the nutanix API client

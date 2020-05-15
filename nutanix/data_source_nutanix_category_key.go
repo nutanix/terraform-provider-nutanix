@@ -10,6 +10,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
+var listLength int64 = 500
+
 func dataSourceNutanixCategoryKey() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceNutanixCategoryKeyRead,
@@ -53,6 +55,7 @@ func dataSourceNutanixCategoryKeyRead(d *schema.ResourceData, meta interface{}) 
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
 		}
+
 		return err
 	}
 
@@ -65,12 +68,13 @@ func dataSourceNutanixCategoryKeyRead(d *schema.ResourceData, meta interface{}) 
 
 	list, err := conn.V3.ListCategoryValues(d.Get("name").(string), &v3.CategoryListMetadata{
 		Kind:   utils.StringPtr("category"),
-		Length: utils.Int64Ptr(500),
+		Length: utils.Int64Ptr(listLength),
 	})
 
 	if err != nil {
 		return err
 	}
+
 	values := make([]string, len(list.Entities))
 
 	for k, v := range list.Entities {

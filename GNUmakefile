@@ -10,7 +10,7 @@ build: fmtcheck
 
 test: fmtcheck
 	go test $(TEST) -timeout=30s -parallel=4
-	
+
 testacc: fmtcheck
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 120m -coverprofile c.out
 	go tool cover -html=c.out
@@ -29,12 +29,12 @@ errcheck:
 
 lint: fmtcheck
 	@echo "==> Checking source code against linters..."
-	@GOGC=30 golangci-lint run
+	@GOGC=30 golangci-lint run --timeout=30m
 
 tools:
-	GO111MODULE=off go get -u github.com/client9/misspell/cmd/misspell
-	GO111MODULE=off go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
-	GO111MODULE=off go get github.com/mitchellh/gox	
+	GO111MODULE=on go install github.com/client9/misspell/cmd/misspell
+	GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint
+	GO111MODULE=on go install github.com/mitchellh/gox
 
 vet:
 	@echo "go vet ."
