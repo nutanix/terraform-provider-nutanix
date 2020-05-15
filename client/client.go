@@ -37,6 +37,8 @@ type Client struct {
 	// User agent for client
 	UserAgent string
 
+	Cookies []*http.Cookie
+
 	// Optional function called after every successful request made.
 	onRequestCompleted RequestCompletionCallback
 }
@@ -46,13 +48,14 @@ type RequestCompletionCallback func(*http.Request, *http.Response, interface{})
 
 // Credentials needed username and password
 type Credentials struct {
-	URL      string
-	Username string
-	Password string
-	Endpoint string
-	Port     string
-	Insecure bool
-	ProxyURL string
+	URL         string
+	Username    string
+	Password    string
+	Endpoint    string
+	Port        string
+	Insecure    bool
+	SessionAuth bool
+	ProxyURL    string
 }
 
 // NewClient returns a new Nutanix API client.
@@ -82,7 +85,32 @@ func NewClient(credentials *Credentials) (*Client, error) {
 		return nil, err
 	}
 
-	c := &Client{credentials, httpClient, baseURL, userAgent, nil}
+	c := &Client{credentials, httpClient, baseURL, userAgent, nil, nil}
+
+	if credentials.SessionAuth {
+		log.Printf("[DEBUG] Using session_auth\n")
+
+		ctx := context.TODO()
+		req, err := c.NewRequest(ctx, http.MethodGet, "/users/me", nil)
+		if err != nil {
+			return c, err
+		}
+
+		resp, err := c.client.Do(req)
+
+		if err != nil {
+			return c, err
+		}
+		defer func() {
+			if rerr := resp.Body.Close(); err == nil {
+				err = rerr
+			}
+		}()
+
+		err = CheckResponse(resp)
+
+		c.Cookies = resp.Cookies()
+	}
 
 	return c, nil
 }
@@ -114,8 +142,16 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 	req.Header.Add("Content-Type", mediaType)
 	req.Header.Add("Accept", mediaType)
 	req.Header.Add("User-Agent", c.UserAgent)
-	req.Header.Add("Authorization", "Basic "+
-		base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
+	if c.Cookies != nil {
+		log.Printf("[DEBUG] Adding cookies to request\n")
+		for _, i := range c.Cookies {
+			req.AddCookie(i)
+		}
+	} else {
+		log.Printf("[DEBUG] Adding basic auth to request\n")
+		req.Header.Add("Authorization", "Basic "+
+			base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
+	}
 
 	return req, nil
 }

@@ -51,6 +51,21 @@ provider "nutanix" {
 }
 ```
 
+### Session based Authentication
+
+Session based authentication can be used which authenticates only once with basic authentication and uses a cookie for all further attempts.
+The main benefit is a reduction in the time API calls take to complete. Sessions are only valid for 15 minutes.
+
+Usage:
+
+```hcl
+provider "nutanix" {
+  ...
+  session_auth = true
+  ...
+}
+```
+
 ### Environment variables
 
 You can provide your credentials via environment variables, representing your Nutanix
