@@ -764,6 +764,7 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
 	conn := meta.(*Client).API
+	setVMTimeout(meta)
 	// Prepare request
 	request := &v3.VMIntentInput{}
 	spec := &v3.VM{}
@@ -857,7 +858,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
 	conn := meta.(*Client).API
-
+	setVMTimeout(meta)
 	// Make request to the API
 	resp, err := conn.V3.GetVM(d.Id())
 
@@ -1003,6 +1004,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 
 func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
+	setVMTimeout(meta)
 	var hotPlugChange = true
 
 	log.Printf("[Debug] Updating VM values %s", d.Id())
@@ -1037,7 +1039,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 
 	if d.HasChange("categories") {
 		metadata.Categories = expandCategories(d.Get("categories"))
-		hotPlugChange = false
 	}
 	metadata.OwnerReference = response.Metadata.OwnerReference
 	if d.HasChange("owner_reference") {
@@ -1417,7 +1418,7 @@ func taskVMStateRefreshFunc(client *v3.Client, vmUUID string, powerState string)
 
 func resourceNutanixVirtualMachineDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
-
+	setVMTimeout(meta)
 	log.Printf("[DEBUG] Deleting Virtual Machine: %s, %s", d.Get("name").(string), d.Id())
 	resp, err := conn.V3.DeleteVM(d.Id())
 	if err != nil {
@@ -1976,6 +1977,13 @@ func CountDiskListCdrom(dl []*v3.VMDisk) (int, error) {
 func resourceVirtualMachineInstanceStateUpgradeV0(is map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	log.Printf("[DEBUG] Entering resourceVirtualMachineInstanceStateUpgradeV0")
 	return resourceNutanixCategoriesMigrateState(is, meta)
+}
+
+func setVMTimeout(meta interface{}) {
+	client := meta.(*Client)
+	if client.WaitTimeout != 0 {
+		vmTimeout = time.Duration(client.WaitTimeout) * time.Minute
+	}
 }
 
 func resourceNutanixVirtualMachineInstanceResourceV0() *schema.Resource {
