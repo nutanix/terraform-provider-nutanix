@@ -300,7 +300,7 @@ func resourceNutanixProtectionRuleCreate(d *schema.ResourceData, meta interface{
 	desc, descok := d.GetOk("description")
 
 	if !nok && !azclok && !oazlok {
-		return fmt.Errorf("please provide the required attributes `name`, `availability_zone_connectivity_list`, `ordered_availability_zone_list`")
+		return fmt.Errorf("please provide the required attributes `name`, `availability_zone`, `ordered_availability_zone`")
 	}
 
 	if err := getMetadataAttributes(d, metadata, "protection_rule"); err != nil {
@@ -703,16 +703,14 @@ func flattenCategoriesFilter(categoryFilter *v3.CategoryFilter) []interface{} {
 
 func flattenAvailabilityZoneConnectivityList(azcl []*v3.AvailabilityZoneConnectivityList) []map[string]interface{} {
 	availibilityList := make([]map[string]interface{}, 0)
-	if azcl != nil {
-		for _, v := range azcl {
-			availability := make(map[string]interface{})
+	for _, v := range azcl {
+		availability := make(map[string]interface{})
 
-			availability["destination_availability_zone_index"] = utils.Int64Value(v.DestinationAvailabilityZoneIndex)
-			availability["source_availability_zone_index"] = utils.Int64Value(v.SourceAvailabilityZoneIndex)
-			availability["snapshot_schedule_list"] = flattenSnapshotScheduleList(v.SnapshotScheduleList)
+		availability["destination_availability_zone_index"] = utils.Int64Value(v.DestinationAvailabilityZoneIndex)
+		availability["source_availability_zone_index"] = utils.Int64Value(v.SourceAvailabilityZoneIndex)
+		availability["snapshot_schedule_list"] = flattenSnapshotScheduleList(v.SnapshotScheduleList)
 
-			availibilityList = append(availibilityList, availability)
-		}
+		availibilityList = append(availibilityList, availability)
 	}
 	return availibilityList
 }

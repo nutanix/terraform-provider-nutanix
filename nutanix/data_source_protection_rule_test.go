@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccNutanixProtectionRuleDataSource_basic(t *testing.T) {
-	resourceName := "nutanix_protection_rule.protection_rule_test"
+	resourceName := "nutanix_protection_rule.test"
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")
 	description := acctest.RandomWithPrefix("test-protection-desc-dou")
@@ -17,7 +17,7 @@ func TestAccNutanixProtectionRuleDataSource_basic(t *testing.T) {
 	nameUpdated := acctest.RandomWithPrefix("test-protection-name-dou")
 	descriptionUpdated := acctest.RandomWithPrefix("test-protection-desc-dou")
 
-	zone := "ab788130-0820-4d07-a1b5-b0ba4d3a4254"
+	zone := "ab788130-0820-4d07-a1b5-b0ba4d3ard54"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -43,7 +43,7 @@ func TestAccNutanixProtectionRuleDataSource_basic(t *testing.T) {
 
 func testAccProtectionRuleDataSourceConfig(name, description, zone string) string {
 	return fmt.Sprintf(`
-		resource "nutanix_protection_rule" "protection_rule_test" {
+		resource "nutanix_protection_rule" "test" {
 			name        = "%s"
 			description = "%s"
 			ordered_availability_zone_list{
@@ -67,7 +67,7 @@ func testAccProtectionRuleDataSourceConfig(name, description, zone string) strin
 			}
 		}
 		data "nutanix_protection_rule" "test" {
-			protection_rule_id = nutanix_protection_rule.protection_rule_test.id
+			protection_rule_id = nutanix_protection_rule.test.id
 		}
 `, name, description, zone)
 }

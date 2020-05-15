@@ -12,7 +12,7 @@ import (
 )
 
 func TestAccNutanixRecoveryPlan_basic(t *testing.T) {
-	resourceName := "nutanix_recovery_plan.recovery_plan_test"
+	resourceName := "nutanix_recovery_plan.test"
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")
 	description := acctest.RandomWithPrefix("test-protection-desc-dou")
@@ -20,15 +20,13 @@ func TestAccNutanixRecoveryPlan_basic(t *testing.T) {
 	nameUpdated := acctest.RandomWithPrefix("test-protection-name-dou")
 	descriptionUpdated := acctest.RandomWithPrefix("test-protection-desc-dou")
 
-	zone := "ab788130-0820-4d07-a1b5-b0ba4d3a4254"
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixRecoveryPlanDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixRecoveryPlanConfig(name, description, zone),
+				Config: testAccNutanixRecoveryPlanConfig(name, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixRecoveryPlanExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -36,7 +34,7 @@ func TestAccNutanixRecoveryPlan_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNutanixRecoveryPlanConfig(nameUpdated, descriptionUpdated, zone),
+				Config: testAccNutanixRecoveryPlanConfig(nameUpdated, descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixRecoveryPlanExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", nameUpdated),
@@ -48,11 +46,10 @@ func TestAccNutanixRecoveryPlan_basic(t *testing.T) {
 }
 
 func TestAccResourceNutanixRecoveryPlan_importBasic(t *testing.T) {
-	resourceName := "nutanix_recovery_plan.recovery_plan_test"
+	resourceName := "nutanix_recovery_plan.test"
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")
 	description := acctest.RandomWithPrefix("test-protection-desc-dou")
-	zone := "ab788130-0820-4d07-a1b5-b0ba4d3a4254"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -60,7 +57,7 @@ func TestAccResourceNutanixRecoveryPlan_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixRecoveryPlanDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixRecoveryPlanConfig(name, description, zone),
+				Config: testAccNutanixRecoveryPlanConfig(name, description),
 			},
 			{
 				ResourceName:      resourceName,
@@ -117,9 +114,9 @@ func testAccCheckNutanixRecoveryPlanDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccNutanixRecoveryPlanConfig(name, description, zone string) string {
+func testAccNutanixRecoveryPlanConfig(name, description string) string {
 	return fmt.Sprintf(`
-		resource "nutanix_recovery_plan" "recovery_plan_test" {
+		resource "nutanix_recovery_plan" "test" {
 			name        = "%s"
 			description = "%s"
 			stage_list {
@@ -133,10 +130,10 @@ func testAccNutanixRecoveryPlanConfig(name, description, zone string) string {
 						}
 					}
 				}
-				stage_uuid = "%[3]s"
+				stage_uuid = "ab788130-0820-4d07-a1b5-b0ba4d3a4254"
 				delay_time_secs = 0
 			}
 			parameters{}
 		}
-	`, name, description, zone)
+	`, name, description)
 }

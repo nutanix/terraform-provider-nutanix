@@ -789,14 +789,14 @@ func expandFloatingAssignmentList(d []interface{}) []*v3.FloatingIPAssignmentLis
 			floating.AvailabilityZoneURL = utils.StringPtr(v2.(string))
 		}
 		if v2, ok1 := v1["vm_ip_assignment_list"].([]interface{}); ok1 {
-			floating.VMIPAssignmentList = expandVmIpAssignmentList(v2)
+			floating.VMIPAssignmentList = expandVMIPAssignmentList(v2)
 			floatings = append(floatings, floating)
 		}
 	}
 	return floatings
 }
 
-func expandVmIpAssignmentList(d []interface{}) []*v3.VMIPAssignmentList {
+func expandVMIPAssignmentList(d []interface{}) []*v3.VMIPAssignmentList {
 	assigns := make([]*v3.VMIPAssignmentList, 0)
 	for _, assignment := range d {
 		vmial := &v3.VMIPAssignmentList{}
@@ -903,16 +903,14 @@ func expandSubnetList(d []interface{}) []*v3.SubnetList {
 
 func flattenStageList(sl []*v3.StageList) []map[string]interface{} {
 	stageList := make([]map[string]interface{}, 0)
-	if sl != nil {
-		for _, v := range sl {
-			stage := make(map[string]interface{})
+	for _, v := range sl {
+		stage := make(map[string]interface{})
 
-			stage["stage_uuid"] = utils.StringValue(v.StageUUID)
-			stage["delay_time_secs"] = utils.Int64Value(v.DelayTimeSecs)
-			stage["stage_work"] = flattenStageWork(v.StageWork)
+		stage["stage_uuid"] = utils.StringValue(v.StageUUID)
+		stage["delay_time_secs"] = utils.Int64Value(v.DelayTimeSecs)
+		stage["stage_work"] = flattenStageWork(v.StageWork)
 
-			stageList = append(stageList, stage)
-		}
+		stageList = append(stageList, stage)
 	}
 	return stageList
 }
@@ -969,14 +967,14 @@ func flattenFloatingAssignmentList(floatingList []*v3.FloatingIPAssignmentList) 
 		for _, floating := range floatingList {
 			float := make(map[string]interface{})
 			float["availability_zone_url"] = utils.StringValue(floating.AvailabilityZoneURL)
-			float["vm_ip_assignment_list"] = flattenVmAssignmentList(floating.VMIPAssignmentList)
+			float["vm_ip_assignment_list"] = flattenVMAssignmentList(floating.VMIPAssignmentList)
 			floatings = append(floatings, float)
 		}
 	}
 	return floatings
 }
 
-func flattenVmAssignmentList(vmList []*v3.VMIPAssignmentList) []map[string]interface{} {
+func flattenVMAssignmentList(vmList []*v3.VMIPAssignmentList) []map[string]interface{} {
 	assignments := make([]map[string]interface{}, 0)
 	if len(vmList) > 0 {
 		for _, assignment := range vmList {

@@ -459,10 +459,10 @@ func dataSourceNutanixRecoveryPlansRead(d *schema.ResourceData, meta interface{}
 	return nil
 }
 
-func flattenRecoveryPlanEntities(ProtectionRules []*v3.RecoveryPlanResponse) []map[string]interface{} {
-	entities := make([]map[string]interface{}, len(ProtectionRules))
+func flattenRecoveryPlanEntities(protectionRules []*v3.RecoveryPlanResponse) []map[string]interface{} {
+	entities := make([]map[string]interface{}, len(protectionRules))
 
-	for i, recoveryPlan := range ProtectionRules {
+	for i, recoveryPlan := range protectionRules {
 		metadata, categories := setRSEntityMetadata(recoveryPlan.Metadata)
 
 		entities[i] = map[string]interface{}{

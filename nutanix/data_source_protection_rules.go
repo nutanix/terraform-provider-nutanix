@@ -265,10 +265,10 @@ func dataSourceNutanixProtectionRulesRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func flattenProtectionRuleEntities(ProtectionRules []*v3.ProtectionRuleResponse) []map[string]interface{} {
-	entities := make([]map[string]interface{}, len(ProtectionRules))
+func flattenProtectionRuleEntities(protectionRules []*v3.ProtectionRuleResponse) []map[string]interface{} {
+	entities := make([]map[string]interface{}, len(protectionRules))
 
-	for i, protectionRule := range ProtectionRules {
+	for i, protectionRule := range protectionRules {
 		metadata, categories := setRSEntityMetadata(protectionRule.Metadata)
 
 		entities[i] = map[string]interface{}{

@@ -9,14 +9,13 @@ import (
 )
 
 func TestAccNutanixRecoveryPlanDataSource_basic(t *testing.T) {
-	resourceName := "nutanix_recovery_plan.recovery_plan_test"
+	resourceName := "nutanix_recovery_plan.test"
 
 	name := acctest.RandomWithPrefix("test-recovery-name-dou")
 	description := acctest.RandomWithPrefix("test-recovery-desc-dou")
 
 	nameUpdated := acctest.RandomWithPrefix("test-recovery-name-dou")
 	descriptionUpdated := acctest.RandomWithPrefix("test-recovery-desc-dou")
-	zone := "ab788130-0820-4d07-a1b5-b0ba4d3a4254"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -24,14 +23,14 @@ func TestAccNutanixRecoveryPlanDataSource_basic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixRecoveryPlanDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecoveryPlanDataSourceConfig(name, description, zone),
+				Config: testAccRecoveryPlanDataSourceConfig(name, description),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 				),
 			},
 			{
-				Config: testAccRecoveryPlanDataSourceConfig(nameUpdated, descriptionUpdated, zone),
+				Config: testAccRecoveryPlanDataSourceConfig(nameUpdated, descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", nameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
@@ -41,9 +40,9 @@ func TestAccNutanixRecoveryPlanDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccRecoveryPlanDataSourceConfig(name, description, zoneUUID string) string {
+func testAccRecoveryPlanDataSourceConfig(name, description string) string {
 	return fmt.Sprintf(`
-        resource "nutanix_recovery_plan" "recovery_plan_test" {
+        resource "nutanix_recovery_plan" "test" {
 			name        = "%s"
 			description = "%s"
 			stage_list {
@@ -57,12 +56,14 @@ func testAccRecoveryPlanDataSourceConfig(name, description, zoneUUID string) str
 						}
 					}
 				}
-				stage_uuid = "%[3]s"
+				stage_uuid = "ab788130-0820-4d07-a1b5-b0ba4d3a4254"
 				delay_time_secs = 0
 			}
+			parameters{}
 		}
 		data "nutanix_recovery_plan" "test" {
-			recovery_plan_id = nutanix_recovery_plan.recovery_plan_test.id
+			recovery_plan_id = nutanix_recovery_plan.test.id
 		}
-`, name, description, zoneUUID)
+
+`, name, description)
 }
