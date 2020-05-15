@@ -287,19 +287,10 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 	request.Metadata = metadata
 	request.Spec = spec
 
-	imageUUID, err := resourceNutanixImageExists(conn, n.(string))
-	if err != nil {
-		return fmt.Errorf("failed to read image with name(%s): %+v", n.(string), err)
-	}
-
-	if imageUUID != nil {
-		return fmt.Errorf("image already exists with name %s  in the given cluster, UUID %s", d.Get("name").(string), *imageUUID)
-	}
-
 	// Make request to the API
 	resp, err := conn.V3.CreateImage(request)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating Nutanix Image %s: %+v", utils.StringValue(spec.Name), err)
 	}
 
 	UUID := *resp.Metadata.UUID
@@ -611,26 +602,6 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 	}
 
 	return nil
-}
-
-func resourceNutanixImageExists(conn *v3.Client, name string) (*string, error) {
-	log.Printf("[DEBUG] Get Image Existence : %s", name)
-
-	imageEntities := &v3.DSMetadata{}
-	var imageUUID *string
-
-	imageList, err := conn.V3.ListImage(imageEntities)
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, image := range imageList.Entities {
-		if image.Status.Name == utils.StringPtr(name) {
-			imageUUID = image.Metadata.UUID
-		}
-	}
-	return imageUUID, nil
 }
 
 func resourceImageInstanceStateUpgradeV0(is map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
