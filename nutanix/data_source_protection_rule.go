@@ -276,10 +276,12 @@ func dataSourceNutanixProtectionRuleRead(d *schema.ResourceData, meta interface{
 	if err := d.Set("category_filter", flattenCategoriesFilter(resp.Spec.Resources.CategoryFilter)); err != nil {
 		return err
 	}
-	if err := d.Set("availability_zone_connectivity_list", flattenAvailabilityZoneConnectivityList(resp.Spec.Resources.AvailabilityZoneConnectivityList)); err != nil {
+	if err := d.Set("availability_zone_connectivity_list",
+		flattenAvailabilityZoneConnectivityList(resp.Spec.Resources.AvailabilityZoneConnectivityList)); err != nil {
 		return err
 	}
-	if err := d.Set("ordered_availability_zone_list", flattenOrderAvailibilityList(resp.Spec.Resources.OrderedAvailabilityZoneList)); err != nil {
+	if err := d.Set("ordered_availability_zone_list",
+		flattenOrderAvailibilityList(resp.Spec.Resources.OrderedAvailabilityZoneList)); err != nil {
 		return err
 	}
 	if err := d.Set("state", resp.Status.State); err != nil {
