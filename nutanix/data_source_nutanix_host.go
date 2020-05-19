@@ -643,11 +643,7 @@ func flattenReferenceList(references []*v3.ReferenceValues) []map[string]interfa
 	res := make([]map[string]interface{}, len(references))
 	if len(references) > 0 {
 		for i, r := range references {
-			res[i] = map[string]interface{}{
-				"kind": r.Kind,
-				"uuid": r.UUID,
-				"name": r.Name,
-			}
+			res[i] = flattenReference(r)
 		}
 	}
 	return res
