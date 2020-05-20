@@ -76,9 +76,12 @@ const (
 	// TypecheckCgo enables full support for type checking cgo. Requires Go 1.15+.
 	// Modifies CompiledGoFiles and Types, and has no effect on its own.
 	TypecheckCgo
+<<<<<<< HEAD
 
 	// NeedModule adds Module.
 	NeedModule
+=======
+>>>>>>> 8a0b5446... chore: updated vendor
 )
 
 const (
