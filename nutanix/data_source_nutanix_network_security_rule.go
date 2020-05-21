@@ -132,11 +132,11 @@ func dataSourceNutanixNetworkSecurityRule() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"end_port": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
 									"start_port": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
 								},
@@ -152,7 +152,7 @@ func dataSourceNutanixNetworkSecurityRule() *schema.Resource {
 										Computed: true,
 									},
 									"start_port": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
 								},
@@ -292,11 +292,11 @@ func dataSourceNutanixNetworkSecurityRule() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"end_port": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
 									"start_port": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
 								},
@@ -312,7 +312,7 @@ func dataSourceNutanixNetworkSecurityRule() *schema.Resource {
 										Computed: true,
 									},
 									"start_port": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
 								},
@@ -424,7 +424,7 @@ func dataSourceNutanixNetworkSecurityRule() *schema.Resource {
 										Computed: true,
 									},
 									"start_port": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
 								},
@@ -440,7 +440,7 @@ func dataSourceNutanixNetworkSecurityRule() *schema.Resource {
 										Computed: true,
 									},
 									"start_port": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
 								},
@@ -579,11 +579,11 @@ func dataSourceNutanixNetworkSecurityRule() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"end_port": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
 									"start_port": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
 								},
@@ -599,7 +599,7 @@ func dataSourceNutanixNetworkSecurityRule() *schema.Resource {
 										Computed: true,
 									},
 									"start_port": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
 								},
