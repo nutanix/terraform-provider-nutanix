@@ -494,18 +494,6 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 		spec.Description = utils.StringPtr(desc.(string))
 	}
 
-	networkSecurityRueUUID, err := resourceNutanixNetworkSecurityRuleExists(conn, d.Get("name").(string))
-
-	if err != nil {
-		return err
-	}
-
-	if networkSecurityRueUUID != nil {
-		return fmt.Errorf(
-			"network security rule already with name %s exists in the given cluster, UUID %s",
-			d.Get("name").(string), *networkSecurityRueUUID)
-	}
-
 	// set request
 
 	spec.Resources = networkSecurityRule
@@ -520,7 +508,7 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 	resp, err := conn.V3.CreateNetworkSecurityRule(request)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating Nutanix Network Security Rule %s: %+v", utils.StringValue(spec.Name), err)
 	}
 
 	d.SetId(*resp.Metadata.UUID)
@@ -555,6 +543,7 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 	if errNet != nil {
 		if strings.Contains(fmt.Sprint(errNet), "ENTITY_NOT_FOUND") {
 			d.SetId("")
+			return nil
 		}
 		return errNet
 	}
@@ -821,25 +810,6 @@ func resourceNutanixNetworkSecurityRuleDelete(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func resourceNutanixNetworkSecurityRuleExists(conn *v3.Client, name string) (*string, error) {
-	log.Printf("[DEBUG] Get Network Security Rule Existence : %s", name)
-
-	var nsrUUID *string
-
-	networkSecurityRuleList, err := conn.V3.ListAllNetworkSecurityRule()
-
-	if err != nil {
-		return nil, err
-	}
-
-	for _, nsr := range networkSecurityRuleList.Entities {
-		if nsr.Metadata.Name == utils.StringPtr(name) {
-			nsrUUID = nsr.Metadata.UUID
-		}
-	}
-	return nsrUUID, nil
-}
-
 func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule *v3.NetworkSecurityRuleResources) error {
 	isolationRule := &v3.NetworkSecurityRuleIsolationRule{}
 	appRule := &v3.NetworkSecurityRuleResourcesRule{}
@@ -871,7 +841,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			}
 
 			if ippl, ipok := nr["ip_subnet_prefix_length"]; ipok && ippl.(string) != "" {
-				if i, err := strconv.Atoi(ippl.(string)); err != nil {
+				if i, err := strconv.Atoi(ippl.(string)); err == nil {
 					iPSubnet.PrefixLength = utils.Int64Ptr(int64(i))
 				}
 			}
@@ -884,11 +854,11 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 				nrItem.UDPPortRangeList = expandPortRangeList(u)
 			}
 
-			if f, fok := nr["filter_kind_list"]; fok {
+			if f, fok := nr["filter_kind_list"]; fok && len(f.([]interface{})) > 0 {
 				filter.KindList = expandStringList(f.([]interface{}))
 			}
 
-			if ft, ftok := nr["filter_type"]; ftok {
+			if ft, ftok := nr["filter_type"]; ftok && ft != "" {
 				filter.Type = utils.StringPtr(ft.(string))
 			}
 
@@ -934,7 +904,9 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			}
 
 			nrItem.IPSubnet = iPSubnet
-			nrItem.Filter = filter
+			if !reflect.DeepEqual(*filter, v3.CategoryFilter{}) {
+				nrItem.Filter = filter
+			}
 			outbound[k] = nrItem
 		}
 		appRule.OutboundAllowList = outbound
@@ -999,7 +971,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			}
 
 			if ippl, ipok := nr["ip_subnet_prefix_length"]; ipok && ippl.(string) != "" {
-				if i, err := strconv.Atoi(ippl.(string)); err != nil {
+				if i, err := strconv.Atoi(ippl.(string)); err == nil {
 					iPSubnet.PrefixLength = utils.Int64Ptr(int64(i))
 				}
 			}
@@ -1012,11 +984,11 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 				nrItem.UDPPortRangeList = expandPortRangeList(u)
 			}
 
-			if f, fok := nr["filter_kind_list"]; fok {
+			if f, fok := nr["filter_kind_list"]; fok && len(f.([]interface{})) > 0 {
 				filter.KindList = expandStringList(f.([]interface{}))
 			}
 
-			if ft, ftok := nr["filter_type"]; ftok {
+			if ft, ftok := nr["filter_type"]; ftok && ft != "" {
 				filter.Type = utils.StringPtr(ft.(string))
 			}
 
@@ -1062,7 +1034,9 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 			}
 
 			nrItem.IPSubnet = iPSubnet
-			nrItem.Filter = filter
+			if !reflect.DeepEqual(*filter, v3.CategoryFilter{}) {
+				nrItem.Filter = filter
+			}
 			inbound[k] = nrItem
 		}
 		appRule.InboundAllowList = inbound

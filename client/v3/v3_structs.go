@@ -1028,16 +1028,8 @@ type ImageListIntentResponse struct {
 // ClusterListIntentResponse ...
 type ClusterListIntentResponse struct {
 	APIVersion *string                  `json:"api_version" mapstructure:"api_version"`
-	Entities   []*ClusterIntentResource `json:"entities,omitempty" mapstructure:"entities,omitempty"`
+	Entities   []*ClusterIntentResponse `json:"entities,omitempty" mapstructure:"entities,omitempty"`
 	Metadata   *ListMetadataOutput      `json:"metadata" mapstructure:"metadata"`
-}
-
-// ClusterIntentResource ...
-type ClusterIntentResource struct {
-	APIVersion *string           `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
-	Metadata   *Metadata         `json:"metadata" mapstructure:"metadata"`
-	Spec       *Cluster          `json:"spec,omitempty" mapstructure:"spec,omitempty"`
-	Status     *ClusterDefStatus `json:"status,omitempty" mapstructure:"status,omitempty"`
 }
 
 // ClusterIntentResponse ...
@@ -1932,5 +1924,65 @@ type HostResponse struct {
 type HostListResponse struct {
 	APIVersion string              `json:"api_version,omitempty"`
 	Entities   []*HostResponse     `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput `json:"metadata,omitempty"`
+}
+
+/* Project Resource */
+
+// Resources represents the utilization limits for resource types
+type Resources struct {
+	Units        string `json:"units,omitempty"`
+	Limit        *int64 `json:"limit,omitempty"`
+	ResourceType string `json:"resource_type,omitempty"`
+	Value        *int64 `json:"value,omitempty"`
+}
+
+// ResourceDomain specification (limits)
+type ResourceDomain struct {
+	Resources []*Resources `json:"resources,omitempty"`
+}
+
+// ProjectResources ...
+type ProjectResources struct {
+	ResourceDomain                 *ResourceDomain    `json:"resource_domain,omitempty"`
+	AccountReferenceList           []*ReferenceValues `json:"account_reference_list,omitempty"`
+	EnvironmentReferenceList       []*ReferenceValues `json:"environment_reference_list,omitempty"`
+	DefaultSubnetReference         *ReferenceValues   `json:"default_subnet_reference,omitempty"`
+	UserReferenceList              []*ReferenceValues `json:"user_reference_list,omitempty"`
+	IsDefault                      bool               `json:"is_default,omitempty"`
+	ExternalUserGroupReferenceList []*ReferenceValues `json:"external_user_group_reference_list,omitempty"`
+	SubnetReferenceList            []*ReferenceValues `json:"subnet_reference_list,omitempty"`
+	ExternalNetworkList            []*ReferenceValues `json:"external_network_list,omitempty"`
+}
+
+// ProjectStatus ...
+type ProjectStatus struct {
+	State            string             `json:"state,omitempty"`
+	MessageList      []*MessageResource `json:"message_list,omitempty"`
+	Name             string             `json:"name,omitempty"`
+	Resources        *ProjectResources  `json:"resources,omitempty"`
+	Descripion       string             `json:"description,omitempty"`
+	ExecutionContext *ExecutionContext  `json:"execution_context,omitempty"`
+}
+
+// ProjectSpec ...
+type ProjectSpec struct {
+	Name       string            `json:"name,omitempty"`
+	Resources  *ProjectResources `json:"resources,omitempty"`
+	Descripion string            `json:"description,omitempty"`
+}
+
+// Project Response object for intentful operations on a Host
+type Project struct {
+	Status     *ProjectStatus `json:"status,omitempty"`
+	Spec       *ProjectSpec   `json:"spec,omitempty"`
+	APIVersion string         `json:"api_version,omitempty"`
+	Metadata   *Metadata      `json:"metadata,omitempty"`
+}
+
+// ProjectListResponse Response object for intentful operation of Host
+type ProjectListResponse struct {
+	APIVersion string              `json:"api_version,omitempty"`
+	Entities   []*Project          `json:"entities,omitempty"`
 	Metadata   *ListMetadataOutput `json:"metadata,omitempty"`
 }

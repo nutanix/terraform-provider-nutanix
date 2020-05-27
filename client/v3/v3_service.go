@@ -56,15 +56,21 @@ type Service interface {
 	GetVolumeGroup(uuid string) (*VolumeGroupResponse, error)
 	DeleteVolumeGroup(uuid string) error
 	CreateVolumeGroup(request *VolumeGroupInput) (*VolumeGroupResponse, error)
-	ListAllVM() (*VMListIntentResponse, error)
-	ListAllSubnet() (*SubnetListIntentResponse, error)
-	ListAllNetworkSecurityRule() (*NetworkSecurityRuleListIntentResponse, error)
-	ListAllImage() (*ImageListIntentResponse, error)
-	ListAllCluster() (*ClusterListIntentResponse, error)
+	ListAllVM(filter string) (*VMListIntentResponse, error)
+	ListAllSubnet(filter string) (*SubnetListIntentResponse, error)
+	ListAllNetworkSecurityRule(filter string) (*NetworkSecurityRuleListIntentResponse, error)
+	ListAllImage(filter string) (*ImageListIntentResponse, error)
+	ListAllCluster(filter string) (*ClusterListIntentResponse, error)
 	GetTask(taskUUID string) (*TasksResponse, error)
 	GetHost(taskUUID string) (*HostResponse, error)
 	ListHost(getEntitiesRequest *DSMetadata) (*HostListResponse, error)
 	ListAllHost() (*HostListResponse, error)
+	CreateProject(request *Project) (*Project, error)
+	GetProject(projectUUID string) (*Project, error)
+	ListProject(getEntitiesRequest *DSMetadata) (*ProjectListResponse, error)
+	ListAllProject() (*ProjectListResponse, error)
+	UpdateProject(uuid string, body *Project) (*Project, error)
+	DeleteProject(uuid string) error
 }
 
 /*CreateVM Creates a VM
@@ -853,10 +859,11 @@ func hasNext(ri *int64) bool {
 }
 
 // ListAllVM ...
-func (op Operations) ListAllVM() (*VMListIntentResponse, error) {
+func (op Operations) ListAllVM(filter string) (*VMListIntentResponse, error) {
 	entities := make([]*VMIntentResource, 0)
 
 	resp, err := op.ListVM(&DSMetadata{
+		Filter: &filter,
 		Kind:   utils.StringPtr("vm"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
@@ -872,6 +879,7 @@ func (op Operations) ListAllVM() (*VMListIntentResponse, error) {
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
 			resp, err = op.ListVM(&DSMetadata{
+				Filter: &filter,
 				Kind:   utils.StringPtr("vm"),
 				Length: utils.Int64Ptr(itemsPerPage),
 				Offset: utils.Int64Ptr(offset),
@@ -893,10 +901,11 @@ func (op Operations) ListAllVM() (*VMListIntentResponse, error) {
 }
 
 // ListAllSubnet ...
-func (op Operations) ListAllSubnet() (*SubnetListIntentResponse, error) {
+func (op Operations) ListAllSubnet(filter string) (*SubnetListIntentResponse, error) {
 	entities := make([]*SubnetIntentResponse, 0)
 
 	resp, err := op.ListSubnet(&DSMetadata{
+		Filter: &filter,
 		Kind:   utils.StringPtr("subnet"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
@@ -912,6 +921,7 @@ func (op Operations) ListAllSubnet() (*SubnetListIntentResponse, error) {
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
 			resp, err = op.ListSubnet(&DSMetadata{
+				Filter: &filter,
 				Kind:   utils.StringPtr("subnet"),
 				Length: utils.Int64Ptr(itemsPerPage),
 				Offset: utils.Int64Ptr(offset),
@@ -934,10 +944,11 @@ func (op Operations) ListAllSubnet() (*SubnetListIntentResponse, error) {
 }
 
 // ListAllNetworkSecurityRule ...
-func (op Operations) ListAllNetworkSecurityRule() (*NetworkSecurityRuleListIntentResponse, error) {
+func (op Operations) ListAllNetworkSecurityRule(filter string) (*NetworkSecurityRuleListIntentResponse, error) {
 	entities := make([]*NetworkSecurityRuleIntentResource, 0)
 
 	resp, err := op.ListNetworkSecurityRule(&DSMetadata{
+		Filter: &filter,
 		Kind:   utils.StringPtr("network_security_rule"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
@@ -953,6 +964,7 @@ func (op Operations) ListAllNetworkSecurityRule() (*NetworkSecurityRuleListInten
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
 			resp, err = op.ListNetworkSecurityRule(&DSMetadata{
+				Filter: &filter,
 				Kind:   utils.StringPtr("network_security_rule"),
 				Length: utils.Int64Ptr(itemsPerPage),
 				Offset: utils.Int64Ptr(offset),
@@ -975,10 +987,11 @@ func (op Operations) ListAllNetworkSecurityRule() (*NetworkSecurityRuleListInten
 }
 
 // ListAllImage ...
-func (op Operations) ListAllImage() (*ImageListIntentResponse, error) {
+func (op Operations) ListAllImage(filter string) (*ImageListIntentResponse, error) {
 	entities := make([]*ImageIntentResponse, 0)
 
 	resp, err := op.ListImage(&DSMetadata{
+		Filter: &filter,
 		Kind:   utils.StringPtr("image"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
@@ -994,6 +1007,7 @@ func (op Operations) ListAllImage() (*ImageListIntentResponse, error) {
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
 			resp, err = op.ListImage(&DSMetadata{
+				Filter: &filter,
 				Kind:   utils.StringPtr("image"),
 				Length: utils.Int64Ptr(itemsPerPage),
 				Offset: utils.Int64Ptr(offset),
@@ -1016,10 +1030,11 @@ func (op Operations) ListAllImage() (*ImageListIntentResponse, error) {
 }
 
 // ListAllCluster ...
-func (op Operations) ListAllCluster() (*ClusterListIntentResponse, error) {
-	entities := make([]*ClusterIntentResource, 0)
+func (op Operations) ListAllCluster(filter string) (*ClusterListIntentResponse, error) {
+	entities := make([]*ClusterIntentResponse, 0)
 
 	resp, err := op.ListCluster(&DSMetadata{
+		Filter: &filter,
 		Kind:   utils.StringPtr("cluster"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
@@ -1035,6 +1050,7 @@ func (op Operations) ListAllCluster() (*ClusterListIntentResponse, error) {
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
 			resp, err = op.ListCluster(&DSMetadata{
+				Filter: &filter,
 				Kind:   utils.StringPtr("cluster"),
 				Length: utils.Int64Ptr(itemsPerPage),
 				Offset: utils.Int64Ptr(offset),
@@ -1139,4 +1155,144 @@ func (op Operations) ListAllHost() (*HostListResponse, error) {
 	}
 
 	return resp, nil
+}
+
+/*CreateProject creates a project
+ * This operation submits a request to create a project based on the input parameters.
+ *
+ * @param request *Project
+ * @return *Project
+ */
+func (op Operations) CreateProject(request *Project) (*Project, error) {
+	ctx := context.TODO()
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, "/projects", request)
+	if err != nil {
+		return nil, err
+	}
+
+	projectResponse := new(Project)
+
+	return projectResponse, op.client.Do(ctx, req, projectResponse)
+}
+
+/*GetProject This operation gets a project.
+ *
+ * @param uuid The prject uuid - string.
+ * @return *Project
+ */
+func (op Operations) GetProject(projectUUID string) (*Project, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/projects/%s", projectUUID)
+	project := new(Project)
+
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return project, op.client.Do(ctx, req, project)
+}
+
+/*ListProject gets a list of projects.
+ *
+ * @param metadata allows create filters to get specific data - *DSMetadata.
+ * @return *ProjectListResponse
+ */
+func (op Operations) ListProject(getEntitiesRequest *DSMetadata) (*ProjectListResponse, error) {
+	ctx := context.TODO()
+	path := "/projects/list"
+
+	projectList := new(ProjectListResponse)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return projectList, op.client.Do(ctx, req, projectList)
+}
+
+/*ListAllProject gets a list of projects
+ * This operation gets a list of Projects, allowing for sorting and pagination.
+ * Note: Entities that have not been created successfully are not listed.
+ * @return *ProjectListResponse
+ */
+func (op Operations) ListAllProject() (*ProjectListResponse, error) {
+	entities := make([]*Project, 0)
+
+	resp, err := op.ListProject(&DSMetadata{
+		Kind:   utils.StringPtr("project"),
+		Length: utils.Int64Ptr(itemsPerPage),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining) {
+			resp, err = op.ListProject(&DSMetadata{
+				Kind:   utils.StringPtr("project"),
+				Length: utils.Int64Ptr(itemsPerPage),
+				Offset: utils.Int64Ptr(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
+		}
+
+		resp.Entities = entities
+	}
+
+	return resp, nil
+}
+
+/*UpdateProject Updates a project
+ * This operation submits a request to update a existing Project based on the input parameters
+ * @param uuid The uuid of the entity - string.
+ * @param body - *Project
+ * @return *Project, error
+ */
+func (op Operations) UpdateProject(uuid string, body *Project) (*Project, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/projects/%s", uuid)
+	projectInput := new(Project)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return projectInput, op.client.Do(ctx, req, projectInput)
+}
+
+/*DeleteProject Deletes a project
+ * This operation submits a request to delete a existing Project.
+ *
+ * @param uuid The uuid of the entity.
+ * @return void
+ */
+func (op Operations) DeleteProject(uuid string) error {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/projects/%s", uuid)
+
+	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	if err != nil {
+		return err
+	}
+
+	return op.client.Do(ctx, req, nil)
 }

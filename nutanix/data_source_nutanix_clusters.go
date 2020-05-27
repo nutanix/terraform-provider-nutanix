@@ -604,7 +604,8 @@ func dataSourceNutanixClustersRead(d *schema.ResourceData, meta interface{}) err
 	// Get client connection
 	conn := meta.(*Client).API
 
-	resp, err := conn.V3.ListAllCluster()
+	var filter string
+	resp, err := conn.V3.ListAllCluster(filter)
 
 	if err != nil {
 		return err
