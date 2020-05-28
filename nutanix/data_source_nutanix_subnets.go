@@ -9,8 +9,7 @@ import (
 
 func dataSourceNutanixSubnets() *schema.Resource {
 	return &schema.Resource{
-		Read:          dataSourceNutanixSubnetsRead,
-		SchemaVersion: 1,
+		Read: dataSourceNutanixSubnetsRead,
 		Schema: map[string]*schema.Schema{
 			"api_version": {
 				Type:     schema.TypeString,
