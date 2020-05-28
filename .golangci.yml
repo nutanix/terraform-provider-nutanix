@@ -18,11 +18,11 @@ linters-settings:
     locale: US
   lll:
     # Default is 120. '\t' is counted as 1 character.
-    # set our project to 140, as things like v3_structs with inline comments end up being a touch long
+    # set our project to 200, as things like v3_structs with inline comments end up being a touch long
     # also, for anyone using vscode, use the following configs:
-    # "rewrap.wrappingColumn": 140 ... requires the rewrap plugin
-    # "editor.rulers": [140]
-    line-length: 140
+    # "rewrap.wrappingColumn": 200 ... requires the rewrap plugin
+    # "editor.rulers": [200]
+    line-length: 200
 
 linters:
   enable-all: true
