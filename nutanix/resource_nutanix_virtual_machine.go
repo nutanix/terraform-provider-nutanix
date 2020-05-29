@@ -279,6 +279,11 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 
 			// RESOURCES ARGUMENTS
 
+			"use_hot_add": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"num_vnuma_nodes": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -918,6 +923,11 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting parent_reference for Virtual Machine %s: %s", d.Id(), err)
 	}
 
+	//use_hot_add cannot be derived via API so get the value for 'use_hot_add'.
+	// if err := d.Set("use_hot_add", ); err != nil {
+	// 	return fmt.Errorf("error setting use_got_add for Virtual Machine %s: %s", d.Id(), err)
+	// }
+
 	diskAddress := make(map[string]interface{})
 	mac := ""
 	b := make([]string, 0)
@@ -1005,7 +1015,15 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 	setVMTimeout(meta)
-	var hotPlugChange = true
+	var hotPlugChange = d.Get("use_hot_add").(bool)
+
+	// log.Printf("[HP] hotplugchange pre: %t", hotPlugChange)
+
+	// if uha, uhaok := d.GetOk("use_hot_add"); uhaok {
+	// 	log.Printf("[HP] use_hot_add: %t", uha.(bool))
+	// 	hotPlugChange = uha.(bool)
+	// }
+	log.Printf("[HP] hotplugchange post: %t", hotPlugChange)
 
 	log.Printf("[Debug] Updating VM values %s", d.Id())
 

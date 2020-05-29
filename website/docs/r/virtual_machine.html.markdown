@@ -70,6 +70,7 @@ The following arguments are supported:
 * `power_state_mechanism`: - (Optional) Indicates the mechanism guiding the VM power state transition. Currently used for the transition to \"OFF\" state. Power state mechanism (ACPI/GUEST/HARD).
 * `vga_console_enabled`: - (Optional) Indicates whether VGA console should be enabled or not.
 * `disk_list` Disks attached to the VM.
+* `use_hot_add`: - (Optional) Use Hot Add when modifying VM resources. Passing value false will result in VM reboots. Default value is true.
 
 ### Disk List
 
