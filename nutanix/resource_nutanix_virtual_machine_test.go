@@ -2,7 +2,6 @@ package nutanix
 
 import (
 	"fmt"
-	"github.com/spf13/cast"
 	"strings"
 	"testing"
 	"time"
@@ -10,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/spf13/cast"
 )
 
 func TestAccNutanixVirtualMachine_basic(t *testing.T) {
