@@ -1643,7 +1643,7 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	}
 	vm.SerialPortList = expandSerialPortList(d)
 
-	vmDiskList, err := expandDiskList(d, true)
+	vmDiskList, err := expandDiskList(d)
 
 	vm.DiskList = vmDiskList
 
@@ -1722,7 +1722,7 @@ func expandIPAddressList(ipl []interface{}) []*v3.IPAddress {
 func expandDiskListUpdate(d *schema.ResourceData, vm *v3.VMIntentResponse) ([]*v3.VMDisk, error) {
 	var eDiskList []*v3.VMDisk
 	var err error
-	if eDiskList, err = expandDiskList(d, false); err != nil {
+	if eDiskList, err = expandDiskList(d); err != nil {
 		return eDiskList, err
 	}
 	if vm.Spec != nil && vm.Spec.Resources != nil {
@@ -1739,14 +1739,13 @@ func expandDiskListUpdate(d *schema.ResourceData, vm *v3.VMIntentResponse) ([]*v
 	return eDiskList, nil
 }
 
-func expandDiskList(d *schema.ResourceData, isCreation bool) ([]*v3.VMDisk, error) {
+func expandDiskList(d *schema.ResourceData) ([]*v3.VMDisk, error) {
 	if v, ok := d.GetOk("disk_list"); ok {
 		dsk := v.([]interface{})
 		if len(dsk) > 0 {
 			dls := make([]*v3.VMDisk, len(dsk))
 
 			for k, val := range dsk {
-				hasDSRef := false
 				v := val.(map[string]interface{})
 				dl := &v3.VMDisk{}
 
@@ -1764,7 +1763,6 @@ func expandDiskList(d *schema.ResourceData, isCreation bool) ([]*v3.VMDisk, erro
 				}
 				// data_source_reference
 				if v1, ok := v["data_source_reference"]; ok && len(v1.(map[string]interface{})) != 0 {
-					hasDSRef = true
 					dsref := v1.(map[string]interface{})
 					dl.DataSourceReference = validateShortRef(dsref)
 				}
@@ -1775,16 +1773,10 @@ func expandDiskList(d *schema.ResourceData, isCreation bool) ([]*v3.VMDisk, erro
 				}
 				// disk_size_bytes
 				if v1, ok1 := v["disk_size_bytes"]; ok1 && v1.(int) != 0 {
-					if hasDSRef && isCreation {
-						return nil, fmt.Errorf(`"disk_list.%[1]d.disk_size_bytes": conflicts with disk_list.%[1]d.data_source_reference`, k)
-					}
 					dl.DiskSizeBytes = utils.Int64Ptr(int64(v1.(int)))
 				}
 				// disk_size_mib
 				if v1, ok := v["disk_size_mib"]; ok && v1.(int) != 0 {
-					if hasDSRef && isCreation {
-						return nil, fmt.Errorf(`"disk_list.%[1]d.disk_size_mib": conflicts with disk_list.%[1]d.data_source_reference`, k)
-					}
 					dl.DiskSizeMib = utils.Int64Ptr(int64(v1.(int)))
 				}
 				dls[k] = dl
