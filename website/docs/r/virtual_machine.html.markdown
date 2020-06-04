@@ -95,7 +95,10 @@ The device_properties attribute supports the following.
 
 The guest_customization_sysprep attribute supports the following:
 
-* `install_type`: - (Optional) Whether the guest will be freshly installed using this unattend configuration, or whether this unattend configuration will be applied to a pre-prepared image. Default is \"PREPARED\".
+* `install_type`: - (Optional) Whether the guest will be freshly installed using this unattend configuration, or whether this unattend configuration will be applied to a pre-prepared image. Default is `PREPARED`. 
+    Valid values are:
+    - `PREPARED` is done when sysprep is used to finalize Windows installation from an installed Windows and file name it is searching `unattend.xml` for `unattend_xml` parameter
+    - `FRESH` is done when sysprep is used to install Windows from ISO and file name it is searching `autounattend.xml` for `unattend_xml` parameter
 * `unattend_xml`: - (Optional) Generic key value pair used for custom attributes.
 
 ### Disk Address
