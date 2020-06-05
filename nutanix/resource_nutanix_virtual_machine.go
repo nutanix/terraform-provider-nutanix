@@ -279,6 +279,11 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 
 			// RESOURCES ARGUMENTS
 
+			"use_hot_add": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"num_vnuma_nodes": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -917,6 +922,9 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	if err := d.Set("parent_reference", flattenReferenceValues(resp.Status.Resources.ParentReference)); err != nil {
 		return fmt.Errorf("error setting parent_reference for Virtual Machine %s: %s", d.Id(), err)
 	}
+	if err := d.Set("use_hot_add", d.Get("use_hot_add")); err != nil {
+		return fmt.Errorf("error setting use_hot_add for Virtual Machine %s: %s", d.Id(), err)
+	}
 
 	diskAddress := make(map[string]interface{})
 	mac := ""
@@ -1094,7 +1102,9 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		o, n := d.GetChange("num_vcpus_per_socket")
 		res.NumVcpusPerSocket = utils.Int64Ptr(int64(n.(int)))
 		if n.(int) < o.(int) || n.(int) > o.(int) {
-			hotPlugChange = false
+			if !d.Get("use_hot_add").(bool) {
+				hotPlugChange = false
+			}
 		}
 	}
 	if d.HasChange("num_sockets") {
@@ -1108,7 +1118,9 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		o, n := d.GetChange("memory_size_mib")
 		res.MemorySizeMib = utils.Int64Ptr(int64(n.(int)))
 		if n.(int) < o.(int) {
-			hotPlugChange = false
+			if !d.Get("use_hot_add").(bool) {
+				hotPlugChange = false
+			}
 		}
 	}
 	if d.HasChange("hardware_clock_timezone") {
