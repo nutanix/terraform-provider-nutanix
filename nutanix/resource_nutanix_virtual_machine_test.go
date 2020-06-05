@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/spf13/cast"
 )
 
 func TestAccNutanixVirtualMachine_basic(t *testing.T) {
@@ -82,6 +83,58 @@ func TestAccNutanixVirtualMachine_WithDisk(t *testing.T) {
 				ImportStateVerify: true,
 			},
 		}})
+}
+
+func TestAccNutanixVirtualMachine_hotadd(t *testing.T) {
+	vmName := acctest.RandomWithPrefix("test-dou-vm")
+	cpus := 1
+	sockets := 1
+	memory := 1024
+	hotAdd := true
+	imageName := acctest.RandomWithPrefix("test-dou-image")
+
+	vmNameUpdated := acctest.RandomWithPrefix("test-dou-vm")
+	cpusUpdated := 2
+	socketsUpdated := 2
+	memoryUpdated := 2048
+	hotAddUpdated := false // To force a reboot
+	resourceName := "nutanix_virtual_machine.vm10"
+	imageNameUpdate := acctest.RandomWithPrefix("test-dou-image")
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixVMConfigHotAdd(vmName, cpus, sockets, memory, hotAdd, imageName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", cast.ToString(memory)),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", cast.ToString(sockets)),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", cast.ToString(cpus)),
+					resource.TestCheckResourceAttr(resourceName, "use_hot_add", cast.ToString(hotAdd)),
+				),
+			},
+			{
+				Config: testAccNutanixVMConfigHotAdd(vmNameUpdated, cpusUpdated, socketsUpdated, memoryUpdated, hotAddUpdated, imageNameUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", cast.ToString(memoryUpdated)),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", cast.ToString(socketsUpdated)),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", cast.ToString(cpusUpdated)),
+					resource.TestCheckResourceAttr(resourceName, "use_hot_add", cast.ToString(hotAddUpdated))),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"disk_list"},
+			},
+		},
+	})
 }
 
 func TestAccNutanixVirtualMachine_updateFields(t *testing.T) {
@@ -829,4 +882,48 @@ func testAccNutanixVMConfigCloningVM(r int) string {
 			}
 		}
 	`, r)
+}
+
+func testAccNutanixVMConfigHotAdd(vmName string, cpus, sockets, memory int, hotAdd bool, imageName string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster1 = [
+				for cluster in data.nutanix_clusters.clusters.entities :
+				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+			][0]
+		}
+
+		resource "nutanix_image" "cirros-034-disk" {
+			name        = "%[6]s"
+			source_uri  = "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+			description = "heres a tiny linux image, not an iso, but a real disk!"
+		}
+
+		resource "nutanix_virtual_machine" "vm10" {
+			name         = "%[1]s"
+			cluster_uuid = "${local.cluster1}"
+			num_vcpus_per_socket  = %[2]d
+			num_sockets           = %[3]d
+			memory_size_mib       = %[4]d
+			power_state_mechanism = "ACPI"
+			use_hot_add           = %[5]v
+
+			disk_list {
+				data_source_reference = {
+					kind = "image"
+					uuid = nutanix_image.cirros-034-disk.id
+				}
+
+				device_properties {
+					disk_address = {
+						device_index = 0
+						adapter_type = "SCSI"
+					}
+					device_type = "DISK"
+				}
+			}
+		}
+	`, vmName, cpus, sockets, memory, hotAdd, imageName)
 }
