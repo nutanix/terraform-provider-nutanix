@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/cast"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
@@ -661,6 +662,46 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 							Computed: true,
+						},
+						"storage_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"flash_mode": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"storage_container_reference": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"url": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+												"kind": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Default:  "storage_container",
+												},
+												"name": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"uuid": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
 						},
 						"device_properties": {
 							Type:     schema.TypeList,
@@ -1694,65 +1735,97 @@ func expandDiskList(d *schema.ResourceData, isCreation bool) ([]*v3.VMDisk, erro
 		dsk := v.([]interface{})
 		if len(dsk) > 0 {
 			dls := make([]*v3.VMDisk, len(dsk))
+
 			for k, val := range dsk {
 				hasDSRef := false
 				v := val.(map[string]interface{})
 				dl := &v3.VMDisk{}
+
+				// uuid
 				if v1, ok1 := v["uuid"]; ok1 && v1.(string) != "" {
 					dl.UUID = utils.StringPtr(v1.(string))
 				}
-				if v1, ok1 := v["device_properties"]; ok1 {
-					dvp := v1.([]interface{})
-					if len(dvp) > 0 {
-						d := dvp[0].(map[string]interface{})
-						dp := &v3.VMDiskDeviceProperties{}
-						if v1, ok := d["device_type"]; ok {
-							dp.DeviceType = utils.StringPtr(v1.(string))
-						}
-						if v2, ok := d["disk_address"]; ok && len(v2.(map[string]interface{})) > 0 {
-							da := v2.(map[string]interface{})
-							v3disk := &v3.DiskAddress{}
-							if di, diok := da["device_index"]; diok {
-								index, _ := strconv.Atoi(di.(string))
-								v3disk.DeviceIndex = utils.Int64Ptr(int64(index))
-							}
-							if di, diok := da["adapter_type"]; diok {
-								v3disk.AdapterType = utils.StringPtr(di.(string))
-							}
-							dp.DiskAddress = v3disk
-						}
-						dl.DeviceProperties = dp
-					}
+				// storage_config
+				if v, ok1 := v["storage_config"]; ok1 {
+					dl.StorageConfig = expandStorageConfig(v.([]interface{}))
 				}
+				// device_properties
+				if v1, ok1 := v["device_properties"]; ok1 {
+					dl.DeviceProperties = expandDeviceProperties(v1.([]interface{}))
+				}
+				// data_source_reference
 				if v1, ok := v["data_source_reference"]; ok && len(v1.(map[string]interface{})) != 0 {
 					hasDSRef = true
 					dsref := v1.(map[string]interface{})
 					dl.DataSourceReference = validateShortRef(dsref)
 				}
+				// volume_group_reference
 				if v1, ok := v["volume_group_reference"]; ok {
 					volgr := v1.(map[string]interface{})
 					dl.VolumeGroupReference = validateRef(volgr)
 				}
-
+				// disk_size_bytes
 				if v1, ok1 := v["disk_size_bytes"]; ok1 && v1.(int) != 0 {
 					if hasDSRef && isCreation {
 						return nil, fmt.Errorf(`"disk_list.%[1]d.disk_size_bytes": conflicts with disk_list.%[1]d.data_source_reference`, k)
 					}
 					dl.DiskSizeBytes = utils.Int64Ptr(int64(v1.(int)))
 				}
+				// disk_size_mib
 				if v1, ok := v["disk_size_mib"]; ok && v1.(int) != 0 {
 					if hasDSRef && isCreation {
 						return nil, fmt.Errorf(`"disk_list.%[1]d.disk_size_mib": conflicts with disk_list.%[1]d.data_source_reference`, k)
 					}
 					dl.DiskSizeMib = utils.Int64Ptr(int64(v1.(int)))
 				}
-
 				dls[k] = dl
 			}
 			return dls, nil
 		}
 	}
 	return nil, nil
+}
+
+func expandStorageConfig(storageConfig []interface{}) *v3.VMStorageConfig {
+	if len(storageConfig) > 0 {
+		v := storageConfig[0].(map[string]interface{})
+		scr := v["storage_container_reference"].([]interface{})[0].(map[string]interface{})
+
+		return &v3.VMStorageConfig{
+			FlashMode: cast.ToString(v["flash_mode"]),
+			StorageContainerReference: &v3.StorageContainerReference{
+				URL:  cast.ToString(scr["url"]),
+				Kind: cast.ToString(scr["kind"]),
+				UUID: cast.ToString(scr["uuid"]),
+			},
+		}
+	}
+	return nil
+}
+
+func expandDeviceProperties(deviceProperties []interface{}) *v3.VMDiskDeviceProperties {
+	if len(deviceProperties) > 0 {
+		dp := &v3.VMDiskDeviceProperties{}
+		d := deviceProperties[0].(map[string]interface{})
+
+		if v, ok := d["device_type"]; ok {
+			dp.DeviceType = utils.StringPtr(v.(string))
+		}
+		if v, ok := d["disk_address"]; ok && len(v.(map[string]interface{})) > 0 {
+			da := v.(map[string]interface{})
+			v3disk := &v3.DiskAddress{}
+
+			if di, diOk := da["device_index"]; diOk {
+				v3disk.DeviceIndex = utils.Int64Ptr(cast.ToInt64(di))
+			}
+			if at, atOk := da["adapter_type"]; atOk {
+				v3disk.AdapterType = utils.StringPtr(at.(string))
+			}
+			dp.DiskAddress = v3disk
+		}
+		return dp
+	}
+	return nil
 }
 
 func expandSerialPortList(d *schema.ResourceData) []*v3.VMSerialPort {
