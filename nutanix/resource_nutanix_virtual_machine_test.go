@@ -362,6 +362,25 @@ func TestAccNutanixVirtualMachine_cloningVM(t *testing.T) {
 	})
 }
 
+func TestAccNutanixVirtualMachine_withDiskContainer(t *testing.T) {
+	r := acctest.RandInt()
+
+	resourceName := "nutanix_virtual_machine.vm-disk"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixVMConfigWithDiskContainer(r),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "disk_list.#"),
+					resource.TestCheckResourceAttr(resourceName, "disk_list.#", "1"),
+				),
+			},
+		}})
+}
+
 func testAccCheckNutanixVirtualMachineExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -926,4 +945,37 @@ func testAccNutanixVMConfigHotAdd(vmName string, cpus, sockets, memory int, hotA
 			}
 		}
 	`, vmName, cpus, sockets, memory, hotAdd, imageName)
+}
+
+func testAccNutanixVMConfigWithDiskContainer(r int) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster1 = [
+				for cluster in data.nutanix_clusters.clusters.entities :
+				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+			][0]
+		}
+
+		resource "nutanix_virtual_machine" "vm-disk" {
+			name                 = "test-dou-vm-%[1]d"
+			cluster_uuid         = local.cluster1
+			num_vcpus_per_socket = 1
+			num_sockets          = 1
+			memory_size_mib      = 186
+
+			disk_list {
+				disk_size_bytes = 68157440
+				disk_size_mib   = 65
+
+				storage_config {
+					storage_container_reference {
+						kind = "storage_container"
+						uuid = "2bbe77bc-fd14-4697-8de1-6369757f9219"
+					}
+				}
+			}
+		}
+	`, r)
 }
