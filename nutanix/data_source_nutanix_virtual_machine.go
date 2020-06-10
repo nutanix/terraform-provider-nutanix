@@ -522,6 +522,43 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
+						"storage_config": {
+							Type:     schema.TypeList,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"flash_mode": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"storage_container_reference": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"url": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"kind": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"name": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"uuid": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"device_properties": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -570,7 +607,6 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 								},
 							},
 						},
-
 						"volume_group_reference": {
 							Type:     schema.TypeMap,
 							Computed: true,
@@ -665,6 +701,9 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	if err := d.Set("parent_reference", flattenReferenceValues(resp.Status.Resources.ParentReference)); err != nil {
 		return err
 	}
+	if err := d.Set("disk_list", flattenDiskList(resp.Status.Resources.DiskList)); err != nil {
+		return err
+	}
 
 	diskAddress := make(map[string]interface{})
 	mac := ""
@@ -753,7 +792,7 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	d.Set("vga_console_enabled", utils.BoolValue(resp.Status.Resources.VgaConsoleEnabled))
 	d.SetId(utils.StringValue(resp.Metadata.UUID))
 
-	return d.Set("disk_list", setDiskList(resp.Status.Resources.DiskList, resp.Status.Resources.GuestCustomization))
+	return nil
 }
 
 func resourceDatasourceVirtualMachineInstanceStateUpgradeV0(is map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
