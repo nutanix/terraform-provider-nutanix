@@ -36,6 +36,7 @@ The following arguments are supported:
 * `source_uri`: - (Optional) The source URI points at the location of the source image which is used to create/update image.
 * `source_path`: - (Optional) A local path to upload an image.
 * `version`: - (Optional) The image version.
+* `data_source_reference` - (Optional)  Reference to a data source.
 
 ### Version
 
@@ -64,6 +65,7 @@ The metadata attribute exports the following:
 * `spec_version`: - Version number of the latest spec.
 * `spec_hash`: - Hash of the spec. This will be returned from server.
 * `name`: - image name.
+* `should_force_translate`: - Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
 
 ### Reference
 
