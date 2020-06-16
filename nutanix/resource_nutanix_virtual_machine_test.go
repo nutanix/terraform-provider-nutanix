@@ -386,6 +386,8 @@ func TestAccNutanixVirtualMachine_resizeDiskClone(t *testing.T) {
 	resourceName := "nutanix_virtual_machine.vm"
 	imgName := acctest.RandomWithPrefix("test-dou-IMG")
 	vmName := acctest.RandomWithPrefix("test-dou-VM")
+	diskSize := 90 * 1024 * 1024 * 1024
+	diskSizeUpdated := 90 * 1024 * 1024
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -393,7 +395,18 @@ func TestAccNutanixVirtualMachine_resizeDiskClone(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixVMConfigResizeDiskClone(imgName, vmName),
+				Config: testAccNutanixVMConfigResizeDiskClone(imgName, vmName, diskSize),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", vmName),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+				),
+			},
+			{
+				Config: testAccNutanixVMConfigResizeDiskClone(imgName, vmName, diskSizeUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixVirtualMachineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", vmName),
@@ -1006,7 +1019,7 @@ func testAccNutanixVMConfigWithDiskContainer(r int) string {
 	`, r)
 }
 
-func testAccNutanixVMConfigResizeDiskClone(imgName, vmName string) string {
+func testAccNutanixVMConfigResizeDiskClone(imgName, vmName string, diskSize int) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -1034,8 +1047,8 @@ func testAccNutanixVMConfigResizeDiskClone(imgName, vmName string) string {
 					kind = "image"
 					uuid = nutanix_image.img.id
 				}
-				disk_size_bytes = 90 * 1024 * 1024 * 1024
+				disk_size_bytes = %d
 			}
 		}
-	`, imgName, vmName)
+	`, imgName, vmName, diskSize)
 }
