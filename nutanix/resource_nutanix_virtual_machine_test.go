@@ -1016,9 +1016,9 @@ func testAccNutanixVMConfigResizeDiskClone(imgName, vmName string) string {
 			? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
 		}
 
-		resource "nutanix_image" "centos7" {
+		resource "nutanix_image" "img" {
 			name        = "%s"
-			source_uri  = "http://packages.oit.ncsu.edu/centos/7.7.1908/isos/x86_64/CentOS-7-x86_64-NetInstall-1908.iso"
+			source_uri  = "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
 			description = "heres a tiny linux image, not an iso, but a real disk!"
 		}
 
@@ -1032,7 +1032,7 @@ func testAccNutanixVMConfigResizeDiskClone(imgName, vmName string) string {
 			disk_list {
 				data_source_reference = {
 					kind = "image"
-					uuid = "nutanix_image.centos7.id"
+					uuid = nutanix_image.img.id
 				}
 				disk_size_bytes = 90 * 1024 * 1024 * 1024
 			}
