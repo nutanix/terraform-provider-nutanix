@@ -386,8 +386,8 @@ func TestAccNutanixVirtualMachine_resizeDiskClone(t *testing.T) {
 	resourceName := "nutanix_virtual_machine.vm"
 	imgName := acctest.RandomWithPrefix("test-dou-IMG")
 	vmName := acctest.RandomWithPrefix("test-dou-VM")
-	diskSize := 90 * 1024 * 1024 * 1024
-	diskSizeUpdated := 90 * 1024 * 1024
+	diskSize := 90 * 1024 * 1024
+	diskSizeUpdated := 90 * 1024 * 1024 * 1024
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
