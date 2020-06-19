@@ -195,6 +195,20 @@ type VMDiskDeviceProperties struct {
 	DiskAddress *DiskAddress `json:"disk_address,omitempty" mapstructure:"disk_address,omitempty"`
 }
 
+// StorageContainerReference references to a kind. Either one of (kind, uuid) or url needs to be specified.
+type StorageContainerReference struct {
+	URL  string `json:"url,omitempty"`
+	Kind string `json:"kind,omitempty"`
+	UUID string `json:"uuid,omitempty"`
+	Name string `json:"name,omitempty"`
+}
+
+// VMStorageConfig specifies the storage configuration parameters for VM disks.
+type VMStorageConfig struct {
+	FlashMode                 string                     `json:"flash_mode,omitempty"`
+	StorageContainerReference *StorageContainerReference `json:"storage_container_reference,omitempty"`
+}
+
 // VMDisk VirtualMachine Disk (VM Disk).
 type VMDisk struct {
 	DataSourceReference *Reference `json:"data_source_reference,omitempty" mapstructure:"data_source_reference,omitempty"`
@@ -212,6 +226,9 @@ type VMDisk struct {
 	UUID *string `json:"uuid,omitempty" mapstructure:"uuid,omitempty"`
 
 	VolumeGroupReference *Reference `json:"volume_group_reference,omitempty" mapstructure:"volume_group_reference,omitempty"`
+
+	// This preference specifies the storage configuration parameters for VM disks.
+	StorageConfig *VMStorageConfig `json:"storage_config,omitempty" mapstructure:"storage_config,omitempty"`
 }
 
 // VMResources VM Resources Definition.
