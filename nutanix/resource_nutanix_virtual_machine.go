@@ -875,6 +875,13 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error reading Virtual Machine %s: %s", d.Id(), err)
 	}
 
+	// Added check for deletion. Re-running TF right after VM deletion, can cause an error because the ID is still present in API.
+	// Check if name is not present and also resources is not present
+	if resp.Status.Name == nil && resp.Status.Resources == nil {
+		d.SetId("")
+		return nil
+	}
+
 	if err := flattenClusterReference(resp.Status.ClusterReference, d); err != nil {
 		return fmt.Errorf("error setting cluster information for Virtual Machine %s: %s", d.Id(), err)
 	}
@@ -1463,11 +1470,13 @@ func resourceNutanixVirtualMachineExists(d *schema.ResourceData, meta interface{
 	conn := meta.(*Client).API
 
 	_, err := conn.V3.GetVM(d.Id())
-
 	if err != nil {
-		return false, err
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+			return false, nil
+		}
+		return false, fmt.Errorf("error checking virtual Virtual Machine %s existence: %s", d.Id(), err)
 	}
-
 	return true, nil
 }
 
