@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/spf13/cast"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -104,40 +105,51 @@ func flattenNicList(nics []*v3.VMNic) []map[string]interface{} {
 
 func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
 	diskList := make([]map[string]interface{}, 0)
-	if disks != nil {
-		diskList = make([]map[string]interface{}, 0)
-		for _, v := range disks {
-			disk := make(map[string]interface{})
+	for _, v := range disks {
+		var deviceProps []map[string]interface{}
+		var storageConfig []map[string]interface{}
 
-			disk["uuid"] = utils.StringValue(v.UUID)
-			disk["disk_size_bytes"] = utils.Int64Value(v.DiskSizeBytes)
-			disk["disk_size_mib"] = utils.Int64Value(v.DiskSizeMib)
+		if v.DeviceProperties != nil {
+			deviceProps = make([]map[string]interface{}, 1)
+			index := fmt.Sprintf("%d", utils.Int64Value(v.DeviceProperties.DiskAddress.DeviceIndex))
+			adapter := v.DeviceProperties.DiskAddress.AdapterType
 
-			var deviceProps []map[string]interface{}
-			if v.DeviceProperties != nil {
-				deviceProps = make([]map[string]interface{}, 1)
-				deviceProp := make(map[string]interface{})
-				index := fmt.Sprintf("%d", utils.Int64Value(v.DeviceProperties.DiskAddress.DeviceIndex))
-				adapter := v.DeviceProperties.DiskAddress.AdapterType
-				if index == "3" && *adapter == IDE {
-					continue
-				}
-				diskAddress := map[string]interface{}{
+			if index == "3" && *adapter == IDE {
+				continue
+			}
+
+			deviceProps[0] = map[string]interface{}{
+				"device_type": v.DeviceProperties.DeviceType,
+				"disk_address": map[string]interface{}{
 					"device_index": index,
 					"adapter_type": adapter,
-				}
-
-				deviceProp["disk_address"] = diskAddress
-				deviceProp["device_type"] = v.DeviceProperties.DeviceType
-
-				deviceProps[0] = deviceProp
+				},
 			}
-			disk["device_properties"] = deviceProps
-			disk["data_source_reference"] = flattenReferenceValues(v.DataSourceReference)
-			disk["volume_group_reference"] = flattenReferenceValues(v.VolumeGroupReference)
-
-			diskList = append(diskList, disk)
 		}
+
+		if v.StorageConfig != nil {
+			storageConfig = append(storageConfig, map[string]interface{}{
+				"flash_mode": cast.ToString(v.StorageConfig.FlashMode),
+				"storage_container_reference": []map[string]interface{}{
+					{
+						"url":  cast.ToString(v.StorageConfig.StorageContainerReference.URL),
+						"kind": cast.ToString(v.StorageConfig.StorageContainerReference.Kind),
+						"name": cast.ToString(v.StorageConfig.StorageContainerReference.Name),
+						"uuid": cast.ToString(v.StorageConfig.StorageContainerReference.UUID),
+					},
+				},
+			})
+		}
+
+		diskList = append(diskList, map[string]interface{}{
+			"uuid":                   utils.StringValue(v.UUID),
+			"disk_size_bytes":        utils.Int64Value(v.DiskSizeBytes),
+			"disk_size_mib":          utils.Int64Value(v.DiskSizeMib),
+			"device_properties":      deviceProps,
+			"storage_config":         storageConfig,
+			"data_source_reference":  flattenReferenceValues(v.DataSourceReference),
+			"volume_group_reference": flattenReferenceValues(v.VolumeGroupReference),
+		})
 	}
 	return diskList
 }
@@ -176,53 +188,6 @@ func flattenGPUList(gpu []*v3.VMGpuOutputStatus) []map[string]interface{} {
 		}
 	}
 	return gpuList
-}
-
-func setDiskList(disk []*v3.VMDisk, hasCloudInit *v3.GuestCustomizationStatus) []map[string]interface{} {
-	var diskList []map[string]interface{}
-	if len(disk) > 0 {
-		for _, v1 := range disk {
-			if hasCloudInit != nil {
-				if hasCloudInit.CloudInit != nil && utils.StringValue(v1.DeviceProperties.DeviceType) == CDROM {
-					continue
-				}
-			}
-
-			disk := make(map[string]interface{})
-			disk["uuid"] = utils.StringValue(v1.UUID)
-			disk["disk_size_bytes"] = utils.Int64Value(v1.DiskSizeBytes)
-			disk["disk_size_mib"] = utils.Int64Value(v1.DiskSizeMib)
-			if v1.DataSourceReference != nil {
-				disk["data_source_reference"] = flattenReferenceValues(v1.DataSourceReference)
-			}
-
-			if v1.VolumeGroupReference != nil {
-				disk["volume_group_reference"] = flattenReferenceValues(v1.VolumeGroupReference)
-			}
-
-			dp := make([]map[string]interface{}, 1)
-			deviceProps := make(map[string]interface{})
-			deviceProps["device_type"] = utils.StringValue(v1.DeviceProperties.DeviceType)
-			dp[0] = deviceProps
-
-			diskAddress := make(map[string]interface{})
-			if v1.DeviceProperties.DiskAddress != nil {
-				diskAddress["device_index"] = fmt.Sprintf("%d", utils.Int64Value(v1.DeviceProperties.DiskAddress.DeviceIndex))
-				diskAddress["adapter_type"] = utils.StringValue(v1.DeviceProperties.DiskAddress.AdapterType)
-			}
-			deviceProps["disk_address"] = diskAddress
-
-			disk["device_properties"] = dp
-
-			diskList = append(diskList, disk)
-		}
-	}
-
-	if diskList == nil {
-		return make([]map[string]interface{}, 0)
-	}
-
-	return diskList
 }
 
 func flattenNutanixGuestTools(d *schema.ResourceData, guest *v3.GuestToolsStatus) error {

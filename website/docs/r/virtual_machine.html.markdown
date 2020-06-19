@@ -31,6 +31,31 @@ resource "nutanix_virtual_machine" "vm1" {
 }
 ```
 
+## Example Usage with storage config
+```hcl
+data "nutanix_clusters" "clusters" {}
+
+resource "nutanix_virtual_machine" "vm" {
+  name                 = "myVm"
+  cluster_uuid         = data.nutanix_clusters.clusters.entities.0.metadata.uuid
+  num_vcpus_per_socket = 1
+  num_sockets          = 1
+  memory_size_mib      = 186
+
+  disk_list {
+    disk_size_bytes = 68157440
+    disk_size_mib   = 65
+
+    storage_config {
+      storage_container_reference {
+        kind = "storage_container"
+        uuid = "2bbe67bc-fd14-4637-8de1-6379257f4219"
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -92,6 +117,17 @@ The device_properties attribute supports the following.
 
 * `device_type`: - A Disk type (default: DISK).
 * `disk_address`: - Address of disk to boot from.
+
+### Storage Config
+User inputs of storage configuration parameters for VMs.
+
+* `flash_mode`: - State of the storage policy to pin virtual disks to the hot tier. When specified as a VM attribute, the storage policy applies to all virtual disks of the VM unless overridden by the same attribute specified for a virtual disk.
+
+* `storage_container_reference`: - Reference to a kind. Either one of (kind, uuid) or url needs to be specified.
+* `storage_container_reference.#.url`: - GET query on the URL will provide information on the source.
+* `storage_container_reference.#.kind`: - kind of the container reference
+* `storage_container_reference.#.name`: - name of the container reference
+* `storage_container_reference.#.uuid`: - uiid of the container reference
 
 ### Sysprep
 
