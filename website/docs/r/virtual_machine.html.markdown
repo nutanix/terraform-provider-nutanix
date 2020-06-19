@@ -71,6 +71,7 @@ The following arguments are supported:
 * `vga_console_enabled`: - (Optional) Indicates whether VGA console should be enabled or not.
 * `disk_list` Disks attached to the VM.
 * `use_hot_add`: - (Optional) Use Hot Add when modifying VM resources. Passing value false will result in VM reboots. Default value is `true`.
+* `num_threads_per_core`: - (Optional) Number of threads per core.
 
 ### Disk List
 
@@ -189,6 +190,7 @@ The metadata attribute exports the following:
 * `spec_version`: - Version number of the latest spec.
 * `spec_hash`: - Hash of the spec. This will be returned from server.
 * `name`: - vm name.
+* `should_force_translate`: - Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
 
 ### Categories
 
