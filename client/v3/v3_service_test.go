@@ -41,7 +41,8 @@ func TestOperations_CreateVM(t *testing.T) {
 		expected := map[string]interface{}{
 			"api_version": "3.1",
 			"metadata": map[string]interface{}{
-				"kind": "vm",
+				"kind":                   "vm",
+				"should_force_translate": false,
 			},
 			"spec": map[string]interface{}{
 				"cluster_reference": map[string]interface{}{
@@ -66,7 +67,8 @@ func TestOperations_CreateVM(t *testing.T) {
 			"api_version": "3.1",
 			"metadata": {
 				"kind": "vm",
-				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
+				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc",
+				"should_force_translate" : false
 			}
 		}`)
 	})
@@ -95,7 +97,8 @@ func TestOperations_CreateVM(t *testing.T) {
 				&VMIntentInput{
 					APIVersion: utils.StringPtr("3.1"),
 					Metadata: &Metadata{
-						Kind: utils.StringPtr("vm"),
+						Kind:                 utils.StringPtr("vm"),
+						ShouldForceTranslate: utils.BoolPtr(false),
 					},
 					Spec: &VM{
 						ClusterReference: &Reference{
@@ -109,8 +112,9 @@ func TestOperations_CreateVM(t *testing.T) {
 			&VMIntentResponse{
 				APIVersion: utils.StringPtr("3.1"),
 				Metadata: &Metadata{
-					Kind: utils.StringPtr("vm"),
-					UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					Kind:                 utils.StringPtr("vm"),
+					UUID:                 utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					ShouldForceTranslate: utils.BoolPtr(false),
 				},
 			},
 			false,
@@ -847,6 +851,10 @@ func TestOperations_CreateImage(t *testing.T) {
 			"spec": map[string]interface{}{
 				"resources": map[string]interface{}{
 					"image_type": "DISK_IMAGE",
+					"data_source_reference": map[string]interface{}{
+						"kind": "vm_disk",
+						"uuid": "0005a238-f165-08ba-317e-ac1f6b6e5442",
+					},
 				},
 				"name": "image.create",
 			},
@@ -901,6 +909,10 @@ func TestOperations_CreateImage(t *testing.T) {
 						Name: utils.StringPtr("image.create"),
 						Resources: &ImageResources{
 							ImageType: utils.StringPtr("DISK_IMAGE"),
+							DataSourceReference: &Reference{
+								Kind: utils.StringPtr("vm_disk"),
+								UUID: utils.StringPtr("0005a238-f165-08ba-317e-ac1f6b6e5442"),
+							},
 						},
 					},
 				},
