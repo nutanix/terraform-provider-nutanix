@@ -1261,9 +1261,9 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		if err != nil {
 			return err
 		}
-		if res.DiskList, err = expandDiskListUpdate(d, response); err != nil {
-			return err
-		}
+
+		res.DiskList = expandDiskListUpdate(d, response)
+
 		postCdromCount, err := CountDiskListCdrom(res.DiskList)
 		if err != nil {
 			return err
@@ -1643,11 +1643,11 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	}
 	vm.SerialPortList = expandSerialPortList(d)
 
-	vmDiskList, err := expandDiskList(d)
+	vmDiskList := expandDiskList(d)
 
 	vm.DiskList = vmDiskList
 
-	return err
+	return nil
 }
 
 func expandNicList(d *schema.ResourceData) []*v3.VMNic {
@@ -1719,12 +1719,9 @@ func expandIPAddressList(ipl []interface{}) []*v3.IPAddress {
 	return nil
 }
 
-func expandDiskListUpdate(d *schema.ResourceData, vm *v3.VMIntentResponse) ([]*v3.VMDisk, error) {
-	var eDiskList []*v3.VMDisk
-	var err error
-	if eDiskList, err = expandDiskList(d); err != nil {
-		return eDiskList, err
-	}
+func expandDiskListUpdate(d *schema.ResourceData, vm *v3.VMIntentResponse) []*v3.VMDisk {
+	eDiskList := expandDiskList(d)
+
 	if vm.Spec != nil && vm.Spec.Resources != nil {
 		for _, disk := range vm.Spec.Resources.DiskList {
 			if disk.DeviceProperties != nil && disk.DeviceProperties.DiskAddress != nil {
@@ -1736,10 +1733,10 @@ func expandDiskListUpdate(d *schema.ResourceData, vm *v3.VMIntentResponse) ([]*v
 			}
 		}
 	}
-	return eDiskList, nil
+	return eDiskList
 }
 
-func expandDiskList(d *schema.ResourceData) ([]*v3.VMDisk, error) {
+func expandDiskList(d *schema.ResourceData) []*v3.VMDisk {
 	if v, ok := d.GetOk("disk_list"); ok {
 		dsk := v.([]interface{})
 		if len(dsk) > 0 {
@@ -1781,10 +1778,10 @@ func expandDiskList(d *schema.ResourceData) ([]*v3.VMDisk, error) {
 				}
 				dls[k] = dl
 			}
-			return dls, nil
+			return dls
 		}
 	}
-	return nil, nil
+	return nil
 }
 
 func expandStorageConfig(storageConfig []interface{}) *v3.VMStorageConfig {
