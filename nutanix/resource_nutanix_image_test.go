@@ -357,7 +357,7 @@ resource "nutanix_image" "acctest-test-categories" {
 	   name  = nutanix_category_key.os_type.id
 	   value =	nutanix_category_value.ubuntu.id
 	}
-	
+
 	categories {
 	   name  = nutanix_category_key.os_version.id
 	   value = nutanix_category_value.os_version_value_updated.id
@@ -371,14 +371,10 @@ resource "nutanix_image" "acctest-test-categories" {
 
 func testAccNutanixImageConfigWithLargeImageURL(r int) string {
 	return fmt.Sprintf(`
-provider "nutanix" {
-	wait_timeout = 50
-}
-
-resource "nutanix_image" "acctest-test" {
-  name        = "Ubuntu-%d-server"
-  description = "Ubuntu Server"
-  source_uri  = "http://releases.ubuntu.com/18.04/ubuntu-18.04.3-live-server-amd64.iso"
-}
-`, r)
+		resource "nutanix_image" "acctest-test" {
+			name        = "Ubuntu-%d-server"
+			description = "Ubuntu Server"
+			source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
+		}
+	`, r)
 }
