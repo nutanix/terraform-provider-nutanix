@@ -366,6 +366,7 @@ func TestAccNutanixVirtualMachine_withDiskContainer(t *testing.T) {
 	r := acctest.RandInt()
 
 	resourceName := "nutanix_virtual_machine.vm-disk"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -379,6 +380,44 @@ func TestAccNutanixVirtualMachine_withDiskContainer(t *testing.T) {
 				),
 			},
 		}})
+}
+
+func TestAccNutanixVirtualMachine_resizeDiskClone(t *testing.T) {
+	resourceName := "nutanix_virtual_machine.vm"
+	imgName := acctest.RandomWithPrefix("test-dou-IMG")
+	vmName := acctest.RandomWithPrefix("test-dou-VM")
+	diskSize := 90 * 1024 * 1024
+	diskSizeUpdated := 90 * 1024 * 1024 * 1024
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixVMConfigResizeDiskClone(imgName, vmName, diskSize),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", vmName),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+				),
+			},
+			{
+				Config: testAccNutanixVMConfigResizeDiskClone(imgName, vmName, diskSizeUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", vmName),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+				),
+			},
+		},
+	})
 }
 
 func testAccCheckNutanixVirtualMachineExists(n string) resource.TestCheckFunc {
@@ -978,4 +1017,38 @@ func testAccNutanixVMConfigWithDiskContainer(r int) string {
 			}
 		}
 	`, r)
+}
+
+func testAccNutanixVMConfigResizeDiskClone(imgName, vmName string, diskSize int) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+
+			cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+			? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+		}
+
+		resource "nutanix_image" "img" {
+			name        = "%s"
+			source_uri  = "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+			description = "heres a tiny linux image, not an iso, but a real disk!"
+		}
+
+		resource "nutanix_virtual_machine" "vm" {
+			name                 = "%s"
+			num_vcpus_per_socket = 1
+			num_sockets          = 1
+			memory_size_mib      = 186
+			cluster_uuid         = "${local.cluster1}"
+
+			disk_list {
+				data_source_reference = {
+					kind = "image"
+					uuid = nutanix_image.img.id
+				}
+				disk_size_bytes = %d
+			}
+		}
+	`, imgName, vmName, diskSize)
 }
