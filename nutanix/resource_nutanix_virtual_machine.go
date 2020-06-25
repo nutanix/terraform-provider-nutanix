@@ -23,6 +23,7 @@ var (
 	vmDelay      = 3 * time.Second
 	vmMinTimeout = 3 * time.Second
 	IDE          = "IDE"
+	useHotAdd    = true
 )
 
 func resourceNutanixVirtualMachine() *schema.Resource {
@@ -970,7 +971,11 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	if err := d.Set("parent_reference", flattenReferenceValues(resp.Status.Resources.ParentReference)); err != nil {
 		return fmt.Errorf("error setting parent_reference for Virtual Machine %s: %s", d.Id(), err)
 	}
-	if err := d.Set("use_hot_add", d.Get("use_hot_add")); err != nil {
+
+	if uha, ok := d.GetOkExists("use_hot_add"); ok {
+		useHotAdd = uha.(bool)
+	}
+	if err := d.Set("use_hot_add", useHotAdd); err != nil {
 		return fmt.Errorf("error setting use_hot_add for Virtual Machine %s: %s", d.Id(), err)
 	}
 
@@ -1111,6 +1116,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("name") {
 		_, n := d.GetChange("name")
 		spec.Name = utils.StringPtr(n.(string))
+		hotPlugChange = false
 	}
 	spec.Description = response.Status.Description
 	if d.HasChange("description") {

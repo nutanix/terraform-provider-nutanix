@@ -115,16 +115,16 @@ func testAccNutanixNetworkSecurityRuleIsolationConfig(r int) string {
 resource "nutanix_network_security_rule" "isolation" {
 	name        = "test-acc-isolation-rule-%d"
 	description = "Isolation Test Acc"
-	
+
 	isolation_rule_action = "APPLY"
-	
+
 	isolation_rule_first_entity_filter_kind_list = ["vm"]
 	isolation_rule_first_entity_filter_type      = "CATEGORIES_MATCH_ALL"
 	isolation_rule_first_entity_filter_params {
 		name   = "Environment"
 		values = ["Dev"]
 	}
-	
+
 	isolation_rule_second_entity_filter_kind_list = ["vm"]
 	isolation_rule_second_entity_filter_type      = "CATEGORIES_MATCH_ALL"
 	isolation_rule_second_entity_filter_params {
@@ -188,12 +188,12 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
       name   = "${nutanix_category_key.test-category-key.id}"
       values = ["${nutanix_category_value.WEB.id}"]
 	}
-	
+
 	icmp_type_code_list {
 		code = 1
 		type = 1
 	}
-	
+
 	tcp_port_range_list {
 		end_port = 22
 		start_port = 80
@@ -217,7 +217,7 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
     name   = "${nutanix_category_key.test-category-key.id}"
     values = ["${nutanix_category_value.APP.id}"]
   }
-  
+
   app_rule_target_group_filter_params {
     name   = "${nutanix_category_key.USER.id}"
     values = ["${nutanix_category_value.ashwini.id}"]
@@ -289,7 +289,7 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
       name   = "${nutanix_category_key.test-category-key.id}"
       values = ["${nutanix_category_value.WEB.id}"]
 	}
-	
+
 	icmp_type_code_list {
 		code = 1
 		type = 1

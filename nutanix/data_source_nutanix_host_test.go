@@ -56,7 +56,7 @@ func testAccHostDataSourceConfig(imgName, vmName string) string {
 
 		resource "nutanix_image" "cirros-034-disk" {
 			name        = "%s"
-			source_uri  = "http://packages.oit.ncsu.edu/centos/7.7.1908/isos/x86_64/CentOS-7-x86_64-NetInstall-1908.iso"
+			source_uri  = "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
 			description = "heres a tiny linux image, not an iso, but a real disk!"
 		}
 
