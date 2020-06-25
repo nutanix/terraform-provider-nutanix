@@ -95,10 +95,6 @@ func Provider() terraform.ResourceProvider {
 			"nutanix_network_security_rule": dataSourceNutanixNetworkSecurityRule(),
 			"nutanix_host":                  dataSourceNutanixHost(),
 			"nutanix_hosts":                 dataSourceNutanixHosts(),
-			"nutanix_project":               dataSourceNutanixProject(),
-			"nutanix_projects":              dataSourceNutanixProjects(),
-			// "nutanix_volume_group":           dataSourceNutanixVolumeGroup(),
-			// "nutanix_volume_groups":          dataSourceNutanixVolumeGroups(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":       resourceNutanixVirtualMachine(),
@@ -107,8 +103,6 @@ func Provider() terraform.ResourceProvider {
 			"nutanix_category_key":          resourceNutanixCategoryKey(),
 			"nutanix_category_value":        resourceNutanixCategoryValue(),
 			"nutanix_network_security_rule": resourceNutanixNetworkSecurityRule(),
-			"nutanix_project":               resourceNutanixProject(),
-			// "nutanix_volume_group":          resourceNutanixVolumeGroup(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
