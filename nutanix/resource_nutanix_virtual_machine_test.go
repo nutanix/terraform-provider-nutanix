@@ -364,8 +364,10 @@ func TestAccNutanixVirtualMachine_cloningVM(t *testing.T) {
 
 func TestAccNutanixVirtualMachine_withDiskContainer(t *testing.T) {
 	r := acctest.RandInt()
-
 	resourceName := "nutanix_virtual_machine.vm-disk"
+	containerUIID := "de7413d7-2a86-4f9e-8e5a-bea4ce51b4e9"
+	diskSize := 90 * 1024 * 1024
+	diskSizeUpdated := 90 * 1024 * 1024 * 1024
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -373,7 +375,14 @@ func TestAccNutanixVirtualMachine_withDiskContainer(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixVMConfigWithDiskContainer(r),
+				Config: testAccNutanixVMConfigWithDiskContainer(r, diskSize, containerUIID),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "disk_list.#"),
+					resource.TestCheckResourceAttr(resourceName, "disk_list.#", "1"),
+				),
+			},
+			{
+				Config: testAccNutanixVMConfigWithDiskContainer(r, diskSizeUpdated, containerUIID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "disk_list.#"),
 					resource.TestCheckResourceAttr(resourceName, "disk_list.#", "1"),
@@ -986,7 +995,7 @@ func testAccNutanixVMConfigHotAdd(vmName string, cpus, sockets, memory int, hotA
 	`, vmName, cpus, sockets, memory, hotAdd, imageName)
 }
 
-func testAccNutanixVMConfigWithDiskContainer(r int) string {
+func testAccNutanixVMConfigWithDiskContainer(r, diskSizeBytes int, continainerUUID string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -1005,18 +1014,17 @@ func testAccNutanixVMConfigWithDiskContainer(r int) string {
 			memory_size_mib      = 186
 
 			disk_list {
-				disk_size_bytes = 68157440
-				disk_size_mib   = 65
+				disk_size_bytes = %[2]d
 
 				storage_config {
 					storage_container_reference {
 						kind = "storage_container"
-						uuid = "2bbe77bc-fd14-4697-8de1-6369757f9219"
+						uuid = "%[3]s"
 					}
 				}
 			}
 		}
-	`, r)
+	`, r, diskSizeBytes, continainerUUID)
 }
 
 func testAccNutanixVMConfigResizeDiskClone(imgName, vmName string, diskSize int) string {
