@@ -667,6 +667,7 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 						"storage_config": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -697,6 +698,7 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 												"uuid": {
 													Type:     schema.TypeString,
 													Optional: true,
+													Computed: true,
 												},
 											},
 										},
