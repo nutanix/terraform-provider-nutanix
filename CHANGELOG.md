@@ -11,7 +11,6 @@
 - Documentations for host data sources were added [\#139](https://github.com/terraform-providers/terraform-provider-nutanix/pull/139) ([coderGo93](https://github.com/coderGo93))
 - The storage_conntainer was added as a new attribute into the disk_list to reference a container in a VM [\#138](https://github.com/terraform-providers/terraform-provider-nutanix/pull/138) ([PacoDw](https://github.com/PacoDw))
 - Added more information about Sysprep for install type in the documentation [\#133](https://github.com/terraform-providers/terraform-provider-nutanix/pull/133) ([coderGo93](https://github.com/coderGo93))
-- Added Project resource and data sources [\#121](https://github.com/terraform-providers/terraform-provider-nutanix/pull/121) ([PacoDw](https://github.com/PacoDw))
 - Added preCheck function to verify that env variables were set [\#103](https://github.com/terraform-providers/terraform-provider-nutanix/pull/103) ([PacoDw](https://github.com/PacoDw))
 - Feature/cluster datasource name [\#100](https://github.com/terraform-providers/terraform-provider-nutanix/pull/100) ([yannickstruyf3](https://github.com/yannickstruyf3))
 
@@ -54,7 +53,6 @@
 - Cannot use nutanix\_subnets data source [\#73](https://github.com/terraform-providers/terraform-provider-nutanix/issues/73)
 - Add datasource  type "hosts" for api/nutanix/v3/hosts endpoint [\#70](https://github.com/terraform-providers/terraform-provider-nutanix/issues/70)
 - Using user\_data on resource.nutanix\_virtual\_machine yields immediate diff after initial apply [\#69](https://github.com/terraform-providers/terraform-provider-nutanix/issues/69)
-- Project Support [\#65](https://github.com/terraform-providers/terraform-provider-nutanix/issues/65)
 - Cannot list ip addresses of when creating multiple virtual machine resources  [\#63](https://github.com/terraform-providers/terraform-provider-nutanix/issues/63)
 - Provider needs to support data\_source\_reference attribute for nutanix\_image resource [\#52](https://github.com/terraform-providers/terraform-provider-nutanix/issues/52)
 - Terraform Unable to use Provisioners in VM Resource when DHCP is used for IP Address [\#49](https://github.com/terraform-providers/terraform-provider-nutanix/issues/49)
