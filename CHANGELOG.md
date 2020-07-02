@@ -1,4 +1,4 @@
-## 1.1.0 (Unreleased)
+## 1.1.0 (July 02, 2020)
 
 **Implemented enhancements:**
 
