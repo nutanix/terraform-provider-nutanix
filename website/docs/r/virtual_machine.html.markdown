@@ -81,6 +81,8 @@ The following arguments are supported:
 * `parent_referece`: - (Optional) Reference to an entity that the VM cloned from.
 * `memory_size_mib`: - (Optional) Memory size in MiB.
 * `boot_device_order_list`: - (Optional) Indicates the order of device types in which VM should try to boot from. If boot device order is not provided the system will decide appropriate boot device order.
+
+  **Important**: We are aware that is failing when put more than 2 option into the list, so for the next release it will be fixed.
 * `boot_device_disk_address`: - (Optional) Address of disk to boot from.
 * `boot_device_mac_address`: - (Optional) MAC address of nic to boot from.
 * `hardware_clock_timezone`: - (Optional) VM's hardware clock timezone in IANA TZDB format (America/Los_Angeles).
@@ -133,7 +135,7 @@ User inputs of storage configuration parameters for VMs.
 
 The guest_customization_sysprep attribute supports the following:
 
-* `install_type`: - (Optional) Whether the guest will be freshly installed using this unattend configuration, or whether this unattend configuration will be applied to a pre-prepared image. Default is `PREPARED`. 
+* `install_type`: - (Optional) Whether the guest will be freshly installed using this unattend configuration, or whether this unattend configuration will be applied to a pre-prepared image. Default is `PREPARED`.
     Valid values are:
     - `PREPARED` is done when sysprep is used to finalize Windows installation from an installed Windows and file name it is searching `unattend.xml` for `unattend_xml` parameter
     - `FRESH` is done when sysprep is used to install Windows from ISO and file name it is searching `autounattend.xml` for `unattend_xml` parameter
