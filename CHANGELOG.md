@@ -2,6 +2,7 @@
 
 **Implemented enhancements:**
 
+- Boot device order list was limitated to set 1 item until fix issue #28, documentation was updated about it [\#152](https://github.com/terraform-providers/terraform-provider-nutanix/pull/152) ([PacoDw](https://github.com/PacoDw))
 - Added Host datasources [\#116](https://github.com/terraform-providers/terraform-provider-nutanix/pull/116) ([PacoDw](https://github.com/PacoDw))
 - Added datasource of subnets [\#115](https://github.com/terraform-providers/terraform-provider-nutanix/pull/115) ([coderGo93](https://github.com/coderGo93))
 - Validated the terraform configuration adding new test case to validate it [\#114](https://github.com/terraform-providers/terraform-provider-nutanix/pull/114) ([PacoDw](https://github.com/PacoDw))
