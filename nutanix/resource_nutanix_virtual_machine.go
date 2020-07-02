@@ -1100,6 +1100,9 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		metadata = response.Metadata
 	}
 
+	if d.HasChange("use_hot_add") {
+		useHotAdd = d.Get("use_hot_add").(bool)
+	}
 	if d.HasChange("categories") {
 		metadata.Categories = expandCategories(d.Get("categories"))
 	}
@@ -1150,33 +1153,25 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		hotPlugChange = false
 	}
 	if d.HasChange("guest_os_id") {
-		_, n := d.GetChange("guest_os_id")
+		n := d.Get("guest_os_id")
 		res.GuestOsID = utils.StringPtr(n.(string))
 		hotPlugChange = false
 	}
 	if d.HasChange("num_vcpus_per_socket") {
-		o, n := d.GetChange("num_vcpus_per_socket")
+		n := d.Get("num_vcpus_per_socket")
 		res.NumVcpusPerSocket = utils.Int64Ptr(int64(n.(int)))
-		if n.(int) < o.(int) || n.(int) > o.(int) {
-			if !d.Get("use_hot_add").(bool) {
-				hotPlugChange = false
-			}
-		}
+		hotPlugChange = false
 	}
 	if d.HasChange("num_sockets") {
-		o, n := d.GetChange("num_sockets")
+		n := d.Get("num_sockets")
 		res.NumSockets = utils.Int64Ptr(int64(n.(int)))
-		if n.(int) < o.(int) {
-			hotPlugChange = false
-		}
+		hotPlugChange = false
 	}
 	if d.HasChange("memory_size_mib") {
-		o, n := d.GetChange("memory_size_mib")
+		n := d.Get("memory_size_mib")
 		res.MemorySizeMib = utils.Int64Ptr(int64(n.(int)))
-		if n.(int) < o.(int) {
-			if !d.Get("use_hot_add").(bool) {
-				hotPlugChange = false
-			}
+		if !d.Get("use_hot_add").(bool) {
+			hotPlugChange = false
 		}
 	}
 	if d.HasChange("hardware_clock_timezone") {
