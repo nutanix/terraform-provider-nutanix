@@ -539,7 +539,9 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 				Computed: true,
 			},
 			"boot_device_order_list": {
-				Type:     schema.TypeList,
+				Type: schema.TypeList,
+				// remove MaxItems when the issue #28 is fixed
+				MaxItems: 1,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
