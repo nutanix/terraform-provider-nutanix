@@ -1,5 +1,78 @@
-## 1.0.3 (Unreleased)
+## 1.1.0 (Unreleased)
+
+**Implemented enhancements:**
+
+- Added Host datasources [\#116](https://github.com/terraform-providers/terraform-provider-nutanix/pull/116) ([PacoDw](https://github.com/PacoDw))
+- Added datasource of subnets [\#115](https://github.com/terraform-providers/terraform-provider-nutanix/pull/115) ([coderGo93](https://github.com/coderGo93))
+- Validated the terraform configuration adding new test case to validate it [\#114](https://github.com/terraform-providers/terraform-provider-nutanix/pull/114) ([PacoDw](https://github.com/PacoDw))
+- Implemented new linter version and fixed new version linter issues [\#101](https://github.com/terraform-providers/terraform-provider-nutanix/pull/101) ([marinsalinas](https://github.com/marinsalinas))
+- Updated docs by adding should_force_translated for metadata for every datasource/resource available [\#140](https://github.com/terraform-providers/terraform-provider-nutanix/pull/140) ([coderGo93](https://github.com/coderGo93))
+- Documentations for host data sources were added [\#139](https://github.com/terraform-providers/terraform-provider-nutanix/pull/139) ([coderGo93](https://github.com/coderGo93))
+- The storage_conntainer was added as a new attribute into the disk_list to reference a container in a VM [\#138](https://github.com/terraform-providers/terraform-provider-nutanix/pull/138) ([PacoDw](https://github.com/PacoDw))
+- Added more information about Sysprep for install type in the documentation [\#133](https://github.com/terraform-providers/terraform-provider-nutanix/pull/133) ([coderGo93](https://github.com/coderGo93))
+- Added Project resource and data sources [\#121](https://github.com/terraform-providers/terraform-provider-nutanix/pull/121) ([PacoDw](https://github.com/PacoDw))
+- Added preCheck function to verify that env variables were set [\#103](https://github.com/terraform-providers/terraform-provider-nutanix/pull/103) ([PacoDw](https://github.com/PacoDw))
+- Feature/cluster datasource name [\#100](https://github.com/terraform-providers/terraform-provider-nutanix/pull/100) ([yannickstruyf3](https://github.com/yannickstruyf3))
+
+**Fixed bugs:**
+
+- Unable to create vm using guest\_customization\_cloud\_init\_custom\_key\_values [\#58](https://github.com/terraform-providers/terraform-provider-nutanix/issues/58)
+- Fixed the behavior of the use\_hot\_add attribute to reboot the VM correctly [\#149](https://github.com/terraform-providers/terraform-provider-nutanix/pull/149) ([PacoDw](https://github.com/PacoDw))
+- Fixed storage container attribute changing it to computed [\#147](https://github.com/terraform-providers/terraform-provider-nutanix/pull/147) ([PacoDw](https://github.com/PacoDw))
+- Manually deleting VM and running apply results in entity not found. vm exists code removed [\#144](https://github.com/terraform-providers/terraform-provider-nutanix/pull/144) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- Removed check to make sure data_source_reference and disk_size_bytes are mutually exclusive [\#137](https://github.com/terraform-providers/terraform-provider-nutanix/pull/137) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- Added new parameter for VM use\_hot\_add [\#136](https://github.com/terraform-providers/terraform-provider-nutanix/pull/136) ([coderGo93](https://github.com/coderGo93))
+- Improve error handling on incorrect API calls [\#134](https://github.com/terraform-providers/terraform-provider-nutanix/pull/134) ([PacoDw](https://github.com/PacoDw))
+- The filter for subnets was incorrect. Filtering on name is not via subnet_name but name [\#129](https://github.com/terraform-providers/terraform-provider-nutanix/pull/129) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- Fixed Security rules idempotency error: Error was thrown when security rule was delete via Prism and running a new Terraform run afterwards [\#127](https://github.com/terraform-providers/terraform-provider-nutanix/pull/127) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- Added validation to avoid nil pointer error [\#122](https://github.com/terraform-providers/terraform-provider-nutanix/pull/122) ([PacoDw](https://github.com/PacoDw))
+- Fixed timeout issue and categories reboot [\#120](https://github.com/terraform-providers/terraform-provider-nutanix/pull/120) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- Bugfix/cloudinit final [\#111](https://github.com/terraform-providers/terraform-provider-nutanix/pull/111) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- Fixed guest_customization_cloud_init_custom_key_values to create the VM correctly [\#102](https://github.com/terraform-providers/terraform-provider-nutanix/pull/102) ([yannickstruyf3](https://github.com/yannickstruyf3))
+
+**Closed issues:**
+
+- ENTITY\_NOT\_FOUND Error on apply after manual VM deletion [\#143](https://github.com/terraform-providers/terraform-provider-nutanix/issues/143)
+- Provider prevents disk resizing at VM creation time [\#130](https://github.com/terraform-providers/terraform-provider-nutanix/issues/130)
+- Datasource subnets subnet\_name throwing error [\#128](https://github.com/terraform-providers/terraform-provider-nutanix/issues/128)
+- data source nutanix\_network\_security\_rule expected type issue [\#126](https://github.com/terraform-providers/terraform-provider-nutanix/issues/126)
+- Categories assignation issue [\#119](https://github.com/terraform-providers/terraform-provider-nutanix/issues/119)
+- The nutanix\_subnet SIGSEGV on network rename [\#118](https://github.com/terraform-providers/terraform-provider-nutanix/issues/118)
+- Improve error handling on incorrect API calls [\#112](https://github.com/terraform-providers/terraform-provider-nutanix/issues/112)
+- The nutanix\_virtual\_machine resource won't allow setting power\_state [\#98](https://github.com/terraform-providers/terraform-provider-nutanix/issues/98)
+- Unable to modify a VM with learned IP address \(DHCP\) fails with "IP address with type 'LEARNED' not allowed" [\#97](https://github.com/terraform-providers/terraform-provider-nutanix/issues/97)
+- How do I use an unattend.xml file? [\#95](https://github.com/terraform-providers/terraform-provider-nutanix/issues/95)
+- power\_state trigger a syntax error. [\#94](https://github.com/terraform-providers/terraform-provider-nutanix/issues/94)
+- Undefined property is\_connected of class vm\_nic detected [\#90](https://github.com/terraform-providers/terraform-provider-nutanix/issues/90)
+- Update Documentation for guest\_customization\_sysprep Attribute [\#89](https://github.com/terraform-providers/terraform-provider-nutanix/issues/89)
+- CPU and RAM change does not restart VM automatically [\#86](https://github.com/terraform-providers/terraform-provider-nutanix/issues/86)
+- The user\_data for Windows VM [\#84](https://github.com/terraform-providers/terraform-provider-nutanix/issues/84)
+- Cloning from the Image Server leads to a change after a second terraform apply [\#82](https://github.com/terraform-providers/terraform-provider-nutanix/issues/82)
+- Hotplugging CPU and RAM [\#79](https://github.com/terraform-providers/terraform-provider-nutanix/issues/79)
+- Cannot specify target container when adding disks to a virtual machine resource [\#78](https://github.com/terraform-providers/terraform-provider-nutanix/issues/78)
+- Cannot use nutanix\_subnets data source [\#73](https://github.com/terraform-providers/terraform-provider-nutanix/issues/73)
+- Add datasource  type "hosts" for api/nutanix/v3/hosts endpoint [\#70](https://github.com/terraform-providers/terraform-provider-nutanix/issues/70)
+- Using user\_data on resource.nutanix\_virtual\_machine yields immediate diff after initial apply [\#69](https://github.com/terraform-providers/terraform-provider-nutanix/issues/69)
+- Project Support [\#65](https://github.com/terraform-providers/terraform-provider-nutanix/issues/65)
+- Cannot list ip addresses of when creating multiple virtual machine resources  [\#63](https://github.com/terraform-providers/terraform-provider-nutanix/issues/63)
+- Provider needs to support data\_source\_reference attribute for nutanix\_image resource [\#52](https://github.com/terraform-providers/terraform-provider-nutanix/issues/52)
+- Terraform Unable to use Provisioners in VM Resource when DHCP is used for IP Address [\#49](https://github.com/terraform-providers/terraform-provider-nutanix/issues/49)
+- Cloning from a VM on AHV [\#35](https://github.com/terraform-providers/terraform-provider-nutanix/issues/35)
+
+**Merged pull requests:**
+
+- V1.1.0 rc1 [\#150](https://github.com/terraform-providers/terraform-provider-nutanix/pull/150) ([PacoDw](https://github.com/PacoDw))
+- Disabled project resource, tests fixed and issue fixed [\#146](https://github.com/terraform-providers/terraform-provider-nutanix/pull/146) ([PacoDw](https://github.com/PacoDw))
+- Improved travis [\#117](https://github.com/terraform-providers/terraform-provider-nutanix/pull/117) ([PacoDw](https://github.com/PacoDw))
+- Bugfix device\_properties in a disk\_list [\#106](https://github.com/terraform-providers/terraform-provider-nutanix/pull/106) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- Reduce the amount of API requests and improvements [\#92](https://github.com/terraform-providers/terraform-provider-nutanix/pull/92) ([maxaudron](https://github.com/maxaudron))
+- Implement session based authentification [\#88](https://github.com/terraform-providers/terraform-provider-nutanix/pull/88) ([maxaudron](https://github.com/maxaudron))
+- imrpoved wesite removing # [\#85](https://github.com/terraform-providers/terraform-provider-nutanix/pull/85) ([mritzmann](https://github.com/mritzmann))
+- Add support for mapstructure decode tag for reusability [\#81](https://github.com/terraform-providers/terraform-provider-nutanix/pull/81) ([JRemitz](https://github.com/JRemitz))
+- Add missing API fields for structs [\#80](https://github.com/terraform-providers/terraform-provider-nutanix/pull/80) ([JRemitz](https://github.com/JRemitz))
+
 ## 1.0.2 (September 05, 2019)
+
 **Fixed bugs:**
 
 - user\_data typos cause panic, ForceNew for guest\_customization fields [\#67](https://github.com/terraform-providers/terraform-provider-nutanix/issues/67)
@@ -21,6 +94,7 @@
 
 **Merged pull requests:**
 
+- chore: update changelog for 1.0.2 version [\#77](https://github.com/terraform-providers/terraform-provider-nutanix/pull/77) ([marinsalinas](https://github.com/marinsalinas))
 - Dynamic category name support [\#76](https://github.com/terraform-providers/terraform-provider-nutanix/pull/76) ([marinsalinas](https://github.com/marinsalinas))
 - Patch to allow some changes to be hotplug [\#75](https://github.com/terraform-providers/terraform-provider-nutanix/pull/75) ([Jorge-Holgado](https://github.com/Jorge-Holgado))
 - Terraform 0.12 Provider Support. [\#72](https://github.com/terraform-providers/terraform-provider-nutanix/pull/72) ([marinsalinas](https://github.com/marinsalinas))
@@ -40,7 +114,7 @@
 
 **Fixed bugs:**
 
-- nutanix\\_image: long running image create completes successfully at 10 minutes, without getting success call from API [\#20](https://github.com/terraform-providers/terraform-provider-nutanix/issues/20)
+- nutanix\_image: long running image create completes successfully at 10 minutes, without getting success call from API [\#20](https://github.com/terraform-providers/terraform-provider-nutanix/issues/20)
 - nutanix\_virtual\_machine, ip\_endpoint\_list not correctly working [\#12](https://github.com/terraform-providers/terraform-provider-nutanix/issues/12)
 - nutanix\_clusters data source makes Terraform crash [\#10](https://github.com/terraform-providers/terraform-provider-nutanix/issues/10)
 
@@ -57,6 +131,7 @@
 
 **Merged pull requests:**
 
+- update changelog for v1.0.1 [\#56](https://github.com/terraform-providers/terraform-provider-nutanix/pull/56) ([marinsalinas](https://github.com/marinsalinas))
 - fix category key data source basic test [\#55](https://github.com/terraform-providers/terraform-provider-nutanix/pull/55) ([marinsalinas](https://github.com/marinsalinas))
 - Vdisk update \#23 [\#54](https://github.com/terraform-providers/terraform-provider-nutanix/pull/54) ([marinsalinas](https://github.com/marinsalinas))
 - Data Source for categories [\#51](https://github.com/terraform-providers/terraform-provider-nutanix/pull/51) ([marinsalinas](https://github.com/marinsalinas))
@@ -189,7 +264,3 @@
 - Cleanup golint redundant nil check [\#44](https://github.com/nutanix/terraform-provider-nutanix/pull/44) ([gliptak](https://github.com/gliptak))
 - Add GoReportCard badge [\#43](https://github.com/nutanix/terraform-provider-nutanix/pull/43) ([gliptak](https://github.com/gliptak))
 - Add instructions for building project [\#42](https://github.com/nutanix/terraform-provider-nutanix/pull/42) ([marinsalinas](https://github.com/marinsalinas))
-
-
-
-\* *This Change Log was automatically generated by [github_changelog_generator](https://github.com/skywinder/Github-Changelog-Generator)*
