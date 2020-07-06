@@ -40,19 +40,21 @@ Long term, once this is upstream, no pre-compiled binaries will be needed, as te
 
 The following keys can be used to configure the provider.
 
-* **endpoint** - (Required) IP address for the Nutanix Prism Element.
-* **username** - (Required) Username for Nutanix Prism Element. Could be local cluster auth (e.g. `auth`) or directory auth.
+* **endpoint** - (Required) IP address for the Nutanix Prism Central.
+* **username** - (Required) Username for Nutanix Prism Central. Could be local cluster auth (e.g. `auth`) or directory auth.
 * **password** - (Required) Password for the provided username.
-* **port** - (Optional) Port for the Nutanix Prism Element. Default port is 9440.
+* **port** - (Optional) Port for the Nutanix Prism Central. Default port is 9440.
 * **insecure** - (Optional) Explicitly allow the provider to perform insecure SSL requests. If omitted, default value is false.
+* **wait_timeout** - (optional) Set if you know that the creation o update of a resource may take long time (minutes).
 
 ```hcl
 provider "nutanix" {
-  username = "admin"
-  password = "myPassword"
-  port     = 9440
-  endpoint = "10.36.7.201"
-  insecure = true
+  username     = "admin"
+  password     = "myPassword"
+  port         = 9440
+  endpoint     = "10.36.7.201"
+  insecure     = true
+  wait_timeout = 10
 }
 ```
 
@@ -74,7 +76,7 @@ provider "nutanix" {
 * nutanix_network_security_rule
 * nutanix_image
 * nutanix_host
-* nutanix_hots
+* nutanix_hosts
 * nutanix_cluster
 * nutanix_clusters
 * nutanix_category_key
