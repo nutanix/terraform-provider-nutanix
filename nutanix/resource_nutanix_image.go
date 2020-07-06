@@ -208,6 +208,25 @@ func resourceNutanixImage() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"data_source_reference": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"version": {
 				Type:     schema.TypeMap,
 				Optional: true,
@@ -258,9 +277,10 @@ func resourceNutanixImageCreate(d *schema.ResourceData, meta interface{}) error 
 
 	_, iok := d.GetOk("source_uri")
 	_, pok := d.GetOk("source_path")
+	_, dsr := d.GetOk("data_source_reference")
 
 	// if both path and uri are provided, return an error
-	if iok && pok {
+	if iok && pok && dsr {
 		return errors.New("both source_uri and source_path provided")
 	}
 
@@ -579,6 +599,12 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 		}
 		// set source uri
 		image.SourceURI = utils.StringPtr(su.(string))
+	}
+
+	if dsr, dsrok := d.GetOk("data_source_reference"); dsrok {
+		data_source_reference := dsr.(map[string]interface{})
+		image.DataSourceReference = validateRef(data_source_reference)
+		image.ImageType = utils.StringPtr("DISK_IMAGE")
 	}
 
 	if csok {
