@@ -83,6 +83,8 @@ The following arguments are supported:
 * `boot_device_order_list`: - (Optional) Indicates the order of device types in which VM should try to boot from. If boot device order is not provided the system will decide appropriate boot device order.
 
   **Important**: We are aware that is failing when put more than 2 option into the list, so for the next release it will be fixed.
+
+
 * `boot_device_disk_address`: - (Optional) Address of disk to boot from.
 * `boot_device_mac_address`: - (Optional) MAC address of nic to boot from.
 * `hardware_clock_timezone`: - (Optional) VM's hardware clock timezone in IANA TZDB format (America/Los_Angeles).
