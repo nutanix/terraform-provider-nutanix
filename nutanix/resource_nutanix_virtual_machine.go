@@ -569,7 +569,7 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 									"device_type": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
+										Default:  "DISK",
 									},
 									"disk_address": {
 										Type:     schema.TypeMap,
