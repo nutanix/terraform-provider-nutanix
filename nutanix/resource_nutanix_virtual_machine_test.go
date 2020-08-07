@@ -429,6 +429,84 @@ func TestAccNutanixVirtualMachine_resizeDiskClone(t *testing.T) {
 	})
 }
 
+func TestAccNutanixVirtualMachine_changeVMImage(t *testing.T) {
+	resourceName := "nutanix_virtual_machine.vm"
+	imageURL1 := "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+	imageName1 := "cirros-040"
+	imageURL2 := "http://download.cirros-cloud.net/0.5.0/cirros-0.5.0-x86_64-disk.img"
+	imageName2 := "cirros-050"
+	vmName := acctest.RandomWithPrefix("test-dou-VM")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixVMChangeImage(vmName, imageName1, imageURL1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", vmName),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+				),
+			},
+			{
+				Config: testAccNutanixVMChangeImage(vmName, imageName2, imageURL2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", vmName),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNutanixVirtualMachine_changeMultipleVMImages(t *testing.T) {
+	resourceName := "nutanix_virtual_machine.vm"
+	imageURL1 := "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+	imageName1 := "cirros-040"
+	imageURL2 := "http://download.cirros-cloud.net/0.5.0/cirros-0.5.0-x86_64-disk.img"
+	imageName2 := "cirros-050"
+	vmName := acctest.RandomWithPrefix("test-dou-VM")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixVMChangeMultipleVMImages(vmName, imageName1, imageURL1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", vmName),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+				),
+			},
+			{
+				Config: testAccNutanixVMChangeMultipleVMImages(vmName, imageName2, imageURL2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", vmName),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixVirtualMachineExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1059,4 +1137,111 @@ func testAccNutanixVMConfigResizeDiskClone(imgName, vmName string, diskSize int)
 			}
 		}
 	`, imgName, vmName, diskSize)
+}
+
+func testAccNutanixVMChangeImage(vmName string, imgName string, imgURL string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster1 = [
+				for cluster in data.nutanix_clusters.clusters.entities :
+				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+			][0]
+		}
+
+		resource "nutanix_image" "%[2]s" {
+			name        = "%[2]s"
+			source_uri  = "%[3]s"
+			description = "heres a tiny linux image, not an iso, but a real disk!"
+		}
+
+		resource "nutanix_virtual_machine" "vm" {
+			name                 = "%[1]s"
+			cluster_uuid         = local.cluster1
+			num_vcpus_per_socket = 1
+			num_sockets          = 1
+			memory_size_mib      = 186
+
+			disk_list {
+				data_source_reference = {
+					kind = "image"
+					uuid = nutanix_image.%[2]s.id
+				}
+				device_properties {
+					disk_address = {
+						device_index = 0
+						adapter_type = "SCSI"
+					}
+					device_type = "DISK"
+				}
+			}
+			disk_list {
+				disk_size_mib = 100
+			}
+			disk_list {
+				disk_size_mib = 200
+			}
+		}
+	`, vmName, imgName, imgURL)
+}
+
+func testAccNutanixVMChangeMultipleVMImages(vmName string, imgName string, imgURL string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster1 = [
+				for cluster in data.nutanix_clusters.clusters.entities :
+				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+			][0]
+		}
+
+		resource "nutanix_image" "%[2]s" {
+			name        = "%[2]s"
+			source_uri  = "%[3]s"
+			description = "heres a tiny linux image, not an iso, but a real disk!"
+		}
+
+		resource "nutanix_virtual_machine" "vm" {
+			name                 = "%[1]s"
+			cluster_uuid         = local.cluster1
+			num_vcpus_per_socket = 1
+			num_sockets          = 1
+			memory_size_mib      = 186
+
+			disk_list {
+				data_source_reference = {
+					kind = "image"
+					uuid = nutanix_image.%[2]s.id
+				}
+				device_properties {
+					disk_address = {
+						device_index = 0
+						adapter_type = "SCSI"
+					}
+					device_type = "DISK"
+				}
+			}
+			disk_list {
+				data_source_reference = {
+					kind = "image"
+					uuid = nutanix_image.%[2]s.id
+				}
+				device_properties {
+					disk_address = {
+						device_index = 1
+						adapter_type = "SCSI"
+					}
+					device_type = "DISK"
+				}
+			}
+			disk_list {
+				disk_size_mib = 100
+			}
+			disk_list {
+				disk_size_mib = 200
+			}
+		}
+	`, vmName, imgName, imgURL)
 }

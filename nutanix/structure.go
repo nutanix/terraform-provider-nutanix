@@ -104,7 +104,10 @@ func flattenNicList(nics []*v3.VMNic) []map[string]interface{} {
 }
 
 func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
-	diskList := make([]map[string]interface{}, 0)
+	utils.PrintToJSON(disks, "flattenDiskList disks: ")
+	disklistLength := len(disks)
+	sortedSCSI := make([]map[string]interface{}, disklistLength)
+	sortedIDE := make([]map[string]interface{}, disklistLength)
 	for _, v := range disks {
 		var deviceProps []map[string]interface{}
 		var storageConfig []map[string]interface{}
@@ -140,8 +143,7 @@ func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
 				},
 			})
 		}
-
-		diskList = append(diskList, map[string]interface{}{
+		diskMap := map[string]interface{}{
 			"uuid":                   utils.StringValue(v.UUID),
 			"disk_size_bytes":        utils.Int64Value(v.DiskSizeBytes),
 			"disk_size_mib":          utils.Int64Value(v.DiskSizeMib),
@@ -149,9 +151,40 @@ func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
 			"storage_config":         storageConfig,
 			"data_source_reference":  flattenReferenceValues(v.DataSourceReference),
 			"volume_group_reference": flattenReferenceValues(v.VolumeGroupReference),
-		})
+		}
+
+		listIndex, _ := strconv.Atoi(deviceProps[0]["disk_address"].(map[string]interface{})["device_index"].(string))
+		listType := deviceProps[0]["disk_address"].(map[string]interface{})["adapter_type"]
+
+		if listType == IDE {
+			sortedIDE[listIndex] = diskMap
+		} else {
+			sortedSCSI[listIndex] = diskMap
+		}
+
+		// diskList = append(diskList, map[string]interface{}{
+		// 	"uuid":                   utils.StringValue(v.UUID),
+		// 	"disk_size_bytes":        utils.Int64Value(v.DiskSizeBytes),
+		// 	"disk_size_mib":          utils.Int64Value(v.DiskSizeMib),
+		// 	"device_properties":      deviceProps,
+		// 	"storage_config":         storageConfig,
+		// 	"data_source_reference":  flattenReferenceValues(v.DataSourceReference),
+		// 	"volume_group_reference": flattenReferenceValues(v.VolumeGroupReference),
+		// })
 	}
+	diskList := append(deleteEmptyDiskListValues(sortedSCSI), deleteEmptyDiskListValues(sortedIDE)...)
+	utils.PrintToJSON(diskList, "sorted disklist: ")
 	return diskList
+}
+
+func deleteEmptyDiskListValues(s []map[string]interface{}) []map[string]interface{} {
+	var r []map[string]interface{}
+	for _, el := range s {
+		if el != nil {
+			r = append(r, el)
+		}
+	}
+	return r
 }
 
 func flattenSerialPortList(serialPorts []*v3.VMSerialPort) []map[string]interface{} {

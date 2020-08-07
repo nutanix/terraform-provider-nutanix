@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/jinzhu/copier"
 )
 
 var (
@@ -23,6 +24,7 @@ var (
 	vmDelay      = 3 * time.Second
 	vmMinTimeout = 3 * time.Second
 	IDE          = "IDE"
+	SCSI         = "SCSI"
 	useHotAdd    = true
 )
 
@@ -1087,7 +1089,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	preFillGTUpdateRequest(guestTool, response)
 	preFillGUpdateRequest(guest, response)
 	preFillPWUpdateRequest(pw, response)
-
+	toUpdateresourceList := []*v3.VMResources{res}
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
@@ -1266,6 +1268,15 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		}
 
 		res.DiskList = expandDiskListUpdate(d, response)
+		imageMismatch := false
+		toUpdateresourceList, imageMismatch, err = ParseDiskImageChange(response, d, res.DiskList, toUpdateresourceList)
+		if err != nil {
+			return err
+		}
+
+		if imageMismatch {
+			hotPlugChange = false
+		}
 
 		postCdromCount, err := CountDiskListCdrom(res.DiskList)
 		if err != nil {
@@ -1338,33 +1349,44 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		mySpec += 2
 		metadata.SpecVersion = &mySpec
 	}
+	toUpdateresourceListlength := len(toUpdateresourceList)
+	for i := 0; i < toUpdateresourceListlength; i++ {
+		spec.Resources = toUpdateresourceList[i]
+		request.Metadata = metadata
+		request.Spec = spec
 
-	spec.Resources = res
-	request.Metadata = metadata
-	request.Spec = spec
+		log.Printf("[DEBUG] Updating Virtual Machine: %s, %s", d.Get("name").(string), d.Id())
 
-	log.Printf("[DEBUG] Updating Virtual Machine: %s, %s", d.Get("name").(string), d.Id())
+		resp, err2 := conn.V3.UpdateVM(d.Id(), request)
+		if err2 != nil {
+			return fmt.Errorf("error updating Virtual Machine UUID(%s): %s", d.Id(), err2)
+		}
 
-	resp, err2 := conn.V3.UpdateVM(d.Id(), request)
-	if err2 != nil {
-		return fmt.Errorf("error updating Virtual Machine UUID(%s): %s", d.Id(), err2)
+		stateConf := &resource.StateChangeConf{
+			Pending:    []string{"QUEUED", "RUNNING"},
+			Target:     []string{"SUCCEEDED"},
+			Refresh:    taskStateRefreshFunc(conn, resp.Status.ExecutionContext.TaskUUID.(string)),
+			Timeout:    vmTimeout,
+			Delay:      vmDelay,
+			MinTimeout: vmMinTimeout,
+		}
+
+		if _, err := stateConf.WaitForState(); err != nil {
+			return fmt.Errorf(
+				"error waiting for vm (%s) to update: %s", d.Id(), err)
+		}
+
+		// Do not do a new get in final iteration
+		if i < toUpdateresourceListlength-1 {
+			responseAfterUpdate, err := conn.V3.GetVM(d.Id())
+			if err != nil {
+				return err
+			}
+			metadata.SpecVersion = responseAfterUpdate.Metadata.SpecVersion
+		}
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"QUEUED", "RUNNING"},
-		Target:     []string{"SUCCEEDED"},
-		Refresh:    taskStateRefreshFunc(conn, resp.Status.ExecutionContext.TaskUUID.(string)),
-		Timeout:    vmTimeout,
-		Delay:      vmDelay,
-		MinTimeout: vmMinTimeout,
-	}
-
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
-			"error waiting for vm (%s) to update: %s", d.Id(), err)
-	}
-
-	//Tehn, Turn On the VM.
+	//Then, Turn On the VM.
 	if err := changePowerState(conn, d.Id(), "ON"); err != nil {
 		return fmt.Errorf("internal error: cannot turn ON the VM with UUID(%s): %s", d.Id(), err)
 	}
@@ -2065,6 +2087,81 @@ func setVMTimeout(meta interface{}) {
 	if client.WaitTimeout != 0 {
 		vmTimeout = time.Duration(client.WaitTimeout) * time.Minute
 	}
+}
+
+func hasChangedDiskImage(orgDiskUUID string, orgImageUUID string, newDiskListInt interface{}) bool {
+	reflectedNew := reflect.ValueOf(newDiskListInt)
+	for i := 0; i < reflectedNew.Len(); i++ {
+		ndisk := reflectedNew.Index(i).Interface().(map[string]interface{})
+		if orgDiskUUID == ndisk["uuid"].(string) {
+			if datasourcereference, ok := ndisk["data_source_reference"]; ok {
+				if imageUUID, ok := datasourcereference.(map[string]interface{})["uuid"]; ok {
+					if orgImageUUID != imageUUID {
+						return true
+					}
+				}
+			}
+		}
+	}
+	return false
+}
+
+func GetChangedImageDiskUUIDs(d *schema.ResourceData) []string {
+	old, new := d.GetChange("disk_list")
+	tmpDiskUUIDList := make([]string, 0)
+	odiskUUID := ""
+	reflectedOld := reflect.ValueOf(old)
+	for i := 0; i < reflectedOld.Len(); i++ {
+		odisk := reflectedOld.Index(i).Interface().(map[string]interface{})
+		if odiskUUIDInt, ok := odisk["uuid"]; ok {
+			odiskUUID = odiskUUIDInt.(string)
+			if datasourcereference, ok := odisk["data_source_reference"]; ok {
+				if imageUUID, ok := datasourcereference.(map[string]interface{})["uuid"]; ok {
+					if hasChangedDiskImage(odiskUUID, imageUUID.(string), new) {
+						tmpDiskUUIDList = append(tmpDiskUUIDList, odiskUUID)
+					}
+				}
+			}
+		}
+	}
+	return tmpDiskUUIDList
+}
+
+func ParseDiskImageChange(vmOutput *v3.VMIntentResponse, d *schema.ResourceData, expandedDiskList []*v3.VMDisk, toUpdateresourceList []*v3.VMResources) ([]*v3.VMResources, bool, error) {
+	// Check if there is an image mismatch
+	changedImageDiskListUUIDs := GetChangedImageDiskUUIDs(d)
+	imageMismatch := len(changedImageDiskListUUIDs) > 0
+	//if there is no mismatch, just return
+	if !imageMismatch {
+		return toUpdateresourceList, imageMismatch, nil
+	}
+	// if there is a change, create a new vmResource object without the image disks (need to be removed from the vm)
+	tmpDiskList := make([]*v3.VMDisk, 0)
+	previousResourceDefinition := toUpdateresourceList[0]
+	utils.PrintToJSON(expandedDiskList, "expandedDiskList: ")
+	for _, edisk := range expandedDiskList {
+		// if disk has no uuid, it is new and must be added
+		if *edisk.UUID == "" || utils.FindIndexOfValueInStringSlice(changedImageDiskListUUIDs, *edisk.UUID) == -1 {
+			tmpDiskList = append(tmpDiskList, edisk)
+		}
+	}
+	//Need to force OFF powerstate, otherwise this will poweron the vm between changes
+	powerState := "OFF"
+	previousResourceDefinition.PowerState = &powerState
+	for _, rdisk := range previousResourceDefinition.DiskList {
+		if *rdisk.UUID != "" && utils.FindIndexOfValueInStringSlice(changedImageDiskListUUIDs, *rdisk.UUID) > -1 {
+			rdisk.UUID = nil
+		}
+	}
+
+	// Clone the resource
+	resourceClone := v3.VMResources{}
+	copier.Copy(&resourceClone, &previousResourceDefinition)
+	resourceClone.DiskList = tmpDiskList
+	//Add resource to the list of resources to be updated
+	toUpdateresourceList = append([]*v3.VMResources{&resourceClone}, toUpdateresourceList...)
+
+	return toUpdateresourceList, imageMismatch, nil
 }
 
 func resourceNutanixVirtualMachineInstanceResourceV0() *schema.Resource {
