@@ -2003,3 +2003,89 @@ type ProjectListResponse struct {
 	Entities   []*Project          `json:"entities,omitempty"`
 	Metadata   *ListMetadataOutput `json:"metadata,omitempty"`
 }
+
+// ACP
+
+type AccessControlPolicyListResponse struct {
+	APIVersion string                 `json:"api_version,omitempty"`
+	Entities   []*AccessControlPolicy `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput    `json:"metadata,omitempty"`
+}
+
+type AccessControlPolicy struct {
+	APIVersion string                     `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
+	Status     *AccessControlPolicyStatus `json:"status,omitempty"`
+	Metadata   *Metadata                  `json:"metadata" mapstructure:"metadata"`
+	Spec       *AccessControlPolicySpec   `json:"spec" mapstructure:"spec"`
+}
+
+// Metadata Metadata The kind metadata
+// type AccessControlPolicyMetadata struct {
+// 	LastUpdateTime   *time.Time        `json:"last_update_time,omitempty" mapstructure:"last_update_time,omitempty"`   //
+// 	Kind             *string           `json:"kind" mapstructure:"kind"`                                               //
+// 	UUID             *string           `json:"uuid,omitempty" mapstructure:"uuid,omitempty"`                           //
+// 	ProjectReference *Reference        `json:"project_reference,omitempty" mapstructure:"project_reference,omitempty"` // project reference
+// 	CreationTime     *time.Time        `json:"creation_time,omitempty" mapstructure:"creation_time,omitempty"`
+// 	SpecVersion      *int64            `json:"spec_version,omitempty" mapstructure:"spec_version,omitempty"`
+// 	SpecHash         *string           `json:"spec_hash,omitempty" mapstructure:"spec_hash,omitempty"`
+// 	OwnerReference   *Reference        `json:"owner_reference,omitempty" mapstructure:"owner_reference,omitempty"`
+// 	Categories       map[string]string `json:"categories,omitempty" mapstructure:"categories,omitempty"`
+// 	Name             *string           `json:"name,omitempty" mapstructure:"name,omitempty"`
+// 	EntityVersion    *string           `json:"entity_version,omitempty" mapstructure:"entity_version,omitempty"`
+
+// 	// Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
+// 	ShouldForceTranslate *bool `json:"should_force_translate,omitempty" mapstructure:"should_force_translate,omitempty"`
+// }
+
+type AccessControlPolicySpec struct {
+	Name       string                        `json:"name,omitempty"`
+	Resources  *AccessControlPolicyResources `json:"resources,omitempty"`
+	Descripion string                        `json:"description,omitempty"`
+}
+
+type AccessControlPolicyResources struct {
+	UserReferenceList      []*ReferenceValues         `json:"user_reference_list,omitempty"`
+	UserGroupReferenceList []*ReferenceValues         `json:"user_group_reference_list,omitempty"`
+	RoleReference          *ReferenceValues           `json:"role_reference,omitempty"`
+	FilterList             *AccessControlPolicyFilter `json:"filter_list,omitempty"`
+}
+
+type AccessControlPolicyFilter struct {
+	ContextList []*AccessControlPolicyContext `json:"context_list,omitempty"`
+}
+
+type AccessControlPolicyContext struct {
+	ScopeFilterExpressionList  []*AccessControlPolicyScopeFilterExpression  `json:"scope_filter_expression_list,omitempty"`
+	EntityFilterExpressionList []*AccessControlPolicyEntityFilterExpression `json:"entity_filter_expression_list,omitempty"`
+}
+
+type AccessControlPolicyScopeFilterExpression struct {
+	LeftHandSide  string                                  `json:"left_hand_side,omitempty"`
+	Operator      string                                  `json:"operator,omitempty"`
+	RightHandSide *AccessControlPolicyFilterRightHandSide `json:"right_hand_side,omitempty"`
+}
+
+type AccessControlPolicyFilterRightHandSide struct {
+	Collection string            `json:"collection,omitempty"`
+	Categories map[string]string `json:"categories,omitempty" mapstructure:"categories,omitempty"`
+	UUIDList   []string          `json:"uuid_list,omitempty" mapstructure:"uuid_list,omitempty"`
+}
+
+type AccessControlPolicyEntityFilterExpression struct {
+	LeftHandSide  *AccessControlPolicyEntityFilterLeftHandSide `json:"left_hand_side,omitempty"`
+	Operator      string                                       `json:"operator,omitempty"`
+	RightHandSide *AccessControlPolicyFilterRightHandSide      `json:"right_hand_side,omitempty"`
+}
+
+type AccessControlPolicyEntityFilterLeftHandSide struct {
+	EntityType string `json:"entity_type,omitempty"`
+}
+
+type AccessControlPolicyStatus struct {
+	State            string                        `json:"state,omitempty"`
+	MessageList      []*MessageResource            `json:"message_list,omitempty"`
+	Name             string                        `json:"name,omitempty"`
+	Resources        *AccessControlPolicyResources `json:"resources,omitempty"`
+	Descripion       string                        `json:"description,omitempty"`
+	ExecutionContext *ExecutionContext             `json:"execution_context,omitempty"`
+}

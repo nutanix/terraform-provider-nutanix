@@ -17,11 +17,11 @@ import (
 )
 
 const (
-	libraryVersion = "v3"
+	// libraryVersion = "v3"
 	defaultBaseURL = "https://%s/"
-	absolutePath   = "api/nutanix/" + libraryVersion
-	userAgent      = "nutanix/" + libraryVersion
-	mediaType      = "application/json"
+	// absolutePath   = "api/nutanix/" + libraryVersion
+	// userAgent      = "nutanix/" + libraryVersion
+	mediaType = "application/json"
 )
 
 // Client Config Configuration of the client
@@ -41,6 +41,9 @@ type Client struct {
 
 	// Optional function called after every successful request made.
 	onRequestCompleted RequestCompletionCallback
+
+	// absolutePath: for example api/nutanix/v3
+	AbsolutePath string
 }
 
 // RequestCompletionCallback defines the type of the request callback function
@@ -59,7 +62,14 @@ type Credentials struct {
 }
 
 // NewClient returns a new Nutanix API client.
-func NewClient(credentials *Credentials) (*Client, error) {
+func NewClient(credentials *Credentials, userAgent string, absolutePath string) (*Client, error) {
+	if userAgent == "" {
+		return nil, fmt.Errorf("userAgent argument must be passed")
+	}
+	if absolutePath == "" {
+		return nil, fmt.Errorf("absolutePath argument must be passed")
+	}
+
 	transCfg := &http.Transport{
 		// nolint:gas
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: credentials.Insecure}, // ignore expired SSL certificates
@@ -85,7 +95,7 @@ func NewClient(credentials *Credentials) (*Client, error) {
 		return nil, err
 	}
 
-	c := &Client{credentials, httpClient, baseURL, userAgent, nil, nil}
+	c := &Client{credentials, httpClient, baseURL, userAgent, nil, nil, absolutePath}
 
 	if credentials.SessionAuth {
 		log.Printf("[DEBUG] Using session_auth\n")
@@ -117,7 +127,7 @@ func NewClient(credentials *Credentials) (*Client, error) {
 
 // NewRequest creates a request
 func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body interface{}) (*http.Request, error) {
-	rel, errp := url.Parse(absolutePath + urlStr)
+	rel, errp := url.Parse(c.AbsolutePath + urlStr)
 	if errp != nil {
 		return nil, errp
 	}
@@ -158,7 +168,7 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 
 // NewUploadRequest Handles image uploads for image service
 func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, body []byte) (*http.Request, error) {
-	rel, errp := url.Parse(absolutePath + urlStr)
+	rel, errp := url.Parse(c.AbsolutePath + urlStr)
 	if errp != nil {
 		return nil, errp
 	}
@@ -232,35 +242,38 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 
 // CheckResponse checks errors if exist errors in request
 func CheckResponse(r *http.Response) error {
+	log.Print("[DEBUG] in client CheckResponse")
 	if c := r.StatusCode; c >= 200 && c <= 299 {
 		return nil
 	}
+	log.Print("[DEBUG] after status check")
 
 	buf, err := ioutil.ReadAll(r.Body)
 
 	if err != nil {
 		return err
 	}
-
+	log.Print("[DEBUG] after readall")
 	rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
 
 	r.Body = rdr2
-
+	log.Print("[DEBUG] after rdr2")
 	// if has entities -> return nil
 	// if has message_list -> check_error["state"]
 	// if has status -> check_error["status.state"]
 	if len(buf) == 0 {
 		return nil
 	}
+	log.Print("[DEBUG] after len(buf)")
 
 	var res map[string]interface{}
 	err = json.Unmarshal(buf, &res)
 	if err != nil {
 		return fmt.Errorf("unmarshalling error response %s", err)
 	}
+	log.Print("[DEBUG] after json.Unmarshal")
 
 	errRes := &ErrorResponse{}
-
 	if status, ok := res["status"]; ok {
 		_, sok := status.(string)
 		if sok {
@@ -274,14 +287,26 @@ func CheckResponse(r *http.Response) error {
 		return nil
 	}
 
+	log.Print("[DEBUG] after bunch of switch cases")
 	if err != nil {
 		return err
 	}
+	log.Print("[DEBUG] first nil check")
 
+	//karbon error check
+	if message_info, ok := res["message_info"]; ok {
+		log.Print(message_info)
+		return fmt.Errorf("error: %s", message_info)
+	}
+	if message, ok := res["message"]; ok {
+		log.Print(message)
+		return fmt.Errorf("error: %s", message)
+	}
 	if errRes.State != "ERROR" {
 		return nil
 	}
 
+	log.Print("[DEBUG] after errRes.State")
 	pretty, _ := json.MarshalIndent(errRes, "", "  ")
 	return fmt.Errorf("error: %s", string(pretty))
 }
