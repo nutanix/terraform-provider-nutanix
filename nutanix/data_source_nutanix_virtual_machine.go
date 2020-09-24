@@ -710,15 +710,17 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	b := make([]string, 0)
 
 	if resp.Status.Resources.BootConfig != nil {
-		if resp.Status.Resources.BootConfig.BootDevice.DiskAddress != nil {
-			i := strconv.Itoa(int(utils.Int64Value(resp.Status.Resources.BootConfig.BootDevice.DiskAddress.DeviceIndex)))
-			diskAddress["device_index"] = i
-			diskAddress["adapter_type"] = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.DiskAddress.AdapterType)
+		if resp.Status.Resources.BootConfig.BootDevice != nil {
+			if resp.Status.Resources.BootConfig.BootDevice.DiskAddress != nil {
+				i := strconv.Itoa(int(utils.Int64Value(resp.Status.Resources.BootConfig.BootDevice.DiskAddress.DeviceIndex)))
+				diskAddress["device_index"] = i
+				diskAddress["adapter_type"] = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.DiskAddress.AdapterType)
+			}
+			mac = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.MacAddress)
 		}
 		if resp.Status.Resources.BootConfig.BootDeviceOrderList != nil {
 			b = utils.StringValueSlice(resp.Status.Resources.BootConfig.BootDeviceOrderList)
 		}
-		mac = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.MacAddress)
 	}
 
 	d.Set("boot_device_order_list", b)
