@@ -877,7 +877,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error waiting for vm (%s) to create: %s", d.Id(), errWaitTask)
 	}
 
-	//Wait for IP available
+	// Wait for IP available
 	waitIPConf := &resource.StateChangeConf{
 		Pending:    []string{WAITING},
 		Target:     []string{"AVAILABLE"},
@@ -1366,7 +1366,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 			"error waiting for vm (%s) to update: %s", d.Id(), err)
 	}
 
-	//Tehn, Turn On the VM.
+	// Then, Turn On the VM.
 	if err := changePowerState(conn, d.Id(), "ON"); err != nil {
 		return fmt.Errorf("internal error: cannot turn ON the VM with UUID(%s): %s", d.Id(), err)
 	}
@@ -1423,7 +1423,7 @@ func changePowerState(conn *v3.Client, id string, powerState string) error {
 	request.Metadata = metadata
 	request.Spec = spec
 
-	//Set PowerState OFF
+	// Set PowerState OFF
 	request.Spec.Resources.PowerState = utils.StringPtr(powerState)
 
 	resp, err2 := conn.V3.UpdateVM(id, request)
@@ -1431,7 +1431,7 @@ func changePowerState(conn *v3.Client, id string, powerState string) error {
 		return fmt.Errorf("error updating Virtual Machine UUID(%s): %s", id, err2)
 	}
 
-	//Check update tasks
+	// Check update tasks
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
@@ -1446,7 +1446,7 @@ func changePowerState(conn *v3.Client, id string, powerState string) error {
 			"error waiting for vm (%s) to update: %s", id, err)
 	}
 
-	//Check Power State
+	// Check Power State
 	stateConfVM := &resource.StateChangeConf{
 		Pending:    []string{"PENDING", "RUNNING"},
 		Target:     []string{"COMPLETE"},
