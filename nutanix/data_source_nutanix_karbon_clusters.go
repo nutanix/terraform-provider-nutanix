@@ -40,18 +40,18 @@ func dataSourceNutanixKarbonClustersRead(d *schema.ResourceData, meta interface{
 	for k, v := range *resp {
 		cluster := make(map[string]interface{})
 		if err != nil {
-			return fmt.Errorf("Error searching for cluster via legacy API: %s", err)
+			return fmt.Errorf("error searching for cluster via legacy API: %s", err)
 		}
-		karbon_cluster_name := *v.Name
-		flattenedEtcdNodepool, err := flattenNodePools(d, conn, "etcd_node_pool", karbon_cluster_name, v.ETCDConfig.NodePools)
+		karbonClusterName := *v.Name
+		flattenedEtcdNodepool, err := flattenNodePools(d, conn, "etcd_node_pool", karbonClusterName, v.ETCDConfig.NodePools)
 		if err != nil {
 			return err
 		}
-		flattenedWorkerNodepool, err := flattenNodePools(d, conn, "worker_node_pool", karbon_cluster_name, v.WorkerConfig.NodePools)
+		flattenedWorkerNodepool, err := flattenNodePools(d, conn, "worker_node_pool", karbonClusterName, v.WorkerConfig.NodePools)
 		if err != nil {
 			return err
 		}
-		flattenedMasterNodepool, err := flattenNodePools(d, conn, "master_node_pool", karbon_cluster_name, v.MasterConfig.NodePools)
+		flattenedMasterNodepool, err := flattenNodePools(d, conn, "master_node_pool", karbonClusterName, v.MasterConfig.NodePools)
 		if err != nil {
 			return err
 		}
@@ -59,10 +59,10 @@ func dataSourceNutanixKarbonClustersRead(d *schema.ResourceData, meta interface{
 
 		cluster["status"] = utils.StringValue(v.Status)
 
-		//Must use legacy API because GA API reports different version
+		// Must use legacy API because GA API reports different version
 		cluster["version"] = utils.StringValue(v.Version)
 		// cluster["version"] = utils.StringValue(respLegacy.K8sConfig.Version)
-		cluster["kubeapi_server_ipv4_address"] = utils.StringValue(v.KubeApiServerIPv4Address)
+		cluster["kubeapi_server_ipv4_address"] = utils.StringValue(v.KubeAPIServerIPv4Address)
 		cluster["deployment_type"] = v.MasterConfig.DeploymentType
 		cluster["worker_node_pool"] = flattenedWorkerNodepool
 
@@ -73,7 +73,7 @@ func dataSourceNutanixKarbonClustersRead(d *schema.ResourceData, meta interface{
 	}
 
 	if err := d.Set("clusters", clusters); err != nil {
-		return fmt.Errorf("Failed to set clusters output: %s", err)
+		return fmt.Errorf("failed to set clusters output: %s", err)
 	}
 
 	d.SetId(resource.UniqueId())

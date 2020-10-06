@@ -13,6 +13,12 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+const (
+	maxMasterNodes    = 5
+	minMasterNodes    = 2
+	cpuDivisionAmount = 2
+)
+
 func resourceNutanixKarbonCluster() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceNutanixKarbonClusterCreate,
@@ -129,8 +135,8 @@ func KarbonClusterResourceMap() map[string]*schema.Schema {
 					"master_nodes_config": {
 						Type:     schema.TypeSet,
 						Required: true,
-						MaxItems: 5,
-						MinItems: 2,
+						MaxItems: maxMasterNodes,
+						MinItems: minMasterNodes,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"ipv4_address": {
@@ -299,7 +305,7 @@ func resourceNutanixKarbonClusterCreate(d *schema.ResourceData, meta interface{}
 	conn := client.KarbonAPI
 	setTimeout(meta)
 	// Prepare request
-	//Node pools
+	// Node pools
 	etcdNodePool, err := expandNodePool(d.Get("etcd_node_pool").([]interface{}))
 	if err != nil {
 		return err
@@ -312,57 +318,61 @@ func resourceNutanixKarbonClusterCreate(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
-	//storageclass
+	// storageclass
 	storageClassConfig, err := expandStorageClassConfig(d.Get("storage_class_config").(*schema.Set).List())
 	if err != nil {
 		return err
 	}
-	//CNI
-	//todo modify these unchecked GETs
+	// CNI
+	// todo modify these unchecked GETs
 	cniConfig, err := expandCNI(d.Get("cni_config").(*schema.Set).List())
 	if err != nil {
 		return err
 	}
 	karbonClusterName := d.Get("name").(string)
 
-	karbon_cluster := &karbon.KarbonClusterIntentInput{
+	karbonCluster := &karbon.ClusterIntentInput{
 		Name:      karbonClusterName,
 		Version:   d.Get("version").(string),
 		CNIConfig: *cniConfig,
-		ETCDConfig: karbon.KarbonClusterETCDConfigIntentInput{
+		ETCDConfig: karbon.ClusterETCDConfigIntentInput{
 			NodePools: etcdNodePool,
 		},
-		MastersConfig: karbon.KarbonClusterMasterConfigIntentInput{
+		MastersConfig: karbon.ClusterMasterConfigIntentInput{
 			NodePools: masterNodePool,
 		},
-		Metadata: karbon.KarbonClusterMetadataIntentInput{
+		Metadata: karbon.ClusterMetadataIntentInput{
 			APIVersion: "2.0.0",
 		},
 		StorageClassConfig: *storageClassConfig,
-		WorkersConfig: karbon.KarbonClusterWorkerConfigIntentInput{
+		WorkersConfig: karbon.ClusterWorkerConfigIntentInput{
 			NodePools: workerNodePool,
 		},
 	}
 	activePassiveConfig, apcOk := d.GetOk("active_passive_config")
 	externalLbConfig, elbcOk := d.GetOk("external_lb_config")
 	if apcOk && elbcOk {
-		return fmt.Errorf("Cannot pass both active_passive_config and external_lb_config")
+		return fmt.Errorf("cannot pass both active_passive_config and external_lb_config")
 	}
-	//set active passive config
+	if !apcOk && !elbcOk {
+		karbonCluster.MastersConfig.SingleMasterConfig = &karbon.ClusterSingleMasterConfigIntentInput{}
+	}
+	// set active passive config
 	if apcOk {
 		activePassiveConfigList := activePassiveConfig.(*schema.Set).List()
-		karbon_cluster.MastersConfig.ActivePassiveConfig = &karbon.KarbonClusterActivePassiveMasterConfigIntentInput{
+		karbonCluster.MastersConfig.ActivePassiveConfig = &karbon.ClusterActivePassiveMasterConfigIntentInput{
 			ExternalIPv4Address: activePassiveConfigList[0].(map[string]interface{})["external_ipv4_address"].(string),
 		}
 		// set active active config
-	} else if elbcOk {
+	}
+	if elbcOk {
 		externalLbConfigList := externalLbConfig.(*schema.Set).List()
 		externalLbConfigElement := externalLbConfigList[0].(map[string]interface{})
-		masterNodesConfig := make([]karbon.KarbonClusterMasterNodeMasterConfigIntentInput, 0)
+		masterNodesConfig := make([]karbon.ClusterMasterNodeMasterConfigIntentInput, 0)
 		if mnc, ok := externalLbConfigElement["master_nodes_config"]; ok {
 			masterNodesConfigSlice := mnc.(*schema.Set).List()
 			for _, mnce := range masterNodesConfigSlice {
-				masterConf := karbon.KarbonClusterMasterNodeMasterConfigIntentInput{}
+				masterConf := karbon.ClusterMasterNodeMasterConfigIntentInput{}
 				if val, ok := mnce.(map[string]interface{})["ipv4_address"]; ok {
 					masterConf.IPv4Address = val.(string)
 				}
@@ -374,22 +384,23 @@ func resourceNutanixKarbonClusterCreate(d *schema.ResourceData, meta interface{}
 		} else {
 			return fmt.Errorf("master_nodes_config must be passed when configuring external_lb_config")
 		}
-		karbon_cluster.MastersConfig.ExternalLBConfig = &karbon.KarbonClusterExternalLBMasterConfigIntentInput{
+		karbonCluster.MastersConfig.ExternalLBConfig = &karbon.ClusterExternalLBMasterConfigIntentInput{
 			ExternalIPv4Address: externalLbConfigElement["external_ipv4_address"].(string),
 			MasterNodesConfig:   masterNodesConfig,
 		}
-	} else {
-		karbon_cluster.MastersConfig.SingleMasterConfig = &karbon.KarbonClusterSingleMasterConfigIntentInput{}
 	}
 
-	utils.PrintToJSON(karbon_cluster, "[DEBUG karbon_cluster: ")
-	createClusterResponse, err := conn.Cluster.CreateKarbonCluster(karbon_cluster)
+	utils.PrintToJSON(karbonCluster, "[DEBUG karbonCluster: ")
+	createClusterResponse, err := conn.Cluster.CreateKarbonCluster(karbonCluster)
 	if err != nil {
-		return fmt.Errorf("Error occured during cluster creation:\n %s", err)
+		return fmt.Errorf("error occurred during cluster creation:\n %s", err)
 	}
 	utils.PrintToJSON(createClusterResponse, "[DEBUG createClusterResponse: ")
 	if createClusterResponse.TaskUUID == "" {
-		return fmt.Errorf("Did not retrieve Task UUID exiting!")
+		return fmt.Errorf("did not retrieve task uuid")
+	}
+	if createClusterResponse.ClusterUUID == "" {
+		return fmt.Errorf("did not retrieve cluster uuid")
 	}
 	err = WaitForKarbonCluster(client, createClusterResponse.TaskUUID)
 	if err != nil {
@@ -398,8 +409,8 @@ func resourceNutanixKarbonClusterCreate(d *schema.ResourceData, meta interface{}
 
 	fmt.Printf("Cluster uuid: %s", createClusterResponse.ClusterUUID)
 	fmt.Printf("Task uuid: %s", createClusterResponse.TaskUUID)
-	if private_registries, ok := d.GetOk("private_registries"); ok {
-		newPrivateRegistries, err := expandPrivateRegistries(private_registries.(*schema.Set).List())
+	if privateRegistries, ok := d.GetOk("private_registries"); ok {
+		newPrivateRegistries, err := expandPrivateRegistries(privateRegistries.(*schema.Set).List())
 		if err != nil {
 			return err
 		}
@@ -420,13 +431,11 @@ func resourceNutanixKarbonClusterRead(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*Client).KarbonAPI
 	setTimeout(meta)
 	// Make request to the API
+	var err error
 	resp, err := conn.Cluster.GetKarbonCluster(d.Id())
 	if err != nil {
 		d.SetId("")
 		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("Error searching for cluster via legacy API: %s", err)
 	}
 	karbonClusterName := *resp.Name
 	flattenedEtcdNodepool, err := flattenNodePools(d, conn, "etcd_node_pool", karbonClusterName, resp.ETCDConfig.NodePools)
@@ -451,7 +460,7 @@ func resourceNutanixKarbonClusterRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error setting status for Karbon Cluster %s: %s", d.Id(), err)
 	}
 
-	//Must use know version because GA API reports different version
+	// Must use know version because GA API reports different version
 	var versionSet string
 	log.Printf("Getting existing version: %s", d.Get("version").(string))
 	if version, ok := d.GetOk("version"); ok {
@@ -464,20 +473,23 @@ func resourceNutanixKarbonClusterRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error setting version for Karbon Cluster %s: %s", d.Id(), err)
 	}
 
-	d.Set("kubeapi_server_ipv4_address", utils.StringValue(resp.KubeApiServerIPv4Address))
+	d.Set("kubeapi_server_ipv4_address", utils.StringValue(resp.KubeAPIServerIPv4Address))
 	d.Set("deployment_type", resp.MasterConfig.DeploymentType)
 	if err = d.Set("worker_node_pool", flattenedWorkerNodepool); err != nil {
 		return fmt.Errorf("error setting worker_node_pool for Karbon Cluster %s: %s", d.Id(), err)
 	}
-	if err := d.Set("etcd_node_pool", flattenedEtcdNodepool); err != nil {
+	if err = d.Set("etcd_node_pool", flattenedEtcdNodepool); err != nil {
 		return fmt.Errorf("error setting etcd_node_pool for Karbon Cluster %s: %s", d.Id(), err)
 	}
-	if err := d.Set("master_node_pool", flattenedMasterNodepool); err != nil {
+	if err = d.Set("master_node_pool", flattenedMasterNodepool); err != nil {
 		return fmt.Errorf("error setting worker_node_pool for Karbon Cluster %s: %s", d.Id(), err)
 	}
-	flattened_private_registries, err := flattenPrivateRegisties(conn, karbonClusterName)
-	utils.PrintToJSON(flattened_private_registries, "flattened_private_registries: ")
-	if err := d.Set("private_registries", flattened_private_registries); err != nil {
+	flattenedPrivateRegistries, err := flattenPrivateRegisties(conn, karbonClusterName)
+	if err != nil {
+		return fmt.Errorf("error getting flat private_registries for Karbon Cluster %s: %s", d.Id(), err)
+	}
+	utils.PrintToJSON(flattenedPrivateRegistries, "flattenedPrivateRegistries: ")
+	if err = d.Set("private_registries", flattenedPrivateRegistries); err != nil {
 		return fmt.Errorf("error setting private_registries for Karbon Cluster %s: %s", d.Id(), err)
 	}
 	d.SetId(*resp.UUID)
@@ -559,13 +571,12 @@ func resourceNutanixKarbonClusterExists(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		d.SetId("")
 		return false, nil
-
 	}
 	return true, nil
 }
 
-func diffFlatPrivateRegistrySlices(prSlice1 []karbon.KarbonPrivateRegistryOperationIntentInput, prSlice2 []karbon.KarbonPrivateRegistryOperationIntentInput) []karbon.KarbonPrivateRegistryOperationIntentInput {
-	prSliceResult := make([]karbon.KarbonPrivateRegistryOperationIntentInput, 0)
+func diffFlatPrivateRegistrySlices(prSlice1 []karbon.PrivateRegistryOperationIntentInput, prSlice2 []karbon.PrivateRegistryOperationIntentInput) []karbon.PrivateRegistryOperationIntentInput {
+	prSliceResult := make([]karbon.PrivateRegistryOperationIntentInput, 0)
 	for _, e1 := range prSlice1 {
 		found := false
 		for _, e2 := range prSlice2 {
@@ -580,22 +591,22 @@ func diffFlatPrivateRegistrySlices(prSlice1 []karbon.KarbonPrivateRegistryOperat
 	return prSliceResult
 }
 
-func convertKarbonPrivateRegistriesIntentInputToOperations(privateRegistryResponses karbon.KarbonPrivateRegistryListResponse) []karbon.KarbonPrivateRegistryOperationIntentInput {
-	s := make([]karbon.KarbonPrivateRegistryOperationIntentInput, 0)
+func convertKarbonPrivateRegistriesIntentInputToOperations(privateRegistryResponses karbon.PrivateRegistryListResponse) []karbon.PrivateRegistryOperationIntentInput {
+	s := make([]karbon.PrivateRegistryOperationIntentInput, 0)
 	for _, p := range privateRegistryResponses {
 		s = append(s, convertKarbonPrivateRegistryIntentInputToOperation(p))
 	}
 	return s
 }
 
-func convertKarbonPrivateRegistryIntentInputToOperation(privateRegistryResponse karbon.KarbonPrivateRegistryResponse) karbon.KarbonPrivateRegistryOperationIntentInput {
-	return karbon.KarbonPrivateRegistryOperationIntentInput{
+func convertKarbonPrivateRegistryIntentInputToOperation(privateRegistryResponse karbon.PrivateRegistryResponse) karbon.PrivateRegistryOperationIntentInput {
+	return karbon.PrivateRegistryOperationIntentInput{
 		RegistryName: privateRegistryResponse.Name,
 	}
 }
 
-func expandPrivateRegistries(privateRegistries []interface{}) (*[]karbon.KarbonPrivateRegistryOperationIntentInput, error) {
-	prSlice := make([]karbon.KarbonPrivateRegistryOperationIntentInput, 0)
+func expandPrivateRegistries(privateRegistries []interface{}) (*[]karbon.PrivateRegistryOperationIntentInput, error) {
+	prSlice := make([]karbon.PrivateRegistryOperationIntentInput, 0)
 	for _, p := range privateRegistries {
 		fp, err := expandPrivateRegistry(p.(map[string]interface{}))
 		if err != nil {
@@ -606,14 +617,14 @@ func expandPrivateRegistries(privateRegistries []interface{}) (*[]karbon.KarbonP
 	return &prSlice, nil
 }
 
-func expandPrivateRegistry(privateRegistry map[string]interface{}) (*karbon.KarbonPrivateRegistryOperationIntentInput, error) {
+func expandPrivateRegistry(privateRegistry map[string]interface{}) (*karbon.PrivateRegistryOperationIntentInput, error) {
 	if rn, ok := privateRegistry["registry_name"]; ok {
 		rns := rn.(string)
-		return &karbon.KarbonPrivateRegistryOperationIntentInput{
+		return &karbon.PrivateRegistryOperationIntentInput{
 			RegistryName: &rns,
 		}, nil
 	}
-	return nil, fmt.Errorf("Failed to retrieve registry_name for private registry")
+	return nil, fmt.Errorf("failed to retrieve registry_name for private registry")
 }
 
 func flattenPrivateRegisties(conn *karbon.Client, karbonClusterName string) ([]map[string]interface{}, error) {
@@ -635,16 +646,16 @@ func flattenPrivateRegisties(conn *karbon.Client, karbonClusterName string) ([]m
 
 func flattenNodePools(d *schema.ResourceData, conn *karbon.Client, nodePoolKey string, karbonClusterName string, nodepools []string) ([]map[string]interface{}, error) {
 	flatNodepools := make([]map[string]interface{}, 0)
-	//start workaround for disk_mib bug GA API
-	expandedUserDefinedNodePools := make([]karbon.KarbonClusterNodePool, 0)
+	// start workaround for disk_mib bug GA API
+	expandedUserDefinedNodePools := make([]karbon.ClusterNodePool, 0)
 	var err error
 	if nodepoolInterface, ok := d.GetOk(nodePoolKey); ok {
 		expandedUserDefinedNodePools, err = expandNodePool(nodepoolInterface.([]interface{}))
 		if err != nil {
-			return nil, fmt.Errorf("Unable to expand node pool during flattening: %s", err)
+			return nil, fmt.Errorf("unable to expand node pool during flattening: %s", err)
 		}
 	}
-	//end workaround for disk_mib bug GA API
+	// end workaround for disk_mib bug GA API
 	for _, np := range nodepools {
 		nodepool, err := conn.Cluster.GetKarbonClusterNodePool(karbonClusterName, np)
 		if err != nil {
@@ -652,14 +663,13 @@ func flattenNodePools(d *schema.ResourceData, conn *karbon.Client, nodePoolKey s
 		}
 		var flattenedNodepool map[string]interface{}
 		if len(expandedUserDefinedNodePools) == 0 {
-			flattenedNodepool, err = flattenNodePool(d, nil, nodepool)
+			flattenedNodepool = flattenNodePool(nil, nodepool)
 		} else {
 			for _, udnp := range expandedUserDefinedNodePools {
-				if *udnp.Name == *nodepool.Name {
-					flattenedNodepool, err = flattenNodePool(d, &udnp, nodepool)
-					if err != nil {
-						return nil, err
-					}
+				expandedUserDefinedNodePool := udnp
+				if *expandedUserDefinedNodePool.Name == *nodepool.Name {
+					flattenedNodepool = flattenNodePool(&expandedUserDefinedNodePool, nodepool)
+
 					break
 				}
 			}
@@ -669,9 +679,9 @@ func flattenNodePools(d *schema.ResourceData, conn *karbon.Client, nodePoolKey s
 	return flatNodepools, nil
 }
 
-func flattenNodePool(d *schema.ResourceData, userDefinedNodePools *karbon.KarbonClusterNodePool, nodepool *karbon.KarbonClusterNodePool) (map[string]interface{}, error) {
+func flattenNodePool(userDefinedNodePools *karbon.ClusterNodePool, nodepool *karbon.ClusterNodePool) map[string]interface{} {
 	flatNodepool := map[string]interface{}{}
-	//Nodes
+	// Nodes
 	nodes := make([]map[string]interface{}, 0)
 	for _, npn := range *nodepool.Nodes {
 		nodes = append(nodes, map[string]interface{}{
@@ -680,19 +690,19 @@ func flattenNodePool(d *schema.ResourceData, userDefinedNodePools *karbon.Karbon
 		})
 	}
 	flatNodepool["nodes"] = nodes
-	//AHV config
+	// AHV config
 	// disk_mib, ok := d.GetOk("etcd_node_pool")
-	disk_mib := strconv.FormatInt(nodepool.AHVConfig.DiskMib, 10)
+	diskMib := strconv.FormatInt(nodepool.AHVConfig.DiskMib, 10)
 	if userDefinedNodePools != nil {
 		utils.PrintToJSON(userDefinedNodePools, "userDefinedNodePools: ")
 		log.Print(userDefinedNodePools.AHVConfig.DiskMib)
-		disk_mib = strconv.FormatInt(userDefinedNodePools.AHVConfig.DiskMib, 10)
+		diskMib = strconv.FormatInt(userDefinedNodePools.AHVConfig.DiskMib, 10)
 	}
 	flatNodepool["ahv_config"] = map[string]interface{}{
 		"cpu": strconv.FormatInt(nodepool.AHVConfig.CPU, 10),
-		//karbon api bug 	GetKarbonClusterLegacy(uuid string) (*KarbonClusterLegacyIntentResponse, error)
-		"disk_mib": disk_mib,
-		//must check with legacy nodepool because GA API reports wrong disk space
+		// karbon api bug 	GetKarbonClusterLegacy(uuid string) (*KarbonClusterLegacyIntentResponse, error)
+		"disk_mib": diskMib,
+		// must check with legacy nodepool because GA API reports wrong disk space
 		// "disk_mib":                   strconv.FormatInt(*legacyNodepool.ResourceConfig.DiskMib, 10),
 		"memory_mib":                 strconv.FormatInt(nodepool.AHVConfig.MemoryMib, 10),
 		"network_uuid":               nodepool.AHVConfig.NetworkUUID,
@@ -702,11 +712,11 @@ func flattenNodePool(d *schema.ResourceData, userDefinedNodePools *karbon.Karbon
 	flatNodepool["num_instances"] = nodepool.NumInstances
 	flatNodepool["node_os_version"] = nodepool.NodeOSVersion
 	utils.PrintToJSON(flatNodepool, "flatNodepool: ")
-	return flatNodepool, nil
+	return flatNodepool
 }
 
-func GetNodePoolsForCluster(conn *karbon.Client, karbonClusterName string, nodepools []string) ([]karbon.KarbonClusterNodePool, error) {
-	nodepoolStructs := make([]karbon.KarbonClusterNodePool, 0)
+func GetNodePoolsForCluster(conn *karbon.Client, karbonClusterName string, nodepools []string) ([]karbon.ClusterNodePool, error) {
+	nodepoolStructs := make([]karbon.ClusterNodePool, 0)
 	for _, np := range nodepools {
 		nodepool, err := conn.Cluster.GetKarbonClusterNodePool(karbonClusterName, np)
 		if err != nil {
@@ -728,7 +738,7 @@ func WaitForKarbonCluster(client *Client, taskUUID string) error {
 
 		if err != nil {
 			if strings.Contains(fmt.Sprint(err), "INVALID_UUID") {
-				return fmt.Errorf("INVALID_UUID retrieved!")
+				return fmt.Errorf("invalid uuid retrieved")
 			}
 			return err
 		}
@@ -737,12 +747,11 @@ func WaitForKarbonCluster(client *Client, taskUUID string) error {
 		if status == "INVALID_UUID" || status == "FAILED" {
 			return fmt.Errorf("error_detail: %s, progress_message: %s", utils.StringValue(v.ErrorDetail), utils.StringValue(v.ProgressMessage))
 		}
-
 	}
 	if status == "SUCCEEDED" {
 		return nil
 	}
-	return fmt.Errorf("End state was NOT succeeded! %s", status)
+	return fmt.Errorf("end state was not succeeded but was %s", status)
 }
 
 func setTimeout(meta interface{}) {
@@ -752,50 +761,50 @@ func setTimeout(meta interface{}) {
 	}
 }
 
-func expandStorageClassConfig(storageClassConfigsInput []interface{}) (*karbon.KarbonClusterStorageClassConfigIntentInput, error) {
+func expandStorageClassConfig(storageClassConfigsInput []interface{}) (*karbon.ClusterStorageClassConfigIntentInput, error) {
 	log.Print("[DEBUG] entering expandStorageClassConfig")
 	if len(storageClassConfigsInput) != 1 {
-		return nil, fmt.Errorf("More than one storage class input passed")
+		return nil, fmt.Errorf("more than one storage class input passed")
 	}
 	storageClassConfigInput := storageClassConfigsInput[0].(map[string]interface{})
-	storageClassConfig := &karbon.KarbonClusterStorageClassConfigIntentInput{
+	storageClassConfig := &karbon.ClusterStorageClassConfigIntentInput{
 		DefaultStorageClass: true,
 		Name:                "default-storageclass",
-		VolumesConfig:       karbon.KarbonClusterVolumesConfigIntentInput{},
+		VolumesConfig:       karbon.ClusterVolumesConfigIntentInput{},
 	}
 	if val, ok := storageClassConfigInput["reclaim_policy"]; ok {
 		storageClassConfig.ReclaimPolicy = val.(string)
 	}
-	if volumes_config, ok3 := storageClassConfigInput["volumes_config"]; ok3 {
-		volumes_config := volumes_config.(map[string]interface{})
-		if val_file_system, ok := volumes_config["file_system"]; ok {
-			storageClassConfig.VolumesConfig.FileSystem = val_file_system.(string)
+	if volumesConfig, ok3 := storageClassConfigInput["volumes_config"]; ok3 {
+		volumesConfig := volumesConfig.(map[string]interface{})
+		if valFileSystem, ok := volumesConfig["file_system"]; ok {
+			storageClassConfig.VolumesConfig.FileSystem = valFileSystem.(string)
 		}
-		if val_flash_mode, ok := volumes_config["flash_mode"]; ok {
-			b, _ := strconv.ParseBool(val_flash_mode.(string))
+		if valFlashMode, ok := volumesConfig["flash_mode"]; ok {
+			b, _ := strconv.ParseBool(valFlashMode.(string))
 			storageClassConfig.VolumesConfig.FlashMode = b
 		}
-		if val_password, ok := volumes_config["password"]; ok {
-			storageClassConfig.VolumesConfig.Password = val_password.(string)
+		if valPassword, ok := volumesConfig["password"]; ok {
+			storageClassConfig.VolumesConfig.Password = valPassword.(string)
 		}
-		if val_prism_element_cluster_uuid, ok := volumes_config["prism_element_cluster_uuid"]; ok {
-			storageClassConfig.VolumesConfig.PrismElementClusterUUID = val_prism_element_cluster_uuid.(string)
+		if valPrismElementClusterUUID, ok := volumesConfig["prism_element_cluster_uuid"]; ok {
+			storageClassConfig.VolumesConfig.PrismElementClusterUUID = valPrismElementClusterUUID.(string)
 		}
-		if val_storage_container, ok := volumes_config["storage_container"]; ok {
-			storageClassConfig.VolumesConfig.StorageContainer = val_storage_container.(string)
+		if valStorageContainer, ok := volumesConfig["storage_container"]; ok {
+			storageClassConfig.VolumesConfig.StorageContainer = valStorageContainer.(string)
 		}
-		if val_username, ok := volumes_config["username"]; ok {
-			storageClassConfig.VolumesConfig.Username = val_username.(string)
+		if valUsername, ok := volumesConfig["username"]; ok {
+			storageClassConfig.VolumesConfig.Username = valUsername.(string)
 		}
 	}
 	return storageClassConfig, nil
 }
 
-func expandCNI(cniConfigInput []interface{}) (*karbon.KarbonClusterCNIConfigIntentInput, error) {
+func expandCNI(cniConfigInput []interface{}) (*karbon.ClusterCNIConfigIntentInput, error) {
 	if len(cniConfigInput) != 1 {
-		return nil, fmt.Errorf("Cannot have more than one CNI configuration")
+		return nil, fmt.Errorf("cannot have more than one CNI configuration")
 	}
-	cniConfig := &karbon.KarbonClusterCNIConfigIntentInput{}
+	cniConfig := &karbon.ClusterCNIConfigIntentInput{}
 	cniConfigMap := cniConfigInput[0].(map[string]interface{})
 	if value, ok := cniConfigMap["node_cidr_mask_size"]; ok {
 		cniConfig.NodeCIDRMaskSize = int64(value.(int))
@@ -806,43 +815,43 @@ func expandCNI(cniConfigInput []interface{}) (*karbon.KarbonClusterCNIConfigInte
 	if value, ok := cniConfigMap["service_ipv4_cidr"]; ok && value.(string) != "" {
 		cniConfig.ServiceIPv4CIDR = value.(string)
 	}
-	//todo ugly code
+	// todo ugly code
 	if calicoConfig, cok := cniConfigMap["calico_config"]; cok && len(calicoConfig.(*schema.Set).List()) > 0 {
 		utils.PrintToJSON(calicoConfig, "calicoConfig: ")
 		if flannelConfig, fok := cniConfigMap["flannel_config"]; fok && len(flannelConfig.(*schema.Set).List()) > 0 {
 			utils.PrintToJSON(flannelConfig, "flannelConfig: ")
-			return nil, fmt.Errorf("Cannot have both Calico and Flannel config!")
+			return nil, fmt.Errorf("cannot have both calico and flannel config")
 		}
 		calicoConfigMap := calicoConfig.(*schema.Set).List()[0].(map[string]interface{})
-		ipPoolConfigs := make([]karbon.KarbonClusterCalicoConfigIpPoolConfigIntentInput, 0)
+		ipPoolConfigs := make([]karbon.ClusterCalicoConfigIPPoolConfigIntentInput, 0)
 		for _, ipc := range calicoConfigMap["ip_pool_configs"].([]interface{}) {
 			mipc := ipc.(map[string]interface{})
-			ipPoolConfigs = append(ipPoolConfigs, karbon.KarbonClusterCalicoConfigIpPoolConfigIntentInput{
+			ipPoolConfigs = append(ipPoolConfigs, karbon.ClusterCalicoConfigIPPoolConfigIntentInput{
 				CIDR: mipc["cidr"].(string),
 			})
 		}
-		cniConfig.CalicoConfig = &karbon.KarbonClusterCalicoConfigIntentInput{
-			IpPoolConfigs: ipPoolConfigs,
+		cniConfig.CalicoConfig = &karbon.ClusterCalicoConfigIntentInput{
+			IPPoolConfigs: ipPoolConfigs,
 		}
 	} else {
-		cniConfig.FlannelConfig = &karbon.KarbonClusterFlannelConfigIntentInput{}
+		cniConfig.FlannelConfig = &karbon.ClusterFlannelConfigIntentInput{}
 	}
 	utils.PrintToJSON(cniConfig, "cniConfig: ")
 	return cniConfig, nil
 }
 
-func expandNodePool(nodepoolsInput []interface{}) ([]karbon.KarbonClusterNodePool, error) {
-	nodepools := make([]karbon.KarbonClusterNodePool, 0)
+func expandNodePool(nodepoolsInput []interface{}) ([]karbon.ClusterNodePool, error) {
+	nodepools := make([]karbon.ClusterNodePool, 0)
 	for _, npi := range nodepoolsInput {
 		nodepoolInput := npi.(map[string]interface{})
-		nodepool := &karbon.KarbonClusterNodePool{
-			AHVConfig: &karbon.KarbonClusterNodePoolAHVConfig{},
+		nodepool := &karbon.ClusterNodePool{
+			AHVConfig: &karbon.ClusterNodePoolAHVConfig{},
 		}
 		if nameVal, nameOk := nodepoolInput["name"]; nameOk && nameVal.(string) != "" {
 			npName := nameVal.(string)
 			nodepool.Name = &npName
 		} else {
-			return nil, fmt.Errorf("Nodepool name must be passed!")
+			return nil, fmt.Errorf("nodepool name must be passed")
 		}
 		if val, ok := nodepoolInput["node_os_version"]; ok {
 			nodeOsVersion := val.(string)
@@ -854,42 +863,42 @@ func expandNodePool(nodepoolsInput []interface{}) ([]karbon.KarbonClusterNodePoo
 		}
 		if ahvConfig, ok3 := nodepoolInput["ahv_config"]; ok3 {
 			ahvConfig := ahvConfig.(map[string]interface{})
-			if val_cpu, ok := ahvConfig["cpu"]; ok {
-				i, _ := strconv.ParseInt(val_cpu.(string), 10, 64)
-				//Karbon CPU workaround
-				modi := i % 2
+			if valCPU, ok := ahvConfig["cpu"]; ok {
+				i, _ := strconv.ParseInt(valCPU.(string), 10, 64)
+				// Karbon CPU workaround
+				modi := i % cpuDivisionAmount
 				if modi != 0 {
-					return nil, fmt.Errorf("Amount of CPU must be an even number")
+					return nil, fmt.Errorf("amount of CPU must be an even number")
 				}
-				divi := i / 2
+				divi := i / cpuDivisionAmount
 				nodepool.AHVConfig.CPU = divi
 			}
-			if val_disk_mib, ok := ahvConfig["disk_mib"]; ok {
-				log.Print("[DEBUG] val_disk_mib")
-				log.Print(val_disk_mib)
-				i, _ := strconv.ParseInt(val_disk_mib.(string), 10, 64)
+			if valDiskMib, ok := ahvConfig["disk_mib"]; ok {
+				log.Print("[DEBUG] valDiskMib")
+				log.Print(valDiskMib)
+				i, _ := strconv.ParseInt(valDiskMib.(string), 10, 64)
 				log.Print(i)
 				nodepool.AHVConfig.DiskMib = i
 			}
-			if val_memory_mib, ok := ahvConfig["memory_mib"]; ok {
-				log.Print("[DEBUG] val_memory_mib")
-				log.Print(val_memory_mib)
-				i, _ := strconv.ParseInt(val_memory_mib.(string), 10, 64)
+			if valMemoryMib, ok := ahvConfig["memory_mib"]; ok {
+				log.Print("[DEBUG] valMemoryMib")
+				log.Print(valMemoryMib)
+				i, _ := strconv.ParseInt(valMemoryMib.(string), 10, 64)
 				log.Print(i)
 				nodepool.AHVConfig.MemoryMib = i
 			}
-			if val_network_uuid, ok := ahvConfig["network_uuid"]; ok {
-				nodepool.AHVConfig.NetworkUUID = val_network_uuid.(string)
+			if valNetworkUUID, ok := ahvConfig["network_uuid"]; ok {
+				nodepool.AHVConfig.NetworkUUID = valNetworkUUID.(string)
 			}
-			if val_prism_element_cluster_uuid, ok := ahvConfig["prism_element_cluster_uuid"]; ok {
-				nodepool.AHVConfig.PrismElementClusterUUID = val_prism_element_cluster_uuid.(string)
+			if valPrismElementClusterUUID, ok := ahvConfig["prism_element_cluster_uuid"]; ok {
+				nodepool.AHVConfig.PrismElementClusterUUID = valPrismElementClusterUUID.(string)
 			}
 		}
 		if nodes, ok4 := nodepoolInput["nodes"]; ok4 {
-			nodesSlice := make([]karbon.KarbonClusterNodeIntentResponse, 0)
+			nodesSlice := make([]karbon.ClusterNodeIntentResponse, 0)
 			for _, n := range nodes.([]interface{}) {
 				nmap := n.(map[string]interface{})
-				node := karbon.KarbonClusterNodeIntentResponse{}
+				node := karbon.ClusterNodeIntentResponse{}
 				if nHostname, ok := nmap["hostname"]; ok && nHostname != "" {
 					nh := nHostname.(string)
 					node.Hostname = &nh

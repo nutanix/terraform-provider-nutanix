@@ -1093,7 +1093,7 @@ func (op Operations) ListAllCluster(filter string) (*ClusterListIntentResponse, 
 	return resp, nil
 }
 
-//GetTask ...
+// GetTask ...
 func (op Operations) GetTask(taskUUID string) (*TasksResponse, error) {
 	ctx := context.TODO()
 
@@ -1108,7 +1108,7 @@ func (op Operations) GetTask(taskUUID string) (*TasksResponse, error) {
 	return tasksTesponse, op.client.Do(ctx, req, tasksTesponse)
 }
 
-//GetHost ...
+// GetHost ...
 func (op Operations) GetHost(hostUUID string) (*HostResponse, error) {
 	ctx := context.TODO()
 
@@ -1123,7 +1123,7 @@ func (op Operations) GetHost(hostUUID string) (*HostResponse, error) {
 	return host, op.client.Do(ctx, req, host)
 }
 
-//ListHost ...
+// ListHost ...
 func (op Operations) ListHost(getEntitiesRequest *DSMetadata) (*HostListResponse, error) {
 	ctx := context.TODO()
 	path := "/hosts/list"

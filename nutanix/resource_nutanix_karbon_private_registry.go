@@ -62,32 +62,32 @@ func resourceNutanixKarbonPrivateRegistryCreate(d *schema.ResourceData, meta int
 	conn := client.KarbonAPI
 	setTimeout(meta)
 	// Prepare request
-	karbon_private_registry := &karbon.KarbonPrivateRegistryIntentInput{}
+	karbonPrivateRegistry := &karbon.PrivateRegistryIntentInput{}
 	if name, ok := d.GetOk("name"); ok {
 		n := name.(string)
-		karbon_private_registry.Name = &n
+		karbonPrivateRegistry.Name = &n
 	} else {
-		return fmt.Errorf("Error occured during private registry creation:\n Name must be set!")
+		return fmt.Errorf("error occurred during private registry creation:\n Name must be set")
 	}
 	if url, ok := d.GetOk("url"); ok {
 		u := url.(string)
-		karbon_private_registry.URL = &u
+		karbonPrivateRegistry.URL = &u
 	} else {
-		return fmt.Errorf("Error occured during private registry creation:\n URL must be set!")
+		return fmt.Errorf("Error occurred during private registry creation:\n URL must be set")
 	}
 	if port, ok := d.GetOk("port"); ok {
 		p := int64(port.(int))
-		karbon_private_registry.Port = &p
+		karbonPrivateRegistry.Port = &p
 	}
 
 	if cert, ok := d.GetOk("cert"); ok {
 		c := cert.(string)
-		karbon_private_registry.Cert = &c
+		karbonPrivateRegistry.Cert = &c
 	}
-	utils.PrintToJSON(karbon_private_registry, "[DEBUG karbon_private_registry: ")
-	createPrivateRegistryResponse, err := conn.PrivateRegistry.CreateKarbonPrivateRegistry(karbon_private_registry)
+	utils.PrintToJSON(karbonPrivateRegistry, "[DEBUG karbonPrivateRegistry: ")
+	createPrivateRegistryResponse, err := conn.PrivateRegistry.CreateKarbonPrivateRegistry(karbonPrivateRegistry)
 	if err != nil {
-		return fmt.Errorf("Error occured during private registry creation:\n %s", err)
+		return fmt.Errorf("Error occurred during private registry creation:\n %s", err)
 	}
 	utils.PrintToJSON(createPrivateRegistryResponse, "[DEBUG createPrivateRegistryResponse: ")
 
@@ -133,10 +133,10 @@ func resourceNutanixKarbonPrivateRegistryDelete(d *schema.ResourceData, meta int
 	client := meta.(*Client)
 	conn := client.KarbonAPI
 	setTimeout(meta)
-	karbon_private_registry_name := d.Get("name").(string)
-	log.Printf("[DEBUG] Deleting Karbon cluster: %s, %s", karbon_private_registry_name, d.Id())
+	karbonPrivateRegistryName := d.Get("name").(string)
+	log.Printf("[DEBUG] Deleting Karbon cluster: %s, %s", karbonPrivateRegistryName, d.Id())
 
-	_, err := conn.PrivateRegistry.DeleteKarbonPrivateRegistry(karbon_private_registry_name)
+	_, err := conn.PrivateRegistry.DeleteKarbonPrivateRegistry(karbonPrivateRegistryName)
 	if err != nil {
 		return fmt.Errorf("error while deleting Karbon Private Registry UUID(%s): %s", d.Id(), err)
 	}
@@ -161,7 +161,6 @@ func resourceNutanixKarbonPrivateRegistryExists(d *schema.ResourceData, meta int
 	if err != nil {
 		d.SetId("")
 		return false, nil
-
 	}
 	return true, nil
 }

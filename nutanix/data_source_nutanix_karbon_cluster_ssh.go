@@ -6,7 +6,6 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/karbon"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func dataSourceNutanixKarbonClusterSSH() *schema.Resource {
@@ -28,34 +27,43 @@ func dataSourceNutanixKarbonClusterSSHRead(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("please provide one of karbon_cluster_id or karbon_cluster_name attributes")
 	}
 	var err error
-	var resp *karbon.KarbonClusterSSHconfig
+	var resp *karbon.ClusterSSHconfig
 
 	if iok {
-		c, err := conn.Cluster.GetKarbonCluster(karbonClusterID.(string))
+		var c *karbon.ClusterIntentResponse
+		c, err = conn.Cluster.GetKarbonCluster(karbonClusterID.(string))
 		if err != nil {
-			return fmt.Errorf("Unable to find cluster with id %s: %s", karbonClusterID, err)
+			return fmt.Errorf("unable to find cluster with id %s: %s", karbonClusterID, err)
 		}
 		resp, err = conn.Cluster.GetSSHConfigForKarbonCluster(*c.Name)
+		if err != nil {
+			d.SetId("")
+			return err
+		}
 	} else {
 		resp, err = conn.Cluster.GetSSHConfigForKarbonCluster(karbonClusterName.(string))
+		if err != nil {
+			d.SetId("")
+			return err
+		}
 	}
-	utils.PrintToJSON(resp, "resp: ")
-	if err != nil {
-		d.SetId("")
-		return err
-	}
+	// utils.PrintToJSON(resp, "resp: ")
+	// if err != nil {
+	// 	d.SetId("")
+	// 	return err
+	// }
 
 	if err := d.Set("certificate", resp.Certificate); err != nil {
-		return fmt.Errorf("Failed to set certificate output: %s", err)
+		return fmt.Errorf("failed to set certificate output: %s", err)
 	}
 	if err := d.Set("expiry_time", resp.ExpiryTime); err != nil {
-		return fmt.Errorf("Failed to set expiry_time output: %s", err)
+		return fmt.Errorf("failed to set expiry_time output: %s", err)
 	}
 	if err := d.Set("private_key", resp.PrivateKey); err != nil {
-		return fmt.Errorf("Failed to set private_key output: %s", err)
+		return fmt.Errorf("failed to set private_key output: %s", err)
 	}
 	if err := d.Set("username", resp.Username); err != nil {
-		return fmt.Errorf("Failed to set username output: %s", err)
+		return fmt.Errorf("failed to set username output: %s", err)
 	}
 	d.SetId(resource.UniqueId())
 
@@ -64,12 +72,12 @@ func dataSourceNutanixKarbonClusterSSHRead(d *schema.ResourceData, meta interfac
 
 func KarbonClusterSSHConfigElementDataSourceMap() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
-		"karbon_cluster_id": &schema.Schema{
+		"karbon_cluster_id": {
 			Type:          schema.TypeString,
 			Optional:      true,
 			ConflictsWith: []string{"karbon_cluster_name"},
 		},
-		"karbon_cluster_name": &schema.Schema{
+		"karbon_cluster_name": {
 			Type:          schema.TypeString,
 			Optional:      true,
 			ConflictsWith: []string{"karbon_cluster_id"},
