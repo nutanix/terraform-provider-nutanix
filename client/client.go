@@ -221,6 +221,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 			_, err = io.Copy(w, resp.Body)
 			if err != nil {
 				fmt.Printf("Error io.Copy %s", err)
+
 				return err
 			}
 		} else {
@@ -298,10 +299,9 @@ func CheckResponse(r *http.Response) error {
 	}
 	log.Print("[DEBUG] first nil check")
 
-	//karbon error check
-	if message_info, ok := res["message_info"]; ok {
-		log.Print(message_info)
-		return fmt.Errorf("error: %s", message_info)
+	// karbon error check
+	if messageInfo, ok := res["message_info"]; ok {
+		return fmt.Errorf("error: %s", messageInfo)
 	}
 	if message, ok := res["message"]; ok {
 		log.Print(message)
@@ -343,6 +343,7 @@ func (r *ErrorResponse) Error() string {
 	for key, value := range r.MessageList {
 		err = fmt.Sprintf("%d: {message:%s, reason:%s }", key, value.Message, value.Reason)
 	}
+
 	return err
 }
 
@@ -351,5 +352,6 @@ func fillStruct(data map[string]interface{}, result interface{}) error {
 	if err != nil {
 		return err
 	}
+
 	return json.Unmarshal(j, result)
 }

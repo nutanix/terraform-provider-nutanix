@@ -27,7 +27,7 @@ func dataSourceNutanixKarbonPrivateRegistryRead(d *schema.ResourceData, meta int
 		return fmt.Errorf("please provide one of private_registry_id or private_registry_name attributes")
 	}
 	var err error
-	var resp *karbon.KarbonPrivateRegistryResponse
+	var resp *karbon.PrivateRegistryResponse
 
 	if iok {
 		resp, err = findPrivateRegistryByUUID(conn, karbonPrivateRegistryID.(string))
@@ -41,33 +41,34 @@ func dataSourceNutanixKarbonPrivateRegistryRead(d *schema.ResourceData, meta int
 	}
 	uuid := utils.StringValue(resp.UUID)
 	if err := d.Set("name", utils.StringValue(resp.Name)); err != nil {
-		return fmt.Errorf("Error occured while setting name: %s", err)
+		return fmt.Errorf("error occurred while setting name: %s", err)
 	}
 	if err := d.Set("endpoint", utils.StringValue(resp.Endpoint)); err != nil {
-		return fmt.Errorf("Error occured while setting endpoint: %s", err)
+		return fmt.Errorf("error occurred while setting endpoint: %s", err)
 	}
 	if err := d.Set("uuid", uuid); err != nil {
-		return fmt.Errorf("Error occured while setting endpoint: %s", err)
+		return fmt.Errorf("error occurred while setting endpoint: %s", err)
 	}
 	d.SetId(uuid)
 
 	return nil
 }
 
-func findPrivateRegistryByName(conn *karbon.Client, name string) (*karbon.KarbonPrivateRegistryResponse, error) {
+func findPrivateRegistryByName(conn *karbon.Client, name string) (*karbon.PrivateRegistryResponse, error) {
 	return conn.PrivateRegistry.GetKarbonPrivateRegistry(name)
 }
 
-func findPrivateRegistryByUUID(conn *karbon.Client, uuid string) (*karbon.KarbonPrivateRegistryResponse, error) {
+func findPrivateRegistryByUUID(conn *karbon.Client, uuid string) (*karbon.PrivateRegistryResponse, error) {
 	resp, err := conn.PrivateRegistry.ListKarbonPrivateRegistries()
 	if err != nil {
 		return nil, err
 	}
 
-	found := make([]*karbon.KarbonPrivateRegistryResponse, 0)
+	found := make([]*karbon.PrivateRegistryResponse, 0)
 	for _, v := range *resp {
+		reg := v
 		if *v.UUID == uuid {
-			found = append(found, &v)
+			found = append(found, &reg)
 		}
 	}
 

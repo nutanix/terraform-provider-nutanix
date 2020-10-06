@@ -17,27 +17,27 @@ type ClusterOperations struct {
 // Service ...
 type ClusterService interface {
 	// karbon v2.1
-	ListKarbonClusters() (*KarbonClusterListIntentResponse, error)
-	CreateKarbonCluster(createRequest *KarbonClusterIntentInput) (*KarbonClusterActionResponse, error)
-	GetKarbonCluster(karbonClusterName string) (*KarbonClusterIntentResponse, error)
-	GetKarbonClusterNodePool(karbonClusterName string, nodePoolName string) (*KarbonClusterNodePool, error)
-	DeleteKarbonCluster(karbonClusterName string) (*KarbonClusterActionResponse, error)
-	GetKubeConfigForKarbonCluster(karbonClusterName string) (*KarbonClusterKubeconfigResponse, error)
-	GetSSHConfigForKarbonCluster(karbonClusterName string) (*KarbonClusterSSHconfig, error)
-	//registries
-	ListPrivateRegistries(karbonClusterName string) (*KarbonPrivateRegistryListResponse, error)
-	AddPrivateRegistry(karbonClusterName string, createRequest KarbonPrivateRegistryOperationIntentInput) (*KarbonPrivateRegistryResponse, error)
-	DeletePrivateRegistry(karbonClusterName string, privateRegistryName string) (*KarbonPrivateRegistryOperationResponse, error)
+	ListKarbonClusters() (*ClusterListIntentResponse, error)
+	CreateKarbonCluster(createRequest *ClusterIntentInput) (*ClusterActionResponse, error)
+	GetKarbonCluster(karbonClusterName string) (*ClusterIntentResponse, error)
+	GetKarbonClusterNodePool(karbonClusterName string, nodePoolName string) (*ClusterNodePool, error)
+	DeleteKarbonCluster(karbonClusterName string) (*ClusterActionResponse, error)
+	GetKubeConfigForKarbonCluster(karbonClusterName string) (*ClusterKubeconfigResponse, error)
+	GetSSHConfigForKarbonCluster(karbonClusterName string) (*ClusterSSHconfig, error)
+	// registries
+	ListPrivateRegistries(karbonClusterName string) (*PrivateRegistryListResponse, error)
+	AddPrivateRegistry(karbonClusterName string, createRequest PrivateRegistryOperationIntentInput) (*PrivateRegistryResponse, error)
+	DeletePrivateRegistry(karbonClusterName string, privateRegistryName string) (*PrivateRegistryOperationResponse, error)
 }
 
 // karbon 2.1
-func (op ClusterOperations) ListKarbonClusters() (*KarbonClusterListIntentResponse, error) {
+func (op ClusterOperations) ListKarbonClusters() (*ClusterListIntentResponse, error) {
 	log.Printf("pre request")
 	ctx := context.TODO()
 	log.Printf("pre request")
 	path := "/v1-beta.1/k8s/clusters"
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
-	karbonClusterListIntentResponse := new(KarbonClusterListIntentResponse)
+	karbonClusterListIntentResponse := new(ClusterListIntentResponse)
 	log.Printf("post request")
 	if err != nil {
 		return nil, err
@@ -46,12 +46,12 @@ func (op ClusterOperations) ListKarbonClusters() (*KarbonClusterListIntentRespon
 	return karbonClusterListIntentResponse, op.client.Do(ctx, req, karbonClusterListIntentResponse)
 }
 
-func (op ClusterOperations) CreateKarbonCluster(createRequest *KarbonClusterIntentInput) (*KarbonClusterActionResponse, error) {
+func (op ClusterOperations) CreateKarbonCluster(createRequest *ClusterIntentInput) (*ClusterActionResponse, error) {
 	ctx := context.TODO()
 
 	path := "/v1/k8s/clusters"
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, createRequest)
-	karbonClusterActionResponse := new(KarbonClusterActionResponse)
+	karbonClusterActionResponse := new(ClusterActionResponse)
 
 	if err != nil {
 		return nil, err
@@ -60,13 +60,13 @@ func (op ClusterOperations) CreateKarbonCluster(createRequest *KarbonClusterInte
 	return karbonClusterActionResponse, op.client.Do(ctx, req, karbonClusterActionResponse)
 }
 
-func (op ClusterOperations) GetKarbonCluster(name string) (*KarbonClusterIntentResponse, error) {
+func (op ClusterOperations) GetKarbonCluster(name string) (*ClusterIntentResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/v1/k8s/clusters/%s", name)
 	fmt.Printf("Path: %s", path)
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
-	karbonClusterIntentResponse := new(KarbonClusterIntentResponse)
+	karbonClusterIntentResponse := new(ClusterIntentResponse)
 
 	if err != nil {
 		return nil, err
@@ -75,13 +75,13 @@ func (op ClusterOperations) GetKarbonCluster(name string) (*KarbonClusterIntentR
 	return karbonClusterIntentResponse, op.client.Do(ctx, req, karbonClusterIntentResponse)
 }
 
-func (op ClusterOperations) GetKarbonClusterNodePool(name string, nodePoolName string) (*KarbonClusterNodePool, error) {
+func (op ClusterOperations) GetKarbonClusterNodePool(name string, nodePoolName string) (*ClusterNodePool, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/v1-beta.1/k8s/clusters/%s/node-pools/%s", name, nodePoolName)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
-	karbonClusterNodePool := new(KarbonClusterNodePool)
+	karbonClusterNodePool := new(ClusterNodePool)
 
 	if err != nil {
 		return nil, err
@@ -90,13 +90,13 @@ func (op ClusterOperations) GetKarbonClusterNodePool(name string, nodePoolName s
 	return karbonClusterNodePool, op.client.Do(ctx, req, karbonClusterNodePool)
 }
 
-func (op ClusterOperations) DeleteKarbonCluster(name string) (*KarbonClusterActionResponse, error) {
+func (op ClusterOperations) DeleteKarbonCluster(name string) (*ClusterActionResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/v1/k8s/clusters/%s", name)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
-	karbonClusterActionResponse := new(KarbonClusterActionResponse)
+	karbonClusterActionResponse := new(ClusterActionResponse)
 
 	if err != nil {
 		return nil, err
@@ -105,13 +105,13 @@ func (op ClusterOperations) DeleteKarbonCluster(name string) (*KarbonClusterActi
 	return karbonClusterActionResponse, op.client.Do(ctx, req, karbonClusterActionResponse)
 }
 
-func (op ClusterOperations) GetKubeConfigForKarbonCluster(name string) (*KarbonClusterKubeconfigResponse, error) {
+func (op ClusterOperations) GetKubeConfigForKarbonCluster(name string) (*ClusterKubeconfigResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/v1/k8s/clusters/%s/kubeconfig", name)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
-	karbonClusterKubeconfigResponse := new(KarbonClusterKubeconfigResponse)
+	karbonClusterKubeconfigResponse := new(ClusterKubeconfigResponse)
 
 	if err != nil {
 		return nil, err
@@ -120,13 +120,13 @@ func (op ClusterOperations) GetKubeConfigForKarbonCluster(name string) (*KarbonC
 	return karbonClusterKubeconfigResponse, op.client.Do(ctx, req, karbonClusterKubeconfigResponse)
 }
 
-func (op ClusterOperations) GetSSHConfigForKarbonCluster(name string) (*KarbonClusterSSHconfig, error) {
+func (op ClusterOperations) GetSSHConfigForKarbonCluster(name string) (*ClusterSSHconfig, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/v1/k8s/clusters/%s/ssh", name)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
-	karbonClusterSSHconfig := new(KarbonClusterSSHconfig)
+	karbonClusterSSHconfig := new(ClusterSSHconfig)
 
 	if err != nil {
 		return nil, err
@@ -135,14 +135,12 @@ func (op ClusterOperations) GetSSHConfigForKarbonCluster(name string) (*KarbonCl
 	return karbonClusterSSHconfig, op.client.Do(ctx, req, karbonClusterSSHconfig)
 }
 
-//karbon shared
-
-func (op ClusterOperations) ListPrivateRegistries(karbonClusterName string) (*KarbonPrivateRegistryListResponse, error) {
+func (op ClusterOperations) ListPrivateRegistries(karbonClusterName string) (*PrivateRegistryListResponse, error) {
 	ctx := context.TODO()
 	path := fmt.Sprintf("/v1-alpha.1/k8s/clusters/%s/registries", karbonClusterName)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
-	karbonPrivateRegistryListResponse := new(KarbonPrivateRegistryListResponse)
+	karbonPrivateRegistryListResponse := new(PrivateRegistryListResponse)
 
 	if err != nil {
 		return nil, err
@@ -151,12 +149,12 @@ func (op ClusterOperations) ListPrivateRegistries(karbonClusterName string) (*Ka
 	return karbonPrivateRegistryListResponse, op.client.Do(ctx, req, karbonPrivateRegistryListResponse)
 }
 
-func (op ClusterOperations) AddPrivateRegistry(karbonClusterName string, createRequest KarbonPrivateRegistryOperationIntentInput) (*KarbonPrivateRegistryResponse, error) {
+func (op ClusterOperations) AddPrivateRegistry(karbonClusterName string, createRequest PrivateRegistryOperationIntentInput) (*PrivateRegistryResponse, error) {
 	ctx := context.TODO()
 	path := fmt.Sprintf("/v1-alpha.1/k8s/clusters/%s/registries", karbonClusterName)
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, createRequest)
-	karbonPrivateRegistryResponse := new(KarbonPrivateRegistryResponse)
+	karbonPrivateRegistryResponse := new(PrivateRegistryResponse)
 
 	if err != nil {
 		return nil, err
@@ -165,12 +163,12 @@ func (op ClusterOperations) AddPrivateRegistry(karbonClusterName string, createR
 	return karbonPrivateRegistryResponse, op.client.Do(ctx, req, karbonPrivateRegistryResponse)
 }
 
-func (op ClusterOperations) DeletePrivateRegistry(karbonClusterName string, privateRegistryName string) (*KarbonPrivateRegistryOperationResponse, error) {
+func (op ClusterOperations) DeletePrivateRegistry(karbonClusterName string, privateRegistryName string) (*PrivateRegistryOperationResponse, error) {
 	ctx := context.TODO()
 	path := fmt.Sprintf("/v1-alpha.1/k8s/clusters/%s/registries/%s", karbonClusterName, privateRegistryName)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
-	karbonPrivateRegistryOperationResponse := new(KarbonPrivateRegistryOperationResponse)
+	karbonPrivateRegistryOperationResponse := new(PrivateRegistryOperationResponse)
 
 	if err != nil {
 		return nil, err

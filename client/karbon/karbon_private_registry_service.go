@@ -17,17 +17,17 @@ type PrivateRegistryOperations struct {
 // Service ...
 type PrivateRegistryService interface {
 	// karbon v2.1
-	ListKarbonPrivateRegistries() (*KarbonPrivateRegistryListResponse, error)
-	CreateKarbonPrivateRegistry(createRequest *KarbonPrivateRegistryIntentInput) (*KarbonPrivateRegistryResponse, error)
-	GetKarbonPrivateRegistry(name string) (*KarbonPrivateRegistryResponse, error)
-	DeleteKarbonPrivateRegistry(name string) (*KarbonPrivateRegistryOperationResponse, error)
+	ListKarbonPrivateRegistries() (*PrivateRegistryListResponse, error)
+	CreateKarbonPrivateRegistry(createRequest *PrivateRegistryIntentInput) (*PrivateRegistryResponse, error)
+	GetKarbonPrivateRegistry(name string) (*PrivateRegistryResponse, error)
+	DeleteKarbonPrivateRegistry(name string) (*PrivateRegistryOperationResponse, error)
 }
 
-func (op PrivateRegistryOperations) ListKarbonPrivateRegistries() (*KarbonPrivateRegistryListResponse, error) {
+func (op PrivateRegistryOperations) ListKarbonPrivateRegistries() (*PrivateRegistryListResponse, error) {
 	ctx := context.TODO()
 	path := "/v1-alpha.1/registries"
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
-	karbonPrivateRegistryListResponse := new(KarbonPrivateRegistryListResponse)
+	karbonPrivateRegistryListResponse := new(PrivateRegistryListResponse)
 	log.Printf("post request")
 	if err != nil {
 		return nil, err
@@ -36,24 +36,25 @@ func (op PrivateRegistryOperations) ListKarbonPrivateRegistries() (*KarbonPrivat
 	return karbonPrivateRegistryListResponse, op.client.Do(ctx, req, karbonPrivateRegistryListResponse)
 }
 
-func (op PrivateRegistryOperations) CreateKarbonPrivateRegistry(createRequest *KarbonPrivateRegistryIntentInput) (*KarbonPrivateRegistryResponse, error) {
+func (op PrivateRegistryOperations) CreateKarbonPrivateRegistry(createRequest *PrivateRegistryIntentInput) (*PrivateRegistryResponse, error) {
 	ctx := context.TODO()
 	path := "/v1-alpha.1/registries"
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, createRequest)
-	karbonPrivateRegistryResponse := new(KarbonPrivateRegistryResponse)
+	karbonPrivateRegistryResponse := new(PrivateRegistryResponse)
 	if err != nil {
 		return nil, err
 	}
+
 	return karbonPrivateRegistryResponse, op.client.Do(ctx, req, karbonPrivateRegistryResponse)
 }
 
-func (op PrivateRegistryOperations) GetKarbonPrivateRegistry(name string) (*KarbonPrivateRegistryResponse, error) {
+func (op PrivateRegistryOperations) GetKarbonPrivateRegistry(name string) (*PrivateRegistryResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/v1-alpha.1/registries/%s", name)
 	fmt.Printf("Path: %s", path)
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
-	karbonPrivateRegistryResponse := new(KarbonPrivateRegistryResponse)
+	karbonPrivateRegistryResponse := new(PrivateRegistryResponse)
 
 	if err != nil {
 		return nil, err
@@ -62,13 +63,13 @@ func (op PrivateRegistryOperations) GetKarbonPrivateRegistry(name string) (*Karb
 	return karbonPrivateRegistryResponse, op.client.Do(ctx, req, karbonPrivateRegistryResponse)
 }
 
-func (op PrivateRegistryOperations) DeleteKarbonPrivateRegistry(name string) (*KarbonPrivateRegistryOperationResponse, error) {
+func (op PrivateRegistryOperations) DeleteKarbonPrivateRegistry(name string) (*PrivateRegistryOperationResponse, error) {
 	ctx := context.TODO()
 	log.Printf("[Debug] Deleting /v1-alpha.1/registries/%s", name)
 	path := fmt.Sprintf("/v1-alpha.1/registries/%s", name)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
-	karbonPrivateRegistryOperationResponse := new(KarbonPrivateRegistryOperationResponse)
+	karbonPrivateRegistryOperationResponse := new(PrivateRegistryOperationResponse)
 
 	if err != nil {
 		return nil, err

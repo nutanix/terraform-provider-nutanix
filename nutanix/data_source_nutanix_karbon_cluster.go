@@ -23,17 +23,17 @@ func dataSourceNutanixKarbonClusterRead(d *schema.ResourceData, meta interface{}
 	setTimeout(meta)
 	// Make request to the API
 	karbonClusterID, iok := d.GetOk("karbon_cluster_id")
-	karbonClusterName, nok := d.GetOk("karbon_cluster_name")
+	karbonClusterNameInput, nok := d.GetOk("karbon_cluster_name")
 	if !iok && !nok {
 		return fmt.Errorf("please provide one of karbon_cluster_id or karbon_cluster_name attributes")
 	}
 	var err error
-	var resp *karbon.KarbonClusterIntentResponse
+	var resp *karbon.ClusterIntentResponse
 
 	if iok {
 		resp, err = conn.Cluster.GetKarbonCluster(karbonClusterID.(string))
 	} else {
-		resp, err = conn.Cluster.GetKarbonCluster(karbonClusterName.(string))
+		resp, err = conn.Cluster.GetKarbonCluster(karbonClusterNameInput.(string))
 	}
 
 	if err != nil {
@@ -41,16 +41,16 @@ func dataSourceNutanixKarbonClusterRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	karbon_cluster_name := *resp.Name
-	flattenedEtcdNodepool, err := flattenNodePools(d, conn, "etcd_node_pool", karbon_cluster_name, resp.ETCDConfig.NodePools)
+	karbonClusterName := *resp.Name
+	flattenedEtcdNodepool, err := flattenNodePools(d, conn, "etcd_node_pool", karbonClusterName, resp.ETCDConfig.NodePools)
 	if err != nil {
 		return err
 	}
-	flattenedWorkerNodepool, err := flattenNodePools(d, conn, "worker_node_pool", karbon_cluster_name, resp.WorkerConfig.NodePools)
+	flattenedWorkerNodepool, err := flattenNodePools(d, conn, "worker_node_pool", karbonClusterName, resp.WorkerConfig.NodePools)
 	if err != nil {
 		return err
 	}
-	flattenedMasterNodepool, err := flattenNodePools(d, conn, "master_node_pool", karbon_cluster_name, resp.MasterConfig.NodePools)
+	flattenedMasterNodepool, err := flattenNodePools(d, conn, "master_node_pool", karbonClusterName, resp.MasterConfig.NodePools)
 	if err != nil {
 		return err
 	}
@@ -58,12 +58,12 @@ func dataSourceNutanixKarbonClusterRead(d *schema.ResourceData, meta interface{}
 
 	d.Set("status", utils.StringValue(resp.Status))
 
-	//Must use legacy API because GA API reports different version
+	// Must use legacy API because GA API reports different version
 	log.Printf("Getting existing version: %s", d.Get("version").(string))
 	d.Set("version", d.Get("version").(string))
 	// d.Set("version", utils.StringValue(resp.Version))
 	// d.Set("version", utils.StringValue(respLegacy.K8sConfig.Version))
-	d.Set("kubeapi_server_ipv4_address", utils.StringValue(resp.KubeApiServerIPv4Address))
+	d.Set("kubeapi_server_ipv4_address", utils.StringValue(resp.KubeAPIServerIPv4Address))
 	d.Set("deployment_type", resp.MasterConfig.DeploymentType)
 	d.Set("worker_node_pool", flattenedWorkerNodepool)
 
