@@ -54,7 +54,7 @@ func dataSourceNutanixKarbonClusterKubeconfigRead(d *schema.ResourceData, meta i
 	}
 
 	var err error
-	var resp *karbon.KarbonClusterKubeconfig
+	var resp *karbon.ClusterKubeconfig
 
 	if iok {
 		resp, err = GetKubeConfigForCluster(conn, karbonClusterID.(string))
@@ -68,10 +68,10 @@ func dataSourceNutanixKarbonClusterKubeconfigRead(d *schema.ResourceData, meta i
 	}
 	utils.PrintToJSON(resp, "resp: ")
 	if len(resp.Clusters) != 1 {
-		return fmt.Errorf("Incorrect amount of cluster information retrieved via Kubeconfig. Must be 1.")
+		return fmt.Errorf("incorrect amount of cluster information retrieved via kubeconfig, must be 1")
 	}
 	if len(resp.Users) != 1 {
-		return fmt.Errorf("Incorrect amount of user information retrieved via Kubeconfig. Must be 1.")
+		return fmt.Errorf("incorrect amount of user information retrieved via kubeconfig must be 1")
 	}
 
 	if err := d.Set("cluster_ca_certificate", resp.Clusters[0].Cluster.CertificateAuthorityData); err != nil {
@@ -89,12 +89,12 @@ func dataSourceNutanixKarbonClusterKubeconfigRead(d *schema.ResourceData, meta i
 	return nil
 }
 
-func GetKubeConfigForCluster(con *karbon.Client, karbonClusterName string) (*karbon.KarbonClusterKubeconfig, error) {
+func GetKubeConfigForCluster(con *karbon.Client, karbonClusterName string) (*karbon.ClusterKubeconfig, error) {
 	kubeconfig, err := con.Cluster.GetKubeConfigForKarbonCluster(karbonClusterName)
 	if err != nil {
 		return nil, err
 	}
-	karbonClusterKubeconfig := karbon.KarbonClusterKubeconfig{}
+	karbonClusterKubeconfig := karbon.ClusterKubeconfig{}
 	err = yaml.Unmarshal([]byte(kubeconfig.KubeConfig), &karbonClusterKubeconfig)
 	if err != nil {
 		return nil, err

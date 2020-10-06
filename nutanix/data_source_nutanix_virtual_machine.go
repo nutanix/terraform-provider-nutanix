@@ -317,15 +317,15 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 							Computed: true,
 						},
 						"vss_snapshot_capable": {
-							Type:     schema.TypeString, //Bool
+							Type:     schema.TypeString, // Bool
 							Computed: true,
 						},
 						"is_reachable": {
-							Type:     schema.TypeString, //Bool
+							Type:     schema.TypeString, // Bool
 							Computed: true,
 						},
 						"vm_mobility_drivers_installed": {
-							Type:     schema.TypeString, //Bool
+							Type:     schema.TypeString, // Bool
 							Computed: true,
 						},
 					},
@@ -1122,15 +1122,15 @@ func resourceNutanixDatasourceVirtualMachineInstanceResourceV0() *schema.Resourc
 							Computed: true,
 						},
 						"vss_snapshot_capable": {
-							Type:     schema.TypeString, //Bool
+							Type:     schema.TypeString, // Bool
 							Computed: true,
 						},
 						"is_reachable": {
-							Type:     schema.TypeString, //Bool
+							Type:     schema.TypeString, // Bool
 							Computed: true,
 						},
 						"vm_mobility_drivers_installed": {
-							Type:     schema.TypeString, //Bool
+							Type:     schema.TypeString, // Bool
 							Computed: true,
 						},
 					},

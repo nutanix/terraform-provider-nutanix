@@ -326,6 +326,7 @@ func TestClient_NewUploadRequest(t *testing.T) {
 			got, err := c.NewUploadRequest(tt.args.ctx, tt.args.method, tt.args.urlStr, tt.args.body)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Client.NewUploadRequest() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {

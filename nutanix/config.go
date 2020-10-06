@@ -37,6 +37,9 @@ func (c *Config) Client() (*Client, error) {
 	}
 
 	v3Client, err := v3.NewV3Client(configCreds)
+	if err != nil {
+		return nil, err
+	}
 	karbonClient, err := karbon.NewKarbonAPIClient(configCreds)
 	if err != nil {
 		return nil, err

@@ -35,23 +35,23 @@ func dataSourceNutanixKarbonPrivateRegistriesRead(d *schema.ResourceData, meta i
 		return nil
 	}
 
-	private_registries := make([]map[string]interface{}, len(*resp))
+	privateRegistries := make([]map[string]interface{}, len(*resp))
 
 	for k, v := range *resp {
 		privateRegistry := make(map[string]interface{})
 		if err != nil {
-			return fmt.Errorf("Error searching for private registry via legacy API: %s", err)
+			return fmt.Errorf("error searching for private registry via legacy API: %s", err)
 		}
 
 		privateRegistry["name"] = utils.StringValue(v.Name)
 
 		privateRegistry["endpoint"] = utils.StringValue(v.Endpoint)
 		privateRegistry["uuid"] = utils.StringValue(v.UUID)
-		private_registries[k] = privateRegistry
+		privateRegistries[k] = privateRegistry
 	}
 
-	if err := d.Set("private_registries", private_registries); err != nil {
-		return fmt.Errorf("Failed to set private_registries output: %s", err)
+	if err := d.Set("private_registries", privateRegistries); err != nil {
+		return fmt.Errorf("failed to set private_registries output: %s", err)
 	}
 
 	d.SetId(resource.UniqueId())
