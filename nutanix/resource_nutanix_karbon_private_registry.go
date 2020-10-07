@@ -69,13 +69,13 @@ func resourceNutanixKarbonPrivateRegistryCreate(d *schema.ResourceData, meta int
 		n := name.(string)
 		karbonPrivateRegistry.Name = &n
 	} else {
-		return fmt.Errorf("error occurred during private registry creation:\n Name must be set")
+		return fmt.Errorf("error occurred during private registry creation:\n name must be set")
 	}
 	if url, ok := d.GetOk("url"); ok {
 		u := url.(string)
 		karbonPrivateRegistry.URL = &u
 	} else {
-		return fmt.Errorf("Error occurred during private registry creation:\n URL must be set")
+		return fmt.Errorf("error occurred during private registry creation:\n URL must be set")
 	}
 	if port, ok := d.GetOk("port"); ok {
 		p := int64(port.(int))
@@ -89,7 +89,7 @@ func resourceNutanixKarbonPrivateRegistryCreate(d *schema.ResourceData, meta int
 	utils.PrintToJSON(karbonPrivateRegistry, "[DEBUG karbonPrivateRegistry: ")
 	createPrivateRegistryResponse, err := conn.PrivateRegistry.CreateKarbonPrivateRegistry(karbonPrivateRegistry)
 	if err != nil {
-		return fmt.Errorf("Error occurred during private registry creation:\n %s", err)
+		return fmt.Errorf("error occurred during private registry creation:\n %s", err)
 	}
 	utils.PrintToJSON(createPrivateRegistryResponse, "[DEBUG createPrivateRegistryResponse: ")
 
@@ -107,7 +107,7 @@ func resourceNutanixKarbonPrivateRegistryRead(d *schema.ResourceData, meta inter
 	var name interface{}
 	var ok bool
 	if name, ok = d.GetOk("name"); !ok {
-		return fmt.Errorf("Cannot read Private Registry without name!")
+		return fmt.Errorf("cannot read private registry without name")
 	}
 	resp, err := conn.PrivateRegistry.GetKarbonPrivateRegistry(name.(string))
 	if err != nil {
@@ -154,7 +154,7 @@ func resourceNutanixKarbonPrivateRegistryExists(d *schema.ResourceData, meta int
 	var name interface{}
 	var ok bool
 	if name, ok = d.GetOk("name"); !ok {
-		return false, fmt.Errorf("Cannot read Private Registry without name!")
+		return false, fmt.Errorf("cannot read private registry without name")
 	}
 	resp, err := conn.PrivateRegistry.GetKarbonPrivateRegistry(name.(string))
 	log.Print("error:")
