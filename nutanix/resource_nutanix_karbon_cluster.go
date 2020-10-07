@@ -14,12 +14,21 @@ import (
 )
 
 const (
-	MAXMASTERNODES            = 5
-	MINMASTERNODES            = 2
-	CPUDIVISIONAMOUNT         = 2
 	DEFAULTMASTERNODEPOOLNAME = "master_node_pool"
 	DEFAULTETCDNODEPOOLNAME   = "etcd_node_pool"
 	DEFAULTWORKERNODEPOOLNAME = "worker_node_pool"
+	DEFAULTPODIPV4CIDR        = "172.20.0.0/16"
+	DEFAULTSERVICEIPV4CIDR    = "172.19.0.0/16"
+	DEFAULTRECLAIMPOLICY      = "Delete"
+	DEFAULTFILESYSTEM         = "ext4"
+	DEFAULTNODECIDRMASKSIZE   = 24
+	MINDISKMIB                = 1024
+	MINMEMORYMIB              = 1024
+	MINCPU                    = 2
+	MINNUMINSTANCES           = 1
+	MAXMASTERNODES            = 5
+	MINMASTERNODES            = 2
+	CPUDIVISIONAMOUNT         = 2
 )
 
 func resourceNutanixKarbonCluster() *schema.Resource {
@@ -69,13 +78,10 @@ func KarbonClusterResourceMap() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"reclaim_policy": {
-						Type:     schema.TypeString,
-						Optional: true,
-						Default:  "Delete",
-						ValidateFunc: validation.StringInSlice([]string{
-							"Delete",
-							"Retain",
-						}, false),
+						Type:         schema.TypeString,
+						Optional:     true,
+						Default:      DEFAULTRECLAIMPOLICY,
+						ValidateFunc: validation.StringInSlice(getSupportedReclaimPolicies(), false),
 					},
 					"volumes_config": {
 						Type:     schema.TypeList,
@@ -85,13 +91,10 @@ func KarbonClusterResourceMap() map[string]*schema.Schema {
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"file_system": {
-									Type: schema.TypeString,
-									ValidateFunc: validation.StringInSlice([]string{
-										"ext4",
-										"xfs",
-									}, false),
-									Optional: true,
-									Default:  "ext4",
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringInSlice(getSupportedFileSystems(), false),
+									Optional:     true,
+									Default:      DEFAULTFILESYSTEM,
 								},
 								"flash_mode": {
 									Type:     schema.TypeBool,
@@ -207,20 +210,20 @@ func CNISchema() *schema.Schema {
 					Type: schema.TypeInt,
 					// Required: true,
 					Optional: true,
-					Default:  24,
+					Default:  DEFAULTNODECIDRMASKSIZE,
 				},
 				"pod_ipv4_cidr": {
 					Type: schema.TypeString,
 					// Required: true,
 					Optional:     true,
-					Default:      "172.20.0.0/16",
+					Default:      DEFAULTPODIPV4CIDR,
 					ValidateFunc: validation.CIDRNetwork(0, 32),
 				},
 				"service_ipv4_cidr": {
 					Type: schema.TypeString,
 					// Required: true,
 					Optional:     true,
-					Default:      "172.19.0.0/16",
+					Default:      DEFAULTSERVICEIPV4CIDR,
 					ValidateFunc: validation.CIDRNetwork(0, 32),
 				},
 				//TODO: Passing empty flannel_config always gives a diff on plan
@@ -249,7 +252,7 @@ func CNISchema() *schema.Schema {
 										"cidr": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											Default:      "172.20.0.0/16",
+											Default:      DEFAULTPODIPV4CIDR,
 											ValidateFunc: validation.CIDRNetwork(0, 32),
 										},
 									},
@@ -285,7 +288,7 @@ func nodePoolSchema(defaultNodepoolName string, forceNewNodes bool, cpuDefault i
 					Type:         schema.TypeInt,
 					Required:     true,
 					ForceNew:     forceNewNodes,
-					ValidateFunc: validation.IntAtLeast(1),
+					ValidateFunc: validation.IntAtLeast(MINNUMINSTANCES),
 				},
 				"ahv_config": {
 					Type:     schema.TypeList,
@@ -299,19 +302,19 @@ func nodePoolSchema(defaultNodepoolName string, forceNewNodes bool, cpuDefault i
 								Type:         schema.TypeInt,
 								Optional:     true,
 								Default:      cpuDefault,
-								ValidateFunc: validation.IntAtLeast(2),
+								ValidateFunc: validation.IntAtLeast(MINCPU),
 							},
 							"disk_mib": {
 								Type:         schema.TypeInt,
 								Optional:     true,
 								Default:      diskMibDefault,
-								ValidateFunc: validation.IntAtLeast(1024),
+								ValidateFunc: validation.IntAtLeast(MINDISKMIB),
 							},
 							"memory_mib": {
 								Type:         schema.TypeInt,
 								Optional:     true,
 								Default:      memoryMibDefault,
-								ValidateFunc: validation.IntAtLeast(1024),
+								ValidateFunc: validation.IntAtLeast(MINMEMORYMIB),
 							},
 							"network_uuid": {
 								Type:     schema.TypeString,
@@ -981,4 +984,18 @@ func expandNodePool(nodepoolsInput []interface{}) ([]karbon.ClusterNodePool, err
 		nodepools = append(nodepools, *nodepool)
 	}
 	return nodepools, nil
+}
+
+func getSupportedFileSystems() []string {
+	return []string{
+		"ext4",
+		"xfs",
+	}
+}
+
+func getSupportedReclaimPolicies() []string {
+	return []string{
+		"Delete",
+		"Retain",
+	}
 }
