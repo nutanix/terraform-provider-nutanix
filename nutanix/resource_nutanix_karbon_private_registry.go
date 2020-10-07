@@ -8,6 +8,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 func resourceNutanixKarbonPrivateRegistry() *schema.Resource {
@@ -46,6 +47,7 @@ func KarbonPrivateRegistryResourceMap() map[string]*schema.Schema {
 			Type:     schema.TypeInt,
 			Required: true,
 			// ForceNew: true,
+			ValidateFunc: validation.IntAtLeast(1),
 		},
 		"endpoint": {
 			Type:     schema.TypeString,
