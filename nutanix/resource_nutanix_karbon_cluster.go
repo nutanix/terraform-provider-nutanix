@@ -3,7 +3,6 @@ package nutanix
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 	"time"
 
@@ -11,12 +10,16 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 )
 
 const (
-	maxMasterNodes    = 5
-	minMasterNodes    = 2
-	cpuDivisionAmount = 2
+	MAXMASTERNODES            = 5
+	MINMASTERNODES            = 2
+	CPUDIVISIONAMOUNT         = 2
+	DEFAULTMASTERNODEPOOLNAME = "master_node_pool"
+	DEFAULTETCDNODEPOOLNAME   = "etcd_node_pool"
+	DEFAULTWORKERNODEPOOLNAME = "worker_node_pool"
 )
 
 func resourceNutanixKarbonCluster() *schema.Resource {
@@ -61,31 +64,45 @@ func KarbonClusterResourceMap() map[string]*schema.Schema {
 		"storage_class_config": {
 			Type:     schema.TypeSet,
 			Required: true,
-			// ForceNew: true,
+			ForceNew: true,
 			MaxItems: 1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"reclaim_policy": {
 						Type:     schema.TypeString,
-						Required: true,
+						Optional: true,
+						Default:  "Delete",
+						ValidateFunc: validation.StringInSlice([]string{
+							"Delete",
+							"Retain",
+						}, false),
 					},
 					"volumes_config": {
-						Type:     schema.TypeMap,
+						Type:     schema.TypeList,
 						Required: true,
+						MaxItems: 1,
+						ForceNew: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"file_system": {
-									Type:     schema.TypeString,
-									Required: true,
+									Type: schema.TypeString,
+									ValidateFunc: validation.StringInSlice([]string{
+										"ext4",
+										"xfs",
+									}, false),
+									Optional: true,
+									Default:  "ext4",
 								},
 								"flash_mode": {
 									Type:     schema.TypeBool,
-									Required: true,
+									Optional: true,
+									Default:  false,
 								},
 								"password": {
-									Type:      schema.TypeString,
-									Required:  true,
-									Sensitive: true,
+									Type:        schema.TypeString,
+									Required:    true,
+									Sensitive:   true,
+									DefaultFunc: schema.EnvDefaultFunc("NUTANIX_PE_PASSWORD", nil),
 								},
 								"prism_element_cluster_uuid": {
 									Type:     schema.TypeString,
@@ -96,8 +113,9 @@ func KarbonClusterResourceMap() map[string]*schema.Schema {
 									Required: true,
 								},
 								"username": {
-									Type:     schema.TypeString,
-									Required: true,
+									Type:        schema.TypeString,
+									Required:    true,
+									DefaultFunc: schema.EnvDefaultFunc("NUTANIX_PE_USERNAME", nil),
 								},
 							},
 						},
@@ -114,8 +132,9 @@ func KarbonClusterResourceMap() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"external_ipv4_address": {
-						Type:     schema.TypeString,
-						Required: true,
+						Type:         schema.TypeString,
+						Required:     true,
+						ValidateFunc: validation.SingleIP(),
 					},
 				},
 			},
@@ -129,23 +148,26 @@ func KarbonClusterResourceMap() map[string]*schema.Schema {
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"external_ipv4_address": {
-						Type:     schema.TypeString,
-						Required: true,
+						Type:         schema.TypeString,
+						Required:     true,
+						ValidateFunc: validation.SingleIP(),
 					},
 					"master_nodes_config": {
 						Type:     schema.TypeSet,
 						Required: true,
-						MaxItems: maxMasterNodes,
-						MinItems: minMasterNodes,
+						MaxItems: MAXMASTERNODES,
+						MinItems: MINMASTERNODES,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"ipv4_address": {
-									Type:     schema.TypeString,
-									Required: true,
+									Type:         schema.TypeString,
+									Required:     true,
+									ValidateFunc: validation.SingleIP(),
 								},
 								"node_pool_name": {
 									Type:     schema.TypeString,
-									Required: true,
+									Optional: true,
+									Default:  DEFAULTMASTERNODEPOOLNAME,
 								},
 							},
 						},
@@ -153,7 +175,7 @@ func KarbonClusterResourceMap() map[string]*schema.Schema {
 				},
 			},
 		},
-		"private_registries": {
+		"private_registry": {
 			Type:     schema.TypeSet,
 			Optional: true,
 			Elem: &schema.Resource{
@@ -165,16 +187,16 @@ func KarbonClusterResourceMap() map[string]*schema.Schema {
 				},
 			},
 		},
-		"etcd_node_pool":   nodePoolSchema(true),
-		"master_node_pool": nodePoolSchema(true),
-		"worker_node_pool": nodePoolSchema(true),
+		"etcd_node_pool":   nodePoolSchema(DEFAULTETCDNODEPOOLNAME, true, 4, 40960, 8192),
+		"master_node_pool": nodePoolSchema(DEFAULTMASTERNODEPOOLNAME, true, 2, 122880, 4096),
+		"worker_node_pool": nodePoolSchema(DEFAULTWORKERNODEPOOLNAME, true, 8, 122880, 8192),
 		"cni_config":       CNISchema(),
 	}
 }
 
 func CNISchema() *schema.Schema {
 	return &schema.Schema{
-		Type:     schema.TypeSet,
+		Type:     schema.TypeList,
 		Required: true,
 		MaxItems: 1,
 		ForceNew: true,
@@ -190,15 +212,22 @@ func CNISchema() *schema.Schema {
 				"pod_ipv4_cidr": {
 					Type: schema.TypeString,
 					// Required: true,
-					Optional: true,
-					Default:  "172.20.0.0/16",
+					Optional:     true,
+					Default:      "172.20.0.0/16",
+					ValidateFunc: validation.CIDRNetwork(0, 32),
 				},
 				"service_ipv4_cidr": {
 					Type: schema.TypeString,
 					// Required: true,
-					Optional: true,
-					Default:  "172.19.0.0/16",
+					Optional:     true,
+					Default:      "172.19.0.0/16",
+					ValidateFunc: validation.CIDRNetwork(0, 32),
 				},
+				//TODO: Passing empty flannel_config always gives a diff on plan
+				// for example:
+				//  cni_config {
+				//     flannel_config {}
+				//  }
 				"flannel_config": {
 					Type:     schema.TypeSet,
 					Optional: true,
@@ -212,14 +241,16 @@ func CNISchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"ip_pool_configs": {
+							"ip_pool_config": {
 								Type:     schema.TypeList,
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"cidr": {
-											Type:     schema.TypeString,
-											Optional: true,
+											Type:         schema.TypeString,
+											Optional:     true,
+											Default:      "172.20.0.0/16",
+											ValidateFunc: validation.CIDRNetwork(0, 32),
 										},
 									},
 								},
@@ -232,7 +263,7 @@ func CNISchema() *schema.Schema {
 	}
 }
 
-func nodePoolSchema(forceNewNodes bool) *schema.Schema {
+func nodePoolSchema(defaultNodepoolName string, forceNewNodes bool, cpuDefault int, diskMibDefault int, memoryMibDefault int) *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MaxItems: 1,
@@ -241,36 +272,46 @@ func nodePoolSchema(forceNewNodes bool) *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"name": {
 					Type:     schema.TypeString,
-					Required: true,
+					Optional: true,
+					Default:  defaultNodepoolName,
+					ForceNew: forceNewNodes,
 				},
 				"node_os_version": {
 					Type:     schema.TypeString,
 					Required: true,
-					ForceNew: true,
-				},
-				"num_instances": {
-					Type:     schema.TypeInt,
-					Required: true,
 					ForceNew: forceNewNodes,
 				},
+				"num_instances": {
+					Type:         schema.TypeInt,
+					Required:     true,
+					ForceNew:     forceNewNodes,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
 				"ahv_config": {
-					Type:     schema.TypeMap,
+					Type:     schema.TypeList,
+					MaxItems: 1,
 					Optional: true,
 					// Computed: true,
-					// ForceNew: forceNewNodes,
+					ForceNew: forceNewNodes,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"cpu": {
-								Type:     schema.TypeInt,
-								Optional: true,
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      cpuDefault,
+								ValidateFunc: validation.IntAtLeast(2),
 							},
 							"disk_mib": {
-								Type:     schema.TypeInt,
-								Optional: true,
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      diskMibDefault,
+								ValidateFunc: validation.IntAtLeast(1024),
 							},
 							"memory_mib": {
-								Type:     schema.TypeInt,
-								Optional: true,
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      memoryMibDefault,
+								ValidateFunc: validation.IntAtLeast(1024),
 							},
 							"network_uuid": {
 								Type:     schema.TypeString,
@@ -310,7 +351,6 @@ func resourceNutanixKarbonClusterCreate(d *schema.ResourceData, meta interface{}
 	client := meta.(*Client)
 	conn := client.KarbonAPI
 	setTimeout(meta)
-	// Prepare request
 	// Node pools
 	etcdNodePool, err := expandNodePool(d.Get("etcd_node_pool").([]interface{}))
 	if err != nil {
@@ -324,8 +364,6 @@ func resourceNutanixKarbonClusterCreate(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
-	utils.PrintToJSON(workerNodePool, "pre set workerNodePool: ")
-
 	// storageclass
 	storageClassConfig, err := expandStorageClassConfig(d.Get("storage_class_config").(*schema.Set).List())
 	if err != nil {
@@ -333,7 +371,7 @@ func resourceNutanixKarbonClusterCreate(d *schema.ResourceData, meta interface{}
 	}
 	// CNI
 	// todo modify these unchecked GETs
-	cniConfig, err := expandCNI(d.Get("cni_config").(*schema.Set).List())
+	cniConfig, err := expandCNI(d.Get("cni_config").([]interface{}))
 	if err != nil {
 		return err
 	}
@@ -417,7 +455,7 @@ func resourceNutanixKarbonClusterCreate(d *schema.ResourceData, meta interface{}
 
 	fmt.Printf("Cluster uuid: %s", createClusterResponse.ClusterUUID)
 	fmt.Printf("Task uuid: %s", createClusterResponse.TaskUUID)
-	if privateRegistries, ok := d.GetOk("private_registries"); ok {
+	if privateRegistries, ok := d.GetOk("private_registry"); ok {
 		newPrivateRegistries, err := expandPrivateRegistries(privateRegistries.(*schema.Set).List())
 		if err != nil {
 			return err
@@ -494,11 +532,11 @@ func resourceNutanixKarbonClusterRead(d *schema.ResourceData, meta interface{}) 
 	}
 	flattenedPrivateRegistries, err := flattenPrivateRegisties(conn, karbonClusterName)
 	if err != nil {
-		return fmt.Errorf("error getting flat private_registries for Karbon Cluster %s: %s", d.Id(), err)
+		return fmt.Errorf("error getting flat private_registry for Karbon Cluster %s: %s", d.Id(), err)
 	}
 	utils.PrintToJSON(flattenedPrivateRegistries, "flattenedPrivateRegistries: ")
-	if err = d.Set("private_registries", flattenedPrivateRegistries); err != nil {
-		return fmt.Errorf("error setting private_registries for Karbon Cluster %s: %s", d.Id(), err)
+	if err = d.Set("private_registry", flattenedPrivateRegistries); err != nil {
+		return fmt.Errorf("error setting private_registry for Karbon Cluster %s: %s", d.Id(), err)
 	}
 	d.SetId(*resp.UUID)
 	return nil
@@ -516,9 +554,9 @@ func resourceNutanixKarbonClusterUpdate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 	karbonClusterName := *resp.Name
-	if d.HasChange("private_registries") {
-		_, p := d.GetChange("private_registries")
-		utils.PrintToJSON(p.(*schema.Set).List(), "p private_registries: ")
+	if d.HasChange("private_registry") {
+		_, p := d.GetChange("private_registry")
+		utils.PrintToJSON(p.(*schema.Set).List(), "p private_registry: ")
 		newPrivateRegistries, err := expandPrivateRegistries(p.(*schema.Set).List())
 		if err != nil {
 			return err
@@ -700,21 +738,23 @@ func flattenNodePool(userDefinedNodePools *karbon.ClusterNodePool, nodepool *kar
 	flatNodepool["nodes"] = nodes
 	// AHV config
 	// disk_mib, ok := d.GetOk("etcd_node_pool")
-	diskMib := strconv.FormatInt(nodepool.AHVConfig.DiskMib, 10)
+	diskMib := nodepool.AHVConfig.DiskMib
 	if userDefinedNodePools != nil {
 		utils.PrintToJSON(userDefinedNodePools, "userDefinedNodePools: ")
 		log.Print(userDefinedNodePools.AHVConfig.DiskMib)
-		diskMib = strconv.FormatInt(userDefinedNodePools.AHVConfig.DiskMib, 10)
+		diskMib = userDefinedNodePools.AHVConfig.DiskMib
 	}
-	flatNodepool["ahv_config"] = map[string]interface{}{
-		"cpu": strconv.FormatInt(nodepool.AHVConfig.CPU, 10),
-		// karbon api bug 	GetKarbonClusterLegacy(uuid string) (*KarbonClusterLegacyIntentResponse, error)
-		"disk_mib": diskMib,
-		// must check with legacy nodepool because GA API reports wrong disk space
-		// "disk_mib":                   strconv.FormatInt(*legacyNodepool.ResourceConfig.DiskMib, 10),
-		"memory_mib":                 strconv.FormatInt(nodepool.AHVConfig.MemoryMib, 10),
-		"network_uuid":               nodepool.AHVConfig.NetworkUUID,
-		"prism_element_cluster_uuid": nodepool.AHVConfig.PrismElementClusterUUID,
+	flatNodepool["ahv_config"] = []map[string]interface{}{
+		map[string]interface{}{
+			"cpu": nodepool.AHVConfig.CPU,
+			// karbon api bug 	GetKarbonClusterLegacy(uuid string) (*KarbonClusterLegacyIntentResponse, error)
+			"disk_mib": diskMib,
+			// must check with legacy nodepool because GA API reports wrong disk space
+			// "disk_mib":                   strconv.FormatInt(*legacyNodepool.ResourceConfig.DiskMib, 10),
+			"memory_mib":                 nodepool.AHVConfig.MemoryMib,
+			"network_uuid":               nodepool.AHVConfig.NetworkUUID,
+			"prism_element_cluster_uuid": nodepool.AHVConfig.PrismElementClusterUUID,
+		},
 	}
 	flatNodepool["name"] = nodepool.Name
 	flatNodepool["num_instances"] = nodepool.NumInstances
@@ -783,14 +823,18 @@ func expandStorageClassConfig(storageClassConfigsInput []interface{}) (*karbon.C
 	if val, ok := storageClassConfigInput["reclaim_policy"]; ok {
 		storageClassConfig.ReclaimPolicy = val.(string)
 	}
-	if volumesConfig, ok3 := storageClassConfigInput["volumes_config"]; ok3 {
-		volumesConfig := volumesConfig.(map[string]interface{})
+	if volumesConfigListRaw, ok3 := storageClassConfigInput["volumes_config"]; ok3 {
+		volumesConfigList := volumesConfigListRaw.([]interface{})
+		if len(volumesConfigList) != 1 {
+			return nil, fmt.Errorf("at least one volume_config must be passed")
+		}
+		volumesConfig := volumesConfigList[0].(map[string]interface{})
 		if valFileSystem, ok := volumesConfig["file_system"]; ok {
 			storageClassConfig.VolumesConfig.FileSystem = valFileSystem.(string)
 		}
 		if valFlashMode, ok := volumesConfig["flash_mode"]; ok {
-			b, _ := strconv.ParseBool(valFlashMode.(string))
-			storageClassConfig.VolumesConfig.FlashMode = b
+			// b, _ := strconv.ParseBool(valFlashMode.(string))ƒ
+			storageClassConfig.VolumesConfig.FlashMode = valFlashMode.(bool)
 		}
 		if valPassword, ok := volumesConfig["password"]; ok {
 			storageClassConfig.VolumesConfig.Password = valPassword.(string)
@@ -832,7 +876,15 @@ func expandCNI(cniConfigInput []interface{}) (*karbon.ClusterCNIConfigIntentInpu
 		}
 		calicoConfigMap := calicoConfig.(*schema.Set).List()[0].(map[string]interface{})
 		ipPoolConfigs := make([]karbon.ClusterCalicoConfigIPPoolConfigIntentInput, 0)
-		for _, ipc := range calicoConfigMap["ip_pool_configs"].([]interface{}) {
+		var ipPoolConfigsFromMap []interface{}
+		if ipcfm, ok := calicoConfigMap["ip_pool_configs"]; ok {
+			ipPoolConfigsFromMap = ipcfm.([]interface{})
+		}
+		if ipcfm, ok := calicoConfigMap["ip_pool_config"]; ok {
+			ipPoolConfigsFromMap = ipcfm.([]interface{})
+		}
+
+		for _, ipc := range ipPoolConfigsFromMap {
 			mipc := ipc.(map[string]interface{})
 			ipPoolConfigs = append(ipPoolConfigs, karbon.ClusterCalicoConfigIPPoolConfigIntentInput{
 				CIDR: mipc["cidr"].(string),
@@ -848,7 +900,6 @@ func expandCNI(cniConfigInput []interface{}) (*karbon.ClusterCNIConfigIntentInpu
 	return cniConfig, nil
 }
 
-//todo force default values
 func expandNodePool(nodepoolsInput []interface{}) ([]karbon.ClusterNodePool, error) {
 	nodepools := make([]karbon.ClusterNodePool, 0)
 	for _, npi := range nodepoolsInput {
@@ -870,29 +921,36 @@ func expandNodePool(nodepoolsInput []interface{}) ([]karbon.ClusterNodePool, err
 			numInstances := int64(val2.(int))
 			nodepool.NumInstances = &numInstances
 		}
-		if ahvConfig, ok3 := nodepoolInput["ahv_config"]; ok3 {
-			ahvConfig := ahvConfig.(map[string]interface{})
+		if ahvConfigListRaw, ok3 := nodepoolInput["ahv_config"]; ok3 {
+			ahvConfigList := ahvConfigListRaw.([]interface{})
+			if len(ahvConfigList) != 1 {
+				return nil, fmt.Errorf("ahv_config must have 1 element")
+			}
+			ahvConfig := ahvConfigList[0].(map[string]interface{})
 			if valCPU, ok := ahvConfig["cpu"]; ok {
-				i, _ := strconv.ParseInt(valCPU.(string), 10, 64)
+				// i, _ := strconv.ParseInt(valCPU.(string), 10, 64)
+				i := int64(valCPU.(int))
 				// Karbon CPU workaround
-				modi := i % cpuDivisionAmount
+				modi := i % CPUDIVISIONAMOUNT
 				if modi != 0 {
 					return nil, fmt.Errorf("amount of CPU must be an even number")
 				}
-				divi := i / cpuDivisionAmount
+				divi := i / CPUDIVISIONAMOUNT
 				nodepool.AHVConfig.CPU = divi
 			}
 			if valDiskMib, ok := ahvConfig["disk_mib"]; ok {
 				log.Print("[DEBUG] valDiskMib")
 				log.Print(valDiskMib)
-				i, _ := strconv.ParseInt(valDiskMib.(string), 10, 64)
+				// i, _ := strconv.ParseInt(valDiskMib.(string), 10, 64)
+				i := int64(valDiskMib.(int))
 				log.Print(i)
 				nodepool.AHVConfig.DiskMib = i
 			}
 			if valMemoryMib, ok := ahvConfig["memory_mib"]; ok {
 				log.Print("[DEBUG] valMemoryMib")
 				log.Print(valMemoryMib)
-				i, _ := strconv.ParseInt(valMemoryMib.(string), 10, 64)
+				// i, _ := strconv.ParseInt(valMemoryMib.(string), 10, 64)
+				i := int64(valMemoryMib.(int))
 				log.Print(i)
 				nodepool.AHVConfig.MemoryMib = i
 			}
