@@ -182,16 +182,22 @@ func CNISchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"node_cidr_mask_size": {
-					Type:     schema.TypeInt,
-					Required: true,
+					Type: schema.TypeInt,
+					// Required: true,
+					Optional: true,
+					Default:  24,
 				},
 				"pod_ipv4_cidr": {
-					Type:     schema.TypeString,
-					Required: true,
+					Type: schema.TypeString,
+					// Required: true,
+					Optional: true,
+					Default:  "172.20.0.0/16",
 				},
 				"service_ipv4_cidr": {
-					Type:     schema.TypeString,
-					Required: true,
+					Type: schema.TypeString,
+					// Required: true,
+					Optional: true,
+					Default:  "172.19.0.0/16",
 				},
 				"flannel_config": {
 					Type:     schema.TypeSet,
@@ -318,6 +324,8 @@ func resourceNutanixKarbonClusterCreate(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
+	utils.PrintToJSON(workerNodePool, "pre set workerNodePool: ")
+
 	// storageclass
 	storageClassConfig, err := expandStorageClassConfig(d.Get("storage_class_config").(*schema.Set).List())
 	if err != nil {
@@ -840,6 +848,7 @@ func expandCNI(cniConfigInput []interface{}) (*karbon.ClusterCNIConfigIntentInpu
 	return cniConfig, nil
 }
 
+//todo force default values
 func expandNodePool(nodepoolsInput []interface{}) ([]karbon.ClusterNodePool, error) {
 	nodepools := make([]karbon.ClusterNodePool, 0)
 	for _, npi := range nodepoolsInput {
