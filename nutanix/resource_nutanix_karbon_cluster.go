@@ -22,6 +22,15 @@ const (
 	DEFAULTRECLAIMPOLICY      = "Delete"
 	DEFAULTFILESYSTEM         = "ext4"
 	DEFAULTNODECIDRMASKSIZE   = 24
+	DEFAULTETCDNODECPU        = 4
+	DEFAULTETCDNODEDISKMIB    = 40960
+	DEFAULTETCDNODEEMORYMIB   = 8192
+	DEFAULTMASTERNODECPU      = 2
+	DEFAULTMASTERNODEDISKMIB  = 122880
+	DEFAULTMASTERNODEEMORYMIB = 4096
+	DEFAULTWORKERNODECPU      = 8
+	DEFAULTWORKERNODEDISKMIB  = 122880
+	DEFAULTWORKERNODEEMORYMIB = 8192
 	MINDISKMIB                = 1024
 	MINMEMORYMIB              = 1024
 	MINCPU                    = 2
@@ -30,6 +39,10 @@ const (
 	MINMASTERNODES            = 2
 	CPUDIVISIONAMOUNT         = 2
 )
+
+// Known issues:
+//  - Importing karbon clusters do not contain cni_configs and storage_class_configs
+//  - Importing karbon clusters show an incorrect version
 
 func resourceNutanixKarbonCluster() *schema.Resource {
 	return &schema.Resource{
@@ -190,9 +203,9 @@ func KarbonClusterResourceMap() map[string]*schema.Schema {
 				},
 			},
 		},
-		"etcd_node_pool":   nodePoolSchema(DEFAULTETCDNODEPOOLNAME, true, 4, 40960, 8192),
-		"master_node_pool": nodePoolSchema(DEFAULTMASTERNODEPOOLNAME, true, 2, 122880, 4096),
-		"worker_node_pool": nodePoolSchema(DEFAULTWORKERNODEPOOLNAME, true, 8, 122880, 8192),
+		"etcd_node_pool":   nodePoolSchema(DEFAULTETCDNODEPOOLNAME, true, DEFAULTETCDNODECPU, DEFAULTETCDNODEDISKMIB, DEFAULTETCDNODEEMORYMIB),
+		"master_node_pool": nodePoolSchema(DEFAULTMASTERNODEPOOLNAME, true, DEFAULTMASTERNODECPU, DEFAULTMASTERNODEDISKMIB, DEFAULTMASTERNODEEMORYMIB),
+		"worker_node_pool": nodePoolSchema(DEFAULTWORKERNODEPOOLNAME, true, DEFAULTWORKERNODECPU, DEFAULTWORKERNODEDISKMIB, DEFAULTWORKERNODEEMORYMIB),
 		"cni_config":       CNISchema(),
 	}
 }
@@ -226,20 +239,15 @@ func CNISchema() *schema.Schema {
 					Default:      DEFAULTSERVICEIPV4CIDR,
 					ValidateFunc: validation.CIDRNetwork(0, 32),
 				},
-				//TODO: Passing empty flannel_config always gives a diff on plan
-				// for example:
-				//  cni_config {
-				//     flannel_config {}
-				//  }
 				"flannel_config": {
-					Type:     schema.TypeSet,
+					Type:     schema.TypeList,
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{},
 					},
 				},
 				"calico_config": {
-					Type:     schema.TypeSet,
+					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
 					Elem: &schema.Resource{
@@ -501,8 +509,6 @@ func resourceNutanixKarbonClusterRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	utils.PrintToJSON(flattenedWorkerNodepool, "pre set flattenedWorkerNodepool: ")
-	// log.Printf("d.Get(master_node_pool)")
-	// log.Print(d.Get("master_node_pool").([]interface{}))
 	d.Set("name", utils.StringValue(resp.Name))
 
 	if err = d.Set("status", utils.StringValue(resp.Status)); err != nil {
@@ -612,15 +618,62 @@ func resourceNutanixKarbonClusterExists(d *schema.ResourceData, meta interface{}
 	log.Print("[DEBUG] Entering resourceNutanixKarbonClusterExists")
 	conn := meta.(*Client).KarbonAPI
 	setTimeout(meta)
+	karbonClusterName, ok := d.GetOk("name")
+	var exists bool
+	var err error
+	// search by Name
+	if ok {
+		exists, err = checkNutanixKarbonClusterExistsByName(conn, karbonClusterName.(string))
+	} else {
+		//search by uuid
+		exists, err = checkNutanixKarbonClusterExistsByUUID(conn, d.Id())
+	}
+	if err != nil {
+		if strings.Contains(fmt.Sprint(err), "cluster not found") {
+			d.SetId("")
+			return exists, nil
+		}
+		return exists, fmt.Errorf("error checking kubernetes cluster %s existence: %s", d.Id(), err)
+	}
+	return exists, nil
+}
+
+func checkNutanixKarbonClusterExistsByUUID(conn *karbon.Client, UUID string) (bool, error) {
 	// Make request to the API
-	resp, err := conn.Cluster.GetKarbonCluster(d.Id())
+	log.Print("[Debug] checkNutanixKarbonClusterExistsByUUID UUID:")
+	log.Print(UUID)
+	karbonClusters, err := conn.Cluster.ListKarbonClusters()
+	utils.PrintToJSON(karbonClusters, "checkNutanixKarbonClusterExistsByUUID karbonClusters: ")
 	log.Print("error:")
 	log.Print(err)
-	utils.PrintToJSON(resp, "resourceNutanixKarbonClusterExists resp: ")
 	if err != nil {
-		d.SetId("")
-		return false, nil
+		log.Print("checkNutanixKarbonClusterExistsByUUID returning false nil")
+		return false, err
 	}
+	for _, k := range *karbonClusters {
+		if *k.UUID == UUID {
+			log.Print("checkNutanixKarbonClusterExistsByUUID returning true nil")
+			return true, nil
+		}
+	}
+	log.Print("checkNutanixKarbonClusterExistsByUUID returning false nil")
+	return false, fmt.Errorf("k8s cluster not found")
+}
+
+//"cluster not found"
+func checkNutanixKarbonClusterExistsByName(conn *karbon.Client, clusterName string) (bool, error) {
+	// Make request to the API
+	log.Print("[Debug] checkNutanixKarbonClusterExistsByName clusterName:")
+	log.Print(clusterName)
+	resp, err := conn.Cluster.GetKarbonCluster(clusterName)
+	utils.PrintToJSON(resp, "checkNutanixKarbonClusterExistsByName resp: ")
+	log.Print("error:")
+	log.Print(err)
+	if err != nil {
+		log.Print("checkNutanixKarbonClusterExistsByName returning false nil")
+		return false, err
+	}
+	log.Print("checkNutanixKarbonClusterExistsByName returning true nil")
 	return true, nil
 }
 
@@ -743,7 +796,7 @@ func flattenNodePool(userDefinedNodePools *karbon.ClusterNodePool, nodepool *kar
 	// disk_mib, ok := d.GetOk("etcd_node_pool")
 	diskMib := nodepool.AHVConfig.DiskMib
 	if userDefinedNodePools != nil {
-		utils.PrintToJSON(userDefinedNodePools, "userDefinedNodePools: ")
+		// utils.PrintToJSON(userDefinedNodePools, "userDefinedNodePools: ")
 		log.Print(userDefinedNodePools.AHVConfig.DiskMib)
 		diskMib = userDefinedNodePools.AHVConfig.DiskMib
 	}
@@ -762,7 +815,7 @@ func flattenNodePool(userDefinedNodePools *karbon.ClusterNodePool, nodepool *kar
 	flatNodepool["name"] = nodepool.Name
 	flatNodepool["num_instances"] = nodepool.NumInstances
 	flatNodepool["node_os_version"] = nodepool.NodeOSVersion
-	utils.PrintToJSON(flatNodepool, "flatNodepool: ")
+	// utils.PrintToJSON(flatNodepool, "flatNodepool: ")
 	return flatNodepool
 }
 
@@ -871,13 +924,13 @@ func expandCNI(cniConfigInput []interface{}) (*karbon.ClusterCNIConfigIntentInpu
 		cniConfig.ServiceIPv4CIDR = value.(string)
 	}
 	// todo ugly code
-	if calicoConfig, cok := cniConfigMap["calico_config"]; cok && len(calicoConfig.(*schema.Set).List()) > 0 {
+	if calicoConfig, cok := cniConfigMap["calico_config"]; cok && len(calicoConfig.([]interface{})) > 0 {
 		utils.PrintToJSON(calicoConfig, "calicoConfig: ")
-		if flannelConfig, fok := cniConfigMap["flannel_config"]; fok && len(flannelConfig.(*schema.Set).List()) > 0 {
+		if flannelConfig, fok := cniConfigMap["flannel_config"]; fok && len(flannelConfig.([]interface{})) > 0 {
 			utils.PrintToJSON(flannelConfig, "flannelConfig: ")
 			return nil, fmt.Errorf("cannot have both calico and flannel config")
 		}
-		calicoConfigMap := calicoConfig.(*schema.Set).List()[0].(map[string]interface{})
+		calicoConfigMap := calicoConfig.([]interface{})[0].(map[string]interface{})
 		ipPoolConfigs := make([]karbon.ClusterCalicoConfigIPPoolConfigIntentInput, 0)
 		var ipPoolConfigsFromMap []interface{}
 		if ipcfm, ok := calicoConfigMap["ip_pool_configs"]; ok {
@@ -899,6 +952,9 @@ func expandCNI(cniConfigInput []interface{}) (*karbon.ClusterCNIConfigIntentInpu
 	} else {
 		cniConfig.FlannelConfig = &karbon.ClusterFlannelConfigIntentInput{}
 	}
+	log.Print("flannel_config list len")
+	log.Print(len(cniConfigMap["flannel_config"].([]interface{})))
+	log.Print(cniConfigMap["flannel_config"])
 	utils.PrintToJSON(cniConfig, "cniConfig: ")
 	return cniConfig, nil
 }
