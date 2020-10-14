@@ -44,15 +44,13 @@ func KarbonPrivateRegistryResourceMap() map[string]*schema.Schema {
 			ForceNew: true,
 		},
 		"port": {
-			Type:     schema.TypeInt,
-			Required: true,
-			// ForceNew: true,
+			Type:         schema.TypeInt,
+			Required:     true,
 			ValidateFunc: validation.IntAtLeast(1),
 		},
 		"endpoint": {
 			Type:     schema.TypeString,
 			Computed: true,
-			// ForceNew: true,
 		},
 	}
 }
@@ -69,13 +67,13 @@ func resourceNutanixKarbonPrivateRegistryCreate(d *schema.ResourceData, meta int
 		n := name.(string)
 		karbonPrivateRegistry.Name = &n
 	} else {
-		return fmt.Errorf("error occurred during private registry creation:\n name must be set")
+		return fmt.Errorf("error occurred during private registry creation: name must be set")
 	}
 	if url, ok := d.GetOk("url"); ok {
 		u := url.(string)
 		karbonPrivateRegistry.URL = &u
 	} else {
-		return fmt.Errorf("error occurred during private registry creation:\n URL must be set")
+		return fmt.Errorf("error occurred during private registry creation: url must be set")
 	}
 	if port, ok := d.GetOk("port"); ok {
 		p := int64(port.(int))
@@ -89,9 +87,9 @@ func resourceNutanixKarbonPrivateRegistryCreate(d *schema.ResourceData, meta int
 	utils.PrintToJSON(karbonPrivateRegistry, "[DEBUG karbonPrivateRegistry: ")
 	createPrivateRegistryResponse, err := conn.PrivateRegistry.CreateKarbonPrivateRegistry(karbonPrivateRegistry)
 	if err != nil {
-		return fmt.Errorf("error occurred during private registry creation:\n %s", err)
+		return fmt.Errorf("error occurred during private registry creation: %s", err)
 	}
-	utils.PrintToJSON(createPrivateRegistryResponse, "[DEBUG createPrivateRegistryResponse: ")
+	utils.PrintToJSON(createPrivateRegistryResponse, "[DEBUG] createPrivateRegistryResponse: ")
 
 	// Set terraform state id
 	d.SetId(*createPrivateRegistryResponse.UUID)
