@@ -3,6 +3,7 @@ package nutanix
 import (
 	"fmt"
 
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/karbon"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -23,6 +24,10 @@ func dataSourceNutanixKarbonClusterKubeconfig() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"karbon_cluster_id"},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"access_token": {
 				Type:      schema.TypeString,
@@ -66,14 +71,12 @@ func dataSourceNutanixKarbonClusterKubeconfigRead(d *schema.ResourceData, meta i
 		d.SetId("")
 		return err
 	}
-	utils.PrintToJSON(resp, "resp: ")
 	if len(resp.Clusters) != 1 {
 		return fmt.Errorf("incorrect amount of cluster information retrieved via kubeconfig, must be 1")
 	}
 	if len(resp.Users) != 1 {
 		return fmt.Errorf("incorrect amount of user information retrieved via kubeconfig must be 1")
 	}
-
 	if err := d.Set("cluster_ca_certificate", resp.Clusters[0].Cluster.CertificateAuthorityData); err != nil {
 		return fmt.Errorf("error setting `cluster_ca_certificate` for Karbon cluster (%s): %s", d.Id(), err)
 	}
@@ -83,8 +86,11 @@ func dataSourceNutanixKarbonClusterKubeconfigRead(d *schema.ResourceData, meta i
 	if err := d.Set("access_token", resp.Users[0].User.Token); err != nil {
 		return fmt.Errorf("error setting `access_token` for Karbon cluster (%s): %s", d.Id(), err)
 	}
-	karbonClusterNameRetrieved := resp.Clusters[0].Name
-	d.SetId(karbonClusterNameRetrieved)
+	if err := d.Set("name", resp.Clusters[0].Name); err != nil {
+		return fmt.Errorf("error setting `name` for Karbon cluster (%s): %s", d.Id(), err)
+	}
+
+	d.SetId(resource.UniqueId())
 
 	return nil
 }

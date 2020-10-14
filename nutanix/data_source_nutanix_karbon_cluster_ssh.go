@@ -22,36 +22,29 @@ func dataSourceNutanixKarbonClusterSSHRead(d *schema.ResourceData, meta interfac
 	setTimeout(meta)
 	// Make request to the API
 	karbonClusterID, iok := d.GetOk("karbon_cluster_id")
-	karbonClusterName, nok := d.GetOk("karbon_cluster_name")
+	karbonClusterNameInput, nok := d.GetOk("karbon_cluster_name")
 	if !iok && !nok {
 		return fmt.Errorf("please provide one of karbon_cluster_id or karbon_cluster_name attributes")
 	}
 	var err error
 	var resp *karbon.ClusterSSHconfig
-
+	var karbonClusterName string
 	if iok {
 		var c *karbon.ClusterIntentResponse
 		c, err = conn.Cluster.GetKarbonCluster(karbonClusterID.(string))
 		if err != nil {
 			return fmt.Errorf("unable to find cluster with id %s: %s", karbonClusterID, err)
 		}
-		resp, err = conn.Cluster.GetSSHConfigForKarbonCluster(*c.Name)
-		if err != nil {
-			d.SetId("")
-			return err
-		}
+		karbonClusterName = *c.Name
 	} else {
-		resp, err = conn.Cluster.GetSSHConfigForKarbonCluster(karbonClusterName.(string))
-		if err != nil {
-			d.SetId("")
-			return err
-		}
+		karbonClusterName = karbonClusterNameInput.(string)
 	}
-	// utils.PrintToJSON(resp, "resp: ")
-	// if err != nil {
-	// 	d.SetId("")
-	// 	return err
-	// }
+
+	resp, err = conn.Cluster.GetSSHConfigForKarbonCluster(karbonClusterName)
+	if err != nil {
+		d.SetId("")
+		return err
+	}
 
 	if err := d.Set("certificate", resp.Certificate); err != nil {
 		return fmt.Errorf("failed to set certificate output: %s", err)

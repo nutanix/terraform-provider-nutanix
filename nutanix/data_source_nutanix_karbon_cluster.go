@@ -2,7 +2,6 @@ package nutanix
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/karbon"
@@ -54,22 +53,33 @@ func dataSourceNutanixKarbonClusterRead(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
-	d.Set("name", utils.StringValue(resp.Name))
-
-	d.Set("status", utils.StringValue(resp.Status))
-
-	// Must use legacy API because GA API reports different version
-	log.Printf("Getting existing version: %s", d.Get("version").(string))
-	d.Set("version", d.Get("version").(string))
-	// d.Set("version", utils.StringValue(resp.Version))
-	// d.Set("version", utils.StringValue(respLegacy.K8sConfig.Version))
-	d.Set("kubeapi_server_ipv4_address", utils.StringValue(resp.KubeAPIServerIPv4Address))
-	d.Set("deployment_type", resp.MasterConfig.DeploymentType)
-	d.Set("worker_node_pool", flattenedWorkerNodepool)
-
-	d.Set("etcd_node_pool", flattenedEtcdNodepool)
-	d.Set("master_node_pool", flattenedMasterNodepool)
-
+	if err = d.Set("name", utils.StringValue(resp.Name)); err != nil {
+		return fmt.Errorf("error setting name for Karbon Cluster %s: %s", d.Id(), err)
+	}
+	if err = d.Set("status", utils.StringValue(resp.Status)); err != nil {
+		return fmt.Errorf("error setting status for Karbon Cluster %s: %s", d.Id(), err)
+	}
+	if err = d.Set("version", utils.StringValue(resp.Version)); err != nil {
+		return fmt.Errorf("error setting version for Karbon Cluster %s: %s", d.Id(), err)
+	}
+	if err = d.Set("kubeapi_server_ipv4_address", utils.StringValue(resp.KubeAPIServerIPv4Address)); err != nil {
+		return fmt.Errorf("error setting kubeapi_server_ipv4_address for Karbon Cluster %s: %s", d.Id(), err)
+	}
+	if err = d.Set("deployment_type", resp.MasterConfig.DeploymentType); err != nil {
+		return fmt.Errorf("error setting deployment_type for Karbon Cluster %s: %s", d.Id(), err)
+	}
+	if err = d.Set("worker_node_pool", flattenedWorkerNodepool); err != nil {
+		return fmt.Errorf("error setting worker_node_pool for Karbon Cluster %s: %s", d.Id(), err)
+	}
+	if err = d.Set("etcd_node_pool", flattenedEtcdNodepool); err != nil {
+		return fmt.Errorf("error setting etcd_node_pool for Karbon Cluster %s: %s", d.Id(), err)
+	}
+	if err = d.Set("master_node_pool", flattenedMasterNodepool); err != nil {
+		return fmt.Errorf("error setting master_node_pool for Karbon Cluster %s: %s", d.Id(), err)
+	}
+	if err = d.Set("uuid", utils.StringValue(resp.UUID)); err != nil {
+		return fmt.Errorf("error setting uuid for Karbon Cluster %s: %s", d.Id(), err)
+	}
 	d.SetId(*resp.UUID)
 
 	return nil
@@ -93,6 +103,10 @@ func KarbonClusterDataSourceMap() map[string]*schema.Schema {
 func KarbonClusterElementDataSourceMap() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"name": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"uuid": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -138,8 +152,7 @@ func nodePoolDatasourceSchema() *schema.Schema {
 					Computed: true,
 				},
 				"ahv_config": {
-					Type: schema.TypeMap,
-
+					Type:     schema.TypeList,
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
