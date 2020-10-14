@@ -9,6 +9,7 @@ import (
 	karbon "github.com/terraform-providers/terraform-provider-nutanix/client/karbon"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
+	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 )
@@ -21,6 +22,7 @@ const (
 	DEFAULTSERVICEIPV4CIDR    = "172.19.0.0/16"
 	DEFAULTRECLAIMPOLICY      = "Delete"
 	DEFAULTFILESYSTEM         = "ext4"
+	DEFAULTSTORAGECLASSNAME   = "default-storageclass"
 	DEFAULTNODECIDRMASKSIZE   = 24
 	DEFAULTETCDNODECPU        = 4
 	DEFAULTETCDNODEDISKMIB    = 40960
@@ -38,6 +40,11 @@ const (
 	MAXMASTERNODES            = 5
 	MINMASTERNODES            = 2
 	CPUDIVISIONAMOUNT         = 2
+	KARBONAPIVERSION          = "2.0.0"
+	MINIMUMWAITTIMEOUT        = 1
+	DEFAULTWAITTIMEOUT        = 60
+	WAITDELAY                 = 10 * time.Second
+	WAITMINTIMEOUT            = 10 * time.Second
 )
 
 // Known issues:
@@ -61,6 +68,12 @@ func resourceNutanixKarbonCluster() *schema.Resource {
 
 func KarbonClusterResourceMap() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
+		"wait_timeout_minutes": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Default:      DEFAULTWAITTIMEOUT,
+			ValidateFunc: validation.IntAtLeast(MINIMUMWAITTIMEOUT),
+		},
 		"name": {
 			Type:     schema.TypeString,
 			Required: true,
@@ -90,6 +103,12 @@ func KarbonClusterResourceMap() map[string]*schema.Schema {
 			MaxItems: 1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
+					"name": {
+						Type:     schema.TypeString,
+						Optional: true,
+						Default:  DEFAULTSTORAGECLASSNAME,
+						ForceNew: true,
+					},
 					"reclaim_policy": {
 						Type:         schema.TypeString,
 						Optional:     true,
@@ -139,12 +158,22 @@ func KarbonClusterResourceMap() map[string]*schema.Schema {
 				},
 			},
 		},
-		"active_passive_config": {
-			Type:          schema.TypeSet,
+		"single_master_config": {
+			Type:          schema.TypeList,
 			Optional:      true,
 			ForceNew:      true,
 			MaxItems:      1,
-			ConflictsWith: []string{"external_lb_config"},
+			ConflictsWith: []string{"external_lb_config", "active_passive_config"},
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{},
+			},
+		},
+		"active_passive_config": {
+			Type:          schema.TypeList,
+			Optional:      true,
+			ForceNew:      true,
+			MaxItems:      1,
+			ConflictsWith: []string{"external_lb_config", "single_master_config"},
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"external_ipv4_address": {
@@ -156,10 +185,10 @@ func KarbonClusterResourceMap() map[string]*schema.Schema {
 			},
 		},
 		"external_lb_config": {
-			Type:          schema.TypeSet,
+			Type:          schema.TypeList,
 			Optional:      true,
 			ForceNew:      true,
-			ConflictsWith: []string{"active_passive_config"},
+			ConflictsWith: []string{"active_passive_config", "single_master_config"},
 			MaxItems:      1,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
@@ -363,34 +392,68 @@ func resourceNutanixKarbonClusterCreate(d *schema.ResourceData, meta interface{}
 	conn := client.KarbonAPI
 	setTimeout(meta)
 	// Node pools
-	etcdNodePool, err := expandNodePool(d.Get("etcd_node_pool").([]interface{}))
+	var err error
+	etcdNodePoolInput, okETCD := d.GetOk("etcd_node_pool")
+	if !okETCD {
+		return fmt.Errorf("unable to retrieve mandatory parameter etcd_node_pool")
+	}
+	workerNodePoolInput, okWorker := d.GetOk("worker_node_pool")
+	if !okWorker {
+		return fmt.Errorf("unable to retrieve mandatory parameter worker_node_pool")
+	}
+	masterNodePoolInput, okMaster := d.GetOk("master_node_pool")
+	if !okMaster {
+		return fmt.Errorf("unable to retrieve mandatory parameter master_node_pool")
+	}
+	storageClassConfigInput, okStorageClassConfig := d.GetOk("storage_class_config")
+	if !okStorageClassConfig {
+		return fmt.Errorf("unable to retrieve mandatory parameter storage_class_config")
+	}
+	cniInput, okCNI := d.GetOk("cni_config")
+	if !okCNI {
+		return fmt.Errorf("unable to retrieve mandatory parameter cni_config")
+	}
+	karbonClusterNameInput, okName := d.GetOk("name")
+	if !okName {
+		return fmt.Errorf("unable to retrieve mandatory parameter name")
+	}
+	versionInput, okVersion := d.GetOk("version")
+	if !okVersion {
+		return fmt.Errorf("unable to retrieve mandatory parameter version")
+	}
+	timeoutInput, okTimeout := d.GetOk("wait_timeout_minutes")
+	if !okTimeout {
+		return fmt.Errorf("unable to retrieve mandatory parameter wait_timeout_minutes")
+	}
+	timeout := int64(timeoutInput.(int))
+
+	karbonClusterName := karbonClusterNameInput.(string)
+
+	etcdNodePool, err := expandNodePool(etcdNodePoolInput.([]interface{}))
 	if err != nil {
 		return err
 	}
-	workerNodePool, err := expandNodePool(d.Get("worker_node_pool").([]interface{}))
+	workerNodePool, err := expandNodePool(workerNodePoolInput.([]interface{}))
 	if err != nil {
 		return err
 	}
-	masterNodePool, err := expandNodePool(d.Get("master_node_pool").([]interface{}))
+	masterNodePool, err := expandNodePool(masterNodePoolInput.([]interface{}))
 	if err != nil {
 		return err
 	}
 	// storageclass
-	storageClassConfig, err := expandStorageClassConfig(d.Get("storage_class_config").(*schema.Set).List())
+	storageClassConfig, err := expandStorageClassConfig(storageClassConfigInput.(*schema.Set).List())
 	if err != nil {
 		return err
 	}
 	// CNI
-	// todo modify these unchecked GETs
-	cniConfig, err := expandCNI(d.Get("cni_config").([]interface{}))
+	cniConfig, err := expandCNI(cniInput.([]interface{}))
 	if err != nil {
 		return err
 	}
-	karbonClusterName := d.Get("name").(string)
-
 	karbonCluster := &karbon.ClusterIntentInput{
 		Name:      karbonClusterName,
-		Version:   d.Get("version").(string),
+		Version:   versionInput.(string),
 		CNIConfig: *cniConfig,
 		ETCDConfig: karbon.ClusterETCDConfigIntentInput{
 			NodePools: etcdNodePool,
@@ -399,7 +462,7 @@ func resourceNutanixKarbonClusterCreate(d *schema.ResourceData, meta interface{}
 			NodePools: masterNodePool,
 		},
 		Metadata: karbon.ClusterMetadataIntentInput{
-			APIVersion: "2.0.0",
+			APIVersion: KARBONAPIVERSION,
 		},
 		StorageClassConfig: *storageClassConfig,
 		WorkersConfig: karbon.ClusterWorkerConfigIntentInput{
@@ -416,34 +479,16 @@ func resourceNutanixKarbonClusterCreate(d *schema.ResourceData, meta interface{}
 	}
 	// set active passive config
 	if apcOk {
-		activePassiveConfigList := activePassiveConfig.(*schema.Set).List()
-		karbonCluster.MastersConfig.ActivePassiveConfig = &karbon.ClusterActivePassiveMasterConfigIntentInput{
-			ExternalIPv4Address: activePassiveConfigList[0].(map[string]interface{})["external_ipv4_address"].(string),
+		err = addActivePassiveConfig(activePassiveConfig, karbonCluster)
+		if err != nil {
+			return err
 		}
-		// set active active config
 	}
 	if elbcOk {
-		externalLbConfigList := externalLbConfig.(*schema.Set).List()
-		externalLbConfigElement := externalLbConfigList[0].(map[string]interface{})
-		masterNodesConfig := make([]karbon.ClusterMasterNodeMasterConfigIntentInput, 0)
-		if mnc, ok := externalLbConfigElement["master_nodes_config"]; ok {
-			masterNodesConfigSlice := mnc.(*schema.Set).List()
-			for _, mnce := range masterNodesConfigSlice {
-				masterConf := karbon.ClusterMasterNodeMasterConfigIntentInput{}
-				if val, ok := mnce.(map[string]interface{})["ipv4_address"]; ok {
-					masterConf.IPv4Address = val.(string)
-				}
-				if val, ok := mnce.(map[string]interface{})["node_pool_name"]; ok {
-					masterConf.NodePoolName = val.(string)
-				}
-				masterNodesConfig = append(masterNodesConfig, masterConf)
-			}
-		} else {
-			return fmt.Errorf("master_nodes_config must be passed when configuring external_lb_config")
-		}
-		karbonCluster.MastersConfig.ExternalLBConfig = &karbon.ClusterExternalLBMasterConfigIntentInput{
-			ExternalIPv4Address: externalLbConfigElement["external_ipv4_address"].(string),
-			MasterNodesConfig:   masterNodesConfig,
+		// set active active config
+		err = addExternalLBConfig(externalLbConfig, karbonCluster)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -459,7 +504,7 @@ func resourceNutanixKarbonClusterCreate(d *schema.ResourceData, meta interface{}
 	if createClusterResponse.ClusterUUID == "" {
 		return fmt.Errorf("did not retrieve cluster uuid")
 	}
-	err = WaitForKarbonCluster(client, createClusterResponse.TaskUUID)
+	err = WaitForKarbonCluster(client, timeout, createClusterResponse.TaskUUID)
 	if err != nil {
 		return err
 	}
@@ -527,9 +572,12 @@ func resourceNutanixKarbonClusterRead(d *schema.ResourceData, meta interface{}) 
 	if err = d.Set("version", versionSet); err != nil {
 		return fmt.Errorf("error setting version for Karbon Cluster %s: %s", d.Id(), err)
 	}
-
-	d.Set("kubeapi_server_ipv4_address", utils.StringValue(resp.KubeAPIServerIPv4Address))
-	d.Set("deployment_type", resp.MasterConfig.DeploymentType)
+	if err = d.Set("kubeapi_server_ipv4_address", utils.StringValue(resp.KubeAPIServerIPv4Address)); err != nil {
+		return fmt.Errorf("error setting kubeapi_server_ipv4_address for Karbon Cluster %s: %s", d.Id(), err)
+	}
+	if err = d.Set("deployment_type", resp.MasterConfig.DeploymentType); err != nil {
+		return fmt.Errorf("error setting deployment_type for Karbon Cluster %s: %s", d.Id(), err)
+	}
 	if err = d.Set("worker_node_pool", flattenedWorkerNodepool); err != nil {
 		return fmt.Errorf("error setting worker_node_pool for Karbon Cluster %s: %s", d.Id(), err)
 	}
@@ -543,7 +591,7 @@ func resourceNutanixKarbonClusterRead(d *schema.ResourceData, meta interface{}) 
 	if err != nil {
 		return fmt.Errorf("error getting flat private_registry for Karbon Cluster %s: %s", d.Id(), err)
 	}
-	utils.PrintToJSON(flattenedPrivateRegistries, "flattenedPrivateRegistries: ")
+	// utils.PrintToJSON(flattenedPrivateRegistries, "flattenedPrivateRegistries: ")
 	if err = d.Set("private_registry", flattenedPrivateRegistries); err != nil {
 		return fmt.Errorf("error setting private_registry for Karbon Cluster %s: %s", d.Id(), err)
 	}
@@ -565,27 +613,27 @@ func resourceNutanixKarbonClusterUpdate(d *schema.ResourceData, meta interface{}
 	karbonClusterName := *resp.Name
 	if d.HasChange("private_registry") {
 		_, p := d.GetChange("private_registry")
-		utils.PrintToJSON(p.(*schema.Set).List(), "p private_registry: ")
+		// utils.PrintToJSON(p.(*schema.Set).List(), "p private_registry: ")
 		newPrivateRegistries, err := expandPrivateRegistries(p.(*schema.Set).List())
 		if err != nil {
 			return err
 		}
-		utils.PrintToJSON(newPrivateRegistries, "newPrivateRegistries: ")
+		// utils.PrintToJSON(newPrivateRegistries, "newPrivateRegistries: ")
 		currentPrivateRegistriesList, err := conn.Cluster.ListPrivateRegistries(karbonClusterName)
 		if err != nil {
 			return err
 		}
-		utils.PrintToJSON(currentPrivateRegistriesList, "currentPrivateRegistriesList: ")
+		// utils.PrintToJSON(currentPrivateRegistriesList, "currentPrivateRegistriesList: ")
 		currentPrivateRegistries := convertKarbonPrivateRegistriesIntentInputToOperations(*currentPrivateRegistriesList)
-		utils.PrintToJSON(currentPrivateRegistries, "currentPrivateRegistries: ")
+		// utils.PrintToJSON(currentPrivateRegistries, "currentPrivateRegistries: ")
 		toAdd := diffFlatPrivateRegistrySlices(*newPrivateRegistries, currentPrivateRegistries)
-		utils.PrintToJSON(toAdd, "toAdd: ")
+		// utils.PrintToJSON(toAdd, "toAdd: ")
 		for _, a := range toAdd {
 			log.Printf("adding private registry %s", *a.RegistryName)
 			conn.Cluster.AddPrivateRegistry(karbonClusterName, a)
 		}
 		toRemove := diffFlatPrivateRegistrySlices(currentPrivateRegistries, *newPrivateRegistries)
-		utils.PrintToJSON(toRemove, "toRemove: ")
+		// utils.PrintToJSON(toRemove, "toRemove: ")
 		for _, r := range toRemove {
 			log.Printf("removing private registry %s", *r.RegistryName)
 			conn.Cluster.DeletePrivateRegistry(karbonClusterName, *r.RegistryName)
@@ -599,14 +647,23 @@ func resourceNutanixKarbonClusterDelete(d *schema.ResourceData, meta interface{}
 	client := meta.(*Client)
 	conn := client.KarbonAPI
 	setTimeout(meta)
-	karbonClusterName := d.Get("name").(string)
+	timeoutInput, okTimeout := d.GetOk("wait_timeout_minutes")
+	if !okTimeout {
+		return fmt.Errorf("unable to retrieve mandatory parameter wait_timeout_minutes")
+	}
+	timeout := int64(timeoutInput.(int))
+	karbonClusterNameInput, okName := d.GetOk("name")
+	if !okName {
+		return fmt.Errorf("unable to retrieve mandatory parameter name")
+	}
+	karbonClusterName := karbonClusterNameInput.(string)
 	log.Printf("[DEBUG] Deleting Karbon cluster: %s, %s", karbonClusterName, d.Id())
 
 	clusterDeleteResponse, err := conn.Cluster.DeleteKarbonCluster(karbonClusterName)
 	if err != nil {
 		return fmt.Errorf("error while deleting Karbon Cluster UUID(%s): %s", d.Id(), err)
 	}
-	err = WaitForKarbonCluster(client, clusterDeleteResponse.TaskUUID)
+	err = WaitForKarbonCluster(client, timeout, clusterDeleteResponse.TaskUUID)
 	if err != nil {
 		return fmt.Errorf("error while waiting for Karbon Cluster deletion with UUID(%s): %s", d.Id(), err)
 	}
@@ -638,10 +695,10 @@ func resourceNutanixKarbonClusterExists(d *schema.ResourceData, meta interface{}
 	return exists, nil
 }
 
-func checkNutanixKarbonClusterExistsByUUID(conn *karbon.Client, UUID string) (bool, error) {
+func checkNutanixKarbonClusterExistsByUUID(conn *karbon.Client, uuid string) (bool, error) {
 	// Make request to the API
 	log.Print("[Debug] checkNutanixKarbonClusterExistsByUUID UUID:")
-	log.Print(UUID)
+	log.Print(uuid)
 	karbonClusters, err := conn.Cluster.ListKarbonClusters()
 	utils.PrintToJSON(karbonClusters, "checkNutanixKarbonClusterExistsByUUID karbonClusters: ")
 	log.Print("error:")
@@ -651,7 +708,7 @@ func checkNutanixKarbonClusterExistsByUUID(conn *karbon.Client, UUID string) (bo
 		return false, err
 	}
 	for _, k := range *karbonClusters {
-		if *k.UUID == UUID {
+		if *k.UUID == uuid {
 			log.Print("checkNutanixKarbonClusterExistsByUUID returning true nil")
 			return true, nil
 		}
@@ -675,6 +732,54 @@ func checkNutanixKarbonClusterExistsByName(conn *karbon.Client, clusterName stri
 	}
 	log.Print("checkNutanixKarbonClusterExistsByName returning true nil")
 	return true, nil
+}
+
+func addActivePassiveConfig(activePassiveConfig interface{}, karbonCluster *karbon.ClusterIntentInput) error {
+	activePassiveConfigList := activePassiveConfig.([]interface{})
+	if len(activePassiveConfigList) != 1 {
+		return fmt.Errorf("cannot have more (or less) than one active_passive_config element")
+	}
+	externalIPV4Address, okExtAddr := activePassiveConfigList[0].(map[string]interface{})["external_ipv4_address"]
+	if !okExtAddr {
+		return fmt.Errorf("must set external_ipv4_address when using active_passive_config")
+	}
+	karbonCluster.MastersConfig.ActivePassiveConfig = &karbon.ClusterActivePassiveMasterConfigIntentInput{
+		ExternalIPv4Address: externalIPV4Address.(string),
+	}
+	return nil
+}
+
+func addExternalLBConfig(externalLbConfig interface{}, karbonCluster *karbon.ClusterIntentInput) error {
+	externalLbConfigList := externalLbConfig.([]interface{})
+	if len(externalLbConfigList) != 1 {
+		return fmt.Errorf("cannot have more (or less) than one external_lb_config element")
+	}
+	externalLbConfigElement := externalLbConfigList[0].(map[string]interface{})
+	masterNodesConfig := make([]karbon.ClusterMasterNodeMasterConfigIntentInput, 0)
+	if mnc, ok := externalLbConfigElement["master_nodes_config"]; ok && len(mnc.(*schema.Set).List()) > 0 {
+		masterNodesConfigSlice := mnc.(*schema.Set).List()
+		for _, mnce := range masterNodesConfigSlice {
+			masterConf := karbon.ClusterMasterNodeMasterConfigIntentInput{}
+			if val, ok := mnce.(map[string]interface{})["ipv4_address"]; ok {
+				masterConf.IPv4Address = val.(string)
+			} else {
+				return fmt.Errorf("ipv4_address must be set when defining a master node in a external_lb_config element")
+			}
+			if val, ok := mnce.(map[string]interface{})["node_pool_name"]; ok {
+				masterConf.NodePoolName = val.(string)
+			} else {
+				return fmt.Errorf("node_pool_name must be set when defining a master node in a external_lb_config element")
+			}
+			masterNodesConfig = append(masterNodesConfig, masterConf)
+		}
+	} else {
+		return fmt.Errorf("master_nodes_config (>0) must be passed when configuring external_lb_config")
+	}
+	karbonCluster.MastersConfig.ExternalLBConfig = &karbon.ClusterExternalLBMasterConfigIntentInput{
+		ExternalIPv4Address: externalLbConfigElement["external_ipv4_address"].(string),
+		MasterNodesConfig:   masterNodesConfig,
+	}
+	return nil
 }
 
 func diffFlatPrivateRegistrySlices(prSlice1 []karbon.PrivateRegistryOperationIntentInput, prSlice2 []karbon.PrivateRegistryOperationIntentInput) []karbon.PrivateRegistryOperationIntentInput {
@@ -738,9 +843,7 @@ func flattenPrivateRegisties(conn *karbon.Client, karbonClusterName string) ([]m
 	}
 	for _, p := range *privRegList {
 		flatPrivReg = append(flatPrivReg, map[string]interface{}{
-			// "endpoint": p.Endpoint,
 			"registry_name": p.Name,
-			// "UUID":     p.UUID,
 		})
 	}
 	return flatPrivReg, nil
@@ -756,6 +859,8 @@ func flattenNodePools(d *schema.ResourceData, conn *karbon.Client, nodePoolKey s
 		if err != nil {
 			return nil, fmt.Errorf("unable to expand node pool during flattening: %s", err)
 		}
+		// } else {
+		// 	return nil, fmt.Errorf("unable to get mandatory attribute %s", nodePoolKey)
 	}
 	// end workaround for disk_mib bug GA API
 	for _, np := range nodepools {
@@ -801,7 +906,7 @@ func flattenNodePool(userDefinedNodePools *karbon.ClusterNodePool, nodepool *kar
 		diskMib = userDefinedNodePools.AHVConfig.DiskMib
 	}
 	flatNodepool["ahv_config"] = []map[string]interface{}{
-		map[string]interface{}{
+		{
 			"cpu": nodepool.AHVConfig.CPU,
 			// karbon api bug 	GetKarbonClusterLegacy(uuid string) (*KarbonClusterLegacyIntentResponse, error)
 			"disk_mib": diskMib,
@@ -831,31 +936,44 @@ func GetNodePoolsForCluster(conn *karbon.Client, karbonClusterName string, nodep
 	return nodepoolStructs, nil
 }
 
-func WaitForKarbonCluster(client *Client, taskUUID string) error {
-	log.Printf("Starting wait")
-	sleepTime := 30
-	var status string = "QUEUED"
-
-	for status == "QUEUED" || status == "RUNNING" {
-		time.Sleep(time.Duration(sleepTime) * time.Second)
-		v, err := client.API.V3.GetTask(taskUUID)
-
-		if err != nil {
-			if strings.Contains(fmt.Sprint(err), "INVALID_UUID") {
-				return fmt.Errorf("invalid uuid retrieved")
-			}
-			return err
-		}
-		status = *v.Status
-		log.Printf("Status: %s", status)
-		if status == "INVALID_UUID" || status == "FAILED" {
-			return fmt.Errorf("error_detail: %s, progress_message: %s", utils.StringValue(v.ErrorDetail), utils.StringValue(v.ProgressMessage))
-		}
+func WaitForKarbonCluster(client *Client, waitTimeoutMinutes int64, taskUUID string) error {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(client.API, taskUUID),
+		Timeout:    time.Duration(waitTimeoutMinutes) * time.Minute,
+		Delay:      WAITDELAY,
+		MinTimeout: WAITMINTIMEOUT,
 	}
-	if status == "SUCCEEDED" {
-		return nil
+
+	if _, errWaitTask := stateConf.WaitForState(); errWaitTask != nil {
+		return fmt.Errorf("error waiting for karbon cluster to create: %s", errWaitTask)
 	}
-	return fmt.Errorf("end state was not succeeded but was %s", status)
+	return nil
+	// log.Printf("Starting wait")
+	// sleepTime := 30
+	// var status string = "QUEUED"
+
+	// for status == "QUEUED" || status == "RUNNING" {
+	// 	time.Sleep(time.Duration(sleepTime) * time.Second)
+	// 	v, err := client.API.V3.GetTask(taskUUID)
+
+	// 	if err != nil {
+	// 		if strings.Contains(fmt.Sprint(err), "INVALID_UUID") {
+	// 			return fmt.Errorf("invalid uuid retrieved")
+	// 		}
+	// 		return err
+	// 	}
+	// 	status = *v.Status
+	// 	log.Printf("Status: %s", status)
+	// 	if status == "INVALID_UUID" || status == "FAILED" {
+	// 		return fmt.Errorf("error_detail: %s, progress_message: %s", utils.StringValue(v.ErrorDetail), utils.StringValue(v.ProgressMessage))
+	// 	}
+	// }
+	// if status == "SUCCEEDED" {
+	// 	return nil
+	// }
+	// return fmt.Errorf("end state was not succeeded but was %s", status)
 }
 
 func setTimeout(meta interface{}) {
@@ -873,8 +991,13 @@ func expandStorageClassConfig(storageClassConfigsInput []interface{}) (*karbon.C
 	storageClassConfigInput := storageClassConfigsInput[0].(map[string]interface{})
 	storageClassConfig := &karbon.ClusterStorageClassConfigIntentInput{
 		DefaultStorageClass: true,
-		Name:                "default-storageclass",
-		VolumesConfig:       karbon.ClusterVolumesConfigIntentInput{},
+		// Name:                "default-storageclass",
+		VolumesConfig: karbon.ClusterVolumesConfigIntentInput{},
+	}
+	if valName, okName := storageClassConfigInput["name"]; okName {
+		storageClassConfig.Name = valName.(string)
+	} else {
+		return nil, fmt.Errorf("storage_class_config name was not set")
 	}
 	if val, ok := storageClassConfigInput["reclaim_policy"]; ok {
 		storageClassConfig.ReclaimPolicy = val.(string)
@@ -889,7 +1012,6 @@ func expandStorageClassConfig(storageClassConfigsInput []interface{}) (*karbon.C
 			storageClassConfig.VolumesConfig.FileSystem = valFileSystem.(string)
 		}
 		if valFlashMode, ok := volumesConfig["flash_mode"]; ok {
-			// b, _ := strconv.ParseBool(valFlashMode.(string))ƒ
 			storageClassConfig.VolumesConfig.FlashMode = valFlashMode.(bool)
 		}
 		if valPassword, ok := volumesConfig["password"]; ok {
@@ -910,7 +1032,7 @@ func expandStorageClassConfig(storageClassConfigsInput []interface{}) (*karbon.C
 
 func expandCNI(cniConfigInput []interface{}) (*karbon.ClusterCNIConfigIntentInput, error) {
 	if len(cniConfigInput) != 1 {
-		return nil, fmt.Errorf("cannot have more than one CNI configuration")
+		return nil, fmt.Errorf("cannot have more (or less) than one CNI configuration")
 	}
 	cniConfig := &karbon.ClusterCNIConfigIntentInput{}
 	cniConfigMap := cniConfigInput[0].(map[string]interface{})
@@ -923,14 +1045,15 @@ func expandCNI(cniConfigInput []interface{}) (*karbon.ClusterCNIConfigIntentInpu
 	if value, ok := cniConfigMap["service_ipv4_cidr"]; ok && value.(string) != "" {
 		cniConfig.ServiceIPv4CIDR = value.(string)
 	}
-	// todo ugly code
 	if calicoConfig, cok := cniConfigMap["calico_config"]; cok && len(calicoConfig.([]interface{})) > 0 {
-		utils.PrintToJSON(calicoConfig, "calicoConfig: ")
 		if flannelConfig, fok := cniConfigMap["flannel_config"]; fok && len(flannelConfig.([]interface{})) > 0 {
-			utils.PrintToJSON(flannelConfig, "flannelConfig: ")
 			return nil, fmt.Errorf("cannot have both calico and flannel config")
 		}
-		calicoConfigMap := calicoConfig.([]interface{})[0].(map[string]interface{})
+		calicoConfigList := calicoConfig.([]interface{})
+		if len(calicoConfigList) != 1 {
+			return nil, fmt.Errorf("cannot have more (or less) than one calico configuration")
+		}
+		calicoConfigMap := calicoConfigList[0].(map[string]interface{})
 		ipPoolConfigs := make([]karbon.ClusterCalicoConfigIPPoolConfigIntentInput, 0)
 		var ipPoolConfigsFromMap []interface{}
 		if ipcfm, ok := calicoConfigMap["ip_pool_configs"]; ok {
@@ -952,10 +1075,6 @@ func expandCNI(cniConfigInput []interface{}) (*karbon.ClusterCNIConfigIntentInpu
 	} else {
 		cniConfig.FlannelConfig = &karbon.ClusterFlannelConfigIntentInput{}
 	}
-	log.Print("flannel_config list len")
-	log.Print(len(cniConfigMap["flannel_config"].([]interface{})))
-	log.Print(cniConfigMap["flannel_config"])
-	utils.PrintToJSON(cniConfig, "cniConfig: ")
 	return cniConfig, nil
 }
 
@@ -987,7 +1106,6 @@ func expandNodePool(nodepoolsInput []interface{}) ([]karbon.ClusterNodePool, err
 			}
 			ahvConfig := ahvConfigList[0].(map[string]interface{})
 			if valCPU, ok := ahvConfig["cpu"]; ok {
-				// i, _ := strconv.ParseInt(valCPU.(string), 10, 64)
 				i := int64(valCPU.(int))
 				// Karbon CPU workaround
 				modi := i % CPUDIVISIONAMOUNT
@@ -998,19 +1116,18 @@ func expandNodePool(nodepoolsInput []interface{}) ([]karbon.ClusterNodePool, err
 				nodepool.AHVConfig.CPU = divi
 			}
 			if valDiskMib, ok := ahvConfig["disk_mib"]; ok {
-				log.Print("[DEBUG] valDiskMib")
-				log.Print(valDiskMib)
-				// i, _ := strconv.ParseInt(valDiskMib.(string), 10, 64)
+				// log.Print("[DEBUG] valDiskMib")
+				// log.Print(valDiskMib)
 				i := int64(valDiskMib.(int))
-				log.Print(i)
+				// log.Print(i)
 				nodepool.AHVConfig.DiskMib = i
 			}
 			if valMemoryMib, ok := ahvConfig["memory_mib"]; ok {
-				log.Print("[DEBUG] valMemoryMib")
-				log.Print(valMemoryMib)
+				// log.Print("[DEBUG] valMemoryMib")
+				// log.Print(valMemoryMib)
 				// i, _ := strconv.ParseInt(valMemoryMib.(string), 10, 64)
 				i := int64(valMemoryMib.(int))
-				log.Print(i)
+				// log.Print(i)
 				nodepool.AHVConfig.MemoryMib = i
 			}
 			if valNetworkUUID, ok := ahvConfig["network_uuid"]; ok {
