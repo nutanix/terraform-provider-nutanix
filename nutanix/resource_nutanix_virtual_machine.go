@@ -540,8 +540,8 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 			},
 			"boot_device_order_list": {
 				Type: schema.TypeList,
-				// remove MaxItems when the issue #28 is fixed
-				MaxItems: 1,
+				// // remove MaxItems when the issue #28 is fixed
+				// MaxItems: 1,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -987,6 +987,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	mac := ""
 	b := make([]string, 0)
 
+	log.Printf("[DEBUG] checking BootConfig %+v", resp.Status.Resources.BootConfig)
 	if resp.Status.Resources.BootConfig != nil {
 		if resp.Status.Resources.BootConfig.BootDevice != nil {
 			if resp.Status.Resources.BootConfig.BootDevice.DiskAddress != nil {
@@ -997,11 +998,15 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 			mac = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.MacAddress)
 		}
 		if resp.Status.Resources.BootConfig.BootDeviceOrderList != nil {
+			log.Printf("[DEBUG] checking BootConfig.BootDeviceOrderList %+v", utils.StringValueSlice(resp.Status.Resources.BootConfig.BootDeviceOrderList))
 			b = utils.StringValueSlice(resp.Status.Resources.BootConfig.BootDeviceOrderList)
 		}
 	}
 
-	d.Set("boot_device_order_list", b)
+	if err := d.Set("boot_device_order_list", b); err != nil {
+		return fmt.Errorf("error setting boot_device_order_list %s", err)
+	}
+
 	d.Set("boot_device_disk_address", diskAddress)
 	d.Set("boot_device_mac_address", mac)
 
@@ -1085,10 +1090,12 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 
 	response, err := conn.V3.GetVM(d.Id())
 
+	//prefill structs
 	preFillResUpdateRequest(res, response)
 	preFillGTUpdateRequest(guestTool, response)
 	preFillGUpdateRequest(guest, response)
 	preFillPWUpdateRequest(pw, response)
+	boot = res.BootConfig
 
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
@@ -1291,6 +1298,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		res.GpuList = expandGPUList(d)
 		hotPlugChange = false
 	}
+
 	if d.HasChange("boot_device_order_list") {
 		_, n := d.GetChange("boot_device_order_list")
 		boot.BootDeviceOrderList = expandStringList(n.([]interface{}))
@@ -1316,7 +1324,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	boot.BootDevice = bd
 
 	if dska.AdapterType == nil && dska.DeviceIndex == nil && bd.MacAddress == nil {
-		boot = nil
+		boot.BootDevice = nil
 	}
 
 	res.PowerStateMechanism = pw
@@ -1975,6 +1983,7 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 		gold = nil
 	}
 	res.GpuList = gold
+
 	if response.Spec.Resources.BootConfig != nil {
 		res.BootConfig = response.Spec.Resources.BootConfig
 	} else {
