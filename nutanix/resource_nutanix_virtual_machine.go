@@ -874,7 +874,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if _, errWaitTask := stateConf.WaitForState(); errWaitTask != nil {
-		return fmt.Errorf("error waiting for vm (%s) to create: %s", d.Id(), errWaitTask)
+		return fmt.Errorf("error waiting for vm (%s) to create: %s", uuid, errWaitTask)
 	}
 
 	//Wait for IP available
@@ -1085,7 +1085,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	spec := &v3.VM{}
 	guest := &v3.GuestCustomization{}
 	guestTool := &v3.GuestToolsSpec{}
-	boot := &v3.VMBootConfig{}
 	pw := &v3.VMPowerStateMechanism{}
 
 	response, err := conn.V3.GetVM(d.Id())
@@ -1095,7 +1094,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	preFillGTUpdateRequest(guestTool, response)
 	preFillGUpdateRequest(guest, response)
 	preFillPWUpdateRequest(pw, response)
-	boot = res.BootConfig
 
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
@@ -1299,36 +1297,8 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		hotPlugChange = false
 	}
 
-	if d.HasChange("boot_device_order_list") {
-		_, n := d.GetChange("boot_device_order_list")
-		boot.BootDeviceOrderList = expandStringList(n.([]interface{}))
-		hotPlugChange = false
-	}
-
-	bd := &v3.VMBootDevice{}
-	dska := &v3.DiskAddress{}
-	if d.HasChange("boot_device_disk_address") {
-		_, n := d.GetChange("boot_device_disk_address")
-		dai := n.(map[string]interface{})
-		dska = &v3.DiskAddress{
-			DeviceIndex: validateMapIntValue(dai, "device_index"),
-			AdapterType: validateMapStringValue(dai, "adapter_type"),
-		}
-		hotPlugChange = false
-	}
-	if d.HasChange("boot_device_mac_address") {
-		_, n := d.GetChange("boot_device_mac_address")
-		bd.MacAddress = utils.StringPtr(n.(string))
-		hotPlugChange = false
-	}
-	boot.BootDevice = bd
-
-	if dska.AdapterType == nil && dska.DeviceIndex == nil && bd.MacAddress == nil {
-		boot.BootDevice = nil
-	}
-
 	res.PowerStateMechanism = pw
-	res.BootConfig = boot
+	res.BootConfig, hotPlugChange = bootConfigHasChange(res.BootConfig, d)
 
 	if !reflect.DeepEqual(*guestTool, (v3.GuestToolsSpec{})) {
 		res.GuestTools = guestTool
@@ -1380,6 +1350,49 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	return resourceNutanixVirtualMachineRead(d, meta)
+}
+
+func bootConfigHasChange(boot *v3.VMBootConfig, d *schema.ResourceData) (*v3.VMBootConfig, bool) {
+	hotPlugChange := false
+
+	if boot == nil {
+		boot = &v3.VMBootConfig{}
+	}
+
+	if d.HasChange("boot_device_order_list") {
+		_, n := d.GetChange("boot_device_order_list")
+		boot.BootDeviceOrderList = expandStringList(n.([]interface{}))
+		hotPlugChange = false
+	}
+
+	bd := &v3.VMBootDevice{}
+	dska := &v3.DiskAddress{}
+
+	if d.HasChange("boot_device_disk_address") {
+		_, n := d.GetChange("boot_device_disk_address")
+		dai := n.(map[string]interface{})
+		dska = &v3.DiskAddress{
+			DeviceIndex: validateMapIntValue(dai, "device_index"),
+			AdapterType: validateMapStringValue(dai, "adapter_type"),
+		}
+		hotPlugChange = false
+	}
+	if d.HasChange("boot_device_mac_address") {
+		_, n := d.GetChange("boot_device_mac_address")
+		bd.MacAddress = utils.StringPtr(n.(string))
+		hotPlugChange = false
+	}
+	boot.BootDevice = bd
+
+	if dska.AdapterType == nil && dska.DeviceIndex == nil && bd.MacAddress == nil {
+		boot.BootDevice = nil
+	}
+
+	if reflect.DeepEqual(*boot, v3.VMBootConfig{}) {
+		return nil, hotPlugChange
+	}
+
+	return boot, hotPlugChange
 }
 
 func changePowerState(conn *v3.Client, id string, powerState string) error {
@@ -1661,6 +1674,11 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	vmDiskList := expandDiskList(d)
 
 	vm.DiskList = vmDiskList
+
+	//check if BootConfig was set
+	if reflect.DeepEqual(*vm.BootConfig, v3.VMBootConfig{}) {
+		vm.BootConfig = nil
+	}
 
 	return nil
 }
