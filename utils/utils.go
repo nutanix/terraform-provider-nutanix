@@ -15,6 +15,12 @@ func PrintToJSON(v interface{}, msg string) {
 	fmt.Print("\n", msg, string(pretty))
 }
 
+func ToJSONString(v interface{}) string {
+	pretty, _ := json.MarshalIndent(v, "", "  ")
+
+	return string(pretty)
+}
+
 // DebugRequest ...
 func DebugRequest(req *http.Request) {
 	requestDump, err := httputil.DumpRequest(req, true)
