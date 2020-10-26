@@ -52,6 +52,17 @@ func KarbonPrivateRegistryResourceMap() map[string]*schema.Schema {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
+		"username": {
+			Type:     schema.TypeString,
+			Optional: true,
+			ForceNew: true,
+		},
+		"password": {
+			Type:      schema.TypeString,
+			Optional:  true,
+			Sensitive: true,
+			ForceNew:  true,
+		},
 	}
 }
 
@@ -83,6 +94,14 @@ func resourceNutanixKarbonPrivateRegistryCreate(d *schema.ResourceData, meta int
 	if cert, ok := d.GetOk("cert"); ok {
 		c := cert.(string)
 		karbonPrivateRegistry.Cert = &c
+	}
+	if username, ok := d.GetOk("username"); ok {
+		u := username.(string)
+		karbonPrivateRegistry.Username = &u
+	}
+	if password, ok := d.GetOk("password"); ok {
+		pw := password.(string)
+		karbonPrivateRegistry.Password = &pw
 	}
 	utils.PrintToJSON(karbonPrivateRegistry, "[DEBUG karbonPrivateRegistry: ")
 	createPrivateRegistryResponse, err := conn.PrivateRegistry.CreateKarbonPrivateRegistry(karbonPrivateRegistry)

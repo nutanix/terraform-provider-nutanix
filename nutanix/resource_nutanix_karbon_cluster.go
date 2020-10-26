@@ -898,22 +898,25 @@ func flattenNodePool(userDefinedNodePools *karbon.ClusterNodePool, nodepool *kar
 	}
 	flatNodepool["nodes"] = nodes
 	// AHV config
-	// disk_mib, ok := d.GetOk("etcd_node_pool")
+	//API bug karbon
 	diskMib := nodepool.AHVConfig.DiskMib
+	networkUUID := nodepool.AHVConfig.NetworkUUID
 	if userDefinedNodePools != nil {
-		// utils.PrintToJSON(userDefinedNodePools, "userDefinedNodePools: ")
-		log.Print(userDefinedNodePools.AHVConfig.DiskMib)
+		utils.PrintToJSON(userDefinedNodePools.AHVConfig, "userDefinedNodePools.AHVConfig: ")
 		diskMib = userDefinedNodePools.AHVConfig.DiskMib
+		log.Printf("using modified networkUUID %s", networkUUID)
+		networkUUID = userDefinedNodePools.AHVConfig.NetworkUUID
 	}
 	flatNodepool["ahv_config"] = []map[string]interface{}{
 		{
 			"cpu": nodepool.AHVConfig.CPU,
 			// karbon api bug 	GetKarbonClusterLegacy(uuid string) (*KarbonClusterLegacyIntentResponse, error)
 			"disk_mib": diskMib,
-			// must check with legacy nodepool because GA API reports wrong disk space
-			// "disk_mib":                   strconv.FormatInt(*legacyNodepool.ResourceConfig.DiskMib, 10),
-			"memory_mib":                 nodepool.AHVConfig.MemoryMib,
-			"network_uuid":               nodepool.AHVConfig.NetworkUUID,
+			// "disk_mib":   nodepool.AHVConfig.DiskMib,
+			"memory_mib": nodepool.AHVConfig.MemoryMib,
+			//karbon api bug => network_uuid not set KRBN-3520
+			// "network_uuid":               nodepool.AHVConfig.NetworkUUID,
+			"network_uuid":               networkUUID,
 			"prism_element_cluster_uuid": nodepool.AHVConfig.PrismElementClusterUUID,
 		},
 	}
