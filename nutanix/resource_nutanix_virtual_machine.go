@@ -540,8 +540,8 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 			},
 			"boot_device_order_list": {
 				Type: schema.TypeList,
-				// remove MaxItems when the issue #28 is fixed
-				MaxItems: 1,
+				// // remove MaxItems when the issue #28 is fixed
+				// MaxItems: 1,
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -874,7 +874,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 	}
 
 	if _, errWaitTask := stateConf.WaitForState(); errWaitTask != nil {
-		return fmt.Errorf("error waiting for vm (%s) to create: %s", d.Id(), errWaitTask)
+		return fmt.Errorf("error waiting for vm (%s) to create: %s", uuid, errWaitTask)
 	}
 
 	//Wait for IP available
@@ -987,6 +987,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	mac := ""
 	b := make([]string, 0)
 
+	log.Printf("[DEBUG] checking BootConfig %+v", resp.Status.Resources.BootConfig)
 	if resp.Status.Resources.BootConfig != nil {
 		if resp.Status.Resources.BootConfig.BootDevice != nil {
 			if resp.Status.Resources.BootConfig.BootDevice.DiskAddress != nil {
@@ -997,11 +998,15 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 			mac = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.MacAddress)
 		}
 		if resp.Status.Resources.BootConfig.BootDeviceOrderList != nil {
+			log.Printf("[DEBUG] checking BootConfig.BootDeviceOrderList %+v", utils.StringValueSlice(resp.Status.Resources.BootConfig.BootDeviceOrderList))
 			b = utils.StringValueSlice(resp.Status.Resources.BootConfig.BootDeviceOrderList)
 		}
 	}
 
-	d.Set("boot_device_order_list", b)
+	if err := d.Set("boot_device_order_list", b); err != nil {
+		return fmt.Errorf("error setting boot_device_order_list %s", err)
+	}
+
 	d.Set("boot_device_disk_address", diskAddress)
 	d.Set("boot_device_mac_address", mac)
 
@@ -1080,11 +1085,11 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	spec := &v3.VM{}
 	guest := &v3.GuestCustomization{}
 	guestTool := &v3.GuestToolsSpec{}
-	boot := &v3.VMBootConfig{}
 	pw := &v3.VMPowerStateMechanism{}
 
 	response, err := conn.V3.GetVM(d.Id())
 
+	//prefill structs
 	preFillResUpdateRequest(res, response)
 	preFillGTUpdateRequest(guestTool, response)
 	preFillGUpdateRequest(guest, response)
@@ -1291,36 +1296,9 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		res.GpuList = expandGPUList(d)
 		hotPlugChange = false
 	}
-	if d.HasChange("boot_device_order_list") {
-		_, n := d.GetChange("boot_device_order_list")
-		boot.BootDeviceOrderList = expandStringList(n.([]interface{}))
-		hotPlugChange = false
-	}
-
-	bd := &v3.VMBootDevice{}
-	dska := &v3.DiskAddress{}
-	if d.HasChange("boot_device_disk_address") {
-		_, n := d.GetChange("boot_device_disk_address")
-		dai := n.(map[string]interface{})
-		dska = &v3.DiskAddress{
-			DeviceIndex: validateMapIntValue(dai, "device_index"),
-			AdapterType: validateMapStringValue(dai, "adapter_type"),
-		}
-		hotPlugChange = false
-	}
-	if d.HasChange("boot_device_mac_address") {
-		_, n := d.GetChange("boot_device_mac_address")
-		bd.MacAddress = utils.StringPtr(n.(string))
-		hotPlugChange = false
-	}
-	boot.BootDevice = bd
-
-	if dska.AdapterType == nil && dska.DeviceIndex == nil && bd.MacAddress == nil {
-		boot = nil
-	}
 
 	res.PowerStateMechanism = pw
-	res.BootConfig = boot
+	res.BootConfig, hotPlugChange = bootConfigHasChange(res.BootConfig, d)
 
 	if !reflect.DeepEqual(*guestTool, (v3.GuestToolsSpec{})) {
 		res.GuestTools = guestTool
@@ -1372,6 +1350,49 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	return resourceNutanixVirtualMachineRead(d, meta)
+}
+
+func bootConfigHasChange(boot *v3.VMBootConfig, d *schema.ResourceData) (*v3.VMBootConfig, bool) {
+	hotPlugChange := false
+
+	if boot == nil {
+		boot = &v3.VMBootConfig{}
+	}
+
+	if d.HasChange("boot_device_order_list") {
+		_, n := d.GetChange("boot_device_order_list")
+		boot.BootDeviceOrderList = expandStringList(n.([]interface{}))
+		hotPlugChange = false
+	}
+
+	bd := &v3.VMBootDevice{}
+	dska := &v3.DiskAddress{}
+
+	if d.HasChange("boot_device_disk_address") {
+		_, n := d.GetChange("boot_device_disk_address")
+		dai := n.(map[string]interface{})
+		dska = &v3.DiskAddress{
+			DeviceIndex: validateMapIntValue(dai, "device_index"),
+			AdapterType: validateMapStringValue(dai, "adapter_type"),
+		}
+		hotPlugChange = false
+	}
+	if d.HasChange("boot_device_mac_address") {
+		_, n := d.GetChange("boot_device_mac_address")
+		bd.MacAddress = utils.StringPtr(n.(string))
+		hotPlugChange = false
+	}
+	boot.BootDevice = bd
+
+	if dska.AdapterType == nil && dska.DeviceIndex == nil && bd.MacAddress == nil {
+		boot.BootDevice = nil
+	}
+
+	if reflect.DeepEqual(*boot, v3.VMBootConfig{}) {
+		return nil, hotPlugChange
+	}
+
+	return boot, hotPlugChange
 }
 
 func changePowerState(conn *v3.Client, id string, powerState string) error {
@@ -1557,6 +1578,8 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 		vm.MemorySizeMib = utils.Int64Ptr(int64(v.(int)))
 	}
 
+	vm.BootConfig = &v3.VMBootConfig{}
+
 	if v, ok := d.GetOk("boot_device_order_list"); ok {
 		vm.BootConfig.BootDeviceOrderList = expandStringList(v.([]interface{}))
 	}
@@ -1651,6 +1674,11 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	vmDiskList := expandDiskList(d)
 
 	vm.DiskList = vmDiskList
+
+	//check if BootConfig was set
+	if reflect.DeepEqual(*vm.BootConfig, v3.VMBootConfig{}) {
+		vm.BootConfig = nil
+	}
 
 	return nil
 }
@@ -1973,6 +2001,7 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 		gold = nil
 	}
 	res.GpuList = gold
+
 	if response.Spec.Resources.BootConfig != nil {
 		res.BootConfig = response.Spec.Resources.BootConfig
 	} else {
