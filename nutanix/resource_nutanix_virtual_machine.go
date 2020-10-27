@@ -13,6 +13,7 @@ import (
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
+	"github.com/hashicorp/terraform/helper/customdiff"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -44,6 +45,10 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 				Version: 0,
 			},
 		},
+		CustomizeDiff: customdiff.ForceNewIfChange("disk_list", func(old, new, meta interface{}) bool {
+			log.Printf("DEBUG IN CustomizeDiff")
+			return hasDifferentDiskListImageUUIDs(old.([]interface{}), new.([]interface{}))
+		}),
 		Schema: map[string]*schema.Schema{
 			"metadata": {
 				Type:     schema.TypeMap,
@@ -1744,47 +1749,52 @@ func expandDiskListUpdate(d *schema.ResourceData, vm *v3.VMIntentResponse) []*v3
 func expandDiskList(d *schema.ResourceData) []*v3.VMDisk {
 	if v, ok := d.GetOk("disk_list"); ok {
 		dsk := v.([]interface{})
-		if len(dsk) > 0 {
-			dls := make([]*v3.VMDisk, len(dsk))
+		return expandDiskListInterfacesHelper(dsk)
+	}
+	return nil
+}
 
-			for k, val := range dsk {
-				v := val.(map[string]interface{})
-				dl := &v3.VMDisk{}
+func expandDiskListInterfacesHelper(dsk []interface{}) []*v3.VMDisk {
+	if len(dsk) > 0 {
+		dls := make([]*v3.VMDisk, len(dsk))
 
-				// uuid
-				if v1, ok1 := v["uuid"]; ok1 && v1.(string) != "" {
-					dl.UUID = utils.StringPtr(v1.(string))
-				}
-				// storage_config
-				if v, ok1 := v["storage_config"]; ok1 {
-					dl.StorageConfig = expandStorageConfig(v.([]interface{}))
-				}
-				// device_properties
-				if v1, ok1 := v["device_properties"]; ok1 {
-					dl.DeviceProperties = expandDeviceProperties(v1.([]interface{}))
-				}
-				// data_source_reference
-				if v1, ok := v["data_source_reference"]; ok && len(v1.(map[string]interface{})) != 0 {
-					dsref := v1.(map[string]interface{})
-					dl.DataSourceReference = validateShortRef(dsref)
-				}
-				// volume_group_reference
-				if v1, ok := v["volume_group_reference"]; ok {
-					volgr := v1.(map[string]interface{})
-					dl.VolumeGroupReference = validateRef(volgr)
-				}
-				// disk_size_bytes
-				if v1, ok1 := v["disk_size_bytes"]; ok1 && v1.(int) != 0 {
-					dl.DiskSizeBytes = utils.Int64Ptr(int64(v1.(int)))
-				}
-				// disk_size_mib
-				if v1, ok := v["disk_size_mib"]; ok && v1.(int) != 0 {
-					dl.DiskSizeMib = utils.Int64Ptr(int64(v1.(int)))
-				}
-				dls[k] = dl
+		for k, val := range dsk {
+			v := val.(map[string]interface{})
+			dl := &v3.VMDisk{}
+
+			// uuid
+			if v1, ok1 := v["uuid"]; ok1 && v1.(string) != "" {
+				dl.UUID = utils.StringPtr(v1.(string))
 			}
-			return dls
+			// storage_config
+			if v, ok1 := v["storage_config"]; ok1 {
+				dl.StorageConfig = expandStorageConfig(v.([]interface{}))
+			}
+			// device_properties
+			if v1, ok1 := v["device_properties"]; ok1 {
+				dl.DeviceProperties = expandDeviceProperties(v1.([]interface{}))
+			}
+			// data_source_reference
+			if v1, ok := v["data_source_reference"]; ok && len(v1.(map[string]interface{})) != 0 {
+				dsref := v1.(map[string]interface{})
+				dl.DataSourceReference = validateShortRef(dsref)
+			}
+			// volume_group_reference
+			if v1, ok := v["volume_group_reference"]; ok {
+				volgr := v1.(map[string]interface{})
+				dl.VolumeGroupReference = validateRef(volgr)
+			}
+			// disk_size_bytes
+			if v1, ok1 := v["disk_size_bytes"]; ok1 && v1.(int) != 0 {
+				dl.DiskSizeBytes = utils.Int64Ptr(int64(v1.(int)))
+			}
+			// disk_size_mib
+			if v1, ok := v["disk_size_mib"]; ok && v1.(int) != 0 {
+				dl.DiskSizeMib = utils.Int64Ptr(int64(v1.(int)))
+			}
+			dls[k] = dl
 		}
+		return dls
 	}
 	return nil
 }
@@ -2067,6 +2077,46 @@ func setVMTimeout(meta interface{}) {
 	if client.WaitTimeout != 0 {
 		vmTimeout = time.Duration(client.WaitTimeout) * time.Minute
 	}
+}
+
+func hasDifferentDiskListImageUUIDs(old, new []interface{}) bool {
+	expandedOld := expandDiskListInterfacesHelper(old)
+	expandedNew := expandDiskListInterfacesHelper(new)
+	utils.PrintToJSON(expandedOld, "[hasDifferentDiskListImageUUIDs] expandedOld: ")
+	utils.PrintToJSON(expandedNew, "[hasDifferentDiskListImageUUIDs] expandedNew: ")
+	for _, eo := range expandedOld {
+		// if DSR is not nil and kind == image, we know we need to do validation
+		if eo.DataSourceReference != nil && strings.ToLower(*eo.DataSourceReference.Kind) == "image" {
+			log.Printf("[hasDifferentDiskListImageUUIDs] old dsr was not nil and dsr kind was image %s", *eo.UUID)
+			// if eo.UUID !=nil, we know we can find an existing disk in the new list by uuid
+			if eo.UUID != nil {
+				log.Printf("[hasDifferentDiskListImageUUIDs] Searching for disk with uuid %s", *eo.UUID)
+				for _, en := range expandedNew {
+					// check if the disks are the same
+					if en.UUID != nil && *eo.UUID == *en.UUID {
+						log.Printf("[hasDifferentDiskListImageUUIDs] Found matching disk!")
+						if en.DataSourceReference == nil {
+							// if expanded new dsr == nil, image config was removed, forcenew
+							log.Printf("[hasDifferentDiskListImageUUIDs] new dsr was nil => change")
+							return true
+						}
+						if strings.ToLower(*en.DataSourceReference.Kind) != "image" {
+							// if kind of dsr is not image anymore, there was a change
+							log.Printf("[hasDifferentDiskListImageUUIDs] new dsr kind was NOT image => change")
+							return true
+						}
+						if *en.DataSourceReference.UUID != *eo.DataSourceReference.UUID {
+							// if kind of dsr is not image anymore, there was a change
+							log.Printf("[hasDifferentDiskListImageUUIDs] new dsr image uuid was NOT identical to old => change")
+							return true
+						}
+					}
+				}
+			}
+		}
+	}
+	log.Printf("No change found for disk list")
+	return false
 }
 
 func resourceNutanixVirtualMachineInstanceResourceV0() *schema.Resource {
