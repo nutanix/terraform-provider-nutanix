@@ -429,6 +429,37 @@ func TestAccNutanixVirtualMachine_resizeDiskClone(t *testing.T) {
 	})
 }
 
+func TestAccNutanixVirtualMachine_changeImageUUID(t *testing.T) {
+	r := acctest.RandInt()
+
+	resourceName := "nutanix_virtual_machine.vm11"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixVMConfigChangeImages(r),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "disk_list.#"),
+					resource.TestCheckResourceAttr(resourceName, "disk_list.#", "1"),
+				),
+			},
+			{
+				Config: testAccNutanixVMConfigChangeImagesUpdated(r),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "disk_list.#"),
+					resource.TestCheckResourceAttr(resourceName, "disk_list.#", "1"),
+				),
+			},
+			{
+				ResourceName:      "nutanix_virtual_machine.vm11",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		}})
+}
+
 func testAccCheckNutanixVirtualMachineExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1062,4 +1093,78 @@ func testAccNutanixVMConfigResizeDiskClone(imgName, vmName string, diskSize int)
 			}
 		}
 	`, imgName, vmName, diskSize)
+}
+
+func testAccNutanixVMConfigChangeImages(r int) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster1 = [
+				for cluster in data.nutanix_clusters.clusters.entities :
+				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+			][0]
+		}
+		
+		resource "nutanix_image" "cirros-04-disk" {
+			name        = "test-image-dou-vm-create-%[1]d"
+			source_uri  = "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+			description = "heres a tiny linux image, not an iso, but a real disk!"
+		}
+
+		resource "nutanix_virtual_machine" "vm11" {
+			name                 = "test-dou-vm-%[1]d"
+			cluster_uuid         = local.cluster1
+			num_vcpus_per_socket = 1
+			num_sockets          = 1
+			memory_size_mib      = 186
+			
+			disk_list {
+				data_source_reference = {
+					kind = "image"
+					uuid = nutanix_image.cirros-04-disk.id
+				}
+				device_properties {
+					device_type = "DISK"
+				}
+			}
+		}
+	`, r)
+}
+
+func testAccNutanixVMConfigChangeImagesUpdated(r int) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster1 = [
+				for cluster in data.nutanix_clusters.clusters.entities :
+				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+			][0]
+		}
+		
+		resource "nutanix_image" "cirros-05-disk" {
+			name        = "test-image-cirros-050"
+			source_uri  = "http://download.cirros-cloud.net/0.5.0/cirros-0.5.0-x86_64-disk.img"
+			description = "heres a tiny linux image, not an iso, but a real disk!"
+		  }
+		  
+		resource "nutanix_virtual_machine" "vm11" {
+			name                 = "test-dou-vm-%[1]d"
+			cluster_uuid         = local.cluster1
+			num_vcpus_per_socket = 1
+			num_sockets          = 1
+			memory_size_mib      = 186
+			
+			disk_list {
+				data_source_reference = {
+					kind = "image"
+					uuid = nutanix_image.cirros-05-disk.id
+				}
+				device_properties {
+					device_type = "DISK"
+				}
+			}
+		}
+	`, r)
 }
