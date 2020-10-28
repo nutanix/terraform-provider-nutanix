@@ -1119,17 +1119,21 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		metadata.OwnerReference = validateRef(n.(map[string]interface{}))
 	}
 	metadata.ProjectReference = response.Metadata.ProjectReference
+
 	if d.HasChange("project_reference") {
 		_, n := d.GetChange("project_reference")
 		metadata.ProjectReference = validateRef(n.(map[string]interface{}))
 		hotPlugChange = false
 	}
+
 	spec.Name = response.Status.Name
+
 	if d.HasChange("name") {
 		_, n := d.GetChange("name")
 		spec.Name = utils.StringPtr(n.(string))
 		hotPlugChange = false
 	}
+
 	spec.Description = response.Status.Description
 	if d.HasChange("description") {
 		_, n := d.GetChange("description")
@@ -1298,7 +1302,10 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	res.PowerStateMechanism = pw
-	res.BootConfig, hotPlugChange = bootConfigHasChange(res.BootConfig, d)
+	if bc, change := bootConfigHasChange(res.BootConfig, d); !reflect.DeepEqual(*bc, v3.VMBootConfig{}) {
+		res.BootConfig = bc
+		hotPlugChange = change
+	}
 
 	if !reflect.DeepEqual(*guestTool, (v3.GuestToolsSpec{})) {
 		res.GuestTools = guestTool
@@ -1386,10 +1393,6 @@ func bootConfigHasChange(boot *v3.VMBootConfig, d *schema.ResourceData) (*v3.VMB
 
 	if dska.AdapterType == nil && dska.DeviceIndex == nil && bd.MacAddress == nil {
 		boot.BootDevice = nil
-	}
-
-	if reflect.DeepEqual(*boot, v3.VMBootConfig{}) {
-		return nil, hotPlugChange
 	}
 
 	return boot, hotPlugChange

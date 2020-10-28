@@ -97,7 +97,7 @@ func expandArray(m map[string]string, prefix string) []interface{} {
 		if err != nil {
 			panic(err)
 		}
-		keySet[int(k)] = true
+		keySet[k] = true
 	}
 
 	keysList := make([]int, 0, num)

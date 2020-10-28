@@ -12,11 +12,10 @@ require (
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20191212124732-c6ae6269b9d7 // indirect
 	github.com/hashicorp/terraform-plugin-sdk v1.7.0
 	github.com/mitchellh/gox v1.0.1
+	github.com/pkg/sftp v1.12.0 // indirect
 	github.com/spf13/cast v1.3.1
-	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/zclconf/go-cty v1.5.1 // indirect
 	github.com/zclconf/go-cty-yaml v1.0.2 // indirect
-	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a // indirect
 	golang.org/x/net v0.0.0-20200602114024-627f9648deb9 // indirect
 	golang.org/x/tools v0.0.0-20200530233709-52effbd89c51 // indirect
 )
