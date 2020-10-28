@@ -105,16 +105,18 @@ func flattenNicList(nics []*v3.VMNic) []map[string]interface{} {
 
 func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
 	diskList := make([]map[string]interface{}, 0)
-	for _, v := range disks {
+	sortedDisks := sortDiskList(disks)
+	for _, v := range sortedDisks {
 		var deviceProps []map[string]interface{}
 		var storageConfig []map[string]interface{}
-
+		var adapter string = ""
+		var index string = ""
 		if v.DeviceProperties != nil {
 			deviceProps = make([]map[string]interface{}, 1)
-			index := fmt.Sprintf("%d", utils.Int64Value(v.DeviceProperties.DiskAddress.DeviceIndex))
-			adapter := v.DeviceProperties.DiskAddress.AdapterType
+			index = fmt.Sprintf("%d", utils.Int64Value(v.DeviceProperties.DiskAddress.DeviceIndex))
+			adapter = *v.DeviceProperties.DiskAddress.AdapterType
 
-			if index == "3" && *adapter == IDE {
+			if index == "3" && adapter == IDE {
 				continue
 			}
 
@@ -152,6 +154,46 @@ func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
 		})
 	}
 	return diskList
+}
+
+func sortDiskList(disks []*v3.VMDisk) []*v3.VMDisk {
+	//create result slice
+	resList := make([]*v3.VMDisk, len(disks))
+	// keep starting index for adapter types
+	sliceOffset := 0
+	adapterTypes := []string{"SCSI", "IDE"}
+	// loop over the adapter types
+	for _, adapterType := range adapterTypes {
+		// make a list for disks without adapter type
+		noAdapterTypeList := make([]*v3.VMDisk, 0)
+		//init counter
+		adapterTypeCount := 0
+		//loop over the unsorted disks
+		for _, d := range disks {
+			//find the adapter type and match it
+			if d.DeviceProperties != nil && d.DeviceProperties.DiskAddress != nil && adapterType == *d.DeviceProperties.DiskAddress.AdapterType {
+				// Check if the device index is set and add to the result slice
+				if d.DeviceProperties.DiskAddress.DeviceIndex != nil && *d.DeviceProperties.DiskAddress.DeviceIndex >= 0 {
+					index := sliceOffset + int(*d.DeviceProperties.DiskAddress.DeviceIndex)
+					resList[index] = d
+				} else {
+					noAdapterTypeList = append(noAdapterTypeList, d)
+				}
+				adapterTypeCount++
+			}
+		}
+		sliceOffset = sliceOffset + adapterTypeCount
+		for _, noAdapterTypeDisk := range noAdapterTypeList {
+			for i, rDisk := range resList {
+				if rDisk == nil {
+					resList[i] = noAdapterTypeDisk
+					break
+				}
+			}
+		}
+	}
+	utils.PrintToJSON(resList, "resList: ")
+	return resList
 }
 
 func flattenSerialPortList(serialPorts []*v3.VMSerialPort) []map[string]interface{} {
