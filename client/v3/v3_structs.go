@@ -2003,3 +2003,80 @@ type ProjectListResponse struct {
 	Entities   []*Project          `json:"entities,omitempty"`
 	Metadata   *ListMetadataOutput `json:"metadata,omitempty"`
 }
+
+// AccessControlPolicyResources ...
+type AccessControlPolicyResources struct {
+	UserReferenceList      []*Reference `json:"user_reference_list,omitempty"`
+	UserGroupReferenceList []*Reference `json:"user_group_reference_list,omitempty"`
+	RoleReference          *Reference   `json:"role_reference,omitempty"`
+	FilterList             *FilterList  `json:"filter_list,omitempty"`
+}
+
+// FilterList ...
+type FilterList struct {
+	ContextList []*ContextList `json:"context_list,omitempty"`
+}
+
+// ContextList ...
+type ContextList struct {
+	ScopeFilterExpressionList  []*ScopeFilterExpressionList `json:"scope_filter_expression_list,omitempty"`
+	EntityFilterExpressionList []EntityFilterExpressionList `json:"entity_filter_expression_list,omitempty"`
+}
+
+// ScopeFilterExpressionList ...
+type ScopeFilterExpressionList struct {
+	LeftHandSide  string        `json:"left_hand_side,omitempty"`
+	Operator      string        `json:"operator,omitempty"`
+	RightHandSide RightHandSide `json:"right_hand_side,omitempty"`
+}
+
+// EntityFilterExpressionList ...
+type EntityFilterExpressionList struct {
+	LeftHandSide  LeftHandSide  `json:"left_hand_side,omitempty"`
+	Operator      string        `json:"operator,omitempty"`
+	RightHandSide RightHandSide `json:"right_hand_side,omitempty"`
+}
+
+// LeftHandSide ...
+type LeftHandSide struct {
+	EntityType *string `json:"entity_type,omitempty"`
+}
+
+// RightHandSide ...
+type RightHandSide struct {
+	Collection *string           `json:"collection,omitempty"`
+	Categories map[string]string `json:"categories,omitempty"`
+	UUIDList   []string          `json:"uuid_list,omitempty"`
+}
+
+// AccessControlPolicyStatus ...
+type AccessControlPolicyStatus struct {
+	State            *string                       `json:"state,omitempty"`
+	MessageList      []*MessageResource            `json:"message_list,omitempty"`
+	Name             *string                       `json:"name,omitempty"`
+	Resources        *AccessControlPolicyResources `json:"resources,omitempty"`
+	Description      *string                       `json:"description,omitempty"`
+	ExecutionContext *ExecutionContext             `json:"execution_context,omitempty"`
+}
+
+// AccessControlPolicySpec ...
+type AccessControlPolicySpec struct {
+	Name        *string                       `json:"name,omitempty"`
+	Resources   *AccessControlPolicyResources `json:"resources,omitempty"`
+	Description *string                       `json:"description,omitempty"`
+}
+
+// AccessControlPolicy Response object for intentful operations on a access policy
+type AccessControlPolicy struct {
+	Status     *AccessControlPolicyStatus `json:"status,omitempty"`
+	Spec       *AccessControlPolicySpec   `json:"spec,omitempty"`
+	APIVersion string                     `json:"api_version,omitempty"`
+	Metadata   *Metadata                  `json:"metadata,omitempty"`
+}
+
+// AccessControlPolicyListResponse Response object for intentful operation of access policy
+type AccessControlPolicyListResponse struct {
+	APIVersion string                 `json:"api_version,omitempty"`
+	Entities   []*AccessControlPolicy `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput    `json:"metadata,omitempty"`
+}
