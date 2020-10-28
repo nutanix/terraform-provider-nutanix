@@ -1268,6 +1268,16 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		}
 
 		res.DiskList = expandDiskListUpdate(d, response)
+		utils.PrintToJSON(res.DiskList, "PRE res.DiskList: ")
+		imageMismatch := parseDiskImageChange(response, res.DiskList)
+		utils.PrintToJSON(res.DiskList, "POST res.DiskList: ")
+		// if err != nil {
+		// 	return err
+		// }
+
+		if imageMismatch {
+			hotPlugChange = false
+		}
 
 		postCdromCount, err := CountDiskListCdrom(res.DiskList)
 		if err != nil {
@@ -2067,6 +2077,40 @@ func setVMTimeout(meta interface{}) {
 	if client.WaitTimeout != 0 {
 		vmTimeout = time.Duration(client.WaitTimeout) * time.Minute
 	}
+}
+
+func parseDiskImageChange(vmOutput *v3.VMIntentResponse, expandedDiskList []*v3.VMDisk) bool {
+	utils.PrintToJSON(expandedDiskList, "[parseDiskImageChange] PRE expandedDiskList: ")
+	foundImageMismatch := false
+	if vmOutput.Status.Resources.DiskList != nil {
+		currentDiskList := vmOutput.Status.Resources.DiskList
+		utils.PrintToJSON(currentDiskList, "[parseDiskImageChange] currentDiskList: ")
+		// Loop the disks to be updated via PUT
+		for _, nDisk := range expandedDiskList {
+			// check if disk uuid is not nil => is existing disk
+			if nDisk.UUID != nil {
+				// Loop over the current VM disks
+				for _, cDisk := range currentDiskList {
+					// perform a match... Need to check ndisk again since we put it to nil late rin the loop
+					if cDisk.UUID != nil && nDisk.UUID != nil && *nDisk.UUID == *cDisk.UUID {
+						// check if all attrs are not nil and compare the image UUIDs
+						if nDisk.DataSourceReference != nil &&
+							nDisk.DataSourceReference.UUID != nil &&
+							cDisk.DataSourceReference != nil &&
+							cDisk.DataSourceReference.UUID != nil &&
+							*cDisk.DataSourceReference.UUID != *nDisk.DataSourceReference.UUID {
+							// clear UUID so the API sees it as new disk
+							nDisk.UUID = nil
+							foundImageMismatch = true
+						}
+					}
+				}
+			}
+		}
+	}
+	log.Printf("[parseDiskImageChange] foundImageMismatch: %t", foundImageMismatch)
+	utils.PrintToJSON(expandedDiskList, "[parseDiskImageChange] POST expandedDiskList: ")
+	return foundImageMismatch
 }
 
 func resourceNutanixVirtualMachineInstanceResourceV0() *schema.Resource {
