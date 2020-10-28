@@ -3,8 +3,8 @@ package nutanix
 import (
 	"log"
 
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 // Provider function returns the object that implements the terraform.ResourceProvider interface, specifically a schema.Provider
