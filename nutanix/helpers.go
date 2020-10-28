@@ -166,3 +166,50 @@ func taskStateRefreshFunc(client *v3.Client, taskUUID string) resource.StateRefr
 		return v, *v.Status, nil
 	}
 }
+
+func validateArrayRef(references []interface{}) []*v3.Reference {
+	refs := make([]*v3.Reference, 0)
+
+	for _, s := range references {
+		ref := s.(map[string]interface{})
+		r := v3.Reference{}
+
+		if v, ok := ref["kind"]; ok {
+			r.Kind = utils.StringPtr(v.(string))
+		}
+
+		if v, ok := ref["uuid"]; ok {
+			r.UUID = utils.StringPtr(v.(string))
+		}
+		if v, ok := ref["name"]; ok {
+			r.Name = utils.StringPtr(v.(string))
+		}
+
+		refs = append(refs, &r)
+
+	}
+	if len(refs) > 0 {
+		return refs
+	}
+
+	return nil
+}
+
+func flattenArrayReferenceValues(refs []*v3.Reference) []map[string]interface{} {
+	references := make([]map[string]interface{}, 0)
+	for _, r := range refs {
+		reference := make(map[string]interface{})
+		if r != nil {
+			reference["kind"] = utils.StringValue(r.Kind)
+			reference["uuid"] = utils.StringValue(r.UUID)
+
+			if r.Name != nil {
+				reference["name"] = utils.StringValue(r.Name)
+			}
+			references = append(references, reference)
+		}
+	}
+
+	return references
+
+}
