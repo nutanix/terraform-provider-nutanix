@@ -71,6 +71,12 @@ type Service interface {
 	ListAllProject() (*ProjectListResponse, error)
 	UpdateProject(uuid string, body *Project) (*Project, error)
 	DeleteProject(uuid string) error
+	CreateAccessControlPolicy(request *AccessControlPolicy) (*AccessControlPolicy, error)
+	GetAccessControlPolicy(projectUUID string) (*AccessControlPolicy, error)
+	ListAccessControlPolicy(getEntitiesRequest *DSMetadata) (*AccessControlPolicyListResponse, error)
+	ListAllAccessControlPolicy(filter string) (*AccessControlPolicyListResponse, error)
+	UpdateAccessControlPolicy(uuid string, body *AccessControlPolicy) (*AccessControlPolicy, error)
+	DeleteAccessControlPolicy(uuid string) error
 }
 
 /*CreateVM Creates a VM
@@ -1288,6 +1294,149 @@ func (op Operations) DeleteProject(uuid string) error {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/projects/%s", uuid)
+
+	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	if err != nil {
+		return err
+	}
+
+	return op.client.Do(ctx, req, nil)
+}
+
+/*CreateAccessControlPolicy creates a access policy
+ * This operation submits a request to create a access policy based on the input parameters.
+ *
+ * @param request *Access Policy
+ * @return *Access Policy
+ */
+func (op Operations) CreateAccessControlPolicy(request *AccessControlPolicy) (*AccessControlPolicy, error) {
+	ctx := context.TODO()
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, "/access_control_policies", request)
+	if err != nil {
+		return nil, err
+	}
+
+	AccessControlPolicyResponse := new(AccessControlPolicy)
+
+	return AccessControlPolicyResponse, op.client.Do(ctx, req, AccessControlPolicyResponse)
+}
+
+/*GetAccessControlPolicy This operation gets a AccessControlPolicy.
+ *
+ * @param uuid The access policy uuid - string.
+ * @return *AccessControlPolicy
+ */
+func (op Operations) GetAccessControlPolicy(AccessControlPolicyUUID string) (*AccessControlPolicy, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/access_control_policies/%s", AccessControlPolicyUUID)
+	AccessControlPolicy := new(AccessControlPolicy)
+
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return AccessControlPolicy, op.client.Do(ctx, req, AccessControlPolicy)
+}
+
+/*ListAccessControlPolicy gets a list of AccessControlPolicys.
+ *
+ * @param metadata allows create filters to get specific data - *DSMetadata.
+ * @return *AccessControlPolicyListResponse
+ */
+func (op Operations) ListAccessControlPolicy(getEntitiesRequest *DSMetadata) (*AccessControlPolicyListResponse, error) {
+	ctx := context.TODO()
+	path := "/access_control_policies/list"
+
+	AccessControlPolicyList := new(AccessControlPolicyListResponse)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return AccessControlPolicyList, op.client.Do(ctx, req, AccessControlPolicyList)
+}
+
+/*ListAllAccessControlPolicy gets a list of AccessControlPolicys
+ * This operation gets a list of AccessControlPolicys, allowing for sorting and pagination.
+ * Note: Entities that have not been created successfully are not listed.
+ * @return *AccessControlPolicyListResponse
+ */
+func (op Operations) ListAllAccessControlPolicy(filter string) (*AccessControlPolicyListResponse, error) {
+	entities := make([]*AccessControlPolicy, 0)
+
+	resp, err := op.ListAccessControlPolicy(&DSMetadata{
+		Filter: &filter,
+		Kind:   utils.StringPtr("access_control_policy"),
+		Length: utils.Int64Ptr(itemsPerPage),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining) {
+			resp, err = op.ListAccessControlPolicy(&DSMetadata{
+				Filter: &filter,
+				Kind:   utils.StringPtr("access_control_policy"),
+				Length: utils.Int64Ptr(itemsPerPage),
+				Offset: utils.Int64Ptr(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
+		}
+
+		resp.Entities = entities
+	}
+
+	return resp, nil
+}
+
+/*UpdateAccessControlPolicy Updates a AccessControlPolicy
+ * This operation submits a request to update a existing AccessControlPolicy based on the input parameters
+ * @param uuid The uuid of the entity - string.
+ * @param body - *AccessControlPolicy
+ * @return *AccessControlPolicy, error
+ */
+func (op Operations) UpdateAccessControlPolicy(uuid string, body *AccessControlPolicy) (*AccessControlPolicy, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/access_control_policies/%s", uuid)
+	AccessControlPolicyInput := new(AccessControlPolicy)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return AccessControlPolicyInput, op.client.Do(ctx, req, AccessControlPolicyInput)
+}
+
+/*DeleteAccessControlPolicy Deletes a AccessControlPolicy
+ * This operation submits a request to delete a existing AccessControlPolicy.
+ *
+ * @param uuid The uuid of the entity.
+ * @return void
+ */
+func (op Operations) DeleteAccessControlPolicy(uuid string) error {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/access_control_policies/%s", uuid)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	if err != nil {
