@@ -2,6 +2,8 @@ package nutanix
 
 import (
 	"fmt"
+	"log"
+	"reflect"
 	"strconv"
 
 	"github.com/hashicorp/terraform/helper/schema"
@@ -105,7 +107,61 @@ func flattenNicList(nics []*v3.VMNic) []map[string]interface{} {
 
 func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
 	diskList := make([]map[string]interface{}, 0)
-	sortedDisks := sortDiskList(disks)
+	//sortedDisks := sortDiskList(disks)
+	//for _, v := range sortedDisks {
+	for _, v := range disks {
+		var deviceProps []map[string]interface{}
+		var storageConfig []map[string]interface{}
+		var adapter string = ""
+		var index string = ""
+		if v.DeviceProperties != nil {
+			deviceProps = make([]map[string]interface{}, 1)
+			index = fmt.Sprintf("%d", utils.Int64Value(v.DeviceProperties.DiskAddress.DeviceIndex))
+			adapter = *v.DeviceProperties.DiskAddress.AdapterType
+
+			if index == "3" && adapter == IDE {
+				continue
+			}
+
+			deviceProps[0] = map[string]interface{}{
+				"device_type": v.DeviceProperties.DeviceType,
+				"disk_address": map[string]interface{}{
+					"device_index": index,
+					"adapter_type": adapter,
+				},
+			}
+		}
+
+		if v.StorageConfig != nil {
+			storageConfig = append(storageConfig, map[string]interface{}{
+				"flash_mode": cast.ToString(v.StorageConfig.FlashMode),
+				"storage_container_reference": []map[string]interface{}{
+					{
+						"url":  cast.ToString(v.StorageConfig.StorageContainerReference.URL),
+						"kind": cast.ToString(v.StorageConfig.StorageContainerReference.Kind),
+						"name": cast.ToString(v.StorageConfig.StorageContainerReference.Name),
+						"uuid": cast.ToString(v.StorageConfig.StorageContainerReference.UUID),
+					},
+				},
+			})
+		}
+
+		diskList = append(diskList, map[string]interface{}{
+			"uuid":                   utils.StringValue(v.UUID),
+			"disk_size_bytes":        utils.Int64Value(v.DiskSizeBytes),
+			"disk_size_mib":          utils.Int64Value(v.DiskSizeMib),
+			"device_properties":      deviceProps,
+			"storage_config":         storageConfig,
+			"data_source_reference":  flattenReferenceValues(v.DataSourceReference),
+			"volume_group_reference": flattenReferenceValues(v.VolumeGroupReference),
+		})
+	}
+	return diskList
+}
+
+func flattenDiskListNew(disks []*v3.VMDisk, diskFromState []*v3.VMDisk) []map[string]interface{} {
+	diskList := make([]map[string]interface{}, 0)
+	sortedDisks := sortDiskListNew(disks, diskFromState)
 	for _, v := range sortedDisks {
 		var deviceProps []map[string]interface{}
 		var storageConfig []map[string]interface{}
@@ -156,44 +212,83 @@ func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
 	return diskList
 }
 
-func sortDiskList(disks []*v3.VMDisk) []*v3.VMDisk {
+// func sortDiskList(disks []*v3.VMDisk) []*v3.VMDisk {
+// 	//create result slice
+// 	resList := make([]*v3.VMDisk, len(disks))
+// 	// keep starting index for adapter types
+// 	sliceOffset := 0
+// 	adapterTypes := []string{"SCSI", "IDE"}
+// 	// loop over the adapter types
+// 	for _, adapterType := range adapterTypes {
+// 		// make a list for disks without adapter type
+// 		noAdapterTypeList := make([]*v3.VMDisk, 0)
+// 		//init counter
+// 		adapterTypeCount := 0
+// 		//loop over the unsorted disks
+// 		for _, d := range disks {
+// 			//find the adapter type and match it
+// 			if d.DeviceProperties != nil && d.DeviceProperties.DiskAddress != nil && adapterType == *d.DeviceProperties.DiskAddress.AdapterType {
+// 				// Check if the device index is set and add to the result slice
+// 				if d.DeviceProperties.DiskAddress.DeviceIndex != nil && *d.DeviceProperties.DiskAddress.DeviceIndex >= 0 {
+// 					index := sliceOffset + int(*d.DeviceProperties.DiskAddress.DeviceIndex)
+// 					resList[index] = d
+// 				} else {
+// 					noAdapterTypeList = append(noAdapterTypeList, d)
+// 				}
+// 				adapterTypeCount++
+// 			}
+// 		}
+// 		sliceOffset = sliceOffset + adapterTypeCount
+// 		for _, noAdapterTypeDisk := range noAdapterTypeList {
+// 			for i, rDisk := range resList {
+// 				if rDisk == nil {
+// 					resList[i] = noAdapterTypeDisk
+// 					break
+// 				}
+// 			}
+// 		}
+// 	}
+// 	utils.PrintToJSON(resList, "resList: ")
+// 	return resList
+// }
+
+func sortDiskListNew(disks []*v3.VMDisk, disksFromState []*v3.VMDisk) []*v3.VMDisk {
+	//TODO: compare state disk vs current API disks.
 	//create result slice
-	resList := make([]*v3.VMDisk, len(disks))
-	// keep starting index for adapter types
-	sliceOffset := 0
-	adapterTypes := []string{"SCSI", "IDE"}
-	// loop over the adapter types
-	for _, adapterType := range adapterTypes {
-		// make a list for disks without adapter type
-		noAdapterTypeList := make([]*v3.VMDisk, 0)
-		//init counter
-		adapterTypeCount := 0
-		//loop over the unsorted disks
-		for _, d := range disks {
-			//find the adapter type and match it
-			if d.DeviceProperties != nil && d.DeviceProperties.DiskAddress != nil && adapterType == *d.DeviceProperties.DiskAddress.AdapterType {
-				// Check if the device index is set and add to the result slice
-				if d.DeviceProperties.DiskAddress.DeviceIndex != nil && *d.DeviceProperties.DiskAddress.DeviceIndex >= 0 {
-					index := sliceOffset + int(*d.DeviceProperties.DiskAddress.DeviceIndex)
-					resList[index] = d
-				} else {
-					noAdapterTypeList = append(noAdapterTypeList, d)
-				}
-				adapterTypeCount++
-			}
-		}
-		sliceOffset = sliceOffset + adapterTypeCount
-		for _, noAdapterTypeDisk := range noAdapterTypeList {
-			for i, rDisk := range resList {
-				if rDisk == nil {
-					resList[i] = noAdapterTypeDisk
-					break
-				}
-			}
+
+	utils.PrintToJSON(disks, "disks from API")
+	utils.PrintToJSON(disks, "disks from STATE")
+
+	resList := make([]*v3.VMDisk, len(disks)) //make sure the lenght is according the API VM diskList
+	//offset := 0
+
+	for k, disk := range disks {
+		index := findIndexDiskList(disk, disksFromState)
+
+		log.Printf("Found in index %d", index)
+
+		if index < len(disks) {
+			resList[k] = disks[index]
 		}
 	}
-	utils.PrintToJSON(resList, "resList: ")
+	utils.PrintToJSON(resList, "resList")
+
 	return resList
+}
+
+func findIndexDiskList(disk *v3.VMDisk, disks []*v3.VMDisk) int {
+	return Search(len(disks), func(i int) bool {
+		return reflect.DeepEqual(disks[i].DeviceProperties, disk.DeviceProperties)
+	})
+}
+
+func Search(length int, f func(index int) bool) int {
+	for index := 0; index < length; index++ {
+		if f(index) {
+			return index
+		}
+	}
+	return -1
 }
 
 func flattenSerialPortList(serialPorts []*v3.VMSerialPort) []map[string]interface{} {

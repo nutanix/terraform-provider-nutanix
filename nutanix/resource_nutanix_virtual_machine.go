@@ -710,31 +710,26 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 						},
 						"device_properties": {
 							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
+							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"device_type": {
 										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
+										Required: true,
 									},
 									"disk_address": {
 										Type:     schema.TypeMap,
-										Optional: true,
-										Computed: true,
+										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"device_index": {
 													Type:     schema.TypeInt,
-													Optional: true,
-													Computed: true,
+													Required: true,
 												},
 												"adapter_type": {
 													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
+													Required: true,
 												},
 											},
 										},
@@ -956,7 +951,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting nic_list_status for Virtual Machine %s: %s", d.Id(), err)
 	}
 
-	if err := d.Set("disk_list", flattenDiskList(resp.Spec.Resources.DiskList)); err != nil {
+	if err := d.Set("disk_list", flattenDiskListNew(resp.Spec.Resources.DiskList, expandDiskList(d))); err != nil {
 		return fmt.Errorf("error setting disk_list for Virtual Machine %s: %s", d.Id(), err)
 	}
 
