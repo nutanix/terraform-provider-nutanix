@@ -125,14 +125,14 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 				Computed: true,
 			},
 			"user_reference_list": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"kind": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 						"uuid": {
 							Type:     schema.TypeString,
@@ -147,14 +147,14 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 				},
 			},
 			"user_group_reference_list": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"kind": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 						"uuid": {
 							Type:     schema.TypeString,
@@ -169,9 +169,9 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 				},
 			},
 			"role_reference": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Computed: true,
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"kind": {
@@ -190,81 +190,91 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 					},
 				},
 			},
-			"context_list": {
+			"filter_list": {
 				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"scope_filter_expression_list": {
+						"context_list": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"left_hand_side": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"operator": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"right_hand_side": {
+									"scope_filter_expression_list": {
 										Type:     schema.TypeList,
-										MaxItems: 1,
-										Required: true,
+										Optional: true,
+										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"collection": {
+												"left_hand_side": {
 													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
+													Required: true,
 												},
-												"categories": categoriesSchema(),
-												"uuid_list": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Computed: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+												"operator": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"right_hand_side": {
+													Type:     schema.TypeList,
+													MaxItems: 1,
+													Required: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"collection": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+															"categories": categoriesSchema(),
+															"uuid_list": {
+																Type:     schema.TypeSet,
+																Optional: true,
+																Computed: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
+														},
+													},
 												},
 											},
 										},
 									},
-								},
-							},
-						},
-						"entity_filter_expression_list": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"left_hand_side_entity_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-									"operator": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"right_hand_side": {
+									"entity_filter_expression_list": {
 										Type:     schema.TypeList,
-										MaxItems: 1,
 										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"collection": {
+												"left_hand_side_entity_type": {
 													Type:     schema.TypeString,
 													Optional: true,
 													Computed: true,
 												},
-												"categories": categoriesSchema(),
-												"uuid_list": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Computed: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+												"operator": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"right_hand_side": {
+													Type:     schema.TypeList,
+													MaxItems: 1,
+													Required: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"collection": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+															"categories": categoriesSchema(),
+															"uuid_list": {
+																Type:     schema.TypeSet,
+																Optional: true,
+																Computed: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
+														},
+													},
 												},
 											},
 										},
@@ -297,9 +307,9 @@ func resourceNutanixAccessControlPolicyCreate(d *schema.ResourceData, meta inter
 		return err
 	}
 
-	access.RoleReference = validateRef(rf.(map[string]interface{}))
+	access.RoleReference = validateRefList(rf.([]interface{}))
 
-	espandAccessControlPolicyResources(d, access)
+	expandAccessControlPolicyResources(d, access)
 
 	if description, ok := d.GetOk("description"); ok {
 		spec.Description = utils.StringPtr(description.(string))
@@ -317,13 +327,11 @@ func resourceNutanixAccessControlPolicyCreate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("error creating Nutanix AccessControlPolicy %s: %+v", utils.StringValue(spec.Name), err)
 	}
 
-	d.SetId(*resp.Metadata.UUID)
-
 	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
 
 	// Wait for the AccessControlPolicy to be available
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"QUEUED", "RUNNING"},
+		Pending:    []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    subnetTimeout,
@@ -340,6 +348,8 @@ func resourceNutanixAccessControlPolicyCreate(d *schema.ResourceData, meta inter
 	// Setting Description because in Get request is not present.
 	d.Set("description", utils.StringValue(resp.Spec.Description))
 
+	d.SetId(utils.StringValue(resp.Metadata.UUID))
+
 	return resourceNutanixAccessControlPolicyRead(d, meta)
 }
 
@@ -354,10 +364,10 @@ func resourceNutanixAccessControlPolicyRead(d *schema.ResourceData, meta interfa
 		}
 		errDel := resourceNutanixSubnetDelete(d, meta)
 		if errDel != nil {
-			return fmt.Errorf("error deleting subnet (%s) after read error: %+v", id, errDel)
+			return fmt.Errorf("error deleting access control policy (%s) after read error: %+v", id, errDel)
 		}
 		d.SetId("")
-		return fmt.Errorf("error reading subnet id (%s): %+v", id, err)
+		return fmt.Errorf("error reading access control policy id (%s): %+v", id, err)
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
@@ -394,19 +404,17 @@ func resourceNutanixAccessControlPolicyRead(d *schema.ResourceData, meta interfa
 			if err := d.Set("user_group_reference_list", flattenArrayReferenceValues(status.Resources.UserGroupReferenceList)); err != nil {
 				return err
 			}
-			if err := d.Set("role_reference", flattenReferenceValues(status.Resources.RoleReference)); err != nil {
+			if err := d.Set("role_reference", flattenReferenceValuesList(status.Resources.RoleReference)); err != nil {
 				return err
 			}
 			if status.Resources.FilterList.ContextList != nil {
-				if err := d.Set("context_list", flattenContextList(status.Resources.FilterList.ContextList)); err != nil {
+				if err := d.Set("filter_list", flattenFilterList(status.Resources.FilterList)); err != nil {
 					return err
 				}
 			}
 
 		}
 	}
-
-	d.SetId(*resp.Metadata.UUID)
 
 	return nil
 }
@@ -425,7 +433,7 @@ func resourceNutanixAccessControlPolicyUpdate(d *schema.ResourceData, meta inter
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
 		}
-		return fmt.Errorf("error retrieving for subnet id (%s) :%+v", id, err)
+		return fmt.Errorf("error retrieving for access control policy id (%s) :%+v", id, err)
 	}
 
 	if response.Metadata != nil {
@@ -459,18 +467,18 @@ func resourceNutanixAccessControlPolicyUpdate(d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("user_reference_list") {
-		res.UserGroupReferenceList = validateArrayRef(d.Get("user_reference_list").([]interface{}))
+		res.UserGroupReferenceList = validateArrayRef(d.Get("user_reference_list").([]interface{}), utils.StringPtr("user"))
 	}
 
 	if d.HasChange("user_group_reference_list") {
-		res.UserGroupReferenceList = validateArrayRef(d.Get("user_group_reference_list").([]interface{}))
+		res.UserGroupReferenceList = validateArrayRef(d.Get("user_group_reference_list").([]interface{}), utils.StringPtr("user_group"))
 	}
 
-	if d.HasChange("user_group_reference_list") {
-		res.RoleReference = validateRef(d.Get("user_group_reference_list").(map[string]interface{}))
+	if d.HasChange("role_reference") {
+		res.RoleReference = validateRefList(d.Get("role_reference").([]interface{}))
 	}
 
-	if d.HasChange("context_list") {
+	if d.HasChange("filter_list") {
 		res.FilterList.ContextList = expandContextFilterList(d)
 	}
 
@@ -480,7 +488,7 @@ func resourceNutanixAccessControlPolicyUpdate(d *schema.ResourceData, meta inter
 
 	resp, errUpdate := conn.V3.UpdateAccessControlPolicy(d.Id(), request)
 	if errUpdate != nil {
-		return fmt.Errorf("error updating subnet id %s): %s", d.Id(), errUpdate)
+		return fmt.Errorf("error updating access control policy id %s): %s", d.Id(), errUpdate)
 	}
 
 	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
@@ -497,21 +505,35 @@ func resourceNutanixAccessControlPolicyUpdate(d *schema.ResourceData, meta inter
 
 	if _, err := stateConf.WaitForState(); err != nil {
 		return fmt.Errorf(
-			"error waiting for subnet (%s) to update: %s", d.Id(), err)
+			"error waiting for access control policy (%s) to update: %s", d.Id(), err)
 	}
 	// Setting Description because in Get request is not present.
 	d.Set("description", utils.StringValue(resp.Spec.Description))
 
-	return resourceNutanixSubnetRead(d, meta)
+	return resourceNutanixAccessControlPolicyRead(d, meta)
 }
 
 func resourceNutanixAccessControlPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 
-	err := conn.V3.DeleteAccessControlPolicy(d.Id())
-
+	resp, err := conn.V3.DeleteAccessControlPolicy(d.Id())
 	if err != nil {
-		return fmt.Errorf("error deleting subnet id %s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting access control policy id %s): %s", d.Id(), err)
+	}
+
+	// Wait for the VM to be available
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"QUEUED", "RUNNING", "DELETED_PENDING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, cast.ToString(resp.Status.ExecutionContext.TaskUUID)),
+		Timeout:    subnetTimeout,
+		Delay:      subnetDelay,
+		MinTimeout: subnetMinTimeout,
+	}
+
+	if _, err := stateConf.WaitForState(); err != nil {
+		return fmt.Errorf(
+			"error waiting for access control policy (%s) to update: %s", d.Id(), err)
 	}
 
 	d.SetId("")
@@ -536,39 +558,47 @@ func resourceNutanixAccessControlPolicyExists(conn *v3.Client, name string) (*st
 	return accessUUID, nil
 }
 
-func espandAccessControlPolicyResources(d *schema.ResourceData, access *v3.AccessControlPolicyResources) {
+func expandAccessControlPolicyResources(d *schema.ResourceData, access *v3.AccessControlPolicyResources) {
 	var filterList v3.FilterList
 
 	if v, ok := d.GetOk("user_reference_list"); ok {
-		access.UserReferenceList = validateArrayRef(v.([]interface{}))
+		access.UserReferenceList = validateArrayRef(v.(*schema.Set), utils.StringPtr("user"))
 	}
 
 	if v, ok := d.GetOk("user_group_reference_list"); ok {
-		access.UserGroupReferenceList = validateArrayRef(v.([]interface{}))
+		access.UserGroupReferenceList = validateArrayRef(v.(*schema.Set), utils.StringPtr("user_group"))
 	}
 
 	if v, ok := d.GetOk("role_reference"); ok {
-		access.RoleReference = validateRef(v.(map[string]interface{}))
+		access.RoleReference = validateRefList(v.([]interface{}))
 	}
 
 	filterList.ContextList = expandContextFilterList(d)
 
-	access.FilterList = &filterList
+	if filterList.ContextList != nil {
+		access.FilterList = &filterList
+	}
 }
 
 func expandContextFilterList(d *schema.ResourceData) []*v3.ContextList {
-	if v1, ok := d.GetOk("context_list"); ok {
-		contextList := make([]*v3.ContextList, 0)
-		for _, a1 := range v1.([]interface{}) {
-			var context v3.ContextList
-			con := a1.(map[string]interface{})
+	if v1, ok := d.GetOk("filter_list"); ok {
+		fl := v1.([]interface{})
+		for _, filter := range fl {
+			v := filter.(map[string]interface{})
+			if v2, ok := v["context_list"]; ok {
+				contextList := make([]*v3.ContextList, 0)
+				for _, a1 := range v2.([]interface{}) {
+					var context v3.ContextList
+					con := a1.(map[string]interface{})
 
-			context.ScopeFilterExpressionList = expandScopeExpressionList(con)
-			context.EntityFilterExpressionList = expandEntityExpressionList(con)
+					context.ScopeFilterExpressionList = expandScopeExpressionList(con)
+					context.EntityFilterExpressionList = expandEntityExpressionList(con)
 
-			contextList = append(contextList, &context)
+					contextList = append(contextList, &context)
+				}
+				return contextList
+			}
 		}
-		return contextList
 	}
 	return nil
 }
@@ -627,30 +657,46 @@ func expandEntityExpressionList(con map[string]interface{}) []v3.EntityFilterExp
 func expandRightHandSide(side map[string]interface{}) v3.RightHandSide {
 	var right v3.RightHandSide
 	if v4, ok := side["right_hand_side"]; ok {
-		rhd := v4.(map[string]interface{})
+		vrhs := v4.([]interface{})
+		for _, vrh := range vrhs {
+			rhd := vrh.(map[string]interface{})
 
-		if v5, ok := rhd["collection"]; ok {
-			right.Collection = utils.StringPtr(v5.(string))
+			if v5, ok := rhd["collection"]; ok {
+				if v5.(string) != "" {
+					right.Collection = utils.StringPtr(v5.(string))
+				}
+			}
+			if v5, ok := rhd["categories"]; ok {
+				right.Categories = expandCategories(v5)
+			}
+			if v5, ok := rhd["uuid_list"]; ok {
+				right.UUIDList = cast.ToStringSlice(v5.(*schema.Set).List())
+			}
 		}
-		if v5, ok := rhd["categories"]; ok {
-			right.Categories = expandCategories(v5)
-		}
-		if v5, ok := rhd["uuid_list"]; ok {
-			right.UUIDList = cast.ToStringSlice(v5)
-		}
+
 	}
 	return right
 }
 
-func flattenContextList(contextList []*v3.ContextList) map[string]interface{} {
-	contexts := make(map[string]interface{})
+func flattenFilterList(filterList *v3.FilterList) []interface{} {
+	filters := make([]interface{}, 0)
+
+	filter := make(map[string]interface{})
+	filter["context_list"] = flattenContextList(filterList.ContextList)
+	filters = append(filters, filter)
+
+	return filters
+}
+
+func flattenContextList(contextList []*v3.ContextList) []interface{} {
+	contexts := make([]interface{}, 0)
 	for _, con := range contextList {
 		if con != nil {
 			scope := make(map[string]interface{})
 			scope["scope_filter_expression_list"] = flattenScopeExpressionList(con.ScopeFilterExpressionList)
 			scope["entity_filter_expression_list"] = flattenEntityExpressionList(con.EntityFilterExpressionList)
 
-			contexts["context_list"] = scope
+			contexts = append(contexts, scope)
 		}
 	}
 
@@ -658,36 +704,45 @@ func flattenContextList(contextList []*v3.ContextList) map[string]interface{} {
 
 }
 
-func flattenScopeExpressionList(scopeList []*v3.ScopeFilterExpressionList) map[string]interface{} {
-	scopes := make(map[string]interface{})
+func flattenScopeExpressionList(scopeList []*v3.ScopeFilterExpressionList) []interface{} {
+	scopes := make([]interface{}, 0)
 
 	for _, sco := range scopeList {
-		scopes["left_hand_side"] = sco.LeftHandSide
-		scopes["operator"] = sco.Operator
-		scopes["right_hand_side"] = flattenRightHandSide(sco.RightHandSide)
+		scope := make(map[string]interface{})
+		scope["left_hand_side"] = sco.LeftHandSide
+		scope["operator"] = sco.Operator
+		scope["right_hand_side"] = flattenRightHandSide(sco.RightHandSide)
+
+		scopes = append(scopes, scope)
 	}
 
 	return scopes
 }
 
-func flattenEntityExpressionList(entities []v3.EntityFilterExpressionList) map[string]interface{} {
-	scopes := make(map[string]interface{})
+func flattenEntityExpressionList(entities []v3.EntityFilterExpressionList) []interface{} {
+	scopes := make([]interface{}, 0)
 
 	for _, ent := range entities {
-		scopes["left_hand_side_entity_type"] = utils.StringValue(ent.LeftHandSide.EntityType)
-		scopes["operator"] = ent.Operator
-		scopes["right_hand_side"] = flattenRightHandSide(ent.RightHandSide)
+		scope := make(map[string]interface{})
+		scope["left_hand_side_entity_type"] = utils.StringValue(ent.LeftHandSide.EntityType)
+		scope["operator"] = ent.Operator
+		scope["right_hand_side"] = flattenRightHandSide(ent.RightHandSide)
+
+		scopes = append(scopes, scope)
 	}
 
 	return scopes
 }
 
-func flattenRightHandSide(right v3.RightHandSide) map[string]interface{} {
-	rightHand := make(map[string]interface{})
+func flattenRightHandSide(right v3.RightHandSide) []interface{} {
+	rightHand := make([]interface{}, 0)
 
-	rightHand["collection"] = utils.StringValue(right.Collection)
-	rightHand["uuid_list"] = right.UUIDList
-	rightHand["categories"] = flattenCategories(right.Categories)
+	r := make(map[string]interface{})
+	r["collection"] = utils.StringValue(right.Collection)
+	r["uuid_list"] = right.UUIDList
+	r["categories"] = flattenCategories(right.Categories)
+
+	rightHand = append(rightHand, r)
 
 	return rightHand
 }

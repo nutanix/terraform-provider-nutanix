@@ -9,7 +9,7 @@ import (
 
 func dataSourceNutanixAccessControlPolicies() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceNutanixAccessControlPolicysRead,
+		Read: dataSourceNutanixAccessControlPoliciesRead,
 		Schema: map[string]*schema.Schema{
 			"api_version": {
 				Type:     schema.TypeString,
@@ -117,6 +117,155 @@ func dataSourceNutanixAccessControlPolicies() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"user_reference_list": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"user_group_reference_list": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"role_reference": {
+							Type:     schema.TypeList,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+
+						"filter_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"context_list": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"scope_filter_expression_list": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"left_hand_side": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+															"operator": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+															"right_hand_side": {
+																Type:     schema.TypeList,
+																Computed: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"collection": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"categories": categoriesSchema(),
+																		"uuid_list": {
+																			Type:     schema.TypeSet,
+																			Computed: true,
+																			Elem:     &schema.Schema{Type: schema.TypeString},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"entity_filter_expression_list": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"left_hand_side_entity_type": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+															"operator": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+															"right_hand_side": {
+																Type:     schema.TypeList,
+																Computed: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"collection": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"categories": categoriesSchema(),
+																		"uuid_list": {
+																			Type:     schema.TypeSet,
+																			Computed: true,
+																			Elem:     &schema.Schema{Type: schema.TypeString},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -163,7 +312,7 @@ func dataSourceNutanixAccessControlPolicies() *schema.Resource {
 	}
 }
 
-func dataSourceNutanixAccessControlPolicysRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceNutanixAccessControlPoliciesRead(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
 	conn := meta.(*Client).API
 	req := &v3.DSMetadata{}
@@ -201,9 +350,9 @@ func dataSourceNutanixAccessControlPolicysRead(d *schema.ResourceData, meta inte
 			if res := status.Resources; res != nil {
 				entity["user_reference_list"] = flattenArrayReferenceValues(status.Resources.UserReferenceList)
 				entity["user_group_reference_list"] = flattenArrayReferenceValues(status.Resources.UserGroupReferenceList)
-				entity["role_reference"] = flattenReferenceValues(status.Resources.RoleReference)
+				entity["role_reference"] = flattenReferenceValuesList(status.Resources.RoleReference)
 				if status.Resources.FilterList.ContextList != nil {
-					entity["context_list"] = flattenContextList(status.Resources.FilterList.ContextList)
+					entity["filter_list"] = flattenFilterList(status.Resources.FilterList)
 				}
 			}
 		}

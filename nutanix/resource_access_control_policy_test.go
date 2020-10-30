@@ -11,12 +11,14 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
-const resourceAccessPolicy = "nutanix_access_control_policy.accest-access-policy"
+const resourceAccessPolicy = "nutanix_access_control_policy.test"
 
 func TestAccNutanixAccessControlPolicy_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix("accest-access-policy")
 	description := "Description of my access control policy"
-	uuidRole := ""
+	uuidRole := "760dac6c-be97-4b24-adb0-e3c3026dc8d5"
+	nameUpdated := acctest.RandomWithPrefix("accest-access-policy")
+	descriptionUpdated := "Description of my access control policy updated"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -28,7 +30,15 @@ func TestAccNutanixAccessControlPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixAccessControlPolicyExists(resourceAccessPolicy),
 					resource.TestCheckResourceAttr(resourceAccessPolicy, "name", name),
-					resource.TestCheckResourceAttr(resourceAccessPolicy, "description", "Description of my access control policy"),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "description", description),
+				),
+			},
+			{
+				Config: testAccNutanixAccessControlPolicyConfig(uuidRole, nameUpdated, descriptionUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixAccessControlPolicyExists(resourceAccessPolicy),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "name", nameUpdated),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "description", descriptionUpdated),
 				),
 			},
 			{
@@ -40,31 +50,32 @@ func TestAccNutanixAccessControlPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixAccessControlPolicy_Update(t *testing.T) {
+func TestAccNutanixAccessControlPolicy_WithUser(t *testing.T) {
 	name := acctest.RandomWithPrefix("accest-access-policy")
 	description := "Description of my access control policy"
-	uuidRole := ""
-	nameUpdated := acctest.RandomWithPrefix("accest-access-policy updated")
+	uuidRole := "760dac6c-be97-4b24-adb0-e3c3026dc8d5"
+	nameUpdated := acctest.RandomWithPrefix("accest-access-policy")
 	descriptionUpdated := "Description of my access control policy updated"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixAccessControlPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixAccessControlPolicyConfig(uuidRole, name, description),
+				Config: testAccNutanixAccessControlPolicyConfigWithUser(uuidRole, name, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixAccessControlPolicyExists(resourceAccessPolicy),
 					resource.TestCheckResourceAttr(resourceAccessPolicy, "name", name),
-					resource.TestCheckResourceAttr(resourceAccessPolicy, "description", "Description of my access control policy"),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "description", description),
 				),
 			},
 			{
-				Config: testAccNutanixAccessControlPolicyConfig(uuidRole, nameUpdated, descriptionUpdated),
+				Config: testAccNutanixAccessControlPolicyConfigWithUser(uuidRole, nameUpdated, descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixAccessControlPolicyExists(resourceAccessPolicy),
-					resource.TestCheckResourceAttr(resourceAccessPolicy, "name", fmt.Sprintf("%s updated", nameUpdated)),
-					resource.TestCheckResourceAttr(resourceAccessPolicy, "description", fmt.Sprintf("%s updated", descriptionUpdated)),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "name", nameUpdated),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "description", descriptionUpdated),
 				),
 			},
 			{
@@ -77,12 +88,10 @@ func TestAccNutanixAccessControlPolicy_Update(t *testing.T) {
 }
 
 func TestAccNutanixAccessControlPolicy_WithCategory(t *testing.T) {
-	resourceName := "nutanix_access_control_policy.accest-access-policy-categories"
-
 	name := acctest.RandomWithPrefix("accest-access-policy")
 	description := "Description of my access control policy"
-	uuidRole := ""
-	nameUpdated := acctest.RandomWithPrefix("accest-access-policy updated")
+	uuidRole := "760dac6c-be97-4b24-adb0-e3c3026dc8d5"
+	nameUpdated := acctest.RandomWithPrefix("accest-access-policy")
 	descriptionUpdated := "Description of my access control policy updated"
 
 	resource.Test(t, resource.TestCase{
@@ -93,31 +102,30 @@ func TestAccNutanixAccessControlPolicy_WithCategory(t *testing.T) {
 			{
 				Config: testAccNutanixAccessControlPolicyConfigWithCategory(uuidRole, name, description, "Production"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixAccessControlPolicyExists(resourceName),
-					testAccCheckNutanixCategories(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "categories.2228745532.name"),
-					resource.TestCheckResourceAttrSet(resourceName, "categories.2228745532.value"),
-					resource.TestCheckResourceAttr(resourceName, "categories.2228745532.name", "Environment"),
-					resource.TestCheckResourceAttr(resourceName, "categories.2228745532.value", "Production"),
+					testAccCheckNutanixAccessControlPolicyExists(resourceAccessPolicy),
+					testAccCheckNutanixCategories(resourceAccessPolicy),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "categories.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceAccessPolicy, "categories.2228745532.name"),
+					resource.TestCheckResourceAttrSet(resourceAccessPolicy, "categories.2228745532.value"),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "categories.2228745532.name", "Environment"),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "categories.2228745532.value", "Production"),
 				),
 			},
 			{
 				Config: testAccNutanixAccessControlPolicyConfigWithCategory(uuidRole, nameUpdated, descriptionUpdated, "Staging"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixAccessControlPolicyExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "categories.2940305446.name"),
-					resource.TestCheckResourceAttrSet(resourceName, "categories.2940305446.value"),
-					resource.TestCheckResourceAttr(resourceName, "categories.2940305446.name", "Environment"),
-					resource.TestCheckResourceAttr(resourceName, "categories.2940305446.value", "Staging"),
+					testAccCheckNutanixAccessControlPolicyExists(resourceAccessPolicy),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "categories.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceAccessPolicy, "categories.2940305446.name"),
+					resource.TestCheckResourceAttrSet(resourceAccessPolicy, "categories.2940305446.value"),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "categories.2940305446.name", "Environment"),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "categories.2940305446.value", "Staging"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"description"},
+				ResourceName:      resourceAccessPolicy,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -161,10 +169,10 @@ func testAccCheckNutanixAccessControlPolicyDestroy(s *terraform.State) error {
 
 func testAccNutanixAccessControlPolicyConfig(uuidRole, name, description string) string {
 	return fmt.Sprintf(`
-resource "nutanix_access_control_policy" "accest-access-policy" {
+resource "nutanix_access_control_policy" "test" {
 	name        = "%[1]s"
 	description = "%[2]s"
-	role_reference{
+	role_reference {
 		kind = "role"
 		uuid = "%[3]s"
 	}
@@ -174,10 +182,10 @@ resource "nutanix_access_control_policy" "accest-access-policy" {
 
 func testAccNutanixAccessControlPolicyConfigWithCategory(uuidRole, name, description, categoryValue string) string {
 	return fmt.Sprintf(`
-resource "nutanix_access_control_policy" "accest-access-policy-categories" {
+resource "nutanix_access_control_policy" "test" {
 	name        = "%[1]s"
 	description = "%[2]s"
-	role_reference{
+	role_reference {
 		kind = "role"
 		uuid = "%[3]s"
 	}
@@ -187,4 +195,84 @@ resource "nutanix_access_control_policy" "accest-access-policy-categories" {
 	}
 }
 `, name, description, uuidRole, categoryValue)
+}
+
+func testAccNutanixAccessControlPolicyConfigWithUser(uuidRole, name, description string) string {
+	return fmt.Sprintf(`
+resource "nutanix_access_control_policy" "test" {
+	name        = "%[1]s"
+	description = "%[2]s"
+	role_reference {
+		kind = "role"
+		uuid = "%[3]s"
+	}
+	user_reference_list{
+		uuid = "00000000-0000-0000-0000-000000000000"
+		name = "admin"
+	}
+
+	filter_list{
+		context_list{
+			scope_filter_expression_list{
+				operator = "IN"
+				left_hand_side = "PROJECT"
+				right_hand_side {
+					uuid_list = ["6b004b04-b88d-4aae-8b39-4a8f090200d3"]
+				}
+			}
+			entity_filter_expression_list{
+				operator = "IN"
+				left_hand_side_entity_type = "all"
+				right_hand_side{
+					collection = "ALL"
+				}
+			}
+		}
+		context_list{
+			entity_filter_expression_list{
+				operator = "IN"
+				left_hand_side_entity_type = "cluster"
+				right_hand_side{
+					uuid_list = ["00058ef8-c31c-f0bc-0000-000000007b23"]
+				}
+			}
+			entity_filter_expression_list{
+				operator = "IN"
+				left_hand_side_entity_type = "image"
+				right_hand_side{
+					collection = "ALL"
+				}
+			}
+			entity_filter_expression_list{
+				operator = "IN"
+				left_hand_side_entity_type = "category"
+				right_hand_side{
+					collection = "ALL"
+				}
+			}
+			entity_filter_expression_list{
+				operator = "IN"
+				left_hand_side_entity_type = "marketplace_item"
+				right_hand_side{
+					collection = "SELF_OWNED"
+				}
+			}
+			entity_filter_expression_list{
+				operator = "IN"
+				left_hand_side_entity_type = "app_task"
+				right_hand_side{
+					collection = "SELF_OWNED"
+				}
+			}
+			entity_filter_expression_list{
+				operator = "IN"
+				left_hand_side_entity_type = "app_variable"
+				right_hand_side{
+					collection = "SELF_OWNED"
+				}
+			}
+		}
+	}
+}
+`, name, description, uuidRole)
 }
