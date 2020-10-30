@@ -76,7 +76,7 @@ type Service interface {
 	ListAccessControlPolicy(getEntitiesRequest *DSMetadata) (*AccessControlPolicyListResponse, error)
 	ListAllAccessControlPolicy(filter string) (*AccessControlPolicyListResponse, error)
 	UpdateAccessControlPolicy(uuid string, body *AccessControlPolicy) (*AccessControlPolicy, error)
-	DeleteAccessControlPolicy(uuid string) error
+	DeleteAccessControlPolicy(uuid string) (*DeleteResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -1433,15 +1433,17 @@ func (op Operations) UpdateAccessControlPolicy(uuid string, body *AccessControlP
  * @param uuid The uuid of the entity.
  * @return void
  */
-func (op Operations) DeleteAccessControlPolicy(uuid string) error {
+func (op Operations) DeleteAccessControlPolicy(uuid string) (*DeleteResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/access_control_policies/%s", uuid)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	deleteResponse := new(DeleteResponse)
+
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return op.client.Do(ctx, req, nil)
+	return deleteResponse, op.client.Do(ctx, req, deleteResponse)
 }

@@ -11,7 +11,7 @@ import (
 func TestAccNutanixAccessControlPolicyDataSource_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix("accest-access-policy")
 	description := "Description of my access control policy"
-	uuidRole := ""
+	uuidRole := "760dac6c-be97-4b24-adb0-e3c3026dc8d5"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -24,7 +24,7 @@ func TestAccNutanixAccessControlPolicyDataSource_basic(t *testing.T) {
 						"data.nutanix_access_control_policy.test", "name", name),
 					resource.TestCheckResourceAttr(
 						"data.nutanix_access_control_policy.test", "description", description),
-					resource.TestCheckResourceAttrSet("data.nutanix_access_control_policy.accest-access-policy", "name"),
+					resource.TestCheckResourceAttrSet("data.nutanix_access_control_policy.test", "name"),
 				),
 			},
 		},
@@ -33,7 +33,7 @@ func TestAccNutanixAccessControlPolicyDataSource_basic(t *testing.T) {
 
 func testAccAccessControlPolicyDataSourceConfig(uuidRole, name, description string) string {
 	return fmt.Sprintf(`
-resource "nutanix_access_control_policy" "accest-access-policy" {
+resource "nutanix_access_control_policy" "test" {
 	name        = "%[1]s"
 	description = "%[2]s"
 	role_reference{
@@ -43,7 +43,7 @@ resource "nutanix_access_control_policy" "accest-access-policy" {
 }
 
 data "nutanix_access_control_policy" "test" {
-	access_control_policy_id = nutanix_access_control_policy.accest-access-policy.id
+	access_control_policy_id = nutanix_access_control_policy.test.id
 }
 `, name, description, uuidRole)
 }
