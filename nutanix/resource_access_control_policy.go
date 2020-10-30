@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/spf13/cast"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -175,8 +176,9 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"kind": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice([]string{"role"}, false),
 						},
 						"uuid": {
 							Type:     schema.TypeString,
@@ -210,12 +212,14 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"left_hand_side": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice([]string{"CATEGORY", "PROJECT"}, false),
 												},
 												"operator": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice([]string{"IN", "IN_ALL", "NOT_IN"}, false),
 												},
 												"right_hand_side": {
 													Type:     schema.TypeList,
@@ -224,9 +228,10 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"collection": {
-																Type:     schema.TypeString,
-																Optional: true,
-																Computed: true,
+																Type:         schema.TypeString,
+																Optional:     true,
+																Computed:     true,
+																ValidateFunc: validation.StringInSlice([]string{"ALL"}, false),
 															},
 															"categories": categoriesSchema(),
 															"uuid_list": {
@@ -252,8 +257,9 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 													Computed: true,
 												},
 												"operator": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice([]string{"IN", "NOT_IN"}, false),
 												},
 												"right_hand_side": {
 													Type:     schema.TypeList,
@@ -262,9 +268,10 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"collection": {
-																Type:     schema.TypeString,
-																Optional: true,
-																Computed: true,
+																Type:         schema.TypeString,
+																Optional:     true,
+																Computed:     true,
+																ValidateFunc: validation.StringInSlice([]string{"ALL", "SELF_OWNED"}, false),
 															},
 															"categories": categoriesSchema(),
 															"uuid_list": {
