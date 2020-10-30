@@ -6,13 +6,13 @@ import (
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
-func TestAccNutanixAccessControlPolicysDataSource_basic(t *testing.T) {
+func TestAccNutanixAccessControlPoliciesDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessControlPolicysDataSourceConfig(),
+				Config: testAccAccessControlPoliciesDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.nutanix_access_control_policies.test", "entities.0.name"),
 				),
@@ -20,6 +20,6 @@ func TestAccNutanixAccessControlPolicysDataSource_basic(t *testing.T) {
 		},
 	})
 }
-func testAccAccessControlPolicysDataSourceConfig() string {
+func testAccAccessControlPoliciesDataSourceConfig() string {
 	return `data "nutanix_access_control_policies" "test" {}`
 }
