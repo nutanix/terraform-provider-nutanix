@@ -87,6 +87,7 @@ func flattenClusterReference(r *v3.Reference, d *schema.ResourceData) error {
 func validateRef(ref map[string]interface{}) *v3.Reference {
 	r := &v3.Reference{}
 	hasValue := false
+
 	if v, ok := ref["kind"]; ok {
 		r.Kind = utils.StringPtr(v.(string))
 		hasValue = true
@@ -167,15 +168,19 @@ func taskStateRefreshFunc(client *v3.Client, taskUUID string) resource.StateRefr
 	}
 }
 
-func validateArrayRef(references []interface{}) []*v3.Reference {
+func validateArrayRef(references interface{}, kindValue *string) []*v3.Reference {
 	refs := make([]*v3.Reference, 0)
 
-	for _, s := range references {
+	for _, s := range references.(*schema.Set).List() {
 		ref := s.(map[string]interface{})
 		r := v3.Reference{}
 
 		if v, ok := ref["kind"]; ok {
-			r.Kind = utils.StringPtr(v.(string))
+			kind := v.(string)
+			if kindValue != nil {
+				kind = *kindValue
+			}
+			r.Kind = utils.StringPtr(kind)
 		}
 
 		if v, ok := ref["uuid"]; ok {
@@ -212,4 +217,49 @@ func flattenArrayReferenceValues(refs []*v3.Reference) []map[string]interface{} 
 
 	return references
 
+}
+
+func validateRefList(refs []interface{}) *v3.Reference {
+	r := &v3.Reference{}
+	hasValue := false
+
+	for _, v2 := range refs {
+		ref := v2.(map[string]interface{})
+
+		if v, ok := ref["kind"]; ok {
+			r.Kind = utils.StringPtr(v.(string))
+			hasValue = true
+		}
+
+		if v, ok := ref["uuid"]; ok {
+			r.UUID = utils.StringPtr(v.(string))
+			hasValue = true
+		}
+		if v, ok := ref["name"]; ok {
+			r.Name = utils.StringPtr(v.(string))
+			hasValue = true
+		}
+	}
+
+	if hasValue {
+		return r
+	}
+
+	return nil
+}
+
+func flattenReferenceValuesList(r *v3.Reference) []interface{} {
+	references := make([]interface{}, 0)
+	if r != nil {
+		reference := make(map[string]interface{})
+		reference["kind"] = utils.StringValue(r.Kind)
+		reference["uuid"] = utils.StringValue(r.UUID)
+
+		if r.Name != nil {
+			reference["name"] = utils.StringValue(r.Name)
+		}
+
+		references = append(references, reference)
+	}
+	return references
 }

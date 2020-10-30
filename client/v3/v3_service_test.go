@@ -3706,6 +3706,23 @@ func TestOperations_DeleteAccessControlPolicy(t *testing.T) {
 
 	mux.HandleFunc("/api/nutanix/v3/access_control_policies/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodDelete)
+
+		fmt.Fprintf(w, `{
+				"status": {
+					"state": "DELETE_PENDING",
+					"execution_context": {
+						"task_uuid": "ff1b9547-dc9a-4ebd-a2ff-f2b718af935e"
+					}
+				},
+				"spec": "",
+				"api_version": "3.1",
+				"metadata": {
+					"kind": "access_control_policy",
+					"categories": {
+						"Project": "default"
+					}
+				}
+			}`)
 	})
 
 	type fields struct {
@@ -3743,7 +3760,7 @@ func TestOperations_DeleteAccessControlPolicy(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
 			}
-			if err := op.DeleteAccessControlPolicy(tt.args.UUID); (err != nil) != tt.wantErr {
+			if _, err := op.DeleteAccessControlPolicy(tt.args.UUID); (err != nil) != tt.wantErr {
 				t.Errorf("Operations.DeleteAccessControlPolicy() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
