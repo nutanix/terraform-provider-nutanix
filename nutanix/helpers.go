@@ -46,6 +46,25 @@ func getMetadataAttributes(d *schema.ResourceData, metadata *v3.Metadata, kind s
 	return nil
 }
 
+func getMetadataAttributesV2(d *schema.ResourceData, metadata *v3.Metadata, kind string) error {
+	metadata.Kind = utils.StringPtr(kind)
+
+	if v, ok := d.GetOk("categories"); ok {
+		metadata.Categories = expandCategories(v)
+	} else {
+		metadata.Categories = nil
+	}
+
+	if p, ok := d.GetOk("project_reference"); ok {
+		metadata.ProjectReference = validateRefList(p.([]interface{}))
+	}
+	if o, ok := d.GetOk("owner_reference"); ok {
+		metadata.OwnerReference = validateRefList(o.([]interface{}))
+	}
+
+	return nil
+}
+
 func setRSEntityMetadata(v *v3.Metadata) (map[string]interface{}, []interface{}) {
 	metadata := make(map[string]interface{})
 	metadata["last_update_time"] = utils.TimeValue(v.LastUpdateTime).String()
@@ -191,7 +210,6 @@ func validateArrayRef(references interface{}, kindValue *string) []*v3.Reference
 		}
 
 		refs = append(refs, &r)
-
 	}
 	if len(refs) > 0 {
 		return refs
@@ -216,7 +234,6 @@ func flattenArrayReferenceValues(refs []*v3.Reference) []map[string]interface{} 
 	}
 
 	return references
-
 }
 
 func validateRefList(refs []interface{}) *v3.Reference {
