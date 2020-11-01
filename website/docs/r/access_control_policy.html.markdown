@@ -25,68 +25,50 @@ resource "nutanix_access_control_policy" "test" {
 		name = "admin"
 	}
 
-	filter_list{
-		context_list{
-			scope_filter_expression_list{
-				operator = "IN"
-				left_hand_side = "PROJECT"
-				right_hand_side {
-					uuid_list = ["6b004b04-b88d-4aae-8b39-4a8f090200d3"]
-				}
-			}
-			entity_filter_expression_list{
-				operator = "IN"
-				left_hand_side_entity_type = "all"
-				right_hand_side{
-					collection = "ALL"
-				}
-			}
-		}
-		context_list{
-			entity_filter_expression_list{
-				operator = "IN"
-				left_hand_side_entity_type = "cluster"
-				right_hand_side{
-					uuid_list = ["00058ef8-c31c-f0bc-0000-000000007b23"]
-				}
-			}
-			entity_filter_expression_list{
-				operator = "IN"
-				left_hand_side_entity_type = "image"
-				right_hand_side{
-					collection = "ALL"
-				}
-			}
-			entity_filter_expression_list{
-				operator = "IN"
-				left_hand_side_entity_type = "category"
-				right_hand_side{
-					collection = "ALL"
-				}
-			}
-			entity_filter_expression_list{
-				operator = "IN"
-				left_hand_side_entity_type = "marketplace_item"
-				right_hand_side{
-					collection = "SELF_OWNED"
-				}
-			}
-			entity_filter_expression_list{
-				operator = "IN"
-				left_hand_side_entity_type = "app_task"
-				right_hand_side{
-					collection = "SELF_OWNED"
-				}
-			}
-			entity_filter_expression_list{
-				operator = "IN"
-				left_hand_side_entity_type = "app_variable"
-				right_hand_side{
-					collection = "SELF_OWNED"
-				}
-			}
-		}
-	}
+	filter_context_list{
+        entity_filter_expression_list{
+            operator = "IN"
+            left_hand_side_entity_type = "cluster"
+            right_hand_side{
+                uuid_list = ["00058ef8-c31c-f0bc-0000-000000007b23"]
+            }
+        }
+        entity_filter_expression_list{
+            operator = "IN"
+            left_hand_side_entity_type = "image"
+            right_hand_side{
+                collection = "ALL"
+            }
+        }
+        entity_filter_expression_list{
+            operator = "IN"
+            left_hand_side_entity_type = "category"
+            right_hand_side{
+                collection = "ALL"
+            }
+        }
+        entity_filter_expression_list{
+            operator = "IN"
+            left_hand_side_entity_type = "marketplace_item"
+            right_hand_side{
+                collection = "SELF_OWNED"
+            }
+        }
+        entity_filter_expression_list{
+            operator = "IN"
+            left_hand_side_entity_type = "app_task"
+            right_hand_side{
+                collection = "SELF_OWNED"
+            }
+        }
+        entity_filter_expression_list{
+            operator = "IN"
+            left_hand_side_entity_type = "app_variable"
+            right_hand_side{
+                collection = "SELF_OWNED"
+            }
+        }
+    }
 }
 ```
 
