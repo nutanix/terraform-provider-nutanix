@@ -1075,7 +1075,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 	setVMTimeout(meta)
-	var hotPlugChange = true
+	hotPlugChange := true
 
 	log.Printf("[Debug] Updating VM values %s", d.Id())
 
