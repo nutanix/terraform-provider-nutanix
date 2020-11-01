@@ -1327,10 +1327,10 @@ func (op Operations) CreateAccessControlPolicy(request *AccessControlPolicy) (*A
  * @param uuid The access policy uuid - string.
  * @return *AccessControlPolicy
  */
-func (op Operations) GetAccessControlPolicy(AccessControlPolicyUUID string) (*AccessControlPolicy, error) {
+func (op Operations) GetAccessControlPolicy(accessControlPolicyUUID string) (*AccessControlPolicy, error) {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/access_control_policies/%s", AccessControlPolicyUUID)
+	path := fmt.Sprintf("/access_control_policies/%s", accessControlPolicyUUID)
 	AccessControlPolicy := new(AccessControlPolicy)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)

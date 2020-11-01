@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+
 	"github.com/hashicorp/terraform/helper/schema"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -169,83 +170,74 @@ func dataSourceNutanixAccessControlPolicy() *schema.Resource {
 					},
 				},
 			},
-			"filter_list": {
+			"filter_context_list": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"context_list": {
+						"scope_filter_expression_list": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"scope_filter_expression_list": {
+									"left_hand_side": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"operator": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"right_hand_side": {
 										Type:     schema.TypeList,
 										Computed: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"left_hand_side": {
+												"collection": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"operator": {
-													Type:     schema.TypeString,
+												"categories": categoriesSchema(),
+												"uuid_list": {
+													Type:     schema.TypeSet,
 													Computed: true,
-												},
-												"right_hand_side": {
-													Type:     schema.TypeList,
-													Computed: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"collection": {
-																Type:     schema.TypeString,
-																Computed: true,
-															},
-															"categories": categoriesSchema(),
-															"uuid_list": {
-																Type:     schema.TypeSet,
-																Computed: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-														},
-													},
+													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
 											},
 										},
 									},
-									"entity_filter_expression_list": {
+								},
+							},
+						},
+						"entity_filter_expression_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"left_hand_side_entity_type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"operator": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"right_hand_side": {
 										Type:     schema.TypeList,
 										Computed: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"left_hand_side_entity_type": {
+												"collection": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"operator": {
-													Type:     schema.TypeString,
+												"categories": categoriesSchema(),
+												"uuid_list": {
+													Type:     schema.TypeSet,
 													Computed: true,
-												},
-												"right_hand_side": {
-													Type:     schema.TypeList,
-													Computed: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"collection": {
-																Type:     schema.TypeString,
-																Computed: true,
-															},
-															"categories": categoriesSchema(),
-															"uuid_list": {
-																Type:     schema.TypeSet,
-																Computed: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-														},
-													},
+													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
 											},
 										},
@@ -264,7 +256,7 @@ func dataSourceNutanixAccessControlPolicyRead(d *schema.ResourceData, meta inter
 	// Get client connection
 	conn := meta.(*Client).API
 
-	accessId, iok := d.GetOk("access_control_policy_id")
+	accessID, iok := d.GetOk("access_control_policy_id")
 
 	if !iok {
 		return fmt.Errorf("please provide `access_control_policy_id`")
@@ -273,7 +265,7 @@ func dataSourceNutanixAccessControlPolicyRead(d *schema.ResourceData, meta inter
 	var reqErr error
 	var resp *v3.AccessControlPolicy
 
-	resp, reqErr = conn.V3.GetAccessControlPolicy(accessId.(string))
+	resp, reqErr = conn.V3.GetAccessControlPolicy(accessID.(string))
 
 	if reqErr != nil {
 		return reqErr
@@ -319,7 +311,7 @@ func dataSourceNutanixAccessControlPolicyRead(d *schema.ResourceData, meta inter
 				return err
 			}
 			if status.Resources.FilterList.ContextList != nil {
-				if err := d.Set("filter_list", flattenFilterList(status.Resources.FilterList)); err != nil {
+				if err := d.Set("filter_context_list", flattenContextList(status.Resources.FilterList.ContextList)); err != nil {
 					return err
 				}
 			}
