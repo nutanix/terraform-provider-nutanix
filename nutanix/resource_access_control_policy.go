@@ -2,13 +2,14 @@ package nutanix
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/spf13/cast"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-	"strings"
 )
 
 func resourceNutanixAccessControlPolicy() *schema.Resource {
@@ -75,7 +76,8 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 			},
 			"categories": categoriesSchema(),
 			"owner_reference": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -96,7 +98,8 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 				},
 			},
 			"project_reference": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -192,96 +195,86 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 					},
 				},
 			},
-			"filter_list": {
+			"filter_context_list": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"context_list": {
+						"scope_filter_expression_list": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"scope_filter_expression_list": {
+									"left_hand_side": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice([]string{"CATEGORY", "PROJECT"}, false),
+									},
+									"operator": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice([]string{"IN", "IN_ALL", "NOT_IN"}, false),
+									},
+									"right_hand_side": {
 										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
+										MaxItems: 1,
+										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"left_hand_side": {
+												"collection": {
 													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice([]string{"CATEGORY", "PROJECT"}, false),
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.StringInSlice([]string{"ALL"}, false),
 												},
-												"operator": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice([]string{"IN", "IN_ALL", "NOT_IN"}, false),
-												},
-												"right_hand_side": {
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Required: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"collection": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																Computed:     true,
-																ValidateFunc: validation.StringInSlice([]string{"ALL"}, false),
-															},
-															"categories": categoriesSchema(),
-															"uuid_list": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Computed: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-														},
-													},
+												"categories": categoriesSchema(),
+												"uuid_list": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Computed: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
 											},
 										},
 									},
-									"entity_filter_expression_list": {
+								},
+							},
+						},
+						"entity_filter_expression_list": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"left_hand_side_entity_type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"operator": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice([]string{"IN", "NOT_IN"}, false),
+									},
+									"right_hand_side": {
 										Type:     schema.TypeList,
+										MaxItems: 1,
 										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"left_hand_side_entity_type": {
-													Type:     schema.TypeString,
+												"collection": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													Computed:     true,
+													ValidateFunc: validation.StringInSlice([]string{"ALL", "SELF_OWNED"}, false),
+												},
+												"categories": categoriesSchema(),
+												"uuid_list": {
+													Type:     schema.TypeSet,
 													Optional: true,
 													Computed: true,
-												},
-												"operator": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice([]string{"IN", "NOT_IN"}, false),
-												},
-												"right_hand_side": {
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Required: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"collection": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																Computed:     true,
-																ValidateFunc: validation.StringInSlice([]string{"ALL", "SELF_OWNED"}, false),
-															},
-															"categories": categoriesSchema(),
-															"uuid_list": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Computed: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-														},
-													},
+													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
 											},
 										},
@@ -310,7 +303,7 @@ func resourceNutanixAccessControlPolicyCreate(d *schema.ResourceData, meta inter
 		return fmt.Errorf("please provide the required `role_reference` attribute")
 	}
 
-	if err := getMetadataAttributes(d, metadata, "access_control_policy"); err != nil {
+	if err := getMetadataAttributesV2(d, metadata, "access_control_policy"); err != nil {
 		return err
 	}
 
@@ -385,10 +378,10 @@ func resourceNutanixAccessControlPolicyRead(d *schema.ResourceData, meta interfa
 	if err := d.Set("categories", c); err != nil {
 		return err
 	}
-	if err := d.Set("project_reference", flattenReferenceValues(resp.Metadata.ProjectReference)); err != nil {
+	if err := d.Set("project_reference", flattenReferenceValuesList(resp.Metadata.ProjectReference)); err != nil {
 		return err
 	}
-	if err := d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
+	if err := d.Set("owner_reference", flattenReferenceValuesList(resp.Metadata.OwnerReference)); err != nil {
 		return err
 	}
 	d.Set("api_version", resp.APIVersion)
@@ -415,11 +408,10 @@ func resourceNutanixAccessControlPolicyRead(d *schema.ResourceData, meta interfa
 				return err
 			}
 			if status.Resources.FilterList.ContextList != nil {
-				if err := d.Set("filter_list", flattenFilterList(status.Resources.FilterList)); err != nil {
+				if err := d.Set("filter_context_list", flattenContextList(status.Resources.FilterList.ContextList)); err != nil {
 					return err
 				}
 			}
-
 		}
 	}
 
@@ -459,12 +451,10 @@ func resourceNutanixAccessControlPolicyUpdate(d *schema.ResourceData, meta inter
 		metadata.Categories = expandCategories(d.Get("categories"))
 	}
 	if d.HasChange("owner_reference") {
-		or := d.Get("owner_reference").(map[string]interface{})
-		metadata.OwnerReference = validateRef(or)
+		metadata.OwnerReference = validateRefList(d.Get("owner_reference").([]interface{}))
 	}
 	if d.HasChange("project_reference") {
-		pr := d.Get("project_reference").(map[string]interface{})
-		metadata.ProjectReference = validateRef(pr)
+		metadata.ProjectReference = validateRefList(d.Get("project_reference").([]interface{}))
 	}
 	if d.HasChange("name") {
 		spec.Name = utils.StringPtr(d.Get("name").(string))
@@ -485,7 +475,7 @@ func resourceNutanixAccessControlPolicyUpdate(d *schema.ResourceData, meta inter
 		res.RoleReference = validateRefList(d.Get("role_reference").([]interface{}))
 	}
 
-	if d.HasChange("filter_list") {
+	if d.HasChange("filter_context_list") {
 		res.FilterList.ContextList = expandContextFilterList(d)
 	}
 
@@ -588,24 +578,18 @@ func expandAccessControlPolicyResources(d *schema.ResourceData, access *v3.Acces
 }
 
 func expandContextFilterList(d *schema.ResourceData) []*v3.ContextList {
-	if v1, ok := d.GetOk("filter_list"); ok {
-		fl := v1.([]interface{})
-		for _, filter := range fl {
-			v := filter.(map[string]interface{})
-			if v2, ok := v["context_list"]; ok {
-				contextList := make([]*v3.ContextList, 0)
-				for _, a1 := range v2.([]interface{}) {
-					var context v3.ContextList
-					con := a1.(map[string]interface{})
+	if v1, ok := d.GetOk("filter_context_list"); ok {
+		contextList := make([]*v3.ContextList, 0)
+		for _, a1 := range v1.([]interface{}) {
+			var context v3.ContextList
+			con := a1.(map[string]interface{})
 
-					context.ScopeFilterExpressionList = expandScopeExpressionList(con)
-					context.EntityFilterExpressionList = expandEntityExpressionList(con)
+			context.ScopeFilterExpressionList = expandScopeExpressionList(con)
+			context.EntityFilterExpressionList = expandEntityExpressionList(con)
 
-					contextList = append(contextList, &context)
-				}
-				return contextList
-			}
+			contextList = append(contextList, &context)
 		}
+		return contextList
 	}
 	return nil
 }
@@ -629,7 +613,6 @@ func expandScopeExpressionList(con map[string]interface{}) []*v3.ScopeFilterExpr
 			scopes = append(scopes, &scope)
 		}
 		return scopes
-
 	}
 	return nil
 }
@@ -680,19 +663,8 @@ func expandRightHandSide(side map[string]interface{}) v3.RightHandSide {
 				right.UUIDList = cast.ToStringSlice(v5.(*schema.Set).List())
 			}
 		}
-
 	}
 	return right
-}
-
-func flattenFilterList(filterList *v3.FilterList) []interface{} {
-	filters := make([]interface{}, 0)
-
-	filter := make(map[string]interface{})
-	filter["context_list"] = flattenContextList(filterList.ContextList)
-	filters = append(filters, filter)
-
-	return filters
 }
 
 func flattenContextList(contextList []*v3.ContextList) []interface{} {
@@ -708,7 +680,6 @@ func flattenContextList(contextList []*v3.ContextList) []interface{} {
 	}
 
 	return contexts
-
 }
 
 func flattenScopeExpressionList(scopeList []*v3.ScopeFilterExpressionList) []interface{} {

@@ -178,84 +178,74 @@ func dataSourceNutanixAccessControlPolicies() *schema.Resource {
 								},
 							},
 						},
-
-						"filter_list": {
+						"filter_context_list": {
 							Type:     schema.TypeList,
 							Computed: true,
-							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"context_list": {
+									"scope_filter_expression_list": {
 										Type:     schema.TypeList,
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"scope_filter_expression_list": {
+												"left_hand_side": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"operator": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"right_hand_side": {
 													Type:     schema.TypeList,
 													Computed: true,
+													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"left_hand_side": {
+															"collection": {
 																Type:     schema.TypeString,
 																Computed: true,
 															},
-															"operator": {
-																Type:     schema.TypeString,
+															"categories": categoriesSchema(),
+															"uuid_list": {
+																Type:     schema.TypeSet,
 																Computed: true,
-															},
-															"right_hand_side": {
-																Type:     schema.TypeList,
-																Computed: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"collection": {
-																			Type:     schema.TypeString,
-																			Computed: true,
-																		},
-																		"categories": categoriesSchema(),
-																		"uuid_list": {
-																			Type:     schema.TypeSet,
-																			Computed: true,
-																			Elem:     &schema.Schema{Type: schema.TypeString},
-																		},
-																	},
-																},
+																Elem:     &schema.Schema{Type: schema.TypeString},
 															},
 														},
 													},
 												},
-												"entity_filter_expression_list": {
+											},
+										},
+									},
+									"entity_filter_expression_list": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"left_hand_side_entity_type": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"operator": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"right_hand_side": {
 													Type:     schema.TypeList,
 													Computed: true,
+													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"left_hand_side_entity_type": {
+															"collection": {
 																Type:     schema.TypeString,
 																Computed: true,
 															},
-															"operator": {
-																Type:     schema.TypeString,
+															"categories": categoriesSchema(),
+															"uuid_list": {
+																Type:     schema.TypeSet,
 																Computed: true,
-															},
-															"right_hand_side": {
-																Type:     schema.TypeList,
-																Computed: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"collection": {
-																			Type:     schema.TypeString,
-																			Computed: true,
-																		},
-																		"categories": categoriesSchema(),
-																		"uuid_list": {
-																			Type:     schema.TypeSet,
-																			Computed: true,
-																			Elem:     &schema.Schema{Type: schema.TypeString},
-																		},
-																	},
-																},
+																Elem:     &schema.Schema{Type: schema.TypeString},
 															},
 														},
 													},
@@ -352,7 +342,7 @@ func dataSourceNutanixAccessControlPoliciesRead(d *schema.ResourceData, meta int
 				entity["user_group_reference_list"] = flattenArrayReferenceValues(status.Resources.UserGroupReferenceList)
 				entity["role_reference"] = flattenReferenceValuesList(status.Resources.RoleReference)
 				if status.Resources.FilterList.ContextList != nil {
-					entity["filter_list"] = flattenFilterList(status.Resources.FilterList)
+					entity["filter_context_list"] = flattenContextList(status.Resources.FilterList.ContextList)
 				}
 			}
 		}
