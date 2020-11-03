@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cast"
 )
 
-func TestAccNutanixProject_basic(t *testing.T) {
+func c(t *testing.T) {
 	resourceName := "nutanix_project.project_test"
 
 	subnetName := acctest.RandomWithPrefix("test-subnateName")
