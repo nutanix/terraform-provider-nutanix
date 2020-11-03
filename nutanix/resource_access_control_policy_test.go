@@ -212,7 +212,7 @@ resource "nutanix_access_control_policy" "test" {
 		name = "admin"
 	}
 
-	filter_context_list{
+	context_filter_list{
 		scope_filter_expression_list{
 			operator = "IN"
 			left_hand_side = "PROJECT"
@@ -229,7 +229,7 @@ resource "nutanix_access_control_policy" "test" {
 		}
 	}
 
-	filter_context_list{
+	context_filter_list{
 		entity_filter_expression_list{
 			operator = "IN"
 			left_hand_side_entity_type = "cluster"
