@@ -170,7 +170,7 @@ func dataSourceNutanixAccessControlPolicy() *schema.Resource {
 					},
 				},
 			},
-			"filter_context_list": {
+			"context_filter_list": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -311,7 +311,7 @@ func dataSourceNutanixAccessControlPolicyRead(d *schema.ResourceData, meta inter
 				return err
 			}
 			if status.Resources.FilterList.ContextList != nil {
-				if err := d.Set("filter_context_list", flattenContextList(status.Resources.FilterList.ContextList)); err != nil {
+				if err := d.Set("context_filter_list", flattenContextList(status.Resources.FilterList.ContextList)); err != nil {
 					return err
 				}
 			}

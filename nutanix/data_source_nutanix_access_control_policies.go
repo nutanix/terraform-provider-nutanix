@@ -178,7 +178,7 @@ func dataSourceNutanixAccessControlPolicies() *schema.Resource {
 								},
 							},
 						},
-						"filter_context_list": {
+						"context_filter_list": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -342,7 +342,7 @@ func dataSourceNutanixAccessControlPoliciesRead(d *schema.ResourceData, meta int
 				entity["user_group_reference_list"] = flattenArrayReferenceValues(status.Resources.UserGroupReferenceList)
 				entity["role_reference"] = flattenReferenceValuesList(status.Resources.RoleReference)
 				if status.Resources.FilterList.ContextList != nil {
-					entity["filter_context_list"] = flattenContextList(status.Resources.FilterList.ContextList)
+					entity["context_filter_list"] = flattenContextList(status.Resources.FilterList.ContextList)
 				}
 			}
 		}

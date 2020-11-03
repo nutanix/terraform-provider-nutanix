@@ -195,7 +195,7 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 					},
 				},
 			},
-			"filter_context_list": {
+			"context_filter_list": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
@@ -408,7 +408,7 @@ func resourceNutanixAccessControlPolicyRead(d *schema.ResourceData, meta interfa
 				return err
 			}
 			if status.Resources.FilterList.ContextList != nil {
-				if err := d.Set("filter_context_list", flattenContextList(status.Resources.FilterList.ContextList)); err != nil {
+				if err := d.Set("context_filter_list", flattenContextList(status.Resources.FilterList.ContextList)); err != nil {
 					return err
 				}
 			}
@@ -475,7 +475,7 @@ func resourceNutanixAccessControlPolicyUpdate(d *schema.ResourceData, meta inter
 		res.RoleReference = validateRefList(d.Get("role_reference").([]interface{}))
 	}
 
-	if d.HasChange("filter_context_list") {
+	if d.HasChange("context_filter_list") {
 		res.FilterList.ContextList = expandContextFilterList(d)
 	}
 
@@ -578,7 +578,7 @@ func expandAccessControlPolicyResources(d *schema.ResourceData, access *v3.Acces
 }
 
 func expandContextFilterList(d *schema.ResourceData) []*v3.ContextList {
-	if v1, ok := d.GetOk("filter_context_list"); ok {
+	if v1, ok := d.GetOk("context_filter_list"); ok {
 		contextList := make([]*v3.ContextList, 0)
 		for _, a1 := range v1.([]interface{}) {
 			var context v3.ContextList
