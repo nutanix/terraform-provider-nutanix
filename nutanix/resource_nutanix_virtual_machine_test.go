@@ -564,12 +564,36 @@ func testAccNutanixVMConfigWithDisk(r int) string {
 			}
 			disk_list {
 				disk_size_mib = 100
+
+				device_properties {
+				  device_type = "DISK"
+				  disk_address = {
+				    adapter_type = "IDE"
+					device_index = 1
+				  }
+				}
 			}
 			disk_list {
 				disk_size_mib = 200
+
+				device_properties {
+					device_type = "DISK"
+					disk_address = {
+					  adapter_type = "IDE"
+					  device_index = 2
+					}
+				  }
 			}
 			disk_list {
 				disk_size_mib = 300
+
+				device_properties {
+					device_type = "DISK"
+					disk_address = {
+					  adapter_type = "IDE"
+					  device_index = 3
+					}
+				  }
 			}
 		}
 	`, r)
@@ -615,11 +639,29 @@ func testAccNutanixVMConfigWithDiskUpdate(r int) string {
 				disk_size_bytes = 68157440
 				disk_size_mib   = 65
 			}
+
 			disk_list {
 				disk_size_mib = 100
+
+				device_properties {
+					device_type = "DISK"
+					disk_address = {
+					  adapter_type = "IDE"
+					  device_index = 1
+					}
+				  }
 			}
+
 			disk_list {
 				disk_size_mib = 200
+
+				device_properties {
+					device_type = "DISK"
+					disk_address = {
+					  adapter_type = "IDE"
+					  device_index = 2
+					}
+				  }
 			}
 		}
 	`, r)
@@ -765,6 +807,14 @@ func testAccNutanixVMConfigWithSubnet(r int) string {
 					kind = "image"
 					uuid = "${nutanix_image.cirros-034-disk.id}"
 				}
+
+				device_properties {
+				  device_type = "DISK"
+					disk_address = {
+					  device_index = 0
+					  adapter_type = "SCSI"
+					}
+				}
 			}
 
 			nic_list {
@@ -909,6 +959,10 @@ func testAccNutanixVMConfigWithDeviceProperties(r int) string {
 
 				device_properties {
 					device_type = "DISK"
+					disk_address = {
+						device_index = 0
+						adapter_type = "SCSI"
+					}
 				}
 			}
 		}
@@ -954,12 +1008,36 @@ func testAccNutanixVMConfigCloningVM(r int) string {
 			}
 			disk_list {
 				disk_size_mib = 100
+
+				device_properties {
+					device_type = "DISK"
+					disk_address = {
+					  device_index = 1
+					  adapter_type = "SCSI"
+					}
+				  }
 			}
 			disk_list {
 				disk_size_mib = 200
+
+				device_properties {
+					device_type = "DISK"
+					disk_address = {
+					  device_index = 2
+					  adapter_type = "SCSI"
+					}
+				  }
 			}
 			disk_list {
 				disk_size_mib = 300
+
+				device_properties {
+					device_type = "DISK"
+					disk_address = {
+					  device_index = 2
+					  adapter_type = "SCSI"
+					}
+				  }
 			}
 		}
 
@@ -1050,6 +1128,14 @@ func testAccNutanixVMConfigWithDiskContainer(r, diskSizeBytes int, continainerUU
 			disk_list {
 				disk_size_bytes = %[2]d
 
+				device_properties {
+					device_type = "DISK"
+					disk_address = {
+					  device_index = 0
+					  adapter_type = "SCSI"
+					}
+				}
+
 				storage_config {
 					storage_container_reference {
 						kind = "storage_container"
@@ -1089,6 +1175,15 @@ func testAccNutanixVMConfigResizeDiskClone(imgName, vmName string, diskSize int)
 					kind = "image"
 					uuid = nutanix_image.img.id
 				}
+
+				device_properties {
+					device_type = "DISK"
+					disk_address = {
+					  device_index = 0
+					  adapter_type = "SCSI"
+					}
+				}
+
 				disk_size_bytes = %d
 			}
 		}
@@ -1126,6 +1221,10 @@ func testAccNutanixVMConfigChangeImages(r int) string {
 				}
 				device_properties {
 					device_type = "DISK"
+					disk_address = {
+						device_index = 0
+						adapter_type = "SCSI"
+					  }
 				}
 			}
 		}
@@ -1163,6 +1262,10 @@ func testAccNutanixVMConfigChangeImagesUpdated(r int) string {
 				}
 				device_properties {
 					device_type = "DISK"
+					disk_address = {
+						device_index = 0
+						adapter_type = "SCSI"
+					}
 				}
 			}
 		}
