@@ -701,7 +701,7 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	if err := d.Set("parent_reference", flattenReferenceValues(resp.Status.Resources.ParentReference)); err != nil {
 		return err
 	}
-	if err := d.Set("disk_list", flattenDiskList(resp.Status.Resources.DiskList)); err != nil {
+	if err := d.Set("disk_list", flattenDiskList(resp.Status.Resources.DiskList, resp.Status.Resources.DiskList)); err != nil {
 		return err
 	}
 

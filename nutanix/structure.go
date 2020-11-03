@@ -104,63 +104,9 @@ func flattenNicList(nics []*v3.VMNic) []map[string]interface{} {
 	return nicLists
 }
 
-func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
+func flattenDiskList(disks []*v3.VMDisk, diskFromState []*v3.VMDisk) []map[string]interface{} {
 	diskList := make([]map[string]interface{}, 0)
-	//sortedDisks := sortDiskList(disks)
-	//for _, v := range sortedDisks {
-	for _, v := range disks {
-		var deviceProps []map[string]interface{}
-		var storageConfig []map[string]interface{}
-		var adapter string = ""
-		var index string = ""
-		if v.DeviceProperties != nil {
-			deviceProps = make([]map[string]interface{}, 1)
-			index = fmt.Sprintf("%d", utils.Int64Value(v.DeviceProperties.DiskAddress.DeviceIndex))
-			adapter = *v.DeviceProperties.DiskAddress.AdapterType
-
-			if index == "3" && adapter == IDE {
-				continue
-			}
-
-			deviceProps[0] = map[string]interface{}{
-				"device_type": v.DeviceProperties.DeviceType,
-				"disk_address": map[string]interface{}{
-					"device_index": index,
-					"adapter_type": adapter,
-				},
-			}
-		}
-
-		if v.StorageConfig != nil {
-			storageConfig = append(storageConfig, map[string]interface{}{
-				"flash_mode": cast.ToString(v.StorageConfig.FlashMode),
-				"storage_container_reference": []map[string]interface{}{
-					{
-						"url":  cast.ToString(v.StorageConfig.StorageContainerReference.URL),
-						"kind": cast.ToString(v.StorageConfig.StorageContainerReference.Kind),
-						"name": cast.ToString(v.StorageConfig.StorageContainerReference.Name),
-						"uuid": cast.ToString(v.StorageConfig.StorageContainerReference.UUID),
-					},
-				},
-			})
-		}
-
-		diskList = append(diskList, map[string]interface{}{
-			"uuid":                   utils.StringValue(v.UUID),
-			"disk_size_bytes":        utils.Int64Value(v.DiskSizeBytes),
-			"disk_size_mib":          utils.Int64Value(v.DiskSizeMib),
-			"device_properties":      deviceProps,
-			"storage_config":         storageConfig,
-			"data_source_reference":  flattenReferenceValues(v.DataSourceReference),
-			"volume_group_reference": flattenReferenceValues(v.VolumeGroupReference),
-		})
-	}
-	return diskList
-}
-
-func flattenDiskListNew(disks []*v3.VMDisk, diskFromState []*v3.VMDisk) []map[string]interface{} {
-	diskList := make([]map[string]interface{}, 0)
-	sortedDisks := sortDiskListNew(disks, diskFromState)
+	sortedDisks := sortDiskList(disks, diskFromState)
 	for _, v := range sortedDisks {
 		if v == nil {
 			continue
@@ -213,61 +159,20 @@ func flattenDiskListNew(disks []*v3.VMDisk, diskFromState []*v3.VMDisk) []map[st
 	return diskList
 }
 
-// func sortDiskList(disks []*v3.VMDisk) []*v3.VMDisk {
-// 	//create result slice
-// 	resList := make([]*v3.VMDisk, len(disks))
-// 	// keep starting index for adapter types
-// 	sliceOffset := 0
-// 	adapterTypes := []string{"SCSI", "IDE"}
-// 	// loop over the adapter types
-// 	for _, adapterType := range adapterTypes {
-// 		// make a list for disks without adapter type
-// 		noAdapterTypeList := make([]*v3.VMDisk, 0)
-// 		//init counter
-// 		adapterTypeCount := 0
-// 		//loop over the unsorted disks
-// 		for _, d := range disks {
-// 			//find the adapter type and match it
-// 			if d.DeviceProperties != nil && d.DeviceProperties.DiskAddress != nil && adapterType == *d.DeviceProperties.DiskAddress.AdapterType {
-// 				// Check if the device index is set and add to the result slice
-// 				if d.DeviceProperties.DiskAddress.DeviceIndex != nil && *d.DeviceProperties.DiskAddress.DeviceIndex >= 0 {
-// 					index := sliceOffset + int(*d.DeviceProperties.DiskAddress.DeviceIndex)
-// 					resList[index] = d
-// 				} else {
-// 					noAdapterTypeList = append(noAdapterTypeList, d)
-// 				}
-// 				adapterTypeCount++
-// 			}
-// 		}
-// 		sliceOffset = sliceOffset + adapterTypeCount
-// 		for _, noAdapterTypeDisk := range noAdapterTypeList {
-// 			for i, rDisk := range resList {
-// 				if rDisk == nil {
-// 					resList[i] = noAdapterTypeDisk
-// 					break
-// 				}
-// 			}
-// 		}
-// 	}
-// 	utils.PrintToJSON(resList, "resList: ")
-// 	return resList
-// }
-
-func sortDiskListNew(disks []*v3.VMDisk, disksFromState []*v3.VMDisk) []*v3.VMDisk {
-	resList := make([]*v3.VMDisk, len(disks)) //make sure the lenght is according the API VM diskList
+func sortDiskList(disks []*v3.VMDisk, disksFromState []*v3.VMDisk) []*v3.VMDisk {
+	resList := make([]*v3.VMDisk, len(disks)) //make sure the length is according the API VM diskList
 	//offset := 0
 	notFoundList := make([]*v3.VMDisk, 0)
 	for _, disk := range disks {
-		index := -99
 		if disk.DeviceProperties != nil {
 			deviceType := disk.DeviceProperties.DeviceType
 			if disk.DeviceProperties.DiskAddress != nil {
-				if *deviceType == "CDROM" && *disk.DeviceProperties.DiskAddress.DeviceIndex == int64(3) && *disk.DeviceProperties.DiskAddress.AdapterType == IDE {
+				if *deviceType == "CDROM" && *disk.DeviceProperties.DiskAddress.DeviceIndex == int64(CDROOMIndex) && *disk.DeviceProperties.DiskAddress.AdapterType == IDE {
 					continue
 				}
 			}
 		}
-		index = findIndexDiskList(disk, disksFromState)
+		index := findIndexDiskList(disk, disksFromState)
 
 		if index > -1 && index < len(disks) {
 			resList[index] = disk
