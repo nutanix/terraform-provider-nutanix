@@ -999,11 +999,12 @@ func testAccNutanixVMConfigCloningVM(r int) string {
 				}
 
 				device_properties {
+					device_type = "CDROM"
+					
 					disk_address = {
 						device_index = 0
 						adapter_type = "IDE"
 					}
-					device_type = "CDROM"
 				}
 			}
 			disk_list {
@@ -1034,7 +1035,7 @@ func testAccNutanixVMConfigCloningVM(r int) string {
 				device_properties {
 					device_type = "DISK"
 					disk_address = {
-					  device_index = 2
+					  device_index = 3
 					  adapter_type = "SCSI"
 					}
 				  }
@@ -1057,6 +1058,15 @@ func testAccNutanixVMConfigCloningVM(r int) string {
 				data_source_reference = {
 					kind = "image"
 					uuid = "${data.nutanix_virtual_machine.vmds.disk_list.0.data_source_reference.uuid}"
+				}
+
+				device_properties {
+					device_type = "DISK"
+					
+					disk_address = {
+						device_index = 0
+						adapter_type = "IDE"
+					}
 				}
 			}
 		}
