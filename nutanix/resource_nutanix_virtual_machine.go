@@ -1275,9 +1275,12 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		utils.PrintToJSON(res.DiskList, "PRE res.DiskList: ")
 		imageMismatch := parseDiskImageChange(response, res.DiskList)
 		utils.PrintToJSON(res.DiskList, "POST res.DiskList: ")
-		// if err != nil {
-		// 	return err
-		// }
+
+		log.Printf("[DEBUG] imageMismatch %v", imageMismatch)
+
+		if len(res.DiskList) < len(response.Status.Resources.DiskList) {
+			hotPlugChange = false
+		}
 
 		if imageMismatch {
 			hotPlugChange = false
@@ -1764,11 +1767,13 @@ func expandDiskListUpdate(d *schema.ResourceData, vm *v3.VMIntentResponse) []*v3
 	eDiskList := expandDiskList(d)
 
 	if vm.Spec != nil && vm.Spec.Resources != nil {
-		for _, disk := range vm.Spec.Resources.DiskList {
+		for i, disk := range vm.Spec.Resources.DiskList {
 			if disk.DeviceProperties != nil && disk.DeviceProperties.DiskAddress != nil {
 				index := disk.DeviceProperties.DiskAddress.DeviceIndex
 				adapterType := disk.DeviceProperties.DiskAddress.AdapterType
-				if *index == 3 && *adapterType == IDE {
+				deviceType := disk.DeviceProperties.DeviceType
+				utils.PrintToJSON(disk.DeviceProperties, fmt.Sprintf("DeviceProperties[%d]: ", i))
+				if *deviceType == "CDROM" && *index == 3 && *adapterType == IDE {
 					eDiskList = append(eDiskList, disk)
 				}
 			}
@@ -2107,11 +2112,11 @@ func setVMTimeout(meta interface{}) {
 }
 
 func parseDiskImageChange(vmOutput *v3.VMIntentResponse, expandedDiskList []*v3.VMDisk) bool {
-	utils.PrintToJSON(expandedDiskList, "[parseDiskImageChange] PRE expandedDiskList: ")
+	//utils.PrintToJSON(expandedDiskList, "[parseDiskImageChange] PRE expandedDiskList: ")
 	foundImageMismatch := false
 	if vmOutput.Status.Resources.DiskList != nil {
 		currentDiskList := vmOutput.Status.Resources.DiskList
-		utils.PrintToJSON(currentDiskList, "[parseDiskImageChange] currentDiskList: ")
+		//utils.PrintToJSON(currentDiskList, "[parseDiskImageChange] currentDiskList: ")
 		// Loop the disks to be updated via PUT
 		for _, nDisk := range expandedDiskList {
 			// check if disk uuid is not nil => is existing disk
@@ -2135,8 +2140,8 @@ func parseDiskImageChange(vmOutput *v3.VMIntentResponse, expandedDiskList []*v3.
 			}
 		}
 	}
-	log.Printf("[parseDiskImageChange] foundImageMismatch: %t", foundImageMismatch)
-	utils.PrintToJSON(expandedDiskList, "[parseDiskImageChange] POST expandedDiskList: ")
+	//log.Printf("[parseDiskImageChange] foundImageMismatch: %t", foundImageMismatch)
+	//utils.PrintToJSON(expandedDiskList, "[parseDiskImageChange] POST expandedDiskList: ")
 	return foundImageMismatch
 }
 

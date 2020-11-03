@@ -2,7 +2,6 @@ package nutanix
 
 import (
 	"fmt"
-	"log"
 	"reflect"
 	"strconv"
 
@@ -164,20 +163,17 @@ func flattenDiskListNew(disks []*v3.VMDisk, diskFromState []*v3.VMDisk) []map[st
 	sortedDisks := sortDiskListNew(disks, diskFromState)
 	for _, v := range sortedDisks {
 		if v == nil {
-			log.Printf("a disk was nil")
 			continue
 		}
-		log.Printf("a disk was NOT nil")
 		var deviceProps []map[string]interface{}
 		var storageConfig []map[string]interface{}
-		var adapter string = ""
-		var index string = ""
 		if v.DeviceProperties != nil {
 			deviceProps = make([]map[string]interface{}, 1)
-			index = fmt.Sprintf("%d", utils.Int64Value(v.DeviceProperties.DiskAddress.DeviceIndex))
-			adapter = *v.DeviceProperties.DiskAddress.AdapterType
+			index := fmt.Sprintf("%d", utils.Int64Value(v.DeviceProperties.DiskAddress.DeviceIndex))
+			adapter := *v.DeviceProperties.DiskAddress.AdapterType
+			deviceType := *v.DeviceProperties.DeviceType
 
-			if index == "3" && adapter == IDE {
+			if deviceType == "CDROM" && index == "3" && adapter == IDE {
 				continue
 			}
 
@@ -214,7 +210,6 @@ func flattenDiskListNew(disks []*v3.VMDisk, diskFromState []*v3.VMDisk) []map[st
 			"volume_group_reference": flattenReferenceValues(v.VolumeGroupReference),
 		})
 	}
-	utils.PrintToJSON(diskList, "flat disk list: ")
 	return diskList
 }
 
@@ -259,42 +254,28 @@ func flattenDiskListNew(disks []*v3.VMDisk, diskFromState []*v3.VMDisk) []map[st
 // }
 
 func sortDiskListNew(disks []*v3.VMDisk, disksFromState []*v3.VMDisk) []*v3.VMDisk {
-	//TODO: compare state disk vs current API disks.
-	//create result slice
-
-	utils.PrintToJSON(disks, "disks from API")
-	utils.PrintToJSON(disksFromState, "disks from STATE")
-
 	resList := make([]*v3.VMDisk, len(disks)) //make sure the lenght is according the API VM diskList
 	//offset := 0
 	notFoundList := make([]*v3.VMDisk, 0)
 	for _, disk := range disks {
 		index := -99
-		utils.PrintToJSON(disk, "iterating disk:")
-		utils.PrintToJSON(disksFromState, "iterating disksFromState:")
 		if disk.DeviceProperties != nil {
 			deviceType := disk.DeviceProperties.DeviceType
 			if disk.DeviceProperties.DiskAddress != nil {
 				if *deviceType == "CDROM" && *disk.DeviceProperties.DiskAddress.DeviceIndex == int64(3) && *disk.DeviceProperties.DiskAddress.AdapterType == IDE {
-					utils.PrintToJSON(disk, "skipping disk:")
 					continue
 				}
 			}
 		}
-		log.Printf("post skip")
 		index = findIndexDiskList(disk, disksFromState)
 
-		log.Printf("Found in index %d", index)
-
 		if index > -1 && index < len(disks) {
-			// resList[k] = disks[index]
 			resList[index] = disk
 		}
 		if index == -1 {
 			notFoundList = append(notFoundList, disk)
 		}
 	}
-	utils.PrintToJSON(resList, "resList")
 	resList = append(resList, notFoundList...)
 	return resList
 }
