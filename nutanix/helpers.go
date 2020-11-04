@@ -56,10 +56,10 @@ func getMetadataAttributesV2(d *schema.ResourceData, metadata *v3.Metadata, kind
 	}
 
 	if p, ok := d.GetOk("project_reference"); ok {
-		metadata.ProjectReference = validateRefList(p.([]interface{}))
+		metadata.ProjectReference = validateRefList(p.([]interface{}), utils.StringPtr("project"))
 	}
 	if o, ok := d.GetOk("owner_reference"); ok {
-		metadata.OwnerReference = validateRefList(o.([]interface{}))
+		metadata.OwnerReference = validateRefList(o.([]interface{}), nil)
 	}
 
 	return nil
@@ -236,7 +236,7 @@ func flattenArrayReferenceValues(refs []*v3.Reference) []map[string]interface{} 
 	return references
 }
 
-func validateRefList(refs []interface{}) *v3.Reference {
+func validateRefList(refs []interface{}, kindValue *string) *v3.Reference {
 	r := &v3.Reference{}
 	hasValue := false
 
@@ -247,7 +247,9 @@ func validateRefList(refs []interface{}) *v3.Reference {
 			r.Kind = utils.StringPtr(v.(string))
 			hasValue = true
 		}
-
+		if kindValue != nil {
+			r.Kind = kindValue
+		}
 		if v, ok := ref["uuid"]; ok {
 			r.UUID = utils.StringPtr(v.(string))
 			hasValue = true
