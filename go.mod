@@ -8,7 +8,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.6.8 // indirect
 	github.com/hashicorp/hcl/v2 v2.7.0 // indirect
 	github.com/hashicorp/hil v0.0.0-20201113172851-43f73a9c7007 // indirect
-	github.com/hashicorp/terraform v0.13.5 // indirect
+	github.com/hashicorp/terraform v0.13.5
 	github.com/hashicorp/terraform-plugin-sdk v1.7.0
 	github.com/mitchellh/gox v1.0.1
 	github.com/spf13/cast v1.3.1
