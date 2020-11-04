@@ -2122,7 +2122,7 @@ type UserResources struct {
 
 // A Directory Service user.
 type DirectoryServiceUser struct {
-	DefaultUserPrincipalName  *string    `json:"default_user_principal_name,omitempty"` // The Default UserPrincipalName of the user from the directory service. This is of format; samAccountName@domain_name.
+	DefaultUserPrincipalName  *string    `json:"default_user_principal_name,omitempty"` // The Default UserPrincipalName of the user from the directory service.
 	DirectoryServiceReference *Reference `json:"directory_service_reference,omitempty"` // The reference to a directory_service
 	UserPrincipalName         *string    `json:"user_principal_name,omitempty"`         // The UserPrincipalName of the user from the directory service.
 }
@@ -2135,10 +2135,11 @@ type IdentityProvider struct {
 
 // User status definition.
 type UserStatus struct {
-	MessageList []MessageResource    `json:"message_list,omitempty"`
-	Name        *string              `json:"name,omitempty"`      // Name of the User.
-	Resources   *UserStatusResources `json:"resources,omitempty"` // User Resource Definition.
-	State       *string              `json:"state,omitempty"`     // The state of the entity.
+	MessageList      []MessageResource    `json:"message_list,omitempty"`
+	Name             *string              `json:"name,omitempty"`      // Name of the User.
+	Resources        *UserStatusResources `json:"resources,omitempty"` // User Resource Definition.
+	State            *string              `json:"state,omitempty"`     // The state of the entity.
+	ExecutionContext *ExecutionContext    `json:"execution_context,omitempty"`
 }
 
 // User Resource Definition.
