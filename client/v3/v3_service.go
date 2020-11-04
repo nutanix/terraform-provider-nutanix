@@ -81,6 +81,7 @@ type Service interface {
 	GetUser(userUUID string) (*UserIntentResponse, error)
 	UpdateUser(uuid string, body *UserIntentInput) (*UserIntentResponse, error)
 	DeleteUser(uuid string) (*DeleteResponse, error)
+	ListUser(getEntitiesRequest *DSMetadata) (*UserListResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -1529,4 +1530,23 @@ func (op Operations) DeleteUser(uuid string) (*DeleteResponse, error) {
 	}
 
 	return deleteResponse, op.client.Do(ctx, req, deleteResponse)
+}
+
+/*ListUser gets a list of Users.
+ *
+ * @param metadata allows create filters to get specific data - *DSMetadata.
+ * @return *UserListResponse
+ */
+func (op Operations) ListUser(getEntitiesRequest *DSMetadata) (*UserListResponse, error) {
+	ctx := context.TODO()
+	path := "/users/list"
+
+	UserList := new(UserListResponse)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return UserList, op.client.Do(ctx, req, UserList)
 }
