@@ -128,6 +128,31 @@ func validateRef(ref map[string]interface{}) *v3.Reference {
 	return nil
 }
 
+func expandReference(ref map[string]interface{}) *v3.Reference {
+	r := &v3.Reference{}
+	hasValue := false
+
+	if v, ok := ref["kind"]; ok {
+		r.Kind = utils.StringPtr(v.(string))
+		hasValue = true
+	}
+
+	if v, ok := ref["uuid"]; ok {
+		r.UUID = utils.StringPtr(v.(string))
+		hasValue = true
+	}
+	if v, ok := ref["name"]; ok {
+		r.Name = utils.StringPtr(v.(string))
+		hasValue = true
+	}
+
+	if hasValue {
+		return r
+	}
+
+	return nil
+}
+
 func buildReference(uuid, kind string) *v3.Reference {
 	return &v3.Reference{
 		Kind: utils.StringPtr(kind),
