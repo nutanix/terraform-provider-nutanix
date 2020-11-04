@@ -72,7 +72,7 @@ type Service interface {
 	UpdateProject(uuid string, body *Project) (*Project, error)
 	DeleteProject(uuid string) error
 	CreateAccessControlPolicy(request *AccessControlPolicy) (*AccessControlPolicy, error)
-	GetAccessControlPolicy(uuid string) (*AccessControlPolicy, error)
+	GetAccessControlPolicy(accessControlPolicyUUID string) (*AccessControlPolicy, error)
 	ListAccessControlPolicy(getEntitiesRequest *DSMetadata) (*AccessControlPolicyListResponse, error)
 	ListAllAccessControlPolicy(filter string) (*AccessControlPolicyListResponse, error)
 	UpdateAccessControlPolicy(uuid string, body *AccessControlPolicy) (*AccessControlPolicy, error)
@@ -83,6 +83,10 @@ type Service interface {
 	ListAllRole(filter string) (*RoleListResponse, error)
 	UpdateRole(uuid string, body *Role) (*Role, error)
 	DeleteRole(uuid string) (*DeleteResponse, error)
+	CreateUser(request *UserIntentInput) (*UserIntentResponse, error)
+	GetUser(userUUID string) (*UserIntentResponse, error)
+	UpdateUser(uuid string, body *UserIntentInput) (*UserIntentResponse, error)
+	DeleteUser(uuid string) (*DeleteResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -1588,6 +1592,85 @@ func (op Operations) DeleteRole(uuid string) (*DeleteResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/roles/%s", uuid)
+
+	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	deleteResponse := new(DeleteResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return deleteResponse, op.client.Do(ctx, req, deleteResponse)
+}
+
+/*CreateUser creates a User
+ * This operation submits a request to create a userbased on the input parameters.
+ *
+ * @param request *VMIntentInput
+ * @return *UserIntentResponse
+ */
+func (op Operations) CreateUser(request *UserIntentInput) (*UserIntentResponse, error) {
+	ctx := context.TODO()
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, "/users", request)
+	if err != nil {
+		return nil, err
+	}
+
+	UserIntentResponse := new(UserIntentResponse)
+
+	return UserIntentResponse, op.client.Do(ctx, req, UserIntentResponse)
+}
+
+/*GetUser This operation gets a User.
+ *
+ * @param uuid The user uuid - string.
+ * @return *User
+ */
+func (op Operations) GetUser(userUUID string) (*UserIntentResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/users/%s", userUUID)
+	User := new(UserIntentResponse)
+
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return User, op.client.Do(ctx, req, User)
+}
+
+/*UpdateUser Updates a User
+ * This operation submits a request to update a existing User based on the input parameters
+ * @param uuid The uuid of the entity - string.
+ * @param body - *User
+ * @return *User, error
+ */
+func (op Operations) UpdateUser(uuid string, body *UserIntentInput) (*UserIntentResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/users/%s", uuid)
+	UserInput := new(UserIntentResponse)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return UserInput, op.client.Do(ctx, req, UserInput)
+}
+
+/*DeleteUser Deletes a User
+ * This operation submits a request to delete a existing User.
+ *
+ * @param uuid The uuid of the entity.
+ * @return void
+ */
+func (op Operations) DeleteUser(uuid string) (*DeleteResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/users/%s", uuid)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	deleteResponse := new(DeleteResponse)
