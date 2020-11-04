@@ -104,10 +104,6 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
 						"uuid": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -307,7 +303,7 @@ func resourceNutanixAccessControlPolicyCreate(d *schema.ResourceData, meta inter
 		return err
 	}
 
-	access.RoleReference = validateRefList(rf.([]interface{}))
+	access.RoleReference = validateRefList(rf.([]interface{}), nil)
 
 	expandAccessControlPolicyResources(d, access)
 
@@ -451,10 +447,10 @@ func resourceNutanixAccessControlPolicyUpdate(d *schema.ResourceData, meta inter
 		metadata.Categories = expandCategories(d.Get("categories"))
 	}
 	if d.HasChange("owner_reference") {
-		metadata.OwnerReference = validateRefList(d.Get("owner_reference").([]interface{}))
+		metadata.OwnerReference = validateRefList(d.Get("owner_reference").([]interface{}), nil)
 	}
 	if d.HasChange("project_reference") {
-		metadata.ProjectReference = validateRefList(d.Get("project_reference").([]interface{}))
+		metadata.ProjectReference = validateRefList(d.Get("project_reference").([]interface{}), utils.StringPtr("project"))
 	}
 	if d.HasChange("name") {
 		spec.Name = utils.StringPtr(d.Get("name").(string))
@@ -472,7 +468,7 @@ func resourceNutanixAccessControlPolicyUpdate(d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("role_reference") {
-		res.RoleReference = validateRefList(d.Get("role_reference").([]interface{}))
+		res.RoleReference = validateRefList(d.Get("role_reference").([]interface{}), nil)
 	}
 
 	if d.HasChange("context_filter_list") {
@@ -567,7 +563,7 @@ func expandAccessControlPolicyResources(d *schema.ResourceData, access *v3.Acces
 	}
 
 	if v, ok := d.GetOk("role_reference"); ok {
-		access.RoleReference = validateRefList(v.([]interface{}))
+		access.RoleReference = validateRefList(v.([]interface{}), nil)
 	}
 
 	filterList.ContextList = expandContextFilterList(d)
