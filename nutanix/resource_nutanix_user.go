@@ -3,6 +3,7 @@ package nutanix
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
@@ -25,7 +26,7 @@ var (
 func resourceNutanixUser() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceNutanixUserCreate,
-		//Read:   resourceNutanixUserRead,
+		Read:   resourceNutanixUserRead,
 		//Update: resourceNutanixUserUpdate,
 		//Delete: resourceNutanixUserDelete,
 		Importer: &schema.ResourceImporter{
@@ -146,6 +147,10 @@ func resourceNutanixUser() *schema.Resource {
 								},
 							},
 						},
+						"default_user_principal_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -183,6 +188,54 @@ func resourceNutanixUser() *schema.Resource {
 									},
 								},
 							},
+						},
+					},
+				},
+			},
+			"user_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"display_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"project_reference_list": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"access_control_policy_reference_list": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
@@ -257,97 +310,73 @@ func resourceNutanixUserCreate(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return fmt.Errorf("error waiting for user (%s) to create: %s", UUID, errw)
 	}
-
-	return nil
-	//return resourceNutanixUserRead(d, meta)
+	return resourceNutanixUserRead(d, meta)
 }
 
-// func resourceNutanixUserRead(d *schema.ResourceData, meta interface{}) error {
-// 	log.Printf("[DEBUG] Reading Image: %s", d.Get("name").(string))
+func resourceNutanixUserRead(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] Reading User: %s", d.Id())
 
-// 	// Get client connection
-// 	conn := meta.(*Client).API
-// 	uuid := d.Id()
+	// Get client connection
+	conn := meta.(*Client).API
+	uuid := d.Id()
 
-// 	// Make request to the API
-// 	resp, err := conn.V3.GetImage(uuid)
-// 	if err != nil {
-// 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-// 			d.SetId("")
-// 		}
-// 		return fmt.Errorf("error reading image UUID (%s) with error %s", uuid, err)
-// 	}
+	// Make request to the API
+	resp, err := conn.V3.GetUser(uuid)
+	if err != nil {
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
+		return fmt.Errorf("error reading user UUID (%s) with error %s", uuid, err)
+	}
 
-// 	m, c := setRSEntityMetadata(resp.Metadata)
+	m, c := setRSEntityMetadata(resp.Metadata)
 
-// 	if err = d.Set("metadata", m); err != nil {
-// 		return fmt.Errorf("error setting metadata for image UUID(%s), %s", d.Id(), err)
-// 	}
-// 	if err = d.Set("categories", c); err != nil {
-// 		return fmt.Errorf("error setting categories for image UUID(%s), %s", d.Id(), err)
-// 	}
+	if err = d.Set("metadata", m); err != nil {
+		return fmt.Errorf("error setting metadata for image UUID(%s), %s", d.Id(), err)
+	}
+	if err = d.Set("categories", c); err != nil {
+		return fmt.Errorf("error setting categories for image UUID(%s), %s", d.Id(), err)
+	}
 
-// 	if err = d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
-// 		return fmt.Errorf("error setting owner_reference for image UUID(%s), %s", d.Id(), err)
-// 	}
-// 	d.Set("api_version", utils.StringValue(resp.APIVersion))
-// 	d.Set("name", utils.StringValue(resp.Status.Name))
-// 	d.Set("description", utils.StringValue(resp.Status.Description))
+	if err = d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
+		return fmt.Errorf("error setting owner_reference for image UUID(%s), %s", d.Id(), err)
+	}
+	d.Set("api_version", utils.StringValue(resp.APIVersion))
+	d.Set("name", utils.StringValue(resp.Status.Name))
 
-// 	if err = d.Set("availability_zone_reference", flattenReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
-// 		return fmt.Errorf("error setting owner_reference for image UUID(%s), %s", d.Id(), err)
-// 	}
-// 	if err = flattenClusterReference(resp.Status.ClusterReference, d); err != nil {
-// 		return fmt.Errorf("error setting cluster_uuid or cluster_name for image UUID(%s), %s", d.Id(), err)
-// 	}
+	if err = d.Set("state", resp.Status.State); err != nil {
+		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
+	}
 
-// 	if err = d.Set("state", resp.Status.State); err != nil {
-// 		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
-// 	}
+	if err = d.Set("directory_service_user", flattenDirectoryServiceUser(resp.Status.Resources.DirectoryServiceUser)); err != nil {
+		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
+	}
 
-// 	if err = d.Set("image_type", resp.Status.Resources.ImageType); err != nil {
-// 		return fmt.Errorf("error setting image_type for image UUID(%s), %s", d.Id(), err)
-// 	}
+	if err = d.Set("identity_provider_user", flattenIdentityProviderUser(resp.Status.Resources.IdentityProviderUser)); err != nil {
+		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
+	}
 
-// 	if err = d.Set("source_uri", resp.Status.Resources.SourceURI); err != nil {
-// 		return fmt.Errorf("error setting source_uri for image UUID(%s), %s", d.Id(), err)
-// 	}
+	if err = d.Set("user_type", resp.Status.Resources.UserType); err != nil {
+		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
+	}
 
-// 	if err = d.Set("size_bytes", resp.Status.Resources.SizeBytes); err != nil {
-// 		return fmt.Errorf("error setting size_bytes for image UUID(%s), %s", d.Id(), err)
-// 	}
+	if err = d.Set("display_name", resp.Status.Resources.DisplayName); err != nil {
+		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
+	}
 
-// 	checksum := make(map[string]string)
-// 	if resp.Status.Resources.Checksum != nil {
-// 		checksum["checksum_algorithm"] = utils.StringValue(resp.Status.Resources.Checksum.ChecksumAlgorithm)
-// 		checksum["checksum_value"] = utils.StringValue(resp.Status.Resources.Checksum.ChecksumValue)
-// 	}
+	if err := d.Set("project_reference_list", flattenArrayReferenceValues(resp.Status.Resources.ProjectsReferenceList)); err != nil {
+		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
+	}
 
-// 	if err = d.Set("checksum", checksum); err != nil {
-// 		return fmt.Errorf("error setting checksum for image UUID(%s), %s", d.Id(), err)
-// 	}
+	if err := d.Set("access_control_policy_reference_list", flattenArrayReferenceValues(resp.Status.Resources.AccessControlPolicyReferenceList)); err != nil {
+		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
+	}
 
-// 	version := make(map[string]string)
-// 	if resp.Status.Resources.Version != nil {
-// 		version["product_version"] = utils.StringValue(resp.Status.Resources.Version.ProductVersion)
-// 		version["product_name"] = utils.StringValue(resp.Status.Resources.Version.ProductName)
-// 	}
+	//TODO:
+	//identity_provider_user
 
-// 	if err = d.Set("version", version); err != nil {
-// 		return fmt.Errorf("error setting version for image UUID(%s), %s", d.Id(), err)
-// 	}
-
-// 	uriList := make([]string, 0, len(resp.Status.Resources.RetrievalURIList))
-// 	for _, uri := range resp.Status.Resources.RetrievalURIList {
-// 		uriList = append(uriList, utils.StringValue(uri))
-// 	}
-
-// 	if err = d.Set("retrieval_uri_list", uriList); err != nil {
-// 		return fmt.Errorf("error setting retrieval_uri_list for image UUID(%s), %s", d.Id(), err)
-// 	}
-
-// 	return nil
-// }
+	return nil
+}
 
 // func resourceNutanixUserUpdate(d *schema.ResourceData, meta interface{}) error {
 // 	client := meta.(*Client)
@@ -527,4 +556,44 @@ func expandIdentityProviderUser(d *schema.ResourceData) *v3.IdentityProvider {
 	}
 
 	return identiryProvider
+}
+
+func flattenDirectoryServiceUser(dsu *v3.DirectoryServiceUser) []interface{} {
+	if dsu != nil {
+		directoryServiceUserMap := map[string]interface{}{}
+
+		if dsu.DefaultUserPrincipalName != nil {
+			directoryServiceUserMap["default_user_principal_name"] = dsu.DefaultUserPrincipalName
+		}
+
+		if dsu.UserPrincipalName != nil {
+			directoryServiceUserMap["user_principal_name"] = dsu.UserPrincipalName
+		}
+
+		if dsu.DirectoryServiceReference != nil {
+			directoryServiceUserMap["directory_service_reference"] = flattenReferenceValues(dsu.DirectoryServiceReference)
+		}
+
+		return []interface{}{directoryServiceUserMap}
+
+	}
+	return nil
+}
+
+func flattenIdentityProviderUser(ipu *v3.IdentityProvider) []interface{} {
+	if ipu != nil {
+		identityProviderUserMap := map[string]interface{}{}
+
+		if ipu.Username != nil {
+			identityProviderUserMap["username"] = ipu.Username
+		}
+
+		if ipu.IdentityProviderReference != nil {
+			identityProviderUserMap["identity_provider_reference"] = flattenReferenceValues(ipu.IdentityProviderReference)
+		}
+
+		return []interface{}{identityProviderUserMap}
+
+	}
+	return nil
 }
