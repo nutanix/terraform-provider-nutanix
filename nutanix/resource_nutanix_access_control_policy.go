@@ -112,6 +112,11 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"kind": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "project",
+						},
 					},
 				},
 			},
@@ -244,9 +249,10 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"left_hand_side_entity_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: utils.StringLowerCaseValidateFunc,
 									},
 									"operator": {
 										Type:         schema.TypeString,

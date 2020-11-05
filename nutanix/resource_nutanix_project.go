@@ -306,7 +306,7 @@ func resourceNutanixProject() *schema.Resource {
 			"api_version": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "3.1.0",
+				Default:  "3.1",
 			},
 		},
 	}
