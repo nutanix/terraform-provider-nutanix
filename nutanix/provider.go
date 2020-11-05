@@ -112,6 +112,7 @@ func Provider() terraform.ResourceProvider {
 			"nutanix_access_control_policy": resourceNutanixAccessControlPolicy(),
 			"nutanix_project":               resourceNutanixProject(),
 			"nutanix_role":                  resourceNutanixRole(),
+			"nutanix_user":                  resourceNutanixUser(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
