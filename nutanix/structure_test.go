@@ -4,7 +4,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/terraform/flatmap"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -32,7 +31,7 @@ func testConf() map[string]string {
 }
 
 func TestExpandStringList(t *testing.T) {
-	expanded := flatmap.Expand(testConf(), "availability_zones").([]interface{})
+	expanded := utils.Expand(testConf(), "availability_zones").([]interface{})
 	stringList := expandStringList(expanded)
 	expected := []*string{
 		utils.StringPtr("us-east-1a"),
