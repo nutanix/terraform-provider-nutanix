@@ -2144,11 +2144,11 @@ type UserStatus struct {
 
 // User Resource Definition.
 type UserStatusResources struct {
-	AccessControlPolicyReferenceList []Reference           `json:"access_control_policy_reference_list,omitempty"` // List of ACP references.
+	AccessControlPolicyReferenceList []*Reference          `json:"access_control_policy_reference_list,omitempty"` // List of ACP references.
 	DirectoryServiceUser             *DirectoryServiceUser `json:"directory_service_user,omitempty"`               // A Directory Service user.
 	DisplayName                      *string               `json:"display_name,omitempty"`                         // The display name of the user (common name) provided by the directory service.
 	IdentityProviderUser             *IdentityProvider     `json:"identity_provider_user,omitempty"`               // An Identity Provider user.
-	ProjectsReferenceList            []Reference           `json:"projects_reference_list,omitempty"`              // A list of projects the user is part of.
+	ProjectsReferenceList            []*Reference          `json:"projects_reference_list,omitempty"`              // A list of projects the user is part of.
 	ResourceUsageSummary             *ResourceUsageSummary `json:"resource_usage_summary,omitempty"`
 	UserType                         *string               `json:"user_type,omitempty"`
 }
