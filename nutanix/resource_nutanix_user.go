@@ -27,8 +27,8 @@ func resourceNutanixUser() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceNutanixUserCreate,
 		Read:   resourceNutanixUserRead,
-		//Update: resourceNutanixUserUpdate,
-		//Delete: resourceNutanixUserDelete,
+		Update: resourceNutanixUserUpdate,
+		Delete: resourceNutanixUserDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -132,8 +132,9 @@ func resourceNutanixUser() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"kind": {
-										Type:    schema.TypeString,
-										Default: "directory_service",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "directory_service",
 									},
 									"uuid": {
 										Type:     schema.TypeString,
@@ -174,8 +175,9 @@ func resourceNutanixUser() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"kind": {
-										Type:    schema.TypeString,
-										Default: "identity_provider",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "identity_provider",
 									},
 									"uuid": {
 										Type:     schema.TypeString,
@@ -378,145 +380,139 @@ func resourceNutanixUserRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-// func resourceNutanixUserUpdate(d *schema.ResourceData, meta interface{}) error {
-// 	client := meta.(*Client)
-// 	conn := client.API
-// 	timeout := client.WaitTimeout
+func resourceNutanixUserUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*Client)
+	conn := client.API
+	timeout := client.WaitTimeout
 
-// 	if client.WaitTimeout == 0 {
-// 		timeout = 10
-// 	}
+	if client.WaitTimeout == 0 {
+		timeout = 10
+	}
 
-// 	// get state
-// 	request := &v3.ImageIntentInput{}
-// 	metadata := &v3.Metadata{}
-// 	spec := &v3.Image{}
-// 	res := &v3.ImageResources{}
+	// get state
+	request := &v3.UserIntentInput{}
+	metadata := &v3.Metadata{}
+	spec := &v3.UserSpec{}
+	res := &v3.UserResources{}
 
-// 	response, err := conn.V3.GetImage(d.Id())
+	response, err := conn.V3.GetUser(d.Id())
 
-// 	if err != nil {
-// 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-// 			d.SetId("")
-// 		}
-// 		return err
-// 	}
+	if err != nil {
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
+		return err
+	}
 
-// 	if response.Metadata != nil {
-// 		metadata = response.Metadata
-// 	}
+	if response.Metadata != nil {
+		metadata = response.Metadata
+	}
 
-// 	if response.Spec != nil {
-// 		spec = response.Spec
+	if response.Spec != nil {
+		spec = response.Spec
 
-// 		if response.Spec.Resources != nil {
-// 			res = response.Spec.Resources
-// 		}
-// 	}
+		if response.Spec.Resources != nil {
+			res = response.Spec.Resources
+		}
+	}
 
-// 	if d.HasChange("categories") {
-// 		metadata.Categories = expandCategories(d.Get("categories"))
-// 	}
+	if d.HasChange("categories") {
+		metadata.Categories = expandCategories(d.Get("categories"))
+	}
 
-// 	if d.HasChange("owner_reference") {
-// 		or := d.Get("owner_reference").(map[string]interface{})
-// 		metadata.OwnerReference = validateRef(or)
-// 	}
+	if d.HasChange("owner_reference") {
+		or := d.Get("owner_reference").(map[string]interface{})
+		metadata.OwnerReference = validateRef(or)
+	}
 
-// 	if d.HasChange("project_reference") {
-// 		pr := d.Get("project_reference").(map[string]interface{})
-// 		metadata.ProjectReference = validateRef(pr)
-// 	}
+	if d.HasChange("project_reference") {
+		pr := d.Get("project_reference").(map[string]interface{})
+		metadata.ProjectReference = validateRef(pr)
+	}
 
-// 	if d.HasChange("name") {
-// 		spec.Name = utils.StringPtr(d.Get("name").(string))
-// 	}
-// 	if d.HasChange("description") {
-// 		spec.Description = utils.StringPtr(d.Get("description").(string))
-// 	}
+	if d.HasChange("directory_service_user") {
+		res.DirectoryServiceUser = expandDirectoryServiceUser(d)
+	}
 
-// 	if d.HasChange("source_uri") || d.HasChange("checksum") {
-// 		if err := getImageResource(d, res); err != nil {
-// 			return err
-// 		}
-// 		spec.Resources = res
-// 	}
+	if d.HasChange("identity_provider_user") {
+		res.IdentityProviderUser = expandIdentityProviderUser(d)
+	}
 
-// 	request.Metadata = metadata
-// 	request.Spec = spec
+	request.Metadata = metadata
+	request.Spec = spec
 
-// 	resp, errUpdate := conn.V3.UpdateImage(d.Id(), request)
+	resp, errUpdate := conn.V3.UpdateUser(d.Id(), request)
 
-// 	if errUpdate != nil {
-// 		return fmt.Errorf("error updating image(%s) %s", d.Id(), errUpdate)
-// 	}
+	if errUpdate != nil {
+		return fmt.Errorf("error updating user(%s) %s", d.Id(), errUpdate)
+	}
 
-// 	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
+	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
 
-// 	// Wait for the Image to be available
-// 	stateConf := &resource.StateChangeConf{
-// 		Pending:    []string{"QUEUED", "RUNNING"},
-// 		Target:     []string{"SUCCEEDED"},
-// 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-// 		Timeout:    time.Duration(timeout) * time.Minute,
-// 		Delay:      userDelay,
-// 		MinTimeout: userMinTimeout,
-// 	}
+	// Wait for the Image to be available
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, taskUUID),
+		Timeout:    time.Duration(timeout) * time.Minute,
+		Delay:      userDelay,
+		MinTimeout: userMinTimeout,
+	}
 
-// 	if _, err := stateConf.WaitForState(); err != nil {
-// 		delErr := resourceNutanixUserDelete(d, meta)
-// 		if delErr != nil {
-// 			return fmt.Errorf("error waiting for image (%s) to delete in update: %s", d.Id(), delErr)
-// 		}
-// 		uuid := d.Id()
-// 		d.SetId("")
-// 		return fmt.Errorf("error waiting for image (%s) to update: %s", uuid, err)
-// 	}
+	if _, err := stateConf.WaitForState(); err != nil {
+		// delErr := resourceNutanixUserDelete(d, meta)
+		// if delErr != nil {
+		// 	return fmt.Errorf("error waiting for image (%s) to delete in update: %s", d.Id(), delErr)
+		// }
+		uuid := d.Id()
+		d.SetId("")
+		return fmt.Errorf("error waiting for user (%s) to update: %s", uuid, err)
+	}
 
-// 	return resourceNutanixUserRead(d, meta)
-// }
+	return resourceNutanixUserRead(d, meta)
+}
 
-// func resourceNutanixUserDelete(d *schema.ResourceData, meta interface{}) error {
-// 	log.Printf("[DEBUG] Deleting Image: %s", d.Get("name").(string))
+func resourceNutanixUserDelete(d *schema.ResourceData, meta interface{}) error {
+	log.Printf("[DEBUG] Deleting User: %s", d.Get("display_name").(string))
 
-// 	client := meta.(*Client)
-// 	conn := client.API
-// 	timeout := client.WaitTimeout
+	client := meta.(*Client)
+	conn := client.API
+	timeout := client.WaitTimeout
 
-// 	if client.WaitTimeout == 0 {
-// 		timeout = 10
-// 	}
+	if client.WaitTimeout == 0 {
+		timeout = 10
+	}
 
-// 	UUID := d.Id()
+	UUID := d.Id()
 
-// 	resp, err := conn.V3.DeleteImage(UUID)
-// 	if err != nil {
-// 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-// 			d.SetId("")
-// 		}
-// 		return err
-// 	}
+	resp, err := conn.V3.DeleteUser(UUID)
+	if err != nil {
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
+		return err
+	}
 
-// 	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
+	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
 
-// 	// Wait for the Image to be available
-// 	stateConf := &resource.StateChangeConf{
-// 		Pending:    []string{"QUEUED", "RUNNING"},
-// 		Target:     []string{"SUCCEEDED"},
-// 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-// 		Timeout:    time.Duration(timeout) * time.Minute,
-// 		Delay:      userDelay,
-// 		MinTimeout: userMinTimeout,
-// 	}
+	// Wait for the Image to be available
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, taskUUID),
+		Timeout:    time.Duration(timeout) * time.Minute,
+		Delay:      userDelay,
+		MinTimeout: userMinTimeout,
+	}
 
-// 	if _, err := stateConf.WaitForState(); err != nil {
-// 		d.SetId("")
-// 		return fmt.Errorf("error waiting for image (%s) to delete: %s", d.Id(), err)
-// 	}
+	if _, err := stateConf.WaitForState(); err != nil {
+		d.SetId("")
+		return fmt.Errorf("error waiting for user (%s) to delete: %s", d.Id(), err)
+	}
 
-// 	d.SetId("")
-// 	return nil
-// }
+	d.SetId("")
+	return nil
+}
 
 func expandDirectoryServiceUser(d *schema.ResourceData) *v3.DirectoryServiceUser {
 	directoryServiceUserState, ok := d.GetOk("directory_service_user")
