@@ -99,6 +99,7 @@ func Provider() terraform.ResourceProvider {
 			"nutanix_access_control_policies": dataSourceNutanixAccessControlPolicies(),
 			"nutanix_project":                 dataSourceNutanixProject(),
 			"nutanix_projects":                dataSourceNutanixProjects(),
+			"nutanix_user":                    dataSourceNutanixUser(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":       resourceNutanixVirtualMachine(),
