@@ -6,13 +6,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/spf13/cast"
 )
 
-func c(t *testing.T) {
+func TestAccNutanixProject_basic(t *testing.T) {
 	resourceName := "nutanix_project.project_test"
 
 	subnetName := acctest.RandomWithPrefix("test-subnateName")
