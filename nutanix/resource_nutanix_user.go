@@ -3,6 +3,7 @@ package nutanix
 import (
 	"fmt"
 	"log"
+	"reflect"
 	"strings"
 	"time"
 
@@ -531,7 +532,10 @@ func expandDirectoryServiceUser(d *schema.ResourceData) *v3.DirectoryServiceUser
 		directoryServiceUser.DirectoryServiceReference = expandReference(dpr.([]interface{})[0].(map[string]interface{}))
 	}
 
-	return directoryServiceUser
+	if !reflect.DeepEqual(*directoryServiceUser, v3.DirectoryServiceUser{}) {
+		return directoryServiceUser
+	}
+	return nil
 }
 
 func expandIdentityProviderUser(d *schema.ResourceData) *v3.IdentityProvider {
@@ -540,18 +544,21 @@ func expandIdentityProviderUser(d *schema.ResourceData) *v3.IdentityProvider {
 		return nil
 	}
 
-	identiryProviderMap := identityProviderState.([]interface{})[0].(map[string]interface{})
-	identiryProvider := &v3.IdentityProvider{}
+	identityProviderMap := identityProviderState.([]interface{})[0].(map[string]interface{})
+	identityProvider := &v3.IdentityProvider{}
 
-	if username, ok := identiryProviderMap["username"]; ok {
-		identiryProvider.Username = utils.StringPtr(username.(string))
+	if username, ok := identityProviderMap["username"]; ok {
+		identityProvider.Username = utils.StringPtr(username.(string))
 	}
 
-	if ipr, ok := identiryProviderMap["identity_provider_reference"]; ok {
-		identiryProvider.IdentityProviderReference = expandReference(ipr.([]interface{})[0].(map[string]interface{}))
+	if ipr, ok := identityProviderMap["identity_provider_reference"]; ok {
+		identityProvider.IdentityProviderReference = expandReference(ipr.([]interface{})[0].(map[string]interface{}))
 	}
 
-	return identiryProvider
+	if !reflect.DeepEqual(*identityProvider, v3.IdentityProvider{}) {
+		return identityProvider
+	}
+	return nil
 }
 
 func flattenDirectoryServiceUser(dsu *v3.DirectoryServiceUser) []interface{} {
