@@ -2089,9 +2089,9 @@ type AccessControlPolicyListResponse struct {
 
 // Response object for intentful operation of users
 type UserListResponse struct {
-	APIVersion *string              `json:"api_version,omitempty"` // API Version of the Nutanix v3 API framework.
-	Entities   []UserIntentResponse `json:"entities,omitempty"`
-	Metadata   *ListMetadataOutput  `json:"metadata,omitempty"` // All api calls that return a list will have this metadata block
+	APIVersion *string               `json:"api_version,omitempty"` // API Version of the Nutanix v3 API framework.
+	Entities   []*UserIntentResponse `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput   `json:"metadata,omitempty"` // All api calls that return a list will have this metadata block
 }
 
 // An intentful representation of a user

@@ -82,6 +82,7 @@ type Service interface {
 	UpdateUser(uuid string, body *UserIntentInput) (*UserIntentResponse, error)
 	DeleteUser(uuid string) (*DeleteResponse, error)
 	ListUser(getEntitiesRequest *DSMetadata) (*UserListResponse, error)
+	ListAllUser(filter string) (*UserListResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -1549,4 +1550,46 @@ func (op Operations) ListUser(getEntitiesRequest *DSMetadata) (*UserListResponse
 	}
 
 	return UserList, op.client.Do(ctx, req, UserList)
+}
+
+// ListAllUser ...
+func (op Operations) ListAllUser(filter string) (*UserListResponse, error) {
+	entities := make([]*UserIntentResponse, 0)
+
+	resp, err := op.ListUser(&DSMetadata{
+		Filter: &filter,
+		Kind:   utils.StringPtr("user"),
+		Length: utils.Int64Ptr(itemsPerPage),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining) {
+			resp, err = op.ListUser(&DSMetadata{
+				Filter: &filter,
+				Kind:   utils.StringPtr("user"),
+				Length: utils.Int64Ptr(itemsPerPage),
+				Offset: utils.Int64Ptr(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+		}
+
+		resp.Entities = entities
+	}
+
+	return resp, nil
 }
