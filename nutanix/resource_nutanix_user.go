@@ -336,44 +336,44 @@ func resourceNutanixUserRead(d *schema.ResourceData, meta interface{}) error {
 	m, c := setRSEntityMetadata(resp.Metadata)
 
 	if err = d.Set("metadata", m); err != nil {
-		return fmt.Errorf("error setting metadata for image UUID(%s), %s", d.Id(), err)
+		return fmt.Errorf("error setting metadata for user UUID(%s), %s", d.Id(), err)
 	}
 	if err = d.Set("categories", c); err != nil {
-		return fmt.Errorf("error setting categories for image UUID(%s), %s", d.Id(), err)
+		return fmt.Errorf("error setting categories for user UUID(%s), %s", d.Id(), err)
 	}
 
 	if err = d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
-		return fmt.Errorf("error setting owner_reference for image UUID(%s), %s", d.Id(), err)
+		return fmt.Errorf("error setting owner_reference for user UUID(%s), %s", d.Id(), err)
 	}
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
 	d.Set("name", utils.StringValue(resp.Status.Name))
 
 	if err = d.Set("state", resp.Status.State); err != nil {
-		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
+		return fmt.Errorf("error setting state for user UUID(%s), %s", d.Id(), err)
 	}
 
 	if err = d.Set("directory_service_user", flattenDirectoryServiceUser(resp.Status.Resources.DirectoryServiceUser)); err != nil {
-		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
+		return fmt.Errorf("error setting directory_service_user for user UUID(%s), %s", d.Id(), err)
 	}
 
 	if err = d.Set("identity_provider_user", flattenIdentityProviderUser(resp.Status.Resources.IdentityProviderUser)); err != nil {
-		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
+		return fmt.Errorf("error setting identity_provider_user for user UUID(%s), %s", d.Id(), err)
 	}
 
 	if err = d.Set("user_type", resp.Status.Resources.UserType); err != nil {
-		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
+		return fmt.Errorf("error setting user_type for user UUID(%s), %s", d.Id(), err)
 	}
 
 	if err = d.Set("display_name", resp.Status.Resources.DisplayName); err != nil {
-		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
+		return fmt.Errorf("error setting display_name for user UUID(%s), %s", d.Id(), err)
 	}
 
 	if err := d.Set("project_reference_list", flattenArrayReferenceValues(resp.Status.Resources.ProjectsReferenceList)); err != nil {
-		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
+		return fmt.Errorf("error setting project_reference_list for user UUID(%s), %s", d.Id(), err)
 	}
 
 	if err := d.Set("access_control_policy_reference_list", flattenArrayReferenceValues(resp.Status.Resources.AccessControlPolicyReferenceList)); err != nil {
-		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
+		return fmt.Errorf("error setting access_control_policy_reference_list for user UUID(%s), %s", d.Id(), err)
 	}
 
 	//TODO:
@@ -563,6 +563,7 @@ func expandIdentityProviderUser(d *schema.ResourceData) *v3.IdentityProvider {
 }
 
 func flattenDirectoryServiceUser(dsu *v3.DirectoryServiceUser) []interface{} {
+	log.Print("in flattenDirectoryServiceUser")
 	if dsu != nil {
 		directoryServiceUserMap := map[string]interface{}{}
 
@@ -575,9 +576,8 @@ func flattenDirectoryServiceUser(dsu *v3.DirectoryServiceUser) []interface{} {
 		}
 
 		if dsu.DirectoryServiceReference != nil {
-			directoryServiceUserMap["directory_service_reference"] = flattenReferenceValues(dsu.DirectoryServiceReference)
+			directoryServiceUserMap["directory_service_reference"] = []interface{}{flattenReferenceValues(dsu.DirectoryServiceReference)}
 		}
-
 		return []interface{}{directoryServiceUserMap}
 
 	}
