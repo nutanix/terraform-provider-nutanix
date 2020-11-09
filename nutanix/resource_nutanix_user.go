@@ -328,6 +328,7 @@ func resourceNutanixUserRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
+			return nil
 		}
 		return fmt.Errorf("error reading user UUID (%s) with error %s", uuid, err)
 	}
