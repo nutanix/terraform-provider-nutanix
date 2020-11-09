@@ -520,7 +520,7 @@ func expandDirectoryServiceUser(d *schema.ResourceData) *v3.DirectoryServiceUser
 		return nil
 	}
 
-	directoryServiceUserMap := directoryServiceUserState.(*schema.Set).List()[0].(map[string]interface{})
+	directoryServiceUserMap := directoryServiceUserState.([]interface{})[0].(map[string]interface{})
 	directoryServiceUser := &v3.DirectoryServiceUser{}
 
 	if upn, ok := directoryServiceUserMap["user_principal_name"]; ok {
@@ -540,7 +540,7 @@ func expandIdentityProviderUser(d *schema.ResourceData) *v3.IdentityProvider {
 		return nil
 	}
 
-	identiryProviderMap := identityProviderState.(*schema.Set).List()[0].(map[string]interface{})
+	identiryProviderMap := identityProviderState.([]interface{})[0].(map[string]interface{})
 	identiryProvider := &v3.IdentityProvider{}
 
 	if username, ok := identiryProviderMap["username"]; ok {
