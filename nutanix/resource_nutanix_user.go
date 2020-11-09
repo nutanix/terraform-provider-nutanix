@@ -528,7 +528,7 @@ func expandDirectoryServiceUser(d *schema.ResourceData) *v3.DirectoryServiceUser
 	}
 
 	if dpr, ok := directoryServiceUserMap["directory_service_reference"]; ok {
-		directoryServiceUser.DirectoryServiceReference = expandReference(dpr.(*schema.Set).List()[0].(map[string]interface{}))
+		directoryServiceUser.DirectoryServiceReference = expandReference(dpr.([]interface{})[0].(map[string]interface{}))
 	}
 
 	return directoryServiceUser
@@ -548,7 +548,7 @@ func expandIdentityProviderUser(d *schema.ResourceData) *v3.IdentityProvider {
 	}
 
 	if ipr, ok := identiryProviderMap["identity_provider_reference"]; ok {
-		identiryProvider.IdentityProviderReference = expandReference(ipr.(*schema.Set).List()[0].(map[string]interface{}))
+		identiryProvider.IdentityProviderReference = expandReference(ipr.([]interface{})[0].(map[string]interface{}))
 	}
 
 	return identiryProvider
