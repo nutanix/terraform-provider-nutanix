@@ -72,11 +72,17 @@ type Service interface {
 	UpdateProject(uuid string, body *Project) (*Project, error)
 	DeleteProject(uuid string) error
 	CreateAccessControlPolicy(request *AccessControlPolicy) (*AccessControlPolicy, error)
-	GetAccessControlPolicy(projectUUID string) (*AccessControlPolicy, error)
+	GetAccessControlPolicy(uuid string) (*AccessControlPolicy, error)
 	ListAccessControlPolicy(getEntitiesRequest *DSMetadata) (*AccessControlPolicyListResponse, error)
 	ListAllAccessControlPolicy(filter string) (*AccessControlPolicyListResponse, error)
 	UpdateAccessControlPolicy(uuid string, body *AccessControlPolicy) (*AccessControlPolicy, error)
 	DeleteAccessControlPolicy(uuid string) (*DeleteResponse, error)
+	CreateRole(request *Role) (*Role, error)
+	GetRole(uuid string) (*Role, error)
+	ListRole(getEntitiesRequest *DSMetadata) (*RoleListResponse, error)
+	ListAllRole(filter string) (*RoleListResponse, error)
+	UpdateRole(uuid string, body *Role) (*Role, error)
+	DeleteRole(uuid string) (*DeleteResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -1437,6 +1443,151 @@ func (op Operations) DeleteAccessControlPolicy(uuid string) (*DeleteResponse, er
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/access_control_policies/%s", uuid)
+
+	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	deleteResponse := new(DeleteResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return deleteResponse, op.client.Do(ctx, req, deleteResponse)
+}
+
+/*CreateRole creates a role
+ * This operation submits a request to create a role based on the input parameters.
+ *
+ * @param request *Role
+ * @return *Role
+ */
+func (op Operations) CreateRole(request *Role) (*Role, error) {
+	ctx := context.TODO()
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, "/roles", request)
+	if err != nil {
+		return nil, err
+	}
+
+	RoleResponse := new(Role)
+
+	return RoleResponse, op.client.Do(ctx, req, RoleResponse)
+}
+
+/*GetRole This operation gets a role.
+ *
+ * @param uuid The role uuid - string.
+ * @return *Role
+ */
+func (op Operations) GetRole(roleUUID string) (*Role, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/roles/%s", roleUUID)
+	Role := new(Role)
+
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return Role, op.client.Do(ctx, req, Role)
+}
+
+/*ListRole gets a list of roles.
+ *
+ * @param metadata allows create filters to get specific data - *DSMetadata.
+ * @return *RoleListResponse
+ */
+func (op Operations) ListRole(getEntitiesRequest *DSMetadata) (*RoleListResponse, error) {
+	ctx := context.TODO()
+	path := "/roles/list"
+
+	RoleList := new(RoleListResponse)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return RoleList, op.client.Do(ctx, req, RoleList)
+}
+
+/*ListAllRole gets a list of Roles
+ * This operation gets a list of Roles, allowing for sorting and pagination.
+ * Note: Entities that have not been created successfully are not listed.
+ * @return *RoleListResponse
+ */
+func (op Operations) ListAllRole(filter string) (*RoleListResponse, error) {
+	entities := make([]*Role, 0)
+
+	resp, err := op.ListRole(&DSMetadata{
+		Filter: &filter,
+		Kind:   utils.StringPtr("role"),
+		Length: utils.Int64Ptr(itemsPerPage),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining) {
+			resp, err = op.ListRole(&DSMetadata{
+				Filter: &filter,
+				Kind:   utils.StringPtr("role"),
+				Length: utils.Int64Ptr(itemsPerPage),
+				Offset: utils.Int64Ptr(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
+		}
+
+		resp.Entities = entities
+	}
+
+	return resp, nil
+}
+
+/*UpdateRole Updates a role
+ * This operation submits a request to update a existing role based on the input parameters
+ * @param uuid The uuid of the entity - string.
+ * @param body - *Role
+ * @return *Role, error
+ */
+func (op Operations) UpdateRole(uuid string, body *Role) (*Role, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/roles/%s", uuid)
+	RoleInput := new(Role)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return RoleInput, op.client.Do(ctx, req, RoleInput)
+}
+
+/*DeleteRole Deletes a role
+ * This operation submits a request to delete a existing role.
+ *
+ * @param uuid The uuid of the entity.
+ * @return void
+ */
+func (op Operations) DeleteRole(uuid string) (*DeleteResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/roles/%s", uuid)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
 	deleteResponse := new(DeleteResponse)
