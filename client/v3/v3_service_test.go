@@ -3766,3 +3766,425 @@ func TestOperations_DeleteAccessControlPolicy(t *testing.T) {
 		})
 	}
 }
+
+func TestOperations_CreateUser(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/users", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodPost)
+
+		expected := map[string]interface{}{
+			"api_version": "3.1",
+			"metadata": map[string]interface{}{
+				"name": "user_name",
+				"kind": "user",
+				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc",
+			},
+			"spec": map[string]interface{}{
+				"resources": map[string]interface{}{
+					"directory_service_user": map[string]interface{}{
+						"directory_service_reference": map[string]interface{}{
+							"kind": "directory_service",
+							"uuid": "d8b53470-c432-4556-badd-a11c937d89c9",
+						},
+						"user_principal_name": "user-dummy-tbd@ntnx.local",
+					},
+				},
+			},
+		}
+
+		var v map[string]interface{}
+		err := json.NewDecoder(r.Body).Decode(&v)
+		if err != nil {
+			t.Fatalf("decode json: %v", err)
+		}
+
+		if !reflect.DeepEqual(v, expected) {
+			t.Errorf("Request body\n got=%#v\nwant=%#v", v, expected)
+		}
+
+		fmt.Fprintf(w, `{
+			"api_version": "3.1",
+			"metadata": {
+				"kind": "user",
+				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
+			}
+		}`)
+	})
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		request *UserIntentInput
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *UserIntentResponse
+		wantErr bool
+	}{
+		{
+			"Test CreateUser",
+			fields{c},
+			args{
+				&UserIntentInput{
+					APIVersion: utils.StringPtr("3.1"),
+					Metadata: &Metadata{
+						Name: utils.StringPtr("user_name"),
+						Kind: utils.StringPtr("user"),
+						UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					},
+					Spec: &UserSpec{
+						Resources: &UserResources{
+							DirectoryServiceUser: &DirectoryServiceUser{
+								DirectoryServiceReference: &Reference{
+									Kind: utils.StringPtr("directory_service"),
+									UUID: utils.StringPtr("d8b53470-c432-4556-badd-a11c937d89c9"),
+								},
+								UserPrincipalName: utils.StringPtr("user-dummy-tbd@ntnx.local"),
+							},
+						},
+					},
+				},
+			},
+			&UserIntentResponse{
+				APIVersion: utils.StringPtr("3.1"),
+				Metadata: &Metadata{
+					Kind: utils.StringPtr("user"),
+					UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+				},
+			},
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.CreateUser(tt.args.request)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.CreateUser() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.CreateUser() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOperations_GetUser(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/users/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodGet)
+		fmt.Fprint(w, `{"metadata": {"kind":"user","uuid":"cfde831a-4e87-4a75-960f-89b0148aa2cc"}}`)
+	})
+
+	hostResponse := &UserIntentResponse{}
+	hostResponse.Metadata = &Metadata{
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("user"),
+	}
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		UUID string
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *UserIntentResponse
+		wantErr bool
+	}{
+		{
+			"Test GetUser OK",
+			fields{c},
+			args{"cfde831a-4e87-4a75-960f-89b0148aa2cc"},
+			hostResponse,
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.GetUser(tt.args.UUID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.GetUser() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.GetUser() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOperations_ListUser(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/users/list", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodPost)
+		fmt.Fprint(w, `{"entities":[{"metadata": {"kind":"user","uuid":"cfde831a-4e87-4a75-960f-89b0148aa2cc"}}]}`)
+	})
+
+	hostList := &UserListResponse{}
+	hostList.Entities = make([]*UserIntentResponse, 1)
+	hostList.Entities[0] = &UserIntentResponse{}
+	hostList.Entities[0].Metadata = &Metadata{
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("user"),
+	}
+
+	input := &DSMetadata{
+		Length: utils.Int64Ptr(1.0),
+	}
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		getEntitiesRequest *DSMetadata
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *UserListResponse
+		wantErr bool
+	}{
+		{
+			"Test ListUser OK",
+			fields{c},
+			args{input},
+			hostList,
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.ListUser(tt.args.getEntitiesRequest)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.ListUser() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.ListUser() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOperations_UpdateUser(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/users/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodPut)
+
+		expected := map[string]interface{}{
+			"api_version": "3.1",
+			"metadata": map[string]interface{}{
+				"name": "user_name",
+				"kind": "user",
+				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc",
+			},
+			"spec": map[string]interface{}{
+				"resources": map[string]interface{}{
+					"directory_service_user": map[string]interface{}{
+						"directory_service_reference": map[string]interface{}{
+							"kind": "directory_service",
+							"uuid": "d8b53470-c432-4556-badd-a11c937d89c9",
+						},
+						"user_principal_name": "user-dummy-tbd@ntnx.local",
+					},
+				},
+			},
+		}
+
+		var v map[string]interface{}
+		err := json.NewDecoder(r.Body).Decode(&v)
+		if err != nil {
+			t.Fatalf("decode json: %v", err)
+		}
+
+		if !reflect.DeepEqual(v, expected) {
+			t.Errorf("Request body\n got=%#v\nwant=%#v", v, expected)
+		}
+
+		fmt.Fprintf(w, `{
+			"api_version": "3.1",
+			"metadata": {
+				"kind": "user",
+				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
+			}
+		}`)
+	})
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		UUID string
+		body *UserIntentInput
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *UserIntentResponse
+		wantErr bool
+	}{
+		{
+			"Test CreateUser",
+			fields{c},
+			args{
+				"cfde831a-4e87-4a75-960f-89b0148aa2cc",
+				&UserIntentInput{
+					APIVersion: utils.StringPtr("3.1"),
+					Metadata: &Metadata{
+						Name: utils.StringPtr("user_name"),
+						Kind: utils.StringPtr("user"),
+						UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					},
+					Spec: &UserSpec{
+						Resources: &UserResources{
+							DirectoryServiceUser: &DirectoryServiceUser{
+								DirectoryServiceReference: &Reference{
+									Kind: utils.StringPtr("directory_service"),
+									UUID: utils.StringPtr("d8b53470-c432-4556-badd-a11c937d89c9"),
+								},
+								UserPrincipalName: utils.StringPtr("user-dummy-tbd@ntnx.local"),
+							},
+						},
+					},
+				},
+			},
+			&UserIntentResponse{
+				APIVersion: utils.StringPtr("3.1"),
+				Metadata: &Metadata{
+					Kind: utils.StringPtr("user"),
+					UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+				},
+			},
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.UpdateUser(tt.args.UUID, tt.args.body)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.UpdateUser() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.UpdateUser() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOperations_DeleteUser(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/users/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodDelete)
+
+		fmt.Fprintf(w, `{
+				"status": {
+					"state": "DELETE_PENDING",
+					"execution_context": {
+						"task_uuid": "ff1b9547-dc9a-4ebd-a2ff-f2b718af935e"
+					}
+				},
+				"spec": "",
+				"api_version": "3.1",
+				"metadata": {
+					"kind": "user",
+					"categories": {
+						"Project": "default"
+					}
+				}
+			}`)
+	})
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		UUID string
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			"Test DeleteUser OK",
+			fields{c},
+			args{"cfde831a-4e87-4a75-960f-89b0148aa2cc"},
+			false,
+		},
+
+		{
+			"Test DeleteUser Errored",
+			fields{c},
+			args{},
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			if _, err := op.DeleteUser(tt.args.UUID); (err != nil) != tt.wantErr {
+				t.Errorf("Operations.DeleteUser() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
