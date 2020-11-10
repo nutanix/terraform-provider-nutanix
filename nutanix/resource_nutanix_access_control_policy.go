@@ -364,7 +364,7 @@ func resourceNutanixAccessControlPolicyRead(d *schema.ResourceData, meta interfa
 			d.SetId("")
 			return nil
 		}
-		errDel := resourceNutanixSubnetDelete(d, meta)
+		errDel := resourceNutanixAccessControlPolicyDelete(d, meta)
 		if errDel != nil {
 			return fmt.Errorf("error deleting access control policy (%s) after read error: %+v", id, errDel)
 		}

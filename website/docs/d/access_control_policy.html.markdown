@@ -93,10 +93,6 @@ The following attributes are exported:
 * `metadata`: - The vm kind metadata.
 * `api_version` - The version of the API.
 * `state`: - The state of the vm.
-* `cluster_name`: - The name of the cluster.
-* `host_reference`: - Reference to a host.
-* `hypervisor_type`: - The hypervisor type for the hypervisor the VM is hosted on.
-* `nic_list_status`: - Status NICs attached to the VM.
 
 ### Metadata
 
