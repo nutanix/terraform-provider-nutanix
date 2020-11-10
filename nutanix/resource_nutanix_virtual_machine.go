@@ -23,6 +23,7 @@ var (
 	vmDelay      = 3 * time.Second
 	vmMinTimeout = 3 * time.Second
 	IDE          = "IDE"
+	CDROOMIndex  = 3
 	useHotAdd    = true
 )
 
@@ -710,31 +711,26 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 						},
 						"device_properties": {
 							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
+							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"device_type": {
 										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
+										Required: true,
 									},
 									"disk_address": {
 										Type:     schema.TypeMap,
-										Optional: true,
-										Computed: true,
+										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"device_index": {
 													Type:     schema.TypeInt,
-													Optional: true,
-													Computed: true,
+													Required: true,
 												},
 												"adapter_type": {
 													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
+													Required: true,
 												},
 											},
 										},
@@ -956,7 +952,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting nic_list_status for Virtual Machine %s: %s", d.Id(), err)
 	}
 
-	if err := d.Set("disk_list", flattenDiskList(resp.Spec.Resources.DiskList)); err != nil {
+	if err := d.Set("disk_list", flattenDiskList(resp.Spec.Resources.DiskList, expandDiskList(d))); err != nil {
 		return fmt.Errorf("error setting disk_list for Virtual Machine %s: %s", d.Id(), err)
 	}
 
@@ -1277,6 +1273,16 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		}
 
 		res.DiskList = expandDiskListUpdate(d, response)
+		imageMismatch := parseDiskImageChange(response, res.DiskList)
+
+		//check if a disk is removed.
+		if len(res.DiskList) < len(response.Status.Resources.DiskList) {
+			hotPlugChange = false
+		}
+
+		if imageMismatch {
+			hotPlugChange = false
+		}
 
 		postCdromCount, err := CountDiskListCdrom(res.DiskList)
 		if err != nil {
@@ -1763,7 +1769,8 @@ func expandDiskListUpdate(d *schema.ResourceData, vm *v3.VMIntentResponse) []*v3
 			if disk.DeviceProperties != nil && disk.DeviceProperties.DiskAddress != nil {
 				index := disk.DeviceProperties.DiskAddress.DeviceIndex
 				adapterType := disk.DeviceProperties.DiskAddress.AdapterType
-				if *index == 3 && *adapterType == IDE {
+				deviceType := disk.DeviceProperties.DeviceType
+				if *deviceType == "CDROM" && *index == 3 && *adapterType == IDE {
 					eDiskList = append(eDiskList, disk)
 				}
 			}
@@ -2099,6 +2106,36 @@ func setVMTimeout(meta interface{}) {
 	if client.WaitTimeout != 0 {
 		vmTimeout = time.Duration(client.WaitTimeout) * time.Minute
 	}
+}
+
+func parseDiskImageChange(vmOutput *v3.VMIntentResponse, expandedDiskList []*v3.VMDisk) bool {
+	foundImageMismatch := false
+	if vmOutput.Status.Resources.DiskList != nil {
+		currentDiskList := vmOutput.Status.Resources.DiskList
+		// Loop the disks to be updated via PUT
+		for _, nDisk := range expandedDiskList {
+			// check if disk uuid is not nil => is existing disk
+			if nDisk.UUID != nil {
+				// Loop over the current VM disks
+				for _, cDisk := range currentDiskList {
+					// perform a match... Need to check ndisk again since we put it to nil late rin the loop
+					if cDisk.UUID != nil && nDisk.UUID != nil && *nDisk.UUID == *cDisk.UUID {
+						// check if all attrs are not nil and compare the image UUIDs
+						if nDisk.DataSourceReference != nil &&
+							nDisk.DataSourceReference.UUID != nil &&
+							cDisk.DataSourceReference != nil &&
+							cDisk.DataSourceReference.UUID != nil &&
+							*cDisk.DataSourceReference.UUID != *nDisk.DataSourceReference.UUID {
+							// clear UUID so the API sees it as new disk
+							nDisk.UUID = nil
+							foundImageMismatch = true
+						}
+					}
+				}
+			}
+		}
+	}
+	return foundImageMismatch
 }
 
 func resourceNutanixVirtualMachineInstanceResourceV0() *schema.Resource {

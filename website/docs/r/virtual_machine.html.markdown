@@ -109,7 +109,7 @@ The disk_list attribute supports the following:
 * `uuid`: - (Optional) The device ID which is used to uniquely identify this particular disk.
 * `disk_size_bytes` - (Optional) Size of the disk in Bytes.
 * `disk_size_mib` - Size of the disk in MiB. Must match the size specified in 'disk_size_bytes' - rounded up to the nearest MiB - when that field is present.
-* `device_properties` - Properties to a device.
+* `device_properties` - (Required) Properties to a device.
 * `data_source_reference` - Reference to a data source.
 * `volume_group_reference` - Reference to a volume group.
 
@@ -119,8 +119,8 @@ The disk_size (the disk size_mib and the disk_size_bytes attributes) is only hon
 
 The device_properties attribute supports the following.
 
-* `device_type`: - A Disk type (default: DISK).
-* `disk_address`: - Address of disk to boot from.
+* `device_type`: - (Required) A Disk type (default: DISK).
+* `disk_address`: - (Required) Address of disk to boot from.
 
 ### Storage Config
 User inputs of storage configuration parameters for VMs.
@@ -147,8 +147,8 @@ The guest_customization_sysprep attribute supports the following:
 
  The boot_device_disk_address attribute supports the following:
 
-* `device_index`: - (Optional) The index of the disk address.
-* `adapter_type`: - (Optional) The adapter type of the disk address.
+* `device_index`: - (Required) The index of the disk address.
+* `adapter_type`: - (Required) The adapter type of the disk address.
 
 ### GPU List
 

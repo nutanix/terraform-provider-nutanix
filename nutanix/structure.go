@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -103,18 +104,22 @@ func flattenNicList(nics []*v3.VMNic) []map[string]interface{} {
 	return nicLists
 }
 
-func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
+func flattenDiskList(disks []*v3.VMDisk, diskFromState []*v3.VMDisk) []map[string]interface{} {
 	diskList := make([]map[string]interface{}, 0)
-	for _, v := range disks {
+	sortedDisks := sortDiskList(disks, diskFromState)
+	for _, v := range sortedDisks {
+		if v == nil {
+			continue
+		}
 		var deviceProps []map[string]interface{}
 		var storageConfig []map[string]interface{}
-
 		if v.DeviceProperties != nil {
 			deviceProps = make([]map[string]interface{}, 1)
 			index := fmt.Sprintf("%d", utils.Int64Value(v.DeviceProperties.DiskAddress.DeviceIndex))
-			adapter := v.DeviceProperties.DiskAddress.AdapterType
+			adapter := *v.DeviceProperties.DiskAddress.AdapterType
+			deviceType := *v.DeviceProperties.DeviceType
 
-			if index == "3" && *adapter == IDE {
+			if deviceType == "CDROM" && index == "3" && adapter == IDE {
 				continue
 			}
 
@@ -152,6 +157,47 @@ func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
 		})
 	}
 	return diskList
+}
+
+func sortDiskList(disks []*v3.VMDisk, disksFromState []*v3.VMDisk) []*v3.VMDisk {
+	resList := make([]*v3.VMDisk, len(disks)) //make sure the length is according the API VM diskList
+	//offset := 0
+	notFoundList := make([]*v3.VMDisk, 0)
+	for _, disk := range disks {
+		if disk.DeviceProperties != nil {
+			deviceType := disk.DeviceProperties.DeviceType
+			if disk.DeviceProperties.DiskAddress != nil {
+				if *deviceType == "CDROM" && *disk.DeviceProperties.DiskAddress.DeviceIndex == int64(CDROOMIndex) && *disk.DeviceProperties.DiskAddress.AdapterType == IDE {
+					continue
+				}
+			}
+		}
+		index := findIndexDiskList(disk, disksFromState)
+
+		if index > -1 && index < len(disks) {
+			resList[index] = disk
+		}
+		if index == -1 {
+			notFoundList = append(notFoundList, disk)
+		}
+	}
+	resList = append(resList, notFoundList...)
+	return resList
+}
+
+func findIndexDiskList(disk *v3.VMDisk, disks []*v3.VMDisk) int {
+	return Search(len(disks), func(i int) bool {
+		return reflect.DeepEqual(disks[i].DeviceProperties, disk.DeviceProperties)
+	})
+}
+
+func Search(length int, f func(index int) bool) int {
+	for index := 0; index < length; index++ {
+		if f(index) {
+			return index
+		}
+	}
+	return -1
 }
 
 func flattenSerialPortList(serialPorts []*v3.VMSerialPort) []map[string]interface{} {
