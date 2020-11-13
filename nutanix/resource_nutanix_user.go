@@ -512,6 +512,8 @@ func resourceNutanixUserDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error waiting for user (%s) to delete: %s", d.Id(), err)
 	}
 
+	log.Printf("[DEBUG] USER DELETED")
+
 	d.SetId("")
 	return nil
 }
@@ -540,7 +542,7 @@ func expandDirectoryServiceUser(d *schema.ResourceData) *v3.DirectoryServiceUser
 }
 
 func expandIdentityProviderUser(d *schema.ResourceData) *v3.IdentityProvider {
-	identityProviderState, ok := d.GetOk("directory_service_user")
+	identityProviderState, ok := d.GetOk("identity_provider_user")
 	if !ok {
 		return nil
 	}
@@ -579,7 +581,6 @@ func flattenDirectoryServiceUser(dsu *v3.DirectoryServiceUser) []interface{} {
 			directoryServiceUserMap["directory_service_reference"] = []interface{}{flattenReferenceValues(dsu.DirectoryServiceReference)}
 		}
 		return []interface{}{directoryServiceUserMap}
-
 	}
 	return nil
 }
