@@ -62,33 +62,12 @@ func testAccCheckNutanixUserDestroy(s *terraform.State) error {
 	return nil
 }
 
-// func resourceNutanixUserExists(conn *v3.Client, name string) (*string, error) {
-// 	var userUUID *string
-
-// 	filter := fmt.Sprintf("name==%s", name)
-// 	userList, err := conn.V3.ListAllUser(filter)
-
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	for _, user := range userList.Entities {
-// 		if utils.StringValue(user.Status.Name) == name {
-// 			userUUID = user.Metadata.UUID
-// 		}
-// 	}
-// 	return userUUID, nil
-// }
-
 func testAccCheckNutanixUserExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("not found: %s", n)
 		}
-
-		//pretty, _ := json.MarshalIndent(rs, "", "  ")
-		//fmt.Print("\n\n[DEBUG] State of User", string(pretty))
 
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no ID is set")
@@ -100,13 +79,13 @@ func testAccCheckNutanixUserExists(n string) resource.TestCheckFunc {
 
 func testAccNutanixUserConfig(pn, dsuuid string) string {
 	return fmt.Sprintf(`
-	resource "nutanix_user" "user" {
-		directory_service_user {
-		  user_principal_name = "%s"
-		  directory_service_reference {
-			uuid = "%s"
-		  }
+resource "nutanix_user" "user" {
+	directory_service_user {
+		user_principal_name = "%s"
+		directory_service_reference {
+		uuid = "%s"
 		}
-	  }
+	}
+}
 `, pn, dsuuid)
 }
