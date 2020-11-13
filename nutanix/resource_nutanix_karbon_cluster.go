@@ -271,6 +271,7 @@ func CNISchema() *schema.Schema {
 				"flannel_config": {
 					Type:     schema.TypeList,
 					Optional: true,
+					ForceNew: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{},
 					},
@@ -279,16 +280,19 @@ func CNISchema() *schema.Schema {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
+					ForceNew: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"ip_pool_config": {
 								Type:     schema.TypeList,
 								Optional: true,
+								ForceNew: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"cidr": {
 											Type:         schema.TypeString,
 											Optional:     true,
+											ForceNew:     true,
 											Default:      DEFAULTPODIPV4CIDR,
 											ValidateFunc: validation.CIDRNetwork(0, 32),
 										},
