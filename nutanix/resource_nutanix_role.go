@@ -3,8 +3,9 @@ package nutanix
 import (
 	"bytes"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"strings"
+
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
