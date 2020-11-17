@@ -41,6 +41,7 @@ func resourceNutanixProject() *schema.Resource {
 			"resource_domain": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"resources": {
