@@ -40,7 +40,7 @@ func resourceNutanixProject() *schema.Resource {
 			},
 			"resource_domain": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"resources": {
@@ -505,7 +505,7 @@ func expandProjectSpec(d *schema.ResourceData) *v3.ProjectSpec {
 func expandResourceDomain(d *schema.ResourceData) *v3.ResourceDomain {
 	resourceDomain, ok := d.GetOk("resource_domain")
 	if !ok {
-		return &v3.ResourceDomain{}
+		return nil
 	}
 	resources := cast.ToStringMap(resourceDomain.([]interface{})[0])["resources"].([]interface{})
 
