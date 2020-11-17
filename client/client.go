@@ -235,6 +235,12 @@ func CheckResponse(r *http.Response) error {
 	if c := r.StatusCode; c >= 200 && c <= 299 {
 		return nil
 	}
+	
+	// Nutanix returns non-json response with code 401 when
+	// invalid credentials are used
+	if c == 401 {
+		return fmt.Errorf("Invalid Nutanix Credentials")
+	}
 
 	buf, err := ioutil.ReadAll(r.Body)
 
