@@ -4,69 +4,72 @@
     <ul class="nav docs-sidenav">
         <li<%= sidebar_current("docs-home") %>>
             <a href="/docs/providers/index.html">All Providers</a>
-            </li>
-
-            <li<%= sidebar_current("docs-nutanix-index") %>>
-                <a href="/docs/providers/nutanix/index.html">Nutanix Provider</a>
+        </li>
+        
+        <li<%= sidebar_current("docs-nutanix-index") %>>
+            <a href="/docs/providers/nutanix/index.html">Nutanix Provider</a>
+        </li>
+        
+        <li<%= sidebar_current("docs-nutanix-datasource") %>>
+            <a href="#">Data Sources</a>
+            <ul class="nav nav-visible">
+                <li<%= sidebar_current("docs-nutanix-datasource-virtual_machine") %>>
+                    <a href="/docs/providers/nutanix/d/virtual_machine.html">nutanix_virtual_machine</a>
                 </li>
+                <!-- 
+                <li<%= sidebar_current("docs-nutanix-datasource-volume-group") %>>
+                    <a href="/docs/providers/nutanix/d/volume_group.html">nutanix_volume_group</a>
+                </li>
+                -->
+                <li<%= sidebar_current("docs-nutanix-datasource-image") %>>
+                    <a href="/docs/providers/nutanix/d/image.html">nutanix_image</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-datasource-subnet") %>>
+                    <a href="/docs/providers/nutanix/d/subnet.html">nutanix_subnet</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-datasource-network_security_rule") %>>
+                    <a href="/docs/providers/nutanix/d/network_security_rule.html">nutanix_network_security_rule</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-datasource-cluster") %>>
+                    <a href="/docs/providers/nutanix/d/cluster.html">nutanix_cluster</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-datasource-clusters-x") %>>
+                    <a href="/docs/providers/nutanix/d/clusters.html">nutanix_clusters</a>
+                </li>
+            </ul>
+        </li>
 
-                <li<%= sidebar_current("docs-nutanix-datasource") %>>
-                    <a href="#">Data Sources</a>
-                    <ul class="nav nav-visible">
-                        <li<%= sidebar_current("docs-nutanix-datasource-virtual_machine") %>>
-                            <a href="/docs/providers/nutanix/d/virtual_machine.html">nutanix_virtual_machine</a>
-                            </li>
-                            <!-- <li<%= sidebar_current("docs-nutanix-datasource-volume-group") %>>
-                            <a href="/docs/providers/nutanix/d/volume_group.html">nutanix_volume_group</a>
-                        </li> -->
-                            <li<%= sidebar_current("docs-nutanix-datasource-image") %>>
-                                <a href="/docs/providers/nutanix/d/image.html">nutanix_image</a>
-                                </li>
-                                <li<%= sidebar_current("docs-nutanix-datasource-subnet") %>>
-                                    <a href="/docs/providers/nutanix/d/subnet.html">nutanix_subnet</a>
-                                    </li>
-                                    <li<%= sidebar_current("docs-nutanix-datasource-network_security_rule") %>>
-                                        <a
-                                            href="/docs/providers/nutanix/d/network_security_rule.html">nutanix_network_security_rule</a>
-                                        </li>
-                                        <li<%= sidebar_current("docs-nutanix-datasource-cluster") %>>
-                                            <a href="/docs/providers/nutanix/d/cluster.html">nutanix_cluster</a>
-                                            </li>
-                                            <li<%= sidebar_current("docs-nutanix-datasource-clusters-x") %>>
-                                                <a href="/docs/providers/nutanix/d/clusters.html">nutanix_clusters</a>
-                                                </li>
-                    </ul>
-                    </li>
-
-                    <li<%= sidebar_current("docs-nutanix-resource") %>>
-                        <a href="#">Resources</a>
-                        <ul class="nav nav-visible">
-                            <li<%= sidebar_current("docs-nutanix-resource-nutanix-virtual-machine") %>>
-                                <a href="/docs/providers/nutanix/r/virtual_machine.html">nutanix_virtual_machine</a>
-                                </li>
-                                <!-- <li<%= sidebar_current("docs-nutanix-resource-nutanix-volume-group") %>>
-                                    <a href="/docs/providers/nutanix/r/volume_group.html">nutanix_volume_group</a>
-                                    </li> -->
-                                <li<%= sidebar_current("docs-nutanix-resource-nutanix_subnet") %>>
-                                    <a href="/docs/providers/nutanix/r/subnet.html">nutanix_subnet</a>
-                                    </li>
-                                    <li<%= sidebar_current("docs-nutanix-resource-nutanix_image") %>>
-                                        <a href="/docs/providers/nutanix/r/image.html">nutanix_image</a>
-                                        </li>
-                                        <li<%= sidebar_current("docs-nutanix-resource-nutanix-category-key") %>>
-                                            <a
-                                                href="/docs/providers/nutanix/r/category_key.html">nutanix_category_key</a>
-                                            </li>
-                                            <li<%= sidebar_current("docs-nutanix-resource-nutanix-category-value") %>>
-                                                <a
-                                                    href="/docs/providers/nutanix/r/category_value.html">nutanix_category_value</a>
-                                                </li>
-                                                <li<%= sidebar_current("docs-nutanix-resource-network-security-rule") %>>
-                                                    <a
-                                                        href="/docs/providers/nutanix/r/network_security_rule.html">nutanix_network_security_rule</a>
-                                                    </li>
-                        </ul>
-                        </li>
+        <li<%= sidebar_current("docs-nutanix-resource") %>>
+            <a href="#">Resources</a>
+            <ul class="nav nav-visible">
+                <li<%= sidebar_current("docs-nutanix-resource-nutanix-virtual-machine") %>>
+                    <a href="/docs/providers/nutanix/r/virtual_machine.html">nutanix_virtual_machine</a>
+                </li>
+                <!--
+                <li<%= sidebar_current("docs-nutanix-resource-nutanix-volume-group") %>>
+                    <a href="/docs/providers/nutanix/r/volume_group.html">nutanix_volume_group</a>
+                </li>
+                -->
+                <li<%= sidebar_current("docs-nutanix-resource-nutanix_subnet") %>>
+                    <a href="/docs/providers/nutanix/r/subnet.html">nutanix_subnet</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-resource-nutanix_image") %>>
+                    <a href="/docs/providers/nutanix/r/image.html">nutanix_image</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-resource-nutanix-category-key") %>>
+                    <a href="/docs/providers/nutanix/r/category_key.html">nutanix_category_key</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-resource-nutanix-category-value") %>>
+                    <a href="/docs/providers/nutanix/r/category_value.html">nutanix_category_value</a>
+                </li>
+                <li<%= sidebar_current("docs-nutanix-resource-network-security-rule") %>>
+                    <a href="/docs/providers/nutanix/r/network_security_rule.html">nutanix_network_security_rule</a>
+                </li>
+                 <li<%= sidebar_current("docs-nutanix-resource-user") %>>
+                    <a href="/docs/providers/nutanix/r/user.html">nutanix_user</a>
+                </li>
+            </ul>
+        </li>
     </ul>
 </div>
 <% end %>
