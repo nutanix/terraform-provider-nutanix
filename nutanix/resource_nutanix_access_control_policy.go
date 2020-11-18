@@ -466,11 +466,11 @@ func resourceNutanixAccessControlPolicyUpdate(d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("user_reference_list") {
-		res.UserGroupReferenceList = validateArrayRef(d.Get("user_reference_list").([]interface{}), utils.StringPtr("user"))
+		res.UserGroupReferenceList = validateArrayRef(d.Get("user_reference_list").(*schema.Set), utils.StringPtr("user"))
 	}
 
 	if d.HasChange("user_group_reference_list") {
-		res.UserGroupReferenceList = validateArrayRef(d.Get("user_group_reference_list").([]interface{}), utils.StringPtr("user_group"))
+		res.UserGroupReferenceList = validateArrayRef(d.Get("user_group_reference_list").(*schema.Set), utils.StringPtr("user_group"))
 	}
 
 	if d.HasChange("role_reference") {
