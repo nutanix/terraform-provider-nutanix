@@ -466,7 +466,7 @@ func resourceNutanixAccessControlPolicyUpdate(d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("user_reference_list") {
-		res.UserGroupReferenceList = validateArrayRef(d.Get("user_reference_list").(*schema.Set), utils.StringPtr("user"))
+		res.UserReferenceList = validateArrayRef(d.Get("user_reference_list").(*schema.Set), utils.StringPtr("user"))
 	}
 
 	if d.HasChange("user_group_reference_list") {
