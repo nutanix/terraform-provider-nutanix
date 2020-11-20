@@ -44,6 +44,31 @@ func TestAccNutanixUser_basic(t *testing.T) {
 	})
 }
 
+func TestAccNutanixUser_IdentityProvider(t *testing.T) {
+	username := "dou-user-2@ntnxlab.local"
+	identityProviderUUID := "02316a2c-cc8c-41de-9abb-f07c4da58fda"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixUserConfig_IdentityProvider(username, identityProviderUUID),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixUserExists(resourceNameUser),
+					resource.TestCheckResourceAttr(resourceNameUser, "name", username),
+					resource.TestCheckResourceAttr(resourceNameUser, "identity_provider_user.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceNameUser,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixUserDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*Client)
 
@@ -83,9 +108,22 @@ resource "nutanix_user" "user" {
 	directory_service_user {
 		user_principal_name = "%s"
 		directory_service_reference {
-		uuid = "%s"
+		  uuid = "%s"
 		}
 	}
 }
 `, pn, dsuuid)
+}
+
+func testAccNutanixUserConfig_IdentityProvider(username, ipuuid string) string {
+	return fmt.Sprintf(`
+resource "nutanix_user" "user" {
+	identity_provider_user {
+		username = "%s"
+		identity_provider_reference {
+		  uuid = "%s"
+		}
+	}
+}
+`, username, ipuuid)
 }

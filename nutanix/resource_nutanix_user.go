@@ -356,7 +356,8 @@ func resourceNutanixUserRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting directory_service_user for user UUID(%s), %s", d.Id(), err)
 	}
 
-	if err = d.Set("identity_provider_user", flattenIdentityProviderUser(resp.Status.Resources.IdentityProviderUser)); err != nil {
+	//TODO: change to status when API is fixed
+	if err = d.Set("identity_provider_user", flattenIdentityProviderUser(resp.Spec.Resources.IdentityProviderUser)); err != nil {
 		return fmt.Errorf("error setting identity_provider_user for user UUID(%s), %s", d.Id(), err)
 	}
 
@@ -594,7 +595,7 @@ func flattenIdentityProviderUser(ipu *v3.IdentityProvider) []interface{} {
 		}
 
 		if ipu.IdentityProviderReference != nil {
-			identityProviderUserMap["identity_provider_reference"] = flattenReferenceValues(ipu.IdentityProviderReference)
+			identityProviderUserMap["identity_provider_reference"] = []interface{}{flattenReferenceValues(ipu.IdentityProviderReference)}
 		}
 
 		return []interface{}{identityProviderUserMap}
