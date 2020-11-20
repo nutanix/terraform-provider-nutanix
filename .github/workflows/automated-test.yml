@@ -1,6 +1,6 @@
 name: 'Automated Tests'
 
-on: [pull, pull_request]
+on: [push, pull_request]
 
 jobs:
   tests:
