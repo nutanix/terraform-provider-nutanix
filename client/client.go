@@ -143,12 +143,10 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 	req.Header.Add("Accept", mediaType)
 	req.Header.Add("User-Agent", c.UserAgent)
 	if c.Cookies != nil {
-		log.Printf("[DEBUG] Adding cookies to request\n")
 		for _, i := range c.Cookies {
 			req.AddCookie(i)
 		}
 	} else {
-		log.Printf("[DEBUG] Adding basic auth to request\n")
 		req.Header.Add("Authorization", "Basic "+
 			base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
 	}
