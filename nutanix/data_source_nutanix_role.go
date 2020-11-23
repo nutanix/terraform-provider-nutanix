@@ -14,7 +14,12 @@ func dataSourceNutanixRole() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"role_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+			},
+			"role_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"role_id"},
 			},
 			"api_version": {
 				Type:     schema.TypeString,
@@ -138,18 +143,24 @@ func dataSourceNutanixRoleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 
 	accessID, iok := d.GetOk("role_id")
+	roleName, rnOk := d.GetOk("role_name")
 
-	if !iok {
-		return fmt.Errorf("please provide `role_id`")
+	if !iok || rnOk {
+		return fmt.Errorf("please provide `role_id` or `role_name`")
 	}
 
-	var reqErr error
+	var err error
 	var resp *v3.Role
 
-	resp, reqErr = conn.V3.GetRole(accessID.(string))
+	if iok {
+		resp, err = conn.V3.GetRole(accessID.(string))
+	}
+	if rnOk {
+		resp, err = findRoleByName(conn, roleName.(string))
+	}
 
-	if reqErr != nil {
-		return reqErr
+	if err != nil {
+		return err
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
@@ -190,4 +201,31 @@ func dataSourceNutanixRoleRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(utils.StringValue(resp.Metadata.UUID))
 
 	return nil
+}
+
+func findRoleByName(conn *v3.Client, name string) (*v3.Role, error) {
+	filter := fmt.Sprintf("name==%s", name)
+	resp, err := conn.V3.ListAllRole(filter)
+	if err != nil {
+		return nil, err
+	}
+
+	entities := resp.Entities
+
+	found := make([]*v3.Role, 0)
+	for _, v := range entities {
+		if *v.Spec.Name == name {
+			found = append(found, v)
+		}
+	}
+
+	if len(found) > 1 {
+		return nil, fmt.Errorf("your query returned more than one result. Please use role_id argument instead")
+	}
+
+	if len(found) == 0 {
+		return nil, fmt.Errorf("role with the given name, not found")
+	}
+
+	return found[0], nil
 }
