@@ -23,6 +23,7 @@ data "nutanix_cluster" "cluster" {
 The following arguments are supported:
 
 * `cluster_id`: Represents clusters uuid
+* `name`: Represents the name of cluster
 
 ### Metadata
 
