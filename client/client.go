@@ -232,10 +232,12 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 
 // CheckResponse checks errors if exist errors in request
 func CheckResponse(r *http.Response) error {
-	if c := r.StatusCode; c >= 200 && c <= 299 {
+	c := r.StatusCode
+
+	if c >= 200 && c <= 299 {
 		return nil
 	}
-	
+
 	// Nutanix returns non-json response with code 401 when
 	// invalid credentials are used
 	if c == 401 {
