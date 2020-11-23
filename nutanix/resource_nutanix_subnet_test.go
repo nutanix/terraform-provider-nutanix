@@ -1,7 +1,6 @@
 package nutanix
 
 import (
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -171,9 +170,6 @@ func testAccCheckNutanixSubnetExists(n string) resource.TestCheckFunc {
 		if !ok {
 			return fmt.Errorf("not found: %s", n)
 		}
-
-		pretty, _ := json.MarshalIndent(rs, "", "  ")
-		fmt.Print("\n\n[DEBUG] State of Subnet", string(pretty))
 
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no ID is set")
