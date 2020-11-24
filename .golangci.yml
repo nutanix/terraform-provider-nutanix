@@ -22,7 +22,7 @@ linters-settings:
     # also, for anyone using vscode, use the following configs:
     # "rewrap.wrappingColumn": 140 ... requires the rewrap plugin
     # "editor.rulers": [140]
-    line-length: 150
+    line-length: 200
 
 linters:
   enable-all: true
