@@ -190,7 +190,7 @@ func dataSourceNutanixRolesRead(d *schema.ResourceData, meta interface{}) error 
 
 	metadata, filtersOk := d.GetOk("metadata")
 	if filtersOk {
-		req = buildDataSourceSubnetsMetadata(metadata.(*schema.Set))
+		req = buildDataSourceListMetadata(metadata.(*schema.Set))
 	}
 
 	resp, err := conn.V3.ListRole(req)
