@@ -13,8 +13,9 @@ func dataSourceNutanixRole() *schema.Resource {
 		Read: dataSourceNutanixRoleRead,
 		Schema: map[string]*schema.Schema{
 			"role_id": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"role_name"},
 			},
 			"role_name": {
 				Type:          schema.TypeString,
@@ -145,7 +146,7 @@ func dataSourceNutanixRoleRead(d *schema.ResourceData, meta interface{}) error {
 	accessID, iok := d.GetOk("role_id")
 	roleName, rnOk := d.GetOk("role_name")
 
-	if !iok || rnOk {
+	if !iok && !rnOk {
 		return fmt.Errorf("please provide `role_id` or `role_name`")
 	}
 
