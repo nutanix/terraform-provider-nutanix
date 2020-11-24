@@ -77,11 +77,14 @@ const (
 	// Modifies CompiledGoFiles and Types, and has no effect on its own.
 	TypecheckCgo
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 	// NeedModule adds Module.
 	NeedModule
 =======
 >>>>>>> 8a0b5446... chore: updated vendor
+=======
+>>>>>>> 8a0b5446121dbb2d94bd9930504b7deed2e7f4ae
 )
 
 const (

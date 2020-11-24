@@ -2,10 +2,11 @@ package nutanix
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"

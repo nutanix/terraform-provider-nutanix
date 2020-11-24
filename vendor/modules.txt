@@ -491,10 +491,14 @@ golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 golang.org/x/text/width
 <<<<<<< HEAD
+<<<<<<< HEAD
 # golang.org/x/tools v0.0.0-20200530233709-52effbd89c51
 =======
 # golang.org/x/tools v0.0.0-20200515010526-7d3b6ebf133d
 >>>>>>> 8a0b5446... chore: updated vendor
+=======
+# golang.org/x/tools v0.0.0-20200515010526-7d3b6ebf133d
+>>>>>>> 8a0b5446121dbb2d94bd9930504b7deed2e7f4ae
 golang.org/x/tools/go/analysis
 golang.org/x/tools/go/analysis/passes/asmdecl
 golang.org/x/tools/go/analysis/passes/assign
