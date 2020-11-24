@@ -238,8 +238,8 @@ func CheckResponse(r *http.Response) error {
 
 	// Nutanix returns non-json response with code 401 when
 	// invalid credentials are used
-	if c == 401 {
-		return fmt.Errorf("Invalid Nutanix Credentials")
+	if c == http.StatusNotFound {
+		return fmt.Errorf("invalid Nutanix Credentials")
 	}
 
 	buf, err := ioutil.ReadAll(r.Body)
