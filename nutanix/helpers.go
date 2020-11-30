@@ -22,12 +22,15 @@ func getMetadataAttributes(d *schema.ResourceData, metadata *v3.Metadata, kind s
 
 	if p, ok := d.GetOk("project_reference"); ok {
 		pr := p.(map[string]interface{})
-		r := &v3.Reference{
-			Kind: utils.StringPtr(pr["kind"].(string)),
-			UUID: utils.StringPtr(pr["uuid"].(string)),
-		}
+		r := &v3.Reference{}
 		if v1, ok1 := pr["name"]; ok1 {
 			r.Name = utils.StringPtr(v1.(string))
+		}
+		if v2, ok2 := pr["kind"]; ok2 {
+			r.Kind = utils.StringPtr(v2.(string))
+		}
+		if v3, ok3 := pr["uuid"]; ok3 {
+			r.UUID = utils.StringPtr(v3.(string))
 		}
 		metadata.ProjectReference = r
 	}
