@@ -2203,3 +2203,45 @@ type UserListResponse struct {
 	Entities   []*UserIntentResponse `json:"entities,omitempty"`
 	Metadata   *ListMetadataOutput   `json:"metadata,omitempty"` // All api calls that return a list will have this metadata block
 }
+
+// Response object for intentful operations on a user_group
+type UserGroupIntentResponse struct {
+	APIVersion *string          `json:"api_version,omitempty"` // API Version of the Nutanix v3 API framework.
+	Metadata   *Metadata        `json:"metadata,omitempty"`    // The user_group kind metadata
+	Spec       *UserGroupSpec   `json:"spec,omitempty"`        // User Group Input Definition.
+	Status     *UserGroupStatus `json:"status,omitempty"`      // User group status definition.
+}
+
+// User Group Input Definition.
+type UserGroupSpec struct {
+	Resources *UserGroupResources `json:"resources,omitempty"` // User Group Resource Definition
+}
+
+// User Group Resource Definition
+type UserGroupResources struct {
+	AccessControlPolicyReferenceList []*Reference               `json:"access_control_policy_reference_list,omitempty"` // List of ACP references.
+	DirectoryServiceUserGroup        *DirectoryServiceUserGroup `json:"directory_service_user_group,omitempty"`         // A Directory Service user group.
+	DisplayName                      *string                    `json:"display_name,omitempty"`                         // The display name for the user group.
+	ProjectsReferenceList            []*Reference               `json:"projects_reference_list,omitempty"`              // A list of projects the user group is part of.
+	UserGroupType                    *string                    `json:"user_group_type,omitempty"`
+}
+
+// User group status definition.
+type UserGroupStatus struct {
+	MessageList []MessageResource   `json:"message_list,omitempty"`
+	Resources   *UserGroupResources `json:"resources,omitempty"` // User Group Resource Definition.
+	State       *string             `json:"state,omitempty"`     // The state of the entity.
+}
+
+// A Directory Service user group.
+type DirectoryServiceUserGroup struct {
+	DirectoryServiceReference *Reference `json:"directory_service_reference,omitempty"` // The reference to a directory_service
+	DistinguishedName         *string    `json:"distinguished_name,omitempty"`          // The Distinguished name for the user group.
+}
+
+// Response object for intentful operation of user_groups
+type UserGroupListResponse struct {
+	APIVersion *string                    `json:"api_version,omitempty"` // API Version of the Nutanix v3 API framework.
+	Entities   []*UserGroupIntentResponse `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput        `json:"metadata,omitempty"` // All api calls that return a list will have this metadata block
+}
