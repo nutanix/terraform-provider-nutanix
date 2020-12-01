@@ -137,7 +137,8 @@ func resourceNutanixRole() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"kind": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
+							Default:  "permission",
 						},
 						"uuid": {
 							Type:     schema.TypeString,
