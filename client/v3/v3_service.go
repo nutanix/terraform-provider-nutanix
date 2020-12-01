@@ -89,6 +89,9 @@ type Service interface {
 	DeleteUser(uuid string) (*DeleteResponse, error)
 	ListUser(getEntitiesRequest *DSMetadata) (*UserListResponse, error)
 	ListAllUser(filter string) (*UserListResponse, error)
+	GetUserGroup(userUUID string) (*UserGroupIntentResponse, error)
+	ListUserGroup(getEntitiesRequest *DSMetadata) (*UserGroupListResponse, error)
+	ListAllUserGroup(filter string) (*UserGroupListResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -1724,6 +1727,86 @@ func (op Operations) ListAllUser(filter string) (*UserListResponse, error) {
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
 			resp, err = op.ListUser(&DSMetadata{
+				Filter: &filter,
+				Kind:   utils.StringPtr("user"),
+				Length: utils.Int64Ptr(itemsPerPage),
+				Offset: utils.Int64Ptr(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+		}
+
+		resp.Entities = entities
+	}
+
+	return resp, nil
+}
+
+/*GetUserGroup This operation gets a User.
+ *
+ * @param uuid The user uuid - string.
+ * @return *User
+ */
+func (op Operations) GetUserGroup(userGroupUUID string) (*UserGroupIntentResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/user_groups/%s", userGroupUUID)
+	User := new(UserGroupIntentResponse)
+
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return User, op.client.Do(ctx, req, User)
+}
+
+/*ListUserGroup gets a list of UserGroups.
+ *
+ * @param metadata allows create filters to get specific data - *DSMetadata.
+ * @return *UserGroupListResponse
+ */
+func (op Operations) ListUserGroup(getEntitiesRequest *DSMetadata) (*UserGroupListResponse, error) {
+	ctx := context.TODO()
+	path := "/user_groups/list"
+
+	UserGroupList := new(UserGroupListResponse)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return UserGroupList, op.client.Do(ctx, req, UserGroupList)
+}
+
+// ListAllUserGroup ...
+func (op Operations) ListAllUserGroup(filter string) (*UserGroupListResponse, error) {
+	entities := make([]*UserGroupIntentResponse, 0)
+
+	resp, err := op.ListUserGroup(&DSMetadata{
+		Filter: &filter,
+		Kind:   utils.StringPtr("user_group"),
+		Length: utils.Int64Ptr(itemsPerPage),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining) {
+			resp, err = op.ListUserGroup(&DSMetadata{
 				Filter: &filter,
 				Kind:   utils.StringPtr("user"),
 				Length: utils.Int64Ptr(itemsPerPage),
