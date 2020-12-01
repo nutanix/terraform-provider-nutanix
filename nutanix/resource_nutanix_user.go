@@ -599,7 +599,6 @@ func flattenIdentityProviderUser(ipu *v3.IdentityProvider) []interface{} {
 		}
 
 		return []interface{}{identityProviderUserMap}
-
 	}
 	return nil
 }

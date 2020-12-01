@@ -1640,9 +1640,9 @@ type Metadata struct {
 	ShouldForceTranslate *bool `json:"should_force_translate,omitempty" mapstructure:"should_force_translate,omitempty"`
 
 	//TODO: add if necessary
-	//CategoriesMapping    map[string][]string `json:"categories_mapping,omitempty" mapstructure:"categories_mapping,omitempty"`         // Categories for the user. This allows setting up multiple; values from a single key. Categories assigned using the older view will be; present here. This is the new way of assigning categories.
-	//EntityVersion        *string             `json:"entity_version,omitempty" mapstructure:"entity_version,omitempty"`                 // Logical entity version that allows serializing updates to the entity; across multiple API namespaces.  For kinds that support; entity_version, it overrides spec_version described above.
-	//UseCategoriesMapping *bool               `json:"use_categories_mapping,omitempty" mapstructure:"use_categories_mapping,omitempty"` // Client need to specify this field as true if user want to use the; newer way of assigning the categories. Without this things should work; as it was earlier.
+	//CategoriesMapping    map[string][]string `json:"categories_mapping,omitempty" mapstructure:"categories_mapping,omitempty"`
+	//EntityVersion        *string             `json:"entity_version,omitempty" mapstructure:"entity_version,omitempty"`
+	//UseCategoriesMapping *bool               `json:"use_categories_mapping,omitempty" mapstructure:"use_categories_mapping,omitempty"`
 
 }
 
