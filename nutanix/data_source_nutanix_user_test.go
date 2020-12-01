@@ -41,7 +41,7 @@ resource "nutanix_user" "user" {
 }
 
 data "nutanix_user" "user" {
-	uuid = nutanix_user.user.id
+	user_id = nutanix_user.user.id
 }
 `, pn, dsuuid)
 }
@@ -80,7 +80,7 @@ resource "nutanix_user" "user" {
 }
 
 data "nutanix_user" "user" {
-	name = nutanix_user.user.name
+	user_name = nutanix_user.user.name
 }
 `, pn, dsuuid)
 }
