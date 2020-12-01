@@ -3,7 +3,7 @@ layout: "nutanix"
 page_title: "NUTANIX: nutanix_user"
 sidebar_current: "docs-nutanix-datasource-user"
 description: |-
-  This operation retrieves a user based on the input paramters.
+  This operation retrieves a user based on the input parameters.
 ---
 
 # nutanix_user
