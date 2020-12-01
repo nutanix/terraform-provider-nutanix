@@ -325,7 +325,7 @@ func resourceNutanixRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("permission_reference_list") {
-		res.PermissionReferenceList = validateArrayRef(d.Get("permission_reference_list").([]interface{}), nil)
+		res.PermissionReferenceList = validateArrayRef(d.Get("permission_reference_list"), nil)
 	}
 
 	spec.Resources = res
