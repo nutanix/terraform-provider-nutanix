@@ -14,14 +14,20 @@ func dataSourceNutanixUserGroup() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceNutanixUserGroupRead,
 		Schema: map[string]*schema.Schema{
-			"uuid": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"name": {
+			"user_group_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"uuid"},
+				ConflictsWith: []string{"user_group_name", "user_group_distinguished_name"},
+			},
+			"user_group_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"user_group_id", "user_group_distinguished_name"},
+			},
+			"user_group_distinguished_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"user_group_id", "user_group_name"},
 			},
 			"api_version": {
 				Type:     schema.TypeString,
@@ -197,16 +203,17 @@ func dataSourceNutanixUserGroup() *schema.Resource {
 }
 
 func dataSourceNutanixUserGroupRead(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[DEBUG] Reading User: %s", d.Id())
+	log.Printf("[DEBUG] Reading Group: %s", d.Id())
 
 	// Get client connection
 	conn := meta.(*Client).API
 
-	uuid, iok := d.GetOk("uuid")
-	name, nok := d.GetOk("name")
+	uuid, iok := d.GetOk("user_group_id")
+	name, nok := d.GetOk("user_group_name")
+	dname, dnok := d.GetOk("user_group_distinguished_name")
 
-	if !iok && !nok {
-		return fmt.Errorf("please provide one of uuid or name attributes")
+	if !iok && !nok && !dnok {
+		return fmt.Errorf("please provide one of user_group_id, user_group_distinguished_name or user_group_name attributes")
 	}
 
 	var reqErr error
@@ -214,6 +221,8 @@ func dataSourceNutanixUserGroupRead(d *schema.ResourceData, meta interface{}) er
 
 	if iok {
 		resp, reqErr = findUserGroupByUUID(conn, uuid.(string))
+	} else if dnok {
+		resp, reqErr = findUserGroupByDistinguishedName(conn, dname.(string))
 	} else {
 		resp, reqErr = findUserGroupByName(conn, name.(string))
 	}
@@ -222,48 +231,48 @@ func dataSourceNutanixUserGroupRead(d *schema.ResourceData, meta interface{}) er
 		if strings.Contains(fmt.Sprint(reqErr), "ENTITY_NOT_FOUND") {
 			d.SetId("")
 		}
-		return fmt.Errorf("error reading user with error %s", reqErr)
+		return fmt.Errorf("error reading group with error %s", reqErr)
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
 
 	if err := d.Set("metadata", m); err != nil {
-		return fmt.Errorf("error setting metadata for image UUID(%s), %s", d.Id(), err)
+		return fmt.Errorf("error setting metadata for group UUID(%s), %s", d.Id(), err)
 	}
 	if err := d.Set("categories", c); err != nil {
-		return fmt.Errorf("error setting categories for image UUID(%s), %s", d.Id(), err)
+		return fmt.Errorf("error setting categories for group UUID(%s), %s", d.Id(), err)
 	}
 
 	if err := d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
-		return fmt.Errorf("error setting owner_reference for image UUID(%s), %s", d.Id(), err)
+		return fmt.Errorf("error setting owner_reference for group UUID(%s), %s", d.Id(), err)
 	}
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
 	d.Set("name", utils.StringValue(resp.Status.Resources.DisplayName))
 
 	if err := d.Set("state", resp.Status.State); err != nil {
-		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
+		return fmt.Errorf("error setting state for group UUID(%s), %s", d.Id(), err)
 	}
 
 	if err := d.Set("directory_service_user_group", flattenDirectoryServiceUserGroup(resp.Status.Resources.DirectoryServiceUserGroup)); err != nil {
-		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
+		return fmt.Errorf("error setting state for group UUID(%s), %s", d.Id(), err)
 	}
 
 	if err := d.Set("user_group_type", resp.Status.Resources.UserGroupType); err != nil {
-		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
+		return fmt.Errorf("error setting state for group UUID(%s), %s", d.Id(), err)
 	}
 
 	if err := d.Set("display_name", resp.Status.Resources.DisplayName); err != nil {
-		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
+		return fmt.Errorf("error setting state for group UUID(%s), %s", d.Id(), err)
 	}
 
 	if err := d.Set("project_reference_list", flattenArrayReferenceValues(resp.Status.Resources.ProjectsReferenceList)); err != nil {
-		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
+		return fmt.Errorf("error setting state for group UUID(%s), %s", d.Id(), err)
 	}
 
 	refe := flattenArrayReferenceValues(resp.Status.Resources.AccessControlPolicyReferenceList)
 
 	if err := d.Set("access_control_policy_reference_list", refe); err != nil {
-		return fmt.Errorf("error setting state for image UUID(%s), %s", d.Id(), err)
+		return fmt.Errorf("error setting state for group UUID(%s), %s", d.Id(), err)
 	}
 
 	d.SetId(*resp.Metadata.UUID)
@@ -272,7 +281,6 @@ func dataSourceNutanixUserGroupRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func flattenDirectoryServiceUserGroup(dsu *v3.DirectoryServiceUserGroup) []interface{} {
-
 	if dsu != nil {
 		directoryServiceUserMap := map[string]interface{}{}
 
@@ -289,6 +297,14 @@ func flattenDirectoryServiceUserGroup(dsu *v3.DirectoryServiceUserGroup) []inter
 }
 
 func findUserGroupByName(conn *v3.Client, name string) (*v3.UserGroupIntentResponse, error) {
+	return findUserGroupByAttribute(conn, matchUserGroupByName, name)
+}
+
+func findUserGroupByDistinguishedName(conn *v3.Client, name string) (*v3.UserGroupIntentResponse, error) {
+	return findUserGroupByAttribute(conn, matchUserGroupByDistinguishedName, name)
+}
+
+func findUserGroupByAttribute(conn *v3.Client, matches func(*v3.UserGroupIntentResponse, string) bool, targetAttributeValue string) (*v3.UserGroupIntentResponse, error) {
 	//filter := fmt.Sprintf("name==%s", name)
 	resp, err := conn.V3.ListAllUserGroup("")
 	if err != nil {
@@ -299,7 +315,8 @@ func findUserGroupByName(conn *v3.Client, name string) (*v3.UserGroupIntentRespo
 
 	found := make([]*v3.UserGroupIntentResponse, 0)
 	for _, v := range entities {
-		if *v.Status.Resources.DisplayName == name {
+		// if *v.Status.Resources.DisplayName == targetAttributeValue {
+		if matches(v, targetAttributeValue) {
 			found = append(found, v)
 		}
 	}
@@ -316,5 +333,29 @@ func findUserGroupByName(conn *v3.Client, name string) (*v3.UserGroupIntentRespo
 }
 
 func findUserGroupByUUID(conn *v3.Client, uuid string) (*v3.UserGroupIntentResponse, error) {
+	log.Printf("finding group via uuid: %s", uuid)
 	return conn.V3.GetUserGroup(uuid)
+}
+
+func matchUserGroupByDistinguishedName(userGroup *v3.UserGroupIntentResponse, name string) bool {
+	if userGroup != nil &&
+		userGroup.Status != nil &&
+		userGroup.Status.Resources != nil &&
+		userGroup.Status.Resources.DirectoryServiceUserGroup != nil &&
+		userGroup.Status.Resources.DirectoryServiceUserGroup.DistinguishedName != nil &&
+		*userGroup.Status.Resources.DirectoryServiceUserGroup.DistinguishedName == name {
+		return true
+	}
+	return false
+}
+
+func matchUserGroupByName(userGroup *v3.UserGroupIntentResponse, name string) bool {
+	if userGroup != nil &&
+		userGroup.Status != nil &&
+		userGroup.Status.Resources != nil &&
+		userGroup.Status.Resources.DisplayName != nil &&
+		*userGroup.Status.Resources.DisplayName == name {
+		return true
+	}
+	return false
 }
