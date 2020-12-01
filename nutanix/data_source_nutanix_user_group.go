@@ -221,9 +221,13 @@ func dataSourceNutanixUserGroupRead(d *schema.ResourceData, meta interface{}) er
 
 	if iok {
 		resp, reqErr = findUserGroupByUUID(conn, uuid.(string))
-	} else if dnok {
+	}
+
+	if dnok {
 		resp, reqErr = findUserGroupByDistinguishedName(conn, dname.(string))
-	} else {
+	}
+
+	if nok {
 		resp, reqErr = findUserGroupByName(conn, name.(string))
 	}
 
