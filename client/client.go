@@ -143,12 +143,10 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 	req.Header.Add("Accept", mediaType)
 	req.Header.Add("User-Agent", c.UserAgent)
 	if c.Cookies != nil {
-		log.Printf("[DEBUG] Adding cookies to request\n")
 		for _, i := range c.Cookies {
 			req.AddCookie(i)
 		}
 	} else {
-		log.Printf("[DEBUG] Adding basic auth to request\n")
 		req.Header.Add("Authorization", "Basic "+
 			base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
 	}
@@ -232,8 +230,16 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 
 // CheckResponse checks errors if exist errors in request
 func CheckResponse(r *http.Response) error {
-	if c := r.StatusCode; c >= 200 && c <= 299 {
+	c := r.StatusCode
+
+	if c >= 200 && c <= 299 {
 		return nil
+	}
+
+	// Nutanix returns non-json response with code 401 when
+	// invalid credentials are used
+	if c == http.StatusUnauthorized {
+		return fmt.Errorf("invalid Nutanix Credentials")
 	}
 
 	buf, err := ioutil.ReadAll(r.Body)

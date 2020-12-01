@@ -1,4 +1,44 @@
-## 1.2.0 (Unreleased)
+## 1.1.1 (Unreleased)
+
+**Fixed bugs:**
+
+- local resource nutanix\_image [\#182](https://github.com/nutanix/terraform-provider-nutanix/issues/182)
+- Terraform crashes when trying to specify boot\_device\_order\_list for a vm resource [\#28](https://github.com/nutanix/terraform-provider-nutanix/issues/28)
+
+**Closed issues:**
+
+- Problem on json unmarshalling to go struct \(MessageResource.message\_list.details of type map\[string\]interface {}\) [\#204](https://github.com/nutanix/terraform-provider-nutanix/issues/204)
+- Fix resource Read inconsistencies [\#201](https://github.com/nutanix/terraform-provider-nutanix/issues/201)
+- local resource nutanix\_image [\#182](https://github.com/nutanix/terraform-provider-nutanix/issues/182)
+- vss\_snapshot\_capable attribute doesn't work [\#171](https://github.com/nutanix/terraform-provider-nutanix/issues/171)
+- 'invalid memory address or nil pointer dereference' while getting a VM. [\#168](https://github.com/nutanix/terraform-provider-nutanix/issues/168)
+- FYI: Nutanix API Authentication fails when making many requests at once [\#93](https://github.com/nutanix/terraform-provider-nutanix/issues/93)
+- 1122 API requests only to list VMs [\#87](https://github.com/nutanix/terraform-provider-nutanix/issues/87)
+- Failed to perform NGT ISO mount operation with error code: kNoFreeCdRomSlot [\#83](https://github.com/nutanix/terraform-provider-nutanix/issues/83)
+- ip\_address not available as nutanix\_virtual\_machine attribute. [\#19](https://github.com/nutanix/terraform-provider-nutanix/issues/19)
+- Unable to obtain Private\_IP as a Output  [\#17](https://github.com/nutanix/terraform-provider-nutanix/issues/17)
+
+**Merged pull requests:**
+
+- chore: fix goreleaser for v1.1.1 [\#207](https://github.com/nutanix/terraform-provider-nutanix/pull/207) ([marinsalinas](https://github.com/marinsalinas))
+- added return nil in read function [\#203](https://github.com/nutanix/terraform-provider-nutanix/pull/203) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- fixed source\_path image\_type issue [\#202](https://github.com/nutanix/terraform-provider-nutanix/pull/202) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- fixed wrong status\_code check in client \(404 should be 401\) [\#200](https://github.com/nutanix/terraform-provider-nutanix/pull/200) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- GitHub actions [\#198](https://github.com/nutanix/terraform-provider-nutanix/pull/198) ([marinsalinas](https://github.com/marinsalinas))
+- chore: add note to network\_security\_rule [\#196](https://github.com/nutanix/terraform-provider-nutanix/pull/196) ([marinsalinas](https://github.com/marinsalinas))
+- chore: fix linting issues [\#194](https://github.com/nutanix/terraform-provider-nutanix/pull/194) ([marinsalinas](https://github.com/marinsalinas))
+- Fix Testacc [\#193](https://github.com/nutanix/terraform-provider-nutanix/pull/193) ([marinsalinas](https://github.com/marinsalinas))
+- fix: missing variable initialization [\#192](https://github.com/nutanix/terraform-provider-nutanix/pull/192) ([marinsalinas](https://github.com/marinsalinas))
+- Migrate to Terraform Plugin SDK v1 [\#176](https://github.com/nutanix/terraform-provider-nutanix/pull/176) ([marinsalinas](https://github.com/marinsalinas))
+- Fix issue \#168, unchecked nil assignment [\#169](https://github.com/nutanix/terraform-provider-nutanix/pull/169) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- Added name argument for datasource of cluster [\#165](https://github.com/nutanix/terraform-provider-nutanix/pull/165) ([coderGo93](https://github.com/coderGo93))
+- Removed volume\_group documentations [\#160](https://github.com/nutanix/terraform-provider-nutanix/pull/160) ([PacoDw](https://github.com/PacoDw))
+- Updated Readme file and changelog [\#154](https://github.com/nutanix/terraform-provider-nutanix/pull/154) ([PacoDw](https://github.com/PacoDw))
+- provide better error reporting when invalid nutanix credentials are used [\#148](https://github.com/nutanix/terraform-provider-nutanix/pull/148) ([scott-grimes](https://github.com/scott-grimes))
+- Initialize BootConfig struct before the child attributes [\#53](https://github.com/nutanix/terraform-provider-nutanix/pull/53) ([marinsalinas](https://github.com/marinsalinas))
+
+
+
 ## 1.1.0 (July 02, 2020)
 
 **Implemented enhancements:**
