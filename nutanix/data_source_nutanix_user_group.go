@@ -272,7 +272,6 @@ func dataSourceNutanixUserGroupRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func flattenDirectoryServiceUserGroup(dsu *v3.DirectoryServiceUserGroup) []interface{} {
-
 	if dsu != nil {
 		directoryServiceUserMap := map[string]interface{}{}
 
