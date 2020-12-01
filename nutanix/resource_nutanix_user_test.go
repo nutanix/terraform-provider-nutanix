@@ -53,7 +53,7 @@ func TestAccNutanixUser_IdentityProvider(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixUserDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixUserConfig_IdentityProvider(username, identityProviderUUID),
+				Config: testAccNutanixUserConfigIdentityProvider(username, identityProviderUUID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixUserExists(resourceNameUser),
 					resource.TestCheckResourceAttr(resourceNameUser, "name", username),
@@ -115,7 +115,7 @@ resource "nutanix_user" "user" {
 `, pn, dsuuid)
 }
 
-func testAccNutanixUserConfig_IdentityProvider(username, ipuuid string) string {
+func testAccNutanixUserConfigIdentityProvider(username, ipuuid string) string {
 	return fmt.Sprintf(`
 resource "nutanix_user" "user" {
 	identity_provider_user {
