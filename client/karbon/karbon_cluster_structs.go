@@ -41,6 +41,15 @@ type ClusterIntentResponse struct {
 	WorkerConfig struct {
 		NodePools []string `json:"node_pools" mapstructure:"node_pools, omitempty"`
 	} `json:"worker_config" mapstructure:"worker_config, omitempty"`
+	CNIConfig ClusterCNIConfigIntentResponse `json:"cni_config" mapstructure:"cni_config, omitempty"`
+}
+
+type ClusterCNIConfigIntentResponse struct {
+	NodeCIDRMaskSize int64                            `json:"node_cidr_mask_size" mapstructure:"node_cidr_mask_size, omitempty"`
+	PodIPv4CIDR      string                           `json:"pod_ipv4_cidr" mapstructure:"pod_ipv4_cidr, omitempty"`
+	ServiceIPv4CIDR  string                           `json:"service_ipv4_cidr" mapstructure:"service_ipv4_cidr, omitempty"`
+	FlannelConfig    *ClusterFlannelConfigIntentInput `json:"flannel_config" mapstructure:"flannel_config, omitempty"`
+	CalicoConfig     *ClusterCalicoConfigIntentInput  `json:"calico_config" mapstructure:"calico_config, omitempty"`
 }
 
 type ClusterNodePool struct {
@@ -185,4 +194,13 @@ type ClusterSSHconfig struct {
 	ExpiryTime  string `json:"expiry_time" mapstructure:"expiry_time, omitempty"`
 	PrivateKey  string `json:"private_key" mapstructure:"private_key, omitempty"`
 	Username    string `json:"username" mapstructure:"username, omitempty"`
+}
+
+type ClusterScaleUpIntentInput struct {
+	Count int64 `json:"count" mapstructure:"count, omitempty"`
+}
+
+type ClusterScaleDownIntentInput struct {
+	Count    int64     `json:"count" mapstructure:"count, omitempty"`
+	NodeList []*string `json:"node_list" mapstructure:"node_list, omitempty"`
 }
