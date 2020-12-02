@@ -24,6 +24,8 @@ type ClusterService interface {
 	DeleteKarbonCluster(karbonClusterName string) (*ClusterActionResponse, error)
 	GetKubeConfigForKarbonCluster(karbonClusterName string) (*ClusterKubeconfigResponse, error)
 	GetSSHConfigForKarbonCluster(karbonClusterName string) (*ClusterSSHconfig, error)
+	ScaleUpKarbonCluster(karbonClusterName, karbonNodepoolName string, scaleUpRequest *ClusterScaleUpIntentInput) (*ClusterActionResponse, error)
+	ScaleDownKarbonCluster(karbonClusterName, karbonNodepoolName string, scaleDownRequest *ClusterScaleDownIntentInput) (*ClusterActionResponse, error)
 	// registries
 	ListPrivateRegistries(karbonClusterName string) (*PrivateRegistryListResponse, error)
 	AddPrivateRegistry(karbonClusterName string, createRequest PrivateRegistryOperationIntentInput) (*PrivateRegistryResponse, error)
@@ -175,4 +177,32 @@ func (op ClusterOperations) DeletePrivateRegistry(karbonClusterName string, priv
 	}
 
 	return karbonPrivateRegistryOperationResponse, op.client.Do(ctx, req, karbonPrivateRegistryOperationResponse)
+}
+
+func (op ClusterOperations) ScaleUpKarbonCluster(karbonClusterName, karbonNodepoolName string, scaleUpRequest *ClusterScaleUpIntentInput) (*ClusterActionResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/v1-alpha.1/k8s/clusters/%s/node-pools/%s/add-nodes", karbonClusterName, karbonNodepoolName)
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, scaleUpRequest)
+	karbonClusterActionResponse := new(ClusterActionResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return karbonClusterActionResponse, op.client.Do(ctx, req, karbonClusterActionResponse)
+}
+
+func (op ClusterOperations) ScaleDownKarbonCluster(karbonClusterName, karbonNodepoolName string, scaleDownRequest *ClusterScaleDownIntentInput) (*ClusterActionResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/v1-alpha.1/k8s/clusters/%s/node-pools/%s/remove-nodes", karbonClusterName, karbonNodepoolName)
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, scaleDownRequest)
+	karbonClusterActionResponse := new(ClusterActionResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return karbonClusterActionResponse, op.client.Do(ctx, req, karbonClusterActionResponse)
 }
