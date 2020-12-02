@@ -104,6 +104,7 @@ func Provider() terraform.ResourceProvider {
 			"nutanix_user":                    dataSourceNutanixUser(),
 			"nutanix_users":                   dataSourceNutanixUsers(),
 			"nutanix_user_group":              dataSourceNutanixUserGroup(),
+			"nutanix_user_groups":             dataSourceNutanixUserGroups(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":       resourceNutanixVirtualMachine(),
