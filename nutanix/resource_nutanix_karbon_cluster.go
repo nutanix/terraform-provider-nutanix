@@ -234,7 +234,7 @@ func KarbonClusterResourceMap() map[string]*schema.Schema {
 		},
 		"etcd_node_pool":   nodePoolSchema(DEFAULTETCDNODEPOOLNAME, true, DEFAULTETCDNODECPU, DEFAULTETCDNODEDISKMIB, DEFAULTETCDNODEEMORYMIB),
 		"master_node_pool": nodePoolSchema(DEFAULTMASTERNODEPOOLNAME, true, DEFAULTMASTERNODECPU, DEFAULTMASTERNODEDISKMIB, DEFAULTMASTERNODEEMORYMIB),
-		"worker_node_pool": nodePoolSchema(DEFAULTWORKERNODEPOOLNAME, true, DEFAULTWORKERNODECPU, DEFAULTWORKERNODEDISKMIB, DEFAULTWORKERNODEEMORYMIB),
+		"worker_node_pool": nodePoolSchema(DEFAULTWORKERNODEPOOLNAME, false, DEFAULTWORKERNODECPU, DEFAULTWORKERNODEDISKMIB, DEFAULTWORKERNODEEMORYMIB),
 		"cni_config":       CNISchema(),
 	}
 }
@@ -318,12 +318,12 @@ func nodePoolSchema(defaultNodepoolName string, forceNewNodes bool, cpuDefault i
 					Type:     schema.TypeString,
 					Optional: true,
 					Default:  defaultNodepoolName,
-					ForceNew: forceNewNodes,
+					ForceNew: true,
 				},
 				"node_os_version": {
 					Type:     schema.TypeString,
 					Required: true,
-					ForceNew: forceNewNodes,
+					ForceNew: true,
 				},
 				"num_instances": {
 					Type:         schema.TypeInt,
@@ -336,7 +336,7 @@ func nodePoolSchema(defaultNodepoolName string, forceNewNodes bool, cpuDefault i
 					MaxItems: 1,
 					Optional: true,
 					// Computed: true,
-					ForceNew: forceNewNodes,
+					ForceNew: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"cpu": {
@@ -425,11 +425,10 @@ func resourceNutanixKarbonClusterCreate(d *schema.ResourceData, meta interface{}
 	if !okVersion {
 		return fmt.Errorf("unable to retrieve mandatory parameter version")
 	}
-	timeoutInput, okTimeout := d.GetOk("wait_timeout_minutes")
-	if !okTimeout {
-		return fmt.Errorf("unable to retrieve mandatory parameter wait_timeout_minutes")
+	timeout, timeoutErr := getTimeout(d)
+	if timeoutErr != nil {
+		return timeoutErr
 	}
-	timeout := int64(timeoutInput.(int))
 
 	karbonClusterName := karbonClusterNameInput.(string)
 
@@ -615,6 +614,29 @@ func resourceNutanixKarbonClusterUpdate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 	karbonClusterName := *resp.Name
+	if d.HasChange("worker_node_pool") {
+		timeout, timeoutErr := getTimeout(d)
+		if timeoutErr != nil {
+			return timeoutErr
+		}
+		log.Printf("Change!")
+		_, n := d.GetChange("worker_node_pool")
+		newWorkerNodePool, err := expandNodePool(n.([]interface{}))
+		if err != nil {
+			return fmt.Errorf("Error occured while expanding new worker node pool: %s", err)
+		}
+		utils.PrintToJSON(newWorkerNodePool, "new_worker_node_pool: ")
+		currentNodePool, err := GetNodePoolsForCluster(conn, karbonClusterName, resp.WorkerConfig.NodePools)
+		if err != nil {
+			return err
+		}
+		utils.PrintToJSON(currentNodePool, "current_node_pool: ")
+		taskUUID, err := determineNodepoolsScaling(client, karbonClusterName, currentNodePool, newWorkerNodePool)
+		if err != nil {
+			return err
+		}
+		err = WaitForKarbonCluster(client, timeout, taskUUID)
+	}
 	if d.HasChange("private_registry") {
 		_, p := d.GetChange("private_registry")
 		// utils.PrintToJSON(p.(*schema.Set).List(), "p private_registry: ")
@@ -651,11 +673,10 @@ func resourceNutanixKarbonClusterDelete(d *schema.ResourceData, meta interface{}
 	client := meta.(*Client)
 	conn := client.KarbonAPI
 	setTimeout(meta)
-	timeoutInput, okTimeout := d.GetOk("wait_timeout_minutes")
-	if !okTimeout {
-		return fmt.Errorf("unable to retrieve mandatory parameter wait_timeout_minutes")
+	timeout, timeoutErr := getTimeout(d)
+	if timeoutErr != nil {
+		return timeoutErr
 	}
-	timeout := int64(timeoutInput.(int))
 	karbonClusterNameInput, okName := d.GetOk("name")
 	if !okName {
 		return fmt.Errorf("unable to retrieve mandatory parameter name")
@@ -697,6 +718,14 @@ func resourceNutanixKarbonClusterExists(d *schema.ResourceData, meta interface{}
 		return exists, fmt.Errorf("error checking kubernetes cluster %s existence: %s", d.Id(), err)
 	}
 	return exists, nil
+}
+
+func getTimeout(d *schema.ResourceData) (int64, error) {
+	timeoutInput, okTimeout := d.GetOk("wait_timeout_minutes")
+	if !okTimeout {
+		return 0, fmt.Errorf("unable to retrieve mandatory parameter wait_timeout_minutes")
+	}
+	return int64(timeoutInput.(int)), nil
 }
 
 func checkNutanixKarbonClusterExistsByUUID(conn *karbon.Client, uuid string) (bool, error) {
@@ -1164,6 +1193,57 @@ func expandNodePool(nodepoolsInput []interface{}) ([]karbon.ClusterNodePool, err
 		nodepools = append(nodepools, *nodepool)
 	}
 	return nodepools, nil
+}
+
+func determineNodepoolsScaling(client *Client, karbonClusterName string, currentNodepools []karbon.ClusterNodePool, newNodepools []karbon.ClusterNodePool) (string, error) {
+	log.Printf("[DEBUG] entering determineNodepoolsScaling")
+	var taskUUID string
+	for _, cnp := range currentNodepools {
+		log.Printf("cnp.Name: %s", *cnp.Name)
+		for _, nnp := range newNodepools {
+			log.Printf("nnp.Name: %s", *nnp.Name)
+			if *cnp.Name == *nnp.Name {
+				log.Print("cnp.Name == nnp.Name")
+				if *cnp.NumInstances < *nnp.NumInstances {
+					// scale up
+					log.Print("scale up")
+					amountOfNodes := *nnp.NumInstances - *cnp.NumInstances
+					scaleUpRequest := &karbon.ClusterScaleUpIntentInput{
+						Count: amountOfNodes,
+					}
+					// taskUUID, err = scaleUpNodepool(client, karbonClusterName, nnp, amountOfNodes)
+					karbonClusterActionResponse, err := client.KarbonAPI.Cluster.ScaleUpKarbonCluster(
+						karbonClusterName,
+						*nnp.Name,
+						scaleUpRequest,
+					)
+					if err != nil {
+						return "", fmt.Errorf("Error occred while scaling up nodepool %s: %s", *nnp.Name, err)
+					}
+					taskUUID = karbonClusterActionResponse.TaskUUID
+				}
+				if *cnp.NumInstances > *nnp.NumInstances {
+					log.Print("scale down")
+					amountOfNodes := *cnp.NumInstances - *nnp.NumInstances
+					scaleDownRequest := &karbon.ClusterScaleDownIntentInput{
+						Count: amountOfNodes,
+					}
+					// taskUUID, err = scaleDownNodepool(client, karbonClusterName, nnp, amountOfNodes)
+					karbonClusterActionResponse, err := client.KarbonAPI.Cluster.ScaleDownKarbonCluster(
+						karbonClusterName,
+						*nnp.Name,
+						scaleDownRequest,
+					)
+					if err != nil {
+						return "", fmt.Errorf("Error occred while scaling down nodepool %s: %s", *nnp.Name, err)
+					}
+					taskUUID = karbonClusterActionResponse.TaskUUID
+				}
+				log.Print("no match?")
+			}
+		}
+	}
+	return taskUUID, nil
 }
 
 func getSupportedFileSystems() []string {
