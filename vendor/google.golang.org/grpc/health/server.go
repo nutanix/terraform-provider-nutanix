@@ -16,6 +16,8 @@
  *
  */
 
+//go:generate ./regenerate.sh
+
 // Package health provides a service that exposes server's health and it must be
 // imported to enable support for client-side health checks.
 package health
@@ -33,8 +35,7 @@ import (
 
 // Server implements `service Health`.
 type Server struct {
-	healthgrpc.UnimplementedHealthServer
-	mu sync.RWMutex
+	mu sync.Mutex
 	// If shutdown is true, it's expected all serving status is NOT_SERVING, and
 	// will stay in NOT_SERVING.
 	shutdown bool
@@ -53,8 +54,8 @@ func NewServer() *Server {
 
 // Check implements `service Health`.
 func (s *Server) Check(ctx context.Context, in *healthpb.HealthCheckRequest) (*healthpb.HealthCheckResponse, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	if servingStatus, ok := s.statusMap[in.Service]; ok {
 		return &healthpb.HealthCheckResponse{
 			Status: servingStatus,
@@ -138,7 +139,7 @@ func (s *Server) setServingStatusLocked(service string, servingStatus healthpb.H
 // Shutdown sets all serving status to NOT_SERVING, and configures the server to
 // ignore all future status changes.
 //
-// This changes serving status for all services. To set status for a particular
+// This changes serving status for all services. To set status for a perticular
 // services, call SetServingStatus().
 func (s *Server) Shutdown() {
 	s.mu.Lock()
@@ -152,7 +153,7 @@ func (s *Server) Shutdown() {
 // Resume sets all serving status to SERVING, and configures the server to
 // accept all future status changes.
 //
-// This changes serving status for all services. To set status for a particular
+// This changes serving status for all services. To set status for a perticular
 // services, call SetServingStatus().
 func (s *Server) Resume() {
 	s.mu.Lock()

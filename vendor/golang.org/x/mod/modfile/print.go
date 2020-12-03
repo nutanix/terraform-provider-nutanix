@@ -138,11 +138,16 @@ func (p *printer) expr(x Expr) {
 		p.printf(")")
 
 	case *Line:
-		p.tokens(x.Token)
+		sep := ""
+		for _, tok := range x.Token {
+			p.printf("%s%s", sep, tok)
+			sep = " "
+		}
 
 	case *LineBlock:
-		p.tokens(x.Token)
-		p.printf(" ")
+		for _, tok := range x.Token {
+			p.printf("%s ", tok)
+		}
 		p.expr(&x.LParen)
 		p.margin++
 		for _, l := range x.Line {
@@ -157,18 +162,4 @@ func (p *printer) expr(x Expr) {
 	// Queue end-of-line comments for printing when we
 	// reach the end of the line.
 	p.comment = append(p.comment, x.Comment().Suffix...)
-}
-
-func (p *printer) tokens(tokens []string) {
-	sep := ""
-	for _, t := range tokens {
-		if t == "," || t == ")" || t == "]" || t == "}" {
-			sep = ""
-		}
-		p.printf("%s%s", sep, t)
-		sep = " "
-		if t == "(" || t == "[" || t == "{" {
-			sep = ""
-		}
-	}
 }

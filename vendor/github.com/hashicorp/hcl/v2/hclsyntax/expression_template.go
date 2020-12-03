@@ -26,9 +26,6 @@ func (e *TemplateExpr) Value(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) 
 	var diags hcl.Diagnostics
 	isKnown := true
 
-	// Maintain a set of marks for values used in the template
-	marks := make(cty.ValueMarks)
-
 	for _, part := range e.Parts {
 		partVal, partDiags := part.Value(ctx)
 		diags = append(diags, partDiags...)
@@ -74,24 +71,14 @@ func (e *TemplateExpr) Value(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) 
 			continue
 		}
 
-		// Unmark the part and merge its marks into the set
-		unmarked, partMarks := strVal.Unmark()
-		for k, v := range partMarks {
-			marks[k] = v
-		}
-
-		buf.WriteString(unmarked.AsString())
+		buf.WriteString(strVal.AsString())
 	}
 
-	var ret cty.Value
 	if !isKnown {
-		ret = cty.UnknownVal(cty.String)
-	} else {
-		ret = cty.StringVal(buf.String())
+		return cty.UnknownVal(cty.String), diags
 	}
 
-	// Apply the full set of marks to the returned value
-	return ret.WithMarks(marks), diags
+	return cty.StringVal(buf.String()), diags
 }
 
 func (e *TemplateExpr) Range() hcl.Range {

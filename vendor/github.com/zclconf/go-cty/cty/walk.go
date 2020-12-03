@@ -61,34 +61,6 @@ func walk(path Path, val Value, cb func(Path, Value) (bool, error)) error {
 	return nil
 }
 
-// Transformer is the interface used to optionally transform values in a
-// possibly-complex structure. The Enter method is called before traversing
-// through a given path, and the Exit method is called when traversal of a
-// path is complete.
-//
-// Use Enter when you want to transform a complex value before traversal
-// (preorder), and Exit when you want to transform a value after traversal
-// (postorder).
-//
-// The path passed to the given function may not be used after that function
-// returns, since its backing array is re-used for other calls.
-type Transformer interface {
-	Enter(Path, Value) (Value, error)
-	Exit(Path, Value) (Value, error)
-}
-
-type postorderTransformer struct {
-	callback func(Path, Value) (Value, error)
-}
-
-func (t *postorderTransformer) Enter(p Path, v Value) (Value, error) {
-	return v, nil
-}
-
-func (t *postorderTransformer) Exit(p Path, v Value) (Value, error) {
-	return t.callback(p, v)
-}
-
 // Transform visits all of the values in a possibly-complex structure,
 // calling a given function for each value which has an opportunity to
 // replace that value.
@@ -105,7 +77,7 @@ func (t *postorderTransformer) Exit(p Path, v Value) (Value, error) {
 // value constructor functions. An easy way to preserve invariants is to
 // ensure that the transform function never changes the value type.
 //
-// The callback function may halt the walk altogether by
+// The callback function my halt the walk altogether by
 // returning a non-nil error. If the returned error is about the element
 // currently being visited, it is recommended to use the provided path
 // value to produce a PathError describing that context.
@@ -114,23 +86,10 @@ func (t *postorderTransformer) Exit(p Path, v Value) (Value, error) {
 // returns, since its backing array is re-used for other calls.
 func Transform(val Value, cb func(Path, Value) (Value, error)) (Value, error) {
 	var path Path
-	return transform(path, val, &postorderTransformer{cb})
+	return transform(path, val, cb)
 }
 
-// TransformWithTransformer allows the caller to more closely control the
-// traversal used for transformation. See the documentation for Transformer for
-// more details.
-func TransformWithTransformer(val Value, t Transformer) (Value, error) {
-	var path Path
-	return transform(path, val, t)
-}
-
-func transform(path Path, val Value, t Transformer) (Value, error) {
-	val, err := t.Enter(path, val)
-	if err != nil {
-		return DynamicVal, err
-	}
-
+func transform(path Path, val Value, cb func(Path, Value) (Value, error)) (Value, error) {
 	ty := val.Type()
 	var newVal Value
 
@@ -153,7 +112,7 @@ func transform(path Path, val Value, t Transformer) (Value, error) {
 				path := append(path, IndexStep{
 					Key: kv,
 				})
-				newEv, err := transform(path, ev, t)
+				newEv, err := transform(path, ev, cb)
 				if err != nil {
 					return DynamicVal, err
 				}
@@ -184,7 +143,7 @@ func transform(path Path, val Value, t Transformer) (Value, error) {
 				path := append(path, IndexStep{
 					Key: kv,
 				})
-				newEv, err := transform(path, ev, t)
+				newEv, err := transform(path, ev, cb)
 				if err != nil {
 					return DynamicVal, err
 				}
@@ -206,7 +165,7 @@ func transform(path Path, val Value, t Transformer) (Value, error) {
 				path := append(path, GetAttrStep{
 					Name: name,
 				})
-				newAV, err := transform(path, av, t)
+				newAV, err := transform(path, av, cb)
 				if err != nil {
 					return DynamicVal, err
 				}
@@ -219,9 +178,5 @@ func transform(path Path, val Value, t Transformer) (Value, error) {
 		newVal = val
 	}
 
-	newVal, err = t.Exit(path, newVal)
-	if err != nil {
-		return DynamicVal, err
-	}
-	return newVal, err
+	return cb(path, newVal)
 }

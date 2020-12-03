@@ -2,24 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Package modfile implements a parser and formatter for go.mod files.
-//
-// The go.mod syntax is described in
-// https://golang.org/cmd/go/#hdr-The_go_mod_file.
-//
-// The Parse and ParseLax functions both parse a go.mod file and return an
-// abstract syntax tree. ParseLax ignores unknown statements and may be used to
-// parse go.mod files that may have been developed with newer versions of Go.
-//
-// The File struct returned by Parse and ParseLax represent an abstract
-// go.mod file. File has several methods like AddNewRequire and DropReplace
-// that can be used to programmatically edit a file.
-//
-// The Format function formats a File back to a byte slice which can be
-// written to a file.
 package modfile
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -134,7 +120,7 @@ func parseToFile(file string, data []byte, fix VersionFixer, strict bool) (*File
 		Syntax: fs,
 	}
 
-	var errs ErrorList
+	var errs bytes.Buffer
 	for _, x := range fs.Stmt {
 		switch x := x.(type) {
 		case *Line:
@@ -143,22 +129,14 @@ func parseToFile(file string, data []byte, fix VersionFixer, strict bool) (*File
 		case *LineBlock:
 			if len(x.Token) > 1 {
 				if strict {
-					errs = append(errs, Error{
-						Filename: file,
-						Pos:      x.Start,
-						Err:      fmt.Errorf("unknown block type: %s", strings.Join(x.Token, " ")),
-					})
+					fmt.Fprintf(&errs, "%s:%d: unknown block type: %s\n", file, x.Start.Line, strings.Join(x.Token, " "))
 				}
 				continue
 			}
 			switch x.Token[0] {
 			default:
 				if strict {
-					errs = append(errs, Error{
-						Filename: file,
-						Pos:      x.Start,
-						Err:      fmt.Errorf("unknown block type: %s", strings.Join(x.Token, " ")),
-					})
+					fmt.Fprintf(&errs, "%s:%d: unknown block type: %s\n", file, x.Start.Line, strings.Join(x.Token, " "))
 				}
 				continue
 			case "module", "require", "exclude", "replace":
@@ -169,15 +147,15 @@ func parseToFile(file string, data []byte, fix VersionFixer, strict bool) (*File
 		}
 	}
 
-	if len(errs) > 0 {
-		return nil, errs
+	if errs.Len() > 0 {
+		return nil, errors.New(strings.TrimRight(errs.String(), "\n"))
 	}
 	return f, nil
 }
 
 var GoVersionRE = lazyregexp.New(`^([1-9][0-9]*)\.(0|[1-9][0-9]*)$`)
 
-func (f *File) add(errs *ErrorList, line *Line, verb string, args []string, fix VersionFixer, strict bool) {
+func (f *File) add(errs *bytes.Buffer, line *Line, verb string, args []string, fix VersionFixer, strict bool) {
 	// If strict is false, this module is a dependency.
 	// We ignore all unknown directives as well as main-module-only
 	// directives like replace and exclude. It will work better for
@@ -193,83 +171,60 @@ func (f *File) add(errs *ErrorList, line *Line, verb string, args []string, fix 
 		}
 	}
 
-	wrapModPathError := func(modPath string, err error) {
-		*errs = append(*errs, Error{
-			Filename: f.Syntax.Name,
-			Pos:      line.Start,
-			ModPath:  modPath,
-			Verb:     verb,
-			Err:      err,
-		})
-	}
-	wrapError := func(err error) {
-		*errs = append(*errs, Error{
-			Filename: f.Syntax.Name,
-			Pos:      line.Start,
-			Err:      err,
-		})
-	}
-	errorf := func(format string, args ...interface{}) {
-		wrapError(fmt.Errorf(format, args...))
-	}
-
 	switch verb {
 	default:
-		errorf("unknown directive: %s", verb)
+		fmt.Fprintf(errs, "%s:%d: unknown directive: %s\n", f.Syntax.Name, line.Start.Line, verb)
 
 	case "go":
 		if f.Go != nil {
-			errorf("repeated go statement")
+			fmt.Fprintf(errs, "%s:%d: repeated go statement\n", f.Syntax.Name, line.Start.Line)
 			return
 		}
-		if len(args) != 1 {
-			errorf("go directive expects exactly one argument")
-			return
-		} else if !GoVersionRE.MatchString(args[0]) {
-			errorf("invalid go version '%s': must match format 1.23", args[0])
+		if len(args) != 1 || !GoVersionRE.MatchString(args[0]) {
+			fmt.Fprintf(errs, "%s:%d: usage: go 1.23\n", f.Syntax.Name, line.Start.Line)
 			return
 		}
-
 		f.Go = &Go{Syntax: line}
 		f.Go.Version = args[0]
 	case "module":
 		if f.Module != nil {
-			errorf("repeated module statement")
+			fmt.Fprintf(errs, "%s:%d: repeated module statement\n", f.Syntax.Name, line.Start.Line)
 			return
 		}
 		f.Module = &Module{Syntax: line}
 		if len(args) != 1 {
-			errorf("usage: module module/path")
+
+			fmt.Fprintf(errs, "%s:%d: usage: module module/path\n", f.Syntax.Name, line.Start.Line)
 			return
 		}
 		s, err := parseString(&args[0])
 		if err != nil {
-			errorf("invalid quoted string: %v", err)
+			fmt.Fprintf(errs, "%s:%d: invalid quoted string: %v\n", f.Syntax.Name, line.Start.Line, err)
 			return
 		}
 		f.Module.Mod = module.Version{Path: s}
 	case "require", "exclude":
 		if len(args) != 2 {
-			errorf("usage: %s module/path v1.2.3", verb)
+			fmt.Fprintf(errs, "%s:%d: usage: %s module/path v1.2.3\n", f.Syntax.Name, line.Start.Line, verb)
 			return
 		}
 		s, err := parseString(&args[0])
 		if err != nil {
-			errorf("invalid quoted string: %v", err)
+			fmt.Fprintf(errs, "%s:%d: invalid quoted string: %v\n", f.Syntax.Name, line.Start.Line, err)
 			return
 		}
 		v, err := parseVersion(verb, s, &args[1], fix)
 		if err != nil {
-			wrapError(err)
+			fmt.Fprintf(errs, "%s:%d: %v\n", f.Syntax.Name, line.Start.Line, err)
 			return
 		}
 		pathMajor, err := modulePathMajor(s)
 		if err != nil {
-			wrapError(err)
+			fmt.Fprintf(errs, "%s:%d: %v\n", f.Syntax.Name, line.Start.Line, err)
 			return
 		}
 		if err := module.CheckPathMajor(v, pathMajor); err != nil {
-			wrapModPathError(s, err)
+			fmt.Fprintf(errs, "%s:%d: %v\n", f.Syntax.Name, line.Start.Line, &Error{Verb: verb, ModPath: s, Err: err})
 			return
 		}
 		if verb == "require" {
@@ -290,55 +245,55 @@ func (f *File) add(errs *ErrorList, line *Line, verb string, args []string, fix 
 			arrow = 1
 		}
 		if len(args) < arrow+2 || len(args) > arrow+3 || args[arrow] != "=>" {
-			errorf("usage: %s module/path [v1.2.3] => other/module v1.4\n\t or %s module/path [v1.2.3] => ../local/directory", verb, verb)
+			fmt.Fprintf(errs, "%s:%d: usage: %s module/path [v1.2.3] => other/module v1.4\n\t or %s module/path [v1.2.3] => ../local/directory\n", f.Syntax.Name, line.Start.Line, verb, verb)
 			return
 		}
 		s, err := parseString(&args[0])
 		if err != nil {
-			errorf("invalid quoted string: %v", err)
+			fmt.Fprintf(errs, "%s:%d: invalid quoted string: %v\n", f.Syntax.Name, line.Start.Line, err)
 			return
 		}
 		pathMajor, err := modulePathMajor(s)
 		if err != nil {
-			wrapModPathError(s, err)
+			fmt.Fprintf(errs, "%s:%d: %v\n", f.Syntax.Name, line.Start.Line, err)
 			return
 		}
 		var v string
 		if arrow == 2 {
 			v, err = parseVersion(verb, s, &args[1], fix)
 			if err != nil {
-				wrapError(err)
+				fmt.Fprintf(errs, "%s:%d: %v\n", f.Syntax.Name, line.Start.Line, err)
 				return
 			}
 			if err := module.CheckPathMajor(v, pathMajor); err != nil {
-				wrapModPathError(s, err)
+				fmt.Fprintf(errs, "%s:%d: %v\n", f.Syntax.Name, line.Start.Line, &Error{Verb: verb, ModPath: s, Err: err})
 				return
 			}
 		}
 		ns, err := parseString(&args[arrow+1])
 		if err != nil {
-			errorf("invalid quoted string: %v", err)
+			fmt.Fprintf(errs, "%s:%d: invalid quoted string: %v\n", f.Syntax.Name, line.Start.Line, err)
 			return
 		}
 		nv := ""
 		if len(args) == arrow+2 {
 			if !IsDirectoryPath(ns) {
-				errorf("replacement module without version must be directory path (rooted or starting with ./ or ../)")
+				fmt.Fprintf(errs, "%s:%d: replacement module without version must be directory path (rooted or starting with ./ or ../)\n", f.Syntax.Name, line.Start.Line)
 				return
 			}
 			if filepath.Separator == '/' && strings.Contains(ns, `\`) {
-				errorf("replacement directory appears to be Windows path (on a non-windows system)")
+				fmt.Fprintf(errs, "%s:%d: replacement directory appears to be Windows path (on a non-windows system)\n", f.Syntax.Name, line.Start.Line)
 				return
 			}
 		}
 		if len(args) == arrow+3 {
 			nv, err = parseVersion(verb, ns, &args[arrow+2], fix)
 			if err != nil {
-				wrapError(err)
+				fmt.Fprintf(errs, "%s:%d: %v\n", f.Syntax.Name, line.Start.Line, err)
 				return
 			}
 			if IsDirectoryPath(ns) {
-				errorf("replacement module directory path %q cannot have version", ns)
+				fmt.Fprintf(errs, "%s:%d: replacement module directory path %q cannot have version\n", f.Syntax.Name, line.Start.Line, ns)
 				return
 			}
 		}
@@ -417,19 +372,8 @@ func IsDirectoryPath(ns string) bool {
 // a single token in a go.mod line.
 func MustQuote(s string) bool {
 	for _, r := range s {
-		switch r {
-		case ' ', '"', '\'', '`':
+		if !unicode.IsPrint(r) || r == ' ' || r == '"' || r == '\'' || r == '`' {
 			return true
-
-		case '(', ')', '[', ']', '{', '}', ',':
-			if len(s) > 1 {
-				return true
-			}
-
-		default:
-			if !unicode.IsPrint(r) {
-				return true
-			}
 		}
 	}
 	return s == "" || strings.Contains(s, "//") || strings.Contains(s, "/*")
@@ -461,42 +405,14 @@ func parseString(s *string) (string, error) {
 	return t, nil
 }
 
-type ErrorList []Error
-
-func (e ErrorList) Error() string {
-	errStrs := make([]string, len(e))
-	for i, err := range e {
-		errStrs[i] = err.Error()
-	}
-	return strings.Join(errStrs, "\n")
-}
-
 type Error struct {
-	Filename string
-	Pos      Position
-	Verb     string
-	ModPath  string
-	Err      error
+	Verb    string
+	ModPath string
+	Err     error
 }
 
 func (e *Error) Error() string {
-	var pos string
-	if e.Pos.LineRune > 1 {
-		// Don't print LineRune if it's 1 (beginning of line).
-		// It's always 1 except in scanner errors, which are rare.
-		pos = fmt.Sprintf("%s:%d:%d: ", e.Filename, e.Pos.Line, e.Pos.LineRune)
-	} else if e.Pos.Line > 0 {
-		pos = fmt.Sprintf("%s:%d: ", e.Filename, e.Pos.Line)
-	} else if e.Filename != "" {
-		pos = fmt.Sprintf("%s: ", e.Filename)
-	}
-
-	var directive string
-	if e.ModPath != "" {
-		directive = fmt.Sprintf("%s %s: ", e.Verb, e.ModPath)
-	}
-
-	return pos + directive + e.Err.Error()
+	return fmt.Sprintf("%s %s: %v", e.Verb, e.ModPath, e.Err)
 }
 
 func (e *Error) Unwrap() error { return e.Err }

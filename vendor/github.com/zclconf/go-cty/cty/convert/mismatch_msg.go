@@ -78,9 +78,7 @@ func mismatchMessageObjects(got, want cty.Type) string {
 	for name, wantAty := range wantAtys {
 		gotAty, exists := gotAtys[name]
 		if !exists {
-			if !want.AttributeOptional(name) {
-				missingAttrs = append(missingAttrs, name)
-			}
+			missingAttrs = append(missingAttrs, name)
 			continue
 		}
 

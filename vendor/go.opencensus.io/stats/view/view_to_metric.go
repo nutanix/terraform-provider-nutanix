@@ -18,8 +18,6 @@ package view
 import (
 	"time"
 
-	"go.opencensus.io/resource"
-
 	"go.opencensus.io/metric/metricdata"
 	"go.opencensus.io/stats"
 )
@@ -87,18 +85,9 @@ func viewToMetricDescriptor(v *View) *metricdata.Descriptor {
 	return &metricdata.Descriptor{
 		Name:        v.Name,
 		Description: v.Description,
-		Unit:        convertUnit(v),
+		Unit:        getUnit(v.Measure.Unit()),
 		Type:        getType(v),
 		LabelKeys:   getLabelKeys(v),
-	}
-}
-
-func convertUnit(v *View) metricdata.Unit {
-	switch v.Aggregation.Type {
-	case AggTypeCount:
-		return metricdata.UnitDimensionless
-	default:
-		return getUnit(v.Measure.Unit())
 	}
 }
 
@@ -127,7 +116,7 @@ func rowToTimeseries(v *viewInternal, row *Row, now time.Time, startTime time.Ti
 	}
 }
 
-func viewToMetric(v *viewInternal, r *resource.Resource, now time.Time, startTime time.Time) *metricdata.Metric {
+func viewToMetric(v *viewInternal, now time.Time, startTime time.Time) *metricdata.Metric {
 	if v.metricDescriptor.Type == metricdata.TypeGaugeInt64 ||
 		v.metricDescriptor.Type == metricdata.TypeGaugeFloat64 {
 		startTime = time.Time{}
@@ -146,7 +135,6 @@ func viewToMetric(v *viewInternal, r *resource.Resource, now time.Time, startTim
 	m := &metricdata.Metric{
 		Descriptor: *v.metricDescriptor,
 		TimeSeries: ts,
-		Resource:   r,
 	}
 	return m
 }

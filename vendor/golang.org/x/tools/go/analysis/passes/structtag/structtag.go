@@ -116,11 +116,7 @@ func checkCanonicalFieldTag(pass *analysis.Pass, field *types.Var, tag string, s
 	}
 
 	for _, enc := range [...]string{"json", "xml"} {
-		switch reflect.StructTag(tag).Get(enc) {
-		// Ignore warning if the field not exported and the tag is marked as
-		// ignored.
-		case "", "-":
-		default:
+		if reflect.StructTag(tag).Get(enc) != "" {
 			pass.Reportf(field.Pos(), "struct field %s has %s tag but is not exported", field.Name(), enc)
 			return
 		}
