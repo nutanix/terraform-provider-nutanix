@@ -6,8 +6,6 @@ require (
 	github.com/hashicorp/terraform-plugin-sdk v1.7.0
 	github.com/mitchellh/gox v1.0.1
 	github.com/spf13/cast v1.3.1
-	github.com/stretchr/testify v1.6.1 // indirect
-	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a // indirect
 	golang.org/x/tools v0.0.0-20200530233709-52effbd89c51 // indirect
 )
 

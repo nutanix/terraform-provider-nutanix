@@ -2,17 +2,17 @@
 
 Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
-NOTE: The latest version of the Nutanix provider is [v1.1.0](https://github.com/terraform-providers/terraform-provider-nutanix/releases/tag/v1.1.0)
+NOTE: The latest version of the Nutanix provider is [v1.1.1](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.1.1)
 
 ## Build, Quality Status
 
- [![Go Report Card](https://goreportcard.com/badge/github.com/terraform-providers/terraform-provider-nutanix)](https://goreportcard.com/report/github.com/terraform-providers/terraform-provider-nutanix)
+ [![Go Report Card](https://goreportcard.com/badge/github.com/nutanix/terraform-provider-nutanix)](https://goreportcard.com/report/github.com/nutanix/terraform-provider-nutanix)
 <!-- [![Maintainability](https://api.codeclimate.com/v1/badges/8b9e61df450276bbdbdb/maintainability)](https://codeclimate.com/github/nutanix/terraform-provider-nutanix/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/8b9e61df450276bbdbdb/test_coverage)](https://codeclimate.com/github/nutanix/terraform-provider-nutanix/test_coverage) -->
 
 | Master                                                                                                                                                          | Develop                                                                                                                                                           |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [![Build Status](https://travis-ci.org/terraform-providers/terraform-provider-nutanix.svg?branch=master)](https://travis-ci.org/terraform-providers/terraform-provider-nutanix) | [![Build Status](https://travis-ci.org/terraform-providers/terraform-provider-nutanix.svg?branch=develop)](https://travis-ci.org/terraform-providers/terraform-provider-nutanix) |
+| [![Build Status](https://travis-ci.org/nutanix/terraform-provider-nutanix.svg?branch=master)](https://travis-ci.org/nutanix/terraform-provider-nutanix) | [![Build Status](https://travis-ci.org/nutanix/terraform-provider-nutanix.svg?branch=develop)](https://travis-ci.org/nutanix/terraform-provider-nutanix) |
 
 ## Community
 
@@ -100,7 +100,7 @@ provider "nutanix" {
 We recomment to use Go 1.12+ to be able to use `go modules`
 
 ```sh
-$ git clone https://github.com/terraform-providers/terraform-provider-nutanix.git
+$ git clone https://github.com/nutanix/terraform-provider-nutanix.git
 ```
 
 Enter the provider directory and build the provider
@@ -201,7 +201,7 @@ We've got a handful of resources outside of this repository that will help users
   _ Overview Video: [](https://www.youtube.com/watch?v=V8_Lu1mxV6g)
   _ Working with images: [](https://www.youtube.com/watch?v=IW0eQevZ73I)
 * Nutanix GitHub
-  _ [](https://github.com/terraform-providers/terraform-provider-nutanix)
+  _ [](https://github.com/nutanix/terraform-provider-nutanix)
   _ Private repo until code goes upstream
 * Jon’s GitHub
   _ [](https://github.com/JonKohler/ThisOldCloud/tree/master/Terraform-Nutanix)

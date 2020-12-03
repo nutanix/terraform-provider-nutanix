@@ -67,5 +67,5 @@ resource "nutanix_category_value" "test_value"{
 
 
 data "nutanix_category_key" "test_key_value" {
-	name = nutanix_category_key.test_key_value.name
+	name = nutanix_category_value.test_value.name //creating implicit dependency
 }`
