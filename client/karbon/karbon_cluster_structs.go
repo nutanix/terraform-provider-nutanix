@@ -41,15 +41,15 @@ type ClusterIntentResponse struct {
 	WorkerConfig struct {
 		NodePools []string `json:"node_pools" mapstructure:"node_pools, omitempty"`
 	} `json:"worker_config" mapstructure:"worker_config, omitempty"`
-	CNIConfig ClusterCNIConfigIntentResponse `json:"cni_config" mapstructure:"cni_config, omitempty"`
+	CNIConfig ClusterCNIConfig `json:"cni_config" mapstructure:"cni_config, omitempty"`
 }
 
-type ClusterCNIConfigIntentResponse struct {
-	NodeCIDRMaskSize int64                            `json:"node_cidr_mask_size" mapstructure:"node_cidr_mask_size, omitempty"`
-	PodIPv4CIDR      string                           `json:"pod_ipv4_cidr" mapstructure:"pod_ipv4_cidr, omitempty"`
-	ServiceIPv4CIDR  string                           `json:"service_ipv4_cidr" mapstructure:"service_ipv4_cidr, omitempty"`
-	FlannelConfig    *ClusterFlannelConfigIntentInput `json:"flannel_config" mapstructure:"flannel_config, omitempty"`
-	CalicoConfig     *ClusterCalicoConfigIntentInput  `json:"calico_config" mapstructure:"calico_config, omitempty"`
+type ClusterCNIConfig struct {
+	NodeCIDRMaskSize int64                 `json:"node_cidr_mask_size" mapstructure:"node_cidr_mask_size, omitempty"`
+	PodIPv4CIDR      string                `json:"pod_ipv4_cidr" mapstructure:"pod_ipv4_cidr, omitempty"`
+	ServiceIPv4CIDR  string                `json:"service_ipv4_cidr" mapstructure:"service_ipv4_cidr, omitempty"`
+	FlannelConfig    *ClusterFlannelConfig `json:"flannel_config" mapstructure:"flannel_config, omitempty"`
+	CalicoConfig     *ClusterCalicoConfig  `json:"calico_config" mapstructure:"calico_config, omitempty"`
 }
 
 type ClusterNodePool struct {
@@ -116,22 +116,22 @@ type ClusterETCDConfigIntentInput struct {
 }
 
 type ClusterCNIConfigIntentInput struct {
-	NodeCIDRMaskSize int64                            `json:"node_cidr_mask_size" mapstructure:"node_cidr_mask_size, omitempty"`
-	PodIPv4CIDR      string                           `json:"pod_ipv4_cidr" mapstructure:"pod_ipv4_cidr, omitempty"`
-	ServiceIPv4CIDR  string                           `json:"service_ipv4_cidr" mapstructure:"service_ipv4_cidr, omitempty"`
-	FlannelConfig    *ClusterFlannelConfigIntentInput `json:"flannel_config" mapstructure:"flannel_config, omitempty"`
-	CalicoConfig     *ClusterCalicoConfigIntentInput  `json:"calico_config" mapstructure:"calico_config, omitempty"`
+	NodeCIDRMaskSize int64                 `json:"node_cidr_mask_size" mapstructure:"node_cidr_mask_size, omitempty"`
+	PodIPv4CIDR      string                `json:"pod_ipv4_cidr" mapstructure:"pod_ipv4_cidr, omitempty"`
+	ServiceIPv4CIDR  string                `json:"service_ipv4_cidr" mapstructure:"service_ipv4_cidr, omitempty"`
+	FlannelConfig    *ClusterFlannelConfig `json:"flannel_config" mapstructure:"flannel_config, omitempty"`
+	CalicoConfig     *ClusterCalicoConfig  `json:"calico_config" mapstructure:"calico_config, omitempty"`
 }
 
-type ClusterCalicoConfigIntentInput struct {
-	IPPoolConfigs []ClusterCalicoConfigIPPoolConfigIntentInput `json:"ip_pool_configs" mapstructure:"ip_pool_configs,omitempty"`
+type ClusterCalicoConfig struct {
+	IPPoolConfigs []ClusterCalicoConfigIPPoolConfig `json:"ip_pool_configs" mapstructure:"ip_pool_configs,omitempty"`
 }
 
-type ClusterCalicoConfigIPPoolConfigIntentInput struct {
+type ClusterCalicoConfigIPPoolConfig struct {
 	CIDR string `json:"cidr" mapstructure:"cidr"`
 }
 
-type ClusterFlannelConfigIntentInput struct{}
+type ClusterFlannelConfig struct{}
 
 type ClusterNodePoolAHVConfig struct {
 	CPU                     int64  `json:"cpu" mapstructure:"cpu, omitempty"`
