@@ -3766,3 +3766,431 @@ func TestOperations_DeleteAccessControlPolicy(t *testing.T) {
 		})
 	}
 }
+
+func TestOperations_CreateRole(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/roles", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodPost)
+
+		expected := map[string]interface{}{
+			"api_version": "3.1",
+			"metadata": map[string]interface{}{
+				"name": "role_test_name",
+				"kind": "role",
+				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc",
+			},
+			"spec": map[string]interface{}{
+				"resources": map[string]interface{}{
+					"permission_reference_list": []interface{}{
+						map[string]interface{}{
+							"name": "role_test_name",
+							"kind": "role",
+							"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc",
+						},
+					},
+				},
+				"name":        "role_name",
+				"description": "description_test",
+			},
+		}
+
+		var v map[string]interface{}
+		err := json.NewDecoder(r.Body).Decode(&v)
+		if err != nil {
+			t.Fatalf("decode json: %v", err)
+		}
+
+		if !reflect.DeepEqual(v, expected) {
+			t.Errorf("Request body\n got=%#v\nwant=%#v", v, expected)
+		}
+
+		fmt.Fprintf(w, `{
+			"api_version": "3.1",
+			"metadata": {
+				"kind": "role",
+				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
+			}
+		}`)
+	})
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		request *Role
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *Role
+		wantErr bool
+	}{
+		{
+			"Test CreateRole",
+			fields{c},
+			args{
+				&Role{
+					APIVersion: "3.1",
+					Metadata: &Metadata{
+						Name: utils.StringPtr("role_test_name"),
+						Kind: utils.StringPtr("role"),
+						UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					},
+					Spec: &RoleSpec{
+						Name:        utils.StringPtr("role_name"),
+						Description: utils.StringPtr("description_test"),
+						Resources: &RoleResources{
+							PermissionReferenceList: []*Reference{
+								{
+									Kind: utils.StringPtr("role"),
+									UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+									Name: utils.StringPtr("role_test_name"),
+								},
+							},
+						},
+					},
+				},
+			},
+			&Role{
+				APIVersion: "3.1",
+				Metadata: &Metadata{
+					Kind: utils.StringPtr("role"),
+					UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+				},
+			},
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.CreateRole(tt.args.request)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.CreateRole() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.CreateRole() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOperations_GetRole(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/roles/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodGet)
+		fmt.Fprint(w, `{"metadata": {"kind":"host","uuid":"cfde831a-4e87-4a75-960f-89b0148aa2cc"}}`)
+	})
+
+	hostResponse := &Role{}
+	hostResponse.Metadata = &Metadata{
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("host"),
+	}
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		UUID string
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *Role
+		wantErr bool
+	}{
+		{
+			"Test GetRole OK",
+			fields{c},
+			args{"cfde831a-4e87-4a75-960f-89b0148aa2cc"},
+			hostResponse,
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.GetRole(tt.args.UUID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.GetRole() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.GetRole() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOperations_ListRole(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/roles/list", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodPost)
+		fmt.Fprint(w, `{"entities":[{"metadata": {"kind":"host","uuid":"cfde831a-4e87-4a75-960f-89b0148aa2cc"}}]}`)
+	})
+
+	hostList := &RoleListResponse{}
+	hostList.Entities = make([]*Role, 1)
+	hostList.Entities[0] = &Role{}
+	hostList.Entities[0].Metadata = &Metadata{
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("host"),
+	}
+
+	input := &DSMetadata{
+		Length: utils.Int64Ptr(1.0),
+	}
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		getEntitiesRequest *DSMetadata
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *RoleListResponse
+		wantErr bool
+	}{
+		{
+			"Test ListSubnet OK",
+			fields{c},
+			args{input},
+			hostList,
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.ListRole(tt.args.getEntitiesRequest)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.ListRole() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.ListRole() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOperations_UpdateRole(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/roles/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodPut)
+
+		expected := map[string]interface{}{
+			"metadata": map[string]interface{}{
+				"name": "role_test_name",
+				"kind": "role",
+				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc",
+			},
+			"spec": map[string]interface{}{
+				"resources": map[string]interface{}{
+					"permission_reference_list": []interface{}{
+						map[string]interface{}{
+							"name": "role_test_name",
+							"kind": "role",
+							"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc",
+						},
+					},
+				},
+				"name":        "role_name",
+				"description": "description_test",
+			},
+		}
+
+		var v map[string]interface{}
+		err := json.NewDecoder(r.Body).Decode(&v)
+		if err != nil {
+			t.Fatalf("decode json: %v", err)
+		}
+
+		if !reflect.DeepEqual(v, expected) {
+			t.Errorf("Request body\n got=%#v\nwant=%#v", v, expected)
+		}
+
+		fmt.Fprintf(w, `{
+			"api_version": "3.1",
+			"metadata": {
+				"kind": "role",
+				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
+			}
+		}`)
+	})
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		UUID string
+		body *Role
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *Role
+		wantErr bool
+	}{
+		{
+			"Test CreateRole",
+			fields{c},
+			args{
+				"cfde831a-4e87-4a75-960f-89b0148aa2cc",
+				&Role{
+					Metadata: &Metadata{
+						Name: utils.StringPtr("role_test_name"),
+						Kind: utils.StringPtr("role"),
+						UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					},
+					Spec: &RoleSpec{
+						Name:        utils.StringPtr("role_name"),
+						Description: utils.StringPtr("description_test"),
+						Resources: &RoleResources{
+							PermissionReferenceList: []*Reference{
+								{
+									Kind: utils.StringPtr("role"),
+									UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+									Name: utils.StringPtr("role_test_name"),
+								},
+							},
+						},
+					},
+				},
+			},
+			&Role{
+				APIVersion: "3.1",
+				Metadata: &Metadata{
+					Kind: utils.StringPtr("role"),
+					UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+				},
+			},
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.UpdateRole(tt.args.UUID, tt.args.body)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.UpdateRole() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.UpdateRole() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOperations_DeleteRole(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/roles/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodDelete)
+
+		fmt.Fprintf(w, `{
+				"status": {
+					"state": "DELETE_PENDING",
+					"execution_context": {
+						"task_uuid": "ff1b9547-dc9a-4ebd-a2ff-f2b718af935e"
+					}
+				},
+				"spec": "",
+				"api_version": "3.1",
+				"metadata": {
+					"kind": "role",
+					"categories": {
+						"Project": "default"
+					}
+				}
+			}`)
+	})
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		UUID string
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			"Test DeleteRole OK",
+			fields{c},
+			args{"cfde831a-4e87-4a75-960f-89b0148aa2cc"},
+			false,
+		},
+
+		{
+			"Test DeleteRole Errored",
+			fields{c},
+			args{},
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			if _, err := op.DeleteRole(tt.args.UUID); (err != nil) != tt.wantErr {
+				t.Errorf("Operations.DeleteRole() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

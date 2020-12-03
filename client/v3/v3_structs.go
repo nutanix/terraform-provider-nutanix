@@ -2080,3 +2080,40 @@ type AccessControlPolicyListResponse struct {
 	Entities   []*AccessControlPolicy `json:"entities,omitempty"`
 	Metadata   *ListMetadataOutput    `json:"metadata,omitempty"`
 }
+
+// RoleResources ...
+type RoleResources struct {
+	PermissionReferenceList []*Reference `json:"permission_reference_list,omitempty"`
+}
+
+// RoleStatus ...
+type RoleStatus struct {
+	State            *string            `json:"state,omitempty"`
+	MessageList      []*MessageResource `json:"message_list,omitempty"`
+	Name             *string            `json:"name,omitempty"`
+	Resources        *RoleResources     `json:"resources,omitempty"`
+	Description      *string            `json:"description,omitempty"`
+	ExecutionContext *ExecutionContext  `json:"execution_context,omitempty"`
+}
+
+// RoleSpec ...
+type RoleSpec struct {
+	Name        *string        `json:"name,omitempty"`
+	Resources   *RoleResources `json:"resources,omitempty"`
+	Description *string        `json:"description,omitempty"`
+}
+
+// Role Response object for intentful operations on a access policy
+type Role struct {
+	Status     *RoleStatus `json:"status,omitempty"`
+	Spec       *RoleSpec   `json:"spec,omitempty"`
+	APIVersion string      `json:"api_version,omitempty"`
+	Metadata   *Metadata   `json:"metadata,omitempty"`
+}
+
+// RoleListResponse Response object for intentful operation of access policy
+type RoleListResponse struct {
+	APIVersion string              `json:"api_version,omitempty"`
+	Entities   []*Role             `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput `json:"metadata,omitempty"`
+}
