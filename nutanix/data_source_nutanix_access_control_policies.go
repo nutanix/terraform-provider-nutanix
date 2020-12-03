@@ -309,7 +309,7 @@ func dataSourceNutanixAccessControlPoliciesRead(d *schema.ResourceData, meta int
 
 	metadata, filtersOk := d.GetOk("metadata")
 	if filtersOk {
-		req = buildDataSourceSubnetsMetadata(metadata.(*schema.Set))
+		req = buildDataSourceListMetadata(metadata.(*schema.Set))
 	}
 
 	resp, err := conn.V3.ListAccessControlPolicy(req)

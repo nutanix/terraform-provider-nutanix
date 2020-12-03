@@ -345,7 +345,7 @@ func dataSourceNutanixSubnetsRead(d *schema.ResourceData, meta interface{}) erro
 
 	metadata, filtersOk := d.GetOk("metadata")
 	if filtersOk {
-		req = buildDataSourceSubnetsMetadata(metadata.(*schema.Set))
+		req = buildDataSourceListMetadata(metadata.(*schema.Set))
 	}
 
 	resp, err := conn.V3.ListSubnet(req)
@@ -448,7 +448,7 @@ func dataSourceNutanixSubnetsRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func buildDataSourceSubnetsMetadata(set *schema.Set) *v3.DSMetadata {
+func buildDataSourceListMetadata(set *schema.Set) *v3.DSMetadata {
 	filters := v3.DSMetadata{}
 	for _, v := range set.List() {
 		m := v.(map[string]interface{})
