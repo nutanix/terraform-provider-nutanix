@@ -29,6 +29,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	pb "google.golang.org/grpc/binarylog/grpc_binarylog_v1"
+	"google.golang.org/grpc/grpclog"
 )
 
 var (
@@ -62,7 +63,7 @@ func (ns *noopSink) Close() error                 { return nil }
 
 // newWriterSink creates a binary log sink with the given writer.
 //
-// Write() marshals the proto message and writes it to the given writer. Each
+// Write() marshalls the proto message and writes it to the given writer. Each
 // message is prefixed with a 4 byte big endian unsigned integer as the length.
 //
 // No buffer is done, Close() doesn't try to close the writer.
@@ -77,7 +78,7 @@ type writerSink struct {
 func (ws *writerSink) Write(e *pb.GrpcLogEntry) error {
 	b, err := proto.Marshal(e)
 	if err != nil {
-		grpclogLogger.Infof("binary logging: failed to marshal proto message: %v", err)
+		grpclog.Infof("binary logging: failed to marshal proto message: %v", err)
 	}
 	hdr := make([]byte, 4)
 	binary.BigEndian.PutUint32(hdr, uint32(len(b)))

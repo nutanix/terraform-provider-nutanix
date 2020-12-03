@@ -39,12 +39,7 @@ func GetSizes(ctx context.Context, buildFlags, env []string, gocmdRunner *gocomm
 	}
 
 	if tool == "off" {
-		inv := gocommand.Invocation{
-			BuildFlags: buildFlags,
-			Env:        env,
-			WorkingDir: dir,
-		}
-		return GetSizesGolist(ctx, inv, gocmdRunner)
+		return GetSizesGolist(ctx, buildFlags, env, gocmdRunner, dir)
 	}
 
 	req, err := json.Marshal(struct {
@@ -80,17 +75,26 @@ func GetSizes(ctx context.Context, buildFlags, env []string, gocmdRunner *gocomm
 	return response.Sizes, nil
 }
 
-func GetSizesGolist(ctx context.Context, inv gocommand.Invocation, gocmdRunner *gocommand.Runner) (types.Sizes, error) {
-	inv.Verb = "list"
-	inv.Args = []string{"-f", "{{context.GOARCH}} {{context.Compiler}}", "--", "unsafe"}
+func GetSizesGolist(ctx context.Context, buildFlags, env []string, gocmdRunner *gocommand.Runner, dir string) (types.Sizes, error) {
+	inv := gocommand.Invocation{
+		Verb:       "list",
+		Args:       []string{"-f", "{{context.GOARCH}} {{context.Compiler}}", "--", "unsafe"},
+		Env:        env,
+		BuildFlags: buildFlags,
+		WorkingDir: dir,
+	}
 	stdout, stderr, friendlyErr, rawErr := gocmdRunner.RunRaw(ctx, inv)
 	var goarch, compiler string
 	if rawErr != nil {
 		if strings.Contains(rawErr.Error(), "cannot find main module") {
 			// User's running outside of a module. All bets are off. Get GOARCH and guess compiler is gc.
 			// TODO(matloob): Is this a problem in practice?
-			inv.Verb = "env"
-			inv.Args = []string{"GOARCH"}
+			inv := gocommand.Invocation{
+				Verb:       "env",
+				Args:       []string{"GOARCH"},
+				Env:        env,
+				WorkingDir: dir,
+			}
 			envout, enverr := gocmdRunner.Run(ctx, inv)
 			if enverr != nil {
 				return nil, enverr
