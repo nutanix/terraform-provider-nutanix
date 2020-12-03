@@ -1638,6 +1638,12 @@ type Metadata struct {
 
 	// Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
 	ShouldForceTranslate *bool `json:"should_force_translate,omitempty" mapstructure:"should_force_translate,omitempty"`
+
+	//TODO: add if necessary
+	//CategoriesMapping    map[string][]string `json:"categories_mapping,omitempty" mapstructure:"categories_mapping,omitempty"`
+	//EntityVersion        *string             `json:"entity_version,omitempty" mapstructure:"entity_version,omitempty"`
+	//UseCategoriesMapping *bool               `json:"use_categories_mapping,omitempty" mapstructure:"use_categories_mapping,omitempty"`
+
 }
 
 // NetworkSecurityRuleIntentInput An intentful representation of a network_security_rule
@@ -2116,4 +2122,126 @@ type RoleListResponse struct {
 	APIVersion string              `json:"api_version,omitempty"`
 	Entities   []*Role             `json:"entities,omitempty"`
 	Metadata   *ListMetadataOutput `json:"metadata,omitempty"`
+}
+
+type ResourceUsageSummary struct {
+	ResourceDomain *ResourceDomainStatus `json:"resource_domain"` // The status for a resource domain (limits and values)
+}
+
+type ResourceDomainStatus struct {
+	Resources []ResourceUtilizationStatus `json:"resources,omitempty"` // The utilization/limit for resource types
+}
+
+type ResourceUtilizationStatus struct {
+	Limit        *int64  `json:"limit,omitempty"`         // The resource consumption limit (unspecified is unlimited)
+	ResourceType *string `json:"resource_type,omitempty"` // The type of resource (for example storage, CPUs)
+	Units        *string `json:"units,omitempty"`         // The units of the resource type
+	Value        *int64  `json:"value,omitempty"`         // The amount of resource consumed
+}
+
+// An intentful representation of a user
+type UserIntentInput struct {
+	APIVersion *string   `json:"api_version,omitempty"` // API Version of the Nutanix v3 API framework.
+	Metadata   *Metadata `json:"metadata,omitempty"`    // The user kind metadata
+	Spec       *UserSpec `json:"spec,omitempty"`        // User Input Definition.
+}
+
+// Response object for intentful operations on a user
+type UserIntentResponse struct {
+	APIVersion *string     `json:"api_version,omitempty"` // API Version of the Nutanix v3 API framework.
+	Metadata   *Metadata   `json:"metadata,omitempty"`    // The user kind metadata
+	Spec       *UserSpec   `json:"spec,omitempty"`        // User Input Definition.
+	Status     *UserStatus `json:"status,omitempty"`      // User status definition.
+}
+
+// User Input Definition.
+type UserSpec struct {
+	Resources *UserResources `json:"resources,omitempty"` // User Resource Definition.
+}
+
+// User Resource Definition.
+type UserResources struct {
+	DirectoryServiceUser *DirectoryServiceUser `json:"directory_service_user,omitempty"` // A Directory Service user.
+	IdentityProviderUser *IdentityProvider     `json:"identity_provider_user,omitempty"` // An Identity Provider user.
+}
+
+// A Directory Service user.
+type DirectoryServiceUser struct {
+	DefaultUserPrincipalName  *string    `json:"default_user_principal_name,omitempty"` // The Default UserPrincipalName of the user from the directory service.
+	DirectoryServiceReference *Reference `json:"directory_service_reference,omitempty"` // The reference to a directory_service
+	UserPrincipalName         *string    `json:"user_principal_name,omitempty"`         // The UserPrincipalName of the user from the directory service.
+}
+
+// An Identity Provider user.
+type IdentityProvider struct {
+	IdentityProviderReference *Reference `json:"identity_provider_reference,omitempty"` // The reference to a identity_provider
+	Username                  *string    `json:"username,omitempty"`                    // The username from the identity provider. Name Id for SAML Identity Provider.
+}
+
+// User status definition.
+type UserStatus struct {
+	MessageList      []MessageResource    `json:"message_list,omitempty"`
+	Name             *string              `json:"name,omitempty"`      // Name of the User.
+	Resources        *UserStatusResources `json:"resources,omitempty"` // User Resource Definition.
+	State            *string              `json:"state,omitempty"`     // The state of the entity.
+	ExecutionContext *ExecutionContext    `json:"execution_context,omitempty"`
+}
+
+// User Resource Definition.
+type UserStatusResources struct {
+	AccessControlPolicyReferenceList []*Reference          `json:"access_control_policy_reference_list,omitempty"` // List of ACP references.
+	DirectoryServiceUser             *DirectoryServiceUser `json:"directory_service_user,omitempty"`               // A Directory Service user.
+	DisplayName                      *string               `json:"display_name,omitempty"`                         // The display name of the user (common name) provided by the directory service.
+	IdentityProviderUser             *IdentityProvider     `json:"identity_provider_user,omitempty"`               // An Identity Provider user.
+	ProjectsReferenceList            []*Reference          `json:"projects_reference_list,omitempty"`              // A list of projects the user is part of.
+	ResourceUsageSummary             *ResourceUsageSummary `json:"resource_usage_summary,omitempty"`
+	UserType                         *string               `json:"user_type,omitempty"`
+}
+
+type UserListResponse struct {
+	APIVersion *string               `json:"api_version,omitempty"` // API Version of the Nutanix v3 API framework.
+	Entities   []*UserIntentResponse `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput   `json:"metadata,omitempty"` // All api calls that return a list will have this metadata block
+}
+
+// Response object for intentful operations on a user_group
+type UserGroupIntentResponse struct {
+	APIVersion *string          `json:"api_version,omitempty"` // API Version of the Nutanix v3 API framework.
+	Metadata   *Metadata        `json:"metadata,omitempty"`    // The user_group kind metadata
+	Spec       *UserGroupSpec   `json:"spec,omitempty"`        // User Group Input Definition.
+	Status     *UserGroupStatus `json:"status,omitempty"`      // User group status definition.
+}
+
+// User Group Input Definition.
+type UserGroupSpec struct {
+	Resources *UserGroupResources `json:"resources,omitempty"` // User Group Resource Definition
+}
+
+// User Group Resource Definition
+type UserGroupResources struct {
+	AccessControlPolicyReferenceList []*Reference               `json:"access_control_policy_reference_list,omitempty"` // List of ACP references.
+	DirectoryServiceUserGroup        *DirectoryServiceUserGroup `json:"directory_service_user_group,omitempty"`         // A Directory Service user group.
+	DisplayName                      *string                    `json:"display_name,omitempty"`                         // The display name for the user group.
+	ProjectsReferenceList            []*Reference               `json:"projects_reference_list,omitempty"`              // A list of projects the user group is part of.
+	UserGroupType                    *string                    `json:"user_group_type,omitempty"`
+}
+
+// User group status definition.
+type UserGroupStatus struct {
+	MessageList []MessageResource   `json:"message_list,omitempty"`
+	Resources   *UserGroupResources `json:"resources,omitempty"` // User Group Resource Definition.
+	State       *string             `json:"state,omitempty"`     // The state of the entity.
+}
+
+// A Directory Service user group.
+type DirectoryServiceUserGroup struct {
+	DirectoryServiceReference *Reference `json:"directory_service_reference,omitempty"` // The reference to a directory_service
+	DistinguishedName         *string    `json:"distinguished_name,omitempty"`          // The Distinguished name for the user group.
+}
+
+// Response object for intentful operation of user_groups
+type UserGroupListResponse struct {
+	APIVersion *string                    `json:"api_version,omitempty"` // API Version of the Nutanix v3 API framework.
+	Entities   []*UserGroupIntentResponse `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput        `json:"metadata,omitempty"` // All api calls that return a list will have this metadata block
 }

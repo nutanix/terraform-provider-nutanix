@@ -141,7 +141,7 @@ func resourceNutanixProject() *schema.Resource {
 				},
 			},
 			"user_reference_list": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -164,7 +164,7 @@ func resourceNutanixProject() *schema.Resource {
 				},
 			},
 			"external_user_group_reference_list": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -446,10 +446,10 @@ func resourceNutanixProjectUpdate(d *schema.ResourceData, meta interface{}) erro
 		project.Spec.Resources.DefaultSubnetReference = expandReferenceList(d, "default_subnet_reference")[0]
 	}
 	if d.HasChange("user_reference_list") {
-		project.Spec.Resources.UserReferenceList = expandReferenceList(d, "user_reference_list")
+		project.Spec.Resources.UserReferenceList = expandReferenceSet(d, "user_reference_list")
 	}
 	if d.HasChange("external_user_group_reference_list") {
-		project.Spec.Resources.ExternalUserGroupReferenceList = expandReferenceList(d, "external_user_group_reference_list")
+		project.Spec.Resources.ExternalUserGroupReferenceList = expandReferenceSet(d, "external_user_group_reference_list")
 	}
 	if d.HasChange("subnet_reference_list") {
 		project.Spec.Resources.SubnetReferenceList = expandReferenceList(d, "subnet_reference_list")
@@ -495,8 +495,8 @@ func expandProjectSpec(d *schema.ResourceData) *v3.ProjectSpec {
 			AccountReferenceList:           expandReferenceList(d, "account_reference_list"),
 			EnvironmentReferenceList:       expandReferenceList(d, "environment_reference_list"),
 			DefaultSubnetReference:         expandReferenceList(d, "default_subnet_reference")[0],
-			UserReferenceList:              expandReferenceList(d, "user_reference_list"),
-			ExternalUserGroupReferenceList: expandReferenceList(d, "external_user_group_reference_list"),
+			UserReferenceList:              expandReferenceSet(d, "user_reference_list"),
+			ExternalUserGroupReferenceList: expandReferenceSet(d, "external_user_group_reference_list"),
 			SubnetReferenceList:            expandReferenceList(d, "subnet_reference_list"),
 			ExternalNetworkList:            expandReferenceList(d, "external_network_list"),
 		},
@@ -554,6 +554,16 @@ func expandReferenceByMap(reference map[string]interface{}) *v3.ReferenceValues 
 
 func expandReferenceList(d *schema.ResourceData, key string) []*v3.ReferenceValues {
 	references := d.Get(key).([]interface{})
+	list := make([]*v3.ReferenceValues, len(references))
+
+	for i, r := range references {
+		list[i] = expandReferenceByMap(cast.ToStringMap(r))
+	}
+	return list
+}
+
+func expandReferenceSet(d *schema.ResourceData, key string) []*v3.ReferenceValues {
+	references := d.Get(key).(*schema.Set).List()
 	list := make([]*v3.ReferenceValues, len(references))
 
 	for i, r := range references {
