@@ -598,6 +598,12 @@ func resourceNutanixKarbonClusterRead(d *schema.ResourceData, meta interface{}) 
 	if err = d.Set("private_registry", flattenedPrivateRegistries); err != nil {
 		return fmt.Errorf("error setting private_registry for Karbon Cluster %s: %s", d.Id(), err)
 	}
+	flatCNIConfig := flattenCNIConfig(resp.CNIConfig)
+	utils.PrintToJSON(flatCNIConfig, "flatCNIConfig: ")
+	if err = d.Set("cni_config", flatCNIConfig); err != nil {
+		return fmt.Errorf("error setting cni_config for Karbon Cluster %s: %s", d.Id(), err)
+	}
+
 	d.SetId(*resp.UUID)
 	return nil
 }
@@ -882,6 +888,40 @@ func flattenPrivateRegisties(conn *karbon.Client, karbonClusterName string) ([]m
 	return flatPrivReg, nil
 }
 
+func flattenCNIConfig(cniConfig karbon.ClusterCNIConfig) []map[string]interface{} {
+	flatCNIConfigList := make([]map[string]interface{}, 0)
+	flatCNIConfig := map[string]interface{}{
+		"flannel_config":      cniConfig.FlannelConfig,
+		"node_cidr_mask_size": cniConfig.NodeCIDRMaskSize,
+		"pod_ipv4_cidr":       cniConfig.PodIPv4CIDR,
+		"service_ipv4_cidr":   cniConfig.ServiceIPv4CIDR,
+	}
+	if cniConfig.CalicoConfig != nil {
+		flatCNIConfig["calico_config"] = flattenCalicoConfig(cniConfig.CalicoConfig)
+	}
+	flatCNIConfigList = append(flatCNIConfigList, flatCNIConfig)
+	return flatCNIConfigList
+}
+
+func flattenCalicoConfig(calicoConfig *karbon.ClusterCalicoConfig) []map[string]interface{} {
+	flatCalicoConfigList := make([]map[string]interface{}, 0)
+	if calicoConfig != nil {
+		ipPoolList := make([]map[string]interface{}, 0)
+		for _, ippc := range calicoConfig.IPPoolConfigs {
+			ipPoolList = append(ipPoolList, map[string]interface{}{
+				"cidr": ippc.CIDR,
+			})
+		}
+		if len(ipPoolList) > 0 {
+			flatCalicoConfigList = append(flatCalicoConfigList,
+				map[string]interface{}{
+					"ip_pool_config": ipPoolList,
+				})
+		}
+	}
+	return flatCalicoConfigList
+}
+
 func flattenNodePools(d *schema.ResourceData, conn *karbon.Client, nodePoolKey string, karbonClusterName string, nodepools []string) ([]map[string]interface{}, error) {
 	flatNodepools := make([]map[string]interface{}, 0)
 	// start workaround for disk_mib bug GA API
@@ -1090,7 +1130,7 @@ func expandCNI(cniConfigInput []interface{}) (*karbon.ClusterCNIConfigIntentInpu
 			return nil, fmt.Errorf("cannot have more (or less) than one calico configuration")
 		}
 		calicoConfigMap := calicoConfigList[0].(map[string]interface{})
-		ipPoolConfigs := make([]karbon.ClusterCalicoConfigIPPoolConfigIntentInput, 0)
+		ipPoolConfigs := make([]karbon.ClusterCalicoConfigIPPoolConfig, 0)
 		var ipPoolConfigsFromMap []interface{}
 		if ipcfm, ok := calicoConfigMap["ip_pool_configs"]; ok {
 			ipPoolConfigsFromMap = ipcfm.([]interface{})
@@ -1101,15 +1141,15 @@ func expandCNI(cniConfigInput []interface{}) (*karbon.ClusterCNIConfigIntentInpu
 
 		for _, ipc := range ipPoolConfigsFromMap {
 			mipc := ipc.(map[string]interface{})
-			ipPoolConfigs = append(ipPoolConfigs, karbon.ClusterCalicoConfigIPPoolConfigIntentInput{
+			ipPoolConfigs = append(ipPoolConfigs, karbon.ClusterCalicoConfigIPPoolConfig{
 				CIDR: mipc["cidr"].(string),
 			})
 		}
-		cniConfig.CalicoConfig = &karbon.ClusterCalicoConfigIntentInput{
+		cniConfig.CalicoConfig = &karbon.ClusterCalicoConfig{
 			IPPoolConfigs: ipPoolConfigs,
 		}
 	} else {
-		cniConfig.FlannelConfig = &karbon.ClusterFlannelConfigIntentInput{}
+		cniConfig.FlannelConfig = &karbon.ClusterFlannelConfig{}
 	}
 	return cniConfig, nil
 }
