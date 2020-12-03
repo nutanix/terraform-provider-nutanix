@@ -88,16 +88,6 @@ func (it inputTokens) PartitionType(ty hclsyntax.TokenType) (before, within, aft
 	panic(fmt.Sprintf("didn't find any token of type %s", ty))
 }
 
-func (it inputTokens) PartitionTypeOk(ty hclsyntax.TokenType) (before, within, after inputTokens, ok bool) {
-	for i, t := range it.writerTokens {
-		if t.Type == ty {
-			return it.Slice(0, i), it.Slice(i, i+1), it.Slice(i+1, len(it.nativeTokens)), true
-		}
-	}
-
-	return inputTokens{}, inputTokens{}, inputTokens{}, false
-}
-
 func (it inputTokens) PartitionTypeSingle(ty hclsyntax.TokenType) (before inputTokens, found *Token, after inputTokens) {
 	before, within, after := it.PartitionType(ty)
 	if within.Len() != 1 {
@@ -414,19 +404,6 @@ func parseTraversalStep(nativeStep hcl.Traverser, from inputTokens) (before inpu
 		children = step.inTree.children
 		before, from, after = from.Partition(nativeStep.SourceRange())
 
-		if inBefore, dot, from, ok := from.PartitionTypeOk(hclsyntax.TokenDot); ok {
-			children.AppendUnstructuredTokens(inBefore.Tokens())
-			children.AppendUnstructuredTokens(dot.Tokens())
-
-			valBefore, valToken, valAfter := from.PartitionTypeSingle(hclsyntax.TokenNumberLit)
-			children.AppendUnstructuredTokens(valBefore.Tokens())
-			key := newNumber(valToken)
-			step.key = children.Append(key)
-			children.AppendUnstructuredTokens(valAfter.Tokens())
-
-			return before, newNode(step), after
-		}
-
 		var inBefore, oBrack, keyTokens, cBrack inputTokens
 		inBefore, oBrack, from = from.PartitionType(hclsyntax.TokenOBrack)
 		children.AppendUnstructuredTokens(inBefore.Tokens())
@@ -521,8 +498,8 @@ func writerTokens(nativeTokens hclsyntax.Tokens) Tokens {
 // The tokens are assumed to be in source order and non-overlapping, which
 // will be true if the token sequence from the scanner is used directly.
 func partitionTokens(toks hclsyntax.Tokens, rng hcl.Range) (start, end int) {
-	// We use a linear search here because we assume that in most cases our
-	// target range is close to the beginning of the sequence, and the sequences
+	// We us a linear search here because we assume tha in most cases our
+	// target range is close to the beginning of the sequence, and the seqences
 	// are generally small for most reasonable files anyway.
 	for i := 0; ; i++ {
 		if i >= len(toks) {
