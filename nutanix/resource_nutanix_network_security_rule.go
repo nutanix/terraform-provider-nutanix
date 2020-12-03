@@ -578,49 +578,7 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 
 	rules := resp.Spec.Resources
 
-	if rules.AppRule != nil {
-		if err := d.Set("app_rule_action", utils.StringValue(rules.AppRule.Action)); err != nil {
-			return err
-		}
-
-		if rules.AppRule.TargetGroup != nil {
-			if err := d.Set("app_rule_target_group_default_internal_policy",
-				utils.StringValue(rules.AppRule.TargetGroup.DefaultInternalPolicy)); err != nil {
-				return err
-			}
-			if err := d.Set("app_rule_target_group_peer_specification_type",
-				utils.StringValue(rules.AppRule.TargetGroup.PeerSpecificationType)); err != nil {
-				return err
-			}
-
-			if rules.AppRule.TargetGroup.Filter != nil {
-				v := rules.AppRule.TargetGroup
-				if v.Filter != nil {
-					if err := d.Set("app_rule_target_group_filter_kind_list", utils.StringValueSlice(v.Filter.KindList)); err != nil {
-						return err
-					}
-
-					if err := d.Set("app_rule_target_group_filter_type", utils.StringValue(v.Filter.Type)); err != nil {
-						return err
-					}
-
-					if err := d.Set("app_rule_target_group_filter_params", expandFilterParams(v.Filter.Params)); err != nil {
-						return err
-					}
-				}
-			}
-		}
-
-		// Set app_rule_outbound_allow_list
-		if err := d.Set("app_rule_outbound_allow_list", flattenNetworkRuleList(rules.AppRule.OutboundAllowList)); err != nil {
-			return err
-		}
-
-		// Set app_rule_inbound_allow_list
-		if err := d.Set("app_rule_inbound_allow_list", flattenNetworkRuleList(rules.AppRule.InboundAllowList)); err != nil {
-			return err
-		}
-	} else if err := d.Set("app_rule_target_group_filter_kind_list", make([]string, 0)); err != nil {
+	if err := flattenNetworkRule("app_rule", rules.AppRule, d); err != nil {
 		return err
 	}
 
@@ -672,6 +630,56 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 		}
 	}
 
+	return nil
+}
+
+func flattenNetworkRule(prefix string, rule *v3.NetworkSecurityRuleResourcesRule, d *schema.ResourceData) error {
+	if rule != nil {
+		if err := d.Set(fmt.Sprintf("%s_action", prefix), utils.StringValue(rule.Action)); err != nil {
+			return err
+		}
+
+		if rule.TargetGroup != nil {
+			if err := d.Set(fmt.Sprintf("%s_target_group_default_internal_policy", prefix),
+				utils.StringValue(rule.TargetGroup.DefaultInternalPolicy)); err != nil {
+				return err
+			}
+			if err := d.Set(fmt.Sprintf("%s_target_group_peer_specification_type", prefix),
+				utils.StringValue(rule.TargetGroup.PeerSpecificationType)); err != nil {
+				return err
+			}
+
+			if rule.TargetGroup.Filter != nil {
+				v := rule.TargetGroup
+				if v.Filter != nil {
+					if err := d.Set(fmt.Sprintf("%s_target_group_filter_kind_list", prefix), utils.StringValueSlice(v.Filter.KindList)); err != nil {
+						return err
+					}
+
+					if err := d.Set(fmt.Sprintf("%s_target_group_filter_type", prefix), utils.StringValue(v.Filter.Type)); err != nil {
+						return err
+					}
+
+					if err := d.Set(fmt.Sprintf("%s_target_group_filter_params", prefix), expandFilterParams(v.Filter.Params)); err != nil {
+						return err
+					}
+				}
+			}
+		}
+
+		// Set app_rule_outbound_allow_list
+		if err := d.Set(fmt.Sprintf("%s_outbound_allow_list", prefix), flattenNetworkRuleList(rule.OutboundAllowList)); err != nil {
+			return err
+		}
+
+		// Set app_rule_inbound_allow_list
+		if err := d.Set(fmt.Sprintf("%s_inbound_allow_list", prefix), flattenNetworkRuleList(rule.InboundAllowList)); err != nil {
+			return err
+		}
+
+	} else if err := d.Set(fmt.Sprintf("%s_target_group_filter_kind_list", prefix), make([]string, 0)); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -812,17 +820,108 @@ func resourceNutanixNetworkSecurityRuleDelete(d *schema.ResourceData, meta inter
 
 func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule *v3.NetworkSecurityRuleResources) error {
 	isolationRule := &v3.NetworkSecurityRuleIsolationRule{}
-	appRule := &v3.NetworkSecurityRuleResourcesRule{}
-	aRuleTargetGroup := &v3.TargetGroup{}
-	aRuleTargetGroupFilter := &v3.CategoryFilter{}
+
 	iRuleFirstEntityFilter := &v3.CategoryFilter{}
 	iRuleSecondEntityFilter := &v3.CategoryFilter{}
 
-	if ara, ok := d.GetOk("app_rule_action"); ok && ara.(string) != "" {
+	appRule := expandNetworkRule("app_rule", d)
+
+	if ira, ok := d.GetOk("isolation_rule_action"); ok && ira.(string) != "" {
+		isolationRule.Action = utils.StringPtr(ira.(string))
+	}
+
+	if f, fok := d.GetOk("isolation_rule_first_entity_filter_kind_list"); fok && f != nil {
+		iRuleFirstEntityFilter.KindList = expandStringList(f.([]interface{}))
+	}
+
+	if ft, ftok := d.GetOk("isolation_rule_first_entity_filter_type"); ftok && ft.(string) != "" {
+		iRuleFirstEntityFilter.Type = utils.StringPtr(ft.(string))
+	}
+
+	if fp, fpok := d.GetOk("isolation_rule_first_entity_filter_params"); fpok {
+		fpl := fp.(*schema.Set).List()
+
+		if len(fpl) > 0 {
+			fl := make(map[string][]string)
+			for _, v := range fpl {
+				item := v.(map[string]interface{})
+
+				if i, ok := item["name"]; ok && i.(string) != "" {
+					if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
+						var values []string
+						for _, item := range k.([]interface{}) {
+							values = append(values, item.(string))
+						}
+						fl[i.(string)] = values
+					}
+				}
+			}
+			iRuleFirstEntityFilter.Params = fl
+		} else {
+			iRuleFirstEntityFilter.Params = nil
+		}
+	}
+
+	if f, fok := d.GetOk("isolation_rule_second_entity_filter_kind_list"); fok && f != nil {
+		iRuleSecondEntityFilter.KindList = expandStringList(f.([]interface{}))
+	}
+
+	if ft, ftok := d.GetOk("isolation_rule_second_entity_filter_type"); ftok && ft.(string) != "" {
+		iRuleSecondEntityFilter.Type = utils.StringPtr(ft.(string))
+	}
+
+	if fp, fpok := d.GetOk("isolation_rule_second_entity_filter_params"); fpok {
+		fpl := fp.(*schema.Set).List()
+
+		if len(fpl) > 0 {
+			fl := make(map[string][]string)
+			for _, v := range fpl {
+				item := v.(map[string]interface{})
+
+				if i, ok := item["name"]; ok && i.(string) != "" {
+					if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
+						var values []string
+						for _, item := range k.([]interface{}) {
+							values = append(values, item.(string))
+						}
+						fl[i.(string)] = values
+					}
+				}
+			}
+			iRuleSecondEntityFilter.Params = fl
+		} else {
+			iRuleSecondEntityFilter.Params = nil
+		}
+	}
+
+	if !reflect.DeepEqual(*appRule, (v3.NetworkSecurityRuleResourcesRule{})) {
+		networkSecurityRule.AppRule = appRule
+	}
+
+	if !reflect.DeepEqual(*iRuleFirstEntityFilter, (v3.CategoryFilter{})) {
+		isolationRule.FirstEntityFilter = iRuleFirstEntityFilter
+	}
+
+	if !reflect.DeepEqual(*iRuleSecondEntityFilter, (v3.CategoryFilter{})) {
+		isolationRule.SecondEntityFilter = iRuleSecondEntityFilter
+	}
+
+	if !reflect.DeepEqual(*isolationRule, (v3.NetworkSecurityRuleIsolationRule{})) {
+		networkSecurityRule.IsolationRule = isolationRule
+	}
+	return nil
+}
+
+func expandNetworkRule(prefix string, d *schema.ResourceData) *v3.NetworkSecurityRuleResourcesRule {
+	appRule := &v3.NetworkSecurityRuleResourcesRule{}
+	aRuleTargetGroup := &v3.TargetGroup{}
+	aRuleTargetGroupFilter := &v3.CategoryFilter{}
+
+	if ara, ok := d.GetOk(fmt.Sprintf("%s_action", prefix)); ok && ara.(string) != "" {
 		appRule.Action = utils.StringPtr(ara.(string))
 	}
 
-	if qroal, ok := d.GetOk("app_rule_outbound_allow_list"); ok {
+	if qroal, ok := d.GetOk(fmt.Sprintf("%s_outbound_allow_list", prefix)); ok {
 		oal := qroal.([]interface{})
 		outbound := make([]*v3.NetworkRule, len(oal))
 
@@ -912,23 +1011,23 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 		appRule.OutboundAllowList = outbound
 	}
 
-	if qroal, ok := d.GetOk("app_rule_target_group_default_internal_policy"); ok && qroal != nil {
+	if qroal, ok := d.GetOk(fmt.Sprintf("%s_target_group_default_internal_policy", prefix)); ok && qroal != nil {
 		aRuleTargetGroup.DefaultInternalPolicy = utils.StringPtr(qroal.(string))
 	}
 
-	if qroal, ok := d.GetOk("app_rule_target_group_peer_specification_type"); ok && qroal != nil {
+	if qroal, ok := d.GetOk(fmt.Sprintf("%s_target_group_peer_specification_type", prefix)); ok && qroal != nil {
 		aRuleTargetGroup.PeerSpecificationType = utils.StringPtr(qroal.(string))
 	}
 
-	if f, fok := d.GetOk("app_rule_target_group_filter_kind_list"); fok && f != nil {
+	if f, fok := d.GetOk(fmt.Sprintf("%s_target_group_filter_kind_list", prefix)); fok && f != nil {
 		aRuleTargetGroupFilter.KindList = expandStringList(f.([]interface{}))
 	}
 
-	if ft, ftok := d.GetOk("app_rule_target_group_filter_type"); ftok && ft.(string) != "" {
+	if ft, ftok := d.GetOk(fmt.Sprintf("%s_target_group_filter_type", prefix)); ftok && ft.(string) != "" {
 		aRuleTargetGroupFilter.Type = utils.StringPtr(ft.(string))
 	}
 
-	if fp, fpok := d.GetOk("app_rule_target_group_filter_params"); fpok {
+	if fp, fpok := d.GetOk(fmt.Sprintf("%s_target_group_filter_params", prefix)); fpok {
 		fpl := fp.(*schema.Set).List()
 
 		if len(fpl) > 0 {
@@ -952,7 +1051,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 		}
 	}
 
-	if qrial, ok := d.GetOk("app_rule_inbound_allow_list"); ok {
+	if qrial, ok := d.GetOk(fmt.Sprintf("%s_inbound_allow_list", prefix)); ok {
 		oal := qrial.([]interface{})
 		inbound := make([]*v3.NetworkRule, len(oal))
 
@@ -1042,74 +1141,6 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 		appRule.InboundAllowList = inbound
 	}
 
-	if ira, ok := d.GetOk("isolation_rule_action"); ok && ira.(string) != "" {
-		isolationRule.Action = utils.StringPtr(ira.(string))
-	}
-
-	if f, fok := d.GetOk("isolation_rule_first_entity_filter_kind_list"); fok && f != nil {
-		iRuleFirstEntityFilter.KindList = expandStringList(f.([]interface{}))
-	}
-
-	if ft, ftok := d.GetOk("isolation_rule_first_entity_filter_type"); ftok && ft.(string) != "" {
-		iRuleFirstEntityFilter.Type = utils.StringPtr(ft.(string))
-	}
-
-	if fp, fpok := d.GetOk("isolation_rule_first_entity_filter_params"); fpok {
-		fpl := fp.(*schema.Set).List()
-
-		if len(fpl) > 0 {
-			fl := make(map[string][]string)
-			for _, v := range fpl {
-				item := v.(map[string]interface{})
-
-				if i, ok := item["name"]; ok && i.(string) != "" {
-					if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
-						var values []string
-						for _, item := range k.([]interface{}) {
-							values = append(values, item.(string))
-						}
-						fl[i.(string)] = values
-					}
-				}
-			}
-			iRuleFirstEntityFilter.Params = fl
-		} else {
-			iRuleFirstEntityFilter.Params = nil
-		}
-	}
-
-	if f, fok := d.GetOk("isolation_rule_second_entity_filter_kind_list"); fok && f != nil {
-		iRuleSecondEntityFilter.KindList = expandStringList(f.([]interface{}))
-	}
-
-	if ft, ftok := d.GetOk("isolation_rule_second_entity_filter_type"); ftok && ft.(string) != "" {
-		iRuleSecondEntityFilter.Type = utils.StringPtr(ft.(string))
-	}
-
-	if fp, fpok := d.GetOk("isolation_rule_second_entity_filter_params"); fpok {
-		fpl := fp.(*schema.Set).List()
-
-		if len(fpl) > 0 {
-			fl := make(map[string][]string)
-			for _, v := range fpl {
-				item := v.(map[string]interface{})
-
-				if i, ok := item["name"]; ok && i.(string) != "" {
-					if k, kok := item["values"]; kok && len(k.([]interface{})) > 0 {
-						var values []string
-						for _, item := range k.([]interface{}) {
-							values = append(values, item.(string))
-						}
-						fl[i.(string)] = values
-					}
-				}
-			}
-			iRuleSecondEntityFilter.Params = fl
-		} else {
-			iRuleSecondEntityFilter.Params = nil
-		}
-	}
-
 	if !reflect.DeepEqual(*aRuleTargetGroupFilter, (v3.CategoryFilter{})) {
 		aRuleTargetGroup.Filter = aRuleTargetGroupFilter
 	}
@@ -1118,22 +1149,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 		appRule.TargetGroup = aRuleTargetGroup
 	}
 
-	if !reflect.DeepEqual(*appRule, (v3.NetworkSecurityRuleResourcesRule{})) {
-		networkSecurityRule.AppRule = appRule
-	}
-
-	if !reflect.DeepEqual(*iRuleFirstEntityFilter, (v3.CategoryFilter{})) {
-		isolationRule.FirstEntityFilter = iRuleFirstEntityFilter
-	}
-
-	if !reflect.DeepEqual(*iRuleSecondEntityFilter, (v3.CategoryFilter{})) {
-		isolationRule.SecondEntityFilter = iRuleSecondEntityFilter
-	}
-
-	if !reflect.DeepEqual(*isolationRule, (v3.NetworkSecurityRuleIsolationRule{})) {
-		networkSecurityRule.IsolationRule = isolationRule
-	}
-	return nil
+	return appRule
 }
 
 func expandFilterParams(fp map[string][]string) []map[string]interface{} {
