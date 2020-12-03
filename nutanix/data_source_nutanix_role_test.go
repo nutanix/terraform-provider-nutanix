@@ -18,7 +18,7 @@ func TestAccNutanixRoleDataSourceByID_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleDataSourceConfigByName(name, description),
+				Config: testAccRoleDataSourceConfigByID(name, description),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.nutanix_role.test", "name", name),
