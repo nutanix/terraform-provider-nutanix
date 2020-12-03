@@ -97,8 +97,9 @@ func resourceNutanixCategoryValueRead(d *schema.ResourceData, meta interface{}) 
 	resp, err := conn.V3.GetCategoryValue(name.(string), d.Id())
 
 	if err != nil {
-		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") || strings.Contains(fmt.Sprint(err), "CATEGORY_NAME_VALUE_MISMATCH") {
 			d.SetId("")
+			return nil
 		}
 		return err
 	}
