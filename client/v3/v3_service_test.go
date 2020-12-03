@@ -3346,3 +3346,423 @@ func TestOperations_DeleteProject(t *testing.T) {
 		})
 	}
 }
+
+func TestOperations_CreateAccessControlPolicy(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/access_control_policies", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodPost)
+
+		expected := map[string]interface{}{
+			"api_version": "3.1",
+			"metadata": map[string]interface{}{
+				"name": "access_control_policy_test_name",
+				"kind": "access_control_policy",
+				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc",
+			},
+			"spec": map[string]interface{}{
+				"resources": map[string]interface{}{
+					"role_reference": map[string]interface{}{
+						"name": "access_control_policy_test_name",
+						"kind": "role",
+						"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc",
+					},
+				},
+				"name":        "access_control_policy_name",
+				"description": "description_test",
+			},
+		}
+
+		var v map[string]interface{}
+		err := json.NewDecoder(r.Body).Decode(&v)
+		if err != nil {
+			t.Fatalf("decode json: %v", err)
+		}
+
+		if !reflect.DeepEqual(v, expected) {
+			t.Errorf("Request body\n got=%#v\nwant=%#v", v, expected)
+		}
+
+		fmt.Fprintf(w, `{
+			"api_version": "3.1",
+			"metadata": {
+				"kind": "access_control_policy",
+				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
+			}
+		}`)
+	})
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		request *AccessControlPolicy
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *AccessControlPolicy
+		wantErr bool
+	}{
+		{
+			"Test CreateAccessControlPolicy",
+			fields{c},
+			args{
+				&AccessControlPolicy{
+					APIVersion: "3.1",
+					Metadata: &Metadata{
+						Name: utils.StringPtr("access_control_policy_test_name"),
+						Kind: utils.StringPtr("access_control_policy"),
+						UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					},
+					Spec: &AccessControlPolicySpec{
+						Name:        utils.StringPtr("access_control_policy_name"),
+						Description: utils.StringPtr("description_test"),
+						Resources: &AccessControlPolicyResources{
+							RoleReference: &Reference{
+								Kind: utils.StringPtr("role"),
+								UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+								Name: utils.StringPtr("access_control_policy_test_name"),
+							},
+						},
+					},
+				},
+			},
+			&AccessControlPolicy{
+				APIVersion: "3.1",
+				Metadata: &Metadata{
+					Kind: utils.StringPtr("access_control_policy"),
+					UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+				},
+			},
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.CreateAccessControlPolicy(tt.args.request)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.CreateAccessControlPolicy() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.CreateAccessControlPolicy() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOperations_GetAccessControlPolicy(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/access_control_policies/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodGet)
+		fmt.Fprint(w, `{"metadata": {"kind":"host","uuid":"cfde831a-4e87-4a75-960f-89b0148aa2cc"}}`)
+	})
+
+	hostResponse := &AccessControlPolicy{}
+	hostResponse.Metadata = &Metadata{
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("host"),
+	}
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		UUID string
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *AccessControlPolicy
+		wantErr bool
+	}{
+		{
+			"Test GetAccessControlPolicy OK",
+			fields{c},
+			args{"cfde831a-4e87-4a75-960f-89b0148aa2cc"},
+			hostResponse,
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.GetAccessControlPolicy(tt.args.UUID)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.GetAccessControlPolicy() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.GetAccessControlPolicy() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOperations_ListAccessControlPolicy(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/access_control_policies/list", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodPost)
+		fmt.Fprint(w, `{"entities":[{"metadata": {"kind":"host","uuid":"cfde831a-4e87-4a75-960f-89b0148aa2cc"}}]}`)
+	})
+
+	hostList := &AccessControlPolicyListResponse{}
+	hostList.Entities = make([]*AccessControlPolicy, 1)
+	hostList.Entities[0] = &AccessControlPolicy{}
+	hostList.Entities[0].Metadata = &Metadata{
+		UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+		Kind: utils.StringPtr("host"),
+	}
+
+	input := &DSMetadata{
+		Length: utils.Int64Ptr(1.0),
+	}
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		getEntitiesRequest *DSMetadata
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *AccessControlPolicyListResponse
+		wantErr bool
+	}{
+		{
+			"Test ListSubnet OK",
+			fields{c},
+			args{input},
+			hostList,
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.ListAccessControlPolicy(tt.args.getEntitiesRequest)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.ListAccessControlPolicy() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.ListAccessControlPolicy() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOperations_UpdateAccessControlPolicy(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/access_control_policies/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodPut)
+
+		expected := map[string]interface{}{
+			"metadata": map[string]interface{}{
+				"name": "access_control_policy_test_name",
+				"kind": "access_control_policy",
+				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc",
+			},
+			"spec": map[string]interface{}{
+				"resources": map[string]interface{}{
+					"role_reference": map[string]interface{}{
+						"name": "access_control_policy_test_name_2",
+						"kind": "role",
+						"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc",
+					},
+				},
+				"name":        "access_control_policy_name",
+				"description": "description_test",
+			},
+		}
+
+		var v map[string]interface{}
+		err := json.NewDecoder(r.Body).Decode(&v)
+		if err != nil {
+			t.Fatalf("decode json: %v", err)
+		}
+
+		if !reflect.DeepEqual(v, expected) {
+			t.Errorf("Request body\n got=%#v\nwant=%#v", v, expected)
+		}
+
+		fmt.Fprintf(w, `{
+			"api_version": "3.1",
+			"metadata": {
+				"kind": "access_control_policy",
+				"uuid": "cfde831a-4e87-4a75-960f-89b0148aa2cc"
+			}
+		}`)
+	})
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		UUID string
+		body *AccessControlPolicy
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *AccessControlPolicy
+		wantErr bool
+	}{
+		{
+			"Test CreateAccessControlPolicy",
+			fields{c},
+			args{
+				"cfde831a-4e87-4a75-960f-89b0148aa2cc",
+				&AccessControlPolicy{
+					Metadata: &Metadata{
+						Name: utils.StringPtr("access_control_policy_test_name"),
+						Kind: utils.StringPtr("access_control_policy"),
+						UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+					},
+					Spec: &AccessControlPolicySpec{
+						Name:        utils.StringPtr("access_control_policy_name"),
+						Description: utils.StringPtr("description_test"),
+						Resources: &AccessControlPolicyResources{
+							RoleReference: &Reference{
+								Kind: utils.StringPtr("role"),
+								UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+								Name: utils.StringPtr("access_control_policy_test_name_2"),
+							},
+						},
+					},
+				},
+			},
+			&AccessControlPolicy{
+				APIVersion: "3.1",
+				Metadata: &Metadata{
+					Kind: utils.StringPtr("access_control_policy"),
+					UUID: utils.StringPtr("cfde831a-4e87-4a75-960f-89b0148aa2cc"),
+				},
+			},
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			got, err := op.UpdateAccessControlPolicy(tt.args.UUID, tt.args.body)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Operations.UpdateAccessControlPolicy() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Operations.UpdateAccessControlPolicy() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOperations_DeleteAccessControlPolicy(t *testing.T) {
+	mux, c, server := setup()
+
+	defer server.Close()
+
+	mux.HandleFunc("/api/nutanix/v3/access_control_policies/cfde831a-4e87-4a75-960f-89b0148aa2cc", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodDelete)
+
+		fmt.Fprintf(w, `{
+				"status": {
+					"state": "DELETE_PENDING",
+					"execution_context": {
+						"task_uuid": "ff1b9547-dc9a-4ebd-a2ff-f2b718af935e"
+					}
+				},
+				"spec": "",
+				"api_version": "3.1",
+				"metadata": {
+					"kind": "access_control_policy",
+					"categories": {
+						"Project": "default"
+					}
+				}
+			}`)
+	})
+
+	type fields struct {
+		client *client.Client
+	}
+
+	type args struct {
+		UUID string
+	}
+
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		{
+			"Test DeleteAccessControlPolicy OK",
+			fields{c},
+			args{"cfde831a-4e87-4a75-960f-89b0148aa2cc"},
+			false,
+		},
+
+		{
+			"Test DeleteAccessControlPolicy Errored",
+			fields{c},
+			args{},
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			op := Operations{
+				client: tt.fields.client,
+			}
+			if _, err := op.DeleteAccessControlPolicy(tt.args.UUID); (err != nil) != tt.wantErr {
+				t.Errorf("Operations.DeleteAccessControlPolicy() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
