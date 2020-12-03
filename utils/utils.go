@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httputil"
+	"strings"
 )
 
 // PrintToJSON method helper to debug responses
@@ -47,4 +48,12 @@ func ConvertMapString(o map[string]interface{}) map[string]string {
 		converted[k] = fmt.Sprintf(v.(string))
 	}
 	return converted
+}
+
+func StringLowerCaseValidateFunc(val interface{}, key string) (warns []string, errs []error) {
+	v := val.(string)
+	if !(strings.ToLower(v) == v) {
+		errs = append(errs, fmt.Errorf("%q must be in lowercase, got: %s", key, v))
+	}
+	return
 }

@@ -119,15 +119,15 @@ func appendTokensForValue(val cty.Value, toks Tokens) Tokens {
 			Type:  hclsyntax.TokenOBrace,
 			Bytes: []byte{'{'},
 		})
-		if val.LengthInt() > 0 {
-			toks = append(toks, &Token{
-				Type:  hclsyntax.TokenNewline,
-				Bytes: []byte{'\n'},
-			})
-		}
 
 		i := 0
 		for it := val.ElementIterator(); it.Next(); {
+			if i > 0 {
+				toks = append(toks, &Token{
+					Type:  hclsyntax.TokenComma,
+					Bytes: []byte{','},
+				})
+			}
 			eKey, eVal := it.Element()
 			if hclsyntax.ValidIdentifier(eKey.AsString()) {
 				toks = append(toks, &Token{
@@ -142,10 +142,6 @@ func appendTokensForValue(val cty.Value, toks Tokens) Tokens {
 				Bytes: []byte{'='},
 			})
 			toks = appendTokensForValue(eVal, toks)
-			toks = append(toks, &Token{
-				Type:  hclsyntax.TokenNewline,
-				Bytes: []byte{'\n'},
-			})
 			i++
 		}
 
@@ -163,12 +159,12 @@ func appendTokensForValue(val cty.Value, toks Tokens) Tokens {
 
 func appendTokensForTraversal(traversal hcl.Traversal, toks Tokens) Tokens {
 	for _, step := range traversal {
-		toks = appendTokensForTraversalStep(step, toks)
+		appendTokensForTraversalStep(step, toks)
 	}
 	return toks
 }
 
-func appendTokensForTraversalStep(step hcl.Traverser, toks Tokens) Tokens {
+func appendTokensForTraversalStep(step hcl.Traverser, toks Tokens) {
 	switch ts := step.(type) {
 	case hcl.TraverseRoot:
 		toks = append(toks, &Token{
@@ -192,7 +188,7 @@ func appendTokensForTraversalStep(step hcl.Traverser, toks Tokens) Tokens {
 			Type:  hclsyntax.TokenOBrack,
 			Bytes: []byte{'['},
 		})
-		toks = appendTokensForValue(ts.Key, toks)
+		appendTokensForValue(ts.Key, toks)
 		toks = append(toks, &Token{
 			Type:  hclsyntax.TokenCBrack,
 			Bytes: []byte{']'},
@@ -200,8 +196,6 @@ func appendTokensForTraversalStep(step hcl.Traverser, toks Tokens) Tokens {
 	default:
 		panic(fmt.Sprintf("unsupported traversal step type %T", step))
 	}
-
-	return toks
 }
 
 func escapeQuotedStringLit(s string) []byte {
