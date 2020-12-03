@@ -17,7 +17,6 @@ const resourceAccessPolicy = "nutanix_access_control_policy.test"
 func TestAccNutanixAccessControlPolicy_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix("accest-access-policy")
 	description := "Description of my access control policy"
-	uuidRole := "760dac6c-be97-4b24-adb0-e3c3026dc8d5"
 	nameUpdated := acctest.RandomWithPrefix("accest-access-policy")
 	descriptionUpdated := "Description of my access control policy updated"
 
@@ -27,7 +26,7 @@ func TestAccNutanixAccessControlPolicy_basic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixAccessControlPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixAccessControlPolicyConfig(uuidRole, name, description),
+				Config: testAccNutanixAccessControlPolicyConfig(name, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixAccessControlPolicyExists(),
 					resource.TestCheckResourceAttr(resourceAccessPolicy, "name", name),
@@ -35,7 +34,7 @@ func TestAccNutanixAccessControlPolicy_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNutanixAccessControlPolicyConfig(uuidRole, nameUpdated, descriptionUpdated),
+				Config: testAccNutanixAccessControlPolicyConfig(nameUpdated, descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixAccessControlPolicyExists(),
 					resource.TestCheckResourceAttr(resourceAccessPolicy, "name", nameUpdated),
@@ -54,7 +53,6 @@ func TestAccNutanixAccessControlPolicy_basic(t *testing.T) {
 func TestAccNutanixAccessControlPolicy_WithUser(t *testing.T) {
 	name := acctest.RandomWithPrefix("accest-access-policy")
 	description := "Description of my access control policy"
-	uuidRole := "760dac6c-be97-4b24-adb0-e3c3026dc8d5"
 	nameUpdated := acctest.RandomWithPrefix("accest-access-policy")
 	descriptionUpdated := "Description of my access control policy updated"
 
@@ -64,7 +62,7 @@ func TestAccNutanixAccessControlPolicy_WithUser(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixAccessControlPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixAccessControlPolicyConfigWithUser(uuidRole, name, description),
+				Config: testAccNutanixAccessControlPolicyConfigWithUser(name, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixAccessControlPolicyExists(),
 					resource.TestCheckResourceAttr(resourceAccessPolicy, "name", name),
@@ -72,7 +70,7 @@ func TestAccNutanixAccessControlPolicy_WithUser(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNutanixAccessControlPolicyConfigWithUser(uuidRole, nameUpdated, descriptionUpdated),
+				Config: testAccNutanixAccessControlPolicyConfigWithUser(nameUpdated, descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixAccessControlPolicyExists(),
 					resource.TestCheckResourceAttr(resourceAccessPolicy, "name", nameUpdated),
@@ -91,7 +89,6 @@ func TestAccNutanixAccessControlPolicy_WithUser(t *testing.T) {
 func TestAccNutanixAccessControlPolicy_WithCategory(t *testing.T) {
 	name := acctest.RandomWithPrefix("accest-access-policy")
 	description := "Description of my access control policy"
-	uuidRole := "760dac6c-be97-4b24-adb0-e3c3026dc8d5"
 	nameUpdated := acctest.RandomWithPrefix("accest-access-policy")
 	descriptionUpdated := "Description of my access control policy updated"
 
@@ -101,7 +98,7 @@ func TestAccNutanixAccessControlPolicy_WithCategory(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixAccessControlPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixAccessControlPolicyConfigWithCategory(uuidRole, name, description, "Production"),
+				Config: testAccNutanixAccessControlPolicyConfigWithCategory(name, description, "Production"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixAccessControlPolicyExists(),
 					testAccCheckNutanixCategories(resourceAccessPolicy),
@@ -113,7 +110,7 @@ func TestAccNutanixAccessControlPolicy_WithCategory(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNutanixAccessControlPolicyConfigWithCategory(uuidRole, nameUpdated, descriptionUpdated, "Staging"),
+				Config: testAccNutanixAccessControlPolicyConfigWithCategory(nameUpdated, descriptionUpdated, "Staging"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixAccessControlPolicyExists(),
 					resource.TestCheckResourceAttr(resourceAccessPolicy, "categories.#", "1"),
@@ -168,44 +165,68 @@ func testAccCheckNutanixAccessControlPolicyDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccNutanixAccessControlPolicyConfig(uuidRole, name, description string) string {
+func testAccNutanixAccessControlPolicyConfig(name, description string) string {
 	return fmt.Sprintf(`
-resource "nutanix_access_control_policy" "test" {
-	name        = "%[1]s"
-	description = "%[2]s"
-	role_reference {
-		kind = "role"
-		uuid = "%[3]s"
+resource "nutanix_role" "test" {
+	name        = "test role"
+	description = "description role"
+	permission_reference_list {
+		kind = "permission"
+		uuid = "2e9988df-47ae-44ae-9114-ada346657b90"
 	}
 }
-`, name, description, uuidRole)
-}
-
-func testAccNutanixAccessControlPolicyConfigWithCategory(uuidRole, name, description, categoryValue string) string {
-	return fmt.Sprintf(`
 resource "nutanix_access_control_policy" "test" {
 	name        = "%[1]s"
 	description = "%[2]s"
 	role_reference {
 		kind = "role"
-		uuid = "%[3]s"
+		uuid = nutanix_role.test.id
+	}
+}
+`, name, description)
+}
+
+func testAccNutanixAccessControlPolicyConfigWithCategory(name, description, categoryValue string) string {
+	return fmt.Sprintf(`
+resource "nutanix_role" "test" {
+	name        = "test role"
+	description = "description role"
+	permission_reference_list {
+		kind = "permission"
+		uuid = "2e9988df-47ae-44ae-9114-ada346657b90"
+	}
+}
+resource "nutanix_access_control_policy" "test" {
+	name        = "%[1]s"
+	description = "%[2]s"
+	role_reference {
+		kind = "role"
+		uuid = nutanix_role.test.id
 	}
 	categories {
 		name = "Environment"
-		value = "%[4]s"
+		value = "%[3]s"
 	}
 }
-`, name, description, uuidRole, categoryValue)
+`, name, description, categoryValue)
 }
 
-func testAccNutanixAccessControlPolicyConfigWithUser(uuidRole, name, description string) string {
+func testAccNutanixAccessControlPolicyConfigWithUser(name, description string) string {
 	return fmt.Sprintf(`
+resource "nutanix_role" "test" {
+	name        = "test role"
+	description = "description role"
+	permission_reference_list {
+		kind = "permission"
+		uuid = "2e9988df-47ae-44ae-9114-ada346657b90"
+	}
+}
 resource "nutanix_access_control_policy" "test" {
 	name        = "%[1]s"
 	description = "%[2]s"
 	role_reference {
 		kind = "role"
-		uuid = "%[3]s"
+		uuid = nutanix_role.test.id
 	}
 	user_reference_list{
 		uuid = "00000000-0000-0000-0000-000000000000"
@@ -274,5 +295,5 @@ resource "nutanix_access_control_policy" "test" {
 		}
 	}
 }
-`, name, description, uuidRole)
+`, name, description)
 }
