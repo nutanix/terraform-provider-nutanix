@@ -3,6 +3,7 @@ package v3
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -3793,25 +3794,25 @@ func TestOperations_CreateProtectionRule(t *testing.T) {
 					},
 					"availability_zone_connectivity_list": []interface{}{
 						map[string]interface{}{
-							"destination_availability_zone_index": 0,
-							"source_availability_zone_index":      0,
+							"destination_availability_zone_index": float64(0),
+							"source_availability_zone_index":      float64(0),
 							"snapshot_schedule_list": []interface{}{
 								map[string]interface{}{
-									"recovery_point_objective_secs": 0,
-									"auto_suspend_timeout_secs":     0,
+									"recovery_point_objective_secs": float64(0),
+									"auto_suspend_timeout_secs":     float64(0),
 									"snapshot_type":                 "CRASH_CONSISTENT",
 									"local_snapshot_retention_policy": map[string]interface{}{
-										"num_snapshots": 1,
+										"num_snapshots": float64(1),
 										"rollup_retention_policy": map[string]interface{}{
 											"snapshot_interval_type": "HOURLY",
-											"multiple":               1,
+											"multiple":               float64(1),
 										},
 									},
 									"remote_snapshot_retention_policy": map[string]interface{}{
-										"num_snapshots": 1,
+										"num_snapshots": float64(1),
 										"rollup_retention_policy": map[string]interface{}{
 											"snapshot_interval_type": "HOURLY",
-											"multiple":               1,
+											"multiple":               float64(1),
 										},
 									},
 								},
@@ -3834,7 +3835,8 @@ func TestOperations_CreateProtectionRule(t *testing.T) {
 			t.Fatalf("decode json: %v", err)
 		}
 
-		if !reflect.DeepEqual(v, expected) {
+		assert := assert.New(t)
+		if !assert.Equal(v, expected, "The response should be the same") {
 			t.Errorf("Request body\n got=%#v\nwant=%#v", v, expected)
 		}
 
@@ -4096,25 +4098,25 @@ func TestOperations_UpdateProtectionRules(t *testing.T) {
 					},
 					"availability_zone_connectivity_list": []interface{}{
 						map[string]interface{}{
-							"destination_availability_zone_index": 0,
-							"source_availability_zone_index":      0,
+							"destination_availability_zone_index": float64(0),
+							"source_availability_zone_index":      float64(0),
 							"snapshot_schedule_list": []interface{}{
 								map[string]interface{}{
-									"recovery_point_objective_secs": 0,
-									"auto_suspend_timeout_secs":     0,
+									"recovery_point_objective_secs": float64(0),
+									"auto_suspend_timeout_secs":     float64(0),
 									"snapshot_type":                 "CRASH_CONSISTENT",
 									"local_snapshot_retention_policy": map[string]interface{}{
-										"num_snapshots": 1,
+										"num_snapshots": float64(1),
 										"rollup_retention_policy": map[string]interface{}{
 											"snapshot_interval_type": "HOURLY",
-											"multiple":               1,
+											"multiple":               float64(1),
 										},
 									},
 									"remote_snapshot_retention_policy": map[string]interface{}{
-										"num_snapshots": 1,
+										"num_snapshots": float64(1),
 										"rollup_retention_policy": map[string]interface{}{
 											"snapshot_interval_type": "HOURLY",
-											"multiple":               1,
+											"multiple":               float64(1),
 										},
 									},
 								},
@@ -4137,7 +4139,8 @@ func TestOperations_UpdateProtectionRules(t *testing.T) {
 			t.Fatalf("decode json: %v", err)
 		}
 
-		if !reflect.DeepEqual(v, expected) {
+		assert := assert.New(t)
+		if !assert.Equal(v, expected, "The response should be the same") {
 			t.Errorf("Request body\n got=%#v\nwant=%#v", v, expected)
 		}
 
@@ -4343,7 +4346,7 @@ func TestOperations_CreateRecoveryPlan(t *testing.T) {
 											"subnet_list": []interface{}{
 												map[string]interface{}{
 													"gateway_ip":                  "127.0.0.1",
-													"prefix_length":               16,
+													"prefix_length":               float64(16),
 													"external_connectivity_state": "external",
 												},
 											},
@@ -4363,7 +4366,7 @@ func TestOperations_CreateRecoveryPlan(t *testing.T) {
 											"subnet_list": []interface{}{
 												map[string]interface{}{
 													"gateway_ip":                  "127.0.0.1",
-													"prefix_length":               16,
+													"prefix_length":               float64(16),
 													"external_connectivity_state": "external",
 												},
 											},
@@ -4437,7 +4440,7 @@ func TestOperations_CreateRecoveryPlan(t *testing.T) {
 					"stage_list": []interface{}{
 						map[string]interface{}{
 							"stage_uuid":      "cfde831a-4e87-4a75-960f-89b0148aa2cc",
-							"delay_time_secs": 0,
+							"delay_time_secs": float64(0),
 							"stage_work": map[string]interface{}{
 								"recover_entities": map[string]interface{}{
 									"entity_info_list": []interface{}{
@@ -4445,7 +4448,7 @@ func TestOperations_CreateRecoveryPlan(t *testing.T) {
 											"script_list": []interface{}{
 												map[string]interface{}{
 													"enable_script_exec": false,
-													"timeout":            0,
+													"timeout":            float64(0),
 												},
 											},
 										},
@@ -4466,7 +4469,8 @@ func TestOperations_CreateRecoveryPlan(t *testing.T) {
 			t.Fatalf("decode json: %v", err)
 		}
 
-		if !reflect.DeepEqual(v, expected) {
+		assert := assert.New(t)
+		if !assert.Equal(v, expected, "The response should be the same") {
 			t.Errorf("Request body\n got=%#v\nwant=%#v", v, expected)
 		}
 
@@ -4836,7 +4840,7 @@ func TestOperations_UpdateRecoveryPlans(t *testing.T) {
 											"subnet_list": []interface{}{
 												map[string]interface{}{
 													"gateway_ip":                  "127.0.0.1",
-													"prefix_length":               16,
+													"prefix_length":               float64(16),
 													"external_connectivity_state": "external",
 												},
 											},
@@ -4856,7 +4860,7 @@ func TestOperations_UpdateRecoveryPlans(t *testing.T) {
 											"subnet_list": []interface{}{
 												map[string]interface{}{
 													"gateway_ip":                  "127.0.0.1",
-													"prefix_length":               16,
+													"prefix_length":               float64(16),
 													"external_connectivity_state": "external",
 												},
 											},
@@ -4930,7 +4934,7 @@ func TestOperations_UpdateRecoveryPlans(t *testing.T) {
 					"stage_list": []interface{}{
 						map[string]interface{}{
 							"stage_uuid":      "cfde831a-4e87-4a75-960f-89b0148aa2cc",
-							"delay_time_secs": 0,
+							"delay_time_secs": float64(0),
 							"stage_work": map[string]interface{}{
 								"recover_entities": map[string]interface{}{
 									"entity_info_list": []interface{}{
@@ -4938,7 +4942,7 @@ func TestOperations_UpdateRecoveryPlans(t *testing.T) {
 											"script_list": []interface{}{
 												map[string]interface{}{
 													"enable_script_exec": false,
-													"timeout":            0,
+													"timeout":            float64(0),
 												},
 											},
 										},
@@ -4959,7 +4963,8 @@ func TestOperations_UpdateRecoveryPlans(t *testing.T) {
 			t.Fatalf("decode json: %v", err)
 		}
 
-		if !reflect.DeepEqual(v, expected) {
+		assert := assert.New(t)
+		if !assert.Equal(v, expected, "The response should be the same") {
 			t.Errorf("Request body\n got=%#v\nwant=%#v", v, expected)
 		}
 
