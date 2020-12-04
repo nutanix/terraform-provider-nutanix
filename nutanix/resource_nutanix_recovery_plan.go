@@ -898,7 +898,6 @@ func expandVMIPAssignmentList(d []interface{}) []*v3.VMIPAssignmentList {
 					vmial.TestFloatingIPConfig.ShouldAllocateDynamically = utils.BoolPtr(v5.(bool))
 				}
 			}
-
 		}
 		if v2, ok1 := v1["recovery_floating_ip_config"]; ok1 {
 			v4 := v2.([]interface{})

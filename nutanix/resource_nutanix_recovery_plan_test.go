@@ -46,6 +46,40 @@ func TestAccNutanixRecoveryPlanWithStageList_basic(t *testing.T) {
 	})
 }
 
+func TestAccNutanixRecoveryPlanWithNetwork_basic(t *testing.T) {
+	resourceName := "nutanix_recovery_plan.test"
+
+	name := acctest.RandomWithPrefix("test-protection-name-dou")
+	description := acctest.RandomWithPrefix("test-protection-desc-dou")
+
+	nameUpdated := acctest.RandomWithPrefix("test-protection-name-dou")
+	descriptionUpdated := acctest.RandomWithPrefix("test-protection-desc-dou")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixRecoveryPlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixRecoveryPlanConfigWithNetwork(name, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixRecoveryPlanExists(&resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+				),
+			},
+			{
+				Config: testAccNutanixRecoveryPlanConfigWithNetwork(nameUpdated, descriptionUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixRecoveryPlanExists(&resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", nameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
+				),
+			},
+		},
+	})
+}
+
 func TestAccResourceNutanixRecoveryPlanWithStageList_importBasic(t *testing.T) {
 	resourceName := "nutanix_recovery_plan.test"
 
