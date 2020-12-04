@@ -17,20 +17,22 @@ func TestAccNutanixRecoveryPlanDataSource_basic(t *testing.T) {
 	nameUpdated := acctest.RandomWithPrefix("test-recovery-name-dou")
 	descriptionUpdated := acctest.RandomWithPrefix("test-recovery-desc-dou")
 
+	stageUuid := "ab788130-0820-4d07-a1b5-b0ba4d3a4254"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixRecoveryPlanDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecoveryPlanDataSourceConfig(name, description),
+				Config: testAccRecoveryPlanDataSourceConfig(name, description, stageUuid),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 				),
 			},
 			{
-				Config: testAccRecoveryPlanDataSourceConfig(nameUpdated, descriptionUpdated),
+				Config: testAccRecoveryPlanDataSourceConfig(nameUpdated, descriptionUpdated, stageUuid),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", nameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
@@ -40,7 +42,7 @@ func TestAccNutanixRecoveryPlanDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccRecoveryPlanDataSourceConfig(name, description string) string {
+func testAccRecoveryPlanDataSourceConfig(name, description, stageUuid string) string {
 	return fmt.Sprintf(`
         resource "nutanix_recovery_plan" "test" {
 			name        = "%s"
@@ -56,7 +58,7 @@ func testAccRecoveryPlanDataSourceConfig(name, description string) string {
 						}
 					}
 				}
-				stage_uuid = "ab788130-0820-4d07-a1b5-b0ba4d3a4254"
+				stage_uuid = "%s"
 				delay_time_secs = 0
 			}
 			parameters{}
@@ -65,5 +67,5 @@ func testAccRecoveryPlanDataSourceConfig(name, description string) string {
 			recovery_plan_id = nutanix_recovery_plan.test.id
 		}
 
-`, name, description)
+`, name, description, stageUuid)
 }

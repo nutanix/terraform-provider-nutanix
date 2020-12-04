@@ -630,6 +630,9 @@ func resourceNutanixRecoveryPlanRead(d *schema.ResourceData, meta interface{}) e
 	if err := d.Set("name", resp.Spec.Name); err != nil {
 		return err
 	}
+	if err := d.Set("description", resp.Spec.Description); err != nil {
+		return err
+	}
 	if err := d.Set("stage_list", flattenStageList(resp.Spec.Resources.StageList)); err != nil {
 		return err
 	}

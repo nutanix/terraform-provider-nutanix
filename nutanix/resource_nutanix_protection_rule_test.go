@@ -17,6 +17,7 @@ func TestAccNutanixProtectionRule_basic(t *testing.T) {
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")
 	description := acctest.RandomWithPrefix("test-protection-desc-dou")
+	aZUrl := "4db9adc1-8d13-4585-a901-a3ce1276ecb0"
 
 	nameUpdated := acctest.RandomWithPrefix("test-protection-name-dou")
 	descriptionUpdated := acctest.RandomWithPrefix("test-protection-desc-dou")
@@ -27,7 +28,7 @@ func TestAccNutanixProtectionRule_basic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixProtectionRUleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixProtectionRuleConfig(name, description, 1),
+				Config: testAccNutanixProtectionRuleConfig(name, description, aZUrl, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixProtectionRuleExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -35,7 +36,7 @@ func TestAccNutanixProtectionRule_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNutanixProtectionRuleConfig(nameUpdated, descriptionUpdated, 2),
+				Config: testAccNutanixProtectionRuleConfig(nameUpdated, descriptionUpdated, aZUrl, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixProtectionRuleExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", nameUpdated),
@@ -51,6 +52,7 @@ func TestAccResourceNutanixProtectionRule_importBasic(t *testing.T) {
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")
 	description := acctest.RandomWithPrefix("test-protection-desc-dou")
+	aZUrl := "4db9adc1-8d13-4585-a901-a3ce1276ecb0"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -58,7 +60,7 @@ func TestAccResourceNutanixProtectionRule_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixProtectionRUleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixProtectionRuleConfig(name, description, 1),
+				Config: testAccNutanixProtectionRuleConfig(name, description, aZUrl, 1),
 			},
 			{
 				ResourceName:      resourceName,
@@ -115,13 +117,13 @@ func testAccCheckNutanixProtectionRUleDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccNutanixProtectionRuleConfig(name, description string, snapshots int64) string {
+func testAccNutanixProtectionRuleConfig(name, description, aZUrl string, snapshots int64) string {
 	return fmt.Sprintf(`
 		resource "nutanix_protection_rule" "test" {
 			name        = "%s"
 			description = "%s"
 			ordered_availability_zone_list{
-				availability_zone_url = "4db9adc1-8d13-4585-a901-a3ce1276ecb0"
+				availability_zone_url = "%s"
 			}
 
 			availability_zone_connectivity_list{
@@ -140,5 +142,5 @@ func testAccNutanixProtectionRuleConfig(name, description string, snapshots int6
 				}
 			}
 		}
-	`, name, description, snapshots)
+	`, name, description, aZUrl, snapshots)
 }

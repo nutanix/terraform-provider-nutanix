@@ -13,25 +13,25 @@ func TestAccNutanixProtectionRuleDataSource_basic(t *testing.T) {
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")
 	description := acctest.RandomWithPrefix("test-protection-desc-dou")
+	aZUrl := "4db9adc1-8d13-4585-a901-a3ce1276ecb0"
 
 	nameUpdated := acctest.RandomWithPrefix("test-protection-name-dou")
 	descriptionUpdated := acctest.RandomWithPrefix("test-protection-desc-dou")
 
-	zone := "ab788130-0820-4d07-a1b5-b0ba4d3ard54"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixProtectionRUleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProtectionRuleDataSourceConfig(name, description, zone),
+				Config: testAccProtectionRuleDataSourceConfig(name, description, aZUrl),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 				),
 			},
 			{
-				Config: testAccProtectionRuleDataSourceConfig(nameUpdated, descriptionUpdated, zone),
+				Config: testAccProtectionRuleDataSourceConfig(nameUpdated, descriptionUpdated, aZUrl),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", nameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
@@ -41,7 +41,7 @@ func TestAccNutanixProtectionRuleDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccProtectionRuleDataSourceConfig(name, description, zone string) string {
+func testAccProtectionRuleDataSourceConfig(name, description, aZUrl string) string {
 	return fmt.Sprintf(`
 		resource "nutanix_protection_rule" "test" {
 			name        = "%s"
@@ -54,7 +54,7 @@ func testAccProtectionRuleDataSourceConfig(name, description, zone string) strin
 				snapshot_schedule_list{
 					recovery_point_objective_secs = 3600
 					snapshot_type= "CRASH_CONSISTENT"
-					local_snapshot_retention_policy = {
+					local_snapshot_retention_policy {
 						num_snapshots = 1
 					}
 				}
@@ -69,5 +69,5 @@ func testAccProtectionRuleDataSourceConfig(name, description, zone string) strin
 		data "nutanix_protection_rule" "test" {
 			protection_rule_id = nutanix_protection_rule.test.id
 		}
-`, name, description, zone)
+`, name, description, aZUrl)
 }
