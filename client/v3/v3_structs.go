@@ -86,6 +86,7 @@ type VMBootConfig struct {
 	// given then specified boot device will be primary boot device and remaining devices will be assigned boot order
 	// according to boot device order field.
 	BootDevice *VMBootDevice `json:"boot_device,omitempty" mapstructure:"boot_device,omitempty"`
+	BootType   *string       `json:"boot_type,omitempty" mapstructure:"boot_type,omitempty"`
 
 	// Indicates the order of device types in which VM should try to boot from. If boot device order is not provided the
 	// system will decide appropriate boot device order.

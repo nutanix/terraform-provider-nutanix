@@ -570,6 +570,11 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"boot_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"hardware_clock_timezone": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -985,6 +990,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 
 	diskAddress := make(map[string]interface{})
 	mac := ""
+	bootType := ""
 	b := make([]string, 0)
 
 	log.Printf("[DEBUG] checking BootConfig %+v", resp.Status.Resources.BootConfig)
@@ -1001,6 +1007,9 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 			log.Printf("[DEBUG] checking BootConfig.BootDeviceOrderList %+v", utils.StringValueSlice(resp.Status.Resources.BootConfig.BootDeviceOrderList))
 			b = utils.StringValueSlice(resp.Status.Resources.BootConfig.BootDeviceOrderList)
 		}
+		if resp.Status.Resources.BootConfig.BootType != nil {
+			bootType = utils.StringValue(resp.Status.Resources.BootConfig.BootType)
+		}
 	}
 
 	if err := d.Set("boot_device_order_list", b); err != nil {
@@ -1009,6 +1018,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 
 	d.Set("boot_device_disk_address", diskAddress)
 	d.Set("boot_device_mac_address", mac)
+	d.Set("boot_type", bootType)
 
 	cloudInitUser := ""
 	cloudInitMeta := ""
@@ -1372,6 +1382,12 @@ func bootConfigHasChange(boot *v3.VMBootConfig, d *schema.ResourceData) (*v3.VMB
 		hotPlugChange = false
 	}
 
+	if d.HasChange("boot_type") {
+		_, n := d.GetChange("boot_type")
+		boot.BootType = utils.StringPtr(n.(string))
+		hotPlugChange = false
+	}
+
 	bd := &v3.VMBootDevice{}
 	dska := &v3.DiskAddress{}
 
@@ -1606,6 +1622,11 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 		bdi := v.(string)
 		bd.MacAddress = utils.StringPtr(bdi)
 		vm.BootConfig.BootDevice = bd
+	}
+
+	if v, ok := d.GetOk("boot_type"); ok {
+		biosType := v.(string)
+		vm.BootConfig.BootType = utils.StringPtr(biosType)
 	}
 
 	if v, ok := d.GetOk("hardware_clock_timezone"); ok {
