@@ -939,7 +939,6 @@ func flattenNetworkRule(prefix string, rule *v3.NetworkSecurityRuleResourcesRule
 		if err := d.Set(fmt.Sprintf("%s_inbound_allow_list", prefix), flattenNetworkRuleList(rule.InboundAllowList)); err != nil {
 			return err
 		}
-
 	} else if err := d.Set(fmt.Sprintf("%s_target_group_filter_kind_list", prefix), make([]string, 0)); err != nil {
 		return err
 	}
