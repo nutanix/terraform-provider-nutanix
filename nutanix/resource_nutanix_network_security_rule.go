@@ -452,6 +452,265 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 					},
 				},
 			},
+			"ad_rule_action": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"ad_rule_outbound_allow_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"protocol": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"ip_subnet": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"ip_subnet_prefix_length": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"tcp_port_range_list": portRangeSchema(),
+						"udp_port_range_list": portRangeSchema(),
+						"filter_kind_list": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"filter_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"filter_params": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Set:      filterParamsHash,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"values": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"peer_specification_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+
+						"expiration_time": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"network_function_chain_reference": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"icmp_type_code_list": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"code": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"ad_rule_target_group_default_internal_policy": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"ad_rule_target_group_peer_specification_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"ad_rule_target_group_filter_kind_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"ad_rule_target_group_filter_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"ad_rule_target_group_filter_params": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Set:      filterParamsHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"values": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
+			"ad_rule_inbound_allow_list": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"protocol": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"ip_subnet": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"ip_subnet_prefix_length": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"tcp_port_range_list": portRangeSchema(),
+						"udp_port_range_list": portRangeSchema(),
+						"filter_kind_list": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"filter_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"filter_params": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Computed: true,
+							Set:      filterParamsHash,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"values": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"peer_specification_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+
+						"expiration_time": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"network_function_chain_reference": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"icmp_type_code_list": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"code": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -579,6 +838,10 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 	rules := resp.Spec.Resources
 
 	if err := flattenNetworkRule("app_rule", rules.AppRule, d); err != nil {
+		return err
+	}
+
+	if err := flattenNetworkRule("ad_rule", rules.AdRule, d); err != nil {
 		return err
 	}
 
@@ -744,6 +1007,14 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 		d.HasChange("app_rule_target_group_filter_type") ||
 		d.HasChange("app_rule_target_group_filter_params") ||
 		d.HasChange("app_rule_inbound_allow_list") ||
+		d.HasChange("ad_rule_action") ||
+		d.HasChange("ad_rule_outbound_allow_list") ||
+		d.HasChange("ad_rule_target_group_default_internal_policy") ||
+		d.HasChange("ad_rule_target_group_peer_specification_type") ||
+		d.HasChange("ad_rule_target_group_filter_kind_list") ||
+		d.HasChange("ad_rule_target_group_filter_type") ||
+		d.HasChange("ad_rule_target_group_filter_params") ||
+		d.HasChange("ad_rule_inbound_allow_list") ||
 		d.HasChange("isolation_rule_action") ||
 		d.HasChange("isolation_rule_first_entity_filter_kind_list") ||
 		d.HasChange("isolation_rule_first_entity_filter_type") ||
@@ -825,6 +1096,7 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 	iRuleSecondEntityFilter := &v3.CategoryFilter{}
 
 	appRule := expandNetworkRule("app_rule", d)
+	adRule := expandNetworkRule("ad_rule", d)
 
 	if ira, ok := d.GetOk("isolation_rule_action"); ok && ira.(string) != "" {
 		isolationRule.Action = utils.StringPtr(ira.(string))
@@ -896,6 +1168,10 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 
 	if !reflect.DeepEqual(*appRule, (v3.NetworkSecurityRuleResourcesRule{})) {
 		networkSecurityRule.AppRule = appRule
+	}
+
+	if !reflect.DeepEqual(*adRule, (v3.NetworkSecurityRuleResourcesRule{})) {
+		networkSecurityRule.AdRule = adRule
 	}
 
 	if !reflect.DeepEqual(*iRuleFirstEntityFilter, (v3.CategoryFilter{})) {
