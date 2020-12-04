@@ -21,7 +21,7 @@ func TestAccNutanixRecoveryPlanWithStageList_basic(t *testing.T) {
 	nameUpdated := acctest.RandomWithPrefix("test-protection-name-dou")
 	descriptionUpdated := acctest.RandomWithPrefix("test-protection-desc-dou")
 
-	stageUuid := "ab788130-0820-4d07-a1b5-b0ba4d3a4254"
+	stageUUID := "ab788130-0820-4d07-a1b5-b0ba4d3a4254"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -29,7 +29,7 @@ func TestAccNutanixRecoveryPlanWithStageList_basic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixRecoveryPlanDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixRecoveryPlanConfigWithStageList(name, description, stageUuid),
+				Config: testAccNutanixRecoveryPlanConfigWithStageList(name, description, stageUUID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixRecoveryPlanExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -37,7 +37,7 @@ func TestAccNutanixRecoveryPlanWithStageList_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNutanixRecoveryPlanConfigWithStageList(nameUpdated, descriptionUpdated, stageUuid),
+				Config: testAccNutanixRecoveryPlanConfigWithStageList(nameUpdated, descriptionUpdated, stageUUID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixRecoveryPlanExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", nameUpdated),
@@ -57,8 +57,8 @@ func TestAccNutanixRecoveryPlanWithNetwork_basic(t *testing.T) {
 	nameUpdated := acctest.RandomWithPrefix("test-protection-name-dou")
 	descriptionUpdated := acctest.RandomWithPrefix("test-protection-desc-dou")
 
-	stageUuid := "ab788130-0820-4d07-a1b5-b0ba4d3a4254"
-	azUrl := "c99ab7cd-9191-4fcb-8fc0-232eff76e595"
+	stageUUID := "ab788130-0820-4d07-a1b5-b0ba4d3a4254"
+	azURL := "c99ab7cd-9191-4fcb-8fc0-232eff76e595"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -66,7 +66,7 @@ func TestAccNutanixRecoveryPlanWithNetwork_basic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixRecoveryPlanDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixRecoveryPlanConfigWithNetwork(name, description, stageUuid, azUrl),
+				Config: testAccNutanixRecoveryPlanConfigWithNetwork(name, description, stageUUID, azURL),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixRecoveryPlanExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -74,7 +74,7 @@ func TestAccNutanixRecoveryPlanWithNetwork_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNutanixRecoveryPlanConfigWithNetwork(nameUpdated, descriptionUpdated, stageUuid, azUrl),
+				Config: testAccNutanixRecoveryPlanConfigWithNetwork(nameUpdated, descriptionUpdated, stageUUID, azURL),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixRecoveryPlanExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", nameUpdated),
@@ -91,7 +91,7 @@ func TestAccResourceNutanixRecoveryPlanWithStageList_importBasic(t *testing.T) {
 	name := acctest.RandomWithPrefix("test-protection-name-dou")
 	description := acctest.RandomWithPrefix("test-protection-desc-dou")
 
-	stageUuid := "ab788130-0820-4d07-a1b5-b0ba4d3a4254"
+	stageUUID := "ab788130-0820-4d07-a1b5-b0ba4d3a4254"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -99,7 +99,7 @@ func TestAccResourceNutanixRecoveryPlanWithStageList_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixRecoveryPlanDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixRecoveryPlanConfigWithStageList(name, description, stageUuid),
+				Config: testAccNutanixRecoveryPlanConfigWithStageList(name, description, stageUUID),
 			},
 			{
 				ResourceName:      resourceName,
@@ -156,7 +156,7 @@ func testAccCheckNutanixRecoveryPlanDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccNutanixRecoveryPlanConfigWithStageList(name, description, stageUuid string) string {
+func testAccNutanixRecoveryPlanConfigWithStageList(name, description, stageUUID string) string {
 	return fmt.Sprintf(`
 		resource "nutanix_recovery_plan" "test" {
 			name        = "%s"
@@ -177,10 +177,10 @@ func testAccNutanixRecoveryPlanConfigWithStageList(name, description, stageUuid 
 			}
 			parameters{}
 		}
-	`, name, description, stageUuid)
+	`, name, description, stageUUID)
 }
 
-func testAccNutanixRecoveryPlanConfigWithNetwork(name, description, stageUuid, aZUrl string) string {
+func testAccNutanixRecoveryPlanConfigWithNetwork(name, description, stageUUID, aZUrl string) string {
 	return fmt.Sprintf(`
 		resource "nutanix_recovery_plan" "test" {
 			name        = "%s"
@@ -207,5 +207,5 @@ func testAccNutanixRecoveryPlanConfigWithNetwork(name, description, stageUuid, a
 				}
 			}
 		}
-	`, name, description, stageUuid, aZUrl)
+	`, name, description, stageUUID, aZUrl)
 }
