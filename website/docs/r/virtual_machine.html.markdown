@@ -81,12 +81,9 @@ The following arguments are supported:
 * `parent_referece`: - (Optional) Reference to an entity that the VM cloned from.
 * `memory_size_mib`: - (Optional) Memory size in MiB.
 * `boot_device_order_list`: - (Optional) Indicates the order of device types in which VM should try to boot from. If boot device order is not provided the system will decide appropriate boot device order.
-
-  **Important**: We are aware that is failing when put more than 2 option into the list, so for the next release it will be fixed.
-
-
 * `boot_device_disk_address`: - (Optional) Address of disk to boot from.
 * `boot_device_mac_address`: - (Optional) MAC address of nic to boot from.
+* `boot_type`: - (Optional) Indicates whether the VM should use Secure boot, UEFI boot or Legacy boot.If UEFI or; Secure boot is enabled then other legacy boot options (like boot_device and; boot_device_order_list) are ignored. Secure boot depends on UEFI boot, i.e. enabling; Secure boot means that UEFI boot is also enabled.
 * `hardware_clock_timezone`: - (Optional) VM's hardware clock timezone in IANA TZDB format (America/Los_Angeles).
 * `guest_customization_cloud_init_user_data`: - (Optional) The contents of the user_data configuration for cloud-init. This can be formatted as YAML, JSON, or could be a shell script. The value must be base64 encoded.
 * `guest_customization_cloud_init_meta_data` - (Optional) The contents of the meta_data configuration for cloud-init. This can be formatted as YAML or JSON. The value must be base64 encoded.
