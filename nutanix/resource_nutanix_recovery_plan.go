@@ -77,7 +77,8 @@ func resourceNutanixRecoveryPlan() *schema.Resource {
 			},
 			"categories": categoriesSchema(),
 			"owner_reference": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -98,7 +99,8 @@ func resourceNutanixRecoveryPlan() *schema.Resource {
 				},
 			},
 			"project_reference": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -227,7 +229,8 @@ func resourceNutanixRecoveryPlan() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"test_floating_ip_config": {
-													Type:     schema.TypeMap,
+													Type:     schema.TypeList,
+													MinItems: 1,
 													Optional: true,
 													Computed: true,
 													Elem: &schema.Resource{
@@ -246,7 +249,8 @@ func resourceNutanixRecoveryPlan() *schema.Resource {
 													},
 												},
 												"recovery_floating_ip_config": {
-													Type:     schema.TypeMap,
+													Type:     schema.TypeList,
+													MinItems: 1,
 													Optional: true,
 													Computed: true,
 													Elem: &schema.Resource{
@@ -265,7 +269,8 @@ func resourceNutanixRecoveryPlan() *schema.Resource {
 													},
 												},
 												"vm_reference": {
-													Type:     schema.TypeMap,
+													Type:     schema.TypeList,
+													MinItems: 1,
 													Required: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
@@ -286,7 +291,8 @@ func resourceNutanixRecoveryPlan() *schema.Resource {
 													},
 												},
 												"vm_nic_information": {
-													Type:     schema.TypeMap,
+													Type:     schema.TypeList,
+													MinItems: 1,
 													Required: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
@@ -334,7 +340,8 @@ func resourceNutanixRecoveryPlan() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"virtual_network_reference": {
-																Type:     schema.TypeMap,
+																Type:     schema.TypeList,
+																MaxItems: 1,
 																Optional: true,
 																Computed: true,
 																Elem: &schema.Resource{
@@ -358,7 +365,8 @@ func resourceNutanixRecoveryPlan() *schema.Resource {
 																},
 															},
 															"vpc_reference": {
-																Type:     schema.TypeMap,
+																Type:     schema.TypeList,
+																MaxItems: 1,
 																Optional: true,
 																Computed: true,
 																Elem: &schema.Resource{
@@ -424,7 +432,33 @@ func resourceNutanixRecoveryPlan() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"virtual_network_reference": {
-																Type:     schema.TypeMap,
+																Type:     schema.TypeList,
+																MaxItems: 1,
+																Optional: true,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"kind": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																			Computed: true,
+																		},
+																		"uuid": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																			Computed: true,
+																		},
+																		"name": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+															"vpc_reference": {
+																Type:     schema.TypeList,
+																MaxItems: 1,
 																Optional: true,
 																Computed: true,
 																Elem: &schema.Resource{
@@ -468,6 +502,11 @@ func resourceNutanixRecoveryPlan() *schema.Resource {
 																		},
 																	},
 																},
+															},
+															"use_vpc_reference": {
+																Type:     schema.TypeBool,
+																Optional: true,
+																Computed: true,
 															},
 															"name": {
 																Type:     schema.TypeString,
@@ -582,10 +621,10 @@ func resourceNutanixRecoveryPlanRead(d *schema.ResourceData, meta interface{}) e
 	if err := d.Set("categories", c); err != nil {
 		return err
 	}
-	if err := d.Set("project_reference", flattenReferenceValues(resp.Metadata.ProjectReference)); err != nil {
+	if err := d.Set("project_reference", flattenReferenceValuesList(resp.Metadata.ProjectReference)); err != nil {
 		return err
 	}
-	if err := d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
+	if err := d.Set("owner_reference", flattenReferenceValuesList(resp.Metadata.OwnerReference)); err != nil {
 		return err
 	}
 	if err := d.Set("name", resp.Spec.Name); err != nil {
@@ -639,12 +678,12 @@ func resourceNutanixRecoveryPlanUpdate(d *schema.ResourceData, meta interface{})
 		metadata.Categories = expandCategories(d.Get("categories"))
 	}
 	if d.HasChange("owner_reference") {
-		or := d.Get("owner_reference").(map[string]interface{})
-		metadata.OwnerReference = validateRef(or)
+		or := d.Get("owner_reference").([]interface{})
+		metadata.OwnerReference = validateRefList(or, utils.StringPtr("recovery_plan"))
 	}
 	if d.HasChange("project_reference") {
-		pr := d.Get("project_reference").(map[string]interface{})
-		metadata.ProjectReference = validateRef(pr)
+		pr := d.Get("project_reference").([]interface{})
+		metadata.ProjectReference = validateRefList(pr, utils.StringPtr("recovery_plan"))
 	}
 	if d.HasChange("name") {
 		spec.Name = d.Get("name").(string)
@@ -849,42 +888,55 @@ func expandVMIPAssignmentList(d []interface{}) []*v3.VMIPAssignmentList {
 		vmial := &v3.VMIPAssignmentList{}
 		v1 := assignment.(map[string]interface{})
 		if v2, ok1 := v1["test_floating_ip_config"]; ok1 {
-			v4 := v2.(map[string]interface{})
-			if v5, ok1 := v4["ip"]; ok1 && v5.(string) != "" {
-				vmial.TestFloatingIPConfig.IP = v5.(string)
+			v4 := v2.([]interface{})
+			for _, v6 := range v4 {
+				v7 := v6.(map[string]interface{})
+				if v5, ok1 := v7["ip"]; ok1 && v5.(string) != "" {
+					vmial.TestFloatingIPConfig.IP = v5.(string)
+				}
+				if v5, ok1 := v7["should_allocate_dynamically"]; ok1 {
+					vmial.TestFloatingIPConfig.ShouldAllocateDynamically = utils.BoolPtr(v5.(bool))
+				}
 			}
-			if v5, ok1 := v4["ip"]; ok1 {
-				vmial.TestFloatingIPConfig.ShouldAllocateDynamically = utils.BoolPtr(v5.(bool))
-			}
+
 		}
 		if v2, ok1 := v1["recovery_floating_ip_config"]; ok1 {
-			v4 := v2.(map[string]interface{})
-			if v5, ok1 := v4["ip"]; ok1 && v5.(string) != "" {
-				vmial.TestFloatingIPConfig.IP = v5.(string)
-			}
-			if v5, ok1 := v4["ip"]; ok1 {
-				vmial.TestFloatingIPConfig.ShouldAllocateDynamically = utils.BoolPtr(v5.(bool))
+			v4 := v2.([]interface{})
+			for _, v6 := range v4 {
+				v7 := v6.(map[string]interface{})
+				if v5, ok1 := v7["ip"]; ok1 && v5.(string) != "" {
+					vmial.TestFloatingIPConfig.IP = v5.(string)
+				}
+				if v5, ok1 := v7["should_allocate_dynamically"]; ok1 {
+					vmial.TestFloatingIPConfig.ShouldAllocateDynamically = utils.BoolPtr(v5.(bool))
+				}
 			}
 		}
 		if v2, ok1 := v1["vm_reference"]; ok1 {
-			v4 := v2.(map[string]interface{})
-			if v5, ok1 := v4["name"]; ok1 && v5.(string) != "" {
-				vmial.VMReference.Name = utils.StringPtr(v5.(string))
-			}
-			if v5, ok1 := v4["uuid"]; ok1 && v5.(string) != "" {
-				vmial.VMReference.UUID = utils.StringPtr(v5.(string))
-			}
-			if v5, ok1 := v4["kind"]; ok1 && v5.(string) != "" {
-				vmial.VMReference.Kind = utils.StringPtr(v5.(string))
+			v6 := v2.([]interface{})
+			for _, v7 := range v6 {
+				v4 := v7.(map[string]interface{})
+				if v5, ok1 := v4["name"]; ok1 && v5.(string) != "" {
+					vmial.VMReference.Name = utils.StringPtr(v5.(string))
+				}
+				if v5, ok1 := v4["uuid"]; ok1 && v5.(string) != "" {
+					vmial.VMReference.UUID = utils.StringPtr(v5.(string))
+				}
+				if v5, ok1 := v4["kind"]; ok1 && v5.(string) != "" {
+					vmial.VMReference.Kind = utils.StringPtr(v5.(string))
+				}
 			}
 		}
 		if v2, ok1 := v1["vm_nic_information"]; ok1 {
-			v4 := v2.(map[string]interface{})
-			if v5, ok1 := v4["ip"]; ok1 && v5.(string) != "" {
-				vmial.VMNICInformation.IP = v5.(string)
-			}
-			if v5, ok1 := v4["uuid"]; ok1 && v5.(string) != "" {
-				vmial.VMNICInformation.UUID = v5.(string)
+			v6 := v2.([]interface{})
+			for _, v7 := range v6 {
+				v4 := v7.(map[string]interface{})
+				if v5, ok1 := v4["ip"]; ok1 && v5.(string) != "" {
+					vmial.VMNICInformation.IP = v5.(string)
+				}
+				if v5, ok1 := v4["uuid"]; ok1 && v5.(string) != "" {
+					vmial.VMNICInformation.UUID = v5.(string)
+				}
 			}
 		}
 		assigns = append(assigns, vmial)
@@ -901,29 +953,38 @@ func expandZoneNetworkMappingList(d []interface{}) []*v3.AvailabilityZoneNetwork
 			netMap.AvailabilityZoneURL = v5.(string)
 		}
 		if v5, ok1 := v4["recovery_network"].([]interface{}); ok1 && len(v5) > 0 {
-			netMap.RecoveryNetwork = expandRecoveryNetwork(v5[0].(map[string]interface{}))
+			netMap.RecoveryNetwork = expandRecoveryNetwork(v5[0].([]interface{}))
 		}
 		if v5, ok1 := v4["test_network"].([]interface{}); ok1 && len(v5) > 0 {
-			netMap.RecoveryNetwork = expandRecoveryNetwork(v5[0].(map[string]interface{}))
+			netMap.RecoveryNetwork = expandRecoveryNetwork(v5[0].([]interface{}))
 		}
 		mapping = append(mapping, netMap)
 	}
 	return mapping
 }
 
-func expandRecoveryNetwork(d map[string]interface{}) *v3.Network {
+func expandRecoveryNetwork(d []interface{}) *v3.Network {
 	network := &v3.Network{}
-	if v, ok1 := d["name"]; ok1 && v.(string) != "" {
-		network.Name = v.(string)
-	}
-	if v, ok1 := d["virtual_network_reference"].(map[string]interface{}); ok1 {
-		network.VirtualNetworkReference = validateRef(v)
-	}
-	if v, ok1 := d["name"]; ok1 && v.(string) != "" {
-		network.Name = v.(string)
-	}
-	if v, ok1 := d["subnet_list"].([]interface{}); ok1 {
-		network.SubnetList = expandSubnetList(v)
+	for _, v1 := range d {
+		d := v1.(map[string]interface{})
+		if v, ok1 := d["name"]; ok1 && v.(string) != "" {
+			network.Name = v.(string)
+		}
+		if v, ok1 := d["virtual_network_reference"].([]interface{}); ok1 {
+			network.VirtualNetworkReference = validateRefList(v, utils.StringPtr("recovery_plan"))
+		}
+		if v, ok1 := d["vpc_reference"].([]interface{}); ok1 {
+			network.VPCReference = validateRefList(v, utils.StringPtr("recovery_plan"))
+		}
+		if v, ok1 := d["name"]; ok1 && v.(string) != "" {
+			network.Name = v.(string)
+		}
+		if v, ok1 := d["subnet_list"].([]interface{}); ok1 {
+			network.SubnetList = expandSubnetList(v)
+		}
+		if v, ok1 := d["use_vpc_reference"].(bool); ok1 {
+			network.UseVPCReference = utils.BoolPtr(v)
+		}
 	}
 
 	return network
@@ -1067,8 +1128,10 @@ func flattenRecoveryNetwork(d *v3.Network) []interface{} {
 	networks := make([]interface{}, 0)
 	network := make(map[string]interface{})
 	network["name"] = d.Name
-	network["virtual_network_reference"] = flattenReferenceValues(d.VirtualNetworkReference)
+	network["virtual_network_reference"] = flattenReferenceValuesList(d.VirtualNetworkReference)
+	network["vpc_reference"] = flattenReferenceValuesList(d.VPCReference)
 	network["subnet_list"] = flattenSubnetList(d.SubnetList)
+	network["use_vpc_reference"] = d.UseVPCReference
 	networks = append(networks, network)
 	return networks
 }
