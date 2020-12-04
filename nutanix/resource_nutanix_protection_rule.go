@@ -78,7 +78,8 @@ func resourceNutanixProtectionRule() *schema.Resource {
 			},
 			"categories": categoriesSchema(),
 			"owner_reference": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -99,7 +100,8 @@ func resourceNutanixProtectionRule() *schema.Resource {
 				},
 			},
 			"project_reference": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -382,10 +384,10 @@ func resourceNutanixProtectionRuleRead(d *schema.ResourceData, meta interface{})
 	if err := d.Set("categories", c); err != nil {
 		return err
 	}
-	if err := d.Set("project_reference", flattenReferenceValues(resp.Metadata.ProjectReference)); err != nil {
+	if err := d.Set("project_reference", flattenReferenceValuesList(resp.Metadata.ProjectReference)); err != nil {
 		return err
 	}
-	if err := d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
+	if err := d.Set("owner_reference", flattenReferenceValuesList(resp.Metadata.OwnerReference)); err != nil {
 		return err
 	}
 	if err := d.Set("name", resp.Spec.Name); err != nil {
@@ -446,12 +448,12 @@ func resourceNutanixProtectionRuleUpdate(d *schema.ResourceData, meta interface{
 		metadata.Categories = expandCategories(d.Get("categories"))
 	}
 	if d.HasChange("owner_reference") {
-		or := d.Get("owner_reference").(map[string]interface{})
-		metadata.OwnerReference = validateRef(or)
+		or := d.Get("owner_reference").([]interface{})
+		metadata.OwnerReference = validateRefList(or, utils.StringPtr("protection_rule"))
 	}
 	if d.HasChange("project_reference") {
-		pr := d.Get("project_reference").(map[string]interface{})
-		metadata.ProjectReference = validateRef(pr)
+		pr := d.Get("project_reference").([]interface{})
+		metadata.ProjectReference = validateRefList(pr, utils.StringPtr("protection_rule"))
 	}
 	if d.HasChange("name") {
 		spec.Name = d.Get("name").(string)

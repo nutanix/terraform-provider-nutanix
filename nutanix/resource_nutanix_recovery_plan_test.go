@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccNutanixRecoveryPlan_basic(t *testing.T) {
+func TestAccNutanixRecoveryPlanWithStageList_basic(t *testing.T) {
 	resourceName := "nutanix_recovery_plan.test"
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")
@@ -27,7 +27,7 @@ func TestAccNutanixRecoveryPlan_basic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixRecoveryPlanDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixRecoveryPlanConfig(name, description),
+				Config: testAccNutanixRecoveryPlanConfigWithStageList(name, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixRecoveryPlanExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -35,7 +35,7 @@ func TestAccNutanixRecoveryPlan_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNutanixRecoveryPlanConfig(nameUpdated, descriptionUpdated),
+				Config: testAccNutanixRecoveryPlanConfigWithStageList(nameUpdated, descriptionUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixRecoveryPlanExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", nameUpdated),
@@ -46,7 +46,7 @@ func TestAccNutanixRecoveryPlan_basic(t *testing.T) {
 	})
 }
 
-func TestAccResourceNutanixRecoveryPlan_importBasic(t *testing.T) {
+func TestAccResourceNutanixRecoveryPlanWithStageList_importBasic(t *testing.T) {
 	resourceName := "nutanix_recovery_plan.test"
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")
@@ -58,7 +58,7 @@ func TestAccResourceNutanixRecoveryPlan_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixRecoveryPlanDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixRecoveryPlanConfig(name, description),
+				Config: testAccNutanixRecoveryPlanConfigWithStageList(name, description),
 			},
 			{
 				ResourceName:      resourceName,
@@ -115,7 +115,7 @@ func testAccCheckNutanixRecoveryPlanDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccNutanixRecoveryPlanConfig(name, description string) string {
+func testAccNutanixRecoveryPlanConfigWithStageList(name, description string) string {
 	return fmt.Sprintf(`
 		resource "nutanix_recovery_plan" "test" {
 			name        = "%s"
@@ -135,6 +135,36 @@ func testAccNutanixRecoveryPlanConfig(name, description string) string {
 				delay_time_secs = 0
 			}
 			parameters{}
+		}
+	`, name, description)
+}
+
+func testAccNutanixRecoveryPlanConfigWithNetwork(name, description string) string {
+	return fmt.Sprintf(`
+		resource "nutanix_recovery_plan" "test" {
+			name        = "%s"
+			description = "%s"
+			stage_list {
+				stage_work{
+					recover_entities{
+						entity_info_list{
+							categories {
+								name = "Environment"
+								value = "Dev"
+							}
+						}
+					}
+				}
+				stage_uuid = "ab788130-0820-4d07-a1b5-b0ba4d3a4254"
+				delay_time_secs = 0
+			}
+			parameters{
+				network_mapping_list{
+					availability_zone_network_mapping_list{
+						availability_zone_url = "c99ab7cd-9191-4fcb-8fc0-232eff76e595"
+					}
+				}
+			}
 		}
 	`, name, description)
 }
