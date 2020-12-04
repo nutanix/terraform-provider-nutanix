@@ -65,42 +65,50 @@ func dataSourceNutanixProtectionRules() *schema.Resource {
 						},
 						"categories": categoriesSchema(),
 						"owner_reference": {
-							Type:     schema.TypeMap,
+							Type:     schema.TypeList,
+							MaxItems: 1,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"kind": {
-										Type: schema.TypeString,
+										Type:     schema.TypeString,
+										Computed: true,
 									},
 									"uuid": {
-										Type: schema.TypeString,
+										Type:     schema.TypeString,
+										Computed: true,
 									},
 									"name": {
-										Type: schema.TypeString,
+										Type:     schema.TypeString,
+										Computed: true,
 									},
 								},
 							},
 						},
 						"project_reference": {
-							Type:     schema.TypeMap,
+							Type:     schema.TypeList,
+							MaxItems: 1,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"kind": {
-										Type: schema.TypeString,
+										Type:     schema.TypeString,
+										Computed: true,
 									},
 									"uuid": {
-										Type: schema.TypeString,
+										Type:     schema.TypeString,
+										Computed: true,
 									},
 									"name": {
-										Type: schema.TypeString,
+										Type:     schema.TypeString,
+										Computed: true,
 									},
 								},
 							},
 						},
 						"name": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 						"start_time": {
 							Type:     schema.TypeString,
@@ -108,7 +116,7 @@ func dataSourceNutanixProtectionRules() *schema.Resource {
 						},
 						"availability_zone_connectivity_list": {
 							Type:     schema.TypeList,
-							Required: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"destination_availability_zone_index": {
@@ -126,11 +134,13 @@ func dataSourceNutanixProtectionRules() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"recovery_point_objective_secs": {
 													Type:     schema.TypeInt,
-													Required: true,
+													Computed: true,
 												},
 												"local_snapshot_retention_policy": {
-													Type:     schema.TypeMap,
+													Type:     schema.TypeList,
 													Computed: true,
+													MaxItems: 1,
+													MinItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"num_snapshots": {
@@ -142,7 +152,7 @@ func dataSourceNutanixProtectionRules() *schema.Resource {
 																Computed: true,
 															},
 															"rollup_retention_policy_snapshot_interval_type": {
-																Type:     schema.TypeInt,
+																Type:     schema.TypeString,
 																Computed: true,
 															},
 														},
@@ -157,18 +167,23 @@ func dataSourceNutanixProtectionRules() *schema.Resource {
 													Computed: true,
 												},
 												"remote_snapshot_retention_policy": {
-													Type:     schema.TypeMap,
+													Type:     schema.TypeList,
 													Computed: true,
+													MaxItems: 1,
+													MinItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"num_snapshots": {
-																Type: schema.TypeInt,
+																Type:     schema.TypeInt,
+																Computed: true,
 															},
 															"rollup_retention_policy_multiple": {
-																Type: schema.TypeInt,
+																Type:     schema.TypeInt,
+																Computed: true,
 															},
 															"rollup_retention_policy_snapshot_interval_type": {
-																Type: schema.TypeInt,
+																Type:     schema.TypeString,
+																Computed: true,
 															},
 														},
 													},
@@ -181,7 +196,7 @@ func dataSourceNutanixProtectionRules() *schema.Resource {
 						},
 						"ordered_availability_zone_list": {
 							Type:     schema.TypeList,
-							Required: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cluster_uuid": {
@@ -221,11 +236,11 @@ func dataSourceNutanixProtectionRules() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"name": {
 													Type:     schema.TypeString,
-													Required: true,
+													Computed: true,
 												},
 												"values": {
 													Type:     schema.TypeList,
-													Required: true,
+													Computed: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
 											},
@@ -273,10 +288,11 @@ func flattenProtectionRuleEntities(protectionRules []*v3.ProtectionRuleResponse)
 
 		entities[i] = map[string]interface{}{
 			"name":                                protectionRule.Status.Name,
+			"description":                         protectionRule.Spec.Description,
 			"metadata":                            metadata,
 			"categories":                          categories,
-			"project_reference":                   flattenReferenceValues(protectionRule.Metadata.ProjectReference),
-			"owner_reference":                     flattenReferenceValues(protectionRule.Metadata.OwnerReference),
+			"project_reference":                   flattenReferenceValuesList(protectionRule.Metadata.ProjectReference),
+			"owner_reference":                     flattenReferenceValuesList(protectionRule.Metadata.OwnerReference),
 			"start_time":                          protectionRule.Status.Resources.StartTime,
 			"availability_zone_connectivity_list": flattenAvailabilityZoneConnectivityList(protectionRule.Spec.Resources.AvailabilityZoneConnectivityList),
 			"ordered_availability_zone_list":      flattenOrderAvailibilityList(protectionRule.Spec.Resources.OrderedAvailabilityZoneList),

@@ -25,7 +25,6 @@ func dataSourceNutanixRecoveryPlans() *schema.Resource {
 						},
 						"description": {
 							Type:     schema.TypeString,
-							Optional: true,
 							Computed: true,
 						},
 						"metadata": {
@@ -35,37 +34,30 @@ func dataSourceNutanixRecoveryPlans() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"last_update_time": {
 										Type:     schema.TypeString,
-										Optional: true,
 										Computed: true,
 									},
 									"kind": {
 										Type:     schema.TypeString,
-										Optional: true,
 										Computed: true,
 									},
 									"uuid": {
 										Type:     schema.TypeString,
-										Optional: true,
 										Computed: true,
 									},
 									"creation_time": {
 										Type:     schema.TypeString,
-										Optional: true,
 										Computed: true,
 									},
 									"spec_version": {
 										Type:     schema.TypeString,
-										Optional: true,
 										Computed: true,
 									},
 									"spec_hash": {
 										Type:     schema.TypeString,
-										Optional: true,
 										Computed: true,
 									},
 									"name": {
 										Type:     schema.TypeString,
-										Optional: true,
 										Computed: true,
 									},
 								},
@@ -73,43 +65,43 @@ func dataSourceNutanixRecoveryPlans() *schema.Resource {
 						},
 						"categories": categoriesSchema(),
 						"owner_reference": {
-							Type:     schema.TypeMap,
-							Optional: true,
+							Type:     schema.TypeList,
+							MaxItems: 1,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"kind": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Computed: true,
 									},
 									"uuid": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Computed: true,
 									},
 									"name": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Computed: true,
 									},
 								},
 							},
 						},
 						"project_reference": {
-							Type:     schema.TypeMap,
-							Optional: true,
+							Type:     schema.TypeList,
+							MaxItems: 1,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"kind": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Computed: true,
 									},
 									"uuid": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Computed: true,
 									},
 									"name": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Computed: true,
 									},
 								},
 							},
@@ -133,41 +125,52 @@ func dataSourceNutanixRecoveryPlans() *schema.Resource {
 									},
 									"stage_work": {
 										Type:     schema.TypeList,
+										Computed: true,
 										MinItems: 1,
 										MaxItems: 1,
-										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"recover_entities": {
 													Type:     schema.TypeList,
+													Computed: true,
 													MinItems: 1,
 													MaxItems: 1,
-													Optional: true,
-													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"entity_info_list": {
 																Type:     schema.TypeList,
-																Optional: true,
 																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"any_entity_reference_kind": {
 																			Type:     schema.TypeString,
-																			Optional: true,
 																			Computed: true,
 																		},
 																		"any_entity_reference_uuid": {
 																			Type:     schema.TypeString,
-																			Optional: true,
 																			Computed: true,
 																		},
 																		"any_entity_reference_name": {
 																			Type:     schema.TypeString,
-																			Optional: true,
 																			Computed: true,
 																		},
 																		"categories": categoriesSchema(),
+																		"script_list": {
+																			Type:     schema.TypeList,
+																			Computed: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"enable_script_exec": {
+																						Type:     schema.TypeBool,
+																						Computed: true,
+																					},
+																					"timeout": {
+																						Type:     schema.TypeString,
+																						Computed: true,
+																					},
+																				},
+																			},
+																		},
 																	},
 																},
 															},
@@ -183,6 +186,8 @@ func dataSourceNutanixRecoveryPlans() *schema.Resource {
 						"parameters": {
 							Type:     schema.TypeList,
 							Computed: true,
+							MinItems: 1,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"floating_ip_assignment_list": {
@@ -200,45 +205,42 @@ func dataSourceNutanixRecoveryPlans() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"test_floating_ip_config": {
-																Type:     schema.TypeMap,
-																Optional: true,
+																Type:     schema.TypeList,
+																MinItems: 1,
 																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"ip": {
 																			Type:     schema.TypeString,
-																			Optional: true,
 																			Computed: true,
 																		},
 																		"should_allocate_dynamically": {
 																			Type:     schema.TypeBool,
-																			Optional: true,
 																			Computed: true,
 																		},
 																	},
 																},
 															},
 															"recovery_floating_ip_config": {
-																Type:     schema.TypeMap,
-																Optional: true,
+																Type:     schema.TypeList,
+																MinItems: 1,
 																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"ip": {
 																			Type:     schema.TypeString,
-																			Optional: true,
 																			Computed: true,
 																		},
 																		"should_allocate_dynamically": {
 																			Type:     schema.TypeBool,
-																			Optional: true,
 																			Computed: true,
 																		},
 																	},
 																},
 															},
 															"vm_reference": {
-																Type:     schema.TypeMap,
+																Type:     schema.TypeList,
+																MinItems: 1,
 																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
@@ -252,20 +254,19 @@ func dataSourceNutanixRecoveryPlans() *schema.Resource {
 																		},
 																		"name": {
 																			Type:     schema.TypeString,
-																			Optional: true,
 																			Computed: true,
 																		},
 																	},
 																},
 															},
 															"vm_nic_information": {
-																Type:     schema.TypeMap,
+																Type:     schema.TypeList,
+																MinItems: 1,
 																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"ip": {
 																			Type:     schema.TypeString,
-																			Optional: true,
 																			Computed: true,
 																		},
 																		"uuid": {
@@ -288,42 +289,57 @@ func dataSourceNutanixRecoveryPlans() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"availability_zone_network_mapping_list": {
 													Type:     schema.TypeList,
-													Optional: true,
 													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"availability_zone_url": {
 																Type:     schema.TypeString,
-																Optional: true,
 																Computed: true,
 															},
 															"recovery_network": {
 																Type:     schema.TypeList,
+																Computed: true,
 																MinItems: 1,
 																MaxItems: 1,
-																Optional: true,
-																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"virtual_network_reference": {
-																			Type:     schema.TypeMap,
-																			Optional: true,
+																			Type:     schema.TypeList,
+																			MaxItems: 1,
 																			Computed: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
 																					"kind": {
 																						Type:     schema.TypeString,
-																						Optional: true,
 																						Computed: true,
 																					},
 																					"uuid": {
 																						Type:     schema.TypeString,
-																						Optional: true,
 																						Computed: true,
 																					},
 																					"name": {
 																						Type:     schema.TypeString,
-																						Optional: true,
+																						Computed: true,
+																					},
+																				},
+																			},
+																		},
+																		"vpc_reference": {
+																			Type:     schema.TypeList,
+																			MaxItems: 1,
+																			Computed: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"kind": {
+																						Type:     schema.TypeString,
+																						Computed: true,
+																					},
+																					"uuid": {
+																						Type:     schema.TypeString,
+																						Computed: true,
+																					},
+																					"name": {
+																						Type:     schema.TypeString,
 																						Computed: true,
 																					},
 																				},
@@ -331,7 +347,6 @@ func dataSourceNutanixRecoveryPlans() *schema.Resource {
 																		},
 																		"subnet_list": {
 																			Type:     schema.TypeList,
-																			Optional: true,
 																			Computed: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
@@ -341,7 +356,6 @@ func dataSourceNutanixRecoveryPlans() *schema.Resource {
 																					},
 																					"external_connectivity_state": {
 																						Type:     schema.TypeString,
-																						Optional: true,
 																						Computed: true,
 																					},
 																					"prefix_length": {
@@ -350,6 +364,10 @@ func dataSourceNutanixRecoveryPlans() *schema.Resource {
 																					},
 																				},
 																			},
+																		},
+																		"use_vpc_reference": {
+																			Type:     schema.TypeBool,
+																			Computed: true,
 																		},
 																		"name": {
 																			Type:     schema.TypeString,
@@ -360,31 +378,48 @@ func dataSourceNutanixRecoveryPlans() *schema.Resource {
 															},
 															"test_network": {
 																Type:     schema.TypeList,
+																Computed: true,
 																MinItems: 1,
 																MaxItems: 1,
-																Optional: true,
-																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"virtual_network_reference": {
-																			Type:     schema.TypeMap,
-																			Optional: true,
+																			Type:     schema.TypeList,
+																			MaxItems: 1,
 																			Computed: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
 																					"kind": {
 																						Type:     schema.TypeString,
-																						Optional: true,
 																						Computed: true,
 																					},
 																					"uuid": {
 																						Type:     schema.TypeString,
-																						Optional: true,
 																						Computed: true,
 																					},
 																					"name": {
 																						Type:     schema.TypeString,
-																						Optional: true,
+																						Computed: true,
+																					},
+																				},
+																			},
+																		},
+																		"vpc_reference": {
+																			Type:     schema.TypeList,
+																			MaxItems: 1,
+																			Computed: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"kind": {
+																						Type:     schema.TypeString,
+																						Computed: true,
+																					},
+																					"uuid": {
+																						Type:     schema.TypeString,
+																						Computed: true,
+																					},
+																					"name": {
+																						Type:     schema.TypeString,
 																						Computed: true,
 																					},
 																				},
@@ -392,7 +427,6 @@ func dataSourceNutanixRecoveryPlans() *schema.Resource {
 																		},
 																		"subnet_list": {
 																			Type:     schema.TypeList,
-																			Optional: true,
 																			Computed: true,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
@@ -402,7 +436,6 @@ func dataSourceNutanixRecoveryPlans() *schema.Resource {
 																					},
 																					"external_connectivity_state": {
 																						Type:     schema.TypeString,
-																						Optional: true,
 																						Computed: true,
 																					},
 																					"prefix_length": {
@@ -411,6 +444,10 @@ func dataSourceNutanixRecoveryPlans() *schema.Resource {
 																					},
 																				},
 																			},
+																		},
+																		"use_vpc_reference": {
+																			Type:     schema.TypeBool,
+																			Computed: true,
 																		},
 																		"name": {
 																			Type:     schema.TypeString,
@@ -467,10 +504,11 @@ func flattenRecoveryPlanEntities(protectionRules []*v3.RecoveryPlanResponse) []m
 
 		entities[i] = map[string]interface{}{
 			"name":              recoveryPlan.Status.Name,
+			"description":       recoveryPlan.Spec.Description,
 			"metadata":          metadata,
 			"categories":        categories,
-			"project_reference": flattenReferenceValues(recoveryPlan.Metadata.ProjectReference),
-			"owner_reference":   flattenReferenceValues(recoveryPlan.Metadata.OwnerReference),
+			"project_reference": flattenReferenceValuesList(recoveryPlan.Metadata.ProjectReference),
+			"owner_reference":   flattenReferenceValuesList(recoveryPlan.Metadata.OwnerReference),
 			"stage_list":        flattenStageList(recoveryPlan.Status.Resources.StageList),
 			"parameters":        flattenParameters(recoveryPlan.Spec.Resources.Parameters),
 			"state":             recoveryPlan.Status.State,

@@ -17,7 +17,7 @@ func dataSourceNutanixProtectionRule() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"protection_rule_id": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"api_version": {
 				Type:     schema.TypeString,
@@ -65,35 +65,43 @@ func dataSourceNutanixProtectionRule() *schema.Resource {
 			},
 			"categories": categoriesSchema(),
 			"owner_reference": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"kind": {
-							Type: schema.TypeString,
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 						"uuid": {
-							Type: schema.TypeString,
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 						"name": {
-							Type: schema.TypeString,
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
 			},
 			"project_reference": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"kind": {
-							Type: schema.TypeString,
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 						"uuid": {
-							Type: schema.TypeString,
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 						"name": {
-							Type: schema.TypeString,
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
@@ -129,8 +137,10 @@ func dataSourceNutanixProtectionRule() *schema.Resource {
 										Computed: true,
 									},
 									"local_snapshot_retention_policy": {
-										Type:     schema.TypeMap,
+										Type:     schema.TypeList,
 										Computed: true,
+										MaxItems: 1,
+										MinItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"num_snapshots": {
@@ -142,7 +152,7 @@ func dataSourceNutanixProtectionRule() *schema.Resource {
 													Computed: true,
 												},
 												"rollup_retention_policy_snapshot_interval_type": {
-													Type:     schema.TypeInt,
+													Type:     schema.TypeString,
 													Computed: true,
 												},
 											},
@@ -157,18 +167,23 @@ func dataSourceNutanixProtectionRule() *schema.Resource {
 										Computed: true,
 									},
 									"remote_snapshot_retention_policy": {
-										Type:     schema.TypeMap,
+										Type:     schema.TypeList,
 										Computed: true,
+										MaxItems: 1,
+										MinItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"num_snapshots": {
-													Type: schema.TypeInt,
+													Type:     schema.TypeInt,
+													Computed: true,
 												},
 												"rollup_retention_policy_multiple": {
-													Type: schema.TypeInt,
+													Type:     schema.TypeInt,
+													Computed: true,
 												},
 												"rollup_retention_policy_snapshot_interval_type": {
-													Type: schema.TypeInt,
+													Type:     schema.TypeString,
+													Computed: true,
 												},
 											},
 										},
@@ -261,10 +276,10 @@ func dataSourceNutanixProtectionRuleRead(d *schema.ResourceData, meta interface{
 	if err := d.Set("categories", c); err != nil {
 		return err
 	}
-	if err := d.Set("project_reference", flattenReferenceValues(resp.Metadata.ProjectReference)); err != nil {
+	if err := d.Set("project_reference", flattenReferenceValuesList(resp.Metadata.ProjectReference)); err != nil {
 		return err
 	}
-	if err := d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
+	if err := d.Set("owner_reference", flattenReferenceValuesList(resp.Metadata.OwnerReference)); err != nil {
 		return err
 	}
 	if err := d.Set("name", resp.Spec.Name); err != nil {
