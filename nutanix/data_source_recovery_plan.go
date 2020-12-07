@@ -456,8 +456,114 @@ func dataSourceNutanixRecoveryPlan() *schema.Resource {
 														},
 													},
 												},
+												"recovery_ip_assignment_list": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"vm_reference": {
+																Type:     schema.TypeList,
+																MaxItems: 1,
+																Required: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"kind": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"uuid": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"name": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+															"ip_config_list": {
+																Type:     schema.TypeList,
+																Required: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"ip_address": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"test_ip_assignment_list": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"vm_reference": {
+																Type:     schema.TypeList,
+																MaxItems: 1,
+																Required: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"kind": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"uuid": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"name": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+															"ip_config_list": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"ip_address": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"cluster_reference_list": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"kind": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+															"uuid": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+															"name": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+														},
+													},
+												},
 											},
 										},
+									},
+									"are_networks_stretched": {
+										Type:     schema.TypeBool,
+										Computed: true,
 									},
 								},
 							},
