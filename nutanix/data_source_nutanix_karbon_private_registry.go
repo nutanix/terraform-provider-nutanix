@@ -3,7 +3,7 @@ package nutanix
 import (
 	"fmt"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/karbon"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
