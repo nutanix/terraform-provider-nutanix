@@ -230,7 +230,7 @@ func resourceNutanixRecoveryPlan() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"test_floating_ip_config": {
 													Type:     schema.TypeList,
-													MinItems: 1,
+													MaxItems: 1,
 													Optional: true,
 													Computed: true,
 													Elem: &schema.Resource{
@@ -250,7 +250,7 @@ func resourceNutanixRecoveryPlan() *schema.Resource {
 												},
 												"recovery_floating_ip_config": {
 													Type:     schema.TypeList,
-													MinItems: 1,
+													MaxItems: 1,
 													Optional: true,
 													Computed: true,
 													Elem: &schema.Resource{
@@ -270,7 +270,7 @@ func resourceNutanixRecoveryPlan() *schema.Resource {
 												},
 												"vm_reference": {
 													Type:     schema.TypeList,
-													MinItems: 1,
+													MaxItems: 1,
 													Required: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
@@ -292,7 +292,7 @@ func resourceNutanixRecoveryPlan() *schema.Resource {
 												},
 												"vm_nic_information": {
 													Type:     schema.TypeList,
-													MinItems: 1,
+													MaxItems: 1,
 													Required: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
@@ -515,8 +515,123 @@ func resourceNutanixRecoveryPlan() *schema.Resource {
 														},
 													},
 												},
+												"recovery_ip_assignment_list": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"vm_reference": {
+																Type:     schema.TypeList,
+																MaxItems: 1,
+																Required: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"kind": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"uuid": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																			Computed: true,
+																		},
+																		"name": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+															"ip_config_list": {
+																Type:     schema.TypeList,
+																Required: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"ip_address": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"test_ip_assignment_list": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"vm_reference": {
+																Type:     schema.TypeList,
+																MaxItems: 1,
+																Required: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"kind": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																		"uuid": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																			Computed: true,
+																		},
+																		"name": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+															"ip_config_list": {
+																Type:     schema.TypeList,
+																Required: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"ip_address": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"cluster_reference_list": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"kind": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+															"uuid": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+															"name": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+														},
+													},
+												},
 											},
 										},
+									},
+									"are_networks_stretched": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
 									},
 								},
 							},
@@ -859,6 +974,9 @@ func expandParameters(d *schema.ResourceData) *v3.Parameters {
 					if v2, ok1 := v2["availability_zone_network_mapping_list"].([]interface{}); ok1 {
 						networkMapping.AvailabilityZoneNetworkMappingList = expandZoneNetworkMappingList(v2)
 					}
+					if v2, ok1 := v2["are_networks_stretched"]; ok1 {
+						networkMapping.AreNetworksStretched = utils.BoolPtr(v2.(bool))
+					}
 					networkMappingList = append(networkMappingList, networkMapping)
 				}
 
@@ -960,6 +1078,15 @@ func expandZoneNetworkMappingList(d []interface{}) []*v3.AvailabilityZoneNetwork
 		if v5, ok1 := v4["test_network"].([]interface{}); ok1 && len(v5) > 0 {
 			netMap.RecoveryNetwork = expandRecoveryNetwork(v5[0].([]interface{}))
 		}
+		if v5, ok1 := v4["recovery_ip_assignment_list"].([]interface{}); ok1 && len(v5) > 0 {
+			netMap.RecoveryIPAssignmentList = expandIPAssignmentList(v5[0].([]interface{}))
+		}
+		if v5, ok1 := v4["test_ip_assignment_list"].([]interface{}); ok1 && len(v5) > 0 {
+			netMap.RecoveryIPAssignmentList = expandIPAssignmentList(v5[0].([]interface{}))
+		}
+		if v5, ok1 := v4["cluster_reference_list"].([]interface{}); ok1 && len(v5) > 0 {
+			netMap.ClusterReferenceList = validateArrayRef(v5[0].([]interface{}), nil)
+		}
 		mapping = append(mapping, netMap)
 	}
 	return mapping
@@ -992,19 +1119,57 @@ func expandRecoveryNetwork(d []interface{}) *v3.Network {
 	return network
 }
 
+func expandIPAssignmentList(d []interface{}) []*v3.IPAssignmentList {
+	assigns := make([]*v3.IPAssignmentList, 0)
+	for _, assignment := range d {
+		vmial := &v3.IPAssignmentList{}
+		v1 := assignment.(map[string]interface{})
+		if v2, ok1 := v1["vm_reference"]; ok1 {
+			v6 := v2.([]interface{})
+			for _, v7 := range v6 {
+				v4 := v7.(map[string]interface{})
+				if v5, ok1 := v4["name"]; ok1 && v5.(string) != "" {
+					vmial.VMReference.Name = utils.StringPtr(v5.(string))
+				}
+				if v5, ok1 := v4["uuid"]; ok1 && v5.(string) != "" {
+					vmial.VMReference.UUID = utils.StringPtr(v5.(string))
+				}
+				if v5, ok1 := v4["kind"]; ok1 && v5.(string) != "" {
+					vmial.VMReference.Kind = utils.StringPtr(v5.(string))
+				}
+			}
+		}
+		if v2, ok1 := v1["ip_config_list"]; ok1 {
+			v6 := v2.([]interface{})
+			for _, v7 := range v6 {
+				v4 := v7.(map[string]interface{})
+				ipConfigList := make([]*v3.IPConfigList, 0)
+				if v5, ok1 := v4["ip_address"]; ok1 && v5.(string) != "" {
+					var ipConfig v3.IPConfigList
+					ipConfig.IPAddress = v5.(string)
+					ipConfigList = append(ipConfigList, &ipConfig)
+				}
+				vmial.IPConfigList = ipConfigList
+			}
+		}
+		assigns = append(assigns, vmial)
+	}
+	return assigns
+}
+
 func expandSubnetList(d []interface{}) []*v3.SubnetList {
 	subnets := make([]*v3.SubnetList, 0)
 	for _, subnet := range d {
 		sub := &v3.SubnetList{}
 		v2 := subnet.(map[string]interface{})
-		if v3, ok1 := v2["gateway_ip"]; ok1 && v3.(string) != "" {
-			sub.GatewayIP = v3.(string)
+		if v4, ok1 := v2["gateway_ip"]; ok1 && v4.(string) != "" {
+			sub.GatewayIP = v4.(string)
 		}
-		if v3, ok1 := v2["external_connectivity_state"]; ok1 && v3.(string) != "" {
-			sub.ExternalConnectivityState = v3.(string)
+		if v4, ok1 := v2["external_connectivity_state"]; ok1 && v4.(string) != "" {
+			sub.ExternalConnectivityState = v4.(string)
 		}
-		if v3, ok1 := v2["prefix_length"]; ok1 {
-			sub.PrefixLength = utils.Int64Ptr(cast.ToInt64(v3))
+		if v4, ok1 := v2["prefix_length"]; ok1 {
+			sub.PrefixLength = utils.Int64Ptr(cast.ToInt64(v4))
 		}
 		subnets = append(subnets, sub)
 	}
@@ -1116,9 +1281,13 @@ func flattenNetworkMappingList(networksList []*v3.NetworkMappingList) []map[stri
 					zon["availability_zone_url"] = zone.AvailabilityZoneURL
 					zon["recovery_network"] = flattenRecoveryNetwork(zone.RecoveryNetwork)
 					zon["test_network"] = flattenRecoveryNetwork(zone.RecoveryNetwork)
+					zon["recovery_ip_assignment_list"] = flattenAssignmentList(zone.RecoveryIPAssignmentList)
+					zon["test_ip_assignment_list"] = flattenAssignmentList(zone.TestIPAssignmentList)
+					zon["cluster_reference_list"] = flattenArrayReferenceValues(zone.ClusterReferenceList)
 					zones = append(zones, zon)
 				}
 				availibility["availability_zone_network_mapping_list"] = zones
+				availibility["are_networks_stretched"] = network.AreNetworksStretched
 			}
 			networks = append(networks, availibility)
 		}
@@ -1136,6 +1305,31 @@ func flattenRecoveryNetwork(d *v3.Network) []interface{} {
 	network["use_vpc_reference"] = d.UseVPCReference
 	networks = append(networks, network)
 	return networks
+}
+
+func flattenAssignmentList(list []*v3.IPAssignmentList) []map[string]interface{} {
+	assignments := make([]map[string]interface{}, 0)
+	if len(list) > 0 {
+		for _, assignment := range list {
+			assign := make(map[string]interface{})
+			assign["vm_reference"] = flattenReferenceValues(assignment.VMReference)
+			assign["ip_config_list"] = flattenIPConfigList(assignment.IPConfigList)
+			assignments = append(assignments, assign)
+		}
+	}
+	return assignments
+}
+
+func flattenIPConfigList(list []*v3.IPConfigList) []map[string]interface{} {
+	ipConfigList := make([]map[string]interface{}, 0)
+	if len(list) > 0 {
+		for _, ipConfig := range list {
+			ipConf := make(map[string]interface{})
+			ipConf["ip_address"] = ipConfig.IPAddress
+			ipConfigList = append(ipConfigList, ipConf)
+		}
+	}
+	return ipConfigList
 }
 
 func flattenSubnetList(subnets []*v3.SubnetList) []map[string]interface{} {
