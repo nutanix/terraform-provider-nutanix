@@ -7,6 +7,7 @@ require (
 	github.com/mitchellh/gox v1.0.1
 	github.com/spf13/cast v1.3.1
 	golang.org/x/tools v0.0.0-20200530233709-52effbd89c51 // indirect
+	gopkg.in/yaml.v2 v2.2.8
 )
 
 go 1.13

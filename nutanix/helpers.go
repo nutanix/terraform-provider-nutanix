@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
@@ -23,8 +24,11 @@ func getMetadataAttributes(d *schema.ResourceData, metadata *v3.Metadata, kind s
 	if p, ok := d.GetOk("project_reference"); ok {
 		pr := p.(map[string]interface{})
 		r := &v3.Reference{
-			Kind: utils.StringPtr(pr["kind"].(string)),
+			// Kind: utils.StringPtr(pr["kind"].(string)),
 			UUID: utils.StringPtr(pr["uuid"].(string)),
+		}
+		if vKind, okKind := pr["kind"]; okKind {
+			r.Kind = utils.StringPtr(vKind.(string))
 		}
 		if v1, ok1 := pr["name"]; ok1 {
 			r.Name = utils.StringPtr(v1.(string))
@@ -82,11 +86,13 @@ func flattenReferenceValues(r *v3.Reference) map[string]interface{} {
 	if r != nil {
 		reference["kind"] = utils.StringValue(r.Kind)
 		reference["uuid"] = utils.StringValue(r.UUID)
-
+		log.Print(r.Name)
+		log.Print(r.Name != nil)
 		if r.Name != nil {
 			reference["name"] = utils.StringValue(r.Name)
 		}
 	}
+	utils.PrintToJSON(reference, "reference: ")
 	return reference
 }
 
