@@ -9,9 +9,9 @@ import (
 	karbon "github.com/terraform-providers/terraform-provider-nutanix/client/karbon"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 const (
@@ -179,7 +179,7 @@ func KarbonClusterResourceMap() map[string]*schema.Schema {
 					"external_ipv4_address": {
 						Type:         schema.TypeString,
 						Required:     true,
-						ValidateFunc: validation.SingleIP(),
+						ValidateFunc: validation.IsIPAddress,
 					},
 				},
 			},
@@ -195,7 +195,7 @@ func KarbonClusterResourceMap() map[string]*schema.Schema {
 					"external_ipv4_address": {
 						Type:         schema.TypeString,
 						Required:     true,
-						ValidateFunc: validation.SingleIP(),
+						ValidateFunc: validation.IsIPAddress,
 					},
 					"master_nodes_config": {
 						Type:     schema.TypeSet,
@@ -207,7 +207,7 @@ func KarbonClusterResourceMap() map[string]*schema.Schema {
 								"ipv4_address": {
 									Type:         schema.TypeString,
 									Required:     true,
-									ValidateFunc: validation.SingleIP(),
+									ValidateFunc: validation.IsIPAddress,
 								},
 								"node_pool_name": {
 									Type:     schema.TypeString,
@@ -259,14 +259,14 @@ func CNISchema() *schema.Schema {
 					// Required: true,
 					Optional:     true,
 					Default:      DEFAULTPODIPV4CIDR,
-					ValidateFunc: validation.CIDRNetwork(0, 32),
+					ValidateFunc: validation.IsCIDRNetwork(0, 32),
 				},
 				"service_ipv4_cidr": {
 					Type: schema.TypeString,
 					// Required: true,
 					Optional:     true,
 					Default:      DEFAULTSERVICEIPV4CIDR,
-					ValidateFunc: validation.CIDRNetwork(0, 32),
+					ValidateFunc: validation.IsCIDRNetwork(0, 32),
 				},
 				"flannel_config": {
 					Type:     schema.TypeList,
@@ -294,7 +294,7 @@ func CNISchema() *schema.Schema {
 											Optional:     true,
 											ForceNew:     true,
 											Default:      DEFAULTPODIPV4CIDR,
-											ValidateFunc: validation.CIDRNetwork(0, 32),
+											ValidateFunc: validation.IsCIDRNetwork(0, 32),
 										},
 									},
 								},
@@ -629,7 +629,7 @@ func resourceNutanixKarbonClusterUpdate(d *schema.ResourceData, meta interface{}
 		_, n := d.GetChange("worker_node_pool")
 		newWorkerNodePool, err := expandNodePool(n.([]interface{}))
 		if err != nil {
-			return fmt.Errorf("Error occured while expanding new worker node pool: %s", err)
+			return fmt.Errorf("error occurred while expanding new worker node pool: %s", err)
 		}
 		utils.PrintToJSON(newWorkerNodePool, "new_worker_node_pool: ")
 		currentNodePool, err := GetNodePoolsForCluster(conn, karbonClusterName, resp.WorkerConfig.NodePools)
@@ -642,6 +642,9 @@ func resourceNutanixKarbonClusterUpdate(d *schema.ResourceData, meta interface{}
 			return err
 		}
 		err = WaitForKarbonCluster(client, timeout, taskUUID)
+		if err != nil {
+			return err
+		}
 	}
 	if d.HasChange("private_registry") {
 		_, p := d.GetChange("private_registry")
@@ -1258,7 +1261,7 @@ func determineNodepoolsScaling(client *Client, karbonClusterName string, current
 						scaleUpRequest,
 					)
 					if err != nil {
-						return "", fmt.Errorf("Error occred while scaling up nodepool %s: %s", *nnp.Name, err)
+						return "", fmt.Errorf("error occurred while scaling up nodepool %s: %s", *nnp.Name, err)
 					}
 					taskUUID = karbonClusterActionResponse.TaskUUID
 				}
@@ -1275,7 +1278,7 @@ func determineNodepoolsScaling(client *Client, karbonClusterName string, current
 						scaleDownRequest,
 					)
 					if err != nil {
-						return "", fmt.Errorf("Error occred while scaling down nodepool %s: %s", *nnp.Name, err)
+						return "", fmt.Errorf("error occurred while scaling down nodepool %s: %s", *nnp.Name, err)
 					}
 					taskUUID = karbonClusterActionResponse.TaskUUID
 				}
