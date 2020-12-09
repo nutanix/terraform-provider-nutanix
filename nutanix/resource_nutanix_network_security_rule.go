@@ -128,6 +128,16 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"allow_ipv6_traffic": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"is_policy_hitlog_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"app_rule_action": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -837,6 +847,14 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 
 	rules := resp.Spec.Resources
 
+	if rules.AllowIpv6Traffic != nil {
+		d.Set("allow_ipv6_traffic", utils.BoolValue(rules.AllowIpv6Traffic))
+	}
+
+	if rules.IsPolicyHitlogEnabled != nil {
+		d.Set("is_policy_hitlog_enabled", utils.BoolValue(rules.IsPolicyHitlogEnabled))
+	}
+
 	if err := flattenNetworkRule("app_rule", rules.AppRule, d); err != nil {
 		return err
 	}
@@ -998,7 +1016,9 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 	}
 
 	// TODO: Change
-	if d.HasChange("app_rule_action") ||
+	if d.HasChange("allow_ipv6_traffic") ||
+		d.HasChange("is_policy_hitlog_enabled") ||
+		d.HasChange("app_rule_action") ||
 		d.HasChange("app_rule_outbound_allow_list") ||
 		d.HasChange("app_rule_target_group_default_internal_policy") ||
 		d.HasChange("app_rule_target_group_peer_specification_type") ||
@@ -1093,6 +1113,14 @@ func getNetworkSecurityRuleResources(d *schema.ResourceData, networkSecurityRule
 
 	iRuleFirstEntityFilter := &v3.CategoryFilter{}
 	iRuleSecondEntityFilter := &v3.CategoryFilter{}
+
+	if allowIpv6Traffic, aok := d.GetOk("allow_ipv6_traffic"); aok {
+		networkSecurityRule.AllowIpv6Traffic = utils.BoolPtr(allowIpv6Traffic.(bool))
+	}
+
+	if isPolicyHitlogEnabled, iok := d.GetOk("is_policy_hitlog_enabled"); iok {
+		networkSecurityRule.IsPolicyHitlogEnabled = utils.BoolPtr(isPolicyHitlogEnabled.(bool))
+	}
 
 	appRule := expandNetworkRule("app_rule", d)
 	adRule := expandNetworkRule("ad_rule", d)
