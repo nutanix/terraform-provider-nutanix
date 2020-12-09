@@ -1082,6 +1082,14 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 
 	rules := resp.Status.Resources
 
+	if rules.AllowIpv6Traffic != nil {
+		d.Set("allow_ipv6_traffic", utils.BoolValue(rules.AllowIpv6Traffic))
+	}
+
+	if rules.IsPolicyHitlogEnabled != nil {
+		d.Set("is_policy_hitlog_enabled", utils.BoolValue(rules.IsPolicyHitlogEnabled))
+	}
+
 	if rules.QuarantineRule != nil {
 		if err := d.Set("quarantine_rule_action", utils.StringValue(rules.QuarantineRule.Action)); err != nil {
 			return err
@@ -1440,6 +1448,14 @@ func resourceNutanixDatasourceNetworkSecurityRuleResourceV0() *schema.Resource {
 			},
 			"description": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"allow_ipv6_traffic": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"is_policy_hitlog_enabled": {
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"quarantine_rule_action": {
