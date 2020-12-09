@@ -6,7 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/karbon"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 	"gopkg.in/yaml.v2"
 )
 
@@ -105,6 +104,5 @@ func GetKubeConfigForCluster(con *karbon.Client, karbonClusterName string) (*kar
 	if err != nil {
 		return nil, err
 	}
-	utils.PrintToJSON(karbonClusterKubeconfig, "[karbonClusterKubeconfig]")
 	return &karbonClusterKubeconfig, nil
 }

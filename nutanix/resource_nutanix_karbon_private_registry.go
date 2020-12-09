@@ -5,7 +5,6 @@ import (
 	"log"
 
 	karbon "github.com/terraform-providers/terraform-provider-nutanix/client/karbon"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
@@ -103,12 +102,10 @@ func resourceNutanixKarbonPrivateRegistryCreate(d *schema.ResourceData, meta int
 		pw := password.(string)
 		karbonPrivateRegistry.Password = &pw
 	}
-	utils.PrintToJSON(karbonPrivateRegistry, "[DEBUG karbonPrivateRegistry: ")
 	createPrivateRegistryResponse, err := conn.PrivateRegistry.CreateKarbonPrivateRegistry(karbonPrivateRegistry)
 	if err != nil {
 		return fmt.Errorf("error occurred during private registry creation: %s", err)
 	}
-	utils.PrintToJSON(createPrivateRegistryResponse, "[DEBUG] createPrivateRegistryResponse: ")
 
 	// Set terraform state id
 	d.SetId(*createPrivateRegistryResponse.UUID)
@@ -134,7 +131,6 @@ func resourceNutanixKarbonPrivateRegistryRead(d *schema.ResourceData, meta inter
 	if err := d.Set("name", *resp.Name); err != nil {
 		return fmt.Errorf("error setting name for Karbon private registry %s: %s", d.Id(), err)
 	}
-	// log.Print(*resp.Endpoint)
 	if err := d.Set("endpoint", *resp.Endpoint); err != nil {
 		return fmt.Errorf("error setting endpoint for Karbon private registry %s: %s", d.Id(), err)
 	}
@@ -153,7 +149,6 @@ func resourceNutanixKarbonPrivateRegistryDelete(d *schema.ResourceData, meta int
 	conn := client.KarbonAPI
 	setTimeout(meta)
 	karbonPrivateRegistryName := d.Get("name").(string)
-	log.Printf("[DEBUG] Deleting Karbon cluster: %s, %s", karbonPrivateRegistryName, d.Id())
 
 	_, err := conn.PrivateRegistry.DeleteKarbonPrivateRegistry(karbonPrivateRegistryName)
 	if err != nil {
@@ -173,10 +168,7 @@ func resourceNutanixKarbonPrivateRegistryExists(d *schema.ResourceData, meta int
 	if name, ok = d.GetOk("name"); !ok {
 		return false, fmt.Errorf("cannot read private registry without name")
 	}
-	resp, err := conn.PrivateRegistry.GetKarbonPrivateRegistry(name.(string))
-	log.Print("error:")
-	log.Print(err)
-	utils.PrintToJSON(resp, "resourceNutanixKarbonPrivateRegistryExists resp: ")
+	_, err := conn.PrivateRegistry.GetKarbonPrivateRegistry(name.(string))
 	if err != nil {
 		d.SetId("")
 		return false, nil
