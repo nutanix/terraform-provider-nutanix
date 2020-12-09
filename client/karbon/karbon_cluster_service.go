@@ -3,7 +3,6 @@ package karbon
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
@@ -34,13 +33,10 @@ type ClusterService interface {
 
 // karbon 2.1
 func (op ClusterOperations) ListKarbonClusters() (*ClusterListIntentResponse, error) {
-	log.Printf("pre request")
 	ctx := context.TODO()
-	log.Printf("pre request")
 	path := "/v1-beta.1/k8s/clusters"
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
 	karbonClusterListIntentResponse := new(ClusterListIntentResponse)
-	log.Printf("post request")
 	if err != nil {
 		return nil, err
 	}

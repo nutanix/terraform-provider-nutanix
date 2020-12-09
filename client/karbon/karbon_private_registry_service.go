@@ -3,7 +3,6 @@ package karbon
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
@@ -28,7 +27,6 @@ func (op PrivateRegistryOperations) ListKarbonPrivateRegistries() (*PrivateRegis
 	path := "/v1-alpha.1/registries"
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
 	karbonPrivateRegistryListResponse := new(PrivateRegistryListResponse)
-	log.Printf("post request")
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +63,6 @@ func (op PrivateRegistryOperations) GetKarbonPrivateRegistry(name string) (*Priv
 
 func (op PrivateRegistryOperations) DeleteKarbonPrivateRegistry(name string) (*PrivateRegistryOperationResponse, error) {
 	ctx := context.TODO()
-	log.Printf("[Debug] Deleting /v1-alpha.1/registries/%s", name)
 	path := fmt.Sprintf("/v1-alpha.1/registries/%s", name)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)

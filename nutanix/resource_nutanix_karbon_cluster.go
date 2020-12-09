@@ -495,12 +495,10 @@ func resourceNutanixKarbonClusterCreate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	utils.PrintToJSON(karbonCluster, "[DEBUG karbonCluster: ")
 	createClusterResponse, err := conn.Cluster.CreateKarbonCluster(karbonCluster)
 	if err != nil {
 		return fmt.Errorf("error occurred during cluster creation:\n %s", err)
 	}
-	utils.PrintToJSON(createClusterResponse, "[DEBUG createClusterResponse: ")
 	if createClusterResponse.TaskUUID == "" {
 		return fmt.Errorf("did not retrieve task uuid")
 	}
@@ -512,16 +510,12 @@ func resourceNutanixKarbonClusterCreate(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	fmt.Printf("Cluster uuid: %s", createClusterResponse.ClusterUUID)
-	fmt.Printf("Task uuid: %s", createClusterResponse.TaskUUID)
 	if privateRegistries, ok := d.GetOk("private_registry"); ok {
 		newPrivateRegistries, err := expandPrivateRegistries(privateRegistries.(*schema.Set).List())
 		if err != nil {
 			return err
 		}
-		utils.PrintToJSON(newPrivateRegistries, "newPrivateRegistries: ")
 		for _, newP := range *newPrivateRegistries {
-			log.Printf("adding private registry %s", *newP.RegistryName)
 			conn.Cluster.AddPrivateRegistry(karbonClusterName, newP)
 		}
 	}
@@ -556,7 +550,6 @@ func resourceNutanixKarbonClusterRead(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	utils.PrintToJSON(flattenedWorkerNodepool, "pre set flattenedWorkerNodepool: ")
 	d.Set("name", utils.StringValue(resp.Name))
 
 	if err = d.Set("status", utils.StringValue(resp.Status)); err != nil {
@@ -565,13 +558,11 @@ func resourceNutanixKarbonClusterRead(d *schema.ResourceData, meta interface{}) 
 
 	// Must use know version because GA API reports different version
 	var versionSet string
-	log.Printf("Getting existing version: %s", d.Get("version").(string))
 	if version, ok := d.GetOk("version"); ok {
 		versionSet = version.(string)
 	} else {
 		versionSet = utils.StringValue(resp.Version)
 	}
-	log.Printf("using version: %s", versionSet)
 	if err = d.Set("version", versionSet); err != nil {
 		return fmt.Errorf("error setting version for Karbon Cluster %s: %s", d.Id(), err)
 	}
@@ -594,12 +585,10 @@ func resourceNutanixKarbonClusterRead(d *schema.ResourceData, meta interface{}) 
 	if err != nil {
 		return fmt.Errorf("error getting flat private_registry for Karbon Cluster %s: %s", d.Id(), err)
 	}
-	// utils.PrintToJSON(flattenedPrivateRegistries, "flattenedPrivateRegistries: ")
 	if err = d.Set("private_registry", flattenedPrivateRegistries); err != nil {
 		return fmt.Errorf("error setting private_registry for Karbon Cluster %s: %s", d.Id(), err)
 	}
 	flatCNIConfig := flattenCNIConfig(resp.CNIConfig)
-	utils.PrintToJSON(flatCNIConfig, "flatCNIConfig: ")
 	if err = d.Set("cni_config", flatCNIConfig); err != nil {
 		return fmt.Errorf("error setting cni_config for Karbon Cluster %s: %s", d.Id(), err)
 	}
@@ -625,18 +614,15 @@ func resourceNutanixKarbonClusterUpdate(d *schema.ResourceData, meta interface{}
 		if timeoutErr != nil {
 			return timeoutErr
 		}
-		log.Printf("Change!")
 		_, n := d.GetChange("worker_node_pool")
 		newWorkerNodePool, err := expandNodePool(n.([]interface{}))
 		if err != nil {
 			return fmt.Errorf("error occurred while expanding new worker node pool: %s", err)
 		}
-		utils.PrintToJSON(newWorkerNodePool, "new_worker_node_pool: ")
 		currentNodePool, err := GetNodePoolsForCluster(conn, karbonClusterName, resp.WorkerConfig.NodePools)
 		if err != nil {
 			return err
 		}
-		utils.PrintToJSON(currentNodePool, "current_node_pool: ")
 		taskUUID, err := determineNodepoolsScaling(client, karbonClusterName, currentNodePool, newWorkerNodePool)
 		if err != nil {
 			return err
@@ -648,29 +634,21 @@ func resourceNutanixKarbonClusterUpdate(d *schema.ResourceData, meta interface{}
 	}
 	if d.HasChange("private_registry") {
 		_, p := d.GetChange("private_registry")
-		// utils.PrintToJSON(p.(*schema.Set).List(), "p private_registry: ")
 		newPrivateRegistries, err := expandPrivateRegistries(p.(*schema.Set).List())
 		if err != nil {
 			return err
 		}
-		// utils.PrintToJSON(newPrivateRegistries, "newPrivateRegistries: ")
 		currentPrivateRegistriesList, err := conn.Cluster.ListPrivateRegistries(karbonClusterName)
 		if err != nil {
 			return err
 		}
-		// utils.PrintToJSON(currentPrivateRegistriesList, "currentPrivateRegistriesList: ")
 		currentPrivateRegistries := convertKarbonPrivateRegistriesIntentInputToOperations(*currentPrivateRegistriesList)
-		// utils.PrintToJSON(currentPrivateRegistries, "currentPrivateRegistries: ")
 		toAdd := diffFlatPrivateRegistrySlices(*newPrivateRegistries, currentPrivateRegistries)
-		// utils.PrintToJSON(toAdd, "toAdd: ")
 		for _, a := range toAdd {
-			log.Printf("adding private registry %s", *a.RegistryName)
 			conn.Cluster.AddPrivateRegistry(karbonClusterName, a)
 		}
 		toRemove := diffFlatPrivateRegistrySlices(currentPrivateRegistries, *newPrivateRegistries)
-		// utils.PrintToJSON(toRemove, "toRemove: ")
 		for _, r := range toRemove {
-			log.Printf("removing private registry %s", *r.RegistryName)
 			conn.Cluster.DeletePrivateRegistry(karbonClusterName, *r.RegistryName)
 		}
 	}
@@ -691,7 +669,6 @@ func resourceNutanixKarbonClusterDelete(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("unable to retrieve mandatory parameter name")
 	}
 	karbonClusterName := karbonClusterNameInput.(string)
-	log.Printf("[DEBUG] Deleting Karbon cluster: %s, %s", karbonClusterName, d.Id())
 
 	clusterDeleteResponse, err := conn.Cluster.DeleteKarbonCluster(karbonClusterName)
 	if err != nil {
@@ -739,40 +716,25 @@ func getTimeout(d *schema.ResourceData) (int64, error) {
 
 func checkNutanixKarbonClusterExistsByUUID(conn *karbon.Client, uuid string) (bool, error) {
 	// Make request to the API
-	log.Print("[Debug] checkNutanixKarbonClusterExistsByUUID UUID:")
-	log.Print(uuid)
 	karbonClusters, err := conn.Cluster.ListKarbonClusters()
-	utils.PrintToJSON(karbonClusters, "checkNutanixKarbonClusterExistsByUUID karbonClusters: ")
-	log.Print("error:")
-	log.Print(err)
 	if err != nil {
-		log.Print("checkNutanixKarbonClusterExistsByUUID returning false nil")
 		return false, err
 	}
 	for _, k := range *karbonClusters {
 		if *k.UUID == uuid {
-			log.Print("checkNutanixKarbonClusterExistsByUUID returning true nil")
 			return true, nil
 		}
 	}
-	log.Print("checkNutanixKarbonClusterExistsByUUID returning false nil")
 	return false, fmt.Errorf("k8s cluster not found")
 }
 
 //"cluster not found"
 func checkNutanixKarbonClusterExistsByName(conn *karbon.Client, clusterName string) (bool, error) {
 	// Make request to the API
-	log.Print("[Debug] checkNutanixKarbonClusterExistsByName clusterName:")
-	log.Print(clusterName)
-	resp, err := conn.Cluster.GetKarbonCluster(clusterName)
-	utils.PrintToJSON(resp, "checkNutanixKarbonClusterExistsByName resp: ")
-	log.Print("error:")
-	log.Print(err)
+	_, err := conn.Cluster.GetKarbonCluster(clusterName)
 	if err != nil {
-		log.Print("checkNutanixKarbonClusterExistsByName returning false nil")
 		return false, err
 	}
-	log.Print("checkNutanixKarbonClusterExistsByName returning true nil")
 	return true, nil
 }
 
@@ -879,7 +841,6 @@ func expandPrivateRegistry(privateRegistry map[string]interface{}) (*karbon.Priv
 func flattenPrivateRegisties(conn *karbon.Client, karbonClusterName string) ([]map[string]interface{}, error) {
 	flatPrivReg := make([]map[string]interface{}, 0)
 	privRegList, err := conn.Cluster.ListPrivateRegistries(karbonClusterName)
-	utils.PrintToJSON(privRegList, "privRegList: ")
 	if err != nil {
 		return nil, err
 	}
@@ -978,9 +939,7 @@ func flattenNodePool(userDefinedNodePools *karbon.ClusterNodePool, nodepool *kar
 	diskMib := nodepool.AHVConfig.DiskMib
 	networkUUID := nodepool.AHVConfig.NetworkUUID
 	if userDefinedNodePools != nil {
-		utils.PrintToJSON(userDefinedNodePools.AHVConfig, "userDefinedNodePools.AHVConfig: ")
 		diskMib = userDefinedNodePools.AHVConfig.DiskMib
-		log.Printf("using modified networkUUID %s", networkUUID)
 		networkUUID = userDefinedNodePools.AHVConfig.NetworkUUID
 	}
 	flatNodepool["ahv_config"] = []map[string]interface{}{
@@ -999,7 +958,6 @@ func flattenNodePool(userDefinedNodePools *karbon.ClusterNodePool, nodepool *kar
 	flatNodepool["name"] = nodepool.Name
 	flatNodepool["num_instances"] = nodepool.NumInstances
 	flatNodepool["node_os_version"] = nodepool.NodeOSVersion
-	// utils.PrintToJSON(flatNodepool, "flatNodepool: ")
 	return flatNodepool
 }
 
@@ -1029,30 +987,6 @@ func WaitForKarbonCluster(client *Client, waitTimeoutMinutes int64, taskUUID str
 		return fmt.Errorf("error waiting for karbon cluster to create: %s", errWaitTask)
 	}
 	return nil
-	// log.Printf("Starting wait")
-	// sleepTime := 30
-	// var status string = "QUEUED"
-
-	// for status == "QUEUED" || status == "RUNNING" {
-	// 	time.Sleep(time.Duration(sleepTime) * time.Second)
-	// 	v, err := client.API.V3.GetTask(taskUUID)
-
-	// 	if err != nil {
-	// 		if strings.Contains(fmt.Sprint(err), "INVALID_UUID") {
-	// 			return fmt.Errorf("invalid uuid retrieved")
-	// 		}
-	// 		return err
-	// 	}
-	// 	status = *v.Status
-	// 	log.Printf("Status: %s", status)
-	// 	if status == "INVALID_UUID" || status == "FAILED" {
-	// 		return fmt.Errorf("error_detail: %s, progress_message: %s", utils.StringValue(v.ErrorDetail), utils.StringValue(v.ProgressMessage))
-	// 	}
-	// }
-	// if status == "SUCCEEDED" {
-	// 	return nil
-	// }
-	// return fmt.Errorf("end state was not succeeded but was %s", status)
 }
 
 func setTimeout(meta interface{}) {
@@ -1063,15 +997,13 @@ func setTimeout(meta interface{}) {
 }
 
 func expandStorageClassConfig(storageClassConfigsInput []interface{}) (*karbon.ClusterStorageClassConfigIntentInput, error) {
-	log.Print("[DEBUG] entering expandStorageClassConfig")
 	if len(storageClassConfigsInput) != 1 {
 		return nil, fmt.Errorf("more than one storage class input passed")
 	}
 	storageClassConfigInput := storageClassConfigsInput[0].(map[string]interface{})
 	storageClassConfig := &karbon.ClusterStorageClassConfigIntentInput{
 		DefaultStorageClass: true,
-		// Name:                "default-storageclass",
-		VolumesConfig: karbon.ClusterVolumesConfigIntentInput{},
+		VolumesConfig:       karbon.ClusterVolumesConfigIntentInput{},
 	}
 	if valName, okName := storageClassConfigInput["name"]; okName {
 		storageClassConfig.Name = valName.(string)
@@ -1195,18 +1127,11 @@ func expandNodePool(nodepoolsInput []interface{}) ([]karbon.ClusterNodePool, err
 				nodepool.AHVConfig.CPU = divi
 			}
 			if valDiskMib, ok := ahvConfig["disk_mib"]; ok {
-				// log.Print("[DEBUG] valDiskMib")
-				// log.Print(valDiskMib)
 				i := int64(valDiskMib.(int))
-				// log.Print(i)
 				nodepool.AHVConfig.DiskMib = i
 			}
 			if valMemoryMib, ok := ahvConfig["memory_mib"]; ok {
-				// log.Print("[DEBUG] valMemoryMib")
-				// log.Print(valMemoryMib)
-				// i, _ := strconv.ParseInt(valMemoryMib.(string), 10, 64)
 				i := int64(valMemoryMib.(int))
-				// log.Print(i)
 				nodepool.AHVConfig.MemoryMib = i
 			}
 			if valNetworkUUID, ok := ahvConfig["network_uuid"]; ok {
@@ -1239,22 +1164,16 @@ func expandNodePool(nodepoolsInput []interface{}) ([]karbon.ClusterNodePool, err
 }
 
 func determineNodepoolsScaling(client *Client, karbonClusterName string, currentNodepools []karbon.ClusterNodePool, newNodepools []karbon.ClusterNodePool) (string, error) {
-	log.Printf("[DEBUG] entering determineNodepoolsScaling")
 	var taskUUID string
 	for _, cnp := range currentNodepools {
-		log.Printf("cnp.Name: %s", *cnp.Name)
 		for _, nnp := range newNodepools {
-			log.Printf("nnp.Name: %s", *nnp.Name)
 			if *cnp.Name == *nnp.Name {
-				log.Print("cnp.Name == nnp.Name")
 				if *cnp.NumInstances < *nnp.NumInstances {
 					// scale up
-					log.Print("scale up")
 					amountOfNodes := *nnp.NumInstances - *cnp.NumInstances
 					scaleUpRequest := &karbon.ClusterScaleUpIntentInput{
 						Count: amountOfNodes,
 					}
-					// taskUUID, err = scaleUpNodepool(client, karbonClusterName, nnp, amountOfNodes)
 					karbonClusterActionResponse, err := client.KarbonAPI.Cluster.ScaleUpKarbonCluster(
 						karbonClusterName,
 						*nnp.Name,
@@ -1266,12 +1185,10 @@ func determineNodepoolsScaling(client *Client, karbonClusterName string, current
 					taskUUID = karbonClusterActionResponse.TaskUUID
 				}
 				if *cnp.NumInstances > *nnp.NumInstances {
-					log.Print("scale down")
 					amountOfNodes := *cnp.NumInstances - *nnp.NumInstances
 					scaleDownRequest := &karbon.ClusterScaleDownIntentInput{
 						Count: amountOfNodes,
 					}
-					// taskUUID, err = scaleDownNodepool(client, karbonClusterName, nnp, amountOfNodes)
 					karbonClusterActionResponse, err := client.KarbonAPI.Cluster.ScaleDownKarbonCluster(
 						karbonClusterName,
 						*nnp.Name,
@@ -1282,7 +1199,6 @@ func determineNodepoolsScaling(client *Client, karbonClusterName string, current
 					}
 					taskUUID = karbonClusterActionResponse.TaskUUID
 				}
-				log.Print("no match?")
 			}
 		}
 	}
