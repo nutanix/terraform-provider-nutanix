@@ -739,6 +739,294 @@ func dataSourceNutanixNetworkSecurityRule() *schema.Resource {
 					},
 				},
 			},
+			"ad_rule_action": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ad_rule_outbound_allow_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"protocol": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ip_subnet": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ip_subnet_prefix_length": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"tcp_port_range_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"end_port": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"start_port": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"udp_port_range_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"end_port": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"start_port": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"filter_kind_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"filter_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"filter_params": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Set:      filterParamsHash,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"values": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"peer_specification_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"expiration_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"network_function_chain_reference": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"icmp_type_code_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"code": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"ad_rule_target_group_default_internal_policy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ad_rule_target_group_peer_specification_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ad_rule_target_group_filter_kind_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"ad_rule_target_group_filter_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ad_rule_target_group_filter_params": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Set:      filterParamsHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"values": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				},
+			},
+			"ad_rule_inbound_allow_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"protocol": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ip_subnet": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ip_subnet_prefix_length": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"tcp_port_range_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"end_port": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"start_port": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"udp_port_range_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"end_port": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"start_port": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"filter_kind_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"filter_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"filter_params": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Set:      filterParamsHash,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"values": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"peer_specification_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"expiration_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"network_function_chain_reference": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"icmp_type_code_list": {
+							Type: schema.TypeList,
+
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"code": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -998,49 +1286,11 @@ func dataSourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta inter
 		}
 	}
 
-	if rules.AppRule != nil {
-		if err := d.Set("app_rule_action", utils.StringValue(rules.AppRule.Action)); err != nil {
-			return err
-		}
+	if err := flattenNetworkRule("app_rule", rules.AppRule, d); err != nil {
+		return err
+	}
 
-		if rules.AppRule.TargetGroup != nil {
-			if err := d.Set("app_rule_target_group_default_internal_policy",
-				utils.StringValue(rules.AppRule.TargetGroup.DefaultInternalPolicy)); err != nil {
-				return err
-			}
-			if err := d.Set("app_rule_target_group_peer_specification_type",
-				utils.StringValue(rules.AppRule.TargetGroup.PeerSpecificationType)); err != nil {
-				return err
-			}
-
-			if rules.AppRule.TargetGroup.Filter != nil {
-				v := rules.AppRule.TargetGroup
-				if v.Filter != nil {
-					if err := d.Set("app_rule_target_group_filter_kind_list", utils.StringValueSlice(v.Filter.KindList)); err != nil {
-						return err
-					}
-
-					if err := d.Set("app_rule_target_group_filter_type", utils.StringValue(v.Filter.Type)); err != nil {
-						return err
-					}
-
-					if err := d.Set("app_rule_target_group_filter_params", expandFilterParams(v.Filter.Params)); err != nil {
-						return err
-					}
-				}
-			}
-		}
-
-		// Set app_rule_outbound_allow_list
-		if err := d.Set("app_rule_outbound_allow_list", flattenNetworkRuleList(rules.AppRule.OutboundAllowList)); err != nil {
-			return err
-		}
-
-		// Set app_rule_inbound_allow_list
-		if err := d.Set("app_rule_inbound_allow_list", flattenNetworkRuleList(rules.AppRule.InboundAllowList)); err != nil {
-			return err
-		}
-	} else if err := d.Set("app_rule_target_group_filter_kind_list", make([]string, 0)); err != nil {
+	if err := flattenNetworkRule("ad_rule", rules.AdRule, d); err != nil {
 		return err
 	}
 
