@@ -204,10 +204,12 @@ func resourceNutanixProtectionRule() *schema.Resource {
 												"num_snapshots": {
 													Type:     schema.TypeInt,
 													Optional: true,
+													Computed: true,
 												},
 												"rollup_retention_policy_multiple": {
 													Type:     schema.TypeInt,
 													Optional: true,
+													Computed: true,
 												},
 												"rollup_retention_policy_snapshot_interval_type": {
 													Type:         schema.TypeString,
@@ -636,9 +638,7 @@ func expandSnapshotScheduleList(d interface{}) []*v3.SnapshotScheduleList {
 				az.SnapshotType = v1.(string)
 			}
 			if v1, ok1 := v["remote_snapshot_retention_policy"].([]interface{}); ok1 && len(v1) > 0 {
-				fmt.Println("entro remote snapshot")
 				az.RemoteSnapshotRetentionPolicy = expandRetentionPolicy(v1[0])
-				utils.PrintToJSON(az.RemoteSnapshotRetentionPolicy, "")
 			}
 			snapshots = append(snapshots, az)
 		}
@@ -663,9 +663,8 @@ func expandRetentionPolicy(d interface{}) *v3.SnapshotRetentionPolicy {
 			log.Printf("[DEGUG] rrp.Multiple: %+v", rrp.Multiple)
 			flagRollup = true
 		}
-		if v1, ok := v["f"]; ok && v1.(string) != "" {
+		if v1, ok := v["rollup_retention_policy_snapshot_interval_type"]; ok && v1.(string) != "" {
 			rrp.SnapshotIntervalType = v1.(string)
-			log.Printf("[DEGUG] rrp.SnapshotIntervalType: %+v", rrp.SnapshotIntervalType)
 			flagRollup = true
 		}
 		if flagRollup {

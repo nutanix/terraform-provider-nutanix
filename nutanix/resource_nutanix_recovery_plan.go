@@ -418,7 +418,8 @@ func resourceNutanixRecoveryPlan() *schema.Resource {
 															},
 															"name": {
 																Type:     schema.TypeString,
-																Required: true,
+																Optional: true,
+																Computed: true,
 															},
 														},
 													},
@@ -510,7 +511,8 @@ func resourceNutanixRecoveryPlan() *schema.Resource {
 															},
 															"name": {
 																Type:     schema.TypeString,
-																Required: true,
+																Optional: true,
+																Computed: true,
 															},
 														},
 													},
@@ -604,7 +606,7 @@ func resourceNutanixRecoveryPlan() *schema.Resource {
 													},
 												},
 												"cluster_reference_list": {
-													Type:     schema.TypeList,
+													Type:     schema.TypeSet,
 													Optional: true,
 													Computed: true,
 													Elem: &schema.Resource{
@@ -1069,23 +1071,24 @@ func expandZoneNetworkMappingList(d []interface{}) []*v3.AvailabilityZoneNetwork
 	for _, networkMap := range d {
 		netMap := &v3.AvailabilityZoneNetworkMappingList{}
 		v4 := networkMap.(map[string]interface{})
+		log.Printf("print map network map : %+v", v4)
 		if v5, ok1 := v4["availability_zone_url"]; ok1 && v5.(string) != "" {
 			netMap.AvailabilityZoneURL = v5.(string)
 		}
 		if v5, ok1 := v4["recovery_network"].([]interface{}); ok1 && len(v5) > 0 {
-			netMap.RecoveryNetwork = expandRecoveryNetwork(v5[0].([]interface{}))
+			netMap.RecoveryNetwork = expandRecoveryNetwork(v5)
 		}
-		if v5, ok1 := v4["test_network"].([]interface{}); ok1 && len(v5) > 0 {
-			netMap.RecoveryNetwork = expandRecoveryNetwork(v5[0].([]interface{}))
+		if v5, ok1 := v4["test_network"].([]interface{}); ok1 && len(v5) > 0 && len(v5) > 0 {
+			netMap.TestNetwork = expandRecoveryNetwork(v5)
 		}
 		if v5, ok1 := v4["recovery_ip_assignment_list"].([]interface{}); ok1 && len(v5) > 0 {
-			netMap.RecoveryIPAssignmentList = expandIPAssignmentList(v5[0].([]interface{}))
+			netMap.RecoveryIPAssignmentList = expandIPAssignmentList(v5)
 		}
-		if v5, ok1 := v4["test_ip_assignment_list"].([]interface{}); ok1 && len(v5) > 0 {
-			netMap.RecoveryIPAssignmentList = expandIPAssignmentList(v5[0].([]interface{}))
+		if v5, ok1 := v4["test_ip_assignment_list"].([]interface{}); ok1 {
+			netMap.TestIPAssignmentList = expandIPAssignmentList(v5)
 		}
-		if v5, ok1 := v4["cluster_reference_list"].([]interface{}); ok1 && len(v5) > 0 {
-			netMap.ClusterReferenceList = validateArrayRef(v5[0].([]interface{}), nil)
+		if v5, ok1 := v4["cluster_reference_list"]; ok1 {
+			netMap.ClusterReferenceList = validateArrayRef(v5.(*schema.Set), nil)
 		}
 		mapping = append(mapping, netMap)
 	}
@@ -1095,24 +1098,22 @@ func expandZoneNetworkMappingList(d []interface{}) []*v3.AvailabilityZoneNetwork
 func expandRecoveryNetwork(d []interface{}) *v3.Network {
 	network := &v3.Network{}
 	for _, v1 := range d {
-		d := v1.(map[string]interface{})
-		if v, ok1 := d["name"]; ok1 && v.(string) != "" {
-			network.Name = v.(string)
+		v := v1.(map[string]interface{})
+		log.Printf("print map recovery : %+v", v)
+		if v2, ok1 := v["virtual_network_reference"].([]interface{}); ok1 && len(v2) > 0 {
+			network.VirtualNetworkReference = validateRefList(v2, nil)
 		}
-		if v, ok1 := d["virtual_network_reference"].([]interface{}); ok1 {
-			network.VirtualNetworkReference = validateRefList(v, utils.StringPtr("recovery_plan"))
+		if v2, ok1 := v["vpc_reference"].([]interface{}); ok1 && len(v2) > 0 {
+			network.VPCReference = validateRefList(v2, nil)
 		}
-		if v, ok1 := d["vpc_reference"].([]interface{}); ok1 {
-			network.VPCReference = validateRefList(v, utils.StringPtr("recovery_plan"))
+		if v2, ok1 := v["name"]; ok1 && v2.(string) != "" {
+			network.Name = v2.(string)
 		}
-		if v, ok1 := d["name"]; ok1 && v.(string) != "" {
-			network.Name = v.(string)
+		if v2, ok1 := v["subnet_list"].([]interface{}); ok1 {
+			network.SubnetList = expandSubnetList(v2)
 		}
-		if v, ok1 := d["subnet_list"].([]interface{}); ok1 {
-			network.SubnetList = expandSubnetList(v)
-		}
-		if v, ok1 := d["use_vpc_reference"].(bool); ok1 {
-			network.UseVPCReference = utils.BoolPtr(v)
+		if v2, ok1 := v["use_vpc_reference"].(bool); ok1 && v2 {
+			network.UseVPCReference = utils.BoolPtr(v2)
 		}
 	}
 
