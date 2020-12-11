@@ -92,6 +92,9 @@ type Service interface {
 	GetUserGroup(userUUID string) (*UserGroupIntentResponse, error)
 	ListUserGroup(getEntitiesRequest *DSMetadata) (*UserGroupListResponse, error)
 	ListAllUserGroup(filter string) (*UserGroupListResponse, error)
+	GetPermission(permissionUUID string) (*PermissionIntentResponse, error)
+	ListPermission(getEntitiesRequest *DSMetadata) (*PermissionListResponse, error)
+	ListAllPermission(filter string) (*PermissionListResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -1809,6 +1812,86 @@ func (op Operations) ListAllUserGroup(filter string) (*UserGroupListResponse, er
 			resp, err = op.ListUserGroup(&DSMetadata{
 				Filter: &filter,
 				Kind:   utils.StringPtr("user"),
+				Length: utils.Int64Ptr(itemsPerPage),
+				Offset: utils.Int64Ptr(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+		}
+
+		resp.Entities = entities
+	}
+
+	return resp, nil
+}
+
+/*GePermission This operation gets a Permission.
+ *
+ * @param uuid The permission uuid - string.
+ * @return *PermissionIntentResponse
+ */
+func (op Operations) GetPermission(permissionUUID string) (*PermissionIntentResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/permissions/%s", permissionUUID)
+	permission := new(PermissionIntentResponse)
+
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return permission, op.client.Do(ctx, req, permission)
+}
+
+/*ListPermission gets a list of Permissions.
+ *
+ * @param metadata allows create filters to get specific data - *DSMetadata.
+ * @return *PermissionListResponse
+ */
+func (op Operations) ListPermission(getEntitiesRequest *DSMetadata) (*PermissionListResponse, error) {
+	ctx := context.TODO()
+	path := "/permissions/list"
+
+	PermissionList := new(PermissionListResponse)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return PermissionList, op.client.Do(ctx, req, PermissionList)
+}
+
+// ListAllPermission ...
+func (op Operations) ListAllPermission(filter string) (*PermissionListResponse, error) {
+	entities := make([]*PermissionIntentResponse, 0)
+
+	resp, err := op.ListPermission(&DSMetadata{
+		Filter: &filter,
+		Kind:   utils.StringPtr("permission"),
+		Length: utils.Int64Ptr(itemsPerPage),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining) {
+			resp, err = op.ListPermission(&DSMetadata{
+				Filter: &filter,
+				Kind:   utils.StringPtr("permission"),
 				Length: utils.Int64Ptr(itemsPerPage),
 				Offset: utils.Int64Ptr(offset),
 			})
