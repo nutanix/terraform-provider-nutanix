@@ -2245,3 +2245,46 @@ type UserGroupListResponse struct {
 	Entities   []*UserGroupIntentResponse `json:"entities,omitempty"`
 	Metadata   *ListMetadataOutput        `json:"metadata,omitempty"` // All api calls that return a list will have this metadata block
 }
+
+// Response object for intentful operations on a user_group
+type PermissionIntentResponse struct {
+	APIVersion *string           `json:"api_version,omitempty"` // API Version of the Nutanix v3 API framework.
+	Metadata   *Metadata         `json:"metadata,omitempty"`    // The user_group kind metadata
+	Spec       *PermissionSpec   `json:"spec,omitempty"`        // Permission Input Definition.
+	Status     *PermissionStatus `json:"status,omitempty"`      // User group status definition.
+}
+
+// Permission Input Definition.
+type PermissionSpec struct {
+	Name        *string              `json:"name,omitempty"`        // The name for the permission.
+	Description *string              `json:"description,omitempty"` // The display name for the permission.
+	Resources   *PermissionResources `json:"resources,omitempty"`   // Permission Resource Definition
+}
+
+// Permission Resource Definition
+type PermissionResources struct {
+	Operation *string           `json:"operation,omitempty"`
+	Kind      *string           `json:"kind,omitempty"`
+	Fields    *FieldsPermission `json:"fields,omitempty"`
+}
+
+type FieldsPermission struct {
+	FieldMode     *string   `json:"field_mode,omitempty"`
+	FieldNameList []*string `json:"field_name_list,omitempty"`
+}
+
+// Permission status definition.
+type PermissionStatus struct {
+	Name        *string              `json:"name,omitempty"`        // The name for the permission.
+	Description *string              `json:"description,omitempty"` // The display name for the permission.
+	Resources   *PermissionResources `json:"resources,omitempty"`   // Permission Resource Definition
+	MessageList []MessageResource    `json:"message_list,omitempty"`
+	State       *string              `json:"state,omitempty"` // The state of the entity.
+}
+
+// Response object for intentful operation of Permissions
+type PermissionListResponse struct {
+	APIVersion *string                     `json:"api_version,omitempty"` // API Version of the Nutanix v3 API framework.
+	Entities   []*PermissionIntentResponse `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput         `json:"metadata,omitempty"` // All api calls that return a list will have this metadata block
+}
