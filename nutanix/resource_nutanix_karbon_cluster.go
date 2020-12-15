@@ -545,7 +545,6 @@ func resourceNutanixKarbonClusterRead(d *schema.ResourceData, meta interface{}) 
 	if err != nil {
 		return err
 	}
-	fmt.Printf("[DEBUG] master_node_poo flatten")
 	flattenedMasterNodepool, err := flattenNodePools(d, conn, "master_node_pool", karbonClusterName, resp.MasterConfig.NodePools)
 	if err != nil {
 		return err
