@@ -13,41 +13,41 @@ import (
 
 func TestAccNutanixKarbonCluster_basic(t *testing.T) {
 	r := acctest.RandInt()
-	resourceName := "nutanix_virtual_machine.vm1"
+	resourceName := "nutanix_karbon_cluster.cluster"
+	subnetName := "Rx-Automation-Network"
+	defaultContainter := "default-container-85827904983728"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixKarbonClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixKarbonClusterConfig(r),
+				Config: testAccNutanixKarbonClusterConfig(subnetName, r, defaultContainter, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixKarbonClusterExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
-					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
-					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
-					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
-					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("test-karbon-%d", r)),
+					resource.TestCheckResourceAttr(resourceName, "etcd_node_pool.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "master_node_pool.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_class_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "worker_node_pool.#", "1"),
 				),
 			},
 			{
-				Config: testAccNutanixKarbonClusterConfigUpdate(r),
+				Config: testAccNutanixKarbonClusterConfig(subnetName, r, defaultContainter, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixKarbonClusterExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
-					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
-					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
-					resource.TestCheckResourceAttr(resourceName, "num_sockets", "2"),
-					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
-					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("test-karbon-%d", r)),
+					resource.TestCheckResourceAttr(resourceName, "etcd_node_pool.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "master_node_pool.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_class_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "worker_node_pool.#", "1"),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"disk_list"},
+				ImportStateVerifyIgnore: []string{"version", "master_node_pool", "worker_node_pool", "storage_class_config", "wait_timeout_minutes"}, //Wil be fixed on future API versions
 			},
 		},
 	})
@@ -63,7 +63,7 @@ func testAccCheckNutanixKarbonClusterDestroy(s *terraform.State) error {
 		for {
 			_, err := conn.KarbonAPI.Cluster.GetKarbonCluster(rs.Primary.ID)
 			if err != nil {
-				if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+				if strings.Contains(fmt.Sprint(err), "Not Found:K8s cluster not found.") {
 					return nil
 				}
 				return err
@@ -89,35 +89,36 @@ func testAccCheckNutanixKarbonClusterExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccNutanixKarbonClusterConfig(subnetName string, r int) string {
+func testAccNutanixKarbonClusterConfig(subnetName string, r int, containter string, workers int) string {
 	return fmt.Sprintf(`
 	locals {
-		cluster_id = data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL" ? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid
-	  }
+		cluster_id        = data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL" ? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid
+		node_os_version   = "ntnx-0.7"
+		deployment_type   = ""
+		amount_of_workers = %d
+		amount_of_masters = 1
+		cni               = "flannel"
+		master_vip        = ""
+	}
 	  
 	data "nutanix_clusters" "clusters" {}
 	  
 	data "nutanix_subnet" "karbon_subnet" {
-		subnet_name = %s
+		subnet_name = "%s"
 	}
 
 	resource "nutanix_karbon_cluster" "cluster" {
-		# depends_on = [nutanix_karbon_private_registry.registry]
-		name    = var.karbon_cluster_name
-		version = var.k8sversion
-	  
-		# private_registry {
-		#   registry_name = nutanix_karbon_private_registry.registry.name
-		# }
+		name    = "test-karbon-%d"
+		version = "1.16.13-0"
 	  
 		dynamic "active_passive_config" {
-		  for_each = var.deployment_type == "active-passive" ? [1] : []
+		  for_each = local.deployment_type == "active-passive" ? [1] : []
 		  content {
-			external_ipv4_address = var.master_vip
+			external_ipv4_address = local.master_vip
 		  }
 		}
 		dynamic "external_lb_config" {
-		  for_each = var.deployment_type == "active-active" ? [1] : []
+		  for_each = local.deployment_type == "active-active" ? [1] : []
 		  content {
 			external_ipv4_address = "10.10.30.228"
 			master_nodes_config {
@@ -136,12 +137,12 @@ func testAccNutanixKarbonClusterConfig(subnetName string, r int) string {
 		  volumes_config {
 			flash_mode                 = false
 			prism_element_cluster_uuid = local.cluster_id
-			storage_container          = var.storage_container
+			storage_container          = "%s"
 		  }
 		}
 		cni_config {
 		  dynamic "calico_config" {
-			for_each = var.cni == "calico" ? [1] : []
+			for_each = local.cni == "calico" ? [1] : []
 			content {
 			  ip_pool_config {
 				cidr = "172.20.0.0/16"
@@ -150,8 +151,8 @@ func testAccNutanixKarbonClusterConfig(subnetName string, r int) string {
 		  }
 		}
 		worker_node_pool {
-		  node_os_version = var.node_os_version
-		  num_instances   = var.amount_of_workers
+		  node_os_version = local.node_os_version
+		  num_instances   = local.amount_of_workers
 		  ahv_config {
 			cpu                        = 8
 			disk_mib                   = 122880
@@ -161,7 +162,7 @@ func testAccNutanixKarbonClusterConfig(subnetName string, r int) string {
 		  }
 		}
 		etcd_node_pool {
-		  node_os_version = var.node_os_version
+		  node_os_version = local.node_os_version
 		  num_instances   = 1
 		  ahv_config {
 			cpu                        = 4
@@ -172,8 +173,8 @@ func testAccNutanixKarbonClusterConfig(subnetName string, r int) string {
 		  }
 		}
 		master_node_pool {
-		  node_os_version = var.node_os_version
-		  num_instances   = var.amount_of_masters
+		  node_os_version = local.node_os_version
+		  num_instances   = local.amount_of_masters
 		  ahv_config {
 			cpu                        = 2
 			disk_mib                   = 122880
@@ -184,34 +185,5 @@ func testAccNutanixKarbonClusterConfig(subnetName string, r int) string {
 		}
 	  }
 
-
-	`, subnetName)
-}
-
-func testAccNutanixKarbonClusterConfigUpdate(r int) string {
-	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
-
-		locals {
-			cluster1 = [
-				for cluster in data.nutanix_clusters.clusters.entities :
-				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
-			][0]
-		}
-
-		resource "nutanix_virtual_machine" "vm1" {
-			name                 = "test-dou-%d"
-			cluster_uuid         = "${local.cluster1}"
-			num_vcpus_per_socket = 1
-			num_sockets          = 2
-			memory_size_mib      = 186
-
-			boot_device_order_list = ["DISK", "CDROM"]
-
-			categories {
-				name  = "Environment"
-				value = "Production"
-			}
-		}
-	`, r)
+	`, workers, subnetName, r, containter)
 }
