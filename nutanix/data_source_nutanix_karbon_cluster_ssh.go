@@ -1,6 +1,7 @@
 package nutanix
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -24,7 +25,7 @@ func dataSourceNutanixKarbonClusterSSHRead(d *schema.ResourceData, meta interfac
 	karbonClusterID, iok := d.GetOk("karbon_cluster_id")
 	karbonClusterNameInput, nok := d.GetOk("karbon_cluster_name")
 	if !iok && !nok {
-		return fmt.Errorf("please provide one of karbon_cluster_id or karbon_cluster_name attributes")
+		return errors.New("please provide one of karbon_cluster_id or karbon_cluster_name attributes")
 	}
 	var err error
 	var resp *karbon.ClusterSSHconfig
