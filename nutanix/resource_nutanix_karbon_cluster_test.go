@@ -92,7 +92,10 @@ func testAccCheckNutanixKarbonClusterExists(n string) resource.TestCheckFunc {
 func testAccNutanixKarbonClusterConfig(subnetName string, r int, containter string, workers int) string {
 	return fmt.Sprintf(`
 	locals {
-		cluster_id        = data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL" ? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid
+		cluster_id = [
+				for cluster in data.nutanix_clusters.clusters.entities :
+				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+			][0]
 		node_os_version   = "ntnx-0.7"
 		deployment_type   = ""
 		amount_of_workers = %d
