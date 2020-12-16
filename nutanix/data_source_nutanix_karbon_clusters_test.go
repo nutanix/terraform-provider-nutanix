@@ -28,7 +28,7 @@ func TestAccNutanixKarbonClustersDataSource_basic(t *testing.T) {
 }
 
 func testAccKarbonClustersDataSourceConfig(subnetName string, r int, containter string, workers int) string {
-	return testAccNutanixKarbonClusterConfig(subnetName, r, containter, workers) + `
+	return testAccNutanixKarbonClusterConfig(subnetName, r, containter, workers, "flannel") + `
 	data "nutanix_karbon_clusters" "kclusters" {}
 
 	`
