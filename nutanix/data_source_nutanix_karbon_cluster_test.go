@@ -48,7 +48,7 @@ func TestAccNutanixKarbonClusterDataSource_basicByName(t *testing.T) {
 }
 
 func testAccKarbonClusterDataSourceConfig(subnetName string, r int, containter string, workers int) string {
-	return testAccNutanixKarbonClusterConfig(subnetName, r, containter, workers) + `
+	return testAccNutanixKarbonClusterConfig(subnetName, r, containter, workers, "flannel") + `
 	data "nutanix_karbon_cluster" "kcluster" {
 		karbon_cluster_id = nutanix_karbon_cluster.cluster.id
 	}
@@ -56,7 +56,7 @@ func testAccKarbonClusterDataSourceConfig(subnetName string, r int, containter s
 }
 
 func testAccKarbonClusterDataSourceConfigByName(subnetName string, r int, containter string, workers int) string {
-	return testAccNutanixKarbonClusterConfig(subnetName, r, containter, workers) + `
+	return testAccNutanixKarbonClusterConfig(subnetName, r, containter, workers, "flannel") + `
 	data "nutanix_karbon_cluster" "kcluster" {
 		karbon_cluster_name = nutanix_karbon_cluster.cluster.name
 	}
