@@ -2,8 +2,9 @@ package nutanix
 
 import (
 	"fmt"
-	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"strings"
+
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
