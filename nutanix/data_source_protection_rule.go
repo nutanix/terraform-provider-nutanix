@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -16,8 +17,14 @@ func dataSourceNutanixProtectionRule() *schema.Resource {
 		SchemaVersion: 1,
 		Schema: map[string]*schema.Schema{
 			"protection_rule_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"protection_rule_name"},
+			},
+			"protection_rule_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"protection_rule_id"},
 			},
 			"api_version": {
 				Type:     schema.TypeString,
@@ -259,8 +266,23 @@ func dataSourceNutanixProtectionRule() *schema.Resource {
 
 func dataSourceNutanixProtectionRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
-	protectionRuleID := d.Get("protection_rule_id").(string)
-	resp, err := conn.V3.GetProtectionRule(protectionRuleID)
+	protectionRuleID, iOk := d.GetOk("protection_rule_id")
+	protectionRuleName, nOk := d.GetOk("protection_rule_name")
+
+	if !iOk && !nOk {
+		return fmt.Errorf("please provide `protection_rule_id` or `role_name`")
+	}
+
+	var err error
+	var resp *v3.ProtectionRuleResponse
+
+	if iOk {
+		resp, err = conn.V3.GetProtectionRule(protectionRuleID.(string))
+	}
+	if nOk {
+		resp, err = findProtectionRuleByName(conn, protectionRuleName.(string))
+	}
+
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
@@ -306,4 +328,31 @@ func dataSourceNutanixProtectionRuleRead(d *schema.ResourceData, meta interface{
 	d.SetId(*resp.Metadata.UUID)
 
 	return nil
+}
+
+func findProtectionRuleByName(conn *v3.Client, name string) (*v3.ProtectionRuleResponse, error) {
+	filter := fmt.Sprintf("name==%s", name)
+	resp, err := conn.V3.ListAllProtectionRules(filter)
+	if err != nil {
+		return nil, err
+	}
+
+	entities := resp.Entities
+
+	found := make([]*v3.ProtectionRuleResponse, 0)
+	for _, v := range entities {
+		if v.Spec.Name == name {
+			found = append(found, v)
+		}
+	}
+
+	if len(found) > 1 {
+		return nil, fmt.Errorf("your query returned more than one result. Please use role_id argument instead")
+	}
+
+	if len(found) == 0 {
+		return nil, fmt.Errorf("role with the given name, not found")
+	}
+
+	return found[0], nil
 }

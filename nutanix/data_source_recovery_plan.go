@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -16,8 +17,14 @@ func dataSourceNutanixRecoveryPlan() *schema.Resource {
 		SchemaVersion: 1,
 		Schema: map[string]*schema.Schema{
 			"recovery_plan_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"recovery_plan_name"},
+			},
+			"recovery_plan_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"recovery_plan_id"},
 			},
 			"api_version": {
 				Type:     schema.TypeString,
@@ -581,8 +588,22 @@ func dataSourceNutanixRecoveryPlan() *schema.Resource {
 
 func dataSourceNutanixRecoveryPlanRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
-	recoveryPlanID := d.Get("recovery_plan_id").(string)
-	resp, err := conn.V3.GetRecoveryPlan(recoveryPlanID)
+	recoveryPlanID, iOk := d.GetOk("recovery_plan_id")
+	recoveryPlanName, nOk := d.GetOk("recovery_plan_name")
+
+	if !iOk && !nOk {
+		return fmt.Errorf("please provide `recovery_plan_id` or `recovery_plan_name`")
+	}
+
+	var err error
+	var resp *v3.RecoveryPlanResponse
+
+	if iOk {
+		resp, err = conn.V3.GetRecoveryPlan(recoveryPlanID.(string))
+	}
+	if nOk {
+		resp, err = findRecoveryPlanByName(conn, recoveryPlanName.(string))
+	}
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
@@ -623,4 +644,31 @@ func dataSourceNutanixRecoveryPlanRead(d *schema.ResourceData, meta interface{})
 	d.SetId(*resp.Metadata.UUID)
 
 	return nil
+}
+
+func findRecoveryPlanByName(conn *v3.Client, name string) (*v3.RecoveryPlanResponse, error) {
+	filter := fmt.Sprintf("name==%s", name)
+	resp, err := conn.V3.ListAllRecoveryPlans(filter)
+	if err != nil {
+		return nil, err
+	}
+
+	entities := resp.Entities
+
+	found := make([]*v3.RecoveryPlanResponse, 0)
+	for _, v := range entities {
+		if v.Spec.Name == name {
+			found = append(found, v)
+		}
+	}
+
+	if len(found) > 1 {
+		return nil, fmt.Errorf("your query returned more than one result. Please use role_id argument instead")
+	}
+
+	if len(found) == 0 {
+		return nil, fmt.Errorf("role with the given name, not found")
+	}
+
+	return found[0], nil
 }
