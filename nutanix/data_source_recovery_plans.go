@@ -586,7 +586,13 @@ func dataSourceNutanixRecoveryPlansRead(d *schema.ResourceData, meta interface{}
 	// Get client connection
 	conn := meta.(*Client).API
 
-	resp, err := conn.V3.ListAllRecoveryPlans()
+	req := &v3.DSMetadata{}
+
+	metadata, filtersOk := d.GetOk("metadata")
+	if filtersOk {
+		req = buildDataSourceListMetadata(metadata.(*schema.Set))
+	}
+	resp, err := conn.V3.ListRecoveryPlans(req)
 	if err != nil {
 		return err
 	}

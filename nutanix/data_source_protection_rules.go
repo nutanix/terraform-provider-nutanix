@@ -263,8 +263,13 @@ func dataSourceNutanixProtectionRules() *schema.Resource {
 func dataSourceNutanixProtectionRulesRead(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
 	conn := meta.(*Client).API
+	req := &v3.DSMetadata{}
 
-	resp, err := conn.V3.ListAllProtectionRules()
+	metadata, filtersOk := d.GetOk("metadata")
+	if filtersOk {
+		req = buildDataSourceListMetadata(metadata.(*schema.Set))
+	}
+	resp, err := conn.V3.ListProtectionRules(req)
 	if err != nil {
 		return err
 	}

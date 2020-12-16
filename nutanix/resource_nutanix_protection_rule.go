@@ -541,7 +541,8 @@ func resourceNutanixProtectionRuleDelete(d *schema.ResourceData, meta interface{
 func resourceNutanixProtectionRulesExists(conn *v3.Client, name string) (*string, error) {
 	var uuid *string
 
-	protectionList, err := conn.V3.ListAllProtectionRules()
+	filter := fmt.Sprintf("name==%s", name)
+	protectionList, err := conn.V3.ListAllProtectionRules(filter)
 
 	if err != nil {
 		return nil, err

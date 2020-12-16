@@ -880,7 +880,8 @@ func resourceNutanixRecoveryPlanDelete(d *schema.ResourceData, meta interface{})
 func resourceNutanixRecoveryPlanExists(conn *v3.Client, name string) (*string, error) {
 	var uuid *string
 
-	protectionList, err := conn.V3.ListAllRecoveryPlans()
+	filter := fmt.Sprintf("name==%s", name)
+	protectionList, err := conn.V3.ListAllRecoveryPlans(filter)
 
 	if err != nil {
 		return nil, err
