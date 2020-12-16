@@ -103,6 +103,14 @@ func Provider() terraform.ResourceProvider {
 			"nutanix_protection_rules":        dataSourceNutanixProtectionRules(),
 			"nutanix_recovery_plan":           dataSourceNutanixRecoveryPlan(),
 			"nutanix_recovery_plans":          dataSourceNutanixRecoveryPlans(),
+			"nutanix_role":                    dataSourceNutanixRole(),
+			"nutanix_roles":                   dataSourceNutanixRoles(),
+			"nutanix_user":                    dataSourceNutanixUser(),
+			"nutanix_users":                   dataSourceNutanixUsers(),
+			"nutanix_user_group":              dataSourceNutanixUserGroup(),
+			"nutanix_user_groups":             dataSourceNutanixUserGroups(),
+			"nutanix_permission":              dataSourceNutanixPermission(),
+			"nutanix_permissions":             dataSourceNutanixPermissions(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":       resourceNutanixVirtualMachine(),
@@ -115,6 +123,8 @@ func Provider() terraform.ResourceProvider {
 			"nutanix_project":               resourceNutanixProject(),
 			"nutanix_protection_rule":       resourceNutanixProtectionRule(),
 			"nutanix_recovery_plan":         resourceNutanixRecoveryPlan(),
+			"nutanix_role":                  resourceNutanixRole(),
+			"nutanix_user":                  resourceNutanixUser(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
