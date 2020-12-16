@@ -3,13 +3,14 @@ package v3
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
