@@ -97,13 +97,13 @@ type Service interface {
 	ListAllPermission(filter string) (*PermissionListResponse, error)
 	GetProtectionRule(uuid string) (*ProtectionRuleResponse, error)
 	ListProtectionRules(getEntitiesRequest *DSMetadata) (*ProtectionRulesListResponse, error)
-	ListAllProtectionRules() (*ProtectionRulesListResponse, error)
+	ListAllProtectionRules(filter string) (*ProtectionRulesListResponse, error)
 	CreateProtectionRule(request *ProtectionRuleInput) (*ProtectionRuleResponse, error)
 	UpdateProtectionRule(uuid string, body *ProtectionRuleInput) (*ProtectionRuleResponse, error)
 	DeleteProtectionRule(uuid string) (*DeleteResponse, error)
 	GetRecoveryPlan(uuid string) (*RecoveryPlanResponse, error)
 	ListRecoveryPlans(getEntitiesRequest *DSMetadata) (*RecoveryPlanListResponse, error)
-	ListAllRecoveryPlans() (*RecoveryPlanListResponse, error)
+	ListAllRecoveryPlans(filter string) (*RecoveryPlanListResponse, error)
 	CreateRecoveryPlan(request *RecoveryPlanInput) (*RecoveryPlanResponse, error)
 	UpdateRecoveryPlan(uuid string, body *RecoveryPlanInput) (*RecoveryPlanResponse, error)
 	DeleteRecoveryPlan(uuid string) (*DeleteResponse, error)
@@ -1954,10 +1954,11 @@ func (op Operations) ListProtectionRules(getEntitiesRequest *DSMetadata) (*Prote
 }
 
 // ListAllProtectionRules ...
-func (op Operations) ListAllProtectionRules() (*ProtectionRulesListResponse, error) {
+func (op Operations) ListAllProtectionRules(filter string) (*ProtectionRulesListResponse, error) {
 	entities := make([]*ProtectionRuleResponse, 0)
 
 	resp, err := op.ListProtectionRules(&DSMetadata{
+		Filter: &filter,
 		Kind:   utils.StringPtr("protection_rule"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
@@ -1972,6 +1973,7 @@ func (op Operations) ListAllProtectionRules() (*ProtectionRulesListResponse, err
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
 			resp, err = op.ListProtectionRules(&DSMetadata{
+				Filter: &filter,
 				Kind:   utils.StringPtr("protection_rule"),
 				Length: utils.Int64Ptr(itemsPerPage),
 				Offset: utils.Int64Ptr(offset),
@@ -2069,10 +2071,11 @@ func (op Operations) ListRecoveryPlans(getEntitiesRequest *DSMetadata) (*Recover
 }
 
 // ListAllRecoveryPlans ...
-func (op Operations) ListAllRecoveryPlans() (*RecoveryPlanListResponse, error) {
+func (op Operations) ListAllRecoveryPlans(filter string) (*RecoveryPlanListResponse, error) {
 	entities := make([]*RecoveryPlanResponse, 0)
 
 	resp, err := op.ListRecoveryPlans(&DSMetadata{
+		Filter: &filter,
 		Kind:   utils.StringPtr("recovery_plan"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
@@ -2087,6 +2090,7 @@ func (op Operations) ListAllRecoveryPlans() (*RecoveryPlanListResponse, error) {
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
 			resp, err = op.ListRecoveryPlans(&DSMetadata{
+				Filter: &filter,
 				Kind:   utils.StringPtr("recovery_plan"),
 				Length: utils.Int64Ptr(itemsPerPage),
 				Offset: utils.Int64Ptr(offset),
