@@ -30,6 +30,7 @@ func TestAccNutanixKarbonCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "master_node_pool.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "worker_node_pool.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "worker_node_pool.0.num_instances", "1"),
 				),
 			},
 			{
@@ -41,6 +42,51 @@ func TestAccNutanixKarbonCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "master_node_pool.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "worker_node_pool.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "worker_node_pool.0.num_instances", "2"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"version", "master_node_pool", "worker_node_pool", "storage_class_config", "wait_timeout_minutes"}, //Wil be fixed on future API versions
+			},
+		},
+	})
+}
+
+func TestAccNutanixKarbonCluster_scaleDown(t *testing.T) {
+	r := acctest.RandInt()
+	resourceName := "nutanix_karbon_cluster.cluster"
+	subnetName := "Rx-Automation-Network"
+	defaultContainter := "default-container-85827904983728"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixKarbonClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixKarbonClusterConfig(subnetName, r, defaultContainter, 3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixKarbonClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("test-karbon-%d", r)),
+					resource.TestCheckResourceAttr(resourceName, "etcd_node_pool.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "master_node_pool.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_class_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "worker_node_pool.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "worker_node_pool.0.num_instances", "3"),
+				),
+			},
+			{
+				Config: testAccNutanixKarbonClusterConfig(subnetName, r, defaultContainter, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixKarbonClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("test-karbon-%d", r)),
+					resource.TestCheckResourceAttr(resourceName, "etcd_node_pool.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "master_node_pool.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_class_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "worker_node_pool.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "worker_node_pool.0.num_instances", "1"),
 				),
 			},
 			{
