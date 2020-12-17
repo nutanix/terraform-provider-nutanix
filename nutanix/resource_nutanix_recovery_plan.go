@@ -942,19 +942,25 @@ func expandEntityInfoList(d []interface{}) []*v3.EntityInfoList {
 		v := val.(map[string]interface{})
 		entity := &v3.EntityInfoList{}
 		reference := &v3.Reference{}
+		flagRef := false
 		if v1, ok1 := v["any_entity_reference_kind"]; ok1 && v1.(string) != "" {
 			reference.Kind = utils.StringPtr(v1.(string))
+			flagRef = true
 		}
 		if v1, ok1 := v["any_entity_reference_uuid"]; ok1 && v1.(string) != "" {
 			reference.UUID = utils.StringPtr(v1.(string))
+			flagRef = true
 		}
 		if v1, ok1 := v["any_entity_reference_name"]; ok1 && v1.(string) != "" {
 			reference.Name = utils.StringPtr(v1.(string))
+			flagRef = true
 		}
 		if v1, ok1 := v["categories"]; ok1 {
 			entity.Categories = expandCategories(v1)
 		}
-		entity.AnyEntityReference = reference
+		if flagRef {
+			entity.AnyEntityReference = reference
+		}
 
 		entities = append(entities, entity)
 	}
