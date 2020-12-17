@@ -9,7 +9,7 @@ import (
 
 func TestAccNutanixKarbonClusterDataSource_basic(t *testing.T) {
 	r := acctest.RandInt()
-	//resourceName := "nutanix_karbon_cluster.cluster"
+	dataSourceName := "data.nutanix_karbon_cluster.kcluster"
 	subnetName := "Rx-Automation-Network"
 	defaultContainter := "default-container-85827904983728"
 	resource.Test(t, resource.TestCase{
@@ -19,6 +19,7 @@ func TestAccNutanixKarbonClusterDataSource_basic(t *testing.T) {
 			{
 				Config: testAccKarbonClusterDataSourceConfig(subnetName, r, defaultContainter, 1),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixKarbonClusterExists(dataSourceName),
 					resource.TestCheckResourceAttrSet(
 						"data.nutanix_karbon_cluster.kcluster", "id"),
 				),
