@@ -941,18 +941,20 @@ func expandEntityInfoList(d []interface{}) []*v3.EntityInfoList {
 	for _, val := range d {
 		v := val.(map[string]interface{})
 		entity := &v3.EntityInfoList{}
+		reference := &v3.Reference{}
 		if v1, ok1 := v["any_entity_reference_kind"]; ok1 && v1.(string) != "" {
-			entity.AnyEntityReference.Kind = utils.StringPtr(v1.(string))
+			reference.Kind = utils.StringPtr(v1.(string))
 		}
 		if v1, ok1 := v["any_entity_reference_uuid"]; ok1 && v1.(string) != "" {
-			entity.AnyEntityReference.UUID = utils.StringPtr(v1.(string))
+			reference.UUID = utils.StringPtr(v1.(string))
 		}
 		if v1, ok1 := v["any_entity_reference_name"]; ok1 && v1.(string) != "" {
-			entity.AnyEntityReference.Name = utils.StringPtr(v1.(string))
+			reference.Name = utils.StringPtr(v1.(string))
 		}
 		if v1, ok1 := v["categories"]; ok1 {
 			entity.Categories = expandCategories(v1)
 		}
+		entity.AnyEntityReference = reference
 
 		entities = append(entities, entity)
 	}
@@ -1015,51 +1017,59 @@ func expandVMIPAssignmentList(d []interface{}) []*v3.VMIPAssignmentList {
 			v4 := v2.([]interface{})
 			for _, v6 := range v4 {
 				v7 := v6.(map[string]interface{})
+				ipConfig := &v3.FloatingIPConfig{}
 				if v5, ok1 := v7["ip"]; ok1 && v5.(string) != "" {
-					vmial.TestFloatingIPConfig.IP = v5.(string)
+					ipConfig.IP = v5.(string)
 				}
 				if v5, ok1 := v7["should_allocate_dynamically"]; ok1 {
-					vmial.TestFloatingIPConfig.ShouldAllocateDynamically = utils.BoolPtr(v5.(bool))
+					ipConfig.ShouldAllocateDynamically = utils.BoolPtr(v5.(bool))
 				}
+				vmial.TestFloatingIPConfig = ipConfig
 			}
 		}
 		if v2, ok1 := v1["recovery_floating_ip_config"]; ok1 {
 			v4 := v2.([]interface{})
 			for _, v6 := range v4 {
 				v7 := v6.(map[string]interface{})
+				ipConfig := &v3.FloatingIPConfig{}
 				if v5, ok1 := v7["ip"]; ok1 && v5.(string) != "" {
-					vmial.TestFloatingIPConfig.IP = v5.(string)
+					ipConfig.IP = v5.(string)
 				}
 				if v5, ok1 := v7["should_allocate_dynamically"]; ok1 {
-					vmial.TestFloatingIPConfig.ShouldAllocateDynamically = utils.BoolPtr(v5.(bool))
+					ipConfig.ShouldAllocateDynamically = utils.BoolPtr(v5.(bool))
 				}
+				vmial.RecoveryFloatingIPConfig = ipConfig
 			}
 		}
 		if v2, ok1 := v1["vm_reference"]; ok1 {
 			v6 := v2.([]interface{})
 			for _, v7 := range v6 {
 				v4 := v7.(map[string]interface{})
+				reference := &v3.Reference{}
 				if v5, ok1 := v4["name"]; ok1 && v5.(string) != "" {
-					vmial.VMReference.Name = utils.StringPtr(v5.(string))
+					reference.Name = utils.StringPtr(v5.(string))
 				}
 				if v5, ok1 := v4["uuid"]; ok1 && v5.(string) != "" {
-					vmial.VMReference.UUID = utils.StringPtr(v5.(string))
+					reference.UUID = utils.StringPtr(v5.(string))
 				}
 				if v5, ok1 := v4["kind"]; ok1 && v5.(string) != "" {
-					vmial.VMReference.Kind = utils.StringPtr(v5.(string))
+					reference.Kind = utils.StringPtr(v5.(string))
 				}
+				vmial.VMReference = reference
 			}
 		}
 		if v2, ok1 := v1["vm_nic_information"]; ok1 {
 			v6 := v2.([]interface{})
 			for _, v7 := range v6 {
 				v4 := v7.(map[string]interface{})
+				vmInfo := &v3.VMNICInformation{}
 				if v5, ok1 := v4["ip"]; ok1 && v5.(string) != "" {
-					vmial.VMNICInformation.IP = v5.(string)
+					vmInfo.IP = v5.(string)
 				}
 				if v5, ok1 := v4["uuid"]; ok1 && v5.(string) != "" {
-					vmial.VMNICInformation.UUID = v5.(string)
+					vmInfo.UUID = v5.(string)
 				}
+				vmial.VMNICInformation = vmInfo
 			}
 		}
 		assigns = append(assigns, vmial)
@@ -1130,15 +1140,17 @@ func expandIPAssignmentList(d []interface{}) []*v3.IPAssignmentList {
 			v6 := v2.([]interface{})
 			for _, v7 := range v6 {
 				v4 := v7.(map[string]interface{})
+				reference := &v3.Reference{}
 				if v5, ok1 := v4["name"]; ok1 && v5.(string) != "" {
-					vmial.VMReference.Name = utils.StringPtr(v5.(string))
+					reference.Name = utils.StringPtr(v5.(string))
 				}
 				if v5, ok1 := v4["uuid"]; ok1 && v5.(string) != "" {
-					vmial.VMReference.UUID = utils.StringPtr(v5.(string))
+					reference.UUID = utils.StringPtr(v5.(string))
 				}
 				if v5, ok1 := v4["kind"]; ok1 && v5.(string) != "" {
-					vmial.VMReference.Kind = utils.StringPtr(v5.(string))
+					reference.Kind = utils.StringPtr(v5.(string))
 				}
+				vmial.VMReference = reference
 			}
 		}
 		if v2, ok1 := v1["ip_config_list"]; ok1 {
