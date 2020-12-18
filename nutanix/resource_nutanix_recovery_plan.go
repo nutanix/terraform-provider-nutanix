@@ -175,7 +175,7 @@ func resourceNutanixRecoveryPlan() *schema.Resource {
 																Optional: true,
 																Computed: true,
 															},
-															"categories": categoriesSchema(),
+															"categories": categoriesSchemaOptional(),
 															"script_list": {
 																Type:     schema.TypeList,
 																Optional: true,
