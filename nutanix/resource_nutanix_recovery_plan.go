@@ -1222,8 +1222,6 @@ func flattenStageWork(stageWork *v3.StageWork) []interface{} {
 
 func flattenEntityInfoList(entitiesList []*v3.EntityInfoList) []interface{} {
 	entities := make([]interface{}, 0)
-	log.Printf("[DEBUG] entitiesList: %+v", entitiesList)
-	utils.PrintToJSON(entitiesList, "")
 	for _, v2 := range entitiesList {
 		ent := make(map[string]interface{})
 		if v2 != nil {
