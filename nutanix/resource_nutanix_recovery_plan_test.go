@@ -48,6 +48,57 @@ func TestAccNutanixRecoveryPlanWithStageList_basic(t *testing.T) {
 	})
 }
 
+func TestAccNutanixRecoveryPlanWithStageListDynamic_basic(t *testing.T) {
+	resourceName := "nutanix_recovery_plan.test"
+
+	name := acctest.RandomWithPrefix("test-protection-name-dou")
+	description := acctest.RandomWithPrefix("test-protection-desc-dou")
+
+	nameUpdated := acctest.RandomWithPrefix("test-protection-name-dou")
+	descriptionUpdated := acctest.RandomWithPrefix("test-protection-desc-dou")
+
+	stageUUID := "ab788130-0820-4d07-a1b5-b0ba4d3a4254"
+	entity := `
+ entity_info_list {
+	categories {
+		name = "Environment"
+		value = "Dev"
+	}
+}
+`
+	entityUpdated := `
+ entity_info_list {
+	any_entity_reference_kind = "vm"
+	any_entity_reference_uuid = "2457b73a-9ace-4c92-959d-dc24e09e0846"
+	any_entity_reference_name = "terratest-drrunbook-1337"
+}
+`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixRecoveryPlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixRecoveryPlanConfigWithStageListDynamic(name, description, stageUUID, entity),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixRecoveryPlanExists(&resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+				),
+			},
+			{
+				Config: testAccNutanixRecoveryPlanConfigWithStageListDynamic(nameUpdated, descriptionUpdated, stageUUID, entityUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixRecoveryPlanExists(&resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", nameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNutanixRecoveryPlanWithNetwork_basic(t *testing.T) {
 	resourceName := "nutanix_recovery_plan.test"
 
@@ -208,4 +259,23 @@ func testAccNutanixRecoveryPlanConfigWithNetwork(name, description, stageUUID, a
 			}
 		}
 	`, name, description, stageUUID, aZUrl)
+}
+
+func testAccNutanixRecoveryPlanConfigWithStageListDynamic(name, description, stageUUID, categories string) string {
+	return fmt.Sprintf(`
+		resource "nutanix_recovery_plan" "test" {
+			name        = "%s"
+			description = "%s"
+			stage_list {
+				stage_work{
+					recover_entities{
+						   %s
+					}
+				}
+				stage_uuid = "%s"
+				delay_time_secs = 0
+			}
+			parameters{}
+		}
+	`, name, description, categories, stageUUID)
 }
