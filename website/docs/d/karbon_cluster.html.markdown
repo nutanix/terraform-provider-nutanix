@@ -30,15 +30,15 @@ The following arguments are supported:
 The following arguments are supported:
 
 * `name`: - The name for the k8s cluster.
-* `wait_timeout_minutes`
+* `wait_timeout_minutes`: - Maximum wait time for the Karbon cluster to provision.
 * `version`: - K8s version of the cluster.
-* `storage_class_config`
+* `storage_class_config`: - Storage class configuration attribute for defining the persistent volume attributes.
 * `single_master_config`: - Configuration of a single master node.
 * `active_passive_config`: - The active passive mode uses the Virtual Router Redundancy Protocol (VRRP) protocol to provide high availability of the master.
 * `external_lb_config`: - The external load balancer configuration in the case of a multi-master-external-load-balancer type master deployment.
-* `private_registry`: - .
+* `private_registry`: - Allows the Karbon cluster to pull images of a list of private registries.
 * `etcd_node_pool`: - Configuration of the node pools that the nodes in the etcd cluster belong to. The etcd nodes require a minimum of 8,192 MiB memory and 409,60 MiB disk space.
-* `master_node_pool`: - .
+* `master_node_pool`: - Configuration of the master node pools.
 * `cni_config`: - K8s cluster networking configuration. The flannel or the calico configuration needs to be provided.
 
 ### Storage Class Config
@@ -48,11 +48,11 @@ The storage_class_config attribute supports the following:
 * `name`: - The name of the storage class.
 * `reclaim_policy` - Reclaim policy for persistent volumes provisioned using the specified storage class.
 * `volumes_config.#.file_system` - Karbon uses either the ext4 or xfs file-system on the volume disk.
-* `volumes_config.#.flash_mode`
-* `volumes_config.#.password` - TPassword of the Prism Element user that the API calls use to provision volumes.
+* `volumes_config.#.flash_mode` - Pins the persistent volumes to the flash tier in case of a `true` value.
+* `volumes_config.#.password` - The password of the Prism Element user that the API calls use to provision volumes.
 * `volumes_config.#.prism_element_cluster_uuid` - The universally unique identifier (UUID) of the Prism Element cluster.
-* `volumes_config.#.storage_container` - TName of the storage container the storage container uses to provision volumes.
-* `volumes_config.#.username` - TThe username of the Prism Element user that the API calls use to provision volumes.
+* `volumes_config.#.storage_container` - Name of the storage container the storage container uses to provision volumes.
+* `volumes_config.#.username` - Username of the Prism Element user that the API calls use to provision volumes.
 
 
 ### External LB Config
@@ -67,8 +67,8 @@ The external load balancer configuration in the case of a multi-master-external-
 ### private_registry
 User inputs of storage configuration parameters for VMs.
 
-* `private_registry`: - .
-* `private_registry.registry_name`: - .
+* `private_registry`: - List of private registries.
+* `private_registry.registry_name`: - Name of the private registry to add to the Karbon cluster.
 
 ### Node Pool
 
@@ -77,15 +77,15 @@ The `etcd_node_pool`, `master_node_pool`, `worker_node_pool` attribute supports 
 * `name`: - Unique name of the node pool.
 * `node_os_version`: - The version of the node OS image.
 * `num_instances`: - Number of nodes in the node pool.
-* `ahv_config`: - .
+* `ahv_config`: - VM configuration in AHV.
 * `ahv_config.cpu`: - The number of VCPUs allocated for each VM on the PE cluster.
 * `ahv_config.disk_mib`: - Size of local storage for each VM on the PE cluster in MiB.
 * `ahv_config.memory_mib`: - Memory allocated for each VM on the PE cluster in MiB.
 * `ahv_config.network_uuid`: - The UUID of the network for the VMs deployed with this resource configuration.
 * `ahv_config.prism_element_cluster_uuid`: - The unique universal identifier (UUID) of the Prism Element cluster used to deploy VMs for this node pool.
-* `nodes`
-* `nodes.hostname`
-* `nodes.ipv4_address`
+* `nodes`: - List of the deployed nodes in the node pool.
+* `nodes.hostname`: - Hostname of the deployed node.
+* `nodes.ipv4_address`: - IP of the deployed node.
 
 ### cni_config
 
