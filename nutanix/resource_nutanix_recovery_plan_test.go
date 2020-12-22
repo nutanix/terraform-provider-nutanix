@@ -95,6 +95,22 @@ func TestAccNutanixRecoveryPlanWithStageListDynamic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
 				),
 			},
+			{
+				Config: testAccNutanixRecoveryPlanConfigWithStageListDynamic(name, description, stageUUID, entity),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixRecoveryPlanExists(&resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+				),
+			},
+			{
+				Config: testAccNutanixRecoveryPlanConfigWithStageListDynamic(nameUpdated, descriptionUpdated, stageUUID, entityUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixRecoveryPlanExists(&resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", nameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
+				),
+			},
 		},
 	})
 }
