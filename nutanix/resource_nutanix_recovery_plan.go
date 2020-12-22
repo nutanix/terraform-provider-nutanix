@@ -163,17 +163,14 @@ func resourceNutanixRecoveryPlan() *schema.Resource {
 															"any_entity_reference_kind": {
 																Type:     schema.TypeString,
 																Optional: true,
-																Computed: true,
 															},
 															"any_entity_reference_uuid": {
 																Type:     schema.TypeString,
 																Optional: true,
-																Computed: true,
 															},
 															"any_entity_reference_name": {
 																Type:     schema.TypeString,
 																Optional: true,
-																Computed: true,
 															},
 															"categories": categoriesSchemaOptional(),
 															"script_list": {
@@ -943,6 +940,7 @@ func expandEntityInfoList(d []interface{}) []*v3.EntityInfoList {
 		entity := &v3.EntityInfoList{}
 		reference := &v3.Reference{}
 		flagRef := false
+
 		if v1, ok1 := v["any_entity_reference_kind"]; ok1 && v1.(string) != "" {
 			reference.Kind = utils.StringPtr(v1.(string))
 			flagRef = true
@@ -1232,6 +1230,7 @@ func flattenEntityInfoList(entitiesList []*v3.EntityInfoList) []interface{} {
 				entity["any_entity_reference_uuid"] = utils.StringValue(v2.AnyEntityReference.UUID)
 				entity["any_entity_reference_kind"] = utils.StringValue(v2.AnyEntityReference.Kind)
 			}
+
 			entity["categories"] = flattenCategories(v2.Categories)
 			entList = append(entList, entity)
 			ent["entity_info_list"] = entList
