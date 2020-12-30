@@ -28,7 +28,7 @@ func dataSourceNutanixProject() *schema.Resource {
 			},
 			"is_default": {
 				Type:     schema.TypeBool,
-				Computed: true,
+				Computed: false,
 			},
 			"resource_domain": {
 				Type:     schema.TypeList,
