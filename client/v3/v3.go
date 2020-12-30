@@ -18,7 +18,7 @@ func NewV3Client(credentials client.Credentials) (*Client, error) {
 		return nil, err
 	}
 
-	f := &Client{
+	d := &Client{
 		client: c,
 		V3: Operations{
 			client: c,
@@ -32,5 +32,5 @@ func NewV3Client(credentials client.Credentials) (*Client, error) {
 	// 	}
 	// })
 
-	return f, nil
+	return d, nil
 }
