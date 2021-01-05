@@ -1609,7 +1609,9 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 		dai := v.(map[string]interface{})
 
 		if value3, ok3 := dai["device_index"]; ok3 {
-			da.DeviceIndex = utils.Int64Ptr(int64(value3.(int)))
+			if i, err := strconv.ParseInt(value3.(string), 10, 64); err == nil {
+				da.DeviceIndex = utils.Int64Ptr(i)
+			}
 		}
 		if value3, ok3 := dai["adapter_type"]; ok3 {
 			da.AdapterType = utils.StringPtr(value3.(string))
