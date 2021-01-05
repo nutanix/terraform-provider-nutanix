@@ -571,9 +571,10 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 				Computed: true,
 			},
 			"boot_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice([]string{"UEFI", "LEGACY", "SECURE_BOOT"}, false),
 			},
 			"hardware_clock_timezone": {
 				Type:     schema.TypeString,
