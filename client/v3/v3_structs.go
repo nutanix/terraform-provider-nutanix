@@ -287,6 +287,8 @@ type VMResources struct {
 	VMVnumaConfig *VMVnumaConfig `json:"vnuma_config,omitempty" mapstructure:"vnuma_config,omitempty"`
 
 	SerialPortList []*VMSerialPort `json:"serial_port_list,omitempty" mapstructure:"serial_port_list,omitempty"`
+
+	MachineType *string `json:"machine_type,omitempty" mapstructure:"machine_type,omitempty"`
 }
 
 // VM An intentful representation of a vm spec
@@ -512,6 +514,8 @@ type VMResourcesDefStatus struct {
 	VnumaConfig *VMVnumaConfig `json:"vnuma_config,omitempty" mapstructure:"vnuma_config,omitempty"`
 
 	SerialPortList []*VMSerialPort `json:"serial_port_list,omitempty" mapstructure:"serial_port_list,omitempty"`
+
+	MachineType *string `json:"machine_type,omitempty" mapstructure:"machine_type,omitempty"`
 }
 
 // VMDefStatus An intentful representation of a vm status

@@ -576,6 +576,12 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice([]string{"UEFI", "LEGACY", "SECURE_BOOT"}, false),
 			},
+			"machine_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				//ValidateFunc: validation.StringInSlice([]string{"UEFI", "LEGACY", "SECURE_BOOT"}, false),
+			},
 			"hardware_clock_timezone": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -1020,6 +1026,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	d.Set("boot_device_disk_address", diskAddress)
 	d.Set("boot_device_mac_address", mac)
 	d.Set("boot_type", bootType)
+	d.Set("machine_type", resp.Status.Resources.MachineType)
 
 	cloudInitUser := ""
 	cloudInitMeta := ""
@@ -1309,6 +1316,12 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 
 	if d.HasChange("gpu_list") {
 		res.GpuList = expandGPUList(d)
+		hotPlugChange = false
+	}
+
+	if d.HasChange("machine_type") {
+		n := d.Get("machine_type")
+		res.MachineType = utils.StringPtr(n.(string))
 		hotPlugChange = false
 	}
 
@@ -1630,6 +1643,11 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	if v, ok := d.GetOk("boot_type"); ok {
 		biosType := v.(string)
 		vm.BootConfig.BootType = utils.StringPtr(biosType)
+	}
+
+	if v, ok := d.GetOk("machine_type"); ok {
+		mtype := v.(string)
+		vm.MachineType = utils.StringPtr(mtype)
 	}
 
 	if v, ok := d.GetOk("hardware_clock_timezone"); ok {
