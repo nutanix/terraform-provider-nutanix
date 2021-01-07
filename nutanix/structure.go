@@ -104,11 +104,29 @@ func flattenNicList(nics []*v3.VMNic) []map[string]interface{} {
 	return nicLists
 }
 
+func usesGuestCustomization(d *schema.ResourceData) bool {
+	keys := []string{
+		"guest_customization_cloud_init_user_data",
+		"guest_customization_cloud_init_meta_data",
+		"guest_customization_cloud_init_custom_key_values",
+		"guest_customization_is_overridable",
+		"guest_customization_sysprep",
+		"guest_customization_sysprep_custom_key_values"}
+	for _, k := range keys {
+		if _, ok := d.GetOk(k); ok {
+			return true
+		}
+	}
+	return false
+}
+
 func flattenDiskListFilterCloudInit(d *schema.ResourceData, disks []*v3.VMDisk) []map[string]interface{} {
+	//todo check if guestcust is passed -> if it is not passed, just continue without searching for cloud-init uuid
+	// reason: no device_index or disk id will result in crash
 	cloudInitCdromUUIDInput := d.Get("cloud_init_cdrom_uuid")
 	cloudInitCdromUUID := cloudInitCdromUUIDInput.(string)
 	filteredDiskList := disks
-	if cloudInitCdromUUID == "" {
+	if cloudInitCdromUUID == "" && usesGuestCustomization(d) == true {
 		log.Printf("Entering search for cloudInitCdromUUID")
 		filteredDiskList = make([]*v3.VMDisk, 0)
 		//expand the user inputted list of disks
@@ -150,6 +168,8 @@ func flattenDiskListFilterCloudInit(d *schema.ResourceData, disks []*v3.VMDisk) 
 		utils.PrintToJSON(userCdromDiskList, "userCdromDiskList: ")
 		utils.PrintToJSON(filteredDiskList, "filteredDiskList: ")
 		log.Printf("cloudInitCdromUUID: %s", cloudInitCdromUUID)
+	} else {
+		log.Printf("Will not search for cloudInitCdromUUID")
 	}
 	fDiskList := flattenDiskListHelper(filteredDiskList, cloudInitCdromUUID)
 	utils.PrintToJSON(fDiskList, "fDiskList: ")
