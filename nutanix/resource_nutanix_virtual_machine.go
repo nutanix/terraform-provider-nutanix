@@ -978,7 +978,11 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting nic_list_status for Virtual Machine %s: %s", d.Id(), err)
 	}
 	// if err := d.Set("disk_list", flattenDiskList(resp.Spec.Resources.DiskList)); err != nil {
-	if err := d.Set("disk_list", flattenDiskListFilterCloudInit(d, resp.Spec.Resources.DiskList)); err != nil {
+	flatDiskList, err := flattenDiskListFilterCloudInit(d, resp.Spec.Resources.DiskList)
+	if err != nil {
+		return fmt.Errorf("error flattening disk list for vm %s: %s", d.Id(), err)
+	}
+	if err := d.Set("disk_list", flatDiskList); err != nil {
 		return fmt.Errorf("error setting disk_list for Virtual Machine %s: %s", d.Id(), err)
 	}
 

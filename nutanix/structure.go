@@ -120,12 +120,27 @@ func usesGuestCustomization(d *schema.ResourceData) bool {
 	return false
 }
 
-func flattenDiskListFilterCloudInit(d *schema.ResourceData, disks []*v3.VMDisk) []map[string]interface{} {
+func getDeviceIndexForDisk(disk *v3.VMDisk) (*int64, error) {
+	if disk.DeviceProperties == nil {
+		return nil, fmt.Errorf("deviceproperties was nil for disk")
+	}
+	if disk.DeviceProperties.DiskAddress == nil {
+		return nil, fmt.Errorf("disk address was nil for disk")
+	}
+	if disk.DeviceProperties.DiskAddress.DeviceIndex == nil {
+		return nil, fmt.Errorf("device index was nil for disk")
+	}
+	diskIndex := *disk.DeviceProperties.DiskAddress.DeviceIndex
+	return &diskIndex, nil
+}
+
+func flattenDiskListFilterCloudInit(d *schema.ResourceData, disks []*v3.VMDisk) ([]map[string]interface{}, error) {
 	//todo check if guestcust is passed -> if it is not passed, just continue without searching for cloud-init uuid
 	// reason: no device_index or disk id will result in crash
 	cloudInitCdromUUIDInput := d.Get("cloud_init_cdrom_uuid")
 	cloudInitCdromUUID := cloudInitCdromUUIDInput.(string)
 	filteredDiskList := disks
+	potentialCloudInitIDs := make([]string, 0)
 	if cloudInitCdromUUID == "" && usesGuestCustomization(d) == true {
 		log.Printf("Entering search for cloudInitCdromUUID")
 		filteredDiskList = make([]*v3.VMDisk, 0)
@@ -144,12 +159,21 @@ func flattenDiskListFilterCloudInit(d *schema.ResourceData, disks []*v3.VMDisk) 
 				continue
 			} else {
 				//Get existing CDrom device Index
-				eDiskIndex := *eDisk.DeviceProperties.DiskAddress.DeviceIndex
+
+				eDiskIndexP, err := getDeviceIndexForDisk(eDisk) //*eDisk.DeviceProperties.DiskAddress.DeviceIndex
+				if err != nil {
+					return nil, err
+				}
+				eDiskIndex := *eDiskIndexP
 				match := false
 				// Loop over the user defined cdrom drives
 				for _, uDisk := range userCdromDiskList {
 					//extract the device index of the user defined cdrom
-					uDiskIndex := *uDisk.DeviceProperties.DiskAddress.DeviceIndex
+					uDiskIndexP, err := getDeviceIndexForDisk(uDisk)
+					if err != nil {
+						return nil, err
+					}
+					uDiskIndex := *uDiskIndexP
 					// if there is a matching device index for a userdefined and an existing cdrom, it is not the cloud-init one
 					if eDiskIndex == uDiskIndex {
 						filteredDiskList = append(filteredDiskList, eDisk)
@@ -158,11 +182,19 @@ func flattenDiskListFilterCloudInit(d *schema.ResourceData, disks []*v3.VMDisk) 
 					}
 				}
 				if !match {
-					cloudInitCdromUUID = *eDisk.UUID
+					potentialCloudInitIDs = append(potentialCloudInitIDs, *eDisk.UUID)
+					// cloudInitCdromUUID = *eDisk.UUID
 					d.Set("cloud_init_cdrom_uuid", cloudInitCdromUUID)
 				}
 			}
 		}
+		if len(potentialCloudInitIDs) == 1 {
+			cloudInitCdromUUID = potentialCloudInitIDs[0]
+		}
+		if len(potentialCloudInitIDs) > 1 {
+			return nil, fmt.Errorf("more than 1 unknown cd-rom device: %v", potentialCloudInitIDs)
+		}
+
 		log.Printf("flattenDiskListFilterCloudInit")
 		utils.PrintToJSON(disks, "disks: ")
 		utils.PrintToJSON(userCdromDiskList, "userCdromDiskList: ")
@@ -173,7 +205,7 @@ func flattenDiskListFilterCloudInit(d *schema.ResourceData, disks []*v3.VMDisk) 
 	}
 	fDiskList := flattenDiskListHelper(filteredDiskList, cloudInitCdromUUID)
 	utils.PrintToJSON(fDiskList, "fDiskList: ")
-	return fDiskList
+	return fDiskList, nil
 }
 func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
 	return flattenDiskListHelper(disks, "")
