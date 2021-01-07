@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -103,7 +104,61 @@ func flattenNicList(nics []*v3.VMNic) []map[string]interface{} {
 	return nicLists
 }
 
+func flattenDiskListFilterCloudInit(d *schema.ResourceData, disks []*v3.VMDisk) []map[string]interface{} {
+	cloudInitCdromUUIDInput := d.Get("cloud_init_cdrom_uuid")
+	cloudInitCdromUUID := cloudInitCdromUUIDInput.(string)
+	filteredDiskList := disks
+	if cloudInitCdromUUID == "" {
+		log.Printf("Entering search for cloudInitCdromUUID")
+		filteredDiskList = make([]*v3.VMDisk, 0)
+		//expand the user inputted list of disks
+		expandedOrgDiskList := expandDiskList(d)
+		utils.PrintToJSON(expandedOrgDiskList, "expandedOrgDiskList: ")
+		//extract the CD-rom drives
+		userCdromDiskList := GetCdromDiskList(expandedOrgDiskList)
+		for _, eDisk := range disks {
+			//if existing disk is not CD-rom, append it to the list and continue
+			utils.PrintToJSON(eDisk, "edisk: ")
+			log.Print(isCdromDisk(eDisk))
+			if !isCdromDisk(eDisk) {
+				filteredDiskList = append(filteredDiskList, eDisk)
+				log.Print("appended!")
+				continue
+			} else {
+				//Get existing CDrom device Index
+				eDiskIndex := *eDisk.DeviceProperties.DiskAddress.DeviceIndex
+				match := false
+				// Loop over the user defined cdrom drives
+				for _, uDisk := range userCdromDiskList {
+					//extract the device index of the user defined cdrom
+					uDiskIndex := *uDisk.DeviceProperties.DiskAddress.DeviceIndex
+					// if there is a matching device index for a userdefined and an existing cdrom, it is not the cloud-init one
+					if eDiskIndex == uDiskIndex {
+						filteredDiskList = append(filteredDiskList, eDisk)
+						match = true
+						break
+					}
+				}
+				if !match {
+					cloudInitCdromUUID = *eDisk.UUID
+					d.Set("cloud_init_cdrom_uuid", cloudInitCdromUUID)
+				}
+			}
+		}
+		log.Printf("flattenDiskListFilterCloudInit")
+		utils.PrintToJSON(disks, "disks: ")
+		utils.PrintToJSON(userCdromDiskList, "userCdromDiskList: ")
+		utils.PrintToJSON(filteredDiskList, "filteredDiskList: ")
+		log.Printf("cloudInitCdromUUID: %s", cloudInitCdromUUID)
+	}
+	fDiskList := flattenDiskListHelper(filteredDiskList, cloudInitCdromUUID)
+	utils.PrintToJSON(fDiskList, "fDiskList: ")
+	return fDiskList
+}
 func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
+	return flattenDiskListHelper(disks, "")
+}
+func flattenDiskListHelper(disks []*v3.VMDisk, cloudInitCdromUUID string) []map[string]interface{} {
 	diskList := make([]map[string]interface{}, 0)
 	for _, v := range disks {
 		var deviceProps []map[string]interface{}
@@ -114,9 +169,9 @@ func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
 			index := fmt.Sprintf("%d", utils.Int64Value(v.DeviceProperties.DiskAddress.DeviceIndex))
 			adapter := v.DeviceProperties.DiskAddress.AdapterType
 
-			if index == "3" && *adapter == IDE {
-				continue
-			}
+			// if index == "3" && *adapter == IDE {
+			// 	continue
+			// }
 
 			deviceProps[0] = map[string]interface{}{
 				"device_type": v.DeviceProperties.DeviceType,
@@ -141,8 +196,12 @@ func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
 			})
 		}
 
+		diskUUID := utils.StringValue(v.UUID)
+		if cloudInitCdromUUID == diskUUID {
+			continue
+		}
 		diskList = append(diskList, map[string]interface{}{
-			"uuid":                   utils.StringValue(v.UUID),
+			"uuid":                   diskUUID,
 			"disk_size_bytes":        utils.Int64Value(v.DiskSizeBytes),
 			"disk_size_mib":          utils.Int64Value(v.DiskSizeMib),
 			"device_properties":      deviceProps,

@@ -45,6 +45,11 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 			},
 		},
 		Schema: map[string]*schema.Schema{
+			"cloud_init_cdrom_uuid": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
+			},
 			"metadata": {
 				Type:     schema.TypeMap,
 				Computed: true,
@@ -915,10 +920,15 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 
 	// Set terraform state id
 	d.SetId(uuid)
+	d.Set("cloud_init_cdrom_uuid", "")
 	return resourceNutanixVirtualMachineRead(d, meta)
 }
 
 func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{}) error {
+	initialDiskList := d.Get("disk_list")
+	utils.PrintToJSON(initialDiskList, "machine read disk_list start")
+	cloudInitCDromUUID := d.Get("cloud_init_cdrom_uuid")
+	utils.PrintToJSON(cloudInitCDromUUID, "machine read cloud_init_cdrom_uuid start")
 	// Get client connection
 	conn := meta.(*Client).API
 	setVMTimeout(meta)
@@ -967,8 +977,8 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	if err := d.Set("nic_list_status", flattenNicListStatus(resp.Status.Resources.NicList)); err != nil {
 		return fmt.Errorf("error setting nic_list_status for Virtual Machine %s: %s", d.Id(), err)
 	}
-
-	if err := d.Set("disk_list", flattenDiskList(resp.Spec.Resources.DiskList)); err != nil {
+	// if err := d.Set("disk_list", flattenDiskList(resp.Spec.Resources.DiskList)); err != nil {
+	if err := d.Set("disk_list", flattenDiskListFilterCloudInit(d, resp.Spec.Resources.DiskList)); err != nil {
 		return fmt.Errorf("error setting disk_list for Virtual Machine %s: %s", d.Id(), err)
 	}
 
@@ -2120,13 +2130,25 @@ func waitForIPRefreshFunc(client *v3.Client, vmUUID string) resource.StateRefres
 	}
 }
 
-func CountDiskListCdrom(dl []*v3.VMDisk) (int, error) {
-	counter := 0
+func GetCdromDiskList(dl []*v3.VMDisk) []*v3.VMDisk {
+	cdList := make([]*v3.VMDisk, 0)
 	for _, v := range dl {
-		if v.DeviceProperties != nil && *v.DeviceProperties.DeviceType == "CDROM" {
-			counter++
+		if isCdromDisk(v) {
+			cdList = append(cdList, v)
 		}
 	}
+	return cdList
+}
+
+func isCdromDisk(d *v3.VMDisk) bool {
+	if d.DeviceProperties != nil && *d.DeviceProperties.DeviceType == "CDROM" {
+		return true
+	}
+	return false
+}
+
+func CountDiskListCdrom(dl []*v3.VMDisk) (int, error) {
+	counter := len(GetCdromDiskList(dl))
 	return counter, nil
 }
 
