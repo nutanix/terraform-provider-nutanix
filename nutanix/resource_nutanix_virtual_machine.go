@@ -1306,14 +1306,16 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		if err != nil {
 			return err
 		}
-
+		log.Printf("preCdromCount: %d", preCdromCount)
 		res.DiskList = expandDiskListUpdate(d, response)
 
 		postCdromCount, err := CountDiskListCdrom(res.DiskList)
 		if err != nil {
 			return err
 		}
+		log.Printf("postCdromCount: %d", postCdromCount)
 		if preCdromCount != postCdromCount {
+			log.Printf("cdrom hotplugchange!")
 			hotPlugChange = false
 		}
 	}
@@ -1812,18 +1814,23 @@ func expandIPAddressList(ipl []interface{}) []*v3.IPAddress {
 
 func expandDiskListUpdate(d *schema.ResourceData, vm *v3.VMIntentResponse) []*v3.VMDisk {
 	eDiskList := expandDiskList(d)
-
-	if vm.Spec != nil && vm.Spec.Resources != nil {
-		for _, disk := range vm.Spec.Resources.DiskList {
-			if disk.DeviceProperties != nil && disk.DeviceProperties.DiskAddress != nil {
-				index := disk.DeviceProperties.DiskAddress.DeviceIndex
-				adapterType := disk.DeviceProperties.DiskAddress.AdapterType
-				if *index == 3 && *adapterType == IDE {
+	utils.PrintToJSON(eDiskList, "pre expandDiskListUpdate: ")
+	if cloudInitCdromUUIDInt, ok := d.GetOk("cloud_init_cdrom_uuid"); ok {
+		cloudInitCdromUUID := cloudInitCdromUUIDInt.(string)
+		if cloudInitCdromUUID != "" && vm.Spec != nil && vm.Spec.Resources != nil {
+			for _, disk := range vm.Spec.Resources.DiskList {
+				if disk.UUID != nil && *disk.UUID == cloudInitCdromUUID {
+					// if disk.DeviceProperties != nil && disk.DeviceProperties.DiskAddress != nil {
+					// index := disk.DeviceProperties.DiskAddress.DeviceIndex
+					// adapterType := disk.DeviceProperties.DiskAddress.AdapterType
+					// if *index == 3 && *adapterType == IDE {
 					eDiskList = append(eDiskList, disk)
+					// }
 				}
 			}
 		}
 	}
+	utils.PrintToJSON(eDiskList, "post expandDiskListUpdate: ")
 	return eDiskList
 }
 
