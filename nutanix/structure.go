@@ -141,7 +141,7 @@ func flattenDiskListFilterCloudInit(d *schema.ResourceData, disks []*v3.VMDisk) 
 	cloudInitCdromUUID := cloudInitCdromUUIDInput.(string)
 	filteredDiskList := disks
 	potentialCloudInitIDs := make([]string, 0)
-	if cloudInitCdromUUID == "" && usesGuestCustomization(d) == true {
+	if cloudInitCdromUUID == "" && usesGuestCustomization(d) {
 		log.Printf("Entering search for cloudInitCdromUUID")
 		filteredDiskList = make([]*v3.VMDisk, 0)
 		//expand the user inputted list of disks
