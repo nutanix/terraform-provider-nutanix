@@ -184,12 +184,12 @@ func flattenDiskListFilterCloudInit(d *schema.ResourceData, disks []*v3.VMDisk) 
 				if !match {
 					potentialCloudInitIDs = append(potentialCloudInitIDs, *eDisk.UUID)
 					// cloudInitCdromUUID = *eDisk.UUID
-					d.Set("cloud_init_cdrom_uuid", cloudInitCdromUUID)
 				}
 			}
 		}
 		if len(potentialCloudInitIDs) == 1 {
 			cloudInitCdromUUID = potentialCloudInitIDs[0]
+			d.Set("cloud_init_cdrom_uuid", cloudInitCdromUUID)
 		}
 		if len(potentialCloudInitIDs) > 1 {
 			return nil, fmt.Errorf("more than 1 unknown cd-rom device: %v", potentialCloudInitIDs)
