@@ -30,10 +30,10 @@ The entities attribute element contains the following attributes:
 The following attributes are exported:
 
 * `api_version` - The version of the API.
-* `metadata`: - The vm kind metadata.
-* `categories`: - The Distinguished Categories for the Access Control Policy.
-* `owner_reference`: - The Distinguished The reference to a user.
-* `project_reference`: - The Distinguished The reference to a project.
+* `metadata`: - The user group kind metadata.
+* `categories`: - The Categories for the user group.
+* `owner_reference`: - The reference to a user.
+* `project_reference`: - The reference to a project.
 * `user_group_type`: - The type of the user group.
 * `display_name`: - The display name of the user group.
 * `directory_service_user_group`: - A Directory Service User Group.
@@ -45,12 +45,12 @@ The following attributes are exported:
 
 The metadata attribute exports the following:
 
-* `last_update_time`: - UTC date and time in RFC-3339 format when vm was last updated.
-* `uuid`: - vm UUID.
-* `creation_time`: - UTC date and time in RFC-3339 format when vm was created.
+* `last_update_time`: - UTC date and time in RFC-3339 format when user group was last updated.
+* `uuid`: - User group UUID.
+* `creation_time`: - UTC date and time in RFC-3339 format when user group was created.
 * `spec_version`: - Version number of the latest spec.
 * `spec_hash`: - Hash of the spec. This will be returned from server.
-* `name`: - vm name.
+* `name`: - User group name.
 * `should_force_translate`: - Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
 
 ### Categories
