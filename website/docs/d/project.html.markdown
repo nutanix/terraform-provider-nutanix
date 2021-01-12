@@ -130,12 +130,12 @@ The following attributes are exported:
 ### Metadata
 The metadata attribute exports the following:
 
-* `last_update_time` - UTC date and time in RFC-3339 format when vm was last updated.
-* `uuid` - vm UUID.
-* `creation_time` - UTC date and time in RFC-3339 format when vm was created.
+* `last_update_time` - UTC date and time in RFC-3339 format when the project was last updated.
+* `uuid` - Project UUID.
+* `creation_time` - UTC date and time in RFC-3339 format when the project was created.
 * `spec_version` - Version number of the latest spec.
 * `spec_hash` - Hash of the spec. This will be returned from server.
-* `name` - vm name.
+* `name` - Project name.
 * `should_force_translate`: - Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
 
 ### Categories

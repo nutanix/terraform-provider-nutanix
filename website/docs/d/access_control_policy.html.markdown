@@ -20,11 +20,11 @@ resource "nutanix_access_control_policy" "test" {
 		kind = "role"
 		uuid = "UUID of role"
 	}
-
-    data "nutanix_access_control_policy" "test" {
-        access_control_policy_id = nutanix_access_control_policy.test.id
-    }
 }
+data "nutanix_access_control_policy" "test" {
+    access_control_policy_id = nutanix_access_control_policy.test.id
+}
+
 ```
 
 ## Argument Reference
@@ -38,11 +38,10 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `name`: - Name of the Access Control Policy.
-* `description`: - The description of the association of a role to a user in a given context.
+* `description`: - The description of the Access Control Policy.
 * `categories`: - Categories for the Access Control Policy.
 * `project_reference`: - The reference to a project.
 * `owner_reference`: - The reference to a user.
-* `project_reference`: - The reference to a project.
 * `role_reference`: - The reference to a role.
 * `user_reference_list`: - The User(s) being assigned a given role.
 * `user_group_reference_list`: - The User group(s) being assigned a given role.
@@ -90,20 +89,20 @@ The right_hand_side attribute supports the following.
 
 The following attributes are exported:
 
-* `metadata`: - The vm kind metadata.
+* `metadata`: - The Access Control Policy kind metadata.
 * `api_version` - The version of the API.
-* `state`: - The state of the vm.
+* `state`: - The state of the Access Control Policy.
 
 ### Metadata
 
 The metadata attribute exports the following:
 
-* `last_update_time`: - UTC date and time in RFC-3339 format when vm was last updated.
-* `uuid`: - vm UUID.
-* `creation_time`: - UTC date and time in RFC-3339 format when vm was created.
+* `last_update_time`: - UTC date and time in RFC-3339 format when Access Control Policy was last updated.
+* `uuid`: - Access Control Policy UUID.
+* `creation_time`: - UTC date and time in RFC-3339 format when Access Control Policy was created.
 * `spec_version`: - Version number of the latest spec.
 * `spec_hash`: - Hash of the spec. This will be returned from server.
-* `name`: - vm name.
+* `name`: - Access Control Policy name.
 * `should_force_translate`: - Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
 
 ### Categories

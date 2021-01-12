@@ -44,7 +44,6 @@ The following arguments are supported:
 * `categories`: - (Optional) Categories for the Access Control Policy.
 * `project_reference`: - (Optional) The reference to a project.
 * `owner_reference`: - (Optional) The reference to a user.
-* `project_reference`: - (Optional) The reference to a project.
 
 ### Directory Service User
 
