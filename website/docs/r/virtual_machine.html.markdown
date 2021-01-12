@@ -84,6 +84,7 @@ The following arguments are supported:
 * `boot_device_disk_address`: - (Optional) Address of disk to boot from.
 * `boot_device_mac_address`: - (Optional) MAC address of nic to boot from.
 * `boot_type`: - (Optional) Indicates whether the VM should use Secure boot, UEFI boot or Legacy boot.If UEFI or; Secure boot is enabled then other legacy boot options (like boot_device and; boot_device_order_list) are ignored. Secure boot depends on UEFI boot, i.e. enabling; Secure boot means that UEFI boot is also enabled. The possible value are: UEFI", "LEGACY", "SECURE_BOOT".
+* `machine_type`: - Machine type for the VM. Machine type Q35 is required for secure boot and does not support IDE disks.
 * `hardware_clock_timezone`: - (Optional) VM's hardware clock timezone in IANA TZDB format (America/Los_Angeles).
 * `guest_customization_cloud_init_user_data`: - (Optional) The contents of the user_data configuration for cloud-init. This can be formatted as YAML, JSON, or could be a shell script. The value must be base64 encoded.
 * `guest_customization_cloud_init_meta_data` - (Optional) The contents of the meta_data configuration for cloud-init. This can be formatted as YAML or JSON. The value must be base64 encoded.
