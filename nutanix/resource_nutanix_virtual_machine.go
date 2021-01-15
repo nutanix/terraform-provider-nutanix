@@ -920,7 +920,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 
 	// Set terraform state id
 	d.SetId(uuid)
-	d.Set("cloud_init_cdrom_uuid", "")
+	// d.Set("cloud_init_cdrom_uuid", "")
 	return resourceNutanixVirtualMachineRead(d, meta)
 }
 
