@@ -97,29 +97,6 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 					},
 				},
 			},
-			"project_reference": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"uuid": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"kind": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "project",
-						},
-					},
-				},
-			},
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -380,9 +357,6 @@ func resourceNutanixAccessControlPolicyRead(d *schema.ResourceData, meta interfa
 	if err := d.Set("categories", c); err != nil {
 		return err
 	}
-	if err := d.Set("project_reference", flattenReferenceValuesList(resp.Metadata.ProjectReference)); err != nil {
-		return err
-	}
 	if err := d.Set("owner_reference", flattenReferenceValuesList(resp.Metadata.OwnerReference)); err != nil {
 		return err
 	}
@@ -454,9 +428,6 @@ func resourceNutanixAccessControlPolicyUpdate(d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("owner_reference") {
 		metadata.OwnerReference = validateRefList(d.Get("owner_reference").([]interface{}), nil)
-	}
-	if d.HasChange("project_reference") {
-		metadata.ProjectReference = validateRefList(d.Get("project_reference").([]interface{}), utils.StringPtr("project"))
 	}
 	if d.HasChange("name") {
 		spec.Name = utils.StringPtr(d.Get("name").(string))
