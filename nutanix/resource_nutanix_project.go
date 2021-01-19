@@ -2,15 +2,13 @@ package nutanix
 
 import (
 	"fmt"
-	"log"
-	"strings"
-	"time"
-
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/spf13/cast"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+	"log"
+	"strings"
 )
 
 func resourceNutanixProject() *schema.Resource {
@@ -483,9 +481,9 @@ func resourceNutanixProjectUpdate(d *schema.ResourceData, meta interface{}) erro
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    time.Duration(10) * time.Minute,
-		Delay:      imageDelay,
-		MinTimeout: imageMinTimeout,
+		Timeout:    subnetTimeout,
+		Delay:      subnetDelay,
+		MinTimeout: subnetMinTimeout,
 	}
 
 	if _, err := stateConf.WaitForState(); err != nil {
