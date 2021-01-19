@@ -1141,7 +1141,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("project_reference") {
 		_, n := d.GetChange("project_reference")
 		metadata.ProjectReference = validateRef(n.(map[string]interface{}))
-		hotPlugChange = false
 	}
 
 	spec.Name = response.Status.Name
