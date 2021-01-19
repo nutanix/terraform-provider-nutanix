@@ -141,12 +141,7 @@ func flattenDiskListFilterCloudInit(d *schema.ResourceData, disks []*v3.VMDisk) 
 	cloudInitCdromUUID := cloudInitCdromUUIDInput.(string)
 	filteredDiskList := disks
 	potentialCloudInitIDs := make([]string, 0)
-	//Check if name is set:
-	//    if name is not set, it indicates an import action
-	_, nameOk := d.GetOk("name")
-	log.Printf("NameOk value:  %t", nameOk)
-	// search of cloudinit-cdrom uuid if the uuid is not yet set AND (guest customisation keys are passed OR name was not set -> import action)
-	if cloudInitCdromUUID == "" && (usesGuestCustomization(d) || !nameOk) {
+	if cloudInitCdromUUID == "" && usesGuestCustomization(d) {
 		log.Printf("Entering search for cloudInitCdromUUID")
 		filteredDiskList = make([]*v3.VMDisk, 0)
 		//expand the user inputted list of disks
