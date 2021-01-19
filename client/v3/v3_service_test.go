@@ -3340,7 +3340,7 @@ func TestOperations_DeleteProject(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
 			}
-			if err := op.DeleteProject(tt.args.UUID); (err != nil) != tt.wantErr {
+			if _, err := op.DeleteProject(tt.args.UUID); (err != nil) != tt.wantErr {
 				t.Errorf("Operations.DeleteProject() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

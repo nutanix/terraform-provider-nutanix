@@ -70,7 +70,7 @@ type Service interface {
 	ListProject(getEntitiesRequest *DSMetadata) (*ProjectListResponse, error)
 	ListAllProject() (*ProjectListResponse, error)
 	UpdateProject(uuid string, body *Project) (*Project, error)
-	DeleteProject(uuid string) error
+	DeleteProject(uuid string) (*DeleteResponse, error)
 	CreateAccessControlPolicy(request *AccessControlPolicy) (*AccessControlPolicy, error)
 	GetAccessControlPolicy(accessControlPolicyUUID string) (*AccessControlPolicy, error)
 	ListAccessControlPolicy(getEntitiesRequest *DSMetadata) (*AccessControlPolicyListResponse, error)
@@ -1308,17 +1308,18 @@ func (op Operations) UpdateProject(uuid string, body *Project) (*Project, error)
  * @param uuid The uuid of the entity.
  * @return void
  */
-func (op Operations) DeleteProject(uuid string) error {
+func (op Operations) DeleteProject(uuid string) (*DeleteResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/projects/%s", uuid)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	deleteResponse := new(DeleteResponse)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return op.client.Do(ctx, req, nil)
+	return deleteResponse, op.client.Do(ctx, req, deleteResponse)
 }
 
 /*CreateAccessControlPolicy creates a access policy
