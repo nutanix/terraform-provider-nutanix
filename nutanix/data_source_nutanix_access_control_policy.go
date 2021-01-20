@@ -13,8 +13,14 @@ func dataSourceNutanixAccessControlPolicy() *schema.Resource {
 		Read: dataSourceNutanixAccessControlPolicyRead,
 		Schema: map[string]*schema.Schema{
 			"access_control_policy_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"access_control_policy_name"},
+			},
+			"access_control_policy_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"access_control_policy_id"},
 			},
 			"api_version": {
 				Type:     schema.TypeString,
@@ -256,16 +262,22 @@ func dataSourceNutanixAccessControlPolicyRead(d *schema.ResourceData, meta inter
 	// Get client connection
 	conn := meta.(*Client).API
 
-	accessID, iok := d.GetOk("access_control_policy_id")
+	id, iok := d.GetOk("access_control_policy_id")
+	name, nOk := d.GetOk("access_control_policy_name")
 
-	if !iok {
-		return fmt.Errorf("please provide `access_control_policy_id`")
+	if !iok && !nOk {
+		return fmt.Errorf("please provide `access_control_policy_id` or `access_control_policy_name`")
 	}
 
 	var reqErr error
 	var resp *v3.AccessControlPolicy
 
-	resp, reqErr = conn.V3.GetAccessControlPolicy(accessID.(string))
+	if iok {
+		resp, reqErr = conn.V3.GetAccessControlPolicy(id.(string))
+	}
+	if nOk {
+		resp, reqErr = findACPByName(conn, name.(string))
+	}
 
 	if reqErr != nil {
 		return reqErr
@@ -320,4 +332,31 @@ func dataSourceNutanixAccessControlPolicyRead(d *schema.ResourceData, meta inter
 	d.SetId(utils.StringValue(resp.Metadata.UUID))
 
 	return nil
+}
+
+func findACPByName(conn *v3.Client, name string) (*v3.AccessControlPolicy, error) {
+	filter := fmt.Sprintf("name==%s", name)
+	resp, err := conn.V3.ListAllAccessControlPolicy(filter)
+	if err != nil {
+		return nil, err
+	}
+
+	entities := resp.Entities
+
+	found := make([]*v3.AccessControlPolicy, 0)
+	for _, v := range entities {
+		if *v.Spec.Name == name {
+			found = append(found, v)
+		}
+	}
+
+	if len(found) > 1 {
+		return nil, fmt.Errorf("your query returned more than one result. Please use access_control_policy_id argument instead")
+	}
+
+	if len(found) == 0 {
+		return nil, fmt.Errorf("access control policy with the given name, not found")
+	}
+
+	return found[0], nil
 }
