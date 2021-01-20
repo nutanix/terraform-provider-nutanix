@@ -2,7 +2,6 @@ package nutanix
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -142,20 +141,15 @@ func flattenDiskListFilterCloudInit(d *schema.ResourceData, disks []*v3.VMDisk) 
 	filteredDiskList := disks
 	potentialCloudInitIDs := make([]string, 0)
 	if cloudInitCdromUUID == "" && usesGuestCustomization(d) {
-		log.Printf("Entering search for cloudInitCdromUUID")
 		filteredDiskList = make([]*v3.VMDisk, 0)
 		//expand the user inputted list of disks
 		expandedOrgDiskList := expandDiskList(d)
-		utils.PrintToJSON(expandedOrgDiskList, "expandedOrgDiskList: ")
 		//extract the CD-rom drives
 		userCdromDiskList := GetCdromDiskList(expandedOrgDiskList)
 		for _, eDisk := range disks {
 			//if existing disk is not CD-rom, append it to the list and continue
-			utils.PrintToJSON(eDisk, "edisk: ")
-			log.Print(isCdromDisk(eDisk))
 			if !isCdromDisk(eDisk) {
 				filteredDiskList = append(filteredDiskList, eDisk)
-				log.Print("appended!")
 				continue
 			} else {
 				//Get existing CDrom device Index
@@ -183,7 +177,6 @@ func flattenDiskListFilterCloudInit(d *schema.ResourceData, disks []*v3.VMDisk) 
 				}
 				if !match {
 					potentialCloudInitIDs = append(potentialCloudInitIDs, *eDisk.UUID)
-					// cloudInitCdromUUID = *eDisk.UUID
 				}
 			}
 		}
@@ -194,17 +187,8 @@ func flattenDiskListFilterCloudInit(d *schema.ResourceData, disks []*v3.VMDisk) 
 		if len(potentialCloudInitIDs) > 1 {
 			return nil, fmt.Errorf("more than 1 unknown cd-rom device: %v", potentialCloudInitIDs)
 		}
-
-		log.Printf("flattenDiskListFilterCloudInit")
-		utils.PrintToJSON(disks, "disks: ")
-		utils.PrintToJSON(userCdromDiskList, "userCdromDiskList: ")
-		utils.PrintToJSON(filteredDiskList, "filteredDiskList: ")
-		log.Printf("cloudInitCdromUUID: %s", cloudInitCdromUUID)
-	} else {
-		log.Printf("Will not search for cloudInitCdromUUID")
 	}
 	fDiskList := flattenDiskListHelper(filteredDiskList, cloudInitCdromUUID)
-	utils.PrintToJSON(fDiskList, "fDiskList: ")
 	return fDiskList, nil
 }
 func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
@@ -220,10 +204,6 @@ func flattenDiskListHelper(disks []*v3.VMDisk, cloudInitCdromUUID string) []map[
 			deviceProps = make([]map[string]interface{}, 1)
 			index := fmt.Sprintf("%d", utils.Int64Value(v.DeviceProperties.DiskAddress.DeviceIndex))
 			adapter := v.DeviceProperties.DiskAddress.AdapterType
-
-			// if index == "3" && *adapter == IDE {
-			// 	continue
-			// }
 
 			deviceProps[0] = map[string]interface{}{
 				"device_type": v.DeviceProperties.DeviceType,
