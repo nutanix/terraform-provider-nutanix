@@ -97,8 +97,8 @@ type VMBootConfig struct {
 type NutanixGuestToolsSpec struct {
 	State                 *string           `json:"state,omitempty" mapstructure:"state,omitempty"`                                     // Nutanix Guest Tools is enabled or not.
 	Version               *string           `json:"version,omitempty" mapstructure:"version,omitempty"`                                 // Version of Nutanix Guest Tools installed on the VM.
-	NgtState              *string           `json:"ngt_state,omitempty" mapstructure:"ngt_state,omitempty"`                             //Nutanix Guest Tools installed or not.
-	Credentials           map[string]string `json:"credentials,omitempty" mapstructure:"credentials,omitempty"`                         //Credentials to login server
+	NgtState              *string           `json:"ngt_state,omitempty" mapstructure:"ngt_state,omitempty"`                             // Nutanix Guest Tools installed or not.
+	Credentials           map[string]string `json:"credentials,omitempty" mapstructure:"credentials,omitempty"`                         // Credentials to login server
 	IsoMountState         *string           `json:"iso_mount_state,omitempty" mapstructure:"iso_mount_state,omitempty"`                 // Desired mount state of Nutanix Guest Tools ISO.
 	EnabledCapabilityList []*string         `json:"enabled_capability_list,omitempty" mapstructure:"enabled_capability_list,omitempty"` // Application names that are enabled.
 }
@@ -379,7 +379,7 @@ type VMNicOutputStatus struct {
 type NutanixGuestToolsStatus struct {
 	// Version of Nutanix Guest Tools available on the cluster.
 	AvailableVersion *string `json:"available_version,omitempty" mapstructure:"available_version,omitempty"`
-	//Nutanix Guest Tools installed or not.
+	// Nutanix Guest Tools installed or not.
 	NgtState *string `json:"ngt_state,omitempty" mapstructure:"ngt_state,omitempty"`
 	// Desired mount state of Nutanix Guest Tools ISO.
 	IsoMountState *string `json:"iso_mount_state,omitempty" mapstructure:"iso_mount_state,omitempty"`
@@ -389,7 +389,7 @@ type NutanixGuestToolsStatus struct {
 	Version *string `json:"version,omitempty" mapstructure:"version,omitempty"`
 	// Application names that are enabled.
 	EnabledCapabilityList []*string `json:"enabled_capability_list,omitempty" mapstructure:"enabled_capability_list,omitempty"`
-	//Credentials to login server
+	// Credentials to login server
 	Credentials map[string]string `json:"credentials,omitempty" mapstructure:"credentials,omitempty"`
 	// Version of the operating system on the VM.
 	GuestOsVersion *string `json:"guest_os_version,omitempty" mapstructure:"guest_os_version,omitempty"`
@@ -541,7 +541,7 @@ type VMDefStatus struct {
 	ExecutionContext *ExecutionContext `json:"execution_context,omitempty" mapstructure:"execution_context,omitempty"`
 }
 
-//ExecutionContext ...
+// ExecutionContext ...
 type ExecutionContext struct {
 	TaskUUID interface{} `json:"task_uuid,omitempty" mapstructure:"task_uuid,omitempty"`
 }
