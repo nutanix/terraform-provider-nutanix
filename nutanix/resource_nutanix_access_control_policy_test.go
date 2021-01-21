@@ -53,8 +53,6 @@ func TestAccNutanixAccessControlPolicy_basic(t *testing.T) {
 func TestAccNutanixAccessControlPolicy_WithUser(t *testing.T) {
 	name := acctest.RandomWithPrefix("accest-access-policy")
 	description := "Description of my access control policy"
-	nameUpdated := acctest.RandomWithPrefix("accest-access-policy")
-	descriptionUpdated := "Description of my access control policy updated"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -67,14 +65,6 @@ func TestAccNutanixAccessControlPolicy_WithUser(t *testing.T) {
 					testAccCheckNutanixAccessControlPolicyExists(),
 					resource.TestCheckResourceAttr(resourceAccessPolicy, "name", name),
 					resource.TestCheckResourceAttr(resourceAccessPolicy, "description", description),
-				),
-			},
-			{
-				Config: testAccNutanixAccessControlPolicyConfigWithUser(nameUpdated, descriptionUpdated),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNutanixAccessControlPolicyExists(),
-					resource.TestCheckResourceAttr(resourceAccessPolicy, "name", nameUpdated),
-					resource.TestCheckResourceAttr(resourceAccessPolicy, "description", descriptionUpdated),
 				),
 			},
 			{
@@ -214,7 +204,7 @@ resource "nutanix_access_control_policy" "test" {
 func testAccNutanixAccessControlPolicyConfigWithUser(name, description string) string {
 	return fmt.Sprintf(`
 resource "nutanix_role" "test" {
-	name        = "test role"
+	name        = "test role 2"
 	description = "description role"
 	permission_reference_list {
 		kind = "permission"
@@ -238,7 +228,10 @@ resource "nutanix_access_control_policy" "test" {
 			operator = "IN"
 			left_hand_side = "PROJECT"
 			right_hand_side {
-				uuid_list = ["6b004b04-b88d-4aae-8b39-4a8f090200d3"]
+				categories {
+						name = "Environment"
+						value = ["Dev", "Dev1"]
+					}
 			}
 		}
 		entity_filter_expression_list{
