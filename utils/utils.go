@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -47,6 +48,7 @@ func ConvertMapString(o map[string]interface{}) map[string]string {
 	for k, v := range o {
 		converted[k] = fmt.Sprintf(v.(string))
 	}
+
 	return converted
 }
 
@@ -56,4 +58,16 @@ func StringLowerCaseValidateFunc(val interface{}, key string) (warns []string, e
 		errs = append(errs, fmt.Errorf("%q must be in lowercase, got: %s", key, v))
 	}
 	return
+}
+
+func GenUUID() string {
+	b := make([]byte, 16)
+	_, err := rand.Read(b)
+	if err != nil {
+		log.Fatal(err)
+	}
+	uuid := fmt.Sprintf("%x-%x-%x-%x-%x",
+		b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
+
+	return uuid
 }
