@@ -1556,32 +1556,18 @@ type NetworkRuleIcmpTypeCodeList struct {
 
 // NetworkRule ...
 type NetworkRule struct {
-
-	// Timestamp of expiration time.
-	ExpirationTime *string `json:"expiration_time,omitempty" mapstructure:"expiration_time,omitempty"`
-
-	// The set of categories that matching VMs need to have.
-	Filter *CategoryFilter `json:"filter,omitempty" mapstructure:"filter,omitempty"`
-
-	// List of ICMP types and codes allowed by this rule.
-	IcmpTypeCodeList []*NetworkRuleIcmpTypeCodeList `json:"icmp_type_code_list,omitempty" mapstructure:"icmp_type_code_list,omitempty"`
-
-	IPSubnet *IPSubnet `json:"ip_subnet,omitempty" mapstructure:"ip_subnet,omitempty"`
-
-	NetworkFunctionChainReference *Reference `json:"network_function_chain_reference,omitempty" mapstructure:"network_function_chain_reference,omitempty"`
-
-	// The set of categories that matching VMs need to have.
-	PeerSpecificationType *string `json:"peer_specification_type,omitempty" mapstructure:"peer_specification_type,omitempty"`
-
-	// Select a protocol to allow.  Multiple protocols can be allowed by repeating network_rule object.  If a protocol
-	// is not configured in the network_rule object then it is allowed.
-	Protocol *string `json:"protocol,omitempty" mapstructure:"protocol,omitempty"`
-
-	// List of TCP ports that are allowed by this rule.
-	TCPPortRangeList []*PortRange `json:"tcp_port_range_list,omitempty" mapstructure:"tcp_port_range_list,omitempty"`
-
-	// List of UDP ports that are allowed by this rule.
-	UDPPortRangeList []*PortRange `json:"udp_port_range_list,omitempty" mapstructure:"udp_port_range_list,omitempty"`
+	ExpirationTime                *string                        `json:"expiration_time,omitempty" mapstructure:"expiration_time,omitempty"`
+	Filter                        *CategoryFilter                `json:"filter,omitempty" mapstructure:"filter,omitempty"`
+	IcmpTypeCodeList              []*NetworkRuleIcmpTypeCodeList `json:"icmp_type_code_list,omitempty" mapstructure:"icmp_type_code_list,omitempty"`
+	IPSubnet                      *IPSubnet                      `json:"ip_subnet,omitempty" mapstructure:"ip_subnet,omitempty"`
+	NetworkFunctionChainReference *Reference                     `json:"network_function_chain_reference,omitempty" mapstructure:"network_function_chain_reference,omitempty"`
+	PeerSpecificationType         *string                        `json:"peer_specification_type,omitempty" mapstructure:"peer_specification_type,omitempty"`
+	Protocol                      *string                        `json:"protocol,omitempty" mapstructure:"protocol,omitempty"`
+	TCPPortRangeList              []*PortRange                   `json:"tcp_port_range_list,omitempty" mapstructure:"tcp_port_range_list,omitempty"`
+	UDPPortRangeList              []*PortRange                   `json:"udp_port_range_list,omitempty" mapstructure:"udp_port_range_list,omitempty"`
+	AddressGroupInclusionList     []*Reference                   `json:"address_group_inclusion_list,omitempty" mapstructure:"address_group_inclusion_list,omitempty"`
+	Description                   *string                        `json:"description,omitempty" mapstructure:"description,omitempty"`
+	ServiceGroupList              []*Reference                   `json:"service_group_list,omitempty" mapstructure:"service_group_list,omitempty"`
 }
 
 // TargetGroup ...
@@ -1616,9 +1602,12 @@ type NetworkSecurityRuleIsolationRule struct {
 
 // NetworkSecurityRuleResources ...
 type NetworkSecurityRuleResources struct {
-	AppRule        *NetworkSecurityRuleResourcesRule `json:"app_rule,omitempty" mapstructure:"app_rule,omitempty"`
-	IsolationRule  *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty" mapstructure:"isolation_rule,omitempty"`
-	QuarantineRule *NetworkSecurityRuleResourcesRule `json:"quarantine_rule,omitempty" mapstructure:"quarantine_rule,omitempty"`
+	AllowIpv6Traffic      *bool                             `json:"allow_ipv6_traffic,omitempty" mapstructure:"allow_ipv6_traffic,omitempty"`
+	IsPolicyHitlogEnabled *bool                             `json:"is_policy_hitlog_enabled,omitempty" mapstructure:"is_policy_hitlog_enabled,omitempty"`
+	AdRule                *NetworkSecurityRuleResourcesRule `json:"ad_rule,omitempty" mapstructure:"ad_rule,omitempty"`
+	AppRule               *NetworkSecurityRuleResourcesRule `json:"app_rule,omitempty" mapstructure:"app_rule,omitempty"`
+	IsolationRule         *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty" mapstructure:"isolation_rule,omitempty"`
+	QuarantineRule        *NetworkSecurityRuleResourcesRule `json:"quarantine_rule,omitempty" mapstructure:"quarantine_rule,omitempty"`
 }
 
 // NetworkSecurityRule ...

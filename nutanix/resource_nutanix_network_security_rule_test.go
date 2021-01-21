@@ -74,6 +74,41 @@ func TestAccNutanixNetworkSecurityRule_isolation(t *testing.T) {
 	})
 }
 
+func TestAccNutanixNetworkSecurityRule_adrule(t *testing.T) {
+	// Skipped because this test didn't pass in GCP environment
+	if isGCPEnvironment() {
+		t.Skip()
+	}
+
+	rInt := acctest.RandInt()
+	resourceName := "nutanix_network_security_rule.VDI"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixNetworkSecurityRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixNetworkSecurityRuleConfigAdRule(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixNetworkSecurityRuleExists(resourceName),
+				),
+			},
+			{
+				Config: testAccNutanixNetworkSecurityRuleConfigAdRuleUpdate(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixNetworkSecurityRuleExists(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixNetworkSecurityRuleExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -336,5 +371,75 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
     }
   }
 }
+`, r)
+}
+
+func testAccNutanixNetworkSecurityRuleConfigAdRule(r int) string {
+	return fmt.Sprintf(`
+	resource "nutanix_network_security_rule" "VDI" {
+		name           = "tf-%d"
+		ad_rule_action = "APPLY"
+		description    = "test"
+		#   app_rule_action = "APPLY"
+		ad_rule_inbound_allow_list {
+		  ip_subnet               = "10.0.0.0"
+		  ip_subnet_prefix_length = "8"
+		  peer_specification_type = "IP_SUBNET"
+		  protocol                = "ALL"
+		}
+		ad_rule_target_group_default_internal_policy = "DENY_ALL"
+		ad_rule_target_group_filter_kind_list = [
+		  "vm"
+		]
+		ad_rule_target_group_filter_params {
+		  name = "ADGroup"
+		  values = [
+			"flow"
+		  ]
+		}
+		ad_rule_target_group_filter_type             = "CATEGORIES_MATCH_ALL"
+		ad_rule_target_group_peer_specification_type = "FILTER"
+		ad_rule_outbound_allow_list {
+		  ip_subnet               = "10.0.0.0"
+		  ip_subnet_prefix_length = "8"
+		  peer_specification_type = "IP_SUBNET"
+		  protocol                = "ALL"
+		}
+	  }
+`, r)
+}
+
+func testAccNutanixNetworkSecurityRuleConfigAdRuleUpdate(r int) string {
+	return fmt.Sprintf(`
+	resource "nutanix_network_security_rule" "VDI" {
+		name           = "tf-%d"
+		ad_rule_action = "APPLY"
+		description    = "test update"
+		#   app_rule_action = "APPLY"
+		ad_rule_inbound_allow_list {
+		  ip_subnet               = "10.0.0.0"
+		  ip_subnet_prefix_length = "8"
+		  peer_specification_type = "IP_SUBNET"
+		  protocol                = "ALL"
+		}
+		ad_rule_target_group_default_internal_policy = "DENY_ALL"
+		ad_rule_target_group_filter_kind_list = [
+		  "vm"
+		]
+		ad_rule_target_group_filter_params {
+		  name = "ADGroup"
+		  values = [
+			"flow"
+		  ]
+		}
+		ad_rule_target_group_filter_type             = "CATEGORIES_MATCH_ALL"
+		ad_rule_target_group_peer_specification_type = "FILTER"
+		ad_rule_outbound_allow_list {
+		  ip_subnet               = "10.0.0.0"
+		  ip_subnet_prefix_length = "8"
+		  peer_specification_type = "IP_SUBNET"
+		  protocol                = "ALL"
+		}
+	  }
 `, r)
 }
