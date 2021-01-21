@@ -71,45 +71,45 @@ The following arguments are supported:
 * `resource_domain.resources.#.resource_type` - (Required) The type of resource (for example storage, CPUs)
 
 ### Account Reference List
-* `account_reference_list` - (Optional/Computed)
-* `account_reference_list.#.kind` - (Optional) The efault value is `account`
-* `account_reference_list.#.uuid` - (Required)
-* `account_reference_list.#.name` - (Optional/Computed)
+* `account_reference_list` - (Optional/Computed) List of accounts associated with the project.
+* `account_reference_list.#.kind` - (Optional) The kind name. Default value is `account`
+* `account_reference_list.#.uuid` - (Required) The UUID of an account.
+* `account_reference_list.#.name` - (Optional/Computed) The name of an account.
 
 ### Environment Reference List
-* `environment_reference_list` - (Optional/Computed)
-* `environment_reference_list.#.kind` - (Optional) The efault value is `environment`
-* `environment_reference_list.#.uuid` - (Required)
-* `environment_reference_list.#.name` - (Optional/Computed)
+* `environment_reference_list` - (Optional/Computed) List of environments associated with the project.
+* `environment_reference_list.#.kind` - (Optional) The kind name. Default value is `environment`
+* `environment_reference_list.#.uuid` - (Required) The UUID of an environment.
+* `environment_reference_list.#.name` - (Optional/Computed) The name of an environment.
 
 ### Default Subnet Reference Map
-* `default_subnet_reference` - (Required)
-* `default_subnet_reference.kind` - (Optional) The efault value is `subnet`
-* `default_subnet_reference.uuid` - (Required)
-* `default_subnet_reference.name` - (Optional/Computed)
+* `default_subnet_reference` - (Required) Reference to a subnet.
+* `default_subnet_reference.kind` - (Optional) The kind name. Default value is `subnet`
+* `default_subnet_reference.uuid` - (Required) The UUID of a subnet.
+* `default_subnet_reference.name` - (Optional/Computed) The name of a subnet.
 
 ### user_reference_list
-* `user_reference_list` - (Optional/Computed)
-* `user_reference_list.#.kind` - (Optional) The efault value is `user`
-* `user_reference_list.#.uuid` - (Required)
-* `user_reference_list.#.name` - (Optional/Computed)
+* `user_reference_list` - (Optional/Computed) List of users in the project.
+* `user_reference_list.#.kind` - (Optional) The kind name. Default value is `user`
+* `user_reference_list.#.uuid` - (Required) The UUID of a user
+* `user_reference_list.#.name` - (Optional/Computed) The name of a user.
 
 ### External User Group Reference List
-* `external_user_group_reference_list` - (Optional/Computed)
-* `external_user_group_reference_list.#.kind` - (Optional) The efault value is `user_group`
-* `external_user_group_reference_list.#.uuid` - (Required)
-* `external_user_group_reference_list.#.name` - (Optional/Computed)
+* `external_user_group_reference_list` - (Optional/Computed) List of directory service user groups. These groups are not managed by Nutanix.
+* `external_user_group_reference_list.#.kind` - (Optional) The kind name. Default value is `user_group`
+* `external_user_group_reference_list.#.uuid` - (Required) The UUID of a user_group
+* `external_user_group_reference_list.#.name` - (Optional/Computed) The name of a user_group
 
 ### Subnet Reference List
-* `subnet_reference_list` - (Optional/Computed)
-* `subnet_reference_list.#.kind` - (Optional) The efault value is `subnet`
-* `subnet_reference_list.#.uuid` - (Required)
-* `subnet_reference_list.#.name` - (Optional/Computed)
+* `subnet_reference_list` - (Optional/Computed) List of subnets for the project.
+* `subnet_reference_list.#.kind` - (Optional) The kind name. Default value is `subnet`
+* `subnet_reference_list.#.uuid` - (Required) The UUID of a subnet
+* `subnet_reference_list.#.name` - (Optional/Computed) The name of a subnet.
 
 ### External Network List
-* `subnet_reference_list` - (Optional/Computed)
-* `subnet_reference_list.#.uuid` - (Required)
-* `subnet_reference_list.#.name` - (Optional/Computed)
+* `external_network_list` - (Optional/Computed) List of external networks associated with the project.
+* `external_network_list.#.uuid` - (Required) The UUID of a network.
+* `external_network_list.#.name` - (Optional/Computed) The name of a network.
 
 
 ## Attributes Reference

@@ -40,45 +40,45 @@ The entities attribute element contains the followings attributes:
 * `resource_domain.resources.#.value` - The amount of resource consumed
 
 ### Account Reference List
-* `account_reference_list`
-* `account_reference_list.#.kind`
-* `account_reference_list.#.uuid`
-* `account_reference_list.#.name`
+* `account_reference_list` - List of accounts associated with the project.
+* `account_reference_list.#.kind` - The kind name. Default value is `account`
+* `account_reference_list.#.uuid` - The UUID of an account.
+* `account_reference_list.#.name` - The name of an account.
 
 ### Environment Reference List
-* `environment_reference_list`
-* `environment_reference_list.#.kind`
-* `environment_reference_list.#.uuid`
-* `environment_reference_list.#.name`
+* `environment_reference_list` - List of environments associated with the project.
+* `environment_reference_list.#.kind` - The kind name. Default value is `environment`
+* `environment_reference_list.#.uuid` - The UUID of an environment.
+* `environment_reference_list.#.name` - The name of an environment.
 
 ### Default Subnet Reference Map
-* `default_subnet_reference`
-* `default_subnet_reference.kind`
-* `default_subnet_reference.uuid`
-* `default_subnet_reference.name`
+* `default_subnet_reference` - Reference to a subnet.
+* `default_subnet_reference.kind` - The kind name. Default value is `subnet`
+* `default_subnet_reference.uuid` - The UUID of a subnet.
+* `default_subnet_reference.name` - The name of a subnet.
 
 ### user_reference_list
-* `user_reference_list`
-* `user_reference_list.#.kind`
-* `user_reference_list.#.uuid`
-* `user_reference_list.#.name`
+* `user_reference_list` - List of users in the project.
+* `user_reference_list.#.kind` - The kind name. Default value is `user`
+* `user_reference_list.#.uuid` - The UUID of a user
+* `user_reference_list.#.name` - The name of a user.
 
 ### External User Group Reference List
-* `external_user_group_reference_list`
-* `external_user_group_reference_list.#.kind`
-* `external_user_group_reference_list.#.uuid`
-* `external_user_group_reference_list.#.name`
+* `external_user_group_reference_list` - List of directory service user groups. These groups are not managed by Nutanix.
+* `external_user_group_reference_list.#.kind` - The kind name. Default value is `user_group`
+* `external_user_group_reference_list.#.uuid` - The UUID of a user_group
+* `external_user_group_reference_list.#.name` - The name of a user_group
 
 ### Subnet Reference List
-* `subnet_reference_list`
-* `subnet_reference_list.#.kind`
-* `subnet_reference_list.#.uuid`
-* `subnet_reference_list.#.name`
+* `subnet_reference_list` - List of subnets for the project.
+* `subnet_reference_list.#.kind` - The kind name. Default value is `subnet`
+* `subnet_reference_list.#.uuid` - The UUID of a subnet
+* `subnet_reference_list.#.name` - The name of a subnet.
 
 ### External Network List
-* `subnet_reference_list`
-* `subnet_reference_list.#.uuid`
-* `subnet_reference_list.#.name`
+* `external_network_list` - List of external networks associated with the project.
+* `external_network_list.#.uuid` - The UUID of a network.
+* `external_network_list.#.name` - The name of a network.
 
 ### Resource Domain
 * `resource_domain.resources.#.units` - The units of the resource type
