@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -11,8 +12,14 @@ func dataSourceNutanixProject() *schema.Resource {
 		Read: dataSourceNutanixProjectRead,
 		Schema: map[string]*schema.Schema{
 			"project_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"project_name"},
+			},
+			"project_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"project_id"},
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -285,9 +292,23 @@ func dataSourceNutanixProject() *schema.Resource {
 func dataSourceNutanixProjectRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 
-	projectID := d.Get("project_id").(string)
+	id, iok := d.GetOk("project_id")
+	name, nOk := d.GetOk("project_name")
 
-	project, err := conn.V3.GetProject(projectID)
+	if !iok && !nOk {
+		return fmt.Errorf("please provide `project_id` or `project_name`")
+	}
+
+	var err error
+	var project *v3.Project
+
+	if iok {
+		project, err = conn.V3.GetProject(id.(string))
+	}
+	if nOk {
+		project, err = findProjectByName(conn, name.(string))
+	}
+
 	if err != nil {
 		return err
 	}
@@ -347,7 +368,34 @@ func dataSourceNutanixProjectRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting `api_version` for Project(%s): %s", d.Id(), err)
 	}
 
-	d.SetId(projectID)
+	d.SetId(id.(string))
 
 	return nil
+}
+
+func findProjectByName(conn *v3.Client, name string) (*v3.Project, error) {
+	filter := fmt.Sprintf("name==%s", name)
+	resp, err := conn.V3.ListAllProject(filter)
+	if err != nil {
+		return nil, err
+	}
+
+	entities := resp.Entities
+
+	found := make([]*v3.Project, 0)
+	for _, v := range entities {
+		if v.Spec.Name == name {
+			found = append(found, v)
+		}
+	}
+
+	if len(found) > 1 {
+		return nil, fmt.Errorf("your query returned more than one result. Please use project_id argument instead")
+	}
+
+	if len(found) == 0 {
+		return nil, fmt.Errorf("project with the given name, not found")
+	}
+
+	return found[0], nil
 }
