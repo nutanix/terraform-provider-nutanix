@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -369,7 +370,7 @@ func dataSourceNutanixProjectRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting `api_version` for Project(%s): %s", d.Id(), err)
 	}
 
-	d.SetId(id.(string))
+	d.SetId(utils.StringValue(project.Metadata.UUID))
 
 	return nil
 }
