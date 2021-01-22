@@ -1086,7 +1086,7 @@ func expandZoneNetworkMappingList(d []interface{}) []*v3.AvailabilityZoneNetwork
 	for _, networkMap := range d {
 		netMap := &v3.AvailabilityZoneNetworkMappingList{}
 		v4 := networkMap.(map[string]interface{})
-		log.Printf("print map network map : %+v", v4)
+
 		if v5, ok1 := v4["availability_zone_url"]; ok1 && v5.(string) != "" {
 			netMap.AvailabilityZoneURL = v5.(string)
 		}
@@ -1114,7 +1114,7 @@ func expandRecoveryNetwork(d []interface{}) *v3.Network {
 	network := &v3.Network{}
 	for _, v1 := range d {
 		v := v1.(map[string]interface{})
-		log.Printf("print map recovery : %+v", v)
+
 		if v2, ok1 := v["virtual_network_reference"].([]interface{}); ok1 && len(v2) > 0 {
 			network.VirtualNetworkReference = validateRefList(v2, nil)
 		}
@@ -1297,7 +1297,7 @@ func flattenNetworkMappingList(networksList []*v3.NetworkMappingList) []map[stri
 					zon := make(map[string]interface{})
 					zon["availability_zone_url"] = zone.AvailabilityZoneURL
 					zon["recovery_network"] = flattenRecoveryNetwork(zone.RecoveryNetwork)
-					zon["test_network"] = flattenRecoveryNetwork(zone.RecoveryNetwork)
+					zon["test_network"] = flattenRecoveryNetwork(zone.TestNetwork)
 					zon["recovery_ip_assignment_list"] = flattenAssignmentList(zone.RecoveryIPAssignmentList)
 					zon["test_ip_assignment_list"] = flattenAssignmentList(zone.TestIPAssignmentList)
 					zon["cluster_reference_list"] = flattenArrayReferenceValues(zone.ClusterReferenceList)
