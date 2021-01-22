@@ -207,7 +207,27 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 													Computed:     true,
 													ValidateFunc: validation.StringInSlice([]string{"ALL"}, false),
 												},
-												"categories": categoriesSchema(),
+												"categories": {
+													Type:     schema.TypeList,
+													MaxItems: 1,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"name": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+															"value": {
+																Type:     schema.TypeSet,
+																Optional: true,
+																Computed: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
+														},
+													},
+												},
 												"uuid_list": {
 													Type:     schema.TypeSet,
 													Optional: true,
@@ -248,7 +268,27 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 													Computed:     true,
 													ValidateFunc: validation.StringInSlice([]string{"ALL", "SELF_OWNED"}, false),
 												},
-												"categories": categoriesSchema(),
+												"categories": {
+													Type:     schema.TypeList,
+													MaxItems: 1,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"name": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+															"value": {
+																Type:     schema.TypeSet,
+																Optional: true,
+																Computed: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
+														},
+													},
+												},
 												"uuid_list": {
 													Type:     schema.TypeSet,
 													Optional: true,
@@ -630,7 +670,7 @@ func expandRightHandSide(side map[string]interface{}) v3.RightHandSide {
 				}
 			}
 			if v5, ok := rhd["categories"]; ok {
-				right.Categories = expandCategories(v5)
+				right.Categories = expandRightHandsideCategories(v5.([]interface{}))
 			}
 			if v5, ok := rhd["uuid_list"]; ok {
 				right.UUIDList = cast.ToStringSlice(v5.(*schema.Set).List())
@@ -691,9 +731,33 @@ func flattenRightHandSide(right v3.RightHandSide) []interface{} {
 	r := make(map[string]interface{})
 	r["collection"] = utils.StringValue(right.Collection)
 	r["uuid_list"] = right.UUIDList
-	r["categories"] = flattenCategories(right.Categories)
+	r["categories"] = flattenTightHandsideCategories(right.Categories)
 
 	rightHand = append(rightHand, r)
 
 	return rightHand
+}
+
+func expandRightHandsideCategories(categoriesSet []interface{}) map[string][]string {
+	output := make(map[string][]string)
+
+	for _, v := range categoriesSet {
+		category := v.(map[string]interface{})
+		output[category["name"].(string)] = cast.ToStringSlice(category["value"].(*schema.Set).List())
+	}
+
+	return output
+}
+
+func flattenTightHandsideCategories(categories map[string][]string) []interface{} {
+	c := make([]interface{}, 0)
+
+	for name, value := range categories {
+		c = append(c, map[string]interface{}{
+			"name":  name,
+			"value": value,
+		})
+	}
+
+	return c
 }
