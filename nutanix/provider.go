@@ -113,6 +113,10 @@ func Provider() terraform.ResourceProvider {
 			"nutanix_karbon_cluster_ssh":        dataSourceNutanixKarbonClusterSSH(),
 			"nutanix_karbon_private_registry":   dataSourceNutanixKarbonPrivateRegistry(),
 			"nutanix_karbon_private_registries": dataSourceNutanixKarbonPrivateRegistries(),
+			"nutanix_protection_rule":           dataSourceNutanixProtectionRule(),
+			"nutanix_protection_rules":          dataSourceNutanixProtectionRules(),
+			"nutanix_recovery_plan":             dataSourceNutanixRecoveryPlan(),
+			"nutanix_recovery_plans":            dataSourceNutanixRecoveryPlans(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":         resourceNutanixVirtualMachine(),
@@ -127,6 +131,8 @@ func Provider() terraform.ResourceProvider {
 			"nutanix_user":                    resourceNutanixUser(),
 			"nutanix_karbon_cluster":          resourceNutanixKarbonCluster(),
 			"nutanix_karbon_private_registry": resourceNutanixKarbonPrivateRegistry(),
+			"nutanix_protection_rule":         resourceNutanixProtectionRule(),
+			"nutanix_recovery_plan":           resourceNutanixRecoveryPlan(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
