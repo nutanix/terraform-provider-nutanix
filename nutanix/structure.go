@@ -153,7 +153,6 @@ func flattenDiskListFilterCloudInit(d *schema.ResourceData, disks []*v3.VMDisk) 
 				continue
 			} else {
 				//Get existing CDrom device Index
-
 				eDiskIndexP, err := getDeviceIndexForDisk(eDisk) //*eDisk.DeviceProperties.DiskAddress.DeviceIndex
 				if err != nil {
 					return nil, err
