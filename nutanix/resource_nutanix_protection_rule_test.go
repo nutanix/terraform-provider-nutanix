@@ -17,7 +17,10 @@ func TestAccNutanixProtectionRule_basic(t *testing.T) {
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")
 	description := acctest.RandomWithPrefix("test-protection-desc-dou")
-	aZUrl := "4db9adc1-8d13-4585-a901-a3ce1276ecb0"
+	aZUrlSource := "c99ab7cd-9191-4fcb-8fc0-232eff76e595"
+	uuidSource := "0005b21a-2b28-7bac-699a-ac1f6b6e5556"
+	aZUrlTarget := "c7926832-4976-4fe4-bead-7e508e03e3ec"
+	uuidTarget := "0005b5f7-2c60-d181-1c29-ac1f6b6e5435"
 
 	nameUpdated := acctest.RandomWithPrefix("test-protection-name-dou")
 	descriptionUpdated := acctest.RandomWithPrefix("test-protection-desc-dou")
@@ -28,7 +31,7 @@ func TestAccNutanixProtectionRule_basic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixProtectionRUleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixProtectionRuleConfig(name, description, aZUrl, 1),
+				Config: testAccNutanixProtectionRuleConfig(name, description, aZUrlSource, uuidSource, aZUrlTarget, uuidTarget, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixProtectionRuleExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -36,7 +39,7 @@ func TestAccNutanixProtectionRule_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNutanixProtectionRuleConfig(nameUpdated, descriptionUpdated, aZUrl, 2),
+				Config: testAccNutanixProtectionRuleConfig(nameUpdated, descriptionUpdated, aZUrlSource, uuidSource, aZUrlTarget, uuidTarget, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixProtectionRuleExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", nameUpdated),
@@ -52,7 +55,10 @@ func TestAccResourceNutanixProtectionRule_importBasic(t *testing.T) {
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")
 	description := acctest.RandomWithPrefix("test-protection-desc-dou")
-	aZUrl := "4db9adc1-8d13-4585-a901-a3ce1276ecb0"
+	aZUrlSource := "c99ab7cd-9191-4fcb-8fc0-232eff76e595"
+	uuidSource := "0005b21a-2b28-7bac-699a-ac1f6b6e5556"
+	aZUrlTarget := "c7926832-4976-4fe4-bead-7e508e03e3ec"
+	uuidTarget := "0005b5f7-2c60-d181-1c29-ac1f6b6e5435"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -60,7 +66,7 @@ func TestAccResourceNutanixProtectionRule_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixProtectionRUleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixProtectionRuleConfig(name, description, aZUrl, 1),
+				Config: testAccNutanixProtectionRuleConfig(name, description, aZUrlSource, uuidSource, aZUrlTarget, uuidTarget, 1),
 			},
 			{
 				ResourceName:      resourceName,
@@ -117,21 +123,39 @@ func testAccCheckNutanixProtectionRUleDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccNutanixProtectionRuleConfig(name, description, aZUrl string, snapshots int64) string {
+func testAccNutanixProtectionRuleConfig(name, description, aZUrlSource, clusterUUIDSource, aZUrlTarget, clusterUUIDTarget string, snapshots int64) string {
 	return fmt.Sprintf(`
 		resource "nutanix_protection_rule" "test" {
 			name        = "%s"
 			description = "%s"
 			ordered_availability_zone_list{
 				availability_zone_url = "%s"
+				cluster_uuid = "%s"
+			}
+			ordered_availability_zone_list{
+				availability_zone_url = "%s"
+				cluster_uuid = "%s"
 			}
 
 			availability_zone_connectivity_list{
+				source_availability_zone_index = 0
+				destination_availability_zone_index = 1
 				snapshot_schedule_list{
 					recovery_point_objective_secs = 3600
 					snapshot_type= "CRASH_CONSISTENT"
 					local_snapshot_retention_policy {
-						num_snapshots = %d
+						num_snapshots = %[7]d
+					}
+				}
+			}
+			availability_zone_connectivity_list{
+				source_availability_zone_index = 1
+				destination_availability_zone_index = 0
+				snapshot_schedule_list{
+					recovery_point_objective_secs = 3600
+					snapshot_type= "CRASH_CONSISTENT"
+					local_snapshot_retention_policy {
+						num_snapshots = %[7]d
 					}
 				}
 			}
@@ -142,5 +166,5 @@ func testAccNutanixProtectionRuleConfig(name, description, aZUrl string, snapsho
 				}
 			}
 		}
-	`, name, description, aZUrl, snapshots)
+	`, name, description, aZUrlSource, clusterUUIDSource, aZUrlTarget, clusterUUIDTarget, snapshots)
 }

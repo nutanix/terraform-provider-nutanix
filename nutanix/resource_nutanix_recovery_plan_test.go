@@ -117,7 +117,8 @@ func TestAccNutanixRecoveryPlanWithNetwork_basic(t *testing.T) {
 	descriptionUpdated := acctest.RandomWithPrefix("test-protection-desc-dou")
 
 	stageUUID := "ab788130-0820-4d07-a1b5-b0ba4d3a4254"
-	azURL := "c99ab7cd-9191-4fcb-8fc0-232eff76e595"
+	azURLSource := "c99ab7cd-9191-4fcb-8fc0-232eff76e595"
+	azURLTarget := "c7926832-4976-4fe4-bead-7e508e03e3ec"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -125,7 +126,7 @@ func TestAccNutanixRecoveryPlanWithNetwork_basic(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixRecoveryPlanDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixRecoveryPlanConfigWithNetwork(name, description, stageUUID, azURL),
+				Config: testAccNutanixRecoveryPlanConfigWithNetwork(name, description, stageUUID, azURLSource, azURLTarget),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixRecoveryPlanExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -133,7 +134,7 @@ func TestAccNutanixRecoveryPlanWithNetwork_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNutanixRecoveryPlanConfigWithNetwork(nameUpdated, descriptionUpdated, stageUUID, azURL),
+				Config: testAccNutanixRecoveryPlanConfigWithNetwork(nameUpdated, descriptionUpdated, stageUUID, azURLSource, azURLTarget),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixRecoveryPlanExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", nameUpdated),
@@ -239,7 +240,7 @@ func testAccNutanixRecoveryPlanConfigWithStageList(name, description, stageUUID 
 	`, name, description, stageUUID)
 }
 
-func testAccNutanixRecoveryPlanConfigWithNetwork(name, description, stageUUID, aZUrl string) string {
+func testAccNutanixRecoveryPlanConfigWithNetwork(name, description, stageUUID, aZUrlSource, aZUrlTarget string) string {
 	return fmt.Sprintf(`
 		resource "nutanix_recovery_plan" "test" {
 			name        = "%s"
@@ -248,10 +249,9 @@ func testAccNutanixRecoveryPlanConfigWithNetwork(name, description, stageUUID, a
 				stage_work{
 					recover_entities{
 						entity_info_list{
-							categories {
-								name = "Environment"
-								value = "Dev"
-							}
+							any_entity_reference_name = "yst-leap-test-vm"
+							any_entity_reference_kind = "vm"
+							any_entity_reference_uuid = "d0e42d78-8b0f-4a6e-9eb4-93609de2403c"
 						}
 					}
 				}
@@ -262,11 +262,46 @@ func testAccNutanixRecoveryPlanConfigWithNetwork(name, description, stageUUID, a
 				network_mapping_list{
 					availability_zone_network_mapping_list{
 						availability_zone_url = "%s"
+						recovery_network{
+							name = "Rx-Automation-Network"
+							subnet_list {
+								gateway_ip = "10.38.2.129"
+								prefix_length = 26
+								external_connectivity_state = "DISABLED"
+							}
+						}
+						test_network{
+							name = "Rx-Automation-Network"
+							subnet_list {
+								gateway_ip = "192.168.0.1"
+								prefix_length = 24
+								external_connectivity_state = "DISABLED"
+							}
+						}
+					}
+					availability_zone_network_mapping_list{
+						availability_zone_url = "%s"
+						recovery_network{
+							name = "Rx-Automation-Network"
+							subnet_list {
+								gateway_ip = "10.38.4.65"
+								prefix_length = 26
+								external_connectivity_state = "DISABLED"
+							}
+						}
+						test_network{
+							name = "Rx-Automation-Network"
+							subnet_list {
+								gateway_ip = "192.168.0.1"
+								prefix_length = 24
+								external_connectivity_state = "DISABLED"
+							}
+						}
 					}
 				}
 			}
 		}
-	`, name, description, stageUUID, aZUrl)
+	`, name, description, stageUUID, aZUrlSource, aZUrlTarget)
 }
 
 func testAccNutanixRecoveryPlanConfigWithStageListDynamic(name, description, stageUUID, categories string) string {
