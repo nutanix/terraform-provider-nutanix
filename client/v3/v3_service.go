@@ -68,9 +68,9 @@ type Service interface {
 	CreateProject(request *Project) (*Project, error)
 	GetProject(projectUUID string) (*Project, error)
 	ListProject(getEntitiesRequest *DSMetadata) (*ProjectListResponse, error)
-	ListAllProject() (*ProjectListResponse, error)
+	ListAllProject(filter string) (*ProjectListResponse, error)
 	UpdateProject(uuid string, body *Project) (*Project, error)
-	DeleteProject(uuid string) error
+	DeleteProject(uuid string) (*DeleteResponse, error)
 	CreateAccessControlPolicy(request *AccessControlPolicy) (*AccessControlPolicy, error)
 	GetAccessControlPolicy(accessControlPolicyUUID string) (*AccessControlPolicy, error)
 	ListAccessControlPolicy(getEntitiesRequest *DSMetadata) (*AccessControlPolicyListResponse, error)
@@ -1108,7 +1108,7 @@ func (op Operations) ListAllCluster(filter string) (*ClusterListIntentResponse, 
 	return resp, nil
 }
 
-//GetTask ...
+// GetTask ...
 func (op Operations) GetTask(taskUUID string) (*TasksResponse, error) {
 	ctx := context.TODO()
 
@@ -1123,7 +1123,7 @@ func (op Operations) GetTask(taskUUID string) (*TasksResponse, error) {
 	return tasksTesponse, op.client.Do(ctx, req, tasksTesponse)
 }
 
-//GetHost ...
+// GetHost ...
 func (op Operations) GetHost(hostUUID string) (*HostResponse, error) {
 	ctx := context.TODO()
 
@@ -1138,7 +1138,7 @@ func (op Operations) GetHost(hostUUID string) (*HostResponse, error) {
 	return host, op.client.Do(ctx, req, host)
 }
 
-//ListHost ...
+// ListHost ...
 func (op Operations) ListHost(getEntitiesRequest *DSMetadata) (*HostListResponse, error) {
 	ctx := context.TODO()
 	path := "/hosts/list"
@@ -1255,10 +1255,11 @@ func (op Operations) ListProject(getEntitiesRequest *DSMetadata) (*ProjectListRe
  * Note: Entities that have not been created successfully are not listed.
  * @return *ProjectListResponse
  */
-func (op Operations) ListAllProject() (*ProjectListResponse, error) {
+func (op Operations) ListAllProject(filter string) (*ProjectListResponse, error) {
 	entities := make([]*Project, 0)
 
 	resp, err := op.ListProject(&DSMetadata{
+		Filter: &filter,
 		Kind:   utils.StringPtr("project"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
@@ -1273,6 +1274,7 @@ func (op Operations) ListAllProject() (*ProjectListResponse, error) {
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
 			resp, err = op.ListProject(&DSMetadata{
+				Filter: &filter,
 				Kind:   utils.StringPtr("project"),
 				Length: utils.Int64Ptr(itemsPerPage),
 				Offset: utils.Int64Ptr(offset),
@@ -1320,17 +1322,18 @@ func (op Operations) UpdateProject(uuid string, body *Project) (*Project, error)
  * @param uuid The uuid of the entity.
  * @return void
  */
-func (op Operations) DeleteProject(uuid string) error {
+func (op Operations) DeleteProject(uuid string) (*DeleteResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/projects/%s", uuid)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	deleteResponse := new(DeleteResponse)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return op.client.Do(ctx, req, nil)
+	return deleteResponse, op.client.Do(ctx, req, deleteResponse)
 }
 
 /*CreateAccessControlPolicy creates a access policy

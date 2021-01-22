@@ -268,11 +268,11 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
 
 The following arguments are supported:
 
-* `name`: - (Required) The name for the image.
-* `categories`: - (Optional) Categories for the image.
+* `name`: - (Required) The name for the network_security_rule.
+* `categories`: - (Optional) Categories for the network_security_rule.
 * `project_reference`: - (Optional) The reference to a project.
 * `owner_reference`: - (Optional) The reference to a user.
-* `description`: - (Optional) A description for image.
+* `description`: - (Optional) A description for network_security_rule.
 * `quarantine_rule_action`: - (Optional) These rules are used for quarantining suspected VMs. Target group is a required attribute. Empty inbound_allow_list will not allow anything into target group. Empty outbound_allow_list will allow everything from target group.
 * `quarantine_rule_outbound_allow_list`: - (Optional)
 * `quarantine_rule_target_group_default_internal_policy`: - (Optional) - Default policy for communication within target group.
@@ -288,7 +288,15 @@ The following arguments are supported:
 * `app_rule_target_group_filter_kind_list`: - (Optional) - List of kinds associated with this filter.
 * `app_rule_target_group_filter_type`: - (Optional) - The type of the filter being used.
 * `app_rule_target_group_filter_params`: - (Optional) - A list of category key and list of values.
-* `app_rule_inbound_allow_list`: - (Optional)
+* `app_rule_inbound_allow_list`: - (Optional) The set of categories that matching VMs need to have.
+* `ad_rule_action`: - (Optional) - These rules govern what flows are allowed. Target group is a required attribute. Empty inbound_allow_list will not anything into target group. Empty outbound_allow_list will allow everything from target group.
+* `ad_rule_outbound_allow_list`: - (Optional)
+* `ad_rule_target_group_default_internal_policy`: - (Optional) - Default policy for communication within target group.
+* `ad_rule_target_group_peer_specification_type`: - (Optional) - Way to identify the object for which rule is applied.
+* `ad_rule_target_group_filter_kind_list`: - (Optional) - List of kinds associated with this filter.
+* `ad_rule_target_group_filter_type`: - (Optional) - The type of the filter being used.
+* `ad_rule_target_group_filter_params`: - (Optional) - A list of category key and list of values.
+* `ad_rule_inbound_allow_list`: - (Optional) The set of categories that matching VMs need to have.
 * `isolation_rule_action`: - (Optional) - These rules are used for environmental isolation.
 * `app_rule_inbound_allow_list`: - (Optional)
 * `isolation_rule_first_entity_filter_kind_list`: - (Optional) - List of kinds associated with this filter.
@@ -302,9 +310,9 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `metadata`: - The image kind metadata.
-* `retrieval_uri_list`: - List of URIs where the raw image data can be accessed.
-* `size_bytes`: - The size of the image in bytes.
+* `metadata`: - The network_security_rule kind metadata.
+* `retrieval_uri_list`: - List of URIs where the raw network_security_rule data can be accessed.
+* `size_bytes`: - The size of the network_security_rule in bytes.
 * `state`: - The state of the Network Security Rule.
 * `api_version` - The version of the API.
 
@@ -328,4 +336,4 @@ The `project_reference`, `owner_reference`, `availability_zone_reference`, `clus
 * `name`: - the name(Optional).
 * `uuid`: - the UUID(Required).
 
-See detailed information in [Nutanix Image](https://nutanix.github.io/Automation/experimental/swagger-redoc-sandbox/#tag/network_security_rules/paths/~1network_security_rules~1{UUID}/put).
+See detailed information in [Nutanix Network Security Rule](https://www.nutanix.dev/reference/prism_central/v3/api/network-security-rules/postnetworksecurityrules/).

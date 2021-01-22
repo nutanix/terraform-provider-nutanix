@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/karbon"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 )
 
@@ -39,15 +40,21 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	karbonClient, err := karbon.NewKarbonAPIClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Client{
 		WaitTimeout: c.WaitTimeout,
 		API:         v3Client,
+		KarbonAPI:   karbonClient,
 	}, nil
 }
 
 // Client represents the nutanix API client
 type Client struct {
 	API         *v3.Client
+	KarbonAPI   *karbon.Client
 	WaitTimeout int64
 }

@@ -206,7 +206,24 @@ func dataSourceNutanixAccessControlPolicies() *schema.Resource {
 																Type:     schema.TypeString,
 																Computed: true,
 															},
-															"categories": categoriesSchema(),
+															"categories": {
+																Type:     schema.TypeList,
+																MaxItems: 1,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"name": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"value": {
+																			Type:     schema.TypeList,
+																			Computed: true,
+																			Elem:     &schema.Schema{Type: schema.TypeString},
+																		},
+																	},
+																},
+															},
 															"uuid_list": {
 																Type:     schema.TypeSet,
 																Computed: true,
@@ -241,7 +258,24 @@ func dataSourceNutanixAccessControlPolicies() *schema.Resource {
 																Type:     schema.TypeString,
 																Computed: true,
 															},
-															"categories": categoriesSchema(),
+															"categories": {
+																Type:     schema.TypeList,
+																MaxItems: 1,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"name": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"value": {
+																			Type:     schema.TypeList,
+																			Computed: true,
+																			Elem:     &schema.Schema{Type: schema.TypeString},
+																		},
+																	},
+																},
+															},
 															"uuid_list": {
 																Type:     schema.TypeSet,
 																Computed: true,

@@ -34,7 +34,7 @@ The following attributes are exported:
 
 The entities attribute element contains the following attributes:
 
-* `metadata`: - The vm kind metadata.
+* `metadata`: - The user kind metadata.
 * `api_version` - The version of the API.
 * `state`: - The state of the entity.
 * `name`: - The name of the user.
@@ -44,7 +44,7 @@ The entities attribute element contains the following attributes:
 * `access_control_policy_reference_list`: - List of ACP references. See #reference for more details.
 * `directory_service_user`: - (Optional) The directory service user configuration. See below for more information.
 * `identity_provider_user`: - (Optional) (Optional) The identity provider user configuration. See below for more information.
-* `categories`: - (Optional) Categories for the Access Control Policy.
+* `categories`: - (Optional) Categories for the user.
 * `project_reference`: - (Optional) The reference to a project.
 * `owner_reference`: - (Optional) The reference to a user.
 
@@ -52,12 +52,12 @@ The entities attribute element contains the following attributes:
 
 The metadata attribute exports the following:
 
-* `last_update_time`: - UTC date and time in RFC-3339 format when vm was last updated.
-* `uuid`: - vm UUID.
-* `creation_time`: - UTC date and time in RFC-3339 format when vm was created.
+* `last_update_time`: - UTC date and time in RFC-3339 format when user was last updated.
+* `uuid`: - User UUID.
+* `creation_time`: - UTC date and time in RFC-3339 format when user was created.
 * `spec_version`: - Version number of the latest spec.
 * `spec_hash`: - Hash of the spec. This will be returned from server.
-* `name`: - vm name.
+* `name`: - User name.
 * `should_force_translate`: - Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
 
 ### Categories
