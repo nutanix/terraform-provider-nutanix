@@ -2044,9 +2044,9 @@ type LeftHandSide struct {
 
 // RightHandSide ...
 type RightHandSide struct {
-	Collection *string           `json:"collection,omitempty"`
-	Categories map[string]string `json:"categories,omitempty"`
-	UUIDList   []string          `json:"uuid_list,omitempty"`
+	Collection *string             `json:"collection,omitempty"`
+	Categories map[string][]string `json:"categories,omitempty"`
+	UUIDList   []string            `json:"uuid_list,omitempty"`
 }
 
 // AccessControlPolicyStatus ...
