@@ -20,10 +20,9 @@ resource "nutanix_role" "test" {
 		kind = "permission"
 		uuid = "ID OF PERMISSION"
 	}
-
-    data "nutanix_role" "test" {
-        role_id = nutanix_role.test.id
-    }
+}
+data "nutanix_role" "test" {
+	role_id = nutanix_role.test.id
 }
 ```
 
@@ -31,14 +30,15 @@ resource "nutanix_role" "test" {
 
 The following arguments are supported:
 
-* `role_id`: - (Required) The UUID of a Role.
+* `role_id`: - (Optional) The UUID of a Role.
+* `role_name`: - (Optional) The name of a Role.
 
 ## Attribute Reference
 
 The following attributes are exported:
 
 * `name`: - Name of the Role.
-* `description`: - The description of the association of a role to a user in a given context.
+* `description`: - The description of the Role.
 * `categories`: - Categories for the Role.
 * `project_reference`: - The reference to a project.
 * `owner_reference`: - The reference to a user.
@@ -49,20 +49,20 @@ The following attributes are exported:
 
 The following attributes are exported:
 
-* `metadata`: - The vm kind metadata.
+* `metadata`: - The role kind metadata.
 * `api_version` - The version of the API.
-* `state`: - The state of the vm.
+* `state`: - The state of the role.
 
 ### Metadata
 
 The metadata attribute exports the following:
 
-* `last_update_time`: - UTC date and time in RFC-3339 format when vm was last updated.
-* `uuid`: - vm UUID.
-* `creation_time`: - UTC date and time in RFC-3339 format when vm was created.
+* `last_update_time`: - UTC date and time in RFC-3339 format when role was last updated.
+* `uuid`: - Role UUID.
+* `creation_time`: - UTC date and time in RFC-3339 format when role was created.
 * `spec_version`: - Version number of the latest spec.
 * `spec_hash`: - Hash of the spec. This will be returned from server.
-* `name`: - vm name.
+* `name`: - Role name.
 * `should_force_translate`: - Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
 
 ### Categories
