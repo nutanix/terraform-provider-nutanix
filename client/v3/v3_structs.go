@@ -86,6 +86,7 @@ type VMBootConfig struct {
 	// given then specified boot device will be primary boot device and remaining devices will be assigned boot order
 	// according to boot device order field.
 	BootDevice *VMBootDevice `json:"boot_device,omitempty" mapstructure:"boot_device,omitempty"`
+	BootType   *string       `json:"boot_type,omitempty" mapstructure:"boot_type,omitempty"`
 
 	// Indicates the order of device types in which VM should try to boot from. If boot device order is not provided the
 	// system will decide appropriate boot device order.
@@ -96,8 +97,8 @@ type VMBootConfig struct {
 type NutanixGuestToolsSpec struct {
 	State                 *string           `json:"state,omitempty" mapstructure:"state,omitempty"`                                     // Nutanix Guest Tools is enabled or not.
 	Version               *string           `json:"version,omitempty" mapstructure:"version,omitempty"`                                 // Version of Nutanix Guest Tools installed on the VM.
-	NgtState              *string           `json:"ngt_state,omitempty" mapstructure:"ngt_state,omitempty"`                             //Nutanix Guest Tools installed or not.
-	Credentials           map[string]string `json:"credentials,omitempty" mapstructure:"credentials,omitempty"`                         //Credentials to login server
+	NgtState              *string           `json:"ngt_state,omitempty" mapstructure:"ngt_state,omitempty"`                             // Nutanix Guest Tools installed or not.
+	Credentials           map[string]string `json:"credentials,omitempty" mapstructure:"credentials,omitempty"`                         // Credentials to login server
 	IsoMountState         *string           `json:"iso_mount_state,omitempty" mapstructure:"iso_mount_state,omitempty"`                 // Desired mount state of Nutanix Guest Tools ISO.
 	EnabledCapabilityList []*string         `json:"enabled_capability_list,omitempty" mapstructure:"enabled_capability_list,omitempty"` // Application names that are enabled.
 }
@@ -286,6 +287,8 @@ type VMResources struct {
 	VMVnumaConfig *VMVnumaConfig `json:"vnuma_config,omitempty" mapstructure:"vnuma_config,omitempty"`
 
 	SerialPortList []*VMSerialPort `json:"serial_port_list,omitempty" mapstructure:"serial_port_list,omitempty"`
+
+	MachineType *string `json:"machine_type,omitempty" mapstructure:"machine_type,omitempty"`
 }
 
 // VM An intentful representation of a vm spec
@@ -376,7 +379,7 @@ type VMNicOutputStatus struct {
 type NutanixGuestToolsStatus struct {
 	// Version of Nutanix Guest Tools available on the cluster.
 	AvailableVersion *string `json:"available_version,omitempty" mapstructure:"available_version,omitempty"`
-	//Nutanix Guest Tools installed or not.
+	// Nutanix Guest Tools installed or not.
 	NgtState *string `json:"ngt_state,omitempty" mapstructure:"ngt_state,omitempty"`
 	// Desired mount state of Nutanix Guest Tools ISO.
 	IsoMountState *string `json:"iso_mount_state,omitempty" mapstructure:"iso_mount_state,omitempty"`
@@ -386,7 +389,7 @@ type NutanixGuestToolsStatus struct {
 	Version *string `json:"version,omitempty" mapstructure:"version,omitempty"`
 	// Application names that are enabled.
 	EnabledCapabilityList []*string `json:"enabled_capability_list,omitempty" mapstructure:"enabled_capability_list,omitempty"`
-	//Credentials to login server
+	// Credentials to login server
 	Credentials map[string]string `json:"credentials,omitempty" mapstructure:"credentials,omitempty"`
 	// Version of the operating system on the VM.
 	GuestOsVersion *string `json:"guest_os_version,omitempty" mapstructure:"guest_os_version,omitempty"`
@@ -511,6 +514,8 @@ type VMResourcesDefStatus struct {
 	VnumaConfig *VMVnumaConfig `json:"vnuma_config,omitempty" mapstructure:"vnuma_config,omitempty"`
 
 	SerialPortList []*VMSerialPort `json:"serial_port_list,omitempty" mapstructure:"serial_port_list,omitempty"`
+
+	MachineType *string `json:"machine_type,omitempty" mapstructure:"machine_type,omitempty"`
 }
 
 // VMDefStatus An intentful representation of a vm status
@@ -536,7 +541,7 @@ type VMDefStatus struct {
 	ExecutionContext *ExecutionContext `json:"execution_context,omitempty" mapstructure:"execution_context,omitempty"`
 }
 
-//ExecutionContext ...
+// ExecutionContext ...
 type ExecutionContext struct {
 	TaskUUID interface{} `json:"task_uuid,omitempty" mapstructure:"task_uuid,omitempty"`
 }
@@ -1551,32 +1556,18 @@ type NetworkRuleIcmpTypeCodeList struct {
 
 // NetworkRule ...
 type NetworkRule struct {
-
-	// Timestamp of expiration time.
-	ExpirationTime *string `json:"expiration_time,omitempty" mapstructure:"expiration_time,omitempty"`
-
-	// The set of categories that matching VMs need to have.
-	Filter *CategoryFilter `json:"filter,omitempty" mapstructure:"filter,omitempty"`
-
-	// List of ICMP types and codes allowed by this rule.
-	IcmpTypeCodeList []*NetworkRuleIcmpTypeCodeList `json:"icmp_type_code_list,omitempty" mapstructure:"icmp_type_code_list,omitempty"`
-
-	IPSubnet *IPSubnet `json:"ip_subnet,omitempty" mapstructure:"ip_subnet,omitempty"`
-
-	NetworkFunctionChainReference *Reference `json:"network_function_chain_reference,omitempty" mapstructure:"network_function_chain_reference,omitempty"`
-
-	// The set of categories that matching VMs need to have.
-	PeerSpecificationType *string `json:"peer_specification_type,omitempty" mapstructure:"peer_specification_type,omitempty"`
-
-	// Select a protocol to allow.  Multiple protocols can be allowed by repeating network_rule object.  If a protocol
-	// is not configured in the network_rule object then it is allowed.
-	Protocol *string `json:"protocol,omitempty" mapstructure:"protocol,omitempty"`
-
-	// List of TCP ports that are allowed by this rule.
-	TCPPortRangeList []*PortRange `json:"tcp_port_range_list,omitempty" mapstructure:"tcp_port_range_list,omitempty"`
-
-	// List of UDP ports that are allowed by this rule.
-	UDPPortRangeList []*PortRange `json:"udp_port_range_list,omitempty" mapstructure:"udp_port_range_list,omitempty"`
+	ExpirationTime                *string                        `json:"expiration_time,omitempty" mapstructure:"expiration_time,omitempty"`
+	Filter                        *CategoryFilter                `json:"filter,omitempty" mapstructure:"filter,omitempty"`
+	IcmpTypeCodeList              []*NetworkRuleIcmpTypeCodeList `json:"icmp_type_code_list,omitempty" mapstructure:"icmp_type_code_list,omitempty"`
+	IPSubnet                      *IPSubnet                      `json:"ip_subnet,omitempty" mapstructure:"ip_subnet,omitempty"`
+	NetworkFunctionChainReference *Reference                     `json:"network_function_chain_reference,omitempty" mapstructure:"network_function_chain_reference,omitempty"`
+	PeerSpecificationType         *string                        `json:"peer_specification_type,omitempty" mapstructure:"peer_specification_type,omitempty"`
+	Protocol                      *string                        `json:"protocol,omitempty" mapstructure:"protocol,omitempty"`
+	TCPPortRangeList              []*PortRange                   `json:"tcp_port_range_list,omitempty" mapstructure:"tcp_port_range_list,omitempty"`
+	UDPPortRangeList              []*PortRange                   `json:"udp_port_range_list,omitempty" mapstructure:"udp_port_range_list,omitempty"`
+	AddressGroupInclusionList     []*Reference                   `json:"address_group_inclusion_list,omitempty" mapstructure:"address_group_inclusion_list,omitempty"`
+	Description                   *string                        `json:"description,omitempty" mapstructure:"description,omitempty"`
+	ServiceGroupList              []*Reference                   `json:"service_group_list,omitempty" mapstructure:"service_group_list,omitempty"`
 }
 
 // TargetGroup ...
@@ -1611,9 +1602,12 @@ type NetworkSecurityRuleIsolationRule struct {
 
 // NetworkSecurityRuleResources ...
 type NetworkSecurityRuleResources struct {
-	AppRule        *NetworkSecurityRuleResourcesRule `json:"app_rule,omitempty" mapstructure:"app_rule,omitempty"`
-	IsolationRule  *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty" mapstructure:"isolation_rule,omitempty"`
-	QuarantineRule *NetworkSecurityRuleResourcesRule `json:"quarantine_rule,omitempty" mapstructure:"quarantine_rule,omitempty"`
+	AllowIpv6Traffic      *bool                             `json:"allow_ipv6_traffic,omitempty" mapstructure:"allow_ipv6_traffic,omitempty"`
+	IsPolicyHitlogEnabled *bool                             `json:"is_policy_hitlog_enabled,omitempty" mapstructure:"is_policy_hitlog_enabled,omitempty"`
+	AdRule                *NetworkSecurityRuleResourcesRule `json:"ad_rule,omitempty" mapstructure:"ad_rule,omitempty"`
+	AppRule               *NetworkSecurityRuleResourcesRule `json:"app_rule,omitempty" mapstructure:"app_rule,omitempty"`
+	IsolationRule         *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty" mapstructure:"isolation_rule,omitempty"`
+	QuarantineRule        *NetworkSecurityRuleResourcesRule `json:"quarantine_rule,omitempty" mapstructure:"quarantine_rule,omitempty"`
 }
 
 // NetworkSecurityRule ...
@@ -2050,9 +2044,9 @@ type LeftHandSide struct {
 
 // RightHandSide ...
 type RightHandSide struct {
-	Collection *string           `json:"collection,omitempty"`
-	Categories map[string]string `json:"categories,omitempty"`
-	UUIDList   []string          `json:"uuid_list,omitempty"`
+	Collection *string             `json:"collection,omitempty"`
+	Categories map[string][]string `json:"categories,omitempty"`
+	UUIDList   []string            `json:"uuid_list,omitempty"`
 }
 
 // AccessControlPolicyStatus ...

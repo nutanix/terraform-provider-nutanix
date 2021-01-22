@@ -570,6 +570,18 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"boot_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice([]string{"UEFI", "LEGACY", "SECURE_BOOT"}, false),
+			},
+			"machine_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"hardware_clock_timezone": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -877,7 +889,7 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error waiting for vm (%s) to create: %s", uuid, errWaitTask)
 	}
 
-	//Wait for IP available
+	// Wait for IP available
 	waitIPConf := &resource.StateChangeConf{
 		Pending:    []string{WAITING},
 		Target:     []string{"AVAILABLE"},
@@ -985,6 +997,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 
 	diskAddress := make(map[string]interface{})
 	mac := ""
+	bootType := ""
 	b := make([]string, 0)
 
 	log.Printf("[DEBUG] checking BootConfig %+v", resp.Status.Resources.BootConfig)
@@ -1001,6 +1014,9 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 			log.Printf("[DEBUG] checking BootConfig.BootDeviceOrderList %+v", utils.StringValueSlice(resp.Status.Resources.BootConfig.BootDeviceOrderList))
 			b = utils.StringValueSlice(resp.Status.Resources.BootConfig.BootDeviceOrderList)
 		}
+		if resp.Status.Resources.BootConfig.BootType != nil {
+			bootType = utils.StringValue(resp.Status.Resources.BootConfig.BootType)
+		}
 	}
 
 	if err := d.Set("boot_device_order_list", b); err != nil {
@@ -1009,6 +1025,8 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 
 	d.Set("boot_device_disk_address", diskAddress)
 	d.Set("boot_device_mac_address", mac)
+	d.Set("boot_type", bootType)
+	d.Set("machine_type", resp.Status.Resources.MachineType)
 
 	cloudInitUser := ""
 	cloudInitMeta := ""
@@ -1123,7 +1141,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("project_reference") {
 		_, n := d.GetChange("project_reference")
 		metadata.ProjectReference = validateRef(n.(map[string]interface{}))
-		hotPlugChange = false
 	}
 
 	spec.Name = response.Status.Name
@@ -1301,6 +1318,12 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		hotPlugChange = false
 	}
 
+	if d.HasChange("machine_type") {
+		n := d.Get("machine_type")
+		res.MachineType = utils.StringPtr(n.(string))
+		hotPlugChange = false
+	}
+
 	res.PowerStateMechanism = pw
 	if bc, change := bootConfigHasChange(res.BootConfig, d); !reflect.DeepEqual(*bc, v3.VMBootConfig{}) {
 		res.BootConfig = bc
@@ -1351,7 +1374,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 			"error waiting for vm (%s) to update: %s", d.Id(), err)
 	}
 
-	//Tehn, Turn On the VM.
+	// Then, Turn On the VM.
 	if err := changePowerState(conn, d.Id(), "ON"); err != nil {
 		return fmt.Errorf("internal error: cannot turn ON the VM with UUID(%s): %s", d.Id(), err)
 	}
@@ -1369,6 +1392,12 @@ func bootConfigHasChange(boot *v3.VMBootConfig, d *schema.ResourceData) (*v3.VMB
 	if d.HasChange("boot_device_order_list") {
 		_, n := d.GetChange("boot_device_order_list")
 		boot.BootDeviceOrderList = expandStringList(n.([]interface{}))
+		hotPlugChange = false
+	}
+
+	if d.HasChange("boot_type") {
+		_, n := d.GetChange("boot_type")
+		boot.BootType = utils.StringPtr(n.(string))
 		hotPlugChange = false
 	}
 
@@ -1447,7 +1476,7 @@ func changePowerState(conn *v3.Client, id string, powerState string) error {
 	request.Metadata = metadata
 	request.Spec = spec
 
-	//Set PowerState OFF
+	// Set PowerState OFF
 	request.Spec.Resources.PowerState = utils.StringPtr(powerState)
 
 	resp, err2 := conn.V3.UpdateVM(id, request)
@@ -1455,7 +1484,7 @@ func changePowerState(conn *v3.Client, id string, powerState string) error {
 		return fmt.Errorf("error updating Virtual Machine UUID(%s): %s", id, err2)
 	}
 
-	//Check update tasks
+	// Check update tasks
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
@@ -1470,7 +1499,7 @@ func changePowerState(conn *v3.Client, id string, powerState string) error {
 			"error waiting for vm (%s) to update: %s", id, err)
 	}
 
-	//Check Power State
+	// Check Power State
 	stateConfVM := &resource.StateChangeConf{
 		Pending:    []string{"PENDING", "RUNNING"},
 		Target:     []string{"COMPLETE"},
@@ -1593,7 +1622,9 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 		dai := v.(map[string]interface{})
 
 		if value3, ok3 := dai["device_index"]; ok3 {
-			da.DeviceIndex = utils.Int64Ptr(int64(value3.(int)))
+			if i, err := strconv.ParseInt(value3.(string), 10, 64); err == nil {
+				da.DeviceIndex = utils.Int64Ptr(i)
+			}
 		}
 		if value3, ok3 := dai["adapter_type"]; ok3 {
 			da.AdapterType = utils.StringPtr(value3.(string))
@@ -1606,6 +1637,16 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 		bdi := v.(string)
 		bd.MacAddress = utils.StringPtr(bdi)
 		vm.BootConfig.BootDevice = bd
+	}
+
+	if v, ok := d.GetOk("boot_type"); ok {
+		biosType := v.(string)
+		vm.BootConfig.BootType = utils.StringPtr(biosType)
+	}
+
+	if v, ok := d.GetOk("machine_type"); ok {
+		mtype := v.(string)
+		vm.MachineType = utils.StringPtr(mtype)
 	}
 
 	if v, ok := d.GetOk("hardware_clock_timezone"); ok {

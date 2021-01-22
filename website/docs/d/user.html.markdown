@@ -48,7 +48,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `metadata`: - The vm kind metadata.
+* `metadata`: - The user kind metadata.
 * `api_version` - The version of the API.
 * `state`: - The state of the entity.
 * `name`: - The name of the user.
@@ -66,12 +66,12 @@ The following attributes are exported:
 
 The metadata attribute exports the following:
 
-* `last_update_time`: - UTC date and time in RFC-3339 format when vm was last updated.
-* `uuid`: - vm UUID.
-* `creation_time`: - UTC date and time in RFC-3339 format when vm was created.
+* `last_update_time`: - UTC date and time in RFC-3339 format when user was last updated.
+* `uuid`: - User UUID.
+* `creation_time`: - UTC date and time in RFC-3339 format when user was created.
 * `spec_version`: - Version number of the latest spec.
 * `spec_hash`: - Hash of the spec. This will be returned from server.
-* `name`: - vm name.
+* `name`: - User name.
 * `should_force_translate`: - Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
 
 ### Categories

@@ -479,6 +479,7 @@ func testAccNutanixVMConfig(r int) string {
 			cluster_uuid = "${local.cluster1}"
 			
 			boot_device_order_list = ["DISK", "CDROM"]
+			boot_type            = "LEGACY"
 			num_vcpus_per_socket = 1
 			num_sockets          = 1
 			memory_size_mib      = 186
@@ -613,6 +614,7 @@ func testAccNutanixVMConfigUpdate(r int) string {
 			memory_size_mib      = 186
 
 			boot_device_order_list = ["DISK", "CDROM"]
+			boot_type              = "LEGACY"
 
 			categories {
 				name  = "Environment"
