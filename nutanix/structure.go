@@ -136,8 +136,10 @@ func getDeviceIndexForDisk(disk *v3.VMDisk) (*int64, error) {
 func flattenDiskListFilterCloudInit(d *schema.ResourceData, disks []*v3.VMDisk) ([]map[string]interface{}, error) {
 	//todo check if guestcust is passed -> if it is not passed, just continue without searching for cloud-init uuid
 	// reason: no device_index or disk id will result in crash
-	cloudInitCdromUUIDInput := d.Get("cloud_init_cdrom_uuid")
-	cloudInitCdromUUID := cloudInitCdromUUIDInput.(string)
+	cloudInitCdromUUID := ""
+	if cloudInitCdromUUIDInput, cliOk := d.GetOk("cloud_init_cdrom_uuid"); cliOk {
+		cloudInitCdromUUID = cloudInitCdromUUIDInput.(string)
+	}
 	filteredDiskList := disks
 	potentialCloudInitIDs := make([]string, 0)
 	if cloudInitCdromUUID == "" && usesGuestCustomization(d) {

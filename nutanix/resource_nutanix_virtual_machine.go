@@ -924,8 +924,6 @@ func resourceNutanixVirtualMachineCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{}) error {
-	initialDiskList := d.Get("disk_list")
-	cloudInitCDromUUID := d.Get("cloud_init_cdrom_uuid")
 	// Get client connection
 	conn := meta.(*Client).API
 	setVMTimeout(meta)
