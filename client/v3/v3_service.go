@@ -68,7 +68,7 @@ type Service interface {
 	CreateProject(request *Project) (*Project, error)
 	GetProject(projectUUID string) (*Project, error)
 	ListProject(getEntitiesRequest *DSMetadata) (*ProjectListResponse, error)
-	ListAllProject() (*ProjectListResponse, error)
+	ListAllProject(filter string) (*ProjectListResponse, error)
 	UpdateProject(uuid string, body *Project) (*Project, error)
 	DeleteProject(uuid string) (*DeleteResponse, error)
 	CreateAccessControlPolicy(request *AccessControlPolicy) (*AccessControlPolicy, error)
@@ -1243,10 +1243,11 @@ func (op Operations) ListProject(getEntitiesRequest *DSMetadata) (*ProjectListRe
  * Note: Entities that have not been created successfully are not listed.
  * @return *ProjectListResponse
  */
-func (op Operations) ListAllProject() (*ProjectListResponse, error) {
+func (op Operations) ListAllProject(filter string) (*ProjectListResponse, error) {
 	entities := make([]*Project, 0)
 
 	resp, err := op.ListProject(&DSMetadata{
+		Filter: &filter,
 		Kind:   utils.StringPtr("project"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
@@ -1261,6 +1262,7 @@ func (op Operations) ListAllProject() (*ProjectListResponse, error) {
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
 			resp, err = op.ListProject(&DSMetadata{
+				Filter: &filter,
 				Kind:   utils.StringPtr("project"),
 				Length: utils.Int64Ptr(itemsPerPage),
 				Offset: utils.Int64Ptr(offset),
