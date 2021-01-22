@@ -467,7 +467,7 @@ func resourceNutanixProjectUpdate(d *schema.ResourceData, meta interface{}) erro
 		project.APIVersion = d.Get("api_version").(string)
 	}
 
-	_, err = conn.V3.UpdateProject(d.Id(), project)
+	resp, err := conn.V3.UpdateProject(d.Id(), project)
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
@@ -475,14 +475,48 @@ func resourceNutanixProjectUpdate(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
+	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
+
+	// Wait for the Image to be available
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"QUEUED", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, taskUUID),
+		Timeout:    subnetTimeout,
+		Delay:      subnetDelay,
+		MinTimeout: subnetMinTimeout,
+	}
+
+	if _, err := stateConf.WaitForState(); err != nil {
+		d.SetId("")
+		return fmt.Errorf("error waiting for project (%s) to update: %s", d.Id(), err)
+	}
+
 	return resourceNutanixProjectRead(d, meta)
 }
 
 func resourceNutanixProjectDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
-	if err := conn.V3.DeleteProject(d.Id()); err != nil {
-		return err
+	resp, err := conn.V3.DeleteProject(d.Id())
+	if err != nil {
+		return fmt.Errorf("error deleting project id %s): %s", d.Id(), err)
 	}
+
+	// Wait for the Project to be available
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"QUEUED", "RUNNING", "DELETED_PENDING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, cast.ToString(resp.Status.ExecutionContext.TaskUUID)),
+		Timeout:    subnetTimeout,
+		Delay:      subnetDelay,
+		MinTimeout: subnetMinTimeout,
+	}
+
+	if _, err := stateConf.WaitForState(); err != nil {
+		return fmt.Errorf("error waiting for project (%s) to update: %s", d.Id(), err)
+	}
+
+	d.SetId("")
 	return nil
 }
 
