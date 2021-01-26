@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -47,13 +48,14 @@ func TestAccNutanixVirtualMachineDataSource_WithDisk(t *testing.T) {
 func TestAccNutanixVirtualMachineDataSource_withDiskContainer(t *testing.T) {
 	datasourceName := "data.nutanix_virtual_machine.nutanix_virtual_machine"
 	vmName := acctest.RandomWithPrefix("test-dou-vm")
+	containerUUID := os.Getenv("NUTANIX_STORAGE_CONTAINER")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVMDataSourceWithDiskContainer(vmName),
+				Config: testAccVMDataSourceWithDiskContainer(vmName, containerUUID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceName, "vm_id"),
 					resource.TestCheckResourceAttrSet(datasourceName, "disk_list.#"),
@@ -70,7 +72,7 @@ func TestAccNutanixVirtualMachineDataSource_withDiskContainer(t *testing.T) {
 	})
 }
 
-func testAccVMDataSourceWithDiskContainer(vmName string) string {
+func testAccVMDataSourceWithDiskContainer(vmName, containerUUID string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -96,7 +98,7 @@ func testAccVMDataSourceWithDiskContainer(vmName string) string {
 				storage_config {
 					storage_container_reference {
 						kind = "storage_container"
-						uuid = "2bbe77bc-fd14-4697-8de1-6369757f9219"
+						uuid = "%s"
 					}
 				}
 			}
@@ -105,7 +107,7 @@ func testAccVMDataSourceWithDiskContainer(vmName string) string {
 		data "nutanix_virtual_machine" "nutanix_virtual_machine" {
 			vm_id = nutanix_virtual_machine.vm-disk.id
 		}
-	`, vmName)
+	`, vmName, containerUUID)
 }
 
 func testAccVMDataSourceConfig(r int) string {

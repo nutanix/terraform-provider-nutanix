@@ -37,8 +37,9 @@ func testAccPreCheck(t *testing.T) {
 		os.Getenv("NUTANIX_PASSWORD") == "" ||
 		os.Getenv("NUTANIX_INSECURE") == "" ||
 		os.Getenv("NUTANIX_PORT") == "" ||
-		os.Getenv("NUTANIX_ENDPOINT") == "" {
-		t.Fatal("`NUTANIX_USERNAME`,`NUTANIX_PASSWORD`,`NUTANIX_INSECURE`,`NUTANIX_PORT`,`NUTANIX_ENDPOINT` must be set for acceptance testing")
+		os.Getenv("NUTANIX_ENDPOINT") == "" ||
+		os.Getenv("NUTANIX_STORAGE_CONTAINER") == "" {
+		t.Fatal("`NUTANIX_USERNAME`,`NUTANIX_PASSWORD`,`NUTANIX_INSECURE`,`NUTANIX_PORT`,`NUTANIX_ENDPOINT`, `NUTANIX_STORAGE_CONTAINER` must be set for acceptance testing")
 	}
 }
 

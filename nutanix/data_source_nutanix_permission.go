@@ -167,7 +167,7 @@ func dataSourceNutanixPermissionRead(d *schema.ResourceData, meta interface{}) e
 	if rnOk {
 		resp, err = findPermissionByName(conn, permissionName.(string))
 	}
-	utils.PrintToJSON(resp, "Permission: ")
+
 	if err != nil {
 		return err
 	}
