@@ -147,7 +147,7 @@ func expandReference(ref map[string]interface{}) *v3.Reference {
 		r.UUID = utils.StringPtr(v.(string))
 		hasValue = true
 	}
-	if v, ok := ref["name"]; ok {
+	if v, ok := ref["name"]; ok && v.(string) != "" {
 		r.Name = utils.StringPtr(v.(string))
 		hasValue = true
 	}

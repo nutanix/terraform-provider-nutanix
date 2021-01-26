@@ -13,7 +13,7 @@ const resourceNameUser = "nutanix_user.user"
 
 func TestAccNutanixUser_basic(t *testing.T) {
 	principalName := "dou-user@ntnxlab.local"
-	directoryServiceUUID := "dd19a896-8e72-4158-b716-98455ceda220"
+	directoryServiceUUID := "542d7921-1385-4b6e-ab10-09f2ca4f054d"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

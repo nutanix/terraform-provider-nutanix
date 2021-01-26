@@ -15,8 +15,8 @@ func TestAccNutanixPermissionsDataSource_basic(t *testing.T) {
 				Config: testAccPermissionsDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.nutanix_permissions.test", "entities.#"),
-					resource.TestCheckResourceAttr(
-						"data.nutanix_permissions.test", "entities.#", "485"),
+					resource.TestCheckResourceAttrSet(
+						"data.nutanix_permissions.test", "entities.#"),
 				),
 			},
 		},

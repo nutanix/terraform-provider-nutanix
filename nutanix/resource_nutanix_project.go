@@ -475,21 +475,21 @@ func resourceNutanixProjectUpdate(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
+	uuid := *resp.Metadata.UUID
 	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
 
-	// Wait for the Image to be available
+	// Wait for the Project to be available
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    subnetTimeout,
-		Delay:      subnetDelay,
-		MinTimeout: subnetMinTimeout,
+		Timeout:    vmTimeout,
+		Delay:      vmDelay,
+		MinTimeout: vmMinTimeout,
 	}
 
-	if _, err := stateConf.WaitForState(); err != nil {
-		d.SetId("")
-		return fmt.Errorf("error waiting for project (%s) to update: %s", d.Id(), err)
+	if _, errWaitTask := stateConf.WaitForState(); errWaitTask != nil {
+		return fmt.Errorf("error waiting for project(%s) to update: %s", uuid, errWaitTask)
 	}
 
 	return resourceNutanixProjectRead(d, meta)

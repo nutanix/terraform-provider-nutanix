@@ -15,8 +15,6 @@ func TestAccNutanixUserGroupsDataSource_basic(t *testing.T) {
 				Config: testAccUserGroupsDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.nutanix_user_groups.test", "entities.#"),
-					resource.TestCheckResourceAttr(
-						"data.nutanix_user_groups.test", "entities.#", "3"),
 				),
 			},
 		},

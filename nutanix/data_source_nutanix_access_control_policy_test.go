@@ -12,13 +12,14 @@ import (
 func TestAccNutanixAccessControlPolicyDataSourceByID_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix("accest-access-policy")
 	description := "Description of my access control policy"
+	roleName := acctest.RandomWithPrefix("test-acc-role")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessControlPolicyDataSourceByIDConfig(name, description),
+				Config: testAccAccessControlPolicyDataSourceByIDConfig(name, description, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.nutanix_access_control_policy.test", "name", name),
@@ -34,13 +35,14 @@ func TestAccNutanixAccessControlPolicyDataSourceByID_basic(t *testing.T) {
 func TestAccNutanixAccessControlPolicyDataSourceByName_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix("accest-access-policy")
 	description := "Description of my access control policy"
+	roleName := acctest.RandomWithPrefix("test-acc-role")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessControlPolicyDataSourceByNameConfig(name, description),
+				Config: testAccAccessControlPolicyDataSourceByNameConfig(name, description, roleName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.nutanix_access_control_policy.test", "name", name),
@@ -53,10 +55,10 @@ func TestAccNutanixAccessControlPolicyDataSourceByName_basic(t *testing.T) {
 	})
 }
 
-func testAccAccessControlPolicyDataSourceByIDConfig(name, description string) string {
+func testAccAccessControlPolicyDataSourceByIDConfig(name, description, roleName string) string {
 	return fmt.Sprintf(`
 resource "nutanix_role" "test" {
-	name        = "test role"
+	name        = "%[3]s"
 	description = "description role"
 	permission_reference_list {
 		kind = "permission"
@@ -75,13 +77,13 @@ resource "nutanix_access_control_policy" "test" {
 data "nutanix_access_control_policy" "test" {
 	access_control_policy_id = nutanix_access_control_policy.test.id
 }
-`, name, description)
+`, name, description, roleName)
 }
 
-func testAccAccessControlPolicyDataSourceByNameConfig(name, description string) string {
+func testAccAccessControlPolicyDataSourceByNameConfig(name, description, roleName string) string {
 	return fmt.Sprintf(`
 resource "nutanix_role" "test" {
-	name        = "test role 2"
+	name        = "%[3]s"
 	description = "description role"
 	permission_reference_list {
 		kind = "permission"
@@ -100,5 +102,5 @@ resource "nutanix_access_control_policy" "test" {
 data "nutanix_access_control_policy" "test" {
 	access_control_policy_name = nutanix_access_control_policy.test.name
 }
-`, name, description)
+`, name, description, roleName)
 }
