@@ -19,9 +19,9 @@ func TestAccNutanixProtectionRule_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix("test-protection-name-dou")
 	description := acctest.RandomWithPrefix("test-protection-desc-dou")
 	aZUrlSource := "c99ab7cd-9191-4fcb-8fc0-232eff76e595"
-	uuidSource := "0005b21a-2b28-7bac-699a-ac1f6b6e5556"
-	aZUrlTarget := "c7926832-4976-4fe4-bead-7e508e03e3ec"
-	uuidTarget := "0005b5f7-2c60-d181-1c29-ac1f6b6e5435"
+	uuidSource := "4db9adc1-8d13-4585-a901-a3ce1276ecb0"
+	aZUrlTarget := "45a97947-4b09-4179-8e9b-0c2859020539"
+	uuidTarget := "40cc9ba1-4c3c-4deb-a04e-a5e33c09d767"
 
 	nameUpdated := acctest.RandomWithPrefix("test-protection-name-dou")
 	descriptionUpdated := acctest.RandomWithPrefix("test-protection-desc-dou")
@@ -58,9 +58,9 @@ func TestAccResourceNutanixProtectionRule_importBasic(t *testing.T) {
 	name := acctest.RandomWithPrefix("test-protection-name-dou")
 	description := acctest.RandomWithPrefix("test-protection-desc-dou")
 	aZUrlSource := "c99ab7cd-9191-4fcb-8fc0-232eff76e595"
-	uuidSource := "0005b21a-2b28-7bac-699a-ac1f6b6e5556"
-	aZUrlTarget := "c7926832-4976-4fe4-bead-7e508e03e3ec"
-	uuidTarget := "0005b5f7-2c60-d181-1c29-ac1f6b6e5435"
+	uuidSource := "4db9adc1-8d13-4585-a901-a3ce1276ecb0"
+	aZUrlTarget := "45a97947-4b09-4179-8e9b-0c2859020539"
+	uuidTarget := "40cc9ba1-4c3c-4deb-a04e-a5e33c09d767"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
