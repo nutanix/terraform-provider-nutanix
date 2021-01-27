@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -365,7 +366,7 @@ func TestAccNutanixVirtualMachine_cloningVM(t *testing.T) {
 func TestAccNutanixVirtualMachine_withDiskContainer(t *testing.T) {
 	r := acctest.RandInt()
 	resourceName := "nutanix_virtual_machine.vm-disk"
-	containerUIID := "de7413d7-2a86-4f9e-8e5a-bea4ce51b4e9"
+	containerUUID := os.Getenv("NUTANIX_STORAGE_CONTAINER")
 	diskSize := 90 * 1024 * 1024
 	diskSizeUpdated := 90 * 1024 * 1024 * 1024
 
@@ -375,14 +376,14 @@ func TestAccNutanixVirtualMachine_withDiskContainer(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixVMConfigWithDiskContainer(r, diskSize, containerUIID),
+				Config: testAccNutanixVMConfigWithDiskContainer(r, diskSize, containerUUID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "disk_list.#"),
 					resource.TestCheckResourceAttr(resourceName, "disk_list.#", "1"),
 				),
 			},
 			{
-				Config: testAccNutanixVMConfigWithDiskContainer(r, diskSizeUpdated, containerUIID),
+				Config: testAccNutanixVMConfigWithDiskContainer(r, diskSizeUpdated, containerUUID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "disk_list.#"),
 					resource.TestCheckResourceAttr(resourceName, "disk_list.#", "1"),
