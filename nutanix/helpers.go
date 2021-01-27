@@ -2,7 +2,6 @@ package nutanix
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
@@ -86,13 +85,10 @@ func flattenReferenceValues(r *v3.Reference) map[string]interface{} {
 	if r != nil {
 		reference["kind"] = utils.StringValue(r.Kind)
 		reference["uuid"] = utils.StringValue(r.UUID)
-		log.Print(r.Name)
-		log.Print(r.Name != nil)
 		if r.Name != nil {
 			reference["name"] = utils.StringValue(r.Name)
 		}
 	}
-	utils.PrintToJSON(reference, "reference: ")
 	return reference
 }
 
@@ -147,7 +143,7 @@ func expandReference(ref map[string]interface{}) *v3.Reference {
 		r.UUID = utils.StringPtr(v.(string))
 		hasValue = true
 	}
-	if v, ok := ref["name"]; ok {
+	if v, ok := ref["name"]; ok && v.(string) != "" {
 		r.Name = utils.StringPtr(v.(string))
 		hasValue = true
 	}

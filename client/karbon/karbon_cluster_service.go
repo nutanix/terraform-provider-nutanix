@@ -62,7 +62,6 @@ func (op ClusterOperations) GetKarbonCluster(name string) (*ClusterIntentRespons
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/v1/k8s/clusters/%s", name)
-	fmt.Printf("Path: %s", path)
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
 	karbonClusterIntentResponse := new(ClusterIntentResponse)
 

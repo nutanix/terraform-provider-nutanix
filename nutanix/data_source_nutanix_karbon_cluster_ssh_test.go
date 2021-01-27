@@ -8,6 +8,7 @@ import (
 )
 
 func TestAccNutanixKarbonClusterSSHDataSource_basicx(t *testing.T) {
+	t.Skip()
 	r := acctest.RandInt()
 	//resourceName := "nutanix_karbon_cluster.cluster"
 	subnetName := "Rx-Automation-Network"

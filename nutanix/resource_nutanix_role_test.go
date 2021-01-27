@@ -1,7 +1,6 @@
 package nutanix
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -99,9 +98,6 @@ func testAccCheckNutanixRoleExists() resource.TestCheckFunc {
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceRole)
 		}
-
-		pretty, _ := json.MarshalIndent(rs, "", "  ")
-		fmt.Print("\n\n[DEBUG] State of Role", string(pretty))
 
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no ID is set")

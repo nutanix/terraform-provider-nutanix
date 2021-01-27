@@ -301,7 +301,6 @@ func dataSourceNutanixUserRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	refe := flattenArrayReferenceValues(resp.Status.Resources.AccessControlPolicyReferenceList)
-	utils.PrintToJSON(refe, "acceess")
 
 	if err := d.Set("access_control_policy_reference_list", refe); err != nil {
 		return fmt.Errorf("error setting state for user UUID(%s), %s", d.Id(), err)
