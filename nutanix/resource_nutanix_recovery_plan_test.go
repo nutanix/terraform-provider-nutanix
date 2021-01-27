@@ -108,6 +108,7 @@ func TestAccNutanixRecoveryPlanWithStageListDynamic_basic(t *testing.T) {
 }
 
 func TestAccNutanixRecoveryPlanWithNetwork_basic(t *testing.T) {
+	t.Skip()
 	resourceName := "nutanix_recovery_plan.test"
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")

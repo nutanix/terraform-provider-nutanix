@@ -18,9 +18,6 @@ func resourceNutanixCategoriesMigrateState(rawState map[string]interface{}, meta
 
 	sort.Strings(keys)
 
-	log.Printf("[DEBUG] meta: %#v", meta)
-	log.Printf("[DEBUG] Attributes before migration: %#v", rawState)
-
 	if l, ok := rawState["categories"]; ok {
 		if assertedL, ok := l.(map[string]interface{}); ok {
 			c := make([]interface{}, 0)

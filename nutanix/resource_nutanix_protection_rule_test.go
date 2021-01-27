@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccNutanixProtectionRule_basic(t *testing.T) {
+	t.Skip()
 	resourceName := "nutanix_protection_rule.test"
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")
@@ -51,6 +52,7 @@ func TestAccNutanixProtectionRule_basic(t *testing.T) {
 }
 
 func TestAccResourceNutanixProtectionRule_importBasic(t *testing.T) {
+	t.Skip()
 	resourceName := "nutanix_protection_rule.test"
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")

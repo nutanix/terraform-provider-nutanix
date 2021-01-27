@@ -9,6 +9,7 @@ import (
 )
 
 func TestAccNutanixProtectionRuleDataSource_basic(t *testing.T) {
+	t.Skip()
 	resourceName := "nutanix_protection_rule.test"
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")

@@ -45,6 +45,7 @@ func TestAccNutanixUser_basic(t *testing.T) {
 }
 
 func TestAccNutanixUser_IdentityProvider(t *testing.T) {
+	t.Skip()
 	username := "dou-user-2@ntnxlab.local"
 	identityProviderUUID := "02316a2c-cc8c-41de-9abb-f07c4da58fda"
 	resource.Test(t, resource.TestCase{

@@ -429,6 +429,16 @@ func resourceNutanixAccessControlPolicyRead(d *schema.ResourceData, meta interfa
 				}
 			}
 		}
+
+		if spec := resp.Spec.Resources; spec != nil {
+			if spec.FilterList != nil {
+				if spec.FilterList.ContextList != nil {
+					if err := d.Set("context_filter_list", flattenContextList(spec.FilterList.ContextList)); err != nil {
+						return err
+					}
+				}
+			}
+		}
 	}
 
 	return nil
