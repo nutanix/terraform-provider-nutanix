@@ -246,7 +246,6 @@ func CheckResponse(r *http.Response) error {
 	if c >= 200 && c <= 299 {
 		return nil
 	}
-	log.Print("[DEBUG] after status check")
 
 	// Nutanix returns non-json response with code 401 when
 	// invalid credentials are used
@@ -259,18 +258,16 @@ func CheckResponse(r *http.Response) error {
 	if err != nil {
 		return err
 	}
-	log.Print("[DEBUG] after readall")
+
 	rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
 
 	r.Body = rdr2
-	log.Print("[DEBUG] after rdr2")
 	// if has entities -> return nil
 	// if has message_list -> check_error["state"]
 	// if has status -> check_error["status.state"]
 	if len(buf) == 0 {
 		return nil
 	}
-	log.Print("[DEBUG] after len(buf)")
 
 	var res map[string]interface{}
 	err = json.Unmarshal(buf, &res)

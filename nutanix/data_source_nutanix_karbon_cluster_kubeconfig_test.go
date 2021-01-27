@@ -9,6 +9,7 @@ import (
 )
 
 func TestAccNutanixKarbonClusterKubeConfigDataSource_basic(t *testing.T) {
+	t.Skip()
 	r := acctest.RandInt()
 	subnetName := "Rx-Automation-Network"
 	defaultContainter := "default-container-85827904983728"

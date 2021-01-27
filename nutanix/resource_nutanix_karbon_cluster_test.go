@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccNutanixKarbonCluster_basic(t *testing.T) {
+	t.Skip()
 	r := acctest.RandInt()
 	resourceName := "nutanix_karbon_cluster.cluster"
 	subnetName := "Rx-Automation-Network"
@@ -57,6 +58,7 @@ func TestAccNutanixKarbonCluster_basic(t *testing.T) {
 
 func TestAccNutanixKarbonCluster_scaleDown(t *testing.T) {
 	r := acctest.RandInt()
+	t.Skip()
 	resourceName := "nutanix_karbon_cluster.cluster"
 	subnetName := "Rx-Automation-Network"
 	defaultContainter := "default-container-85827904983728"
@@ -101,6 +103,7 @@ func TestAccNutanixKarbonCluster_scaleDown(t *testing.T) {
 
 func TestAccNutanixKarbonCluster_updateCNI(t *testing.T) {
 	r := acctest.RandInt()
+	t.Skip()
 	resourceName := "nutanix_karbon_cluster.cluster"
 	subnetName := "Rx-Automation-Network"
 	defaultContainter := "default-container-85827904983728"
