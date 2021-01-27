@@ -45,6 +45,11 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 			},
 		},
 		Schema: map[string]*schema.Schema{
+			"cloud_init_cdrom_uuid": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
+			},
 			"metadata": {
 				Type:     schema.TypeMap,
 				Computed: true,
@@ -922,6 +927,8 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	// Get client connection
 	conn := meta.(*Client).API
 	setVMTimeout(meta)
+
+	var err error
 	// Make request to the API
 	resp, err := conn.V3.GetVM(d.Id())
 
@@ -940,58 +947,61 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		return nil
 	}
 
-	if err := flattenClusterReference(resp.Status.ClusterReference, d); err != nil {
+	if err = flattenClusterReference(resp.Status.ClusterReference, d); err != nil {
 		return fmt.Errorf("error setting cluster information for Virtual Machine %s: %s", d.Id(), err)
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
 
-	if err := d.Set("metadata", m); err != nil {
+	if err = d.Set("metadata", m); err != nil {
 		return fmt.Errorf("error setting metadata for Virtual Machine %s: %s", d.Id(), err)
 	}
-	if err := d.Set("categories", c); err != nil {
+	if err = d.Set("categories", c); err != nil {
 		return fmt.Errorf("error setting categories for Virtual Machine %s: %s", d.Id(), err)
 	}
-	if err := d.Set("project_reference", flattenReferenceValues(resp.Metadata.ProjectReference)); err != nil {
+	if err = d.Set("project_reference", flattenReferenceValues(resp.Metadata.ProjectReference)); err != nil {
 		return fmt.Errorf("error setting project_reference for Virtual Machine %s: %s", d.Id(), err)
 	}
-	if err := d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
+	if err = d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
 		return fmt.Errorf("error setting owner_reference for Virtual Machine %s: %s", d.Id(), err)
 	}
-	if err := d.Set("availability_zone_reference", flattenReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
+	if err = d.Set("availability_zone_reference", flattenReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
 		return fmt.Errorf("error setting availability_zone_reference for Virtual Machine %s: %s", d.Id(), err)
 	}
-	if err := d.Set("nic_list", flattenNicList(resp.Spec.Resources.NicList)); err != nil {
+	if err = d.Set("nic_list", flattenNicList(resp.Spec.Resources.NicList)); err != nil {
 		return fmt.Errorf("error setting nic_list for Virtual Machine %s: %s", d.Id(), err)
 	}
-	if err := d.Set("nic_list_status", flattenNicListStatus(resp.Status.Resources.NicList)); err != nil {
+	if err = d.Set("nic_list_status", flattenNicListStatus(resp.Status.Resources.NicList)); err != nil {
 		return fmt.Errorf("error setting nic_list_status for Virtual Machine %s: %s", d.Id(), err)
 	}
-
-	if err := d.Set("disk_list", flattenDiskList(resp.Spec.Resources.DiskList)); err != nil {
+	flatDiskList, err := flattenDiskListFilterCloudInit(d, resp.Spec.Resources.DiskList)
+	if err != nil {
+		return fmt.Errorf("error flattening disk list for vm %s: %s", d.Id(), err)
+	}
+	if err = d.Set("disk_list", flatDiskList); err != nil {
 		return fmt.Errorf("error setting disk_list for Virtual Machine %s: %s", d.Id(), err)
 	}
 
-	if err := d.Set("serial_port_list", flattenSerialPortList(resp.Status.Resources.SerialPortList)); err != nil {
+	if err = d.Set("serial_port_list", flattenSerialPortList(resp.Status.Resources.SerialPortList)); err != nil {
 		return fmt.Errorf("error setting serial_port_list for Virtual Machine %s: %s", d.Id(), err)
 	}
-	if err := d.Set("host_reference", flattenReferenceValues(resp.Status.Resources.HostReference)); err != nil {
+	if err = d.Set("host_reference", flattenReferenceValues(resp.Status.Resources.HostReference)); err != nil {
 		return fmt.Errorf("error setting host_reference for Virtual Machine %s: %s", d.Id(), err)
 	}
-	if err := flattenNutanixGuestTools(d, resp.Status.Resources.GuestTools); err != nil {
+	if err = flattenNutanixGuestTools(d, resp.Status.Resources.GuestTools); err != nil {
 		return fmt.Errorf("error setting nutanix_guest_tools for Virtual Machine %s: %s", d.Id(), err)
 	}
-	if err := d.Set("gpu_list", flattenGPUList(resp.Status.Resources.GpuList)); err != nil {
+	if err = d.Set("gpu_list", flattenGPUList(resp.Status.Resources.GpuList)); err != nil {
 		return fmt.Errorf("error setting gpu_list for Virtual Machine %s: %s", d.Id(), err)
 	}
-	if err := d.Set("parent_reference", flattenReferenceValues(resp.Status.Resources.ParentReference)); err != nil {
+	if err = d.Set("parent_reference", flattenReferenceValues(resp.Status.Resources.ParentReference)); err != nil {
 		return fmt.Errorf("error setting parent_reference for Virtual Machine %s: %s", d.Id(), err)
 	}
 
 	if uha, ok := d.GetOkExists("use_hot_add"); ok {
 		useHotAdd = uha.(bool)
 	}
-	if err := d.Set("use_hot_add", useHotAdd); err != nil {
+	if err = d.Set("use_hot_add", useHotAdd); err != nil {
 		return fmt.Errorf("error setting use_hot_add for Virtual Machine %s: %s", d.Id(), err)
 	}
 
@@ -1019,7 +1029,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	if err := d.Set("boot_device_order_list", b); err != nil {
+	if err = d.Set("boot_device_order_list", b); err != nil {
 		return fmt.Errorf("error setting boot_device_order_list %s", err)
 	}
 
@@ -1292,7 +1302,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		if err != nil {
 			return err
 		}
-
 		res.DiskList = expandDiskListUpdate(d, response)
 
 		postCdromCount, err := CountDiskListCdrom(res.DiskList)
@@ -1798,13 +1807,11 @@ func expandIPAddressList(ipl []interface{}) []*v3.IPAddress {
 
 func expandDiskListUpdate(d *schema.ResourceData, vm *v3.VMIntentResponse) []*v3.VMDisk {
 	eDiskList := expandDiskList(d)
-
-	if vm.Spec != nil && vm.Spec.Resources != nil {
-		for _, disk := range vm.Spec.Resources.DiskList {
-			if disk.DeviceProperties != nil && disk.DeviceProperties.DiskAddress != nil {
-				index := disk.DeviceProperties.DiskAddress.DeviceIndex
-				adapterType := disk.DeviceProperties.DiskAddress.AdapterType
-				if *index == 3 && *adapterType == IDE {
+	if cloudInitCdromUUIDInt, ok := d.GetOk("cloud_init_cdrom_uuid"); ok {
+		cloudInitCdromUUID := cloudInitCdromUUIDInt.(string)
+		if cloudInitCdromUUID != "" && vm.Spec != nil && vm.Spec.Resources != nil {
+			for _, disk := range vm.Spec.Resources.DiskList {
+				if disk.UUID != nil && *disk.UUID == cloudInitCdromUUID {
 					eDiskList = append(eDiskList, disk)
 				}
 			}
@@ -2120,13 +2127,25 @@ func waitForIPRefreshFunc(client *v3.Client, vmUUID string) resource.StateRefres
 	}
 }
 
-func CountDiskListCdrom(dl []*v3.VMDisk) (int, error) {
-	counter := 0
+func GetCdromDiskList(dl []*v3.VMDisk) []*v3.VMDisk {
+	cdList := make([]*v3.VMDisk, 0)
 	for _, v := range dl {
-		if v.DeviceProperties != nil && *v.DeviceProperties.DeviceType == "CDROM" {
-			counter++
+		if isCdromDisk(v) {
+			cdList = append(cdList, v)
 		}
 	}
+	return cdList
+}
+
+func isCdromDisk(d *v3.VMDisk) bool {
+	if d.DeviceProperties != nil && *d.DeviceProperties.DeviceType == "CDROM" {
+		return true
+	}
+	return false
+}
+
+func CountDiskListCdrom(dl []*v3.VMDisk) (int, error) {
+	counter := len(GetCdromDiskList(dl))
 	return counter, nil
 }
 
