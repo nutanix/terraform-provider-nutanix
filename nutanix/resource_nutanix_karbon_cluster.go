@@ -505,6 +505,8 @@ func resourceNutanixKarbonClusterCreate(d *schema.ResourceData, meta interface{}
 	if createClusterResponse.ClusterUUID == "" {
 		return fmt.Errorf("did not retrieve cluster uuid")
 	}
+	// Set terraform state id
+	d.SetId(createClusterResponse.ClusterUUID)
 	err = WaitForKarbonCluster(client, timeout, createClusterResponse.TaskUUID)
 	if err != nil {
 		return err
@@ -519,8 +521,6 @@ func resourceNutanixKarbonClusterCreate(d *schema.ResourceData, meta interface{}
 			conn.Cluster.AddPrivateRegistry(karbonClusterName, newP)
 		}
 	}
-	// Set terraform state id
-	d.SetId(createClusterResponse.ClusterUUID)
 	return resourceNutanixKarbonClusterRead(d, meta)
 }
 
