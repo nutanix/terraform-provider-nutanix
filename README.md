@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
-NOTE: The latest version of the Nutanix provider is [v1.1.1](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.1.1)
+NOTE: The latest version of the Nutanix provider is [v1.2.0](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.2.0)
 
 ## Build, Quality Status
 
@@ -60,27 +60,56 @@ provider "nutanix" {
 
 ## Resources
 
-* nutanix_virtual_machine
-* nutanix_subnet
-* nutanix_network_security_rule
-* nutanix_image
-* nutanix_category_value
+* nutanix_access_control_policy
 * nutanix_category_key
+* nutanix_category_value
+* nutanix_image
+* nutanix_karbon_cluster
+* nutanix_karbon_private_registry
+* nutanix_network_security_rule
+* nutanix_project
+* nutanix_protection_rule
+* nutanix_recovery_plan
+* nutanix_role
+* nutanix_subnet
+* nutanix_user
+* nutanix_virtual_machine
 
 
 ## Data Sources
 
-* nutanix_virtual_machine
-* nutanix_subnet
-* nutanix_subnets
-* nutanix_network_security_rule
-* nutanix_image
-* nutanix_host
-* nutanix_hosts
+* nutanix_access_control_policies
+* nutanix_access_control_policy
+* nutanix_category_key
 * nutanix_cluster
 * nutanix_clusters
-* nutanix_category_key
-
+* nutanix_host
+* nutanix_hosts
+* nutanix_image
+* nutanix_karbon_cluster_kubeconfig
+* nutanix_karbon_cluster_ssh
+* nutanix_karbon_cluster
+* nutanix_karbon_clusters
+* nutanix_karbon_private_registries
+* nutanix_karbon_private_registry
+* nutanix_network_security_rule
+* nutanix_permission
+* nutanix_permissions
+* nutanix_project
+* nutanix_projects
+* nutanix_role
+* nutanix_roles
+* nutanix_subnet
+* nutanix_subnets
+* nutanix_user_group
+* nutanix_user_groups
+* nutanix_user
+* nutanix_users
+* nutanix_virtual_machine
+* nutanix_protection_rule
+* nutanix_protection_rules
+* nutanix_recovery_plan
+* nutanix_recovery_plans
 
 
 ## Quick Install
