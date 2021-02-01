@@ -41,10 +41,6 @@ func dataSourceNutanixKarbonClusterKubeconfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"raw_config" {
-				Type: schema.TypeString,
-				Computed: true,
-			}
 		},
 	}
 }
