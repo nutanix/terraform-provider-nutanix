@@ -78,8 +78,8 @@ The following attributes are exported:
 * `categories`: - (Optional) The API Version.
 * `owner_reference`: - (Optional) The reference to a user.
 * `project_reference`: - (Optional) The reference to a project.
-* `vswitch_name`: - (Optional).
-* `subnet_type`: - (Optional).
+* `vswitch_name`: - (Optional) The name of the vswitch.
+* `subnet_type`: - (Optional) The type of the subnet.
 * `default_gateway_ip`: - (Optional) Default gateway IP address.
 * `prefix_length`: - (Optional). IP prefix length of the Subnet.
 * `subnet_ip`: - (Optional) Subnet IP address.
@@ -122,4 +122,4 @@ attributes supports the following:
 
 Note: `cluster_reference`, `subnet_reference` does not support the attribute `name`
 
-See detailed information in [Nutanix Subnet](http://developer.nutanix.com/reference/prism_central/v3/#definitions-subnet_resources).
+See detailed information in [Nutanix Subnet](https://www.nutanix.dev/reference/prism_central/v3/api/subnets/getsubnetsuuid/).
