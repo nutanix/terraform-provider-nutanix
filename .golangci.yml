@@ -34,10 +34,10 @@ linters:
     - errcheck
       # errocheck disabled to silience errors here: https://travis-ci.com/nutanix/terraform-provider-nutanix/jobs/131154435
       # Example error:
-        # nutanix/data_source_nutanix_image.go:61:7: Error return value of `d.Set` is not checked (errcheck)
-        # d.Set("name", utils.StringValue(resp.Status.Name))
+      # nutanix/data_source_nutanix_image.go:61:7: Error return value of `d.Set` is not checked (errcheck)
+      # d.Set("name", utils.StringValue(resp.Status.Name))
       # waiting on terraform/hashi to let us know how they want us to changle those errors
-        # see Error return value of `d.Set` is not checked (errcheck)
+      # see Error return value of `d.Set` is not checked (errcheck)
     - typecheck
     - gosec
     - gochecknoinits
@@ -56,7 +56,7 @@ issues:
   exclude-rules:
     - path: _test\.go
       linters:
-          - testpackage
+        - testpackage
       # part of the golangci govet package is picking up things that go vet doesn't. Seems flaky, shutting that specific error off
 
 run:
