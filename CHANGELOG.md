@@ -1,4 +1,4 @@
-## v1.2.0 [Unreleased](https://github.com/nutanix/terraform-provider-nutanix/tree/HEAD)
+## 1.2.1 (Feb 01, 2021)
 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.1.1...HEAD)
 
