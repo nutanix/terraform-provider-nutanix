@@ -28,6 +28,8 @@ For a slack invite, please contact terraform@nutanix.com from your business emai
 
 The Terraform Nutanix provider is designed to work with Nutanix Prism Central, such that you can manage one or more Prism Element clusters at scale. AOS/PC 5.6.0 or higher is required, as this Provider makes exclusive use of the v3 APIs
 
+> For the 1.2.0 release of the provider it will have an N-1 compatibility with the Prism Central APIs. This provider was tested against Prism Central versions 2020.9 and 2020.11, as well as AOS version 5.18 and 5.19
+
 ## Example Usage
 
 See the Examples folder for a handful of main.tf demos as well as some pre-compiled binaries.
