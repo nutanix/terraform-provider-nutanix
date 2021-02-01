@@ -46,8 +46,8 @@ The following attributes are exported:
 * `dhcp_server_address`: Host address.
 * `dhcp_server_address_port`: Port Number.
 * `dhcp_options`: Spec for defining DHCP options.
-* `dhcp_domain_search_list`: -.
-* `vlan_id`: -.
+* `dhcp_domain_search_list`: DHCP domain search list for a subnet.
+* `vlan_id`: VLAN assigned to the subnet.
 * `network_function_chain_reference`: The reference to a network_function_chain.
 * `state`: The state of the subnet.
 
@@ -77,8 +77,8 @@ The `project_reference`, `owner_reference`, `availability_zone_reference`, `clus
 attributes supports the following:
 
 * `kind`: The kind name (Default value: project.
-* `name`: the nam.
-* `uuid`: the UUI.
+* `name`: the name.
+* `uuid`: the UUID.
 
 Note: `cluster_reference`, `subnet_reference` does not support the attribute `name`
 

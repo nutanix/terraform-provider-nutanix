@@ -27,7 +27,7 @@ The following attributes are exported:
 
 The entities attribute element contains the following attributes:
 
-* `metadata`: The subnet kind metadata.
+* `metadata`: The permission kind metadata.
 * `categories`: The categories for this resource.
 * `owner_reference`: The reference to a user.
 * `project_reference`: The reference to a project.
@@ -49,12 +49,12 @@ The field attribute exports the following:
 
 The metadata attribute exports the following:
 
-* `last_update_time` - UTC date and time in RFC-3339 format when the project was last updated.
-* `uuid` - Project UUID.
-* `creation_time` - UTC date and time in RFC-3339 format when the project was created.
+* `last_update_time` - UTC date and time in RFC-3339 format when the permission was last updated.
+* `uuid` - permission UUID.
+* `creation_time` - UTC date and time in RFC-3339 format when the permission was created.
 * `spec_version` - Version number of the latest spec.
 * `spec_hash` - Hash of the spec. This will be returned from server.
-* `name` - Project name.
+* `name` - permission name.
 * `should_force_translate`: - Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
 
 ### Categories
