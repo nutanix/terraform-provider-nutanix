@@ -12,18 +12,24 @@ import (
 	"testing"
 )
 
+const (
+	testLibraryVersion = "v3"
+	testAbsolutePath   = "api/nutanix/" + testLibraryVersion
+	testUserAgent      = "nutanix/" + testLibraryVersion
+)
+
 func setup() (*http.ServeMux, *Client, *httptest.Server) {
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
 
-	client, _ := NewClient(&Credentials{"", "username", "password", "", "", true, false, ""})
+	client, _ := NewClient(&Credentials{"", "username", "password", "", "", true, false, ""}, testUserAgent, testAbsolutePath)
 	client.BaseURL, _ = url.Parse(server.URL)
 
 	return mux, client, server
 }
 
 func TestNewClient(t *testing.T) {
-	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, ""})
+	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, ""}, testUserAgent, testAbsolutePath)
 
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
@@ -35,19 +41,19 @@ func TestNewClient(t *testing.T) {
 		t.Errorf("NewClient BaseURL = %v, expected %v", c.BaseURL, expectedURL)
 	}
 
-	if c.UserAgent != userAgent {
-		t.Errorf("NewClient UserAgent = %v, expected %v", c.UserAgent, userAgent)
+	if c.UserAgent != testUserAgent {
+		t.Errorf("NewClient UserAgent = %v, expected %v", c.UserAgent, testUserAgent)
 	}
 }
 
 func TestNewRequest(t *testing.T) {
-	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, ""})
+	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, ""}, testUserAgent, testAbsolutePath)
 
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
 
-	inURL, outURL := "/foo", fmt.Sprintf(defaultBaseURL+absolutePath+"/foo", "foo.com")
+	inURL, outURL := "/foo", fmt.Sprintf(defaultBaseURL+testAbsolutePath+"/foo", "foo.com")
 	inBody, outBody := map[string]interface{}{"name": "bar"}, `{"name":"bar"}`+"\n"
 
 	req, _ := c.NewRequest(context.TODO(), http.MethodPost, inURL, inBody)
@@ -320,6 +326,7 @@ func TestClient_NewUploadRequest(t *testing.T) {
 			got, err := c.NewUploadRequest(tt.args.ctx, tt.args.method, tt.args.urlStr, tt.args.body)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Client.NewUploadRequest() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {

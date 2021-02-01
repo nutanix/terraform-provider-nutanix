@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -281,7 +282,31 @@ func TestAccNutanixVirtualMachine_CdromGuestCustomisationReboot(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"disk_list"},
+				ImportStateVerifyIgnore: []string{"disk_list", "cloud_init_cdrom_uuid"},
+			},
+		},
+	})
+}
+
+func TestAccNutanixVirtualMachine_CdromGuestCustomisationRebootWithManualCDROM(t *testing.T) {
+	r := acctest.RandInt()
+	resourceName := "nutanix_virtual_machine.vm7"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixVMConfigCdromGuestCustomisationRebootWithManualCDROM(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"disk_list", "cloud_init_cdrom_uuid"},
 			},
 		},
 	})
@@ -310,7 +335,7 @@ func TestAccNutanixVirtualMachine_CloudInitCustomKeyValues(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"disk_list"},
+				ImportStateVerifyIgnore: []string{"disk_list", "cloud_init_cdrom_uuid"},
 			},
 		},
 	})
@@ -365,7 +390,7 @@ func TestAccNutanixVirtualMachine_cloningVM(t *testing.T) {
 func TestAccNutanixVirtualMachine_withDiskContainer(t *testing.T) {
 	r := acctest.RandInt()
 	resourceName := "nutanix_virtual_machine.vm-disk"
-	containerUIID := "de7413d7-2a86-4f9e-8e5a-bea4ce51b4e9"
+	containerUUID := os.Getenv("NUTANIX_STORAGE_CONTAINER")
 	diskSize := 90 * 1024 * 1024
 	diskSizeUpdated := 90 * 1024 * 1024 * 1024
 
@@ -375,14 +400,14 @@ func TestAccNutanixVirtualMachine_withDiskContainer(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixVMConfigWithDiskContainer(r, diskSize, containerUIID),
+				Config: testAccNutanixVMConfigWithDiskContainer(r, diskSize, containerUUID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "disk_list.#"),
 					resource.TestCheckResourceAttr(resourceName, "disk_list.#", "1"),
 				),
 			},
 			{
-				Config: testAccNutanixVMConfigWithDiskContainer(r, diskSizeUpdated, containerUIID),
+				Config: testAccNutanixVMConfigWithDiskContainer(r, diskSizeUpdated, containerUUID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "disk_list.#"),
 					resource.TestCheckResourceAttr(resourceName, "disk_list.#", "1"),
@@ -479,6 +504,7 @@ func testAccNutanixVMConfig(r int) string {
 			cluster_uuid = "${local.cluster1}"
 			
 			boot_device_order_list = ["DISK", "CDROM"]
+			boot_type            = "LEGACY"
 			num_vcpus_per_socket = 1
 			num_sockets          = 1
 			memory_size_mib      = 186
@@ -613,6 +639,7 @@ func testAccNutanixVMConfigUpdate(r int) string {
 			memory_size_mib      = 186
 
 			boot_device_order_list = ["DISK", "CDROM"]
+			boot_type              = "LEGACY"
 
 			categories {
 				name  = "Environment"
@@ -817,6 +844,37 @@ func testAccNutanixVMConfigCdromGuestCustomisationReboot(r int) string {
 			num_sockets                              = 1
 			memory_size_mib                          = 186
 			guest_customization_cloud_init_user_data = base64encode("#cloud-config\nfqdn: test.domain.local")
+		}
+	`, r)
+}
+
+func testAccNutanixVMConfigCdromGuestCustomisationRebootWithManualCDROM(r int) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+			? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+		}
+
+		resource "nutanix_virtual_machine" "vm7" {
+			name         = "test-dou-%d"
+			cluster_uuid = "${local.cluster1}"
+
+			num_vcpus_per_socket                     = 1
+			num_sockets                              = 1
+			memory_size_mib                          = 186
+			guest_customization_cloud_init_user_data = base64encode("#cloud-config\nfqdn: test.domain.local")
+
+			disk_list {
+				device_properties {
+				  device_type = "CDROM"
+				  disk_address = {
+					device_index = 0
+					adapter_type = "IDE"
+				  }
+				}
+			}
 		}
 	`, r)
 }
