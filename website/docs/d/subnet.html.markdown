@@ -69,26 +69,26 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `metadata`: - (Required) The subnet kind metadata.
-* `availability_zone_reference`: - (Optional) The reference to a availability_zone.
-* `cluster_reference`: - (Optional) The reference to a cluster.
-* `cluster_name`: - (Optional) The name of a cluster.
-* `description`: - (Optional) A description for subnet.
-* `name`: - (Optional) Subnet name (Readonly).
-* `categories`: - (Optional) The API Version.
-* `owner_reference`: - (Optional) The reference to a user.
-* `project_reference`: - (Optional) The reference to a project.
-* `vswitch_name`: - (Optional) The name of the vswitch.
-* `subnet_type`: - (Optional) The type of the subnet.
-* `default_gateway_ip`: - (Optional) Default gateway IP address.
+* `metadata`: The subnet kind metadata.
+* `availability_zone_reference`: The reference to a availability_zone.
+* `cluster_reference`: The reference to a cluster.
+* `cluster_name`: The name of a cluster.
+* `description`: A description for subnet.
+* `name`: Subnet name (Readonly).
+* `categories`: The API Version.
+* `owner_reference`: The reference to a user.
+* `project_reference`: The reference to a project.
+* `vswitch_name`: The name of the vswitch.
+* `subnet_type`: The type of the subnet.
+* `default_gateway_ip`: Default gateway IP address.
 * `prefix_length`: - (Optional). IP prefix length of the Subnet.
-* `subnet_ip`: - (Optional) Subnet IP address.
-* `dhcp_server_address`: - (Optional) Host address.
-* `dhcp_server_address_port`: - (Optional) Port Number.
-* `dhcp_options`: - (Optional) Spec for defining DHCP options.
-* `dhcp_domain_search_list`: - (Optional).
-* `vlan_id`: - (Optional).
-* `network_function_chain_reference`: - (Optional) The reference to a network_function_chain.
+* `subnet_ip`: Subnet IP address.
+* `dhcp_server_address`: Host address.
+* `dhcp_server_address_port`: Port Number.
+* `dhcp_options`: Spec for defining DHCP options.
+* `dhcp_domain_search_list`: DHCP domain search list for a subnet.
+* `vlan_id`: VLAN assigned to the subnet.
+* `network_function_chain_reference`: The reference to a network_function_chain.
 * `state`: - The state of the subnet.
 
 ### Metadata
