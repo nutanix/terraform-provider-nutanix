@@ -6,15 +6,14 @@ description: |-
  Describes a list of hosts
 ---
 
-# nutanix_host
+# nutanix_hosts
 
 Describes a list of hosts
 
 ## Example Usage
 
 ```hcl
-data "nutanix_hosts" "host" {
-}`
+data "nutanix_hosts" "host" {}`
 ```
 
 ## Attribute Reference
@@ -22,7 +21,7 @@ data "nutanix_hosts" "host" {
 The following attributes are exported:
 
 * `api_version`: version of the API
-* `entities`: List of Projects
+* `entities`: List of Hosts
 
 # Entities
 
