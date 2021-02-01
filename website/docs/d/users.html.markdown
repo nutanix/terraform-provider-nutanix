@@ -6,7 +6,7 @@ description: |-
   This operation retrieves a list of all the users.
 ---
 
-# nutanix_user
+# nutanix_users
 
 Provides a datasource to retrieve all the users.
 
@@ -29,6 +29,9 @@ data "nutanix_user" "users" {}
 ## Attribute Reference
 
 The following attributes are exported:
+
+* `api_version`: version of the API
+* `entities`: List of Users
 
 # Entities
 
