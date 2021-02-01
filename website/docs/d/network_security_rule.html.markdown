@@ -51,7 +51,6 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-The following arguments are supported:
 * `network_security_rule_id` - (Required) The ID for the rule you want to retrieve.
 * `name`: - The name for the network_security_rule.
 * `categories`: Categories for the network_security_rule.
