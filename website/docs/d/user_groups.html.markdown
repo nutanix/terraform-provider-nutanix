@@ -16,9 +16,6 @@ Provides a datasource to retrieve all the user groups.
 data "nutanix_user_groups" "usergroups" {}
 ```
 
-
-
-
 ## Argument Reference
 
 The following attributes are exported:

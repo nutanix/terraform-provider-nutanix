@@ -1,9 +1,9 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_role"
-sidebar_current: "docs-nutanix-resource-role"
+sidebar_current: "docs-nutanix-datasource-role"
 description: |-
-Describes a Role
+  This operation retrieves a role on the input parameters.
 ---
 
 # nutanix_role
