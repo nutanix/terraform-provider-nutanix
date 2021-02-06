@@ -80,4 +80,4 @@ provider "nutanix" {
 ## Notes
 
 ### Resource Timeouts
-Currently, the only way to set a timeout is using the `wait_timeout` attribute or `NUTANIX_WAIT_TIMEOUT` environment variable. This will set a timeout for all operations on all resources. This provider currently doesn't support specifying [operation timeouts](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts).
+Currently, the only way to set a timeout is using the `wait_timeout` argument or `NUTANIX_WAIT_TIMEOUT` environment variable. This will set a timeout for all operations on all resources. This provider currently doesn't support specifying [operation timeouts](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts).
