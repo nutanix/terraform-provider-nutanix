@@ -29,16 +29,16 @@ provider "nutanix" {
 
 ### Provider Variables
 
-| Variable Name  | Description                                                                  | Default |
-| -------------- | ---------------------------------------------------------------------------- | ------- |
-| `username`     | Prism Central/Elements username                                              | N/A     |
-| `password`     | Prism Central/Elements password                                              | N/A     |
-| `endpoint`     | Prism Central/Elements URL                                                   | N/A     |
-| `insecure`     | Whether to verify the SSL certificate on https connections                   | `false` |
-| `port`         | Port of Prism Central/Elements                                               | `9440`  |
-| `wait_timeout` | Timeout waiting for resource to create/update/destroy (in minutes)           | `1`     |
-| `proxy_url`    | Proxy to use when connecting to Prism Central/Elements                       | N/A     |
-| `session_auth` | Whether to use [session-based authentication](#session-based-authentication) | `false` |
+| Name           | Env Var                | Description                                                                  | Default |
+| -------------- | ---------------------- | ---------------------------------------------------------------------------- | ------- |
+| `username`     | `NUTANIX_USERNAME`     | Prism Central/Elements username                                              | N/A     |
+| `password`     | `NUTANIX_PASSWORD`     | Prism Central/Elements password                                              | N/A     |
+| `endpoint`     | `NUTANIX_ENDPOINT`     | Prism Central/Elements URL                                                   | N/A     |
+| `insecure`     | `NUTANIX_INSECURE`     | Whether to verify the SSL certificate on https connections                   | `false` |
+| `port`         | `NUTANIX_PORT`         | Port of Prism Central/Elements                                               | `9440`  |
+| `wait_timeout` | `NUTANIX_WAIT_TIMEOUT` | Timeout waiting for resource to create/update/destroy (in minutes)           | `1`     |
+| `proxy_url`    | `NUTANIX_PROXY_URL`    | Proxy to use when connecting to Prism Central/Elements                       | N/A     |
+| `session_auth` | `NUTANIX_SESSION_AUTH` | Whether to use [session-based authentication](#session-based-authentication) | `false` |
 
 ## Authentication
 
