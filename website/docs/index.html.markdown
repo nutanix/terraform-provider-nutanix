@@ -16,7 +16,7 @@ Use the navigation to the left to read about the available resources.
 
 ## Example Usage
 
-```hcl
+```terraform
 provider "nutanix" {
   username     = "xxxx"
   password     = "xxxx"
@@ -26,6 +26,19 @@ provider "nutanix" {
   wait_timeout = 10
 }
 ```
+
+### Provider Variables
+
+| Variable Name  | Description                                                                  | Default |
+| -------------- | ---------------------------------------------------------------------------- | ------- |
+| `username`     | Prism Central/Elements username                                              | N/A     |
+| `password`     | Prism Central/Elements password                                              | N/A     |
+| `endpoint`     | Prism Central/Elements URL                                                   | N/A     |
+| `insecure`     | Whether to verify the SSL certificate on https connections                   | `false` |
+| `port`         | Port of Prism Central/Elements                                               | `9440`  |
+| `wait_timeout` | Timeout waiting for resource to create/update/destroy (in minutes)           | `1`     |
+| `proxy_url`    | Proxy to use when connecting to Prism Central/Elements                       | N/A     |
+| `session_auth` | Whether to use [session-based authentication](#session-based-authentication) | `false` |
 
 ## Authentication
 
@@ -39,7 +52,7 @@ Static credentials can be provided by adding the fowlloing attributes in-line in
 
 Usage:
 
-```hcl
+```terraform
 provider "nutanix" {
   username     = "xxxx"
   password     = "xxxx"
@@ -58,7 +71,7 @@ The main benefit is a reduction in the time API calls take to complete. Sessions
 
 Usage:
 
-```hcl
+```terraform
 provider "nutanix" {
   ...
   session_auth = true
