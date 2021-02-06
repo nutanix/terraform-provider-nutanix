@@ -53,14 +53,14 @@ provider "nutanix" {
 ## Argument Reference
 
 The following arguments are used to configure the Nutanix Provider:
-- `username` - **(Required)** This is the username for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_USERNAME` environment variable.
-- `password` - **(Required)** This is the password for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_PASSWORD` environment variable.
-- `endpoint` - **(Required)** This is the endpoint for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_ENDPOINT` environment variable.
-- `insecure` - (Optional) This specifies whether to allow verify ssl certificates. This can also be specified with `NUTANIX_INSECURE`. Defaults to `false`.
-- `port` - (Optional) This is the port for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_PORT` environment variable. Defaults to `9440`.
-- `session_auth` - (Optional) This specifies whether to use [session authentication](#session-based-authentication). This can also be specified with `NUTANIX_SESSION_AUTH`. Defaults to `true`
-- `wait_timeout` - (Optional) This specifies the timeout on all resource operations in the provider in minutes. This can also be specified with `NUTANIX_WAIT_TIMEOUT`. Defaults to `1`. Also see [resource timeouts](#resource-timeouts).
-- `proxy_url` - (Optional) This specifies the url to proxy through to access the Prism Elements or Prism Central endpoint.
+* `username` - **(Required)** This is the username for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_USERNAME` environment variable.
+* `password` - **(Required)** This is the password for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_PASSWORD` environment variable.
+* `endpoint` - **(Required)** This is the endpoint for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_ENDPOINT` environment variable.
+* `insecure` - (Optional) This specifies whether to allow verify ssl certificates. This can also be specified with `NUTANIX_INSECURE`. Defaults to `false`.
+* `port` - (Optional) This is the port for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_PORT` environment variable. Defaults to `9440`.
+* `session_auth` - (Optional) This specifies whether to use [session authentication](#session-based-authentication). This can also be specified with `NUTANIX_SESSION_AUTH`. Defaults to `true`
+* `wait_timeout` - (Optional) This specifies the timeout on all resource operations in the provider in minutes. This can also be specified with `NUTANIX_WAIT_TIMEOUT`. Defaults to `1`. Also see [resource timeouts](#resource-timeouts).
+* `proxy_url` - (Optional) This specifies the url to proxy through to access the Prism Elements or Prism Central endpoint.
 
 ### Session based Authentication
 
