@@ -18,51 +18,26 @@ Use the navigation to the left to read about the available resources.
 
 ```terraform
 provider "nutanix" {
-  username     = "xxxx"
-  password     = "xxxx"
-  endpoint     = "xxxx"
+  username     = var.nutanix_username
+  password     = var.nutanix_password
+  endpoint     = var.nutanix_endpoint
+  port         = var.nutanix_port
   insecure     = true
-  port         = 9440
   wait_timeout = 10
 }
 ```
 
-### Provider Variables
+## Argument Reference
 
-| Name           | Env Var                | Description                                                                  | Default |
-| -------------- | ---------------------- | ---------------------------------------------------------------------------- | ------- |
-| `username`     | `NUTANIX_USERNAME`     | Prism Central/Elements username                                              | N/A     |
-| `password`     | `NUTANIX_PASSWORD`     | Prism Central/Elements password                                              | N/A     |
-| `endpoint`     | `NUTANIX_ENDPOINT`     | Prism Central/Elements URL                                                   | N/A     |
-| `insecure`     | `NUTANIX_INSECURE`     | Whether to verify the SSL certificate on https connections                   | `false` |
-| `port`         | `NUTANIX_PORT`         | Port of Prism Central/Elements                                               | `9440`  |
-| `wait_timeout` | `NUTANIX_WAIT_TIMEOUT` | Timeout waiting for resource to create/update/destroy (in minutes)           | `1`     |
-| `proxy_url`    | `NUTANIX_PROXY_URL`    | Proxy to use when connecting to Prism Central/Elements                       | N/A     |
-| `session_auth` | `NUTANIX_SESSION_AUTH` | Whether to use [session-based authentication](#session-based-authentication) | `false` |
-
-## Authentication
-
-The Nutanix provider offers a flexible means of providing credentials for
-authentication. The following methods are supported, in this order, and
-explained below:
-
-### Static credentials
-
-Static credentials can be provided by adding the fowlloing attributes in-line in the Nutanix provider block:
-
-Usage:
-
-```terraform
-provider "nutanix" {
-  username     = "xxxx"
-  password     = "xxxx"
-  endpoint     = "xxxx"
-  insecure     = true
-  port         = 9440
-  wait_timeout = 10 //Optional
-  proxy_url    =  "xxxx" //Optional
-}
-```
+The following arguments are used to configure the Nutanix Provider:
+- `username` - **(Required)** This is the username for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_USERNAME` environment variable.
+- `password` - **(Required)** This is the password for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_PASSWORD` environment variable.
+- `endpoint` - **(Required)** This is the endpoint for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_ENDPOINT` environment variable.
+- `insecure` - (Optional) This specifies whether to allow verify ssl certificates. This can also be specified with `NUTANIX_INSECURE`. Defaults to `false`.
+- `port` - (Optional) This is the port for the Prism Elements or Prism Central instance. This can also be specified with the `NUTANIX_PORT` environment variable. Defaults to `9440`.
+- `session_auth` - (Optional) This specifies whether to use [session authentication](#session-based-authentication). This can also be specified with `NUTANIX_SESSION_AUTH`. Defaults to `true`
+- `wait_timeout` - (Optional) This specifies the timeout on all resource operations in the provider in minutes. This can also be specified with `NUTANIX_WAIT_TIMEOUT`. Defaults to `1`. Also see [resource timeouts](#resource-timeouts).
+- `proxy_url` - (Optional) This specifies the url to proxy through to access the Prism Elements or Prism Central endpoint.
 
 ### Session based Authentication
 
@@ -79,25 +54,7 @@ provider "nutanix" {
 }
 ```
 
-### Environment variables
+## Notes
 
-You can provide your credentials via environment variables, representing your Nutanix
-authentication.
-
-```hcl
-provider "nutanix" {}
-```
-
-Usage:
-
-``` bash
-$ export NUTANIX_USERNAME="xxxx"
-$ export NUTANIX_PASSWORD="xxxx"
-$ export NUTANIX_INSECURE="xxxx"
-$ export NUTANIX_PORT="xxxx"
-$ export NUTANIX_ENDPOINT="xxxx"
-$ export NUTANIX_WAIT_TIMEOUT = "xxx"
-$ export NUTANIX_PROXY_URL = "xxx"
-
-$ terraform plan
-```
+### Resource Timeouts
+Currently, the only way to set a timeout is using the `wait_timeout` attribute or `NUTANIX_WAIT_TIMEOUT` environment variable. This will set a timeout for all operations on all resources. This provider currently doesn't support specifying [operation timeouts](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts).
