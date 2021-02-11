@@ -1207,10 +1207,8 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		//remove cpu sockets
 		if n.(int) < o.(int) {
 			hotPlugChange = false
-		} else { //add cpu sockets
-			if !d.Get("use_hot_add").(bool) {
-				hotPlugChange = false
-			}
+		} else if !d.Get("use_hot_add").(bool) {
+			hotPlugChange = false
 		}
 	}
 
@@ -1220,10 +1218,8 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		//remove memory
 		if n.(int) < o.(int) {
 			hotPlugChange = false
-		} else { //add memory
-			if !d.Get("use_hot_add").(bool) {
-				hotPlugChange = false
-			}
+		} else if !d.Get("use_hot_add").(bool) {
+			hotPlugChange = false
 		}
 	}
 	if d.HasChange("hardware_clock_timezone") {
