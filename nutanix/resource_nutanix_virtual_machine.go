@@ -1203,15 +1203,24 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("num_sockets") {
 		o, n := d.GetChange("num_sockets")
 		res.NumSockets = utils.Int64Ptr(int64(n.(int)))
+
+		//remove cpu sockets
 		if n.(int) < o.(int) {
 			hotPlugChange = false
+		} else { //add cpu sockets
+			if !d.Get("use_hot_add").(bool) {
+				hotPlugChange = false
+			}
 		}
 	}
 
 	if d.HasChange("memory_size_mib") {
 		o, n := d.GetChange("memory_size_mib")
 		res.MemorySizeMib = utils.Int64Ptr(int64(n.(int)))
+		//remove memory
 		if n.(int) < o.(int) {
+			hotPlugChange = false
+		} else { //add memory
 			if !d.Get("use_hot_add").(bool) {
 				hotPlugChange = false
 			}
