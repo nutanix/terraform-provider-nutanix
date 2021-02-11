@@ -8,8 +8,7 @@ description: |-
 
 # Nutanix Provider
 
-The provider is used to interact with the
-many resources and data sources supported by Nutanix, using either Prism Central or Prism Element as the provider endpoint.
+The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint.
 
 Use the navigation on the left to read about the available resources and data sources this provider can use.
 
