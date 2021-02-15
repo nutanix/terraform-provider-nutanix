@@ -290,7 +290,7 @@ func dataSourceNutanixUsersRead(d *schema.ResourceData, meta interface{}) error 
 		req = buildDataSourceListMetadata(metadata.(*schema.Set))
 	}
 
-	resp, err := conn.V3.ListUser(req)
+	resp, err := conn.V3.ListAllUser(utils.StringValue(req.Filter))
 	if err != nil {
 		return err
 	}
