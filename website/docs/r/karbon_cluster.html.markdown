@@ -9,6 +9,7 @@ description: |-
 # nutanix_karbon_cluster
 
 Provides a Nutanix Karbon Cluster resource to Create a k8s cluster.
+**Note:** Minimum tested version is Karbon 2.2
 
 ## Example Usage
 
