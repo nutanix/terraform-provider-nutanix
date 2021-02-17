@@ -1,5 +1,7 @@
 name: CI
-on: [push]
+on:
+  schedule:
+    - cron:  '0 6 * * *'
 env:
   SPECTRAL_DSN: ${{ secrets.SPECTRAL_DSN }}
 jobs:
