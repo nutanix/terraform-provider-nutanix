@@ -1,6 +1,7 @@
 package nutanix
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -21,5 +22,40 @@ func TestAccNutanixSubnetsDataSource_basic(t *testing.T) {
 	})
 }
 func testAccSubnetsDataSourceConfig() string {
-	return `data "nutanix_subnets" "test" {}`
+	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {}
+
+locals {
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
+}
+
+resource "nutanix_subnet" "test" {
+	count = 21
+	name = "dou_vlan0_test_${count.index}_%[1]d"
+	cluster_uuid = local.cluster1
+
+	vlan_id = count.index + 1
+	subnet_type = "VLAN"
+
+	prefix_length = 24
+	default_gateway_ip = "192.168.0.1"
+	subnet_ip = "192.168.0.0"
+	#ip_config_pool_list_ranges = ["192.168.0.5", "192.168.0.100"]
+
+	dhcp_options = {
+		boot_file_name   = "bootfile"
+		domain_name      = "nutanix"
+		tftp_server_name = "10.250.140.200"
+	}
+	
+	dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
+}
+
+data "nutanix_subnets" "test" {}
+
+	`, randIntBetween(1, 25))
 }
