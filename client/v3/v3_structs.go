@@ -1339,6 +1339,9 @@ type CategoryListMetadata struct {
 
 	// The sort order in which results are returned
 	SortOrder *string `json:"sort_order,omitempty" mapstructure:"sort_order,omitempty"`
+
+	// Total number of matched results.
+	TotalMatches *int64 `json:"total_matches,omitempty" mapstructure:"total_matches,omitempty"`
 }
 
 // CategoryKeyStatus represents Category Key Definition.
