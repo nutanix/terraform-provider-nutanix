@@ -1131,7 +1131,7 @@ func (op Operations) ListAllCategoryValues(categoryKeyName, filter string) (*Cat
 		for hasNext(&remaining) {
 			resp, err = op.ListCategoryValues(categoryKeyName, &CategoryListMetadata{
 				Filter: &filter,
-				Kind:   utils.StringPtr("cluster"),
+				Kind:   utils.StringPtr("category"),
 				Length: utils.Int64Ptr(itemsPerPage),
 				Offset: utils.Int64Ptr(offset),
 			})
