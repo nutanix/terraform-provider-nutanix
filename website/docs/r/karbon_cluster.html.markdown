@@ -13,9 +13,50 @@ Provides a Nutanix Karbon Cluster resource to Create a k8s cluster.
 ## Example Usage
 
 ```hcl
-data "nutanix_karbon_clusters" "clusters" {}
+resource "nutanix_karbon_cluster" "example_cluster" {
+  name       = "example_cluster"
+  version    = "1.18.15-1"
+  storage_class_config {
+    reclaim_policy = "Delete"
+    volumes_config {
+      file_system                = "ext4"
+      flash_mode                 = false
+      password                   = "my_pe_pw"
+      prism_element_cluster_uuid = "my_pe_cluster_uuid"
+      storage_container          = "my_storage_container_name"
+      username                   = "my_pe_username"
+    }
+  }
+  cni_config {
+    node_cidr_mask_size = 24
+    pod_ipv4_cidr       = "172.20.0.0/16"
+    service_ipv4_cidr   = "172.19.0.0/16"
+  }
+  worker_node_pool {
+    node_os_version = "ntnx-1.0"
+    num_instances   = 1
+    ahv_config {
+      network_uuid               = "my_subnet_id"
+      prism_element_cluster_uuid = "my_pe_cluster_uuid"
+    }
+  }
+  etcd_node_pool {
+    node_os_version = "ntnx-1.0"
+    num_instances   = 1
+    ahv_config {
 
-resource "nutanix_karbon_cluster" "vm1" {
+      network_uuid               = "my_subnet_id"
+      prism_element_cluster_uuid = "my_pe_cluster_uuid"
+    }
+  }
+  master_node_pool {
+    node_os_version = "ntnx-1.0"
+    num_instances   = 1
+    ahv_config {
+      network_uuid               = "my_subnet_id"
+      prism_element_cluster_uuid = "my_pe_cluster_uuid"
+    }
+  }
 }
 
 ```
