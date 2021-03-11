@@ -9,8 +9,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-var listLength int64 = 500
-
 func dataSourceNutanixCategoryKey() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceNutanixCategoryKeyRead,
