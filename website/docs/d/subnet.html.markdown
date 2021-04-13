@@ -37,7 +37,7 @@ resource "nutanix_subnet" "test" {
   prefix_length = 24
   default_gateway_ip = "192.168.0.1"
   subnet_ip = "192.168.0.0"
-  #ip_config_pool_list_ranges = ["192.168.0.5", "192.168.0.100"]
+  #ip_config_pool_list_ranges = ["192.168.0.5 192.168.0.100"]
 
   dhcp_options {
     boot_file_name = "bootfile"
