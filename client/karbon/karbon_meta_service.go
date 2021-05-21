@@ -34,13 +34,14 @@ func (op MetaOperations) GetVersion() (*MetaVersionResponse, error) {
 }
 
 func (op MetaOperations) GetSemanticVersion() (*MetaSemanticVersionResponse, error) {
+	const expectedVersionLength int = 3
 	metaSemanticVersionResponse := new(MetaSemanticVersionResponse)
 	rawVersion, err := op.GetVersion()
 	if err != nil {
 		return nil, err
 	}
 	splitted := strings.Split(*rawVersion.Version, ".")
-	if len(splitted) != 3 {
+	if len(splitted) != expectedVersionLength {
 		return nil, fmt.Errorf("expected karbon version to be consisting out of 3 elements but was %v", len(splitted))
 	}
 
