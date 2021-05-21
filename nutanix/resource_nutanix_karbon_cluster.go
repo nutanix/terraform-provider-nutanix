@@ -907,7 +907,6 @@ func flattenNodePools(d *schema.ResourceData, conn *karbon.Client, nodePoolKey s
 		return nil, fmt.Errorf("unable to get karbon version during flattening: %s", err)
 	}
 	if nodepoolInterface, ok := d.GetOk(nodePoolKey); ok {
-
 		expandedUserDefinedNodePools, err = expandNodePool(nodepoolInterface.([]interface{}), karbonVersion)
 		if err != nil {
 			return nil, fmt.Errorf("unable to expand node pool during flattening: %s", err)
@@ -1240,9 +1239,12 @@ func getSupportedReclaimPolicies() []string {
 }
 
 func calculateCPURequirement(karbonVersion *karbon.MetaSemanticVersionResponse, amountOfCPU int64) (int64, error) {
-	baseMajorVersion := int64(2)
-	baseMinorVersion := int64(2)
-	baseRevVersion := int64(2)
+	const baseMajorVersion int64 = 2
+	const baseMinorVersion int64 = 2
+	const baseRevVersion int64 = 2
+	// baseMajorVersion := int64(baseMajorVersionConst)
+	// baseMinorVersion := int64(baseMinorVersionConst)
+	// baseRevVersion := int64(baseRevVersionConst)
 
 	// CPU workaround for < 2.2.2
 	if karbonVersion.MajorVersion <= baseMajorVersion && karbonVersion.MinorVersion <= baseMinorVersion && karbonVersion.RevisionVersion < baseRevVersion {
