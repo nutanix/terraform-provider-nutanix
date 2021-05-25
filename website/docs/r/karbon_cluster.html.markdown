@@ -37,6 +37,16 @@ The following arguments are supported:
 * `master_node_pool`: - (Required) Configuration of the master node pools.
 * `cni_config`: - (Required) K8s cluster networking configuration. The flannel or the calico configuration needs to be provided.
 
+### Active Passive Config
+
+If you plan to use multi-master (which you should for production), then you need to set the `active_passive_config` block.
+The `external_ipv4_address` should be an IP address in your subnet range, as this will be a VRRP IP that will 'bounce' between masters.
+
+```
+active_passive_config {
+  external_ipv4_address = "10.100.10.100"
+```
+
 ### Storage Class Config
 
 The storage_class_config attribute supports the following:
