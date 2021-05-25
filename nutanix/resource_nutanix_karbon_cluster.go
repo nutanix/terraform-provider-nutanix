@@ -899,9 +899,6 @@ func flattenNodePools(d *schema.ResourceData, conn *karbon.Client, nodePoolKey s
 	flatNodepools := make([]map[string]interface{}, 0)
 	// start workaround for disk_mib bug GA API
 	expandedUserDefinedNodePools := make([]karbon.ClusterNodePool, 0)
-	// var err error
-	// var karbonVersion *karbon.MetaSemanticVersionResponse
-	log.Print("[YST] before karbonVersion")
 	karbonVersion, err := conn.Meta.GetSemanticVersion()
 	if err != nil {
 		return nil, fmt.Errorf("unable to get karbon version during flattening: %s", err)
@@ -911,8 +908,6 @@ func flattenNodePools(d *schema.ResourceData, conn *karbon.Client, nodePoolKey s
 		if err != nil {
 			return nil, fmt.Errorf("unable to expand node pool during flattening: %s", err)
 		}
-		// } else {
-		// 	return nil, fmt.Errorf("unable to get mandatory attribute %s", nodePoolKey)
 	}
 	// end workaround for disk_mib bug GA API
 	for _, np := range nodepools {
@@ -965,7 +960,6 @@ func flattenNodePool(userDefinedNodePools *karbon.ClusterNodePool, nodepool *kar
 			// "disk_mib":   nodepool.AHVConfig.DiskMib,
 			"memory_mib": nodepool.AHVConfig.MemoryMib,
 			//karbon api bug => network_uuid not set KRBN-3520
-			// "network_uuid":               nodepool.AHVConfig.NetworkUUID,
 			"network_uuid":               networkUUID,
 			"prism_element_cluster_uuid": nodepool.AHVConfig.PrismElementClusterUUID,
 		},
@@ -1134,11 +1128,6 @@ func expandNodePool(nodepoolsInput []interface{}, karbonVersion *karbon.MetaSema
 			if valCPU, ok := ahvConfig["cpu"]; ok {
 				i := int64(valCPU.(int))
 				// Karbon CPU workaround
-				// modi := i % CPUDIVISIONAMOUNT
-				// if modi != 0 {
-				// 	return nil, fmt.Errorf("amount of CPU must be an even number")
-				// }
-				// divi := i / CPUDIVISIONAMOUNT
 				amountOfCPU, err := calculateCPURequirement(karbonVersion, i)
 				if err != nil {
 					return nil, fmt.Errorf("error occurred calculating amount of cpu while expanding node pools: %s", err)
@@ -1242,9 +1231,6 @@ func calculateCPURequirement(karbonVersion *karbon.MetaSemanticVersionResponse, 
 	const baseMajorVersion int64 = 2
 	const baseMinorVersion int64 = 2
 	const baseRevVersion int64 = 2
-	// baseMajorVersion := int64(baseMajorVersionConst)
-	// baseMinorVersion := int64(baseMinorVersionConst)
-	// baseRevVersion := int64(baseRevVersionConst)
 
 	// CPU workaround for < 2.2.2
 	if karbonVersion.MajorVersion <= baseMajorVersion && karbonVersion.MinorVersion <= baseMinorVersion && karbonVersion.RevisionVersion < baseRevVersion {
