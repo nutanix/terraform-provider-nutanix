@@ -14,6 +14,7 @@ type Client struct {
 	client          *client.Client
 	Cluster         ClusterService
 	PrivateRegistry PrivateRegistryService
+	Meta            MetaService
 }
 
 // NewKarbonAPIClient return a client to operate Karbon resources
@@ -30,6 +31,9 @@ func NewKarbonAPIClient(credentials client.Credentials) (*Client, error) {
 			client: c,
 		},
 		PrivateRegistry: PrivateRegistryOperations{
+			client: c,
+		},
+		Meta: MetaOperations{
 			client: c,
 		},
 	}
