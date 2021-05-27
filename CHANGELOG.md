@@ -1,4 +1,96 @@
-## 1.2.0 (Unreleased)
+## 1.2.1 (Feb 01, 2021)
+
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.1.1...HEAD)
+
+**Closed issues:**
+
+- Terraform crashed while creating VM in Nutanix [\#205](https://github.com/nutanix/terraform-provider-nutanix/issues/205)
+- nutanix provider doesn't appear in terraform registry [\#166](https://github.com/nutanix/terraform-provider-nutanix/issues/166)
+- Option not available to change the BIOS type [\#163](https://github.com/nutanix/terraform-provider-nutanix/issues/163)
+- Need a user/group data source to get uuid [\#142](https://github.com/nutanix/terraform-provider-nutanix/issues/142)
+- Missing user role association with nutanix\_project ressource [\#141](https://github.com/nutanix/terraform-provider-nutanix/issues/141)
+- Support for Secure VDI Groups \(VDI Policy\) in nutanix\_network\_security\_rule [\#132](https://github.com/nutanix/terraform-provider-nutanix/issues/132)
+- Provider does not recover from error [\#131](https://github.com/nutanix/terraform-provider-nutanix/issues/131)
+- During a resource adjustment the VM is not shut down using ACPI [\#96](https://github.com/nutanix/terraform-provider-nutanix/issues/96)
+- DR Runbook support [\#22](https://github.com/nutanix/terraform-provider-nutanix/issues/22)
+- Nutanix Karbon interaction [\#6](https://github.com/nutanix/terraform-provider-nutanix/issues/6)
+
+**Merged pull requests:**
+
+- Add note about Prism version api we tested for v1.2.0 release [\#246](https://github.com/nutanix/terraform-provider-nutanix/pull/246) ([marinsalinas](https://github.com/marinsalinas))
+- Update README and Website for  v1.2.0 release. [\#245](https://github.com/nutanix/terraform-provider-nutanix/pull/245) ([marinsalinas](https://github.com/marinsalinas))
+- persist uuid after creation [\#244](https://github.com/nutanix/terraform-provider-nutanix/pull/244) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- V1.2.0 beta [\#243](https://github.com/nutanix/terraform-provider-nutanix/pull/243) ([marinsalinas](https://github.com/marinsalinas))
+- test: changed data for variables of azurl for protection rules [\#242](https://github.com/nutanix/terraform-provider-nutanix/pull/242) ([coderGo93](https://github.com/coderGo93))
+- V1.2.0 fix testacc [\#241](https://github.com/nutanix/terraform-provider-nutanix/pull/241) ([marinsalinas](https://github.com/marinsalinas))
+- fixed bug where datasource project search by name was empty [\#240](https://github.com/nutanix/terraform-provider-nutanix/pull/240) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- Bugfix/remove ide3 dependency tests [\#239](https://github.com/nutanix/terraform-provider-nutanix/pull/239) ([marinsalinas](https://github.com/marinsalinas))
+- Added missing information for resource and datasource of project [\#238](https://github.com/nutanix/terraform-provider-nutanix/pull/238) ([coderGo93](https://github.com/coderGo93))
+- Added filter by name in datasource of project [\#237](https://github.com/nutanix/terraform-provider-nutanix/pull/237) ([coderGo93](https://github.com/coderGo93))
+- Added filter by name in datasource of access control policy [\#236](https://github.com/nutanix/terraform-provider-nutanix/pull/236) ([coderGo93](https://github.com/coderGo93))
+- Task completion project [\#234](https://github.com/nutanix/terraform-provider-nutanix/pull/234) ([coderGo93](https://github.com/coderGo93))
+- adding a VM to a project does not require a reboot [\#232](https://github.com/nutanix/terraform-provider-nutanix/pull/232) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- removed project\_ref [\#231](https://github.com/nutanix/terraform-provider-nutanix/pull/231) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- Bugfix/v1.2.0 beta doc review yst [\#229](https://github.com/nutanix/terraform-provider-nutanix/pull/229) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- Karbon Base [\#228](https://github.com/nutanix/terraform-provider-nutanix/pull/228) ([marinsalinas](https://github.com/marinsalinas))
+- Bugfix/remove ide3 dependency [\#227](https://github.com/nutanix/terraform-provider-nutanix/pull/227) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- added machine\_type to data source [\#226](https://github.com/nutanix/terraform-provider-nutanix/pull/226) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- Add testacc for karbon resources and data sources [\#222](https://github.com/nutanix/terraform-provider-nutanix/pull/222) ([marinsalinas](https://github.com/marinsalinas))
+- Karbon docs [\#221](https://github.com/nutanix/terraform-provider-nutanix/pull/221) ([coderGo93](https://github.com/coderGo93))
+- VDI Support [\#220](https://github.com/nutanix/terraform-provider-nutanix/pull/220) ([marinsalinas](https://github.com/marinsalinas))
+- added permissions for roles [\#219](https://github.com/nutanix/terraform-provider-nutanix/pull/219) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- Feat: add bios\_type support to VM resource and datasource [\#217](https://github.com/nutanix/terraform-provider-nutanix/pull/217) ([marinsalinas](https://github.com/marinsalinas))
+- Protection rule and Recovery plan\(DR Runbook\) resources and datasources [\#216](https://github.com/nutanix/terraform-provider-nutanix/pull/216) ([coderGo93](https://github.com/coderGo93))
+- fixed bug that occured when updating the permissions of a role [\#215](https://github.com/nutanix/terraform-provider-nutanix/pull/215) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- Bugfix/role update [\#214](https://github.com/nutanix/terraform-provider-nutanix/pull/214) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- renamed ds attributes and prints [\#213](https://github.com/nutanix/terraform-provider-nutanix/pull/213) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- changed print messages and added filter based on DN [\#212](https://github.com/nutanix/terraform-provider-nutanix/pull/212) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- changed if statement in ds role and modified the conflictswith [\#195](https://github.com/nutanix/terraform-provider-nutanix/pull/195) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- Roles [\#181](https://github.com/nutanix/terraform-provider-nutanix/pull/181) ([coderGo93](https://github.com/coderGo93))
+- User Resource and Data Sources. [\#179](https://github.com/nutanix/terraform-provider-nutanix/pull/179) ([marinsalinas](https://github.com/marinsalinas))
+- Access control policies [\#175](https://github.com/nutanix/terraform-provider-nutanix/pull/175) ([coderGo93](https://github.com/coderGo93))
+## [1.1.1](https://github.com/nutanix/terraform-provider-nutanix/tree/v1.1.1) (2020-11-30)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.1.0...v1.1.1)
+
+**Fixed bugs:**
+
+- local resource nutanix\_image [\#182](https://github.com/nutanix/terraform-provider-nutanix/issues/182)
+- Terraform crashes when trying to specify boot\_device\_order\_list for a vm resource [\#28](https://github.com/nutanix/terraform-provider-nutanix/issues/28)
+
+**Closed issues:**
+
+- Problem on json unmarshalling to go struct \(MessageResource.message\_list.details of type map\[string\]interface {}\) [\#204](https://github.com/nutanix/terraform-provider-nutanix/issues/204)
+- Fix resource Read inconsistencies [\#201](https://github.com/nutanix/terraform-provider-nutanix/issues/201)
+- local resource nutanix\_image [\#182](https://github.com/nutanix/terraform-provider-nutanix/issues/182)
+- vss\_snapshot\_capable attribute doesn't work [\#171](https://github.com/nutanix/terraform-provider-nutanix/issues/171)
+- 'invalid memory address or nil pointer dereference' while getting a VM. [\#168](https://github.com/nutanix/terraform-provider-nutanix/issues/168)
+- FYI: Nutanix API Authentication fails when making many requests at once [\#93](https://github.com/nutanix/terraform-provider-nutanix/issues/93)
+- 1122 API requests only to list VMs [\#87](https://github.com/nutanix/terraform-provider-nutanix/issues/87)
+- Failed to perform NGT ISO mount operation with error code: kNoFreeCdRomSlot [\#83](https://github.com/nutanix/terraform-provider-nutanix/issues/83)
+- ip\_address not available as nutanix\_virtual\_machine attribute. [\#19](https://github.com/nutanix/terraform-provider-nutanix/issues/19)
+- Unable to obtain Private\_IP as a Output  [\#17](https://github.com/nutanix/terraform-provider-nutanix/issues/17)
+
+**Merged pull requests:**
+
+- chore: fix goreleaser for v1.1.1 [\#207](https://github.com/nutanix/terraform-provider-nutanix/pull/207) ([marinsalinas](https://github.com/marinsalinas))
+- added return nil in read function [\#203](https://github.com/nutanix/terraform-provider-nutanix/pull/203) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- fixed source\_path image\_type issue [\#202](https://github.com/nutanix/terraform-provider-nutanix/pull/202) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- fixed wrong status\_code check in client \(404 should be 401\) [\#200](https://github.com/nutanix/terraform-provider-nutanix/pull/200) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- GitHub actions [\#198](https://github.com/nutanix/terraform-provider-nutanix/pull/198) ([marinsalinas](https://github.com/marinsalinas))
+- chore: add note to network\_security\_rule [\#196](https://github.com/nutanix/terraform-provider-nutanix/pull/196) ([marinsalinas](https://github.com/marinsalinas))
+- chore: fix linting issues [\#194](https://github.com/nutanix/terraform-provider-nutanix/pull/194) ([marinsalinas](https://github.com/marinsalinas))
+- Fix Testacc [\#193](https://github.com/nutanix/terraform-provider-nutanix/pull/193) ([marinsalinas](https://github.com/marinsalinas))
+- fix: missing variable initialization [\#192](https://github.com/nutanix/terraform-provider-nutanix/pull/192) ([marinsalinas](https://github.com/marinsalinas))
+- Migrate to Terraform Plugin SDK v1 [\#176](https://github.com/nutanix/terraform-provider-nutanix/pull/176) ([marinsalinas](https://github.com/marinsalinas))
+- Fix issue \#168, unchecked nil assignment [\#169](https://github.com/nutanix/terraform-provider-nutanix/pull/169) ([yannickstruyf3](https://github.com/yannickstruyf3))
+- Added name argument for datasource of cluster [\#165](https://github.com/nutanix/terraform-provider-nutanix/pull/165) ([coderGo93](https://github.com/coderGo93))
+- Removed volume\_group documentations [\#160](https://github.com/nutanix/terraform-provider-nutanix/pull/160) ([PacoDw](https://github.com/PacoDw))
+- Updated Readme file and changelog [\#154](https://github.com/nutanix/terraform-provider-nutanix/pull/154) ([PacoDw](https://github.com/PacoDw))
+- provide better error reporting when invalid nutanix credentials are used [\#148](https://github.com/nutanix/terraform-provider-nutanix/pull/148) ([scott-grimes](https://github.com/scott-grimes))
+- Initialize BootConfig struct before the child attributes [\#53](https://github.com/nutanix/terraform-provider-nutanix/pull/53) ([marinsalinas](https://github.com/marinsalinas))
+
+
+
 ## 1.1.0 (July 02, 2020)
 
 **Implemented enhancements:**

@@ -11,8 +11,8 @@ import (
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 const (
@@ -368,6 +368,7 @@ func resourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
+			return nil
 		}
 		return fmt.Errorf("error reading image UUID (%s) with error %s", uuid, err)
 	}
@@ -500,7 +501,7 @@ func resourceNutanixImageUpdate(d *schema.ResourceData, meta interface{}) error 
 		spec.Description = utils.StringPtr(d.Get("description").(string))
 	}
 
-	if d.HasChange("source_uri") || d.HasChange("checksum") {
+	if d.HasChange("source_uri") || d.HasChange("checksum") || d.HasChange("source_path") {
 		if err := getImageResource(d, res); err != nil {
 			return err
 		}
@@ -586,9 +587,20 @@ func resourceNutanixImageDelete(d *schema.ResourceData, meta interface{}) error 
 func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 	cs, csok := d.GetOk("checksum")
 	checks := &v3.Checksum{}
-
-	if su, suok := d.GetOk("source_uri"); suok {
-		switch ext := filepath.Ext(su.(string)); ext {
+	su, suok := d.GetOk("source_uri")
+	sp, spok := d.GetOk("source_path")
+	var furi string
+	if suok {
+		image.SourceURI = utils.StringPtr(su.(string))
+		furi = su.(string)
+	}
+	if spok {
+		furi = sp.(string)
+	}
+	if it, itok := d.GetOk("image_type"); itok {
+		image.ImageType = utils.StringPtr(it.(string))
+	} else {
+		switch ext := filepath.Ext(furi); ext {
 		case ".qcow2":
 			image.ImageType = utils.StringPtr("DISK_IMAGE")
 		case ".iso":
@@ -598,7 +610,6 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 			image.ImageType = utils.StringPtr("DISK_IMAGE")
 		}
 		// set source uri
-		image.SourceURI = utils.StringPtr(su.(string))
 	}
 
 	if dsr, dsrok := d.GetOk("data_source_reference"); dsrok {

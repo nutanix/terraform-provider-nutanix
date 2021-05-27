@@ -1,14 +1,13 @@
 package nutanix
 
 import (
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 const resourceNameSubnet = "nutanix_subnet.acctest-managed"
@@ -171,9 +170,6 @@ func testAccCheckNutanixSubnetExists(n string) resource.TestCheckFunc {
 		if !ok {
 			return fmt.Errorf("not found: %s", n)
 		}
-
-		pretty, _ := json.MarshalIndent(rs, "", "  ")
-		fmt.Print("\n\n[DEBUG] State of Subnet", string(pretty))
 
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("no ID is set")

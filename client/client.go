@@ -13,15 +13,15 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/hashicorp/terraform/helper/logging"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/logging"
 )
 
 const (
-	libraryVersion = "v3"
+	// libraryVersion = "v3"
 	defaultBaseURL = "https://%s/"
-	absolutePath   = "api/nutanix/" + libraryVersion
-	userAgent      = "nutanix/" + libraryVersion
-	mediaType      = "application/json"
+	// absolutePath   = "api/nutanix/" + libraryVersion
+	// userAgent      = "nutanix/" + libraryVersion
+	mediaType = "application/json"
 )
 
 // Client Config Configuration of the client
@@ -41,6 +41,9 @@ type Client struct {
 
 	// Optional function called after every successful request made.
 	onRequestCompleted RequestCompletionCallback
+
+	// absolutePath: for example api/nutanix/v3
+	AbsolutePath string
 }
 
 // RequestCompletionCallback defines the type of the request callback function
@@ -59,7 +62,14 @@ type Credentials struct {
 }
 
 // NewClient returns a new Nutanix API client.
-func NewClient(credentials *Credentials) (*Client, error) {
+func NewClient(credentials *Credentials, userAgent string, absolutePath string) (*Client, error) {
+	if userAgent == "" {
+		return nil, fmt.Errorf("userAgent argument must be passed")
+	}
+	if absolutePath == "" {
+		return nil, fmt.Errorf("absolutePath argument must be passed")
+	}
+
 	transCfg := &http.Transport{
 		// nolint:gas
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: credentials.Insecure}, // ignore expired SSL certificates
@@ -85,7 +95,7 @@ func NewClient(credentials *Credentials) (*Client, error) {
 		return nil, err
 	}
 
-	c := &Client{credentials, httpClient, baseURL, userAgent, nil, nil}
+	c := &Client{credentials, httpClient, baseURL, userAgent, nil, nil, absolutePath}
 
 	if credentials.SessionAuth {
 		log.Printf("[DEBUG] Using session_auth\n")
@@ -117,7 +127,7 @@ func NewClient(credentials *Credentials) (*Client, error) {
 
 // NewRequest creates a request
 func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body interface{}) (*http.Request, error) {
-	rel, errp := url.Parse(absolutePath + urlStr)
+	rel, errp := url.Parse(c.AbsolutePath + urlStr)
 	if errp != nil {
 		return nil, errp
 	}
@@ -143,12 +153,10 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 	req.Header.Add("Accept", mediaType)
 	req.Header.Add("User-Agent", c.UserAgent)
 	if c.Cookies != nil {
-		log.Printf("[DEBUG] Adding cookies to request\n")
 		for _, i := range c.Cookies {
 			req.AddCookie(i)
 		}
 	} else {
-		log.Printf("[DEBUG] Adding basic auth to request\n")
 		req.Header.Add("Authorization", "Basic "+
 			base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
 	}
@@ -158,7 +166,7 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 
 // NewUploadRequest Handles image uploads for image service
 func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, body []byte) (*http.Request, error) {
-	rel, errp := url.Parse(absolutePath + urlStr)
+	rel, errp := url.Parse(c.AbsolutePath + urlStr)
 	if errp != nil {
 		return nil, errp
 	}
@@ -213,6 +221,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 			_, err = io.Copy(w, resp.Body)
 			if err != nil {
 				fmt.Printf("Error io.Copy %s", err)
+
 				return err
 			}
 		} else {
@@ -232,8 +241,16 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 
 // CheckResponse checks errors if exist errors in request
 func CheckResponse(r *http.Response) error {
-	if c := r.StatusCode; c >= 200 && c <= 299 {
+	c := r.StatusCode
+
+	if c >= 200 && c <= 299 {
 		return nil
+	}
+
+	// Nutanix returns non-json response with code 401 when
+	// invalid credentials are used
+	if c == http.StatusUnauthorized {
+		return fmt.Errorf("invalid Nutanix Credentials")
 	}
 
 	buf, err := ioutil.ReadAll(r.Body)
@@ -245,7 +262,6 @@ func CheckResponse(r *http.Response) error {
 	rdr2 := ioutil.NopCloser(bytes.NewBuffer(buf))
 
 	r.Body = rdr2
-
 	// if has entities -> return nil
 	// if has message_list -> check_error["state"]
 	// if has status -> check_error["status.state"]
@@ -258,9 +274,9 @@ func CheckResponse(r *http.Response) error {
 	if err != nil {
 		return fmt.Errorf("unmarshalling error response %s", err)
 	}
+	log.Print("[DEBUG] after json.Unmarshal")
 
 	errRes := &ErrorResponse{}
-
 	if status, ok := res["status"]; ok {
 		_, sok := status.(string)
 		if sok {
@@ -274,14 +290,25 @@ func CheckResponse(r *http.Response) error {
 		return nil
 	}
 
+	log.Print("[DEBUG] after bunch of switch cases")
 	if err != nil {
 		return err
 	}
+	log.Print("[DEBUG] first nil check")
 
+	// karbon error check
+	if messageInfo, ok := res["message_info"]; ok {
+		return fmt.Errorf("error: %s", messageInfo)
+	}
+	if message, ok := res["message"]; ok {
+		log.Print(message)
+		return fmt.Errorf("error: %s", message)
+	}
 	if errRes.State != "ERROR" {
 		return nil
 	}
 
+	log.Print("[DEBUG] after errRes.State")
 	pretty, _ := json.MarshalIndent(errRes, "", "  ")
 	return fmt.Errorf("error: %s", string(pretty))
 }
@@ -313,6 +340,7 @@ func (r *ErrorResponse) Error() string {
 	for key, value := range r.MessageList {
 		err = fmt.Sprintf("%d: {message:%s, reason:%s }", key, value.Message, value.Reason)
 	}
+
 	return err
 }
 
@@ -321,5 +349,6 @@ func fillStruct(data map[string]interface{}, result interface{}) error {
 	if err != nil {
 		return err
 	}
+
 	return json.Unmarshal(j, result)
 }

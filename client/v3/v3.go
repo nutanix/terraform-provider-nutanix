@@ -4,6 +4,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
 )
 
+const (
+	libraryVersion = "v3"
+	absolutePath   = "api/nutanix/" + libraryVersion
+	userAgent      = "nutanix/" + libraryVersion
+)
+
 // Client manages the V3 API
 type Client struct {
 	client *client.Client
@@ -12,7 +18,7 @@ type Client struct {
 
 // NewV3Client return a client to operate V3 resources
 func NewV3Client(credentials client.Credentials) (*Client, error) {
-	c, err := client.NewClient(&credentials)
+	c, err := client.NewClient(&credentials, userAgent, absolutePath)
 
 	if err != nil {
 		return nil, err

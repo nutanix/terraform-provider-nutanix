@@ -7,7 +7,7 @@ import (
 
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceNutanixVirtualMachine() *schema.Resource {
@@ -317,15 +317,15 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 							Computed: true,
 						},
 						"vss_snapshot_capable": {
-							Type:     schema.TypeString, //Bool
+							Type:     schema.TypeString, // Bool
 							Computed: true,
 						},
 						"is_reachable": {
-							Type:     schema.TypeString, //Bool
+							Type:     schema.TypeString, // Bool
 							Computed: true,
 						},
 						"vm_mobility_drivers_installed": {
-							Type:     schema.TypeString, //Bool
+							Type:     schema.TypeString, // Bool
 							Computed: true,
 						},
 					},
@@ -447,6 +447,14 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 			"boot_device_mac_address": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
+			},
+			"boot_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"machine_type": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"hardware_clock_timezone": {
@@ -707,23 +715,35 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 
 	diskAddress := make(map[string]interface{})
 	mac := ""
+	bootType := ""
+	machineType := ""
 	b := make([]string, 0)
 
 	if resp.Status.Resources.BootConfig != nil {
-		if resp.Status.Resources.BootConfig.BootDevice.DiskAddress != nil {
-			i := strconv.Itoa(int(utils.Int64Value(resp.Status.Resources.BootConfig.BootDevice.DiskAddress.DeviceIndex)))
-			diskAddress["device_index"] = i
-			diskAddress["adapter_type"] = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.DiskAddress.AdapterType)
+		if resp.Status.Resources.BootConfig.BootDevice != nil {
+			if resp.Status.Resources.BootConfig.BootDevice.DiskAddress != nil {
+				i := strconv.Itoa(int(utils.Int64Value(resp.Status.Resources.BootConfig.BootDevice.DiskAddress.DeviceIndex)))
+				diskAddress["device_index"] = i
+				diskAddress["adapter_type"] = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.DiskAddress.AdapterType)
+			}
+			mac = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.MacAddress)
 		}
 		if resp.Status.Resources.BootConfig.BootDeviceOrderList != nil {
 			b = utils.StringValueSlice(resp.Status.Resources.BootConfig.BootDeviceOrderList)
 		}
-		mac = utils.StringValue(resp.Status.Resources.BootConfig.BootDevice.MacAddress)
+		if resp.Status.Resources.BootConfig.BootType != nil {
+			bootType = utils.StringValue(resp.Status.Resources.BootConfig.BootType)
+		}
+	}
+	if resp.Status.Resources.MachineType != nil {
+		machineType = utils.StringValue(resp.Status.Resources.MachineType)
 	}
 
 	d.Set("boot_device_order_list", b)
 	d.Set("boot_device_disk_address", diskAddress)
 	d.Set("boot_device_mac_address", mac)
+	d.Set("boot_type", bootType)
+	d.Set("machine_type", machineType)
 
 	sysprep := make(map[string]interface{})
 	sysrepCV := make(map[string]string)
@@ -1102,15 +1122,15 @@ func resourceNutanixDatasourceVirtualMachineInstanceResourceV0() *schema.Resourc
 							Computed: true,
 						},
 						"vss_snapshot_capable": {
-							Type:     schema.TypeString, //Bool
+							Type:     schema.TypeString, // Bool
 							Computed: true,
 						},
 						"is_reachable": {
-							Type:     schema.TypeString, //Bool
+							Type:     schema.TypeString, // Bool
 							Computed: true,
 						},
 						"vm_mobility_drivers_installed": {
-							Type:     schema.TypeString, //Bool
+							Type:     schema.TypeString, // Bool
 							Computed: true,
 						},
 					},

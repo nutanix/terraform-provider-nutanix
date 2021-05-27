@@ -1,8 +1,8 @@
 package nutanix
 
 import (
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func categoriesSchema() *schema.Schema {
@@ -54,4 +54,27 @@ func flattenCategories(categories map[string]string) []interface{} {
 	}
 
 	return c
+}
+
+func categoriesSchemaOptional() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Set: func(v interface{}) int {
+			category := v.(map[string]interface{})
+			return hashcode.String(category["name"].(string) + category["value"].(string))
+		},
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"value": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			},
+		},
+	}
 }

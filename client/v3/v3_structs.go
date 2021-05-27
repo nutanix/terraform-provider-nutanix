@@ -86,6 +86,7 @@ type VMBootConfig struct {
 	// given then specified boot device will be primary boot device and remaining devices will be assigned boot order
 	// according to boot device order field.
 	BootDevice *VMBootDevice `json:"boot_device,omitempty" mapstructure:"boot_device,omitempty"`
+	BootType   *string       `json:"boot_type,omitempty" mapstructure:"boot_type,omitempty"`
 
 	// Indicates the order of device types in which VM should try to boot from. If boot device order is not provided the
 	// system will decide appropriate boot device order.
@@ -96,8 +97,8 @@ type VMBootConfig struct {
 type NutanixGuestToolsSpec struct {
 	State                 *string           `json:"state,omitempty" mapstructure:"state,omitempty"`                                     // Nutanix Guest Tools is enabled or not.
 	Version               *string           `json:"version,omitempty" mapstructure:"version,omitempty"`                                 // Version of Nutanix Guest Tools installed on the VM.
-	NgtState              *string           `json:"ngt_state,omitempty" mapstructure:"ngt_state,omitempty"`                             //Nutanix Guest Tools installed or not.
-	Credentials           map[string]string `json:"credentials,omitempty" mapstructure:"credentials,omitempty"`                         //Credentials to login server
+	NgtState              *string           `json:"ngt_state,omitempty" mapstructure:"ngt_state,omitempty"`                             // Nutanix Guest Tools installed or not.
+	Credentials           map[string]string `json:"credentials,omitempty" mapstructure:"credentials,omitempty"`                         // Credentials to login server
 	IsoMountState         *string           `json:"iso_mount_state,omitempty" mapstructure:"iso_mount_state,omitempty"`                 // Desired mount state of Nutanix Guest Tools ISO.
 	EnabledCapabilityList []*string         `json:"enabled_capability_list,omitempty" mapstructure:"enabled_capability_list,omitempty"` // Application names that are enabled.
 }
@@ -286,6 +287,8 @@ type VMResources struct {
 	VMVnumaConfig *VMVnumaConfig `json:"vnuma_config,omitempty" mapstructure:"vnuma_config,omitempty"`
 
 	SerialPortList []*VMSerialPort `json:"serial_port_list,omitempty" mapstructure:"serial_port_list,omitempty"`
+
+	MachineType *string `json:"machine_type,omitempty" mapstructure:"machine_type,omitempty"`
 }
 
 // VM An intentful representation of a vm spec
@@ -376,7 +379,7 @@ type VMNicOutputStatus struct {
 type NutanixGuestToolsStatus struct {
 	// Version of Nutanix Guest Tools available on the cluster.
 	AvailableVersion *string `json:"available_version,omitempty" mapstructure:"available_version,omitempty"`
-	//Nutanix Guest Tools installed or not.
+	// Nutanix Guest Tools installed or not.
 	NgtState *string `json:"ngt_state,omitempty" mapstructure:"ngt_state,omitempty"`
 	// Desired mount state of Nutanix Guest Tools ISO.
 	IsoMountState *string `json:"iso_mount_state,omitempty" mapstructure:"iso_mount_state,omitempty"`
@@ -386,7 +389,7 @@ type NutanixGuestToolsStatus struct {
 	Version *string `json:"version,omitempty" mapstructure:"version,omitempty"`
 	// Application names that are enabled.
 	EnabledCapabilityList []*string `json:"enabled_capability_list,omitempty" mapstructure:"enabled_capability_list,omitempty"`
-	//Credentials to login server
+	// Credentials to login server
 	Credentials map[string]string `json:"credentials,omitempty" mapstructure:"credentials,omitempty"`
 	// Version of the operating system on the VM.
 	GuestOsVersion *string `json:"guest_os_version,omitempty" mapstructure:"guest_os_version,omitempty"`
@@ -511,6 +514,8 @@ type VMResourcesDefStatus struct {
 	VnumaConfig *VMVnumaConfig `json:"vnuma_config,omitempty" mapstructure:"vnuma_config,omitempty"`
 
 	SerialPortList []*VMSerialPort `json:"serial_port_list,omitempty" mapstructure:"serial_port_list,omitempty"`
+
+	MachineType *string `json:"machine_type,omitempty" mapstructure:"machine_type,omitempty"`
 }
 
 // VMDefStatus An intentful representation of a vm status
@@ -536,7 +541,7 @@ type VMDefStatus struct {
 	ExecutionContext *ExecutionContext `json:"execution_context,omitempty" mapstructure:"execution_context,omitempty"`
 }
 
-//ExecutionContext ...
+// ExecutionContext ...
 type ExecutionContext struct {
 	TaskUUID interface{} `json:"task_uuid,omitempty" mapstructure:"task_uuid,omitempty"`
 }
@@ -1551,32 +1556,18 @@ type NetworkRuleIcmpTypeCodeList struct {
 
 // NetworkRule ...
 type NetworkRule struct {
-
-	// Timestamp of expiration time.
-	ExpirationTime *string `json:"expiration_time,omitempty" mapstructure:"expiration_time,omitempty"`
-
-	// The set of categories that matching VMs need to have.
-	Filter *CategoryFilter `json:"filter,omitempty" mapstructure:"filter,omitempty"`
-
-	// List of ICMP types and codes allowed by this rule.
-	IcmpTypeCodeList []*NetworkRuleIcmpTypeCodeList `json:"icmp_type_code_list,omitempty" mapstructure:"icmp_type_code_list,omitempty"`
-
-	IPSubnet *IPSubnet `json:"ip_subnet,omitempty" mapstructure:"ip_subnet,omitempty"`
-
-	NetworkFunctionChainReference *Reference `json:"network_function_chain_reference,omitempty" mapstructure:"network_function_chain_reference,omitempty"`
-
-	// The set of categories that matching VMs need to have.
-	PeerSpecificationType *string `json:"peer_specification_type,omitempty" mapstructure:"peer_specification_type,omitempty"`
-
-	// Select a protocol to allow.  Multiple protocols can be allowed by repeating network_rule object.  If a protocol
-	// is not configured in the network_rule object then it is allowed.
-	Protocol *string `json:"protocol,omitempty" mapstructure:"protocol,omitempty"`
-
-	// List of TCP ports that are allowed by this rule.
-	TCPPortRangeList []*PortRange `json:"tcp_port_range_list,omitempty" mapstructure:"tcp_port_range_list,omitempty"`
-
-	// List of UDP ports that are allowed by this rule.
-	UDPPortRangeList []*PortRange `json:"udp_port_range_list,omitempty" mapstructure:"udp_port_range_list,omitempty"`
+	ExpirationTime                *string                        `json:"expiration_time,omitempty" mapstructure:"expiration_time,omitempty"`
+	Filter                        *CategoryFilter                `json:"filter,omitempty" mapstructure:"filter,omitempty"`
+	IcmpTypeCodeList              []*NetworkRuleIcmpTypeCodeList `json:"icmp_type_code_list,omitempty" mapstructure:"icmp_type_code_list,omitempty"`
+	IPSubnet                      *IPSubnet                      `json:"ip_subnet,omitempty" mapstructure:"ip_subnet,omitempty"`
+	NetworkFunctionChainReference *Reference                     `json:"network_function_chain_reference,omitempty" mapstructure:"network_function_chain_reference,omitempty"`
+	PeerSpecificationType         *string                        `json:"peer_specification_type,omitempty" mapstructure:"peer_specification_type,omitempty"`
+	Protocol                      *string                        `json:"protocol,omitempty" mapstructure:"protocol,omitempty"`
+	TCPPortRangeList              []*PortRange                   `json:"tcp_port_range_list,omitempty" mapstructure:"tcp_port_range_list,omitempty"`
+	UDPPortRangeList              []*PortRange                   `json:"udp_port_range_list,omitempty" mapstructure:"udp_port_range_list,omitempty"`
+	AddressGroupInclusionList     []*Reference                   `json:"address_group_inclusion_list,omitempty" mapstructure:"address_group_inclusion_list,omitempty"`
+	Description                   *string                        `json:"description,omitempty" mapstructure:"description,omitempty"`
+	ServiceGroupList              []*Reference                   `json:"service_group_list,omitempty" mapstructure:"service_group_list,omitempty"`
 }
 
 // TargetGroup ...
@@ -1611,9 +1602,12 @@ type NetworkSecurityRuleIsolationRule struct {
 
 // NetworkSecurityRuleResources ...
 type NetworkSecurityRuleResources struct {
-	AppRule        *NetworkSecurityRuleResourcesRule `json:"app_rule,omitempty" mapstructure:"app_rule,omitempty"`
-	IsolationRule  *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty" mapstructure:"isolation_rule,omitempty"`
-	QuarantineRule *NetworkSecurityRuleResourcesRule `json:"quarantine_rule,omitempty" mapstructure:"quarantine_rule,omitempty"`
+	AllowIpv6Traffic      *bool                             `json:"allow_ipv6_traffic,omitempty" mapstructure:"allow_ipv6_traffic,omitempty"`
+	IsPolicyHitlogEnabled *bool                             `json:"is_policy_hitlog_enabled,omitempty" mapstructure:"is_policy_hitlog_enabled,omitempty"`
+	AdRule                *NetworkSecurityRuleResourcesRule `json:"ad_rule,omitempty" mapstructure:"ad_rule,omitempty"`
+	AppRule               *NetworkSecurityRuleResourcesRule `json:"app_rule,omitempty" mapstructure:"app_rule,omitempty"`
+	IsolationRule         *NetworkSecurityRuleIsolationRule `json:"isolation_rule,omitempty" mapstructure:"isolation_rule,omitempty"`
+	QuarantineRule        *NetworkSecurityRuleResourcesRule `json:"quarantine_rule,omitempty" mapstructure:"quarantine_rule,omitempty"`
 }
 
 // NetworkSecurityRule ...
@@ -1638,6 +1632,12 @@ type Metadata struct {
 
 	// Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
 	ShouldForceTranslate *bool `json:"should_force_translate,omitempty" mapstructure:"should_force_translate,omitempty"`
+
+	//TODO: add if necessary
+	//CategoriesMapping    map[string][]string `json:"categories_mapping,omitempty" mapstructure:"categories_mapping,omitempty"`
+	//EntityVersion        *string             `json:"entity_version,omitempty" mapstructure:"entity_version,omitempty"`
+	//UseCategoriesMapping *bool               `json:"use_categories_mapping,omitempty" mapstructure:"use_categories_mapping,omitempty"`
+
 }
 
 // NetworkSecurityRuleIntentInput An intentful representation of a network_security_rule
@@ -2002,4 +2002,509 @@ type ProjectListResponse struct {
 	APIVersion string              `json:"api_version,omitempty"`
 	Entities   []*Project          `json:"entities,omitempty"`
 	Metadata   *ListMetadataOutput `json:"metadata,omitempty"`
+}
+
+// AccessControlPolicyResources ...
+type AccessControlPolicyResources struct {
+	UserReferenceList      []*Reference `json:"user_reference_list,omitempty"`
+	UserGroupReferenceList []*Reference `json:"user_group_reference_list,omitempty"`
+	RoleReference          *Reference   `json:"role_reference,omitempty"`
+	FilterList             *FilterList  `json:"filter_list,omitempty"`
+}
+
+// FilterList ...
+type FilterList struct {
+	ContextList []*ContextList `json:"context_list,omitempty"`
+}
+
+// ContextList ...
+type ContextList struct {
+	ScopeFilterExpressionList  []*ScopeFilterExpressionList `json:"scope_filter_expression_list,omitempty"`
+	EntityFilterExpressionList []EntityFilterExpressionList `json:"entity_filter_expression_list,omitempty"`
+}
+
+// ScopeFilterExpressionList ...
+type ScopeFilterExpressionList struct {
+	LeftHandSide  string        `json:"left_hand_side,omitempty"`
+	Operator      string        `json:"operator,omitempty"`
+	RightHandSide RightHandSide `json:"right_hand_side,omitempty"`
+}
+
+// EntityFilterExpressionList ...
+type EntityFilterExpressionList struct {
+	LeftHandSide  LeftHandSide  `json:"left_hand_side,omitempty"`
+	Operator      string        `json:"operator,omitempty"`
+	RightHandSide RightHandSide `json:"right_hand_side,omitempty"`
+}
+
+// LeftHandSide ...
+type LeftHandSide struct {
+	EntityType *string `json:"entity_type,omitempty"`
+}
+
+// RightHandSide ...
+type RightHandSide struct {
+	Collection *string             `json:"collection,omitempty"`
+	Categories map[string][]string `json:"categories,omitempty"`
+	UUIDList   []string            `json:"uuid_list,omitempty"`
+}
+
+// AccessControlPolicyStatus ...
+type AccessControlPolicyStatus struct {
+	State            *string                       `json:"state,omitempty"`
+	MessageList      []*MessageResource            `json:"message_list,omitempty"`
+	Name             *string                       `json:"name,omitempty"`
+	Resources        *AccessControlPolicyResources `json:"resources,omitempty"`
+	Description      *string                       `json:"description,omitempty"`
+	ExecutionContext *ExecutionContext             `json:"execution_context,omitempty"`
+}
+
+// AccessControlPolicySpec ...
+type AccessControlPolicySpec struct {
+	Name        *string                       `json:"name,omitempty"`
+	Resources   *AccessControlPolicyResources `json:"resources,omitempty"`
+	Description *string                       `json:"description,omitempty"`
+}
+
+// AccessControlPolicy Response object for intentful operations on a access policy
+type AccessControlPolicy struct {
+	Status     *AccessControlPolicyStatus `json:"status,omitempty"`
+	Spec       *AccessControlPolicySpec   `json:"spec,omitempty"`
+	APIVersion string                     `json:"api_version,omitempty"`
+	Metadata   *Metadata                  `json:"metadata,omitempty"`
+}
+
+// AccessControlPolicyListResponse Response object for intentful operation of access policy
+type AccessControlPolicyListResponse struct {
+	APIVersion string                 `json:"api_version,omitempty"`
+	Entities   []*AccessControlPolicy `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput    `json:"metadata,omitempty"`
+}
+
+// RoleResources ...
+type RoleResources struct {
+	PermissionReferenceList []*Reference `json:"permission_reference_list,omitempty"`
+}
+
+// RoleStatus ...
+type RoleStatus struct {
+	State            *string            `json:"state,omitempty"`
+	MessageList      []*MessageResource `json:"message_list,omitempty"`
+	Name             *string            `json:"name,omitempty"`
+	Resources        *RoleResources     `json:"resources,omitempty"`
+	Description      *string            `json:"description,omitempty"`
+	ExecutionContext *ExecutionContext  `json:"execution_context,omitempty"`
+}
+
+// RoleSpec ...
+type RoleSpec struct {
+	Name        *string        `json:"name,omitempty"`
+	Resources   *RoleResources `json:"resources,omitempty"`
+	Description *string        `json:"description,omitempty"`
+}
+
+// Role Response object for intentful operations on a access policy
+type Role struct {
+	Status     *RoleStatus `json:"status,omitempty"`
+	Spec       *RoleSpec   `json:"spec,omitempty"`
+	APIVersion string      `json:"api_version,omitempty"`
+	Metadata   *Metadata   `json:"metadata,omitempty"`
+}
+
+// RoleListResponse Response object for intentful operation of access policy
+type RoleListResponse struct {
+	APIVersion string              `json:"api_version,omitempty"`
+	Entities   []*Role             `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput `json:"metadata,omitempty"`
+}
+
+type ResourceUsageSummary struct {
+	ResourceDomain *ResourceDomainStatus `json:"resource_domain"` // The status for a resource domain (limits and values)
+}
+
+type ResourceDomainStatus struct {
+	Resources []ResourceUtilizationStatus `json:"resources,omitempty"` // The utilization/limit for resource types
+}
+
+type ResourceUtilizationStatus struct {
+	Limit        *int64  `json:"limit,omitempty"`         // The resource consumption limit (unspecified is unlimited)
+	ResourceType *string `json:"resource_type,omitempty"` // The type of resource (for example storage, CPUs)
+	Units        *string `json:"units,omitempty"`         // The units of the resource type
+	Value        *int64  `json:"value,omitempty"`         // The amount of resource consumed
+}
+
+// An intentful representation of a user
+type UserIntentInput struct {
+	APIVersion *string   `json:"api_version,omitempty"` // API Version of the Nutanix v3 API framework.
+	Metadata   *Metadata `json:"metadata,omitempty"`    // The user kind metadata
+	Spec       *UserSpec `json:"spec,omitempty"`        // User Input Definition.
+}
+
+// Response object for intentful operations on a user
+type UserIntentResponse struct {
+	APIVersion *string     `json:"api_version,omitempty"` // API Version of the Nutanix v3 API framework.
+	Metadata   *Metadata   `json:"metadata,omitempty"`    // The user kind metadata
+	Spec       *UserSpec   `json:"spec,omitempty"`        // User Input Definition.
+	Status     *UserStatus `json:"status,omitempty"`      // User status definition.
+}
+
+// User Input Definition.
+type UserSpec struct {
+	Resources *UserResources `json:"resources,omitempty"` // User Resource Definition.
+}
+
+// User Resource Definition.
+type UserResources struct {
+	DirectoryServiceUser *DirectoryServiceUser `json:"directory_service_user,omitempty"` // A Directory Service user.
+	IdentityProviderUser *IdentityProvider     `json:"identity_provider_user,omitempty"` // An Identity Provider user.
+}
+
+// A Directory Service user.
+type DirectoryServiceUser struct {
+	DefaultUserPrincipalName  *string    `json:"default_user_principal_name,omitempty"` // The Default UserPrincipalName of the user from the directory service.
+	DirectoryServiceReference *Reference `json:"directory_service_reference,omitempty"` // The reference to a directory_service
+	UserPrincipalName         *string    `json:"user_principal_name,omitempty"`         // The UserPrincipalName of the user from the directory service.
+}
+
+// An Identity Provider user.
+type IdentityProvider struct {
+	IdentityProviderReference *Reference `json:"identity_provider_reference,omitempty"` // The reference to a identity_provider
+	Username                  *string    `json:"username,omitempty"`                    // The username from the identity provider. Name Id for SAML Identity Provider.
+}
+
+// User status definition.
+type UserStatus struct {
+	MessageList      []MessageResource    `json:"message_list,omitempty"`
+	Name             *string              `json:"name,omitempty"`      // Name of the User.
+	Resources        *UserStatusResources `json:"resources,omitempty"` // User Resource Definition.
+	State            *string              `json:"state,omitempty"`     // The state of the entity.
+	ExecutionContext *ExecutionContext    `json:"execution_context,omitempty"`
+}
+
+// User Resource Definition.
+type UserStatusResources struct {
+	AccessControlPolicyReferenceList []*Reference          `json:"access_control_policy_reference_list,omitempty"` // List of ACP references.
+	DirectoryServiceUser             *DirectoryServiceUser `json:"directory_service_user,omitempty"`               // A Directory Service user.
+	DisplayName                      *string               `json:"display_name,omitempty"`                         // The display name of the user (common name) provided by the directory service.
+	IdentityProviderUser             *IdentityProvider     `json:"identity_provider_user,omitempty"`               // An Identity Provider user.
+	ProjectsReferenceList            []*Reference          `json:"projects_reference_list,omitempty"`              // A list of projects the user is part of.
+	ResourceUsageSummary             *ResourceUsageSummary `json:"resource_usage_summary,omitempty"`
+	UserType                         *string               `json:"user_type,omitempty"`
+}
+
+type UserListResponse struct {
+	APIVersion *string               `json:"api_version,omitempty"` // API Version of the Nutanix v3 API framework.
+	Entities   []*UserIntentResponse `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput   `json:"metadata,omitempty"` // All api calls that return a list will have this metadata block
+}
+
+// Response object for intentful operations on a user_group
+type UserGroupIntentResponse struct {
+	APIVersion *string          `json:"api_version,omitempty"` // API Version of the Nutanix v3 API framework.
+	Metadata   *Metadata        `json:"metadata,omitempty"`    // The user_group kind metadata
+	Spec       *UserGroupSpec   `json:"spec,omitempty"`        // User Group Input Definition.
+	Status     *UserGroupStatus `json:"status,omitempty"`      // User group status definition.
+}
+
+// User Group Input Definition.
+type UserGroupSpec struct {
+	Resources *UserGroupResources `json:"resources,omitempty"` // User Group Resource Definition
+}
+
+// User Group Resource Definition
+type UserGroupResources struct {
+	AccessControlPolicyReferenceList []*Reference               `json:"access_control_policy_reference_list,omitempty"` // List of ACP references.
+	DirectoryServiceUserGroup        *DirectoryServiceUserGroup `json:"directory_service_user_group,omitempty"`         // A Directory Service user group.
+	DisplayName                      *string                    `json:"display_name,omitempty"`                         // The display name for the user group.
+	ProjectsReferenceList            []*Reference               `json:"projects_reference_list,omitempty"`              // A list of projects the user group is part of.
+	UserGroupType                    *string                    `json:"user_group_type,omitempty"`
+}
+
+// User group status definition.
+type UserGroupStatus struct {
+	MessageList []MessageResource   `json:"message_list,omitempty"`
+	Resources   *UserGroupResources `json:"resources,omitempty"` // User Group Resource Definition.
+	State       *string             `json:"state,omitempty"`     // The state of the entity.
+}
+
+// A Directory Service user group.
+type DirectoryServiceUserGroup struct {
+	DirectoryServiceReference *Reference `json:"directory_service_reference,omitempty"` // The reference to a directory_service
+	DistinguishedName         *string    `json:"distinguished_name,omitempty"`          // The Distinguished name for the user group.
+}
+
+// Response object for intentful operation of user_groups
+type UserGroupListResponse struct {
+	APIVersion *string                    `json:"api_version,omitempty"` // API Version of the Nutanix v3 API framework.
+	Entities   []*UserGroupIntentResponse `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput        `json:"metadata,omitempty"` // All api calls that return a list will have this metadata block
+}
+
+// Response object for intentful operations on a user_group
+type PermissionIntentResponse struct {
+	APIVersion *string           `json:"api_version,omitempty"` // API Version of the Nutanix v3 API framework.
+	Metadata   *Metadata         `json:"metadata,omitempty"`    // The user_group kind metadata
+	Spec       *PermissionSpec   `json:"spec,omitempty"`        // Permission Input Definition.
+	Status     *PermissionStatus `json:"status,omitempty"`      // User group status definition.
+}
+
+// Permission Input Definition.
+type PermissionSpec struct {
+	Name        *string              `json:"name,omitempty"`        // The name for the permission.
+	Description *string              `json:"description,omitempty"` // The display name for the permission.
+	Resources   *PermissionResources `json:"resources,omitempty"`   // Permission Resource Definition
+}
+
+// Permission Resource Definition
+type PermissionResources struct {
+	Operation *string           `json:"operation,omitempty"`
+	Kind      *string           `json:"kind,omitempty"`
+	Fields    *FieldsPermission `json:"fields,omitempty"`
+}
+
+type FieldsPermission struct {
+	FieldMode     *string   `json:"field_mode,omitempty"`
+	FieldNameList []*string `json:"field_name_list,omitempty"`
+}
+
+// Permission status definition.
+type PermissionStatus struct {
+	Name        *string              `json:"name,omitempty"`        // The name for the permission.
+	Description *string              `json:"description,omitempty"` // The display name for the permission.
+	Resources   *PermissionResources `json:"resources,omitempty"`   // Permission Resource Definition
+	MessageList []MessageResource    `json:"message_list,omitempty"`
+	State       *string              `json:"state,omitempty"` // The state of the entity.
+}
+
+// Response object for intentful operation of Permissions
+type PermissionListResponse struct {
+	APIVersion *string                     `json:"api_version,omitempty"` // API Version of the Nutanix v3 API framework.
+	Entities   []*PermissionIntentResponse `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput         `json:"metadata,omitempty"` // All api calls that return a list will have this metadata block
+}
+
+//ProtectionRuleResources represents the resources of protection rules
+type ProtectionRuleResources struct {
+	StartTime                        string                              `json:"start_time,omitempty"`
+	AvailabilityZoneConnectivityList []*AvailabilityZoneConnectivityList `json:"availability_zone_connectivity_list,omitempty"`
+	OrderedAvailabilityZoneList      []*OrderedAvailabilityZoneList      `json:"ordered_availability_zone_list,omitempty"`
+	CategoryFilter                   *CategoryFilter                     `json:"category_filter,omitempty"`
+}
+
+//AvailabilityZoneConnectivityList represents a object for resource of protection rule
+type AvailabilityZoneConnectivityList struct {
+	DestinationAvailabilityZoneIndex *int64                  `json:"destination_availability_zone_index,omitempty"`
+	SourceAvailabilityZoneIndex      *int64                  `json:"source_availability_zone_index,omitempty"`
+	SnapshotScheduleList             []*SnapshotScheduleList `json:"snapshot_schedule_list,omitempty"`
+}
+
+//SnapshotScheduleList represents a object for resource of protection rule
+type SnapshotScheduleList struct {
+	RecoveryPointObjectiveSecs    *int64                   `json:"recovery_point_objective_secs,omitempty"`
+	LocalSnapshotRetentionPolicy  *SnapshotRetentionPolicy `json:"local_snapshot_retention_policy,omitempty"`
+	AutoSuspendTimeoutSecs        *int64                   `json:"auto_suspend_timeout_secs,omitempty"`
+	SnapshotType                  string                   `json:"snapshot_type,omitempty"`
+	RemoteSnapshotRetentionPolicy *SnapshotRetentionPolicy `json:"remote_snapshot_retention_policy,omitempty"`
+}
+
+//SnapshotRetentionPolicy represents a object for resource of protection rule
+type SnapshotRetentionPolicy struct {
+	NumSnapshots          *int64                 `json:"num_snapshots,omitempty"`
+	RollupRetentionPolicy *RollupRetentionPolicy `json:"rollup_retention_policy,omitempty"`
+}
+
+//RollupRetentionPolicy represents a object for resource of protection rule
+type RollupRetentionPolicy struct {
+	Multiple             *int64 `json:"multiple,omitempty"`
+	SnapshotIntervalType string `json:"snapshot_interval_type,omitempty"`
+}
+
+//OrderedAvailabilityZoneList represents a object for resource of protection rule
+type OrderedAvailabilityZoneList struct {
+	ClusterUUID         string `json:"cluster_uuid,omitempty"`
+	AvailabilityZoneURL string `json:"availability_zone_url,omitempty"`
+}
+
+//ProtectionRuleStatus represents a status of a protection rule
+type ProtectionRuleStatus struct {
+	State            string                   `json:"state,omitempty"`
+	MessageList      []*MessageResource       `json:"message_list,omitempty"`
+	Name             string                   `json:"name,omitempty"`
+	Resources        *ProtectionRuleResources `json:"resources,omitempty"`
+	ExecutionContext *ExecutionContext        `json:"execution_context,omitempty"`
+}
+
+//ProtectionRuleSpec represents a spec of protection rules
+type ProtectionRuleSpec struct {
+	Name        string                   `json:"name,omitempty"`
+	Description string                   `json:"description,omitempty"`
+	Resources   *ProtectionRuleResources `json:"resources,omitempty"`
+}
+
+//ProtectionRuleResponse represents a response object of a protection rule
+type ProtectionRuleResponse struct {
+	APIVersion string                `json:"api_version,omitempty"`
+	Metadata   *Metadata             `json:"metadata,omitempty"`
+	Spec       *ProtectionRuleSpec   `json:"spec,omitempty"`
+	Status     *ProtectionRuleStatus `json:"status,omitempty"`
+}
+
+//ProtectionRulesListResponse represents the response of a list of protection rules
+type ProtectionRulesListResponse struct {
+	APIVersion string                    `json:"api_version,omitempty"`
+	Entities   []*ProtectionRuleResponse `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput       `json:"metadata,omitempty"`
+}
+
+//ProtectionRuleInput Represents the request of create protection rule
+type ProtectionRuleInput struct {
+	APIVersion string              `json:"api_version,omitempty"`
+	Metadata   *Metadata           `json:"metadata,omitempty"`
+	Spec       *ProtectionRuleSpec `json:"spec,omitempty"`
+}
+
+//RecoveryPlanResources represents the resources of recovery plan
+type RecoveryPlanResources struct {
+	StageList  []*StageList `json:"stage_list,omitempty"`
+	Parameters *Parameters  `json:"parameters,omitempty"`
+}
+
+//Parameters represents a object for resource of recovery plan
+type Parameters struct {
+	FloatingIPAssignmentList []*FloatingIPAssignmentList `json:"floating_ip_assignment_list,omitempty"`
+	NetworkMappingList       []*NetworkMappingList       `json:"network_mapping_list,omitempty"`
+}
+
+//FloatingIPAssignmentList represents a object for resource of recovery plan
+type FloatingIPAssignmentList struct {
+	AvailabilityZoneURL string                `json:"availability_zone_url,omitempty"`
+	VMIPAssignmentList  []*VMIPAssignmentList `json:"vm_ip_assignment_list,omitempty"`
+}
+
+//VMIPAssignmentList represents a object for resource of recovery plan
+type VMIPAssignmentList struct {
+	TestFloatingIPConfig     *FloatingIPConfig `json:"test_floating_ip_config,omitempty"`
+	RecoveryFloatingIPConfig *FloatingIPConfig `json:"recovery_floating_ip_config,omitempty"`
+	VMReference              *Reference        `json:"vm_reference,omitempty"`
+	VMNICInformation         *VMNICInformation `json:"vm_nic_information,omitempty"`
+}
+
+//FloatingIPConfig represents a object for resource of recovery plan
+type FloatingIPConfig struct {
+	IP                        string `json:"ip,omitempty"`
+	ShouldAllocateDynamically *bool  `json:"should_allocate_dynamically,omitempty"`
+}
+
+//VMNICInformation represents a object for resource of recovery plan
+type VMNICInformation struct {
+	IP   string `json:"ip,omitempty"`
+	UUID string `json:"uuid,omitempty"`
+}
+
+// represents a object for resource of recovery plan
+type NetworkMappingList struct {
+	AvailabilityZoneNetworkMappingList []*AvailabilityZoneNetworkMappingList `json:"availability_zone_network_mapping_list,omitempty"`
+	AreNetworksStretched               *bool                                 `json:"are_networks_stretched,omitempty"`
+}
+
+//AvailabilityZoneNetworkMappingList represents a object for resource of recovery plan
+type AvailabilityZoneNetworkMappingList struct {
+	RecoveryNetwork          *Network            `json:"recovery_network,omitempty"`
+	AvailabilityZoneURL      string              `json:"availability_zone_url,omitempty"`
+	TestNetwork              *Network            `json:"test_network,omitempty"`
+	RecoveryIPAssignmentList []*IPAssignmentList `json:"recovery_ip_assignment_list,omitempty"`
+	TestIPAssignmentList     []*IPAssignmentList `json:"test_ip_assignment_list,omitempty"`
+	ClusterReferenceList     []*Reference        `json:"cluster_reference_list,omitempty"`
+}
+
+type IPAssignmentList struct {
+	VMReference  *Reference      `json:"vm_reference,omitempty"`
+	IPConfigList []*IPConfigList `json:"ip_config_list,omitempty"`
+}
+
+type IPConfigList struct {
+	IPAddress string `json:"ip_address,omitempty"`
+}
+
+//Network represents a object for resource of recovery plan
+type Network struct {
+	VirtualNetworkReference *Reference    `json:"virtual_network_reference,omitempty"`
+	SubnetList              []*SubnetList `json:"subnet_list,omitempty"`
+	Name                    string        `json:"name,omitempty"`
+	VPCReference            *Reference    `json:"vpc_reference,omitempty"`
+	UseVPCReference         *bool         `json:"use_vpc_reference,omitempty"`
+}
+
+//SubnetList represents a object for resource of recovery plan
+type SubnetList struct {
+	GatewayIP                 string `json:"gateway_ip,omitempty"`
+	ExternalConnectivityState string `json:"external_connectivity_state,omitempty"`
+	PrefixLength              *int64 `json:"prefix_length,omitempty"`
+}
+
+//StageList represents a object for resource of recovery plan
+type StageList struct {
+	StageWork     *StageWork `json:"stage_work,omitempty"`
+	StageUUID     string     `json:"stage_uuid,omitempty"`
+	DelayTimeSecs *int64     `json:"delay_time_secs,omitempty"`
+}
+
+//StageWork represents a object for resource of recovery plan
+type StageWork struct {
+	RecoverEntities *RecoverEntities `json:"recover_entities,omitempty"`
+}
+
+//RecoverEntities represents a object for resource of recovery plan
+type RecoverEntities struct {
+	EntityInfoList []*EntityInfoList `json:"entity_info_list,omitempty"`
+}
+
+//EntityInfoList represents a object for resource of recovery plan
+type EntityInfoList struct {
+	AnyEntityReference *Reference        `json:"any_entity_reference,omitempty"`
+	Categories         map[string]string `json:"categories,omitempty"`
+	ScriptList         []*ScriptList     `json:"script_list,omitempty"`
+}
+
+type ScriptList struct {
+	EnableScriptExec *bool  `json:"enable_script_exec,omitempty"`
+	Timeout          *int64 `json:"timeout,omitempty"`
+}
+
+//RecoveryPlanStatus represents a status of a recovery plan
+type RecoveryPlanStatus struct {
+	State            string                 `json:"state,omitempty"`
+	MessageList      []*MessageResource     `json:"message_list,omitempty"`
+	Name             string                 `json:"name,omitempty"`
+	Resources        *RecoveryPlanResources `json:"resources,omitempty"`
+	ExecutionContext *ExecutionContext      `json:"execution_context,omitempty"`
+}
+
+//RecoveryPlanSpec represents a spec of recovery plans
+type RecoveryPlanSpec struct {
+	Name        string                 `json:"name,omitempty"`
+	Description string                 `json:"description,omitempty"`
+	Resources   *RecoveryPlanResources `json:"resources,omitempty"`
+}
+
+//RecoveryPlanResponse represents a response object of a recovery plan
+type RecoveryPlanResponse struct {
+	APIVersion string              `json:"api_version,omitempty"`
+	Metadata   *Metadata           `json:"metadata,omitempty"`
+	Spec       *RecoveryPlanSpec   `json:"spec,omitempty"`
+	Status     *RecoveryPlanStatus `json:"status,omitempty"`
+}
+
+//RecoveryPlanListResponse represents the response of a list of recovery plans
+type RecoveryPlanListResponse struct {
+	APIVersion string                  `json:"api_version,omitempty"`
+	Entities   []*RecoveryPlanResponse `json:"entities,omitempty"`
+	Metadata   *ListMetadataOutput     `json:"metadata,omitempty"`
+}
+
+//RecoveryPlanInput Represents the request of create recovery plan
+type RecoveryPlanInput struct {
+	APIVersion string            `json:"api_version,omitempty"`
+	Metadata   *Metadata         `json:"metadata,omitempty"`
+	Spec       *RecoveryPlanSpec `json:"spec,omitempty"`
 }
