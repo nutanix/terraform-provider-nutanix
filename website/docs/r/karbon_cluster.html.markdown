@@ -91,6 +91,15 @@ The storage_class_config attribute supports the following:
 * `volumes_config.#.storage_container` - (Required) Name of the storage container the storage container uses to provision volumes.
 * `volumes_config.#.username` - (Required) Username of the Prism Element user that the API calls use to provision volumes.
 
+### Single Master Config
+
+The `single_master_config` defines the deployment of a Karbon cluster with a single master setup. This is the default behavior unless the `active_passive_config` or the `external_lb_config` attributes are passed.
+
+### Active-Passive Config
+
+The `active_passive_config` attribute can be used in case a multi-master active-passive deployment is required. The external_ipv4_address should be an IP address in the Karbon cluster subnet range. The Virtual Router Redundancy Protocol (VRRP) protocol is used to provide high availability of the master.
+
+* `active_passive_config.#.external_ipv4_address`: (Required) The VRRP IPV4 address to be used by the masters.
 
 ### External LB Config
 
@@ -101,7 +110,7 @@ The external load balancer configuration in the case of a multi-master-external-
 * `external_lb_config.#.master_nodes_config.ipv4_address`: (Required) The IPV4 address to assign to the master.
 * `external_lb_config.#.master_nodes_config.node_pool_name`: (Optional) The name of the node pool in which this master IPV4 address will be used.
 
-### private_registry
+### Private Registry
 User inputs of storage configuration parameters for VMs.
 
 * `private_registry`: - (Optional) List of private registries.
@@ -124,7 +133,7 @@ The `etcd_node_pool`, `master_node_pool`, `worker_node_pool` attribute supports 
 * `nodes.hostname`: - Hostname of the deployed node.
 * `nodes.ipv4_address`: - IP of the deployed node.
 
-### cni_config
+### CNI Config
 
  The boot_device_disk_address attribute supports the following:
 
