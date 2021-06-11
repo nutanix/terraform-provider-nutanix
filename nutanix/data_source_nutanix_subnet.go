@@ -24,12 +24,17 @@ func dataSourceNutanixSubnet() *schema.Resource {
 			"subnet_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"subnet_name"},
+				ConflictsWith: []string{"subnet_name", "subnet_vlan_id"},
+			},
+			"subnet_vlan_id": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ConflictsWith: []string{"subnet_name", "subnet_id"},
 			},
 			"subnet_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"subnet_id"},
+				ConflictsWith: []string{"subnet_id", "subnet_vlan_id"},
 			},
 			"api_version": {
 				Type:     schema.TypeString,
@@ -310,15 +315,43 @@ func findSubnetByName(conn *v3.Client, name string) (*v3.SubnetIntentResponse, e
 	return found[0], nil
 }
 
+func findSubnetByVlanID(conn *v3.Client, vlanId int) (*v3.SubnetIntentResponse, error) {
+	filter := fmt.Sprintf("vlan_id==%d", vlanId)
+	resp, err := conn.V3.ListAllSubnet(filter)
+	if err != nil {
+		return nil, err
+	}
+
+	entities := resp.Entities
+
+	found := make([]*v3.SubnetIntentResponse, 0)
+	for _, v := range entities {
+		if *v.Spec.Resources.VlanID == int64(vlanId) {
+			found = append(found, v)
+		}
+	}
+
+	if len(found) > 1 {
+		return nil, fmt.Errorf("your query returned more than one result. Please use subnet_id argument instead")
+	}
+
+	if len(found) == 0 {
+		return nil, fmt.Errorf("subnet with the given vlan_id, not found")
+	}
+
+	return found[0], nil
+}
+
 func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	// Get client connection
 	conn := meta.(*Client).API
 
 	subnetID, iok := d.GetOk("subnet_id")
 	subnetName, nok := d.GetOk("subnet_name")
+	subnetVlanId, vok := d.GetOk("subnet_vlan_id")
 
-	if !iok && !nok {
-		return fmt.Errorf("please provide one of subnet_id or subnet_name attributes")
+	if !iok && !nok && !vok {
+		return fmt.Errorf("please provide one of subnet_id or subnet_name or subnet_vlan_id attributes")
 	}
 
 	var reqErr error
@@ -327,7 +360,11 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 	if iok {
 		resp, reqErr = findSubnetByUUID(conn, subnetID.(string))
 	} else {
-		resp, reqErr = findSubnetByName(conn, subnetName.(string))
+		if vok {
+			resp, reqErr = findSubnetByVlanID(conn, subnetVlanId.(int))
+		} else {
+			resp, reqErr = findSubnetByName(conn, subnetName.(string))
+		}
 	}
 
 	if reqErr != nil {
