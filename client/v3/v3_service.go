@@ -61,6 +61,7 @@ type Service interface {
 	ListAllNetworkSecurityRule(filter string) (*NetworkSecurityRuleListIntentResponse, error)
 	ListAllImage(filter string) (*ImageListIntentResponse, error)
 	ListAllCluster(filter string) (*ClusterListIntentResponse, error)
+	ListAllCategoryValues(categoryName, filter string) (*CategoryValueListResponse, error)
 	GetTask(taskUUID string) (*TasksResponse, error)
 	GetHost(taskUUID string) (*HostResponse, error)
 	ListHost(getEntitiesRequest *DSMetadata) (*HostListResponse, error)
@@ -1088,6 +1089,49 @@ func (op Operations) ListAllCluster(filter string) (*ClusterListIntentResponse, 
 			resp, err = op.ListCluster(&DSMetadata{
 				Filter: &filter,
 				Kind:   utils.StringPtr("cluster"),
+				Length: utils.Int64Ptr(itemsPerPage),
+				Offset: utils.Int64Ptr(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
+		}
+
+		resp.Entities = entities
+	}
+
+	return resp, nil
+}
+
+// ListAllCluster ...
+func (op Operations) ListAllCategoryValues(categoryKeyName, filter string) (*CategoryValueListResponse, error) {
+	entities := make([]*CategoryValueStatus, 0)
+
+	resp, err := op.ListCategoryValues(categoryKeyName, &CategoryListMetadata{
+		Filter: &filter,
+		Kind:   utils.StringPtr("category"),
+		Length: utils.Int64Ptr(itemsPerPage),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining) {
+			resp, err = op.ListCategoryValues(categoryKeyName, &CategoryListMetadata{
+				Filter: &filter,
+				Kind:   utils.StringPtr("category"),
 				Length: utils.Int64Ptr(itemsPerPage),
 				Offset: utils.Int64Ptr(offset),
 			})

@@ -193,7 +193,7 @@ func dataSourceNutanixRolesRead(d *schema.ResourceData, meta interface{}) error 
 		req = buildDataSourceListMetadata(metadata.(*schema.Set))
 	}
 
-	resp, err := conn.V3.ListRole(req)
+	resp, err := conn.V3.ListAllRole(utils.StringValue(req.Filter))
 	if err != nil {
 		return err
 	}

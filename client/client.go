@@ -272,7 +272,7 @@ func CheckResponse(r *http.Response) error {
 	var res map[string]interface{}
 	err = json.Unmarshal(buf, &res)
 	if err != nil {
-		return fmt.Errorf("unmarshalling error response %s", err)
+		return fmt.Errorf("unmarshalling error response %s for response body %s", err, string(buf))
 	}
 	log.Print("[DEBUG] after json.Unmarshal")
 

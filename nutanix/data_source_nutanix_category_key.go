@@ -6,11 +6,8 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
-
-var listLength int64 = 500
 
 func dataSourceNutanixCategoryKey() *schema.Resource {
 	return &schema.Resource{
@@ -66,10 +63,7 @@ func dataSourceNutanixCategoryKeyRead(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(utils.StringValue(resp.Name))
 
-	list, err := conn.V3.ListCategoryValues(d.Get("name").(string), &v3.CategoryListMetadata{
-		Kind:   utils.StringPtr("category"),
-		Length: utils.Int64Ptr(listLength),
-	})
+	list, err := conn.V3.ListAllCategoryValues(d.Get("name").(string), "")
 
 	if err != nil {
 		return err

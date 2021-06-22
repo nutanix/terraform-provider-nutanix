@@ -14,9 +14,50 @@ Provides a Nutanix Karbon Cluster resource to Create a k8s cluster.
 ## Example Usage
 
 ```hcl
-data "nutanix_karbon_clusters" "clusters" {}
+resource "nutanix_karbon_cluster" "example_cluster" {
+  name       = "example_cluster"
+  version    = "1.18.15-1"
+  storage_class_config {
+    reclaim_policy = "Delete"
+    volumes_config {
+      file_system                = "ext4"
+      flash_mode                 = false
+      password                   = "my_pe_pw"
+      prism_element_cluster_uuid = "my_pe_cluster_uuid"
+      storage_container          = "my_storage_container_name"
+      username                   = "my_pe_username"
+    }
+  }
+  cni_config {
+    node_cidr_mask_size = 24
+    pod_ipv4_cidr       = "172.20.0.0/16"
+    service_ipv4_cidr   = "172.19.0.0/16"
+  }
+  worker_node_pool {
+    node_os_version = "ntnx-1.0"
+    num_instances   = 1
+    ahv_config {
+      network_uuid               = "my_subnet_id"
+      prism_element_cluster_uuid = "my_pe_cluster_uuid"
+    }
+  }
+  etcd_node_pool {
+    node_os_version = "ntnx-1.0"
+    num_instances   = 1
+    ahv_config {
 
-resource "nutanix_karbon_cluster" "vm1" {
+      network_uuid               = "my_subnet_id"
+      prism_element_cluster_uuid = "my_pe_cluster_uuid"
+    }
+  }
+  master_node_pool {
+    node_os_version = "ntnx-1.0"
+    num_instances   = 1
+    ahv_config {
+      network_uuid               = "my_subnet_id"
+      prism_element_cluster_uuid = "my_pe_cluster_uuid"
+    }
+  }
 }
 
 ```
@@ -50,6 +91,15 @@ The storage_class_config attribute supports the following:
 * `volumes_config.#.storage_container` - (Required) Name of the storage container the storage container uses to provision volumes.
 * `volumes_config.#.username` - (Required) Username of the Prism Element user that the API calls use to provision volumes.
 
+### Single Master Config
+
+The `single_master_config` defines the deployment of a Karbon cluster with a single master setup. This is the default behavior unless the `active_passive_config` or the `external_lb_config` attributes are passed.
+
+### Active-Passive Config
+
+The `active_passive_config` attribute can be used in case a multi-master active-passive deployment is required. The external_ipv4_address should be an IP address in the Karbon cluster subnet range. The Virtual Router Redundancy Protocol (VRRP) protocol is used to provide high availability of the master.
+
+* `active_passive_config.#.external_ipv4_address`: (Required) The VRRP IPV4 address to be used by the masters.
 
 ### External LB Config
 
@@ -60,7 +110,7 @@ The external load balancer configuration in the case of a multi-master-external-
 * `external_lb_config.#.master_nodes_config.ipv4_address`: (Required) The IPV4 address to assign to the master.
 * `external_lb_config.#.master_nodes_config.node_pool_name`: (Optional) The name of the node pool in which this master IPV4 address will be used.
 
-### private_registry
+### Private Registry
 User inputs of storage configuration parameters for VMs.
 
 * `private_registry`: - (Optional) List of private registries.
@@ -83,7 +133,7 @@ The `etcd_node_pool`, `master_node_pool`, `worker_node_pool` attribute supports 
 * `nodes.hostname`: - Hostname of the deployed node.
 * `nodes.ipv4_address`: - IP of the deployed node.
 
-### cni_config
+### CNI Config
 
  The boot_device_disk_address attribute supports the following:
 

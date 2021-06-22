@@ -1061,8 +1061,8 @@ func dataSourceNutanixClusterRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func findClusterByName(conn *v3.Client, name string) (*v3.ClusterIntentResponse, error) {
-	clusterEntitiesMetadata := &v3.DSMetadata{}
-	resp, err := conn.V3.ListCluster(clusterEntitiesMetadata)
+	filter := fmt.Sprintf("name==%s", name)
+	resp, err := conn.V3.ListAllCluster(filter)
 	if err != nil {
 		return nil, err
 	}
