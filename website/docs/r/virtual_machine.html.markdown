@@ -125,7 +125,7 @@ User inputs of storage configuration parameters for VMs.
 
 * `flash_mode`: - State of the storage policy to pin virtual disks to the hot tier. When specified as a VM attribute, the storage policy applies to all virtual disks of the VM unless overridden by the same attribute specified for a virtual disk.
 
-* `storage_container_reference`: - Reference to a kind. Either one of (kind, uuid) or url needs to be specified.
+* `storage_container_reference`: - Reference to a kind. Either one of (kind, uuid) or url needs to be specified. Requires Prism Central / AOS 5.17+.
 * `storage_container_reference.#.url`: - GET query on the URL will provide information on the source.
 * `storage_container_reference.#.kind`: - kind of the container reference
 * `storage_container_reference.#.name`: - name of the container reference

@@ -346,7 +346,7 @@ func dataSourceNutanixAccessControlPoliciesRead(d *schema.ResourceData, meta int
 		req = buildDataSourceListMetadata(metadata.(*schema.Set))
 	}
 
-	resp, err := conn.V3.ListAccessControlPolicy(req)
+	resp, err := conn.V3.ListAllAccessControlPolicy(utils.StringValue(req.Filter))
 	if err != nil {
 		return err
 	}

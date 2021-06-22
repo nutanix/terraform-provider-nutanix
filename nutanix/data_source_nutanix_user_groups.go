@@ -251,7 +251,7 @@ func dataSourceNutanixUserGroupsRead(d *schema.ResourceData, meta interface{}) e
 		req = buildDataSourceListMetadata(metadata.(*schema.Set))
 	}
 
-	resp, err := conn.V3.ListUserGroup(req)
+	resp, err := conn.V3.ListAllUserGroup(utils.StringValue(req.Filter))
 	if err != nil {
 		return err
 	}
