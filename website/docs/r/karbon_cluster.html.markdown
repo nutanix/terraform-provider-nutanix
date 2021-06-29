@@ -9,7 +9,9 @@ description: |-
 # nutanix_karbon_cluster
 
 Provides a Nutanix Karbon Cluster resource to Create a k8s cluster.
+
 **Note:** Minimum tested version is Karbon 2.2
+
 **Note:** Kubernetes and Node OS upgrades are not supported using this provider.
 
 ## Example Usage
@@ -78,16 +80,6 @@ The following arguments are supported:
 * `etcd_node_pool`: - (Required) Configuration of the node pools that the nodes in the etcd cluster belong to. The etcd nodes require a minimum of 8,192 MiB memory and 409,60 MiB disk space.
 * `master_node_pool`: - (Required) Configuration of the master node pools.
 * `cni_config`: - (Required) K8s cluster networking configuration. The flannel or the calico configuration needs to be provided. **Note:** Updates to this attribute forces new resource creation.
-
-### Active Passive Config
-
-If you plan to use multi-master (which you should for production), then you need to set the `active_passive_config` block.
-The `external_ipv4_address` should be an IP address in your subnet range, as this will be a VRRP IP that will 'bounce' between masters.
-
-```
-active_passive_config {
-  external_ipv4_address = "10.100.10.100"
-```
 
 ### Storage Class Config
 
