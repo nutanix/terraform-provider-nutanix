@@ -8,13 +8,13 @@ description: |-
 
 # nutanix_karbon_cluster
 
-Describes Karbon Clusters
+Describes a Karbon Cluster
 
 ## Example Usage
 
 ```hcl
 data "nutanix_karbon_cluster" "cluster" {
-   cluster_id = "<YOUR-CLUSTER-ID>"
+   karbon_cluster_id = "<YOUR-CLUSTER-ID>"
 }
 ```
 
