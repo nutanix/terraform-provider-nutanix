@@ -9,7 +9,9 @@ description: |-
 # nutanix_karbon_cluster
 
 Provides a Nutanix Karbon Cluster resource to Create a k8s cluster.
+
 **Note:** Minimum tested version is Karbon 2.2
+
 **Note:** Kubernetes and Node OS upgrades are not supported using this provider.
 
 ## Example Usage
@@ -81,7 +83,7 @@ The following arguments are supported:
 
 ### Active Passive Config
 
-If you plan to use multi-master (which you should for production), then you need to set the `active_passive_config` block.
+If you plan to use multi-master, then you need to set the `active_passive_config` block.
 The `external_ipv4_address` should be an IP address in your subnet range, as this will be a VRRP IP that will 'bounce' between masters.
 
 ```
