@@ -24,12 +24,12 @@ resource "nutanix_karbon_private_registry" "registry" {
 
 The following arguments are supported:
 
-* `name`: - (Required) Name of the private registry configuration.
-* `cert`: - (Optional) Certificate of the private registry in format of base64-encoded byte array.
-* `url`: - (Optional) URL of the private registry.
+* `name`: - (Required) Name of the private registry configuration. **Note:** Updates to this attribute forces new resource creation.
+* `cert`: - (Optional) Certificate of the private registry in format of base64-encoded byte array. **Note:** Updates to this attribute forces new resource creation.
+* `url`: - (Optional) URL of the private registry. **Note:** Updates to this attribute forces new resource creation.
 * `port`: - (Optional) Port of the private registry.
-* `username`: - (Optional) Username for authentication to the private registry.
-* `password`: - (Optional) Password for authentication to the private registry.
+* `username`: - (Optional) Username for authentication to the private registry. **Note:** Updates to this attribute forces new resource creation.
+* `password`: - (Optional) Password for authentication to the private registry. **Note:** Updates to this attribute forces new resource creation.
 
 
 ## Attributes Reference
