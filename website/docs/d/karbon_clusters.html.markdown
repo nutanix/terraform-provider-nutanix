@@ -18,10 +18,7 @@ data "nutanix_karbon_clusters" "clusters" {}
 
 ## Argument Reference
 
-The following arguments are supported:
-
-* `karbon_cluster_id`: Represents karbon cluster uuid
-* `karbon_cluster_name`: Represents the name of karbon cluster
+No arguments are supported.
 
 ## Attribute Reference
 
