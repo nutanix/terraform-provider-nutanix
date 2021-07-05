@@ -28,11 +28,12 @@ var (
 
 func resourceNutanixVirtualMachine() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceNutanixVirtualMachineCreate,
-		Read:   resourceNutanixVirtualMachineRead,
-		Update: resourceNutanixVirtualMachineUpdate,
-		Delete: resourceNutanixVirtualMachineDelete,
-		Exists: resourceNutanixVirtualMachineExists,
+		Create:        resourceNutanixVirtualMachineCreate,
+		Read:          resourceNutanixVirtualMachineRead,
+		Update:        resourceNutanixVirtualMachineUpdate,
+		Delete:        resourceNutanixVirtualMachineDelete,
+		Exists:        resourceNutanixVirtualMachineExists,
+		CustomizeDiff: resourceNutanixVirtualMachineDiff,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -666,6 +667,7 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 			"disk_list": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"uuid": {
@@ -1313,7 +1315,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 			return err
 		}
 		res.DiskList = expandDiskListUpdate(d, response)
-
+		utils.PrintToJSON(res.DiskList, "[YST] disk update res.DiskList: ")
 		postCdromCount, err := CountDiskListCdrom(res.DiskList)
 		if err != nil {
 			return err
@@ -1846,48 +1848,53 @@ func expandDiskListUpdate(d *schema.ResourceData, vm *v3.VMIntentResponse) []*v3
 
 func expandDiskList(d *schema.ResourceData) []*v3.VMDisk {
 	if v, ok := d.GetOk("disk_list"); ok {
-		dsk := v.([]interface{})
-		if len(dsk) > 0 {
-			dls := make([]*v3.VMDisk, len(dsk))
+		return expandDiskListRaw(v)
+	}
+	return nil
+}
 
-			for k, val := range dsk {
-				v := val.(map[string]interface{})
-				dl := &v3.VMDisk{}
+func expandDiskListRaw(diskList interface{}) []*v3.VMDisk {
+	dsk := diskList.([]interface{})
+	if len(dsk) > 0 {
+		dls := make([]*v3.VMDisk, len(dsk))
 
-				// uuid
-				if v1, ok1 := v["uuid"]; ok1 && v1.(string) != "" {
-					dl.UUID = utils.StringPtr(v1.(string))
-				}
-				// storage_config
-				if v, ok1 := v["storage_config"]; ok1 {
-					dl.StorageConfig = expandStorageConfig(v.([]interface{}))
-				}
-				// device_properties
-				if v1, ok1 := v["device_properties"]; ok1 {
-					dl.DeviceProperties = expandDeviceProperties(v1.([]interface{}))
-				}
-				// data_source_reference
-				if v1, ok := v["data_source_reference"]; ok && len(v1.(map[string]interface{})) != 0 {
-					dsref := v1.(map[string]interface{})
-					dl.DataSourceReference = validateShortRef(dsref)
-				}
-				// volume_group_reference
-				if v1, ok := v["volume_group_reference"]; ok {
-					volgr := v1.(map[string]interface{})
-					dl.VolumeGroupReference = validateRef(volgr)
-				}
-				// disk_size_bytes
-				if v1, ok1 := v["disk_size_bytes"]; ok1 && v1.(int) != 0 {
-					dl.DiskSizeBytes = utils.Int64Ptr(int64(v1.(int)))
-				}
-				// disk_size_mib
-				if v1, ok := v["disk_size_mib"]; ok && v1.(int) != 0 {
-					dl.DiskSizeMib = utils.Int64Ptr(int64(v1.(int)))
-				}
-				dls[k] = dl
+		for k, val := range dsk {
+			v := val.(map[string]interface{})
+			dl := &v3.VMDisk{}
+
+			// uuid
+			if v1, ok1 := v["uuid"]; ok1 && v1.(string) != "" {
+				dl.UUID = utils.StringPtr(v1.(string))
 			}
-			return dls
+			// storage_config
+			if v, ok1 := v["storage_config"]; ok1 {
+				dl.StorageConfig = expandStorageConfig(v.([]interface{}))
+			}
+			// device_properties
+			if v1, ok1 := v["device_properties"]; ok1 {
+				dl.DeviceProperties = expandDeviceProperties(v1.([]interface{}))
+			}
+			// data_source_reference
+			if v1, ok := v["data_source_reference"]; ok && len(v1.(map[string]interface{})) != 0 {
+				dsref := v1.(map[string]interface{})
+				dl.DataSourceReference = validateShortRef(dsref)
+			}
+			// volume_group_reference
+			if v1, ok := v["volume_group_reference"]; ok {
+				volgr := v1.(map[string]interface{})
+				dl.VolumeGroupReference = validateRef(volgr)
+			}
+			// disk_size_bytes
+			if v1, ok1 := v["disk_size_bytes"]; ok1 && v1.(int) != 0 {
+				dl.DiskSizeBytes = utils.Int64Ptr(int64(v1.(int)))
+			}
+			// disk_size_mib
+			if v1, ok := v["disk_size_mib"]; ok && v1.(int) != 0 {
+				dl.DiskSizeMib = utils.Int64Ptr(int64(v1.(int)))
+			}
+			dls[k] = dl
 		}
+		return dls
 	}
 	return nil
 }
@@ -1903,6 +1910,7 @@ func expandStorageConfig(storageConfig []interface{}) *v3.VMStorageConfig {
 				URL:  cast.ToString(scr["url"]),
 				Kind: cast.ToString(scr["kind"]),
 				UUID: cast.ToString(scr["uuid"]),
+				Name: cast.ToString(scr["name"]),
 			},
 		}
 	}
@@ -2183,6 +2191,45 @@ func setVMTimeout(meta interface{}) {
 	if client.WaitTimeout != 0 {
 		vmTimeout = time.Duration(client.WaitTimeout) * time.Minute
 	}
+}
+
+func resourceNutanixVirtualMachineDiff(d *schema.ResourceDiff, m interface{}) error {
+	log.Printf("[YST ]resourceNutanixVirtualMachineDiff")
+	cio, cin := d.GetChange("cloud_init_cdrom_uuid")
+	log.Printf("[YST] cio: %s", cio.(string))
+	log.Printf("[YST] cin: %s", cin.(string))
+	if cloudInitCdromUUID, ok := d.GetOk("cloud_init_cdrom_uuid"); !ok {
+		usesGuestCustomization := usesGuestCustomizationDiff(d)
+		if usesGuestCustomization {
+			stateFileDiskList, apiDiskList := d.GetChange("disk_list")
+			newlyGeneratedDiff := expandDiskListRaw(stateFileDiskList)
+			apiDiskListExpanded := expandDiskListRaw(apiDiskList)
+			cloudInitHelper, flatDiskList, err := flattenDiskListFilterCloudInitHelper(cloudInitCdromUUID.(string), usesGuestCustomization, apiDiskListExpanded, newlyGeneratedDiff, false)
+			if err != nil {
+				return err
+			}
+			utils.PrintToJSON(stateFileDiskList, "[YST] stateFileDiskList: ")
+			utils.PrintToJSON(apiDiskList, "[YST] apiDiskList: ")
+			utils.PrintToJSON(flatDiskList, "[YST] flatDiskList: ")
+			utils.PrintToJSON(cloudInitHelper, "[YST] cloudInitHelper: ")
+			newDiskList := make([]interface{}, 0)
+			added := false
+			for i, d := range apiDiskList.([]interface{}) {
+				if i == cloudInitHelper.Index && cloudInitHelper.UUID != "" {
+					newDiskList = append(newDiskList, flattenDisk(cloudInitHelper.CloudInitCDrom))
+					added = true
+				}
+				newDiskList = append(newDiskList, d)
+			}
+			if !added && cloudInitHelper.UUID != "" {
+				newDiskList = append(newDiskList, flattenDisk(cloudInitHelper.CloudInitCDrom))
+			}
+			d.SetNew("cloud_init_cdrom_uuid", cloudInitHelper.UUID)
+			utils.PrintToJSON(newDiskList, "[YST] newDiskList: ")
+			d.SetNew("disk_list", newDiskList)
+		}
+	}
+	return nil
 }
 
 func resourceNutanixVirtualMachineInstanceResourceV0() *schema.Resource {
