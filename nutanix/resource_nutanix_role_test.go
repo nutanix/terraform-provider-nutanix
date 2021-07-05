@@ -132,87 +132,11 @@ resource "nutanix_role" "test" {
 	description = "%[2]s"
 	permission_reference_list {
 		kind = "permission"
-		uuid = "d08ea95c-8221-4590-a77a-52d69639959a"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "1a8a65c0-4333-42c6-9039-fd2585ceead7"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "bea75573-e8fe-42a3-817a-bd1bd98ab110"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "93e1cc93-d799-4f44-84ad-534814f6db0d"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "62f53a1a-324c-4da6-bcb8-2cecc07b2cb7"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "62f53a1a-324c-4da6-bcb8-2cecc07b2cb7"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "ef38a553-a20f-4a2b-b12d-bb9cca03cbdd"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "6e768a07-21ef-4615-84d0-7ec442ec942f"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "91b77724-b163-473f-94a8-d016e75c18bd"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "491ae1d0-5a8f-4bcc-9cee-068cd01c9274"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "1dbfb7b4-9896-4c2a-b6fe-fbf113bae306"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "740d29f7-18ae-4d07-aeef-3fc901c1887a"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "b28f35be-6561-4a4a-9d90-a298d2de33d7"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "428fad6c-8735-4a7d-bad3-8497bef051c8"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "ea445ec5-f9bb-4af6-92e8-0d72d11ada85"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "85a24ad8-67b6-4b63-b30f-96da1baca161"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "d370823b-82d8-4518-a486-b75ba8e130d6"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "2e9988df-47ae-44ae-9114-ada346657b90"
+		uuid = "16b81a55-2bca-48c6-9fab-4f82c6bb4284"
 	}
 	permission_reference_list {
 		kind = "permission"
 		uuid = "4e8e9007-8fbe-4709-a069-278259238e55"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "2e9988df-47ae-44ae-9114-ada346657b90"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "2e9988df-47ae-44ae-9114-ada346657b90"
 	}
 }
 `, name, description)
