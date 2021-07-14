@@ -1201,14 +1201,24 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		hotPlugChange = false
 	}
 	if d.HasChange("num_sockets") {
-		n := d.Get("num_sockets")
+		o, n := d.GetChange("num_sockets")
 		res.NumSockets = utils.Int64Ptr(int64(n.(int)))
-		hotPlugChange = false
+
+		//remove cpu sockets
+		if n.(int) < o.(int) {
+			hotPlugChange = false
+		} else if !d.Get("use_hot_add").(bool) {
+			hotPlugChange = false
+		}
 	}
+
 	if d.HasChange("memory_size_mib") {
-		n := d.Get("memory_size_mib")
+		o, n := d.GetChange("memory_size_mib")
 		res.MemorySizeMib = utils.Int64Ptr(int64(n.(int)))
-		if !d.Get("use_hot_add").(bool) {
+		//remove memory
+		if n.(int) < o.(int) {
+			hotPlugChange = false
+		} else if !d.Get("use_hot_add").(bool) {
 			hotPlugChange = false
 		}
 	}
@@ -1352,10 +1362,12 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		if err := changePowerState(conn, d.Id(), "OFF"); err != nil {
 			return fmt.Errorf("internal error: cannot shut down the VM with UUID(%s): %s", d.Id(), err)
 		}
-		// SpecVersion has changed due previous poweroff, increasing it manually (without reading the value again)
-		mySpec := *metadata.SpecVersion
-		mySpec += 2
-		metadata.SpecVersion = &mySpec
+		// SpecVersion has changed due previous poweroff
+		specVersion, specErr := getVMSpecVersion(conn, d.Id())
+		if specErr != nil {
+			return fmt.Errorf("error getting spec for Virtual Machine UUID(%s): %s", d.Id(), specErr)
+		}
+		metadata.SpecVersion = specVersion
 	}
 
 	spec.Resources = res
@@ -1389,6 +1401,18 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	return resourceNutanixVirtualMachineRead(d, meta)
+}
+
+func getVMSpecVersion(conn *v3.Client, vmID string) (*int64, error) {
+	response, err := conn.V3.GetVM(vmID)
+	if err != nil {
+		return nil, err
+	}
+	if response.Metadata == nil {
+		return nil, fmt.Errorf("failed to retrieve metadata for vm with uuid %s", vmID)
+	}
+	metadata := response.Metadata
+	return metadata.SpecVersion, nil
 }
 
 func bootConfigHasChange(boot *v3.VMBootConfig, d *schema.ResourceData) (*v3.VMBootConfig, bool) {

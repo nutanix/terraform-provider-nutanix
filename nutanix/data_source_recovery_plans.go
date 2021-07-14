@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func dataSourceNutanixRecoveryPlans() *schema.Resource {
@@ -592,7 +593,7 @@ func dataSourceNutanixRecoveryPlansRead(d *schema.ResourceData, meta interface{}
 	if filtersOk {
 		req = buildDataSourceListMetadata(metadata.(*schema.Set))
 	}
-	resp, err := conn.V3.ListRecoveryPlans(req)
+	resp, err := conn.V3.ListAllRecoveryPlans(utils.StringValue(req.Filter))
 	if err != nil {
 		return err
 	}

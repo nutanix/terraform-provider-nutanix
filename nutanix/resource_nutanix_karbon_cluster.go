@@ -397,6 +397,10 @@ func resourceNutanixKarbonClusterCreate(d *schema.ResourceData, meta interface{}
 	setTimeout(meta)
 	// Node pools
 	var err error
+	karbonVersion, err := conn.Meta.GetSemanticVersion()
+	if err != nil {
+		return fmt.Errorf("unable to get karbon version during cluster create: %s", err)
+	}
 	etcdNodePoolInput, okETCD := d.GetOk("etcd_node_pool")
 	if !okETCD {
 		return fmt.Errorf("unable to retrieve mandatory parameter etcd_node_pool")
@@ -432,15 +436,15 @@ func resourceNutanixKarbonClusterCreate(d *schema.ResourceData, meta interface{}
 
 	karbonClusterName := karbonClusterNameInput.(string)
 
-	etcdNodePool, err := expandNodePool(etcdNodePoolInput.([]interface{}))
+	etcdNodePool, err := expandNodePool(etcdNodePoolInput.([]interface{}), karbonVersion)
 	if err != nil {
 		return err
 	}
-	workerNodePool, err := expandNodePool(workerNodePoolInput.([]interface{}))
+	workerNodePool, err := expandNodePool(workerNodePoolInput.([]interface{}), karbonVersion)
 	if err != nil {
 		return err
 	}
-	masterNodePool, err := expandNodePool(masterNodePoolInput.([]interface{}))
+	masterNodePool, err := expandNodePool(masterNodePoolInput.([]interface{}), karbonVersion)
 	if err != nil {
 		return err
 	}
@@ -603,10 +607,15 @@ func resourceNutanixKarbonClusterUpdate(d *schema.ResourceData, meta interface{}
 	client := meta.(*Client)
 	conn := client.KarbonAPI
 	setTimeout(meta)
+
 	// Make request to the API
 	resp, err := conn.Cluster.GetKarbonCluster(d.Id())
 	if err != nil {
 		return err
+	}
+	karbonVersion, err := conn.Meta.GetSemanticVersion()
+	if err != nil {
+		return fmt.Errorf("unable to get karbon version during cluster update: %s", err)
 	}
 	karbonClusterName := *resp.Name
 	if d.HasChange("worker_node_pool") {
@@ -615,7 +624,7 @@ func resourceNutanixKarbonClusterUpdate(d *schema.ResourceData, meta interface{}
 			return timeoutErr
 		}
 		_, n := d.GetChange("worker_node_pool")
-		newWorkerNodePool, err := expandNodePool(n.([]interface{}))
+		newWorkerNodePool, err := expandNodePool(n.([]interface{}), karbonVersion)
 		if err != nil {
 			return fmt.Errorf("error occurred while expanding new worker node pool: %s", err)
 		}
@@ -890,14 +899,15 @@ func flattenNodePools(d *schema.ResourceData, conn *karbon.Client, nodePoolKey s
 	flatNodepools := make([]map[string]interface{}, 0)
 	// start workaround for disk_mib bug GA API
 	expandedUserDefinedNodePools := make([]karbon.ClusterNodePool, 0)
-	var err error
+	karbonVersion, err := conn.Meta.GetSemanticVersion()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get karbon version during flattening: %s", err)
+	}
 	if nodepoolInterface, ok := d.GetOk(nodePoolKey); ok {
-		expandedUserDefinedNodePools, err = expandNodePool(nodepoolInterface.([]interface{}))
+		expandedUserDefinedNodePools, err = expandNodePool(nodepoolInterface.([]interface{}), karbonVersion)
 		if err != nil {
 			return nil, fmt.Errorf("unable to expand node pool during flattening: %s", err)
 		}
-		// } else {
-		// 	return nil, fmt.Errorf("unable to get mandatory attribute %s", nodePoolKey)
 	}
 	// end workaround for disk_mib bug GA API
 	for _, np := range nodepools {
@@ -950,7 +960,6 @@ func flattenNodePool(userDefinedNodePools *karbon.ClusterNodePool, nodepool *kar
 			// "disk_mib":   nodepool.AHVConfig.DiskMib,
 			"memory_mib": nodepool.AHVConfig.MemoryMib,
 			//karbon api bug => network_uuid not set KRBN-3520
-			// "network_uuid":               nodepool.AHVConfig.NetworkUUID,
 			"network_uuid":               networkUUID,
 			"prism_element_cluster_uuid": nodepool.AHVConfig.PrismElementClusterUUID,
 		},
@@ -1089,7 +1098,7 @@ func expandCNI(cniConfigInput []interface{}) (*karbon.ClusterCNIConfigIntentInpu
 	return cniConfig, nil
 }
 
-func expandNodePool(nodepoolsInput []interface{}) ([]karbon.ClusterNodePool, error) {
+func expandNodePool(nodepoolsInput []interface{}, karbonVersion *karbon.MetaSemanticVersionResponse) ([]karbon.ClusterNodePool, error) {
 	nodepools := make([]karbon.ClusterNodePool, 0)
 	for _, npi := range nodepoolsInput {
 		nodepoolInput := npi.(map[string]interface{})
@@ -1119,12 +1128,11 @@ func expandNodePool(nodepoolsInput []interface{}) ([]karbon.ClusterNodePool, err
 			if valCPU, ok := ahvConfig["cpu"]; ok {
 				i := int64(valCPU.(int))
 				// Karbon CPU workaround
-				modi := i % CPUDIVISIONAMOUNT
-				if modi != 0 {
-					return nil, fmt.Errorf("amount of CPU must be an even number")
+				amountOfCPU, err := calculateCPURequirement(karbonVersion, i)
+				if err != nil {
+					return nil, fmt.Errorf("error occurred calculating amount of cpu while expanding node pools: %s", err)
 				}
-				divi := i / CPUDIVISIONAMOUNT
-				nodepool.AHVConfig.CPU = divi
+				nodepool.AHVConfig.CPU = amountOfCPU
 			}
 			if valDiskMib, ok := ahvConfig["disk_mib"]; ok {
 				i := int64(valDiskMib.(int))
@@ -1217,4 +1225,22 @@ func getSupportedReclaimPolicies() []string {
 		"Delete",
 		"Retain",
 	}
+}
+
+func calculateCPURequirement(karbonVersion *karbon.MetaSemanticVersionResponse, amountOfCPU int64) (int64, error) {
+	const baseMajorVersion int64 = 2
+	const baseMinorVersion int64 = 2
+	const baseRevVersion int64 = 2
+
+	// CPU workaround for < 2.2.2
+	if karbonVersion.MajorVersion <= baseMajorVersion && karbonVersion.MinorVersion <= baseMinorVersion && karbonVersion.RevisionVersion < baseRevVersion {
+		log.Printf("[DEBUG] version was below 2.2.2. Applying CPU workaround")
+		modi := amountOfCPU % CPUDIVISIONAMOUNT
+		if modi != 0 {
+			return 0, fmt.Errorf("amount of CPU must be an even number")
+		}
+		return amountOfCPU / CPUDIVISIONAMOUNT, nil
+	}
+	log.Printf("[DEBUG] version was 2.2.2 or higher. NOT applying CPU workaround")
+	return amountOfCPU, nil
 }
