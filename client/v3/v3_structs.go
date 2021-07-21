@@ -283,6 +283,9 @@ type VMResources struct {
 	// Indicates whether VGA console should be enabled or not.
 	VgaConsoleEnabled *bool `json:"vga_console_enabled,omitempty" mapstructure:"vga_console_enabled,omitempty"`
 
+	// Indicates whether to passthrough the host’s CPU features to the guest. Enabling this will disable live migration of the VM.
+	EnableCPUPassthrough *bool `json:"enable_cpu_passthrough,omitempty" mapstructure:"enable_cpu_passthrough,omitempty"`
+
 	// Information regarding vNUMA configuration.
 	VMVnumaConfig *VMVnumaConfig `json:"vnuma_config,omitempty" mapstructure:"vnuma_config,omitempty"`
 
@@ -509,6 +512,9 @@ type VMResourcesDefStatus struct {
 
 	// Indicates whether VGA console has been enabled or not.
 	VgaConsoleEnabled *bool `json:"vga_console_enabled,omitempty" mapstructure:"vga_console_enabled,omitempty"`
+
+	// Indicates whether to passthrough the host’s CPU features to the guest. Enabling this will disable live migration of the VM.
+	EnableCPUPassthrough *bool `json:"enable_cpu_passthrough,omitempty" mapstructure:"enable_cpu_passthrough,omitempty"`
 
 	// Information regarding vNUMA configuration.
 	VnumaConfig *VMVnumaConfig `json:"vnuma_config,omitempty" mapstructure:"vnuma_config,omitempty"`
