@@ -2,7 +2,6 @@ package nutanix
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -232,14 +231,11 @@ func flattenDiskListFilterCloudInitHelper(
 				}
 			}
 		}
-		log.Printf("[YST] pre if potentialCloudInitHelpers ")
 		if len(potentialCloudInitHelpers) == 1 {
-			log.Printf("[YST] in if potentialCloudInitHelpers ")
 			cloudInitHelper = &potentialCloudInitHelpers[0]
 			cloudInitCdromUUID = cloudInitHelper.UUID
 			// d.Set("cloud_init_cdrom_uuid", cloudInitCdromUUID)
 		}
-		log.Printf("[YST] post if potentialCloudInitHelpers ")
 		if len(potentialCloudInitHelpers) > 1 {
 			return nil, nil, fmt.Errorf("more than 1 unknown cd-rom device")
 		}
@@ -252,7 +248,6 @@ func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
 	return flattenDiskListHelper(disks, "", true)
 }
 func flattenDiskListHelper(disks []*v3.VMDisk, cloudInitCdromUUID string, removeCloudInit bool) []map[string]interface{} {
-	utils.PrintToJSON(disks, "[YST] flattendisklisthelper disks: ")
 	diskList := make([]map[string]interface{}, 0)
 	for _, v := range disks {
 		flatDisk := flattenDisk(v)
