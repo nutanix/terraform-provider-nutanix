@@ -1315,7 +1315,6 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 			return err
 		}
 		res.DiskList = expandDiskListUpdate(d, response)
-		utils.PrintToJSON(res.DiskList, "[YST] disk update res.DiskList: ")
 		postCdromCount, err := CountDiskListCdrom(res.DiskList)
 		if err != nil {
 			return err
@@ -2194,10 +2193,7 @@ func setVMTimeout(meta interface{}) {
 }
 
 func resourceNutanixVirtualMachineDiff(d *schema.ResourceDiff, m interface{}) error {
-	log.Printf("[YST ]resourceNutanixVirtualMachineDiff")
 	cio, cin := d.GetChange("cloud_init_cdrom_uuid")
-	log.Printf("[YST] cio: %s", cio.(string))
-	log.Printf("[YST] cin: %s", cin.(string))
 	if cloudInitCdromUUID, ok := d.GetOk("cloud_init_cdrom_uuid"); !ok {
 		usesGuestCustomization := usesGuestCustomizationDiff(d)
 		if usesGuestCustomization {
@@ -2208,10 +2204,6 @@ func resourceNutanixVirtualMachineDiff(d *schema.ResourceDiff, m interface{}) er
 			if err != nil {
 				return err
 			}
-			utils.PrintToJSON(stateFileDiskList, "[YST] stateFileDiskList: ")
-			utils.PrintToJSON(apiDiskList, "[YST] apiDiskList: ")
-			utils.PrintToJSON(flatDiskList, "[YST] flatDiskList: ")
-			utils.PrintToJSON(cloudInitHelper, "[YST] cloudInitHelper: ")
 			newDiskList := make([]interface{}, 0)
 			added := false
 			for i, d := range apiDiskList.([]interface{}) {
@@ -2225,7 +2217,6 @@ func resourceNutanixVirtualMachineDiff(d *schema.ResourceDiff, m interface{}) er
 				newDiskList = append(newDiskList, flattenDisk(cloudInitHelper.CloudInitCDrom))
 			}
 			d.SetNew("cloud_init_cdrom_uuid", cloudInitHelper.UUID)
-			utils.PrintToJSON(newDiskList, "[YST] newDiskList: ")
 			d.SetNew("disk_list", newDiskList)
 		}
 	}
