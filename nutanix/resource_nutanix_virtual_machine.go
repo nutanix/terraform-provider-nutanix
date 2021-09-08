@@ -2193,14 +2193,13 @@ func setVMTimeout(meta interface{}) {
 }
 
 func resourceNutanixVirtualMachineDiff(d *schema.ResourceDiff, m interface{}) error {
-	cio, cin := d.GetChange("cloud_init_cdrom_uuid")
 	if cloudInitCdromUUID, ok := d.GetOk("cloud_init_cdrom_uuid"); !ok {
 		usesGuestCustomization := usesGuestCustomizationDiff(d)
 		if usesGuestCustomization {
 			stateFileDiskList, apiDiskList := d.GetChange("disk_list")
 			newlyGeneratedDiff := expandDiskListRaw(stateFileDiskList)
 			apiDiskListExpanded := expandDiskListRaw(apiDiskList)
-			cloudInitHelper, flatDiskList, err := flattenDiskListFilterCloudInitHelper(cloudInitCdromUUID.(string), usesGuestCustomization, apiDiskListExpanded, newlyGeneratedDiff, false)
+			cloudInitHelper, _, err := flattenDiskListFilterCloudInitHelper(cloudInitCdromUUID.(string), usesGuestCustomization, apiDiskListExpanded, newlyGeneratedDiff, false)
 			if err != nil {
 				return err
 			}
