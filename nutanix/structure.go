@@ -234,7 +234,6 @@ func flattenDiskListFilterCloudInitHelper(
 		if len(potentialCloudInitHelpers) == 1 {
 			cloudInitHelper = &potentialCloudInitHelpers[0]
 			cloudInitCdromUUID = cloudInitHelper.UUID
-			// d.Set("cloud_init_cdrom_uuid", cloudInitCdromUUID)
 		}
 		if len(potentialCloudInitHelpers) > 1 {
 			return nil, nil, fmt.Errorf("more than 1 unknown cd-rom device")
