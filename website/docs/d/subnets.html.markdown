@@ -13,7 +13,7 @@ Describes a list of subnets
 ## Example Usage
 
 ```hcl
-data "nutanix_subnets" "subnets" {}`
+data "nutanix_subnets" "subnets" {}
 ```
 
 ## Attribute Reference
