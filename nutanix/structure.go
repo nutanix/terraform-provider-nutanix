@@ -26,6 +26,23 @@ func expandStringList(configured []interface{}) []*string {
 	return vs
 }
 
+func convertMapInterfaceToMapString(mapInterface map[string]interface{}) map[string]string {
+	// mapInterface := make(map[interface{}]interface{})
+	mapString := make(map[string]string)
+
+	// mapInterface["k1"] = 1
+	// mapInterface[3] = "hello"
+	// mapInterface["world"] = 1.05
+
+	for key, value := range mapInterface {
+		strKey := fmt.Sprintf("%v", key)
+		strValue := fmt.Sprintf("%v", value)
+
+		mapString[strKey] = strValue
+	}
+	return mapString
+}
+
 func flattenNicListStatus(nics []*v3.VMNicOutputStatus) []map[string]interface{} {
 	nicLists := make([]map[string]interface{}, 0)
 	if nics != nil {

@@ -2008,7 +2008,7 @@ func expandNGT(d *schema.ResourceData) *v3.GuestToolsSpec {
 	}
 
 	if val, ok := d.GetOk("ngt_credentials"); ok {
-		guestTools.NutanixGuestTools.Credentials = val.(map[string]string)
+		guestTools.NutanixGuestTools.Credentials = convertMapInterfaceToMapString(val.(map[string]interface{}))
 	}
 
 	if reflect.DeepEqual(guestTools.NutanixGuestTools, &v3.NutanixGuestToolsSpec{}) {
