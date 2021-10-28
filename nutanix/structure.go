@@ -27,13 +27,7 @@ func expandStringList(configured []interface{}) []*string {
 }
 
 func convertMapInterfaceToMapString(mapInterface map[string]interface{}) map[string]string {
-	// mapInterface := make(map[interface{}]interface{})
 	mapString := make(map[string]string)
-
-	// mapInterface["k1"] = 1
-	// mapInterface[3] = "hello"
-	// mapInterface["world"] = 1.05
-
 	for key, value := range mapInterface {
 		strKey := fmt.Sprintf("%v", key)
 		strValue := fmt.Sprintf("%v", value)
