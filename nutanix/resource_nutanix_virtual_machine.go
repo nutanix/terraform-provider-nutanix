@@ -292,6 +292,11 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"is_vcpu_hard_pinned": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"use_hot_add": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -1085,6 +1090,7 @@ func resourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{})
 	}
 
 	d.Set("enable_cpu_passthrough", resp.Status.Resources.EnableCPUPassthrough)
+	d.Set("is_vcpu_hard_pinned", resp.Status.Resources.EnableCPUPinning)
 	d.Set("guest_customization_cloud_init_user_data", cloudInitUser)
 	d.Set("guest_customization_cloud_init_meta_data", cloudInitMeta)
 	d.Set("hardware_clock_timezone", utils.StringValue(resp.Status.Resources.HardwareClockTimezone))
@@ -1195,6 +1201,11 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		_, n := d.GetChange("enable_cpu_passthrough")
 		res.EnableCPUPassthrough = utils.BoolPtr(n.(bool))
 		// TODO: Is this correct?
+		hotPlugChange = false
+	}
+	if d.HasChange("is_vcpu_hard_pinned") {
+		_, n := d.GetChange("is_vcpu_hard_pinned")
+		res.EnableCPUPinning = utils.BoolPtr(n.(bool))
 		hotPlugChange = false
 	}
 	if d.HasChange("num_vnuma_nodes") {
@@ -1645,6 +1656,9 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	}
 	if v, ok := d.GetOk("enable_cpu_passthrough"); ok {
 		vm.EnableCPUPassthrough = utils.BoolPtr(v.(bool))
+	}
+	if v, ok := d.GetOk("is_vcpu_hard_pinned"); ok {
+		vm.EnableCPUPinning = utils.BoolPtr(v.(bool))
 	}
 	if v, ok := d.GetOk("num_sockets"); ok {
 		vm.NumSockets = utils.Int64Ptr(int64(v.(int)))
@@ -2481,6 +2495,11 @@ func resourceNutanixVirtualMachineInstanceResourceV0() *schema.Resource {
 			// RESOURCES ARGUMENTS
 
 			"enable_cpu_passthrough": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"is_vcpu_hard_pinned": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
