@@ -198,6 +198,10 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"is_vcpu_hard_pinned": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"num_vnuma_nodes": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -802,6 +806,7 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	d.Set("description", utils.StringValue(resp.Status.Description))
 	d.Set("state", utils.StringValue(resp.Status.State))
 	d.Set("enable_cpu_passthrough", utils.BoolValue(resp.Status.Resources.EnableCPUPassthrough))
+	d.Set("is_vcpu_hard_pinned", utils.BoolValue(resp.Status.Resources.EnableCPUPinning))
 	d.Set("num_vnuma_nodes", utils.Int64Value(resp.Status.Resources.VnumaConfig.NumVnumaNodes))
 	d.Set("guest_os_id", utils.StringValue(resp.Status.Resources.GuestOsID))
 	d.Set("power_state", utils.StringValue(resp.Status.Resources.PowerState))
@@ -1004,6 +1009,10 @@ func resourceNutanixDatasourceVirtualMachineInstanceResourceV0() *schema.Resourc
 
 			// RESOURCES ARGUMENTS
 			"enable_cpu_passthrough": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"is_vcpu_hard_pinned": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},

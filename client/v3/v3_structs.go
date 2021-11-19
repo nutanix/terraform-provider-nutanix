@@ -286,6 +286,9 @@ type VMResources struct {
 	// Indicates whether to passthrough the host’s CPU features to the guest. Enabling this will disable live migration of the VM.
 	EnableCPUPassthrough *bool `json:"enable_cpu_passthrough,omitempty" mapstructure:"enable_cpu_passthrough,omitempty"`
 
+	// Indicates whether a VMs cores are getting pinned on either CPU1, CPU2, CPU3 or CPU4. By default, the Linux Scheduler in AHV will pin all cores wherever they are best available.
+	EnableCPUPinning *bool `json:"is_vcpu_hard_pinned,omitempty" mapstructure:"is_vcpu_hard_pinned,omitempty"`
+
 	// Information regarding vNUMA configuration.
 	VMVnumaConfig *VMVnumaConfig `json:"vnuma_config,omitempty" mapstructure:"vnuma_config,omitempty"`
 
@@ -515,6 +518,9 @@ type VMResourcesDefStatus struct {
 
 	// Indicates whether to passthrough the host’s CPU features to the guest. Enabling this will disable live migration of the VM.
 	EnableCPUPassthrough *bool `json:"enable_cpu_passthrough,omitempty" mapstructure:"enable_cpu_passthrough,omitempty"`
+
+	// Indicates whether a VMs cores are getting pinned on either CPU1, CPU2, CPU3 or CPU4. By default, the Linux Scheduler in AHV will pin all cores wherever they are best available.
+	EnableCPUPinning *bool `json:"is_vcpu_hard_pinned,omitempty" mapstructure:"is_vcpu_hard_pinned,omitempty"`
 
 	// Information regarding vNUMA configuration.
 	VnumaConfig *VMVnumaConfig `json:"vnuma_config,omitempty" mapstructure:"vnuma_config,omitempty"`
