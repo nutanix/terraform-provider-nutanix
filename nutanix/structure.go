@@ -295,12 +295,10 @@ func flattenGPUList(gpu []*v3.VMGpuOutputStatus) []map[string]interface{} {
 
 func flattenNutanixGuestTools(d *schema.ResourceData, guest *v3.GuestToolsStatus) error {
 	nutanixGuestTools := make(map[string]interface{})
-	ngtCredentials := make(map[string]string)
 	ngtEnabledCapabilityList := make([]string, 0)
 
 	if guest != nil && guest.NutanixGuestTools != nil {
 		tools := guest.NutanixGuestTools
-		ngtCredentials = tools.Credentials
 		ngtEnabledCapabilityList = utils.StringValueSlice(tools.EnabledCapabilityList)
 
 		nutanixGuestTools["available_version"] = utils.StringValue(tools.AvailableVersion)
@@ -315,10 +313,6 @@ func flattenNutanixGuestTools(d *schema.ResourceData, guest *v3.GuestToolsStatus
 	}
 
 	if err := d.Set("ngt_enabled_capability_list", ngtEnabledCapabilityList); err != nil {
-		return err
-	}
-
-	if err := d.Set("ngt_credentials", ngtCredentials); err != nil {
 		return err
 	}
 
