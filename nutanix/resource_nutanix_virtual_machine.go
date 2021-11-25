@@ -2640,6 +2640,7 @@ func resourceNutanixVirtualMachineInstanceResourceV0() *schema.Resource {
 			"ngt_credentials": {
 				Type:     schema.TypeMap,
 				Optional: true,
+				Computed: true,
 			},
 			"ngt_enabled_capability_list": {
 				Type:     schema.TypeList,
