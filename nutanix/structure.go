@@ -374,8 +374,10 @@ func flattenNutanixGuestTools(d *schema.ResourceData, guest *v3.GuestToolsStatus
 		return err
 	}
 
-	if err := d.Set("ngt_credentials", ngtCredentials); err != nil {
-		return err
+	if _, ok := d.GetOk("ngt_credentials"); !ok {
+		if err := d.Set("ngt_credentials", ngtCredentials); err != nil {
+			return err
+		}
 	}
 
 	if err := d.Set("nutanix_guest_tools", nutanixGuestTools); err != nil {
