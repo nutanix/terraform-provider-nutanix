@@ -100,6 +100,7 @@ The following arguments are supported:
 * `use_hot_add`: - (Optional) Use Hot Add when modifying VM resources. Passing value false will result in VM reboots. Default value is `true`.
 * `num_threads_per_core`: - (Optional) Number of threads per core.
 * `enable_cpu_passthrough`: - (Optional) Add true to enable CPU passthrough.
+* `is_vcpu_hard_pinned`: - (Optional) Add true to enable CPU pinning.
 
 ### Disk List
 
