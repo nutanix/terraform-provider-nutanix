@@ -1,3 +1,18 @@
+## 1.2.2 (Nov 29, 2021)
+
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.2.1...v1.2.2)
+
+**Closed issues:**
+
+- Cloud_init and sysprep CDROMs being detected and destroyed forcing VM reboot. [\#285](https://github.com/nutanix/terraform-provider-nutanix/issues/285)
+- Provider crash when using NGT credentials attribute in nutanix_virtual_machine resource type. [\#297](https://github.com/nutanix/terraform-provider-nutanix/issues/297)
+
+**Merged pull requests:**
+
+- Add support for CPU passthrough [\#288](https://github.com/nutanix/terraform-provider-nutanix/pull/288) ([svalabs](https://github.com/svalabs))
+
+
+
 ## 1.2.1 (Feb 01, 2021)
 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.1.1...HEAD)
