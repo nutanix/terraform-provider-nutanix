@@ -7,9 +7,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	v3 "github.com/nutanix/terraform-provider-nutanix/client/v3"
+	"github.com/nutanix/terraform-provider-nutanix/utils"
 	"github.com/spf13/cast"
-	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func resourceNutanixRecoveryPlan() *schema.Resource {

@@ -1,4 +1,4 @@
-module github.com/terraform-providers/terraform-provider-nutanix
+module github.com/nutanix/terraform-provider-nutanix
 
 require (
 	github.com/client9/misspell v0.3.4

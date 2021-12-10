@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/terraform-providers/terraform-provider-nutanix/client/karbon"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+	"github.com/nutanix/terraform-provider-nutanix/client/karbon"
+	"github.com/nutanix/terraform-provider-nutanix/utils"
 )
 
 func dataSourceNutanixKarbonCluster() *schema.Resource {
