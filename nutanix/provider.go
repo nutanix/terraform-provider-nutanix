@@ -133,6 +133,7 @@ func Provider() terraform.ResourceProvider {
 			"nutanix_karbon_private_registry": resourceNutanixKarbonPrivateRegistry(),
 			"nutanix_protection_rule":         resourceNutanixProtectionRule(),
 			"nutanix_recovery_plan":           resourceNutanixRecoveryPlan(),
+			"nutanix_service_group":           resourceNutanixServiceGroup(),
 		},
 		ConfigureFunc: providerConfigure,
 	}

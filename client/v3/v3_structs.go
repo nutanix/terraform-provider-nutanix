@@ -2517,3 +2517,33 @@ type RecoveryPlanInput struct {
 	Metadata   *Metadata         `json:"metadata,omitempty"`
 	Spec       *RecoveryPlanSpec `json:"spec,omitempty"`
 }
+
+type ServiceListEntry struct {
+	Protocol         *string                        `json:"protocol,omitempty"`
+	TCPPortRangeList []*PortRange                   `json:"tcp_port_range_list,omitempty"`
+	UDPPortRangeList []*PortRange                   `json:"udp_port_range_list,omitempty"`
+	IcmpTypeCodeList []*NetworkRuleIcmpTypeCodeList `json:"icmp_type_code_list,omitempty"`
+}
+
+type ServiceGroupListEntry struct {
+	UUID                   *string            `json:"uuid,omitempty"`
+	ServiceGroup           *ServiceGroupInput `json:"service_group,omitempty"`
+	AssociatedPoliciesList []*Reference       `json:"associated_policies_list,omitempty"`
+}
+
+type ServiceGroupInput struct {
+	Name          *string             `json:"name,omitempty"`
+	Description   *string             `json:"description,omitempty"`
+	ServiceList   []*ServiceListEntry `json:"service_list,omitempty"`
+	SystemDefined *bool               `json:"is_system_defined,omitempty"`
+}
+
+type ServiceGroupListResponse struct {
+	Metadata *ListMetadataOutput      `json:"metadata,omitempty"`
+	Entities []*ServiceGroupListEntry `json:"entities,omitempty"`
+}
+
+type ServiceGroupResponse struct {
+	ServiceGroup *ServiceGroupInput `json:"service_group,omitempty"`
+	UUID         *string            `json:"uuid,omitempty"`
+}

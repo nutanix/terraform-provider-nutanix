@@ -108,6 +108,12 @@ type Service interface {
 	CreateRecoveryPlan(request *RecoveryPlanInput) (*RecoveryPlanResponse, error)
 	UpdateRecoveryPlan(uuid string, body *RecoveryPlanInput) (*RecoveryPlanResponse, error)
 	DeleteRecoveryPlan(uuid string) (*DeleteResponse, error)
+	GetServiceGroup(uuid string) (*ServiceGroupResponse, error)
+	ListServiceGroups(getEntitiesRequest *DSMetadata) (*ServiceGroupListResponse, error)
+	ListAllServiceGroups(filter string) (*ServiceGroupListResponse, error)
+	CreateServiceGroup(request *ServiceGroupInput) (*Reference, error)
+	UpdateServiceGroup(uuid string, body *ServiceGroupInput) error
+	DeleteServiceGroup(uuid string) error
 }
 
 /*CreateVM Creates a VM
@@ -2202,4 +2208,113 @@ func (op Operations) DeleteRecoveryPlan(uuid string) (*DeleteResponse, error) {
 	}
 
 	return deleteResponse, op.client.Do(ctx, req, deleteResponse)
+}
+
+func (op Operations) GetServiceGroup(uuid string) (*ServiceGroupResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/service_groups/%s", uuid)
+	ServiceGroup := new(ServiceGroupResponse)
+
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return ServiceGroup, op.client.Do(ctx, req, ServiceGroup)
+}
+
+func (op Operations) CreateServiceGroup(request *ServiceGroupInput) (*Reference, error) {
+	ctx := context.TODO()
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, "/service_groups", request)
+	ServiceGroup := new(Reference)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return ServiceGroup, op.client.Do(ctx, req, ServiceGroup)
+}
+
+func (op Operations) DeleteServiceGroup(uuid string) error {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/service_groups/%s", uuid)
+
+	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+
+	if err != nil {
+		return err
+	}
+
+	return op.client.Do(ctx, req, nil)
+}
+
+func (op Operations) ListAllServiceGroups(filter string) (*ServiceGroupListResponse, error) {
+	entities := make([]*ServiceGroupListEntry, 0)
+
+	resp, err := op.ListServiceGroups(&DSMetadata{
+		Filter: &filter,
+		Kind:   utils.StringPtr("service_group"),
+		Length: utils.Int64Ptr(itemsPerPage),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining) {
+			resp, err = op.ListServiceGroups(&DSMetadata{
+				Filter: &filter,
+				Kind:   utils.StringPtr("service_group"),
+				Length: utils.Int64Ptr(itemsPerPage),
+				Offset: utils.Int64Ptr(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
+		}
+
+		resp.Entities = entities
+	}
+
+	return resp, nil
+}
+
+func (op Operations) ListServiceGroups(getEntitiesRequest *DSMetadata) (*ServiceGroupListResponse, error) {
+	ctx := context.TODO()
+	path := "/service_groups/list"
+
+	list := new(ServiceGroupListResponse)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return list, op.client.Do(ctx, req, list)
+}
+
+func (op Operations) UpdateServiceGroup(uuid string, body *ServiceGroupInput) error {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/service_groups/%s", uuid)
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
+
+	if err != nil {
+		return err
+	}
+
+	return op.client.Do(ctx, req, nil)
 }
