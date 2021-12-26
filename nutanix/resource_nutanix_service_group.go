@@ -13,10 +13,10 @@ import (
 
 func resourceNutanixServiceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceNutanixServicGroupCreate,
-		Read:   resourceNutanixServicGroupRead,
-		Delete: resourceNutanixServicGroupDelete,
-		Update: resourceNutanixServicGroupUpdate,
+		Create: resourceNutanixServiceGroupCreate,
+		Read:   resourceNutanixServiceGroupRead,
+		Delete: resourceNutanixServiceGroupDelete,
+		Update: resourceNutanixServiceGroupUpdate,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -111,7 +111,7 @@ func IsValidProtocol(category string) bool {
 	return false
 }
 
-func resourceNutanixServicGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixServiceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 	id := d.Id()
 	response, err := conn.V3.GetServiceGroup(id)
@@ -159,7 +159,7 @@ func resourceNutanixServicGroupUpdate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error updating service group id %s): %s", d.Id(), errUpdate)
 	}
 
-	return resourceNutanixServicGroupRead(d, meta)
+	return resourceNutanixServiceGroupRead(d, meta)
 }
 
 func flattenServiceEntry(group *v3.ServiceGroupInput) []map[string]interface{} {
@@ -210,7 +210,7 @@ func flattenServiceEntry(group *v3.ServiceGroupInput) []map[string]interface{} {
 	return groupList
 }
 
-func resourceNutanixServicGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixServiceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading ServiceGroup: %s", d.Get("name").(string))
 
 	// Get client connection
@@ -274,7 +274,7 @@ func expandServiceEntry(d *schema.ResourceData) ([]*v3.ServiceListEntry, error) 
 	return nil, nil
 }
 
-func resourceNutanixServicGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixServiceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 
 	request := &v3.ServiceGroupInput{}
@@ -321,10 +321,10 @@ func resourceNutanixServicGroupCreate(d *schema.ResourceData, meta interface{}) 
 	// set terraform state
 	d.SetId(n)
 
-	return resourceNutanixServicGroupRead(d, meta)
+	return resourceNutanixServiceGroupRead(d, meta)
 }
 
-func resourceNutanixServicGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixServiceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*Client).API
 
 	log.Printf("[Debug] Destroying the service group with the ID %s", d.Id())
