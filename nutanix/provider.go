@@ -117,6 +117,8 @@ func Provider() terraform.ResourceProvider {
 			"nutanix_protection_rules":          dataSourceNutanixProtectionRules(),
 			"nutanix_recovery_plan":             dataSourceNutanixRecoveryPlan(),
 			"nutanix_recovery_plans":            dataSourceNutanixRecoveryPlans(),
+			"nutanix_address_groups":            dataSourceNutanixAddressGroups(),
+			"nutanix_address_group":             dataSourceNutanixAddressGroup(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":         resourceNutanixVirtualMachine(),
