@@ -133,6 +133,7 @@ func Provider() *schema.Provider {
 			"nutanix_protection_rule":         resourceNutanixProtectionRule(),
 			"nutanix_recovery_plan":           resourceNutanixRecoveryPlan(),
 			"nutanix_service_group":           resourceNutanixServiceGroup(),
+			"nutanix_address_group":           resourceNutanixAddressGroup(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
