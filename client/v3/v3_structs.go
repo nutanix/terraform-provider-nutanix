@@ -2578,7 +2578,7 @@ type AddressGroupResponse struct {
 
 type AddressGroupListEntry struct {
 	AddressGroup           *AddressGroupInput `json:"address_group,omitempty"`
-	AssociatedPoliciesList []*Reference       `json:"associated_policies_list,omitempty"`
+	AssociatedPoliciesList []*ReferenceValues `json:"associated_policies_list,omitempty"`
 }
 
 type AddressGroupListResponse struct {

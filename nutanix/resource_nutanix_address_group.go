@@ -129,7 +129,7 @@ func resourceNutanixAddressGroupRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	if err := d.Set("ip_address_block_list", flattenAddressEntry(resp.AddressGroup)); err != nil {
+	if err := d.Set("ip_address_block_list", flattenAddressEntry(resp.AddressGroup.BlockList)); err != nil {
 		return err
 	}
 
@@ -138,9 +138,9 @@ func resourceNutanixAddressGroupRead(d *schema.ResourceData, meta interface{}) e
 	return d.Set("description", utils.StringValue(resp.AddressGroup.Description))
 }
 
-func flattenAddressEntry(group *v3.AddressGroupInput) []map[string]interface{} {
+func flattenAddressEntry(group []*v3.IPAddressBlock) []map[string]interface{} {
 	groupList := make([]map[string]interface{}, 0)
-	for _, v := range group.BlockList {
+	for _, v := range group {
 		groupItem := make(map[string]interface{})
 		groupItem["ip"] = v.IPAddress
 		groupItem["prefix_length"] = v.PrefixLength
