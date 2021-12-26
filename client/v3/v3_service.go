@@ -114,6 +114,12 @@ type Service interface {
 	CreateServiceGroup(request *ServiceGroupInput) (*Reference, error)
 	UpdateServiceGroup(uuid string, body *ServiceGroupInput) error
 	DeleteServiceGroup(uuid string) error
+	GetAddressGroup(uuid string) (*AddressGroupResponse, error)
+	ListAddressGroups(getEntitiesRequest *DSMetadata) (*AddressGroupListResponse, error)
+	ListAllAddressGroups(filter string) (*AddressGroupListResponse, error)
+	DeleteAddressGroup(uuid string) error
+	CreateAddressGroup(request *AddressGroupInput) (*Reference, error)
+	UpdateAddressGroup(uuid string, body *AddressGroupInput) error
 }
 
 /*CreateVM Creates a VM
@@ -2310,6 +2316,114 @@ func (op Operations) UpdateServiceGroup(uuid string, body *ServiceGroupInput) er
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/service_groups/%s", uuid)
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
+
+	if err != nil {
+		return err
+	}
+
+	return op.client.Do(ctx, req, nil)
+}
+
+func (op Operations) GetAddressGroup(uuid string) (*AddressGroupResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/address_groups/%s", uuid)
+	AddressGroup := new(AddressGroupResponse)
+
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return AddressGroup, op.client.Do(ctx, req, AddressGroup)
+}
+
+func (op Operations) ListAllAddressGroups(filter string) (*AddressGroupListResponse, error) {
+	entities := make([]*AddressGroupListEntry, 0)
+
+	resp, err := op.ListAddressGroups(&DSMetadata{
+		Filter: &filter,
+		Kind:   utils.StringPtr("address_group"),
+		Length: utils.Int64Ptr(itemsPerPage),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining) {
+			resp, err = op.ListAddressGroups(&DSMetadata{
+				Filter: &filter,
+				Kind:   utils.StringPtr("address_group"),
+				Length: utils.Int64Ptr(itemsPerPage),
+				Offset: utils.Int64Ptr(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+			log.Printf("[Debug] total=%d, remaining=%d, offset=%d len(entities)=%d\n", totalEntities, remaining, offset, len(entities))
+		}
+
+		resp.Entities = entities
+	}
+
+	return resp, nil
+}
+
+func (op Operations) ListAddressGroups(getEntitiesRequest *DSMetadata) (*AddressGroupListResponse, error) {
+	ctx := context.TODO()
+	path := "/address_groups/list"
+
+	list := new(AddressGroupListResponse)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return list, op.client.Do(ctx, req, list)
+}
+
+func (op Operations) DeleteAddressGroup(uuid string) error {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/address_groups/%s", uuid)
+
+	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+
+	if err != nil {
+		return err
+	}
+
+	return op.client.Do(ctx, req, nil)
+}
+
+func (op Operations) CreateAddressGroup(request *AddressGroupInput) (*Reference, error) {
+	ctx := context.TODO()
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, "/address_groups", request)
+	AddressGroup := new(Reference)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return AddressGroup, op.client.Do(ctx, req, AddressGroup)
+}
+func (op Operations) UpdateAddressGroup(uuid string, body *AddressGroupInput) error {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/address_groups/%s", uuid)
 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
 
 	if err != nil {

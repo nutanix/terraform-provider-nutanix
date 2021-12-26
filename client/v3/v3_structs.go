@@ -2547,3 +2547,30 @@ type ServiceGroupResponse struct {
 	ServiceGroup *ServiceGroupInput `json:"service_group,omitempty"`
 	UUID         *string            `json:"uuid,omitempty"`
 }
+
+type IPAddressBlock struct {
+	IPAddress    *string `json:"ip,omitempty"`
+	PrefixLength *int64  `json:"prefix_length,omitempty"`
+}
+
+type AddressGroupInput struct {
+	Name               *string           `json:"name,omitempty"`
+	Description        *string           `json:"description,omitempty"`
+	BlockList          []*IPAddressBlock `json:"ip_address_block_list,omitempty"`
+	AddressGroupString *string           `json:"address_group_string,omitempty"`
+}
+
+type AddressGroupResponse struct {
+	UUID         *string            `json:"uuid,omitempty"`
+	AddressGroup *AddressGroupInput `json:"address_group,omitempty"`
+}
+
+type AddressGroupListEntry struct {
+	AddressGroup           *AddressGroupInput `json:"address_group,omitempty"`
+	AssociatedPoliciesList []*Reference       `json:"associated_policies_list,omitempty"`
+}
+
+type AddressGroupListResponse struct {
+	Metadata *ListMetadataOutput      `json:"metadata,omitempty"`
+	Entities []*AddressGroupListEntry `json:"entities,omitempty"`
+}
