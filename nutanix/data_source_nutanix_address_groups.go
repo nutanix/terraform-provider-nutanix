@@ -146,7 +146,6 @@ func flattenAddressGroup(entries []*v3.AddressGroupListEntry) interface{} {
 	entities := make([]map[string]interface{}, len(entries))
 
 	for i, entry := range entries {
-
 		entities[i] = map[string]interface{}{
 			"address_group": map[string]interface{}{
 				"name":                  entry.AddressGroup.Name,
