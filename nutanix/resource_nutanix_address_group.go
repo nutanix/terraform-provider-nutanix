@@ -2,11 +2,12 @@ package nutanix
 
 import (
 	"fmt"
+	"log"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-	"log"
-	"strings"
 )
 
 func resourceNutanixAddressGroup() *schema.Resource {
@@ -49,7 +50,6 @@ func resourceNutanixAddressGroup() *schema.Resource {
 			},
 		},
 	}
-
 }
 
 func resourceNutanixAddressGroupUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -96,7 +96,6 @@ func resourceNutanixAddressGroupUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	return resourceNutanixAddressGroupRead(d, meta)
-
 }
 
 func resourceNutanixAddressGroupDelete(d *schema.ResourceData, meta interface{}) error {
