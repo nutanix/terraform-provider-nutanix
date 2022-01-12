@@ -31,6 +31,11 @@ func dataSourceNutanixSubnet() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"subnet_id"},
 			},
+			"filter_cluster_uuid": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"subnet_id"},
+			},
 			"api_version": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -283,7 +288,7 @@ func findSubnetByUUID(conn *v3.Client, uuid string) (*v3.SubnetIntentResponse, e
 	return conn.V3.GetSubnet(uuid)
 }
 
-func findSubnetByName(conn *v3.Client, name string) (*v3.SubnetIntentResponse, error) {
+func findSubnetByName(conn *v3.Client, name string, cluster_uuid string) (*v3.SubnetIntentResponse, error) {
 	filter := fmt.Sprintf("name==%s", name)
 	resp, err := conn.V3.ListAllSubnet(filter)
 	if err != nil {
@@ -295,12 +300,14 @@ func findSubnetByName(conn *v3.Client, name string) (*v3.SubnetIntentResponse, e
 	found := make([]*v3.SubnetIntentResponse, 0)
 	for _, v := range entities {
 		if *v.Spec.Name == name {
-			found = append(found, v)
+			if cluster_uuid == "" || *v.Spec.ClusterReference.UUID == cluster_uuid {
+				found = append(found, v)
+			}
 		}
 	}
 
 	if len(found) > 1 {
-		return nil, fmt.Errorf("your query returned more than one result. Please use subnet_id argument instead")
+		return nil, fmt.Errorf("your query returned more than one result. Please use subnet_id argument or filter by cluster_id instead")
 	}
 
 	if len(found) == 0 {
@@ -316,6 +323,11 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 
 	subnetID, iok := d.GetOk("subnet_id")
 	subnetName, nok := d.GetOk("subnet_name")
+	filter_cluster_uuid, fok := d.GetOk("filter_cluster_uuid")
+
+	if !fok {
+		filter_cluster_uuid = ""
+	}
 
 	if !iok && !nok {
 		return fmt.Errorf("please provide one of subnet_id or subnet_name attributes")
@@ -327,7 +339,7 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 	if iok {
 		resp, reqErr = findSubnetByUUID(conn, subnetID.(string))
 	} else {
-		resp, reqErr = findSubnetByName(conn, subnetName.(string))
+		resp, reqErr = findSubnetByName(conn, subnetName.(string), filter_cluster_uuid.(string))
 	}
 
 	if reqErr != nil {
