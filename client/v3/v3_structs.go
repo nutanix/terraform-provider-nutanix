@@ -50,6 +50,9 @@ type VMNic struct {
 
 	NetworkFunctionChainReference *Reference `json:"network_function_chain_reference,omitempty" mapstructure:"network_function_chain_reference,omitempty"`
 
+	// The number of queues for this NIC
+	NumQueues *int64 `json:"num_queues,omitempty" mapstructure:"num_queues,omitempty"`
+
 	// The type of this Network function NIC. Defaults to INGRESS.
 	NetworkFunctionNicType *string `json:"network_function_nic_type,omitempty" mapstructure:"network_function_nic_type,omitempty"`
 
@@ -367,6 +370,9 @@ type VMNicOutputStatus struct {
 	Model *string `json:"model,omitempty" mapstructure:"model,omitempty"`
 
 	NetworkFunctionChainReference *Reference `json:"network_function_chain_reference,omitempty" mapstructure:"network_function_chain_reference,omitempty"`
+
+	// The number of queues for this NIC
+	NumQueues *int64 `json:"num_queues,omitempty" mapstructure:"num_queues,omitempty"`
 
 	// The type of this Network function NIC. Defaults to INGRESS.
 	NetworkFunctionNicType *string `json:"network_function_nic_type,omitempty" mapstructure:"network_function_nic_type,omitempty"`
