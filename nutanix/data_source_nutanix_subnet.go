@@ -288,7 +288,7 @@ func findSubnetByUUID(conn *v3.Client, uuid string) (*v3.SubnetIntentResponse, e
 	return conn.V3.GetSubnet(uuid)
 }
 
-func findSubnetByName(conn *v3.Client, name string, cluster_uuid string) (*v3.SubnetIntentResponse, error) {
+func findSubnetByName(conn *v3.Client, name string, clusterUUID string) (*v3.SubnetIntentResponse, error) {
 	filter := fmt.Sprintf("name==%s", name)
 	resp, err := conn.V3.ListAllSubnet(filter)
 	if err != nil {
@@ -300,7 +300,7 @@ func findSubnetByName(conn *v3.Client, name string, cluster_uuid string) (*v3.Su
 	found := make([]*v3.SubnetIntentResponse, 0)
 	for _, v := range entities {
 		if *v.Spec.Name == name {
-			if cluster_uuid == "" || *v.Spec.ClusterReference.UUID == cluster_uuid {
+			if clusterUUID == "" || *v.Spec.ClusterReference.UUID == clusterUUID {
 				found = append(found, v)
 			}
 		}
@@ -323,10 +323,10 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 
 	subnetID, iok := d.GetOk("subnet_id")
 	subnetName, nok := d.GetOk("subnet_name")
-	filter_cluster_uuid, fok := d.GetOk("filter_cluster_uuid")
+	filterClusterUUID, fok := d.GetOk("filter_cluster_uuid")
 
 	if !fok {
-		filter_cluster_uuid = ""
+		filterClusterUUID = ""
 	}
 
 	if !iok && !nok {
@@ -339,7 +339,7 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 	if iok {
 		resp, reqErr = findSubnetByUUID(conn, subnetID.(string))
 	} else {
-		resp, reqErr = findSubnetByName(conn, subnetName.(string), filter_cluster_uuid.(string))
+		resp, reqErr = findSubnetByName(conn, subnetName.(string), filterClusterUUID.(string))
 	}
 
 	if reqErr != nil {
