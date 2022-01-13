@@ -267,6 +267,10 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 								},
 							},
 						},
+						"num_queues": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 						"subnet_uuid": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -1075,6 +1079,10 @@ func resourceNutanixDatasourceVirtualMachineInstanceResourceV0() *schema.Resourc
 									},
 								},
 							},
+						},
+						"num_queues": {
+							Type:     schema.TypeInt,
+							Computed: true,
 						},
 						"subnet_uuid": {
 							Type:     schema.TypeString,

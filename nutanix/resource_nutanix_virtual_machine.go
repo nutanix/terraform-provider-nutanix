@@ -269,6 +269,10 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 								},
 							},
 						},
+						"num_queues": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 						"subnet_uuid": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -373,6 +377,11 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 									},
 								},
 							},
+						},
+						"num_queues": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
 						},
 						"subnet_uuid": {
 							Type:     schema.TypeString,
@@ -1318,7 +1327,22 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 		hotPlugChange = false
 	}
 	if d.HasChange("nic_list") {
-		res.NicList = expandNicList(d)
+		oldNics := res.NicList
+		newNics := expandNicList(d)
+
+	nicLoop:
+		for _, newNic := range newNics {
+			for _, oldNic := range oldNics {
+				if newNic.UUID != nil && oldNic.UUID != nil && *newNic.UUID == *oldNic.UUID {
+					if newNic.NumQueues != nil && oldNic.NumQueues != nil && *newNic.NumQueues != *oldNic.NumQueues {
+						hotPlugChange = false
+						break nicLoop
+					}
+				}
+			}
+		}
+
+		res.NicList = newNics
 	}
 
 	if d.HasChange("disk_list") {
@@ -1372,6 +1396,7 @@ func resourceNutanixVirtualMachineUpdate(d *schema.ResourceData, meta interface{
 
 	// If there are non-hotPlug changes, then poweroff is needed
 	if !hotPlugChange {
+		//return fmt.Errorf("shutting off VM")
 		if err := changePowerState(conn, d.Id(), "OFF"); err != nil {
 			return fmt.Errorf("internal error: cannot shut down the VM with UUID(%s): %s", d.Id(), err)
 		}
@@ -1775,8 +1800,8 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 
 	return nil
 }
-
 func expandNicList(d *schema.ResourceData) []*v3.VMNic {
+
 	if v, ok := d.GetOk("nic_list"); ok {
 		n := v.([]interface{})
 		if len(n) > 0 {
@@ -1806,6 +1831,9 @@ func expandNicList(d *schema.ResourceData) []*v3.VMNic {
 				if value, ok := val["network_function_chain_reference"]; ok && len(value.(map[string]interface{})) != 0 {
 					v := value.(map[string]interface{})
 					nic.NetworkFunctionChainReference = validateRef(v)
+				}
+				if value, ok := val["num_queues"]; ok && value.(int) != 0 {
+					nic.NumQueues = utils.Int64Ptr(int64(value.(int)))
 				}
 				if value, ok := val["subnet_uuid"]; ok {
 					v := value.(string)
@@ -2065,6 +2093,7 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 				SubnetReference:               v.SubnetReference,
 				NetworkFunctionNicType:        v.NetworkFunctionNicType,
 				NetworkFunctionChainReference: v.NetworkFunctionChainReference,
+				NumQueues:                     v.NumQueues,
 				IsConnected:                   v.IsConnected,
 			}
 		}
@@ -2462,6 +2491,10 @@ func resourceNutanixVirtualMachineInstanceResourceV0() *schema.Resource {
 								},
 							},
 						},
+						"num_queues": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 						"subnet_uuid": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -2561,6 +2594,11 @@ func resourceNutanixVirtualMachineInstanceResourceV0() *schema.Resource {
 									},
 								},
 							},
+						},
+						"num_queues": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
 						},
 						"subnet_uuid": {
 							Type:     schema.TypeString,
