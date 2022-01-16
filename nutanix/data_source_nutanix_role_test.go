@@ -60,14 +60,14 @@ resource "nutanix_role" "test" {
 	description = "%[2]s"
 	permission_reference_list {
 		kind = "permission"
-		uuid = "2e9988df-47ae-44ae-9114-ada346657b90"
+		uuid = "%[3]s"
 	}
 }
 
 data "nutanix_role" "test" {
 	role_id = nutanix_role.test.id
 }
-`, name, description)
+`, name, description, testVars.Permissions[0].UUID)
 }
 
 func testAccRoleDataSourceConfigByName(name, description string) string {
@@ -77,12 +77,12 @@ resource "nutanix_role" "test" {
 	description = "%[2]s"
 	permission_reference_list {
 		kind = "permission"
-		uuid = "2e9988df-47ae-44ae-9114-ada346657b90"
+		uuid = "%[3]s"
 	}
 }
 
 data "nutanix_role" "test" {
 	role_name = nutanix_role.test.name
 }
-`, name, description)
+`, name, description, testVars.Permissions[0].UUID)
 }
