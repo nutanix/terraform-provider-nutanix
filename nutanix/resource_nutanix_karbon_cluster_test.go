@@ -189,7 +189,7 @@ func testAccNutanixKarbonClusterConfig(subnetName string, r int, containter stri
 				for cluster in data.nutanix_clusters.clusters.entities :
 				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 			][0]
-		node_os_version   = "ntnx-1.0"
+		node_os_version   = "%s"
 		deployment_type   = ""
 		amount_of_workers = %d
 		amount_of_masters = 1
@@ -281,5 +281,5 @@ func testAccNutanixKarbonClusterConfig(subnetName string, r int, containter stri
 		}
 	  }
 
-	`, workers, cni, subnetName, r, containter)
+	`, testVars.NodeOsVersion, workers, cni, subnetName, r, containter)
 }
