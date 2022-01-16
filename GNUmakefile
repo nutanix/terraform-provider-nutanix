@@ -13,7 +13,6 @@ test: fmtcheck
 
 testacc: fmtcheck
 	TF_ACC=1 go test $(TEST) -v $(TESTARGS) -timeout 200m -coverprofile c.out -covermode=count
-	# go tool cover -html=c.out
 
 fmt:
 	@echo "==> Fixing source code with gofmt..."
