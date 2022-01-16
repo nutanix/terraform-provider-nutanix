@@ -7,25 +7,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-const (
-	PERMISSIONNAME = "Access_Console_Virtual_Machine"
-	PERMISSINOUUID = "16b81a55-2bca-48c6-9fab-4f82c6bb4284"
-)
-
 func TestAccNutanixPermissionDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionDataSourceConfig(PERMISSINOUUID),
+				Config: testAccPermissionDataSourceConfig(testVars.Permissions[1].UUID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"data.nutanix_permission.test", "name", PERMISSIONNAME),
+						"data.nutanix_permission.test", "name", testVars.Permissions[1].Name),
 					resource.TestCheckResourceAttr(
-						"data.nutanix_permission.test", "operation", "console_access"),
+						"data.nutanix_permission.test", "operation", "delete"),
 					resource.TestCheckResourceAttr(
-						"data.nutanix_permission.test", "fields.0.field_mode", "DISALLOWED"),
+						"data.nutanix_permission.test", "fields.0.field_mode", "NONE"),
 				),
 			},
 		},
@@ -46,14 +41,14 @@ func TestAccNutanixPermissionDataSource_basicByName(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionDataSourceConfigByName(PERMISSIONNAME),
+				Config: testAccPermissionDataSourceConfigByName(testVars.Permissions[1].Name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"data.nutanix_permission.test", "name", PERMISSIONNAME),
+						"data.nutanix_permission.test", "name", testVars.Permissions[1].Name),
 					resource.TestCheckResourceAttr(
-						"data.nutanix_permission.test", "operation", "console_access"),
+						"data.nutanix_permission.test", "operation", "delete"),
 					resource.TestCheckResourceAttr(
-						"data.nutanix_permission.test", "fields.0.field_mode", "DISALLOWED"),
+						"data.nutanix_permission.test", "fields.0.field_mode", "NONE"),
 				),
 			},
 		},

@@ -394,7 +394,7 @@ func testAccNutanixNetworkSecurityRuleConfigAdRule(r int) string {
 		ad_rule_target_group_filter_params {
 		  name = "ADGroup"
 		  values = [
-			"flow"
+			"%s"
 		  ]
 		}
 		ad_rule_target_group_filter_type             = "CATEGORIES_MATCH_ALL"
@@ -406,7 +406,7 @@ func testAccNutanixNetworkSecurityRuleConfigAdRule(r int) string {
 		  protocol                = "ALL"
 		}
 	  }
-`, r)
+`, r, testVars.AdRuleTarget.Values)
 }
 
 func testAccNutanixNetworkSecurityRuleConfigAdRuleUpdate(r int) string {
@@ -429,7 +429,7 @@ func testAccNutanixNetworkSecurityRuleConfigAdRuleUpdate(r int) string {
 		ad_rule_target_group_filter_params {
 		  name = "ADGroup"
 		  values = [
-			"flow"
+			"%s"
 		  ]
 		}
 		ad_rule_target_group_filter_type             = "CATEGORIES_MATCH_ALL"
@@ -441,5 +441,5 @@ func testAccNutanixNetworkSecurityRuleConfigAdRuleUpdate(r int) string {
 		  protocol                = "ALL"
 		}
 	  }
-`, r)
+`, r, testVars.AdRuleTarget.Values)
 }
