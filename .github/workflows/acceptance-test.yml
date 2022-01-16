@@ -71,9 +71,6 @@ jobs:
               ref
             });
             const check = checks.check_runs.filter(c => c.name === process.env.job);
-            console.log(check);
-            console.log(checks);
-            console.log(check.length)
             if (check.length == 0) {
               return "Check is not present, ignoring this step."
             }
