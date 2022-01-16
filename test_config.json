@@ -1,0 +1,41 @@
+{
+    "subnet_name": "vlan.154",
+    "default_container_name": "default-container-75702903530678",
+    "user_group_with_distinguished_name": {
+        "distinguished_name": "cn=sspadmins,cn=users,dc=qa,dc=nucalm,dc=io",
+        "display_name": "sspadmins",
+        "uuid": "a8df1950-f144-4716-bc7f-274aeffa8449"
+    },
+    "permissions": [
+        {
+            "name": "",
+            "uuid": "9da69fbf-95e8-497b-92ef-05be71b1644c"
+        },
+        {
+            "name": "Delete_ACP",
+            "uuid": "3f9eedbe-4816-43b5-977a-29b70e424761"
+        }
+    ],
+    "users": [
+        {
+            "principal_name": "user4@qa.nucalm.io",
+            "expected_display_name": "user4",
+            "directory_service_uuid": "3d227657-118d-4819-b4c0-432d54fd0687"
+        },
+        {
+            "principal_name": "user3@qa.nucalm.io",
+            "expected_display_name": "user3",
+            "directory_service_uuid": "3d227657-118d-4819-b4c0-432d54fd0687"
+        },
+        {
+            "principal_name": "ssptest3@qa.nucalm.io",
+            "expected_display_name": "ssptest3",
+            "directory_service_uuid": "3d227657-118d-4819-b4c0-432d54fd0687"
+        }
+    ],
+    "node_os_version": "ntnx-1.0",
+    "ad_rule_target": {
+        "name": "ADGroup",
+        "values": "sspadmins"
+    }
+}
