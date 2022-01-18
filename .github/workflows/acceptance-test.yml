@@ -20,7 +20,7 @@ jobs:
         with:
           go-version: 1.17
       - name: Acceptance test cases
-        run: CGO_ENABLED=0 NUTANIX_USERNAME="admin" NUTANIX_PASSWORD="Nutanix.123" NUTANIX_INSECURE=true NUTANIX_PORT=9440 NUTANIX_ENDPOINT="10.51.144.11" NUTANIX_PE_PASSWORD="Nutanix.123" NUTANIX_PE_USERNAME="admin" NUTANIX_STORAGE_CONTAINER="80766075-f2aa-4aee-a526-63d4a047d2ab" make testacc
+        run: ${{ secrets.ACCEPTANCE_TEST_ARGS }} make testacc
       - name: Code Coverage Check
         run:  |
               echo "Code coverage: Checking if code coverage is above threshold..."
