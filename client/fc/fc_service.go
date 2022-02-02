@@ -20,7 +20,7 @@ type Operations struct {
 // Service ...
 type Service interface {
 	GetImagedNode(uuid string) (*ImagedNodeDetails, error)
-	ListImagedNodes(req *ImagedNodesListInput) (resp *ImagedNodesListResponse, error)
+	ListImagedNodes(req *ImagedNodesListInput) (*ImagedNodesListResponse, error)
 	GetImagedCluster()
 	ListImagedCluster()
 	CreateCluster()
