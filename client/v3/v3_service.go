@@ -57,7 +57,7 @@ type Service interface {
 	DeleteVolumeGroup(uuid string) error
 	CreateVolumeGroup(request *VolumeGroupInput) (*VolumeGroupResponse, error)
 	ListAllVM(filter string) (*VMListIntentResponse, error)
-	ListAllSubnet(filter string) (*SubnetListIntentResponse, error)
+	ListAllSubnet(filter string, extraFilters []*client.ExtraFilter) (*SubnetListIntentResponse, error)
 	ListAllNetworkSecurityRule(filter string) (*NetworkSecurityRuleListIntentResponse, error)
 	ListAllImage(filter string) (*ImageListIntentResponse, error)
 	ListAllCluster(filter string) (*ClusterListIntentResponse, error)
@@ -294,7 +294,7 @@ func (op Operations) ListSubnet(getEntitiesRequest *DSMetadata) (*SubnetListInte
 		return nil, err
 	}
 
-	return subnetListIntentResponse, op.client.Do(ctx, req, subnetListIntentResponse)
+	return subnetListIntentResponse, op.client.DoWithFilters(ctx, req, subnetListIntentResponse, getEntitiesRequest.ExtraFilters)
 }
 
 /*UpdateSubnet Updates a subnet
@@ -938,13 +938,14 @@ func (op Operations) ListAllVM(filter string) (*VMListIntentResponse, error) {
 }
 
 // ListAllSubnet ...
-func (op Operations) ListAllSubnet(filter string) (*SubnetListIntentResponse, error) {
+func (op Operations) ListAllSubnet(filter string, extraFilters []*client.ExtraFilter) (*SubnetListIntentResponse, error) {
 	entities := make([]*SubnetIntentResponse, 0)
 
 	resp, err := op.ListSubnet(&DSMetadata{
-		Filter: &filter,
-		Kind:   utils.StringPtr("subnet"),
-		Length: utils.Int64Ptr(itemsPerPage),
+		Filter:       &filter,
+		Kind:         utils.StringPtr("subnet"),
+		Length:       utils.Int64Ptr(itemsPerPage),
+		ExtraFilters: extraFilters,
 	})
 
 	if err != nil {

@@ -700,7 +700,7 @@ func resourceNutanixSubnetExists(conn *v3.Client, name string) (*string, error) 
 	var subnetUUID *string
 
 	filter := fmt.Sprintf("name==%s", name)
-	subnetList, err := conn.V3.ListAllSubnet(filter)
+	subnetList, err := conn.V3.ListAllSubnet(filter, nil)
 
 	if err != nil {
 		return nil, err
