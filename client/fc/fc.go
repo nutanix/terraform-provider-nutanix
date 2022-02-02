@@ -6,14 +6,14 @@ import (
 
 const (
 	libraryVersion = "v1"
-	absolutePath   = "api/nutanix/" + libraryVersion
+	absolutePath   = "api/fc/" + libraryVersion
 	userAgent      = "nutanix/" + libraryVersion
 )
 
 // Client manages the foundation central API
 type Client struct {
 	client *client.Client
-	FC     Service
+    Service
 }
 
 // NewFoundationCentralClient return a client to operate foundation central resources
@@ -26,7 +26,7 @@ func NewFoundationCentralClient(credentials client.Credentials) (*Client, error)
 
 	fc := &Client{
 		client: c,
-		FC: Operations{
+		Service: Operations{
 			client: c,
 		},
 	}

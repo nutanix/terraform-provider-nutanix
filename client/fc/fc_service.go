@@ -3,13 +3,9 @@ package fc
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"log"
 	"net/http"
-	"os"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 // Operations ...
@@ -21,20 +17,20 @@ type Operations struct {
 type Service interface {
 	GetImagedNode(uuid string) (*ImagedNodeDetails, error)
 	ListImagedNodes(req *ImagedNodesListInput) (*ImagedNodesListResponse, error)
-	GetImagedCluster()
-	ListImagedCluster()
-	CreateCluster()
-	UpdateCluster()
-	DeleteCluster()
-	CreateAPIKey()
-	GetAPIKey()
-	ListAPIKeys()
+	// GetImagedCluster()
+	// ListImagedCluster()
+	// CreateCluster()
+	// UpdateCluster()
+	// DeleteCluster()
+	// CreateAPIKey()
+	// GetAPIKey()
+	// ListAPIKeys()
 }
 
 func (op Operations) GetImagedNode(nodeUUID string) (*ImagedNodeDetails, error) {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/imaged_nodes/%s", uuid)
+	path := fmt.Sprintf("/imaged_nodes/%s", nodeUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
 	imagedNodeDetails := new(ImagedNodeDetails)
@@ -46,11 +42,13 @@ func (op Operations) GetImagedNode(nodeUUID string) (*ImagedNodeDetails, error) 
 	return imagedNodeDetails, op.client.Do(ctx, req, imagedNodeDetails)
 }
 
-func (op Operations) ListImagedNodes(req *ImagedNodesListInput) (*ImagedNodesListResponse, error) {
+func (op Operations) ListImagedNodes(input *ImagedNodesListInput) (*ImagedNodesListResponse, error) {
+	fmt.Println("ListImagedNodes Called with %+v,", *input)
 	ctx := context.TODO()
 	path := "/imaged_nodes/list"
 
-	req, err := op.client.NewRequest(ctx, http.MethodPost, path, req)
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
+
 	imagedNodesListResponse := new(ImagedNodesListResponse)
 
 	if err != nil {
