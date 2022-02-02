@@ -2,6 +2,8 @@ package v3
 
 import (
 	"time"
+
+	"github.com/terraform-providers/terraform-provider-nutanix/client"
 )
 
 // Reference ...
@@ -589,6 +591,9 @@ type DSMetadata struct {
 
 	// The sort order in which results are returned
 	SortOrder *string `json:"sort_order,omitempty" mapstructure:"sort_order,omitempty"`
+
+	// Extra filters for client side filtering api response
+	ExtraFilters []*client.ExtraFilter `json:"-"`
 }
 
 // VMIntentResource Response object for intentful operations on a vm

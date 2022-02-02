@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-nutanix/client"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -31,6 +32,7 @@ func dataSourceNutanixSubnet() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"subnet_id"},
 			},
+			"extra_filter": DataSourceFiltersSchema(),
 			"filter_cluster_uuid": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -288,9 +290,13 @@ func findSubnetByUUID(conn *v3.Client, uuid string) (*v3.SubnetIntentResponse, e
 	return conn.V3.GetSubnet(uuid)
 }
 
-func findSubnetByName(conn *v3.Client, name string, clusterUUID string) (*v3.SubnetIntentResponse, error) {
-	filter := fmt.Sprintf("name==%s", name)
-	resp, err := conn.V3.ListAllSubnet(filter)
+func findSubnetByName(conn *v3.Client, name string, clusterUUID string, extraFilters []*client.ExtraFilter) (*v3.SubnetIntentResponse, error) {
+	//filter := fmt.Sprintf("name==%s", name)
+	filter := ""
+	if extraFilters != nil {
+		log.Printf("justhere extraFilters: %v", extraFilters)
+	}
+	resp, err := conn.V3.ListAllSubnet(filter, extraFilters)
 	if err != nil {
 		return nil, err
 	}
@@ -324,6 +330,11 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 	subnetID, iok := d.GetOk("subnet_id")
 	subnetName, nok := d.GetOk("subnet_name")
 	filterClusterUUID, fok := d.GetOk("filter_cluster_uuid")
+	var extraFilters []*client.ExtraFilter
+	if v, ok := d.GetOk("extra_filter"); ok {
+		extraFilters = BuildFiltersDataSource(v.(*schema.Set))
+	}
+	log.Printf("extraFilters: %v", extraFilters)
 
 	if !fok {
 		filterClusterUUID = ""
@@ -339,7 +350,7 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 	if iok {
 		resp, reqErr = findSubnetByUUID(conn, subnetID.(string))
 	} else {
-		resp, reqErr = findSubnetByName(conn, subnetName.(string), filterClusterUUID.(string))
+		resp, reqErr = findSubnetByName(conn, subnetName.(string), filterClusterUUID.(string), extraFilters)
 	}
 
 	if reqErr != nil {
