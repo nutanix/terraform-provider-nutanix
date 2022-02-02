@@ -110,9 +110,9 @@ type ImagedNodesResponse struct {
 }
 
 type ImagedNodesListInput struct {
-	Length  *int64                `json:"object_version,omitempty"`
-	Filters *ImagedNodeListFilter `json:"object_version,omitempty"`
-	Offset  *int64                `json:"object_version,omitempty"`
+	Length  *int64                `json:"length,omitempty"`
+	Filters *ImagedNodeListFilter `json:"filters,omitempty"`
+	Offset  *int64                `json:"offset,omitempty"`
 }
 
 type ImagedNodesListResponse struct {

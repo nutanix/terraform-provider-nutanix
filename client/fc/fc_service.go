@@ -43,7 +43,6 @@ func (op Operations) GetImagedNode(nodeUUID string) (*ImagedNodeDetails, error) 
 }
 
 func (op Operations) ListImagedNodes(input *ImagedNodesListInput) (*ImagedNodesListResponse, error) {
-	fmt.Println("ListImagedNodes Called with %+v,", *input)
 	ctx := context.TODO()
 	path := "/imaged_nodes/list"
 
