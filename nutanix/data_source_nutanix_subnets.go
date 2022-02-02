@@ -348,7 +348,7 @@ func dataSourceNutanixSubnetsRead(d *schema.ResourceData, meta interface{}) erro
 		req = buildDataSourceListMetadata(metadata.(*schema.Set))
 	}
 
-	resp, err := conn.V3.ListAllSubnet(utils.StringValue(req.Filter))
+	resp, err := conn.V3.ListAllSubnet(utils.StringValue(req.Filter), nil)
 	if err != nil {
 		return err
 	}

@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/logging"
 )
@@ -59,6 +60,12 @@ type Credentials struct {
 	Insecure    bool
 	SessionAuth bool
 	ProxyURL    string
+}
+
+// ExtraFilter specification for client side filters
+type ExtraFilter struct {
+	Name   string
+	Values []string
 }
 
 // NewClient returns a new Nutanix API client.
@@ -214,6 +221,133 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 
 	if err != nil {
 		return err
+	}
+
+	if v != nil {
+		if w, ok := v.(io.Writer); ok {
+			_, err = io.Copy(w, resp.Body)
+			if err != nil {
+				fmt.Printf("Error io.Copy %s", err)
+
+				return err
+			}
+		} else {
+			err = json.NewDecoder(resp.Body).Decode(v)
+			if err != nil {
+				return fmt.Errorf("error unmarshalling json: %s", err)
+			}
+		}
+	}
+
+	if c.onRequestCompleted != nil {
+		c.onRequestCompleted(req, resp, v)
+	}
+
+	return err
+}
+
+func searchSlice(slice []string, key string) bool {
+	for _, v := range slice {
+		if v == key {
+			return true
+		}
+	}
+	return false
+}
+
+// DoWithFilters performs request passed and filters entities in json response
+func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interface{}, filters []*ExtraFilter) error {
+	req = req.WithContext(ctx)
+	resp, err := c.client.Do(req)
+
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if rerr := resp.Body.Close(); err == nil {
+			err = rerr
+		}
+	}()
+
+	err = CheckResponse(resp)
+
+	if err != nil {
+		return err
+	}
+
+	if filters != nil {
+		var res map[string]interface{}
+		body, _ := io.ReadAll(resp.Body)
+		json.Unmarshal(body, &res)
+
+		// Base paths to append target search path and find values
+		baseSearchPaths := [][]string{
+			[]string{"spec"},
+			[]string{"spec", "resources"},
+		}
+		// Full search paths
+		searchPaths := map[string][][]string{}
+
+		filterMap := map[string]*ExtraFilter{}
+		for _, filter := range filters {
+			filterMap[filter.Name] = filter
+
+			// Build search paths
+			filterSearchPaths := [][]string{}
+			for _, baseSearchPath := range baseSearchPaths {
+				searchPath := append(baseSearchPath, strings.Split(filter.Name, ".")...)
+				filterSearchPaths = append(filterSearchPaths, searchPath)
+			}
+			searchPaths[filter.Name] = filterSearchPaths
+		}
+
+		// Entities that pass filters
+		var filteredEntities []interface{}
+
+		entities := res["entities"].([]interface{})
+		for _, entity := range entities {
+			filtersPassed := 0
+		filter_loop:
+			for filter, filterSearchPaths := range searchPaths {
+				for _, searchPath := range filterSearchPaths {
+					// Start searching from the entity root
+					searchTarget := entity.(map[string]interface{})
+
+					pathOk := false
+
+					// Traverse till leaf
+					for _, pathElem := range searchPath[:len(searchPath)-1] {
+						if searchTarget, pathOk = searchTarget[pathElem].(map[string]interface{}); !pathOk {
+							break
+						}
+					}
+					if !pathOk {
+						continue // Could not find the filter key in this search path
+					}
+
+					// Stringify leaf value since we support only string values in filter
+					value := fmt.Sprint(searchTarget[searchPath[len(searchPath)-1]])
+					if searchSlice(filterMap[filter].Values, value) {
+						filtersPassed = filtersPassed + 1
+						continue filter_loop
+					}
+
+				}
+			}
+
+			// Value must pass all filters since we perform logical AND b/w filters
+			if filtersPassed == len(filters) {
+				filteredEntities = append(filteredEntities, entity)
+			}
+		}
+		res["entities"] = filteredEntities
+
+		// Convert filtered result back to io.ReadCloser and replace resp.Body
+		filteredBody, err := json.Marshal(res)
+		if err == nil {
+			resp.Body = io.NopCloser(bytes.NewReader(filteredBody))
+		}
 	}
 
 	if v != nil {
