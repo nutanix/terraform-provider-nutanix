@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/fc"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/foundation"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/karbon"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
@@ -52,6 +53,7 @@ func (c *Config) Client() (*Client, error) {
 		return nil, err
 	}
 	foundationClient, err := foundation.NewFoundationAPIClient(configCreds)
+	fcClient, err := fc.NewFoundationCentralClient(configCreds)
 	if err != nil {
 		return nil, err
 	}
@@ -60,6 +62,7 @@ func (c *Config) Client() (*Client, error) {
 		API:                 v3Client,
 		KarbonAPI:           karbonClient,
 		FoundationClientAPI: foundationClient,
+		FC:                  fcClient,
 	}, nil
 }
 
@@ -69,4 +72,5 @@ type Client struct {
 	KarbonAPI           *karbon.Client
 	FoundationClientAPI *foundation.Client
 	WaitTimeout         int64
+	FC                  *fc.Client
 }
