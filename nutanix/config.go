@@ -6,6 +6,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/karbon"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/fc"
 )
 
 // Version represents api version
@@ -44,11 +45,15 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	fcClient, err := fc.NewFoundationCentralClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 	return &Client{
 		WaitTimeout: c.WaitTimeout,
 		API:         v3Client,
 		KarbonAPI:   karbonClient,
+		FC:          fcClient,
 	}, nil
 }
 
@@ -56,5 +61,6 @@ func (c *Config) Client() (*Client, error) {
 type Client struct {
 	API         *v3.Client
 	KarbonAPI   *karbon.Client
+	FC          *fc.Client
 	WaitTimeout int64
 }
