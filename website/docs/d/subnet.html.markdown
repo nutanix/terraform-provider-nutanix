@@ -64,7 +64,6 @@ The following arguments are supported:
 
 * `subnet_id`: - (Optional) The ID for the subnet.
 * `subnet_name`: - (Optional) The name for the subnet
-* `filter_cluster_uuid`: - (Optional) The cluster UUID to filter by
 
 ## Attributes Reference
 
