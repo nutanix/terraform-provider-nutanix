@@ -290,10 +290,9 @@ func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interfa
 
 			// Build search paths by appending target search paths to base paths
 			filterSearchPaths := [][]string{}
-			if baseSearchPaths == nil || len(baseSearchPaths) == 0 {
+			if len(baseSearchPaths) == 0 {
 				searchPath := strings.Split(filter.Name, ".")
 				filterSearchPaths = append(filterSearchPaths, searchPath)
-
 			}
 			for _, baseSearchPath := range baseSearchPaths {
 				searchPath := append(baseSearchPath, strings.Split(filter.Name, ".")...)
@@ -329,10 +328,9 @@ func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interfa
 					// Stringify leaf value since we support only string values in filter
 					value := fmt.Sprint(searchTarget[searchPath[len(searchPath)-1]])
 					if searchSlice(filterMap[filter].Values, value) {
-						filtersPassed = filtersPassed + 1
+						filtersPassed++
 						continue filter_loop
 					}
-
 				}
 			}
 
@@ -344,8 +342,8 @@ func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interfa
 		res["entities"] = filteredEntities
 
 		// Convert filtered result back to io.ReadCloser and replace resp.Body
-		filteredBody, err := json.Marshal(res)
-		if err == nil {
+		filteredBody, jsonErr := json.Marshal(res)
+		if jsonErr == nil {
 			resp.Body = io.NopCloser(bytes.NewReader(filteredBody))
 		}
 	}
