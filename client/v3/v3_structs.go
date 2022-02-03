@@ -592,7 +592,7 @@ type DSMetadata struct {
 	// The sort order in which results are returned
 	SortOrder *string `json:"sort_order,omitempty" mapstructure:"sort_order,omitempty"`
 
-	// Extra filters for client side filtering api response
+	// Additional filters for client side filtering api response
 	AdditionalFilters []*client.AdditionalFilter `json:"-"`
 }
 
