@@ -294,8 +294,8 @@ func (op Operations) ListSubnet(getEntitiesRequest *DSMetadata) (*SubnetListInte
 		return nil, err
 	}
 	baseSearchPaths := [][]string{
-		[]string{"spec"},
-		[]string{"spec", "resources"},
+		{"spec"},
+		{"spec", "resources"},
 	}
 
 	return subnetListIntentResponse, op.client.DoWithFilters(ctx, req, subnetListIntentResponse, getEntitiesRequest.AdditionalFilters, baseSearchPaths)
