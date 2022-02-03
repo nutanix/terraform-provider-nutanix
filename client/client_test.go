@@ -3,11 +3,13 @@ package client
 import (
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 )
@@ -240,6 +242,65 @@ func TestDo_redirectLoop(t *testing.T) {
 // 		t.Errorf("expected response to contain %v, Response = %v", expected, completedResp)
 // 	}
 // }
+
+// *********** Filters tests ***********
+
+func getEntity(name string, vlanID string, uuid string) string {
+	return fmt.Sprintf(`{"spec":{"cluster_reference":{"uuid":"%s"},"name":"%s","resources":{"vlan_id":%s}}}`, uuid, name, vlanID)
+}
+
+func removeWhiteSpace(input string) string {
+	whitespacePattern := regexp.MustCompile(`\s+`)
+	return whitespacePattern.ReplaceAllString(input, "")
+}
+
+func getFilter(name string, values []string) []*AdditionalFilter {
+	return []*AdditionalFilter{
+		&AdditionalFilter{
+			Name:   name,
+			Values: values,
+		},
+	}
+}
+
+func runTest(filters []*AdditionalFilter, inputString string, expected string) bool {
+	input := io.NopCloser(strings.NewReader(inputString))
+	fmt.Println(expected)
+	baseSearchPaths := [][]string{
+		[]string{"spec"},
+		[]string{"spec", "resources"},
+	}
+	actualBytes, _ := io.ReadAll(filter(input, filters, baseSearchPaths))
+	actual := string(actualBytes)
+	fmt.Println(actual)
+	return actual == expected
+}
+
+func TestDoWithFilters_filter(t *testing.T) {
+	entity1 := getEntity("subnet-01", "111", "012345-111")
+	entity2 := getEntity("subnet-01", "112", "012345-112")
+	entity3 := getEntity("subnet-02", "112", "012345-111")
+	input := fmt.Sprintf(`{"entities":[%s,%s,%s]}`, entity1, entity2, entity3)
+
+	filtersList := [][]*AdditionalFilter{
+		getFilter("name", []string{"subnet-01", "subnet-03"}),
+		getFilter("vlan_id", []string{"111", "subnet-03"}),
+		getFilter("cluster_reference.uuid", []string{"111", "012345-112"}),
+	}
+	expectedList := []string{
+		removeWhiteSpace(fmt.Sprintf(`{"entities":[%s,%s]}`, entity1, entity2)),
+		removeWhiteSpace(fmt.Sprintf(`{"entities":[%s]}`, entity1)),
+		removeWhiteSpace(fmt.Sprintf(`{"entities":[%s]}`, entity2)),
+	}
+
+	for i := 0; i < len(filtersList); i++ {
+		if ok := runTest(filtersList[i], input, expectedList[i]); !ok {
+			t.Fatal()
+		}
+	}
+}
+
+// *************************************
 
 func TestClient_NewRequest(t *testing.T) {
 	type fields struct {
