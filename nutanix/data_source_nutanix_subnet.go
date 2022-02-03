@@ -286,7 +286,8 @@ func findSubnetByUUID(conn *v3.Client, uuid string) (*v3.SubnetIntentResponse, e
 }
 
 func findSubnetByName(conn *v3.Client, name string, additionalFilters []*client.AdditionalFilter) (*v3.SubnetIntentResponse, error) {
-	resp, err := conn.V3.ListAllSubnet("", additionalFilters)
+	filter := fmt.Sprintf("name==%s", name)
+	resp, err := conn.V3.ListAllSubnet(filter, additionalFilters)
 	if err != nil {
 		return nil, err
 	}
