@@ -136,9 +136,12 @@ func Provider() *schema.Provider {
 			"nutanix_karbon_private_registry": resourceNutanixKarbonPrivateRegistry(),
 			"nutanix_protection_rule":         resourceNutanixProtectionRule(),
 			"nutanix_recovery_plan":           resourceNutanixRecoveryPlan(),
+<<<<<<< HEAD
 			"nutanix_service_group":           resourceNutanixServiceGroup(),
 			"nutanix_address_group":           resourceNutanixAddressGroup(),
-			"nutanix_fc_image_cluster":        resourceNutanixFcImageCluster(),
+=======
+			"nutanix_fc_image_cluster":        resourceNutanixFCImageCluster(),
+>>>>>>> 6e6b48e9 (Fix)
 		},
 		ConfigureFunc: providerConfigure,
 	}
