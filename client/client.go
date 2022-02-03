@@ -276,77 +276,7 @@ func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interfa
 		return err
 	}
 
-	if filters != nil {
-		var res map[string]interface{}
-		body, _ := io.ReadAll(resp.Body)
-		json.Unmarshal(body, &res)
-
-		// Full search paths
-		searchPaths := map[string][][]string{}
-
-		filterMap := map[string]*AdditionalFilter{}
-		for _, filter := range filters {
-			filterMap[filter.Name] = filter
-
-			// Build search paths by appending target search paths to base paths
-			filterSearchPaths := [][]string{}
-			if len(baseSearchPaths) == 0 {
-				searchPath := strings.Split(filter.Name, ".")
-				filterSearchPaths = append(filterSearchPaths, searchPath)
-			}
-			for _, baseSearchPath := range baseSearchPaths {
-				searchPath := append(baseSearchPath, strings.Split(filter.Name, ".")...)
-				filterSearchPaths = append(filterSearchPaths, searchPath)
-			}
-			searchPaths[filter.Name] = filterSearchPaths
-		}
-
-		// Entities that pass filters
-		var filteredEntities []interface{}
-
-		entities := res["entities"].([]interface{})
-		for _, entity := range entities {
-			filtersPassed := 0
-		filter_loop:
-			for filter, filterSearchPaths := range searchPaths {
-				for _, searchPath := range filterSearchPaths {
-					// Start searching from the entity root
-					searchTarget := entity.(map[string]interface{})
-
-					pathOk := false
-
-					// Traverse till leaf
-					for _, pathElem := range searchPath[:len(searchPath)-1] {
-						if searchTarget, pathOk = searchTarget[pathElem].(map[string]interface{}); !pathOk {
-							break
-						}
-					}
-					if !pathOk {
-						continue // Could not find the filter key in this search path
-					}
-
-					// Stringify leaf value since we support only string values in filter
-					value := fmt.Sprint(searchTarget[searchPath[len(searchPath)-1]])
-					if searchSlice(filterMap[filter].Values, value) {
-						filtersPassed++
-						continue filter_loop
-					}
-				}
-			}
-
-			// Value must pass all filters since we perform logical AND b/w filters
-			if filtersPassed == len(filters) {
-				filteredEntities = append(filteredEntities, entity)
-			}
-		}
-		res["entities"] = filteredEntities
-
-		// Convert filtered result back to io.ReadCloser and replace resp.Body
-		filteredBody, jsonErr := json.Marshal(res)
-		if jsonErr == nil {
-			resp.Body = io.NopCloser(bytes.NewReader(filteredBody))
-		}
-	}
+	resp.Body = filter(resp.Body, filters, baseSearchPaths)
 
 	if v != nil {
 		if w, ok := v.(io.Writer); ok {
@@ -369,6 +299,83 @@ func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interfa
 	}
 
 	return err
+}
+
+func filter(body io.ReadCloser, filters []*AdditionalFilter, baseSearchPaths [][]string) io.ReadCloser {
+	if filters == nil {
+		return body
+	}
+	var res map[string]interface{}
+	b, _ := io.ReadAll(body)
+	json.Unmarshal(b, &res)
+
+	// Full search paths
+	searchPaths := map[string][][]string{}
+
+	filterMap := map[string]*AdditionalFilter{}
+	for _, filter := range filters {
+		filterMap[filter.Name] = filter
+
+		// Build search paths by appending target search paths to base paths
+		filterSearchPaths := [][]string{}
+		if len(baseSearchPaths) == 0 {
+			searchPath := strings.Split(filter.Name, ".")
+			filterSearchPaths = append(filterSearchPaths, searchPath)
+		}
+		for _, baseSearchPath := range baseSearchPaths {
+			searchPath := append(baseSearchPath, strings.Split(filter.Name, ".")...)
+			filterSearchPaths = append(filterSearchPaths, searchPath)
+		}
+		searchPaths[filter.Name] = filterSearchPaths
+	}
+
+	// Entities that pass filters
+	var filteredEntities []interface{}
+
+	entities := res["entities"].([]interface{})
+	for _, entity := range entities {
+		filtersPassed := 0
+	filter_loop:
+		for filter, filterSearchPaths := range searchPaths {
+			for _, searchPath := range filterSearchPaths {
+				// Start searching from the entity root
+				searchTarget := entity.(map[string]interface{})
+
+				pathOk := false
+
+				// Traverse till leaf
+				for _, pathElem := range searchPath[:len(searchPath)-1] {
+					if searchTarget, pathOk = searchTarget[pathElem].(map[string]interface{}); !pathOk {
+						break
+					}
+				}
+				if !pathOk {
+					continue // Could not find the filter key in this search path
+				}
+
+				// Stringify leaf value since we support only string values in filter
+				value := fmt.Sprint(searchTarget[searchPath[len(searchPath)-1]])
+				if searchSlice(filterMap[filter].Values, value) {
+					filtersPassed++
+					continue filter_loop
+				}
+			}
+		}
+
+		// Value must pass all filters since we perform logical AND b/w filters
+		if filtersPassed == len(filters) {
+			filteredEntities = append(filteredEntities, entity)
+		}
+	}
+	res["entities"] = filteredEntities
+
+	// Convert filtered result back to io.ReadCloser
+	filteredBody, jsonErr := json.Marshal(res)
+	if jsonErr == nil {
+		return io.NopCloser(bytes.NewReader(filteredBody))
+	}
+
+	return body
 }
 
 // CheckResponse checks errors if exist errors in request
