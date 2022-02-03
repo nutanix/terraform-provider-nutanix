@@ -17,11 +17,11 @@ type Operations struct {
 type Service interface {
 	GetImagedNode(uuid string) (*ImagedNodeDetails, error)
 	ListImagedNodes(req *ImagedNodesListInput) (*ImagedNodesListResponse, error)
-	// GetImagedCluster()
-	// ListImagedCluster()
-	// CreateCluster()
-	// UpdateCluster()
-	// DeleteCluster()
+	GetImagedCluster()
+	ListImagedCluster()
+	CreateCluster()
+	UpdateCluster()
+	DeleteCluster()
 	// CreateAPIKey()
 	// GetAPIKey()
 	// ListAPIKeys()
@@ -55,4 +55,76 @@ func (op Operations) ListImagedNodes(input *ImagedNodesListInput) (*ImagedNodesL
 	}
 
 	return imagedNodesListResponse, op.client.Do(ctx, req, imagedNodesListResponse)
+}
+
+func (op Operations) GetImagedCluster(clusterUUID string) (*ImagedClusterDetails, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/imaged_clusters/%s", clusterUUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+	imagedClusterDetails := new(ImagedClusterDetails)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return imagedClusterDetails, op.client.Do(ctx, req, imagedClusterDetails)
+}
+
+func (op Operations) ListImagedCluster(input *ImagedClustersListInput) (*ImagedClustersListResponse, error) {
+	ctx := context.TODO()
+	path := "/imaged_clusters/list"
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
+
+	imagedClustersListResponse := new(ImagedClustersListResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return imagedClustersListResponse, op.client.Do(ctx, req, imagedClustersListResponse)
+}
+
+func (op Operations) CreateCluster(input *CreateClusterInput) (*CreateClusterResponse, error) {
+	ctx := context.TODO()
+	path := "/imaged_clusters"
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
+
+	createClusterResponse := new(CreateClusterResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return createClusterResponse, op.client.Do(ctx, req, createClusterResponse)
+
+}
+
+func (op Operations) UpdateCluster(clusterUUID string, updateData *UpdateClusterData) error {
+	ctx := context.TODO()
+	path := fmt.Sprintf("/imaged_clusters/%s", clusterUUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, updateData)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return op.client.Do(ctx, req, nil)
+}
+
+func (op Operations) DeleteCluster(clusterUUID string) error {
+	ctx := context.TODO()
+	path := fmt.Sprintf("/imaged_clusters/%s", clusterUUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return op.client.Do(ctx, req, nil)
 }

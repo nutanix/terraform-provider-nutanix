@@ -13,7 +13,7 @@ const (
 // Client manages the foundation central API
 type Client struct {
 	client *client.Client
-    Service
+	Service
 }
 
 // NewFoundationCentralClient return a client to operate foundation central resources
