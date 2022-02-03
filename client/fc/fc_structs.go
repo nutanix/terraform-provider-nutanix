@@ -20,10 +20,10 @@ type ListMetadataOutput struct {
 
 // CommonNetworkSetting ...
 type CommonNetworkSettings struct {
-	CvmDnsServers        []*string `json:"cvm_dns_servers,omitempty"`
-	HypervisorDnsServers []*string `json:"hypervisor_dns_servers,omitempty"`
-	CvmNtpServers        []*string `json:"cvm_ntp_servers,omitempty"`
-	HypervisorNtpServers []*string `json:"hypervisor_ntp_servers,omitempty"`
+	CvmDnsServers        []string `json:"cvm_dns_servers,omitempty"`
+	HypervisorDnsServers []string `json:"hypervisor_dns_servers,omitempty"`
+	CvmNtpServers        []string `json:"cvm_ntp_servers,omitempty"`
+	HypervisorNtpServers []string `json:"hypervisor_ntp_servers,omitempty"`
 }
 
 type ImagedNodeListFilter struct {
@@ -151,7 +151,7 @@ type ImagedClusterDetails struct {
 	ImagedNodeUUIDList     []*string              `json:"imaged_node_uuid_list,omitempty"`
 	CommonNetworkSettings  *CommonNetworkSettings `json:"common_network_settings,omitempty"`
 	StorageNodeCount       *int                   `json:"storage_node_count,omitempty"`
-	RedundancyFactor       *int                `json:"redundancy_factor,omitempty"`
+	RedundancyFactor       *int                   `json:"redundancy_factor,omitempty"`
 	FoundationInitNodeUUID *string                `json:"foundation_init_node_uuid,omitempty"`
 	WorkflowType           *string                `json:"workflow_type,omitempty"`
 	ClusterName            *string                `json:"cluster_name,omitempty"`
@@ -168,9 +168,9 @@ type ImagedClustersListFilter struct {
 }
 
 type ImagedClustersListInput struct {
-	Length  *int                     `json:"length,omitempty"`
+	Length  *int                      `json:"length,omitempty"`
 	Filters *ImagedClustersListFilter `json:"filters,omitempty"`
-	Offset  *int                     `json:"offset,omitempty"`
+	Offset  *int                      `json:"offset,omitempty"`
 }
 
 type ImagedClustersListResponse struct {
@@ -207,10 +207,10 @@ type Node struct {
 }
 type CreateClusterInput struct {
 	ClusterExternalIP       *string                `json:"cluster_external_ip,omitempty"`
-	common_network_settings *CommonNetworkSettings `json:"common_network_settings,omitempty"`
+	Common_network_settings *CommonNetworkSettings `json:"common_network_settings,omitempty"`
 	HypervisorIsoDetails    *HypervisorIsoDetails  `json:"hypervisor_iso_details,omitempty"`
 	StorageNodeCount        *int                   `json:"storage_node_count,omitempty"`
-	RedundancyFactor        *int                `json:"redundancy_factor,omitempty"`
+	RedundancyFactor        *int                   `json:"redundancy_factor,omitempty"`
 	ClusterName             *string                `json:"cluster_name,omitempty"`
 	AosPackageUrl           *string                `json:"aos_package_url,omitempty"`
 	ClusterSize             *int                   `json:"cluster_size,omitempty"`
