@@ -26,7 +26,7 @@ func DataSourceFiltersSchema() *schema.Schema {
 	}
 }
 func BuildFiltersDataSource(set *schema.Set) []*client.AdditionalFilter {
-	var filters []*client.AdditionalFilter
+	filters := []*client.AdditionalFilter{}
 	for _, v := range set.List() {
 		m := v.(map[string]interface{})
 		var filterValues []string
