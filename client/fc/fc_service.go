@@ -17,11 +17,11 @@ type Operations struct {
 type Service interface {
 	GetImagedNode(uuid string) (*ImagedNodeDetails, error)
 	ListImagedNodes(req *ImagedNodesListInput) (*ImagedNodesListResponse, error)
-	GetImagedCluster()
-	ListImagedCluster()
-	CreateCluster()
-	UpdateCluster()
-	DeleteCluster()
+	GetImagedCluster(uuid string) (*ImagedClusterDetails, error) 
+	ListImagedClusters(input *ImagedClustersListInput) (*ImagedClustersListResponse, error)
+	CreateCluster(input *CreateClusterInput) (*CreateClusterResponse, error)
+	UpdateCluster(clusterUUID string, updateData *UpdateClusterData) error 
+	DeleteCluster(clusterUUID string) error
 	// CreateAPIKey()
 	// GetAPIKey()
 	// ListAPIKeys()
@@ -72,7 +72,7 @@ func (op Operations) GetImagedCluster(clusterUUID string) (*ImagedClusterDetails
 	return imagedClusterDetails, op.client.Do(ctx, req, imagedClusterDetails)
 }
 
-func (op Operations) ListImagedCluster(input *ImagedClustersListInput) (*ImagedClustersListResponse, error) {
+func (op Operations) ListImagedClusters(input *ImagedClustersListInput) (*ImagedClustersListResponse, error) {
 	ctx := context.TODO()
 	path := "/imaged_clusters/list"
 
@@ -110,7 +110,7 @@ func (op Operations) UpdateCluster(clusterUUID string, updateData *UpdateCluster
 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, updateData)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	return op.client.Do(ctx, req, nil)
@@ -123,7 +123,7 @@ func (op Operations) DeleteCluster(clusterUUID string) error {
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	return op.client.Do(ctx, req, nil)

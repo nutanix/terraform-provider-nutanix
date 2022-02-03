@@ -1,7 +1,5 @@
 package fc
 
-import ()
-
 type ErrorResponse struct {
 	Code        *int32
 	MessageList []*string
@@ -153,7 +151,7 @@ type ImagedClusterDetails struct {
 	ImagedNodeUUIDList     []*string              `json:"imaged_node_uuid_list,omitempty"`
 	CommonNetworkSettings  *CommonNetworkSettings `json:"common_network_settings,omitempty"`
 	StorageNodeCount       *int                   `json:"storage_node_count,omitempty"`
-	RedundancyFactor       *string                `json:"redundancy_factor,omitempty"`
+	RedundancyFactor       *int                `json:"redundancy_factor,omitempty"`
 	FoundationInitNodeUUID *string                `json:"foundation_init_node_uuid,omitempty"`
 	WorkflowType           *string                `json:"workflow_type,omitempty"`
 	ClusterName            *string                `json:"cluster_name,omitempty"`
@@ -171,7 +169,7 @@ type ImagedClustersListFilter struct {
 
 type ImagedClustersListInput struct {
 	Length  *int                     `json:"length,omitempty"`
-	Filters *ImagedClusterListFilter `json:"filters,omitempty"`
+	Filters *ImagedClustersListFilter `json:"filters,omitempty"`
 	Offset  *int                     `json:"offset,omitempty"`
 }
 
@@ -212,7 +210,7 @@ type CreateClusterInput struct {
 	common_network_settings *CommonNetworkSettings `json:"common_network_settings,omitempty"`
 	HypervisorIsoDetails    *HypervisorIsoDetails  `json:"hypervisor_iso_details,omitempty"`
 	StorageNodeCount        *int                   `json:"storage_node_count,omitempty"`
-	RedundancyFactor        *string                `json:"redundancy_factor,omitempty"`
+	RedundancyFactor        *int                `json:"redundancy_factor,omitempty"`
 	ClusterName             *string                `json:"cluster_name,omitempty"`
 	AosPackageUrl           *string                `json:"aos_package_url,omitempty"`
 	ClusterSize             *int                   `json:"cluster_size,omitempty"`
