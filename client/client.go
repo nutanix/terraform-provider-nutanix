@@ -62,8 +62,8 @@ type Credentials struct {
 	ProxyURL    string
 }
 
-// ExtraFilter specification for client side filters
-type ExtraFilter struct {
+// AdditionalFilter specification for client side filters
+type AdditionalFilter struct {
 	Name   string
 	Values []string
 }
@@ -256,7 +256,7 @@ func searchSlice(slice []string, key string) bool {
 }
 
 // DoWithFilters performs request passed and filters entities in json response
-func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interface{}, filters []*ExtraFilter) error {
+func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interface{}, filters []*AdditionalFilter, baseSearchPaths [][]string) error {
 	req = req.WithContext(ctx)
 	resp, err := c.client.Do(req)
 
@@ -281,19 +281,14 @@ func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interfa
 		body, _ := io.ReadAll(resp.Body)
 		json.Unmarshal(body, &res)
 
-		// Base paths to append target search path and find values
-		baseSearchPaths := [][]string{
-			[]string{"spec"},
-			[]string{"spec", "resources"},
-		}
 		// Full search paths
 		searchPaths := map[string][][]string{}
 
-		filterMap := map[string]*ExtraFilter{}
+		filterMap := map[string]*AdditionalFilter{}
 		for _, filter := range filters {
 			filterMap[filter.Name] = filter
 
-			// Build search paths
+			// Build search paths by appending target search paths to base paths
 			filterSearchPaths := [][]string{}
 			for _, baseSearchPath := range baseSearchPaths {
 				searchPath := append(baseSearchPath, strings.Split(filter.Name, ".")...)
