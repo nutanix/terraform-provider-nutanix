@@ -256,7 +256,7 @@ func removeWhiteSpace(input string) string {
 
 func getFilter(name string, values []string) []*AdditionalFilter {
 	return []*AdditionalFilter{
-		&AdditionalFilter{
+		{
 			Name:   name,
 			Values: values,
 		},
@@ -267,8 +267,8 @@ func runTest(filters []*AdditionalFilter, inputString string, expected string) b
 	input := io.NopCloser(strings.NewReader(inputString))
 	fmt.Println(expected)
 	baseSearchPaths := [][]string{
-		[]string{"spec"},
-		[]string{"spec", "resources"},
+		{"spec"},
+		{"spec", "resources"},
 	}
 	actualBytes, _ := io.ReadAll(filter(input, filters, baseSearchPaths))
 	actual := string(actualBytes)
