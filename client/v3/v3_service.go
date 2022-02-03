@@ -57,7 +57,7 @@ type Service interface {
 	DeleteVolumeGroup(uuid string) error
 	CreateVolumeGroup(request *VolumeGroupInput) (*VolumeGroupResponse, error)
 	ListAllVM(filter string) (*VMListIntentResponse, error)
-	ListAllSubnet(filter string, extraFilters []*client.AdditionalFilter) (*SubnetListIntentResponse, error)
+	ListAllSubnet(filter string, additionalFilters []*client.AdditionalFilter) (*SubnetListIntentResponse, error)
 	ListAllNetworkSecurityRule(filter string) (*NetworkSecurityRuleListIntentResponse, error)
 	ListAllImage(filter string) (*ImageListIntentResponse, error)
 	ListAllCluster(filter string) (*ClusterListIntentResponse, error)
