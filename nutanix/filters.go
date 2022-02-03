@@ -25,15 +25,15 @@ func DataSourceFiltersSchema() *schema.Schema {
 		},
 	}
 }
-func BuildFiltersDataSource(set *schema.Set) []*client.ExtraFilter {
-	var filters []*client.ExtraFilter
+func BuildFiltersDataSource(set *schema.Set) []*client.AdditionalFilter {
+	var filters []*client.AdditionalFilter
 	for _, v := range set.List() {
 		m := v.(map[string]interface{})
 		var filterValues []string
 		for _, e := range m["values"].([]interface{}) {
 			filterValues = append(filterValues, e.(string))
 		}
-		filters = append(filters, &client.ExtraFilter{
+		filters = append(filters, &client.AdditionalFilter{
 			Name:   m["name"].(string),
 			Values: filterValues,
 		})
