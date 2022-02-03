@@ -32,12 +32,7 @@ func dataSourceNutanixSubnet() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"subnet_id"},
 			},
-			"extra_filter": DataSourceFiltersSchema(),
-			"filter_cluster_uuid": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"subnet_id"},
-			},
+			"additional_filter": DataSourceFiltersSchema(),
 			"api_version": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -290,13 +285,8 @@ func findSubnetByUUID(conn *v3.Client, uuid string) (*v3.SubnetIntentResponse, e
 	return conn.V3.GetSubnet(uuid)
 }
 
-func findSubnetByName(conn *v3.Client, name string, clusterUUID string, extraFilters []*client.AdditionalFilter) (*v3.SubnetIntentResponse, error) {
-	//filter := fmt.Sprintf("name==%s", name)
-	filter := ""
-	if extraFilters != nil {
-		log.Printf("justhere extraFilters: %v", extraFilters)
-	}
-	resp, err := conn.V3.ListAllSubnet(filter, extraFilters)
+func findSubnetByName(conn *v3.Client, name string, additionalFilters []*client.AdditionalFilter) (*v3.SubnetIntentResponse, error) {
+	resp, err := conn.V3.ListAllSubnet("", additionalFilters)
 	if err != nil {
 		return nil, err
 	}
@@ -306,14 +296,12 @@ func findSubnetByName(conn *v3.Client, name string, clusterUUID string, extraFil
 	found := make([]*v3.SubnetIntentResponse, 0)
 	for _, v := range entities {
 		if *v.Spec.Name == name {
-			if clusterUUID == "" || *v.Spec.ClusterReference.UUID == clusterUUID {
-				found = append(found, v)
-			}
+			found = append(found, v)
 		}
 	}
 
 	if len(found) > 1 {
-		return nil, fmt.Errorf("your query returned more than one result. Please use subnet_id argument or filter by cluster_id instead")
+		return nil, fmt.Errorf("your query returned more than one result. Please use subnet_id argument or use additional filters instead")
 	}
 
 	if len(found) == 0 {
@@ -329,15 +317,9 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 
 	subnetID, iok := d.GetOk("subnet_id")
 	subnetName, nok := d.GetOk("subnet_name")
-	filterClusterUUID, fok := d.GetOk("filter_cluster_uuid")
 	var additionalFilters []*client.AdditionalFilter
-	if v, ok := d.GetOk("extra_filter"); ok {
+	if v, ok := d.GetOk("additional_filter"); ok {
 		additionalFilters = BuildFiltersDataSource(v.(*schema.Set))
-	}
-	log.Printf("extraFilters: %v", additionalFilters)
-
-	if !fok {
-		filterClusterUUID = ""
 	}
 
 	if !iok && !nok {
@@ -350,7 +332,7 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 	if iok {
 		resp, reqErr = findSubnetByUUID(conn, subnetID.(string))
 	} else {
-		resp, reqErr = findSubnetByName(conn, subnetName.(string), filterClusterUUID.(string), additionalFilters)
+		resp, reqErr = findSubnetByName(conn, subnetName.(string), additionalFilters)
 	}
 
 	if reqErr != nil {
