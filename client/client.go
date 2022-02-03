@@ -205,8 +205,9 @@ func (c *Client) OnRequestCompleted(rc RequestCompletionCallback) {
 // Do performs request passed
 func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error {
 	req = req.WithContext(ctx)
+	fmt.Printf("req: %v\n", req)
 	resp, err := c.client.Do(req)
-
+	fmt.Printf("resp: %v\n", resp)
 	if err != nil {
 		return err
 	}
