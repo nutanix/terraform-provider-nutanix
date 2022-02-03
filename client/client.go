@@ -290,6 +290,11 @@ func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interfa
 
 			// Build search paths by appending target search paths to base paths
 			filterSearchPaths := [][]string{}
+			if baseSearchPaths == nil || len(baseSearchPaths) == 0 {
+				searchPath := strings.Split(filter.Name, ".")
+				filterSearchPaths = append(filterSearchPaths, searchPath)
+
+			}
 			for _, baseSearchPath := range baseSearchPaths {
 				searchPath := append(baseSearchPath, strings.Split(filter.Name, ".")...)
 				filterSearchPaths = append(filterSearchPaths, searchPath)
