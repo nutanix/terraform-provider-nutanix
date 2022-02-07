@@ -266,11 +266,12 @@ func getFilter(name string, values []string) []*AdditionalFilter {
 func runTest(filters []*AdditionalFilter, inputString string, expected string) bool {
 	input := io.NopCloser(strings.NewReader(inputString))
 	fmt.Println(expected)
-	baseSearchPaths := [][]string{
-		{"spec"},
-		{"spec", "resources"},
+	baseSearchPaths := []string{"spec", "spec.resources"}
+	filteredBody, err := filter(input, filters, baseSearchPaths)
+	if err != nil {
+		panic(err)
 	}
-	actualBytes, _ := io.ReadAll(filter(input, filters, baseSearchPaths))
+	actualBytes, _ := io.ReadAll(filteredBody)
 	actual := string(actualBytes)
 	fmt.Println(actual)
 	return actual == expected
