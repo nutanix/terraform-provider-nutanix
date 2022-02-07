@@ -1200,15 +1200,16 @@ func testAccNutanixVirtualMachineCloudInitUserData(r int) string {
 		locals {
 			cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
 			? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
-		}
 
+			gs = base64encode("#cloud-config\nusers:\n  - name: ubuntu\n    ssh-authorized-keys:\n      - ssh-rsa DUMMYSSH mypass\n    sudo: ['ALL=(ALL) NOPASSWD:ALL']")
+		}
 		resource "nutanix_virtual_machine" "vm11" {
 		  	name = "terf__cloud_init-%d"
 		  	cluster_uuid = "${local.cluster1}"
 		  	num_vcpus_per_socket = 1
 		  	num_sockets          = 1
 		  	memory_size_mib      = 500
-		  	guest_customization_cloud_init_user_data = base64encode("#cloud-config\nusers:\n  - name: ubuntu\n    ssh-authorized-keys:\n      - ssh-rsa DUMMYSSHKEYGEN mypass\n    sudo: ['ALL=(ALL) NOPASSWD:ALL']")
+		  	guest_customization_cloud_init_user_data = "${local.gs}"
 
 		  	disk_list {
 		   		device_properties {
