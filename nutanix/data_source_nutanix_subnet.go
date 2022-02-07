@@ -285,9 +285,9 @@ func findSubnetByUUID(conn *v3.Client, uuid string) (*v3.SubnetIntentResponse, e
 	return conn.V3.GetSubnet(uuid)
 }
 
-func findSubnetByName(conn *v3.Client, name string, additionalFilters []*client.AdditionalFilter) (*v3.SubnetIntentResponse, error) {
+func findSubnetByName(conn *v3.Client, name string, clientSideFilters []*client.AdditionalFilter) (*v3.SubnetIntentResponse, error) {
 	filter := fmt.Sprintf("name==%s", name)
-	resp, err := conn.V3.ListAllSubnet(filter, additionalFilters)
+	resp, err := conn.V3.ListAllSubnet(filter, clientSideFilters)
 	if err != nil {
 		return nil, err
 	}
@@ -318,9 +318,9 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 
 	subnetID, iok := d.GetOk("subnet_id")
 	subnetName, nok := d.GetOk("subnet_name")
-	var additionalFilters []*client.AdditionalFilter
+	var clientSideFilters []*client.AdditionalFilter
 	if v, ok := d.GetOk("additional_filter"); ok {
-		additionalFilters = BuildFiltersDataSource(v.(*schema.Set))
+		clientSideFilters = BuildFiltersDataSource(v.(*schema.Set))
 	}
 
 	if !iok && !nok {
@@ -333,7 +333,7 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 	if iok {
 		resp, reqErr = findSubnetByUUID(conn, subnetID.(string))
 	} else {
-		resp, reqErr = findSubnetByName(conn, subnetName.(string), additionalFilters)
+		resp, reqErr = findSubnetByName(conn, subnetName.(string), clientSideFilters)
 	}
 
 	if reqErr != nil {
