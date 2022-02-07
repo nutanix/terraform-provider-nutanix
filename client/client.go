@@ -372,9 +372,8 @@ func filter(body io.ReadCloser, filters []*AdditionalFilter, baseSearchPaths []s
 	filteredBody, jsonErr := json.Marshal(res)
 	if jsonErr != nil {
 		return body, jsonErr
-	} else {
-		return io.NopCloser(bytes.NewReader(filteredBody)), nil
 	}
+	return io.NopCloser(bytes.NewReader(filteredBody)), nil
 }
 
 // CheckResponse checks errors if exist errors in request
