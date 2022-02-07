@@ -593,7 +593,7 @@ type DSMetadata struct {
 	SortOrder *string `json:"sort_order,omitempty" mapstructure:"sort_order,omitempty"`
 
 	// Additional filters for client side filtering api response
-	AdditionalFilters []*client.AdditionalFilter `json:"-"`
+	ClientSideFilters []*client.AdditionalFilter `json:"-"`
 }
 
 // VMIntentResource Response object for intentful operations on a vm
