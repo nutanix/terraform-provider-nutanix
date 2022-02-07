@@ -12,8 +12,8 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"strings"
 
+	"github.com/PaesslerAG/jsonpath"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/logging"
 )
 
@@ -256,7 +256,7 @@ func searchSlice(slice []string, key string) bool {
 }
 
 // DoWithFilters performs request passed and filters entities in json response
-func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interface{}, filters []*AdditionalFilter, baseSearchPaths [][]string) error {
+func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interface{}, filters []*AdditionalFilter, baseSearchPaths []string) error {
 	req = req.WithContext(ctx)
 	resp, err := c.client.Do(req)
 
@@ -305,10 +305,14 @@ func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interfa
 	return err
 }
 
-func filter(body io.ReadCloser, filters []*AdditionalFilter, baseSearchPaths [][]string) (io.ReadCloser, error) {
+func filter(body io.ReadCloser, filters []*AdditionalFilter, baseSearchPaths []string) (io.ReadCloser, error) {
 	if filters == nil {
 		return body, nil
 	}
+	if len(baseSearchPaths) == 0 {
+		baseSearchPaths = []string{"$."}
+	}
+
 	var res map[string]interface{}
 	b, err := io.ReadAll(body)
 	if err != nil {
@@ -317,20 +321,16 @@ func filter(body io.ReadCloser, filters []*AdditionalFilter, baseSearchPaths [][
 	json.Unmarshal(b, &res)
 
 	// Full search paths
-	searchPaths := map[string][][]string{}
+	searchPaths := map[string][]string{}
 
 	filterMap := map[string]*AdditionalFilter{}
 	for _, filter := range filters {
 		filterMap[filter.Name] = filter
+		//Build search paths by appending target search paths to base paths
+		filterSearchPaths := []string{}
 
-		// Build search paths by appending target search paths to base paths
-		filterSearchPaths := [][]string{}
-		if len(baseSearchPaths) == 0 {
-			searchPath := strings.Split(filter.Name, ".")
-			filterSearchPaths = append(filterSearchPaths, searchPath)
-		}
 		for _, baseSearchPath := range baseSearchPaths {
-			searchPath := append(baseSearchPath, strings.Split(filter.Name, ".")...)
+			searchPath := fmt.Sprintf("%s.%s", baseSearchPath, filter.Name)
 			filterSearchPaths = append(filterSearchPaths, searchPath)
 		}
 		searchPaths[filter.Name] = filterSearchPaths
@@ -345,23 +345,15 @@ func filter(body io.ReadCloser, filters []*AdditionalFilter, baseSearchPaths [][
 	filter_loop:
 		for filter, filterSearchPaths := range searchPaths {
 			for _, searchPath := range filterSearchPaths {
-				// Start searching from the entity root
 				searchTarget := entity.(map[string]interface{})
 
-				pathOk := false
-
-				// Traverse till leaf
-				for _, pathElem := range searchPath[:len(searchPath)-1] {
-					if searchTarget, pathOk = searchTarget[pathElem].(map[string]interface{}); !pathOk {
-						break
-					}
-				}
-				if !pathOk {
-					continue // Could not find the filter key in this search path
+				val, err := jsonpath.Get(searchPath, searchTarget)
+				if err != nil {
+					continue
 				}
 
 				// Stringify leaf value since we support only string values in filter
-				value := fmt.Sprint(searchTarget[searchPath[len(searchPath)-1]])
+				value := fmt.Sprint(val)
 				if searchSlice(filterMap[filter].Values, value) {
 					filtersPassed++
 					continue filter_loop

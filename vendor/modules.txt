@@ -10,6 +10,10 @@ cloud.google.com/go/storage
 github.com/BurntSushi/toml
 # github.com/OpenPeeDeeP/depguard v1.0.1
 github.com/OpenPeeDeeP/depguard
+# github.com/PaesslerAG/gval v1.0.0
+github.com/PaesslerAG/gval
+# github.com/PaesslerAG/jsonpath v0.1.1
+github.com/PaesslerAG/jsonpath
 # github.com/agext/levenshtein v1.2.2
 github.com/agext/levenshtein
 # github.com/apparentlymart/go-cidr v1.0.1
@@ -303,7 +307,6 @@ github.com/kisielk/gotool/internal/load
 github.com/konsorten/go-windows-terminal-sequences
 # github.com/magiconair/properties v1.8.1
 github.com/magiconair/properties
-github.com/magiconair/properties/assert
 # github.com/maratori/testpackage v1.0.1
 github.com/maratori/testpackage/pkg/testpackage
 # github.com/matoous/godox v0.0.0-20190911065817-5d6d842e92eb
@@ -381,7 +384,7 @@ github.com/spf13/pflag
 github.com/spf13/viper
 # github.com/stretchr/objx v0.2.0
 github.com/stretchr/objx
-# github.com/stretchr/testify v1.5.1
+# github.com/stretchr/testify v1.6.1
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/mock
 # github.com/subosito/gotenv v1.2.0
@@ -618,6 +621,8 @@ google.golang.org/grpc/test/bufconn
 gopkg.in/ini.v1
 # gopkg.in/yaml.v2 v2.2.8
 gopkg.in/yaml.v2
+# gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+gopkg.in/yaml.v3
 # honnef.co/go/tools v0.0.1-2019.2.3
 honnef.co/go/tools/arg
 honnef.co/go/tools/config
