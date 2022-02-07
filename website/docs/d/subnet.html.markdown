@@ -90,6 +90,7 @@ The following attributes are exported:
 * `vlan_id`: VLAN assigned to the subnet.
 * `network_function_chain_reference`: The reference to a network_function_chain.
 * `state`: - The state of the subnet.
+* `additional_filter`: - Additional filters to narrow down list of subnets.
 
 ### Metadata
 
