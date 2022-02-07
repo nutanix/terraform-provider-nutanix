@@ -276,7 +276,11 @@ func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interfa
 		return err
 	}
 
-	resp.Body = filter(resp.Body, filters, baseSearchPaths)
+	resp.Body, err = filter(resp.Body, filters, baseSearchPaths)
+
+	if err != nil {
+		return err
+	}
 
 	if v != nil {
 		if w, ok := v.(io.Writer); ok {
@@ -301,12 +305,15 @@ func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interfa
 	return err
 }
 
-func filter(body io.ReadCloser, filters []*AdditionalFilter, baseSearchPaths [][]string) io.ReadCloser {
+func filter(body io.ReadCloser, filters []*AdditionalFilter, baseSearchPaths [][]string) (io.ReadCloser, error) {
 	if filters == nil {
-		return body
+		return body, nil
 	}
 	var res map[string]interface{}
-	b, _ := io.ReadAll(body)
+	b, err := io.ReadAll(body)
+	if err != nil {
+		return body, err
+	}
 	json.Unmarshal(b, &res)
 
 	// Full search paths
@@ -371,11 +378,11 @@ func filter(body io.ReadCloser, filters []*AdditionalFilter, baseSearchPaths [][
 
 	// Convert filtered result back to io.ReadCloser
 	filteredBody, jsonErr := json.Marshal(res)
-	if jsonErr == nil {
-		return io.NopCloser(bytes.NewReader(filteredBody))
+	if jsonErr != nil {
+		return body, jsonErr
+	} else {
+		return io.NopCloser(bytes.NewReader(filteredBody)), nil
 	}
-
-	return body
 }
 
 // CheckResponse checks errors if exist errors in request
