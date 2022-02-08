@@ -335,7 +335,7 @@ func flattenProjectEntities(projects []*v3.Project) []map[string]interface{} {
 			"user_reference_list":                flattenReferenceList(project.Spec.Resources.UserReferenceList),
 			"external_user_group_reference_list": flattenReferenceList(project.Spec.Resources.ExternalUserGroupReferenceList),
 			"subnet_reference_list":              flattenReferenceList(project.Spec.Resources.SubnetReferenceList),
-			"external_network_list":              flattenReferenceList(project.Spec.Resources.ExternalNetworkList),
+			"external_network_list":              flattenExternalNetworkListReferenceList(project.Spec.Resources.ExternalNetworkList),
 			"metadata":                           metadata,
 			"categories":                         categories,
 			"project_reference":                  flattenReferenceValues(project.Metadata.ProjectReference),
