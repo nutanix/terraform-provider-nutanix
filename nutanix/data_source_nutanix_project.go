@@ -351,7 +351,7 @@ func dataSourceNutanixProjectRead(d *schema.ResourceData, meta interface{}) erro
 	if err := d.Set("subnet_reference_list", flattenReferenceList(project.Spec.Resources.SubnetReferenceList)); err != nil {
 		return fmt.Errorf("error setting `subnet_reference_list` for Project(%s): %s", d.Id(), err)
 	}
-	if err := d.Set("external_network_list", flattenReferenceList(project.Spec.Resources.ExternalNetworkList)); err != nil {
+	if err := d.Set("external_network_list", flattenExternalNetworkListReferenceList(project.Spec.Resources.ExternalNetworkList)); err != nil {
 		return fmt.Errorf("error setting `external_network_list` for Project(%s): %s", d.Id(), err)
 	}
 	if err := d.Set("metadata", m); err != nil {
