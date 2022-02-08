@@ -463,7 +463,7 @@ func TestAccNutanixVirtualMachine_CloudInitUserData(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixVirtualMachineCloudInitUserData(r),
+				Config: testAccNutanixVMConfigCloudInitUserData(r),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixVirtualMachineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
@@ -1193,7 +1193,7 @@ func testAccNutanixVMConfigResizeDiskClone(imgName, vmName string, diskSize int)
 	`, imgName, vmName, diskSize)
 }
 
-func testAccNutanixVirtualMachineCloudInitUserData(r int) string {
+func testAccNutanixVMConfigCloudInitUserData(r int) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
