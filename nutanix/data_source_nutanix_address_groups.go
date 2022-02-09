@@ -57,8 +57,9 @@ func dataSourceNutanixAddressGroups() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"address_group": {
-							Type:     schema.TypeMap,
+							Type:     schema.TypeList,
 							Computed: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
@@ -93,7 +94,7 @@ func dataSourceNutanixAddressGroups() *schema.Resource {
 							},
 						},
 						"associated_policies_list": {
-							Type:     schema.TypeMap,
+							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -147,15 +148,16 @@ func flattenAddressGroup(entries []*v3.AddressGroupListEntry) interface{} {
 
 	for i, entry := range entries {
 		entities[i] = map[string]interface{}{
-			"address_group": map[string]interface{}{
-				"name":                  entry.AddressGroup.Name,
-				"description":           entry.AddressGroup.Description,
-				"address_group_string":  entry.AddressGroup.AddressGroupString,
-				"ip_address_block_list": flattenAddressEntry(entry.AddressGroup.BlockList),
+			"address_group": []map[string]interface{}{
+				{
+					"name":                  entry.AddressGroup.Name,
+					"description":           entry.AddressGroup.Description,
+					"address_group_string":  entry.AddressGroup.AddressGroupString,
+					"ip_address_block_list": flattenAddressEntry(entry.AddressGroup.BlockList),
+				},
 			},
 			"associated_policies_list": flattenReferenceList(entry.AssociatedPoliciesList),
 		}
 	}
-
 	return entities
 }
