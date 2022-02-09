@@ -323,6 +323,19 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 		clientSideFilters = BuildFiltersDataSource(v.(*schema.Set))
 	}
 
+	mappings := map[string]string{
+		"cluster_name":             "cluster_reference.name",
+		"default_gateway_ip":       "ip_config.default_gateway_ip",
+		"prefix_length":            "ip_config.prefix_length",
+		"subnet_ip":                "ip_config.subnet_ip",
+		"dhcp_server_address":      "ip_config.dhcp_server_address.ip",
+		"dhcp_server_address_port": "ip_config.dhcp_server_address.port",
+		"dhcp_options":             "ip_config.dhcp_options",
+		"dhcp_domain_search_list":  "ip_config.dhcp_options.domain_search_list",
+	}
+
+	clientSideFilters = ReplaceFilterPrefixes(clientSideFilters, mappings)
+
 	if !iok && !nok {
 		return fmt.Errorf("please provide one of subnet_id or subnet_name attributes")
 	}

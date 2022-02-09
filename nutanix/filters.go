@@ -1,6 +1,9 @@
 package nutanix
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
 )
@@ -38,5 +41,26 @@ func BuildFiltersDataSource(set *schema.Set) []*client.AdditionalFilter {
 			Values: filterValues,
 		})
 	}
+	return filters
+}
+
+func ReplaceFilterPrefixes(filters []*client.AdditionalFilter, mappings map[string]string) []*client.AdditionalFilter {
+	if mappings == nil {
+		return filters
+	}
+
+	for _, filter := range filters {
+		filterPath := strings.Split(filter.Name, ".")
+		fmt.Println(filterPath)
+		if len(filterPath) > 0 {
+			replacedBase, ok := mappings[filterPath[0]]
+			fmt.Println(replacedBase)
+			if ok {
+				filterPath[0] = replacedBase
+			}
+		}
+		filter.Name = strings.Join(filterPath, ".")
+	}
+
 	return filters
 }
