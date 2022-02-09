@@ -421,7 +421,11 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 		return err
 	}
 
-	d.Set("cluster_reference_name", utils.StringValue(resp.Status.ClusterReference.Name))
+	//cluster reference is not there for overlay subnet
+	if resp.Status.ClusterReference != nil {
+		d.Set("cluster_reference_name", utils.StringValue(resp.Status.ClusterReference.Name))
+	}
+
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
 	d.Set("name", utils.StringValue(resp.Status.Name))
 	d.Set("description", utils.StringValue(resp.Status.Description))

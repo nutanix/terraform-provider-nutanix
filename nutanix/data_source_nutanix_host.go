@@ -649,6 +649,26 @@ func flattenReferenceList(references []*v3.ReferenceValues) []map[string]interfa
 	return res
 }
 
+func flattenExternalNetworkListReference(reference *v3.ReferenceValues) map[string]interface{} {
+	if reference != nil {
+		return map[string]interface{}{
+			"uuid": reference.UUID,
+			"name": reference.Name,
+		}
+	}
+	return map[string]interface{}{}
+}
+
+func flattenExternalNetworkListReferenceList(references []*v3.ReferenceValues) []map[string]interface{} {
+	res := make([]map[string]interface{}, len(references))
+	if len(references) > 0 {
+		for i, r := range references {
+			res[i] = flattenExternalNetworkListReference(r)
+		}
+	}
+	return res
+}
+
 func flattenHypervisor(hypervisor *v3.Hypervisor) map[string]interface{} {
 	if hypervisor != nil {
 		return map[string]interface{}{
