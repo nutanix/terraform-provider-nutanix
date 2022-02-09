@@ -132,14 +132,10 @@ resource "nutanix_role" "test" {
 	description = "%[2]s"
 	permission_reference_list {
 		kind = "permission"
-		uuid = "16b81a55-2bca-48c6-9fab-4f82c6bb4284"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "4e8e9007-8fbe-4709-a069-278259238e55"
+		uuid = "%[3]s"
 	}
 }
-`, name, description)
+`, name, description, testVars.Permissions[0].UUID)
 }
 
 func testAccNutanixRoleConfigWithCategory(name, description, categoryValue string) string {
@@ -149,12 +145,12 @@ resource "nutanix_role" "test" {
 	description = "%[2]s"
 	permission_reference_list {
 		kind = "permission"
-		uuid = "2e9988df-47ae-44ae-9114-ada346657b90"
+		uuid = "%[4]s"
 	}
 	categories {
 		name = "Environment"
 		value = "%[3]s"
 	}
 }
-`, name, description, categoryValue)
+`, name, description, categoryValue, testVars.Permissions[0].UUID)
 }

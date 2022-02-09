@@ -264,7 +264,7 @@ func testAccNutanixRecoveryPlanConfigWithNetwork(name, description, stageUUID, a
 					availability_zone_network_mapping_list{
 						availability_zone_url = "%s"
 						recovery_network{
-							name = "Rx-Automation-Network"
+							name = "%[5]s"
 							subnet_list {
 								gateway_ip = "10.38.2.129"
 								prefix_length = 26
@@ -272,7 +272,7 @@ func testAccNutanixRecoveryPlanConfigWithNetwork(name, description, stageUUID, a
 							}
 						}
 						test_network{
-							name = "Rx-Automation-Network"
+							name = "%[5]s"
 							subnet_list {
 								gateway_ip = "192.168.0.1"
 								prefix_length = 24
@@ -283,7 +283,7 @@ func testAccNutanixRecoveryPlanConfigWithNetwork(name, description, stageUUID, a
 					availability_zone_network_mapping_list{
 						availability_zone_url = "%s"
 						recovery_network{
-							name = "Rx-Automation-Network"
+							name = "%[5]s"
 							subnet_list {
 								gateway_ip = "10.38.4.65"
 								prefix_length = 26
@@ -291,7 +291,7 @@ func testAccNutanixRecoveryPlanConfigWithNetwork(name, description, stageUUID, a
 							}
 						}
 						test_network{
-							name = "Rx-Automation-Network"
+							name = "%[5]s"
 							subnet_list {
 								gateway_ip = "192.168.0.1"
 								prefix_length = 24
@@ -302,7 +302,7 @@ func testAccNutanixRecoveryPlanConfigWithNetwork(name, description, stageUUID, a
 				}
 			}
 		}
-	`, name, description, stageUUID, aZUrlSource, aZUrlTarget)
+	`, name, description, stageUUID, aZUrlSource, aZUrlTarget, testVars.SubnetName)
 }
 
 func testAccNutanixRecoveryPlanConfigWithStageListDynamic(name, description, stageUUID, categories string) string {

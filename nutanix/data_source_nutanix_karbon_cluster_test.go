@@ -11,8 +11,8 @@ func TestAccNutanixKarbonClusterDataSource_basic(t *testing.T) {
 	t.Skip()
 	r := acctest.RandInt()
 	dataSourceName := "data.nutanix_karbon_cluster.kcluster"
-	subnetName := "Rx-Automation-Network"
-	defaultContainter := "default-container-85827904983728"
+	subnetName := testVars.SubnetName
+	defaultContainter := testVars.DefaultContainerName
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -32,8 +32,8 @@ func TestAccNutanixKarbonClusterDataSource_basic(t *testing.T) {
 func TestAccNutanixKarbonClusterDataSource_basicByName(t *testing.T) {
 	r := acctest.RandInt()
 	//resourceName := "nutanix_karbon_cluster.cluster"
-	subnetName := "Rx-Automation-Network"
-	defaultContainter := "default-container-85827904983728"
+	subnetName := testVars.SubnetName
+	defaultContainter := testVars.DefaultContainerName
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,

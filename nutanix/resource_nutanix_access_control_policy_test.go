@@ -171,7 +171,7 @@ resource "nutanix_role" "test" {
 	description = "description role"
 	permission_reference_list {
 		kind = "permission"
-		uuid = "2e9988df-47ae-44ae-9114-ada346657b90"
+		uuid = "%[4]s"
 	}
 }
 resource "nutanix_access_control_policy" "test" {
@@ -182,7 +182,7 @@ resource "nutanix_access_control_policy" "test" {
 		uuid = nutanix_role.test.id
 	}
 }
-`, name, description, roleName)
+`, name, description, roleName, testVars.Permissions[0].UUID)
 }
 
 func testAccNutanixAccessControlPolicyConfigWithCategory(name, description, categoryValue, roleName string) string {
@@ -192,7 +192,7 @@ resource "nutanix_role" "test" {
 	description = "description role"
 	permission_reference_list {
 		kind = "permission"
-		uuid = "2e9988df-47ae-44ae-9114-ada346657b90"
+		uuid = "%[5]s"
 	}
 }
 resource "nutanix_access_control_policy" "test" {
@@ -207,7 +207,7 @@ resource "nutanix_access_control_policy" "test" {
 		value = "%[3]s"
 	}
 }
-`, name, description, categoryValue, roleName)
+`, name, description, categoryValue, roleName, testVars.Permissions[0].UUID)
 }
 
 func testAccNutanixAccessControlPolicyConfigWithUser(name, description, roleName string) string {
@@ -217,7 +217,7 @@ resource "nutanix_role" "test" {
 	description = "description role"
 	permission_reference_list {
 		kind = "permission"
-		uuid = "2e9988df-47ae-44ae-9114-ada346657b90"
+		uuid = "%[4]s"
 	}
 }
 resource "nutanix_access_control_policy" "test" {
@@ -297,5 +297,5 @@ resource "nutanix_access_control_policy" "test" {
 		}
 	}
 }
-`, name, description, roleName)
+`, name, description, roleName, testVars.Permissions[0].UUID)
 }
