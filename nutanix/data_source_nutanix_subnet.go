@@ -325,6 +325,7 @@ func dataSourceNutanixSubnetRead(d *schema.ResourceData, meta interface{}) error
 
 	mappings := map[string]string{
 		"cluster_name":             "cluster_reference.name",
+		"cluster_uuid":             "cluster_reference.uuid",
 		"default_gateway_ip":       "ip_config.default_gateway_ip",
 		"prefix_length":            "ip_config.prefix_length",
 		"subnet_ip":                "ip_config.subnet_ip",
