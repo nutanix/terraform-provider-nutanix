@@ -47,5 +47,4 @@ func TestFilters_replaceFilterPrefixes(t *testing.T) {
 			t.Fatalf("Failed to replace filter mapping from %s to %s, actual: %s", originalFilters[i].Name, expected[i].Name, actual[i].Name)
 		}
 	}
-
 }
