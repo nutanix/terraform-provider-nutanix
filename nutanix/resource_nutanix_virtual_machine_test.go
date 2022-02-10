@@ -30,6 +30,7 @@ func TestAccNutanixVirtualMachine_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceName, "is_vcpu_hard_pinned", "false"),
 					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 				),
 			},
@@ -156,6 +157,7 @@ func TestAccNutanixVirtualMachine_updateFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceName, "is_vcpu_hard_pinned", "true"),
 					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 				),
 			},
@@ -169,6 +171,7 @@ func TestAccNutanixVirtualMachine_updateFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "256"),
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "2"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "2"),
+					resource.TestCheckResourceAttr(resourceName, "is_vcpu_hard_pinned", "false"),
 					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 				),
 			},
@@ -737,6 +740,7 @@ func testAccNutanixVMConfigUpdatedFields(r int) string {
 			num_vcpus_per_socket = 1
 			num_sockets          = 1
 			memory_size_mib      = 186
+			is_vcpu_hard_pinned = true
 
 
 			categories {
@@ -764,6 +768,7 @@ func testAccNutanixVMConfigUpdatedFieldsUpdated(r int) string {
 			num_vcpus_per_socket = 2
 			num_sockets          = 2
 			memory_size_mib      = 256
+			is_vcpu_hard_pinned = false
 
 			categories {
 				name  = "Environment"
