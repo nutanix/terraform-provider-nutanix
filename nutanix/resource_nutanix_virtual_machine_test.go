@@ -30,7 +30,6 @@ func TestAccNutanixVirtualMachine_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
-					resource.TestCheckResourceAttr(resourceName, "is_vcpu_hard_pinned", "false"),
 					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 				),
 			},
