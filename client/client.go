@@ -228,7 +228,6 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 			_, err = io.Copy(w, resp.Body)
 			if err != nil {
 				fmt.Printf("Error io.Copy %s", err)
-
 				return err
 			}
 		} else {
@@ -259,7 +258,6 @@ func searchSlice(slice []string, key string) bool {
 func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interface{}, filters []*AdditionalFilter, baseSearchPaths []string) error {
 	req = req.WithContext(ctx)
 	resp, err := c.client.Do(req)
-
 	if err != nil {
 		return err
 	}
@@ -271,13 +269,11 @@ func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interfa
 	}()
 
 	err = CheckResponse(resp)
-
 	if err != nil {
 		return err
 	}
 
 	resp.Body, err = filter(resp.Body, filters, baseSearchPaths)
-
 	if err != nil {
 		return err
 	}
@@ -287,7 +283,6 @@ func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interfa
 			_, err = io.Copy(w, resp.Body)
 			if err != nil {
 				fmt.Printf("Error io.Copy %s", err)
-
 				return err
 			}
 		} else {
@@ -322,13 +317,11 @@ func filter(body io.ReadCloser, filters []*AdditionalFilter, baseSearchPaths []s
 
 	// Full search paths
 	searchPaths := map[string][]string{}
-
 	filterMap := map[string]*AdditionalFilter{}
 	for _, filter := range filters {
 		filterMap[filter.Name] = filter
 		//Build search paths by appending target search paths to base paths
 		filterSearchPaths := []string{}
-
 		for _, baseSearchPath := range baseSearchPaths {
 			searchPath := fmt.Sprintf("%s.%s", baseSearchPath, filter.Name)
 			filterSearchPaths = append(filterSearchPaths, searchPath)
@@ -346,12 +339,10 @@ func filter(body io.ReadCloser, filters []*AdditionalFilter, baseSearchPaths []s
 		for filter, filterSearchPaths := range searchPaths {
 			for _, searchPath := range filterSearchPaths {
 				searchTarget := entity.(map[string]interface{})
-
 				val, err := jsonpath.Get(searchPath, searchTarget)
 				if err != nil {
 					continue
 				}
-
 				// Stringify leaf value since we support only string values in filter
 				value := fmt.Sprint(val)
 				if searchSlice(filterMap[filter].Values, value) {
