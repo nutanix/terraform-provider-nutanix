@@ -195,7 +195,7 @@ resource "nutanix_virtual_machine" "demo-01-web" {
   num_sockets          = 1
   memory_size_mib      = 4096
 
-  #enable vcpu hard pinning
+  #enable vcpu hard pinning (optional)
   #is_vcpu_hard_pinned = true
 
   # What cluster will this VLAN live on?
