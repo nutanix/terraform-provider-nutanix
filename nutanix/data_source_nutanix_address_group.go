@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func dataSourceNutanixAddressGroup() *schema.Resource {
@@ -21,11 +22,11 @@ func dataSourceNutanixAddressGroup() *schema.Resource {
 			},
 			"description": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
 			},
 			"ip_address_block_list": {
 				Type:     schema.TypeList,
-				Required: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ip": {
@@ -60,16 +61,16 @@ func dataSourceNutanixAddressGroupRead(d *schema.ResourceData, meta interface{})
 			return fmt.Errorf("error reading user with error %s", reqErr)
 		}
 
-		if name, nameOk := d.GetOk("name"); nameOk {
-			d.Set("name", name.(string))
+		if err := d.Set("name", utils.StringValue(group.AddressGroup.Name)); err != nil {
+			return err
 		}
 
-		if desc, descOk := d.GetOk("description"); descOk {
-			d.Set("description", desc.(string))
+		if err := d.Set("description", utils.StringValue(group.AddressGroup.Description)); err != nil {
+			return err
 		}
 
-		if str, strOk := d.GetOk("address_group_string"); strOk {
-			d.Set("address_group_string", str.(string))
+		if err := d.Set("address_group_string", utils.StringValue(group.AddressGroup.AddressGroupString)); err != nil {
+			return err
 		}
 
 		if err := d.Set("ip_address_block_list", flattenAddressEntry(group.AddressGroup.BlockList)); err != nil {
