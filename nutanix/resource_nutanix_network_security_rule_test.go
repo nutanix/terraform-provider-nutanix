@@ -376,6 +376,11 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
 
 func testAccNutanixNetworkSecurityRuleConfigAdRule(r int) string {
 	return fmt.Sprintf(`
+	resource "nutanix_category_value" "ad-group-user-1" {
+		name = "ADGroup"
+		description = "group user category value"
+		value = "%s"
+	}
 	resource "nutanix_network_security_rule" "VDI" {
 		name           = "tf-%d"
 		ad_rule_action = "APPLY"
@@ -405,12 +410,18 @@ func testAccNutanixNetworkSecurityRuleConfigAdRule(r int) string {
 		  peer_specification_type = "IP_SUBNET"
 		  protocol                = "ALL"
 		}
+		depends_on = [nutanix_category_value.ad-group-user-1]
 	  }
-`, r, testVars.AdRuleTarget.Values)
+`, testVars.AdRuleTarget.Values, r, testVars.AdRuleTarget.Values)
 }
 
 func testAccNutanixNetworkSecurityRuleConfigAdRuleUpdate(r int) string {
 	return fmt.Sprintf(`
+	resource "nutanix_category_value" "ad-group-user-1" {
+		name = "ADGroup"
+		description = "group user category value"
+		value = "%s"
+	}
 	resource "nutanix_network_security_rule" "VDI" {
 		name           = "tf-%d"
 		ad_rule_action = "APPLY"
@@ -440,6 +451,7 @@ func testAccNutanixNetworkSecurityRuleConfigAdRuleUpdate(r int) string {
 		  peer_specification_type = "IP_SUBNET"
 		  protocol                = "ALL"
 		}
+		depends_on = [nutanix_category_value.ad-group-user-1]
 	  }
-`, r, testVars.AdRuleTarget.Values)
+`, testVars.AdRuleTarget.Values, r, testVars.AdRuleTarget.Values)
 }
