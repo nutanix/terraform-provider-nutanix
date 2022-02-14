@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const resourceNameSubnet = "nutanix_subnet.acctest-managed"
@@ -93,10 +93,10 @@ func TestAccNutanixSubnet_WithCategory(t *testing.T) {
 					testAccCheckNutanixSubnetExists(resourceName),
 					testAccCheckNutanixCategories(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "categories.2228745532.name"),
-					resource.TestCheckResourceAttrSet(resourceName, "categories.2228745532.value"),
-					resource.TestCheckResourceAttr(resourceName, "categories.2228745532.name", "Environment"),
-					resource.TestCheckResourceAttr(resourceName, "categories.2228745532.value", "Production"),
+					resource.TestCheckResourceAttrSet(resourceName, "categories.0.name"),
+					resource.TestCheckResourceAttrSet(resourceName, "categories.0.value"),
+					resource.TestCheckResourceAttr(resourceName, "categories.0.name", "Environment"),
+					resource.TestCheckResourceAttr(resourceName, "categories.0.value", "Production"),
 				),
 			},
 			{
@@ -104,10 +104,10 @@ func TestAccNutanixSubnet_WithCategory(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixSubnetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "categories.2940305446.name"),
-					resource.TestCheckResourceAttrSet(resourceName, "categories.2940305446.value"),
-					resource.TestCheckResourceAttr(resourceName, "categories.2940305446.name", "Environment"),
-					resource.TestCheckResourceAttr(resourceName, "categories.2940305446.value", "Staging"),
+					resource.TestCheckResourceAttrSet(resourceName, "categories.0.name"),
+					resource.TestCheckResourceAttrSet(resourceName, "categories.0.value"),
+					resource.TestCheckResourceAttr(resourceName, "categories.0.name", "Environment"),
+					resource.TestCheckResourceAttr(resourceName, "categories.0.value", "Staging"),
 				),
 			},
 			{
@@ -190,8 +190,8 @@ func testAccCheckNutanixCategories(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no ID is set")
 		}
 
-		if val, ok := rs.Primary.Attributes["categories.2228745532.name"]; !ok || val == "" {
-			return fmt.Errorf("%s: manual Attribute '%s' expected to be set", n, "categories.2228745532.name")
+		if val, ok := rs.Primary.Attributes["categories.0.name"]; !ok || val == "" {
+			return fmt.Errorf("%s: manual Attribute '%s' expected to be set", n, "categories.0.name")
 		}
 
 		return nil

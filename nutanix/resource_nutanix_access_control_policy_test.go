@@ -5,10 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const resourceAccessPolicy = "nutanix_access_control_policy.test"
@@ -105,10 +105,10 @@ func TestAccNutanixAccessControlPolicy_WithCategory(t *testing.T) {
 					testAccCheckNutanixAccessControlPolicyExists(),
 					testAccCheckNutanixCategories(resourceAccessPolicy),
 					resource.TestCheckResourceAttr(resourceAccessPolicy, "categories.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceAccessPolicy, "categories.2228745532.name"),
-					resource.TestCheckResourceAttrSet(resourceAccessPolicy, "categories.2228745532.value"),
-					resource.TestCheckResourceAttr(resourceAccessPolicy, "categories.2228745532.name", "Environment"),
-					resource.TestCheckResourceAttr(resourceAccessPolicy, "categories.2228745532.value", "Production"),
+					resource.TestCheckResourceAttrSet(resourceAccessPolicy, "categories.0.name"),
+					resource.TestCheckResourceAttrSet(resourceAccessPolicy, "categories.0.value"),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "categories.0.name", "Environment"),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "categories.0.value", "Production"),
 				),
 			},
 			{
@@ -116,10 +116,10 @@ func TestAccNutanixAccessControlPolicy_WithCategory(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixAccessControlPolicyExists(),
 					resource.TestCheckResourceAttr(resourceAccessPolicy, "categories.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceAccessPolicy, "categories.2940305446.name"),
-					resource.TestCheckResourceAttrSet(resourceAccessPolicy, "categories.2940305446.value"),
-					resource.TestCheckResourceAttr(resourceAccessPolicy, "categories.2940305446.name", "Environment"),
-					resource.TestCheckResourceAttr(resourceAccessPolicy, "categories.2940305446.value", "Staging"),
+					resource.TestCheckResourceAttrSet(resourceAccessPolicy, "categories.0.name"),
+					resource.TestCheckResourceAttrSet(resourceAccessPolicy, "categories.0.value"),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "categories.0.name", "Environment"),
+					resource.TestCheckResourceAttr(resourceAccessPolicy, "categories.0.value", "Staging"),
 				),
 			},
 			{

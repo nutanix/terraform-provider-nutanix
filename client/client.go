@@ -14,7 +14,7 @@ import (
 	"net/url"
 
 	"github.com/PaesslerAG/jsonpath"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/logging"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
 )
 
 const (

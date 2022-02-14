@@ -1,6 +1,7 @@
 package nutanix
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"reflect"
@@ -10,9 +11,9 @@ import (
 
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 )
 
@@ -24,12 +25,12 @@ var (
 
 func resourceNutanixNetworkSecurityRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceNutanixNetworkSecurityRuleCreate,
-		Read:   resourceNutanixNetworkSecurityRuleRead,
-		Update: resourceNutanixNetworkSecurityRuleUpdate,
-		Delete: resourceNutanixNetworkSecurityRuleDelete,
+		CreateContext: resourceNutanixNetworkSecurityRuleCreate,
+		ReadContext:   resourceNutanixNetworkSecurityRuleRead,
+		UpdateContext: resourceNutanixNetworkSecurityRuleUpdate,
+		DeleteContext: resourceNutanixNetworkSecurityRuleDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
@@ -47,33 +48,8 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 			"metadata": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"last_update_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"creation_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"spec_version": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"spec_hash": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"categories": categoriesSchema(),
@@ -81,42 +57,16 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"project_reference": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"name": {
@@ -211,22 +161,8 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kind": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"uuid": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-								},
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 						"icmp_type_code_list": {
@@ -357,22 +293,8 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kind": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"uuid": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-								},
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 						"icmp_type_code_list": {
@@ -535,22 +457,8 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kind": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"uuid": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-								},
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 						"icmp_type_code_list": {
@@ -681,22 +589,8 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kind": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"uuid": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-								},
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 						"icmp_type_code_list": {
@@ -725,7 +619,7 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 	}
 }
 
-func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixNetworkSecurityRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Get client connection
 	conn := meta.(*Client).API
 
@@ -740,14 +634,14 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 	desc, descok := d.GetOk("description")
 
 	if !nok {
-		return fmt.Errorf("please provide the required attribute name")
+		return diag.Errorf("please provide the required attribute name")
 	}
 
 	// Read arguments and set request values
 
 	// only set kind
 	if errMetad := getMetadataAttributes(d, metadata, "network_security_rule"); errMetad != nil {
-		return errMetad
+		return diag.FromErr(errMetad)
 	}
 
 	if descok {
@@ -756,7 +650,7 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 
 	// get resources
 	if err := getNetworkSecurityRuleResources(d, networkSecurityRule); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if descok {
@@ -777,7 +671,7 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 	resp, err := conn.V3.CreateNetworkSecurityRule(request)
 
 	if err != nil {
-		return fmt.Errorf("error creating Nutanix Network Security Rule %s: %+v", utils.StringValue(spec.Name), err)
+		return diag.Errorf("error creating Nutanix Network Security Rule %s: %+v", utils.StringValue(spec.Name), err)
 	}
 
 	d.SetId(*resp.Metadata.UUID)
@@ -794,14 +688,14 @@ func resourceNutanixNetworkSecurityRuleCreate(d *schema.ResourceData, meta inter
 		MinTimeout: netMinTimeout,
 	}
 
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("error waiting for network_security_rule (%s) to create: %s", d.Id(), err)
+	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
+		return diag.Errorf("error waiting for network_security_rule (%s) to create: %s", d.Id(), err)
 	}
 
-	return resourceNutanixNetworkSecurityRuleRead(d, meta)
+	return resourceNutanixNetworkSecurityRuleRead(ctx, d, meta)
 }
 
-func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixNetworkSecurityRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] Reading Network Security Rule: %s", d.Get("name").(string))
 
 	// Get client connection
@@ -814,31 +708,31 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 			d.SetId("")
 			return nil
 		}
-		return errNet
+		return diag.FromErr(errNet)
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
 
 	if err := d.Set("metadata", m); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("categories", c); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("project_reference", flattenReferenceValues(resp.Metadata.ProjectReference)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if resp.Status == nil {
-		return fmt.Errorf("error reading Status from network security rule %s", d.Id())
+		return diag.Errorf("error reading Status from network security rule %s", d.Id())
 	}
 
 	if resp.Status.Resources == nil {
-		return fmt.Errorf("error reading Status.Resources from network security rule %s", d.Id())
+		return diag.Errorf("error reading Status.Resources from network security rule %s", d.Id())
 	}
 
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
@@ -856,30 +750,30 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 	}
 
 	if err := flattenNetworkRule("app_rule", rules.AppRule, d); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := flattenNetworkRule("ad_rule", rules.AdRule, d); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if rules.IsolationRule != nil {
 		if err := d.Set("isolation_rule_action", utils.StringValue(rules.IsolationRule.Action)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if rules.IsolationRule.FirstEntityFilter != nil {
 			firstFilter := rules.IsolationRule.FirstEntityFilter
 			if err := d.Set("isolation_rule_first_entity_filter_kind_list", utils.StringValueSlice(firstFilter.KindList)); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 
 			if err := d.Set("isolation_rule_first_entity_filter_type", utils.StringValue(firstFilter.Type)); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 
 			if err := d.Set("isolation_rule_first_entity_filter_params", expandFilterParams(firstFilter.Params)); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 
@@ -887,27 +781,27 @@ func resourceNutanixNetworkSecurityRuleRead(d *schema.ResourceData, meta interfa
 			secondFilter := rules.IsolationRule.SecondEntityFilter
 
 			if err := d.Set("isolation_rule_second_entity_filter_kind_list", utils.StringValueSlice(secondFilter.KindList)); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 			if err := d.Set("isolation_rule_second_entity_filter_type", utils.StringValue(secondFilter.Type)); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 			if err := d.Set("isolation_rule_second_entity_filter_params", expandFilterParams(secondFilter.Params)); err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 	} else {
 		if err := d.Set("isolation_rule_first_entity_filter_kind_list", make([]string, 0)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("isolation_rule_first_entity_filter_params", make([]string, 0)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("isolation_rule_second_entity_filter_kind_list", make([]string, 0)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		if err := d.Set("isolation_rule_second_entity_filter_params", make([]string, 0)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 	}
 
@@ -963,7 +857,7 @@ func flattenNetworkRule(prefix string, rule *v3.NetworkSecurityRuleResourcesRule
 	return nil
 }
 
-func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixNetworkSecurityRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Get client connection
 	conn := meta.(*Client).API
 
@@ -979,7 +873,7 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	if response.Metadata != nil {
@@ -1042,7 +936,7 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 		d.HasChange("isolation_rule_second_entity_filter_type") ||
 		d.HasChange("isolation_rule_second_entity_filter_params") {
 		if err := getNetworkSecurityRuleResources(d, networkSecurityRule); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		spec.Resources = networkSecurityRule
 	}
@@ -1053,7 +947,7 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 	resp, errUpdate := conn.V3.UpdateNetworkSecurityRule(d.Id(), request)
 
 	if errUpdate != nil {
-		return errUpdate
+		return diag.FromErr(errUpdate)
 	}
 
 	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
@@ -1068,15 +962,15 @@ func resourceNutanixNetworkSecurityRuleUpdate(d *schema.ResourceData, meta inter
 		MinTimeout: netMinTimeout,
 	}
 
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
+	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
+		return diag.Errorf(
 			"error waiting for network_security_rule (%s) to update: %s", d.Id(), err)
 	}
 
-	return resourceNutanixNetworkSecurityRuleRead(d, meta)
+	return resourceNutanixNetworkSecurityRuleRead(ctx, d, meta)
 }
 
-func resourceNutanixNetworkSecurityRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixNetworkSecurityRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] Deleting Network Security Rule: %s", d.Get("name").(string))
 
 	conn := meta.(*Client).API
@@ -1084,7 +978,7 @@ func resourceNutanixNetworkSecurityRuleDelete(d *schema.ResourceData, meta inter
 
 	resp, err := conn.V3.DeleteNetworkSecurityRule(UUID)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
@@ -1099,8 +993,8 @@ func resourceNutanixNetworkSecurityRuleDelete(d *schema.ResourceData, meta inter
 		MinTimeout: netMinTimeout,
 	}
 
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
+	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
+		return diag.Errorf(
 			"error waiting for network_security_rule (%s) to delete: %s", d.Id(), err)
 	}
 
@@ -1513,7 +1407,7 @@ func expandIcmpTypeCodeList(icmp interface{}) []*v3.NetworkRuleIcmpTypeCodeList 
 
 func filterParamsHash(v interface{}) int {
 	params := v.(map[string]interface{})
-	return hashcode.String(params["name"].(string))
+	return utils.HashcodeString(params["name"].(string))
 }
 
 func flattenNetworkRuleList(networkRules []*v3.NetworkRule) []map[string]interface{} {
@@ -1607,7 +1501,7 @@ func portRangeSchema() *schema.Schema {
 	}
 }
 
-func resourceSecurityRuleInstanceStateUpgradeV0(is map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceSecurityRuleInstanceStateUpgradeV0(ctx context.Context, is map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	log.Printf("[DEBUG] Entering resourceSecurityRuleInstanceStateUpgradeV0")
 	return resourceNutanixCategoriesMigrateState(is, meta)
 }
@@ -1622,33 +1516,8 @@ func resourceNutanixSecurityRuleInstanceResourceV0() *schema.Resource {
 			"metadata": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"last_update_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"creation_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"spec_version": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"spec_hash": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"categories": {
@@ -1660,42 +1529,16 @@ func resourceNutanixSecurityRuleInstanceResourceV0() *schema.Resource {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"project_reference": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"name": {
@@ -1780,22 +1623,8 @@ func resourceNutanixSecurityRuleInstanceResourceV0() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kind": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"uuid": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-								},
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 						"icmp_type_code_list": {
@@ -1926,22 +1755,8 @@ func resourceNutanixSecurityRuleInstanceResourceV0() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kind": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"uuid": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-									},
-								},
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 						"icmp_type_code_list": {
