@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -22,6 +23,11 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 		DeleteContext: resourceNutanixAccessControlPolicyDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Update: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Delete: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
 			"api_version": {
@@ -276,7 +282,6 @@ func resourceNutanixAccessControlPolicy() *schema.Resource {
 
 func resourceNutanixAccessControlPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).API
-
 	request := &v3.AccessControlPolicy{}
 	spec := &v3.AccessControlPolicySpec{}
 	metadata := &v3.Metadata{}
@@ -319,7 +324,7 @@ func resourceNutanixAccessControlPolicyCreate(ctx context.Context, d *schema.Res
 		Pending:    []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    subnetTimeout,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      subnetDelay,
 		MinTimeout: subnetMinTimeout,
 	}
@@ -416,7 +421,6 @@ func resourceNutanixAccessControlPolicyUpdate(ctx context.Context, d *schema.Res
 	metadata := &v3.Metadata{}
 	res := &v3.AccessControlPolicyResources{}
 	spec := &v3.AccessControlPolicySpec{}
-
 	id := d.Id()
 	response, err := conn.V3.GetAccessControlPolicy(id)
 
@@ -484,7 +488,7 @@ func resourceNutanixAccessControlPolicyUpdate(ctx context.Context, d *schema.Res
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    subnetTimeout,
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      subnetDelay,
 		MinTimeout: subnetMinTimeout,
 	}
@@ -512,7 +516,7 @@ func resourceNutanixAccessControlPolicyDelete(ctx context.Context, d *schema.Res
 		Pending:    []string{"QUEUED", "RUNNING", "DELETED_PENDING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, cast.ToString(resp.Status.ExecutionContext.TaskUUID)),
-		Timeout:    subnetTimeout,
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      subnetDelay,
 		MinTimeout: subnetMinTimeout,
 	}

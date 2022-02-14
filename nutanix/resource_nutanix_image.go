@@ -49,6 +49,11 @@ func resourceNutanixImage() *schema.Resource {
 				Version: 0,
 			},
 		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Update: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Delete: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+		},
 		Schema: map[string]*schema.Schema{
 			"api_version": {
 				Type:     schema.TypeString,
@@ -159,11 +164,6 @@ func resourceNutanixImageCreate(ctx context.Context, d *schema.ResourceData, met
 	log.Printf("[DEBUG] Creating Image: %s", d.Get("name").(string))
 	client := meta.(*Client)
 	conn := client.API
-	timeout := client.WaitTimeout
-
-	if client.WaitTimeout == 0 {
-		timeout = 10
-	}
 
 	request := &v3.ImageIntentInput{}
 	spec := &v3.Image{}
@@ -221,7 +221,7 @@ func resourceNutanixImageCreate(ctx context.Context, d *schema.ResourceData, met
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    time.Duration(timeout) * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      imageDelay,
 		MinTimeout: imageMinTimeout,
 	}
@@ -345,11 +345,6 @@ func resourceNutanixImageRead(ctx context.Context, d *schema.ResourceData, meta 
 func resourceNutanixImageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*Client)
 	conn := client.API
-	timeout := client.WaitTimeout
-
-	if client.WaitTimeout == 0 {
-		timeout = 10
-	}
 
 	// get state
 	request := &v3.ImageIntentInput{}
@@ -422,7 +417,7 @@ func resourceNutanixImageUpdate(ctx context.Context, d *schema.ResourceData, met
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    time.Duration(timeout) * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      imageDelay,
 		MinTimeout: imageMinTimeout,
 	}
@@ -446,12 +441,6 @@ func resourceNutanixImageDelete(ctx context.Context, d *schema.ResourceData, met
 
 	client := meta.(*Client)
 	conn := client.API
-	timeout := client.WaitTimeout
-
-	if client.WaitTimeout == 0 {
-		timeout = 10
-	}
-
 	UUID := d.Id()
 
 	resp, err := conn.V3.DeleteImage(UUID)
@@ -469,7 +458,7 @@ func resourceNutanixImageDelete(ctx context.Context, d *schema.ResourceData, met
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    time.Duration(timeout) * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      imageDelay,
 		MinTimeout: imageMinTimeout,
 	}

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -22,6 +23,11 @@ func resourceNutanixRole() *schema.Resource {
 		DeleteContext: resourceNutanixRoleDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Update: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Delete: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
 			"api_version": {
@@ -171,7 +177,7 @@ func resourceNutanixRoleCreate(ctx context.Context, d *schema.ResourceData, meta
 		Pending:    []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    subnetTimeout,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      subnetDelay,
 		MinTimeout: subnetMinTimeout,
 	}
@@ -309,7 +315,7 @@ func resourceNutanixRoleUpdate(ctx context.Context, d *schema.ResourceData, meta
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    subnetTimeout,
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      subnetDelay,
 		MinTimeout: subnetMinTimeout,
 	}
@@ -337,7 +343,7 @@ func resourceNutanixRoleDelete(ctx context.Context, d *schema.ResourceData, meta
 		Pending:    []string{"QUEUED", "RUNNING", "DELETED_PENDING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, cast.ToString(resp.Status.ExecutionContext.TaskUUID)),
-		Timeout:    subnetTimeout,
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      subnetDelay,
 		MinTimeout: subnetMinTimeout,
 	}

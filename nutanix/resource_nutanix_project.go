@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -22,6 +23,11 @@ func resourceNutanixProject() *schema.Resource {
 		DeleteContext: resourceNutanixProjectDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Update: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Delete: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -284,7 +290,7 @@ func resourceNutanixProjectCreate(ctx context.Context, d *schema.ResourceData, m
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    vmTimeout,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      vmDelay,
 		MinTimeout: vmMinTimeout,
 	}
@@ -432,7 +438,7 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    vmTimeout,
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      vmDelay,
 		MinTimeout: vmMinTimeout,
 	}
@@ -456,7 +462,7 @@ func resourceNutanixProjectDelete(ctx context.Context, d *schema.ResourceData, m
 		Pending:    []string{"QUEUED", "RUNNING", "DELETED_PENDING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, cast.ToString(resp.Status.ExecutionContext.TaskUUID)),
-		Timeout:    subnetTimeout,
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      subnetDelay,
 		MinTimeout: subnetMinTimeout,
 	}
