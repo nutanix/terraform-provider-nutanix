@@ -1,16 +1,18 @@
 package nutanix
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func dataSourceNutanixAddressGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceNutanixAddressGroupRead,
+		ReadContext: dataSourceNutanixAddressGroupRead,
 		Schema: map[string]*schema.Schema{
 			"uuid": {
 				Type:     schema.TypeString,
@@ -48,7 +50,7 @@ func dataSourceNutanixAddressGroup() *schema.Resource {
 	}
 }
 
-func dataSourceNutanixAddressGroupRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceNutanixAddressGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).API
 
 	if uuid, uuidOk := d.GetOk("uuid"); uuidOk {
@@ -58,28 +60,28 @@ func dataSourceNutanixAddressGroupRead(d *schema.ResourceData, meta interface{})
 			if strings.Contains(fmt.Sprint(reqErr), "ENTITY_NOT_FOUND") {
 				d.SetId("")
 			}
-			return fmt.Errorf("error reading user with error %s", reqErr)
+			return diag.Errorf("error reading user with error %s", reqErr)
 		}
 
 		if err := d.Set("name", utils.StringValue(group.AddressGroup.Name)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("description", utils.StringValue(group.AddressGroup.Description)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("address_group_string", utils.StringValue(group.AddressGroup.AddressGroupString)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		if err := d.Set("ip_address_block_list", flattenAddressEntry(group.AddressGroup.BlockList)); err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		d.SetId(uuid.(string))
 	} else {
-		return fmt.Errorf("please provide `uuid`")
+		return diag.Errorf("please provide `uuid`")
 	}
 	return nil
 }
