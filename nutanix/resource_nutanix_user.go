@@ -35,6 +35,11 @@ func resourceNutanixUser() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Update: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Delete: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+		},
 		Schema: map[string]*schema.Schema{
 			"api_version": {
 				Type:     schema.TypeString,
@@ -209,11 +214,6 @@ func resourceNutanixUserCreate(ctx context.Context, d *schema.ResourceData, meta
 	log.Printf("[DEBUG] Creating User: %s", d.Get("name").(string))
 	client := meta.(*Client)
 	conn := client.API
-	timeout := client.WaitTimeout
-
-	if client.WaitTimeout == 0 {
-		timeout = 10
-	}
 
 	request := &v3.UserIntentInput{}
 
@@ -250,7 +250,7 @@ func resourceNutanixUserCreate(ctx context.Context, d *schema.ResourceData, meta
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    time.Duration(timeout) * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      userDelay,
 		MinTimeout: userMinTimeout,
 	}
@@ -336,11 +336,6 @@ func resourceNutanixUserRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceNutanixUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*Client)
 	conn := client.API
-	timeout := client.WaitTimeout
-
-	if client.WaitTimeout == 0 {
-		timeout = 10
-	}
 
 	// get state
 	request := &v3.UserIntentInput{}
@@ -407,7 +402,7 @@ func resourceNutanixUserUpdate(ctx context.Context, d *schema.ResourceData, meta
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    time.Duration(timeout) * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      userDelay,
 		MinTimeout: userMinTimeout,
 	}
@@ -430,11 +425,6 @@ func resourceNutanixUserDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	client := meta.(*Client)
 	conn := client.API
-	timeout := client.WaitTimeout
-
-	if client.WaitTimeout == 0 {
-		timeout = 10
-	}
 
 	UUID := d.Id()
 
@@ -453,7 +443,7 @@ func resourceNutanixUserDelete(ctx context.Context, d *schema.ResourceData, meta
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    time.Duration(timeout) * time.Minute,
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      userDelay,
 		MinTimeout: userMinTimeout,
 	}
