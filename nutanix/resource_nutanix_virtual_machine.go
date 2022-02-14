@@ -39,6 +39,11 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Update: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Delete: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+		},
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
@@ -676,7 +681,7 @@ func resourceNutanixVirtualMachineCreate(ctx context.Context, d *schema.Resource
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    vmTimeout,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      vmDelay,
 		MinTimeout: vmMinTimeout,
 	}
@@ -1188,7 +1193,7 @@ func resourceNutanixVirtualMachineUpdate(ctx context.Context, d *schema.Resource
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, resp.Status.ExecutionContext.TaskUUID.(string)),
-		Timeout:    vmTimeout,
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      vmDelay,
 		MinTimeout: vmMinTimeout,
 	}
@@ -1387,7 +1392,7 @@ func resourceNutanixVirtualMachineDelete(ctx context.Context, d *schema.Resource
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, resp.Status.ExecutionContext.TaskUUID.(string)),
-		Timeout:    vmTimeout,
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      vmDelay,
 		MinTimeout: vmMinTimeout,
 	}
