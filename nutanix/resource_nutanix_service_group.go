@@ -1,25 +1,27 @@
 package nutanix
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func resourceNutanixServiceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceNutanixServiceGroupCreate,
-		Read:   resourceNutanixServiceGroupRead,
-		Delete: resourceNutanixServiceGroupDelete,
-		Update: resourceNutanixServiceGroupUpdate,
+		CreateContext: resourceNutanixServiceGroupCreate,
+		ReadContext:   resourceNutanixServiceGroupRead,
+		DeleteContext: resourceNutanixServiceGroupDelete,
+		UpdateContext: resourceNutanixServiceGroupUpdate,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"system_defined": {
@@ -112,7 +114,7 @@ func IsValidProtocol(category string) bool {
 	return false
 }
 
-func resourceNutanixServiceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixServiceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).API
 	id := d.Id()
 	response, err := conn.V3.GetServiceGroup(id)
@@ -123,7 +125,7 @@ func resourceNutanixServiceGroupUpdate(d *schema.ResourceData, meta interface{})
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
 		}
-		return fmt.Errorf("error retrieving for access control policy id (%s) :%+v", id, err)
+		return diag.Errorf("error retrieving for access control policy id (%s) :%+v", id, err)
 	}
 
 	group := response.ServiceGroup
@@ -144,7 +146,7 @@ func resourceNutanixServiceGroupUpdate(d *schema.ResourceData, meta interface{})
 		serviceList, err := expandServiceEntry(d)
 
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		group.ServiceList = serviceList
@@ -157,10 +159,10 @@ func resourceNutanixServiceGroupUpdate(d *schema.ResourceData, meta interface{})
 
 	errUpdate := conn.V3.UpdateServiceGroup(d.Id(), request)
 	if errUpdate != nil {
-		return fmt.Errorf("error updating service group id %s): %s", d.Id(), errUpdate)
+		return diag.Errorf("error updating service group id %s): %s", d.Id(), errUpdate)
 	}
 
-	return resourceNutanixServiceGroupRead(d, meta)
+	return resourceNutanixServiceGroupRead(ctx, d, meta)
 }
 
 func flattenServiceEntry(group *v3.ServiceGroupInput) []map[string]interface{} {
@@ -211,7 +213,7 @@ func flattenServiceEntry(group *v3.ServiceGroupInput) []map[string]interface{} {
 	return groupList
 }
 
-func resourceNutanixServiceGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixServiceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] Reading ServiceGroup: %s", d.Get("name").(string))
 
 	// Get client connection
@@ -225,17 +227,17 @@ func resourceNutanixServiceGroupRead(d *schema.ResourceData, meta interface{}) e
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("service_list", flattenServiceEntry(resp.ServiceGroup)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("name", utils.StringValue(resp.ServiceGroup.Name))
 	d.Set("description", utils.StringValue(resp.ServiceGroup.Description))
 
-	return d.Set("system_defined", utils.BoolValue(resp.ServiceGroup.SystemDefined))
+	return diag.FromErr(d.Set("system_defined", utils.BoolValue(resp.ServiceGroup.SystemDefined)))
 }
 
 func expandServiceEntry(d *schema.ResourceData) ([]*v3.ServiceListEntry, error) {
@@ -275,7 +277,7 @@ func expandServiceEntry(d *schema.ResourceData) ([]*v3.ServiceListEntry, error) 
 	return nil, nil
 }
 
-func resourceNutanixServiceGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixServiceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).API
 
 	request := &v3.ServiceGroupInput{}
@@ -290,7 +292,7 @@ func resourceNutanixServiceGroupCreate(d *schema.ResourceData, meta interface{})
 
 	// validate required fields
 	if !nameOK {
-		return fmt.Errorf("please provide the required attribute name")
+		return diag.Errorf("please provide the required attribute name")
 	}
 
 	request.Name = utils.StringPtr(name.(string))
@@ -298,7 +300,7 @@ func resourceNutanixServiceGroupCreate(d *schema.ResourceData, meta interface{})
 	serviceList, err := expandServiceEntry(d)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	request.ServiceList = serviceList
@@ -306,7 +308,7 @@ func resourceNutanixServiceGroupCreate(d *schema.ResourceData, meta interface{})
 	requestEnc, err := json.Marshal(request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	log.Printf("[DEBUG] %s", requestEnc)
@@ -314,7 +316,7 @@ func resourceNutanixServiceGroupCreate(d *schema.ResourceData, meta interface{})
 	resp, err := conn.V3.CreateServiceGroup(request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	n := *resp.UUID
@@ -322,16 +324,16 @@ func resourceNutanixServiceGroupCreate(d *schema.ResourceData, meta interface{})
 	// set terraform state
 	d.SetId(n)
 
-	return resourceNutanixServiceGroupRead(d, meta)
+	return resourceNutanixServiceGroupRead(ctx, d, meta)
 }
 
-func resourceNutanixServiceGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixServiceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).API
 
 	log.Printf("[Debug] Destroying the service group with the ID %s", d.Id())
 
 	if err := conn.V3.DeleteServiceGroup(d.Id()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
