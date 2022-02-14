@@ -3,12 +3,11 @@ package nutanix
 import (
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // Provider function returns the object that implements the terraform.ResourceProvider interface, specifically a schema.Provider
-func Provider() terraform.ResourceProvider {
+func Provider() *schema.Provider {
 	// defines descriptions for ResourceProvider schema definitions
 	descriptions := map[string]string{
 		"username": "User name for Nutanix Prism. Could be\n" +
