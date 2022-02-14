@@ -1,21 +1,23 @@
 package nutanix
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func dataSourceNutanixAddressGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceNutanixAddressGroupsRead,
+		ReadContext: dataSourceNutanixAddressGroupsRead,
 		Schema: map[string]*schema.Schema{
 			"metadata": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"filter": {
@@ -59,7 +61,6 @@ func dataSourceNutanixAddressGroups() *schema.Resource {
 						"address_group": {
 							Type:     schema.TypeList,
 							Computed: true,
-							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
@@ -120,7 +121,7 @@ func dataSourceNutanixAddressGroups() *schema.Resource {
 	}
 }
 
-func dataSourceNutanixAddressGroupsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceNutanixAddressGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Get client connection
 	conn := meta.(*Client).API
 	req := &v3.DSMetadata{}
@@ -132,11 +133,11 @@ func dataSourceNutanixAddressGroupsRead(d *schema.ResourceData, meta interface{}
 
 	resp, err := conn.V3.ListAllAddressGroups(utils.StringValue(req.Filter))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("entities", flattenAddressGroup(resp.Entities)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(resource.UniqueId())

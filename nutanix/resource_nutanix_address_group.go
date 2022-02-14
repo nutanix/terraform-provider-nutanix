@@ -1,23 +1,25 @@
 package nutanix
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func resourceNutanixAddressGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceNutanixAddressGroupCreate,
-		Read:   resourceNutanixAddressGroupRead,
-		Delete: resourceNutanixAddressGroupDelete,
-		Update: resourceNutanixAddressGroupUpdate,
+		CreateContext: resourceNutanixAddressGroupCreate,
+		ReadContext:   resourceNutanixAddressGroupRead,
+		DeleteContext: resourceNutanixAddressGroupDelete,
+		UpdateContext: resourceNutanixAddressGroupUpdate,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -52,7 +54,7 @@ func resourceNutanixAddressGroup() *schema.Resource {
 	}
 }
 
-func resourceNutanixAddressGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixAddressGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).API
 	id := d.Id()
 	response, err := conn.V3.GetAddressGroup(id)
@@ -63,7 +65,7 @@ func resourceNutanixAddressGroupUpdate(d *schema.ResourceData, meta interface{})
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
 		}
-		return fmt.Errorf("error retrieving for address group id (%s) :%+v", id, err)
+		return diag.Errorf("error retrieving for address group id (%s) :%+v", id, err)
 	}
 
 	group := response.AddressGroup
@@ -80,7 +82,7 @@ func resourceNutanixAddressGroupUpdate(d *schema.ResourceData, meta interface{})
 		blockList, err := expandAddressEntry(d)
 
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		group.BlockList = blockList
@@ -92,26 +94,26 @@ func resourceNutanixAddressGroupUpdate(d *schema.ResourceData, meta interface{})
 
 	errUpdate := conn.V3.UpdateAddressGroup(d.Id(), request)
 	if errUpdate != nil {
-		return fmt.Errorf("error updating address group id %s): %s", d.Id(), errUpdate)
+		return diag.Errorf("error updating address group id %s): %s", d.Id(), errUpdate)
 	}
 
-	return resourceNutanixAddressGroupRead(d, meta)
+	return resourceNutanixAddressGroupRead(ctx, d, meta)
 }
 
-func resourceNutanixAddressGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixAddressGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).API
 
 	log.Printf("[Debug] Destroying the address group with the ID %s", d.Id())
 
 	if err := conn.V3.DeleteAddressGroup(d.Id()); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId("")
 	return nil
 }
 
-func resourceNutanixAddressGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixAddressGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] Reading AddressGroup: %s", d.Get("name").(string))
 
 	// Get client connection
@@ -125,16 +127,16 @@ func resourceNutanixAddressGroupRead(d *schema.ResourceData, meta interface{}) e
 			d.SetId("")
 			return nil
 		}
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("ip_address_block_list", flattenAddressEntry(resp.AddressGroup.BlockList)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("name", utils.StringValue(resp.AddressGroup.Name))
 
-	return d.Set("description", utils.StringValue(resp.AddressGroup.Description))
+	return diag.FromErr(d.Set("description", utils.StringValue(resp.AddressGroup.Description)))
 }
 
 func flattenAddressEntry(group []*v3.IPAddressBlock) []map[string]interface{} {
@@ -149,7 +151,7 @@ func flattenAddressEntry(group []*v3.IPAddressBlock) []map[string]interface{} {
 	return groupList
 }
 
-func resourceNutanixAddressGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixAddressGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).API
 
 	request := &v3.AddressGroupInput{}
@@ -167,7 +169,7 @@ func resourceNutanixAddressGroupCreate(d *schema.ResourceData, meta interface{})
 	addressList, err := expandAddressEntry(d)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	request.BlockList = addressList
@@ -175,7 +177,7 @@ func resourceNutanixAddressGroupCreate(d *schema.ResourceData, meta interface{})
 	resp, err := conn.V3.CreateAddressGroup(request)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	n := *resp.UUID
@@ -183,7 +185,7 @@ func resourceNutanixAddressGroupCreate(d *schema.ResourceData, meta interface{})
 	// set terraform state
 	d.SetId(n)
 
-	return resourceNutanixAddressGroupRead(d, meta)
+	return resourceNutanixAddressGroupRead(ctx, d, meta)
 }
 
 func expandAddressEntry(d *schema.ResourceData) ([]*v3.IPAddressBlock, error) {
