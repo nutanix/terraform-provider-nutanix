@@ -17,7 +17,6 @@ import (
 )
 
 var (
-	subnetTimeout    = 10 * time.Minute
 	subnetDelay      = 10 * time.Second
 	subnetMinTimeout = 3 * time.Second
 )
@@ -38,6 +37,11 @@ func resourceNutanixSubnet() *schema.Resource {
 				Upgrade: resourceSubnetInstanceStateUpgradeV0,
 				Version: 0,
 			},
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Update: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Delete: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
 			"api_version": {
@@ -240,7 +244,7 @@ func resourceNutanixSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    subnetTimeout,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      subnetDelay,
 		MinTimeout: subnetMinTimeout,
 	}
@@ -531,7 +535,7 @@ func resourceNutanixSubnetUpdate(ctx context.Context, d *schema.ResourceData, me
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    subnetTimeout,
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      subnetDelay,
 		MinTimeout: subnetMinTimeout,
 	}
@@ -562,7 +566,7 @@ func resourceNutanixSubnetDelete(ctx context.Context, d *schema.ResourceData, me
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    subnetTimeout,
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      subnetDelay,
 		MinTimeout: subnetMinTimeout,
 	}

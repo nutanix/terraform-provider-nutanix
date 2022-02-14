@@ -18,7 +18,6 @@ import (
 )
 
 var (
-	netTimeout    = 10 * time.Minute
 	netDelay      = 10 * time.Second
 	netMinTimeout = 3 * time.Second
 )
@@ -31,6 +30,11 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 		DeleteContext: resourceNutanixNetworkSecurityRuleDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Update: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Delete: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
 		},
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
@@ -683,7 +687,7 @@ func resourceNutanixNetworkSecurityRuleCreate(ctx context.Context, d *schema.Res
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    netTimeout,
+		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      netDelay,
 		MinTimeout: netMinTimeout,
 	}
@@ -957,7 +961,7 @@ func resourceNutanixNetworkSecurityRuleUpdate(ctx context.Context, d *schema.Res
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    netTimeout,
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
 		Delay:      netDelay,
 		MinTimeout: netMinTimeout,
 	}
@@ -988,7 +992,7 @@ func resourceNutanixNetworkSecurityRuleDelete(ctx context.Context, d *schema.Res
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
-		Timeout:    netTimeout,
+		Timeout:    d.Timeout(schema.TimeoutDelete),
 		Delay:      netDelay,
 		MinTimeout: netMinTimeout,
 	}
@@ -1508,6 +1512,11 @@ func resourceSecurityRuleInstanceStateUpgradeV0(ctx context.Context, is map[stri
 
 func resourceNutanixSecurityRuleInstanceResourceV0() *schema.Resource {
 	return &schema.Resource{
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Update: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Delete: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+		},
 		Schema: map[string]*schema.Schema{
 			"api_version": {
 				Type:     schema.TypeString,

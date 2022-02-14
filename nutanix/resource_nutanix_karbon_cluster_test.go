@@ -50,7 +50,7 @@ func TestAccNutanixKarbonCluster_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"version", "master_node_pool", "worker_node_pool", "storage_class_config", "wait_timeout_minutes"}, //Wil be fixed on future API versions
+				ImportStateVerifyIgnore: []string{"version", "master_node_pool", "worker_node_pool", "storage_class_config"}, //Wil be fixed on future API versions
 			},
 		},
 	})
@@ -95,7 +95,7 @@ func TestAccNutanixKarbonCluster_scaleDown(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"version", "master_node_pool", "worker_node_pool", "storage_class_config", "wait_timeout_minutes"}, //Wil be fixed on future API versions
+				ImportStateVerifyIgnore: []string{"version", "master_node_pool", "worker_node_pool", "storage_class_config"}, //Wil be fixed on future API versions
 			},
 		},
 	})
@@ -140,7 +140,7 @@ func TestAccNutanixKarbonCluster_updateCNI(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"version", "master_node_pool", "worker_node_pool", "storage_class_config", "wait_timeout_minutes"}, //Wil be fixed on future API versions
+				ImportStateVerifyIgnore: []string{"version", "master_node_pool", "worker_node_pool", "storage_class_config"}, //Wil be fixed on future API versions
 			},
 		},
 	})
@@ -196,9 +196,9 @@ func testAccNutanixKarbonClusterConfig(subnetName string, r int, containter stri
 		cni               = "%s"
 		master_vip        = ""
 	}
-	  
+
 	data "nutanix_clusters" "clusters" {}
-	  
+
 	data "nutanix_subnet" "karbon_subnet" {
 		subnet_name = "%s"
 	}
@@ -206,7 +206,7 @@ func testAccNutanixKarbonClusterConfig(subnetName string, r int, containter stri
 	resource "nutanix_karbon_cluster" "cluster" {
 		name    = "test-karbon-%d"
 		version = "1.16.13-0"
-	  
+
 		dynamic "active_passive_config" {
 		  for_each = local.deployment_type == "active-passive" ? [1] : []
 		  content {
@@ -227,7 +227,7 @@ func testAccNutanixKarbonClusterConfig(subnetName string, r int, containter stri
 			}
 		  }
 		}
-	  
+
 		storage_class_config {
 		  reclaim_policy = "Delete"
 		  volumes_config {
