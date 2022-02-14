@@ -20,17 +20,17 @@
         {
             "principal_name": "user4@qa.nucalm.io",
             "expected_display_name": "user4",
-            "directory_service_uuid": "cdf9f238-28b6-5030-8596-24ade3c04975"
+            "directory_service_uuid": "62dd5132-b5e4-45d4-ae00-a3219ddce787"
         },
         {
-            "principal_name": "user3@qa.nucalm.io",
-            "expected_display_name": "user3",
-            "directory_service_uuid": "56fcc8f3-1d86-500b-b097-f02419a5403c"
+            "principal_name": "user6@qa.nucalm.io",
+            "expected_display_name": "user6",
+            "directory_service_uuid": "62dd5132-b5e4-45d4-ae00-a3219ddce787"
         },
         {
             "principal_name": "ssptest3@qa.nucalm.io",
             "expected_display_name": "ssptest3",
-            "directory_service_uuid": "b765c6cc-87bd-5725-9cbe-f72bd9899cd9"
+            "directory_service_uuid": "62dd5132-b5e4-45d4-ae00-a3219ddce787"
         }
     ],
     "node_os_version": "ntnx-1.0",
