@@ -122,6 +122,8 @@ func dataSourceNutanixNetworkSecurityRule() *schema.Resource {
 								},
 							},
 						},
+						"service_group_list":           referenceListSchema(),
+						"address_group_inclusion_list": referenceListSchema(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -529,6 +531,8 @@ func dataSourceNutanixNetworkSecurityRule() *schema.Resource {
 								},
 							},
 						},
+						"service_group_list":           referenceListSchema(),
+						"address_group_inclusion_list": referenceListSchema(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -703,6 +707,8 @@ func dataSourceNutanixNetworkSecurityRule() *schema.Resource {
 								},
 							},
 						},
+						"service_group_list":           referenceListSchema(),
+						"address_group_inclusion_list": referenceListSchema(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -849,6 +855,8 @@ func dataSourceNutanixNetworkSecurityRule() *schema.Resource {
 								},
 							},
 						},
+						"service_group_list":           referenceListSchema(),
+						"address_group_inclusion_list": referenceListSchema(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -1016,6 +1024,14 @@ func dataSourceNutanixNetworkSecurityRuleRead(ctx context.Context, d *schema.Res
 					qroaItem["udp_port_range_list"] = udpprList
 				}
 
+				if v.AddressGroupInclusionList != nil {
+					qroaItem["address_group_inclusion_list"] = flattenReferencesList(v.AddressGroupInclusionList)
+				}
+
+				if v.ServiceGroupList != nil {
+					qroaItem["service_group_list"] = flattenReferencesList(v.ServiceGroupList)
+				}
+
 				if v.Filter != nil {
 					qroaItem["filter_kind_list"] = utils.StringValueSlice(v.Filter.KindList)
 					qroaItem["filter_type"] = utils.StringValue(v.Filter.Type)
@@ -1116,6 +1132,14 @@ func dataSourceNutanixNetworkSecurityRuleRead(ctx context.Context, d *schema.Res
 						udpprList[i] = udpItem
 					}
 					qriaItem["udp_port_range_list"] = udpprList
+				}
+
+				if v.AddressGroupInclusionList != nil {
+					qriaItem["address_group_inclusion_list"] = flattenReferencesList(v.AddressGroupInclusionList)
+				}
+
+				if v.ServiceGroupList != nil {
+					qriaItem["service_group_list"] = flattenReferencesList(v.ServiceGroupList)
 				}
 
 				if v.Filter != nil {
@@ -1351,6 +1375,8 @@ func resourceNutanixDatasourceNetworkSecurityRuleResourceV0() *schema.Resource {
 								},
 							},
 						},
+						"service_group_list":           referenceListSchema(),
+						"address_group_inclusion_list": referenceListSchema(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -1497,6 +1523,8 @@ func resourceNutanixDatasourceNetworkSecurityRuleResourceV0() *schema.Resource {
 								},
 							},
 						},
+						"service_group_list":           referenceListSchema(),
+						"address_group_inclusion_list": referenceListSchema(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -1612,6 +1640,8 @@ func resourceNutanixDatasourceNetworkSecurityRuleResourceV0() *schema.Resource {
 								},
 							},
 						},
+						"service_group_list":           referenceListSchema(),
+						"address_group_inclusion_list": referenceListSchema(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -1758,6 +1788,8 @@ func resourceNutanixDatasourceNetworkSecurityRuleResourceV0() *schema.Resource {
 								},
 							},
 						},
+						"service_group_list":           referenceListSchema(),
+						"address_group_inclusion_list": referenceListSchema(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Computed: true,
