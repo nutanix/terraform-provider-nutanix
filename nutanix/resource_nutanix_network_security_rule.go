@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/cast"
+
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
@@ -164,8 +166,10 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"tcp_port_range_list": portRangeSchema(),
-						"udp_port_range_list": portRangeSchema(),
+						"tcp_port_range_list":          portRangeSchema(),
+						"udp_port_range_list":          portRangeSchema(),
+						"service_group_list":           referenceListSchema(),
+						"address_group_inclusion_list": referenceListSchema(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -310,8 +314,10 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"tcp_port_range_list": portRangeSchema(),
-						"udp_port_range_list": portRangeSchema(),
+						"tcp_port_range_list":          portRangeSchema(),
+						"udp_port_range_list":          portRangeSchema(),
+						"service_group_list":           referenceListSchema(),
+						"address_group_inclusion_list": referenceListSchema(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -488,8 +494,10 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"tcp_port_range_list": portRangeSchema(),
-						"udp_port_range_list": portRangeSchema(),
+						"tcp_port_range_list":          portRangeSchema(),
+						"udp_port_range_list":          portRangeSchema(),
+						"service_group_list":           referenceListSchema(),
+						"address_group_inclusion_list": referenceListSchema(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -634,8 +642,10 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"tcp_port_range_list": portRangeSchema(),
-						"udp_port_range_list": portRangeSchema(),
+						"tcp_port_range_list":          portRangeSchema(),
+						"udp_port_range_list":          portRangeSchema(),
+						"service_group_list":           referenceListSchema(),
+						"address_group_inclusion_list": referenceListSchema(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -1256,6 +1266,14 @@ func expandNetworkRule(prefix string, d *schema.ResourceData) *v3.NetworkSecurit
 				nrItem.UDPPortRangeList = expandPortRangeList(u)
 			}
 
+			if a, agok := nr["address_group_inclusion_list"]; agok {
+				nrItem.AddressGroupInclusionList = expandReferencesList(a)
+			}
+
+			if s, sgok := nr["service_group_list"]; sgok {
+				nrItem.ServiceGroupList = expandReferencesList(s)
+			}
+
 			if f, fok := nr["filter_kind_list"]; fok && len(f.([]interface{})) > 0 {
 				filter.KindList = expandStringList(f.([]interface{}))
 			}
@@ -1386,6 +1404,14 @@ func expandNetworkRule(prefix string, d *schema.ResourceData) *v3.NetworkSecurit
 				nrItem.UDPPortRangeList = expandPortRangeList(u)
 			}
 
+			if a, agok := nr["address_group_inclusion_list"]; agok {
+				nrItem.AddressGroupInclusionList = expandReferencesList(a)
+			}
+
+			if s, sgok := nr["service_group_list"]; sgok {
+				nrItem.ServiceGroupList = expandReferencesList(s)
+			}
+
 			if f, fok := nr["filter_kind_list"]; fok && len(f.([]interface{})) > 0 {
 				filter.KindList = expandStringList(f.([]interface{}))
 			}
@@ -1455,6 +1481,26 @@ func expandNetworkRule(prefix string, d *schema.ResourceData) *v3.NetworkSecurit
 	return appRule
 }
 
+func expandReferencePtr(reference map[string]interface{}) *v3.Reference {
+	return &v3.Reference{
+		Kind: utils.StringPtr(cast.ToString(reference["kind"])),
+		Name: utils.StringPtr(cast.ToString(reference["name"])),
+		UUID: utils.StringPtr(cast.ToString(reference["uuid"])),
+	}
+}
+
+func expandReferencesList(rl interface{}) []*v3.Reference {
+	refList := rl.([]interface{})
+	refs := make([]*v3.Reference, len(refList))
+
+	for i, r := range refList {
+		reff := r.(map[string]interface{})
+		refs[i] = expandReferencePtr(reff)
+	}
+
+	return refs
+}
+
 func expandFilterParams(fp map[string][]string) []map[string]interface{} {
 	fpList := make([]map[string]interface{}, 0)
 	if len(fp) > 0 {
@@ -1516,6 +1562,20 @@ func filterParamsHash(v interface{}) int {
 	return hashcode.String(params["name"].(string))
 }
 
+func flattenReferencesList(refs []*v3.Reference) []map[string]interface{} {
+	refList := make([]map[string]interface{}, len(refs))
+
+	for i, r := range refs {
+		refItem := make(map[string]interface{})
+		refItem["kind"] = utils.StringValue(r.Kind)
+		refItem["name"] = utils.StringValue(r.Name)
+		refItem["uuid"] = utils.StringValue(r.UUID)
+		refList[i] = refItem
+	}
+
+	return refList
+}
+
 func flattenNetworkRuleList(networkRules []*v3.NetworkRule) []map[string]interface{} {
 	ruleList := make([]map[string]interface{}, 0)
 	for _, v := range networkRules {
@@ -1551,6 +1611,14 @@ func flattenNetworkRuleList(networkRules []*v3.NetworkRule) []map[string]interfa
 			ruleItem["udp_port_range_list"] = udpprList
 		}
 
+		if v.AddressGroupInclusionList != nil {
+			ruleItem["address_group_inclusion_list"] = flattenReferencesList(v.AddressGroupInclusionList)
+		}
+
+		if v.ServiceGroupList != nil {
+			ruleItem["service_group_list"] = flattenReferencesList(v.ServiceGroupList)
+		}
+
 		if v.Filter != nil {
 			ruleItem["filter_kind_list"] = utils.StringValueSlice(v.Filter.KindList)
 			ruleItem["filter_type"] = utils.StringValue(v.Filter.Type)
@@ -1583,6 +1651,30 @@ func flattenNetworkRuleList(networkRules []*v3.NetworkRule) []map[string]interfa
 		ruleList = append(ruleList, ruleItem)
 	}
 	return ruleList
+}
+
+func referenceListSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"kind": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"uuid": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
+	}
 }
 
 func portRangeSchema() *schema.Schema {
@@ -1733,8 +1825,10 @@ func resourceNutanixSecurityRuleInstanceResourceV0() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"tcp_port_range_list": portRangeSchema(),
-						"udp_port_range_list": portRangeSchema(),
+						"tcp_port_range_list":          portRangeSchema(),
+						"udp_port_range_list":          portRangeSchema(),
+						"service_group_list":           referenceListSchema(),
+						"address_group_inclusion_list": referenceListSchema(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -1879,8 +1973,10 @@ func resourceNutanixSecurityRuleInstanceResourceV0() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"tcp_port_range_list": portRangeSchema(),
-						"udp_port_range_list": portRangeSchema(),
+						"tcp_port_range_list":          portRangeSchema(),
+						"udp_port_range_list":          portRangeSchema(),
+						"service_group_list":           referenceListSchema(),
+						"address_group_inclusion_list": referenceListSchema(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Optional: true,
