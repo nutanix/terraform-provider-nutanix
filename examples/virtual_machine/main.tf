@@ -12,8 +12,6 @@
 #     - nutanix_image
 # - data sources
 #     - nutanix_clusters
-#     -
-#     -
 # - script Variables
 #     - clusterid's for targeting clusters within prism central
 #
@@ -27,13 +25,21 @@
 ###   While it may be possible to use Prism Element directly, Nutanix's
 ###   provider is not structured or tested for this. Using Prism Central will
 ###   give the broadest capabilities across the board
-/*  provider "nutanix" {
+terraform{
+  required_providers{
+    nutanix = {
+      source = "nutanix/nutanix"
+      version = "1.3.0"
+    }
+  }
+}
+provider "nutanix" {
   username  = "admin"
-  password  = "Nutanix/1234"
-  endpoint  = "10.5.80.255"
+  password  = "Nutanix/123456"
+  endpoint  = "10.xx.xx.xx"
   insecure  = true
   port      = 9440
-}  */
+}
 
 data "nutanix_clusters" "clusters" {
 }
@@ -54,31 +60,35 @@ locals {
 ### plain text name
 ### This is useful when managing a nutanix prism central instance from multiple
 ### state files, or deploying terraform into an existing / brownfield environment
+
 ### Virtual Machine Data Sources
 # data "nutanix_virtual_machine" "nutanix_virtual_machine" {
 #   vm_id = nutanix_virtual_machine.vm1.id
 # }
+
 ### Image Data Sources
 # data "nutanix_image" "test" {
-#     metadata = {
-#         kind = "image"
-#     }
-#     image_id = nutanix_image.test.id
+#     image_id = "<image_uuid>"
 # }
+
 ### Subnet Data Sources
-# data "nutanix_subnet" "next-iac-managed" {
-#     metadata = {
-#         kind = "subnet"
-#     }
-#    image_id = nutanix_subnet.next-iac-managed.id
+# data "nutanix_subnet" "next-iac-managed_1" {
+#    subnet_id = "<subnet_uuid>"
 #}
+
+# data "nutanix_subnet" "next-iac-managed_2" {
+#    subnet_name = "<subnet_name>"
+#}
+
 ### Cluster Data Sources
-#data "nutanix_image" "test" {
-#    metadata = {
-#        kind = "image"
-#    }
-#    image_id = nutanix_image.test.id
-#}
+# data "nutanix_cluster" "cluster1" {
+# 	cluster_id = "<cluster_id>"
+# }
+
+# data "nutanix_cluster" "cluster2" {
+# 	name = "<cluster_name>"
+# }`
+
 ##########################
 ### Resources
 ##########################
@@ -157,24 +167,24 @@ resource "nutanix_subnet" "infra-managed-network-140" {
 
   # Provision a Managed L3 Network
   # This bit is only needed if you intend to turn on AHV's IPAM
-  subnet_ip = "172.21.32.0"
+  subnet_ip = "10.xx.xx.xx"
 
-  default_gateway_ip = "172.21.32.1"
+  default_gateway_ip = "10.xx.xx.xx"
   prefix_length      = 24
 
   dhcp_options = {
     boot_file_name   = "bootfile"
-    domain_name      = "ntnxlab"
-    tftp_server_name = "172.21.32.200"
+    domain_name      = "lab"
+    tftp_server_name = "10.xx.xx.xx"
   }
 
   dhcp_server_address = {
-    ip = "172.21.32.254"
+    ip = "10.xx.xx.xx"
   }
 
-  dhcp_domain_name_server_list = ["172.21.30.223"]
+  dhcp_domain_name_server_list = ["10.xx.xx.xx"]
   dhcp_domain_search_list      = ["ntnxlab.local"]
-  #ip_config_pool_list_ranges   = ["172.21.32.3 172.21.32.253"] 
+  #ip_config_pool_list_ranges   = ["10.xx.xx.xx 10.xx.xx.xx"] 
 }
 
 ### Virtual Machine Resources
@@ -195,9 +205,6 @@ resource "nutanix_virtual_machine" "demo-01-web" {
   num_sockets          = 1
   memory_size_mib      = 4096
 
-  #enable vcpu hard pinning (optional)
-  #is_vcpu_hard_pinned = true
-
   # What cluster will this VLAN live on?
   cluster_uuid = local.cluster1
 
@@ -207,7 +214,7 @@ resource "nutanix_virtual_machine" "demo-01-web" {
     subnet_uuid = nutanix_subnet.infra-managed-network-140.id
     # Used to set static IP.
     # ip_endpoint_list {
-    #   ip   = "172.21.32.20"
+    #   ip   = "10.xx.xx.xx"
     #   type = "ASSIGNED"
     # }
   }
@@ -246,7 +253,7 @@ resource "nutanix_virtual_machine" "demo-01-web" {
   #   connection {
   #     user     = "cirros"    # user from the image attached
   #     password = "cubswin:)" #password from the user 
-  #     host    = "172.21.32.20" #host is now a required value for connection, you can use `self.nic_list_status[0].ip_endpoint_list[0].ip` to set the IP or if you know the IP you could set manually.
+  #     host    = "10.xx.xx.xx" #host is now a required value for connection, you can use `self.nic_list_status[0].ip_endpoint_list[0].ip` to set the IP or if you know the IP you could set manually.
   #   }
 
   #   inline = [
@@ -257,6 +264,7 @@ resource "nutanix_virtual_machine" "demo-01-web" {
 
 # Show IP address
 output "ip_address" {
-  value = nutanix_virtual_machine.demo-01-web.nic_list_status.0.ip_endpoint_list[0]["ip"]
+  value = nutanix_virtual_machine.demo-01-web.nic_list_status[0].ip_endpoint_list[0].ip
 }
+
 
