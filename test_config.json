@@ -4,33 +4,33 @@
     "user_group_with_distinguished_name": {
         "distinguished_name": "cn=sspadmins,cn=users,dc=qa,dc=nucalm,dc=io",
         "display_name": "sspadmins",
-        "uuid": "de322512-490a-425f-a741-199ba4ef6b0a"
+        "uuid": "4e34dc16-79f4-44a4-9b81-08ff58f2f261"
     },
     "permissions": [
         {
             "name": "",
-            "uuid": "0119111c-76c2-46a0-b77b-b9ea2629c92b"
+            "uuid": "2d9c8063-8ab0-481e-b505-4c4ee0644ba5"
         },
         {
             "name": "Delete_ACP",
-            "uuid": "981b0854-ed5d-48a5-847a-2a16aea27c52"
+            "uuid": "8b0b4d1a-d2ac-4ccd-a618-95378fc8d559"
         }
     ],
     "users": [
         {
             "principal_name": "user4@qa.nucalm.io",
             "expected_display_name": "user4",
-            "directory_service_uuid": "e44c9416-256b-4c60-88c1-5ab739c909e6"
+            "directory_service_uuid": "bdf0bafb-bbd7-4a1b-ba14-94a990607506"
         },
         {
             "principal_name": "user6@qa.nucalm.io",
             "expected_display_name": "user6",
-            "directory_service_uuid": "e44c9416-256b-4c60-88c1-5ab739c909e6"
+            "directory_service_uuid": "bdf0bafb-bbd7-4a1b-ba14-94a990607506"
         },
         {
             "principal_name": "ssptest3@qa.nucalm.io",
             "expected_display_name": "ssptest3",
-            "directory_service_uuid": "e44c9416-256b-4c60-88c1-5ab739c909e6"
+            "directory_service_uuid": "bdf0bafb-bbd7-4a1b-ba14-94a990607506"
         }
     ],
     "node_os_version": "ntnx-1.0",
