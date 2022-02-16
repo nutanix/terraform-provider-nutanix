@@ -22,7 +22,7 @@ For a slack invite, please contact terraform@nutanix.com from your business emai
 
 ### Provider Development
 * [Terraform](https://www.terraform.io/downloads.html) 0.12+
-* [Go](https://golang.org/doc/install) 1.12+ (to build the provider plugin)
+* [Go](https://golang.org/doc/install) 1.17+ (to build the provider plugin)
 * This provider uses [SDKv2](https://www.terraform.io/plugin/sdkv2/sdkv2-intro) from release 1.3.0
 
 ### Provider Use
@@ -30,7 +30,9 @@ For a slack invite, please contact terraform@nutanix.com from your business emai
 The Terraform Nutanix provider is designed to work with Nutanix Prism Central, such that you can manage one or more Prism Element clusters at scale. AOS/PC 5.6.0 or higher is required, as this Provider makes exclusive use of the v3 APIs
 
 > For the 1.2.0 release of the provider it will have an N-1 compatibility with the Prism Central APIs. This provider was tested against Prism Central versions 2020.9 and 2020.11, as well as AOS version 5.18 and 5.19
-> For the 1.3.0 release of the provider it will have N-2 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc.2021.9.0.4, pc.2021.8.0.1	and pc.2021.7.
+
+
+> For the 1.3.0 release of the provider it will have N-2 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc.2021.9.0.4, pc.2021.8.0.1 and pc.2021.7.
 
 ## Example Usage
 

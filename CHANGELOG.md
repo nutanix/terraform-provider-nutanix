@@ -20,7 +20,6 @@
 
 **Closed issues:**
 
-- Allow usage of service and address groups in network_security_rules [\#170](https://github.com/nutanix/terraform-provider-nutanix/issues/170)
 - Implement Timeout blocks on resource level [\#254](https://github.com/nutanix/terraform-provider-nutanix/issues/254)
 - Upgrade Terraform provider to the latest SDK [\#287](https://github.com/nutanix/terraform-provider-nutanix/issues/287)
 - Allow Subnet Datasources to filter based on PE ID [\#308](https://github.com/nutanix/terraform-provider-nutanix/issues/308)
@@ -29,6 +28,7 @@
 - Develop integration tests with code coverage. [\#316](https://github.com/nutanix/terraform-provider-nutanix/issues/316)
 - Provider plugin crashes when nutanix_subnet datasource queried with overlay subnet [\#327](https://github.com/nutanix/terraform-provider-nutanix/issues/327)
 - `nutanix_projects` and `nutanix_project` throws error when there is external network associated to a project [\#337](https://github.com/nutanix/terraform-provider-nutanix/issues/337)
+
 
 
 **Merged pull requests:**
@@ -48,6 +48,7 @@
 - Add vCPU hard pinning  [\#307](https://github.com/nutanix/terraform-provider-nutanix/pull/307) ([basraayman](https://github.com/basraayman))
 - bugfix 254 - timeout on resource level [\#333](https://github.com/nutanix/terraform-provider-nutanix/pull/333) ([venkatavivek-ntnx](https://github.com/venkatavivek-ntnx))
 - Fix existing examples. Add new examples [\#346](https://github.com/nutanix/terraform-provider-nutanix/pull/346) ([bhati-pradeep](https://github.com/bhati-pradeep))
+- Automation for manual testcases [\#334](https://github.com/nutanix/terraform-provider-nutanix/issues/334) ([abhimutant](https://github.com/abhimutant))
 
 
 
