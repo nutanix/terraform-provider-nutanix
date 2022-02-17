@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/spf13/cast"
 )
 
@@ -575,13 +575,18 @@ func testAccNutanixVMConfig(r int) string {
 		resource "nutanix_virtual_machine" "vm1" {
 			name         = "test-dou-%d"
 			cluster_uuid = "${local.cluster1}"
-			
+
 			boot_device_order_list = ["DISK", "CDROM"]
 			boot_type            = "LEGACY"
 			num_vcpus_per_socket = 1
 			num_sockets          = 1
 			memory_size_mib      = 186
 
+			timeouts {
+				create = "10m"
+				update = "10m"
+				delete = "10m"
+			}
 
 			categories {
 				name  = "Environment"

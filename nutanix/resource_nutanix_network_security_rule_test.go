@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccNutanixNetworkSecurityRule_basic(t *testing.T) {
@@ -376,6 +376,11 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
 
 func testAccNutanixNetworkSecurityRuleConfigAdRule(r int) string {
 	return fmt.Sprintf(`
+	resource "nutanix_category_value" "ad-group-user-1" {
+		name = "ADGroup"
+		description = "group user category value"
+		value = "%s"
+	}
 	resource "nutanix_network_security_rule" "VDI" {
 		name           = "tf-%d"
 		ad_rule_action = "APPLY"
@@ -405,12 +410,18 @@ func testAccNutanixNetworkSecurityRuleConfigAdRule(r int) string {
 		  peer_specification_type = "IP_SUBNET"
 		  protocol                = "ALL"
 		}
+		depends_on = [nutanix_category_value.ad-group-user-1]
 	  }
-`, r, testVars.AdRuleTarget.Values)
+`, testVars.AdRuleTarget.Values, r, testVars.AdRuleTarget.Values)
 }
 
 func testAccNutanixNetworkSecurityRuleConfigAdRuleUpdate(r int) string {
 	return fmt.Sprintf(`
+	resource "nutanix_category_value" "ad-group-user-1" {
+		name = "ADGroup"
+		description = "group user category value"
+		value = "%s"
+	}
 	resource "nutanix_network_security_rule" "VDI" {
 		name           = "tf-%d"
 		ad_rule_action = "APPLY"
@@ -440,6 +451,7 @@ func testAccNutanixNetworkSecurityRuleConfigAdRuleUpdate(r int) string {
 		  peer_specification_type = "IP_SUBNET"
 		  protocol                = "ALL"
 		}
+		depends_on = [nutanix_category_value.ad-group-user-1]
 	  }
-`, r, testVars.AdRuleTarget.Values)
+`, testVars.AdRuleTarget.Values, r, testVars.AdRuleTarget.Values)
 }
