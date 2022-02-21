@@ -20,7 +20,7 @@ type ImageNodesInput struct {
 	XsMasterIP            *string       `json:"xs_master_ip,omitempty"`
 	Clusters              []*Clusters   `json:"clusters,omitempty"`
 	HypervExternalVswitch *string       `json:"hyperv_external_vswitch,omitempty"`
-	HypervisorNameserver  string        `json:"hypervisor_nameserver"`
+	HypervisorNameserver  *string       `json:"hypervisor_nameserver,omitempty"`
 	HypervSku             *string       `json:"hyperv_sku,omitempty"`
 	EosMetadata           *EosMetadata  `json:"eos_metadata,omitempty"`
 	Tests                 *Tests        `json:"tests,omitempty"`
@@ -33,7 +33,7 @@ type ImageNodesInput struct {
 	UncPassword           *string       `json:"unc_password,omitempty"`
 	XsMasterUsername      *string       `json:"xs_master_username,omitempty"`
 	SkipHypervisor        *bool         `json:"skip_hypervisor,omitempty"`
-	HypervisorGateway     *string       `json:"hypervisor_gateway"`
+	HypervisorGateway     string        `json:"hypervisor_gateway"`
 	NosPackage            string        `json:"nos_package"` //To-do for cluster creation:null for cluster creation
 	UcsmUser              *string       `json:"ucsm_user,omitempty"`
 }
@@ -116,14 +116,14 @@ type Node struct {
 	NodePosition            *string      `json:"node_position,omitempty"`
 	ImageDelay              int          `json:"image_delay,omitempty"`
 	UcsmParams              UcsmParams   `json:"ucsm_params,omitempty"`
-	HypervisorHostname      *string      `json:"hypervisor_hostname"`
+	HypervisorHostname      string       `json:"hypervisor_hostname"`
 	CvmGbRAM                *int         `json:"cvm_gb_ram,omitempty"`
 	DeviceHint              *string      `json:"device_hint,omitempty"`
 	BondMode                *string      `json:"bond_mode,omitempty"`
 	RdmaPassthrough         *bool        `json:"rdma_passthrough,omitempty"`
 	ClusterID               *string      `json:"cluster_id,omitempty"` //type unknown in docs
 	UcsmNodeSerial          *string      `json:"ucsm_node_serial,omitempty"`
-	HypervisorIP            *string      `json:"hypervisor_ip"`
+	HypervisorIP            string       `json:"hypervisor_ip"`
 	NodeSerial              *string      `json:"node_serial,omitempty"`
 	IpmiConfigureNow        *bool        `json:"ipmi_configure_now,omitempty"`
 	ImageSuccessful         *bool        `json:"image_successful,omitempty"`
@@ -133,14 +133,14 @@ type Node struct {
 	RdmaMacAddr             *string      `json:"rdma_mac_addr,omitempty"`
 	BondUplinks             []*string    `json:"bond_uplinks,omitempty"`
 	CurrentNetworkInterface *string      `json:"current_network_interface,omitempty"`
-	Hypervisor              *string      `json:"hypervisor"`
+	Hypervisor              string       `json:"hypervisor"`
 	Vswitches               []*Vswitches `json:"vswitches,omitempty"`
 	BondLacpRate            *string      `json:"bond_lacp_rate,omitempty"`
-	ImageNow                *bool        `json:"image_now"`
+	ImageNow                bool         `json:"image_now"`
 	UcsmManagedMode         *string      `json:"ucsm_managed_mode,omitempty"`
-	IpmiIP                  *string      `json:"ipmi_ip"`
+	IpmiIP                  string       `json:"ipmi_ip"`
 	CurrentCvmVlanTag       *string      `json:"current_cvm_vlan_tag,omitempty"` //type unknown in docs
-	CvmIP                   *string      `json:"cvm_ip"`
+	CvmIP                   string       `json:"cvm_ip"`
 	ExludeBootSerial        *string      `json:"exlude_boot_serial,omitempty"`
 	MitigateLowBootSpace    *bool        `json:"mitigate_low_boot_space,omitempty"`
 }
@@ -152,40 +152,61 @@ type Block struct {
 }
 
 //Response from /image_nodes API call
+//Its union of successfull and errored response
 type ImageNodesAPIResponse struct {
-	SessionID string `mapstructure:"session_id"`
+	SessionID *string `json:"session_id"`
+
+	//Error details incase of errored responses
+	Error *Error `json:"error"`
+}
+
+type Details struct {
+}
+
+//Error details for image nodes errored response
+type Error struct {
+	Message   string  `json:"message"`
+	Details   Details `json:"details"`
+	SessionID string  `json:"session_id"`
 }
 
 //Node Imaging progress response
-type ProgressResponse struct {
-	AbortSession             bool              `mapstructure:"abort_session"`
-	Results                  []string          `mapstructure:"results"`
-	SessionID                string            `mapstructure:"session_id"`
-	ImagingStopped           bool              `mapstructure:"imaging_stopped"`
-	AggregatePercentComplete int               `mapstructure:"aggregate_percent_complete"`
-	Action                   string            `mapstructure:"action"`
-	Clusters                 []ClusterProgress `mapstructure:"clusters"`
-	Nodes                    []NodeProgress    `mapstructure:"nodes"`
+type ImageNodesProgressResponse struct {
+	AbortSession             *bool              `json:"abort_session"`
+	Results                  []*string          `json:"results"`
+	SessionID                *string            `json:"session_id"`
+	ImagingStopped           *bool              `json:"imaging_stopped"`
+	AggregatePercentComplete *float64           `json:"aggregate_percent_complete"`
+	Action                   *string            `json:"action"`
+	Clusters                 []*ClusterProgress `json:"clusters"`
+	Nodes                    []*NodeProgress    `json:"nodes"`
+
+	//Message in case of errored response
+	Message *string `json:"message"`
 }
+
+//Individual cluster progress
 type ClusterProgress struct {
-	Category        []string `mapstructure:"category,omitempty"`
-	Status          string   `mapstructure:"status"`
-	Messages        []string `mapstructure:"messages"`
-	ClusterName     string   `mapstructure:"cluster_name"`
-	TimeElapsed     int      `mapstructure:"time_elapsed"`
-	ClusterMembers  []string `mapstructure:"cluster_members"`
-	PercentComplete int      `mapstructure:"percent_complete"`
-	TimeTotal       int      `mapstructure:"time_total"`
+	Category        []string `json:"category,omitempty"`
+	Status          string   `json:"status"`
+	Messages        []string `json:"messages"`
+	ClusterName     string   `json:"cluster_name"`
+	TimeElapsed     float64  `json:"time_elapsed"`
+	ClusterMembers  []string `json:"cluster_members"`
+	PercentComplete float64  `json:"percent_complete"`
+	TimeTotal       float64  `json:"time_total"`
 }
+
+//Individual Node progress
 type NodeProgress struct {
-	Category        []string `mapstructure:"category,omitempty"`
-	Status          string   `mapstructure:"status"`
-	Messages        []string `mapstructure:"messages"`
-	TimeElapsed     int      `mapstructure:"time_elapsed"`
-	CvmIP           string   `mapstructure:"cvm_ip"`
-	PercentComplete int      `mapstructure:"percent_complete"`
-	HypervisorIP    string   `mapstructure:"hypervisor_ip"`
-	TimeTotal       int      `mapstructure:"time_total"`
+	Category        []string `json:"category,omitempty"`
+	Status          string   `json:"status"`
+	Messages        []string `json:"messages"`
+	TimeElapsed     float64  `json:"time_elapsed"`
+	CvmIP           string   `json:"cvm_ip"`
+	PercentComplete float64  `json:"percent_complete"`
+	HypervisorIP    string   `json:"hypervisor_ip"`
+	TimeTotal       float64  `json:"time_total"`
 }
 
 //Response from /enumerate_nos_packages api
@@ -193,14 +214,14 @@ type ListNOSPackagesResponse []string
 
 //Reference to hypervisor for ListHypervisorISOsResponse
 type HypervisorISOReference struct {
-	Supported bool   `mapstructure:"supported"`
-	Filename  string `mapstructure:"filename"`
+	Supported bool   `json:"supported"`
+	Filename  string `json:"filename"`
 }
 
 //Response from /enumerate_hypervisor_isos api
 type ListHypervisorISOsResponse struct {
-	Hyperv []HypervisorISOReference `mapstructure:"hyperv"`
-	Kvm    []HypervisorISOReference `mapstructure:"kvm"`
-	Esx    []HypervisorISOReference `mapstructure:"esx"`
-	Linux  []HypervisorISOReference `mapstructure:"linux"`
+	Hyperv []HypervisorISOReference `json:"hyperv"`
+	Kvm    []HypervisorISOReference `json:"kvm"`
+	Esx    []HypervisorISOReference `json:"esx"`
+	Linux  []HypervisorISOReference `json:"linux"`
 }
