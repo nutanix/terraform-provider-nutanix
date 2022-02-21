@@ -3,7 +3,7 @@ package nutanix
 import (
 	"testing"
 
-	"github.com/terraform-providers/terraform-provider-nutanix/client"
+	"github.com/nutanix/terraform-provider-nutanix/client"
 )
 
 func TestFilters_replaceFilterPrefixes(t *testing.T) {

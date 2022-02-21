@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+	v3 "github.com/nutanix/terraform-provider-nutanix/client/v3"
+	"github.com/nutanix/terraform-provider-nutanix/utils"
 )
 
 var (

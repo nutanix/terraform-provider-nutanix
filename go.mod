@@ -1,4 +1,4 @@
-module github.com/terraform-providers/terraform-provider-nutanix
+module github.com/nutanix/terraform-provider-nutanix
 
 require (
 	github.com/PaesslerAG/jsonpath v0.1.1

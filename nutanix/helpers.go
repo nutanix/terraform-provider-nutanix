@@ -7,8 +7,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+	v3 "github.com/nutanix/terraform-provider-nutanix/client/v3"
+	"github.com/nutanix/terraform-provider-nutanix/utils"
 )
 
 func getMetadataAttributes(d *schema.ResourceData, metadata *v3.Metadata, kind string) error {

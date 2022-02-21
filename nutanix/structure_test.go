@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+	"github.com/nutanix/terraform-provider-nutanix/utils"
 )
 
 // based on AWS Provider we should change for us
