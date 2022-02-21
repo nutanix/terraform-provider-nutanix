@@ -136,7 +136,7 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string) 
 	return c, nil
 }
 
-// NewClient returns a basic http/https client based on isHttp flag
+// NewBaseClient returns a basic http/https client based on isHttp flag
 func NewBaseClient(credentials *Credentials, absolutePath string, isHttp bool) (*Client, error) {
 	if absolutePath == "" {
 		return nil, fmt.Errorf("absolutePath argument must be passed")
