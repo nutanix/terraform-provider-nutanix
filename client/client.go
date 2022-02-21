@@ -52,14 +52,17 @@ type RequestCompletionCallback func(*http.Request, *http.Response, interface{})
 
 // Credentials needed username and password
 type Credentials struct {
-	URL         string
-	Username    string
-	Password    string
-	Endpoint    string
-	Port        string
-	Insecure    bool
-	SessionAuth bool
-	ProxyURL    string
+	URL                string
+	Username           string
+	Password           string
+	Endpoint           string
+	Port               string
+	Insecure           bool
+	SessionAuth        bool
+	ProxyURL           string
+	FoundationEndpoint string
+	FoundationPort     string
+	FoundationURL      string
 }
 
 // AdditionalFilter specification for client side filters
@@ -167,6 +170,37 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 		req.Header.Add("Authorization", "Basic "+
 			base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
 	}
+
+	return req, nil
+}
+
+// NewRequest creates a request without authorisation headers
+func (c *Client) NewUnAuthRequest(ctx context.Context, method, urlStr string, body interface{}) (*http.Request, error) {
+	rel, errp := url.Parse(c.AbsolutePath + urlStr)
+	if errp != nil {
+		return nil, errp
+	}
+
+	u := c.BaseURL.ResolveReference(rel)
+
+	buf := new(bytes.Buffer)
+
+	if body != nil {
+		err := json.NewEncoder(buf).Encode(body)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	req, err := http.NewRequest(method, u.String(), buf)
+
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", mediaType)
+	req.Header.Add("Accept", mediaType)
+	req.Header.Add("User-Agent", c.UserAgent)
 
 	return req, nil
 }
