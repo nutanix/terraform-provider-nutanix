@@ -28,6 +28,10 @@ func Provider() *schema.Provider {
 			"note, this is never the data services VIP, and should not be an\n" +
 			"individual CVM address, as this would cause calls to fail during\n" +
 			"cluster lifecycle management operations, such as AOS upgrades.",
+
+		"foundation_endpoint": "URL for foundation VM (eg. Foundation VM IP)",
+
+		"foundation_port": "Port for foundation VM",
 	}
 
 	// Nutanix provider schema
@@ -81,6 +85,18 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_PROXY_URL", nil),
 				Description: descriptions["proxy_url"],
+			},
+			"foundation_endpoint": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("FOUNDATION_ENDPOINT", nil),
+				Description: descriptions["foundation_endpoint"],
+			},
+			"foundation_port": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("FOUNDATION_PORT", nil),
+				Description: descriptions["foundation_port"],
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
@@ -147,14 +163,16 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	log.Printf("[DEBUG] config wait_timeout %d", d.Get("wait_timeout").(int))
 
 	config := Config{
-		Endpoint:    d.Get("endpoint").(string),
-		Username:    d.Get("username").(string),
-		Password:    d.Get("password").(string),
-		Insecure:    d.Get("insecure").(bool),
-		SessionAuth: d.Get("session_auth").(bool),
-		Port:        d.Get("port").(string),
-		WaitTimeout: int64(d.Get("wait_timeout").(int)),
-		ProxyURL:    d.Get("proxy_url").(string),
+		Endpoint:           d.Get("endpoint").(string),
+		Username:           d.Get("username").(string),
+		Password:           d.Get("password").(string),
+		Insecure:           d.Get("insecure").(bool),
+		SessionAuth:        d.Get("session_auth").(bool),
+		Port:               d.Get("port").(string),
+		WaitTimeout:        int64(d.Get("wait_timeout").(int)),
+		ProxyURL:           d.Get("proxy_url").(string),
+		FoundationEndpoint: d.Get("foundation_endpoint").(string),
+		FoundationPort:     d.Get("foundation_port").(string),
 	}
 
 	return config.Client()
