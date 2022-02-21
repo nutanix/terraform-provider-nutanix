@@ -6,9 +6,7 @@ import (
 
 const (
 	absolutePath = "foundation"
-	//To-Do: if its required
-	userAgent = "foundation"
-	mediaType = "application/json"
+	userAgent    = "foundation"
 )
 
 //Foundation client with its services
@@ -17,8 +15,8 @@ type Client struct {
 	//base client
 	client *client.Client
 
-	//Service for Imaging and Cluster Creation
-	ImageNodes ImageNodesService
+	//Service for Imaging Nodes and Cluster Creation
+	NodeImaging NodeImagingService
 
 	//Service for File Management in foundation VM
 	FileManagement FileManagementService
@@ -27,15 +25,20 @@ type Client struct {
 //This routine returns new Foundation API Client
 func NewFoundationAPIClient(credentials client.Credentials) (*Client, error) {
 
-	client, err := client.NewClient(&credentials, userAgent, absolutePath)
+	//for foundation client, url should be foundation url
+	credentials.URL = credentials.FoundationURL
+	client, err := client.NewBaseClient(&credentials, absolutePath, true)
 
 	if err != nil {
 		return nil, err
 	}
 
+	//Fill user agent details
+	client.UserAgent = userAgent
+
 	foundationClient := &Client{
 		client: client,
-		ImageNodes: ImageNodesOperations{
+		NodeImaging: NodeImagingOperations{
 			client: client,
 		},
 		FileManagement: FileManagementOperations{

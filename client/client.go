@@ -20,6 +20,7 @@ import (
 const (
 	// libraryVersion = "v3"
 	defaultBaseURL = "https://%s/"
+	httpBaseURL    = "http://%s/"
 	// absolutePath   = "api/nutanix/" + libraryVersion
 	// userAgent      = "nutanix/" + libraryVersion
 	mediaType = "application/json"
@@ -131,6 +132,35 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string) 
 
 		c.Cookies = resp.Cookies()
 	}
+
+	return c, nil
+}
+
+// NewClient returns a basic http/https client based on isHttp flag
+func NewBaseClient(credentials *Credentials, absolutePath string, isHttp bool) (*Client, error) {
+	if absolutePath == "" {
+		return nil, fmt.Errorf("absolutePath argument must be passed")
+	}
+
+	httpClient := http.DefaultClient
+
+	transCfg := &http.Transport{
+		// nolint:gas
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: credentials.Insecure}, // ignore expired SSL certificates
+	}
+	httpClient.Transport = logging.NewTransport("Nutanix", transCfg)
+
+	urlExpr := defaultBaseURL
+	if isHttp {
+		urlExpr = httpBaseURL
+	}
+
+	baseURL, err := url.Parse(fmt.Sprintf(urlExpr, credentials.URL))
+	if err != nil {
+		return nil, err
+	}
+
+	c := &Client{credentials, httpClient, baseURL, "", nil, nil, absolutePath}
 
 	return c, nil
 }
@@ -458,10 +488,17 @@ func CheckResponse(r *http.Response) error {
 	}
 	log.Print("[DEBUG] first nil check")
 
+	// foundation /image_nodes api error check
+	if errStruct, ok := res["error"]; ok {
+		return fmt.Errorf("error: %s", errStruct)
+	}
+
 	// karbon error check
 	if messageInfo, ok := res["message_info"]; ok {
 		return fmt.Errorf("error: %s", messageInfo)
 	}
+
+	//This check is also used for foundation /progress api errors
 	if message, ok := res["message"]; ok {
 		log.Print(message)
 		return fmt.Errorf("error: %s", message)
