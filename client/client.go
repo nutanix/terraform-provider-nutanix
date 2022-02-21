@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/PaesslerAG/jsonpath"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
@@ -19,10 +20,13 @@ import (
 
 const (
 	// libraryVersion = "v3"
-	defaultBaseURL = "https://%s/"
+	defaultBaseURL = "%s://%s/"
+	httpPrefix     = "http"
+	httpsPrefix    = "https"
 	// absolutePath   = "api/nutanix/" + libraryVersion
 	// userAgent      = "nutanix/" + libraryVersion
-	mediaType = "application/json"
+	mediaType       = "application/json"
+	formEncodedType = "application/x-www-form-urlencoded"
 )
 
 // Client Config Configuration of the client
@@ -45,6 +49,9 @@ type Client struct {
 
 	// absolutePath: for example api/nutanix/v3
 	AbsolutePath string
+
+	// error message, incase client is in error state
+	ErrorMsg string
 }
 
 // RequestCompletionCallback defines the type of the request callback function
@@ -52,14 +59,17 @@ type RequestCompletionCallback func(*http.Request, *http.Response, interface{})
 
 // Credentials needed username and password
 type Credentials struct {
-	URL         string
-	Username    string
-	Password    string
-	Endpoint    string
-	Port        string
-	Insecure    bool
-	SessionAuth bool
-	ProxyURL    string
+	URL                string
+	Username           string
+	Password           string
+	Endpoint           string
+	Port               string
+	Insecure           bool
+	SessionAuth        bool
+	ProxyURL           string
+	FoundationEndpoint string              // Required field for connecting to foundation VM APIs
+	FoundationPort     string              // Port for connecting to foundation VM APIs
+	RequiredFields     map[string][]string // RequiredFields is client to its required fields mapping for validations and usage in every client
 }
 
 // AdditionalFilter specification for client side filters
@@ -68,8 +78,8 @@ type AdditionalFilter struct {
 	Values []string
 }
 
-// NewClient returns a new Nutanix API client.
-func NewClient(credentials *Credentials, userAgent string, absolutePath string) (*Client, error) {
+// NewClient returns a wrapper around http/https (as per isHTTP flag) client with additions of proxy & session_auth if given
+func NewClient(credentials *Credentials, userAgent string, absolutePath string, isHTTP bool) (*Client, error) {
 	if userAgent == "" {
 		return nil, fmt.Errorf("userAgent argument must be passed")
 	}
@@ -77,10 +87,13 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string) 
 		return nil, fmt.Errorf("absolutePath argument must be passed")
 	}
 
-	transCfg := &http.Transport{
-		// nolint:gas
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: credentials.Insecure}, // ignore expired SSL certificates
+	// create base client with basic configs
+	baseClient, err := NewBaseClient(credentials, absolutePath, isHTTP)
+	if err != nil {
+		return nil, err
 	}
+	// add useragent
+	baseClient.UserAgent = userAgent
 
 	if credentials.ProxyURL != "" {
 		log.Printf("[DEBUG] Using proxy: %s\n", credentials.ProxyURL)
@@ -89,34 +102,28 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string) 
 			return nil, fmt.Errorf("error parsing proxy url: %s", err)
 		}
 
+		// override transport config incase of using proxy
+		transCfg := &http.Transport{
+			// nolint:gas
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: credentials.Insecure}, // ignore expired SSL certificates
+		}
 		transCfg.Proxy = http.ProxyURL(proxy)
+		baseClient.client.Transport = logging.NewTransport("Nutanix", transCfg)
 	}
-
-	httpClient := http.DefaultClient
-
-	httpClient.Transport = logging.NewTransport("Nutanix", transCfg)
-
-	baseURL, err := url.Parse(fmt.Sprintf(defaultBaseURL, credentials.URL))
-
-	if err != nil {
-		return nil, err
-	}
-
-	c := &Client{credentials, httpClient, baseURL, userAgent, nil, nil, absolutePath}
 
 	if credentials.SessionAuth {
 		log.Printf("[DEBUG] Using session_auth\n")
 
 		ctx := context.TODO()
-		req, err := c.NewRequest(ctx, http.MethodGet, "/users/me", nil)
+		req, err := baseClient.NewRequest(ctx, http.MethodGet, "/users/me", nil)
 		if err != nil {
-			return c, err
+			return baseClient, err
 		}
 
-		resp, err := c.client.Do(req)
+		resp, err := baseClient.client.Do(req)
 
 		if err != nil {
-			return c, err
+			return baseClient, err
 		}
 		defer func() {
 			if rerr := resp.Body.Close(); err == nil {
@@ -126,14 +133,50 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string) 
 
 		err = CheckResponse(resp)
 
-		c.Cookies = resp.Cookies()
+		baseClient.Cookies = resp.Cookies()
 	}
+
+	return baseClient, nil
+}
+
+// NewBaseClient returns a basic http/https client based on isHttp flag
+func NewBaseClient(credentials *Credentials, absolutePath string, isHTTP bool) (*Client, error) {
+	if absolutePath == "" {
+		return nil, fmt.Errorf("absolutePath argument must be passed")
+	}
+
+	httpClient := http.DefaultClient
+
+	transCfg := &http.Transport{
+		//to skip/unskip SSL certificate validation
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: credentials.Insecure,
+		},
+	}
+	httpClient.Transport = logging.NewTransport("Nutanix", transCfg)
+
+	protocol := httpsPrefix
+	if isHTTP {
+		protocol = httpPrefix
+	}
+
+	baseURL, err := url.Parse(fmt.Sprintf(defaultBaseURL, protocol, credentials.URL))
+	if err != nil {
+		return nil, err
+	}
+
+	c := &Client{credentials, httpClient, baseURL, "", nil, nil, absolutePath, ""}
 
 	return c, nil
 }
 
 // NewRequest creates a request
 func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body interface{}) (*http.Request, error) {
+	// check if client exists or not
+	if c.client == nil {
+		return nil, fmt.Errorf(c.ErrorMsg)
+	}
+
 	rel, errp := url.Parse(c.AbsolutePath + urlStr)
 	if errp != nil {
 		return nil, errp
@@ -167,12 +210,82 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 		req.Header.Add("Authorization", "Basic "+
 			base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
 	}
+	return req, nil
+}
+
+// NewRequest creates a request without authorisation headers
+func (c *Client) NewUnAuthRequest(ctx context.Context, method, urlStr string, body interface{}) (*http.Request, error) {
+	// check if client exists or not
+	if c.client == nil {
+		return nil, fmt.Errorf(c.ErrorMsg)
+	}
+
+	//create main api url
+	rel, err := url.Parse(c.AbsolutePath + urlStr)
+	if err != nil {
+		return nil, err
+	}
+	u := c.BaseURL.ResolveReference(rel)
+
+	buf := new(bytes.Buffer)
+	if body != nil {
+		er := json.NewEncoder(buf).Encode(body)
+		if err != nil {
+			return nil, er
+		}
+	}
+	req, err := http.NewRequest(method, u.String(), buf)
+	if err != nil {
+		return nil, err
+	}
+
+	//add api headers
+	req.Header.Add("Content-Type", mediaType)
+	req.Header.Add("Accept", mediaType)
+	req.Header.Add("User-Agent", c.UserAgent)
+
+	return req, nil
+}
+
+// NewUnAuthFormEncodedRequest returns content-type: application/x-www-form-urlencoded based unauth request
+func (c *Client) NewUnAuthFormEncodedRequest(ctx context.Context, method, urlStr string, body map[string]string) (*http.Request, error) {
+	// check if client exists or not
+	if c.client == nil {
+		return nil, fmt.Errorf(c.ErrorMsg)
+	}
+	//create main api url
+	rel, err := url.Parse(c.AbsolutePath + urlStr)
+	if err != nil {
+		return nil, err
+	}
+	u := c.BaseURL.ResolveReference(rel)
+
+	// create form data from body
+	data := url.Values{}
+	for k, v := range body {
+		data.Set(k, v)
+	}
+
+	// create a new request based on encoded from data
+	req, err := http.NewRequest(method, u.String(), strings.NewReader(data.Encode()))
+	if err != nil {
+		return nil, err
+	}
+
+	//add api headers
+	req.Header.Add("Content-Type", formEncodedType)
+	req.Header.Add("Accept", mediaType)
+	req.Header.Add("User-Agent", c.UserAgent)
 
 	return req, nil
 }
 
 // NewUploadRequest Handles image uploads for image service
 func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, body []byte) (*http.Request, error) {
+	// check if client exists or not
+	if c.client == nil {
+		return nil, fmt.Errorf(c.ErrorMsg)
+	}
 	rel, errp := url.Parse(c.AbsolutePath + urlStr)
 	if errp != nil {
 		return nil, errp
@@ -197,6 +310,33 @@ func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, bo
 	return req, nil
 }
 
+// NewUploadRequest handles image uploads for image service
+func (c *Client) NewUnAuthUploadRequest(ctx context.Context, method, urlStr string, body []byte) (*http.Request, error) {
+	// check if client exists or not
+	if c.client == nil {
+		return nil, fmt.Errorf(c.ErrorMsg)
+	}
+	rel, errp := url.Parse(c.AbsolutePath + urlStr)
+	if errp != nil {
+		return nil, errp
+	}
+
+	u := c.BaseURL.ResolveReference(rel)
+
+	buf := bytes.NewBuffer(body)
+
+	req, err := http.NewRequest(method, u.String(), buf)
+
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", "application/octet-stream")
+	req.Header.Add("Accept", "application/octet-stream")
+	req.Header.Add("User-Agent", c.UserAgent)
+	return req, nil
+}
+
 // OnRequestCompleted sets the DO API request completion callback
 func (c *Client) OnRequestCompleted(rc RequestCompletionCallback) {
 	c.onRequestCompleted = rc
@@ -204,6 +344,11 @@ func (c *Client) OnRequestCompleted(rc RequestCompletionCallback) {
 
 // Do performs request passed
 func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error {
+	// check if client exists or not
+	if c.client == nil {
+		return fmt.Errorf(c.ErrorMsg)
+	}
+
 	req = req.WithContext(ctx)
 	resp, err := c.client.Do(req)
 
@@ -241,7 +386,6 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 	if c.onRequestCompleted != nil {
 		c.onRequestCompleted(req, resp, v)
 	}
-
 	return err
 }
 
@@ -256,6 +400,10 @@ func searchSlice(slice []string, key string) bool {
 
 // DoWithFilters performs request passed and filters entities in json response
 func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interface{}, filters []*AdditionalFilter, baseSearchPaths []string) error {
+	// check if client exists or not
+	if c.client == nil {
+		return fmt.Errorf(c.ErrorMsg)
+	}
 	req = req.WithContext(ctx)
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -428,6 +576,8 @@ func CheckResponse(r *http.Response) error {
 	if messageInfo, ok := res["message_info"]; ok {
 		return fmt.Errorf("error: %s", messageInfo)
 	}
+
+	// This check is also used for some foundation api errors
 	if message, ok := res["message"]; ok {
 		log.Print(message)
 		return fmt.Errorf("error: %s", message)

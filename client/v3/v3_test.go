@@ -8,10 +8,10 @@ import (
 )
 
 func TestNewV3Client(t *testing.T) {
-	cred := client.Credentials{URL: "foo.com", Username: "username", Password: "password", Port: "", Endpoint: "", Insecure: true}
+	cred := client.Credentials{URL: "foo.com", Username: "username", Password: "password", Port: "", Endpoint: "0.0.0.0", Insecure: true}
 	c, _ := NewV3Client(cred)
 
-	cred2 := client.Credentials{URL: "^^^", Username: "username", Password: "password", Port: "", Endpoint: "", Insecure: true}
+	cred2 := client.Credentials{URL: "^^^", Username: "username", Password: "password", Port: "", Endpoint: "0.0.0.0", Insecure: true}
 	c2, _ := NewV3Client(cred2)
 
 	type args struct {

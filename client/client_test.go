@@ -24,20 +24,20 @@ func setup() (*http.ServeMux, *Client, *httptest.Server) {
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
 
-	client, _ := NewClient(&Credentials{"", "username", "password", "", "", true, false, ""}, testUserAgent, testAbsolutePath)
+	client, _ := NewClient(&Credentials{"", "username", "password", "", "", true, false, "", "", "", nil}, testUserAgent, testAbsolutePath, false)
 	client.BaseURL, _ = url.Parse(server.URL)
 
 	return mux, client, server
 }
 
 func TestNewClient(t *testing.T) {
-	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, ""}, testUserAgent, testAbsolutePath)
+	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil}, testUserAgent, testAbsolutePath, false)
 
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
 
-	expectedURL := fmt.Sprintf(defaultBaseURL, "foo.com")
+	expectedURL := fmt.Sprintf(defaultBaseURL, "https", "foo.com")
 
 	if c.BaseURL == nil || c.BaseURL.String() != expectedURL {
 		t.Errorf("NewClient BaseURL = %v, expected %v", c.BaseURL, expectedURL)
@@ -49,13 +49,13 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestNewRequest(t *testing.T) {
-	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, ""}, testUserAgent, testAbsolutePath)
+	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil}, testUserAgent, testAbsolutePath, false)
 
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
 
-	inURL, outURL := "/foo", fmt.Sprintf(defaultBaseURL+testAbsolutePath+"/foo", "foo.com")
+	inURL, outURL := "/foo", fmt.Sprintf(defaultBaseURL+testAbsolutePath+"/foo", "https", "foo.com")
 	inBody, outBody := map[string]interface{}{"name": "bar"}, `{"name":"bar"}`+"\n"
 
 	req, _ := c.NewRequest(context.TODO(), http.MethodPost, inURL, inBody)
