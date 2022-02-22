@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccNutanixSubnetDataSource_basic(t *testing.T) {
@@ -53,6 +53,27 @@ func TestAccNutanixSubnetDataSource_conflicts(t *testing.T) {
 			{
 				Config:      testAccSubnetDataSourceBadConfig(),
 				ExpectError: regexp.MustCompile("conflicts with"),
+			},
+		},
+	})
+}
+
+func TestAccNutanixSubnetDataSource_nameWithFilters(t *testing.T) {
+	r := randIntBetween(11, 20)
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetDataSourceConfigNameWithFilters(r, r),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"data.nutanix_subnet.test", "subnet_type", "VLAN"),
+				),
+			},
+			{
+				Config:      testAccSubnetDataSourceConfigNameWithFilters(r, 30),
+				ExpectError: regexp.MustCompile("subnet with the given name, not found"),
 			},
 		},
 	})
@@ -133,6 +154,34 @@ data "nutanix_subnet" "test" {
 	subnet_name = nutanix_subnet.test.name
 }
 `, r, r)
+}
+
+func testAccSubnetDataSourceConfigNameWithFilters(r int, f int) string {
+	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {}
+
+locals {
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
+}
+
+resource "nutanix_subnet" "test" {
+	name = "dnd_acc_test_vlan0_test_%d"
+	cluster_uuid = local.cluster1
+	vlan_id = %d
+	subnet_type = "VLAN"
+}
+
+data "nutanix_subnet" "test" {
+	subnet_name = nutanix_subnet.test.name
+	additional_filter {
+		name = "vlan_id"
+		values = ["%d"]
+	}
+}
+`, r, r, f)
 }
 
 func testAccSubnetDataSourceBadConfig() string {

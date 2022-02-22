@@ -3,12 +3,11 @@ package nutanix
 import (
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // Provider function returns the object that implements the terraform.ResourceProvider interface, specifically a schema.Provider
-func Provider() terraform.ResourceProvider {
+func Provider() *schema.Provider {
 	// defines descriptions for ResourceProvider schema definitions
 	descriptions := map[string]string{
 		"username": "User name for Nutanix Prism. Could be\n" +
@@ -117,6 +116,8 @@ func Provider() terraform.ResourceProvider {
 			"nutanix_protection_rules":          dataSourceNutanixProtectionRules(),
 			"nutanix_recovery_plan":             dataSourceNutanixRecoveryPlan(),
 			"nutanix_recovery_plans":            dataSourceNutanixRecoveryPlans(),
+			"nutanix_address_groups":            dataSourceNutanixAddressGroups(),
+			"nutanix_address_group":             dataSourceNutanixAddressGroup(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":         resourceNutanixVirtualMachine(),
@@ -133,6 +134,8 @@ func Provider() terraform.ResourceProvider {
 			"nutanix_karbon_private_registry": resourceNutanixKarbonPrivateRegistry(),
 			"nutanix_protection_rule":         resourceNutanixProtectionRule(),
 			"nutanix_recovery_plan":           resourceNutanixRecoveryPlan(),
+			"nutanix_service_group":           resourceNutanixServiceGroup(),
+			"nutanix_address_group":           resourceNutanixAddressGroup(),
 		},
 		ConfigureFunc: providerConfigure,
 	}

@@ -1,17 +1,19 @@
 package nutanix
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func dataSourceNutanixImage() *schema.Resource {
 	return &schema.Resource{
-		Read:          dataSourceNutanixImageRead,
+		ReadContext:   dataSourceNutanixImageRead,
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
@@ -38,78 +40,23 @@ func dataSourceNutanixImage() *schema.Resource {
 			"metadata": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"last_update_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"creation_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"spec_version": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"spec_hash": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"categories": categoriesSchema(),
 			"owner_reference": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"project_reference": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"name": {
@@ -127,21 +74,8 @@ func dataSourceNutanixImage() *schema.Resource {
 			"availability_zone_reference": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"cluster_uuid": {
@@ -164,17 +98,8 @@ func dataSourceNutanixImage() *schema.Resource {
 			"checksum": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"checksum_algorithm": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"checksum_value": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"source_uri": {
@@ -184,17 +109,8 @@ func dataSourceNutanixImage() *schema.Resource {
 			"version": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"product_version": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"product_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"architecture": {
@@ -209,7 +125,7 @@ func dataSourceNutanixImage() *schema.Resource {
 	}
 }
 
-func dataSourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceNutanixImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Get client connection
 	conn := meta.(*Client).API
 
@@ -217,7 +133,7 @@ func dataSourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error 
 	imageName, nok := d.GetOk("image_name")
 
 	if !iok && !nok {
-		return fmt.Errorf("please provide one of image_id or image_name attributes")
+		return diag.Errorf("please provide one of image_id or image_name attributes")
 	}
 
 	var reqErr error
@@ -230,27 +146,27 @@ func dataSourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if reqErr != nil {
-		return reqErr
+		return diag.FromErr(reqErr)
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
 
 	if err := d.Set("metadata", m); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("categories", c); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("availability_zone_reference", flattenReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := flattenClusterReference(resp.Status.ClusterReference, d); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.Set("api_version", utils.StringValue(resp.APIVersion))
 	d.Set("name", utils.StringValue(resp.Status.Name))
@@ -266,7 +182,7 @@ func dataSourceNutanixImageRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err := d.Set("retrieval_uri_list", uriList); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(utils.StringValue(resp.Metadata.UUID))
@@ -305,7 +221,7 @@ func findImageByName(conn *v3.Client, name string) (*v3.ImageIntentResponse, err
 	return findImageByUUID(conn, *found[0].Metadata.UUID)
 }
 
-func resourceDatasourceImageInstanceStateUpgradeV0(is map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceDatasourceImageInstanceStateUpgradeV0(ctx context.Context, is map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	log.Printf("[DEBUG] Entering resourceDatasourceImageInstanceStateUpgradeV0")
 	return resourceNutanixCategoriesMigrateState(is, meta)
 }
@@ -330,37 +246,8 @@ func resourceNutanixDatasourceImageInstanceResourceV0() *schema.Resource {
 			"metadata": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"last_update_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"creation_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"spec_version": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"spec_hash": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"categories": {
@@ -371,41 +258,15 @@ func resourceNutanixDatasourceImageInstanceResourceV0() *schema.Resource {
 			"owner_reference": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"project_reference": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"name": {
@@ -423,21 +284,8 @@ func resourceNutanixDatasourceImageInstanceResourceV0() *schema.Resource {
 			"availability_zone_reference": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"cluster_uuid": {
@@ -460,17 +308,8 @@ func resourceNutanixDatasourceImageInstanceResourceV0() *schema.Resource {
 			"checksum": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"checksum_algorithm": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"checksum_value": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"source_uri": {
@@ -480,17 +319,8 @@ func resourceNutanixDatasourceImageInstanceResourceV0() *schema.Resource {
 			"version": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"product_version": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"product_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"architecture": {

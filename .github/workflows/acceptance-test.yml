@@ -1,0 +1,83 @@
+name: Acceptance Test cases
+on:
+  pull_request:
+  repository_dispatch:
+    types: [ok-to-test-command]
+jobs:
+  Acceptance-Tests:
+    runs-on: self-hosted
+    if: github.event_name == 'repository_dispatch'
+    steps:
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+      - name: Check out repository code
+        uses: actions/checkout@v2
+        with:
+          ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+      - name: Acceptance test cases
+        run: ${{ secrets.ACCEPTANCE_TEST_ARGS }} make testacc
+      - name: Code Coverage Check
+        run:  |
+              echo "Code coverage: Checking if code coverage is above threshold..."
+              export TESTCOV_THRESHOLD=50
+              echo "Threshold: $TESTCOV_THRESHOLD %"
+              totalCoverage=`go tool cover -func=c.out | grep total | grep -Eo '[0-9]+\.[0-9]+'`
+              echo "Current test coverage : $totalCoverage %"
+              if (( $(echo "$totalCoverage $TESTCOV_THRESHOLD" | awk '{print ($1 > $2)}') )); then
+                  echo "CODE_COVERAGE_OUTPUT=Line code coverage is $totalCoverage" >> $GITHUB_ENV
+                  echo "Line coverage is $totalCoverage"
+              else
+                  echo "CODE_COVERAGE_OUTPUT=Current line coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD). Kindly add more acceptance tests." >> $GITHUB_ENV
+                  echo "Current coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD)."
+              fi
+      - run: echo "Success!"
+      - run: echo "🍏 This job's status is ${{ job.status }}."
+
+      # Update the comment back
+      - name: Update comment
+        uses: peter-evans/create-or-update-comment@v1
+        if: ${{ always() }}
+        with:
+          comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
+          body: |
+            >Acceptance test run status: ${{ job.status }}
+            >${{ env.CODE_COVERAGE_OUTPUT }}
+          reaction-type: hooray
+
+      # Update check run for Acceptance Test
+      - uses: actions/github-script@v5
+        id: update-check-run
+        if: ${{ always() }}
+        env:
+          number: ${{ github.event.client_payload.pull_request.number }}
+          job: ${{ github.job }}
+          # Conveniently, job.status maps to https://developer.github.com/v3/checks/runs/#update-a-check-run
+          conclusion: ${{ job.status }} 
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { data: pull } = await github.rest.pulls.get({
+              ...context.repo,
+              pull_number: process.env.number
+            });
+            const ref = pull.head.sha;
+            const { data: checks } = await github.rest.checks.listForRef({
+              ...context.repo,
+              ref
+            });
+            const check = checks.check_runs.filter(c => c.name === process.env.job);
+            if (check.length == 0) {
+              return "Check is not present, ignoring this step."
+            }
+            const { data: result } = await github.rest.checks.update({
+              ...context.repo,
+              check_run_id: check[0].id,
+              status: 'completed',
+              conclusion: process.env.conclusion
+            });
+            return result;

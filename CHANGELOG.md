@@ -1,3 +1,72 @@
+## 1.3.0 (Feb 16, 2022)
+
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.2.2...v1.3.0)
+
+**Implemented enhancements:**
+
+- Implement Timeout blocks on resource level [\#254](https://github.com/nutanix/terraform-provider-nutanix/issues/254)
+- SDK V2 Upgrade: Upgrade Terraform provider to the latest SDK [\#287](https://github.com/nutanix/terraform-provider-nutanix/issues/287)
+- Allow Subnet Datasources to filter based on PE ID [\#308](https://github.com/nutanix/terraform-provider-nutanix/issues/308)
+- Implement CI/CD pipeline for this project [\#314](https://github.com/nutanix/terraform-provider-nutanix/issues/314)
+- Clean up existing tests with dynamic config  [\#315](https://github.com/nutanix/terraform-provider-nutanix/issues/315)
+- Develop integration tests with code coverage. [\#316](https://github.com/nutanix/terraform-provider-nutanix/issues/316)
+
+
+**Fixed Bugs**
+
+- Provider plugin crashes when nutanix_subnet datasource queried with overlay subnet [\#327](https://github.com/nutanix/terraform-provider-nutanix/issues/327)
+- `nutanix_projects` and `nutanix_project` throws error when there is external network associated to a project [\#337](https://github.com/nutanix/terraform-provider-nutanix/issues/337)
+
+
+**Closed issues:**
+
+- Implement Timeout blocks on resource level [\#254](https://github.com/nutanix/terraform-provider-nutanix/issues/254)
+- Upgrade Terraform provider to the latest SDK [\#287](https://github.com/nutanix/terraform-provider-nutanix/issues/287)
+- Allow Subnet Datasources to filter based on PE ID [\#308](https://github.com/nutanix/terraform-provider-nutanix/issues/308)
+- Implement CI/CD pipeline for this project [\#314](https://github.com/nutanix/terraform-provider-nutanix/issues/314)
+- Clean up existing tests with dynamic config  [\#315](https://github.com/nutanix/terraform-provider-nutanix/issues/315)
+- Develop integration tests with code coverage. [\#316](https://github.com/nutanix/terraform-provider-nutanix/issues/316)
+- Provider plugin crashes when nutanix_subnet datasource queried with overlay subnet [\#327](https://github.com/nutanix/terraform-provider-nutanix/issues/327)
+- `nutanix_projects` and `nutanix_project` throws error when there is external network associated to a project [\#337](https://github.com/nutanix/terraform-provider-nutanix/issues/337)
+
+
+
+**Merged pull requests:**
+
+- Workflow for automated acceptance test cases [\#325](https://github.com/nutanix/terraform-provider-nutanix/pull/325) ([siddharth-kulshrestha](https://github.com/siddharth-kulshrestha))
+- update go release to 1.17 [\#317](https://github.com/nutanix/terraform-provider-nutanix/pull/317) ([tuxtof](https://github.com/tuxtof))
+- Workflow for automated acceptance test cases [\#325](https://github.com/nutanix/terraform-provider-nutanix/pull/325) ([siddharth-kulshrestha](https://github.com/siddharth-kulshrestha))
+- Fix nutanix_project and nutanix_projects datasource to not use "kind" attribute in "external_network_list" [\#335](https://github.com/nutanix/terraform-provider-nutanix/pull/335) ([bhati-pradeep](https://github.com/bhati-pradeep))
+- Add check for cluster_reference before set to avoid it in case of overlay subnets in datasource nutanix_subnet [\#328](https://github.com/nutanix/terraform-provider-nutanix/pull/328) ([bhati-pradeep](https://github.com/bhati-pradeep))
+- fixed a typo in subnet.html.markdown [\#273](https://github.com/nutanix/terraform-provider-nutanix/pull/273) ([gowatana](https://github.com/gowatana))
+- Update subnets.html.markdown [\#293](https://github.com/nutanix/terraform-provider-nutanix/pull/293) ([jastrom85](https://github.com/jastrom85))
+- Add filter by cluster uuid in subnet datasource [\#323](https://github.com/nutanix/terraform-provider-nutanix/pull/323) ([shreevari](https://github.com/shreevari))
+- Modify tests and example to use is_vcpu_hard_pinned for nutanix_virtual_machine [\#338](https://github.com/nutanix/terraform-provider-nutanix/pull/338) ([bhati-pradeep](https://github.com/bhati-pradeep))
+- Add resources for address groups and service groups [\#322](https://github.com/nutanix/terraform-provider-nutanix/pull/322) ([svalabs](https://github.com/svalabs))
+- Service group fix [\#340](https://github.com/nutanix/terraform-provider-nutanix/pull/340) ([abhimutant](https://github.com/abhimutant))
+- V2 SDK upgrade [\#332](https://github.com/nutanix/terraform-provider-nutanix/pull/332) ([siddharth-kulshrestha](https://github.com/siddharth-kulshrestha))
+- Add vCPU hard pinning  [\#307](https://github.com/nutanix/terraform-provider-nutanix/pull/307) ([basraayman](https://github.com/basraayman))
+- bugfix 254 - timeout on resource level [\#333](https://github.com/nutanix/terraform-provider-nutanix/pull/333) ([venkatavivek-ntnx](https://github.com/venkatavivek-ntnx))
+- Fix existing examples. Add new examples [\#346](https://github.com/nutanix/terraform-provider-nutanix/pull/346) ([bhati-pradeep](https://github.com/bhati-pradeep))
+- Automation for manual testcases [\#334](https://github.com/nutanix/terraform-provider-nutanix/issues/334) ([abhimutant](https://github.com/abhimutant))
+
+
+
+## 1.2.2 (Nov 29, 2021)
+
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.2.1...v1.2.2)
+
+**Closed issues:**
+
+- Cloud_init and sysprep CDROMs being detected and destroyed forcing VM reboot. [\#285](https://github.com/nutanix/terraform-provider-nutanix/issues/285)
+- Provider crash when using NGT credentials attribute in nutanix_virtual_machine resource type. [\#297](https://github.com/nutanix/terraform-provider-nutanix/issues/297)
+
+**Merged pull requests:**
+
+- Add support for CPU passthrough [\#288](https://github.com/nutanix/terraform-provider-nutanix/pull/288) ([svalabs](https://github.com/svalabs))
+
+
+
 ## 1.2.1 (Feb 01, 2021)
 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.1.1...HEAD)

@@ -1,18 +1,19 @@
 package nutanix
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strconv"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func dataSourceNutanixVirtualMachine() *schema.Resource {
 	return &schema.Resource{
-		Read:          dataSourceNutanixVirtualMachineRead,
+		ReadContext:   dataSourceNutanixVirtualMachineRead,
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
 			{
@@ -29,78 +30,23 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 			"metadata": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"last_update_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"creation_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"spec_version": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"spec_hash": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"categories": categoriesSchema(),
 			"project_reference": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"owner_reference": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"api_version": {
@@ -118,21 +64,8 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 			"availability_zone_reference": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"cluster_uuid": {
@@ -171,21 +104,8 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 			"host_reference": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"hypervisor_type": {
@@ -194,7 +114,14 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 			},
 
 			// RESOURCES ARGUMENTS
-
+			"enable_cpu_passthrough": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"is_vcpu_hard_pinned": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"num_vnuma_nodes": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -247,21 +174,8 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 						"network_function_chain_reference": {
 							Type:     schema.TypeMap,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kind": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"uuid": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 						"subnet_uuid": {
@@ -290,45 +204,8 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 			"nutanix_guest_tools": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"available_version": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ngt_state": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"iso_mount_state": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"state": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"version": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"guest_os_version": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"vss_snapshot_capable": {
-							Type:     schema.TypeString, // Bool
-							Computed: true,
-						},
-						"is_reachable": {
-							Type:     schema.TypeString, // Bool
-							Computed: true,
-						},
-						"vm_mobility_drivers_installed": {
-							Type:     schema.TypeString, // Bool
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"ngt_enabled_capability_list": {
@@ -399,21 +276,8 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 			"parent_reference": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"memory_size_mib": {
@@ -429,19 +293,8 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"device_index": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"adapter_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"boot_device_mac_address": {
@@ -480,17 +333,8 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 			"guest_customization_sysprep": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"install_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"unattend_xml": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"guest_customization_sysprep_custom_key_values": {
@@ -533,7 +377,6 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 						"storage_config": {
 							Type:     schema.TypeList,
 							Computed: true,
-							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"flash_mode": {
@@ -579,17 +422,8 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 									"disk_address": {
 										Type:     schema.TypeMap,
 										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"device_index": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"adapter_type": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
 										},
 									},
 								},
@@ -598,41 +432,15 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 						"data_source_reference": {
 							Type:     schema.TypeMap,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kind": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"uuid": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 						"volume_group_reference": {
 							Type:     schema.TypeMap,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kind": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"uuid": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 					},
@@ -658,59 +466,59 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 	}
 }
 
-func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceNutanixVirtualMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Get client connection
 	conn := meta.(*Client).API
 
 	vm, ok := d.GetOk("vm_id")
 
 	if !ok {
-		return fmt.Errorf("please provide the required attribute vm_id")
+		return diag.Errorf("please provide the required attribute vm_id")
 	}
 
 	// Make request to the API
 	resp, err := conn.V3.GetVM(vm.(string))
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	m, c := setRSEntityMetadata(resp.Metadata)
 
 	if err := d.Set("metadata", m); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("categories", c); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("project_reference", flattenReferenceValues(resp.Metadata.ProjectReference)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("owner_reference", flattenReferenceValues(resp.Metadata.OwnerReference)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("availability_zone_reference", flattenReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := flattenClusterReference(resp.Status.ClusterReference, d); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("nic_list", flattenNicListStatus(resp.Status.Resources.NicList)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("host_reference", flattenReferenceValues(resp.Status.Resources.HostReference)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := flattenNutanixGuestTools(d, resp.Status.Resources.GuestTools); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("gpu_list", flattenGPUList(resp.Status.Resources.GpuList)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("parent_reference", flattenReferenceValues(resp.Status.Resources.ParentReference)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("disk_list", flattenDiskList(resp.Status.Resources.DiskList)); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	diskAddress := make(map[string]interface{})
@@ -774,21 +582,21 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 		}
 	}
 	if err := d.Set("guest_customization_cloud_init_custom_key_values", cloudInitCV); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("guest_customization_sysprep_custom_key_values", sysrepCV); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if err := d.Set("guest_customization_sysprep", sysprep); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := flattenClusterReference(resp.Status.ClusterReference, d); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("serial_port_list", resp.Status.Resources.SerialPortList); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.Set("guest_customization_cloud_init_user_data", cloudInitUser)
@@ -798,6 +606,8 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	d.Set("name", utils.StringValue(resp.Status.Name))
 	d.Set("description", utils.StringValue(resp.Status.Description))
 	d.Set("state", utils.StringValue(resp.Status.State))
+	d.Set("enable_cpu_passthrough", utils.BoolValue(resp.Status.Resources.EnableCPUPassthrough))
+	d.Set("is_vcpu_hard_pinned", utils.BoolValue(resp.Status.Resources.EnableCPUPinning))
 	d.Set("num_vnuma_nodes", utils.Int64Value(resp.Status.Resources.VnumaConfig.NumVnumaNodes))
 	d.Set("guest_os_id", utils.StringValue(resp.Status.Resources.GuestOsID))
 	d.Set("power_state", utils.StringValue(resp.Status.Resources.PowerState))
@@ -815,7 +625,7 @@ func dataSourceNutanixVirtualMachineRead(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceDatasourceVirtualMachineInstanceStateUpgradeV0(is map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceDatasourceVirtualMachineInstanceStateUpgradeV0(ctx context.Context, is map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	log.Printf("[DEBUG] Entering resourceDatasourceDatasourceVirtualMachineInstanceStateUpgradeV0")
 	return resourceNutanixCategoriesMigrateState(is, meta)
 }
@@ -830,37 +640,8 @@ func resourceNutanixDatasourceVirtualMachineInstanceResourceV0() *schema.Resourc
 			"metadata": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"last_update_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"creation_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"spec_version": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"spec_hash": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"categories": {
@@ -871,41 +652,15 @@ func resourceNutanixDatasourceVirtualMachineInstanceResourceV0() *schema.Resourc
 			"project_reference": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"owner_reference": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"api_version": {
@@ -923,21 +678,8 @@ func resourceNutanixDatasourceVirtualMachineInstanceResourceV0() *schema.Resourc
 			"availability_zone_reference": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"cluster_uuid": {
@@ -976,21 +718,8 @@ func resourceNutanixDatasourceVirtualMachineInstanceResourceV0() *schema.Resourc
 			"host_reference": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"hypervisor_type": {
@@ -999,7 +728,14 @@ func resourceNutanixDatasourceVirtualMachineInstanceResourceV0() *schema.Resourc
 			},
 
 			// RESOURCES ARGUMENTS
-
+			"enable_cpu_passthrough": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"is_vcpu_hard_pinned": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"num_vnuma_nodes": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -1052,21 +788,8 @@ func resourceNutanixDatasourceVirtualMachineInstanceResourceV0() *schema.Resourc
 						"network_function_chain_reference": {
 							Type:     schema.TypeMap,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kind": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"uuid": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 						"subnet_uuid": {
@@ -1095,45 +818,8 @@ func resourceNutanixDatasourceVirtualMachineInstanceResourceV0() *schema.Resourc
 			"nutanix_guest_tools": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"available_version": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ngt_state": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"iso_mount_state": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"state": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"version": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"guest_os_version": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"vss_snapshot_capable": {
-							Type:     schema.TypeString, // Bool
-							Computed: true,
-						},
-						"is_reachable": {
-							Type:     schema.TypeString, // Bool
-							Computed: true,
-						},
-						"vm_mobility_drivers_installed": {
-							Type:     schema.TypeString, // Bool
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"ngt_enabled_capability_list": {
@@ -1204,21 +890,8 @@ func resourceNutanixDatasourceVirtualMachineInstanceResourceV0() *schema.Resourc
 			"parent_reference": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"uuid": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"memory_size_mib": {
@@ -1234,19 +907,8 @@ func resourceNutanixDatasourceVirtualMachineInstanceResourceV0() *schema.Resourc
 				Type:     schema.TypeMap,
 				Optional: true,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"device_index": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"adapter_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"boot_device_mac_address": {
@@ -1277,17 +939,8 @@ func resourceNutanixDatasourceVirtualMachineInstanceResourceV0() *schema.Resourc
 			"guest_customization_sysprep": {
 				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"install_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"unattend_xml": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"guest_customization_sysprep_custom_key_values": {
@@ -1339,17 +992,8 @@ func resourceNutanixDatasourceVirtualMachineInstanceResourceV0() *schema.Resourc
 									"disk_address": {
 										Type:     schema.TypeMap,
 										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"device_index": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"adapter_type": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
 										},
 									},
 								},
@@ -1358,42 +1002,16 @@ func resourceNutanixDatasourceVirtualMachineInstanceResourceV0() *schema.Resourc
 						"data_source_reference": {
 							Type:     schema.TypeMap,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kind": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"uuid": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 
 						"volume_group_reference": {
 							Type:     schema.TypeMap,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kind": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"uuid": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 					},
