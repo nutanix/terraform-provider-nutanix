@@ -34,7 +34,7 @@ type ImageNodesInput struct {
 	XsMasterUsername      *string       `json:"xs_master_username,omitempty"`
 	SkipHypervisor        *bool         `json:"skip_hypervisor,omitempty"`
 	HypervisorGateway     string        `json:"hypervisor_gateway"`
-	NosPackage            string        `json:"nos_package"` //To-do for cluster creation:null for cluster creation
+	NosPackage            string        `json:"nos_package"` //will be null for cluster creation
 	UcsmUser              *string       `json:"ucsm_user,omitempty"`
 }
 
@@ -44,7 +44,7 @@ type Hypervisor struct {
 	Filename string  `json:"filename"`
 }
 
-//Hypervisor ISO's for various kinds
+//Hypervisor ISO's for various kinds of hypervisor
 type HypervisorIso struct {
 	Hyperv *Hypervisor `json:"hyperv,omitempty"`
 	Kvm    *Hypervisor `json:"kvm,omitempty"`
@@ -64,7 +64,6 @@ type FcSettings struct {
 	FoundationCentral bool       `json:"foundation_central"`
 }
 
-//To-do for cluster creation: check for required fields
 //Clusters creation related information
 type Clusters struct {
 	EnableNs              *bool    `json:"enable_ns,omitempty"`
@@ -72,7 +71,7 @@ type Clusters struct {
 	ClusterInitSuccessful *bool    `json:"cluster_init_successful"`
 	BackplaneNetmask      *string  `json:"backplane_netmask,omitempty"`
 	RedundancyFactor      int      `json:"redundancy_factor"`
-	BackplaneVlan         *string  `json:"backplane_vlan,omitempty"` //type unknown in docs
+	BackplaneVlan         *string  `json:"backplane_vlan,omitempty"`
 	ClusterName           string   `json:"cluster_name"`
 	ClusterExternalIP     *string  `json:"cluster_external_ip,omitempty"`
 	CvmNtpServers         *string  `json:"cvm_ntp_servers,omitempty"`
@@ -121,7 +120,7 @@ type Node struct {
 	DeviceHint              *string      `json:"device_hint,omitempty"`
 	BondMode                *string      `json:"bond_mode,omitempty"`
 	RdmaPassthrough         *bool        `json:"rdma_passthrough,omitempty"`
-	ClusterID               *string      `json:"cluster_id,omitempty"` //type unknown in docs
+	ClusterID               *string      `json:"cluster_id,omitempty"`
 	UcsmNodeSerial          *string      `json:"ucsm_node_serial,omitempty"`
 	HypervisorIP            string       `json:"hypervisor_ip"`
 	NodeSerial              *string      `json:"node_serial,omitempty"`
@@ -139,7 +138,7 @@ type Node struct {
 	ImageNow                bool         `json:"image_now"`
 	UcsmManagedMode         *string      `json:"ucsm_managed_mode,omitempty"`
 	IpmiIP                  string       `json:"ipmi_ip"`
-	CurrentCvmVlanTag       *string      `json:"current_cvm_vlan_tag,omitempty"` //type unknown in docs
+	CurrentCvmVlanTag       *string      `json:"current_cvm_vlan_tag,omitempty"`
 	CvmIP                   string       `json:"cvm_ip"`
 	ExludeBootSerial        *string      `json:"exlude_boot_serial,omitempty"`
 	MitigateLowBootSpace    *bool        `json:"mitigate_low_boot_space,omitempty"`

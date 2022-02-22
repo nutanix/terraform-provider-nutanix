@@ -148,8 +148,10 @@ func NewBaseClient(credentials *Credentials, absolutePath string, isHttp bool) (
 	httpClient := http.DefaultClient
 
 	transCfg := &http.Transport{
-		// nolint:gas
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: credentials.Insecure}, // ignore expired SSL certificates
+		//to skip/unskip SSL certificate validation
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: credentials.Insecure,
+		},
 	}
 	httpClient.Transport = logging.NewTransport("Nutanix", transCfg)
 
