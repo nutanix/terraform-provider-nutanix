@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"path/filepath"
@@ -196,14 +197,9 @@ func resourceNutanixImageCreate(ctx context.Context, d *schema.ResourceData, met
 	_, pok := d.GetOk("source_path")
 	_, dsr := d.GetOk("data_source_reference")
 
-	// if both path and uri are provided, return an error
-<<<<<<< HEAD
+	// if three path, uri, dsr are provided, return an error
 	if iok && pok && dsr {
-		return errors.New("both source_uri and source_path provided")
-=======
-	if iok && pok {
-		return diag.Errorf("both source_uri and source_path provided")
->>>>>>> master
+		return errors.New("all three source_uri, source_path and data_source_reference are provided")
 	}
 
 	// Read Arguments and set request values
