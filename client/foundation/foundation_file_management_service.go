@@ -8,8 +8,8 @@ import (
 )
 
 type FileManagementService interface {
-	ListNOSPackages() (*ListNOSPackagesResponse, error)
-	ListHypervisorISOs() (*ListHypervisorISOsResponse, error)
+	ListNOSPackages(context.Context) (*ListNOSPackagesResponse, error)
+	ListHypervisorISOs(context.Context) (*ListHypervisorISOsResponse, error)
 }
 
 type FileManagementOperations struct {
@@ -17,25 +17,23 @@ type FileManagementOperations struct {
 }
 
 //Lists the available AOS packages in Foundation
-func (fileManagementOperations FileManagementOperations) ListNOSPackages() (*ListNOSPackagesResponse, error) {
-	ctx := context.TODO()
+func (fmo FileManagementOperations) ListNOSPackages(ctx context.Context) (*ListNOSPackagesResponse, error) {
 	path := "/enumerate_nos_packages"
-	req, err := fileManagementOperations.client.NewUnAuthRequest(ctx, http.MethodGet, path, nil)
+	req, err := fmo.client.NewUnAuthRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}
 	listNOSPackagesResponse := new(ListNOSPackagesResponse)
-	return listNOSPackagesResponse, fileManagementOperations.client.Do(ctx, req, listNOSPackagesResponse)
+	return listNOSPackagesResponse, fmo.client.Do(ctx, req, listNOSPackagesResponse)
 }
 
 //Lists the hypervisor ISOs available in Foundation
-func (fileManagementOperations FileManagementOperations) ListHypervisorISOs() (*ListHypervisorISOsResponse, error) {
-	ctx := context.TODO()
+func (fmo FileManagementOperations) ListHypervisorISOs(ctx context.Context) (*ListHypervisorISOsResponse, error) {
 	path := "/enumerate_hypervisor_isos"
-	req, err := fileManagementOperations.client.NewUnAuthRequest(ctx, http.MethodGet, path, nil)
+	req, err := fmo.client.NewUnAuthRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}
 	listHypervisorISOsResponse := new(ListHypervisorISOsResponse)
-	return listHypervisorISOsResponse, fileManagementOperations.client.Do(ctx, req, listHypervisorISOsResponse)
+	return listHypervisorISOsResponse, fmo.client.Do(ctx, req, listHypervisorISOsResponse)
 }

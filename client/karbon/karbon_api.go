@@ -19,7 +19,7 @@ type Client struct {
 
 // NewKarbonAPIClient return a client to operate Karbon resources
 func NewKarbonAPIClient(credentials client.Credentials) (*Client, error) {
-	c, err := client.NewClient(&credentials, userAgent, absolutePath)
+	c, err := client.NewClient(&credentials, userAgent, absolutePath, false)
 
 	if err != nil {
 		return nil, err

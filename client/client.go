@@ -19,8 +19,7 @@ import (
 
 const (
 	// libraryVersion = "v3"
-	defaultBaseURL = "https://%s/"
-	httpBaseURL    = "http://%s/"
+	defaultBaseURL = "%s://%s/"
 	// absolutePath   = "api/nutanix/" + libraryVersion
 	// userAgent      = "nutanix/" + libraryVersion
 	mediaType = "application/json"
@@ -63,7 +62,6 @@ type Credentials struct {
 	ProxyURL           string
 	FoundationEndpoint string
 	FoundationPort     string
-	FoundationURL      string
 }
 
 // AdditionalFilter specification for client side filters
@@ -73,7 +71,7 @@ type AdditionalFilter struct {
 }
 
 // NewClient returns a new Nutanix API client.
-func NewClient(credentials *Credentials, userAgent string, absolutePath string) (*Client, error) {
+func NewClient(credentials *Credentials, userAgent string, absolutePath string, isHttp bool) (*Client, error) {
 	if userAgent == "" {
 		return nil, fmt.Errorf("userAgent argument must be passed")
 	}
@@ -100,7 +98,12 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string) 
 
 	httpClient.Transport = logging.NewTransport("Nutanix", transCfg)
 
-	baseURL, err := url.Parse(fmt.Sprintf(defaultBaseURL, credentials.URL))
+	protocol := "https"
+	if isHttp {
+		protocol = "http"
+	}
+
+	baseURL, err := url.Parse(fmt.Sprintf(defaultBaseURL, protocol, credentials.URL))
 
 	if err != nil {
 		return nil, err
@@ -150,12 +153,12 @@ func NewBaseClient(credentials *Credentials, absolutePath string, isHttp bool) (
 	}
 	httpClient.Transport = logging.NewTransport("Nutanix", transCfg)
 
-	urlExpr := defaultBaseURL
+	protocol := "https"
 	if isHttp {
-		urlExpr = httpBaseURL
+		protocol = "http"
 	}
 
-	baseURL, err := url.Parse(fmt.Sprintf(urlExpr, credentials.URL))
+	baseURL, err := url.Parse(fmt.Sprintf(defaultBaseURL, protocol, credentials.URL))
 	if err != nil {
 		return nil, err
 	}
@@ -206,28 +209,28 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 
 // NewRequest creates a request without authorisation headers
 func (c *Client) NewUnAuthRequest(ctx context.Context, method, urlStr string, body interface{}) (*http.Request, error) {
-	rel, errp := url.Parse(c.AbsolutePath + urlStr)
-	if errp != nil {
-		return nil, errp
-	}
 
+	//create main api url
+	rel, err := url.Parse(c.AbsolutePath + urlStr)
+	if err != nil {
+		return nil, err
+	}
 	u := c.BaseURL.ResolveReference(rel)
 
 	buf := new(bytes.Buffer)
-
 	if body != nil {
 		err := json.NewEncoder(buf).Encode(body)
-
 		if err != nil {
 			return nil, err
 		}
 	}
-	req, err := http.NewRequest(method, u.String(), buf)
 
+	req, err := http.NewRequest(method, u.String(), buf)
 	if err != nil {
 		return nil, err
 	}
 
+	//add api headers
 	req.Header.Add("Content-Type", mediaType)
 	req.Header.Add("Accept", mediaType)
 	req.Header.Add("User-Agent", c.UserAgent)
