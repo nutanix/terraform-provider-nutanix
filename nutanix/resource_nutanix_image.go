@@ -2,7 +2,6 @@ package nutanix
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"path/filepath"
@@ -141,7 +140,8 @@ func resourceNutanixImage() *schema.Resource {
 				Computed: true,
 			},
 			"data_source_reference": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -199,7 +199,7 @@ func resourceNutanixImageCreate(ctx context.Context, d *schema.ResourceData, met
 
 	// if three path, uri, dsr are provided, return an error
 	if iok && pok && dsr {
-		return errors.New("all three source_uri, source_path and data_source_reference are provided")
+		return diag.Errorf("all three source_uri, source_path and data_source_reference are provided")
 	}
 
 	// Read Arguments and set request values
