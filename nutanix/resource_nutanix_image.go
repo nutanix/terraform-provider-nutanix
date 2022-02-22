@@ -522,8 +522,8 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 	}
 
 	if dsr, dsrok := d.GetOk("data_source_reference"); dsrok {
-		data_source_reference := dsr.(map[string]interface{})
-		image.DataSourceReference = validateRef(data_source_reference)
+		dataSourceReference := dsr.(map[string]interface{})
+		image.DataSourceReference = validateRef(dataSourceReference)
 		image.ImageType = utils.StringPtr("DISK_IMAGE")
 	}
 
