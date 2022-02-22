@@ -28,7 +28,7 @@ func setup() (*http.ServeMux, *client.Client, *httptest.Server) {
 		Insecure: true},
 		userAgent,
 		absolutePath,
-	)
+		false)
 	c.BaseURL, _ = url.Parse(server.URL)
 
 	return mux, c, server

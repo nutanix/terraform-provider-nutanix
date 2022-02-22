@@ -39,7 +39,6 @@ func (c *Config) Client() (*Client, error) {
 		ProxyURL:           c.ProxyURL,
 		FoundationEndpoint: c.FoundationEndpoint,
 		FoundationPort:     c.FoundationPort,
-		FoundationURL:      fmt.Sprintf("%s:%s", c.FoundationEndpoint, c.FoundationPort),
 	}
 
 	v3Client, err := v3.NewV3Client(configCreds)

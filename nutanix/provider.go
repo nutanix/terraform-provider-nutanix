@@ -29,7 +29,7 @@ func Provider() *schema.Provider {
 			"individual CVM address, as this would cause calls to fail during\n" +
 			"cluster lifecycle management operations, such as AOS upgrades.",
 
-		"foundation_endpoint": "URL for foundation VM (eg. Foundation VM IP)",
+		"foundation_endpoint": "endpoint for foundation VM (eg. Foundation VM IP)",
 
 		"foundation_port": "Port for foundation VM",
 	}
