@@ -70,7 +70,7 @@ type Clusters struct {
 	BackplaneSubnet       string   `json:"backplane_subnet,omitempty"`
 	ClusterInitSuccessful *bool    `json:"cluster_init_successful"`
 	BackplaneNetmask      string   `json:"backplane_netmask,omitempty"`
-	RedundancyFactor      *int     `json:"redundancy_factor"`
+	RedundancyFactor      *int64   `json:"redundancy_factor"`
 	BackplaneVlan         string   `json:"backplane_vlan,omitempty"`
 	ClusterName           string   `json:"cluster_name"`
 	ClusterExternalIP     string   `json:"cluster_external_ip,omitempty"`
@@ -106,17 +106,17 @@ type Vswitches struct {
 	Name        string   `json:"name"`
 	Uplinks     []string `json:"uplinks"`
 	OtherConfig []string `json:"other_config"`
-	Mtu         *int     `json:"mtu"`
+	Mtu         *int64   `json:"mtu"`
 }
 
 //Single node defination
 type Node struct {
 	Ipv6Address             string       `json:"ipv6_address,omitempty"`
 	NodePosition            string       `json:"node_position"`
-	ImageDelay              *int         `json:"image_delay,omitempty"`
+	ImageDelay              *int64       `json:"image_delay,omitempty"`
 	UcsmParams              *UcsmParams  `json:"ucsm_params,omitempty"`
 	HypervisorHostname      string       `json:"hypervisor_hostname"`
-	CvmGbRAM                *int         `json:"cvm_gb_ram,omitempty"`
+	CvmGbRAM                *int64       `json:"cvm_gb_ram,omitempty"`
 	DeviceHint              string       `json:"device_hint,omitempty"`
 	BondMode                string       `json:"bond_mode"`
 	RdmaPassthrough         *bool        `json:"rdma_passthrough,omitempty"`
@@ -127,7 +127,7 @@ type Node struct {
 	IpmiConfigureNow        *bool        `json:"ipmi_configure_now,omitempty"`
 	ImageSuccessful         *bool        `json:"image_successful,omitempty"`
 	Ipv6Interface           string       `json:"ipv6_interface,omitempty"`
-	CvmNumVcpus             *int         `json:"cvm_num_vcpus,omitempty"`
+	CvmNumVcpus             *int64       `json:"cvm_num_vcpus,omitempty"`
 	IpmiMac                 string       `json:"ipmi_mac,omitempty"`
 	RdmaMacAddr             string       `json:"rdma_mac_addr,omitempty"`
 	BondUplinks             []string     `json:"bond_uplinks,omitempty"`
@@ -138,7 +138,7 @@ type Node struct {
 	ImageNow                *bool        `json:"image_now"`
 	UcsmManagedMode         string       `json:"ucsm_managed_mode,omitempty"`
 	IpmiIP                  string       `json:"ipmi_ip"`
-	CurrentCvmVlanTag       *int         `json:"current_cvm_vlan_tag"`
+	CurrentCvmVlanTag       *int64       `json:"current_cvm_vlan_tag"`
 	CvmIP                   string       `json:"cvm_ip"`
 	ExludeBootSerial        string       `json:"exlude_boot_serial,omitempty"`
 	MitigateLowBootSpace    *bool        `json:"mitigate_low_boot_space,omitempty"`
