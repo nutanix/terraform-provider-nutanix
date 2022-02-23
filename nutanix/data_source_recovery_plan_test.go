@@ -25,14 +25,14 @@ func TestAccRecoveryPlanDataSourceConfig_WithID(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixRecoveryPlanDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecoveryPlanDataSourceConfig_WithID(name, description, stageUUID),
+				Config: testAccRecoveryPlanDataSourceConfigWithID(name, description, stageUUID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 				),
 			},
 			{
-				Config: testAccRecoveryPlanDataSourceConfig_WithID(nameUpdated, descriptionUpdated, stageUUID),
+				Config: testAccRecoveryPlanDataSourceConfigWithID(nameUpdated, descriptionUpdated, stageUUID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", nameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
@@ -57,14 +57,14 @@ func TestAccRecoveryPlanDataSourceConfig_WithName(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixRecoveryPlanDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecoveryPlanDataSourceConfig_WithName(name, description, stageUUID),
+				Config: testAccRecoveryPlanDataSourceConfigWithName(name, description, stageUUID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 				),
 			},
 			{
-				Config: testAccRecoveryPlanDataSourceConfig_WithName(nameUpdated, descriptionUpdated, stageUUID),
+				Config: testAccRecoveryPlanDataSourceConfigWithName(nameUpdated, descriptionUpdated, stageUUID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", nameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
@@ -74,7 +74,7 @@ func TestAccRecoveryPlanDataSourceConfig_WithName(t *testing.T) {
 	})
 }
 
-func testAccRecoveryPlanDataSourceConfig_WithID(name, description, stageUUID string) string {
+func testAccRecoveryPlanDataSourceConfigWithID(name, description, stageUUID string) string {
 	return fmt.Sprintf(`
         resource "nutanix_recovery_plan" "test" {
 			name        = "%s"
@@ -102,7 +102,7 @@ func testAccRecoveryPlanDataSourceConfig_WithID(name, description, stageUUID str
 `, name, description, stageUUID)
 }
 
-func testAccRecoveryPlanDataSourceConfig_WithName(name, description, stageUUID string) string {
+func testAccRecoveryPlanDataSourceConfigWithName(name, description, stageUUID string) string {
 	return fmt.Sprintf(`
         resource "nutanix_recovery_plan" "test" {
 			name        = "%s"
