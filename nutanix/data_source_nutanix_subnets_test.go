@@ -28,7 +28,7 @@ func TestAccNutanixSubnetsDataSource_WithFilters(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetsDataSourceConfig_WithFilters(),
+				Config: testAccSubnetsDataSourceConfigWithFilters(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
 						"data.nutanix_subnets.test", "entities.0.name", "vlan0_test_2"),
@@ -77,8 +77,8 @@ data "nutanix_subnets" "test" {}
 	`, randIntBetween(1, 25))
 }
 
-func testAccSubnetsDataSourceConfig_WithFilters() string {
-	return fmt.Sprintf(`
+func testAccSubnetsDataSourceConfigWithFilters() string {
+	return `
 	data "nutanix_clusters" "clusters" {}
 	locals{
 		cluster1 = [
@@ -104,5 +104,5 @@ func testAccSubnetsDataSourceConfig_WithFilters() string {
 		depends_on = [
 			nutanix_subnet.test-subnets
 		]
-	}`)
+	}`
 }
