@@ -21,6 +21,23 @@ func TestAccNutanixSubnetsDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
+func TestAccNutanixSubnetsDataSource_WithFilters(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetsDataSourceConfig_WithFilters(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"data.nutanix_subnets.test", "entities.0.name", "vlan0_test_2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccSubnetsDataSourceConfig() string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
@@ -58,4 +75,34 @@ resource "nutanix_subnet" "test" {
 data "nutanix_subnets" "test" {}
 
 	`, randIntBetween(1, 25))
+}
+
+func testAccSubnetsDataSourceConfig_WithFilters() string {
+	return fmt.Sprintf(`
+	data "nutanix_clusters" "clusters" {}
+	locals{
+		cluster1 = [
+			for cluster in data.nutanix_clusters.clusters.entities:
+			cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+		][0]
+	}
+	
+	resource "nutanix_subnet" "test-subnets" {
+		count = 5
+		name = "vlan0_test_${count.index}" 
+		cluster_uuid = local.cluster1
+	
+		vlan_id = count.index + 1
+		subnet_type = "VLAN"
+		
+	}
+	
+	data "nutanix_subnets" "test" {
+		metadata {
+		  filter = "name==vlan0_test_2"
+		}
+		depends_on = [
+			nutanix_subnet.test-subnets
+		]
+	}`)
 }
