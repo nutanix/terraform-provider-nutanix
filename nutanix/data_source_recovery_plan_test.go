@@ -43,7 +43,6 @@ func TestAccRecoveryPlanDataSourceConfig_WithID(t *testing.T) {
 }
 
 func TestAccRecoveryPlanDataSourceConfig_WithName(t *testing.T) {
-
 	name := acctest.RandomWithPrefix("test-recovery-name")
 	nameUpdated := acctest.RandomWithPrefix("test-recovery-name")
 	description := acctest.RandomWithPrefix("test-recovery-desc")
