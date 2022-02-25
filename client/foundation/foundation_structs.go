@@ -36,6 +36,8 @@ type ImageNodesInput struct {
 	HypervisorGateway     string        `json:"hypervisor_gateway"`
 	NosPackage            string        `json:"nos_package"` //will be null for cluster creation
 	UcsmUser              string        `json:"ucsm_user,omitempty"`
+	// IPMINetmask           string        `json:"ipmi_netmask,omitempty"`
+	// IPMIGateway           string        `json:"ipmi_gateway,omitempty"`
 }
 
 //Specific hypervisor defination for imaging
@@ -118,7 +120,7 @@ type Node struct {
 	HypervisorHostname      string       `json:"hypervisor_hostname"`
 	CvmGbRAM                *int64       `json:"cvm_gb_ram,omitempty"`
 	DeviceHint              string       `json:"device_hint,omitempty"`
-	BondMode                string       `json:"bond_mode"`
+	BondMode                string       `json:"bond_mode,omitempty"`
 	RdmaPassthrough         *bool        `json:"rdma_passthrough,omitempty"`
 	ClusterID               string       `json:"cluster_id,omitempty"`
 	UcsmNodeSerial          string       `json:"ucsm_node_serial,omitempty"`
@@ -134,7 +136,7 @@ type Node struct {
 	CurrentNetworkInterface string       `json:"current_network_interface,omitempty"`
 	Hypervisor              string       `json:"hypervisor"`
 	Vswitches               []*Vswitches `json:"vswitches,omitempty"`
-	BondLacpRate            string       `json:"bond_lacp_rate"`
+	BondLacpRate            string       `json:"bond_lacp_rate,omitempty"`
 	ImageNow                *bool        `json:"image_now"`
 	UcsmManagedMode         string       `json:"ucsm_managed_mode,omitempty"`
 	IpmiIP                  string       `json:"ipmi_ip"`
