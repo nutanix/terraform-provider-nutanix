@@ -1,12 +1,14 @@
 package nutanix
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/foundation"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -211,6 +213,29 @@ func taskStateRefreshFunc(client *v3.Client, taskUUID string) resource.StateRefr
 				fmt.Errorf("error_detail: %s, progress_message: %s", utils.StringValue(v.ErrorDetail), utils.StringValue(v.ProgressMessage))
 		}
 		return v, *v.Status, nil
+	}
+}
+
+func foundationImageRefresh(client *foundation.Client, taskUUID string, ctx context.Context) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		v, err := client.NodeImaging.ImageNodesProgress(ctx, taskUUID)
+
+		if err != nil {
+			if strings.Contains(fmt.Sprint(err), "Failed") {
+				return v, ERROR, nil
+			}
+			return nil, "FAILED", err
+		}
+
+		// if (*v.AggregatePercentComplete) < 100 || (*v.ImagingStopped) {
+		// 	return v, cast.ToString(*v.AggregatePercentComplete),
+		// 		fmt.Errorf("error_detail: %s, progress_message: %s", v.Action, cast.ToString(v.AggregatePercentComplete))
+		// }
+		// return v, cast.ToString(*v.AggregatePercentComplete), nil
+		if utils.BoolValue(v.ImagingStopped) {
+			return v, "COMPLETED", nil
+		}
+		return v, "PENDING", nil
 	}
 }
 
