@@ -1,0 +1,1174 @@
+package nutanix
+
+import (
+	"context"
+	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/spf13/cast"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/foundation"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
+
+var (
+	ImageMinTimeout = 60 * time.Minute
+)
+
+func ResourceFoundationImageNodes() *schema.Resource {
+	return &schema.Resource{
+		CreateContext: resourceFoundationImageNodesCreate,
+		ReadContext:   resourceFoundationImageNodesRead,
+		DeleteContext: resourceFoundationImageNodesDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(ImageMinTimeout),
+		},
+
+		Schema: map[string]*schema.Schema{
+			"xs_master_label": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"ipmi_password": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"cvm_gateway": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"hyperv_external_vnic": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"xen_config_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"ucsm_ip": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"ucsm_password": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"hypervisor_iso": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"hyperv": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"filename": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"checksum": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"kvm": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"filename": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"checksum": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"xen": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"filename": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"checksum": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"esx": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"filename": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"checksum": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"unc_path": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"hypervisor_netmask": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"fc_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"fc_metadata": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"fc_ip": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"api_key": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"foundation_central": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"xs_master_password": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"svm_rescue_args": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"cvm_netmask": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"xs_master_ip": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"clusters": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enable_ns": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"backplane_subnet": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"cluster_init_successful": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"backplane_netmask": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"redundancy_factor": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"backplane_vlan": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"cluster_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"cluster_external_ip": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"cvm_ntp_servers": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"single_node_cluster": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"cluster_members": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"cvm_dns_servers": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"cluster_init_now": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"hypervisor_ntp_servers": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"hyperv_external_vswitch": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"hypervisor_nameserver": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"hyperv_sku": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
+			"eos_metadata": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"config_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"account_name": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"email": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"tests": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"run_syscheck": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"run_ncc": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"blocks": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Required: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"nodes": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ipv6_address": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"node_position": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"image_delay": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"ucsm_params": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"native_vlan": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"keep_ucsm_settings": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"mac_pool": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"vlan_name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"hypervisor_hostname": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"cvm_gb_ram": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"device_hint": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"bond_mode": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"rdma_passthrough": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"cluster_id": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"ucsm_node_serial": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"hypervisor_ip": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"node_serial": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"ipmi_configure_now": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"image_successful": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"ipv6_interface": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"cvm_num_vcpus": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"ipmi_mac": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"rdma_mac_addr": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"bond_uplinks": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"current_network_interface": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"hypervisor": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"vswitches": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										ForceNew: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"lacp": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"bond_mode": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"uplinks": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"other_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"mtu": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"bond_lacp_rate": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"image_now": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"ucsm_managed_mode": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"ipmi_ip": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"current_cvm_vlan_tag": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"cvm_ip": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"exlude_boot_serial": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"mitigate_low_boot_space": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"block_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"hyperv_product_key": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"unc_username": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"install_script": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"ipmi_user": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"hypervisor_password": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"unc_password": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"xs_master_username": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"skip_hypervisor": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
+			"hypervisor_gateway": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"nos_package": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"ucsm_user": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"session_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+		},
+	}
+}
+
+func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+
+	conn := meta.(*Client).FoundationClientAPI
+	// Prepare request
+	request := &foundation.ImageNodesInput{}
+
+	xsmasterlabel, ok := d.GetOk("xs_master_label")
+	if ok {
+		request.XsMasterLabel = (xsmasterlabel.(string))
+	}
+
+	ipmi_pass, ok := d.GetOk("ipmi_password")
+	if !ok {
+		return diag.Errorf("please provide the required ipmi password attribute")
+	}
+	request.IpmiPassword = ipmi_pass.(string)
+
+	cvm_gateway, cvmgok := d.GetOk("cvm_gateway")
+	if cvmgok {
+		request.CvmGateway = (cvm_gateway.(string))
+	}
+
+	hyperv_external_vnic, hyperv_external_vnicok := d.GetOk("hyperv_external_vnic")
+	if hyperv_external_vnicok {
+		request.HypervExternalVnic = hyperv_external_vnic.(string)
+	}
+
+	xen_config_type, ok := d.GetOk("xen_config_type")
+	if ok {
+		request.XenConfigType = (xen_config_type.(string))
+	}
+
+	ucsm_ip, ok := d.GetOk("ucsm_ip")
+	if ok {
+		request.UcsmIP = (ucsm_ip.(string))
+	}
+
+	ucsm_password, ok := d.GetOk("ucsm_password")
+	if ok {
+		request.UcsmPassword = (ucsm_password.(string))
+	}
+
+	unc_path, ok := d.GetOk("unc_path")
+	if ok {
+		request.UncPath = (unc_path.(string))
+	}
+
+	hypervisor_netmask, ok := d.GetOk("hypervisor_netmask")
+	if ok {
+		request.HypervisorNetmask = (hypervisor_netmask.(string))
+	}
+
+	xs_master_password, ok := d.GetOk("xs_master_password")
+	if ok {
+		request.XsMasterPassword = (xs_master_password.(string))
+	}
+
+	cvm_netmask, ok := d.GetOk("cvm_netmask")
+	if ok {
+		request.CvmNetmask = (cvm_netmask.(string))
+	}
+
+	xs_master_ip, ok := d.GetOk("xs_master_ip")
+	if ok {
+		request.XsMasterIP = (xs_master_ip.(string))
+	}
+
+	hyperv_external_vswitch, ok := d.GetOk("hyperv_external_vswitch")
+	if ok {
+		request.HypervExternalVswitch = hyperv_external_vswitch.(string)
+	}
+
+	hypervisor_nameserver, ok := d.GetOk("hypervisor_nameserver")
+	if ok {
+		request.HypervisorNameserver = (hypervisor_nameserver.(string))
+	}
+
+	hyperv_sku, ok := d.GetOk("hyperv_sku")
+	if ok {
+		request.HypervSku = (hyperv_sku.(string))
+	}
+
+	hyperv_product_key, ok := d.GetOk("hyperv_product_key")
+	if ok {
+		request.HypervProductKey = (hyperv_product_key.(string))
+	}
+
+	unc_username, ok := d.GetOk("unc_username")
+	if ok {
+		request.UncUsername = (unc_username.(string))
+	}
+
+	install_script, ok := d.GetOk("install_script")
+	if ok {
+		request.InstallScript = (install_script.(string))
+	}
+
+	ipmi_user, ok := d.GetOk("ipmi_user")
+	if ok {
+		request.IpmiUser = (ipmi_user.(string))
+	}
+
+	hypervisor_password, ok := d.GetOk("hypervisor_password")
+	if ok {
+		request.HypervisorPassword = (hypervisor_password.(string))
+	}
+
+	unc_password, ok := d.GetOk("unc_password")
+	if ok {
+		request.UncPassword = (unc_password.(string))
+	}
+
+	xs_master_username, ok := d.GetOk("xs_master_username")
+	if ok {
+		request.XsMasterUsername = (xs_master_username.(string))
+	}
+
+	skip_hypervisor, ok := d.GetOk("skip_hypervisor")
+	if ok {
+		request.SkipHypervisor = utils.BoolPtr(skip_hypervisor.(bool))
+	}
+
+	hypervisor_gateway, ok := d.GetOk("hypervisor_gateway")
+	if ok {
+		request.HypervisorGateway = (hypervisor_gateway.(string))
+	}
+
+	nos_package, ok := d.GetOk("nos_package")
+	if ok {
+		request.NosPackage = (nos_package.(string))
+	}
+
+	ucsm_user, ok := d.GetOk("ucsm_user")
+	if ok {
+		request.UcsmUser = (ucsm_user.(string))
+	}
+
+	fc_settings, err := expandFcSetting(d)
+	if err == nil {
+		request.FcSettings = fc_settings
+		// return diag.FromErr(err)
+	}
+
+	eosmeta, err := expandEosMetadata(d)
+	if err == nil {
+		request.EosMetadata = eosmeta
+		// return diag.FromErr(err)
+	}
+
+	tests, err := expandTests(d)
+	if err == nil {
+		request.Tests = tests
+	}
+
+	hypervisorIso, ok := d.GetOk("hypervisor_iso")
+	if ok {
+		request.HypervisorIso = expandHypervisorIso(hypervisorIso.(map[string]interface{}))
+	}
+
+	cluster, err := expandCluster(d)
+	if err == nil {
+		request.Clusters = cluster
+	}
+
+	blocks, err := flattenBlocks(d)
+	if err == nil {
+		request.Blocks = blocks
+	}
+
+	// call the client here
+
+	resp, err := conn.NodeImaging.ImageNodes(ctx, request)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(resp.SessionID)
+
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING"},
+		Target:  []string{"COMPLETED", "FAILED"},
+		Refresh: foundationImageRefresh(conn, resp.SessionID, ctx),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+		Delay:   1 * time.Minute,
+	}
+	info, err := stateConf.WaitForStateContext(ctx)
+	if err != nil {
+		return diag.Errorf("error waiting for image (%s) to be ready: %v", resp.SessionID, err)
+	}
+	if progress, ok := info.(*foundation.ImageNodesProgressResponse); ok {
+		if utils.Float64Value(progress.AggregatePercentComplete) < 100 {
+			return diag.Errorf("Progress is incomplete")
+		}
+	}
+	return nil
+}
+
+func resourceFoundationImageNodesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return nil
+}
+
+func resourceFoundationImageNodesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return nil
+}
+
+func expandTests(d *schema.ResourceData) (*foundation.Tests, error) {
+	tests := &foundation.Tests{}
+
+	if test, ok := d.GetOk("tests"); ok {
+		set := test.(map[string]interface{})
+
+		if runsync, ok := set["RunSyscheck"]; ok {
+			tests.RunSyscheck = utils.BoolPtr(runsync.(bool))
+		}
+		if runncc, ok := set["RunNcc"]; ok {
+			tests.RunNcc = utils.BoolPtr(runncc.(bool))
+		}
+
+		return tests, nil
+
+	}
+
+	return nil, nil
+
+}
+
+func expandEosMetadata(d *schema.ResourceData) (*foundation.EosMetadata, error) {
+
+	eos_meta := &foundation.EosMetadata{}
+	if eos, ok := d.GetOk("eos_metadata"); ok {
+		eosmeta := eos.(map[string]interface{})
+
+		if config, ok := eosmeta["ConfigID"]; ok {
+			eos_meta.ConfigID = (config.(string))
+		}
+
+		if acname, ok := eosmeta["AccountName"]; ok {
+			ac := acname.([]interface{})
+
+			for a := range ac {
+				eos_meta.AccountName[a] = ac[a].(string)
+			}
+		}
+		if email, ok := d.GetOk("Email"); ok {
+			eos_meta.Email = (email.(string))
+		}
+		return eos_meta, nil
+	}
+	return nil, nil
+}
+func expandFcSetting(d *schema.ResourceData) (*foundation.FcSettings, error) {
+
+	fc := &foundation.FcSettings{}
+
+	if fcset, ok := d.GetOk("fc_settings"); ok {
+		set := fcset.(map[string]interface{})
+
+		if val, ok2 := set["FoundationCentral"]; ok2 {
+			fc.FoundationCentral = utils.BoolPtr(val.(bool))
+		}
+		if val, ok2 := set["FcMetadata"]; ok2 {
+			fcmeta := val.(map[string]interface{})
+			if val, ok := fcmeta["FcIP"]; ok {
+				fc.FcMetadata.FcIP = (val.(string))
+			}
+
+			if val, ok := fcmeta["APIKey"]; ok {
+				fc.FcMetadata.APIKey = val.(string)
+			}
+		}
+		return fc, nil
+	}
+	return nil, nil
+}
+
+func expandHypervisorIso(pr map[string]interface{}) foundation.HypervisorIso {
+
+	iso := foundation.HypervisorIso{}
+
+	if hyperv, ok := pr["Hyperv"]; ok {
+		iso.Hyperv = expandHypervisor(hyperv.(map[string]interface{}))
+	}
+	if kvm, ok := pr["Kvm"]; ok {
+		iso.Kvm = expandHypervisor(kvm.(map[string]interface{}))
+	}
+
+	if xen, ok := pr["Xen"]; ok {
+		iso.Hyperv = expandHypervisor(xen.(map[string]interface{}))
+	}
+	if esx, ok := pr["esx"]; ok {
+		iso.Kvm = expandHypervisor(esx.(map[string]interface{}))
+	}
+
+	return iso
+}
+
+func expandHypervisor(pr map[string]interface{}) *foundation.Hypervisor {
+	hyp := &foundation.Hypervisor{}
+
+	if checksum, ok := pr["Checksum"]; ok {
+		hyp.Checksum = (checksum.(string))
+	}
+	if filename, ok := pr["Filename"]; ok {
+		hyp.Filename = (filename.(string))
+	}
+
+	return hyp
+
+}
+
+func expandVswitches(pr interface{}) []*foundation.Vswitches {
+	vswit := pr.([]interface{})
+	outbound := make([]*foundation.Vswitches, len(vswit))
+
+	for _, vs := range vswit {
+		vs := vs.(map[string]interface{})
+		vst := &foundation.Vswitches{}
+
+		if lacp, ok := vs["lacp"]; ok {
+			vst.Lacp = lacp.(string)
+		}
+		if bondmode, ok := vs["bond_mode"]; ok {
+			vst.BondMode = bondmode.(string)
+		}
+		if mtu, ok := vs["mtu"]; ok {
+			vst.Mtu = utils.Int64Ptr(mtu.(int64))
+		}
+		if name, ok := vs["name"]; ok {
+			vst.Name = name.(string)
+		}
+
+		if otherconf, ok := vs["other_config"]; ok {
+			other := otherconf.([]interface{})
+
+			for o := range other {
+				vst.OtherConfig[o] = other[o].(string)
+			}
+		}
+		if uplinks, ok := vs["uplinks"]; ok {
+			ups := uplinks.([]interface{})
+
+			for o := range ups {
+				vst.Uplinks[o] = ups[o].(string)
+			}
+		}
+		outbound = append(outbound, vst)
+	}
+	return outbound
+}
+
+func expandUcsmParams(pr interface{}) *foundation.UcsmParams {
+
+	ucsm := pr.([]interface{})
+	UcsmParam := &foundation.UcsmParams{}
+
+	for _, k := range ucsm {
+
+		set := k.(map[string]interface{})
+
+		if nativevlan, ok := set["NativeVlan"]; ok {
+			UcsmParam.NativeVlan = utils.BoolPtr(nativevlan.(bool))
+		}
+		if KeepUcsmSettings, ok := set["KeepUcsmSettings"]; ok {
+			UcsmParam.KeepUcsmSettings = utils.BoolPtr(KeepUcsmSettings.(bool))
+		}
+		if macPool, ok := set["MacPool"]; ok {
+			UcsmParam.MacPool = macPool.(string)
+		}
+		if VlanName, ok := set["VlanName"]; ok {
+			UcsmParam.VlanName = VlanName.(string)
+		}
+	}
+	return UcsmParam
+}
+
+func expandCluster(d *schema.ResourceData) ([]*foundation.Clusters, error) {
+	clstr := make([]*foundation.Clusters, 0)
+	if v, ok := d.GetOk("clusters"); ok {
+		n := v.([]interface{})
+		if len(n) > 0 {
+			cls := make([]*foundation.Clusters, 0)
+
+			for _, nc := range n {
+
+				clst := nc.(map[string]interface{})
+
+				clusterList := &foundation.Clusters{}
+				if enablens, ok := clst["enable_ns"]; ok {
+					clusterList.EnableNs = utils.BoolPtr(enablens.(bool))
+				}
+				if backplanesn, ok := clst["backplane_subnet"]; ok {
+					clusterList.BackplaneSubnet = backplanesn.(string)
+				}
+				if clstinit, ok := clst["cluster_init_successful"]; ok {
+					clusterList.ClusterInitSuccessful = utils.BoolPtr(clstinit.(bool))
+				}
+				if backplanenm, ok := clst["backplane_netmask"]; ok {
+					clusterList.BackplaneNetmask = (backplanenm.(string))
+				}
+				if rf, ok := clst["redundancy_factor"]; ok {
+					clusterList.RedundancyFactor = utils.Int64Ptr(cast.ToInt64(rf))
+				}
+				if backplanevlan, ok := clst["backplane_vlan"]; ok {
+					clusterList.BackplaneVlan = (backplanevlan.(string))
+				}
+				if clustername, ok := clst["cluster_name"]; ok {
+					clusterList.ClusterName = clustername.(string)
+				}
+				if clusterext, ok := clst["cluster_external_ip"]; ok {
+					clusterList.ClusterExternalIP = (clusterext.(string))
+				}
+				if cvmntps, ok := clst["cvm_ntp_servers"]; ok {
+					clusterList.CvmNtpServers = (cvmntps.(string))
+				}
+				if sncluster, ok := clst["single_node_cluster"]; ok {
+					clusterList.SingleNodeCluster = utils.BoolPtr(sncluster.(bool))
+				}
+				if cvmdns, ok := clst["cvm_dns_servers"]; ok {
+					clusterList.CvmDNSServers = (cvmdns.(string))
+				}
+				if clusterinitnow, ok := clst["cluster_init_now"]; ok {
+					clusterList.ClusterInitNow = utils.BoolPtr(clusterinitnow.(bool))
+				}
+				if hypervntps, ok := clst["hypervisor_ntp_servers"]; ok {
+					clusterList.HypervisorNtpServers = (hypervntps.(string))
+				}
+				if clsmembers, ok := clst["cluster_members"]; ok {
+					clsm := clsmembers.([]interface{})
+					res := []string{}
+					for _, v := range clsm {
+						res = append(res, v.(string))
+					}
+					clusterList.ClusterMembers = res
+				}
+				cls = append(cls, clusterList)
+			}
+			return cls, nil
+		}
+
+	}
+	return clstr, nil
+}
+
+func expandNodes(pr interface{}) []*foundation.Node {
+	nodesList := pr.([]interface{})
+	nodes := make([]*foundation.Node, len(nodesList))
+
+	for i, p := range nodesList {
+		node := p.(map[string]interface{})
+		nodeList := &foundation.Node{}
+
+		if ipv6, ipv6ok := node["ipv6_address"]; ipv6ok {
+			nodeList.BondLacpRate = (ipv6.(string))
+		}
+		if np, npok := node["node_position"]; npok {
+			nodeList.NodePosition = (np.(string))
+		}
+		if imgd, imgdok := node["image_delay"]; imgdok {
+			nodeList.ImageDelay = utils.Int64Ptr(cast.ToInt64(imgd))
+		}
+		if hypervhostname, hpyervhostnok := node["hypervisor_hostname"]; hpyervhostnok {
+			nodeList.HypervisorHostname = (hypervhostname.(string))
+		}
+		if cvmram, cvmramok := node["cvm_gb_ram"]; cvmramok {
+			nodeList.CvmGbRAM = utils.Int64Ptr(cast.ToInt64(cvmram))
+		}
+		if devicehint, devicehintok := node["device_hint"]; devicehintok {
+			nodeList.DeviceHint = (devicehint.(string))
+		}
+		if bondmode, bondmodeok := node["bond_mode"]; bondmodeok {
+			nodeList.BondMode = (bondmode.(string))
+		}
+		if rdmapass, rdmapassok := node["rdma_passthrough"]; rdmapassok {
+			nodeList.RdmaPassthrough = utils.BoolPtr(rdmapass.(bool))
+		}
+		if clsid, clsidok := node["cluster_id"]; clsidok {
+			nodeList.ClusterID = (clsid.(string))
+		}
+		if ucsmns, ucsmnsok := node["ucsm_node_serial"]; ucsmnsok {
+			nodeList.UcsmNodeSerial = (ucsmns.(string))
+		}
+		if hypervip, hypervipok := node["hypervisor_ip"]; hypervipok {
+			nodeList.HypervisorIP = (hypervip.(string))
+		}
+		if ns, nsok := node["node_serial"]; nsok {
+			nodeList.NodeSerial = (ns.(string))
+		}
+		if ipmicn, ipmicnok := node["ipmi_configure_now"]; ipmicnok {
+			nodeList.IpmiConfigureNow = utils.BoolPtr(ipmicn.(bool))
+		}
+		if imgsuc, imgsucok := node["image_successful"]; imgsucok {
+			nodeList.ImageSuccessful = utils.BoolPtr(imgsuc.(bool))
+		}
+		if ipv6i, ipv6iok := node["ipv6_interface"]; ipv6iok {
+			nodeList.Ipv6Interface = (ipv6i.(string))
+		}
+		if cvmvcpu, cvmvcpuok := node["cvm_num_vcpus"]; cvmvcpuok {
+			nodeList.CvmNumVcpus = utils.Int64Ptr(cast.ToInt64(cvmvcpu))
+		}
+		if ipmimac, ipmimacok := node["ipmi_mac"]; ipmimacok {
+			nodeList.IpmiMac = (ipmimac.(string))
+		}
+		if clsid, clsidok := node["rdma_mac_addr"]; clsidok {
+			nodeList.ClusterID = (clsid.(string))
+		}
+		if ucsmns, ucsmnsok := node["current_network_interface"]; ucsmnsok {
+			nodeList.UcsmNodeSerial = (ucsmns.(string))
+		}
+		if hypervip, hypervipok := node["hypervisor_ip"]; hypervipok {
+			nodeList.HypervisorIP = (hypervip.(string))
+		}
+		if hyperv, hypervok := node["hypervisor"]; hypervok {
+			nodeList.Hypervisor = (hyperv.(string))
+		}
+		if bondlacprate, bondlacprateok := node["bond_lacp_rate"]; bondlacprateok {
+			nodeList.BondLacpRate = (bondlacprate.(string))
+		}
+		if imgnow, imgnowok := node["image_now"]; imgnowok {
+			nodeList.ImageNow = utils.BoolPtr(imgnow.(bool))
+		}
+		if ucsmmode, ucsmmodeok := node["ucsm_managed_mode"]; ucsmmodeok {
+			nodeList.UcsmManagedMode = (ucsmmode.(string))
+		}
+		if ipmi, ipmiok := node["ipmi_ip"]; ipmiok {
+			nodeList.IpmiIP = (ipmi.(string))
+		}
+		if cvmvlantag, cvmvlantagok := node["current_cvm_vlan_tag"]; cvmvlantagok {
+			nodeList.CurrentCvmVlanTag = utils.Int64Ptr(cast.ToInt64(cvmvlantag))
+		}
+		if cvmip, cvmipok := node["cvm_ip"]; cvmipok {
+			nodeList.CvmIP = (cvmip.(string))
+		}
+		if exboots, exbootsok := node["exlude_boot_serial"]; exbootsok {
+			nodeList.ExludeBootSerial = (exboots.(string))
+		}
+		if lbootspace, lbootspaceok := node["mitigate_low_boot_space"]; lbootspaceok {
+			nodeList.MitigateLowBootSpace = utils.BoolPtr(lbootspace.(bool))
+		}
+		if ucsm_params, ucsm_paramsok := node["ucsm_params"]; ucsm_paramsok {
+			nodeList.UcsmParams = expandUcsmParams(ucsm_params)
+		}
+		if vswitch, vswitchesok := node["vswitches"]; vswitchesok {
+
+			nodeList.Vswitches = expandVswitches(vswitch)
+		}
+		nodes[i] = nodeList
+	}
+	return nodes
+}
+
+func flattenBlocks(d *schema.ResourceData) ([]*foundation.Block, error) {
+	if blocks, ok := d.GetOk("blocks"); ok {
+		set := blocks.([]interface{})
+		outbound := make([]*foundation.Block, len(set))
+
+		for k, v := range set {
+			block := &foundation.Block{}
+
+			entry := v.(map[string]interface{})
+
+			if nodes, nodesok := entry["nodes"]; nodesok {
+				block.Nodes = expandNodes(nodes)
+			}
+
+			if blockid, blockidok := entry["block_id"]; blockidok {
+				block.BlockID = (blockid.(string))
+			}
+			outbound[k] = block
+		}
+		return outbound, nil
+	}
+	return nil, nil
+}

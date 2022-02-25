@@ -226,7 +226,7 @@ func (c *Client) NewUnAuthRequest(ctx context.Context, method, urlStr string, bo
 			return nil, err
 		}
 	}
-
+	fmt.Println(buf.String())
 	req, err := http.NewRequest(method, u.String(), buf)
 	if err != nil {
 		return nil, err
