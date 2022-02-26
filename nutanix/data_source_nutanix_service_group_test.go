@@ -30,23 +30,26 @@ func TestAccNutanixServiceGroupDataSource_basic(t *testing.T) {
 
 func testAccServiceGroupDataSourceConfig(name, description string) string {
 	return fmt.Sprintf(`
-	resource "nutanix_service_group" "test" {
-		  name = "%[1]s"
-		  description = "%[2]s"
+		resource "nutanix_service_group" "test" {
+			name = "%[1]s"
+			description = "%[2]s"
 
-		  service_list {
-			  protocol = "TCP"
-			  tcp_port_range_list {
-			start_port = 22
-			end_port = 22
-		  }
-		  tcp_port_range_list {
-			   start_port = 2222
-			end_port = 2222
-		  }
-	}
-
-	data "nutanix_service_group" "service_group" {
-		uuid = "${nutanix_address_group.test_address.id}"
-	}`, name, description)
+			service_list {
+				protocol = "TCP"
+				tcp_port_range_list {
+					start_port = 22
+					end_port = 22
+				}
+			
+				tcp_port_range_list {
+					start_port = 2222
+					end_port = 2222
+				}
+			}
+		}
+		data "nutanix_service_group" "service_group" {
+			uuid = "${nutanix_service_group.test.id}"
+		}
+	
+	`, name, description)
 }
