@@ -231,26 +231,29 @@ type ListHypervisorISOsResponse struct {
 }
 
 //Response struct format for /discover_nodes api
-type DiscoverNodesAPIResponse []struct {
+type DiscoverNodesAPIResponse []DiscoveredBlock
+
+//struct format for discovered block
+type DiscoveredBlock struct {
 	Model    string           `json:"model"`
 	Nodes    []DiscoveredNode `json:"nodes"`
-	ChassisN string           `json:"chassis_n"`
+	ChassisN *int64           `json:"chassis_n"`
 	BlockID  string           `json:"block_id"`
 }
 
 //Format for single discovered node
 type DiscoveredNode struct {
-	FoundationVersion       string `json:"foundation_version"`
-	Ipv6Address             string `json:"ipv6_address"`
-	NodeUUID                string `json:"node_uuid"`
-	CurrentNetworkInterface string `json:"current_network_interface"`
-	NodePosition            string `json:"node_position"`
-	Hypervisor              string `json:"hypervisor"`
-	Configured              *bool  `json:"configured"`
-	NosVersion              string `json:"nos_version"`
-	ClusterID               *int   `json:"cluster_id"`           //check for type
-	CurrentCvmVlanTag       *int   `json:"current_cvm_vlan_tag"` //check for type
-	HypervisorVersion       string `json:"hypervisor_version"`
-	CvmIP                   string `json:"cvm_ip"`
-	Model                   string `json:"model"`
+	FoundationVersion       string      `json:"foundation_version"`
+	Ipv6Address             string      `json:"ipv6_address"`
+	NodeUUID                string      `json:"node_uuid"`
+	CurrentNetworkInterface string      `json:"current_network_interface"`
+	NodePosition            string      `json:"node_position"`
+	Hypervisor              string      `json:"hypervisor"`
+	Configured              *bool       `json:"configured"`
+	NosVersion              string      `json:"nos_version"`
+	ClusterID               interface{} `json:"cluster_id"`           //check for type
+	CurrentCvmVlanTag       *int64      `json:"current_cvm_vlan_tag"` //check for type
+	HypervisorVersion       string      `json:"hypervisor_version"`
+	SvmIP                   string      `json:"svm_ip"`
+	Model                   string      `json:"model"`
 }

@@ -17,7 +17,7 @@ type NetworkingOperations struct {
 
 //Discovers Nutanix-imaged nodes within an IPv6 network.
 func (ntw NetworkingOperations) DiscoverNodes(ctx context.Context) (*DiscoverNodesAPIResponse, error) {
-	path := "/dicover_nodes"
+	path := "/discover_nodes"
 	req, err := ntw.client.NewUnAuthRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
