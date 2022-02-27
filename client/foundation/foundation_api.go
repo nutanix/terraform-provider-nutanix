@@ -22,6 +22,9 @@ type Client struct {
 
 	//Service for File Management in foundation VM
 	FileManagement FileManagementService
+
+	//Service for Networking apis in foundation VM
+	Networking NetworkingService
 }
 
 //This routine returns new Foundation API Client
@@ -43,6 +46,9 @@ func NewFoundationAPIClient(credentials client.Credentials) (*Client, error) {
 			client: client,
 		},
 		FileManagement: FileManagementOperations{
+			client: client,
+		},
+		Networking: NetworkingOperations{
 			client: client,
 		},
 	}
