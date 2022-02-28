@@ -40,7 +40,7 @@ type ImageNodesInput struct {
 	// IPMIGateway           string        `json:"ipmi_gateway,omitempty"`
 }
 
-//Specific hypervisor defination for imaging
+//Specific hypervisor definition for imaging
 type Hypervisor struct {
 	Checksum string `json:"checksum,omitempty"`
 	Filename string `json:"filename"`
@@ -111,7 +111,7 @@ type Vswitches struct {
 	Mtu         *int64   `json:"mtu"`
 }
 
-//Single node defination
+//Single node definition
 type Node struct {
 	Ipv6Address             string       `json:"ipv6_address,omitempty"`
 	NodePosition            string       `json:"node_position"`
@@ -155,7 +155,7 @@ type Block struct {
 }
 
 //Response from /image_nodes API call
-//Its union of successfull and errored response
+//Its union of successful and errored response
 type ImageNodesAPIResponse struct {
 	SessionID string `json:"session_id"`
 
