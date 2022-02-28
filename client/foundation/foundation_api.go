@@ -26,7 +26,6 @@ type Client struct {
 
 //This routine returns new Foundation API Client
 func NewFoundationAPIClient(credentials client.Credentials) (*Client, error) {
-
 	//for foundation client, url should be based on foundation's endpoint and port
 	credentials.URL = fmt.Sprintf("%s:%s", credentials.FoundationEndpoint, credentials.FoundationPort)
 	client, err := client.NewBaseClient(&credentials, absolutePath, true)

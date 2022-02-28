@@ -71,7 +71,7 @@ type AdditionalFilter struct {
 }
 
 // NewClient returns a new Nutanix API client.
-func NewClient(credentials *Credentials, userAgent string, absolutePath string, isHttp bool) (*Client, error) {
+func NewClient(credentials *Credentials, userAgent string, absolutePath string, isHTTP bool) (*Client, error) {
 	if userAgent == "" {
 		return nil, fmt.Errorf("userAgent argument must be passed")
 	}
@@ -99,7 +99,7 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string, 
 	httpClient.Transport = logging.NewTransport("Nutanix", transCfg)
 
 	protocol := "https"
-	if isHttp {
+	if isHTTP {
 		protocol = "http"
 	}
 
@@ -140,7 +140,7 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string, 
 }
 
 // NewBaseClient returns a basic http/https client based on isHttp flag
-func NewBaseClient(credentials *Credentials, absolutePath string, isHttp bool) (*Client, error) {
+func NewBaseClient(credentials *Credentials, absolutePath string, isHTTP bool) (*Client, error) {
 	if absolutePath == "" {
 		return nil, fmt.Errorf("absolutePath argument must be passed")
 	}
@@ -156,7 +156,7 @@ func NewBaseClient(credentials *Credentials, absolutePath string, isHttp bool) (
 	httpClient.Transport = logging.NewTransport("Nutanix", transCfg)
 
 	protocol := "https"
-	if isHttp {
+	if isHTTP {
 		protocol = "http"
 	}
 
@@ -205,13 +205,11 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 		req.Header.Add("Authorization", "Basic "+
 			base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
 	}
-
 	return req, nil
 }
 
 // NewRequest creates a request without authorisation headers
 func (c *Client) NewUnAuthRequest(ctx context.Context, method, urlStr string, body interface{}) (*http.Request, error) {
-
 	//create main api url
 	rel, err := url.Parse(c.AbsolutePath + urlStr)
 	if err != nil {
@@ -310,7 +308,6 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 	if c.onRequestCompleted != nil {
 		c.onRequestCompleted(req, resp, v)
 	}
-
 	return err
 }
 

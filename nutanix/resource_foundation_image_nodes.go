@@ -610,7 +610,6 @@ func ResourceFoundationImageNodes() *schema.Resource {
 }
 
 func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*Client).FoundationClientAPI
 	// Prepare request
 	request := &foundation.ImageNodesInput{}
@@ -770,7 +769,7 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 		request.Clusters = cluster
 	}
 
-	blocks, err := flattenBlocks(d)
+	blocks, err := expandBlocks(d)
 	if err == nil {
 		request.Blocks = blocks
 	}
@@ -823,41 +822,35 @@ func expandTests(d *schema.ResourceData) (*foundation.Tests, error) {
 		if runncc, ok := set["RunNcc"]; ok {
 			tests.RunNcc = utils.BoolPtr(runncc.(bool))
 		}
-
 		return tests, nil
-
 	}
-
 	return nil, nil
-
 }
 
 func expandEosMetadata(d *schema.ResourceData) (*foundation.EosMetadata, error) {
-
-	eos_meta := &foundation.EosMetadata{}
+	eosMeta := &foundation.EosMetadata{}
 	if eos, ok := d.GetOk("eos_metadata"); ok {
 		eosmeta := eos.(map[string]interface{})
 
 		if config, ok := eosmeta["ConfigID"]; ok {
-			eos_meta.ConfigID = (config.(string))
+			eosMeta.ConfigID = (config.(string))
 		}
 
 		if acname, ok := eosmeta["AccountName"]; ok {
 			ac := acname.([]interface{})
 
 			for a := range ac {
-				eos_meta.AccountName[a] = ac[a].(string)
+				eosMeta.AccountName[a] = ac[a].(string)
 			}
 		}
 		if email, ok := d.GetOk("Email"); ok {
-			eos_meta.Email = (email.(string))
+			eosMeta.Email = (email.(string))
 		}
-		return eos_meta, nil
+		return eosMeta, nil
 	}
 	return nil, nil
 }
 func expandFcSetting(d *schema.ResourceData) (*foundation.FcSettings, error) {
-
 	fc := &foundation.FcSettings{}
 
 	if fcset, ok := d.GetOk("fc_settings"); ok {
@@ -882,7 +875,6 @@ func expandFcSetting(d *schema.ResourceData) (*foundation.FcSettings, error) {
 }
 
 func expandHypervisorIso(pr map[string]interface{}) foundation.HypervisorIso {
-
 	iso := foundation.HypervisorIso{}
 
 	if hyperv, ok := pr["Hyperv"]; ok {
@@ -898,7 +890,6 @@ func expandHypervisorIso(pr map[string]interface{}) foundation.HypervisorIso {
 	if esx, ok := pr["esx"]; ok {
 		iso.Kvm = expandHypervisor(esx.(map[string]interface{}))
 	}
-
 	return iso
 }
 
@@ -911,9 +902,7 @@ func expandHypervisor(pr map[string]interface{}) *foundation.Hypervisor {
 	if filename, ok := pr["Filename"]; ok {
 		hyp.Filename = (filename.(string))
 	}
-
 	return hyp
-
 }
 
 func expandVswitches(pr interface{}) []*foundation.Vswitches {
@@ -923,7 +912,6 @@ func expandVswitches(pr interface{}) []*foundation.Vswitches {
 	for _, vs := range vswit {
 		vs := vs.(map[string]interface{})
 		vst := &foundation.Vswitches{}
-
 		if lacp, ok := vs["lacp"]; ok {
 			vst.Lacp = lacp.(string)
 		}
@@ -957,7 +945,6 @@ func expandVswitches(pr interface{}) []*foundation.Vswitches {
 }
 
 func expandUcsmParams(pr interface{}) *foundation.UcsmParams {
-
 	ucsm := pr.([]interface{})
 	UcsmParam := &foundation.UcsmParams{}
 
@@ -1044,7 +1031,6 @@ func expandCluster(d *schema.ResourceData) ([]*foundation.Clusters, error) {
 			}
 			return cls, nil
 		}
-
 	}
 	return clstr, nil
 }
@@ -1162,7 +1148,7 @@ func expandNodes(pr interface{}) []*foundation.Node {
 	return nodes
 }
 
-func flattenBlocks(d *schema.ResourceData) ([]*foundation.Block, error) {
+func expandBlocks(d *schema.ResourceData) ([]*foundation.Block, error) {
 	if blocks, ok := d.GetOk("blocks"); ok {
 		set := blocks.([]interface{})
 		outbound := make([]*foundation.Block, len(set))
