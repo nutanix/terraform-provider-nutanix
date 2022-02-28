@@ -5,15 +5,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const resourceNameUser = "nutanix_user.user"
 
 func TestAccNutanixUser_basic(t *testing.T) {
-	principalName := "dou-user@ntnxlab.local"
-	directoryServiceUUID := "542d7921-1385-4b6e-ab10-09f2ca4f054d"
+	principalName := testVars.Users[2].PrincipalName
+	directoryServiceUUID := testVars.Users[2].DirectoryServiceUUID
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,

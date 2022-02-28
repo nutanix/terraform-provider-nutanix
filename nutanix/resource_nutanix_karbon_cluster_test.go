@@ -6,17 +6,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccNutanixKarbonCluster_basic(t *testing.T) {
 	t.Skip()
 	r := acctest.RandInt()
 	resourceName := "nutanix_karbon_cluster.cluster"
-	subnetName := "Rx-Automation-Network"
-	defaultContainter := "default-container-85827904983728"
+	subnetName := testVars.SubnetName
+	defaultContainter := testVars.DefaultContainerName
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -50,7 +50,7 @@ func TestAccNutanixKarbonCluster_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"version", "master_node_pool", "worker_node_pool", "storage_class_config", "wait_timeout_minutes"}, //Wil be fixed on future API versions
+				ImportStateVerifyIgnore: []string{"version", "master_node_pool", "worker_node_pool", "storage_class_config"}, //Wil be fixed on future API versions
 			},
 		},
 	})
@@ -60,8 +60,8 @@ func TestAccNutanixKarbonCluster_scaleDown(t *testing.T) {
 	r := acctest.RandInt()
 	t.Skip()
 	resourceName := "nutanix_karbon_cluster.cluster"
-	subnetName := "Rx-Automation-Network"
-	defaultContainter := "default-container-85827904983728"
+	subnetName := testVars.SubnetName
+	defaultContainter := testVars.DefaultContainerName
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -95,7 +95,7 @@ func TestAccNutanixKarbonCluster_scaleDown(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"version", "master_node_pool", "worker_node_pool", "storage_class_config", "wait_timeout_minutes"}, //Wil be fixed on future API versions
+				ImportStateVerifyIgnore: []string{"version", "master_node_pool", "worker_node_pool", "storage_class_config"}, //Wil be fixed on future API versions
 			},
 		},
 	})
@@ -105,8 +105,8 @@ func TestAccNutanixKarbonCluster_updateCNI(t *testing.T) {
 	r := acctest.RandInt()
 	t.Skip()
 	resourceName := "nutanix_karbon_cluster.cluster"
-	subnetName := "Rx-Automation-Network"
-	defaultContainter := "default-container-85827904983728"
+	subnetName := testVars.SubnetName
+	defaultContainter := testVars.DefaultContainerName
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -140,7 +140,7 @@ func TestAccNutanixKarbonCluster_updateCNI(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"version", "master_node_pool", "worker_node_pool", "storage_class_config", "wait_timeout_minutes"}, //Wil be fixed on future API versions
+				ImportStateVerifyIgnore: []string{"version", "master_node_pool", "worker_node_pool", "storage_class_config"}, //Wil be fixed on future API versions
 			},
 		},
 	})
@@ -189,16 +189,16 @@ func testAccNutanixKarbonClusterConfig(subnetName string, r int, containter stri
 				for cluster in data.nutanix_clusters.clusters.entities :
 				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 			][0]
-		node_os_version   = "ntnx-0.7"
+		node_os_version   = "%s"
 		deployment_type   = ""
 		amount_of_workers = %d
 		amount_of_masters = 1
 		cni               = "%s"
 		master_vip        = ""
 	}
-	  
+
 	data "nutanix_clusters" "clusters" {}
-	  
+
 	data "nutanix_subnet" "karbon_subnet" {
 		subnet_name = "%s"
 	}
@@ -206,7 +206,7 @@ func testAccNutanixKarbonClusterConfig(subnetName string, r int, containter stri
 	resource "nutanix_karbon_cluster" "cluster" {
 		name    = "test-karbon-%d"
 		version = "1.16.13-0"
-	  
+
 		dynamic "active_passive_config" {
 		  for_each = local.deployment_type == "active-passive" ? [1] : []
 		  content {
@@ -227,7 +227,7 @@ func testAccNutanixKarbonClusterConfig(subnetName string, r int, containter stri
 			}
 		  }
 		}
-	  
+
 		storage_class_config {
 		  reclaim_policy = "Delete"
 		  volumes_config {
@@ -281,5 +281,5 @@ func testAccNutanixKarbonClusterConfig(subnetName string, r int, containter stri
 		}
 	  }
 
-	`, workers, cni, subnetName, r, containter)
+	`, testVars.NodeOsVersion, workers, cni, subnetName, r, containter)
 }

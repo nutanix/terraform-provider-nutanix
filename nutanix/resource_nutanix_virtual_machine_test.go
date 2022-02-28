@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/spf13/cast"
 )
 
@@ -156,6 +156,7 @@ func TestAccNutanixVirtualMachine_updateFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceName, "is_vcpu_hard_pinned", "true"),
 					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 				),
 			},
@@ -169,6 +170,7 @@ func TestAccNutanixVirtualMachine_updateFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "256"),
 					resource.TestCheckResourceAttr(resourceName, "num_sockets", "2"),
 					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "2"),
+					resource.TestCheckResourceAttr(resourceName, "is_vcpu_hard_pinned", "false"),
 					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
 				),
 			},
@@ -461,6 +463,77 @@ func TestAccNutanixVirtualMachine_resizeDiskClone(t *testing.T) {
 	})
 }
 
+func TestAccNutanixVirtualMachine_CloudInitUserData(t *testing.T) {
+	r := acctest.RandInt()
+	resourceName := "nutanix_virtual_machine.vm11"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixVMConfigCloudInitUserData(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "500"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"disk_list", "cloud_init_cdrom_uuid"},
+			},
+		},
+	})
+}
+
+func TestAccNutanixVirtualMachine_Ngt(t *testing.T) {
+	r := acctest.RandInt()
+	resourceName := "nutanix_virtual_machine.vm12"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixVMConfigWithoutNgt(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
+				),
+			},
+			{
+				Config: testAccNutanixVMConfigWithNgt(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "186"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "2"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ngt_credentials", "ngt_credentials.password", "ngt_credentials.username"},
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixVirtualMachineExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -509,13 +582,18 @@ func testAccNutanixVMConfig(r int) string {
 		resource "nutanix_virtual_machine" "vm1" {
 			name         = "test-dou-%d"
 			cluster_uuid = "${local.cluster1}"
-			
+
 			boot_device_order_list = ["DISK", "CDROM"]
 			boot_type            = "LEGACY"
 			num_vcpus_per_socket = 1
 			num_sockets          = 1
 			memory_size_mib      = 186
 
+			timeouts {
+				create = "10m"
+				update = "10m"
+				delete = "10m"
+			}
 
 			categories {
 				name  = "Environment"
@@ -673,6 +751,7 @@ func testAccNutanixVMConfigUpdatedFields(r int) string {
 			num_vcpus_per_socket = 1
 			num_sockets          = 1
 			memory_size_mib      = 186
+			is_vcpu_hard_pinned = true
 
 
 			categories {
@@ -700,6 +779,7 @@ func testAccNutanixVMConfigUpdatedFieldsUpdated(r int) string {
 			num_vcpus_per_socket = 2
 			num_sockets          = 2
 			memory_size_mib      = 256
+			is_vcpu_hard_pinned = false
 
 			categories {
 				name  = "Environment"
@@ -1200,4 +1280,109 @@ func testAccNutanixVMConfigResizeDiskClone(imgName, vmName string, diskSize int)
 			}
 		}
 	`, imgName, vmName, diskSize)
+}
+
+func testAccNutanixVMConfigCloudInitUserData(r int) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+			? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+
+			gs = base64encode("#cloud-config\nusers:\n  - name: ubuntu\n    ssh-authorized-keys:\n      - ssh-rsa DUMMYSSH mypass\n    sudo: ['ALL=(ALL) NOPASSWD:ALL']")
+		}
+		resource "nutanix_virtual_machine" "vm11" {
+		  	name = "terf__cloud_init-%d"
+		  	cluster_uuid = "${local.cluster1}"
+		  	num_vcpus_per_socket = 1
+		  	num_sockets          = 1
+		  	memory_size_mib      = 500
+		  	guest_customization_cloud_init_user_data = "${local.gs}"
+
+		  	disk_list {
+		   		device_properties {
+		      		device_type = "CDROM"
+		      		disk_address = {
+		        		device_index = 0
+		        		adapter_type = "IDE"
+		     		}
+		    	}
+		 	}
+		  	enable_cpu_passthrough = true
+		}
+	`, r)
+}
+
+func testAccNutanixVMConfigWithoutNgt(r int) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster1 = [
+				for cluster in data.nutanix_clusters.clusters.entities :
+				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+			][0]
+		}
+
+		resource "nutanix_virtual_machine" "vm12" {
+			name                 = "test-vm-%d-ngt"
+			cluster_uuid         = local.cluster1
+			num_vcpus_per_socket = 1
+			num_sockets          = 1
+			memory_size_mib      = 186
+			categories {
+				name  = "Environment"
+				value = "Production"
+			}
+			enable_cpu_passthrough = true
+
+		}
+	`, r)
+}
+func testAccNutanixVMConfigWithNgt(r int) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster1 = [
+				for cluster in data.nutanix_clusters.clusters.entities :
+				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+			][0]
+		}
+		resource "nutanix_image" "cirros-034-disk" {
+		      name        = "test-image-disk"
+		      source_uri  = "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+		      description = "heres a tiny linux image, not an iso, but a real disk!"
+		    }
+		resource "nutanix_virtual_machine" "vm12" {
+			name                 = "test-vm-%d-ngt"
+			cluster_uuid         = local.cluster1
+			num_vcpus_per_socket = 1
+			num_sockets          = 2
+			memory_size_mib      = 186
+			disk_list {
+		        data_source_reference = {
+		          kind = "image"
+		          uuid = nutanix_image.cirros-034-disk.id
+		        }
+
+		        device_properties {
+		          disk_address = {
+		            device_index = 0
+		            adapter_type = "SCSI"
+		          }
+		          device_type = "DISK"
+		        }
+		      }
+			categories {
+				name  = "Environment"
+				value = "Production"
+			}
+			ngt_credentials = {
+        		username = "root"
+       			password = "pass"
+      		}
+		}
+	`, r)
 }

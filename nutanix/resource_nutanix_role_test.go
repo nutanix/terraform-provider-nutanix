@@ -5,10 +5,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 const resourceRole = "nutanix_role.test"
@@ -66,10 +66,10 @@ func TestAccNutanixRole_WithCategory(t *testing.T) {
 					testAccCheckNutanixRoleExists(),
 					testAccCheckNutanixCategories(resourceRole),
 					resource.TestCheckResourceAttr(resourceRole, "categories.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceRole, "categories.2228745532.name"),
-					resource.TestCheckResourceAttrSet(resourceRole, "categories.2228745532.value"),
-					resource.TestCheckResourceAttr(resourceRole, "categories.2228745532.name", "Environment"),
-					resource.TestCheckResourceAttr(resourceRole, "categories.2228745532.value", "Production"),
+					resource.TestCheckResourceAttrSet(resourceRole, "categories.0.name"),
+					resource.TestCheckResourceAttrSet(resourceRole, "categories.0.value"),
+					resource.TestCheckResourceAttr(resourceRole, "categories.0.name", "Environment"),
+					resource.TestCheckResourceAttr(resourceRole, "categories.0.value", "Production"),
 				),
 			},
 			{
@@ -77,10 +77,10 @@ func TestAccNutanixRole_WithCategory(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixRoleExists(),
 					resource.TestCheckResourceAttr(resourceRole, "categories.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceRole, "categories.2940305446.name"),
-					resource.TestCheckResourceAttrSet(resourceRole, "categories.2940305446.value"),
-					resource.TestCheckResourceAttr(resourceRole, "categories.2940305446.name", "Environment"),
-					resource.TestCheckResourceAttr(resourceRole, "categories.2940305446.value", "Staging"),
+					resource.TestCheckResourceAttrSet(resourceRole, "categories.0.name"),
+					resource.TestCheckResourceAttrSet(resourceRole, "categories.0.value"),
+					resource.TestCheckResourceAttr(resourceRole, "categories.0.name", "Environment"),
+					resource.TestCheckResourceAttr(resourceRole, "categories.0.value", "Staging"),
 				),
 			},
 			{
@@ -132,14 +132,10 @@ resource "nutanix_role" "test" {
 	description = "%[2]s"
 	permission_reference_list {
 		kind = "permission"
-		uuid = "16b81a55-2bca-48c6-9fab-4f82c6bb4284"
-	}
-	permission_reference_list {
-		kind = "permission"
-		uuid = "4e8e9007-8fbe-4709-a069-278259238e55"
+		uuid = "%[3]s"
 	}
 }
-`, name, description)
+`, name, description, testVars.Permissions[0].UUID)
 }
 
 func testAccNutanixRoleConfigWithCategory(name, description, categoryValue string) string {
@@ -149,12 +145,12 @@ resource "nutanix_role" "test" {
 	description = "%[2]s"
 	permission_reference_list {
 		kind = "permission"
-		uuid = "2e9988df-47ae-44ae-9114-ada346657b90"
+		uuid = "%[4]s"
 	}
 	categories {
 		name = "Environment"
 		value = "%[3]s"
 	}
 }
-`, name, description, categoryValue)
+`, name, description, categoryValue, testVars.Permissions[0].UUID)
 }

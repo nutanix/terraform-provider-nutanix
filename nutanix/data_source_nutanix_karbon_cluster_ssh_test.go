@@ -3,16 +3,16 @@ package nutanix
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccNutanixKarbonClusterSSHDataSource_basicx(t *testing.T) {
 	t.Skip()
 	r := acctest.RandInt()
 	//resourceName := "nutanix_karbon_cluster.cluster"
-	subnetName := "Rx-Automation-Network"
-	defaultContainter := "default-container-85827904983728"
+	subnetName := testVars.SubnetName
+	defaultContainter := testVars.DefaultContainerName
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -33,8 +33,8 @@ func TestAccNutanixKarbonClusterSSHDataSource_basicx(t *testing.T) {
 func TestAccNutanixKarbonClusterSSHDataSource_basicByName(t *testing.T) {
 	r := acctest.RandInt()
 	//resourceName := "nutanix_karbon_cluster.cluster"
-	subnetName := "Rx-Automation-Network"
-	defaultContainter := "default-container-85827904983728"
+	subnetName := testVars.SubnetName
+	defaultContainter := testVars.DefaultContainerName
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,

@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccNutanixVirtualMachineDataSource_basic(t *testing.T) {
@@ -21,6 +21,8 @@ func TestAccNutanixVirtualMachineDataSource_basic(t *testing.T) {
 						"data.nutanix_virtual_machine.nutanix_virtual_machine", "num_vcpus_per_socket", "1"),
 					resource.TestCheckResourceAttr(
 						"data.nutanix_virtual_machine.nutanix_virtual_machine", "num_sockets", "1"),
+					resource.TestCheckResourceAttr(
+						"data.nutanix_virtual_machine.nutanix_virtual_machine", "is_vcpu_hard_pinned", "true"),
 				),
 			},
 		},
@@ -127,6 +129,7 @@ resource "nutanix_virtual_machine" "vm1" {
   num_vcpus_per_socket = 1
   num_sockets          = 1
   memory_size_mib      = 186
+  is_vcpu_hard_pinned  = true
 }
 
 data "nutanix_virtual_machine" "nutanix_virtual_machine" {

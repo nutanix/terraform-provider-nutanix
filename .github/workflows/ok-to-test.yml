@@ -1,0 +1,18 @@
+name: 'Ok-To-Test'
+
+on: [issue_comment]
+
+jobs:
+  Trigger-Dispatch-Event:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.issue.pull_request }}
+    steps:
+      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+      - name: Slash Command Dispatch
+        uses: peter-evans/slash-command-dispatch@v1
+        with:
+          token: ${{ secrets.PAT }} # PAT or OAuth token will also work
+          issue-type: pull-request
+          commands: ok-to-test
+          permission: write
+      - run: echo "🍏 This job's status is ${{ job.status }}."

@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccNutanixKarbonClusterKubeConfigDataSource_basic(t *testing.T) {
 	t.Skip()
 	r := acctest.RandInt()
-	subnetName := "Rx-Automation-Network"
-	defaultContainter := "default-container-85827904983728"
+	subnetName := testVars.SubnetName
+	defaultContainter := testVars.DefaultContainerName
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -32,8 +32,8 @@ func TestAccNutanixKarbonClusterKubeConfigDataSource_basic(t *testing.T) {
 
 func TestAccNutanixKarbonClusterKubeConfigDataSource_basicByName(t *testing.T) {
 	r := acctest.RandInt()
-	subnetName := "Rx-Automation-Network"
-	defaultContainter := "default-container-85827904983728"
+	subnetName := testVars.SubnetName
+	defaultContainter := testVars.DefaultContainerName
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
