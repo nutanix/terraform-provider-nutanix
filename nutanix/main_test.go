@@ -29,6 +29,17 @@ type TestConfig struct {
 		Name   string `json:"name"`
 		Values string `json:"values"`
 	} `json:"ad_rule_target"`
+	// here UUID = availability_zone_url
+	ProtectionPolicy struct {
+		LocalAz struct {
+			UUID        string `json:"uuid"`
+			ClusterUUID string `json:"cluster_uuid"`
+		} `json:"local_az"`
+		DestinationAz struct {
+			UUID        string `json:"uuid"`
+			ClusterUUID string `json:"cluster_uuid"`
+		} `json:"destination_az"`
+	} `json:"protection_policy"`
 }
 
 type IPMIConfig struct {

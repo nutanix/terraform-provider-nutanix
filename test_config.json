@@ -37,6 +37,16 @@
     "ad_rule_target": {
         "name": "ADGroup",
         "values": "sspadmins"
+    },
+    "protection_policy":{
+        "local_az":{
+            "uuid":"a973cd7b-7696-4ca5-b959-04b5bcb9e683",
+            "cluster_uuid":"0005ded3-2367-7205-3507-ac1f6b60292f"
+        },
+        "destination_az":{
+            "uuid":"97b0cc07-d838-4925-acd7-540c11bd653d",
+            "cluster_uuid":"0005dc0f-13a7-62e0-185b-ac1f6b6f97e2"
+        }
     }
 }
 
