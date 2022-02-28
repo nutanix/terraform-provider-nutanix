@@ -1598,7 +1598,6 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 	return nil
 }
 func expandNicList(d *schema.ResourceData) []*v3.VMNic {
-
 	if v, ok := d.GetOk("nic_list"); ok {
 		n := v.([]interface{})
 		if len(n) > 0 {
