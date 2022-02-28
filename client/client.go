@@ -219,12 +219,11 @@ func (c *Client) NewUnAuthRequest(ctx context.Context, method, urlStr string, bo
 
 	buf := new(bytes.Buffer)
 	if body != nil {
-		err := json.NewEncoder(buf).Encode(body)
+		er := json.NewEncoder(buf).Encode(body)
 		if err != nil {
-			return nil, err
+			return nil, er
 		}
 	}
-	fmt.Println(buf.String())
 	req, err := http.NewRequest(method, u.String(), buf)
 	if err != nil {
 		return nil, err
