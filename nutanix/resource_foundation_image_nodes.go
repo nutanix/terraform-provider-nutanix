@@ -13,10 +13,11 @@ import (
 )
 
 var (
-	ImageMinTimeout = 60 * time.Minute
+	ImageMinTimeout          = 60 * time.Minute
+	AggregatePercentComplete = 100
 )
 
-func ResourceFoundationImageNodes() *schema.Resource {
+func resourceFoundationImageNodes() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceFoundationImageNodesCreate,
 		ReadContext:   resourceFoundationImageNodesRead,
@@ -795,7 +796,7 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("error waiting for image (%s) to be ready: %v", resp.SessionID, err)
 	}
 	if progress, ok := info.(*foundation.ImageNodesProgressResponse); ok {
-		if utils.Float64Value(progress.AggregatePercentComplete) < 100 {
+		if utils.Float64Value(progress.AggregatePercentComplete) < float64(AggregatePercentComplete) {
 			return diag.Errorf("Progress is incomplete")
 		}
 	}
@@ -949,7 +950,6 @@ func expandUcsmParams(pr interface{}) *foundation.UcsmParams {
 	UcsmParam := &foundation.UcsmParams{}
 
 	for _, k := range ucsm {
-
 		set := k.(map[string]interface{})
 
 		if nativevlan, ok := set["NativeVlan"]; ok {
@@ -976,7 +976,6 @@ func expandCluster(d *schema.ResourceData) ([]*foundation.Clusters, error) {
 			cls := make([]*foundation.Clusters, 0)
 
 			for _, nc := range n {
-
 				clst := nc.(map[string]interface{})
 
 				clusterList := &foundation.Clusters{}
@@ -1134,7 +1133,6 @@ func expandNodes(pr interface{}) []*foundation.Node {
 			nodeList.UcsmParams = expandUcsmParams(ucsmParams)
 		}
 		if vswitch, vswitchesok := node["vswitches"]; vswitchesok {
-
 			nodeList.Vswitches = expandVswitches(vswitch)
 		}
 		if ipmiUser, ok := node["ipmi_user"]; ok {

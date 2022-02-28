@@ -216,9 +216,9 @@ func taskStateRefreshFunc(client *v3.Client, taskUUID string) resource.StateRefr
 	}
 }
 
-func foundationImageRefresh(ctx context.Context, client *foundation.Client, taskUUID string) resource.StateRefreshFunc {
+func foundationImageRefresh(ctx context.Context, client *foundation.Client, sessionUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		v, err := client.NodeImaging.ImageNodesProgress(ctx, taskUUID)
+		v, err := client.NodeImaging.ImageNodesProgress(ctx, sessionUUID)
 
 		if err != nil {
 			if strings.Contains(fmt.Sprint(err), "Failed") {

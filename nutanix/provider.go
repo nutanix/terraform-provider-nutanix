@@ -154,7 +154,7 @@ func Provider() *schema.Provider {
 			"nutanix_recovery_plan":           resourceNutanixRecoveryPlan(),
 			"nutanix_service_group":           resourceNutanixServiceGroup(),
 			"nutanix_address_group":           resourceNutanixAddressGroup(),
-			"nutanix_foundation_image_nodes":  ResourceFoundationImageNodes(),
+			"nutanix_foundation_image_nodes":  resourceFoundationImageNodes(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
