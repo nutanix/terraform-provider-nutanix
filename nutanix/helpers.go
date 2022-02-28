@@ -216,7 +216,7 @@ func taskStateRefreshFunc(client *v3.Client, taskUUID string) resource.StateRefr
 	}
 }
 
-func foundationImageRefresh(client *foundation.Client, taskUUID string, ctx context.Context) resource.StateRefreshFunc {
+func foundationImageRefresh(ctx context.Context, client *foundation.Client, taskUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := client.NodeImaging.ImageNodesProgress(ctx, taskUUID)
 
@@ -227,11 +227,6 @@ func foundationImageRefresh(client *foundation.Client, taskUUID string, ctx cont
 			return nil, "FAILED", err
 		}
 
-		// if (*v.AggregatePercentComplete) < 100 || (*v.ImagingStopped) {
-		// 	return v, cast.ToString(*v.AggregatePercentComplete),
-		// 		fmt.Errorf("error_detail: %s, progress_message: %s", v.Action, cast.ToString(v.AggregatePercentComplete))
-		// }
-		// return v, cast.ToString(*v.AggregatePercentComplete), nil
 		if utils.BoolValue(v.ImagingStopped) {
 			return v, "COMPLETED", nil
 		}
