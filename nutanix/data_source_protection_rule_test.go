@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -9,15 +10,17 @@ import (
 )
 
 func TestAccNutanixProtectionRuleDataSource_basic(t *testing.T) {
-	t.Skip()
-	resourceName := "nutanix_protection_rule.test"
+	if os.Getenv("PROTECTION_RULES_TEST_FLAG") != "true" {
+		t.Skip()
+	}
+	dataSourceName := "data.nutanix_protection_rule.test"
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")
 	description := acctest.RandomWithPrefix("test-protection-desc-dou")
-	aZUrlSource := "c99ab7cd-9191-4fcb-8fc0-232eff76e595"
-	uuidSource := "0005b21a-2b28-7bac-699a-ac1f6b6e5556"
-	aZUrlTarget := "c7926832-4976-4fe4-bead-7e508e03e3ec"
-	uuidTarget := "0005b5f7-2c60-d181-1c29-ac1f6b6e5435"
+	aZUUIDSource := testVars.ProtectionPolicy.LocalAz.UUID
+	clusterUUIDSource := testVars.ProtectionPolicy.LocalAz.ClusterUUID
+	aZUUIDTarget := testVars.ProtectionPolicy.DestinationAz.UUID
+	clusterUUIDTarget := testVars.ProtectionPolicy.DestinationAz.UUID
 
 	nameUpdated := acctest.RandomWithPrefix("test-protection-name-dou")
 	descriptionUpdated := acctest.RandomWithPrefix("test-protection-desc-dou")
@@ -25,27 +28,27 @@ func TestAccNutanixProtectionRuleDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNutanixProtectionRUleDestroy,
+		CheckDestroy: testAccCheckNutanixProtectionRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProtectionRuleDataSourceConfig(name, description, aZUrlSource, uuidSource, aZUrlTarget, uuidTarget, 1),
+				Config: testAccProtectionRuleDataSourceConfig(name, description, aZUUIDSource, clusterUUIDSource, aZUUIDTarget, clusterUUIDTarget, 1),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(dataSourceName, "name", name),
+					resource.TestCheckResourceAttr(dataSourceName, "description", description),
 				),
 			},
 			{
-				Config: testAccProtectionRuleDataSourceConfig(nameUpdated, descriptionUpdated, aZUrlSource, uuidSource, aZUrlTarget, uuidTarget, 1),
+				Config: testAccProtectionRuleDataSourceConfig(nameUpdated, descriptionUpdated, aZUUIDSource, clusterUUIDSource, aZUUIDTarget, clusterUUIDTarget, 1),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "name", nameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
+					resource.TestCheckResourceAttr(dataSourceName, "name", nameUpdated),
+					resource.TestCheckResourceAttr(dataSourceName, "description", descriptionUpdated),
 				),
 			},
 		},
 	})
 }
 
-func testAccProtectionRuleDataSourceConfig(name, description, aZUrlSource, clusterUUIDSource, aZUrlTarget, clusterUUIDTarget string, snapshots int64) string {
+func testAccProtectionRuleDataSourceConfig(name, description, aZUUIDSource, clusterUUIDSource, aZUUIDTarget, clusterUUIDTarget string, snapshots int64) string {
 	return fmt.Sprintf(`
 		resource "nutanix_protection_rule" "test" {
 			name        = "%s"
@@ -84,12 +87,12 @@ func testAccProtectionRuleDataSourceConfig(name, description, aZUrlSource, clust
 			category_filter {
 				params {
 					name = "Environment"
-					values = ["Dev"]
+					values = ["Staging"]
 				}
 			}
 		}
 		data "nutanix_protection_rule" "test" {
 			protection_rule_id = nutanix_protection_rule.test.id
 		}
-`, name, description, aZUrlSource, clusterUUIDSource, aZUrlTarget, clusterUUIDTarget, snapshots)
+`, name, description, aZUUIDSource, clusterUUIDSource, aZUUIDTarget, clusterUUIDTarget, snapshots)
 }
