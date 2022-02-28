@@ -4,7 +4,7 @@ package foundation
 type ImageNodesInput struct {
 	XsMasterLabel         string        `json:"xs_master_label,omitempty"`
 	LayoutEggUUID         string        `json:"layout_egg_uuid,omitempty"`
-	IpmiPassword          string        `json:"ipmi_password"`
+	IpmiPassword          string        `json:"ipmi_password,omitempty"`
 	CvmGateway            string        `json:"cvm_gateway"`
 	HypervExternalVnic    string        `json:"hyperv_external_vnic,omitempty"`
 	XenConfigType         string        `json:"xen_config_type,omitempty"`
@@ -28,7 +28,7 @@ type ImageNodesInput struct {
 	HypervProductKey      string        `json:"hyperv_product_key,omitempty"`
 	UncUsername           string        `json:"unc_username,omitempty"`
 	InstallScript         string        `json:"install_script,omitempty"`
-	IpmiUser              string        `json:"ipmi_user"`
+	IpmiUser              string        `json:"ipmi_user,omitempty"`
 	HypervisorPassword    string        `json:"hypervisor_password,omitempty"`
 	UncPassword           string        `json:"unc_password,omitempty"`
 	XsMasterUsername      string        `json:"xs_master_username,omitempty"`
@@ -140,10 +140,12 @@ type Node struct {
 	ImageNow                *bool        `json:"image_now"`
 	UcsmManagedMode         string       `json:"ucsm_managed_mode,omitempty"`
 	IpmiIP                  string       `json:"ipmi_ip"`
-	CurrentCvmVlanTag       *int64       `json:"current_cvm_vlan_tag"`
+	CurrentCvmVlanTag       *int64       `json:"current_cvm_vlan_tag,omitempty"`
 	CvmIP                   string       `json:"cvm_ip"`
 	ExludeBootSerial        string       `json:"exlude_boot_serial,omitempty"`
 	MitigateLowBootSpace    *bool        `json:"mitigate_low_boot_space,omitempty"`
+	IpmiUser                string       `json:"ipmi_user,omitempty"`
+	IpmiPassword            string       `json:"ipmi_password,omitempty"`
 }
 
 //Block containing multiple nodes

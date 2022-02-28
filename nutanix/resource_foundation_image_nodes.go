@@ -36,7 +36,7 @@ func ResourceFoundationImageNodes() *schema.Resource {
 			},
 			"ipmi_password": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"cvm_gateway": {
@@ -512,7 +512,7 @@ func ResourceFoundationImageNodes() *schema.Resource {
 									},
 									"current_cvm_vlan_tag": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 									},
 									"cvm_ip": {
 										Type:     schema.TypeString,
@@ -525,6 +525,16 @@ func ResourceFoundationImageNodes() *schema.Resource {
 									"mitigate_low_boot_space": {
 										Type:     schema.TypeBool,
 										Optional: true,
+									},
+									"ipmi_password": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+									"ipmi_user": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -553,7 +563,7 @@ func ResourceFoundationImageNodes() *schema.Resource {
 			},
 			"ipmi_user": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"hypervisor_password": {
@@ -610,142 +620,139 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 		request.XsMasterLabel = (xsmasterlabel.(string))
 	}
 
-	ipmi_pass, ok := d.GetOk("ipmi_password")
-	if !ok {
-		return diag.Errorf("please provide the required ipmi password attribute")
+	ipmiPass, ok := d.GetOk("ipmi_password")
+	if ok {
+		request.IpmiPassword = ipmiPass.(string)
 	}
-	request.IpmiPassword = ipmi_pass.(string)
 
-	cvm_gateway, cvmgok := d.GetOk("cvm_gateway")
+	cvmGateway, cvmgok := d.GetOk("cvm_gateway")
 	if cvmgok {
-		request.CvmGateway = (cvm_gateway.(string))
+		request.CvmGateway = (cvmGateway.(string))
 	}
 
-	hyperv_external_vnic, hyperv_external_vnicok := d.GetOk("hyperv_external_vnic")
-	if hyperv_external_vnicok {
-		request.HypervExternalVnic = hyperv_external_vnic.(string)
+	hypervExternalVnic, hyExNicok := d.GetOk("hyperv_external_vnic")
+	if hyExNicok {
+		request.HypervExternalVnic = hypervExternalVnic.(string)
 	}
 
-	xen_config_type, ok := d.GetOk("xen_config_type")
+	xenConfigType, ok := d.GetOk("xen_config_type")
 	if ok {
-		request.XenConfigType = (xen_config_type.(string))
+		request.XenConfigType = (xenConfigType.(string))
 	}
 
-	ucsm_ip, ok := d.GetOk("ucsm_ip")
+	ucsmIP, ok := d.GetOk("ucsm_ip")
 	if ok {
-		request.UcsmIP = (ucsm_ip.(string))
+		request.UcsmIP = (ucsmIP.(string))
 	}
 
-	ucsm_password, ok := d.GetOk("ucsm_password")
+	ucsmPassword, ok := d.GetOk("ucsm_password")
 	if ok {
-		request.UcsmPassword = (ucsm_password.(string))
+		request.UcsmPassword = (ucsmPassword.(string))
 	}
 
-	unc_path, ok := d.GetOk("unc_path")
+	uncPath, ok := d.GetOk("unc_path")
 	if ok {
-		request.UncPath = (unc_path.(string))
+		request.UncPath = (uncPath.(string))
 	}
 
-	hypervisor_netmask, ok := d.GetOk("hypervisor_netmask")
+	hypervisorNetmask, ok := d.GetOk("hypervisor_netmask")
 	if ok {
-		request.HypervisorNetmask = (hypervisor_netmask.(string))
+		request.HypervisorNetmask = (hypervisorNetmask.(string))
 	}
 
-	xs_master_password, ok := d.GetOk("xs_master_password")
+	xsMasterPassword, ok := d.GetOk("xs_master_password")
 	if ok {
-		request.XsMasterPassword = (xs_master_password.(string))
+		request.XsMasterPassword = (xsMasterPassword.(string))
 	}
 
-	cvm_netmask, ok := d.GetOk("cvm_netmask")
+	cvmNetmask, ok := d.GetOk("cvm_netmask")
 	if ok {
-		request.CvmNetmask = (cvm_netmask.(string))
+		request.CvmNetmask = (cvmNetmask.(string))
 	}
 
-	xs_master_ip, ok := d.GetOk("xs_master_ip")
+	xsMasterIP, ok := d.GetOk("xs_master_ip")
 	if ok {
-		request.XsMasterIP = (xs_master_ip.(string))
+		request.XsMasterIP = (xsMasterIP.(string))
 	}
 
-	hyperv_external_vswitch, ok := d.GetOk("hyperv_external_vswitch")
+	hypervExternalVswitch, ok := d.GetOk("hyperv_external_vswitch")
 	if ok {
-		request.HypervExternalVswitch = hyperv_external_vswitch.(string)
+		request.HypervExternalVswitch = hypervExternalVswitch.(string)
 	}
 
-	hypervisor_nameserver, ok := d.GetOk("hypervisor_nameserver")
+	hypervisorNameserver, ok := d.GetOk("hypervisor_nameserver")
 	if ok {
-		request.HypervisorNameserver = (hypervisor_nameserver.(string))
+		request.HypervisorNameserver = (hypervisorNameserver.(string))
 	}
 
-	hyperv_sku, ok := d.GetOk("hyperv_sku")
+	hypervSku, ok := d.GetOk("hyperv_sku")
 	if ok {
-		request.HypervSku = (hyperv_sku.(string))
+		request.HypervSku = (hypervSku.(string))
 	}
 
-	hyperv_product_key, ok := d.GetOk("hyperv_product_key")
+	hypervProductKey, ok := d.GetOk("hyperv_product_key")
 	if ok {
-		request.HypervProductKey = (hyperv_product_key.(string))
+		request.HypervProductKey = (hypervProductKey.(string))
 	}
 
-	unc_username, ok := d.GetOk("unc_username")
+	uncUsername, ok := d.GetOk("unc_username")
 	if ok {
-		request.UncUsername = (unc_username.(string))
+		request.UncUsername = (uncUsername.(string))
 	}
 
-	install_script, ok := d.GetOk("install_script")
+	installScript, ok := d.GetOk("install_script")
 	if ok {
-		request.InstallScript = (install_script.(string))
+		request.InstallScript = (installScript.(string))
 	}
 
-	ipmi_user, ok := d.GetOk("ipmi_user")
+	ipmiUser, ok := d.GetOk("ipmi_user")
 	if ok {
-		request.IpmiUser = (ipmi_user.(string))
+		request.IpmiUser = (ipmiUser.(string))
 	}
 
-	hypervisor_password, ok := d.GetOk("hypervisor_password")
+	hypervisorPassword, ok := d.GetOk("hypervisor_password")
 	if ok {
-		request.HypervisorPassword = (hypervisor_password.(string))
+		request.HypervisorPassword = (hypervisorPassword.(string))
 	}
 
-	unc_password, ok := d.GetOk("unc_password")
+	uncPassword, ok := d.GetOk("unc_password")
 	if ok {
-		request.UncPassword = (unc_password.(string))
+		request.UncPassword = (uncPassword.(string))
 	}
 
-	xs_master_username, ok := d.GetOk("xs_master_username")
+	xsMasterUsername, ok := d.GetOk("xs_master_username")
 	if ok {
-		request.XsMasterUsername = (xs_master_username.(string))
+		request.XsMasterUsername = (xsMasterUsername.(string))
 	}
 
-	skip_hypervisor, ok := d.GetOk("skip_hypervisor")
+	skipHypervisor, ok := d.GetOk("skip_hypervisor")
 	if ok {
-		request.SkipHypervisor = utils.BoolPtr(skip_hypervisor.(bool))
+		request.SkipHypervisor = utils.BoolPtr(skipHypervisor.(bool))
 	}
 
-	hypervisor_gateway, ok := d.GetOk("hypervisor_gateway")
+	hypervisorGateway, ok := d.GetOk("hypervisor_gateway")
 	if ok {
-		request.HypervisorGateway = (hypervisor_gateway.(string))
+		request.HypervisorGateway = (hypervisorGateway.(string))
 	}
 
-	nos_package, ok := d.GetOk("nos_package")
+	nosPackage, ok := d.GetOk("nos_package")
 	if ok {
-		request.NosPackage = (nos_package.(string))
+		request.NosPackage = (nosPackage.(string))
 	}
 
-	ucsm_user, ok := d.GetOk("ucsm_user")
+	ucsmUser, ok := d.GetOk("ucsm_user")
 	if ok {
-		request.UcsmUser = (ucsm_user.(string))
+		request.UcsmUser = (ucsmUser.(string))
 	}
 
-	fc_settings, err := expandFcSetting(d)
+	fcSettings, err := expandFcSetting(d)
 	if err == nil {
-		request.FcSettings = fc_settings
-		// return diag.FromErr(err)
+		request.FcSettings = fcSettings
 	}
 
-	eosmeta, err := expandEosMetadata(d)
+	eosMeta, err := expandEosMetadata(d)
 	if err == nil {
-		request.EosMetadata = eosmeta
-		// return diag.FromErr(err)
+		request.EosMetadata = eosMeta
 	}
 
 	tests, err := expandTests(d)
@@ -780,7 +787,7 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING"},
 		Target:  []string{"COMPLETED", "FAILED"},
-		Refresh: foundationImageRefresh(conn, resp.SessionID, ctx),
+		Refresh: foundationImageRefresh(ctx, conn, resp.SessionID),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 		Delay:   1 * time.Minute,
 	}
@@ -1137,12 +1144,18 @@ func expandNodes(pr interface{}) []*foundation.Node {
 		if lbootspace, lbootspaceok := node["mitigate_low_boot_space"]; lbootspaceok {
 			nodeList.MitigateLowBootSpace = utils.BoolPtr(lbootspace.(bool))
 		}
-		if ucsm_params, ucsm_paramsok := node["ucsm_params"]; ucsm_paramsok {
-			nodeList.UcsmParams = expandUcsmParams(ucsm_params)
+		if ucsmParams, ucsmParamsok := node["ucsm_params"]; ucsmParamsok {
+			nodeList.UcsmParams = expandUcsmParams(ucsmParams)
 		}
 		if vswitch, vswitchesok := node["vswitches"]; vswitchesok {
 
 			nodeList.Vswitches = expandVswitches(vswitch)
+		}
+		if ipmiUser, ok := node["ipmi_user"]; ok {
+			nodeList.IpmiUser = (ipmiUser.(string))
+		}
+		if ipmiPassword, ok := node["ipmi_password"]; ok {
+			nodeList.IpmiPassword = (ipmiPassword.(string))
 		}
 		nodes[i] = nodeList
 	}
