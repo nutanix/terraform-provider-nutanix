@@ -1,17 +1,19 @@
 package nutanix
 
 import (
+	"context"
 	"log"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func resourceNutanixFCImageCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceNutanixFCImageClusterCreate,
-		Read:   resourceNutanixFCImageClusterRead,
-		Update: resourceNutanixFCImageClusterUpdate,
-		Delete: resourceNutanixFCImageClusterDelete,
+		CreateContext: resourceNutanixFCImageClusterCreate,
+		ReadContext:   resourceNutanixFCImageClusterRead,
+		UpdateContext: resourceNutanixFCImageClusterUpdate,
+		DeleteContext: resourceNutanixFCImageClusterDelete,
 		Schema: map[string]*schema.Schema{
 			"cluster_external_ip": {
 				Type:     schema.TypeString,
@@ -19,8 +21,10 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 				Optional: true,
 			},
 			"common_network_settings": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Computed: true,
+				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cvm_dns_servers": {
@@ -43,8 +47,10 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 				},
 			},
 			"hypervisor_iso_details": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Computed: true,
+				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"hyperv_sku": {
@@ -176,7 +182,7 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 	}
 }
 
-func resourceNutanixFCImageClusterRead(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixFCImageClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
@@ -188,7 +194,7 @@ func resourceNutanixFCImageClusterRead(d *schema.ResourceData, meta interface{})
 // 	cns.HypervisorDnsServers = settingsMap[""].([]interface{})
 // }
 
-func resourceNutanixFCImageClusterCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] Create FC Image: %s", d.Get("name").(string))
 
 	// Get client connection
@@ -249,7 +255,7 @@ func resourceNutanixFCImageClusterCreate(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceNutanixFCImageClusterUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixFCImageClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// client := meta.(*Client)
 	// conn := client.API
 	// timeout := client.WaitTimeout
@@ -327,7 +333,7 @@ func resourceNutanixFCImageClusterUpdate(d *schema.ResourceData, meta interface{
 	return nil
 }
 
-func resourceNutanixFCImageClusterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceNutanixFCImageClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] Deleting Image: %s", d.Get("name").(string))
 
 	// client := meta.(*Client)
