@@ -2,7 +2,6 @@ package nutanix
 
 import (
 	"context"
-	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -106,7 +105,7 @@ func dataSourceFoundationHypervisorIsosRead(ctx context.Context, d *schema.Resou
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	log.Print(resp)
+
 	if err := d.Set("hyperv", flattenHypervisorIsos(resp.Hyperv)); err != nil {
 		return diag.FromErr(err)
 	}
