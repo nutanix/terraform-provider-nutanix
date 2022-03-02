@@ -227,4 +227,5 @@ type ListHypervisorISOsResponse struct {
 	Kvm    []*HypervisorISOReference `json:"kvm"`
 	Esx    []*HypervisorISOReference `json:"esx"`
 	Linux  []*HypervisorISOReference `json:"linux"`
+	Xen    []*HypervisorISOReference `json:"xen"`
 }
