@@ -251,8 +251,8 @@ type DiscoveredNode struct {
 	Hypervisor              string      `json:"hypervisor"`
 	Configured              *bool       `json:"configured"`
 	NosVersion              string      `json:"nos_version"`
-	ClusterID               interface{} `json:"cluster_id"`           //check for type
-	CurrentCvmVlanTag       *int64      `json:"current_cvm_vlan_tag"` //check for type
+	ClusterID               interface{} `json:"cluster_id"`
+	CurrentCvmVlanTag       interface{} `json:"current_cvm_vlan_tag"`
 	HypervisorVersion       string      `json:"hypervisor_version"`
 	SvmIP                   string      `json:"svm_ip"`
 	Model                   string      `json:"model"`
