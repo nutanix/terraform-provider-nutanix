@@ -18,7 +18,7 @@ type FileManagementOperations struct {
 	client *client.Client
 }
 
-//ListNOSPackages lists the available AOS packages in Foundation
+//ListNOSPackages lists the available AOS packages file names in Foundation
 func (fmo FileManagementOperations) ListNOSPackages(ctx context.Context) (*ListNOSPackagesResponse, error) {
 	path := "/enumerate_nos_packages"
 	req, err := fmo.client.NewUnAuthRequest(ctx, http.MethodGet, path, nil)
