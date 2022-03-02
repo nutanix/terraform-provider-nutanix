@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -9,6 +10,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/client/foundation"
 )
 
+// dataSourceFoundationDiscoverNodes datasource gets discovered nodes within Ipv6 network of foundation
 func dataSourceFoundationDiscoverNodes() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFoundationDiscoverNodesRead,
@@ -68,11 +70,11 @@ func dataSourceFoundationDiscoverNodes() *schema.Resource {
 										Computed: true,
 									},
 									"cluster_id": {
-										Type:     schema.TypeInt, //check for type
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
 									"current_cvm_vlan_tag": {
-										Type:     schema.TypeInt, //check for type
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
 									"hypervisor_version": {
@@ -97,8 +99,9 @@ func dataSourceFoundationDiscoverNodes() *schema.Resource {
 	}
 }
 
+// dataSourceFoundationDiscoverNodesRead performs get operation on /discover_nodes api and sets it to resource data schema appropriately
 func dataSourceFoundationDiscoverNodesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
+	// create foundation client connection
 	conn := meta.(*Client).FoundationClientAPI
 
 	resp, err := conn.Networking.DiscoverNodes(ctx)
@@ -112,19 +115,21 @@ func dataSourceFoundationDiscoverNodesRead(ctx context.Context, d *schema.Resour
 		entity["chassis_n"] = v.ChassisN
 		entity["block_id"] = v.BlockID
 
+		// construct node details map
 		entity["nodes"] = flattenDiscoveredNodes(v.Nodes)
 
 		entities[k] = entity
 	}
-	// log.Println(entities)
-	setErr := d.Set("entities", entities)
-	if setErr != nil {
+
+	if setErr := d.Set("entities", entities); setErr != nil {
 		return diag.FromErr(err)
 	}
+
 	d.SetId(resource.UniqueId())
 	return nil
 }
 
+// flattenDiscoveredNodes constructs node details map for each discovered node
 func flattenDiscoveredNodes(nodesList []foundation.DiscoveredNode) []map[string]interface{} {
 	nodes := make([]map[string]interface{}, len(nodesList))
 	for k, v := range nodesList {
@@ -139,13 +144,19 @@ func flattenDiscoveredNodes(nodesList []foundation.DiscoveredNode) []map[string]
 		node["configured"] = v.Configured
 		node["nos_version"] = v.NosVersion
 
-		if v.ClusterID != nil && v.ClusterID != "" {
+		// to make sure we set accept integer response
+		if v.ClusterID != nil && reflect.TypeOf(v.ClusterID).String() != "string" {
 			node["cluster_id"] = int64((v.ClusterID).(float64))
 		} else {
-			node["cluster_id"] = int64(0)
+			node["cluster_id"] = int64(-1)
 		}
 
-		node["current_cvm_vlan_tag"] = v.CurrentCvmVlanTag
+		// to make sure we set accept integer response
+		if v.CurrentCvmVlanTag != nil && reflect.TypeOf(v.CurrentCvmVlanTag).String() != "string" {
+			node["current_cvm_vlan_tag"] = int64((v.CurrentCvmVlanTag).(float64))
+		} else {
+			node["current_cvm_vlan_tag"] = int64(-1)
+		}
 
 		node["hypervisor_version"] = v.HypervisorVersion
 		node["svm_ip"] = v.SvmIP
