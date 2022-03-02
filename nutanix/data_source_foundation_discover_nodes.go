@@ -2,7 +2,6 @@ package nutanix
 
 import (
 	"context"
-	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -144,16 +143,16 @@ func flattenDiscoveredNodes(nodesList []foundation.DiscoveredNode) []map[string]
 		node["configured"] = v.Configured
 		node["nos_version"] = v.NosVersion
 
-		// to make sure we set accept integer response
-		if v.ClusterID != nil && reflect.TypeOf(v.ClusterID).String() != "string" {
-			node["cluster_id"] = int64((v.ClusterID).(float64))
+		//ClusterID is of interface{} type so making sure we only accept integer values
+		if val, ok := v.ClusterID.(float64); ok {
+			node["cluster_id"] = int64(val)
 		} else {
 			node["cluster_id"] = int64(-1)
 		}
 
-		// to make sure we set accept integer response
-		if v.CurrentCvmVlanTag != nil && reflect.TypeOf(v.CurrentCvmVlanTag).String() != "string" {
-			node["current_cvm_vlan_tag"] = int64((v.CurrentCvmVlanTag).(float64))
+		//CurrentCvmVlanTag is of interface{} type so making sure we only accept integer values
+		if val, ok := v.CurrentCvmVlanTag.(float64); ok {
+			node["current_cvm_vlan_tag"] = int64(val)
 		} else {
 			node["current_cvm_vlan_tag"] = int64(-1)
 		}
