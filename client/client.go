@@ -20,6 +20,8 @@ import (
 const (
 	// libraryVersion = "v3"
 	defaultBaseURL = "%s://%s/"
+	httpPrefix     = "http"
+	httpsPrefix    = "https"
 	// absolutePath   = "api/nutanix/" + libraryVersion
 	// userAgent      = "nutanix/" + libraryVersion
 	mediaType = "application/json"
@@ -98,9 +100,9 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string, 
 
 	httpClient.Transport = logging.NewTransport("Nutanix", transCfg)
 
-	protocol := "https"
+	protocol := httpsPrefix
 	if isHTTP {
-		protocol = "http"
+		protocol = httpPrefix
 	}
 
 	baseURL, err := url.Parse(fmt.Sprintf(defaultBaseURL, protocol, credentials.URL))
@@ -155,9 +157,9 @@ func NewBaseClient(credentials *Credentials, absolutePath string, isHTTP bool) (
 	}
 	httpClient.Transport = logging.NewTransport("Nutanix", transCfg)
 
-	protocol := "https"
+	protocol := httpsPrefix
 	if isHTTP {
-		protocol = "http"
+		protocol = httpPrefix
 	}
 
 	baseURL, err := url.Parse(fmt.Sprintf(defaultBaseURL, protocol, credentials.URL))
