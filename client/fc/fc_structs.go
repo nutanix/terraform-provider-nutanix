@@ -69,6 +69,7 @@ type ImagedNodeDetails struct {
 	HypervisorGateway  *string            `json:"hypervisor_gateway,omitempty"`
 	CvmIP              *string            `json:"cvm_ip,omitempty"`
 	AosVersion         *string            `json:"aos_version,omitempty"`
+	ClusterExternalIP  *string            `json:"cluster_external_ip,omitempty"`
 }
 
 // ImagedNodesInput ...
@@ -206,17 +207,17 @@ type Node struct {
 	IpmiGateway                *string                `json:"ipmi_gateway,omitempty"`
 }
 type CreateClusterInput struct {
-	ClusterExternalIP       *string                `json:"cluster_external_ip,omitempty"`
-	Common_network_settings *CommonNetworkSettings `json:"common_network_settings,omitempty"`
-	HypervisorIsoDetails    *HypervisorIsoDetails  `json:"hypervisor_iso_details,omitempty"`
-	StorageNodeCount        *int                   `json:"storage_node_count,omitempty"`
-	RedundancyFactor        *int                   `json:"redundancy_factor,omitempty"`
-	ClusterName             *string                `json:"cluster_name,omitempty"`
-	AosPackageUrl           *string                `json:"aos_package_url,omitempty"`
-	ClusterSize             *int                   `json:"cluster_size,omitempty"`
-	AosPackageSha256sum     *string                `json:"aos_package_sha256sum,omitempty"`
-	Timezone                *string                `json:"timezone,omitempty"`
-	NodesList               []*Node                `json:"nodes_list,omitempty"`
+	ClusterExternalIP     *string                `json:"cluster_external_ip,omitempty"`
+	CommonNetworkSettings *CommonNetworkSettings `json:"common_network_settings,omitempty"`
+	HypervisorIsoDetails  *HypervisorIsoDetails  `json:"hypervisor_iso_details,omitempty"`
+	StorageNodeCount      *int                   `json:"storage_node_count,omitempty"`
+	RedundancyFactor      *int                   `json:"redundancy_factor,omitempty"`
+	ClusterName           *string                `json:"cluster_name,omitempty"`
+	AosPackageUrl         *string                `json:"aos_package_url,omitempty"`
+	ClusterSize           *int                   `json:"cluster_size,omitempty"`
+	AosPackageSha256sum   *string                `json:"aos_package_sha256sum,omitempty"`
+	Timezone              *string                `json:"timezone,omitempty"`
+	NodesList             []*Node                `json:"nodes_list,omitempty"`
 }
 
 type CreateClusterResponse struct {
