@@ -3,8 +3,10 @@ package nutanix
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/fc"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -284,6 +286,21 @@ func resourceNutanixFCImageClusterRead(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
+func foundationCentralClusterRefresh(ctx context.Context, conn *fc.Client, imageUUID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		v, err := conn.Service.GetImagedCluster(imageUUID)
+
+		if err != nil {
+			return nil, "FAILED", err
+		}
+
+		if utils.BoolValue(v.ClusterStatus.ImagingStopped) {
+			return v, "COMPLETED", nil
+		}
+		return v, "PENDING", nil
+	}
+}
+
 func expandCommonNetworkSettings(d *schema.ResourceData) *fc.CommonNetworkSettings {
 	cns := fc.CommonNetworkSettings{}
 	resourceData, ok := d.GetOk("common_network_settings")
@@ -461,7 +478,24 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 
 	d.SetId(*resp.ImagedClusterUUID)
 
-	// Poll for operation here
+	// Poll for operation here - Cluster GET Call
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING"},
+		Target:  []string{"COMPLETED", "FAILED"},
+		Refresh: foundationCentralClusterRefresh(ctx, conn, *resp.ImagedClusterUUID),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+		Delay:   1 * time.Minute,
+	}
+	info, err := stateConf.WaitForStateContext(ctx)
+	if err != nil {
+		return diag.Errorf("error waiting for image (%s) to be ready: %v", *resp.ImagedClusterUUID, err)
+	}
+
+	if progress, ok := info.(*fc.ImagedClusterDetails); ok {
+		if utils.Float64Value(progress.ClusterStatus.AggregatePercentComplete) < float64(100) {
+			return diag.Errorf("Progress is incomplete")
+		}
+	}
 
 	return nil
 }
