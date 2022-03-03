@@ -7,16 +7,18 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
 )
 
+// NetworkingService is a interface for networking apis in foundation
 type NetworkingService interface {
 	DiscoverNodes(context.Context) (*DiscoverNodesAPIResponse, error)
 	NodeNetworkDetails(context.Context, *NodeNetworkDetailsInput) (*NodeNetworkDetailsResponse, error)
 }
 
+// NetworkingOperations implements NetworkingService interface
 type NetworkingOperations struct {
 	client *client.Client
 }
 
-//Discovers Nutanix-imaged nodes within an IPv6 network.
+// DiscoverNodes discovers(gets) Nutanix-imaged nodes within an IPv6 network.
 func (ntw NetworkingOperations) DiscoverNodes(ctx context.Context) (*DiscoverNodesAPIResponse, error) {
 	path := "/discover_nodes"
 	req, err := ntw.client.NewUnAuthRequest(ctx, http.MethodGet, path, nil)
