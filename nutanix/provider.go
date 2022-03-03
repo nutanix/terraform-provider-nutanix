@@ -138,6 +138,7 @@ func Provider() *schema.Provider {
 			"nutanix_service_groups":             dataSourceNutanixServiceGroups(),
 			"nutanix_foundation_hypervisor_isos": dataSourceFoundationHypervisorIsos(),
 			"nutanix_foundation_discover_nodes":  dataSourceFoundationDiscoverNodes(),
+			"nutanix_foundation_nos_packages":    dataSourceFoundationNOSPackages(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":         resourceNutanixVirtualMachine(),
