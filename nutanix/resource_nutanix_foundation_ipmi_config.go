@@ -18,15 +18,13 @@ func resourceNutanixFoundationIPMIConfig() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"ipmi_user": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
-				Computed: true,
 			},
 			"ipmi_password": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
-				Computed: true,
 			},
 			"ipmi_netmask": {
 				Type:     schema.TypeString,
