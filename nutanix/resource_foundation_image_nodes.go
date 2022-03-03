@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -606,6 +607,10 @@ func resourceFoundationImageNodes() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"poll": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -776,7 +781,6 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	// call the client here
-
 	resp, err := conn.NodeImaging.ImageNodes(ctx, request)
 	if err != nil {
 		return diag.FromErr(err)
@@ -784,22 +788,27 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(resp.SessionID)
 
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING"},
-		Target:  []string{"COMPLETED", "FAILED"},
-		Refresh: foundationImageRefresh(ctx, conn, resp.SessionID),
-		Timeout: d.Timeout(schema.TimeoutCreate),
-		Delay:   1 * time.Minute,
-	}
-	info, err := stateConf.WaitForStateContext(ctx)
-	if err != nil {
-		return diag.Errorf("error waiting for image (%s) to be ready: %v", resp.SessionID, err)
-	}
-	if progress, ok := info.(*foundation.ImageNodesProgressResponse); ok {
-		if utils.Float64Value(progress.AggregatePercentComplete) < float64(AggregatePercentComplete) {
-			return diag.Errorf("Progress is incomplete")
+	if v, ok := d.GetOk("poll"); ok && v == true {
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"PENDING"},
+			Target:  []string{"COMPLETED", "FAILED"},
+			Refresh: foundationImageRefresh(ctx, conn, resp.SessionID),
+			Timeout: d.Timeout(schema.TimeoutCreate),
+			Delay:   1 * time.Minute,
 		}
+		info, err := stateConf.WaitForStateContext(ctx)
+		if err != nil {
+			return diag.Errorf("error waiting for image (%s) to be ready: %v", resp.SessionID, err)
+		}
+		if progress, ok := info.(*foundation.ImageNodesProgressResponse); ok {
+			if utils.Float64Value(progress.AggregatePercentComplete) < float64(AggregatePercentComplete) {
+				return diag.Errorf("Progress is incomplete with error")
+			}
+		}
+	} else {
+		log.Printf("Comming out of polling as its disabled for imaging node with session_id: %s", resp.SessionID)
 	}
+
 	return nil
 }
 
