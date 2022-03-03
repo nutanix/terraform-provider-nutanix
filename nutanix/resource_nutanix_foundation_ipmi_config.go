@@ -155,7 +155,6 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 			nodeSpec.IpmiIP = ipmiIP.(string)
 			nodeSpec.IpmiConfigureNow = ipmiConfigureNow.(bool)
 			nodeList[k1] = nodeSpec
-
 		}
 		blockSpec.Nodes = nodeList
 		blocksInput[k] = blockSpec
@@ -199,7 +198,6 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 		}
 		block["nodes"] = nodes
 		blocksResponse[k] = block
-
 	}
 	if setErr := d.Set("blocks", blocksResponse); setErr != nil {
 		return diag.FromErr(setErr)
