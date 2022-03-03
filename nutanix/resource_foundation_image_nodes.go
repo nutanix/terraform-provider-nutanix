@@ -603,12 +603,13 @@ func resourceFoundationImageNodes() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"session_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"poll": {
 				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
+			"session_id": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 		},
