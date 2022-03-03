@@ -91,26 +91,26 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 	inpSpec := &foundation.IPMIConfigAPIInput{}
 
 	//setting required values which will be common for all nodes
-	ipmi_user, ok := d.GetOk("ipmi_user")
+	ipmiUser, ok := d.GetOk("ipmi_user")
 	if !ok {
 		return diag.Errorf(getRequiredErrorMessage("ipmi_user"))
 	}
-	ipmi_pass, ok := d.GetOk("ipmi_password")
+	ipmiPass, ok := d.GetOk("ipmi_password")
 	if !ok {
 		return diag.Errorf(getRequiredErrorMessage("ipmi_password"))
 	}
-	ipmi_netmask, ok := d.GetOk("ipmi_netmask")
+	ipmiNetmask, ok := d.GetOk("ipmi_netmask")
 	if !ok {
 		return diag.Errorf(getRequiredErrorMessage("ipmi_netmask"))
 	}
-	ipmi_gateway, ok := d.GetOk("ipmi_gateway")
+	ipmiGateway, ok := d.GetOk("ipmi_gateway")
 	if !ok {
 		return diag.Errorf(getRequiredErrorMessage("ipmi_gateway"))
 	}
-	inpSpec.IpmiUser = ipmi_user.(string)
-	inpSpec.IpmiPassword = ipmi_pass.(string)
-	inpSpec.IpmiNetmask = ipmi_netmask.(string)
-	inpSpec.IpmiGateway = ipmi_gateway.(string)
+	inpSpec.IpmiUser = ipmiUser.(string)
+	inpSpec.IpmiPassword = ipmiPass.(string)
+	inpSpec.IpmiNetmask = ipmiNetmask.(string)
+	inpSpec.IpmiGateway = ipmiGateway.(string)
 
 	// get blocks details
 	b, ok := d.GetOk("blocks")
@@ -123,8 +123,8 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 	for k, v := range blocks {
 		blockSpec := foundation.IPMIConfigBlockInput{}
 		val := v.(map[string]interface{})
-		if block_id, ok := val["block_id"]; ok {
-			blockSpec.BlockID = block_id.(string)
+		if blockId, ok := val["block_id"]; ok {
+			blockSpec.BlockID = blockId.(string)
 		}
 
 		n, ok := val["nodes"]
@@ -139,21 +139,21 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 			nodeSpec := foundation.IPMIConfigNodeInput{}
 			val1 := v1.(map[string]interface{})
 
-			ipmi_mac, ok := val1["ipmi_mac"]
+			ipmiMac, ok := val1["ipmi_mac"]
 			if !ok {
 				return diag.Errorf("Please provide ipmi_mac for %dth block and %dth node", k, k1)
 			}
-			ipmi_ip, ok := val1["ipmi_ip"]
+			ipmiIp, ok := val1["ipmi_ip"]
 			if !ok {
 				return diag.Errorf("Please provide ipmi_ip for %dth block and %dth node", k, k1)
 			}
-			ipmi_configure_now, ok := val1["ipmi_configure_now"]
+			ipmiConfigureNow, ok := val1["ipmi_configure_now"]
 			if !ok {
 				return diag.Errorf("Please provide ipmi_configure_now for %dth block and %dth node", k, k1)
 			}
-			nodeSpec.IpmiMac = ipmi_mac.(string)
-			nodeSpec.IpmiIP = ipmi_ip.(string)
-			nodeSpec.IpmiConfigureNow = ipmi_configure_now.(bool)
+			nodeSpec.IpmiMac = ipmiMac.(string)
+			nodeSpec.IpmiIP = ipmiIp.(string)
+			nodeSpec.IpmiConfigureNow = ipmiConfigureNow.(bool)
 			nodeList[k1] = nodeSpec
 
 		}
