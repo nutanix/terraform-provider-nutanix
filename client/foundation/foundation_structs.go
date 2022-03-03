@@ -290,3 +290,48 @@ type NodeNetworkDetailsInput struct {
 type NodeIpv6Input struct {
 	Ipv6Address string `json:"ipv6_address"`
 }
+
+// Input struct for IPMI Configuration using /ipmi_config api in foundation
+type IPMIConfigAPIInput struct {
+	IpmiUser     string                 `json:"ipmi_user"`
+	IpmiNetmask  string                 `json:"ipmi_netmask"`
+	Blocks       []IPMIConfigBlockInput `json:"blocks"`
+	IpmiGateway  string                 `json:"ipmi_gateway"`
+	IpmiPassword string                 `json:"ipmi_password"`
+}
+
+// IPMI config info for every node
+type IPMIConfigNodeInput struct {
+	IpmiMac          string `json:"ipmi_mac"`
+	IpmiConfigureNow bool   `json:"ipmi_configure_now"`
+	IpmiIP           string `json:"ipmi_ip"`
+}
+
+// Block Info for IPMI Config
+type IPMIConfigBlockInput struct {
+	Nodes   []IPMIConfigNodeInput `json:"nodes"`
+	BlockID string                `json:"block_id,omitempty"`
+}
+
+// Response stuct for ipmi config using /ipmi_config api in foundation
+type IPMIConfigAPIResponse struct {
+	IpmiUser     string                    `json:"ipmi_user"`
+	IpmiNetmask  string                    `json:"ipmi_netmask"`
+	Blocks       []IPMIConfigBlockResponse `json:"blocks"`
+	IpmiGateway  string                    `json:"ipmi_gateway"`
+	IpmiPassword string                    `json:"ipmi_password"`
+}
+
+// IPMI config info response for every node along with success flag
+type IPMIConfigNodeResponse struct {
+	IpmiConfigureSuccessful bool   `json:"ipmi_configure_successful"`
+	IpmiConfigureNow        bool   `json:"ipmi_configure_now"`
+	IpmiIP                  string `json:"ipmi_ip"`
+	IpmiMac                 string `json:"ipmi_mac"`
+}
+
+// Block Info for IPMI Config response
+type IPMIConfigBlockResponse struct {
+	Nodes   []IPMIConfigNodeResponse `json:"nodes"`
+	BlockID string                   `json:"block_id"`
+}
