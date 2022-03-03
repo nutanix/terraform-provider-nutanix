@@ -2,6 +2,7 @@ package foundation
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
@@ -11,6 +12,8 @@ import (
 type FileManagementService interface {
 	ListNOSPackages(context.Context) (*ListNOSPackagesResponse, error)
 	ListHypervisorISOs(context.Context) (*ListHypervisorISOsResponse, error)
+	UploadHypervisor(context.Context, *UploadHypervisorInput) (*UploadHypervisorResponse, error)
+	DeleteHypervisorAOS(ctx context.Context, id string) error
 }
 
 // FileManagementOperations implements FileManagementService interface
@@ -38,4 +41,28 @@ func (fmo FileManagementOperations) ListHypervisorISOs(ctx context.Context) (*Li
 	}
 	listHypervisorISOsResponse := new(ListHypervisorISOsResponse)
 	return listHypervisorISOsResponse, fmo.client.Do(ctx, req, listHypervisorISOsResponse)
+}
+
+//Uploads hypervisor or AOS image to foundation.
+
+func (fmo FileManagementOperations) UploadHypervisor(ctx context.Context, uploadAOSInput *UploadHypervisorInput) (*UploadHypervisorResponse, error) {
+	path := fmt.Sprintf("/upload?filename=%s&installer_type=%s", uploadAOSInput.Filename, uploadAOSInput.Installer_type)
+	req, err := fmo.client.NewUnAuthRequest(ctx, http.MethodPost, path, nil)
+	if err != nil {
+		return nil, err
+	}
+	uploadHypervisorResponse := new(UploadHypervisorResponse)
+	return uploadHypervisorResponse, fmo.client.Do(ctx, req, uploadHypervisorResponse)
+}
+
+//Deletes hypervisor or AOS images uploaded to foundation.
+func (fmo FileManagementOperations) DeleteHypervisorAOS(ctx context.Context, id string) error {
+	path := "/delete"
+
+	req, err := fmo.client.NewUnAuthRequest(ctx, http.MethodDelete, path, nil)
+	if err != nil {
+		return err
+	}
+
+	return fmo.client.Do(ctx, req, nil)
 }

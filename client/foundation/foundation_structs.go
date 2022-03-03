@@ -290,3 +290,16 @@ type NodeNetworkDetailsInput struct {
 type NodeIpv6Input struct {
 	Ipv6Address string `json:"ipv6_address"`
 }
+
+// Input to upload the hypervisor AOS image
+type UploadHypervisorInput struct {
+	Filename       string `json:"filename"`
+	Installer_type string `json:"installer_type"`
+}
+
+// Response from /upload API for upload Hypervisor AOS image
+type UploadHypervisorResponse struct {
+	Md5sum       string `json:"md5sum"`
+	Name         string `json:"name"`
+	In_Whitelist bool   `json:"in_whitelist"`
+}
