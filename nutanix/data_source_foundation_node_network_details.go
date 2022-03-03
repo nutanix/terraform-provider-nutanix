@@ -115,7 +115,7 @@ func dataSourceNodeNetworkDetailsRead(ctx context.Context, d *schema.ResourceDat
 		node["cvm_vlan_id"] = v.CvmVlanID
 		node["hypervisor_hostname"] = v.HypervisorHostname
 		node["hypervisor_netmask"] = v.HypervisorNetmask
-		node["cvm_netmask"] = v.IpmiIP
+		node["cvm_netmask"] = v.CvmNetmask
 		node["ipmi_ip"] = v.IpmiIP
 		node["hypervisor_gateway"] = v.HypervisorGateway
 		node["error"] = v.Error
