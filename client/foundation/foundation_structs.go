@@ -257,3 +257,36 @@ type DiscoveredNode struct {
 	SvmIP                   string      `json:"svm_ip"`
 	Model                   string      `json:"model"`
 }
+
+//Response struct for /node_network_details api
+type NodeNetworkDetailsResponse struct {
+	Nodes []NodeNetworkDetail `json:"nodes"`
+	Error string              `json:"error"`
+}
+
+//Network detail of particular node
+type NodeNetworkDetail struct {
+	CvmGateway         string `json:"cvm_gateway"`
+	IpmiNetmask        string `json:"ipmi_netmask"`
+	Ipv6Address        string `json:"ipv6_address"`
+	CvmVlanID          string `json:"cvm_vlan_id"`
+	HypervisorHostname string `json:"hypervisor_hostname"`
+	HypervisorNetmask  string `json:"hypervisor_netmask"`
+	CvmNetmask         string `json:"cvm_netmask"`
+	IpmiIP             string `json:"ipmi_ip"`
+	HypervisorGateway  string `json:"hypervisor_gateway"`
+	Error              string `json:"error"`
+	CvmIP              string `json:"cvm_ip"`
+	HypervisorIP       string `json:"hypervisor_ip"`
+	IpmiGateway        string `json:"ipmi_gateway"`
+}
+
+//Node network details api input
+type NodeNetworkDetailsInput struct {
+	Nodes []NodeIpv6Input `json:"nodes"`
+}
+
+//Node ipv6 details for node network details api
+type NodeIpv6Input struct {
+	Ipv6Address string `json:"ipv6_address"`
+}
