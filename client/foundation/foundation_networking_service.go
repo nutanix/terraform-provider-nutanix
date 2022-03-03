@@ -11,6 +11,7 @@ import (
 type NetworkingService interface {
 	DiscoverNodes(context.Context) (*DiscoverNodesAPIResponse, error)
 	NodeNetworkDetails(context.Context, *NodeNetworkDetailsInput) (*NodeNetworkDetailsResponse, error)
+	ConfigureIPMI(context.Context, *IPMIConfigAPIInput) (*IPMIConfigAPIResponse, error)
 }
 
 // NetworkingOperations implements NetworkingService interface
@@ -29,7 +30,7 @@ func (ntw NetworkingOperations) DiscoverNodes(ctx context.Context) (*DiscoverNod
 	return discoverNodesAPIResponse, ntw.client.Do(ctx, req, discoverNodesAPIResponse)
 }
 
-//Gets hypervisor, CVM & IPMI info of the discovered nodes using IPv6 Api
+// Gets hypervisor, CVM & IPMI info of the discovered nodes
 func (ntw NetworkingOperations) NodeNetworkDetails(ctx context.Context, ntwInput *NodeNetworkDetailsInput) (*NodeNetworkDetailsResponse, error) {
 	path := "/node_network_details"
 	req, err := ntw.client.NewUnAuthRequest(ctx, http.MethodPost, path, ntwInput)
@@ -38,4 +39,15 @@ func (ntw NetworkingOperations) NodeNetworkDetails(ctx context.Context, ntwInput
 	}
 	nodeNetworkDetailsResponse := new(NodeNetworkDetailsResponse)
 	return nodeNetworkDetailsResponse, ntw.client.Do(ctx, req, nodeNetworkDetailsResponse)
+}
+
+// Configures IPMI IP address on BMC of nodes.
+func (ntw NetworkingOperations) ConfigureIPMI(ctx context.Context, config *IPMIConfigAPIInput) (*IPMIConfigAPIResponse, error) {
+	path := "/ipmi_config"
+	req, err := ntw.client.NewUnAuthRequest(ctx, http.MethodPost, path, config)
+	if err != nil {
+		return nil, err
+	}
+	ipmiConfigAPIResponse := new(IPMIConfigAPIResponse)
+	return ipmiConfigAPIResponse, ntw.client.Do(ctx, req, ipmiConfigAPIResponse)
 }
