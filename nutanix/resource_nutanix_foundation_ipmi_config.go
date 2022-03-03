@@ -123,8 +123,8 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 	for k, v := range blocks {
 		blockSpec := foundation.IPMIConfigBlockInput{}
 		val := v.(map[string]interface{})
-		if blockId, ok := val["block_id"]; ok {
-			blockSpec.BlockID = blockId.(string)
+		if blockID, ok := val["block_id"]; ok {
+			blockSpec.BlockID = blockID.(string)
 		}
 
 		n, ok := val["nodes"]
@@ -143,7 +143,7 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 			if !ok {
 				return diag.Errorf("Please provide ipmi_mac for %dth block and %dth node", k, k1)
 			}
-			ipmiIp, ok := val1["ipmi_ip"]
+			ipmiIP, ok := val1["ipmi_ip"]
 			if !ok {
 				return diag.Errorf("Please provide ipmi_ip for %dth block and %dth node", k, k1)
 			}
@@ -152,7 +152,7 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 				return diag.Errorf("Please provide ipmi_configure_now for %dth block and %dth node", k, k1)
 			}
 			nodeSpec.IpmiMac = ipmiMac.(string)
-			nodeSpec.IpmiIP = ipmiIp.(string)
+			nodeSpec.IpmiIP = ipmiIP.(string)
 			nodeSpec.IpmiConfigureNow = ipmiConfigureNow.(bool)
 			nodeList[k1] = nodeSpec
 
