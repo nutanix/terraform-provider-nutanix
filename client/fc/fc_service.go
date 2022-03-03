@@ -17,10 +17,10 @@ type Operations struct {
 type Service interface {
 	GetImagedNode(uuid string) (*ImagedNodeDetails, error)
 	ListImagedNodes(req *ImagedNodesListInput) (*ImagedNodesListResponse, error)
-	GetImagedCluster(uuid string) (*ImagedClusterDetails, error) 
+	GetImagedCluster(uuid string) (*ImagedClusterDetails, error)
 	ListImagedClusters(input *ImagedClustersListInput) (*ImagedClustersListResponse, error)
 	CreateCluster(input *CreateClusterInput) (*CreateClusterResponse, error)
-	UpdateCluster(clusterUUID string, updateData *UpdateClusterData) error 
+	UpdateCluster(clusterUUID string, updateData *UpdateClusterData) error
 	DeleteCluster(clusterUUID string) error
 	// CreateAPIKey()
 	// GetAPIKey()

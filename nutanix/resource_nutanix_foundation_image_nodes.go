@@ -31,19 +31,27 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"cvm_dns_servers": {
 							Type:     schema.TypeList,
+							Optional: true,
 							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"hypervisor_dns_servers": {
 							Type:     schema.TypeList,
+							Optional: true,
 							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"cvm_ntp_servers": {
 							Type:     schema.TypeList,
+							Optional: true,
 							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"hypervisor_ntp_servers": {
 							Type:     schema.TypeList,
+							Optional: true,
 							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -57,6 +65,7 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"hyperv_sku": {
 							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 						"url": {
@@ -65,10 +74,12 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 						},
 						"hyperv_product_key": {
 							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 						"sha256sum": {
 							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 					},
@@ -76,6 +87,7 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 			},
 			"storage_node_count": {
 				Type:     schema.TypeInt,
+				Optional: true,
 				Computed: true,
 			},
 			"redundancy_factor": {
@@ -84,35 +96,43 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 			},
 			"cluster_name": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"aos_package_url": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"cluster_size": {
 				Type:     schema.TypeInt,
+				Optional: true,
 				Computed: true,
 			},
 			"aos_package_sha256sum": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"timezone": {
 				Type:     schema.TypeBool,
+				Optional: true,
 				Computed: true,
 			},
 			"image_cluster_uuid": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"node_list": {
 				Type:     schema.TypeList,
+				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"cvm_gateway": {
 							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 						"ipmi_netmask": {
@@ -126,10 +146,12 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 						},
 						"imaged_node_uuid": {
 							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 						"cvm_vlan_id": {
 							Type:     schema.TypeInt,
+							Optional: true,
 							Computed: true,
 						},
 						"hypervisor_type": {
@@ -138,14 +160,17 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 						},
 						"image_now": {
 							Type:     schema.TypeBool,
+							Optional: true,
 							Computed: true,
 						},
 						"hypervisor_hostname": {
 							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 						"hypervisor_netmask": {
 							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 						"cvm_netmask": {
@@ -154,14 +179,17 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 						},
 						"ipmi_ip": {
 							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 						"hypervisor_gateway": {
 							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 						"hardware_attributes_override": {
 							Type:     schema.TypeMap,
+							Optional: true,
 							Computed: true,
 						},
 						"cvm_ram_gb": {
@@ -170,14 +198,17 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 						},
 						"cvm_ip": {
 							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 						"hypervisor_ip": {
 							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 						"ipmi_gateway": {
 							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 						"use_existing_network_settings": {
@@ -261,7 +292,7 @@ func expandCommonNetworkSettings(d *schema.ResourceData) *fc.CommonNetworkSettin
 	}
 	settingsMap := resourceData.([]interface{})[0].(map[string]interface{})
 
-	cns.CvmDnsServers = settingsMap["cvm_dns_server"].([]string)
+	cns.CvmDnsServers = settingsMap["cvm_dns_servers"].([]string)
 	cns.CvmNtpServers = settingsMap["cvm_ntp_servers"].([]string)
 	cns.HypervisorDnsServers = settingsMap["hypervisor_dns_servers"].([]string)
 	cns.HypervisorNtpServers = settingsMap["hypervisor_ntp_servers"].([]string)
