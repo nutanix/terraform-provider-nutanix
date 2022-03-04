@@ -241,6 +241,7 @@ func (c *Client) NewUnAuthRequest(ctx context.Context, method, urlStr string, bo
 	return req, nil
 }
 
+// NewUnAuthFormEncodedRequest returns content-type: application/x-www-form-urlencoded based unauth request
 func (c *Client) NewUnAuthFormEncodedRequest(ctx context.Context, method, urlStr string, body map[string]string) (*http.Request, error) {
 	//create main api url
 	rel, err := url.Parse(c.AbsolutePath + urlStr)
