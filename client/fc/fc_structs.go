@@ -227,3 +227,15 @@ type CreateClusterResponse struct {
 type UpdateClusterData struct {
 	Archived *bool `json:"archived,omitempty"`
 }
+
+type CreateAPIKeysInput struct {
+	Alias string `json:"alias"`
+}
+
+type CreateAPIKeysResponse struct {
+	CreatedTimestamp string `json:"created_timestamp"`
+	Alias            string `json:"alias"`
+	KeyUUID          string `json:"key_uuid"`
+	ApiKey           string `json:"api_key"`
+	CurrentTime      string `json:"current_time"`
+}
