@@ -100,7 +100,6 @@ func (op Operations) CreateCluster(input *CreateClusterInput) (*CreateClusterRes
 	}
 
 	return createClusterResponse, op.client.Do(ctx, req, createClusterResponse)
-
 }
 
 func (op Operations) UpdateCluster(clusterUUID string, updateData *UpdateClusterData) error {
