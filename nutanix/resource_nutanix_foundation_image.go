@@ -9,6 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+// resourceNutanixFoundationImage resource creates image in foundation vm for all types of hypervisor & nos images
+// Note: source is the path to file in setup where this terraform file runs
 func resourceNutanixFoundationImage() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceNutanixFoundationImageCreate,
@@ -46,6 +48,7 @@ func resourceNutanixFoundationImage() *schema.Resource {
 	}
 }
 
+// resourceNutanixFoundationImageCreate creates a image as per installer type, filename and source path
 func resourceNutanixFoundationImageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// create connection
 	conn := meta.(*Client).FoundationClientAPI
@@ -75,16 +78,19 @@ func resourceNutanixFoundationImageCreate(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
+// resourceNutanixFoundationImageRead will skip as there is no way to read all images
 func resourceNutanixFoundationImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
+// resourceNutanixFoundationImageDelete deletes the existing image
 func resourceNutanixFoundationImageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	//create foundation client
+	// create foundation client
 	conn := meta.(*Client).FoundationClientAPI
 	installerType := d.Get("installer_type").(string)
 	fileName := d.Get("filename").(string)
 
+	// delete the existing image as per the state details
 	log.Printf("[Debug] Destroying the image with the name %s", fileName)
 	if err := conn.FileManagement.DeleteImage(ctx, installerType, fileName); err != nil {
 		return diag.FromErr(err)
