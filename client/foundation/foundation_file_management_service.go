@@ -2,7 +2,10 @@ package foundation
 
 import (
 	"context"
+	"fmt"
+	"io/ioutil"
 	"net/http"
+	"os"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
 )
@@ -11,6 +14,8 @@ import (
 type FileManagementService interface {
 	ListNOSPackages(context.Context) (*ListNOSPackagesResponse, error)
 	ListHypervisorISOs(context.Context) (*ListHypervisorISOsResponse, error)
+	UploadImage(context.Context, string, string, string) (*UploadImageResponse, error)
+	DeleteImage(context.Context, string, string) error
 }
 
 // FileManagementOperations implements FileManagementService interface
@@ -38,4 +43,46 @@ func (fmo FileManagementOperations) ListHypervisorISOs(ctx context.Context) (*Li
 	}
 	listHypervisorISOsResponse := new(ListHypervisorISOsResponse)
 	return listHypervisorISOsResponse, fmo.client.Do(ctx, req, listHypervisorISOsResponse)
+}
+
+//UploadImage uploads the image to foundation vm as per installer type
+func (fmo FileManagementOperations) UploadImage(ctx context.Context, installerType, fileName, source string) (*UploadImageResponse, error) {
+	path := fmt.Sprintf("/upload?installer_type=%s&filename=%s", installerType, fileName)
+
+	// open file. The source should be complete file path eg./Users/...
+	file, err := os.Open(source)
+	if err != nil {
+		return nil, fmt.Errorf("error while opening file: %s", err)
+
+	}
+	defer file.Close()
+
+	// read file as slice of bytes
+	fileContents, err := ioutil.ReadAll(file)
+	if err != nil {
+		return nil, fmt.Errorf("error while reading file: %s", err)
+	}
+
+	req, err := fmo.client.NewUnAuthUploadRequest(ctx, http.MethodPost, path, fileContents)
+	if err != nil {
+		return nil, err
+	}
+
+	uploadImageResponse := new(UploadImageResponse)
+	return uploadImageResponse, fmo.client.Do(ctx, req, uploadImageResponse)
+}
+
+func (fmo FileManagementOperations) DeleteImage(ctx context.Context, installerType, fileName string) error {
+	path := "/delete/"
+
+	// create body
+	body := make(map[string]string)
+	body["installer_type"] = installerType
+	body["filename"] = fileName
+
+	req, err := fmo.client.NewUnAuthFormEncodedRequest(ctx, http.MethodPost, path, body)
+	if err != nil {
+		return err
+	}
+	return fmo.client.Do(ctx, req, nil)
 }

@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/PaesslerAG/jsonpath"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging"
@@ -24,7 +25,8 @@ const (
 	httpsPrefix    = "https"
 	// absolutePath   = "api/nutanix/" + libraryVersion
 	// userAgent      = "nutanix/" + libraryVersion
-	mediaType = "application/json"
+	mediaType       = "application/json"
+	formEncodedType = "application/x-www-form-urlencoded"
 )
 
 // Client Config Configuration of the client
@@ -239,6 +241,34 @@ func (c *Client) NewUnAuthRequest(ctx context.Context, method, urlStr string, bo
 	return req, nil
 }
 
+func (c *Client) NewUnAuthFormEncodedRequest(ctx context.Context, method, urlStr string, body map[string]string) (*http.Request, error) {
+	//create main api url
+	rel, err := url.Parse(c.AbsolutePath + urlStr)
+	if err != nil {
+		return nil, err
+	}
+	u := c.BaseURL.ResolveReference(rel)
+
+	// create form data from body
+	data := url.Values{}
+	for k, v := range body {
+		data.Set(k, v)
+	}
+
+	// create a new request based on encoded from data
+	req, err := http.NewRequest(method, u.String(), strings.NewReader(data.Encode()))
+	if err != nil {
+		return nil, err
+	}
+
+	//add api headers
+	req.Header.Add("Content-Type", formEncodedType)
+	req.Header.Add("Accept", mediaType)
+	req.Header.Add("User-Agent", c.UserAgent)
+
+	return req, nil
+}
+
 // NewUploadRequest Handles image uploads for image service
 func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, body []byte) (*http.Request, error) {
 	rel, errp := url.Parse(c.AbsolutePath + urlStr)
@@ -262,6 +292,29 @@ func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, bo
 	req.Header.Add("Authorization", "Basic "+
 		base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
 
+	return req, nil
+}
+
+// NewUploadRequest handles image uploads for image service
+func (c *Client) NewUnAuthUploadRequest(ctx context.Context, method, urlStr string, body []byte) (*http.Request, error) {
+	rel, errp := url.Parse(c.AbsolutePath + urlStr)
+	if errp != nil {
+		return nil, errp
+	}
+
+	u := c.BaseURL.ResolveReference(rel)
+
+	buf := bytes.NewBuffer(body)
+
+	req, err := http.NewRequest(method, u.String(), buf)
+
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", "application/octet-stream")
+	req.Header.Add("Accept", "application/octet-stream")
+	req.Header.Add("User-Agent", c.UserAgent)
 	return req, nil
 }
 
@@ -491,7 +544,7 @@ func CheckResponse(r *http.Response) error {
 	}
 	log.Print("[DEBUG] first nil check")
 
-	// foundation /image_nodes api error check
+	// This check is used for some foundation api errors
 	if errStruct, ok := res["error"]; ok {
 		return fmt.Errorf("error: %s", errStruct)
 	}
@@ -501,7 +554,7 @@ func CheckResponse(r *http.Response) error {
 		return fmt.Errorf("error: %s", messageInfo)
 	}
 
-	//This check is also used for foundation /progress api errors
+	// This check is also used for some foundation api errors
 	if message, ok := res["message"]; ok {
 		log.Print(message)
 		return fmt.Errorf("error: %s", message)
