@@ -160,6 +160,7 @@ func Provider() *schema.Provider {
 			"nutanix_address_group":           resourceNutanixAddressGroup(),
 			"nutanix_foundation_image_nodes":  resourceFoundationImageNodes(),
 			"nutanix_foundation_ipmi_config":  resourceNutanixFoundationIPMIConfig(),
+			"nutanix_foundation_image":        resourceNutanixFoundationImage(),
 		},
 		ConfigureFunc: providerConfigure,
 	}

@@ -335,3 +335,10 @@ type IPMIConfigBlockResponse struct {
 	Nodes   []IPMIConfigNodeResponse `json:"nodes"`
 	BlockID string                   `json:"block_id"`
 }
+
+// Response struct for upload image
+type UploadImageResponse struct {
+	Md5Sum      string `json:"md5sum"`
+	Name        string `json:"name"`
+	InWhitelist bool   `json:"in_whitelist"`
+}
