@@ -12,6 +12,10 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
+const (
+	aggregatePercentComplete = 100
+)
+
 func resourceNutanixFCImageCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceNutanixFCImageClusterCreate,
@@ -261,7 +265,7 @@ func resourceNutanixFCImageClusterRead(ctx context.Context, d *schema.ResourceDa
 		if !ok {
 			log.Println("aos_package_url is not set")
 		}
-		req.AosPackageUrl = utils.StringPtr(aosPackageURL.(string))
+		req.AosPackageURL = utils.StringPtr(aosPackageURL.(string))
 
 		aosPackageSha, ok := d.GetOk("aos_package_sha256sum")
 		if !ok {
@@ -309,9 +313,9 @@ func expandCommonNetworkSettings(d *schema.ResourceData) *fc.CommonNetworkSettin
 	}
 	settingsMap := resourceData.([]interface{})[0].(map[string]interface{})
 
-	cns.CvmDnsServers = settingsMap["cvm_dns_servers"].([]string)
+	cns.CvmDNSServers = settingsMap["cvm_dns_servers"].([]string)
 	cns.CvmNtpServers = settingsMap["cvm_ntp_servers"].([]string)
-	cns.HypervisorDnsServers = settingsMap["hypervisor_dns_servers"].([]string)
+	cns.HypervisorDNSServers = settingsMap["hypervisor_dns_servers"].([]string)
 	cns.HypervisorNtpServers = settingsMap["hypervisor_ntp_servers"].([]string)
 
 	return &cns
@@ -326,7 +330,7 @@ func expandHyperVisorIsoDetails(d *schema.ResourceData) *fc.HypervisorIsoDetails
 	settingsMap := resourceData.([]interface{})[0].(map[string]interface{})
 
 	hid.HypervSku = utils.StringPtr(settingsMap["hyperv_sku"].(string))
-	hid.Url = utils.StringPtr(settingsMap["url"].(string))
+	hid.URL = utils.StringPtr(settingsMap["url"].(string))
 	hid.HypervProductKey = utils.StringPtr(settingsMap["hyperv_product_key"].(string))
 	hid.Sha256sum = utils.StringPtr(settingsMap["sha256sum"].(string))
 
@@ -384,8 +388,8 @@ func expandNodesList(d *schema.ResourceData) []*fc.Node {
 		if cvmVlanID, ok := nodeSettings["cvm_vlan_id"]; ok {
 			node.CvmVlanID = utils.IntPtr(cvmVlanID.(int))
 		}
-		if cvmRamGb, ok := nodeSettings["cvm_ram_gb"]; ok {
-			node.CvmRamGb = utils.IntPtr(cvmRamGb.(int))
+		if cvmRAMGb, ok := nodeSettings["cvm_ram_gb"]; ok {
+			node.CvmRAMGb = utils.IntPtr(cvmRAMGb.(int))
 		}
 
 		if rdmaPassthrough, ok := nodeSettings["rdma_passthrough"]; ok {
@@ -442,7 +446,7 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 	if !ok {
 		log.Println("aos_package_url is not set")
 	}
-	req.AosPackageUrl = utils.StringPtr(aosPackageURL.(string))
+	req.AosPackageURL = utils.StringPtr(aosPackageURL.(string))
 
 	aosPackageSha, ok := d.GetOk("aos_package_sha256sum")
 	if !ok {
@@ -492,7 +496,7 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 	}
 
 	if progress, ok := info.(*fc.ImagedClusterDetails); ok {
-		if utils.Float64Value(progress.ClusterStatus.AggregatePercentComplete) < float64(100) {
+		if utils.Float64Value(progress.ClusterStatus.AggregatePercentComplete) < float64(aggregatePercentComplete) {
 			return diag.Errorf("Progress is incomplete")
 		}
 	}

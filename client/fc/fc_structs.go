@@ -20,8 +20,8 @@ type ListMetadataOutput struct {
 
 // CommonNetworkSetting ...
 type CommonNetworkSettings struct {
-	CvmDnsServers        []string `json:"cvm_dns_servers,omitempty"`
-	HypervisorDnsServers []string `json:"hypervisor_dns_servers,omitempty"`
+	CvmDNSServers        []string `json:"cvm_dns_servers,omitempty"`
+	HypervisorDNSServers []string `json:"hypervisor_dns_servers,omitempty"`
 	CvmNtpServers        []string `json:"cvm_ntp_servers,omitempty"`
 	HypervisorNtpServers []string `json:"hypervisor_ntp_servers,omitempty"`
 }
@@ -47,7 +47,7 @@ type ImagedNodeDetails struct {
 	IpmiIP             *string            `json:"ipmi_ip,omitempty"`
 	CvmUUID            *string            `json:"cvm_uuid,omitempty"`
 	CvmIpv6            *string            `json:"cvm_ipv6,omitempty"`
-	ImagedClusterUuid  *string            `json:"imaged_cluster_uuid,omitempty"`
+	ImagedClusterUUID  *string            `json:"imaged_cluster_uuid,omitempty"`
 	CvmUp              *bool              `json:"cvm_up,omitempty"`
 	Available          *bool              `json:"available,omitempty"`
 	ObjectVersion      *int               `json:"object_version,omitempty"`
@@ -64,7 +64,7 @@ type ImagedNodeDetails struct {
 	ImagedNodeUUID     *string            `json:"imaged_node_uuid,omitempty"`
 	BlockSerial        *string            `json:"block_serial,omitempty"`
 	HypervisorType     *string            `json:"hypervisor_type,omitempty"`
-	LatestHbTsList     []*string          `json:"latest_hb_ts_list,omitempty"`
+	LatestHbTSList     []*string          `json:"latest_hb_ts_list,omitempty"`
 	HypervisorNetmask  *string            `json:"hypervisor_netmask,omitempty"`
 	HypervisorGateway  *string            `json:"hypervisor_gateway,omitempty"`
 	CvmIP              *string            `json:"cvm_ip,omitempty"`
@@ -142,7 +142,7 @@ type ClusterStatus struct {
 	AggregatePercentComplete *float64                `json:"aggregate_percent_complete,omitempty"`
 	CurrentFoundationIP      *string                 `json:"current_foundation_ip,omitempty"`
 	ClusterProgressDetails   *ClusterProgressDetails `json:"cluster_progress_details,omitempty"`
-	FoundationSessionId      *string                 `json:"foundation_session_id,omitempty"`
+	FoundationSessionID      *string                 `json:"foundation_session_id,omitempty"`
 }
 
 type ImagedClusterDetails struct {
@@ -181,7 +181,7 @@ type ImagedClustersListResponse struct {
 
 type HypervisorIsoDetails struct {
 	HypervSku        *string `json:"hyperv_sku,omitempty"`
-	Url              *string `json:"url,omitempty"`
+	URL              *string `json:"url,omitempty"`
 	HypervProductKey *string `json:"hyperv_product_key,omitempty"`
 	Sha256sum        *string `json:"sha256sum,omitempty"`
 }
@@ -200,7 +200,7 @@ type Node struct {
 	IpmiIP                     *string                `json:"ipmi_ip,omitempty"`
 	HypervisorGateway          *string                `json:"hypervisor_gateway,omitempty"`
 	HardwareAttributesOverride map[string]interface{} `json:"hardware_attributes_override,omitempty"`
-	CvmRamGb                   *int                   `json:"cvm_ram_gb,omitempty"`
+	CvmRAMGb                   *int                   `json:"cvm_ram_gb,omitempty"`
 	CvmIP                      *string                `json:"cvm_ip,omitempty"`
 	HypervisorIP               *string                `json:"hypervisor_ip,omitempty"`
 	UseExistingNetworkSettings *bool                  `json:"use_existing_network_settings,omitempty"`
@@ -213,7 +213,7 @@ type CreateClusterInput struct {
 	StorageNodeCount      *int                   `json:"storage_node_count,omitempty"`
 	RedundancyFactor      *int                   `json:"redundancy_factor,omitempty"`
 	ClusterName           *string                `json:"cluster_name,omitempty"`
-	AosPackageUrl         *string                `json:"aos_package_url,omitempty"`
+	AosPackageURL         *string                `json:"aos_package_url,omitempty"`
 	ClusterSize           *int                   `json:"cluster_size,omitempty"`
 	AosPackageSha256sum   *string                `json:"aos_package_sha256sum,omitempty"`
 	Timezone              *string                `json:"timezone,omitempty"`
