@@ -22,8 +22,8 @@ type Service interface {
 	CreateCluster(input *CreateClusterInput) (*CreateClusterResponse, error)
 	UpdateCluster(clusterUUID string, updateData *UpdateClusterData) error
 	DeleteCluster(clusterUUID string) error
-	// CreateAPIKey()
-	// GetAPIKey()
+	CreateAPIKey(input *CreateAPIKeysInput) (*CreateAPIKeysResponse, error)
+	GetAPIKey(uuid string) (*CreateAPIKeysResponse, error)
 	// ListAPIKeys()
 }
 
@@ -126,4 +126,30 @@ func (op Operations) DeleteCluster(clusterUUID string) error {
 	}
 
 	return op.client.Do(ctx, req, nil)
+}
+
+func (op Operations) CreateAPIKey(input *CreateAPIKeysInput) (*CreateAPIKeysResponse, error) {
+	ctx := context.TODO()
+	path := "/api_keys"
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
+	if err != nil {
+		return nil, err
+	}
+
+	createApiResponse := new(CreateAPIKeysResponse)
+	return createApiResponse, op.client.Do(ctx, req, createApiResponse)
+}
+
+func (op Operations) GetAPIKey(uuid string) (*CreateAPIKeysResponse, error) {
+	ctx := context.TODO()
+	path := fmt.Sprintf("/api_keys/%s", uuid)
+
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, uuid)
+	if err != nil {
+		return nil, err
+	}
+
+	createApiResponse := new(CreateAPIKeysResponse)
+	return createApiResponse, op.client.Do(ctx, req, createApiResponse)
 }
