@@ -24,7 +24,7 @@ type Service interface {
 	DeleteCluster(clusterUUID string) error
 	CreateAPIKey(input *CreateAPIKeysInput) (*CreateAPIKeysResponse, error)
 	GetAPIKey(uuid string) (*CreateAPIKeysResponse, error)
-	// ListAPIKeys()
+	ListAPIKeys(body *ListMetadataInput) (*ListAPIKeysResponse, error)
 }
 
 func (op Operations) GetImagedNode(nodeUUID string) (*ImagedNodeDetails, error) {
@@ -128,6 +128,7 @@ func (op Operations) DeleteCluster(clusterUUID string) error {
 	return op.client.Do(ctx, req, nil)
 }
 
+//Create a new api key which will be used by remote nodes to authenticate with Foundation Central
 func (op Operations) CreateAPIKey(input *CreateAPIKeysInput) (*CreateAPIKeysResponse, error) {
 	ctx := context.TODO()
 	path := "/api_keys"
@@ -141,6 +142,7 @@ func (op Operations) CreateAPIKey(input *CreateAPIKeysInput) (*CreateAPIKeysResp
 	return createApiResponse, op.client.Do(ctx, req, createApiResponse)
 }
 
+//Get an api key given its UUID.
 func (op Operations) GetAPIKey(uuid string) (*CreateAPIKeysResponse, error) {
 	ctx := context.TODO()
 	path := fmt.Sprintf("/api_keys/%s", uuid)
@@ -152,4 +154,18 @@ func (op Operations) GetAPIKey(uuid string) (*CreateAPIKeysResponse, error) {
 
 	createApiResponse := new(CreateAPIKeysResponse)
 	return createApiResponse, op.client.Do(ctx, req, createApiResponse)
+}
+
+//List all the api keys.
+func (op Operations) ListAPIKeys(body *ListMetadataInput) (*ListAPIKeysResponse, error) {
+	ctx := context.TODO()
+	path := "/api_keys/list"
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, body)
+	if err != nil {
+		return nil, err
+	}
+
+	listApiKeysResponse := new(ListAPIKeysResponse)
+	return listApiKeysResponse, op.client.Do(ctx, req, listApiKeysResponse)
 }

@@ -239,3 +239,8 @@ type CreateAPIKeysResponse struct {
 	ApiKey           string `json:"api_key"`
 	CurrentTime      string `json:"current_time"`
 }
+
+type ListAPIKeysResponse struct {
+	Metadata *ListMetadataOutput      `json:"metadata,omitempty" mapstructure:"metadata,omitempty"`
+	APIKeys  []*CreateAPIKeysResponse `json:"api_keys"`
+}
