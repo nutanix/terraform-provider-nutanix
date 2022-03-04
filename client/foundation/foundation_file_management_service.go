@@ -53,7 +53,6 @@ func (fmo FileManagementOperations) UploadImage(ctx context.Context, installerTy
 	file, err := os.Open(source)
 	if err != nil {
 		return nil, fmt.Errorf("error while opening file: %s", err)
-
 	}
 	defer file.Close()
 
