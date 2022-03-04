@@ -2,10 +2,10 @@ package nutanix
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -74,7 +74,7 @@ func resourceNutanixFoundationImageCreate(ctx context.Context, d *schema.Resourc
 	d.Set("md5sum", resp.Md5Sum)
 	d.Set("name", resp.Name)
 	d.Set("in_whitelist", resp.InWhitelist)
-	d.SetId(resource.UniqueId())
+	d.SetId(fmt.Sprintf("%s_%s", installerType, fileName))
 	return nil
 }
 
