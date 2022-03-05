@@ -333,7 +333,6 @@ func resourceFoundationImageNodes() *schema.Resource {
 			},
 			"blocks": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Required: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
@@ -606,7 +605,6 @@ func resourceFoundationImageNodes() *schema.Resource {
 			"poll": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: true,
 			},
 			"session_id": {
 				Type:     schema.TypeString,
@@ -789,7 +787,9 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(resp.SessionID)
 
-	if v, ok := d.GetOk("poll"); ok && v == true {
+	if v, ok := d.GetOk("poll"); ok && !(v.(bool)) {
+		log.Printf("Comming out of polling as its disabled for imaging node with session_id: %s", resp.SessionID)
+	} else {
 		stateConf := &resource.StateChangeConf{
 			Pending: []string{"PENDING"},
 			Target:  []string{"COMPLETED", "FAILED"},
@@ -806,8 +806,6 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 				return diag.Errorf("Progress is incomplete with error")
 			}
 		}
-	} else {
-		log.Printf("Comming out of polling as its disabled for imaging node with session_id: %s", resp.SessionID)
 	}
 
 	return nil
