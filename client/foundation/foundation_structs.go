@@ -20,7 +20,7 @@ type ImageNodesInput struct {
 	XsMasterIP            string        `json:"xs_master_ip,omitempty"`
 	Clusters              []*Clusters   `json:"clusters,omitempty"`
 	HypervExternalVswitch string        `json:"hyperv_external_vswitch,omitempty"`
-	HypervisorNameserver  string        `json:"hypervisor_nameserver"`
+	HypervisorNameserver  string        `json:"hypervisor_nameserver,omitempty"`
 	HypervSku             string        `json:"hyperv_sku,omitempty"`
 	EosMetadata           *EosMetadata  `json:"eos_metadata,omitempty"`
 	Tests                 *Tests        `json:"tests,omitempty"`
