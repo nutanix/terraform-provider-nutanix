@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/spf13/cast"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/foundation"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -282,7 +281,7 @@ func resourceFoundationImageNodes() *schema.Resource {
 			},
 			"hypervisor_nameserver": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"hyperv_sku": {
@@ -512,7 +511,7 @@ func resourceFoundationImageNodes() *schema.Resource {
 										Optional: true,
 									},
 									"current_cvm_vlan_tag": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeInt,
 										Optional: true,
 									},
 									"cvm_ip": {
@@ -605,6 +604,7 @@ func resourceFoundationImageNodes() *schema.Resource {
 			"poll": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				ForceNew: true,
 			},
 			"session_id": {
 				Type:     schema.TypeString,
@@ -615,10 +615,10 @@ func resourceFoundationImageNodes() *schema.Resource {
 }
 
 func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	// create connection
 	conn := meta.(*Client).FoundationClientAPI
 	// Prepare request
 	request := &foundation.ImageNodesInput{}
-
 	xsmasterlabel, ok := d.GetOk("xs_master_label")
 	if ok {
 		request.XsMasterLabel = (xsmasterlabel.(string))
@@ -785,9 +785,9 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 
-	d.SetId(resp.SessionID)
-
-	if v, ok := d.GetOk("poll"); ok && !(v.(bool)) {
+	// check if poll is required or not
+	poll, ok := d.GetOk("poll")
+	if ok && !(poll.(bool)) {
 		log.Printf("Comming out of polling as its disabled for imaging node with session_id: %s", resp.SessionID)
 	} else {
 		stateConf := &resource.StateChangeConf{
@@ -807,6 +807,8 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 			}
 		}
 	}
+
+	d.SetId(resp.SessionID)
 
 	return nil
 }
@@ -955,6 +957,9 @@ func expandVswitches(pr interface{}) []*foundation.Vswitches {
 
 func expandUcsmParams(pr interface{}) *foundation.UcsmParams {
 	ucsm := pr.([]interface{})
+	if len(ucsm) == 0 {
+		return nil
+	}
 	UcsmParam := &foundation.UcsmParams{}
 
 	for _, k := range ucsm {
@@ -1000,7 +1005,7 @@ func expandCluster(d *schema.ResourceData) ([]*foundation.Clusters, error) {
 					clusterList.BackplaneNetmask = (backplanenm.(string))
 				}
 				if rf, ok := clst["redundancy_factor"]; ok {
-					clusterList.RedundancyFactor = utils.Int64Ptr(cast.ToInt64(rf))
+					clusterList.RedundancyFactor = utils.Int64Ptr(int64(rf.(int)))
 				}
 				if backplanevlan, ok := clst["backplane_vlan"]; ok {
 					clusterList.BackplaneVlan = (backplanevlan.(string))
@@ -1049,21 +1054,21 @@ func expandNodes(pr interface{}) []*foundation.Node {
 	for i, p := range nodesList {
 		node := p.(map[string]interface{})
 		nodeList := &foundation.Node{}
-
 		if ipv6, ipv6ok := node["ipv6_address"]; ipv6ok {
 			nodeList.BondLacpRate = (ipv6.(string))
 		}
 		if np, npok := node["node_position"]; npok {
 			nodeList.NodePosition = (np.(string))
 		}
-		if imgd, imgdok := node["image_delay"]; imgdok {
-			nodeList.ImageDelay = utils.Int64Ptr(cast.ToInt64(imgd))
+		if imgd, imgdok := node["image_delay"]; imgdok && imgd.(int) != 0 {
+			nodeList.ImageDelay = utils.Int64Ptr(int64(imgd.(int)))
+
 		}
 		if hypervhostname, hpyervhostnok := node["hypervisor_hostname"]; hpyervhostnok {
 			nodeList.HypervisorHostname = (hypervhostname.(string))
 		}
-		if cvmram, cvmramok := node["cvm_gb_ram"]; cvmramok {
-			nodeList.CvmGbRAM = utils.Int64Ptr(cast.ToInt64(cvmram))
+		if cvmram, cvmramok := node["cvm_gb_ram"]; cvmramok && cvmram.(int) != 0 {
+			nodeList.CvmGbRAM = utils.Int64Ptr(int64(cvmram.(int)))
 		}
 		if devicehint, devicehintok := node["device_hint"]; devicehintok {
 			nodeList.DeviceHint = (devicehint.(string))
@@ -1071,7 +1076,7 @@ func expandNodes(pr interface{}) []*foundation.Node {
 		if bondmode, bondmodeok := node["bond_mode"]; bondmodeok {
 			nodeList.BondMode = (bondmode.(string))
 		}
-		if rdmapass, rdmapassok := node["rdma_passthrough"]; rdmapassok {
+		if rdmapass, rdmapassok := node["rdma_passthrough"]; rdmapassok && rdmapass.(bool) {
 			nodeList.RdmaPassthrough = utils.BoolPtr(rdmapass.(bool))
 		}
 		if clsid, clsidok := node["cluster_id"]; clsidok {
@@ -1086,17 +1091,17 @@ func expandNodes(pr interface{}) []*foundation.Node {
 		if ns, nsok := node["node_serial"]; nsok {
 			nodeList.NodeSerial = (ns.(string))
 		}
-		if ipmicn, ipmicnok := node["ipmi_configure_now"]; ipmicnok {
+		if ipmicn, ipmicnok := node["ipmi_configure_now"]; ipmicnok && ipmicn.(bool) {
 			nodeList.IpmiConfigureNow = utils.BoolPtr(ipmicn.(bool))
 		}
-		if imgsuc, imgsucok := node["image_successful"]; imgsucok {
+		if imgsuc, imgsucok := node["image_successful"]; imgsucok && imgsuc.(bool) {
 			nodeList.ImageSuccessful = utils.BoolPtr(imgsuc.(bool))
 		}
 		if ipv6i, ipv6iok := node["ipv6_interface"]; ipv6iok {
 			nodeList.Ipv6Interface = (ipv6i.(string))
 		}
-		if cvmvcpu, cvmvcpuok := node["cvm_num_vcpus"]; cvmvcpuok {
-			nodeList.CvmNumVcpus = utils.Int64Ptr(cast.ToInt64(cvmvcpu))
+		if cvmvcpu, cvmvcpuok := node["cvm_num_vcpus"]; cvmvcpuok && cvmvcpu.(int) != 0 {
+			nodeList.CvmNumVcpus = utils.Int64Ptr(int64(cvmvcpu.(int)))
 		}
 		if ipmimac, ipmimacok := node["ipmi_mac"]; ipmimacok {
 			nodeList.IpmiMac = (ipmimac.(string))
@@ -1125,8 +1130,8 @@ func expandNodes(pr interface{}) []*foundation.Node {
 		if ipmi, ipmiok := node["ipmi_ip"]; ipmiok {
 			nodeList.IpmiIP = (ipmi.(string))
 		}
-		if cvmvlantag, cvmvlantagok := node["current_cvm_vlan_tag"]; cvmvlantagok {
-			nodeList.CurrentCvmVlanTag = utils.Int64Ptr(cast.ToInt64(cvmvlantag))
+		if cvmvlantag, cvmvlantagok := node["current_cvm_vlan_tag"]; cvmvlantagok && cvmvlantag.(int) != 0 {
+			nodeList.CurrentCvmVlanTag = utils.Int64Ptr(int64(cvmvlantag.(int)))
 		}
 		if cvmip, cvmipok := node["cvm_ip"]; cvmipok {
 			nodeList.CvmIP = (cvmip.(string))
@@ -1134,7 +1139,7 @@ func expandNodes(pr interface{}) []*foundation.Node {
 		if exboots, exbootsok := node["exlude_boot_serial"]; exbootsok {
 			nodeList.ExludeBootSerial = (exboots.(string))
 		}
-		if lbootspace, lbootspaceok := node["mitigate_low_boot_space"]; lbootspaceok {
+		if lbootspace, lbootspaceok := node["mitigate_low_boot_space"]; lbootspaceok && lbootspace.(bool) {
 			nodeList.MitigateLowBootSpace = utils.BoolPtr(lbootspace.(bool))
 		}
 		if ucsmParams, ucsmParamsok := node["ucsm_params"]; ucsmParamsok {
