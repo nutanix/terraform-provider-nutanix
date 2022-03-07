@@ -25,6 +25,7 @@ func dataSourceFoundationCentralListApiKeys() *schema.Resource {
 			"metadata": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"total_matches": {
@@ -92,13 +93,15 @@ func dataSourceFoundationCentralListApiKeysRead(ctx context.Context, d *schema.R
 		return diag.Errorf("error reading API keys with error %s", err)
 	}
 
-	// m := flattenMetadataReference(resp.Metadata)
 	if resp.Metadata != nil {
+		metalist := make([]map[string]interface{}, 0)
 		meta := make(map[string]interface{})
 		meta["length"] = (resp.Metadata.Length)
 		meta["offset"] = (resp.Metadata.Offset)
 		meta["total_matches"] = (resp.Metadata.TotalMatches)
-		d.Set("metadata", meta)
+
+		metalist = append(metalist, meta)
+		d.Set("metadata", metalist)
 	}
 
 	list := flattenApiKeysList(resp.APIKeys)
@@ -106,15 +109,6 @@ func dataSourceFoundationCentralListApiKeysRead(ctx context.Context, d *schema.R
 
 	d.SetId(resource.UniqueId())
 	return nil
-}
-
-func flattenMetadataReference(v *fc.ListMetadataOutput) map[string]interface{} {
-	meta := make(map[string]interface{})
-	meta["length"] = v.Length
-	meta["offset"] = v.Offset
-	meta["total_matches"] = v.TotalMatches
-
-	return meta
 }
 
 func flattenApiKeysList(pr []*fc.CreateAPIKeysResponse) []map[string]interface{} {

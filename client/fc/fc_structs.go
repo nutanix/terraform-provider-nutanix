@@ -233,14 +233,14 @@ type CreateAPIKeysInput struct {
 }
 
 type CreateAPIKeysResponse struct {
-	CreatedTimestamp string `json:"created_timestamp"`
-	Alias            string `json:"alias"`
-	KeyUUID          string `json:"key_uuid"`
-	ApiKey           string `json:"api_key"`
-	CurrentTime      string `json:"current_time"`
+	CreatedTimestamp string `json:"created_timestamp,omitempty"`
+	Alias            string `json:"alias,omitempty"`
+	KeyUUID          string `json:"key_uuid,omitempty"`
+	ApiKey           string `json:"api_key,omitempty"`
+	CurrentTime      string `json:"current_time,omitempty"`
 }
 
 type ListAPIKeysResponse struct {
 	Metadata *ListMetadataOutput      `json:"metadata,omitempty" mapstructure:"metadata,omitempty"`
-	APIKeys  []*CreateAPIKeysResponse `json:"api_keys"`
+	APIKeys  []*CreateAPIKeysResponse `json:"api_keys,omitempty"`
 }
