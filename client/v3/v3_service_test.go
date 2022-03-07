@@ -12,8 +12,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/terraform-providers/terraform-provider-nutanix/client"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+	"github.com/nutanix/terraform-provider-nutanix/client"
+	"github.com/nutanix/terraform-provider-nutanix/utils"
 )
 
 func setup() (*http.ServeMux, *client.Client, *httptest.Server) {

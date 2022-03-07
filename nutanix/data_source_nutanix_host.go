@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
+	v3 "github.com/nutanix/terraform-provider-nutanix/client/v3"
 )
 
 func dataSourceNutanixHost() *schema.Resource {

@@ -5,9 +5,9 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	v3 "github.com/nutanix/terraform-provider-nutanix/client/v3"
+	"github.com/nutanix/terraform-provider-nutanix/utils"
 	"github.com/spf13/cast"
-	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 const (

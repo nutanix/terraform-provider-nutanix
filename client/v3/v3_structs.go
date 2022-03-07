@@ -3,7 +3,7 @@ package v3
 import (
 	"time"
 
-	"github.com/terraform-providers/terraform-provider-nutanix/client"
+	"github.com/nutanix/terraform-provider-nutanix/client"
 )
 
 // Reference ...

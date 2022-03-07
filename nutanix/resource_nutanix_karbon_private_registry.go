@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	karbon "github.com/terraform-providers/terraform-provider-nutanix/client/karbon"
+	karbon "github.com/nutanix/terraform-provider-nutanix/client/karbon"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"

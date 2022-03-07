@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/terraform-providers/terraform-provider-nutanix/client"
+	"github.com/nutanix/terraform-provider-nutanix/client"
 )
 
 func TestNewV3Client(t *testing.T) {

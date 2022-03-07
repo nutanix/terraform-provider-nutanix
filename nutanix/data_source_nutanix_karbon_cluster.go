@@ -5,8 +5,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-nutanix/client/karbon"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+	"github.com/nutanix/terraform-provider-nutanix/client/karbon"
+	"github.com/nutanix/terraform-provider-nutanix/utils"
 )
 
 func dataSourceNutanixKarbonCluster() *schema.Resource {

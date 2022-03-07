@@ -1,7 +1,7 @@
 package v3
 
 import (
-	"github.com/terraform-providers/terraform-provider-nutanix/client"
+	"github.com/nutanix/terraform-provider-nutanix/client"
 )
 
 const (
