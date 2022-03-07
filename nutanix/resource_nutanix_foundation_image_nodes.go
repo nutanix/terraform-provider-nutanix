@@ -1051,7 +1051,6 @@ func expandNodes(pr interface{}) []*foundation.Node {
 		}
 		if imgd, imgdok := node["image_delay"]; imgdok && imgd.(int) != 0 {
 			nodeList.ImageDelay = utils.Int64Ptr(int64(imgd.(int)))
-
 		}
 		if hypervhostname, hpyervhostnok := node["hypervisor_hostname"]; hpyervhostnok {
 			nodeList.HypervisorHostname = (hypervhostname.(string))
