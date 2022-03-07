@@ -138,8 +138,8 @@ func (op Operations) CreateAPIKey(input *CreateAPIKeysInput) (*CreateAPIKeysResp
 		return nil, err
 	}
 
-	createApiResponse := new(CreateAPIKeysResponse)
-	return createApiResponse, op.client.Do(ctx, req, createApiResponse)
+	createAPIResponse := new(CreateAPIKeysResponse)
+	return createAPIResponse, op.client.Do(ctx, req, createAPIResponse)
 }
 
 //Get an api key given its UUID.
@@ -152,8 +152,8 @@ func (op Operations) GetAPIKey(uuid string) (*CreateAPIKeysResponse, error) {
 		return nil, err
 	}
 
-	createAPIResponse := new(CreateAPIKeysResponse)
-	return createAPIResponse, op.client.Do(ctx, req, createAPIResponse)
+	getAPIResponse := new(CreateAPIKeysResponse)
+	return getAPIResponse, op.client.Do(ctx, req, getAPIResponse)
 }
 
 //List all the api keys.
