@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/foundation"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -776,6 +777,24 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 	resp, err := conn.NodeImaging.ImageNodes(ctx, request)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	//poll for progress
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING"},
+		Target:  []string{"COMPLETED", "FAILED"},
+		Refresh: foundationImageRefresh(ctx, conn, resp.SessionID),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+		Delay:   1 * time.Minute,
+	}
+	info, err := stateConf.WaitForStateContext(ctx)
+	if err != nil {
+		return diag.Errorf("error waiting for image (%s) to be ready: %v", resp.SessionID, err)
+	}
+	if progress, ok := info.(*foundation.ImageNodesProgressResponse); ok {
+		if utils.Float64Value(progress.AggregatePercentComplete) < float64(AggregatePercentComplete) {
+			return diag.Errorf("Progress is incomplete with error")
+		}
 	}
 
 	d.SetId(resp.SessionID)
