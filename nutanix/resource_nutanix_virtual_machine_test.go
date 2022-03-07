@@ -209,7 +209,7 @@ func TestAccNutanixVirtualMachine_WithSubnet(t *testing.T) {
 				Config: testAccNutanixVMConfigWithSubnetUpdated(r),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixVirtualMachineExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "nic_list_statu.0.num_queues", "2"),
+					resource.TestCheckResourceAttr(resourceName, "nic_list_status.0.num_queues", "2"),
 				),
 			},
 		},
