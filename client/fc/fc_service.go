@@ -152,8 +152,8 @@ func (op Operations) GetAPIKey(uuid string) (*CreateAPIKeysResponse, error) {
 		return nil, err
 	}
 
-	createApiResponse := new(CreateAPIKeysResponse)
-	return createApiResponse, op.client.Do(ctx, req, createApiResponse)
+	createAPIResponse := new(CreateAPIKeysResponse)
+	return createAPIResponse, op.client.Do(ctx, req, createAPIResponse)
 }
 
 //List all the api keys.
@@ -166,6 +166,6 @@ func (op Operations) ListAPIKeys(body *ListMetadataInput) (*ListAPIKeysResponse,
 		return nil, err
 	}
 
-	listApiKeysResponse := new(ListAPIKeysResponse)
-	return listApiKeysResponse, op.client.Do(ctx, req, listApiKeysResponse)
+	listAPIKeysResponse := new(ListAPIKeysResponse)
+	return listAPIKeysResponse, op.client.Do(ctx, req, listAPIKeysResponse)
 }

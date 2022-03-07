@@ -10,11 +10,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/client/fc"
 )
 
-func resourceFoundationCentralAPIKeys() *schema.Resource {
+func resourceNutanixFCAPIKeys() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceFoundationCentralAPIKeysCreate,
-		ReadContext:   resourceFoundationCentralAPIKeysRead,
-		DeleteContext: resourceFoundationCentralAPIKeysDelete,
+		CreateContext: resourceNutanixFCAPIKeysCreate,
+		ReadContext:   resourceNutanixFCAPIKeysRead,
+		DeleteContext: resourceNutanixFCAPIKeysDelete,
 		Schema: map[string]*schema.Schema{
 			"alias": {
 				Type:     schema.TypeString,
@@ -41,7 +41,7 @@ func resourceFoundationCentralAPIKeys() *schema.Resource {
 	}
 }
 
-func resourceFoundationCentralAPIKeysCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNutanixFCAPIKeysCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).FC
 	req := &fc.CreateAPIKeysInput{}
 
@@ -56,10 +56,10 @@ func resourceFoundationCentralAPIKeysCreate(ctx context.Context, d *schema.Resou
 	}
 
 	d.SetId(resp.KeyUUID)
-	return resourceFoundationCentralAPIKeysRead(ctx, d, meta)
+	return resourceNutanixFCAPIKeysRead(ctx, d, meta)
 }
 
-func resourceFoundationCentralAPIKeysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNutanixFCAPIKeysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).FC
 	resp, err := conn.GetAPIKey(d.Id())
 
@@ -72,13 +72,13 @@ func resourceFoundationCentralAPIKeysRead(ctx context.Context, d *schema.Resourc
 	}
 	d.Set("created_timestamp", resp.CreatedTimestamp)
 	d.Set("key_uuid", resp.KeyUUID)
-	d.Set("api_key", resp.ApiKey)
+	d.Set("api_key", resp.APIKey)
 	d.Set("current_time", resp.CurrentTime)
 	d.Set("alias", resp.Alias)
 
 	return nil
 }
 
-func resourceFoundationCentralAPIKeysDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNutanixFCAPIKeysDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
