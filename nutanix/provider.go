@@ -120,8 +120,8 @@ func Provider() *schema.Provider {
 			"nutanix_address_group":                    dataSourceNutanixAddressGroup(),
 			"nutanix_service_group":                    dataSourceNutanixServiceGroup(),
 			"nutanix_service_groups":                   dataSourceNutanixServiceGroups(),
-			"nutanix_foundation_central_api_keys":      dataSourceFoundationCentralApiKeys(),
-			"nutanix_foundation_central_list_api_keys": dataSourceFoundationCentralListApiKeys(),
+			"nutanix_foundation_central_api_keys":      dataSourceNutanixFCAPIKeys(),
+			"nutanix_foundation_central_list_api_keys": dataSourceNutanixFCListAPIKeys(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  resourceNutanixVirtualMachine(),
@@ -141,7 +141,7 @@ func Provider() *schema.Provider {
 			"nutanix_service_group":                    resourceNutanixServiceGroup(),
 			"nutanix_address_group":                    resourceNutanixAddressGroup(),
 			"nutanix_foundation_central_image_cluster": resourceNutanixFCImageCluster(),
-			"nutanix_foundation_central_api_keys":      resourceFoundationCentralAPIKeys(),
+			"nutanix_foundation_central_api_keys":      resourceNutanixFCAPIKeys(),
 		},
 		ConfigureFunc: providerConfigure,
 	}

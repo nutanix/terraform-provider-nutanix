@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func dataSourceFoundationCentralApiKeys() *schema.Resource {
+func dataSourceNutanixFCAPIKeys() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceFoundationCentralApiKeysRead,
+		ReadContext: dataSourceNutanixFCAPIKeysRead,
 		Schema: map[string]*schema.Schema{
 			"alias": {
 				Type:     schema.TypeString,
@@ -35,7 +35,7 @@ func dataSourceFoundationCentralApiKeys() *schema.Resource {
 	}
 }
 
-func dataSourceFoundationCentralApiKeysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceNutanixFCAPIKeysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).FC
 
 	if uuid, uuidok := d.GetOk("key_uuid"); uuidok {
@@ -46,7 +46,7 @@ func dataSourceFoundationCentralApiKeysRead(ctx context.Context, d *schema.Resou
 		if err := d.Set("created_timestamp", resp.CreatedTimestamp); err != nil {
 			return diag.FromErr(err)
 		}
-		if err := d.Set("api_key", resp.ApiKey); err != nil {
+		if err := d.Set("api_key", resp.APIKey); err != nil {
 			return diag.FromErr(err)
 		}
 		if err := d.Set("current_time", resp.CurrentTime); err != nil {
