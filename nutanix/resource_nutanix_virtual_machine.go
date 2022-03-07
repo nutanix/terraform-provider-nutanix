@@ -1128,11 +1128,13 @@ func resourceNutanixVirtualMachineUpdate(ctx context.Context, d *schema.Resource
 	nicLoop:
 		for _, newNic := range newNics {
 			for _, oldNic := range oldNics {
-				if newNic.UUID != nil && oldNic.UUID != nil && *newNic.UUID == *oldNic.UUID {
-					if newNic.NumQueues != nil && oldNic.NumQueues != nil && *newNic.NumQueues != *oldNic.NumQueues {
-						hotPlugChange = false
-						break nicLoop
-					}
+				if newNic == nil || oldNic == nil {
+					break nicLoop
+				}
+				if *newNic.UUID == *oldNic.UUID && *newNic.NumQueues != *oldNic.NumQueues {
+					hotPlugChange = false
+					break nicLoop
+
 				}
 			}
 		}
