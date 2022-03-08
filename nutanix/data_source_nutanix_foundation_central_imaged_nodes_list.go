@@ -201,7 +201,6 @@ func dataSourceNutanixFCImagedClustersList() *schema.Resource {
 			},
 		},
 	}
-
 }
 
 func dataSourceNutanixFCImagedClustersListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -283,7 +282,6 @@ func flattenImagedNodes(imgcls []*fc.ImagedNodeDetails) []map[string]interface{}
 				"supported_features":  flattenFeature(v.SupportedFeatures),
 				"latest_hb_ts_list":   flattenFeature(v.LatestHbTSList),
 			}
-
 		}
 	}
 	return imgClsList
