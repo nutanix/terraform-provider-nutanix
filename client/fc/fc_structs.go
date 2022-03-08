@@ -70,6 +70,7 @@ type ImagedNodeDetails struct {
 	CvmIP              *string            `json:"cvm_ip,omitempty"`
 	AosVersion         *string            `json:"aos_version,omitempty"`
 	ClusterExternalIP  *string            `json:"cluster_external_ip,omitempty"`
+	SupportedFeatures  []*string          `json:"supported_features,omitempty"`
 }
 
 // ImagedNodesInput ...
