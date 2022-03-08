@@ -224,9 +224,9 @@ func dataSourceNutanixFCImagedClustersListRead(ctx context.Context, d *schema.Re
 		return diag.FromErr(err)
 	}
 
-	img_nodes := flattenImagedClusters(resp.ImagedNodes)
+	imgNodes := flattenImagedNodes(resp.ImagedNodes)
 
-	d.Set("imaged_nodes", img_nodes)
+	d.Set("imaged_nodes", imgNodes)
 
 	if resp.Metadata != nil {
 		metalist := make([]map[string]interface{}, 0)
@@ -243,10 +243,10 @@ func dataSourceNutanixFCImagedClustersListRead(ctx context.Context, d *schema.Re
 	return nil
 }
 
-func flattenImagedClusters(ImgCls []*fc.ImagedNodeDetails) []map[string]interface{} {
-	imgClsList := make([]map[string]interface{}, len(ImgCls))
-	if len(ImgCls) > 0 {
-		for i, v := range ImgCls {
+func flattenImagedNodes(imgcls []*fc.ImagedNodeDetails) []map[string]interface{} {
+	imgClsList := make([]map[string]interface{}, len(imgcls))
+	if len(imgcls) > 0 {
+		for i, v := range imgcls {
 			imgClsList[i] = map[string]interface{}{
 				"aos_version":         v.AosVersion,
 				"api_key_uuid":        v.APIKeyUUID,
@@ -290,7 +290,7 @@ func flattenImagedClusters(ImgCls []*fc.ImagedNodeDetails) []map[string]interfac
 }
 
 func flattenFeature(pr []*string) []string {
-	var res []string
+	res := []string{}
 
 	for _, v := range pr {
 		res = append(res, *v)
