@@ -17,9 +17,9 @@ import (
 )
 
 const (
-	DEFAULTMASTERNODEPOOLNAME = "master_node_pool"
-	DEFAULTETCDNODEPOOLNAME   = "etcd_node_pool"
-	DEFAULTWORKERNODEPOOLNAME = "worker_node_pool"
+	DEFAULTMASTERNODEPOOLNAME = "master-node-pool"
+	DEFAULTETCDNODEPOOLNAME   = "etcd-node-pool"
+	DEFAULTWORKERNODEPOOLNAME = "worker-node-pool"
 	DEFAULTPODIPV4CIDR        = "172.20.0.0/16"
 	DEFAULTSERVICEIPV4CIDR    = "172.19.0.0/16"
 	DEFAULTRECLAIMPOLICY      = "Delete"
