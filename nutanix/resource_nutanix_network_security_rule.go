@@ -1139,6 +1139,7 @@ func expandNetworkRule(prefix string, d *schema.ResourceData) *v3.NetworkSecurit
 		for k, v := range oal {
 			nr := v.(map[string]interface{})
 			nrItem := &v3.NetworkRule{}
+			setIpSubnet := false
 			iPSubnet := &v3.IPSubnet{}
 			filter := &v3.CategoryFilter{}
 
@@ -1148,12 +1149,18 @@ func expandNetworkRule(prefix string, d *schema.ResourceData) *v3.NetworkSecurit
 
 			if ip, ipok := nr["ip_subnet"]; ipok && ip.(string) != "" {
 				iPSubnet.IP = utils.StringPtr(ip.(string))
+				setIpSubnet = true
 			}
 
 			if ippl, ipok := nr["ip_subnet_prefix_length"]; ipok && ippl.(string) != "" {
 				if i, err := strconv.Atoi(ippl.(string)); err == nil {
 					iPSubnet.PrefixLength = utils.Int64Ptr(int64(i))
+					setIpSubnet = true
 				}
+			}
+
+			if setIpSubnet {
+				nrItem.IPSubnet = iPSubnet
 			}
 
 			if t, tcpok := nr["tcp_port_range_list"]; tcpok {
@@ -1221,7 +1228,6 @@ func expandNetworkRule(prefix string, d *schema.ResourceData) *v3.NetworkSecurit
 				nrItem.IcmpTypeCodeList = expandIcmpTypeCodeList(icmp)
 			}
 
-			nrItem.IPSubnet = iPSubnet
 			if !reflect.DeepEqual(*filter, v3.CategoryFilter{}) {
 				nrItem.Filter = filter
 			}
@@ -1561,14 +1567,17 @@ func referenceListSchema() *schema.Schema {
 				"kind": {
 					Type:     schema.TypeString,
 					Computed: true,
+					Optional: true,
 				},
 				"uuid": {
 					Type:     schema.TypeString,
 					Computed: true,
+					Optional: true,
 				},
 				"name": {
 					Type:     schema.TypeString,
 					Computed: true,
+					Optional: true,
 				},
 			},
 		},
