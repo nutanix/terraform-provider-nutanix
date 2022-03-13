@@ -66,12 +66,10 @@ func resourceNutanixFoundationIPMIConfig() *schema.Resource {
 									"ipmi_configure_successful": {
 										Type:     schema.TypeBool,
 										Computed: true,
-										ForceNew: true,
 									},
 									"ipmi_message": {
 										Type:     schema.TypeString,
 										Computed: true,
-										ForceNew: true,
 									},
 								},
 							},
