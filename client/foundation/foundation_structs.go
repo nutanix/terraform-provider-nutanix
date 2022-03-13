@@ -328,6 +328,7 @@ type IPMIConfigNodeResponse struct {
 	IpmiConfigureNow        bool   `json:"ipmi_configure_now"`
 	IpmiIP                  string `json:"ipmi_ip"`
 	IpmiMac                 string `json:"ipmi_mac"`
+	IpmiMessage             string `json:"ipmi_message"`
 }
 
 // Block Info for IPMI Config response
