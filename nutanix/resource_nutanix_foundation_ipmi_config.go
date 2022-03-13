@@ -185,8 +185,6 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 
-	// to be used for particular erroes of every node's response
-	var diags diag.Diagnostics
 	// flatten blocks and nodes list for every block and set appropriately
 	blocksResponse := make([]map[string]interface{}, len(resp.Blocks))
 	for k, v := range resp.Blocks {
@@ -197,13 +195,6 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 		nodes := make([]map[string]interface{}, len(v.Nodes))
 		for k1, v1 := range v.Nodes {
 			node := make(map[string]interface{})
-			if !v1.IpmiConfigureSuccessful {
-				diags = append(diags, diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  "IMPI config failed",
-					Detail:   fmt.Sprintf("IPMI config failed for IPMI mac %s with error: %s", v1.IpmiMac, v1.IpmiMessage),
-				})
-			}
 			node["ipmi_configure_successful"] = v1.IpmiConfigureSuccessful
 			node["ipmi_configure_now"] = v1.IpmiConfigureNow
 			node["ipmi_ip"] = v1.IpmiIP
@@ -213,11 +204,6 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 		}
 		block["nodes"] = nodes
 		blocksResponse[k] = block
-	}
-
-	//error out if node/nodes ipmi config process fails
-	if len(diags) > 0 {
-		return diags
 	}
 
 	if setErr := d.Set("blocks", blocksResponse); setErr != nil {
