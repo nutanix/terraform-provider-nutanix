@@ -1131,7 +1131,7 @@ func resourceNutanixVirtualMachineUpdate(ctx context.Context, d *schema.Resource
 				if newNic == nil || oldNic == nil {
 					break nicLoop
 				}
-				if *newNic.UUID == *oldNic.UUID && *newNic.NumQueues != *oldNic.NumQueues {
+				if *newNic.UUID == *oldNic.UUID && newNic.NumQueues != oldNic.NumQueues {
 					hotPlugChange = false
 					break nicLoop
 				}
