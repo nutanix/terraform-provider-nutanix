@@ -33,7 +33,7 @@
             "directory_service_uuid": "bdf0bafb-bbd7-4a1b-ba14-94a990607506"
         }
     ],
-    "node_os_version": "ntnx-1.0",
+    "node_os_version": "ntnx-1.2",
     "ad_rule_target": {
         "name": "ADGroup",
         "values": "sspadmins"
