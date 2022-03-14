@@ -1577,7 +1577,6 @@ func referenceListSchema() *schema.Schema {
 				"name": {
 					Type:     schema.TypeString,
 					Computed: true,
-					Optional: true,
 				},
 			},
 		},
