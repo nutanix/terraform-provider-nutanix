@@ -193,6 +193,7 @@ The nic_list attribute supports the following:
 * `subnet_uuid`: - The reference to a subnet.
 * `subnet_name`: - The name of the subnet reference to.
 * `floating_ip`: -  The Floating IP associated with the vnic. (Only in `nic_list_status`)
+* `num_queues`: - The number of tx/rx queue pairs for this NIC.
 
 ### Serial Port List
 
