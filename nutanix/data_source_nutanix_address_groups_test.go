@@ -44,6 +44,8 @@ func testAccAddressGroupsDataSourceConfig(r int) string {
 			uuid = nutanix_address_group.test_address.id
 		}
 
-		data "nutanix_address_groups" "addr_groups" {}
+		data "nutanix_address_groups" "addr_groups" {
+			depends_on = [nutanix_address_group.test_address]
+		}
 	`, r)
 }
