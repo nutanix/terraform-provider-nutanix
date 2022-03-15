@@ -320,6 +320,7 @@ type IPMIConfigAPIResponse struct {
 	Blocks       []IPMIConfigBlockResponse `json:"blocks"`
 	IpmiGateway  string                    `json:"ipmi_gateway"`
 	IpmiPassword string                    `json:"ipmi_password"`
+	Error        *Error                    `json:"error"`
 }
 
 // IPMI config info response for every node along with success flag
