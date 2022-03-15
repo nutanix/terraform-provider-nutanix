@@ -1190,7 +1190,6 @@ func collectIndividualErrorDiagnostics(progress *foundation.ImageNodesProgressRe
 				Detail:   message,
 			})
 		}
-
 	}
 
 	// append errors for failed cluster creation
@@ -1206,7 +1205,6 @@ func collectIndividualErrorDiagnostics(progress *foundation.ImageNodesProgressRe
 				Detail:   message,
 			})
 		}
-
 	}
 
 	return diags
