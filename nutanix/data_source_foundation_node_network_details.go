@@ -2,11 +2,13 @@ package nutanix
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/foundation"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 // dataSourceNodeNetworkDetails datasource for getting node network details as per ipv6 addresses
@@ -105,10 +107,22 @@ func dataSourceNodeNetworkDetailsRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
+	// create empty diagnostics struct
+	var diags diag.Diagnostics
+
 	// set response data appropriately to resource data
 	nodes := make([]map[string]string, len(resp.Nodes))
 	for k, v := range resp.Nodes {
 		node := make(map[string]string)
+
+		if v.Error != "" {
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  fmt.Sprintf("Node network details for IPv6 address: %s failed", utils.StringValue(ipv6Addresses[k])),
+				Detail:   v.Error,
+			})
+			continue
+		}
 		node["cvm_gateway"] = v.CvmGateway
 		node["ipmi_netmask"] = v.IpmiNetmask
 		node["ipv6_address"] = v.Ipv6Address
@@ -123,6 +137,11 @@ func dataSourceNodeNetworkDetailsRead(ctx context.Context, d *schema.ResourceDat
 		node["hypervisor_ip"] = v.HypervisorIP
 		node["ipmi_gateway"] = v.IpmiGateway
 		nodes[k] = node
+	}
+
+	// if any errors found
+	if len(diags) > 0 {
+		return diags
 	}
 
 	if setErr := d.Set("nodes", nodes); setErr != nil {
