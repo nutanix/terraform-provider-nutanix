@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -793,7 +794,7 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 	}
 	if progress, ok := info.(*foundation.ImageNodesProgressResponse); ok {
 		if utils.Float64Value(progress.AggregatePercentComplete) < float64(AggregatePercentComplete) {
-			return diag.Errorf("Progress is incomplete with error")
+			return collectIndividualErrorDiagnostics(progress)
 		}
 	}
 
@@ -1169,4 +1170,44 @@ func expandBlocks(d *schema.ResourceData) ([]*foundation.Block, error) {
 		return outbound, nil
 	}
 	return nil, nil
+}
+
+// This method will look into individual node and cluster creation status and create a collection of errors for errored out processes
+func collectIndividualErrorDiagnostics(progress *foundation.ImageNodesProgressResponse) diag.Diagnostics {
+	// create empty diagnostics
+	var diags diag.Diagnostics
+
+	// append errors for failed node imaging
+	for _, v := range progress.Nodes {
+		if utils.Float64Value(v.TimeElapsed) < float64(AggregatePercentComplete) {
+			message := ""
+			for _, v1 := range v.Messages {
+				message += v1 + ". "
+			}
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  fmt.Sprintf("Node imaging for CVM IP: %s failed with error:  %s.", v.CvmIP, v.Status),
+				Detail:   message,
+			})
+		}
+
+	}
+
+	// append errors for failed cluster creation
+	for _, v := range progress.Clusters {
+		if utils.Float64Value(v.TimeElapsed) < float64(AggregatePercentComplete) {
+			message := ""
+			for _, v1 := range v.Messages {
+				message += v1 + ". "
+			}
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  fmt.Sprintf("Cluster creation for Cluster : %s failed with error:  %s.", v.ClusterName, v.Status),
+				Detail:   message,
+			})
+		}
+
+	}
+
+	return diags
 }
