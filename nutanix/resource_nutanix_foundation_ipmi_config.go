@@ -77,7 +77,6 @@ func resourceNutanixFoundationIPMIConfig() *schema.Resource {
 						"block_id": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Computed: true,
 						},
 					},
 				},
@@ -168,6 +167,11 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 	resp, err := conn.Networking.ConfigureIPMI(ctx, inpSpec)
 	if err != nil {
 		return diag.FromErr(err)
+	}
+
+	// incase of errored response
+	if resp.Error != nil {
+		return diag.Errorf(resp.Error.Message)
 	}
 
 	if setErr := d.Set("ipmi_user", resp.IpmiUser); setErr != nil {

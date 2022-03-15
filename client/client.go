@@ -545,11 +545,6 @@ func CheckResponse(r *http.Response) error {
 	}
 	log.Print("[DEBUG] first nil check")
 
-	// This check is used for some foundation api errors
-	if errStruct, ok := res["error"]; ok {
-		return fmt.Errorf("error: %s", errStruct)
-	}
-
 	// karbon error check
 	if messageInfo, ok := res["message_info"]; ok {
 		return fmt.Errorf("error: %s", messageInfo)
