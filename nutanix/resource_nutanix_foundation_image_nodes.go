@@ -75,16 +75,19 @@ func resourceFoundationImageNodes() *schema.Resource {
 						"hyperv": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"filename": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 									"checksum": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -92,16 +95,19 @@ func resourceFoundationImageNodes() *schema.Resource {
 						"kvm": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"filename": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 									"checksum": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -109,16 +115,19 @@ func resourceFoundationImageNodes() *schema.Resource {
 						"xen": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"filename": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 									"checksum": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -132,10 +141,12 @@ func resourceFoundationImageNodes() *schema.Resource {
 									"filename": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 									"checksum": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -162,15 +173,18 @@ func resourceFoundationImageNodes() *schema.Resource {
 						"fc_metadata": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"fc_ip": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"api_key": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -178,6 +192,7 @@ func resourceFoundationImageNodes() *schema.Resource {
 						"foundation_central": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -215,46 +230,57 @@ func resourceFoundationImageNodes() *schema.Resource {
 						"enable_ns": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 						"backplane_subnet": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"cluster_init_successful": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 						"backplane_netmask": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"redundancy_factor": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							ForceNew: true,
 						},
 						"backplane_vlan": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"cluster_name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"cluster_external_ip": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"cvm_ntp_servers": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"single_node_cluster": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 						"cluster_members": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -262,14 +288,17 @@ func resourceFoundationImageNodes() *schema.Resource {
 						"cvm_dns_servers": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"cluster_init_now": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 						"hypervisor_ntp_servers": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -298,10 +327,12 @@ func resourceFoundationImageNodes() *schema.Resource {
 						"config_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"account_name": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -309,6 +340,7 @@ func resourceFoundationImageNodes() *schema.Resource {
 						"email": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -322,10 +354,12 @@ func resourceFoundationImageNodes() *schema.Resource {
 						"run_syscheck": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 						"run_ncc": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -339,41 +373,50 @@ func resourceFoundationImageNodes() *schema.Resource {
 						"nodes": {
 							Type:     schema.TypeList,
 							Required: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ipv6_address": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"node_position": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 									"image_delay": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										ForceNew: true,
 									},
 									"ucsm_params": {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
+										ForceNew: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"native_vlan": {
 													Type:     schema.TypeBool,
 													Optional: true,
+													ForceNew: true,
 												},
 												"keep_ucsm_settings": {
 													Type:     schema.TypeBool,
 													Optional: true,
+													ForceNew: true,
 												},
 												"mac_pool": {
 													Type:     schema.TypeString,
 													Optional: true,
+													ForceNew: true,
 												},
 												"vlan_name": {
 													Type:     schema.TypeString,
 													Optional: true,
+													ForceNew: true,
 												},
 											},
 										},
@@ -381,67 +424,83 @@ func resourceFoundationImageNodes() *schema.Resource {
 									"hypervisor_hostname": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 									"cvm_gb_ram": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										ForceNew: true,
 									},
 									"device_hint": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"bond_mode": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"rdma_passthrough": {
 										Type:     schema.TypeBool,
 										Optional: true,
+										ForceNew: true,
 									},
 									"cluster_id": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"ucsm_node_serial": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"hypervisor_ip": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 									"node_serial": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"ipmi_configure_now": {
 										Type:     schema.TypeBool,
 										Optional: true,
+										ForceNew: true,
 									},
 									"image_successful": {
 										Type:     schema.TypeBool,
 										Optional: true,
+										ForceNew: true,
 									},
 									"ipv6_interface": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"cvm_num_vcpus": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										ForceNew: true,
 									},
 									"ipmi_mac": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"rdma_mac_addr": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"bond_uplinks": {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
+										ForceNew: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
@@ -449,10 +508,12 @@ func resourceFoundationImageNodes() *schema.Resource {
 									"current_network_interface": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"hypervisor": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"vswitches": {
 										Type:     schema.TypeList,
@@ -464,18 +525,22 @@ func resourceFoundationImageNodes() *schema.Resource {
 												"lacp": {
 													Type:     schema.TypeString,
 													Optional: true,
+													ForceNew: true,
 												},
 												"bond_mode": {
 													Type:     schema.TypeString,
 													Optional: true,
+													ForceNew: true,
 												},
 												"name": {
 													Type:     schema.TypeString,
 													Optional: true,
+													ForceNew: true,
 												},
 												"uplinks": {
 													Type:     schema.TypeList,
 													Optional: true,
+													ForceNew: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
@@ -483,6 +548,7 @@ func resourceFoundationImageNodes() *schema.Resource {
 												"other_config": {
 													Type:     schema.TypeList,
 													Optional: true,
+													ForceNew: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
@@ -490,6 +556,7 @@ func resourceFoundationImageNodes() *schema.Resource {
 												"mtu": {
 													Type:     schema.TypeInt,
 													Optional: true,
+													ForceNew: true,
 												},
 											},
 										},
@@ -497,34 +564,42 @@ func resourceFoundationImageNodes() *schema.Resource {
 									"bond_lacp_rate": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"image_now": {
 										Type:     schema.TypeBool,
 										Optional: true,
+										ForceNew: true,
 									},
 									"ucsm_managed_mode": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"ipmi_ip": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"current_cvm_vlan_tag": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										ForceNew: true,
 									},
 									"cvm_ip": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"exlude_boot_serial": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"mitigate_low_boot_space": {
 										Type:     schema.TypeBool,
 										Optional: true,
+										ForceNew: true,
 									},
 									"ipmi_password": {
 										Type:     schema.TypeString,
@@ -542,6 +617,7 @@ func resourceFoundationImageNodes() *schema.Resource {
 						"block_id": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -1070,6 +1146,15 @@ func expandNodes(pr interface{}) []*foundation.Node {
 		}
 		if bondmode, bondmodeok := node["bond_mode"]; bondmodeok {
 			nodeList.BondMode = (bondmode.(string))
+		}
+		if bondUl, bondUlOk := node["bond_uplinks"]; bondUlOk && len(bondUl.([]interface{})) > 0 {
+
+			//convert to []string from []inerfaces
+			var b []string
+			for _, v := range bondUl.([]interface{}) {
+				b = append(b, v.(string))
+			}
+			nodeList.BondUplinks = b
 		}
 		if rdmapass, rdmapassok := node["rdma_passthrough"]; rdmapassok && rdmapass.(bool) {
 			nodeList.RdmaPassthrough = utils.BoolPtr(rdmapass.(bool))
