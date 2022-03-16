@@ -109,7 +109,7 @@ type Service interface {
 	UpdateRecoveryPlan(uuid string, body *RecoveryPlanInput) (*RecoveryPlanResponse, error)
 	DeleteRecoveryPlan(uuid string) (*DeleteResponse, error)
 	GetServiceGroup(uuid string) (*ServiceGroupResponse, error)
-	ListServiceGroups(getEntitiesRequest *DSMetadata) (*ServiceGroupListResponse, error)
+	listServiceGroups(getEntitiesRequest *DSMetadata) (*ServiceGroupListResponse, error)
 	ListAllServiceGroups(filter string) (*ServiceGroupListResponse, error)
 	CreateServiceGroup(request *ServiceGroupInput) (*Reference, error)
 	UpdateServiceGroup(uuid string, body *ServiceGroupInput) error
@@ -689,7 +689,7 @@ func (op Operations) DeleteCategoryValue(name string, value string) error {
 func (op Operations) GetCategoryQuery(query *CategoryQueryInput) (*CategoryQueryResponse, error) {
 	ctx := context.TODO()
 
-	path := "/categories/query"
+	path := "/category/query"
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, query)
 	categoryQueryResponse := new(CategoryQueryResponse)
@@ -2262,7 +2262,7 @@ func (op Operations) DeleteServiceGroup(uuid string) error {
 func (op Operations) ListAllServiceGroups(filter string) (*ServiceGroupListResponse, error) {
 	entities := make([]*ServiceGroupListEntry, 0)
 
-	resp, err := op.ListServiceGroups(&DSMetadata{
+	resp, err := op.listServiceGroups(&DSMetadata{
 		Filter: &filter,
 		Kind:   utils.StringPtr("service_group"),
 		Length: utils.Int64Ptr(itemsPerPage),
@@ -2277,7 +2277,7 @@ func (op Operations) ListAllServiceGroups(filter string) (*ServiceGroupListRespo
 
 	if totalEntities > itemsPerPage {
 		for hasNext(&remaining) {
-			resp, err = op.ListServiceGroups(&DSMetadata{
+			resp, err = op.listServiceGroups(&DSMetadata{
 				Filter: &filter,
 				Kind:   utils.StringPtr("service_group"),
 				Length: utils.Int64Ptr(itemsPerPage),
@@ -2300,7 +2300,7 @@ func (op Operations) ListAllServiceGroups(filter string) (*ServiceGroupListRespo
 	return resp, nil
 }
 
-func (op Operations) ListServiceGroups(getEntitiesRequest *DSMetadata) (*ServiceGroupListResponse, error) {
+func (op Operations) listServiceGroups(getEntitiesRequest *DSMetadata) (*ServiceGroupListResponse, error) {
 	ctx := context.TODO()
 	path := "/service_groups/list"
 

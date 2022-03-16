@@ -2539,7 +2539,7 @@ type ServiceListEntry struct {
 type ServiceGroupListEntry struct {
 	UUID                   *string            `json:"uuid,omitempty"`
 	ServiceGroup           *ServiceGroupInput `json:"service_group,omitempty"`
-	AssociatedPoliciesList []*Reference       `json:"associated_policies_list,omitempty"`
+	AssociatedPoliciesList []*ReferenceValues `json:"associated_policies_list,omitempty"`
 }
 
 type ServiceGroupInput struct {
