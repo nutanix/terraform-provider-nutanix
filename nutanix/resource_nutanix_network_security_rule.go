@@ -122,8 +122,8 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 						},
 						"tcp_port_range_list":          portRangeSchema(),
 						"udp_port_range_list":          portRangeSchema(),
-						"service_group_list":           referenceListSchema(),
-						"address_group_inclusion_list": referenceListSchema(),
+						"service_group_list":           serviceGroupList(),
+						"address_group_inclusion_list": addressGroupList(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -256,8 +256,8 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 						},
 						"tcp_port_range_list":          portRangeSchema(),
 						"udp_port_range_list":          portRangeSchema(),
-						"service_group_list":           referenceListSchema(),
-						"address_group_inclusion_list": referenceListSchema(),
+						"service_group_list":           serviceGroupList(),
+						"address_group_inclusion_list": addressGroupList(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -422,8 +422,8 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 						},
 						"tcp_port_range_list":          portRangeSchema(),
 						"udp_port_range_list":          portRangeSchema(),
-						"service_group_list":           referenceListSchema(),
-						"address_group_inclusion_list": referenceListSchema(),
+						"service_group_list":           serviceGroupList(),
+						"address_group_inclusion_list": addressGroupList(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -556,8 +556,8 @@ func resourceNutanixNetworkSecurityRule() *schema.Resource {
 						},
 						"tcp_port_range_list":          portRangeSchema(),
 						"udp_port_range_list":          portRangeSchema(),
-						"service_group_list":           referenceListSchema(),
-						"address_group_inclusion_list": referenceListSchema(),
+						"service_group_list":           serviceGroupList(),
+						"address_group_inclusion_list": addressGroupList(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -1221,7 +1221,14 @@ func expandNetworkRule(prefix string, d *schema.ResourceData) *v3.NetworkSecurit
 				nrItem.IcmpTypeCodeList = expandIcmpTypeCodeList(icmp)
 			}
 
-			nrItem.IPSubnet = iPSubnet
+			// Don't set this unless explicitly requested by the user as it won't be omitted when not nil and breaks
+			// network security rules that don't rely on categories
+			if ip, ipok := nr["ip_subnet"]; ipok && ip.(string) != "" {
+				nrItem.IPSubnet = iPSubnet
+			} else {
+				nrItem.IPSubnet = nil
+			}
+
 			if !reflect.DeepEqual(*filter, v3.CategoryFilter{}) {
 				nrItem.Filter = filter
 			}
@@ -1359,7 +1366,14 @@ func expandNetworkRule(prefix string, d *schema.ResourceData) *v3.NetworkSecurit
 				nrItem.IcmpTypeCodeList = expandIcmpTypeCodeList(icmp)
 			}
 
-			nrItem.IPSubnet = iPSubnet
+			// Don't set this unless explicitly requested by the user as it won't be omitted when not nil and breaks
+			// network security rules that don't rely on categories
+			if ip, ipok := nr["ip_subnet"]; ipok && ip.(string) != "" {
+				nrItem.IPSubnet = iPSubnet
+			} else {
+				nrItem.IPSubnet = nil
+			}
+
 			if !reflect.DeepEqual(*filter, v3.CategoryFilter{}) {
 				nrItem.Filter = filter
 			}
@@ -1551,7 +1565,15 @@ func flattenNetworkRuleList(networkRules []*v3.NetworkRule) []map[string]interfa
 	return ruleList
 }
 
-func referenceListSchema() *schema.Schema {
+func serviceGroupList() *schema.Schema {
+	return referenceListSchema("service_group")
+}
+
+func addressGroupList() *schema.Schema {
+	return referenceListSchema("address_group")
+}
+
+func referenceListSchema(kind string) *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -1560,11 +1582,13 @@ func referenceListSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"kind": {
 					Type:     schema.TypeString,
-					Computed: true,
+					Default:  kind,
+					Optional: true,
 				},
 				"uuid": {
 					Type:     schema.TypeString,
 					Computed: true,
+					Optional: true,
 				},
 				"name": {
 					Type:     schema.TypeString,
@@ -1679,8 +1703,8 @@ func resourceNutanixSecurityRuleInstanceResourceV0() *schema.Resource {
 						},
 						"tcp_port_range_list":          portRangeSchema(),
 						"udp_port_range_list":          portRangeSchema(),
-						"service_group_list":           referenceListSchema(),
-						"address_group_inclusion_list": referenceListSchema(),
+						"service_group_list":           serviceGroupList(),
+						"address_group_inclusion_list": addressGroupList(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -1813,8 +1837,8 @@ func resourceNutanixSecurityRuleInstanceResourceV0() *schema.Resource {
 						},
 						"tcp_port_range_list":          portRangeSchema(),
 						"udp_port_range_list":          portRangeSchema(),
-						"service_group_list":           referenceListSchema(),
-						"address_group_inclusion_list": referenceListSchema(),
+						"service_group_list":           serviceGroupList(),
+						"address_group_inclusion_list": addressGroupList(),
 						"filter_kind_list": {
 							Type:     schema.TypeList,
 							Optional: true,

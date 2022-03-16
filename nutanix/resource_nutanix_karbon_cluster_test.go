@@ -205,7 +205,7 @@ func testAccNutanixKarbonClusterConfig(subnetName string, r int, containter stri
 
 	resource "nutanix_karbon_cluster" "cluster" {
 		name    = "test-karbon-%d"
-		version = "1.16.13-0"
+		version = "1.18.20-1"
 
 		dynamic "active_passive_config" {
 		  for_each = local.deployment_type == "active-passive" ? [1] : []
