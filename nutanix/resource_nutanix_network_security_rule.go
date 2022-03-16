@@ -1385,21 +1385,13 @@ func expandNetworkRule(prefix string, d *schema.ResourceData) *v3.NetworkSecurit
 	return appRule
 }
 
-func expandReferencePtr(reference map[string]interface{}) *v3.Reference {
-	return &v3.Reference{
-		Kind: utils.StringPtr(cast.ToString(reference["kind"])),
-		Name: utils.StringPtr(cast.ToString(reference["name"])),
-		UUID: utils.StringPtr(cast.ToString(reference["uuid"])),
-	}
-}
-
 func expandReferencesList(rl interface{}) []*v3.Reference {
 	refList := rl.([]interface{})
 	refs := make([]*v3.Reference, len(refList))
 
 	for i, r := range refList {
 		reff := r.(map[string]interface{})
-		refs[i] = expandReferencePtr(reff)
+		refs[i] = expandReference(reff)
 	}
 
 	return refs
@@ -1466,20 +1458,6 @@ func filterParamsHash(v interface{}) int {
 	return utils.HashcodeString(params["name"].(string))
 }
 
-func flattenReferencesList(refs []*v3.Reference) []map[string]interface{} {
-	refList := make([]map[string]interface{}, len(refs))
-
-	for i, r := range refs {
-		refItem := make(map[string]interface{})
-		refItem["kind"] = utils.StringValue(r.Kind)
-		refItem["name"] = utils.StringValue(r.Name)
-		refItem["uuid"] = utils.StringValue(r.UUID)
-		refList[i] = refItem
-	}
-
-	return refList
-}
-
 func flattenNetworkRuleList(networkRules []*v3.NetworkRule) []map[string]interface{} {
 	ruleList := make([]map[string]interface{}, 0)
 	for _, v := range networkRules {
@@ -1516,11 +1494,11 @@ func flattenNetworkRuleList(networkRules []*v3.NetworkRule) []map[string]interfa
 		}
 
 		if v.AddressGroupInclusionList != nil {
-			ruleItem["address_group_inclusion_list"] = flattenReferencesList(v.AddressGroupInclusionList)
+			ruleItem["address_group_inclusion_list"] = flattenArrayReferenceValues(v.AddressGroupInclusionList)
 		}
 
 		if v.ServiceGroupList != nil {
-			ruleItem["service_group_list"] = flattenReferencesList(v.ServiceGroupList)
+			ruleItem["service_group_list"] = flattenArrayReferenceValues(v.ServiceGroupList)
 		}
 
 		if v.Filter != nil {
