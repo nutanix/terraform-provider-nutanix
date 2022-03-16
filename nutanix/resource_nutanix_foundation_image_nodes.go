@@ -80,11 +80,11 @@ func resourceFoundationImageNodes() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"filename": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Required: true,
 									},
 									"checksum": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Required: true,
 									},
 								},
 							},
@@ -97,11 +97,11 @@ func resourceFoundationImageNodes() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"filename": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Required: true,
 									},
 									"checksum": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Required: true,
 									},
 								},
 							},
@@ -114,11 +114,11 @@ func resourceFoundationImageNodes() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"filename": {
 										Type:     schema.TypeString,
-										Computed: true,
+										Required: true,
 									},
 									"checksum": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Required: true,
 									},
 								},
 							},
@@ -131,11 +131,11 @@ func resourceFoundationImageNodes() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"filename": {
 										Type:     schema.TypeString,
-										Computed: true,
+										Required: true,
 									},
 									"checksum": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Required: true,
 									},
 								},
 							},
@@ -761,7 +761,7 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 
 	hypervisorIso, ok := d.GetOk("hypervisor_iso")
 	if ok {
-		request.HypervisorIso = expandHypervisorIso(hypervisorIso.(map[string]interface{}))
+		request.HypervisorIso = expandHypervisorIso(hypervisorIso.([]interface{}))
 	}
 
 	cluster, err := expandCluster(d)
@@ -880,33 +880,34 @@ func expandFcSetting(d *schema.ResourceData) (*foundation.FcSettings, error) {
 	return nil, nil
 }
 
-func expandHypervisorIso(pr map[string]interface{}) foundation.HypervisorIso {
+func expandHypervisorIso(pr []interface{}) foundation.HypervisorIso {
 	iso := foundation.HypervisorIso{}
 
-	if hyperv, ok := pr["Hyperv"]; ok {
-		iso.Hyperv = expandHypervisor(hyperv.(map[string]interface{}))
+	hypervisors := pr[0].(map[string]interface{})
+	if hyperv, ok := hypervisors["hyperv"]; ok && len(hyperv.([]interface{})) > 0 {
+		iso.Hyperv = expandHypervisor(hyperv.([]interface{}))
 	}
-	if kvm, ok := pr["Kvm"]; ok {
-		iso.Kvm = expandHypervisor(kvm.(map[string]interface{}))
+	if kvm, ok := hypervisors["kvm"]; ok && len(kvm.([]interface{})) > 0 {
+		iso.Kvm = expandHypervisor(kvm.([]interface{}))
 	}
-
-	if xen, ok := pr["Xen"]; ok {
-		iso.Hyperv = expandHypervisor(xen.(map[string]interface{}))
+	if xen, ok := hypervisors["xen"]; ok && len(xen.([]interface{})) > 0 {
+		iso.Xen = expandHypervisor(xen.([]interface{}))
 	}
-	if esx, ok := pr["esx"]; ok {
-		iso.Kvm = expandHypervisor(esx.(map[string]interface{}))
+	if esx, ok := hypervisors["esx"]; ok && len(esx.([]interface{})) > 0 {
+		iso.Esx = expandHypervisor(esx.([]interface{}))
 	}
 	return iso
 }
 
-func expandHypervisor(pr map[string]interface{}) *foundation.Hypervisor {
+func expandHypervisor(pr []interface{}) *foundation.Hypervisor {
 	hyp := &foundation.Hypervisor{}
 
-	if checksum, ok := pr["Checksum"]; ok {
-		hyp.Checksum = (checksum.(string))
+	hypervisors := pr[0].(map[string]interface{})
+	if checksum, ok := hypervisors["checksum"]; ok {
+		hyp.Checksum = checksum.(string)
 	}
-	if filename, ok := pr["Filename"]; ok {
-		hyp.Filename = (filename.(string))
+	if filename, ok := hypervisors["filename"]; ok {
+		hyp.Filename = filename.(string)
 	}
 	return hyp
 }
