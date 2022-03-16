@@ -780,6 +780,11 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 
+	// if node images gets errors out initially itself
+	if resp.Error != nil {
+		return diag.Errorf("Node imaging process failed due to error: %s", resp.Error.Message)
+	}
+
 	//poll for progress
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING"},
