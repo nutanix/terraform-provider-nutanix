@@ -163,14 +163,11 @@ type ImageNodesAPIResponse struct {
 	Error *Error `json:"error"`
 }
 
-type Details struct {
-}
-
 //Error details for image nodes errored response
 type Error struct {
-	Message   string  `json:"message"`
-	Details   Details `json:"details"`
-	SessionID string  `json:"session_id"`
+	Message   string            `json:"message"`
+	Details   map[string]string `json:"details"`
+	SessionID string            `json:"session_id"`
 }
 
 //Node Imaging progress response
