@@ -1025,11 +1025,11 @@ func dataSourceNutanixNetworkSecurityRuleRead(ctx context.Context, d *schema.Res
 				}
 
 				if v.AddressGroupInclusionList != nil {
-					qroaItem["address_group_inclusion_list"] = flattenReferencesList(v.AddressGroupInclusionList)
+					qroaItem["address_group_inclusion_list"] = flattenArrayReferenceValues(v.AddressGroupInclusionList)
 				}
 
 				if v.ServiceGroupList != nil {
-					qroaItem["service_group_list"] = flattenReferencesList(v.ServiceGroupList)
+					qroaItem["service_group_list"] = flattenArrayReferenceValues(v.ServiceGroupList)
 				}
 
 				if v.Filter != nil {
@@ -1135,11 +1135,11 @@ func dataSourceNutanixNetworkSecurityRuleRead(ctx context.Context, d *schema.Res
 				}
 
 				if v.AddressGroupInclusionList != nil {
-					qriaItem["address_group_inclusion_list"] = flattenReferencesList(v.AddressGroupInclusionList)
+					qriaItem["address_group_inclusion_list"] = flattenArrayReferenceValues(v.AddressGroupInclusionList)
 				}
 
 				if v.ServiceGroupList != nil {
-					qriaItem["service_group_list"] = flattenReferencesList(v.ServiceGroupList)
+					qriaItem["service_group_list"] = flattenArrayReferenceValues(v.ServiceGroupList)
 				}
 
 				if v.Filter != nil {
