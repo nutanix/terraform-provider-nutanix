@@ -171,7 +171,6 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 
 	// incase of errored response
 	if resp.Error != nil {
-
 		// check if error details exists for every ipmi IP
 		var diags diag.Diagnostics
 		for k, v := range resp.Error.Details {
@@ -184,7 +183,6 @@ func resourceFoundationIPMIConfigCreate(ctx context.Context, d *schema.ResourceD
 		if len(diags) > 0 {
 			return diags
 		}
-
 		// incase there is no error details
 		return diag.Errorf(resp.Error.Message)
 	}
