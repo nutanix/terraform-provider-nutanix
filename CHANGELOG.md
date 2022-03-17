@@ -5,7 +5,7 @@
 **Implemented enhancements:**
 
 - Datasources for service groups along with test cases [\#353](https://github.com/nutanix/terraform-provider-nutanix/issues/353)
-- Set default value of disk_list.device_properties.device_type to DISK [\157](https://github.com/nutanix/terraform-provider-nutanix/pull/157)
+- Set default value of disk_list.device_properties.device_type to DISK [\#157](https://github.com/nutanix/terraform-provider-nutanix/pull/157)
 - Add num_queues parameter for virtual machine NICs [\#324](https://github.com/nutanix/terraform-provider-nutanix/pull/324)
 - Add support for linking service and address groups to network security rules [\#345](https://github.com/nutanix/terraform-provider-nutanix/pull/345)
 
@@ -19,7 +19,7 @@
 
 **Closed issues:**
 
-- fixed unchecked gets in getMetadataAttributes [\206](https://github.com/nutanix/terraform-provider-nutanix/pull/206)
+- fixed unchecked gets in getMetadataAttributes [\#206](https://github.com/nutanix/terraform-provider-nutanix/pull/206)
 - Support defining categories_mapping for a VM [\#321](https://github.com/nutanix/terraform-provider-nutanix/issues/321)
 - Add a complete example of parameter nutanix_guest_tools [\#299](https://github.com/nutanix/terraform-provider-nutanix/issues/299)
 
