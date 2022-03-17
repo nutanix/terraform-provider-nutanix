@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
-NOTE: The latest version of the Nutanix provider is [v1.3.0](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.3.0)
+NOTE: The latest version of the Nutanix provider is [v1.4.0](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.4.0)
 
 ## Build, Quality Status
 
@@ -33,6 +33,8 @@ The Terraform Nutanix provider is designed to work with Nutanix Prism Central, s
 
 
 > For the 1.3.0 release of the provider it will have N-2 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc.2021.9.0.4, pc.2021.8.0.1 and pc.2021.7.
+
+> For the 1.4.0 release of the provider it will have N-2 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc2022.1 pc.2021.9.0.4 and pc.2021.8.0.1
 
 ## Example Usage
 

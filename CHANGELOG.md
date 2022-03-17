@@ -1,3 +1,41 @@
+## 1.4.0 (March 17, 2022)
+
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.3.0...v1.4.0)
+
+**Implemented enhancements:**
+
+- Datasources for service groups along with test cases [\#353](https://github.com/nutanix/terraform-provider-nutanix/issues/353)
+- Set default value of disk_list.device_properties.device_type to DISK [\157](https://github.com/nutanix/terraform-provider-nutanix/pull/157)
+- Add num_queues parameter for virtual machine NICs [\#324](https://github.com/nutanix/terraform-provider-nutanix/pull/324)
+- Add support for linking service and address groups to network security rules [\#345](https://github.com/nutanix/terraform-provider-nutanix/pull/345)
+
+
+**Fixed Bugs**
+
+- Karbon 2.4 Cluster creation failing [\#373](https://github.com/nutanix/terraform-provider-nutanix/issues/373)
+- Use correct API endpoint for category queries [\#348](https://github.com/nutanix/terraform-provider-nutanix/pull/348)
+- Terraform crashed while creating VM in Nutanix [\#205](https://github.com/nutanix/terraform-provider-nutanix/issues/205)
+
+
+**Closed issues:**
+
+- fixed unchecked gets in getMetadataAttributes [\206](https://github.com/nutanix/terraform-provider-nutanix/pull/206)
+- Support defining categories_mapping for a VM [\#321](https://github.com/nutanix/terraform-provider-nutanix/issues/321)
+- Add a complete example of parameter nutanix_guest_tools [\#299](https://github.com/nutanix/terraform-provider-nutanix/issues/299)
+
+**Merged pull requests:**
+
+- Use correct API endpoint for category queries [\#348](https://github.com/nutanix/terraform-provider-nutanix/pull/348)([embik](https://github.com/embik))
+- Set default value of disk_list.device_properties.device_type to DISK [\#157](https://github.com/nutanix/terraform-provider-nutanix/pull/157) ([maxaudron](https://github.com/maxaudron))
+- Added singular and plural datasources for service groups with test cases [\#363](https://github.com/nutanix/terraform-provider-nutanix/pull/363) ([siddharth-kulshrestha](https://github.com/siddharth-kulshrestha))
+- Add acceptance tests [\#355](https://github.com/nutanix/terraform-provider-nutanix/pull/355) ([bhatipradeep](https://github.com/bhatipradeep))
+- Change default node pool names for karbon cluster creation [\#381](https://github.com/nutanix/terraform-provider-nutanix/pull/381) [bhatipradeep](https://github.com/bhatipradeep))
+- bug fix for issue-205 [\#380](https://github.com/nutanix/terraform-provider-nutanix/pull/380) ([abhimutant](https://github.com/abhimutant))
+- Task/m 324 check [\#385](https://github.com/nutanix/terraform-provider-nutanix/pull/385) ([abhimutant](https://github.com/abhimutant))
+- Security rules with service group and address groups [\#384](https://github.com/nutanix/terraform-provider-nutanix/pull/384) ([siddharth-kulshrestha](https://github.com/siddharth-kulshrestha))
+
+
+
 ## 1.3.0 (Feb 16, 2022)
 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.2.2...v1.3.0)
