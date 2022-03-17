@@ -219,6 +219,7 @@ type CreateClusterInput struct {
 	AosPackageSha256sum   *string                `json:"aos_package_sha256sum,omitempty"`
 	Timezone              *string                `json:"timezone,omitempty"`
 	NodesList             []*Node                `json:"nodes_list,omitempty"`
+	SkipClusterCreation   bool                   `json:"skip_cluster_creation,omitempty"`
 }
 
 type CreateClusterResponse struct {
