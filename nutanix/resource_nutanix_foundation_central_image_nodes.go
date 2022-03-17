@@ -121,7 +121,7 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 				Computed: true,
 			},
 			"timezone": {
-				Type:     schema.TypeBool,
+				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
@@ -225,6 +225,10 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 					},
 				},
 			},
+			"skip_cluster_creation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -313,12 +317,22 @@ func expandCommonNetworkSettings(d *schema.ResourceData) *fc.CommonNetworkSettin
 	}
 	settingsMap := resourceData.([]interface{})[0].(map[string]interface{})
 
-	cns.CvmDNSServers = settingsMap["cvm_dns_servers"].([]string)
-	cns.CvmNtpServers = settingsMap["cvm_ntp_servers"].([]string)
-	cns.HypervisorDNSServers = settingsMap["hypervisor_dns_servers"].([]string)
-	cns.HypervisorNtpServers = settingsMap["hypervisor_ntp_servers"].([]string)
+	cns.CvmDNSServers = expandNetworklist(settingsMap["cvm_dns_servers"])
+	cns.CvmNtpServers = expandNetworklist(settingsMap["cvm_ntp_servers"])
+	cns.HypervisorDNSServers = expandNetworklist(settingsMap["hypervisor_dns_servers"])
+	cns.HypervisorNtpServers = expandNetworklist(settingsMap["hypervisor_ntp_servers"])
 
 	return &cns
+}
+
+func expandNetworklist(pr interface{}) []string {
+	c := make([]string, 0)
+	prList := pr.([]interface{})
+
+	for _, k := range prList {
+		c = append(c, k.(string))
+	}
+	return c
 }
 
 func expandHyperVisorIsoDetails(d *schema.ResourceData) *fc.HypervisorIsoDetails {
@@ -412,7 +426,6 @@ func expandNodesList(d *schema.ResourceData) []*fc.Node {
 }
 
 func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[DEBUG] Create FC Image: %s", d.Get("name").(string))
 
 	// Get client connection
 	conn := meta.(*Client).FC
@@ -465,6 +478,12 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 		log.Println("timezone is not set")
 	}
 	req.Timezone = utils.StringPtr(timezone.(string))
+
+	skipClusterCreation, ok := d.GetOk("skip_cluster_creation")
+	if !ok {
+		req.SkipClusterCreation = false
+	}
+	req.SkipClusterCreation = skipClusterCreation.(bool)
 
 	req.CommonNetworkSettings = expandCommonNetworkSettings(d)
 	req.HypervisorIsoDetails = expandHyperVisorIsoDetails(d)
