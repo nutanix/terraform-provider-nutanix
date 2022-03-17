@@ -949,8 +949,8 @@ func expandParameters(d *schema.ResourceData) *v3.Parameters {
 			if v1, ok1 := v1["network_mapping_list"]; ok1 {
 				list := v1.([]interface{})
 				networkMappingList := make([]*v3.NetworkMappingList, 0)
-				networkMapping := &v3.NetworkMappingList{}
 				for _, network := range list {
+					networkMapping := &v3.NetworkMappingList{}
 					v2 := network.(map[string]interface{})
 					if v2, ok1 := v2["availability_zone_network_mapping_list"].([]interface{}); ok1 {
 						networkMapping.AvailabilityZoneNetworkMappingList = expandZoneNetworkMappingList(v2)
