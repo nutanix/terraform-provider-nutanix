@@ -178,9 +178,9 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 
 	// Return error if both foundation and pc connection related fields are empty
 	if (username == "" || password == "" || endpoint == "") && (foundationEndpoint == "") {
-		return nil, fmt.Errorf("please provide required provider configuration for atleast PC connection or foundation. " +
-			"The required fields of PC connection are username, password and endpoint. " +
-			"The required fields for foundation is foundation_endpoint.")
+		return nil, fmt.Errorf("please provide required provider configuration for atleast PC connection or foundation " +
+			"The required fields of PC connection are username, password and endpoint " +
+			"The required fields for foundation is foundation_endpoint")
 	}
 
 	config := Config{
