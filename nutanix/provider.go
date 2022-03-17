@@ -1,6 +1,7 @@
 package nutanix
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -39,13 +40,13 @@ func Provider() *schema.Provider {
 		Schema: map[string]*schema.Schema{
 			"username": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_USERNAME", nil),
 				Description: descriptions["username"],
 			},
 			"password": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_PASSWORD", nil),
 				Description: descriptions["password"],
 			},
@@ -70,7 +71,7 @@ func Provider() *schema.Provider {
 			},
 			"endpoint": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("NUTANIX_ENDPOINT", nil),
 				Description: descriptions["endpoint"],
 			},
@@ -95,6 +96,7 @@ func Provider() *schema.Provider {
 			"foundation_port": {
 				Type:        schema.TypeString,
 				Optional:    true,
+				Default:     "8000",
 				DefaultFunc: schema.EnvDefaultFunc("FOUNDATION_PORT", nil),
 				Description: descriptions["foundation_port"],
 			},
@@ -171,16 +173,26 @@ func Provider() *schema.Provider {
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	log.Printf("[DEBUG] config wait_timeout %d", d.Get("wait_timeout").(int))
 
+	username := d.Get("username")
+	password := d.Get("password")
+	endpoint := d.Get("endpoint")
+	foundationEndpoint := d.Get("foundation_endpoint")
+
+	// Return error if both foundation and pc connection related fields are empty
+	if (username == "" || password == "" || endpoint == "") && (foundationEndpoint == "") {
+		return nil, fmt.Errorf("please provide required provider configuration for atleast PC connection or foundation. The required fields of PC connection are username, password and endpoint. The required fields for foundation is foundation_endpoint")
+	}
+
 	config := Config{
-		Endpoint:           d.Get("endpoint").(string),
-		Username:           d.Get("username").(string),
-		Password:           d.Get("password").(string),
+		Endpoint:           endpoint.(string),
+		Username:           username.(string),
+		Password:           password.(string),
 		Insecure:           d.Get("insecure").(bool),
 		SessionAuth:        d.Get("session_auth").(bool),
 		Port:               d.Get("port").(string),
 		WaitTimeout:        int64(d.Get("wait_timeout").(int)),
 		ProxyURL:           d.Get("proxy_url").(string),
-		FoundationEndpoint: d.Get("foundation_endpoint").(string),
+		FoundationEndpoint: foundationEndpoint.(string),
 		FoundationPort:     d.Get("foundation_port").(string),
 	}
 
