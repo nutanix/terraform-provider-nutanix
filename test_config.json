@@ -1,39 +1,39 @@
 {
     "subnet_name": "vlan.154",
-    "default_container_name": "default-container-75702903530678",
+    "default_container_name": "default-container-44480920297856",
     "user_group_with_distinguished_name": {
         "distinguished_name": "cn=sspadmins,cn=users,dc=qa,dc=nucalm,dc=io",
         "display_name": "sspadmins",
-        "uuid": "4e34dc16-79f4-44a4-9b81-08ff58f2f261"
+        "uuid": "985bf34e-4cce-4777-9045-2f03918c8022"
     },
     "permissions": [
         {
             "name": "",
-            "uuid": "2d9c8063-8ab0-481e-b505-4c4ee0644ba5"
+            "uuid": "22d6eb5e-0c6e-4260-8f82-d3b422b7f224"
         },
         {
             "name": "Delete_ACP",
-            "uuid": "8b0b4d1a-d2ac-4ccd-a618-95378fc8d559"
+            "uuid": "11d74ead-2085-4528-81d3-2d3ba0c005f3"
         }
     ],
     "users": [
         {
             "principal_name": "user4@qa.nucalm.io",
             "expected_display_name": "user4",
-            "directory_service_uuid": "bdf0bafb-bbd7-4a1b-ba14-94a990607506"
+            "directory_service_uuid": "165db740-79d5-434e-a4b7-e6e8c9246297"
         },
         {
             "principal_name": "user6@qa.nucalm.io",
             "expected_display_name": "user6",
-            "directory_service_uuid": "bdf0bafb-bbd7-4a1b-ba14-94a990607506"
+            "directory_service_uuid": "165db740-79d5-434e-a4b7-e6e8c9246297"
         },
         {
             "principal_name": "ssptest3@qa.nucalm.io",
             "expected_display_name": "ssptest3",
-            "directory_service_uuid": "bdf0bafb-bbd7-4a1b-ba14-94a990607506"
+            "directory_service_uuid": "165db740-79d5-434e-a4b7-e6e8c9246297"
         }
     ],
-    "node_os_version": "ntnx-1.2",
+    "node_os_version": "ntnx-1.0",
     "ad_rule_target": {
         "name": "ADGroup",
         "values": "sspadmins"
