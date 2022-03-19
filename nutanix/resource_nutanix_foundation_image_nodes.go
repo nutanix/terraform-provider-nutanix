@@ -1148,7 +1148,6 @@ func expandNodes(pr interface{}) []*foundation.Node {
 			nodeList.BondMode = (bondmode.(string))
 		}
 		if bondUl, bondUlOk := node["bond_uplinks"]; bondUlOk && len(bondUl.([]interface{})) > 0 {
-
 			//convert to []string from []inerfaces
 			var b []string
 			for _, v := range bondUl.([]interface{}) {
