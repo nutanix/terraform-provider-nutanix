@@ -29,27 +29,34 @@ type Client struct {
 
 //This routine returns new Foundation API Client
 func NewFoundationAPIClient(credentials client.Credentials) (*Client, error) {
-	//for foundation client, url should be based on foundation's endpoint and port
-	credentials.URL = fmt.Sprintf("%s:%s", credentials.FoundationEndpoint, credentials.FoundationPort)
-	client, err := client.NewBaseClient(&credentials, absolutePath, true)
 
-	if err != nil {
-		return nil, err
+	var baseClient *client.Client
+	if credentials.FoundationEndpoint != "" {
+		// for foundation client, url should be based on foundation's endpoint and port
+		credentials.URL = fmt.Sprintf("%s:%s", credentials.FoundationEndpoint, credentials.FoundationPort)
+		c, err := client.NewBaseClient(&credentials, absolutePath, true)
+		if err != nil {
+			return nil, err
+		}
+		baseClient = c
+	} else {
+		// create empty client if required fields are not provided
+		baseClient = &client.Client{}
 	}
 
 	//Fill user agent details
-	client.UserAgent = userAgent
+	baseClient.UserAgent = userAgent
 
 	foundationClient := &Client{
-		client: client,
+		client: baseClient,
 		NodeImaging: NodeImagingOperations{
-			client: client,
+			client: baseClient,
 		},
 		FileManagement: FileManagementOperations{
-			client: client,
+			client: baseClient,
 		},
 		Networking: NetworkingOperations{
-			client: client,
+			client: baseClient,
 		},
 	}
 	return foundationClient, nil

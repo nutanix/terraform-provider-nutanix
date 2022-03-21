@@ -1,9 +1,12 @@
 package nutanix
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -164,39 +167,62 @@ func Provider() *schema.Provider {
 			"nutanix_foundation_ipmi_config":  resourceNutanixFoundationIPMIConfig(),
 			"nutanix_foundation_image":        resourceNutanixFoundationImage(),
 		},
-		ConfigureFunc: providerConfigure,
+		ConfigureContextFunc: providerConfigure,
 	}
 }
 
 // This function used to fetch the configuration params given to our provider which
 // we will use to initialize a dummy client that interacts with API.
-func providerConfigure(d *schema.ResourceData) (interface{}, error) {
+func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	log.Printf("[DEBUG] config wait_timeout %d", d.Get("wait_timeout").(int))
 
-	username := d.Get("username")
-	password := d.Get("password")
-	endpoint := d.Get("endpoint")
-	foundationEndpoint := d.Get("foundation_endpoint")
+	// required fields for individual provider service
+	requiredProviderFields := map[string][]string{
+		"Prism Central & Karbon": {"username", "password", "endpoint"},
+		"Foundation":             {"foundation_endpoint"},
+	}
+	disabledProviders := make([]string, 0)
+	// create warnings for disabled provider services
+	var diags diag.Diagnostics
+	for k, v := range requiredProviderFields {
+		// check if any field is not provided
+		for _, attr := range v {
+			// for string fields
+			if val, ok := d.Get(attr).(string); ok && val == "" {
+				disabledProviders = append(disabledProviders, k)
+				break
+			}
+			// for integer fields
+			if val, ok := d.Get(attr).(float64); ok && int64(val) == 0 {
+				disabledProviders = append(disabledProviders, k)
+				break
+			}
+		}
+	}
 
-	// Return error if both foundation and pc connection related fields are empty
-	if (username == "" || password == "" || endpoint == "") && (foundationEndpoint == "") {
-		return nil, fmt.Errorf("please provide required provider configuration for atleast PC connection or foundation " +
-			"The required fields of PC connection are username, password and endpoint " +
-			"The required fields for foundation is foundation_endpoint")
+	if len(disabledProviders) > 0 {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  fmt.Sprintf("Disabled Providers: %s. Please provide required fields in provider configuration to enable them. Refer docs.", strings.Join(disabledProviders, ", ")),
+		})
 	}
 
 	config := Config{
-		Endpoint:           endpoint.(string),
-		Username:           username.(string),
-		Password:           password.(string),
+		Endpoint:           d.Get("endpoint").(string),
+		Username:           d.Get("username").(string),
+		Password:           d.Get("password").(string),
 		Insecure:           d.Get("insecure").(bool),
 		SessionAuth:        d.Get("session_auth").(bool),
 		Port:               d.Get("port").(string),
 		WaitTimeout:        int64(d.Get("wait_timeout").(int)),
 		ProxyURL:           d.Get("proxy_url").(string),
-		FoundationEndpoint: foundationEndpoint.(string),
+		FoundationEndpoint: d.Get("foundation_endpoint").(string),
 		FoundationPort:     d.Get("foundation_port").(string),
 	}
+	c, err := config.Client()
+	if err != nil {
+		return nil, diag.FromErr(err)
+	}
 
-	return config.Client()
+	return c, diags
 }
