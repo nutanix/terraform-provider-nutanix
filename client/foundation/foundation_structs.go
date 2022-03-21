@@ -276,6 +276,7 @@ type NodeNetworkDetail struct {
 	CvmIP              string `json:"cvm_ip"`
 	HypervisorIP       string `json:"hypervisor_ip"`
 	IpmiGateway        string `json:"ipmi_gateway"`
+	NodeSerial         string `json:"node_serial"`
 }
 
 //Node network details api input
