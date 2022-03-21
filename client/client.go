@@ -176,6 +176,11 @@ func NewBaseClient(credentials *Credentials, absolutePath string, isHTTP bool) (
 
 // NewRequest creates a request
 func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body interface{}) (*http.Request, error) {
+	// check if client exists or not
+	if c.client == nil {
+		return nil, fmt.Errorf("client for %s is missing", c.UserAgent)
+	}
+
 	rel, errp := url.Parse(c.AbsolutePath + urlStr)
 	if errp != nil {
 		return nil, errp
@@ -214,6 +219,11 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 
 // NewRequest creates a request without authorisation headers
 func (c *Client) NewUnAuthRequest(ctx context.Context, method, urlStr string, body interface{}) (*http.Request, error) {
+	// check if client exists or not
+	if c.client == nil {
+		return nil, fmt.Errorf("client for %s is missing", c.UserAgent)
+	}
+
 	//create main api url
 	rel, err := url.Parse(c.AbsolutePath + urlStr)
 	if err != nil {
@@ -243,6 +253,10 @@ func (c *Client) NewUnAuthRequest(ctx context.Context, method, urlStr string, bo
 
 // NewUnAuthFormEncodedRequest returns content-type: application/x-www-form-urlencoded based unauth request
 func (c *Client) NewUnAuthFormEncodedRequest(ctx context.Context, method, urlStr string, body map[string]string) (*http.Request, error) {
+	// check if client exists or not
+	if c.client == nil {
+		return nil, fmt.Errorf("client for %s is missing", c.UserAgent)
+	}
 	//create main api url
 	rel, err := url.Parse(c.AbsolutePath + urlStr)
 	if err != nil {
@@ -272,6 +286,10 @@ func (c *Client) NewUnAuthFormEncodedRequest(ctx context.Context, method, urlStr
 
 // NewUploadRequest Handles image uploads for image service
 func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, body []byte) (*http.Request, error) {
+	// check if client exists or not
+	if c.client == nil {
+		return nil, fmt.Errorf("client for %s is missing", c.UserAgent)
+	}
 	rel, errp := url.Parse(c.AbsolutePath + urlStr)
 	if errp != nil {
 		return nil, errp
@@ -298,6 +316,10 @@ func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, bo
 
 // NewUploadRequest handles image uploads for image service
 func (c *Client) NewUnAuthUploadRequest(ctx context.Context, method, urlStr string, body []byte) (*http.Request, error) {
+	// check if client exists or not
+	if c.client == nil {
+		return nil, fmt.Errorf("client for %s is missing", c.UserAgent)
+	}
 	rel, errp := url.Parse(c.AbsolutePath + urlStr)
 	if errp != nil {
 		return nil, errp
@@ -326,6 +348,11 @@ func (c *Client) OnRequestCompleted(rc RequestCompletionCallback) {
 
 // Do performs request passed
 func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error {
+	// check if client exists or not
+	if c.client == nil {
+		return fmt.Errorf("client for %s is missing", c.UserAgent)
+	}
+
 	req = req.WithContext(ctx)
 	resp, err := c.client.Do(req)
 
@@ -377,6 +404,10 @@ func searchSlice(slice []string, key string) bool {
 
 // DoWithFilters performs request passed and filters entities in json response
 func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interface{}, filters []*AdditionalFilter, baseSearchPaths []string) error {
+	// check if client exists or not
+	if c.client == nil {
+		return fmt.Errorf("client for %s is missing", c.UserAgent)
+	}
 	req = req.WithContext(ctx)
 	resp, err := c.client.Do(req)
 	if err != nil {
