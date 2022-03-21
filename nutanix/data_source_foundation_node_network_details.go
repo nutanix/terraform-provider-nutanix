@@ -78,6 +78,10 @@ func dataSourceNodeNetworkDetails() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"node_serial": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -136,6 +140,7 @@ func dataSourceNodeNetworkDetailsRead(ctx context.Context, d *schema.ResourceDat
 		node["cvm_ip"] = v.CvmIP
 		node["hypervisor_ip"] = v.HypervisorIP
 		node["ipmi_gateway"] = v.IpmiGateway
+		node["node_serial"] = v.NodeSerial
 		nodes[k] = node
 	}
 
