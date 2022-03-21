@@ -19,22 +19,29 @@ type Client struct {
 
 // NewKarbonAPIClient return a client to operate Karbon resources
 func NewKarbonAPIClient(credentials client.Credentials) (*Client, error) {
-	c, err := client.NewClient(&credentials, userAgent, absolutePath, false)
+	var baseClient *client.Client
 
-	if err != nil {
-		return nil, err
+	// check if all required fields are present. Else create an empty client
+	if credentials.Username != "" && credentials.Password != "" && credentials.Endpoint != "" {
+		c, err := client.NewClient(&credentials, userAgent, absolutePath, false)
+		if err != nil {
+			return nil, err
+		}
+		baseClient = c
+	} else {
+		baseClient = &client.Client{UserAgent: userAgent}
 	}
 
 	f := &Client{
-		client: c,
+		client: baseClient,
 		Cluster: ClusterOperations{
-			client: c,
+			client: baseClient,
 		},
 		PrivateRegistry: PrivateRegistryOperations{
-			client: c,
+			client: baseClient,
 		},
 		Meta: MetaOperations{
-			client: c,
+			client: baseClient,
 		},
 	}
 

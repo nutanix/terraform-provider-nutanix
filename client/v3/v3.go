@@ -18,16 +18,23 @@ type Client struct {
 
 // NewV3Client return a client to operate V3 resources
 func NewV3Client(credentials client.Credentials) (*Client, error) {
-	c, err := client.NewClient(&credentials, userAgent, absolutePath, false)
+	var baseClient *client.Client
 
-	if err != nil {
-		return nil, err
+	// check if all required fields are present. Else create an empty client
+	if credentials.Username != "" && credentials.Password != "" && credentials.Endpoint != "" {
+		c, err := client.NewClient(&credentials, userAgent, absolutePath, false)
+		if err != nil {
+			return nil, err
+		}
+		baseClient = c
+	} else {
+		baseClient = &client.Client{UserAgent: userAgent}
 	}
 
 	f := &Client{
-		client: c,
+		client: baseClient,
 		V3: Operations{
-			client: c,
+			client: baseClient,
 		},
 	}
 
