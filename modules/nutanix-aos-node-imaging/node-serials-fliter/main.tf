@@ -23,8 +23,7 @@ locals {
     nodeSerialNtwDetails = tomap({
         for node in data.nutanix_foundation_node_network_details.ntwDetails.nodes:
         "${node.ipv6_address}" => node
-        if lookup(var.nodes_info, node.node_serial, null) != null
-        
+        if node.ipv6_address != ""
     })
 
     //Merge the network details and discovery of nodes response for given node serials
@@ -34,9 +33,12 @@ locals {
                 "nodes" = [
                     for node in block.nodes:
                         {
+                            "node_serial" = tomap({
+                                "val" = node.node_serial != "" ? node.node_serial : (lookup(local.nodeSerialNtwDetails, node.ipv6_address, null) != null ? local.nodeSerialNtwDetails[node.ipv6_address].node_serial : "")
+                            })
                             "node" = node
                             "network_details" = lookup(local.nodeSerialNtwDetails,lookup(node,"ipv6_address",""), null)
-                        } if lookup(local.nodeSerialNtwDetails, lookup(node,"ipv6_address",""), null) != null
+                        } if lookup(local.nodeSerialNtwDetails, node.ipv6_address, null) != null ? ( contains(local.node_serials, node.node_serial) || contains(local.node_serials,local.nodeSerialNtwDetails[node.ipv6_address].node_serial)) : false
                 ]
                 "block_id" = lookup(block, "block_id", "")
             }
@@ -118,31 +120,31 @@ resource "nutanix_foundation_image_nodes" "this"{
         for_each = var.hypervisor_isos!=null ? [var.hypervisor_isos] : []
         content { 
             dynamic "kvm"{
-                for_each = lookup(hypervisor_iso.value,"kvm",null) != null ? [hypervisor_iso.value.kvm] : []
+                for_each = hypervisor_iso.value.kvm != null ? [hypervisor_iso.value.kvm] : []
                 content {
                     filename = kvm.value.filename
                     checksum = kvm.value.checksum
                 }
             }
             dynamic "esx"{
-                for_each = lookup(hypervisor_iso.value,"esx",null) != null ? [hypervisor_iso.value.esx] : []
+                for_each = hypervisor_iso.value.esx != null ? [hypervisor_iso.value.esx] : []
                 content {
                     filename = esx.value.filename
-                    checksum = kvm.value.checksum
+                    checksum = esx.value.checksum
                 }
             }
             dynamic "hyperv"{
-                for_each = lookup(hypervisor_iso.value,"hyperv",null) != null ? [hypervisor_iso.value.hyperv] : []
+                for_each = hypervisor_iso.value.hyperv != null ? [hypervisor_iso.value.hyperv] : []
                 content {
                     filename = hyperv.value.filename
-                    checksum = kvm.value.checksum
+                    checksum = hyperv.value.checksum
                 }
             }
             dynamic "xen"{
-                for_each = lookup(hypervisor_iso.value,"xen",null) != null ? [hypervisor_iso.value.xen] : []
+                for_each = hypervisor_iso.value.xen != null ? [hypervisor_iso.value.xen] : []
                 content {
                     filename = xen.value.filename
-                    checksum = kvm.value.checksum
+                    checksum = xen.value.checksum
                 }
             }
         }
@@ -158,45 +160,44 @@ resource "nutanix_foundation_image_nodes" "this"{
                 content { 
 
                     // set required fields
-                    hypervisor_hostname = lookup(var.nodes_info,nodes.value.network_details.node_serial,null) != null ? (lookup(var.nodes_info[nodes.value.network_details.node_serial],"hypervisor_hostname","")!=""? var.nodes_info[nodes.value.network_details.node_serial].hypervisor_hostname : nodes.value.network_details.hypervisor_hostname) : nodes.value.network_details.hypervisor_hostname
-                    hypervisor_ip = lookup(var.nodes_info,nodes.value.network_details.node_serial,null) != null ? (lookup(var.nodes_info[nodes.value.network_details.node_serial],"hypervisor_ip","")!=""? var.nodes_info[nodes.value.network_details.node_serial].hypervisor_ip : nodes.value.network_details.hypervisor_ip) : nodes.value.network_details.hypervisor_ip
-                    hypervisor = lookup(var.nodes_info,nodes.value.network_details.node_serial,null) != null ? (lookup(var.nodes_info[nodes.value.network_details.node_serial],"hypervisor","")!=""? var.nodes_info[nodes.value.network_details.node_serial].hypervisor : nodes.value.node.hypervisor) : nodes.value.node.hypervisor
+                    hypervisor_hostname = var.nodes_info[nodes.value.node_serial.val].hypervisor_hostname != null ? var.nodes_info[nodes.value.node_serial.val].hypervisor_hostname : nodes.value.network_details.hypervisor_hostname
+                    hypervisor_ip = var.nodes_info[nodes.value.node_serial.val].hypervisor_ip != null ? var.nodes_info[nodes.value.node_serial.val].hypervisor_ip : nodes.value.network_details.hypervisor_ip
+                    hypervisor = var.nodes_info[nodes.value.node_serial.val].hypervisor != null ? var.nodes_info[nodes.value.node_serial.val].hypervisor : nodes.value.node.hypervisor
                     image_now = true
-                    ipmi_ip = lookup(var.nodes_info,nodes.value.network_details.node_serial,null) != null ? (lookup(var.nodes_info[nodes.value.network_details.node_serial],"ipmi_ip","")!=""? var.nodes_info[nodes.value.network_details.node_serial].ipmi_ip : (var.hypervisor != "" ? var.hypervisor : nodes.value.network_details.ipmi_ip)) : (var.hypervisor != "" ? var.hypervisor : nodes.value.network_details.ipmi_ip)
-                    cvm_ip = lookup(var.nodes_info,nodes.value.network_details.node_serial,null) != null ? (lookup(var.nodes_info[nodes.value.network_details.node_serial],"cvm_ip","")!=""? var.nodes_info[nodes.value.network_details.node_serial].cvm_ip : nodes.value.network_details.cvm_ip) : nodes.value.network_details.cvm_ip
-                    node_position = lookup(var.nodes_info,nodes.value.network_details.node_serial,null) != null ? (lookup(var.nodes_info[nodes.value.network_details.node_serial],"node_position","")!=""? var.nodes_info[nodes.value.network_details.node_serial].node_position : nodes.value.node.node_position) : nodes.value.node.node_position
-                    ipmi_user = lookup(var.nodes_info,nodes.value.network_details.node_serial,null) != null ? (lookup(var.nodes_info[nodes.value.network_details.node_serial],"ipmi_user","")!=""? var.nodes_info[nodes.value.network_details.node_serial].ipmi_user : var.ipmi_user) : var.ipmi_user
-                    ipmi_password = lookup(var.nodes_info,nodes.value.network_details.node_serial,null) != null ? (lookup(var.nodes_info[nodes.value.network_details.node_serial],"ipmi_password","")!=""? var.nodes_info[nodes.value.network_details.node_serial].ipmi_password : var.ipmi_password) : var.ipmi_password
-                
-                    node_serial = nodes.value.network_details.node_serial
+                    ipmi_ip = var.nodes_info[nodes.value.node_serial.val].ipmi_ip != null ? var.nodes_info[nodes.value.node_serial.val].ipmi_ip : nodes.value.network_details.ipmi_ip
+                    cvm_ip = var.nodes_info[nodes.value.node_serial.val].cvm_ip != null ? var.nodes_info[nodes.value.node_serial.val].cvm_ip : nodes.value.network_details.cvm_ip
+                    node_position = var.nodes_info[nodes.value.node_serial.val].node_position != null ? var.nodes_info[nodes.value.node_serial.val].node_position : nodes.value.node.node_position
+                    ipmi_user = var.nodes_info[nodes.value.node_serial.val].ipmi_user
+                    ipmi_password = var.nodes_info[nodes.value.node_serial.val].ipmi_password
+                    node_serial = nodes.value.node_serial.val
 
                     // set optional fields
-                    ipv6_address = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"ipv6_address",null) : null                    
-                    image_delay = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"image_delay",null) : null
-                    cvm_gb_ram = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"cvm_gb_ram",null) : null
-                    device_hint = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"device_hint",null) : null
-                    bond_mode = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"bond_mode",null) : null
-                    rdma_passthrough = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"rdma_passthrough",null) : null
-                    cluster_id = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"cluster_id",null) : null
-                    ucsm_node_serial = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"ucsm_node_serial",null) : null
-                    ipmi_configure_now = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"ipmi_configure_now",null) : null
-                    cvm_num_vcpus = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"cvm_num_vcpus",null) : null
-                    image_successful = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"image_successful",null) : null
-                    ipv6_interface = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"ipv6_interface",null) : null
-                    ipmi_mac = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"ipmi_mac",null) : null
-                    rdma_mac_addr = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"rdma_mac_addr",null) : null
-                    bond_uplinks = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"bond_uplinks",null) : null
-                    current_network_interface = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"current_network_interface",null) : null
-                    bond_lacp_rate = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"bond_lacp_rate",null) : null
-                    ucsm_managed_mode = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"ucsm_managed_mode",null) : null
-                    current_cvm_vlan_tag = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"current_cvm_vlan_tag",null) : null
-                    exlude_boot_serial = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"exlude_boot_serial",null) : null
-                    mitigate_low_boot_space = lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"mitigate_low_boot_space",null) : null
+                    ipv6_address = var.nodes_info[nodes.value.node_serial.val].ipv6_address != null ? var.nodes_info[nodes.value.node_serial.val].ipv6_address : nodes.value.node.ipv6_address                    
+                    image_delay = var.nodes_info[nodes.value.node_serial.val].image_delay
+                    cvm_gb_ram = var.nodes_info[nodes.value.node_serial.val].cvm_gb_ram
+                    device_hint = var.nodes_info[nodes.value.node_serial.val].device_hint
+                    bond_mode = var.nodes_info[nodes.value.node_serial.val].bond_mode
+                    rdma_passthrough = var.nodes_info[nodes.value.node_serial.val].rdma_passthrough
+                    cluster_id = var.nodes_info[nodes.value.node_serial.val].cluster_id
+                    ucsm_node_serial = var.nodes_info[nodes.value.node_serial.val].ucsm_node_serial
+                    ipmi_configure_now = var.nodes_info[nodes.value.node_serial.val].ipmi_configure_now
+                    cvm_num_vcpus = var.nodes_info[nodes.value.node_serial.val].cvm_num_vcpus
+                    image_successful = var.nodes_info[nodes.value.node_serial.val].image_successful
+                    ipv6_interface = var.nodes_info[nodes.value.node_serial.val].ipv6_interface
+                    ipmi_mac = var.nodes_info[nodes.value.node_serial.val].ipmi_mac
+                    rdma_mac_addr = var.nodes_info[nodes.value.node_serial.val].rdma_mac_addr
+                    bond_uplinks = var.nodes_info[nodes.value.node_serial.val].bond_uplinks
+                    current_network_interface = var.nodes_info[nodes.value.node_serial.val].current_network_interface
+                    bond_lacp_rate = var.nodes_info[nodes.value.node_serial.val].bond_lacp_rate
+                    ucsm_managed_mode = var.nodes_info[nodes.value.node_serial.val].ucsm_managed_mode
+                    current_cvm_vlan_tag = var.nodes_info[nodes.value.node_serial.val].current_cvm_vlan_tag
+                    exlude_boot_serial = var.nodes_info[nodes.value.node_serial.val].exlude_boot_serial
+                    mitigate_low_boot_space = var.nodes_info[nodes.value.node_serial.val].mitigate_low_boot_space
 
                     // set vswitches if given
                     dynamic "vswitches" {
-                        for_each = (lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"vswitches",null) : null) != null ? [var.nodes_info.nodes.value.network_details.node_serial.vswitches] : []
-                        content {
+                        for_each = var.nodes_info[nodes.value.node_serial.val].vswitches != null ? [var.nodes_info[nodes.value.node_serial.val].vswitches] : []
+                        content{
                             lacp = vswitches.value.lacp
                             bond_mode = vswitches.value.bond_mode
                             name = vswitches.value.name
@@ -208,7 +209,7 @@ resource "nutanix_foundation_image_nodes" "this"{
 
                     // set ucsm_params of given
                     dynamic "ucsm_params" {
-                        for_each = (lookup(var.nodes_info, nodes.nodes.value.network_details.node_serial,null) != null ? lookup(var.nodes_info[nodes.value.network_details.node_serial],"ucsm_params",null) : null) != null ? [var.nodes_info.nodes.value.network_details.node_serial.ucsm_params] : []
+                        for_each = var.nodes_info[nodes.value.node_serial.val].ucsm_params != null ? [var.nodes_info[nodes.value.node_serial.val].ucsm_params] : []
                         content {
                             native_vlan = ucsm_params.value.native_vlan
                             keep_ucsm_settings = ucsm_params.value.keep_ucsm_settings
@@ -224,7 +225,7 @@ resource "nutanix_foundation_image_nodes" "this"{
     }
 
     //Dynamically define cluster blocks
-	  dynamic "clusters" {
+	dynamic "clusters" {
         for_each = var.clusters != null ? var.clusters : []
         content {   
             // set required fields
@@ -236,14 +237,14 @@ resource "nutanix_foundation_image_nodes" "this"{
             cluster_init_now = true
 
             // set optional fields
-            enable_ns = lookup(clusters.value, "enable_ns", null)
-            backplane_subnet = lookup(clusters.value, "backplane_subnet", null)
-            backplane_netmask = lookup(clusters.value, "backplane_netmask", null)
-            backplane_vlan = lookup(clusters.value, "backplane_vlan", null)
-            cvm_ntp_servers = lookup(clusters.value, "cvm_ntp_servers", null)
-            single_node_cluster = lookup(clusters.value, "single_node_cluster", null)
-            cvm_dns_servers = lookup(clusters.value, "cvm_dns_servers", null)
-            hypervisor_ntp_servers = lookup(clusters.value, "hypervisor_ntp_servers", null)
+            enable_ns = clusters.value.enable_ns
+            backplane_subnet = clusters.value.backplane_subnet
+            backplane_netmask = clusters.value.backplane_netmask
+            backplane_vlan = clusters.value.backplane_vlan
+            cvm_ntp_servers = clusters.value.cvm_ntp_servers
+            single_node_cluster = clusters.value.single_node_cluster
+            cvm_dns_servers = clusters.value.cvm_dns_servers
+            hypervisor_ntp_servers = clusters.value.hypervisor_ntp_servers
 
         }
     }

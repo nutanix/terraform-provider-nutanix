@@ -1,3 +1,7 @@
+terraform {
+    experiments = [module_variable_optional_attrs]
+}
+
 // [Required] : Hypervisor netmask common for all nodes
 variable "hypervisor_netmask" {
     description = "hypervisor netmask ip"
