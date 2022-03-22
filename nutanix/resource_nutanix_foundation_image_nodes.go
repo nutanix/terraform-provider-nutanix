@@ -677,6 +677,11 @@ func resourceFoundationImageNodes() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"layout_egg_uuid": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"session_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -694,7 +699,10 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 	if ok {
 		request.XsMasterLabel = (xsmasterlabel.(string))
 	}
-
+	layoutEggUUID, ok := d.GetOk("layout_egg_uuid")
+	if ok {
+		request.LayoutEggUUID = (layoutEggUUID.(string))
+	}
 	ipmiPass, ok := d.GetOk("ipmi_password")
 	if ok {
 		request.IpmiPassword = ipmiPass.(string)
