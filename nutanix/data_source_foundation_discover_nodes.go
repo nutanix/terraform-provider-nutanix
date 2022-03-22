@@ -88,6 +88,10 @@ func dataSourceFoundationDiscoverNodes() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
+									"node_serial": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
 								},
 							},
 						},
@@ -142,6 +146,7 @@ func flattenDiscoveredNodes(nodesList []foundation.DiscoveredNode) []map[string]
 		node["hypervisor"] = v.Hypervisor
 		node["configured"] = v.Configured
 		node["nos_version"] = v.NosVersion
+		node["node_serial"] = v.NodeSerial
 
 		//ClusterID is of interface{} type so making sure we only accept integer values
 		if val, ok := v.ClusterID.(float64); ok {
