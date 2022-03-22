@@ -253,6 +253,7 @@ type DiscoveredNode struct {
 	HypervisorVersion       string      `json:"hypervisor_version"`
 	SvmIP                   string      `json:"svm_ip"`
 	Model                   string      `json:"model"`
+	NodeSerial              string      `json:"node_serial"`
 }
 
 //Response struct for /node_network_details api
