@@ -1282,6 +1282,7 @@ func expandNetworkRule(prefix string, d *schema.ResourceData) *v3.NetworkSecurit
 			nr := v.(map[string]interface{})
 			nrItem := &v3.NetworkRule{}
 			iPSubnet := &v3.IPSubnet{}
+			setIPSubnet := false
 			filter := &v3.CategoryFilter{}
 
 			if proto, pok := nr["protocol"]; pok && proto.(string) != "" {
@@ -1290,11 +1291,13 @@ func expandNetworkRule(prefix string, d *schema.ResourceData) *v3.NetworkSecurit
 
 			if ip, ipok := nr["ip_subnet"]; ipok && ip.(string) != "" {
 				iPSubnet.IP = utils.StringPtr(ip.(string))
+				setIPSubnet = true
 			}
 
 			if ippl, ipok := nr["ip_subnet_prefix_length"]; ipok && ippl.(string) != "" {
 				if i, err := strconv.Atoi(ippl.(string)); err == nil {
 					iPSubnet.PrefixLength = utils.Int64Ptr(int64(i))
+					setIPSubnet = true
 				}
 			}
 
@@ -1363,7 +1366,9 @@ func expandNetworkRule(prefix string, d *schema.ResourceData) *v3.NetworkSecurit
 				nrItem.IcmpTypeCodeList = expandIcmpTypeCodeList(icmp)
 			}
 
-			nrItem.IPSubnet = iPSubnet
+			if setIPSubnet {
+				nrItem.IPSubnet = iPSubnet
+			}
 			if !reflect.DeepEqual(*filter, v3.CategoryFilter{}) {
 				nrItem.Filter = filter
 			}
