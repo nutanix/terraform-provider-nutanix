@@ -58,7 +58,7 @@ func dataSourceNutanixFCAPIKeysRead(ctx context.Context, d *schema.ResourceData,
 
 		d.SetId(uuid.(string))
 	} else {
-		return diag.Errorf("please provide `uuid`")
+		return diag.Errorf("please provide `key_uuid`")
 	}
 	return nil
 }

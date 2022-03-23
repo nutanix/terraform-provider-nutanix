@@ -90,7 +90,7 @@ func dataSourceNutanixFCListAPIKeysRead(ctx context.Context, d *schema.ResourceD
 
 	resp, err := conn.ListAPIKeys(req)
 	if err != nil {
-		return diag.Errorf("error reading API keys with error %s", err)
+		return diag.FromErr(err)
 	}
 
 	if resp.Metadata != nil {
