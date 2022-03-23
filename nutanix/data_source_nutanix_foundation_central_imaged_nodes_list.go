@@ -10,17 +10,26 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func dataSourceNutanixFCImagedClustersList() *schema.Resource {
+func dataSourceNutanixFCImagedNodesList() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceNutanixFCImagedClustersListRead,
+		ReadContext: dataSourceNutanixFCImagedNodesListRead,
 		Schema: map[string]*schema.Schema{
 			"length": {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
 			"filters": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"node_state": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
 			},
 			"offset": {
 				Type:     schema.TypeInt,
@@ -110,7 +119,6 @@ func dataSourceNutanixFCImagedClustersList() *schema.Resource {
 						"hypervisor_version": {
 							Type:     schema.TypeString,
 							Computed: true,
-							Optional: true,
 						},
 						"imaged_cluster_uuid": {
 							Type:     schema.TypeString,
@@ -203,7 +211,7 @@ func dataSourceNutanixFCImagedClustersList() *schema.Resource {
 	}
 }
 
-func dataSourceNutanixFCImagedClustersListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceNutanixFCImagedNodesListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).FC
 	req := fc.ImagedNodesListInput{}
 
@@ -214,9 +222,12 @@ func dataSourceNutanixFCImagedClustersListRead(ctx context.Context, d *schema.Re
 		req.Offset = utils.IntPtr(offset.(int))
 	}
 
-	// if filter, fok := d.GetOk("filters"); fok {
-
-	// }
+	if filter, fok := d.GetOk("filters"); fok {
+		filt := &fc.ImagedNodeListFilter{}
+		filter := filter.([]interface{})[0].(map[string]interface{})
+		filt.NodeState = utils.StringPtr(filter["node_state"].(string))
+		req.Filters = filt
+	}
 
 	resp, err := conn.ListImagedNodes(&req)
 	if err != nil {
