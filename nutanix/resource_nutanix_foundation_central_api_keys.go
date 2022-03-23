@@ -50,7 +50,7 @@ func resourceNutanixFCAPIKeysCreate(ctx context.Context, d *schema.ResourceData,
 		req.Alias = alias.(string)
 	}
 
-	resp, err := conn.CreateAPIKey(req)
+	resp, err := conn.CreateAPIKey(ctx, req)
 	if err != nil {
 		return diag.Errorf("error creating API Keys with alias %s: %+v", (req.Alias), err)
 	}
@@ -61,7 +61,7 @@ func resourceNutanixFCAPIKeysCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceNutanixFCAPIKeysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).FC
-	resp, err := conn.GetAPIKey(d.Id())
+	resp, err := conn.GetAPIKey(ctx, d.Id())
 
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
