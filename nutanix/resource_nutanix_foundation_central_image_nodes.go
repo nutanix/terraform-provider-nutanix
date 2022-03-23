@@ -231,7 +231,7 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 
 func resourceNutanixFCImageClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// conn := meta.(*Client).FC
-	// resp, err := conn.GetImagedNode(d.Id())
+	// resp, err := conn.GetImagedNode(ctx, d.Id())
 	// if err != nil {
 	// 	diag.FromErr(err)
 	// }
@@ -292,7 +292,7 @@ func resourceNutanixFCImageClusterRead(ctx context.Context, d *schema.ResourceDa
 
 func foundationCentralClusterRefresh(ctx context.Context, conn *fc.Client, imageUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		v, err := conn.Service.GetImagedCluster(imageUUID)
+		v, err := conn.Service.GetImagedCluster(ctx, imageUUID)
 
 		if err != nil {
 			return nil, "FAILED", err
@@ -471,7 +471,7 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 	req.NodesList = expandNodesList(d)
 
 	//Make request to the API
-	resp, err := conn.Service.CreateCluster(&req)
+	resp, err := conn.Service.CreateCluster(ctx, &req)
 	if err != nil {
 		return diag.FromErr(err)
 	}

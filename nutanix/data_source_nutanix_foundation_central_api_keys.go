@@ -39,7 +39,7 @@ func dataSourceNutanixFCAPIKeysRead(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*Client).FC
 
 	if uuid, uuidok := d.GetOk("key_uuid"); uuidok {
-		resp, err := conn.GetAPIKey(uuid.(string))
+		resp, err := conn.GetAPIKey(ctx, uuid.(string))
 		if err != nil {
 			return diag.Errorf("error reading API keys with error %s", err)
 		}

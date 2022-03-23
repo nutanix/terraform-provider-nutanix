@@ -15,21 +15,19 @@ type Operations struct {
 
 // Service ...
 type Service interface {
-	GetImagedNode(uuid string) (*ImagedNodeDetails, error)
-	ListImagedNodes(req *ImagedNodesListInput) (*ImagedNodesListResponse, error)
-	GetImagedCluster(uuid string) (*ImagedClusterDetails, error)
-	ListImagedClusters(input *ImagedClustersListInput) (*ImagedClustersListResponse, error)
-	CreateCluster(input *CreateClusterInput) (*CreateClusterResponse, error)
-	UpdateCluster(clusterUUID string, updateData *UpdateClusterData) error
-	DeleteCluster(clusterUUID string) error
-	CreateAPIKey(input *CreateAPIKeysInput) (*CreateAPIKeysResponse, error)
-	GetAPIKey(uuid string) (*CreateAPIKeysResponse, error)
-	ListAPIKeys(body *ListMetadataInput) (*ListAPIKeysResponse, error)
+	GetImagedNode(context.Context, string) (*ImagedNodeDetails, error)
+	ListImagedNodes(context.Context, *ImagedNodesListInput) (*ImagedNodesListResponse, error)
+	GetImagedCluster(context.Context, string) (*ImagedClusterDetails, error)
+	ListImagedClusters(context.Context, *ImagedClustersListInput) (*ImagedClustersListResponse, error)
+	CreateCluster(context.Context, *CreateClusterInput) (*CreateClusterResponse, error)
+	UpdateCluster(context.Context, string, *UpdateClusterData) error
+	DeleteCluster(context.Context, string) error
+	CreateAPIKey(context.Context, *CreateAPIKeysInput) (*CreateAPIKeysResponse, error)
+	GetAPIKey(context.Context, string) (*CreateAPIKeysResponse, error)
+	ListAPIKeys(context.Context, *ListMetadataInput) (*ListAPIKeysResponse, error)
 }
 
-func (op Operations) GetImagedNode(nodeUUID string) (*ImagedNodeDetails, error) {
-	ctx := context.TODO()
-
+func (op Operations) GetImagedNode(ctx context.Context, nodeUUID string) (*ImagedNodeDetails, error) {
 	path := fmt.Sprintf("/imaged_nodes/%s", nodeUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
@@ -42,8 +40,7 @@ func (op Operations) GetImagedNode(nodeUUID string) (*ImagedNodeDetails, error) 
 	return imagedNodeDetails, op.client.Do(ctx, req, imagedNodeDetails)
 }
 
-func (op Operations) ListImagedNodes(input *ImagedNodesListInput) (*ImagedNodesListResponse, error) {
-	ctx := context.TODO()
+func (op Operations) ListImagedNodes(ctx context.Context, input *ImagedNodesListInput) (*ImagedNodesListResponse, error) {
 	path := "/imaged_nodes/list"
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
@@ -57,9 +54,7 @@ func (op Operations) ListImagedNodes(input *ImagedNodesListInput) (*ImagedNodesL
 	return imagedNodesListResponse, op.client.Do(ctx, req, imagedNodesListResponse)
 }
 
-func (op Operations) GetImagedCluster(clusterUUID string) (*ImagedClusterDetails, error) {
-	ctx := context.TODO()
-
+func (op Operations) GetImagedCluster(ctx context.Context, clusterUUID string) (*ImagedClusterDetails, error) {
 	path := fmt.Sprintf("/imaged_clusters/%s", clusterUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
@@ -72,8 +67,7 @@ func (op Operations) GetImagedCluster(clusterUUID string) (*ImagedClusterDetails
 	return imagedClusterDetails, op.client.Do(ctx, req, imagedClusterDetails)
 }
 
-func (op Operations) ListImagedClusters(input *ImagedClustersListInput) (*ImagedClustersListResponse, error) {
-	ctx := context.TODO()
+func (op Operations) ListImagedClusters(ctx context.Context, input *ImagedClustersListInput) (*ImagedClustersListResponse, error) {
 	path := "/imaged_clusters/list"
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
@@ -87,8 +81,7 @@ func (op Operations) ListImagedClusters(input *ImagedClustersListInput) (*Imaged
 	return imagedClustersListResponse, op.client.Do(ctx, req, imagedClustersListResponse)
 }
 
-func (op Operations) CreateCluster(input *CreateClusterInput) (*CreateClusterResponse, error) {
-	ctx := context.TODO()
+func (op Operations) CreateCluster(ctx context.Context, input *CreateClusterInput) (*CreateClusterResponse, error) {
 	path := "/imaged_clusters"
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
@@ -102,8 +95,7 @@ func (op Operations) CreateCluster(input *CreateClusterInput) (*CreateClusterRes
 	return createClusterResponse, op.client.Do(ctx, req, createClusterResponse)
 }
 
-func (op Operations) UpdateCluster(clusterUUID string, updateData *UpdateClusterData) error {
-	ctx := context.TODO()
+func (op Operations) UpdateCluster(ctx context.Context, clusterUUID string, updateData *UpdateClusterData) error {
 	path := fmt.Sprintf("/imaged_clusters/%s", clusterUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, updateData)
@@ -115,8 +107,7 @@ func (op Operations) UpdateCluster(clusterUUID string, updateData *UpdateCluster
 	return op.client.Do(ctx, req, nil)
 }
 
-func (op Operations) DeleteCluster(clusterUUID string) error {
-	ctx := context.TODO()
+func (op Operations) DeleteCluster(ctx context.Context, clusterUUID string) error {
 	path := fmt.Sprintf("/imaged_clusters/%s", clusterUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
@@ -129,8 +120,7 @@ func (op Operations) DeleteCluster(clusterUUID string) error {
 }
 
 //Create a new api key which will be used by remote nodes to authenticate with Foundation Central
-func (op Operations) CreateAPIKey(input *CreateAPIKeysInput) (*CreateAPIKeysResponse, error) {
-	ctx := context.TODO()
+func (op Operations) CreateAPIKey(ctx context.Context, input *CreateAPIKeysInput) (*CreateAPIKeysResponse, error) {
 	path := "/api_keys"
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
@@ -143,8 +133,7 @@ func (op Operations) CreateAPIKey(input *CreateAPIKeysInput) (*CreateAPIKeysResp
 }
 
 //Get an api key given its UUID.
-func (op Operations) GetAPIKey(uuid string) (*CreateAPIKeysResponse, error) {
-	ctx := context.TODO()
+func (op Operations) GetAPIKey(ctx context.Context, uuid string) (*CreateAPIKeysResponse, error) {
 	path := fmt.Sprintf("/api_keys/%s", uuid)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, uuid)
@@ -157,8 +146,7 @@ func (op Operations) GetAPIKey(uuid string) (*CreateAPIKeysResponse, error) {
 }
 
 //List all the api keys.
-func (op Operations) ListAPIKeys(body *ListMetadataInput) (*ListAPIKeysResponse, error) {
-	ctx := context.TODO()
+func (op Operations) ListAPIKeys(ctx context.Context, body *ListMetadataInput) (*ListAPIKeysResponse, error) {
 	path := "/api_keys/list"
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, body)
