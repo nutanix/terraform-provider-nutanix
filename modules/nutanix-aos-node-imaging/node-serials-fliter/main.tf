@@ -49,6 +49,87 @@ locals {
         for block in local.blockDetails:
             block if length(block.nodes)>0
     ]
+
+    // list of required details to check if this details are present or not for node imaging
+    // source can be "network_details" (node network details info) or "node" (normal node info from discover nodes)
+    // global defines the params which can be declared common for all nodes in module input, ex. ipmi_user, etc. 
+    // default_value are used to validate to validate of info == default_value (missing from api response). Can be "", 0, false, etc.
+    required_details = [
+        {
+            attribute: "hypervisor_hostname",
+            source: "network_details",
+            global: false
+            default_value : ""
+        },
+        {
+            attribute: "hypervisor_ip",
+            source: "network_details",
+            global: false
+            default_value : ""
+        },
+        {
+            attribute: "ipmi_ip",
+            source: "network_details",
+            global: false
+            default_value : ""
+        },
+        {
+            attribute: "cvm_ip",
+            source: "network_details",
+            global: false
+            default_value : ""
+        },
+        {
+            attribute: "node_position",
+            source: "node",
+            global: false
+            default_value : ""
+        },
+        {
+            attribute: "hypervisor",
+            source: "node",
+            global: true
+            default_value : "null"
+        },
+        {
+            attribute: "ipmi_user",
+            source: "",
+            global: true
+            default_value : ""
+        },
+        {
+            attribute: "ipmi_password",
+            source: "",
+            global: true
+            default_value : ""
+        }
+    ]
+        
+    // create error messages incase required details are not present in node_info/discover_nodes/node_network_details for a particular node
+    node_info_validation_messages = flatten([
+        for block in local.blockDetails:
+            [
+                for node in block.nodes: [
+                    for attr_details in local.required_details:
+                        format("%s for node serial %s is missing. ", attr_details.attribute, node.node_serial.val)
+                        if try(var.nodes_info[node.node_serial.val][attr_details.attribute], null) == null && try(node[attr_details.source][attr_details.attribute] == attr_details.default_value, true)  && (attr_details.global? var.defaults[attr_details.attribute] == null : true)
+                ]
+
+            ]
+    ])
+}
+
+
+// Internal assert helper checking for error messages from above operations and errors out if present
+data "nutanix_assert_helper" "checks" {
+    
+    dynamic "checks" {
+        for_each = local.node_info_validation_messages
+        content{
+            condition = false
+            error_message = checks.value
+        }
+    }
 }
 
 //Resource block for imaging the nodes
@@ -56,8 +137,8 @@ resource "nutanix_foundation_image_nodes" "this"{
 
     // Required fields to be taken from module input
     nos_package = var.nos_package
-    ipmi_user = var.ipmi_user
-    ipmi_password = var.ipmi_password
+    ipmi_user = var.defaults.ipmi_user
+    ipmi_password = var.defaults.ipmi_password
     hypervisor_netmask = var.hypervisor_netmask
     hypervisor_gateway = var.hypervisor_gateway
     cvm_netmask = var.cvm_netmask
@@ -162,7 +243,7 @@ resource "nutanix_foundation_image_nodes" "this"{
                     // set required fields
                     hypervisor_hostname = var.nodes_info[nodes.value.node_serial.val].hypervisor_hostname != null ? var.nodes_info[nodes.value.node_serial.val].hypervisor_hostname : nodes.value.network_details.hypervisor_hostname
                     hypervisor_ip = var.nodes_info[nodes.value.node_serial.val].hypervisor_ip != null ? var.nodes_info[nodes.value.node_serial.val].hypervisor_ip : nodes.value.network_details.hypervisor_ip
-                    hypervisor = var.nodes_info[nodes.value.node_serial.val].hypervisor != null ? var.nodes_info[nodes.value.node_serial.val].hypervisor : nodes.value.node.hypervisor
+                    hypervisor = var.nodes_info[nodes.value.node_serial.val].hypervisor != null ? var.nodes_info[nodes.value.node_serial.val].hypervisor : (var.defaults.hypervisor != null ? var.defaults.hypervisor : nodes.value.node.hypervisor)
                     image_now = true
                     ipmi_ip = var.nodes_info[nodes.value.node_serial.val].ipmi_ip != null ? var.nodes_info[nodes.value.node_serial.val].ipmi_ip : nodes.value.network_details.ipmi_ip
                     cvm_ip = var.nodes_info[nodes.value.node_serial.val].cvm_ip != null ? var.nodes_info[nodes.value.node_serial.val].cvm_ip : nodes.value.network_details.cvm_ip
@@ -174,23 +255,23 @@ resource "nutanix_foundation_image_nodes" "this"{
                     // set optional fields
                     ipv6_address = var.nodes_info[nodes.value.node_serial.val].ipv6_address != null ? var.nodes_info[nodes.value.node_serial.val].ipv6_address : nodes.value.node.ipv6_address                    
                     image_delay = var.nodes_info[nodes.value.node_serial.val].image_delay
-                    cvm_gb_ram = var.nodes_info[nodes.value.node_serial.val].cvm_gb_ram
+                    cvm_gb_ram = var.nodes_info[nodes.value.node_serial.val].cvm_gb_ram != null ? var.nodes_info[nodes.value.node_serial.val].cvm_gb_ram : var.defaults.cvm_gb_ram
                     device_hint = var.nodes_info[nodes.value.node_serial.val].device_hint
                     bond_mode = var.nodes_info[nodes.value.node_serial.val].bond_mode
                     rdma_passthrough = var.nodes_info[nodes.value.node_serial.val].rdma_passthrough
                     cluster_id = var.nodes_info[nodes.value.node_serial.val].cluster_id
                     ucsm_node_serial = var.nodes_info[nodes.value.node_serial.val].ucsm_node_serial
                     ipmi_configure_now = var.nodes_info[nodes.value.node_serial.val].ipmi_configure_now
-                    cvm_num_vcpus = var.nodes_info[nodes.value.node_serial.val].cvm_num_vcpus
+                    cvm_num_vcpus = var.nodes_info[nodes.value.node_serial.val].cvm_num_vcpus != null ? var.nodes_info[nodes.value.node_serial.val].cvm_num_vcpus : var.defaults.cvm_num_vcpus
                     image_successful = var.nodes_info[nodes.value.node_serial.val].image_successful
                     ipv6_interface = var.nodes_info[nodes.value.node_serial.val].ipv6_interface
                     ipmi_mac = var.nodes_info[nodes.value.node_serial.val].ipmi_mac
                     rdma_mac_addr = var.nodes_info[nodes.value.node_serial.val].rdma_mac_addr
                     bond_uplinks = var.nodes_info[nodes.value.node_serial.val].bond_uplinks
-                    current_network_interface = var.nodes_info[nodes.value.node_serial.val].current_network_interface
+                    current_network_interface = var.nodes_info[nodes.value.node_serial.val].current_network_interface != null ? var.nodes_info[nodes.value.node_serial.val].current_network_interface : nodes.value.node.current_network_interface
                     bond_lacp_rate = var.nodes_info[nodes.value.node_serial.val].bond_lacp_rate
                     ucsm_managed_mode = var.nodes_info[nodes.value.node_serial.val].ucsm_managed_mode
-                    current_cvm_vlan_tag = var.nodes_info[nodes.value.node_serial.val].current_cvm_vlan_tag
+                    current_cvm_vlan_tag = var.nodes_info[nodes.value.node_serial.val].current_cvm_vlan_tag != null ? var.nodes_info[nodes.value.node_serial.val].current_cvm_vlan_tag : (var.defaults.current_cvm_vlan_tag != null ? var.defaults.current_cvm_vlan_tag : nodes.value.node.current_cvm_vlan_tag)
                     exlude_boot_serial = var.nodes_info[nodes.value.node_serial.val].exlude_boot_serial
                     mitigate_low_boot_space = var.nodes_info[nodes.value.node_serial.val].mitigate_low_boot_space
 

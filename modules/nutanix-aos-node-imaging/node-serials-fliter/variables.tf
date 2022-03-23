@@ -8,6 +8,26 @@ variable "hypervisor_netmask" {
     type = string
 }
 
+variable "defaults" {
+    description = "default spec for nodes"
+    type = object({
+        ipmi_user = optional(string)
+        ipmi_password = optional(string)
+        hypervisor = optional(string)
+        cvm_gb_ram = optional(string)
+        cvm_num_vcpus = optional(string)
+        current_cvm_vlan_tag = optional(string)
+    })
+    default = {
+      current_cvm_vlan_tag : null
+      cvm_gb_ram : null
+      cvm_num_vcpus : null
+      hypervisor : null
+      ipmi_password : null
+      ipmi_user : null
+    }
+}
+
 // [Required] : Hypervisor gateway common for all nodes
 variable "hypervisor_gateway" {
     description = "hypervisor gateway ip"
@@ -29,18 +49,6 @@ variable "cvm_gateway" {
 // [Required] : nos_package file name for ex. nos_image.tar
 variable "nos_package" {
     description = "nos package file name"
-    type = string
-}
-
-// [Required] : default ipmi_user for all nodes. ipmi_user mentioned in node_info_override will override this for particular node
-variable "ipmi_user" {
-    description = "default ipmi username"
-    type = string
-}
-
-// [Required] : default ipmi_password for all nodes. ipmi_password mentioned in node_info_override will override this for particular node
-variable "ipmi_password"{
-    description = "default ipmi password"
     type = string
 }
 
@@ -254,10 +262,11 @@ variable "clusters" {
 }
 
 /*
-[Optional] : nodes_info would have details for particular node that needs to be override
+[Optional] : nodes_info would have details for particular node that needs to be override.
+All fields are for a particular nodes are optional as required fields come from /discover_nodes and /node_network_details
 Format (Just mention things that needs override over default or existing values. Skip fields which doesn't need to be overriden over default or existing value) :
-node_info_override = {
-    <node1_serial_number> : {
+nodes_info = {
+    "<node1_serial_number>" : {
         cvm_ip              : "10.xx.xx.xx"
         hypervisor          : "kvm"
         hypervisor_hostname : "batman-100"
@@ -267,7 +276,7 @@ node_info_override = {
         ipmi_user           : "<username>"
         node_position       : "A"
     },
-    <node2_serial_number> : {
+    "<node2_serial_number>" : {
         cvm_ip              : "10.xx.xx.xx"
         hypervisor          : "kvm"
         hypervisor_hostname : "batman-100"
@@ -376,4 +385,3 @@ variable "hypervisor_isos" {
     })
     default = null
 }
-
