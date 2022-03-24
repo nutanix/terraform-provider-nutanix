@@ -163,11 +163,11 @@ func dataSourceFCImagedNodeDetailsRead(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*Client).FC
 	req := fc.ImagedNodeDetailsInput{}
 
-	node_uuid, ok := d.GetOk("imaged_node_uuid")
+	nodeUUID, ok := d.GetOk("imaged_node_uuid")
 	if !ok {
 		return diag.Errorf("please provide the imaged_node_uuid")
 	}
-	req.ImagedNodeUUID = node_uuid.(string)
+	req.ImagedNodeUUID = nodeUUID.(string)
 
 	res, err := conn.GetImagedNode(ctx, req.ImagedNodeUUID)
 	if err != nil {
