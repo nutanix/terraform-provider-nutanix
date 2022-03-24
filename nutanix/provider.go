@@ -125,6 +125,7 @@ func Provider() *schema.Provider {
 			"nutanix_foundation_central_imaged_nodes_list":    dataSourceNutanixFCImagedNodesList(),
 			"nutanix_foundation_central_imaged_clusters_list": dataSourceNutanixFCImagedClustersList(),
 			"nutanix_foundation_central_cluster_details":      dataSourceNutanixFCClusterDetails(),
+			"nutanix_foundation_central_imaged_node_details":  dataSourceFCImagedNodeDetails(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  resourceNutanixVirtualMachine(),
