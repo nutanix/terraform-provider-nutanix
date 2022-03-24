@@ -40,7 +40,8 @@ func NewFoundationAPIClient(credentials client.Credentials) (*Client, error) {
 		baseClient = c
 	} else {
 		// create empty client if required fields are not provided
-		baseClient = &client.Client{}
+		baseClient = &client.Client{Error: "Foundation Client is missing. " +
+			"Please provide required detail - foundation_endpoint in provider configuration."}
 	}
 
 	//Fill user agent details

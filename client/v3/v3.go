@@ -28,7 +28,9 @@ func NewV3Client(credentials client.Credentials) (*Client, error) {
 		}
 		baseClient = c
 	} else {
-		baseClient = &client.Client{UserAgent: userAgent}
+		baseClient = &client.Client{UserAgent: userAgent, Error: "nutanix pc Client is missing. " +
+			"Please provide required details - username, password & endpoint" +
+			" in provider configuration."}
 	}
 
 	f := &Client{
