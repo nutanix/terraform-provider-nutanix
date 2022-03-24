@@ -1,52 +1,32 @@
-//discovery of nodes
-data "nutanix_foundation_discover_nodes" "nodes"{}
-
-//Get all unconfigured node's ipv6 addresses
-locals {
-  node_serials = keys(var.nodes_info)
-  ipv6Addresses = flatten([
-      for block in data.nutanix_foundation_discover_nodes.nodes.entities:
-        [
-          for node in block.nodes: 
-            node.ipv6_address if node.configured==false
-        ]
-  ])
-}
-
-//Get node network details as per the ipv6 addresses
-data "nutanix_foundation_node_network_details" "ntwDetails" {
-  ipv6_addresses = local.ipv6Addresses
+module "discovered_nodes_network_details" {
+    source = "../../discover-nodes-network-details/"
 }
 
 locals {
-    //Create map of node_serial => network details as per input node serials
-    nodeSerialNtwDetails = tomap({
-        for node in data.nutanix_foundation_node_network_details.ntwDetails.nodes:
-        "${node.ipv6_address}" => node
-        if node.ipv6_address != ""
-    })
+    //create list of node serials
+    node_serials = keys(var.nodes_info)
 
     //Merge the network details and discovery of nodes response for given node serials
-    blockDetails = [
-        for block in data.nutanix_foundation_discover_nodes.nodes.entities:
+    block_details = [
+        for block in module.discovered_nodes_network_details.discovered_node_details:
             {
                 "nodes" = [
                     for node in block.nodes:
                         {
                             "node_serial" = tomap({
-                                "val" = node.node_serial != "" ? node.node_serial : (lookup(local.nodeSerialNtwDetails, node.ipv6_address, null) != null ? local.nodeSerialNtwDetails[node.ipv6_address].node_serial : "")
+                                "val" = node.node_serial != "" ? node.node_serial : (lookup(module.discovered_nodes_network_details.ipv6_to_node_network_details_map, node.ipv6_address, null) != null ? module.discovered_nodes_network_details.ipv6_to_node_network_details_map[node.ipv6_address].node_serial : "")
                             })
                             "node" = node
-                            "network_details" = lookup(local.nodeSerialNtwDetails,lookup(node,"ipv6_address",""), null)
-                        } if lookup(local.nodeSerialNtwDetails, node.ipv6_address, null) != null ? ( contains(local.node_serials, node.node_serial) || contains(local.node_serials,local.nodeSerialNtwDetails[node.ipv6_address].node_serial)) : false
+                            "network_details" = lookup(module.discovered_nodes_network_details.ipv6_to_node_network_details_map,lookup(node,"ipv6_address",""), null)
+                        } if lookup(module.discovered_nodes_network_details.ipv6_to_node_network_details_map, node.ipv6_address, null) != null ? ( contains(local.node_serials, node.node_serial) || contains(local.node_serials,module.discovered_nodes_network_details.ipv6_to_node_network_details_map[node.ipv6_address].node_serial)) : false
                 ]
                 "block_id" = lookup(block, "block_id", "")
             }
     ]
 
     //Remove not required data
-    filteredNodeDetails = [
-        for block in local.blockDetails:
+    filtered_node_details = [
+        for block in local.block_details:
             block if length(block.nodes)>0
     ]
 
@@ -107,7 +87,7 @@ locals {
         
     // create error messages incase required details are not present in node_info/discover_nodes/node_network_details for a particular node
     node_info_validation_messages = flatten([
-        for block in local.blockDetails:
+        for block in local.block_details:
             [
                 for node in block.nodes: [
                     for attr_details in local.required_details:
@@ -233,7 +213,7 @@ resource "nutanix_foundation_image_nodes" "this"{
 
     //Dynamically define blocks and its nodes as per the input variables of module
     dynamic "blocks"{
-        for_each = local.filteredNodeDetails
+        for_each = local.filtered_node_details
         content {
             block_id = blocks.value.block_id
             dynamic "nodes" {

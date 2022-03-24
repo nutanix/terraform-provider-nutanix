@@ -14,7 +14,7 @@ func DataSourceAssertHelper() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"checks": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"condition": {
