@@ -305,3 +305,7 @@ type Clusters struct {
 	RedundancyFactor      int       `json:"redundancy_factor,omitempty"`
 	TimeZone              string    `json:"timezone,omitempty"`
 }
+
+type ImagedNodeDetailsInput struct {
+	ImagedNodeUUID string `json:"imaged_node_uuid"`
+}
