@@ -168,22 +168,24 @@ func resourceFoundationImageNodes() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"fc_metadata": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							ForceNew: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"fc_ip": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Required: true,
 										ForceNew: true,
 									},
 									"api_key": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Required: true,
 										ForceNew: true,
 									},
 								},
@@ -191,7 +193,7 @@ func resourceFoundationImageNodes() *schema.Resource {
 						},
 						"foundation_central": {
 							Type:     schema.TypeBool,
-							Optional: true,
+							Required: true,
 							ForceNew: true,
 						},
 					},
@@ -224,7 +226,6 @@ func resourceFoundationImageNodes() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enable_ns": {
@@ -249,7 +250,7 @@ func resourceFoundationImageNodes() *schema.Resource {
 						},
 						"redundancy_factor": {
 							Type:     schema.TypeInt,
-							Optional: true,
+							Required: true,
 							ForceNew: true,
 						},
 						"backplane_vlan": {
@@ -259,12 +260,12 @@ func resourceFoundationImageNodes() *schema.Resource {
 						},
 						"cluster_name": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 							ForceNew: true,
 						},
 						"cluster_external_ip": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 							ForceNew: true,
 						},
 						"cvm_ntp_servers": {
@@ -279,7 +280,7 @@ func resourceFoundationImageNodes() *schema.Resource {
 						},
 						"cluster_members": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							ForceNew: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
@@ -292,7 +293,7 @@ func resourceFoundationImageNodes() *schema.Resource {
 						},
 						"cluster_init_now": {
 							Type:     schema.TypeBool,
-							Optional: true,
+							Required: true,
 							ForceNew: true,
 						},
 						"hypervisor_ntp_servers": {
@@ -322,6 +323,7 @@ func resourceFoundationImageNodes() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"config_id": {
@@ -349,6 +351,7 @@ func resourceFoundationImageNodes() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"run_syscheck": {
@@ -517,7 +520,6 @@ func resourceFoundationImageNodes() *schema.Resource {
 									},
 									"vswitches": {
 										Type:     schema.TypeList,
-										MaxItems: 1,
 										Optional: true,
 										ForceNew: true,
 										Elem: &schema.Resource{
@@ -844,7 +846,7 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	hypervisorIso, ok := d.GetOk("hypervisor_iso")
-	if ok {
+	if ok && len(hypervisorIso.([]interface{})) > 0 {
 		request.HypervisorIso = expandHypervisorIso(hypervisorIso.([]interface{}))
 	}
 
@@ -901,15 +903,13 @@ func resourceFoundationImageNodesDelete(ctx context.Context, d *schema.ResourceD
 }
 
 func expandTests(d *schema.ResourceData) (*foundation.Tests, error) {
-	tests := &foundation.Tests{}
-
-	if test, ok := d.GetOk("tests"); ok {
-		set := test.(map[string]interface{})
-
-		if runsync, ok := set["RunSyscheck"]; ok {
+	if test, ok := d.GetOk("tests"); ok && len(test.([]interface{})) > 0 {
+		set := (test.([]interface{})[0]).(map[string]interface{})
+		tests := &foundation.Tests{}
+		if runsync, ok := set["run_ncc"]; ok {
 			tests.RunSyscheck = utils.BoolPtr(runsync.(bool))
 		}
-		if runncc, ok := set["RunNcc"]; ok {
+		if runncc, ok := set["run_syscheck"]; ok {
 			tests.RunNcc = utils.BoolPtr(runncc.(bool))
 		}
 		return tests, nil
@@ -918,22 +918,23 @@ func expandTests(d *schema.ResourceData) (*foundation.Tests, error) {
 }
 
 func expandEosMetadata(d *schema.ResourceData) (*foundation.EosMetadata, error) {
-	eosMeta := &foundation.EosMetadata{}
-	if eos, ok := d.GetOk("eos_metadata"); ok {
-		eosmeta := eos.(map[string]interface{})
-
-		if config, ok := eosmeta["ConfigID"]; ok {
+	if eos, ok := d.GetOk("eos_metadata"); ok && len(eos.([]interface{})) > 0 {
+		eosmeta := (eos.([]interface{}))[0].(map[string]interface{})
+		eosMeta := &foundation.EosMetadata{}
+		if config, ok := eosmeta["config_id"]; ok {
 			eosMeta.ConfigID = (config.(string))
 		}
 
-		if acname, ok := eosmeta["AccountName"]; ok {
+		if acname, ok := eosmeta["account_name"]; ok {
 			ac := acname.([]interface{})
-
+			acc_names := make([]string, len(ac))
 			for a := range ac {
-				eosMeta.AccountName[a] = ac[a].(string)
+				acc_names[a] = ac[a].(string)
 			}
+			eosMeta.AccountName = acc_names
 		}
-		if email, ok := d.GetOk("Email"); ok {
+
+		if email, ok := eosmeta["email"]; ok {
 			eosMeta.Email = (email.(string))
 		}
 		return eosMeta, nil
@@ -941,23 +942,26 @@ func expandEosMetadata(d *schema.ResourceData) (*foundation.EosMetadata, error) 
 	return nil, nil
 }
 func expandFcSetting(d *schema.ResourceData) (*foundation.FcSettings, error) {
-	fc := &foundation.FcSettings{}
+	if fcset, ok := d.GetOk("fc_settings"); ok && len(fcset.([]interface{})) > 0 {
+		fc := &foundation.FcSettings{}
+		set := (fcset.([]interface{}))[0].(map[string]interface{})
 
-	if fcset, ok := d.GetOk("fc_settings"); ok {
-		set := fcset.(map[string]interface{})
-
-		if val, ok2 := set["FoundationCentral"]; ok2 {
+		if val, ok2 := set["foundation_central"]; ok2 {
 			fc.FoundationCentral = utils.BoolPtr(val.(bool))
 		}
-		if val, ok2 := set["FcMetadata"]; ok2 {
-			fcmeta := val.(map[string]interface{})
-			if val, ok := fcmeta["FcIP"]; ok {
-				fc.FcMetadata.FcIP = (val.(string))
+		// expand fc metadata
+		if val, ok2 := set["fc_metadata"]; ok2 && len(val.([]interface{})) > 0 {
+			fcmeta := (val.([]interface{}))[0].(map[string]interface{})
+			fcMetadata := &foundation.FcMetadata{}
+			if val, ok := fcmeta["fc_ip"]; ok {
+				fcMetadata.FcIP = (val.(string))
 			}
-
-			if val, ok := fcmeta["APIKey"]; ok {
-				fc.FcMetadata.APIKey = val.(string)
+			if val, ok := fcmeta["api_key"]; ok {
+				fcMetadata.APIKey = val.(string)
 			}
+			fc.FcMetadata = fcMetadata
+		} else {
+			return fc, fmt.Errorf("fc_metadata is required field for fc_settings block")
 		}
 		return fc, nil
 	}
@@ -999,8 +1003,7 @@ func expandHypervisor(pr []interface{}) *foundation.Hypervisor {
 func expandVswitches(pr interface{}) []*foundation.Vswitches {
 	vswit := pr.([]interface{})
 	outbound := make([]*foundation.Vswitches, len(vswit))
-
-	for _, vs := range vswit {
+	for k, vs := range vswit {
 		vs := vs.(map[string]interface{})
 		vst := &foundation.Vswitches{}
 		if lacp, ok := vs["lacp"]; ok {
@@ -1010,7 +1013,7 @@ func expandVswitches(pr interface{}) []*foundation.Vswitches {
 			vst.BondMode = bondmode.(string)
 		}
 		if mtu, ok := vs["mtu"]; ok {
-			vst.Mtu = utils.Int64Ptr(mtu.(int64))
+			vst.Mtu = utils.Int64Ptr(int64(mtu.(int)))
 		}
 		if name, ok := vs["name"]; ok {
 			vst.Name = name.(string)
@@ -1019,18 +1022,21 @@ func expandVswitches(pr interface{}) []*foundation.Vswitches {
 		if otherconf, ok := vs["other_config"]; ok {
 			other := otherconf.([]interface{})
 
+			otherConfigArray := make([]string, len(other))
 			for o := range other {
-				vst.OtherConfig[o] = other[o].(string)
+				otherConfigArray[o] = other[o].(string)
 			}
+			vst.OtherConfig = otherConfigArray
 		}
 		if uplinks, ok := vs["uplinks"]; ok {
 			ups := uplinks.([]interface{})
-
+			uplinksArray := make([]string, len(ups))
 			for o := range ups {
-				vst.Uplinks[o] = ups[o].(string)
+				uplinksArray[o] = ups[o].(string)
 			}
+			vst.Uplinks = uplinksArray
 		}
-		outbound = append(outbound, vst)
+		outbound[k] = vst
 	}
 	return outbound
 }
@@ -1045,16 +1051,16 @@ func expandUcsmParams(pr interface{}) *foundation.UcsmParams {
 	for _, k := range ucsm {
 		set := k.(map[string]interface{})
 
-		if nativevlan, ok := set["NativeVlan"]; ok {
+		if nativevlan, ok := set["native_vlan"]; ok {
 			UcsmParam.NativeVlan = utils.BoolPtr(nativevlan.(bool))
 		}
-		if KeepUcsmSettings, ok := set["KeepUcsmSettings"]; ok {
+		if KeepUcsmSettings, ok := set["keep_ucsm_settings"]; ok {
 			UcsmParam.KeepUcsmSettings = utils.BoolPtr(KeepUcsmSettings.(bool))
 		}
-		if macPool, ok := set["MacPool"]; ok {
+		if macPool, ok := set["mac_pool"]; ok {
 			UcsmParam.MacPool = macPool.(string)
 		}
-		if VlanName, ok := set["VlanName"]; ok {
+		if VlanName, ok := set["vlan_name"]; ok {
 			UcsmParam.VlanName = VlanName.(string)
 		}
 	}
