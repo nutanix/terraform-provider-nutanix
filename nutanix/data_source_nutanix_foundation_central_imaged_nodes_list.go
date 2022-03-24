@@ -229,7 +229,7 @@ func dataSourceNutanixFCImagedNodesListRead(ctx context.Context, d *schema.Resou
 		req.Filters = filt
 	}
 
-	resp, err := conn.ListImagedNodes(&req)
+	resp, err := conn.ListImagedNodes(ctx, &req)
 	if err != nil {
 		return diag.FromErr(err)
 	}
