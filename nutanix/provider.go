@@ -10,6 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
+var requiredProviderFields map[string][]string = map[string][]string{
+	"prism central": {"username", "password", "endpoint"},
+	"karbon":        {"username", "password", "endpoint"},
+	"foundation":    {"foundation_endpoint"},
+}
+
 // Provider function returns the object that implements the terraform.ResourceProvider interface, specifically a schema.Provider
 func Provider() *schema.Provider {
 	// defines descriptions for ResourceProvider schema definitions
@@ -176,11 +182,6 @@ func Provider() *schema.Provider {
 func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 	log.Printf("[DEBUG] config wait_timeout %d", d.Get("wait_timeout").(int))
 
-	// required fields for individual provider service
-	requiredProviderFields := map[string][]string{
-		"Prism Central & Karbon": {"username", "password", "endpoint"},
-		"Foundation":             {"foundation_endpoint"},
-	}
 	disabledProviders := make([]string, 0)
 	// create warnings for disabled provider services
 	var diags diag.Diagnostics
@@ -218,6 +219,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		ProxyURL:           d.Get("proxy_url").(string),
 		FoundationEndpoint: d.Get("foundation_endpoint").(string),
 		FoundationPort:     d.Get("foundation_port").(string),
+		RequiredFields:     requiredProviderFields,
 	}
 	c, err := config.Client()
 	if err != nil {

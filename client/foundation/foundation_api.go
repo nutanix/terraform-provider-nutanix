@@ -2,6 +2,7 @@ package foundation
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
 )
@@ -9,6 +10,7 @@ import (
 const (
 	absolutePath = "foundation"
 	userAgent    = "foundation"
+	clientName   = "foundation"
 )
 
 //Foundation client with its services
@@ -39,9 +41,10 @@ func NewFoundationAPIClient(credentials client.Credentials) (*Client, error) {
 		}
 		baseClient = c
 	} else {
+		errorMsg := fmt.Sprintf("Foundation Client is missing. "+
+			"Please provide required detail - %s in provider configuration.", strings.Join(credentials.RequiredFields[clientName], ", "))
 		// create empty client if required fields are not provided
-		baseClient = &client.Client{Error: "Foundation Client is missing. " +
-			"Please provide required detail - foundation_endpoint in provider configuration."}
+		baseClient = &client.Client{ErrorMsg: errorMsg}
 	}
 
 	//Fill user agent details
