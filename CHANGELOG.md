@@ -1,3 +1,19 @@
+## 1.4.1 (March 24, 2022)
+
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.4.0...v1.4.1)
+
+
+**Fixed Bugs**
+
+- Network Security Rules: ip subnet is passed as an empty object in the API to create network security which causes API to get failed [\#399](https://github.com/nutanix/terraform-provider-nutanix/issues/399)
+
+
+**Merged pull requests:**
+
+- Network Security Rules: ip subnet is passed as an empty object in the API to create network security which causes API to get failed [\#348](https://github.com/nutanix/terraform-provider-nutanix/pull/397)([siddharth-kulshrestha](https://github.com/siddharth-kulshrestha))
+
+
+
 ## 1.4.0 (March 17, 2022)
 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.3.0...v1.4.0)
