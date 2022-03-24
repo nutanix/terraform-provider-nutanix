@@ -51,7 +51,7 @@ type Client struct {
 	AbsolutePath string
 
 	// error message, incase client is in error state
-	Error string
+	ErrorMsg string
 }
 
 // RequestCompletionCallback defines the type of the request callback function
@@ -69,6 +69,7 @@ type Credentials struct {
 	ProxyURL           string
 	FoundationEndpoint string
 	FoundationPort     string
+	RequiredFields     map[string][]string
 }
 
 // AdditionalFilter specification for client side filters
@@ -181,7 +182,7 @@ func NewBaseClient(credentials *Credentials, absolutePath string, isHTTP bool) (
 func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body interface{}) (*http.Request, error) {
 	// check if client exists or not
 	if c.client == nil {
-		return nil, fmt.Errorf(c.Error)
+		return nil, fmt.Errorf(c.ErrorMsg)
 	}
 
 	rel, errp := url.Parse(c.AbsolutePath + urlStr)
@@ -224,7 +225,7 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 func (c *Client) NewUnAuthRequest(ctx context.Context, method, urlStr string, body interface{}) (*http.Request, error) {
 	// check if client exists or not
 	if c.client == nil {
-		return nil, fmt.Errorf(c.Error)
+		return nil, fmt.Errorf(c.ErrorMsg)
 	}
 
 	//create main api url
@@ -258,7 +259,7 @@ func (c *Client) NewUnAuthRequest(ctx context.Context, method, urlStr string, bo
 func (c *Client) NewUnAuthFormEncodedRequest(ctx context.Context, method, urlStr string, body map[string]string) (*http.Request, error) {
 	// check if client exists or not
 	if c.client == nil {
-		return nil, fmt.Errorf(c.Error)
+		return nil, fmt.Errorf(c.ErrorMsg)
 	}
 	//create main api url
 	rel, err := url.Parse(c.AbsolutePath + urlStr)
@@ -291,7 +292,7 @@ func (c *Client) NewUnAuthFormEncodedRequest(ctx context.Context, method, urlStr
 func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, body []byte) (*http.Request, error) {
 	// check if client exists or not
 	if c.client == nil {
-		return nil, fmt.Errorf(c.Error)
+		return nil, fmt.Errorf(c.ErrorMsg)
 	}
 	rel, errp := url.Parse(c.AbsolutePath + urlStr)
 	if errp != nil {
@@ -321,7 +322,7 @@ func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, bo
 func (c *Client) NewUnAuthUploadRequest(ctx context.Context, method, urlStr string, body []byte) (*http.Request, error) {
 	// check if client exists or not
 	if c.client == nil {
-		return nil, fmt.Errorf(c.Error)
+		return nil, fmt.Errorf(c.ErrorMsg)
 	}
 	rel, errp := url.Parse(c.AbsolutePath + urlStr)
 	if errp != nil {
@@ -353,7 +354,7 @@ func (c *Client) OnRequestCompleted(rc RequestCompletionCallback) {
 func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error {
 	// check if client exists or not
 	if c.client == nil {
-		return fmt.Errorf(c.Error)
+		return fmt.Errorf(c.ErrorMsg)
 	}
 
 	req = req.WithContext(ctx)
@@ -409,7 +410,7 @@ func searchSlice(slice []string, key string) bool {
 func (c *Client) DoWithFilters(ctx context.Context, req *http.Request, v interface{}, filters []*AdditionalFilter, baseSearchPaths []string) error {
 	// check if client exists or not
 	if c.client == nil {
-		return fmt.Errorf(c.Error)
+		return fmt.Errorf(c.ErrorMsg)
 	}
 	req = req.WithContext(ctx)
 	resp, err := c.client.Do(req)

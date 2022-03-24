@@ -1,12 +1,16 @@
 package karbon
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
 )
 
 const (
 	absolutePath = "karbon"
 	userAgent    = "nutanix"
+	clientName   = "karbon"
 )
 
 // Client manages the V3 API
@@ -29,9 +33,9 @@ func NewKarbonAPIClient(credentials client.Credentials) (*Client, error) {
 		}
 		baseClient = c
 	} else {
-		baseClient = &client.Client{UserAgent: userAgent, Error: "Karbon Client is missing. " +
-			"Please provide required details - username, password & endpoint" +
-			" in provider configuration."}
+		errorMsg := fmt.Sprintf("karbon Client is missing. "+
+			"Please provide required detail - %s in provider configuration.", strings.Join(credentials.RequiredFields[clientName], ", "))
+		baseClient = &client.Client{UserAgent: userAgent, ErrorMsg: errorMsg}
 	}
 
 	f := &Client{

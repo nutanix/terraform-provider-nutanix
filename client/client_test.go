@@ -24,14 +24,14 @@ func setup() (*http.ServeMux, *Client, *httptest.Server) {
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
 
-	client, _ := NewClient(&Credentials{"", "username", "password", "", "", true, false, "", "", ""}, testUserAgent, testAbsolutePath, false)
+	client, _ := NewClient(&Credentials{"", "username", "password", "", "", true, false, "", "", "", nil}, testUserAgent, testAbsolutePath, false)
 	client.BaseURL, _ = url.Parse(server.URL)
 
 	return mux, client, server
 }
 
 func TestNewClient(t *testing.T) {
-	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", ""}, testUserAgent, testAbsolutePath, false)
+	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil}, testUserAgent, testAbsolutePath, false)
 
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
@@ -49,7 +49,7 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestNewRequest(t *testing.T) {
-	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", ""}, testUserAgent, testAbsolutePath, false)
+	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil}, testUserAgent, testAbsolutePath, false)
 
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
