@@ -24,6 +24,7 @@ type Config struct {
 	ProxyURL           string
 	FoundationEndpoint string
 	FoundationPort     string
+	RequiredFields     map[string][]string
 }
 
 // Client ...
@@ -39,6 +40,7 @@ func (c *Config) Client() (*Client, error) {
 		ProxyURL:           c.ProxyURL,
 		FoundationEndpoint: c.FoundationEndpoint,
 		FoundationPort:     c.FoundationPort,
+		RequiredFields:     c.RequiredFields,
 	}
 
 	v3Client, err := v3.NewV3Client(configCreds)

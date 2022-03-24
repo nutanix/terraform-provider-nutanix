@@ -1,6 +1,9 @@
 package v3
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
 )
 
@@ -8,6 +11,7 @@ const (
 	libraryVersion = "v3"
 	absolutePath   = "api/nutanix/" + libraryVersion
 	userAgent      = "nutanix/" + libraryVersion
+	clientName     = "prism central"
 )
 
 // Client manages the V3 API
@@ -28,9 +32,10 @@ func NewV3Client(credentials client.Credentials) (*Client, error) {
 		}
 		baseClient = c
 	} else {
-		baseClient = &client.Client{UserAgent: userAgent, Error: "nutanix pc Client is missing. " +
-			"Please provide required details - username, password & endpoint" +
-			" in provider configuration."}
+		errorMsg := fmt.Sprintf("Prism Central (PC) Client is missing. "+
+			"Please provide required detail - %s in provider configuration.", strings.Join(credentials.RequiredFields[clientName], ", "))
+
+		baseClient = &client.Client{UserAgent: userAgent, ErrorMsg: errorMsg}
 	}
 
 	f := &Client{
