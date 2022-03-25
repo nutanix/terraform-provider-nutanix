@@ -280,7 +280,7 @@ resource "nutanix_foundation_image_nodes" "this"{
 
     //Dynamically define cluster blocks
 	dynamic "clusters" {
-        for_each = var.clusters != null ? var.clusters : []
+        for_each = var.clusters
         content {   
             // set required fields
             cluster_init_successful = true

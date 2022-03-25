@@ -8,6 +8,10 @@ variable "hypervisor_netmask" {
     type = string
 }
 
+/*
+[Optional] : This will be used if there is no info provided in node spec of node_info variable
+This has more priority over info from api if any.
+*/
 variable "defaults" {
     description = "default spec for nodes"
     type = object({
@@ -50,14 +54,6 @@ variable "cvm_gateway" {
 variable "nos_package" {
     description = "nos package file name"
     type = string
-}
-
-// [Optional] : hypverisor type if given will override all nodes except nodes not having hypervisor defined in node_info_override
-// The preference order is hypervisor(var) > hypervisor(node_info_override) > hypervisor(node's existing)
-variable "hypervisor" {
-    description = "default hypervisor type"
-    type = string
-    default = ""
 }
 
 // [Optional] : xs_master_label
@@ -176,7 +172,7 @@ variable "xs_master_username" {
 variable "skip_hypervisor" {
     description = "skip_hypervisor for node imaging"
     type = bool
-    default = false
+    default = null
 }
 
 // [Optional] : ucsm_user
@@ -203,7 +199,7 @@ variable "fc_settings" {
 variable "svm_rescue_args" {
     description = "svm_rescue_args for node imaging"
     type = list(string)
-    default = []
+    default = null
 }
 
 // [Optional] : eos_metadata
@@ -262,7 +258,7 @@ variable "clusters" {
 }
 
 /*
-[Optional] : nodes_info would have details for particular node that needs to be override.
+[Required] : nodes_info would have details for particular node that needs to be override.
 All fields are for a particular nodes are optional as required fields come from /discover_nodes and /node_network_details
 Format (Just mention things that needs override over default or existing values. Skip fields which doesn't need to be overriden over default or existing value) :
 nodes_info = {
