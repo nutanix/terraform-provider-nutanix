@@ -21,6 +21,10 @@ func dataSourceNodeNetworkDetails() *schema.Resource {
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"timeout": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"nodes": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -104,6 +108,10 @@ func dataSourceNodeNetworkDetailsRead(ctx context.Context, d *schema.ResourceDat
 	ipv6Addresses := expandStringList(v.([]interface{}))
 	for _, val := range ipv6Addresses {
 		input.Nodes = append(input.Nodes, foundation.NodeIpv6Input{Ipv6Address: *val})
+	}
+	tout, ok := d.GetOk("timeout")
+	if ok {
+		input.Timeout = (tout.(string))
 	}
 
 	resp, err := conn.Networking.NodeNetworkDetails(ctx, input)
