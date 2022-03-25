@@ -952,11 +952,11 @@ func expandEosMetadata(d *schema.ResourceData) (*foundation.EosMetadata, error) 
 
 		if acname, ok := eosmeta["account_name"]; ok {
 			ac := acname.([]interface{})
-			acc_names := make([]string, len(ac))
+			accNames := make([]string, len(ac))
 			for a := range ac {
-				acc_names[a] = ac[a].(string)
+				accNames[a] = ac[a].(string)
 			}
-			eosMeta.AccountName = acc_names
+			eosMeta.AccountName = accNames
 		}
 
 		if email, ok := eosmeta["email"]; ok {
@@ -1165,10 +1165,10 @@ func expandNodes(pr interface{}) []*foundation.Node {
 	for i, p := range nodesList {
 		node := p.(map[string]interface{})
 		nodeList := &foundation.Node{}
-		if ipmiNetmask, ok := node["ipmi_netmask"]; ok {
+		if ipmiNetmask, ipmiNetOk := node["ipmi_netmask"]; ipmiNetOk {
 			nodeList.IPMINetmask = ipmiNetmask.(string)
 		}
-		if ipmiGateway, ok := node["ipmi_gateway"]; ok {
+		if ipmiGateway, ipmiGateOk := node["ipmi_gateway"]; ipmiGateOk {
 			nodeList.IPMIGateway = ipmiGateway.(string)
 		}
 		if ipv6, ipv6ok := node["ipv6_address"]; ipv6ok {
