@@ -1230,11 +1230,11 @@ func expandNodes(pr interface{}) []*foundation.Node {
 		if ipmimac, ipmimacok := node["ipmi_mac"]; ipmimacok {
 			nodeList.IpmiMac = (ipmimac.(string))
 		}
-		if clsid, clsidok := node["rdma_mac_addr"]; clsidok {
-			nodeList.RdmaMacAddr = (clsid.(string))
+		if rma, rmaok := node["rdma_mac_addr"]; rmaok {
+			nodeList.RdmaMacAddr = (rma.(string))
 		}
-		if ucsmns, ucsmnsok := node["current_network_interface"]; ucsmnsok {
-			nodeList.CurrentNetworkInterface = (ucsmns.(string))
+		if cni, cniok := node["current_network_interface"]; cniok {
+			nodeList.CurrentNetworkInterface = (cni.(string))
 		}
 		if hypervip, hypervipok := node["hypervisor_ip"]; hypervipok {
 			nodeList.HypervisorIP = (hypervip.(string))
