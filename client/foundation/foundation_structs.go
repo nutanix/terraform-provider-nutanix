@@ -284,7 +284,8 @@ type NodeNetworkDetail struct {
 
 //Node network details api input
 type NodeNetworkDetailsInput struct {
-	Nodes []NodeIpv6Input `json:"nodes"`
+	Nodes   []NodeIpv6Input `json:"nodes"`
+	Timeout string          `json:"timeout,omitempty"`
 }
 
 //Node ipv6 details for node network details api
