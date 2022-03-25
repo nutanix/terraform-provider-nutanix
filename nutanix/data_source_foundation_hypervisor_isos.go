@@ -118,7 +118,7 @@ func dataSourceFoundationHypervisorIsosRead(ctx context.Context, d *schema.Resou
 	if err := d.Set("linux", flattenHypervisorIsos(resp.Linux)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("xen", flattenHypervisorIsos(resp.Linux)); err != nil {
+	if err := d.Set("xen", flattenHypervisorIsos(resp.Xen)); err != nil {
 		return diag.FromErr(err)
 	}
 
