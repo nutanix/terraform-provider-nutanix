@@ -1,7 +1,7 @@
 locals {
 
     // list of required details to check if this details are present or not for node imaging
-    required_details = [ "hypervisor", "ipmi_user", "ipmi_password"]
+    required_details = [ "hypervisor", "ipmi_user", "ipmi_password", "ipmi_netmask", "ipmi_gateway"]
 
     // create error messages incase required details are not present in node_info/discover_nodes/node_network_details for a particular node
     node_info_validation_messages = flatten([
@@ -139,6 +139,8 @@ resource "nutanix_foundation_image_nodes" "this"{
                 content { 
 
                     // set required fields
+                    ipmi_netmask = nodes.value.ipmi_netmask != null ? nodes.value.ipmi_netmask : var.defaults.ipmi_netmask
+                    ipmi_gateway = nodes.value.ipmi_gateway != null ? nodes.value.ipmi_gateway : var.defaults.ipmi_gateway
                     hypervisor_hostname = nodes.value.hypervisor_hostname
                     hypervisor_ip = nodes.value.hypervisor_ip
                     hypervisor = nodes.value.hypervisor != null ? nodes.value.hypervisor : var.defaults.hypervisor

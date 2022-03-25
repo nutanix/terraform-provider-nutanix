@@ -14,6 +14,8 @@ variable "hypervisor_netmask" {
 variable "defaults" {
     description = "default spec for nodes"
     type = object({
+        ipmi_netmask = optional(string)
+        ipmi_gateway = optional(string)
         ipmi_user = optional(string)
         ipmi_password = optional(string)
         hypervisor = optional(string)
@@ -22,6 +24,8 @@ variable "defaults" {
         current_cvm_vlan_tag = optional(string)
     })
     default = {
+      ipmi_netmask : null
+      ipmi_gateway : null
       current_cvm_vlan_tag : null
       cvm_gb_ram : null
       cvm_num_vcpus : null
@@ -267,6 +271,8 @@ variable "blocks" {
         block_id = optional(string)
         nodes = list(object(
             {
+                ipmi_netmask = optional(string)
+                ipmi_gateway = optional(string)
                 ipv6_address = optional(string)
                 node_position = string
                 image_delay = optional(number)

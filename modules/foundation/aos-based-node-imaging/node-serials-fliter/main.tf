@@ -251,7 +251,7 @@ resource "nutanix_foundation_image_nodes" "this"{
                     current_network_interface = var.nodes_info[nodes.value.node_serial.val].current_network_interface != null ? var.nodes_info[nodes.value.node_serial.val].current_network_interface : nodes.value.node.current_network_interface
                     bond_lacp_rate = var.nodes_info[nodes.value.node_serial.val].bond_lacp_rate
                     ucsm_managed_mode = var.nodes_info[nodes.value.node_serial.val].ucsm_managed_mode
-                    current_cvm_vlan_tag = var.nodes_info[nodes.value.node_serial.val].current_cvm_vlan_tag != null ? var.nodes_info[nodes.value.node_serial.val].current_cvm_vlan_tag : (var.defaults.current_cvm_vlan_tag != null ? var.defaults.current_cvm_vlan_tag : nodes.value.node.current_cvm_vlan_tag)
+                    current_cvm_vlan_tag = var.nodes_info[nodes.value.node_serial.val].current_cvm_vlan_tag != null ? var.nodes_info[nodes.value.node_serial.val].current_cvm_vlan_tag : (var.defaults.current_cvm_vlan_tag != null ? var.defaults.current_cvm_vlan_tag : try(tonumber(nodes.value.node.current_cvm_vlan_tag),null))
                     exlude_boot_serial = var.nodes_info[nodes.value.node_serial.val].exlude_boot_serial
                     mitigate_low_boot_space = var.nodes_info[nodes.value.node_serial.val].mitigate_low_boot_space
 
