@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -69,11 +70,11 @@ func dataSourceFoundationDiscoverNodes() *schema.Resource {
 										Computed: true,
 									},
 									"cluster_id": {
-										Type:     schema.TypeInt,
+										Type:     schema.TypeString,
 										Computed: true,
 									},
 									"current_cvm_vlan_tag": {
-										Type:     schema.TypeInt,
+										Type:     schema.TypeString,
 										Computed: true,
 									},
 									"hypervisor_version": {
@@ -150,16 +151,16 @@ func flattenDiscoveredNodes(nodesList []foundation.DiscoveredNode) []map[string]
 
 		//ClusterID is of interface{} type so making sure we only accept integer values
 		if val, ok := v.ClusterID.(float64); ok {
-			node["cluster_id"] = int64(val)
+			node["cluster_id"] = strconv.FormatInt(int64(val), 10)
 		} else {
-			node["cluster_id"] = int64(-1)
+			node["cluster_id"] = ""
 		}
 
 		//CurrentCvmVlanTag is of interface{} type so making sure we only accept integer values
 		if val, ok := v.CurrentCvmVlanTag.(float64); ok {
-			node["current_cvm_vlan_tag"] = int64(val)
+			node["current_cvm_vlan_tag"] = strconv.FormatInt(int64(val), 10)
 		} else {
-			node["current_cvm_vlan_tag"] = int64(-1)
+			node["current_cvm_vlan_tag"] = ""
 		}
 
 		node["hypervisor_version"] = v.HypervisorVersion
