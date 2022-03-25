@@ -36,8 +36,8 @@ type ImageNodesInput struct {
 	HypervisorGateway     string        `json:"hypervisor_gateway"`
 	NosPackage            string        `json:"nos_package"` //will be null for cluster creation
 	UcsmUser              string        `json:"ucsm_user,omitempty"`
-	// IPMINetmask           string        `json:"ipmi_netmask,omitempty"`
-	// IPMIGateway           string        `json:"ipmi_gateway,omitempty"`
+	IPMINetmask           string        `json:"ipmi_netmask,omitempty"`
+	IPMIGateway           string        `json:"ipmi_gateway,omitempty"`
 }
 
 //Specific hypervisor definition for imaging
@@ -113,6 +113,8 @@ type Vswitches struct {
 
 //Single node definition
 type Node struct {
+	IPMINetmask             string       `json:"ipmi_netmask,omitempty"`
+	IPMIGateway             string       `json:"ipmi_gateway,omitempty"`
 	Ipv6Address             string       `json:"ipv6_address,omitempty"`
 	NodePosition            string       `json:"node_position"`
 	ImageDelay              *int64       `json:"image_delay,omitempty"`

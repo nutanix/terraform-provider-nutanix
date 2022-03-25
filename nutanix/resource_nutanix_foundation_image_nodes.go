@@ -35,6 +35,16 @@ func resourceFoundationImageNodes() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"ipmi_netmask": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"ipmi_gateway": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"ipmi_password": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -379,6 +389,16 @@ func resourceFoundationImageNodes() *schema.Resource {
 							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"ipmi_netmask": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+									"ipmi_gateway": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
 									"ipv6_address": {
 										Type:     schema.TypeString,
 										Optional: true,
@@ -709,7 +729,12 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 	if ok {
 		request.IpmiPassword = ipmiPass.(string)
 	}
-
+	if ipmiNetmask, ok := d.GetOk("ipmi_netmask"); ok {
+		request.IPMINetmask = ipmiNetmask.(string)
+	}
+	if ipmiGateway, ok := d.GetOk("ipmi_gateway"); ok {
+		request.IPMIGateway = ipmiGateway.(string)
+	}
 	cvmGateway, cvmgok := d.GetOk("cvm_gateway")
 	if cvmgok {
 		request.CvmGateway = (cvmGateway.(string))
@@ -1140,8 +1165,14 @@ func expandNodes(pr interface{}) []*foundation.Node {
 	for i, p := range nodesList {
 		node := p.(map[string]interface{})
 		nodeList := &foundation.Node{}
+		if ipmiNetmask, ok := node["ipmi_netmask"]; ok {
+			nodeList.IPMINetmask = ipmiNetmask.(string)
+		}
+		if ipmiGateway, ok := node["ipmi_gateway"]; ok {
+			nodeList.IPMIGateway = ipmiGateway.(string)
+		}
 		if ipv6, ipv6ok := node["ipv6_address"]; ipv6ok {
-			nodeList.BondLacpRate = (ipv6.(string))
+			nodeList.Ipv6Address = (ipv6.(string))
 		}
 		if np, npok := node["node_position"]; npok {
 			nodeList.NodePosition = (np.(string))
@@ -1200,10 +1231,10 @@ func expandNodes(pr interface{}) []*foundation.Node {
 			nodeList.IpmiMac = (ipmimac.(string))
 		}
 		if clsid, clsidok := node["rdma_mac_addr"]; clsidok {
-			nodeList.ClusterID = (clsid.(string))
+			nodeList.RdmaMacAddr = (clsid.(string))
 		}
 		if ucsmns, ucsmnsok := node["current_network_interface"]; ucsmnsok {
-			nodeList.UcsmNodeSerial = (ucsmns.(string))
+			nodeList.CurrentNetworkInterface = (ucsmns.(string))
 		}
 		if hypervip, hypervipok := node["hypervisor_ip"]; hypervipok {
 			nodeList.HypervisorIP = (hypervip.(string))
