@@ -729,10 +729,10 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 	if ok {
 		request.IpmiPassword = ipmiPass.(string)
 	}
-	if ipmiNetmask, ok := d.GetOk("ipmi_netmask"); ok {
+	if ipmiNetmask, ipmiNetOk := d.GetOk("ipmi_netmask"); ipmiNetOk {
 		request.IPMINetmask = ipmiNetmask.(string)
 	}
-	if ipmiGateway, ok := d.GetOk("ipmi_gateway"); ok {
+	if ipmiGateway, ipmiGateOk := d.GetOk("ipmi_gateway"); ipmiGateOk {
 		request.IPMIGateway = ipmiGateway.(string)
 	}
 	cvmGateway, cvmgok := d.GetOk("cvm_gateway")
