@@ -32,56 +32,56 @@ locals {
 
     // list of required details to check if this details are present or not for node imaging
     // source can be "network_details" (node network details info) or "node" (normal node info from discover nodes)
-    // global defines the params which can be declared common for all nodes in module input, ex. ipmi_user, etc. 
-    // default_value are used to validate to validate of info == default_value (missing from api response). Can be "", 0, false, etc.
+    // global defines the params which can be declared common for all nodes in module input params called default, ex. ipmi_user, etc. 
+    // not_allowed are used to validate to validate of info == not_allowed (missing from api response). Can be "", 0, false, etc.
     required_details = [
         {
             attribute: "hypervisor_hostname",
             source: "network_details",
             global: false
-            default_value : ""
+            not_allowed : ""
         },
         {
             attribute: "hypervisor_ip",
             source: "network_details",
             global: false
-            default_value : ""
+            not_allowed : ""
         },
         {
             attribute: "ipmi_ip",
             source: "network_details",
             global: false
-            default_value : ""
+            not_allowed : ""
         },
         {
             attribute: "cvm_ip",
             source: "network_details",
             global: false
-            default_value : ""
+            not_allowed : ""
         },
         {
             attribute: "node_position",
             source: "node",
             global: false
-            default_value : ""
+            not_allowed : ""
         },
         {
             attribute: "hypervisor",
             source: "node",
             global: true
-            default_value : "null"
+            not_allowed : "null"
         },
         {
             attribute: "ipmi_user",
             source: "",
             global: true
-            default_value : ""
+            not_allowed : ""
         },
         {
             attribute: "ipmi_password",
             source: "",
             global: true
-            default_value : ""
+            not_allowed : ""
         }
     ]
         
@@ -92,7 +92,7 @@ locals {
                 for node in block.nodes: [
                     for attr_details in local.required_details:
                         format("%s for node serial %s is missing. ", attr_details.attribute, node.node_serial.val)
-                        if try(var.nodes_info[node.node_serial.val][attr_details.attribute], null) == null && try(node[attr_details.source][attr_details.attribute] == attr_details.default_value, true)  && (attr_details.global? var.defaults[attr_details.attribute] == null : true)
+                        if try(var.nodes_info[node.node_serial.val][attr_details.attribute], null) == null && try(node[attr_details.source][attr_details.attribute] == attr_details.not_allowed, true)  && (attr_details.global? var.defaults[attr_details.attribute] == null : true)
                 ]
 
             ]
