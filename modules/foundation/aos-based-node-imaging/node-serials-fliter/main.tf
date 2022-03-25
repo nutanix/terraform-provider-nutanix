@@ -32,7 +32,7 @@ locals {
 
     // list of required details to check if this details are present or not for node imaging
     // source can be "network_details" (node network details info) or "node" (normal node info from discover nodes)
-    // global defines the params which can be declared common for all nodes in module input params called default, ex. ipmi_user, etc. 
+    // global defines the params which can be declared common for all nodes in module input params called defaults, ex. ipmi_user, etc. 
     // not_allowed are used to validate to validate of info == not_allowed (missing from api response). Can be "", 0, false, etc.
     required_details = [
         {
