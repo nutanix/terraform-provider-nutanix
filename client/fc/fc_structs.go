@@ -157,7 +157,7 @@ type ImagedClusterDetails struct {
 	FoundationInitNodeUUID *string                `json:"foundation_init_node_uuid,omitempty"`
 	WorkflowType           *string                `json:"workflow_type,omitempty"`
 	ClusterName            *string                `json:"cluster_name,omitempty"`
-	FoundationInitConfig   map[string]interface{} `json:"foundation_init_config,omitempty"`
+	FoundationInitConfig   *FoundationInitConfig  `json:"foundation_init_config,omitempty"`
 	ClusterStatus          *ClusterStatus         `json:"cluster_status,omitempty"`
 	ClusterSize            *int                   `json:"cluster_size,omitempty"`
 	Destroyed              *bool                  `json:"destroyed,omitempty"`
@@ -244,4 +244,69 @@ type CreateAPIKeysResponse struct {
 type ListAPIKeysResponse struct {
 	Metadata *ListMetadataOutput      `json:"metadata,omitempty" mapstructure:"metadata,omitempty"`
 	APIKeys  []*CreateAPIKeysResponse `json:"api_keys,omitempty"`
+}
+
+type FoundationInitConfig struct {
+	Blocks            []*Blocks         `json:"blocks,omitempty"`
+	Clusters          []*Clusters       `json:"clusters,omitempty"`
+	CvmGateway        string            `json:"cvm_gateway,omitempty"`
+	CvmNetmask        string            `json:"cvm_netmask,omitempty"`
+	DnsServers        string            `json:"dns_servers,omitempty"`
+	HypervProductKey  string            `json:"hyperv_product_key,omitempty"`
+	HypervSku         string            `json:"hyperv_sku,omitempty"`
+	HypervisorGateway string            `json:"hypervisor_gateway,omitempty"`
+	HypervisorNetmask string            `json:"hypervisor_netmask,omitempty"`
+	IpmiGateway       string            `json:"ipmi_gateway,omitempty"`
+	IpmiNetmask       string            `json:"ipmi_netmask,omitempty"`
+	HypervisorIsoUrl  *HypervisorIsoUrl `json:"hypervisor_iso_url"`
+	HypervisorIsos    []*HypervisorIso  `json:"hypervisor_isos,omitempty"`
+	NosPackageUrl     *NosPackageUrl    `json:"nos_package_url,omitempty"`
+}
+
+type HypervisorIsoUrl struct {
+	HypervisorType *string `json:"hypervisor_type"`
+	Sha256sum      *string `json:"sha256sum"`
+	Url            *string `json:"url"`
+}
+
+type HypervisorIso struct {
+	HypervisorType *string `json:"hypervisor_type,omitempty"`
+	Sha256sum      *string `json:"sha256sum,omitempty"`
+	Url            *string `json:"url,omitempty"`
+}
+
+type NosPackageUrl struct {
+	Sha256sum string `json:"sha256sum,omitempty"`
+	Url       string `json:"url,omitempty"`
+}
+
+type Blocks struct {
+	BlockId string   `json:"block_id,omitempty"`
+	Nodes   []*Nodes `json:"nodes,omitempty"`
+}
+
+type Nodes struct {
+	CvmIP              string `json:"cvm_ip,omitempty"`
+	CvmVlanId          int    `json:"cvm_vlan_id,omitempty"`
+	FcImagedNodeUUID   string `json:"fc_imaged_node_uuid,omitempty"`
+	Hypervisor         string `json:"hypervisor,omitempty"`
+	HypervisorHostname string `json:"hypervisor_hostname,omitempty"`
+	HypervisorIP       string `json:"hypervisor_ip,omitempty"`
+	ImageNow           bool   `json:"image_now,omitempty"`
+	IpmiIP             string `json:"ipmi_ip,omitempty"`
+	IPv6Address        string `json:"ipv6_address,omitempty"`
+	NodePosition       string `json:"node_position,omitempty"`
+	NodeSerial         string `json:"node_serial,omitempty"`
+}
+
+type Clusters struct {
+	ClusterExternalIP     string    `json:"cluster_external_ip,omitempty"`
+	ClusterInitNow        bool      `json:"cluster_init_now,omitempty"`
+	ClusterInitSuccessful bool      `json:"cluster_init_successful,omitempty"`
+	ClusterMembers        []*string `json:"cluster_members,omitempty"`
+	ClusterName           string    `json:"cluster_name,omitempty"`
+	CvmDnsServers         string    `json:"cvm_dns_servers,omitempty"`
+	CvmNtpServers         string    `json:"cvm_ntp_servers,omitempty"`
+	RedundancyFactor      int       `json:"redundancy_factor,omitempty"`
+	TimeZone              string    `json:"timezone,omitempty"`
 }
