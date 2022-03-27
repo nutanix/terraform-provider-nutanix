@@ -137,6 +137,11 @@ func dataSourceNutanixFCImagedClustersList() *schema.Resource {
 																Type:     schema.TypeString,
 																Computed: true,
 															},
+															"cvm_vlan_id": {
+																Type:     schema.TypeInt,
+																Computed: true,
+																Optional: true,
+															},
 															"fc_imaged_node_uuid": {
 																Type:     schema.TypeString,
 																Computed: true,
@@ -197,8 +202,9 @@ func dataSourceNutanixFCImagedClustersList() *schema.Resource {
 													Computed: true,
 												},
 												"cluster_members": {
-													Type:     schema.TypeString,
+													Type:     schema.TypeList,
 													Computed: true,
+													Optional: true,
 													Elem:     &schema.Schema{Type: schema.TypeString},
 												},
 												"cluster_name": {
@@ -248,24 +254,32 @@ func dataSourceNutanixFCImagedClustersList() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
+									// "hypervisor_iso_url": {
+									// 	Type:     schema.TypeList,
+									// 	Computed: true,
+									// 	Optional: true,
+									// 	Elem: &schema.Resource{
+									// 		Schema: map[string]*schema.Schema{
+									// 			"hypervisor_type": {
+									// 				Type:     schema.TypeString,
+									// 				Computed: true,
+									// 			},
+									// 			"sha256sum": {
+									// 				Type:     schema.TypeString,
+									// 				Computed: true,
+									// 			},
+									// 			"url": {
+									// 				Type:     schema.TypeString,
+									// 				Computed: true,
+									// 			},
+									// 		},
+									// 	},
+									// },
 									"hypervisor_iso_url": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeMap,
 										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"hypervisor_type": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"sha256sum": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"url": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
 										},
 									},
 									"hypervisor_isos": {
@@ -512,12 +526,12 @@ func flattenImagedClusters(imgCluster []*fc.ImagedClusterDetails) []map[string]i
 				"foundation_init_node_uuid": v.FoundationInitNodeUUID,
 				"workflow_type":             v.WorkflowType,
 				"cluster_name":              v.ClusterName,
-				// "foundation_init_config":    v.FoundationInitConfig,
-				"cluster_status":      flattenClusterStatus(v.ClusterStatus),
-				"cluster_size":        v.ClusterSize,
-				"destroyed":           v.Destroyed,
-				"created_timestamp":   v.CreatedTimestamp,
-				"imaged_cluster_uuid": v.ImagedClusterUUID,
+				"foundation_init_config":    expandFoundationInitConfig(v.FoundationInitConfig),
+				"cluster_status":            flattenClusterStatus(v.ClusterStatus),
+				"cluster_size":              v.ClusterSize,
+				"destroyed":                 v.Destroyed,
+				"created_timestamp":         v.CreatedTimestamp,
+				"imaged_cluster_uuid":       v.ImagedClusterUUID,
 			}
 		}
 	}
@@ -588,4 +602,143 @@ func flattenClusterProgressDetails(cp *fc.ClusterProgressDetails) []interface{} 
 		cpDetails = append(cpDetails, cpd)
 	}
 	return cpDetails
+}
+
+func expandFoundationInitConfig(fci *fc.FoundationInitConfig) []interface{} {
+	fciDetails := make([]interface{}, 0)
+	if fci != nil {
+		fcic := make(map[string]interface{})
+		fcic["blocks"] = expandBlock(fci.Blocks)
+		fcic["clusters"] = expandCluster(fci.Clusters)
+		fcic["cvm_gateway"] = fci.CvmGateway
+		fcic["cvm_netmask"] = fci.CvmNetmask
+		fcic["dns_servers"] = fci.DnsServers
+		fcic["hyperv_product_key"] = fci.HypervProductKey
+		fcic["hyperv_sku"] = fci.HypervSku
+		fcic["hypervisor_gateway"] = fci.HypervisorGateway
+		fcic["hypervisor_iso_url"] = expandHypervisorIsoUrl(fci.HypervisorIsoUrl)
+		fcic["hypervisor_isos"] = expandHypervisorIsos(fci.HypervisorIsos)
+		fcic["hypervisor_netmask"] = fci.HypervisorNetmask
+		fcic["ipmi_gateway"] = fci.IpmiGateway
+		fcic["ipmi_netmask"] = fci.IpmiNetmask
+		fcic["nos_package_url"] = expandNosPackage(fci.NosPackageUrl)
+
+		fciDetails = append(fciDetails, fcic)
+	}
+
+	return fciDetails
+}
+
+func expandBlock(fb []*fc.Blocks) []map[string]interface{} {
+	res := make([]map[string]interface{}, len(fb))
+	if len(fb) > 0 {
+		for k, v := range fb {
+			re := make(map[string]interface{})
+
+			re["block_id"] = v.BlockId
+			re["nodes"] = expandNodes(v.Nodes)
+
+			res[k] = re
+		}
+	}
+	return res
+}
+
+func expandNodes(fn []*fc.Nodes) []map[string]interface{} {
+	res := make([]map[string]interface{}, len(fn))
+
+	if len(fn) > 0 {
+		for k, v := range fn {
+			re := make(map[string]interface{})
+
+			re["cvm_ip"] = v.CvmIP
+			re["cvm_vlan_id"] = v.CvmVlanId
+			re["fc_imaged_node_uuid"] = v.FcImagedNodeUUID
+			re["hypervisor"] = v.Hypervisor
+			re["hypervisor_hostname"] = v.HypervisorHostname
+			re["hypervisor_ip"] = v.HypervisorIP
+			re["image_now"] = v.ImageNow
+			re["ipmi_ip"] = v.IpmiIP
+			re["ipv6_address"] = v.IPv6Address
+			re["node_position"] = v.NodePosition
+			re["node_serial"] = v.NodeSerial
+
+			res[k] = re
+		}
+
+	}
+	return res
+}
+
+func expandCluster(fc []*fc.Clusters) []map[string]interface{} {
+	res := make([]map[string]interface{}, len(fc))
+
+	if len(fc) > 0 {
+		for k, v := range fc {
+			re := make(map[string]interface{})
+
+			re["cluster_external_ip"] = v.ClusterExternalIP
+			re["cluster_init_now"] = v.ClusterInitNow
+			re["cluster_init_successful"] = v.ClusterInitSuccessful
+			re["cluster_members"] = utils.StringValueSlice(v.ClusterMembers)
+			re["cluster_name"] = v.ClusterName
+			re["cvm_dns_servers"] = v.CvmDnsServers
+			re["cvm_ntp_servers"] = v.CvmNtpServers
+			re["redundancy_factor"] = v.RedundancyFactor
+			re["timezone"] = v.TimeZone
+
+			res[k] = re
+		}
+	}
+	return res
+}
+
+func expandHypervisorIsoUrl(hiso *fc.HypervisorIsoUrl) map[string]interface{} {
+	// res := make([]interface{}, 0)
+	// if hiso != nil {
+	// 	hmap := make(map[string]interface{}, 0)
+	// 	if hiso.HypervisorType != nil {
+	// 		hmap["hypervisor_type"] = (hiso.HypervisorType)
+	// 	}
+	// 	if hiso.Sha256sum != nil {
+	// 		hmap["sha256sum"] = (hiso.Sha256sum)
+	// 	}
+	// 	if hiso.Url != nil {
+	// 		hmap["url"] = (hiso.Url)
+	// 	}
+	// 	res = append(res, hiso)
+	// }
+	// return res
+	return map[string]interface{}{
+		"hypervisor_type": hiso.HypervisorType,
+		"sha256sum":       hiso.Sha256sum,
+		"url":             hiso.Url,
+	}
+}
+
+func expandHypervisorIsos(hisos []*fc.HypervisorIso) (res []map[string]interface{}) {
+	if len(hisos) > 0 {
+		for _, k := range hisos {
+			re := make(map[string]interface{})
+
+			re["hypervisor_type"] = k.HypervisorType
+			re["sha256sum"] = k.Sha256sum
+			re["url"] = k.Url
+
+			res = append(res, re)
+
+		}
+	}
+	return res
+}
+
+func expandNosPackage(fnos *fc.NosPackageUrl) (res []interface{}) {
+	if fnos != nil {
+		re := make(map[string]interface{})
+		re["sha256sum"] = fnos.Sha256sum
+		re["url"] = fnos.Url
+
+		res = append(res, re)
+	}
+	return res
 }
