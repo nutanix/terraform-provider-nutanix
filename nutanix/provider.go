@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/internal"
 )
 
 var requiredProviderFields map[string][]string = map[string][]string{
@@ -151,6 +152,7 @@ func Provider() *schema.Provider {
 			"nutanix_foundation_discover_nodes":       dataSourceFoundationDiscoverNodes(),
 			"nutanix_foundation_nos_packages":         dataSourceFoundationNOSPackages(),
 			"nutanix_foundation_node_network_details": dataSourceNodeNetworkDetails(),
+			"nutanix_assert_helper":                   internal.DataSourceAssertHelper(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":         resourceNutanixVirtualMachine(),
