@@ -612,16 +612,16 @@ func expandFoundationInitConfig(fci *fc.FoundationInitConfig) []interface{} {
 		fcic["clusters"] = expandCluster(fci.Clusters)
 		fcic["cvm_gateway"] = fci.CvmGateway
 		fcic["cvm_netmask"] = fci.CvmNetmask
-		fcic["dns_servers"] = fci.DnsServers
+		fcic["dns_servers"] = fci.DNSServers
 		fcic["hyperv_product_key"] = fci.HypervProductKey
 		fcic["hyperv_sku"] = fci.HypervSku
 		fcic["hypervisor_gateway"] = fci.HypervisorGateway
-		fcic["hypervisor_iso_url"] = expandHypervisorIsoUrl(fci.HypervisorIsoUrl)
+		fcic["hypervisor_iso_url"] = expandHypervisorIsoURL(fci.HypervisorIsoURL)
 		fcic["hypervisor_isos"] = expandHypervisorIsos(fci.HypervisorIsos)
 		fcic["hypervisor_netmask"] = fci.HypervisorNetmask
 		fcic["ipmi_gateway"] = fci.IpmiGateway
 		fcic["ipmi_netmask"] = fci.IpmiNetmask
-		fcic["nos_package_url"] = expandNosPackage(fci.NosPackageUrl)
+		fcic["nos_package_url"] = expandNosPackage(fci.NosPackageURL)
 
 		fciDetails = append(fciDetails, fcic)
 	}
@@ -635,7 +635,7 @@ func expandBlock(fb []*fc.Blocks) []map[string]interface{} {
 		for k, v := range fb {
 			re := make(map[string]interface{})
 
-			re["block_id"] = v.BlockId
+			re["block_id"] = v.BlockID
 			re["nodes"] = expandNodes(v.Nodes)
 
 			res[k] = re
@@ -652,7 +652,7 @@ func expandNodes(fn []*fc.Nodes) []map[string]interface{} {
 			re := make(map[string]interface{})
 
 			re["cvm_ip"] = v.CvmIP
-			re["cvm_vlan_id"] = v.CvmVlanId
+			re["cvm_vlan_id"] = v.CvmVlanID
 			re["fc_imaged_node_uuid"] = v.FcImagedNodeUUID
 			re["hypervisor"] = v.Hypervisor
 			re["hypervisor_hostname"] = v.HypervisorHostname
@@ -665,7 +665,6 @@ func expandNodes(fn []*fc.Nodes) []map[string]interface{} {
 
 			res[k] = re
 		}
-
 	}
 	return res
 }
@@ -682,7 +681,7 @@ func expandCluster(fc []*fc.Clusters) []map[string]interface{} {
 			re["cluster_init_successful"] = v.ClusterInitSuccessful
 			re["cluster_members"] = utils.StringValueSlice(v.ClusterMembers)
 			re["cluster_name"] = v.ClusterName
-			re["cvm_dns_servers"] = v.CvmDnsServers
+			re["cvm_dns_servers"] = v.CvmDNSServers
 			re["cvm_ntp_servers"] = v.CvmNtpServers
 			re["redundancy_factor"] = v.RedundancyFactor
 			re["timezone"] = v.TimeZone
@@ -693,26 +692,11 @@ func expandCluster(fc []*fc.Clusters) []map[string]interface{} {
 	return res
 }
 
-func expandHypervisorIsoUrl(hiso *fc.HypervisorIsoUrl) map[string]interface{} {
-	// res := make([]interface{}, 0)
-	// if hiso != nil {
-	// 	hmap := make(map[string]interface{}, 0)
-	// 	if hiso.HypervisorType != nil {
-	// 		hmap["hypervisor_type"] = (hiso.HypervisorType)
-	// 	}
-	// 	if hiso.Sha256sum != nil {
-	// 		hmap["sha256sum"] = (hiso.Sha256sum)
-	// 	}
-	// 	if hiso.Url != nil {
-	// 		hmap["url"] = (hiso.Url)
-	// 	}
-	// 	res = append(res, hiso)
-	// }
-	// return res
+func expandHypervisorIsoURL(hiso *fc.HypervisorIso) map[string]interface{} {
 	return map[string]interface{}{
 		"hypervisor_type": hiso.HypervisorType,
 		"sha256sum":       hiso.Sha256sum,
-		"url":             hiso.Url,
+		"url":             hiso.URL,
 	}
 }
 
@@ -723,20 +707,19 @@ func expandHypervisorIsos(hisos []*fc.HypervisorIso) (res []map[string]interface
 
 			re["hypervisor_type"] = k.HypervisorType
 			re["sha256sum"] = k.Sha256sum
-			re["url"] = k.Url
+			re["url"] = k.URL
 
 			res = append(res, re)
-
 		}
 	}
 	return res
 }
 
-func expandNosPackage(fnos *fc.NosPackageUrl) (res []interface{}) {
+func expandNosPackage(fnos *fc.NosPackageURL) (res []interface{}) {
 	if fnos != nil {
 		re := make(map[string]interface{})
 		re["sha256sum"] = fnos.Sha256sum
-		re["url"] = fnos.Url
+		re["url"] = fnos.URL
 
 		res = append(res, re)
 	}
