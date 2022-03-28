@@ -4,7 +4,10 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/fc"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func dataSourceNutanixFCClusterDetails() *schema.Resource {
@@ -404,5 +407,139 @@ func dataSourceNutanixFCClusterDetails() *schema.Resource {
 }
 
 func dataSourceNutanixFCClusterDetailsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*Client).FC
+	req := fc.CreateClusterResponse{}
+
+	clusteruuid, ok := d.GetOk("imaged_cluster_uuid")
+	if !ok {
+		return diag.Errorf("please provide `imaged_cluster_uuid`")
+	}
+	req.ImagedClusterUUID = utils.StringPtr(clusteruuid.(string))
+
+	resp, err := conn.GetImagedCluster(ctx, *req.ImagedClusterUUID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("created_timestamp", resp.CreatedTimestamp); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("current_time", resp.CurrentTime); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("archived", resp.Archived); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("cluster_external_ip", resp.ClusterExternalIP); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("imaged_node_uuid_list", utils.StringValueSlice(resp.ImagedNodeUUIDList)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("common_network_settings", expandFCCommonNetworkSettings(resp.CommonNetworkSettings)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("storage_node_count", resp.StorageNodeCount); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("redundancy_factor", resp.RedundancyFactor); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("foundation_init_node_uuid", resp.FoundationInitNodeUUID); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("workflow_type", resp.WorkflowType); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("cluster_name", resp.ClusterName); err != nil {
+		return diag.FromErr(err)
+	}
+	// if err := d.Set("foundation_init_config", resp.FoundationInitConfig); err != nil {
+	// 	return diag.FromErr(err)
+	// }
+	if err := d.Set("cluster_status", flattenClusterStatus(resp.ClusterStatus)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("cluster_size", resp.ClusterSize); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("destroyed", resp.Destroyed); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("workflow_type", resp.WorkflowType); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("imaged_cluster_uuid", resp.ImagedClusterUUID); err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(resource.UniqueId())
+
 	return nil
+}
+
+func expandFCCommonNetworkSettings(cnet *fc.CommonNetworkSettings) []interface{} {
+	references := make([]interface{}, 0)
+	if cnet != nil {
+		reference := make(map[string]interface{})
+		reference["cvm_dns_servers"] = utils.StringSlice(cnet.CvmDNSServers)
+		reference["hypervisor_dns_servers"] = utils.StringSlice(cnet.HypervisorDNSServers)
+		reference["cvm_ntp_servers"] = utils.StringSlice(cnet.CvmNtpServers)
+		reference["hypervisor_ntp_servers"] = utils.StringSlice(cnet.HypervisorNtpServers)
+
+		references = append(references, reference)
+	}
+	return references
+}
+
+func flattenClusterStatus(cs *fc.ClusterStatus) []interface{} {
+	cstatus := make([]interface{}, 0)
+	if cs != nil {
+		csList := make(map[string]interface{})
+		csList["intent_picked_up"] = utils.BoolValue(cs.IntentPickedUp)
+		csList["cluster_creation_started"] = utils.BoolValue(cs.ClusterCreationStarted)
+		csList["imaging_stopped"] = utils.BoolValue(cs.ImagingStopped)
+		csList["aggregate_percent_complete"] = utils.Float64Value(cs.AggregatePercentComplete)
+		csList["current_foundation_ip"] = utils.StringValue(cs.CurrentFoundationIP)
+		csList["foundation_session_id"] = utils.StringValue(cs.FoundationSessionID)
+		csList["node_progress_details"] = flattenNodeProgressDetails(cs.NodeProgressDetails)
+		csList["cluster_progress_details"] = flattenClusterProgressDetails(cs.ClusterProgressDetails)
+
+		cstatus = append(cstatus, csList)
+	}
+	return cstatus
+}
+
+func flattenNodeProgressDetails(np []*fc.NodeProgressDetail) []map[string]interface{} {
+	npd := make([]map[string]interface{}, len(np))
+
+	if len(np) > 0 {
+		for k, v := range np {
+			n := make(map[string]interface{})
+
+			n["status"] = v.Status
+			n["imaged_node_uuid"] = v.ImagedNodeUUID
+			n["imaging_stopped"] = v.ImagingStopped
+			n["intent_picked_up"] = v.IntentPickedUp
+			n["percent_complete"] = v.PercentComplete
+			n["message_list"] = utils.StringValueSlice(v.MessageList)
+
+			npd[k] = n
+		}
+	}
+	return npd
+}
+
+func flattenClusterProgressDetails(cp *fc.ClusterProgressDetails) []interface{} {
+	cpDetails := make([]interface{}, 0)
+	if cp != nil {
+		cpd := make(map[string]interface{})
+		cpd["cluster_name"] = utils.StringValue(cp.ClusterName)
+		cpd["status"] = utils.StringValue(cp.Status)
+		cpd["percent_complete"] = utils.Float64Value(cp.PercentComplete)
+		cpd["message_list"] = utils.StringValueSlice(cp.MessageList)
+
+		cpDetails = append(cpDetails, cpd)
+	}
+	return cpDetails
 }
