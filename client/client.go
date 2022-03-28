@@ -92,6 +92,8 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string, 
 	if err != nil {
 		return nil, err
 	}
+	// add useragent
+	baseClient.UserAgent = userAgent
 
 	if credentials.ProxyURL != "" {
 		log.Printf("[DEBUG] Using proxy: %s\n", credentials.ProxyURL)
