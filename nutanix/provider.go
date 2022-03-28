@@ -11,7 +11,7 @@ import (
 )
 
 var requiredProviderFields map[string][]string = map[string][]string{
-	"prism central": {"username", "password", "endpoint"},
+	"prism_central": {"username", "password", "endpoint"},
 	"karbon":        {"username", "password", "endpoint"},
 	"foundation":    {"foundation_endpoint"},
 }
@@ -189,12 +189,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		// check if any field is not provided
 		for _, attr := range v {
 			// for string fields
-			if val, ok := d.Get(attr).(string); ok && val == "" {
-				disabledProviders = append(disabledProviders, k)
-				break
-			}
-			// for integer fields
-			if val, ok := d.Get(attr).(float64); ok && int64(val) == 0 {
+			if _, ok := d.GetOk(attr); !ok {
 				disabledProviders = append(disabledProviders, k)
 				break
 			}

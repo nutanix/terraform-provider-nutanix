@@ -11,7 +11,7 @@ const (
 	libraryVersion = "v3"
 	absolutePath   = "api/nutanix/" + libraryVersion
 	userAgent      = "nutanix/" + libraryVersion
-	clientName     = "prismCentral"
+	clientName     = "prism_central"
 )
 
 // Client manages the V3 API
