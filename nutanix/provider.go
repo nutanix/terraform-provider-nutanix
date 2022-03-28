@@ -11,7 +11,7 @@ import (
 )
 
 var requiredProviderFields map[string][]string = map[string][]string{
-	"prism central": {"username", "password", "endpoint"},
+	"prism_central": {"username", "password", "endpoint"},
 	"karbon":        {"username", "password", "endpoint"},
 	"foundation":    {"foundation_endpoint"},
 }
@@ -145,6 +145,8 @@ func Provider() *schema.Provider {
 			"nutanix_recovery_plans":                  dataSourceNutanixRecoveryPlans(),
 			"nutanix_address_groups":                  dataSourceNutanixAddressGroups(),
 			"nutanix_address_group":                   dataSourceNutanixAddressGroup(),
+			"nutanix_service_group":                   dataSourceNutanixServiceGroup(),
+			"nutanix_service_groups":                  dataSourceNutanixServiceGroups(),
 			"nutanix_foundation_hypervisor_isos":      dataSourceFoundationHypervisorIsos(),
 			"nutanix_foundation_discover_nodes":       dataSourceFoundationDiscoverNodes(),
 			"nutanix_foundation_nos_packages":         dataSourceFoundationNOSPackages(),
@@ -187,12 +189,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		// check if any field is not provided
 		for _, attr := range v {
 			// for string fields
-			if val, ok := d.Get(attr).(string); ok && val == "" {
-				disabledProviders = append(disabledProviders, k)
-				break
-			}
-			// for integer fields
-			if val, ok := d.Get(attr).(float64); ok && int64(val) == 0 {
+			if _, ok := d.GetOk(attr); !ok {
 				disabledProviders = append(disabledProviders, k)
 				break
 			}

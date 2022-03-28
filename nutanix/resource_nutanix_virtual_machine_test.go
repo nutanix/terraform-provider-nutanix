@@ -205,6 +205,13 @@ func TestAccNutanixVirtualMachine_WithSubnet(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "nic_list_status.0.ip_endpoint_list.0.ip"),
 				),
 			},
+			{
+				Config: testAccNutanixVMConfigWithSubnetUpdated(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "nic_list_status.0.num_queues", "2"),
+				),
+			},
 		},
 	})
 }
@@ -845,6 +852,79 @@ func testAccNutanixVMConfigWithSubnet(r int) string {
 
 			nic_list {
 				subnet_uuid = "${nutanix_subnet.sub.id}"
+			}
+		}
+
+		output "ip_address" {
+			value = "${lookup(nutanix_virtual_machine.vm3.nic_list_status.0.ip_endpoint_list[0], "ip")}"
+		}
+	`, r)
+}
+
+func testAccNutanixVMConfigWithSubnetUpdated(r int) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster1 = [
+				for cluster in data.nutanix_clusters.clusters.entities :
+				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+			][0]
+		}
+
+		resource "nutanix_subnet" "sub" {
+			cluster_uuid = "${local.cluster1}"
+
+			# General Information for subnet
+			name        = "terraform-vm-with-subnet-%[1]d"
+			description = "Description of my unit test VLAN"
+			vlan_id     = %[1]d
+			subnet_type = "VLAN"
+
+			# Provision a Managed L3 Network
+			# This bit is only needed if you intend to turn on AHV's IPAM
+			subnet_ip          = "10.250.140.0"
+			default_gateway_ip = "10.250.140.1"
+			prefix_length      = 24
+			dhcp_options = {
+				boot_file_name   = "bootfile"
+				domain_name      = "nutanix"
+				tftp_server_name = "10.250.140.200"
+			}
+			dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+			dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
+			ip_config_pool_list_ranges   = ["10.250.140.20 10.250.140.100"]
+		}
+
+		resource "nutanix_image" "cirros-034-disk" {
+			name        = "test-image-dou-%[1]d"
+			source_uri  = "http://download.cirros-cloud.net/0.4.0/cirros-0.4.0-x86_64-disk.img"
+			description = "heres a tiny linux image, not an iso, but a real disk!"
+		}
+
+		resource "nutanix_virtual_machine" "vm3" {
+			name = "test-dou-vm-%[1]d"
+
+			categories {
+				name  = "Environment"
+				value = "Staging"
+			}
+
+			cluster_uuid         = "${local.cluster1}"
+			num_vcpus_per_socket = 1
+			num_sockets          = 1
+			memory_size_mib      = 186
+
+			disk_list {
+				data_source_reference = {
+					kind = "image"
+					uuid = "${nutanix_image.cirros-034-disk.id}"
+				}
+			}
+
+			nic_list {
+				subnet_uuid = "${nutanix_subnet.sub.id}"
+				num_queues = 2
 			}
 		}
 

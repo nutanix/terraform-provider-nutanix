@@ -182,6 +182,10 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
+						"num_queues": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 						"subnet_uuid": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -277,6 +281,11 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
+						},
+						"num_queues": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
 						},
 						"subnet_uuid": {
 							Type:     schema.TypeString,
@@ -569,7 +578,7 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 									"device_type": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
+										Default:  "DISK",
 									},
 									"disk_address": {
 										Type:     schema.TypeMap,
@@ -1113,7 +1122,23 @@ func resourceNutanixVirtualMachineUpdate(ctx context.Context, d *schema.Resource
 		hotPlugChange = false
 	}
 	if d.HasChange("nic_list") {
-		res.NicList = expandNicList(d)
+		oldNics := res.NicList
+		newNics := expandNicList(d)
+
+	nicLoop:
+		for _, newNic := range newNics {
+			for _, oldNic := range oldNics {
+				if newNic == nil || oldNic == nil {
+					break nicLoop
+				}
+				if *newNic.UUID == *oldNic.UUID && newNic.NumQueues != oldNic.NumQueues {
+					hotPlugChange = false
+					break nicLoop
+				}
+			}
+		}
+
+		res.NicList = newNics
 	}
 
 	if d.HasChange("disk_list") {
@@ -1573,7 +1598,6 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 
 	return nil
 }
-
 func expandNicList(d *schema.ResourceData) []*v3.VMNic {
 	if v, ok := d.GetOk("nic_list"); ok {
 		n := v.([]interface{})
@@ -1604,6 +1628,9 @@ func expandNicList(d *schema.ResourceData) []*v3.VMNic {
 				if value, ok := val["network_function_chain_reference"]; ok && len(value.(map[string]interface{})) != 0 {
 					v := value.(map[string]interface{})
 					nic.NetworkFunctionChainReference = validateRef(v)
+				}
+				if value, ok := val["num_queues"]; ok && value.(int) != 0 {
+					nic.NumQueues = utils.Int64Ptr(int64(value.(int)))
 				}
 				if value, ok := val["subnet_uuid"]; ok {
 					v := value.(string)
@@ -1863,6 +1890,7 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 				SubnetReference:               v.SubnetReference,
 				NetworkFunctionNicType:        v.NetworkFunctionNicType,
 				NetworkFunctionChainReference: v.NetworkFunctionChainReference,
+				NumQueues:                     v.NumQueues,
 				IsConnected:                   v.IsConnected,
 			}
 		}
@@ -2166,6 +2194,10 @@ func resourceNutanixVirtualMachineInstanceResourceV0() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
+						"num_queues": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 						"subnet_uuid": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -2256,6 +2288,11 @@ func resourceNutanixVirtualMachineInstanceResourceV0() *schema.Resource {
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
+						},
+						"num_queues": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
 						},
 						"subnet_uuid": {
 							Type:     schema.TypeString,

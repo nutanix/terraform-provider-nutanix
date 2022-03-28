@@ -264,6 +264,90 @@ resource "nutanix_network_security_rule" "TEST-TIER" {
 }
 ```
 
+### Usage with service and address groups
+```hcl
+resource "nutanix_service_group" "service1" {
+  name = "srv-1"
+  description = "test"
+
+  service_list {
+      protocol = "TCP"
+      tcp_port_range_list {
+        start_port = 22
+        end_port = 22
+      }
+      tcp_port_range_list {
+        start_port = 2222
+        end_port = 2222
+      }
+  }
+}
+
+resource "nutanix_address_group" "address1" {
+  name = "addr-1"
+  description = "test"
+
+  ip_address_block_list {
+    ip = "10.0.0.0"
+    prefix_length = 24
+  }
+}
+
+resource "nutanix_category_value" "ad-group-user-1" {
+	name = "AD"
+	description = "group user category value"
+	value = "AD"
+}
+
+resource "nutanix_network_security_rule" "VDI" {
+	name           = "nsr-1"
+	ad_rule_action = "APPLY"
+	description    = "test"
+	#   app_rule_action = "APPLY"
+	ad_rule_inbound_allow_list {
+		  ip_subnet               = "10.0.0.0"
+		  ip_subnet_prefix_length = "8"
+		  peer_specification_type = "IP_SUBNET"
+		  protocol                = "ALL"
+
+    #  peer_specification_type = "ALL"
+    #  service_group_list {
+    #    kind = "service_group"
+    #    uuid = nutanix_service_group.service1.id
+    #  }
+    #  address_group_inclusion_list {
+    #    kind = "address_group"
+    #    uuid = nutanix_address_group.address1.id
+    #  }
+	}
+	ad_rule_target_group_default_internal_policy = "DENY_ALL"
+	ad_rule_target_group_filter_kind_list = [
+	  "vm"
+	]
+	ad_rule_target_group_filter_params {
+	  name = "AD"
+	  values = [
+		"AD"
+	  ]
+	}
+	ad_rule_target_group_filter_type             = "CATEGORIES_MATCH_ALL"
+	ad_rule_target_group_peer_specification_type = "FILTER"
+	ad_rule_outbound_allow_list {
+		peer_specification_type = "ALL"
+    service_group_list {
+        kind = "service_group"
+        uuid = nutanix_service_group.service1.id
+      }
+
+    address_group_inclusion_list {
+        kind = "address_group"
+        uuid = nutanix_address_group.address1.id
+      }
+	}
+	depends_on = [nutanix_category_value.ad-group-user-1]
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -298,7 +382,7 @@ The following arguments are supported:
 * `ad_rule_target_group_filter_params`: - (Optional) - A list of category key and list of values.
 * `ad_rule_inbound_allow_list`: - (Optional) The set of categories that matching VMs need to have.
 * `isolation_rule_action`: - (Optional) - These rules are used for environmental isolation.
-* `app_rule_inbound_allow_list`: - (Optional)
+* `app_rule_outbound_allow_list`: - (Optional)
 * `isolation_rule_first_entity_filter_kind_list`: - (Optional) - List of kinds associated with this filter.
 * `isolation_rule_first_entity_filter_type`: - (Optional) - The type of the filter being used.
 * `isolation_rule_first_entity_filter_params`: - (Optional) - A list of category key and list of values.

@@ -84,17 +84,20 @@ type Clusters struct {
 	HypervisorNtpServers  string   `json:"hypervisor_ntp_servers,omitempty"`
 }
 
+// EOS metadata struct used in node imaging when importing cluster config got from install.nutanix.com
 type EosMetadata struct {
 	ConfigID    string   `json:"config_id"`
 	AccountName []string `json:"account_name"`
 	Email       string   `json:"email"`
 }
 
+// Tests struct for enabling sys check and ncc cecks
 type Tests struct {
 	RunSyscheck *bool `json:"run_syscheck"`
 	RunNcc      *bool `json:"run_ncc"`
 }
 
+// UCSM prams for cisco nodes configuration
 type UcsmParams struct {
 	NativeVlan       *bool  `json:"native_vlan"`
 	KeepUcsmSettings *bool  `json:"keep_ucsm_settings"`
@@ -102,6 +105,7 @@ type UcsmParams struct {
 	VlanName         string `json:"vlan_name"`
 }
 
+// Vswitches struct for defining virtual switches
 type Vswitches struct {
 	Lacp        string   `json:"lacp"`
 	BondMode    string   `json:"bond_mode"`
