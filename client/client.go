@@ -87,9 +87,10 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string, 
 		return nil, fmt.Errorf("absolutePath argument must be passed")
 	}
 
-	transCfg := &http.Transport{
-		// nolint:gas
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: credentials.Insecure}, // ignore expired SSL certificates
+	// create base client with basic configs
+	baseClient, err := NewBaseClient(credentials, absolutePath, isHTTP)
+	if err != nil {
+		return nil, err
 	}
 
 	if credentials.ProxyURL != "" {
@@ -99,39 +100,28 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string, 
 			return nil, fmt.Errorf("error parsing proxy url: %s", err)
 		}
 
+		// override transport config incase of using proxy
+		transCfg := &http.Transport{
+			// nolint:gas
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: credentials.Insecure}, // ignore expired SSL certificates
+		}
 		transCfg.Proxy = http.ProxyURL(proxy)
+		baseClient.client.Transport = logging.NewTransport("Nutanix", transCfg)
 	}
-
-	httpClient := http.DefaultClient
-
-	httpClient.Transport = logging.NewTransport("Nutanix", transCfg)
-
-	protocol := httpsPrefix
-	if isHTTP {
-		protocol = httpPrefix
-	}
-
-	baseURL, err := url.Parse(fmt.Sprintf(defaultBaseURL, protocol, credentials.URL))
-
-	if err != nil {
-		return nil, err
-	}
-
-	c := &Client{credentials, httpClient, baseURL, userAgent, nil, nil, absolutePath, ""}
 
 	if credentials.SessionAuth {
 		log.Printf("[DEBUG] Using session_auth\n")
 
 		ctx := context.TODO()
-		req, err := c.NewRequest(ctx, http.MethodGet, "/users/me", nil)
+		req, err := baseClient.NewRequest(ctx, http.MethodGet, "/users/me", nil)
 		if err != nil {
-			return c, err
+			return baseClient, err
 		}
 
-		resp, err := c.client.Do(req)
+		resp, err := baseClient.client.Do(req)
 
 		if err != nil {
-			return c, err
+			return baseClient, err
 		}
 		defer func() {
 			if rerr := resp.Body.Close(); err == nil {
@@ -141,10 +131,10 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string, 
 
 		err = CheckResponse(resp)
 
-		c.Cookies = resp.Cookies()
+		baseClient.Cookies = resp.Cookies()
 	}
 
-	return c, nil
+	return baseClient, nil
 }
 
 // NewBaseClient returns a basic http/https client based on isHttp flag
