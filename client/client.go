@@ -67,9 +67,9 @@ type Credentials struct {
 	Insecure           bool
 	SessionAuth        bool
 	ProxyURL           string
-	FoundationEndpoint string
-	FoundationPort     string
-	RequiredFields     map[string][]string
+	FoundationEndpoint string              // Required field for connecting to foundation VM APIs
+	FoundationPort     string              // Port for connecting to foundatin VM APIs
+	RequiredFields     map[string][]string // RequiredFields is client to its required fields mapping for validations and usage in every client
 }
 
 // AdditionalFilter specification for client side filters
@@ -78,7 +78,7 @@ type AdditionalFilter struct {
 	Values []string
 }
 
-// NewClient returns a new Nutanix API client.
+// NewClient returns a wrapper around http/https (as per isHTTP flag) client with additions of proxy & session_auth if given
 func NewClient(credentials *Credentials, userAgent string, absolutePath string, isHTTP bool) (*Client, error) {
 	if userAgent == "" {
 		return nil, fmt.Errorf("userAgent argument must be passed")

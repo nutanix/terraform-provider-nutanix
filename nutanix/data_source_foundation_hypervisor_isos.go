@@ -13,86 +13,11 @@ func dataSourceFoundationHypervisorIsos() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceFoundationHypervisorIsosRead,
 		Schema: map[string]*schema.Schema{
-			"hyperv": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"filename": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"supported": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"kvm": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"filename": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"supported": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"linux": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"filename": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"supported": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"esx": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"filename": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"supported": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"xen": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"filename": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"supported": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
-			},
+			"hyperv": hypervisorSchema(),
+			"kvm":    hypervisorSchema(),
+			"linux":  hypervisorSchema(),
+			"esx":    hypervisorSchema(),
+			"xen":    hypervisorSchema(),
 		},
 	}
 }
@@ -135,4 +60,23 @@ func flattenHypervisorIsos(ref []*foundation.HypervisorISOReference) []map[strin
 		}
 	}
 	return hyper
+}
+
+func hypervisorSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"filename": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"supported": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+			},
+		},
+	}
 }

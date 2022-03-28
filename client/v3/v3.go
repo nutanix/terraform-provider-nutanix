@@ -11,7 +11,7 @@ const (
 	libraryVersion = "v3"
 	absolutePath   = "api/nutanix/" + libraryVersion
 	userAgent      = "nutanix/" + libraryVersion
-	clientName     = "prism central"
+	clientName     = "prismCentral"
 )
 
 // Client manages the V3 API
@@ -33,7 +33,7 @@ func NewV3Client(credentials client.Credentials) (*Client, error) {
 		baseClient = c
 	} else {
 		errorMsg := fmt.Sprintf("Prism Central (PC) Client is missing. "+
-			"Please provide required detail - %s in provider configuration.", strings.Join(credentials.RequiredFields[clientName], ", "))
+			"Please provide required details - %s in provider configuration.", strings.Join(credentials.RequiredFields[clientName], ", "))
 
 		baseClient = &client.Client{UserAgent: userAgent, ErrorMsg: errorMsg}
 	}

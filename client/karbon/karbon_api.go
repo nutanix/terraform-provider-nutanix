@@ -34,7 +34,7 @@ func NewKarbonAPIClient(credentials client.Credentials) (*Client, error) {
 		baseClient = c
 	} else {
 		errorMsg := fmt.Sprintf("karbon Client is missing. "+
-			"Please provide required detail - %s in provider configuration.", strings.Join(credentials.RequiredFields[clientName], ", "))
+			"Please provide required details - %s in provider configuration.", strings.Join(credentials.RequiredFields[clientName], ", "))
 		baseClient = &client.Client{UserAgent: userAgent, ErrorMsg: errorMsg}
 	}
 

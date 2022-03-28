@@ -221,7 +221,7 @@ func foundationImageRefresh(ctx context.Context, client *foundation.Client, sess
 		v, err := client.NodeImaging.ImageNodesProgress(ctx, sessionUUID)
 
 		if err != nil {
-			if strings.Contains(fmt.Sprint(err), "Failed") {
+			if strings.Contains(err.Error(), "Failed") {
 				return v, ERROR, nil
 			}
 			return nil, "FAILED", err
