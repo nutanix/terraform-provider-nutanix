@@ -109,6 +109,78 @@ func TestAccNutanixNetworkSecurityRule_adrule(t *testing.T) {
 	})
 }
 
+func TestAccNutanixNetworkSecurityRuleWithServiceAndAddressGroupsInInbound(t *testing.T) {
+	// Skipped because this test didn't pass in GCP environment
+	if isGCPEnvironment() {
+		t.Skip()
+	}
+
+	rInt := acctest.RandInt()
+	sgName := fmt.Sprintf("tf-service-group-%d", rInt)
+	agName := fmt.Sprintf("tf-addr-group-%d", rInt)
+	securityPolicyName := fmt.Sprintf("tf-sec-policy-%d", rInt)
+
+	resourceName := "nutanix_network_security_rule.VDI"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixNetworkSecurityRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testNetworkSecurityRuleConfigWithServiceAndAddressGroupsInInbound(sgName, agName, securityPolicyName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixNetworkSecurityRuleExists(resourceName),
+				),
+			},
+			// {
+			// 	Config: testNetworkSecurityRuleConfigWithServiceAndAddressGroupsInOutbound(sgName, agName, securityPolicyName),
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		testAccCheckNutanixNetworkSecurityRuleExists(resourceName),
+			// 	),
+			// },
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNutanixNetworkSecurityRuleWithServiceAndAddressGroupsInOutbound(t *testing.T) {
+	// Skipped because this test didn't pass in GCP environment
+	if isGCPEnvironment() {
+		t.Skip()
+	}
+
+	rInt := acctest.RandInt()
+	sgName := fmt.Sprintf("tf-service-group-%d", rInt)
+	agName := fmt.Sprintf("tf-addr-group-%d", rInt)
+	securityPolicyName := fmt.Sprintf("tf-sec-policy-%d", rInt)
+
+	resourceName := "nutanix_network_security_rule.VDI"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixNetworkSecurityRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testNetworkSecurityRuleConfigWithServiceAndAddressGroupsInOutbound(sgName, agName, securityPolicyName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixNetworkSecurityRuleExists(resourceName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixNetworkSecurityRuleExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -454,4 +526,147 @@ func testAccNutanixNetworkSecurityRuleConfigAdRuleUpdate(r int) string {
 		depends_on = [nutanix_category_value.ad-group-user-1]
 	  }
 `, testVars.AdRuleTarget.Values, r, testVars.AdRuleTarget.Values)
+}
+
+func testNetworkSecurityRuleConfigWithServiceAndAddressGroupsInInbound(sgName, agName, securityPolicyName string) string {
+	return fmt.Sprintf(`
+	resource "nutanix_category_value" "ad-group-user-1" {
+		name = "ADGroup"
+		description = "group user category value"
+		value = "%s"
+	}
+	resource "nutanix_network_security_rule" "VDI" {
+		name           = "%s-in"
+		ad_rule_action = "APPLY"
+		description    = "test"
+		#   app_rule_action = "APPLY"
+		ad_rule_inbound_allow_list {
+			peer_specification_type = "ALL"  
+			service_group_list {
+			  kind = "service_group"
+			  uuid = nutanix_service_group.service1.id
+			}
+			address_group_inclusion_list {
+			  kind = "address_group"
+			  uuid = nutanix_address_group.address1.id
+			}
+		}
+		ad_rule_target_group_default_internal_policy = "DENY_ALL"
+		ad_rule_target_group_filter_kind_list = [
+		  "vm"
+		]
+		ad_rule_target_group_filter_params {
+		  name = "ADGroup"
+		  values = [
+			"%s"
+		  ]
+		}
+		ad_rule_target_group_filter_type             = "CATEGORIES_MATCH_ALL"
+		ad_rule_target_group_peer_specification_type = "FILTER"
+		ad_rule_outbound_allow_list {
+		  ip_subnet               = "10.0.0.0"
+		  ip_subnet_prefix_length = "8"
+		  peer_specification_type = "IP_SUBNET"
+		  protocol                = "ALL"
+		}
+		depends_on = [nutanix_category_value.ad-group-user-1]
+	  }
+	  resource "nutanix_service_group" "service1" {
+		name = "%s-in"
+		description = "test"
+	  
+		service_list {
+			protocol = "TCP"
+			tcp_port_range_list {
+			  start_port = 22
+			  end_port = 22
+			}
+			tcp_port_range_list {
+			  start_port = 2222
+			  end_port = 2222
+			}
+		}
+	  }
+	  resource "nutanix_address_group" "address1" {
+		name = "%s-in"
+		description = "test"
+	  
+		ip_address_block_list {
+		  ip = "10.0.0.0"
+		  prefix_length = 24
+		}
+	  }
+`, testVars.AdRuleTarget.Values, securityPolicyName, testVars.AdRuleTarget.Values, sgName, agName)
+}
+
+func testNetworkSecurityRuleConfigWithServiceAndAddressGroupsInOutbound(sgName, agName, securityPolicyName string) string {
+	return fmt.Sprintf(`
+	resource "nutanix_category_value" "ad-group-user-1" {
+		name = "ADGroup"
+		description = "group user category value"
+		value = "%s"
+	}
+	resource "nutanix_network_security_rule" "VDI" {
+		name           = "%s-out"
+		ad_rule_action = "APPLY"
+		description    = "test"
+		#   app_rule_action = "APPLY"
+		ad_rule_inbound_allow_list {
+			ip_subnet               = "10.0.0.0"
+			ip_subnet_prefix_length = "8"
+			peer_specification_type = "IP_SUBNET"
+			protocol                = "ALL"
+		}
+		ad_rule_target_group_default_internal_policy = "DENY_ALL"
+		ad_rule_target_group_filter_kind_list = [
+		  "vm"
+		]
+		ad_rule_target_group_filter_params {
+		  name = "ADGroup"
+		  values = [
+			"%s"
+		  ]
+		}
+		ad_rule_target_group_filter_type             = "CATEGORIES_MATCH_ALL"
+		ad_rule_target_group_peer_specification_type = "FILTER"
+		ad_rule_outbound_allow_list {
+			peer_specification_type = "ALL"
+			service_group_list {
+				kind = "service_group"
+				uuid = nutanix_service_group.service1.id
+			}
+		
+			address_group_inclusion_list {
+				kind = "address_group"
+				uuid = nutanix_address_group.address1.id
+			}
+		}
+		depends_on = [nutanix_category_value.ad-group-user-1]
+	  }
+	  resource "nutanix_service_group" "service1" {
+		name = "%s-out"
+		description = "test"
+	  
+		service_list {
+			protocol = "TCP"
+			tcp_port_range_list {
+			  start_port = 22
+			  end_port = 22
+			}
+			tcp_port_range_list {
+			  start_port = 2222
+			  end_port = 2222
+			}
+		}
+	  }
+	  resource "nutanix_address_group" "address1" {
+		name = "%s-out"
+		description = "test"
+	  
+		ip_address_block_list {
+		  ip = "10.0.0.0"
+		  prefix_length = 24
+		}
+	  }
+`, testVars.AdRuleTarget.Values, securityPolicyName, testVars.AdRuleTarget.Values, sgName, agName)
 }

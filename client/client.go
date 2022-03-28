@@ -67,9 +67,9 @@ type Credentials struct {
 	Insecure           bool
 	SessionAuth        bool
 	ProxyURL           string
-	FoundationEndpoint string
-	FoundationPort     string
-	RequiredFields     map[string][]string
+	FoundationEndpoint string              // Required field for connecting to foundation VM APIs
+	FoundationPort     string              // Port for connecting to foundation VM APIs
+	RequiredFields     map[string][]string // RequiredFields is client to its required fields mapping for validations and usage in every client
 }
 
 // AdditionalFilter specification for client side filters
@@ -78,7 +78,7 @@ type AdditionalFilter struct {
 	Values []string
 }
 
-// NewClient returns a new Nutanix API client.
+// NewClient returns a wrapper around http/https (as per isHTTP flag) client with additions of proxy & session_auth if given
 func NewClient(credentials *Credentials, userAgent string, absolutePath string, isHTTP bool) (*Client, error) {
 	if userAgent == "" {
 		return nil, fmt.Errorf("userAgent argument must be passed")
@@ -87,10 +87,13 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string, 
 		return nil, fmt.Errorf("absolutePath argument must be passed")
 	}
 
-	transCfg := &http.Transport{
-		// nolint:gas
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: credentials.Insecure}, // ignore expired SSL certificates
+	// create base client with basic configs
+	baseClient, err := NewBaseClient(credentials, absolutePath, isHTTP)
+	if err != nil {
+		return nil, err
 	}
+	// add useragent
+	baseClient.UserAgent = userAgent
 
 	if credentials.ProxyURL != "" {
 		log.Printf("[DEBUG] Using proxy: %s\n", credentials.ProxyURL)
@@ -99,39 +102,28 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string, 
 			return nil, fmt.Errorf("error parsing proxy url: %s", err)
 		}
 
+		// override transport config incase of using proxy
+		transCfg := &http.Transport{
+			// nolint:gas
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: credentials.Insecure}, // ignore expired SSL certificates
+		}
 		transCfg.Proxy = http.ProxyURL(proxy)
+		baseClient.client.Transport = logging.NewTransport("Nutanix", transCfg)
 	}
-
-	httpClient := http.DefaultClient
-
-	httpClient.Transport = logging.NewTransport("Nutanix", transCfg)
-
-	protocol := httpsPrefix
-	if isHTTP {
-		protocol = httpPrefix
-	}
-
-	baseURL, err := url.Parse(fmt.Sprintf(defaultBaseURL, protocol, credentials.URL))
-
-	if err != nil {
-		return nil, err
-	}
-
-	c := &Client{credentials, httpClient, baseURL, userAgent, nil, nil, absolutePath, ""}
 
 	if credentials.SessionAuth {
 		log.Printf("[DEBUG] Using session_auth\n")
 
 		ctx := context.TODO()
-		req, err := c.NewRequest(ctx, http.MethodGet, "/users/me", nil)
+		req, err := baseClient.NewRequest(ctx, http.MethodGet, "/users/me", nil)
 		if err != nil {
-			return c, err
+			return baseClient, err
 		}
 
-		resp, err := c.client.Do(req)
+		resp, err := baseClient.client.Do(req)
 
 		if err != nil {
-			return c, err
+			return baseClient, err
 		}
 		defer func() {
 			if rerr := resp.Body.Close(); err == nil {
@@ -141,8 +133,39 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string, 
 
 		err = CheckResponse(resp)
 
-		c.Cookies = resp.Cookies()
+		baseClient.Cookies = resp.Cookies()
 	}
+
+	return baseClient, nil
+}
+
+// NewBaseClient returns a basic http/https client based on isHttp flag
+func NewBaseClient(credentials *Credentials, absolutePath string, isHTTP bool) (*Client, error) {
+	if absolutePath == "" {
+		return nil, fmt.Errorf("absolutePath argument must be passed")
+	}
+
+	httpClient := http.DefaultClient
+
+	transCfg := &http.Transport{
+		//to skip/unskip SSL certificate validation
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: credentials.Insecure,
+		},
+	}
+	httpClient.Transport = logging.NewTransport("Nutanix", transCfg)
+
+	protocol := httpsPrefix
+	if isHTTP {
+		protocol = httpPrefix
+	}
+
+	baseURL, err := url.Parse(fmt.Sprintf(defaultBaseURL, protocol, credentials.URL))
+	if err != nil {
+		return nil, err
+	}
+
+	c := &Client{credentials, httpClient, baseURL, "", nil, nil, absolutePath, ""}
 
 	return c, nil
 }

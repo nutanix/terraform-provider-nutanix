@@ -24,15 +24,15 @@ func getMetadataAttributes(d *schema.ResourceData, metadata *v3.Metadata, kind s
 
 	if p, ok := d.GetOk("project_reference"); ok {
 		pr := p.(map[string]interface{})
-		r := &v3.Reference{
-			// Kind: utils.StringPtr(pr["kind"].(string)),
-			UUID: utils.StringPtr(pr["uuid"].(string)),
-		}
-		if vKind, okKind := pr["kind"]; okKind {
-			r.Kind = utils.StringPtr(vKind.(string))
-		}
+		r := &v3.Reference{}
 		if v1, ok1 := pr["name"]; ok1 {
 			r.Name = utils.StringPtr(v1.(string))
+		}
+		if v2, ok2 := pr["kind"]; ok2 {
+			r.Kind = utils.StringPtr(v2.(string))
+		}
+		if v3, ok3 := pr["uuid"]; ok3 {
+			r.UUID = utils.StringPtr(v3.(string))
 		}
 		metadata.ProjectReference = r
 	}
@@ -221,7 +221,7 @@ func foundationImageRefresh(ctx context.Context, client *foundation.Client, sess
 		v, err := client.NodeImaging.ImageNodesProgress(ctx, sessionUUID)
 
 		if err != nil {
-			if strings.Contains(fmt.Sprint(err), "Failed") {
+			if strings.Contains(err.Error(), "Failed") {
 				return v, ERROR, nil
 			}
 			return nil, "FAILED", err

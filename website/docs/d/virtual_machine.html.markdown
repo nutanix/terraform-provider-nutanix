@@ -183,6 +183,7 @@ The nic_list attribute supports the following:
 * `network_function_chain_reference`: - The reference to a network_function_chain.
 * `subnet_uuid`: - The reference to a subnet.
 * `subnet_name`: - The name of the subnet reference to.
+* `num_queues` : - The number of tx/rx queue pairs for this NIC.
 
 ### Serial Port List
 

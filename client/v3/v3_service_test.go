@@ -1980,7 +1980,7 @@ func TestOperations_GetCategoryQuery(t *testing.T) {
 
 	defer server.Close()
 
-	mux.HandleFunc("/api/nutanix/v3/categories/query", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/nutanix/v3/category/query", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPost)
 		fmt.Fprint(w, `{"results":[{ "kind": "category_result" }]}`)
 	})
