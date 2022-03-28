@@ -254,27 +254,6 @@ func dataSourceNutanixFCImagedClustersList() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									// "hypervisor_iso_url": {
-									// 	Type:     schema.TypeList,
-									// 	Computed: true,
-									// 	Optional: true,
-									// 	Elem: &schema.Resource{
-									// 		Schema: map[string]*schema.Schema{
-									// 			"hypervisor_type": {
-									// 				Type:     schema.TypeString,
-									// 				Computed: true,
-									// 			},
-									// 			"sha256sum": {
-									// 				Type:     schema.TypeString,
-									// 				Computed: true,
-									// 			},
-									// 			"url": {
-									// 				Type:     schema.TypeString,
-									// 				Computed: true,
-									// 			},
-									// 		},
-									// 	},
-									// },
 									"hypervisor_iso_url": {
 										Type:     schema.TypeMap,
 										Computed: true,
