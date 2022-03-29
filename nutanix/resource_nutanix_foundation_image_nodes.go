@@ -1314,7 +1314,7 @@ func collectIndividualErrorDiagnostics(progress *foundation.ImageNodesProgressRe
 
 	// append errors for failed node imaging
 	for _, v := range progress.Nodes {
-		if utils.Float64Value(v.TimeElapsed) < float64(AggregatePercentComplete) {
+		if utils.Float64Value(v.PercentComplete) < float64(AggregatePercentComplete) {
 			message := ""
 			for _, v1 := range v.Messages {
 				message += v1 + ". "
@@ -1329,7 +1329,7 @@ func collectIndividualErrorDiagnostics(progress *foundation.ImageNodesProgressRe
 
 	// append errors for failed cluster creation
 	for _, v := range progress.Clusters {
-		if utils.Float64Value(v.TimeElapsed) < float64(AggregatePercentComplete) {
+		if utils.Float64Value(v.PercentComplete) < float64(AggregatePercentComplete) {
 			message := ""
 			for _, v1 := range v.Messages {
 				message += v1 + ". "
