@@ -75,7 +75,7 @@ type Clusters struct {
 	RedundancyFactor      *int64   `json:"redundancy_factor"`
 	BackplaneVlan         string   `json:"backplane_vlan,omitempty"`
 	ClusterName           string   `json:"cluster_name"`
-	ClusterExternalIP     string   `json:"cluster_external_ip,omitempty"`
+	ClusterExternalIP     *string  `json:"cluster_external_ip"`
 	CvmNtpServers         string   `json:"cvm_ntp_servers,omitempty"`
 	SingleNodeCluster     *bool    `json:"single_node_cluster,omitempty"`
 	ClusterMembers        []string `json:"cluster_members"`
