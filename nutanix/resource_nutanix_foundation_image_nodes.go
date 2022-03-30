@@ -275,7 +275,7 @@ func resourceFoundationImageNodes() *schema.Resource {
 						},
 						"cluster_external_ip": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							ForceNew: true,
 						},
 						"cvm_ntp_servers": {
@@ -1124,8 +1124,8 @@ func expandCluster(d *schema.ResourceData) ([]*foundation.Clusters, error) {
 				if clustername, ok := clst["cluster_name"]; ok {
 					clusterList.ClusterName = clustername.(string)
 				}
-				if clusterext, ok := clst["cluster_external_ip"]; ok {
-					clusterList.ClusterExternalIP = (clusterext.(string))
+				if clusterext, clusterextok := clst["cluster_external_ip"]; clusterextok && clusterext != "" {
+					clusterList.ClusterExternalIP = utils.StringPtr(clusterext.(string))
 				}
 				if cvmntps, ok := clst["cvm_ntp_servers"]; ok {
 					clusterList.CvmNtpServers = (cvmntps.(string))
