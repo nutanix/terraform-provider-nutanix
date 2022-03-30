@@ -33,6 +33,14 @@ data "nutanix_assert_helper" "checks" {
 //Resource block for imaging the nodes
 resource "nutanix_foundation_image_nodes" "this"{
 
+    // add timeout block if given
+    dynamic "timeouts" {
+        for_each = var.timeout!=null ? [var.timeout] : []
+        content {
+            create = format("%sm",tostring(timeouts.value))
+        }
+    }
+
     // Required fields to be taken from module input
     nos_package = var.nos_package
     ipmi_user = var.defaults.ipmi_user

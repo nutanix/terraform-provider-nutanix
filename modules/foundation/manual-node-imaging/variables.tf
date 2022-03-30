@@ -8,6 +8,13 @@ variable "hypervisor_netmask" {
     type = string
 }
 
+// [Optional] : custom timeout in minutes form image_nodes resource
+variable "timeout" {
+  description = "custom timeout in minutes for image_nodes resource"
+  default = null
+  type = number
+}
+
 /*
 [Optional] : this will be used if there is no info provided in node spec of blocks
 */
@@ -249,7 +256,7 @@ variable "clusters" {
         redundancy_factor = number
         backplane_vlan = optional(string)
         cluster_name = string
-        cluster_external_ip = string
+        cluster_external_ip = optional(string)
         cvm_ntp_servers = optional(string)
         single_node_cluster = optional(bool)
         cluster_members = list(string)
