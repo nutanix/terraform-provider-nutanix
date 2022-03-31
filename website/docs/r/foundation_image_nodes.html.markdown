@@ -168,25 +168,30 @@ The following arguments are supported for each block:
 The following arguments are supported for each node:
 * `ipmi_netmask` :- (Required incase using IPMI based imaging either here or outside blocks) IPMI netmask for this node
 * `ipmi_gateway` :- (Required incase using IPMI based imaging either here or outside blocks) IPMI gateway for this node 
-* `ipv6_address` :- IPV6 address.
+* `ipmi_password` :- (Required incase using IPMI based imaging either here or outside blocks) IPMI username
+* `ipmi_user` :- (Required incase using IPMI based imaging either here or outside blocks) IPMI password
+* `ipmi_ip` :- (Required) IPMI IP address.
+* `hypervisor_hostname` :- (Required) Hypervisor Hostname.
+* `hypervisor_ip` :- (Required) Hypervisor IP address.
 * `node_position` :- (Required) Position of the node in the block.
+* `image_now` :- (Required) If the node should be imaged now.
+* `bond_mode` :- (Required if node is capable) dynamic if using LACP, static for LAG
+* `rdma_passthrough` :- (Required if node is capable) passthru RDMA nic to CVM if possible, default to false
+* `bond_lacp_rate` :- (Required if node is lacp configured) slow or fast if lacp if being used at the switch
+* `ipv6_address` :- (Required when device_hint = "vm_installer" for imaging using node's existing cvm for imaging) IPV6 address.
+* `ipv6_interface` :- (Required when device_hint = "vm_installer" for imaging using node's existing cvm for imaging) ipv6 interface.
 * `image_delay` :- Imaging delay.
 * `ucsm_params` :- Object of UCSM parameters.
 * `ucsm_params.native_vlan` :- If the vlan is native.
 * `ucsm_params.keep_ucsm_settings` :- Whether UCSM settings should be kept.
 * `ucsm_params.mac_pool` :- Mac address pool.
 * `ucsm_params.vlan_name` :- Name of vlan.
-* `hypervisor_hostname` :- (Required) Hypervisor Hostname.
 * `cvm_gb_ram` :- RAM capacity of CVM in GB.
 * `device_hint` :- use "vm_installer" to enable CVM imaging from standalone.
-* `bond_mode` :- (Required if node is capable) dynamic if using LACP, static for LAG
-* `rdma_passthrough` :- (Required if node is capable) passthru RDMA nic to CVM if possible, default to false
 * `cluster_id` :- ID of cluster.
 * `ucsm_node_serial` :- UCSM node serial.
-* `hypervisor_ip` :- (Required) Hypervisor IP address.
 * `node_serial` :- serial number of the node.
 * `ipmi_configure_now` :- Whether IPMI should be configured.
-* `ipv6_interface` :- ipv6 interface.
 * `cvm_num_vcpus` :- Number of CVM vcpus.
 * `ipmi_mac` :- IPMI MAC address.
 * `rdma_mac_addr` :- mac address of nic to be used for rdma
@@ -199,15 +204,11 @@ The following arguments are supported for each node:
 * `vswitches.uplinks` :- Terraform blocks of MAC Addresses of NICs in a team/bond.
 * `vswitches.other_config` :- Terraform blocks of Auxiliary lacp configurations. Applicable only for AHV.
 * `vswitches.mtu` :- MTU of the vswitch. Applicable only for AHV.
-* `bond_lacp_rate` :- (Required if node is lacp configured) slow or fast if lacp if being used at the switch
-* `image_now` :- (Required) If the node should be imaged now.
 * `ucsm_managed_mode` :- UCSM Managed mode.
-* `ipmi_ip` :- (Required) IPMI IP address.
 * `current_cvm_vlan_tag` :- Current CVM vlan tag. 0 Value with remove vlan tag. 
 * `exlude_boot_serial` :- serial of boot device to be excluded (used by NX G6 platforms)
 * `mitigate_low_boot_space` :- relocate bootbank files to make space for phoenix files.
-* `ipmi_password` :- (Required incase using IPMI based imaging either here or outside blocks) IPMI username
-* `ipmi_user` :- (Required incase using IPMI based imaging either here or outside blocks) IPMI password
+
 
 
 

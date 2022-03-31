@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
-NOTE: The latest version of the Nutanix provider is [v1.4.2](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.4.2)
+NOTE: The latest version of the Nutanix provider is [v1.5.0-beta](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.5.0-beta)
 
 ## Build, Quality Status
 
@@ -38,7 +38,7 @@ The Terraform Nutanix provider is designed to work with Nutanix Prism Central an
 > For the 1.4.0 & 1.4.1 release of the provider it will have N-2 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc2022.1 pc.2021.9.0.4 and pc.2021.8.0.1.  
 
 ### Foundation
-> For the 1.4.2 release of the provider it will have N-1 compatibility with the Foundation. This release was tested against Foundation versions v5.2 and v5.1.1
+> For the 1.5.0-beta release of the provider it will have N-1 compatibility with the Foundation. This release was tested against Foundation versions v5.2 and v5.1.1
 
 ## Example Usage
 
@@ -75,7 +75,7 @@ provider "nutanix" {
 ```
 
 ### Provider Configuration Requirements & Warnings
-From foundation getting released in 1.4.2, provider configuration will accomodate prism central and foundation apis connection details. **It will show warnings for disabled api connections as per the attributes given in provider configuration in above mentioned format**. The below are the required attributes for corresponding provider componenets :
+From foundation getting released in 1.5.0-beta, provider configuration will accomodate prism central and foundation apis connection details. **It will show warnings for disabled api connections as per the attributes given in provider configuration in above mentioned format**. The below are the required attributes for corresponding provider componenets :
 * endpoint, username and password are required fields for using Prism Central & Karbon based resources and data sources
 * foundation_endpoint is required field for using Foundation based resources and data sources
 
