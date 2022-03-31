@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/fc"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -470,7 +469,7 @@ func dataSourceNutanixFCClusterDetailsRead(ctx context.Context, d *schema.Resour
 		return diag.FromErr(err)
 	}
 
-	d.SetId(resource.UniqueId())
+	d.SetId(*resp.ImagedClusterUUID)
 
 	return nil
 }
