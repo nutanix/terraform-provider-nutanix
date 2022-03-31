@@ -96,6 +96,10 @@ func dataSourceNutanixFCImagedNodesList() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"hardware_attributes": {
+							Type:     schema.TypeMap,
+							Computed: true,
+						},
 						"hypervisor_gateway": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -292,6 +296,7 @@ func flattenImagedNodes(imgcls []*fc.ImagedNodeDetails) []map[string]interface{}
 				"object_version":      v.ObjectVersion,
 				"supported_features":  flattenFeature(v.SupportedFeatures),
 				"latest_hb_ts_list":   flattenFeature(v.LatestHbTSList),
+				"hardware_attributes": flattenHardwareAttributes(v.HardwareAttributes),
 			}
 		}
 	}

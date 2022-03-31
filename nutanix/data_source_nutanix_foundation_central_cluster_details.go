@@ -115,6 +115,11 @@ func dataSourceNutanixFCClusterDetails() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
+												"cvm_vlan_id": {
+													Type:     schema.TypeInt,
+													Computed: true,
+													Optional: true,
+												},
 												"fc_imaged_node_uuid": {
 													Type:     schema.TypeString,
 													Computed: true,
@@ -151,6 +156,11 @@ func dataSourceNutanixFCClusterDetails() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
+												"hardware_attributes_override": {
+													Type:     schema.TypeMap,
+													Computed: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
 											},
 										},
 									},
@@ -175,7 +185,7 @@ func dataSourceNutanixFCClusterDetails() *schema.Resource {
 										Computed: true,
 									},
 									"cluster_members": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeList,
 										Computed: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
@@ -227,23 +237,10 @@ func dataSourceNutanixFCClusterDetails() *schema.Resource {
 							Computed: true,
 						},
 						"hypervisor_iso_url": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeMap,
 							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"hypervisor_type": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"sha256sum": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"url": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
 						},
 						"hypervisor_isos": {
@@ -436,7 +433,7 @@ func dataSourceNutanixFCClusterDetailsRead(ctx context.Context, d *schema.Resour
 	if err := d.Set("imaged_node_uuid_list", utils.StringValueSlice(resp.ImagedNodeUUIDList)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("common_network_settings", expandFCCommonNetworkSettings(resp.CommonNetworkSettings)); err != nil {
+	if err := d.Set("common_network_settings", flattenFCCommonNetworkSettings(resp.CommonNetworkSettings)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("storage_node_count", resp.StorageNodeCount); err != nil {
@@ -454,9 +451,9 @@ func dataSourceNutanixFCClusterDetailsRead(ctx context.Context, d *schema.Resour
 	if err := d.Set("cluster_name", resp.ClusterName); err != nil {
 		return diag.FromErr(err)
 	}
-	// if err := d.Set("foundation_init_config", resp.FoundationInitConfig); err != nil {
-	// 	return diag.FromErr(err)
-	// }
+	if err := d.Set("foundation_init_config", flattenFCFoundationInitConfig(resp.FoundationInitConfig)); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("cluster_status", flattenClusterStatus(resp.ClusterStatus)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -476,70 +473,4 @@ func dataSourceNutanixFCClusterDetailsRead(ctx context.Context, d *schema.Resour
 	d.SetId(resource.UniqueId())
 
 	return nil
-}
-
-func expandFCCommonNetworkSettings(cnet *fc.CommonNetworkSettings) []interface{} {
-	references := make([]interface{}, 0)
-	if cnet != nil {
-		reference := make(map[string]interface{})
-		reference["cvm_dns_servers"] = utils.StringSlice(cnet.CvmDNSServers)
-		reference["hypervisor_dns_servers"] = utils.StringSlice(cnet.HypervisorDNSServers)
-		reference["cvm_ntp_servers"] = utils.StringSlice(cnet.CvmNtpServers)
-		reference["hypervisor_ntp_servers"] = utils.StringSlice(cnet.HypervisorNtpServers)
-
-		references = append(references, reference)
-	}
-	return references
-}
-
-func flattenClusterStatus(cs *fc.ClusterStatus) []interface{} {
-	cstatus := make([]interface{}, 0)
-	if cs != nil {
-		csList := make(map[string]interface{})
-		csList["intent_picked_up"] = utils.BoolValue(cs.IntentPickedUp)
-		csList["cluster_creation_started"] = utils.BoolValue(cs.ClusterCreationStarted)
-		csList["imaging_stopped"] = utils.BoolValue(cs.ImagingStopped)
-		csList["aggregate_percent_complete"] = utils.Float64Value(cs.AggregatePercentComplete)
-		csList["current_foundation_ip"] = utils.StringValue(cs.CurrentFoundationIP)
-		csList["foundation_session_id"] = utils.StringValue(cs.FoundationSessionID)
-		csList["node_progress_details"] = flattenNodeProgressDetails(cs.NodeProgressDetails)
-		csList["cluster_progress_details"] = flattenClusterProgressDetails(cs.ClusterProgressDetails)
-
-		cstatus = append(cstatus, csList)
-	}
-	return cstatus
-}
-
-func flattenNodeProgressDetails(np []*fc.NodeProgressDetail) []map[string]interface{} {
-	npd := make([]map[string]interface{}, len(np))
-
-	if len(np) > 0 {
-		for k, v := range np {
-			n := make(map[string]interface{})
-
-			n["status"] = v.Status
-			n["imaged_node_uuid"] = v.ImagedNodeUUID
-			n["imaging_stopped"] = v.ImagingStopped
-			n["intent_picked_up"] = v.IntentPickedUp
-			n["percent_complete"] = v.PercentComplete
-			n["message_list"] = utils.StringValueSlice(v.MessageList)
-
-			npd[k] = n
-		}
-	}
-	return npd
-}
-
-func flattenClusterProgressDetails(cp *fc.ClusterProgressDetails) []interface{} {
-	cpDetails := make([]interface{}, 0)
-	if cp != nil {
-		cpd := make(map[string]interface{})
-		cpd["cluster_name"] = utils.StringValue(cp.ClusterName)
-		cpd["status"] = utils.StringValue(cp.Status)
-		cpd["percent_complete"] = utils.Float64Value(cp.PercentComplete)
-		cpd["message_list"] = utils.StringValueSlice(cp.MessageList)
-
-		cpDetails = append(cpDetails, cpd)
-	}
-	return cpDetails
 }
