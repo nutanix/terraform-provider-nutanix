@@ -1,9 +1,9 @@
-// resources/data_sources used here were introduced in nutanix/nutanix version >=1.4.2
+// resources/data_sources used here were introduced in nutanix/nutanix version 1.5.0-beta
 terraform{
     required_providers{
         nutanix = {
             source = "nutanix/nutanix"
-            version = "1.4.2"
+            version = "1.5.0-beta"
         }
     }
 }
