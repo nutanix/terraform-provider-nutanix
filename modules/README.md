@@ -34,7 +34,7 @@ The modules based on foundation data sources and resources are given below :
 
 | Name | Description | Required Version|
 |------|-------------|-----------------|
-| aos-based-node-imaging/nod-serial-filter| This module can be used to image nutanix imaged node having cvm running by giving node serials and some required information. Internally it uses node network details and discover nodes data sources to discover & get network details those node serial corresponding nodes, which can be used as imaging input. | >1.4.1 |
+| aos-based-node-imaging/nod-serial-filter| This module can be used to image nutanix imaged node having cvm running by giving node serials and some required information. Internally it uses node network details and discover nodes data sources to discover & get network details of those node serial corresponding nodes, which can be used as imaging input. | >1.4.1 |
 |dos-based-node-imaging/nod-serial-filter| This module can be used to image nodes having discovery os running by giving node serials and some required information. Internally it uses node network details and discover nodes data sources to discover & get network details of those node serial corresponding nodes, which can be used as imaging input.| >1.4.1|
 | manual-node-imaging | This module can be used to image nodes , which cannot be discovered, by providing defaults and node specific information. | >1.4.1 |
 | discover-nodes-network-details | This module can be used to node discovery and get network details of nodes which are not part of cluster. This module is used by other foundatio modules as well | >1.4.1 |

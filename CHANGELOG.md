@@ -1,11 +1,11 @@
-## 1.4.2 (April 1, 2022)
+## 1.5.0-beta (April 1, 2022)
 
-[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.4.1...v1.4.2)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.4.1...v1.5.0-beta)
 
 **New Feature:**
 
 - Add resources and data sources for Nutanix Foundation  [\#413](https://github.com/nutanix/terraform-provider-nutanix/issues/413)
-
+> For the 1.5.0-beta release of the provider it will have N-1 compatibility with the Nutanix Foundation. This release was tested against Foundation versions v5.2 and v5.1.1
 
 **Merged pull requests:**
 
