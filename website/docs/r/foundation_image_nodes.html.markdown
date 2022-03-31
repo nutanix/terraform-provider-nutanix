@@ -277,7 +277,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `session_id` : - session_id of the imaging session
+* `id` : - unique id of terraform resouce is set to session_id of the imaging session
 
 ## Defaults 
 
