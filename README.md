@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
-NOTE: The latest version of the Nutanix provider is [v1.4.1](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.4.1)
+NOTE: The latest version of the Nutanix provider is [v1.4.2](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.4.2)
 
 ## Build, Quality Status
 
@@ -27,7 +27,7 @@ For a slack invite, please contact terraform@nutanix.com from your business emai
 
 ### Provider Use
 
-The Terraform Nutanix provider is designed to work with Nutanix Prism Central, such that you can manage one or more Prism Element clusters at scale. AOS/PC 5.6.0 or higher is required, as this Provider makes exclusive use of the v3 APIs
+The Terraform Nutanix provider is designed to work with Nutanix Prism Central and Standalone Foundation, such that you can manage one or more Prism Element clusters at scale. AOS/PC 5.6.0 or higher is required, as this Provider makes exclusive use of the v3 APIs. It also consists components to work with Foundation to performing node imaging and related activities.
 
 > For the 1.2.0 release of the provider it will have an N-1 compatibility with the Prism Central APIs. This provider was tested against Prism Central versions 2020.9 and 2020.11, as well as AOS version 5.18 and 5.19
 
@@ -36,6 +36,9 @@ The Terraform Nutanix provider is designed to work with Nutanix Prism Central, s
 
 
 > For the 1.4.0 & 1.4.1 release of the provider it will have N-2 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc2022.1 pc.2021.9.0.4 and pc.2021.8.0.1.  
+
+### Foundation
+> For the 1.4.2 release of the provider it will have N-1 compatibility with the Foundation. This release was tested against Foundation versions v5.2 and v5.1.1
 
 ## Example Usage
 
@@ -49,23 +52,32 @@ Long term, once this is upstream, no pre-compiled binaries will be needed, as te
 
 The following keys can be used to configure the provider.
 
-* **endpoint** - (Required) IP address for the Nutanix Prism Central.
-* **username** - (Required) Username for Nutanix Prism Central. Could be local cluster auth (e.g. `auth`) or directory auth.
-* **password** - (Required) Password for the provided username.
+* **endpoint** - (Optional) IP address for the Nutanix Prism Central.
+* **username** - (Optional) Username for Nutanix Prism Central. Could be local cluster auth (e.g. `auth`) or directory auth.
+* **password** - (Optional) Password for the provided username.
 * **port** - (Optional) Port for the Nutanix Prism Central. Default port is 9440.
 * **insecure** - (Optional) Explicitly allow the provider to perform insecure SSL requests. If omitted, default value is false.
-* **wait_timeout** - (optional) Set if you know that the creation o update of a resource may take long time (minutes).
+* **wait_timeout** - (optional) Set if you know that the creation or update of a resource may take long time (minutes).
+* **foundation_endpoint** - (optional) IP address of foundation vm.
+* **foundation_port** - (optional) Port of foundation vm. Default port is 8000.
 
 ```hcl
 provider "nutanix" {
-  username     = "admin"
-  password     = "myPassword"
-  port         = 9440
-  endpoint     = "10.36.7.201"
-  insecure     = true
-  wait_timeout = 10
+  username            = "admin"
+  password            = "myPassword"
+  port                = 9440
+  endpoint            = "10.36.7.201"
+  insecure            = true
+  wait_timeout        = 10
+  foundation_endpoint = "10.xx.xx.xx"
+  foundation_port     = 8000
 }
 ```
+
+### Provider Configuration Requirements & Warnings
+From foundation getting released in 1.4.2, provider configuration will accomodate prism central and foundation apis connection details. **It will show warnings for disabled api connections as per the attributes given in provider configuration in above mentioned format**. The below are the required attributes for corresponding provider componenets :
+* endpoint, username and password are required fields for using Prism Central & Karbon based resources and data sources
+* foundation_endpoint is required field for using Foundation based resources and data sources
 
 ## Resources
 
@@ -85,7 +97,9 @@ provider "nutanix" {
 * nutanix_virtual_machine
 * nutanix_service_group
 * nutanix_address_group
-
+* nutanix_foundation_image_nodes
+* nutanix_foundation_ipmi_config
+* nutanix_foundation_image
 
 ## Data Sources
 
@@ -123,7 +137,10 @@ provider "nutanix" {
 * nutanix_recovery_plans
 * nutanix_address_groups
 * nutanix_address_group
-
+* nutanix_foundation_discover_nodes
+* nutanix_foundation_node_network_details
+* nutanix_foundation_nos_packages
+* nutanix_foundation_hypervisor_isos
 
 ## Quick Install
 

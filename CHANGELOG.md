@@ -1,3 +1,16 @@
+## 1.4.2 (April 1, 2022)
+
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.4.1...v1.4.2)
+
+**New Feature:**
+
+- Add resources and data sources for Nutanix Foundation  [\#413](https://github.com/nutanix/terraform-provider-nutanix/issues/413)
+
+
+**Merged pull requests:**
+
+- Feature: Foundation datasources, resources, modules & documentation [\#410](https://github.com/nutanix/terraform-provider-nutanix/pull/410) ([bhatipradeep](https://github.com/bhatipradeep)) ([abhimutant](https://github.com/abhimutant))
+
 ## 1.4.1 (March 24, 2022)
 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.4.0...v1.4.1)
