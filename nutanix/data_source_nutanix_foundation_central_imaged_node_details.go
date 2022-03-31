@@ -275,22 +275,11 @@ func dataSourceFCImagedNodeDetailsRead(ctx context.Context, d *schema.ResourceDa
 		return diag.FromErr(err)
 	}
 
-	// if err := d.Set(("hardware_attributes"), (flattenHardwareAttributes(*res.HardwareAttributes))); err != nil {
-	// 	return diag.FromErr(err)
-	// }
+	if err := d.Set(("hardware_attributes"), (flattenHardwareAttributes(res.HardwareAttributes))); err != nil {
+		return diag.FromErr(err)
+	}
 
 	d.SetId(resource.UniqueId())
 
 	return nil
 }
-
-// func flattenHardwareAttributes(pr map[string]interface{}) map[string]interface{} {
-// 	res := make(map[string]interface{}, 0)
-
-// 	for k, v := range pr {
-// 		res[k] = fmt.Sprint(v)
-
-// 	}
-// 	return res
-
-// }
