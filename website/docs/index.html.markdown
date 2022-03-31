@@ -80,3 +80,44 @@ provider "nutanix" {
 
 ### Resource Timeouts
 Currently, the only way to set a timeout is using the `wait_timeout` argument or `NUTANIX_WAIT_TIMEOUT` environment variable. This will set a timeout for all operations on all resources. This provider currently doesn't support specifying [operation timeouts](https://www.terraform.io/docs/language/resources/syntax.html#operation-timeouts).
+
+## Nutanix Foundation (>=v1.5.0-beta)
+
+Going from 1.5.0-beta release of nutanix provider, two more params are added to provider configuration to support foundation components :
+
+* `foundation_endpoint` - (Optional) This is the endpoint for foundation vm. This can also be specified with the `FOUNDATION_ENDPOINT` environment variable.
+* `foundation_port` - (Optional) This is the port for foundation vm. This can also be specified with the `FOUNDATION_PORT` environment variable. Default is `8000`.
+
+```terraform
+terraform {
+  required_providers {
+    nutanix = {
+      source = "nutanix/nutanix"
+      version = ">=1.5.0-beta"
+    }
+  }
+}
+
+provider "nutanix" {
+  username            = var.nutanix_username
+  password            = var.nutanix_password
+  endpoint            = var.nutanix_endpoint
+  port                = var.nutanix_port
+  insecure            = true
+  wait_timeout        = 10
+  foundation_endpoint = var.foundation_endpoint
+  foundation_port     = var.foundation_port
+}
+```
+**Note : Foundation feature in nutanix provider is in beta mode**
+
+Foundation based examples : https://github.com/nutanix/terraform-provider-nutanix/blob/master/examples/foundation/
+
+Foundation based modules & examples : https://github.com/nutanix/terraform-provider-nutanix/blob/master/modules/foundation/
+
+## Provider configuration required details
+
+Going from 1.5.0-beta release of nutanix provider, fields inside provider configuration would be mandatory as per the usecase : 
+
+* `Prism Central & Karbon` : For prism central and karbon related resources and data sources, `username`, `password` & `endpoint` are manadatory.
+* `Foundation` : For foundation related resources and data sources, `foundation_endpoint` in manadatory.

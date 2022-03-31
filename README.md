@@ -37,8 +37,14 @@ The Terraform Nutanix provider is designed to work with Nutanix Prism Central an
 
 > For the 1.4.0 & 1.4.1 release of the provider it will have N-2 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc2022.1 pc.2021.9.0.4 and pc.2021.8.0.1.  
 
-### Foundation
+## Foundation
 > For the 1.5.0-beta release of the provider it will have N-1 compatibility with the Foundation. This release was tested against Foundation versions v5.2 and v5.1.1
+
+Foundation based examples : https://github.com/nutanix/terraform-provider-nutanix/blob/master/examples/foundation/
+
+Foundation based modules & examples : https://github.com/nutanix/terraform-provider-nutanix/blob/master/modules/foundation/
+
+**Note : Foundation feature in nutanix terraform provider is in beta mode**
 
 ## Example Usage
 
