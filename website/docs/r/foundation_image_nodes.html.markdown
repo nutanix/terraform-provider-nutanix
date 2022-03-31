@@ -197,7 +197,7 @@ The following arguments are supported for each node:
 * `vswitches.bond_mode` :- bond_mode such as balance-tcp, active-backup, etc.
 * `vswitches.name` :- Name of the vswitch.
 * `vswitches.uplinks` :- Terraform blocks of MAC Addresses of NICs in a team/bond.
-* `vswitches.other_config` :- Terraform blocks of Auxillary lacp configurations. Applicable only for AHV.
+* `vswitches.other_config` :- Terraform blocks of Auxiliary lacp configurations. Applicable only for AHV.
 * `vswitches.mtu` :- MTU of the vswitch. Applicable only for AHV.
 * `bond_lacp_rate` :- (Required if node is lacp configured) slow or fast if lacp if being used at the switch
 * `image_now` :- (Required) If the node should be imaged now.
@@ -276,7 +276,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `session_id` : - session_id of the imagin session
+* `session_id` : - session_id of the imaging session
 
 ## Defaults 
 
