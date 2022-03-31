@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -141,6 +142,11 @@ func dataSourceNutanixFCImagedClustersList() *schema.Resource {
 																Type:     schema.TypeInt,
 																Computed: true,
 																Optional: true,
+															},
+															"hardware_attributes_override": {
+																Type:     schema.TypeMap,
+																Computed: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
 															},
 															"fc_imaged_node_uuid": {
 																Type:     schema.TypeString,
@@ -499,13 +505,13 @@ func flattenImagedClusters(imgCluster []*fc.ImagedClusterDetails) []map[string]i
 				"archived":                  v.Archived,
 				"cluster_external_ip":       v.ClusterExternalIP,
 				"imaged_node_uuid_list":     utils.StringValueSlice(v.ImagedNodeUUIDList),
-				"common_network_settings":   expandFCCommonNetworkSettings(v.CommonNetworkSettings),
+				"common_network_settings":   flattenFCCommonNetworkSettings(v.CommonNetworkSettings),
 				"storage_node_count":        v.StorageNodeCount,
 				"redundancy_factor":         v.RedundancyFactor,
 				"foundation_init_node_uuid": v.FoundationInitNodeUUID,
 				"workflow_type":             v.WorkflowType,
 				"cluster_name":              v.ClusterName,
-				"foundation_init_config":    expandFoundationInitConfig(v.FoundationInitConfig),
+				"foundation_init_config":    flattenFCFoundationInitConfig(v.FoundationInitConfig),
 				"cluster_status":            flattenClusterStatus(v.ClusterStatus),
 				"cluster_size":              v.ClusterSize,
 				"destroyed":                 v.Destroyed,
@@ -517,7 +523,7 @@ func flattenImagedClusters(imgCluster []*fc.ImagedClusterDetails) []map[string]i
 	return imgClusterList
 }
 
-func expandFCCommonNetworkSettings(cnet *fc.CommonNetworkSettings) []interface{} {
+func flattenFCCommonNetworkSettings(cnet *fc.CommonNetworkSettings) []interface{} {
 	references := make([]interface{}, 0)
 	if cnet != nil {
 		reference := make(map[string]interface{})
@@ -583,24 +589,24 @@ func flattenClusterProgressDetails(cp *fc.ClusterProgressDetails) []interface{} 
 	return cpDetails
 }
 
-func expandFoundationInitConfig(fci *fc.FoundationInitConfig) []interface{} {
+func flattenFCFoundationInitConfig(fci *fc.FoundationInitConfig) []interface{} {
 	fciDetails := make([]interface{}, 0)
 	if fci != nil {
 		fcic := make(map[string]interface{})
-		fcic["blocks"] = expandBlock(fci.Blocks)
-		fcic["clusters"] = expandCluster(fci.Clusters)
+		fcic["blocks"] = flattenFCBlock(fci.Blocks)
+		fcic["clusters"] = flattenCluster(fci.Clusters)
 		fcic["cvm_gateway"] = fci.CvmGateway
 		fcic["cvm_netmask"] = fci.CvmNetmask
 		fcic["dns_servers"] = fci.DNSServers
 		fcic["hyperv_product_key"] = fci.HypervProductKey
 		fcic["hyperv_sku"] = fci.HypervSku
 		fcic["hypervisor_gateway"] = fci.HypervisorGateway
-		fcic["hypervisor_iso_url"] = expandHypervisorIsoURL(fci.HypervisorIsoURL)
-		fcic["hypervisor_isos"] = expandHypervisorIsos(fci.HypervisorIsos)
+		fcic["hypervisor_iso_url"] = flattenHypervisorIsoURL(fci.HypervisorIsoURL)
+		fcic["hypervisor_isos"] = flattenHypervisorIsos(fci.HypervisorIsos)
 		fcic["hypervisor_netmask"] = fci.HypervisorNetmask
 		fcic["ipmi_gateway"] = fci.IpmiGateway
 		fcic["ipmi_netmask"] = fci.IpmiNetmask
-		fcic["nos_package_url"] = expandNosPackage(fci.NosPackageURL)
+		fcic["nos_package_url"] = flattenNosPackage(fci.NosPackageURL)
 
 		fciDetails = append(fciDetails, fcic)
 	}
@@ -608,14 +614,14 @@ func expandFoundationInitConfig(fci *fc.FoundationInitConfig) []interface{} {
 	return fciDetails
 }
 
-func expandBlock(fb []*fc.Blocks) []map[string]interface{} {
+func flattenFCBlock(fb []*fc.Blocks) []map[string]interface{} {
 	res := make([]map[string]interface{}, len(fb))
 	if len(fb) > 0 {
 		for k, v := range fb {
 			re := make(map[string]interface{})
 
 			re["block_id"] = v.BlockID
-			re["nodes"] = expandNodes(v.Nodes)
+			re["nodes"] = flattenNodes(v.Nodes)
 
 			res[k] = re
 		}
@@ -623,7 +629,7 @@ func expandBlock(fb []*fc.Blocks) []map[string]interface{} {
 	return res
 }
 
-func expandNodes(fn []*fc.Nodes) []map[string]interface{} {
+func flattenNodes(fn []*fc.Nodes) []map[string]interface{} {
 	res := make([]map[string]interface{}, len(fn))
 
 	if len(fn) > 0 {
@@ -641,6 +647,7 @@ func expandNodes(fn []*fc.Nodes) []map[string]interface{} {
 			re["ipv6_address"] = v.IPv6Address
 			re["node_position"] = v.NodePosition
 			re["node_serial"] = v.NodeSerial
+			re["hardware_attributes_override"] = flattenHardwareAttributes(v.HardwareAttributesOverride)
 
 			res[k] = re
 		}
@@ -648,7 +655,7 @@ func expandNodes(fn []*fc.Nodes) []map[string]interface{} {
 	return res
 }
 
-func expandCluster(fc []*fc.Clusters) []map[string]interface{} {
+func flattenCluster(fc []*fc.Clusters) []map[string]interface{} {
 	res := make([]map[string]interface{}, len(fc))
 
 	if len(fc) > 0 {
@@ -671,7 +678,7 @@ func expandCluster(fc []*fc.Clusters) []map[string]interface{} {
 	return res
 }
 
-func expandHypervisorIsoURL(hiso *fc.HypervisorIso) map[string]interface{} {
+func flattenHypervisorIsoURL(hiso *fc.HypervisorIso) map[string]interface{} {
 	return map[string]interface{}{
 		"hypervisor_type": hiso.HypervisorType,
 		"sha256sum":       hiso.Sha256sum,
@@ -679,7 +686,7 @@ func expandHypervisorIsoURL(hiso *fc.HypervisorIso) map[string]interface{} {
 	}
 }
 
-func expandHypervisorIsos(hisos []*fc.HypervisorIso) (res []map[string]interface{}) {
+func flattenHypervisorIsos(hisos []*fc.HypervisorIso) (res []map[string]interface{}) {
 	if len(hisos) > 0 {
 		for _, k := range hisos {
 			re := make(map[string]interface{})
@@ -694,7 +701,7 @@ func expandHypervisorIsos(hisos []*fc.HypervisorIso) (res []map[string]interface
 	return res
 }
 
-func expandNosPackage(fnos *fc.NosPackageURL) (res []interface{}) {
+func flattenNosPackage(fnos *fc.NosPackageURL) (res []interface{}) {
 	if fnos != nil {
 		re := make(map[string]interface{})
 		re["sha256sum"] = fnos.Sha256sum
@@ -703,4 +710,12 @@ func expandNosPackage(fnos *fc.NosPackageURL) (res []interface{}) {
 		res = append(res, re)
 	}
 	return res
+}
+
+func flattenHardwareAttributes(pr map[string]interface{}) map[string]interface{} {
+	mm := make(map[string]interface{})
+	for k, v := range pr {
+		mm[k] = fmt.Sprint(v)
+	}
+	return mm
 }

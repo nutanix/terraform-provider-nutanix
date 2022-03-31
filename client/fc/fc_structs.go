@@ -35,42 +35,42 @@ type HardwareAttribute struct {
 
 // ImagedNodeDetails ...
 type ImagedNodeDetails struct {
-	CvmVlanID          *int               `json:"cvm_vlan_id,omitempty"`
-	NodeType           *string            `json:"node_type,omitempty"`
-	CreatedTimestamp   *string            `json:"created_timestamp,omitempty"`
-	Ipv6Interface      *string            `json:"ipv6_interface,omitempty"`
-	APIKeyUUID         *string            `json:"api_key_uuid,omitempty"`
-	FoundationVersion  *string            `json:"foundation_version,omitempty"`
-	CurrentTime        *string            `json:"current_time,omitempty"`
-	NodePosition       *string            `json:"node_position,omitempty"`
-	CvmNetmask         *string            `json:"cvm_netmask,omitempty"`
-	IpmiIP             *string            `json:"ipmi_ip,omitempty"`
-	CvmUUID            *string            `json:"cvm_uuid,omitempty"`
-	CvmIpv6            *string            `json:"cvm_ipv6,omitempty"`
-	ImagedClusterUUID  *string            `json:"imaged_cluster_uuid,omitempty"`
-	CvmUp              *bool              `json:"cvm_up,omitempty"`
-	Available          *bool              `json:"available,omitempty"`
-	ObjectVersion      *int               `json:"object_version,omitempty"`
-	IpmiNetmask        *string            `json:"ipmi_netmask,omitempty"`
-	HypervisorHostname *string            `json:"hypervisor_hostname,omitempty"`
-	NodeState          *string            `json:"node_state,omitempty"`
-	HypervisorVersion  *string            `json:"hypervisor_version,omitempty"`
-	HypervisorIP       *string            `json:"hypervisor_ip,omitempty"`
-	Model              *string            `json:"model,omitempty"`
-	IpmiGateway        *string            `json:"ipmi_gateway,omitempty"`
-	HardwareAttributes *HardwareAttribute `json:"hardware_attributes,omitempty"`
-	CvmGateway         *string            `json:"cvm_gateway,omitempty"`
-	NodeSerial         *string            `json:"node_serial,omitempty"`
-	ImagedNodeUUID     *string            `json:"imaged_node_uuid,omitempty"`
-	BlockSerial        *string            `json:"block_serial,omitempty"`
-	HypervisorType     *string            `json:"hypervisor_type,omitempty"`
-	LatestHbTSList     []*string          `json:"latest_hb_ts_list,omitempty"`
-	HypervisorNetmask  *string            `json:"hypervisor_netmask,omitempty"`
-	HypervisorGateway  *string            `json:"hypervisor_gateway,omitempty"`
-	CvmIP              *string            `json:"cvm_ip,omitempty"`
-	AosVersion         *string            `json:"aos_version,omitempty"`
-	ClusterExternalIP  *string            `json:"cluster_external_ip,omitempty"`
-	SupportedFeatures  []*string          `json:"supported_features,omitempty"`
+	CvmVlanID          *int                   `json:"cvm_vlan_id,omitempty"`
+	NodeType           *string                `json:"node_type,omitempty"`
+	CreatedTimestamp   *string                `json:"created_timestamp,omitempty"`
+	Ipv6Interface      *string                `json:"ipv6_interface,omitempty"`
+	APIKeyUUID         *string                `json:"api_key_uuid,omitempty"`
+	FoundationVersion  *string                `json:"foundation_version,omitempty"`
+	CurrentTime        *string                `json:"current_time,omitempty"`
+	NodePosition       *string                `json:"node_position,omitempty"`
+	CvmNetmask         *string                `json:"cvm_netmask,omitempty"`
+	IpmiIP             *string                `json:"ipmi_ip,omitempty"`
+	CvmUUID            *string                `json:"cvm_uuid,omitempty"`
+	CvmIpv6            *string                `json:"cvm_ipv6,omitempty"`
+	ImagedClusterUUID  *string                `json:"imaged_cluster_uuid,omitempty"`
+	CvmUp              *bool                  `json:"cvm_up,omitempty"`
+	Available          *bool                  `json:"available,omitempty"`
+	ObjectVersion      *int                   `json:"object_version,omitempty"`
+	IpmiNetmask        *string                `json:"ipmi_netmask,omitempty"`
+	HypervisorHostname *string                `json:"hypervisor_hostname,omitempty"`
+	NodeState          *string                `json:"node_state,omitempty"`
+	HypervisorVersion  *string                `json:"hypervisor_version,omitempty"`
+	HypervisorIP       *string                `json:"hypervisor_ip,omitempty"`
+	Model              *string                `json:"model,omitempty"`
+	IpmiGateway        *string                `json:"ipmi_gateway,omitempty"`
+	HardwareAttributes map[string]interface{} `json:"hardware_attributes,omitempty"`
+	CvmGateway         *string                `json:"cvm_gateway,omitempty"`
+	NodeSerial         *string                `json:"node_serial,omitempty"`
+	ImagedNodeUUID     *string                `json:"imaged_node_uuid,omitempty"`
+	BlockSerial        *string                `json:"block_serial,omitempty"`
+	HypervisorType     *string                `json:"hypervisor_type,omitempty"`
+	LatestHbTSList     []*string              `json:"latest_hb_ts_list,omitempty"`
+	HypervisorNetmask  *string                `json:"hypervisor_netmask,omitempty"`
+	HypervisorGateway  *string                `json:"hypervisor_gateway,omitempty"`
+	CvmIP              *string                `json:"cvm_ip,omitempty"`
+	AosVersion         *string                `json:"aos_version,omitempty"`
+	ClusterExternalIP  *string                `json:"cluster_external_ip,omitempty"`
+	SupportedFeatures  []*string              `json:"supported_features,omitempty"`
 }
 
 // ImagedNodesInput ...
@@ -280,17 +280,18 @@ type Blocks struct {
 }
 
 type Nodes struct {
-	CvmIP              string `json:"cvm_ip,omitempty"`
-	CvmVlanID          int    `json:"cvm_vlan_id,omitempty"`
-	FcImagedNodeUUID   string `json:"fc_imaged_node_uuid,omitempty"`
-	Hypervisor         string `json:"hypervisor,omitempty"`
-	HypervisorHostname string `json:"hypervisor_hostname,omitempty"`
-	HypervisorIP       string `json:"hypervisor_ip,omitempty"`
-	ImageNow           bool   `json:"image_now,omitempty"`
-	IpmiIP             string `json:"ipmi_ip,omitempty"`
-	IPv6Address        string `json:"ipv6_address,omitempty"`
-	NodePosition       string `json:"node_position,omitempty"`
-	NodeSerial         string `json:"node_serial,omitempty"`
+	CvmIP                      string                 `json:"cvm_ip,omitempty"`
+	CvmVlanID                  int                    `json:"cvm_vlan_id,omitempty"`
+	FcImagedNodeUUID           string                 `json:"fc_imaged_node_uuid,omitempty"`
+	Hypervisor                 string                 `json:"hypervisor,omitempty"`
+	HypervisorHostname         string                 `json:"hypervisor_hostname,omitempty"`
+	HypervisorIP               string                 `json:"hypervisor_ip,omitempty"`
+	ImageNow                   bool                   `json:"image_now,omitempty"`
+	IpmiIP                     string                 `json:"ipmi_ip,omitempty"`
+	IPv6Address                string                 `json:"ipv6_address,omitempty"`
+	NodePosition               string                 `json:"node_position,omitempty"`
+	NodeSerial                 string                 `json:"node_serial,omitempty"`
+	HardwareAttributesOverride map[string]interface{} `json:"hardware_attributes_override,omitempty"`
 }
 
 type Clusters struct {
