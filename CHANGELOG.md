@@ -5,11 +5,28 @@
 **New Feature:**
 
 - Add resources and data sources for Nutanix Foundation  [\#413](https://github.com/nutanix/terraform-provider-nutanix/issues/413)
-> For the 1.5.0-beta release of the provider it will have N-1 compatibility with the Nutanix Foundation. This release was tested against Foundation versions v5.2 and v5.1.1
+
+    New Data Sources :
+    -   nutanix_foundation_nos_packages
+    -   nutanix_foundation_hypervisor_isos
+    -   nutanix_foundation_discover_nodes
+    -   nutanix_foundation_node_network_details
+    
+    New Resources :
+    -   nutanix_foundation_image_nodes
+    -   nutanix_foundation_ipmi_config
+    -   nutanix_foundation_image
+
+    New Modules : 
+    -   aos-based-node-imaging/node-serials-filter
+    -   discover-nodes-network-details/node-serials-filter
+    -   manual-mode-imaging
 
 **Merged pull requests:**
 
 - Feature: Foundation datasources, resources, modules & documentation [\#410](https://github.com/nutanix/terraform-provider-nutanix/pull/410) ([bhatipradeep](https://github.com/bhatipradeep)) ([abhimutant](https://github.com/abhimutant))
+
+> For the 1.5.0-beta release of the provider it will have N-1 compatibility with the Nutanix Foundation. This release was tested against Foundation versions v5.2 and v5.1.1
 
 ## 1.4.1 (March 24, 2022)
 
