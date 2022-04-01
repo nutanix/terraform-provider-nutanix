@@ -2,7 +2,10 @@ package nutanix
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -14,6 +17,9 @@ import (
 
 const (
 	aggregatePercentComplete = 100
+	ImageMinTimeout          = 2 * time.Hour
+	DelayTime                = 15 * time.Minute
+	NodePollTimeout          = 30 * time.Minute
 )
 
 func resourceNutanixFCImageCluster() *schema.Resource {
@@ -22,6 +28,9 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 		ReadContext:   resourceNutanixFCImageClusterRead,
 		UpdateContext: resourceNutanixFCImageClusterUpdate,
 		DeleteContext: resourceNutanixFCImageClusterDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(ImageMinTimeout),
+		},
 		Schema: map[string]*schema.Schema{
 			"cluster_external_ip": {
 				Type:     schema.TypeString,
@@ -301,8 +310,7 @@ func foundationCentralClusterRefresh(ctx context.Context, conn *fc.Client, image
 		if err != nil {
 			return nil, "FAILED", err
 		}
-
-		if utils.BoolValue(v.ClusterStatus.ImagingStopped) {
+		if *v.ClusterStatus.ImagingStopped {
 			return v, "COMPLETED", nil
 		}
 		return v, "PENDING", nil
@@ -417,7 +425,17 @@ func expandNodesList(d *schema.ResourceData) []*fc.Node {
 		}
 
 		if hardwareAttrs, ok := nodeSettings["hardware_attributes_override"]; ok {
-			node.HardwareAttributesOverride = hardwareAttrs.(map[string]interface{})
+			// Convert map to json string
+			jsonStr, err := json.Marshal(hardwareAttrs)
+			if err != nil {
+				fmt.Println(err)
+			}
+			// Convert json string to map[string]interface{}
+			var mapData map[string]interface{}
+			if err := json.Unmarshal([]byte(jsonStr), &mapData); err != nil {
+				fmt.Println(err)
+			}
+			node.HardwareAttributesOverride = mapData
 		}
 		nodeList = append(nodeList, &node)
 	}
@@ -489,6 +507,25 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 	req.HypervisorIsoDetails = expandHyperVisorIsoDetails(d)
 	req.NodesList = expandNodesList(d)
 
+	// Poll for operation here - Node Detail GET Call
+	for _, vv := range req.NodesList {
+		stateConfig := &resource.StateChangeConf{
+			Pending: []string{"STATE_DISCOVERING", "STATE_UNAVAILABLE"},
+			Target:  []string{"STATE_AVAILABLE"},
+			Refresh: foundationCentralPollingNode(ctx, conn, *vv.ImagedNodeUUID),
+			Timeout: NodePollTimeout,
+			Delay:   10 * time.Second,
+		}
+		infos, err := stateConfig.WaitForStateContext(ctx)
+		if err != nil {
+			return diag.Errorf("error waiting for node (%s) to be available: %v", *vv.ImagedNodeUUID, err)
+		}
+		if progress, ok := infos.(*fc.ImagedNodeDetails); ok {
+			if !(*progress.Available) {
+				return diag.Errorf("Node is not available to image or alraedy be a part of cluster")
+			}
+		}
+	}
 	//Make request to the API
 	resp, err := conn.Service.CreateCluster(ctx, &req)
 	if err != nil {
@@ -507,7 +544,7 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 		Target:  []string{"COMPLETED", "FAILED"},
 		Refresh: foundationCentralClusterRefresh(ctx, conn, *resp.ImagedClusterUUID),
 		Timeout: d.Timeout(schema.TimeoutCreate),
-		Delay:   1 * time.Minute,
+		Delay:   DelayTime,
 	}
 	info, err := stateConf.WaitForStateContext(ctx)
 	if err != nil {
@@ -516,7 +553,7 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 
 	if progress, ok := info.(*fc.ImagedClusterDetails); ok {
 		if utils.Float64Value(progress.ClusterStatus.AggregatePercentComplete) < float64(aggregatePercentComplete) {
-			return diag.Errorf("Progress is incomplete")
+			return collectIndividualErrorDiagnosticsFC(progress)
 		}
 	}
 
@@ -528,5 +565,68 @@ func resourceNutanixFCImageClusterUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceNutanixFCImageClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*Client).FC
+	log.Printf("[DEBUG] Deleting Cluster: %s, %s", d.Get("cluster_name").(string), d.Id())
+	err := conn.DeleteCluster(ctx, d.Id())
+	if err != nil {
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+			return nil
+		}
+		return diag.Errorf("error while Deleting Cluster: UUID(%s): %s", d.Id(), err)
+	}
+	d.SetId("")
 	return nil
+}
+
+func collectIndividualErrorDiagnosticsFC(progress *fc.ImagedClusterDetails) diag.Diagnostics {
+	// create empty diagnostics
+	var diags diag.Diagnostics
+
+	// append errors for failed node imaging
+	for _, v := range progress.ClusterStatus.NodeProgressDetails {
+		if utils.Float64Value(v.PercentComplete) < float64(aggregatePercentComplete) {
+			message := ""
+			for _, v1 := range v.MessageList {
+				message += *v1
+			}
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  fmt.Sprintf("Node imaging for imaged_node_uuid IP: %s failed with error:  %s.", *v.ImagedNodeUUID, *v.Status),
+				Detail:   message,
+			})
+		}
+	}
+
+	// append errors for failed cluster creation
+	for _, v := range progress.ClusterStatus.ClusterProgressDetails {
+		if utils.Float64Value(v.PercentComplete) < float64(aggregatePercentComplete) {
+			message := ""
+			for _, v1 := range v.MessageList {
+				message += *v1
+			}
+			diags = append(diags, diag.Diagnostic{
+				Severity: diag.Error,
+				Summary:  fmt.Sprintf("Cluster creation for Cluster : %s failed with error:  %s.", *v.ClusterName, *v.Status),
+				Detail:   message,
+			})
+		}
+	}
+	return diags
+}
+
+func foundationCentralPollingNode(ctx context.Context, conn *fc.Client, imageUUID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		log.Printf("[DEBUG] Polling Node to be Available: %s", imageUUID)
+		v, err := conn.Service.GetImagedNode(ctx, imageUUID)
+		if err != nil {
+			return nil, *v.NodeState, err
+		}
+
+		if *v.NodeState == "STATE_UNAVAILABLE" || *v.NodeState == "STATE_DISCOVERING" {
+			return v, *v.NodeState, nil
+
+		}
+		return v, "STATE_AVAILABLE", nil
+	}
 }
