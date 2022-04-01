@@ -107,6 +107,7 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 			},
 			"redundancy_factor": {
 				Type:     schema.TypeInt,
+				Computed: true,
 				Optional: true,
 			},
 			"cluster_name": {
@@ -238,68 +239,394 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"imaged_cluster_uuid": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"current_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"archived": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"imaged_node_uuid_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"foundation_init_node_uuid": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"workflow_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"foundation_init_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"blocks": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"block_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"nodes": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"cvm_ip": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"cvm_vlan_id": {
+													Type:     schema.TypeInt,
+													Computed: true,
+													Optional: true,
+												},
+												"fc_imaged_node_uuid": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"hypervisor": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"hypervisor_hostname": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"hypervisor_ip": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"image_now": {
+													Type:     schema.TypeBool,
+													Computed: true,
+												},
+												"ipmi_ip": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"ipv6_address": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"node_position": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"node_serial": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"hardware_attributes_override": {
+													Type:     schema.TypeMap,
+													Computed: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"clusters": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cluster_external_ip": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"cluster_init_now": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									"cluster_init_successful": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									"cluster_members": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"cluster_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"cvm_dns_servers": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"cvm_ntp_servers": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"redundancy_factor": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"timezone": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"cvm_gateway": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"cvm_netmask": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"dns_servers": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"hyperv_product_key": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"hyperv_sku": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"hypervisor_gateway": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"hypervisor_iso_url": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"hypervisor_isos": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"hypervisor_type": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"sha256sum": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"url": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"hypervisor_netmask": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ipmi_gateway": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ipmi_netmask": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"nos_package_url": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"sha256sum": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"url": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			"cluster_status": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cluster_creation_started": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"intent_picked_up": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"imaging_stopped": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"node_progress_details": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"status": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"imaged_node_uuid": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"imaging_stopped": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									"intent_picked_up": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+									"percent_complete": {
+										Type:     schema.TypeFloat,
+										Computed: true,
+									},
+									"message_list": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"aggregate_percent_complete": {
+							Type:     schema.TypeFloat,
+							Computed: true,
+						},
+						"current_foundation_ip": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"cluster_progress_details": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cluster_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"status": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"percent_complete": {
+										Type:     schema.TypeFloat,
+										Computed: true,
+									},
+									"message_list": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"foundation_session_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"destroyed": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"created_timestamp": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
 
 func resourceNutanixFCImageClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// conn := meta.(*Client).FC
-	// resp, err := conn.GetImagedNode(ctx, d.Id())
-	// if err != nil {
-	// 	diag.FromErr(err)
-	// }
-
-	/*
-		clusterExternalIP, ok := d.GetOk("cluster_external_ip")
-		if !ok {
-			log.Println("cluster_external_ip is not set")
-		}
-		req.ClusterExternalIP = utils.StringPtr(clusterExternalIP.(string))
-
-		storageCount, ok := d.GetOk("storage_node_count")
-		if !ok {
-			log.Println("storage_node_count is not set")
-		}
-		req.StorageNodeCount = utils.IntPtr(storageCount.(int))
-
-		redundancyFactor, ok := d.GetOk("redundancy_factor")
-		if !ok {
-			log.Println("redundancy_factor is not set")
-		}
-		req.RedundancyFactor = utils.IntPtr(redundancyFactor.(int))
-
-		clusterName, ok := d.GetOk("cluster_name")
-		if !ok {
-			log.Println("cluster_name is not set")
-		}
-		req.ClusterName = utils.StringPtr(clusterName.(string))
-
-		aosPackageURL, ok := d.GetOk("aos_package_url")
-		if !ok {
-			log.Println("aos_package_url is not set")
-		}
-		req.AosPackageURL = utils.StringPtr(aosPackageURL.(string))
-
-		aosPackageSha, ok := d.GetOk("aos_package_sha256sum")
-		if !ok {
-			log.Println("aos_package_url is not set")
-		}
-		req.AosPackageSha256sum = utils.StringPtr(aosPackageSha.(string))
-
-		clusterSize, ok := d.GetOk("cluster_size")
-		if !ok {
-			log.Println("cluster_size is not set")
-		}
-		req.ClusterSize = utils.IntPtr(clusterSize.(int))
-
-		timezone, ok := d.GetOk("timezone")
-		if !ok {
-			log.Println("timezone is not set")
-		}
-		req.Timezone = utils.StringPtr(timezone.(string))
-	*/
-
-	// req := fc.CreateClusterInput{}
+	conn := meta.(*Client).FC
+	resp, err := conn.GetImagedCluster(ctx, d.Id())
+	if err != nil {
+		diag.FromErr(err)
+	}
+	if err := d.Set("created_timestamp", resp.CreatedTimestamp); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("current_time", resp.CurrentTime); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("archived", resp.Archived); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("cluster_external_ip", resp.ClusterExternalIP); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("imaged_node_uuid_list", utils.StringValueSlice(resp.ImagedNodeUUIDList)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("common_network_settings", flattenFCCommonNetworkSettings(resp.CommonNetworkSettings)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("storage_node_count", resp.StorageNodeCount); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("redundancy_factor", resp.RedundancyFactor); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("foundation_init_node_uuid", resp.FoundationInitNodeUUID); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("workflow_type", resp.WorkflowType); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("cluster_name", resp.ClusterName); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("foundation_init_config", flattenFCFoundationInitConfig(resp.FoundationInitConfig)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("cluster_status", flattenClusterStatus(resp.ClusterStatus)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("cluster_size", resp.ClusterSize); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("destroyed", resp.Destroyed); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("workflow_type", resp.WorkflowType); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("imaged_cluster_uuid", resp.ImagedClusterUUID); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
@@ -507,7 +834,7 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 	req.HypervisorIsoDetails = expandHyperVisorIsoDetails(d)
 	req.NodesList = expandNodesList(d)
 
-	// Poll for operation here - Node Detail GET Call
+	// Poll to Check whether Nodes are Available for Imaging - Node Detail GET Call
 	for _, vv := range req.NodesList {
 		stateConfig := &resource.StateChangeConf{
 			Pending: []string{"STATE_DISCOVERING", "STATE_UNAVAILABLE"},
@@ -557,7 +884,7 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 		}
 	}
 
-	return nil
+	return resourceNutanixFCImageClusterRead(ctx, d, meta)
 }
 
 func resourceNutanixFCImageClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -599,15 +926,16 @@ func collectIndividualErrorDiagnosticsFC(progress *fc.ImagedClusterDetails) diag
 	}
 
 	// append errors for failed cluster creation
-	for _, v := range progress.ClusterStatus.ClusterProgressDetails {
-		if utils.Float64Value(v.PercentComplete) < float64(aggregatePercentComplete) {
+	cpd := progress.ClusterStatus.ClusterProgressDetails
+	if cpd != nil {
+		if utils.Float64Value(cpd.PercentComplete) < float64(aggregatePercentComplete) {
 			message := ""
-			for _, v1 := range v.MessageList {
+			for _, v1 := range cpd.MessageList {
 				message += *v1
 			}
 			diags = append(diags, diag.Diagnostic{
 				Severity: diag.Error,
-				Summary:  fmt.Sprintf("Cluster creation for Cluster : %s failed with error:  %s.", *v.ClusterName, *v.Status),
+				Summary:  fmt.Sprintf("Cluster creation for Cluster : %s failed with error:  %s.", *cpd.ClusterName, *cpd.Status),
 				Detail:   message,
 			})
 		}

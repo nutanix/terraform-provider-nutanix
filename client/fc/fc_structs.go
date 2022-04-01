@@ -136,14 +136,14 @@ type ClusterProgressDetails struct {
 }
 
 type ClusterStatus struct {
-	ClusterCreationStarted   *bool                     `json:"cluster_creation_started,omitempty"`
-	IntentPickedUp           *bool                     `json:"intent_picked_up,omitempty"`
-	ImagingStopped           *bool                     `json:"imaging_stopped,omitempty"`
-	NodeProgressDetails      []*NodeProgressDetail     `json:"node_progress_details,omitempty"`
-	AggregatePercentComplete *float64                  `json:"aggregate_percent_complete,omitempty"`
-	CurrentFoundationIP      *string                   `json:"current_foundation_ip,omitempty"`
-	ClusterProgressDetails   []*ClusterProgressDetails `json:"cluster_progress_details,omitempty"`
-	FoundationSessionID      *string                   `json:"foundation_session_id,omitempty"`
+	ClusterCreationStarted   *bool                   `json:"cluster_creation_started,omitempty"`
+	IntentPickedUp           *bool                   `json:"intent_picked_up,omitempty"`
+	ImagingStopped           *bool                   `json:"imaging_stopped,omitempty"`
+	NodeProgressDetails      []*NodeProgressDetail   `json:"node_progress_details,omitempty"`
+	AggregatePercentComplete *float64                `json:"aggregate_percent_complete,omitempty"`
+	CurrentFoundationIP      *string                 `json:"current_foundation_ip,omitempty"`
+	ClusterProgressDetails   *ClusterProgressDetails `json:"cluster_progress_details,omitempty"`
+	FoundationSessionID      *string                 `json:"foundation_session_id,omitempty"`
 }
 
 type ImagedClusterDetails struct {
