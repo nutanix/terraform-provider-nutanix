@@ -20,7 +20,7 @@ const (
 	ImageMinTimeout           = 2 * time.Hour
 	DelayTime                 = 15 * time.Minute
 	NodePollTimeout           = 30 * time.Minute
-	DelayTimeNodeAvailability = 10 * time.Minute
+	DelayTimeNodeAvailability = 10 * time.Second
 )
 
 func resourceNutanixFCImageCluster() *schema.Resource {
@@ -628,6 +628,8 @@ func resourceNutanixFCImageClusterRead(ctx context.Context, d *schema.ResourceDa
 	if err := d.Set("imaged_cluster_uuid", resp.ImagedClusterUUID); err != nil {
 		return diag.FromErr(err)
 	}
+
+	d.SetId(*resp.ImagedClusterUUID)
 	return nil
 }
 
