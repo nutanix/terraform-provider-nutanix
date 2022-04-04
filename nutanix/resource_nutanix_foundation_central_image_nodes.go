@@ -16,10 +16,11 @@ import (
 )
 
 const (
-	aggregatePercentComplete = 100
-	ImageMinTimeout          = 2 * time.Hour
-	DelayTime                = 15 * time.Minute
-	NodePollTimeout          = 30 * time.Minute
+	aggregatePercentComplete  = 100
+	ImageMinTimeout           = 2 * time.Hour
+	DelayTime                 = 15 * time.Minute
+	NodePollTimeout           = 30 * time.Minute
+	DelayTimeNodeAvailability = 10 * time.Minute
 )
 
 func resourceNutanixFCImageCluster() *schema.Resource {
@@ -759,7 +760,7 @@ func expandNodesList(d *schema.ResourceData) []*fc.Node {
 			}
 			// Convert json string to map[string]interface{}
 			var mapData map[string]interface{}
-			if err := json.Unmarshal([]byte(jsonStr), &mapData); err != nil {
+			if err := json.Unmarshal(jsonStr, &mapData); err != nil {
 				fmt.Println(err)
 			}
 			node.HardwareAttributesOverride = mapData
@@ -840,7 +841,7 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 			Target:  []string{"STATE_AVAILABLE"},
 			Refresh: foundationCentralPollingNode(ctx, conn, *vv.ImagedNodeUUID),
 			Timeout: NodePollTimeout,
-			Delay:   5 * time.Second,
+			Delay:   DelayTimeNodeAvailability,
 		}
 		infos, err := stateConfig.WaitForStateContext(ctx)
 		if err != nil {
