@@ -771,7 +771,6 @@ func expandNodesList(d *schema.ResourceData) []*fc.Node {
 }
 
 func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	// Get client connection
 	conn := meta.(*Client).FC
 	req := fc.CreateClusterInput{}
@@ -841,7 +840,7 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 			Target:  []string{"STATE_AVAILABLE"},
 			Refresh: foundationCentralPollingNode(ctx, conn, *vv.ImagedNodeUUID),
 			Timeout: NodePollTimeout,
-			Delay:   10 * time.Second,
+			Delay:   5 * time.Second,
 		}
 		infos, err := stateConfig.WaitForStateContext(ctx)
 		if err != nil {
@@ -953,7 +952,6 @@ func foundationCentralPollingNode(ctx context.Context, conn *fc.Client, imageUUI
 
 		if *v.NodeState == "STATE_UNAVAILABLE" || *v.NodeState == "STATE_DISCOVERING" {
 			return v, *v.NodeState, nil
-
 		}
 		return v, "STATE_AVAILABLE", nil
 	}
