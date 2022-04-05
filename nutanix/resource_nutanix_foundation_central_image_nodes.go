@@ -664,11 +664,11 @@ func expandCommonNetworkSettings(d *schema.ResourceData) *fc.CommonNetworkSettin
 }
 
 func expandNetworklist(pr interface{}) []string {
-	c := make([]string, 0)
 	prList := pr.([]interface{})
+	c := make([]string, len(prList))
 
-	for _, k := range prList {
-		c = append(c, k.(string))
+	for k, v := range prList {
+		c[k] = v.(string)
 	}
 	return c
 }
@@ -826,11 +826,9 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 	}
 	req.Timezone = utils.StringPtr(timezone.(string))
 
-	skipClusterCreation, ok := d.GetOk("skip_cluster_creation")
-	if !ok {
-		req.SkipClusterCreation = false
+	if skipClusterCreation, ok := d.GetOk("skip_cluster_creation"); ok {
+		req.SkipClusterCreation = skipClusterCreation.(bool)
 	}
-	req.SkipClusterCreation = skipClusterCreation.(bool)
 
 	req.CommonNetworkSettings = expandCommonNetworkSettings(d)
 	req.HypervisorIsoDetails = expandHyperVisorIsoDetails(d)
@@ -840,18 +838,18 @@ func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.Resource
 	for _, vv := range req.NodesList {
 		stateConfig := &resource.StateChangeConf{
 			Pending: []string{"STATE_DISCOVERING", "STATE_UNAVAILABLE"},
-			Target:  []string{"STATE_AVAILABLE"},
+			Target:  []string{"STATE_AVAILABLE", "STATE_IMAGING"},
 			Refresh: foundationCentralPollingNode(ctx, conn, *vv.ImagedNodeUUID),
 			Timeout: NodePollTimeout,
 			Delay:   DelayTimeNodeAvailability,
 		}
 		infos, err := stateConfig.WaitForStateContext(ctx)
 		if err != nil {
-			return diag.Errorf("error waiting for node (%s) to be available: %v", *vv.ImagedNodeUUID, err)
+			return diag.Errorf("error waiting for node (%s) to be available: %v", *vv.CvmIP, err)
 		}
 		if progress, ok := infos.(*fc.ImagedNodeDetails); ok {
 			if !(*progress.Available) {
-				return diag.Errorf("Node is not available to image or alraedy be a part of cluster")
+				return diag.Errorf("Current Node Available Status: (%s). Node is not available to image or already be a part of cluster", *progress.NodeState)
 			}
 		}
 	}
@@ -956,6 +954,6 @@ func foundationCentralPollingNode(ctx context.Context, conn *fc.Client, imageUUI
 		if *v.NodeState == "STATE_UNAVAILABLE" || *v.NodeState == "STATE_DISCOVERING" {
 			return v, *v.NodeState, nil
 		}
-		return v, "STATE_AVAILABLE", nil
+		return v, *v.NodeState, nil
 	}
 }
