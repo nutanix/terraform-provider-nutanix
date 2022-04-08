@@ -17,7 +17,7 @@ import (
 
 const (
 	aggregatePercentComplete  = 100
-	ImageMinTimeout           = 2 * time.Hour
+	ImageMiniTimeout          = 2 * time.Hour
 	DelayTime                 = 15 * time.Minute
 	NodePollTimeout           = 30 * time.Minute
 	DelayTimeNodeAvailability = 10 * time.Second
@@ -30,7 +30,7 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 		UpdateContext: resourceNutanixFCImageClusterUpdate,
 		DeleteContext: resourceNutanixFCImageClusterDelete,
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(ImageMinTimeout),
+			Create: schema.DefaultTimeout(ImageMiniTimeout),
 		},
 		Schema: map[string]*schema.Schema{
 			"cluster_external_ip": {

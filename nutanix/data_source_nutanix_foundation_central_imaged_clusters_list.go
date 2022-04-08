@@ -602,7 +602,7 @@ func flattenFCFoundationInitConfig(fci *fc.FoundationInitConfig) []interface{} {
 		fcic["hyperv_sku"] = fci.HypervSku
 		fcic["hypervisor_gateway"] = fci.HypervisorGateway
 		fcic["hypervisor_iso_url"] = flattenHypervisorIsoURL(fci.HypervisorIsoURL)
-		fcic["hypervisor_isos"] = flattenHypervisorIsos(fci.HypervisorIsos)
+		fcic["hypervisor_isos"] = flattenFCHypervisorIsos(fci.HypervisorIsos)
 		fcic["hypervisor_netmask"] = fci.HypervisorNetmask
 		fcic["ipmi_gateway"] = fci.IpmiGateway
 		fcic["ipmi_netmask"] = fci.IpmiNetmask
@@ -686,7 +686,7 @@ func flattenHypervisorIsoURL(hiso *fc.HypervisorIso) map[string]interface{} {
 	}
 }
 
-func flattenHypervisorIsos(hisos []*fc.HypervisorIso) (res []map[string]interface{}) {
+func flattenFCHypervisorIsos(hisos []*fc.HypervisorIso) (res []map[string]interface{}) {
 	if len(hisos) > 0 {
 		for _, k := range hisos {
 			re := make(map[string]interface{})

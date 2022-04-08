@@ -18,7 +18,7 @@ type Client struct {
 
 // NewFoundationCentralClient return a client to operate foundation central resources
 func NewFoundationCentralClient(credentials client.Credentials) (*Client, error) {
-	c, err := client.NewClient(&credentials, userAgent, absolutePath)
+	c, err := client.NewClient(&credentials, userAgent, absolutePath, false)
 
 	if err != nil {
 		return nil, err
