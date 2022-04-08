@@ -53,6 +53,9 @@ func (c *Config) Client() (*Client, error) {
 		return nil, err
 	}
 	foundationClient, err := foundation.NewFoundationAPIClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 	fcClient, err := fc.NewFoundationCentralClient(configCreds)
 	if err != nil {
 		return nil, err
