@@ -44,7 +44,7 @@ Note : hypervisor realated attributes are must in either defaults or node spec
 module "batch1" {
 
     // source where module code is present in local machine
-    source = "../../../modules/foundation/aos-based-node-imaging/node-serials-fliter/"
+    source = "../../../modules/foundation/aos-based-node-imaging/node-serials-filter/"
     timeout = 120
     cvm_netmask = "xx.xx.xx.xx"
     cvm_gateway = "xx.xx.xx.xx"
