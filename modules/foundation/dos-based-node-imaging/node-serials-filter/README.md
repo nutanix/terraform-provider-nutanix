@@ -17,7 +17,7 @@ Basic example of usage. This gets all network information from data sources and 
 module "batch1" {
 
     // source where module code is present in local machine
-    source = "<local-path-to-nutanix-terraform-provider-repo>/terraform-provider-nutanix/modules/foundation/dos-based-node-imaging/node-serials-fliter/"
+    source = "<local-path-to-nutanix-terraform-provider-repo>/terraform-provider-nutanix/modules/foundation/dos-based-node-imaging/node-serials-filter/"
     timeout = 120
     cvm_netmask = "xx.xx.xx.xx"
     cvm_gateway = "xx.xx.xx.xx"
