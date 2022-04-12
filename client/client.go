@@ -350,9 +350,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) error
 	}
 
 	req = req.WithContext(ctx)
-	log.Printf("req: %v\n", req)
 	resp, err := c.client.Do(req)
-	log.Printf("resp: %v\n", resp)
 	if err != nil {
 		return err
 	}
