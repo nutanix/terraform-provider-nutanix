@@ -1,4 +1,4 @@
-package foundation_central
+package foundationcentral
 
 import (
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
