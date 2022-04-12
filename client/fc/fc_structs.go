@@ -1,4 +1,4 @@
-package foundation_central
+package foundationcentral
 
 type ErrorResponse struct {
 	Code        *int32
