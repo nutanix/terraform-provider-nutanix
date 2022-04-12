@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-nutanix/client/fc"
+	fc "github.com/terraform-providers/terraform-provider-nutanix/client/fc"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -572,7 +572,7 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 }
 
 func resourceNutanixFCImageClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*Client).FC
+	conn := meta.(*Client).FoundationCentral
 	resp, err := conn.GetImagedCluster(ctx, d.Id())
 	if err != nil {
 		diag.FromErr(err)
@@ -775,7 +775,7 @@ func expandNodesList(d *schema.ResourceData) []*fc.Node {
 
 func resourceNutanixFCImageClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Get client connection
-	conn := meta.(*Client).FC
+	conn := meta.(*Client).FoundationCentral
 	req := fc.CreateClusterInput{}
 
 	clusterExternalIP, ok := d.GetOk("cluster_external_ip")
@@ -892,7 +892,7 @@ func resourceNutanixFCImageClusterUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceNutanixFCImageClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*Client).FC
+	conn := meta.(*Client).FoundationCentral
 	log.Printf("[DEBUG] Deleting Cluster: %s, %s", d.Get("cluster_name").(string), d.Id())
 	err := conn.DeleteCluster(ctx, d.Id())
 	if err != nil {
