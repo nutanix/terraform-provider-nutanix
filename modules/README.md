@@ -28,6 +28,17 @@ module "image_nodes" {
 }
 ```
 
+Example to use foubdation central module
+```hcl
+module "image_nodes"{
+    source = "../../files/terraform-provider-nutanix/modules/foundationCentral/aos-based-node-imaging/
+    node-serial-filter"
+    .
+    .
+    .
+}
+```
+
 ## Foundation Modules
 
 The modules based on foundation data sources and resources are given below : 
@@ -42,3 +53,16 @@ The modules based on foundation data sources and resources are given below :
 Note : `Required Version` denotes required terraform nutanix provider version.
 
 Check terraform-provider-nutanix/modules/foundation/examples for example configuration
+
+## Foundation Central Modules
+
+The modules  based on foundation central datasources and resources  are given below:
+
+| Name | Description | Required Version |
+|------|-------------|------------------|
+|aos-based-node-imaging/node-serial-filter| This modules can be used to image nutanix nodes by giving node serial numbers and other required inputs. Internally it uses datasources to fetch the corresponding node information and later used as node imaging input. | >1.5.0-beta |
+|manual-node-imaging/node-serial-filter| This modules is used to image nodes given required input information and node specific details. |>1.5.0-beta |  
+
+Note : `Required Version` denotes required terraform nutanix provider version.
+
+Check terraform-provider-nutanix/modules/foundationCentral/examples for example configuration
