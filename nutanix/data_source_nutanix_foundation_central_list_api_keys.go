@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-nutanix/client/fc"
+	fc "github.com/terraform-providers/terraform-provider-nutanix/client/fc"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -76,7 +76,7 @@ func dataSourceNutanixFCListAPIKeys() *schema.Resource {
 }
 
 func dataSourceNutanixFCListAPIKeysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*Client).FC
+	conn := meta.(*Client).FoundationCentral
 
 	req := &fc.ListMetadataInput{}
 	length, lok := d.GetOk("length")
