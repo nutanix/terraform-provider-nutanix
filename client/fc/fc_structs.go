@@ -1,4 +1,4 @@
-package fc
+package foundation_central
 
 type ErrorResponse struct {
 	Code        *int32
@@ -26,6 +26,7 @@ type CommonNetworkSettings struct {
 	HypervisorNtpServers []string `json:"hypervisor_ntp_servers,omitempty"`
 }
 
+// ImagedNodesList Filter
 type ImagedNodeListFilter struct {
 	NodeState *string `json:"node_state,omitempty"`
 }
@@ -108,17 +109,20 @@ type ImagedNodesResponse struct {
 	ImagedNodeUUID *string `json:"imaged_node_uuid,omitempty"`
 }
 
+// Input for Imaged Nodes List
 type ImagedNodesListInput struct {
 	Length  *int                  `json:"length,omitempty"`
 	Filters *ImagedNodeListFilter `json:"filters,omitempty"`
 	Offset  *int                  `json:"offset,omitempty"`
 }
 
+// Response of Imaged Nodes List
 type ImagedNodesListResponse struct {
 	Metadata    *ListMetadataOutput  `json:"metadata,omitempty"`
 	ImagedNodes []*ImagedNodeDetails `json:"imaged_nodes,omitempty"`
 }
 
+// Progress Details of a Node
 type NodeProgressDetail struct {
 	Status          *string   `json:"status,omitempty"`
 	ImagedNodeUUID  *string   `json:"imaged_node_uuid,omitempty"`
@@ -128,6 +132,7 @@ type NodeProgressDetail struct {
 	MessageList     []*string `json:"message_list,omitempty"`
 }
 
+// Progress details of a Cluster
 type ClusterProgressDetails struct {
 	ClusterName     *string   `json:"cluster_name,omitempty"`
 	Status          *string   `json:"status,omitempty"`
@@ -135,6 +140,7 @@ type ClusterProgressDetails struct {
 	MessageList     []*string `json:"message_list,omitempty"`
 }
 
+// Format of Cluster Status
 type ClusterStatus struct {
 	ClusterCreationStarted   *bool                   `json:"cluster_creation_started,omitempty"`
 	IntentPickedUp           *bool                   `json:"intent_picked_up,omitempty"`
@@ -146,6 +152,7 @@ type ClusterStatus struct {
 	FoundationSessionID      *string                 `json:"foundation_session_id,omitempty"`
 }
 
+// Format of imaged cluster details
 type ImagedClusterDetails struct {
 	CurrentTime            *string                `json:"current_time,omitempty"`
 	Archived               *bool                  `json:"archived,omitempty"`
@@ -165,21 +172,25 @@ type ImagedClusterDetails struct {
 	ImagedClusterUUID      *string                `json:"imaged_cluster_uuid,omitempty"`
 }
 
+// filter for Imaged Cluster List
 type ImagedClustersListFilter struct {
 	Archived *bool `json:"archived,omitempty"`
 }
 
+// Input for Imaged Cluster List
 type ImagedClustersListInput struct {
 	Length  *int                      `json:"length,omitempty"`
 	Filters *ImagedClustersListFilter `json:"filters,omitempty"`
 	Offset  *int                      `json:"offset,omitempty"`
 }
 
+// Response for Imaged Cluster List
 type ImagedClustersListResponse struct {
 	Metadata       *ListMetadataOutput     `json:"metadata,omitempty"`
 	ImagedClusters []*ImagedClusterDetails `json:"imaged_clusters,omitempty"`
 }
 
+// Format of Hypervisor ISO Details
 type HypervisorIsoDetails struct {
 	HypervSku        *string `json:"hyperv_sku,omitempty"`
 	URL              *string `json:"url,omitempty"`
@@ -187,6 +198,7 @@ type HypervisorIsoDetails struct {
 	Sha256sum        *string `json:"sha256sum,omitempty"`
 }
 
+// format of Node to be Imaged
 type Node struct {
 	CvmGateway                 *string                `json:"cvm_gateway,omitempty"`
 	IpmiNetmask                *string                `json:"ipmi_netmask,omitempty"`
@@ -207,6 +219,8 @@ type Node struct {
 	UseExistingNetworkSettings *bool                  `json:"use_existing_network_settings,omitempty"`
 	IpmiGateway                *string                `json:"ipmi_gateway,omitempty"`
 }
+
+// Input to Create a cluster
 type CreateClusterInput struct {
 	ClusterExternalIP     *string                `json:"cluster_external_ip,omitempty"`
 	CommonNetworkSettings *CommonNetworkSettings `json:"common_network_settings,omitempty"`
@@ -222,18 +236,22 @@ type CreateClusterInput struct {
 	SkipClusterCreation   bool                   `json:"skip_cluster_creation,omitempty"`
 }
 
+// Response of cluster creation
 type CreateClusterResponse struct {
 	ImagedClusterUUID *string `json:"imaged_cluster_uuid,omitempty"`
 }
 
+// Update cluster data
 type UpdateClusterData struct {
 	Archived *bool `json:"archived,omitempty"`
 }
 
+// Input to create API KEY
 type CreateAPIKeysInput struct {
 	Alias string `json:"alias"`
 }
 
+// Response of API KEY creation
 type CreateAPIKeysResponse struct {
 	CreatedTimestamp string `json:"created_timestamp,omitempty"`
 	Alias            string `json:"alias,omitempty"`
@@ -242,11 +260,13 @@ type CreateAPIKeysResponse struct {
 	CurrentTime      string `json:"current_time,omitempty"`
 }
 
+// format to list all the API key
 type ListAPIKeysResponse struct {
 	Metadata *ListMetadataOutput      `json:"metadata,omitempty" mapstructure:"metadata,omitempty"`
 	APIKeys  []*CreateAPIKeysResponse `json:"api_keys,omitempty"`
 }
 
+// Format of Foundation Init Config
 type FoundationInitConfig struct {
 	Blocks            []*Blocks        `json:"blocks,omitempty"`
 	Clusters          []*Clusters      `json:"clusters,omitempty"`
@@ -264,22 +284,26 @@ type FoundationInitConfig struct {
 	NosPackageURL     *NosPackageURL   `json:"nos_package_url,omitempty"`
 }
 
+// format for Hypervisor ISO
 type HypervisorIso struct {
 	HypervisorType *string `json:"hypervisor_type,omitempty"`
 	Sha256sum      *string `json:"sha256sum,omitempty"`
 	URL            *string `json:"url,omitempty"`
 }
 
+// NOS Package URL
 type NosPackageURL struct {
 	Sha256sum string `json:"sha256sum,omitempty"`
 	URL       string `json:"url,omitempty"`
 }
 
+// format of blocks
 type Blocks struct {
 	BlockID string   `json:"block_id,omitempty"`
 	Nodes   []*Nodes `json:"nodes,omitempty"`
 }
 
+// format of nodes inside block field
 type Nodes struct {
 	CvmIP                      string                 `json:"cvm_ip,omitempty"`
 	CvmVlanID                  int                    `json:"cvm_vlan_id,omitempty"`
@@ -295,6 +319,7 @@ type Nodes struct {
 	HardwareAttributesOverride map[string]interface{} `json:"hardware_attributes_override,omitempty"`
 }
 
+// format of clusters
 type Clusters struct {
 	ClusterExternalIP     string    `json:"cluster_external_ip,omitempty"`
 	ClusterInitNow        bool      `json:"cluster_init_now,omitempty"`
@@ -307,6 +332,7 @@ type Clusters struct {
 	TimeZone              string    `json:"timezone,omitempty"`
 }
 
+// input of Imaged node details
 type ImagedNodeDetailsInput struct {
 	ImagedNodeUUID string `json:"imaged_node_uuid"`
 }

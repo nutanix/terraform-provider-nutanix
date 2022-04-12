@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-nutanix/client/fc"
+	foundation_central "github.com/terraform-providers/terraform-provider-nutanix/client/fc"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -403,8 +403,8 @@ func dataSourceNutanixFCClusterDetails() *schema.Resource {
 }
 
 func dataSourceNutanixFCClusterDetailsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*Client).FC
-	req := fc.CreateClusterResponse{}
+	conn := meta.(*Client).FoundationCentral
+	req := foundation_central.CreateClusterResponse{}
 
 	clusteruuid, ok := d.GetOk("imaged_cluster_uuid")
 	if !ok {

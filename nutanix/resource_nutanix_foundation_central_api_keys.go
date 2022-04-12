@@ -7,7 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/terraform-providers/terraform-provider-nutanix/client/fc"
+	fc "github.com/terraform-providers/terraform-provider-nutanix/client/fc"
 )
 
 func resourceNutanixFCAPIKeys() *schema.Resource {
@@ -42,7 +42,7 @@ func resourceNutanixFCAPIKeys() *schema.Resource {
 }
 
 func resourceNutanixFCAPIKeysCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*Client).FC
+	conn := meta.(*Client).FoundationCentral
 	req := &fc.CreateAPIKeysInput{}
 
 	alias, ok := d.GetOk("alias")
@@ -60,7 +60,7 @@ func resourceNutanixFCAPIKeysCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceNutanixFCAPIKeysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*Client).FC
+	conn := meta.(*Client).FoundationCentral
 	resp, err := conn.GetAPIKey(ctx, d.Id())
 
 	if err != nil {

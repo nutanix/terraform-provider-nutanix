@@ -36,7 +36,7 @@ func dataSourceNutanixFCAPIKeys() *schema.Resource {
 }
 
 func dataSourceNutanixFCAPIKeysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*Client).FC
+	conn := meta.(*Client).FoundationCentral
 
 	if uuid, uuidok := d.GetOk("key_uuid"); uuidok {
 		resp, err := conn.GetAPIKey(ctx, uuid.(string))

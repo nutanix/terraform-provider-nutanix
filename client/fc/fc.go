@@ -1,4 +1,4 @@
-package fc
+package foundation_central
 
 import (
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
@@ -30,13 +30,6 @@ func NewFoundationCentralClient(credentials client.Credentials) (*Client, error)
 			client: c,
 		},
 	}
-
-	// f.client.OnRequestCompleted(func(req *http.Request, resp *http.Response, v interface{}) {
-	// 	if v != nil {
-	// 		utils.PrintToJSON(v, "[Debug] FINISHED REQUEST")
-	// 		// TBD: How to print responses before all requests.
-	// 	}
-	// })
 
 	return fc, nil
 }
