@@ -28,7 +28,7 @@ module "image_nodes" {
 }
 ```
 
-Example to use foubdation central module
+Example to use foundation central module
 ```hcl
 module "image_nodes"{
     source = "../../files/terraform-provider-nutanix/modules/foundationCentral/aos-based-node-imaging/
