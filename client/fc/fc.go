@@ -1,6 +1,9 @@
 package foundationcentral
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
 )
 
@@ -8,6 +11,7 @@ const (
 	libraryVersion = "v1"
 	absolutePath   = "api/fc/" + libraryVersion
 	userAgent      = "nutanix/" + libraryVersion
+	clientName     = "foundationCentral"
 )
 
 // Client manages the foundation central API
@@ -18,18 +22,27 @@ type Client struct {
 
 // NewFoundationCentralClient return a client to operate foundation central resources
 func NewFoundationCentralClient(credentials client.Credentials) (*Client, error) {
-	c, err := client.NewClient(&credentials, userAgent, absolutePath, false)
+	var baseClient *client.Client
 
-	if err != nil {
-		return nil, err
+	// check if all required fields are present. Else create an empty client
+	if credentials.Username != "" && credentials.Password != "" && credentials.Endpoint != "" {
+		c, err := client.NewClient(&credentials, userAgent, absolutePath, false)
+		if err != nil {
+			return nil, err
+		}
+		baseClient = c
+	} else {
+		errorMsg := fmt.Sprintf("Foundation Central Client is missing. "+
+			"Please provide required details - %s in provider configuration.", strings.Join(credentials.RequiredFields[clientName], ", "))
+
+		baseClient = &client.Client{UserAgent: userAgent, ErrorMsg: errorMsg}
 	}
 
 	fc := &Client{
-		client: c,
+		client: baseClient,
 		Service: Operations{
-			client: c,
+			client: baseClient,
 		},
 	}
-
 	return fc, nil
 }
