@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
-NOTE: The latest version of the Nutanix provider is [v1.5.0-beta](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.5.0-beta)
+NOTE: The latest version of the Nutanix provider is [v1.5.0-beta.2](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.5.0-beta.2)
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 ## Build, Quality Status
@@ -46,6 +46,15 @@ Foundation based examples : https://github.com/nutanix/terraform-provider-nutani
 Foundation based modules & examples : https://github.com/nutanix/terraform-provider-nutanix/blob/master/modules/foundation/
 
 **Note : Foundation feature in nutanix terraform provider is in beta mode**
+
+## Foundation Central
+> For the 1.5.50-beta.2 release of the provider it will have N-1 compatibility with the Foundation Central. This release was tested with v1.2 and v1.3 Foundation Central versions.
+
+Foundation Central based examples : https://github.com/nutanix/terraform-provider-nutanix/blob/master/examples/foundationCentral/
+
+Foundation Central based modules and examples : Foundation based modules & examples : https://github.com/nutanix/terraform-provider-nutanix/blob/master/modules/foundationCentral/
+
+**Note : Foundation Central feature in nutanix terraform provider is in beta mode**
 
 ## Example Usage
 
@@ -129,6 +138,8 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 * nutanix_foundation_image_nodes
 * nutanix_foundation_ipmi_config
 * nutanix_foundation_image
+* nutanix_foundation_central_api_keys
+* nutanix_foundation_central_image_cluster
 
 ## Data Sources
 
@@ -170,6 +181,12 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 * nutanix_foundation_node_network_details
 * nutanix_foundation_nos_packages
 * nutanix_foundation_hypervisor_isos
+* nutanix_foundation_central_api_keys
+* nutanix_foundation_central_list_api_keys
+* nutanix_foundation_central_imaged_nodes_list
+* nutanix_foundation_central_imaged_clusters_list
+* nutanix_foundation_central_cluster_details
+* nutanix_foundation_central_imaged_node_details
 
 ## Quick Install
 
