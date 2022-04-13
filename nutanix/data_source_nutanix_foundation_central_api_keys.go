@@ -24,9 +24,8 @@ func dataSourceNutanixFCAPIKeys() *schema.Resource {
 				Required: true,
 			},
 			"api_key": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"current_time": {
 				Type:     schema.TypeString,
@@ -40,7 +39,7 @@ func dataSourceNutanixFCAPIKeysRead(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*Client).FoundationCentral
 
 	if uuid, uuidok := d.GetOk("key_uuid"); uuidok {
-		resp, err := conn.GetAPIKey(ctx, uuid.(string))
+		resp, err := conn.Service.GetAPIKey(ctx, uuid.(string))
 		if err != nil {
 			return diag.Errorf("error reading API keys with error %s", err)
 		}

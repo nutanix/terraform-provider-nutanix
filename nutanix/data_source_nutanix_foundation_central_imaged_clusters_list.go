@@ -472,7 +472,7 @@ func dataSourceNutanixFCImagedClustersListRead(ctx context.Context, d *schema.Re
 		req.Filters = filt
 	}
 
-	resp, err := conn.ListImagedClusters(ctx, req)
+	resp, err := conn.Service.ListImagedClusters(ctx, req)
 	if err != nil {
 		return diag.FromErr(err)
 	}

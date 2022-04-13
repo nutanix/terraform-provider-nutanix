@@ -89,7 +89,7 @@ func dataSourceNutanixFCListAPIKeysRead(ctx context.Context, d *schema.ResourceD
 		req.Offset = utils.IntPtr(offset.(int))
 	}
 
-	resp, err := conn.ListAPIKeys(ctx, req)
+	resp, err := conn.Service.ListAPIKeys(ctx, req)
 	if err != nil {
 		return diag.FromErr(err)
 	}
