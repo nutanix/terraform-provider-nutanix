@@ -573,7 +573,7 @@ func resourceNutanixFCImageCluster() *schema.Resource {
 
 func resourceNutanixFCImageClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).FoundationCentral
-	resp, err := conn.GetImagedCluster(ctx, d.Id())
+	resp, err := conn.Service.GetImagedCluster(ctx, d.Id())
 	if err != nil {
 		diag.FromErr(err)
 	}
@@ -894,7 +894,7 @@ func resourceNutanixFCImageClusterUpdate(ctx context.Context, d *schema.Resource
 func resourceNutanixFCImageClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).FoundationCentral
 	log.Printf("[DEBUG] Deleting Cluster: %s, %s", d.Get("cluster_name").(string), d.Id())
-	err := conn.DeleteCluster(ctx, d.Id())
+	err := conn.Service.DeleteCluster(ctx, d.Id())
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")

@@ -12,9 +12,10 @@ import (
 )
 
 var requiredProviderFields map[string][]string = map[string][]string{
-	"prism_central": {"username", "password", "endpoint"},
-	"karbon":        {"username", "password", "endpoint"},
-	"foundation":    {"foundation_endpoint"},
+	"prism_central":      {"username", "password", "endpoint"},
+	"karbon":             {"username", "password", "endpoint"},
+	"foundation":         {"foundation_endpoint"},
+	"foundation_central": {"username", "password", "endpoint"},
 }
 
 // Provider function returns the object that implements the terraform.ResourceProvider interface, specifically a schema.Provider

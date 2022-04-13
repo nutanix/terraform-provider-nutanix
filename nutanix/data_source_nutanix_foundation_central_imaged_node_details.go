@@ -169,7 +169,7 @@ func dataSourceFCImagedNodeDetailsRead(ctx context.Context, d *schema.ResourceDa
 	}
 	req.ImagedNodeUUID = nodeUUID.(string)
 
-	res, err := conn.GetImagedNode(ctx, req.ImagedNodeUUID)
+	res, err := conn.Service.GetImagedNode(ctx, req.ImagedNodeUUID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
