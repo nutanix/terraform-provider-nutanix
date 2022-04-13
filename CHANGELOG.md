@@ -1,10 +1,10 @@
 ## 1.5.0-beta.2 (April 12, 2022)
 
-[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.5.0-beta...v/1.5.0-beta.2)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.5.0-beta...v1.5.0-beta.2)
 
 **New Feature:**
 
-- Add resources and data sources for Nutanix Foundation Central  [\#420](https://github.com/nutanix/terraform-provider-nutanix/pull/420)
+- Add resources and data sources for Nutanix Foundation Central  [\#422](https://github.com/nutanix/terraform-provider-nutanix/pull/422)
 
     New Data Sources :
     -   nutanix_foundation_central_api_keys
