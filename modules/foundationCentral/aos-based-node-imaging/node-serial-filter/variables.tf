@@ -39,7 +39,7 @@ variable "cluster_name" {
 variable "cluster_size" {
   description = "Number of nodes in the cluster"
   type        = number
-  default     = 0
+  default     = null
 }
 
 //[Optional]: 
