@@ -1,3 +1,29 @@
+## 1.5.0-beta.2 (April 12, 2022)
+
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.5.0-beta...v/1.5.0-beta.2)
+
+**New Feature:**
+
+- Add resources and data sources for Nutanix Foundation Central  [\#420](https://github.com/nutanix/terraform-provider-nutanix/pull/420)
+
+    New Data Sources :
+    -   nutanix_foundation_central_api_keys
+    -   nutanix_foundation_central_list_api_keys
+    -   nutanix_foundation_central_imaged_nodes_list
+    -   nutanix_foundation_central_imaged_clusters_list
+    -   nutanix_foundation_central_cluster_details
+    -   nutanix_foundation_central_imaged_node_details
+
+    
+    New Resources :
+    -   nutanix_foundation_central_image_cluster
+    -   nutanix_foundation_central_api_keys
+
+    New Modules : 
+    -   aos-based-node-imaging/node-serials-filter
+    -   manual-mode-imaging
+
+
 ## 1.5.0-beta (April 1, 2022)
 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.4.1...v1.5.0-beta)
