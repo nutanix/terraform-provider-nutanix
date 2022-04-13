@@ -412,7 +412,7 @@ func dataSourceNutanixFCClusterDetailsRead(ctx context.Context, d *schema.Resour
 	}
 	req.ImagedClusterUUID = utils.StringPtr(clusteruuid.(string))
 
-	resp, err := conn.GetImagedCluster(ctx, *req.ImagedClusterUUID)
+	resp, err := conn.Service.GetImagedCluster(ctx, *req.ImagedClusterUUID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
