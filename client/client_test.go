@@ -38,7 +38,7 @@ func TestNewClient(t *testing.T) {
 		t.Errorf("Unexpected Error: %v", err)
 	}
 
-	expectedURL := fmt.Sprintf(defaultBaseURL, "https", "foo.com")
+	expectedURL := fmt.Sprintf(defaultBaseURL, httpsPrefix, "foo.com")
 
 	if c.BaseURL == nil || c.BaseURL.String() != expectedURL {
 		t.Errorf("NewClient BaseURL = %v, expected %v", c.BaseURL, expectedURL)
@@ -46,6 +46,23 @@ func TestNewClient(t *testing.T) {
 
 	if c.UserAgent != testUserAgent {
 		t.Errorf("NewClient UserAgent = %v, expected %v", c.UserAgent, testUserAgent)
+	}
+}
+
+func TestNewBaseClient(t *testing.T) {
+	c, err := NewBaseClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil}, testAbsolutePath, true)
+	if err != nil {
+		t.Errorf("Unexpected Error: %v", err)
+	}
+
+	expectedURL := fmt.Sprintf(defaultBaseURL, httpPrefix, "foo.com")
+
+	if c.BaseURL == nil || c.BaseURL.String() != expectedURL {
+		t.Errorf("NewBaseClient BaseURL = %v, expected %v", c.BaseURL, expectedURL)
+	}
+
+	if c.AbsolutePath != testAbsolutePath {
+		t.Errorf("NewBaseClient UserAgent = %v, expected %v", c.AbsolutePath, testAbsolutePath)
 	}
 }
 
@@ -70,6 +87,122 @@ func TestNewRequest(t *testing.T) {
 	body, _ := ioutil.ReadAll(req.Body)
 	if string(body) != outBody {
 		t.Errorf("NewRequest(%v) Body = %v, expected %v", inBody, string(body), outBody)
+	}
+}
+
+func TestNewUnAuthRequest(t *testing.T) {
+	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil}, testUserAgent, testAbsolutePath, true)
+
+	if err != nil {
+		t.Errorf("Unexpected Error: %v", err)
+	}
+
+	inURL, outURL := "/foo", fmt.Sprintf(defaultBaseURL+testAbsolutePath+"/foo", httpPrefix, "foo.com")
+	inBody, outBody := map[string]interface{}{"name": "bar"}, `{"name":"bar"}`+"\n"
+
+	req, _ := c.NewUnAuthRequest(context.TODO(), http.MethodPost, inURL, inBody)
+
+	// test relative URL was expanded
+	if req.URL.String() != outURL {
+		t.Errorf("NewUnAuthRequest(%v) URL = %v, expected %v", inURL, req.URL, outURL)
+	}
+
+	// test body was JSON encoded
+	body, _ := ioutil.ReadAll(req.Body)
+	if string(body) != outBody {
+		t.Errorf("NewUnAuthRequest(%v) Body = %v, expected %v", inBody, string(body), outBody)
+	}
+
+	// test headers. Authorization header shouldn't exist
+	if _, ok := req.Header["Authorization"]; ok {
+		t.Errorf("Unexpected Authorization header obtained in request from NewUnAuthRequest()")
+	}
+	inHeaders := map[string]string{
+		"Content-Type": mediaType,
+		"Accept":       mediaType,
+		"User-Agent":   testUserAgent,
+	}
+	for k, v := range req.Header {
+		if v[0] != inHeaders[k] {
+			t.Errorf("NewUnAuthRequest() Header value for %v = %v, expected %v", k, v[0], inHeaders[k])
+		}
+	}
+}
+
+func TestNewUnAuthFormEncodedRequest(t *testing.T) {
+	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil}, testUserAgent, testAbsolutePath, true)
+
+	if err != nil {
+		t.Errorf("Unexpected Error: %v", err)
+	}
+
+	inURL, outURL := "/foo", fmt.Sprintf(defaultBaseURL+testAbsolutePath+"/foo", httpPrefix, "foo.com")
+	inBody, outBody := map[string]string{"name": "bar", "fullname": "foobar"}, "name=bar&fullname=foobar"+"\n"
+
+	req, _ := c.NewUnAuthFormEncodedRequest(context.TODO(), http.MethodPost, inURL, inBody)
+
+	// test relative URL was expanded
+	if req.URL.String() != outURL {
+		t.Errorf("NewUnAuthFormEncodedRequest(%v) URL = %v, expected %v", inURL, req.URL, outURL)
+	}
+
+	// test body was JSON encoded
+	body, _ := ioutil.ReadAll(req.Body)
+	if string(body) != outBody {
+		t.Errorf("NewUnAuthFormEncodedRequest(%v) Body = %v, expected %v", inBody, string(body), outBody)
+	}
+
+	// test headers. Authorization header shouldn't exist
+	if _, ok := req.Header["Authorization"]; ok {
+		t.Errorf("Unexpected Authorization header obtained in request from NewUnAuthFormEncodedRequest()")
+	}
+	inHeaders := map[string]string{
+		"Content-Type": formEncodedType,
+		"Accept":       mediaType,
+		"User-Agent":   testUserAgent,
+	}
+	for k, v := range req.Header {
+		if v[0] != inHeaders[k] {
+			t.Errorf("NewUnAuthFormEncodedRequest() Header value for %v = %v, expected %v", k, v[0], inHeaders[k])
+		}
+	}
+}
+
+func TestNewUnAuthUploadRequest(t *testing.T) {
+	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil}, testUserAgent, testAbsolutePath, true)
+
+	if err != nil {
+		t.Errorf("Unexpected Error: %v", err)
+	}
+
+	inURL, outURL := "/foo", fmt.Sprintf(defaultBaseURL+testAbsolutePath+"/foo", httpPrefix, "foo.com")
+	inBody, outBody := []byte("Yeah I am genius!"), "Yeah I am genius!"
+	req, _ := c.NewUnAuthUploadRequest(context.TODO(), http.MethodPost, inURL, inBody)
+
+	// test relative URL was expanded
+	if req.URL.String() != outURL {
+		t.Errorf("NewUnAuthUploadRequest(%v) URL = %v, expected %v", inURL, req.URL, outURL)
+	}
+
+	//test body was JSON encoded
+	body, _ := ioutil.ReadAll(req.Body)
+	if string(body) != outBody {
+		t.Errorf("NewUnAuthUploadRequest(%v) Body = %v, expected %v", inBody, string(body), outBody)
+	}
+
+	// test headers. Authorization header shouldn't exist
+	if _, ok := req.Header["Authorization"]; ok {
+		t.Errorf("Unexpected Authorization header obtained in request from NewUnAuthUploadRequest()")
+	}
+	inHeaders := map[string]string{
+		"Content-Type": octetStreamType,
+		"Accept":       mediaType,
+		"User-Agent":   testUserAgent,
+	}
+	for k, v := range req.Header {
+		if v[0] != inHeaders[k] {
+			t.Errorf("NewUnAuthUploadRequest() Header value for %v = %v, expected %v", k, v[0], inHeaders[k])
+		}
 	}
 }
 
