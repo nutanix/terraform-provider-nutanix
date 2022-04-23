@@ -146,7 +146,7 @@ func TestAccNutanixRecoveryPlanWithNetwork_basic(t *testing.T) {
 	})
 }
 
-func TestAccResourceNutanixRecoveryPlanWithStageList_importBasic(t *testing.T) {
+func TestAccNutanixRecoveryPlanWithStageList_importBasic(t *testing.T) {
 	resourceName := "nutanix_recovery_plan.test"
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")

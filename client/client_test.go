@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -19,6 +20,7 @@ const (
 	testLibraryVersion = "v3"
 	testAbsolutePath   = "api/nutanix/" + testLibraryVersion
 	testUserAgent      = "nutanix/" + testLibraryVersion
+	fileName           = "v3/v3.go"
 )
 
 func setup() (*http.ServeMux, *Client, *httptest.Server) {
@@ -90,6 +92,50 @@ func TestNewRequest(t *testing.T) {
 	}
 }
 
+func TestNewUploadRequest(t *testing.T) {
+	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil}, testUserAgent, testAbsolutePath, true)
+
+	if err != nil {
+		t.Errorf("Unexpected Error: %v", err)
+	}
+
+	inURL, outURL := "/foo", fmt.Sprintf(defaultBaseURL+testAbsolutePath+"/foo", httpPrefix, "foo.com")
+	inBody, _ := os.Open(fileName)
+	if err != nil {
+		t.Fatalf("Error opening file %v, error : %v", fileName, err)
+	}
+
+	// expected body
+	out, _ := os.Open(fileName)
+	outBody, _ := ioutil.ReadAll(out)
+
+	req, err := c.NewUploadRequest(context.TODO(), http.MethodPost, inURL, inBody)
+	if err != nil {
+		t.Fatalf("NewUploadRequest() errored out with error : %v", err.Error())
+	}
+	// test relative URL was expanded
+	if req.URL.String() != outURL {
+		t.Errorf("NewUploadRequest(%v) URL = %v, expected %v", inURL, req.URL, outURL)
+	}
+
+	//test body contents
+	got, _ := ioutil.ReadAll(req.Body)
+	if !bytes.Equal(got, outBody) {
+		t.Errorf("NewUploadRequest(%v) Body = %v, expected %v", inBody, string(got), string(outBody))
+	}
+
+	// test headers.
+	inHeaders := map[string]string{
+		"Content-Type": octetStreamType,
+		"Accept":       mediaType,
+	}
+	for k, v := range inHeaders {
+		if v != req.Header[k][0] {
+			t.Errorf("NewUploadRequest() Header value for %v = %v, expected %v", k, req.Header[k][0], v)
+		}
+	}
+}
+
 func TestNewUnAuthRequest(t *testing.T) {
 	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil}, testUserAgent, testAbsolutePath, true)
 
@@ -137,7 +183,8 @@ func TestNewUnAuthFormEncodedRequest(t *testing.T) {
 	}
 
 	inURL, outURL := "/foo", fmt.Sprintf(defaultBaseURL+testAbsolutePath+"/foo", httpPrefix, "foo.com")
-	inBody, outBody := map[string]string{"name": "bar", "fullname": "foobar"}, "name=bar&fullname=foobar"+"\n"
+	inBody := map[string]string{"name": "bar", "fullname": "foobar"}
+	outBody := map[string][]string{"name": {"bar"}, "fullname": {"foobar"}}
 
 	req, _ := c.NewUnAuthFormEncodedRequest(context.TODO(), http.MethodPost, inURL, inBody)
 
@@ -146,10 +193,13 @@ func TestNewUnAuthFormEncodedRequest(t *testing.T) {
 		t.Errorf("NewUnAuthFormEncodedRequest(%v) URL = %v, expected %v", inURL, req.URL, outURL)
 	}
 
-	// test body was JSON encoded
-	body, _ := ioutil.ReadAll(req.Body)
-	if string(body) != outBody {
-		t.Errorf("NewUnAuthFormEncodedRequest(%v) Body = %v, expected %v", inBody, string(body), outBody)
+	// test body
+	// Parse the body form data to a map structure which can be accessed by req.PostForm
+	req.ParseForm()
+
+	// check form encoded key-values as compared to input values
+	if !reflect.DeepEqual(outBody, (map[string][]string)(req.PostForm)) {
+		t.Errorf("NewUnAuthFormEncodedRequest(%v) Form encoded k-v, got = %v, expected %v", inBody, req.PostForm, outBody)
 	}
 
 	// test headers. Authorization header shouldn't exist
@@ -176,18 +226,28 @@ func TestNewUnAuthUploadRequest(t *testing.T) {
 	}
 
 	inURL, outURL := "/foo", fmt.Sprintf(defaultBaseURL+testAbsolutePath+"/foo", httpPrefix, "foo.com")
-	inBody, outBody := []byte("Yeah I am genius!"), "Yeah I am genius!"
-	req, _ := c.NewUnAuthUploadRequest(context.TODO(), http.MethodPost, inURL, inBody)
+	inBody, _ := os.Open(fileName)
+	if err != nil {
+		t.Fatalf("Error opening fiele %v, error : %v", fileName, err)
+	}
 
+	// expected body
+	out, _ := os.Open(fileName)
+	outBody, _ := ioutil.ReadAll(out)
+
+	req, err := c.NewUnAuthUploadRequest(context.TODO(), http.MethodPost, inURL, inBody)
+	if err != nil {
+		t.Fatalf("NewUnAuthUploadRequest() errored out with error : %v", err.Error())
+	}
 	// test relative URL was expanded
 	if req.URL.String() != outURL {
 		t.Errorf("NewUnAuthUploadRequest(%v) URL = %v, expected %v", inURL, req.URL, outURL)
 	}
 
-	//test body was JSON encoded
-	body, _ := ioutil.ReadAll(req.Body)
-	if string(body) != outBody {
-		t.Errorf("NewUnAuthUploadRequest(%v) Body = %v, expected %v", inBody, string(body), outBody)
+	//test body contents
+	got, _ := ioutil.ReadAll(req.Body)
+	if !bytes.Equal(got, outBody) {
+		t.Errorf("NewUnAuthUploadRequest(%v) Body = %v, expected %v", inBody, string(got), string(outBody))
 	}
 
 	// test headers. Authorization header shouldn't exist
@@ -197,11 +257,10 @@ func TestNewUnAuthUploadRequest(t *testing.T) {
 	inHeaders := map[string]string{
 		"Content-Type": octetStreamType,
 		"Accept":       mediaType,
-		"User-Agent":   testUserAgent,
 	}
-	for k, v := range req.Header {
-		if v[0] != inHeaders[k] {
-			t.Errorf("NewUnAuthUploadRequest() Header value for %v = %v, expected %v", k, v[0], inHeaders[k])
+	for k, v := range inHeaders {
+		if v != req.Header[k][0] {
+			t.Errorf("NewUploadRequest() Header value for %v = %v, expected %v", k, req.Header[k][0], v)
 		}
 	}
 }
@@ -479,54 +538,6 @@ func TestClient_NewRequest(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Client.NewRequest() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestClient_NewUploadRequest(t *testing.T) {
-	type fields struct {
-		Credentials        *Credentials
-		client             *http.Client
-		BaseURL            *url.URL
-		UserAgent          string
-		onRequestCompleted RequestCompletionCallback
-	}
-	type args struct {
-		ctx    context.Context
-		method string
-		urlStr string
-		file   *os.File
-	}
-
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *http.Request
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Client{
-				Credentials:        tt.fields.Credentials,
-				client:             tt.fields.client,
-				BaseURL:            tt.fields.BaseURL,
-				UserAgent:          tt.fields.UserAgent,
-				onRequestCompleted: tt.fields.onRequestCompleted,
-			}
-			got, err := c.NewUploadRequest(tt.args.ctx, tt.args.method, tt.args.urlStr, tt.args.file)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Client.NewUploadRequest() error = %v, wantErr %v", err, tt.wantErr)
-
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Client.NewUploadRequest() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -1,4 +1,4 @@
-package v3
+package foundationcentral
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
 )
 
-func TestNewV3Client(t *testing.T) {
+func TestNewFoundationCentralClient(t *testing.T) {
 	// verifies positive client creation
 	cred := client.Credentials{
 		URL:                "foo.com",
@@ -19,7 +19,7 @@ func TestNewV3Client(t *testing.T) {
 		FoundationPort:     "8000",
 		RequiredFields:     nil,
 	}
-	_, err := NewV3Client(cred)
+	_, err := NewFoundationCentralClient(cred)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -29,15 +29,16 @@ func TestNewV3Client(t *testing.T) {
 		URL:      "foo.com",
 		Insecure: true,
 		RequiredFields: map[string][]string{
-			"prism_central": {"username", "password", "endpoint"},
+			"prism_central":      {"username", "password", "endpoint"},
+			"foundation_central": {"username", "password", "endpoint"},
 		},
 	}
-	v3Client2, err2 := NewV3Client(cred2)
+	FcClient2, err2 := NewFoundationCentralClient(cred2)
 	if err2 != nil {
 		t.Errorf(err2.Error())
 	}
 
-	if v3Client2.client.ErrorMsg == "" {
-		t.Errorf("NewV3Client(%v) expected the base client in v3 client to have some error message", cred2)
+	if FcClient2.client.ErrorMsg == "" {
+		t.Errorf("NewFoundationCentralClient(%v) expected the base client in v3 client to have some error message", cred2)
 	}
 }

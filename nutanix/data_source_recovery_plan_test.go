@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccRecoveryPlanDataSourceConfig_WithID(t *testing.T) {
+func TestAccNutanixRecoveryPlanDataSourceConfig_WithID(t *testing.T) {
 	resourceName := "nutanix_recovery_plan.test"
 
 	name := acctest.RandomWithPrefix("test-recovery-name-dou")
@@ -42,7 +42,7 @@ func TestAccRecoveryPlanDataSourceConfig_WithID(t *testing.T) {
 	})
 }
 
-func TestAccRecoveryPlanDataSourceConfig_WithName(t *testing.T) {
+func TestAccNutanixRecoveryPlanDataSourceConfig_WithName(t *testing.T) {
 	name := acctest.RandomWithPrefix("test-recovery-name")
 	nameUpdated := acctest.RandomWithPrefix("test-recovery-name")
 	description := acctest.RandomWithPrefix("test-recovery-desc")
