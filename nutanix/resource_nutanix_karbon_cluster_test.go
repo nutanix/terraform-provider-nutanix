@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
-func TestAccNutanixKarbonCluster_basic(t *testing.T) {
+func TestAccKarbonCluster_basic(t *testing.T) {
 	t.Skip()
 	r := acctest.RandInt()
 	resourceName := "nutanix_karbon_cluster.cluster"
@@ -56,7 +56,7 @@ func TestAccNutanixKarbonCluster_basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixKarbonCluster_scaleDown(t *testing.T) {
+func TestAccKarbonCluster_scaleDown(t *testing.T) {
 	r := acctest.RandInt()
 	t.Skip()
 	resourceName := "nutanix_karbon_cluster.cluster"
@@ -101,7 +101,7 @@ func TestAccNutanixKarbonCluster_scaleDown(t *testing.T) {
 	})
 }
 
-func TestAccNutanixKarbonCluster_updateCNI(t *testing.T) {
+func TestAccKarbonCluster_updateCNI(t *testing.T) {
 	r := acctest.RandInt()
 	t.Skip()
 	resourceName := "nutanix_karbon_cluster.cluster"

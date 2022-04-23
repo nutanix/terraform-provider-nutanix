@@ -7,18 +7,22 @@ import (
 
 func TestConfig_Client(t *testing.T) {
 	type fields struct {
-		Endpoint string
-		Username string
-		Password string
-		Port     string
-		Insecure bool
+		Endpoint           string
+		Username           string
+		Password           string
+		Port               string
+		Insecure           bool
+		FoundationPort     string
+		FoundationEndpoint string
 	}
 	config := &Config{
-		Endpoint: "http://localhost",
-		Username: "test",
-		Password: "test",
-		Port:     "8080",
-		Insecure: true,
+		Endpoint:           "http://localhost",
+		Username:           "test",
+		Password:           "test",
+		Port:               "8080",
+		Insecure:           true,
+		FoundationPort:     "8000",
+		FoundationEndpoint: "0.0.0.0",
 	}
 
 	client, err := config.Client()
@@ -35,11 +39,13 @@ func TestConfig_Client(t *testing.T) {
 		{
 			name: "new client",
 			fields: fields{
-				Endpoint: "http://localhost",
-				Username: "test",
-				Password: "test",
-				Port:     "8080",
-				Insecure: true,
+				Endpoint:           "http://localhost",
+				Username:           "test",
+				Password:           "test",
+				Port:               "8080",
+				Insecure:           true,
+				FoundationPort:     "8000",
+				FoundationEndpoint: "0.0.0.0",
 			},
 			want:    client,
 			wantErr: false,
@@ -50,11 +56,13 @@ func TestConfig_Client(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			c := &Config{
-				Endpoint: tt.fields.Endpoint,
-				Username: tt.fields.Username,
-				Password: tt.fields.Password,
-				Port:     tt.fields.Port,
-				Insecure: tt.fields.Insecure,
+				Endpoint:           tt.fields.Endpoint,
+				Username:           tt.fields.Username,
+				Password:           tt.fields.Password,
+				Port:               tt.fields.Port,
+				Insecure:           tt.fields.Insecure,
+				FoundationEndpoint: tt.fields.FoundationEndpoint,
+				FoundationPort:     tt.fields.FoundationPort,
 			}
 			got, err := c.Client()
 			if (err != nil) != tt.wantErr {

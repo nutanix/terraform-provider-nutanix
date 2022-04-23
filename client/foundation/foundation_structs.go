@@ -70,7 +70,7 @@ type FcSettings struct {
 type Clusters struct {
 	EnableNs              *bool    `json:"enable_ns,omitempty"`
 	BackplaneSubnet       string   `json:"backplane_subnet,omitempty"`
-	ClusterInitSuccessful *bool    `json:"cluster_init_successful"`
+	ClusterInitSuccessful *bool    `json:"cluster_init_successful,omitempty"`
 	BackplaneNetmask      string   `json:"backplane_netmask,omitempty"`
 	RedundancyFactor      *int64   `json:"redundancy_factor"`
 	BackplaneVlan         string   `json:"backplane_vlan,omitempty"`

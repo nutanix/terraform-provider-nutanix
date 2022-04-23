@@ -68,7 +68,7 @@ func TestAccNutanixProject_basic(t *testing.T) {
 	})
 }
 
-func TestAccResourceNutanixProject_importBasic(t *testing.T) {
+func TestAccNutanixProject_importBasic(t *testing.T) {
 	resourceName := "nutanix_project.project_test"
 
 	subnetName := acctest.RandomWithPrefix("test-subnateName")

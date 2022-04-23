@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccNutanixKarbonClusterKubeConfigDataSource_basic(t *testing.T) {
+func TestAccKarbonClusterKubeConfigDataSource_basic(t *testing.T) {
 	t.Skip()
 	r := acctest.RandInt()
 	subnetName := testVars.SubnetName
@@ -30,7 +30,7 @@ func TestAccNutanixKarbonClusterKubeConfigDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixKarbonClusterKubeConfigDataSource_basicByName(t *testing.T) {
+func TestAccKarbonClusterKubeConfigDataSource_basicByName(t *testing.T) {
 	r := acctest.RandInt()
 	subnetName := testVars.SubnetName
 	defaultContainter := testVars.DefaultContainerName

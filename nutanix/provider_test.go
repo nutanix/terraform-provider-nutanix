@@ -42,6 +42,13 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
+func testAccFoundationPreCheck(t *testing.T) {
+	if os.Getenv("FOUNDATION_ENDPOINT") == "" ||
+		os.Getenv("FOUNDATION_PORT") == "" {
+		t.Fatal("`FOUNDATION_ENDPOINT` and `FOUNDATION_PORT` must be set for foundation acceptance testing")
+	}
+}
+
 func randIntBetween(min, max int) int {
 	rand.Seed(time.Now().UnixNano())
 	return rand.Intn(max-min) + min

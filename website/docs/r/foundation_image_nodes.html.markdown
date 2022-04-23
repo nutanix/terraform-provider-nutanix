@@ -174,7 +174,7 @@ The following arguments are supported for each node:
 * `hypervisor_hostname` :- (Required) Hypervisor Hostname.
 * `hypervisor_ip` :- (Required) Hypervisor IP address.
 * `node_position` :- (Required) Position of the node in the block.
-* `image_now` :- (Required) If the node should be imaged now.
+* `image_now` :- (Optional, Default = true) If the node should be imaged now.
 * `bond_mode` :- (Required if node is capable) dynamic if using LACP, static for LAG
 * `rdma_passthrough` :- (Required if node is capable) passthru RDMA nic to CVM if possible, default to false
 * `bond_lacp_rate` :- (Required if node is lacp configured) slow or fast if lacp if being used at the switch
@@ -228,7 +228,7 @@ The following arguments are supported for each cluster:
 * `single_node_cluster` : - If it is a single node cluster.
 * `cluster_members` : - (Required) Members in the cluster.
 * `cvm_dns_servers` : - DNS servers of CVM.
-* `cluster_init_now` : - (Required) If cluster should be created.
+* `cluster_init_now` : - (Optional, Default = true) If cluster should be created.
 * `hypervisor_ntp_servers` : - NTP servers of hypervisor.
 
 ### hypervisor_iso
@@ -278,6 +278,10 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `id` : - unique id of terraform resouce is set to session_id of the imaging session
+* `session_id` : - session_id of the imaging session
+* `cluster_urls` :- list containing cluster name and cluster urls for created clusters in current session
+* `cluster_urls.#.cluster_name` :- cluster_name 
+* `cluster_urls.#.cluster_url` :- url to access the cluster login
 
 ## Defaults 
 

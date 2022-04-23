@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -51,5 +52,6 @@ func dataSourceAssertLogic(ctx context.Context, d *schema.ResourceData, meta int
 	if len(diags) > 0 {
 		return diags
 	}
+	d.SetId(resource.UniqueId())
 	return nil
 }
