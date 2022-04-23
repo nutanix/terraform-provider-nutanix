@@ -3,7 +3,6 @@ package v3
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -367,12 +366,7 @@ func (op Operations) UploadImage(uuid, filepath string) error {
 	}
 	defer file.Close()
 
-	fileContents, err := ioutil.ReadAll(file)
-	if err != nil {
-		return fmt.Errorf("error: Cannot read file %s", err)
-	}
-
-	req, err := op.client.NewUploadRequest(ctx, http.MethodPut, path, fileContents)
+	req, err := op.client.NewUploadRequest(ctx, http.MethodPut, path, file)
 
 	if err != nil {
 		return fmt.Errorf("error: Creating request %s", err)
