@@ -1003,9 +1003,9 @@ func TestOperations_UploadImage(t *testing.T) {
 		testHTTPMethod(t, r, http.MethodPut)
 
 		bodyBytes, _ := ioutil.ReadAll(r.Body)
-		file, _ := ioutil.ReadFile("/v3.go")
+		file, _ := ioutil.ReadFile("v3.go")
 
-		if reflect.DeepEqual(bodyBytes, file) {
+		if !reflect.DeepEqual(bodyBytes, file) {
 			t.Errorf("Operations.UploadImage() error: different uploaded files")
 		}
 	})
@@ -1027,7 +1027,7 @@ func TestOperations_UploadImage(t *testing.T) {
 		{
 			"TestOperations_UploadImage Upload Image",
 			fields{c},
-			args{"cfde831a-4e87-4a75-960f-89b0148aa2cc", "./v3.go"},
+			args{"cfde831a-4e87-4a75-960f-89b0148aa2cc", "v3.go"},
 		},
 	}
 

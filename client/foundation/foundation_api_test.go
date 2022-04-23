@@ -8,7 +8,6 @@ import (
 )
 
 func TestNewFoundationAPIClient(t *testing.T) {
-
 	// verifies positive client creation
 	cred := client.Credentials{
 		URL:                "foo.com",
@@ -25,9 +24,9 @@ func TestNewFoundationAPIClient(t *testing.T) {
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	outUrl := fmt.Sprintf("http://%s:%s/", cred.FoundationEndpoint, cred.FoundationPort)
-	if foundationClient.client.BaseURL.String() != outUrl {
-		t.Errorf("NewFoundationAPIClient(%v) BaseUrl in base client of foundation client = %v, expected %v", cred, foundationClient.client.BaseURL.String(), outUrl)
+	outURL := fmt.Sprintf("http://%s:%s/", cred.FoundationEndpoint, cred.FoundationPort)
+	if foundationClient.client.BaseURL.String() != outURL {
+		t.Errorf("NewFoundationAPIClient(%v) BaseUrl in base client of foundation client = %v, expected %v", cred, foundationClient.client.BaseURL.String(), outURL)
 	}
 
 	// verify missing client scenario

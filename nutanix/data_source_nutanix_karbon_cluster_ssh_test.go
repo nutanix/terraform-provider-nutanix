@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccNutanixKarbonClusterSSHDataSource_basicx(t *testing.T) {
+func TestAccKarbonClusterSSHDataSource_basicx(t *testing.T) {
 	t.Skip()
 	r := acctest.RandInt()
 	//resourceName := "nutanix_karbon_cluster.cluster"
@@ -30,7 +30,7 @@ func TestAccNutanixKarbonClusterSSHDataSource_basicx(t *testing.T) {
 	})
 }
 
-func TestAccNutanixKarbonClusterSSHDataSource_basicByName(t *testing.T) {
+func TestAccKarbonClusterSSHDataSource_basicByName(t *testing.T) {
 	r := acctest.RandInt()
 	//resourceName := "nutanix_karbon_cluster.cluster"
 	subnetName := testVars.SubnetName
