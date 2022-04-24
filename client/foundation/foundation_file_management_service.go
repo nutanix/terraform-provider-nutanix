@@ -3,7 +3,6 @@ package foundation
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -56,13 +55,7 @@ func (fmo FileManagementOperations) UploadImage(ctx context.Context, installerTy
 	}
 	defer file.Close()
 
-	// read file as slice of bytes
-	fileContents, err := ioutil.ReadAll(file)
-	if err != nil {
-		return nil, fmt.Errorf("error while reading file: %s", err)
-	}
-
-	req, err := fmo.client.NewUnAuthUploadRequest(ctx, http.MethodPost, path, fileContents)
+	req, err := fmo.client.NewUnAuthUploadRequest(ctx, http.MethodPost, path, file)
 	if err != nil {
 		return nil, err
 	}
