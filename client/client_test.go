@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"reflect"
 	"regexp"
 	"strings"
@@ -362,7 +363,7 @@ func TestClient_NewUploadRequest(t *testing.T) {
 		ctx    context.Context
 		method string
 		urlStr string
-		body   []byte
+		file   *os.File
 	}
 
 	tests := []struct {
@@ -385,7 +386,7 @@ func TestClient_NewUploadRequest(t *testing.T) {
 				UserAgent:          tt.fields.UserAgent,
 				onRequestCompleted: tt.fields.onRequestCompleted,
 			}
-			got, err := c.NewUploadRequest(tt.args.ctx, tt.args.method, tt.args.urlStr, tt.args.body)
+			got, err := c.NewUploadRequest(tt.args.ctx, tt.args.method, tt.args.urlStr, tt.args.file)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Client.NewUploadRequest() error = %v, wantErr %v", err, tt.wantErr)
 

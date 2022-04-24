@@ -310,7 +310,7 @@ func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, fi
 }
 
 // NewUploadRequest handles image uploads for image service
-func (c *Client) NewUnAuthUploadRequest(ctx context.Context, method, urlStr string, body []byte) (*http.Request, error) {
+func (c *Client) NewUnAuthUploadRequest(ctx context.Context, method, urlStr string, file *os.File) (*http.Request, error) {
 	// check if client exists or not
 	if c.client == nil {
 		return nil, fmt.Errorf(c.ErrorMsg)
@@ -322,9 +322,7 @@ func (c *Client) NewUnAuthUploadRequest(ctx context.Context, method, urlStr stri
 
 	u := c.BaseURL.ResolveReference(rel)
 
-	buf := bytes.NewBuffer(body)
-
-	req, err := http.NewRequest(method, u.String(), buf)
+	req, err := http.NewRequest(method, u.String(), file)
 
 	if err != nil {
 		return nil, err
