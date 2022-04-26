@@ -28,6 +28,7 @@ const (
 	// userAgent      = "nutanix/" + libraryVersion
 	mediaType       = "application/json"
 	formEncodedType = "application/x-www-form-urlencoded"
+	octetStreamType = "application/octet-stream"
 )
 
 // Client Config Configuration of the client
@@ -300,8 +301,17 @@ func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, fi
 		return nil, err
 	}
 
-	req.Header.Add("Content-Type", "application/octet-stream")
-	req.Header.Add("Accept", "application/octet-stream")
+	// Set req.ContentLength by reading file size, as we send *os.File in http.NewRequest()
+	// http.NewRequest() only sets content length value for types - bytes.Buffer, bytes.Reader and strings.Reader
+	// Refer https://github.com/golang/go/blob/a0f77e56b7a7ecb92dca3e2afdd56ee773c2cb07/src/net/http/request.go#L896
+	fileInfo, err := fileReader.Stat()
+	if err != nil {
+		return nil, err
+	}
+	req.ContentLength = fileInfo.Size()
+
+	req.Header.Add("Content-Type", octetStreamType)
+	req.Header.Add("Accept", mediaType)
 	req.Header.Add("User-Agent", c.UserAgent)
 	req.Header.Add("Authorization", "Basic "+
 		base64.StdEncoding.EncodeToString([]byte(c.Credentials.Username+":"+c.Credentials.Password)))
@@ -310,7 +320,7 @@ func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, fi
 }
 
 // NewUploadRequest handles image uploads for image service
-func (c *Client) NewUnAuthUploadRequest(ctx context.Context, method, urlStr string, file *os.File) (*http.Request, error) {
+func (c *Client) NewUnAuthUploadRequest(ctx context.Context, method, urlStr string, fileReader *os.File) (*http.Request, error) {
 	// check if client exists or not
 	if c.client == nil {
 		return nil, fmt.Errorf(c.ErrorMsg)
@@ -322,14 +332,23 @@ func (c *Client) NewUnAuthUploadRequest(ctx context.Context, method, urlStr stri
 
 	u := c.BaseURL.ResolveReference(rel)
 
-	req, err := http.NewRequest(method, u.String(), file)
+	req, err := http.NewRequest(method, u.String(), fileReader)
 
 	if err != nil {
 		return nil, err
 	}
 
-	req.Header.Add("Content-Type", "application/octet-stream")
-	req.Header.Add("Accept", "application/octet-stream")
+	// Set req.ContentLength by reading file size, as we send *os.File in http.NewRequest()
+	// http.NewRequest() only sets content length value for types - bytes.Buffer, bytes.Reader and strings.Reader
+	// Refer https://github.com/golang/go/blob/a0f77e56b7a7ecb92dca3e2afdd56ee773c2cb07/src/net/http/request.go#L896
+	fileInfo, err := fileReader.Stat()
+	if err != nil {
+		return nil, err
+	}
+	req.ContentLength = fileInfo.Size()
+
+	req.Header.Add("Content-Type", octetStreamType)
+	req.Header.Add("Accept", mediaType)
 	req.Header.Add("User-Agent", c.UserAgent)
 	return req, nil
 }
