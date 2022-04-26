@@ -74,7 +74,7 @@ func TestOperation_ImageNodes(t *testing.T) {
 				map[string]interface{}{
 					"redundancy_factor":   1,
 					"cluster_init_now":    true,
-					"cluster_external_ip": interface{}(nil),
+					"cluster_external_ip": nil,
 					"cluster_name":        "test_cluster",
 					"cluster_members":     []interface{}{"0.0.0.0"},
 				},
@@ -82,13 +82,14 @@ func TestOperation_ImageNodes(t *testing.T) {
 		}
 
 		// checks
-		var b map[string]interface{}
-		err := json.NewDecoder(r.Body).Decode(&b)
+		var v map[string]interface{}
+		err := json.NewDecoder(r.Body).Decode(&v)
 		if err != nil {
 			t.Fatalf("decode json: %v", err)
 		}
-		if !reflect.DeepEqual(b, expected) {
-			t.Errorf("Request body\n got=%#v\nwant=%#v", b, expected)
+
+		if !reflect.DeepEqual(v, expected) {
+			t.Errorf("Request body\n got=%#v\nwant=%#v", v, expected)
 		}
 
 		// mock response
@@ -145,7 +146,7 @@ func TestOperation_ImageNodes(t *testing.T) {
 	// checks
 	got, err := op.ImageNodes(ctx, inp)
 	if err != nil {
-		t.Errorf("NodeImagingOperations.ImageNodes() error = %v", err)
+		t.Fatalf("NodeImagingOperations.ImageNodes() error = %v", err)
 	}
 	if !reflect.DeepEqual(got, out) {
 		t.Errorf("NodeImagingOperations.ImageNodes() = %+v, want %+v", got, out)
