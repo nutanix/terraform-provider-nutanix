@@ -301,8 +301,8 @@ func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, fi
 		return nil, err
 	}
 
-	// Set req.ContentLength by reading file size, as we send *os.File in http.NewRequest()
-	// http.NewRequest() only sets content length value for types - bytes.Buffer, bytes.Reader and strings.Reader
+	// Set req.ContentLength and req.GetBody as internally there is no implementation of such for os.File type reader
+	// http.NewRequest() only sets this values for types - bytes.Buffer, bytes.Reader and strings.Reader
 	// Refer https://github.com/golang/go/blob/a0f77e56b7a7ecb92dca3e2afdd56ee773c2cb07/src/net/http/request.go#L896
 	fileInfo, err := fileReader.Stat()
 	if err != nil {
@@ -310,8 +310,7 @@ func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, fi
 	}
 	req.ContentLength = fileInfo.Size()
 	req.GetBody = func() (io.ReadCloser, error) {
-		r := *fileReader
-		return io.NopCloser(&r), nil
+		return io.NopCloser(fileReader), nil
 	}
 
 	req.Header.Add("Content-Type", octetStreamType)
@@ -342,8 +341,8 @@ func (c *Client) NewUnAuthUploadRequest(ctx context.Context, method, urlStr stri
 		return nil, err
 	}
 
-	// Set req.ContentLength by reading file size, as we send *os.File in http.NewRequest()
-	// http.NewRequest() only sets content length value for types - bytes.Buffer, bytes.Reader and strings.Reader
+	// Set req.ContentLength and req.GetBody as internally there is no implementation of such for os.File type reader
+	// http.NewRequest() only sets this values for types - bytes.Buffer, bytes.Reader and strings.Reader
 	// Refer https://github.com/golang/go/blob/a0f77e56b7a7ecb92dca3e2afdd56ee773c2cb07/src/net/http/request.go#L896
 	fileInfo, err := fileReader.Stat()
 	if err != nil {
@@ -351,8 +350,7 @@ func (c *Client) NewUnAuthUploadRequest(ctx context.Context, method, urlStr stri
 	}
 	req.ContentLength = fileInfo.Size()
 	req.GetBody = func() (io.ReadCloser, error) {
-		r := *fileReader
-		return io.NopCloser(&r), nil
+		return io.NopCloser(fileReader), nil
 	}
 
 	req.Header.Add("Content-Type", octetStreamType)
