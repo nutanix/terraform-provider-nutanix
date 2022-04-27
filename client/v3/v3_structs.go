@@ -885,6 +885,9 @@ type ImageResources struct {
 	// The image version
 	Version *ImageVersionResources `json:"version,omitempty" mapstructure:"version,omitempty"`
 
+	// Cluster reference lists
+	InitialPlacementRefList []*ReferenceValues `json:"initial_placement_ref_list,omitempty" mapstructure:"initial_placement_ref_list, omitempty"`
+
 	// Reference to the source image such as 'vm_disk
 	DataSourceReference *Reference `json:"data_source_reference,omitempty" mapstructure:"data_source_reference,omitempty"`
 }
@@ -989,6 +992,9 @@ type ImageResourcesDefStatus struct {
 
 	// The source URI points at the location of a the source image which is used to create/update image.
 	SourceURI *string `json:"source_uri,omitempty" mapstructure:"source_uri,omitempty"`
+
+	// Cluster reference lists
+	InitialPlacementRefList []*ReferenceValues `json:"initial_placement_ref_list,omitempty" mapstructure:"initial_placement_ref_list, omitempty"`
 
 	// The image version
 	Version *ImageVersionStatus `json:"version,omitempty" mapstructure:"version,omitempty"`
