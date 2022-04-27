@@ -309,6 +309,10 @@ func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, fi
 		return nil, err
 	}
 	req.ContentLength = fileInfo.Size()
+	req.GetBody = func() (io.ReadCloser, error) {
+		r := *fileReader
+		return io.NopCloser(&r), nil
+	}
 
 	req.Header.Add("Content-Type", octetStreamType)
 	req.Header.Add("Accept", mediaType)
@@ -346,6 +350,10 @@ func (c *Client) NewUnAuthUploadRequest(ctx context.Context, method, urlStr stri
 		return nil, err
 	}
 	req.ContentLength = fileInfo.Size()
+	req.GetBody = func() (io.ReadCloser, error) {
+		r := *fileReader
+		return io.NopCloser(&r), nil
+	}
 
 	req.Header.Add("Content-Type", octetStreamType)
 	req.Header.Add("Accept", mediaType)
