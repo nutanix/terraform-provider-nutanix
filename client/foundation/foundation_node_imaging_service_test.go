@@ -17,14 +17,13 @@ import (
 func setup() (*http.ServeMux, *client.Client, *httptest.Server) {
 	mux := http.NewServeMux()
 	server := httptest.NewServer(mux)
-	c, _ := client.NewClient(&client.Credentials{
+	c, _ := client.NewBaseClient(&client.Credentials{
 		URL:      "",
 		Username: "username",
 		Password: "password",
 		Port:     "",
 		Endpoint: "0.0.0.0",
 		Insecure: true},
-		userAgent,
 		absolutePath,
 		true)
 	c.UserAgent = userAgent
@@ -33,14 +32,18 @@ func setup() (*http.ServeMux, *client.Client, *httptest.Server) {
 	return mux, c, server
 }
 
-func TestOperation_ImageNodes(t *testing.T) {
+func testHTTPMethod(t *testing.T, r *http.Request, expected string) {
+	if expected != r.Method {
+		t.Errorf("Request method = %v, expected %v", r.Method, expected)
+	}
+}
+
+func TestNodeImagingOperations_ImageNodes(t *testing.T) {
 	mux, c, server := setup()
 	defer server.Close()
 
 	mux.HandleFunc("/foundation/image_nodes", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			t.Errorf("Request method = %v, expected %v", r.Method, http.MethodPost)
-		}
+		testHTTPMethod(t, r, http.MethodPost)
 
 		expected := map[string]interface{}{
 			"ipmi_password":      "test_password",
@@ -72,7 +75,7 @@ func TestOperation_ImageNodes(t *testing.T) {
 			},
 			"clusters": []interface{}{
 				map[string]interface{}{
-					"redundancy_factor":   1,
+					"redundancy_factor":   int64(1),
 					"cluster_init_now":    true,
 					"cluster_external_ip": nil,
 					"cluster_name":        "test_cluster",
@@ -149,7 +152,74 @@ func TestOperation_ImageNodes(t *testing.T) {
 		t.Fatalf("NodeImagingOperations.ImageNodes() error = %v", err)
 	}
 	if !reflect.DeepEqual(got, out) {
-		t.Errorf("NodeImagingOperations.ImageNodes() = %+v, want %+v", got, out)
+		t.Errorf("NodeImagingOperations.ImageNodes() got = %#v, want = %#v", got, out)
+	}
+
+}
+
+func TestNodeImagingOperations_ImageNodesProgress(t *testing.T) {
+	mux, c, server := setup()
+	defer server.Close()
+	sessionId := "123456-1234-123456"
+	mux.HandleFunc("/foundation/progress", func(w http.ResponseWriter, r *http.Request) {
+		testHTTPMethod(t, r, http.MethodGet)
+
+		// mock response
+		fmt.Fprintf(w, `{
+			"session_id": "%v",
+			"imaging_stopped": true,
+			"aggregate_percent_complete": 100.00,
+			"clusters": [{
+				"cluster_name": "test_cluster",
+				"time_elapsed": 102.33,
+				"cluster_members": [
+					"0.0.0.0"
+				],
+				"percent_complete": 100.00
+			}],
+			"nodes": [{
+				"cvm_ip": "0.0.0.0",
+				"hypervisor_ip": "0.0.0.0",
+				"time_elapsed": 102.33,
+				"percent_complete": 100.00
+			}]
+		}`, sessionId)
+	})
+	ctx := context.TODO()
+
+	out := &ImageNodesProgressResponse{
+		SessionID:                "123456-1234-123456",
+		ImagingStopped:           utils.BoolPtr(true),
+		AggregatePercentComplete: utils.Float64Ptr(100.00),
+		Clusters: []*ClusterProgress{
+			{
+				ClusterName:     "test_cluster",
+				TimeElapsed:     utils.Float64Ptr(102.33),
+				ClusterMembers:  []string{"0.0.0.0"},
+				PercentComplete: utils.Float64Ptr(100.00),
+			},
+		},
+		Nodes: []*NodeProgress{
+			{
+				CvmIP:           "0.0.0.0",
+				HypervisorIP:    "0.0.0.0",
+				TimeElapsed:     utils.Float64Ptr(102.33),
+				PercentComplete: utils.Float64Ptr(100.00),
+			},
+		},
+	}
+
+	op := NodeImagingOperations{
+		client: c,
+	}
+
+	// checks
+	got, err := op.ImageNodesProgress(ctx, sessionId)
+	if err != nil {
+		t.Fatalf("NodeImagingOperations.ImageNodesProgress() error = %v", err)
+	}
+	if !reflect.DeepEqual(got, out) {
+		t.Errorf("NodeImagingOperations.ImageNodesProgress() got = %#v, want = %#v", got, out)
 	}
 
 }
