@@ -40,4 +40,4 @@ The following arguments are supported:
 * `private_key` The private key of the user for SSH access.
 * `username` The username for which credentials are returned.
 
-See detailed information in [Get Nutanix Karbon Cluster SSH Credentials](https://www.nutanix.dev/reference/karbon/api-reference/cluster/getk8sclustersshaccess/).
+See detailed information in [Get Nutanix Karbon Cluster SSH Credentials](https://www.nutanix.dev/api_references/karbon/#/b3A6NDM0MDU2NjE-get-ssh-credentials-to-remotely-access-nodes-belonging-to-the-k8s-cluster).

@@ -34,4 +34,4 @@ The following attributes are supported:
 * `endpoint`: - Endpoint of the private in format `url:port`.
 
 
-See detailed information in [Nutanix Karbon Registries](https://www.nutanix.dev/reference/karbon/api-reference/registry/listprivateregistry).
+See detailed information in [Nutanix Karbon Registries](https://www.nutanix.dev/api_references/karbon/#/b3A6NDM0MDU2NDY-list-private-registry-configurations-api-format-https-server-nutanix-com-9440-karbon-v1-alpha-1-registries).
