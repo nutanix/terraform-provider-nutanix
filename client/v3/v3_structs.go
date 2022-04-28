@@ -996,6 +996,9 @@ type ImageResourcesDefStatus struct {
 	// Cluster reference lists
 	InitialPlacementRefList []*ReferenceValues `json:"initial_placement_ref_list,omitempty" mapstructure:"initial_placement_ref_list, omitempty"`
 
+	// cluster reference list when request was made without refs
+	CurrentClusterReferenceList []*ReferenceValues `json:"current_cluster_reference_list,omitempty" mapstructure:"current_cluster_reference_list, omitempty"`
+
 	// The image version
 	Version *ImageVersionStatus `json:"version,omitempty" mapstructure:"version,omitempty"`
 }
