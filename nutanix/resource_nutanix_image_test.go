@@ -70,7 +70,7 @@ func TestAccNutanixImage_Update(t *testing.T) {
 	})
 }
 
-func TestAccNutanixImage_WithCategories(t *testing.T) {
+func TestAccNutanixImage_WithCategoriesAndCluster(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "nutanix_image.acctest-test-categories"
 
@@ -298,6 +298,15 @@ resource "nutanix_category_value" "ubuntu"{
 	value = "ubuntu"
 }
 
+data "nutanix_clusters" "clusters"{}
+
+locals {
+	cluster1 = [
+	  for cluster in data.nutanix_clusters.clusters.entities :
+	  cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
+}
+
 resource "nutanix_image" "acctest-test-categories" {
   name        = "Ubuntu-%d"
   description = "Ubuntu"
@@ -310,6 +319,10 @@ resource "nutanix_image" "acctest-test-categories" {
  categories {
 	name  = nutanix_category_key.os_version.id
 	value =	nutanix_category_value.os_version_value.id
+ }
+
+ cluster_references{
+	 uuid = local.cluster1
  }
 
   source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
@@ -348,6 +361,14 @@ resource "nutanix_category_value" "ubuntu"{
 	value = "ubuntu"
 }
 
+data "nutanix_clusters" "clusters"{}
+
+locals {
+	cluster1 = [
+	  for cluster in data.nutanix_clusters.clusters.entities :
+	  cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
+}
 
 resource "nutanix_image" "acctest-test-categories" {
   	name        = "Ubuntu-%d"
@@ -361,6 +382,10 @@ resource "nutanix_image" "acctest-test-categories" {
 	categories {
 	   name  = nutanix_category_key.os_version.id
 	   value = nutanix_category_value.os_version_value_updated.id
+	}
+
+	cluster_references{
+		uuid = local.cluster1
 	}
 
   	source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
