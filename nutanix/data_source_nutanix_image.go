@@ -91,6 +91,46 @@ func dataSourceNutanixImage() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"cluster_references": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"current_cluster_reference_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"image_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -165,6 +205,15 @@ func dataSourceNutanixImageRead(ctx context.Context, d *schema.ResourceData, met
 	if err := d.Set("availability_zone_reference", flattenReferenceValues(resp.Status.AvailabilityZoneReference)); err != nil {
 		return diag.FromErr(err)
 	}
+
+	if err := d.Set("cluster_references", flattenArrayOfReferenceValues(resp.Status.Resources.InitialPlacementRefList)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("current_cluster_reference_list", flattenArrayOfReferenceValues(resp.Status.Resources.CurrentClusterReferenceList)); err != nil {
+		return diag.FromErr(err)
+	}
+
 	if err := flattenClusterReference(resp.Status.ClusterReference, d); err != nil {
 		return diag.FromErr(err)
 	}
@@ -300,6 +349,46 @@ func resourceNutanixDatasourceImageInstanceResourceV0() *schema.Resource {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"cluster_references": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"current_cluster_reference_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"image_type": {
 				Type:     schema.TypeString,

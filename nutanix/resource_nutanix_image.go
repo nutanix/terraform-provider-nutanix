@@ -120,8 +120,45 @@ func resourceNutanixImage() *schema.Resource {
 				Type:     schema.TypeList,
 				Computed: true,
 				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"current_cluster_reference_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"image_type": {
 				Type:     schema.TypeString,
@@ -346,13 +383,12 @@ func resourceNutanixImageRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("error setting retrieval_uri_list for image UUID(%s), %s", d.Id(), err)
 	}
 
-	clusterList := make([]string, 0, len(resp.Status.Resources.InitialPlacementRefList))
-	for _, ref := range resp.Status.Resources.InitialPlacementRefList {
-		clusterList = append(clusterList, ref.UUID)
+	if err := d.Set("cluster_references", flattenArrayOfReferenceValues(resp.Status.Resources.InitialPlacementRefList)); err != nil {
+		return diag.FromErr(err)
 	}
 
-	if err = d.Set("cluster_references", clusterList); err != nil {
-		return diag.Errorf("error setting cluster_references for image UUID(%s), %s", d.Id(), err)
+	if err := d.Set("current_cluster_reference_list", flattenArrayOfReferenceValues(resp.Status.Resources.CurrentClusterReferenceList)); err != nil {
+		return diag.FromErr(err)
 	}
 
 	return nil
@@ -536,15 +572,9 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 		image.Checksum = checks
 	}
 
-	// set image placement policies for given clusters
+	// List of clusters where image is requested to be placed at time of creation
 	if refs, refsok := d.GetOk("cluster_references"); refsok && len(refs.([]interface{})) > 0 {
-		r := refs.([]interface{})
-		image.InitialPlacementRefList = make([]*v3.ReferenceValues, len(r))
-		for k, v := range r {
-			reference := &v3.ReferenceValues{}
-			reference.UUID = v.(string)
-			image.InitialPlacementRefList[k] = reference
-		}
+		image.InitialPlacementRefList = validateArrayRefValues(refs, "cluster")
 	}
 
 	return nil
@@ -627,8 +657,45 @@ func resourceNutanixImageInstanceResourceV0() *schema.Resource {
 				Type:     schema.TypeList,
 				Computed: true,
 				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"current_cluster_reference_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"image_type": {
 				Type:     schema.TypeString,
