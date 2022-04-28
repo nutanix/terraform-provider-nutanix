@@ -485,7 +485,7 @@ func TestOperations_CreateCluster(t *testing.T) {
 		}`)
 	})
 
-	cluster_uuid := &CreateClusterResponse{
+	clusterUUID := &CreateClusterResponse{
 		ImagedClusterUUID: utils.StringPtr("123-654-678"),
 	}
 
@@ -542,7 +542,7 @@ func TestOperations_CreateCluster(t *testing.T) {
 			"Imaged Nodes and create Cluster ",
 			fields{c},
 			args{input},
-			cluster_uuid,
+			clusterUUID,
 			false,
 		},
 	}

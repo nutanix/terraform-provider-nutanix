@@ -8,26 +8,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccNutanixFCApiKeysDataSource_basic(t *testing.T) {
+func TestAccNutanixFCAPIKeysDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApiKeysDataSourceConfig(),
+				Config: testAccAPIKeysDataSourceConfig(),
 			},
 		},
 	})
 }
 
-func TestAccNutanixFCApiKeysDataSource_KeyUUID(t *testing.T) {
+func TestAccNutanixFCAPIKeysDataSource_KeyUUID(t *testing.T) {
 	apiKeyName := acctest.RandomWithPrefix("test-key")
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApiKeysDataSourceConfigWithKeyUUID(apiKeyName),
+				Config: testAccAPIKeysDataSourceConfigWithKeyUUID(apiKeyName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.nutanix_foundation_central_api_keys.k1", "alias", apiKeyName),
 					resource.TestCheckResourceAttrSet("data.nutanix_foundation_central_api_keys.k1", "alias"),
@@ -37,13 +37,13 @@ func TestAccNutanixFCApiKeysDataSource_KeyUUID(t *testing.T) {
 	})
 }
 
-func testAccApiKeysDataSourceConfig() string {
+func testAccAPIKeysDataSourceConfig() string {
 	return `
 	data "nutanix_foundation_central_list_api_keys" "test"{}
 	`
 }
 
-func testAccApiKeysDataSourceConfigWithKeyUUID(apiKeyName string) string {
+func testAccAPIKeysDataSourceConfigWithKeyUUID(apiKeyName string) string {
 	return fmt.Sprintf(`
 		resource "nutanix_foundation_central_api_keys" "apk"{
 				alias = "%s"
