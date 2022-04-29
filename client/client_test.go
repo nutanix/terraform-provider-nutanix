@@ -131,7 +131,7 @@ func TestNewUploadRequest(t *testing.T) {
 	}
 	for k, v := range inHeaders {
 		if v != req.Header[k][0] {
-			t.Errorf("NewUploadRequest() Header value for %v = %v, expected %v", k, v, req.Header[k][0])
+			t.Errorf("NewUploadRequest() Header value for %v = %v, expected %v", k, req.Header[k][0], v)
 		}
 	}
 }
@@ -256,7 +256,7 @@ func TestNewUnAuthUploadRequest(t *testing.T) {
 	}
 	for k, v := range inHeaders {
 		if v != req.Header[k][0] {
-			t.Errorf("NewUploadRequest() Header value for %v = %v, expected %v", k, v, req.Header[k][0])
+			t.Errorf("NewUploadRequest() Header value for %v = %v, expected %v", k, req.Header[k][0], v)
 		}
 	}
 }
