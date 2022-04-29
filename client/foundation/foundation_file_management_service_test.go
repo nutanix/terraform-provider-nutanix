@@ -116,13 +116,13 @@ func TestFMOperations_ListHypervisorISOs(t *testing.T) {
 func TestFMOperations_UploadImage(t *testing.T) {
 	mux, c, server := setup()
 	defer server.Close()
-	installer_type := "kvm"
+	installerType := "kvm"
 	filename := "test_ahv.iso"
 	source := "foundation_api.go"
 	mux.HandleFunc("/foundation/upload", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPost)
 
-		expectedURL := fmt.Sprintf("/foundation/upload?installer_type=%v&filename=%v", installer_type, filename)
+		expectedURL := fmt.Sprintf("/foundation/upload?installer_type=%v&filename=%v", installerType, filename)
 		if expectedURL != r.URL.String() {
 			t.Errorf("FileManagementOperations.UploadImage() expected URL %v, got %v", expectedURL, r.URL.String())
 		}
@@ -154,7 +154,7 @@ func TestFMOperations_UploadImage(t *testing.T) {
 	}
 
 	// checks
-	got, err := op.UploadImage(ctx, installer_type, filename, source)
+	got, err := op.UploadImage(ctx, installerType, filename, source)
 	if err != nil {
 		t.Fatalf("FileManagementOperations.UploadImage() error = %v", err)
 	}
@@ -167,7 +167,7 @@ func TestFMOperations_UploadImage(t *testing.T) {
 func TestFMOperations_DeleteImage(t *testing.T) {
 	mux, c, server := setup()
 	defer server.Close()
-	installer_type := "kvm"
+	installerType := "kvm"
 	filename := "test_ahv.iso"
 	mux.HandleFunc("/foundation/delete/", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodPost)
@@ -178,7 +178,7 @@ func TestFMOperations_DeleteImage(t *testing.T) {
 		}
 
 		// check form encoded body
-		expected := fmt.Sprintf("filename=%v&installer_type=%v", filename, installer_type)
+		expected := fmt.Sprintf("filename=%v&installer_type=%v", filename, installerType)
 		if string(body) != expected {
 			t.Errorf("FileManagementOperations.DeleteImage() request body expected = %v, got = %v", expected, string(body))
 		}
@@ -191,7 +191,7 @@ func TestFMOperations_DeleteImage(t *testing.T) {
 	}
 
 	// checks
-	err := op.DeleteImage(ctx, installer_type, filename)
+	err := op.DeleteImage(ctx, installerType, filename)
 	if err != nil {
 		t.Fatalf("FileManagementOperations.DeleteImage() error = %v", err)
 	}

@@ -160,7 +160,7 @@ func TestNodeImagingOperations_ImageNodes(t *testing.T) {
 func TestNodeImagingOperations_ImageNodesProgress(t *testing.T) {
 	mux, c, server := setup()
 	defer server.Close()
-	sessionId := "123456-1234-123456"
+	sessionID := "123456-1234-123456"
 	mux.HandleFunc("/foundation/progress", func(w http.ResponseWriter, r *http.Request) {
 		testHTTPMethod(t, r, http.MethodGet)
 
@@ -183,7 +183,7 @@ func TestNodeImagingOperations_ImageNodesProgress(t *testing.T) {
 				"time_elapsed": 102.33,
 				"percent_complete": 100.00
 			}]
-		}`, sessionId)
+		}`, sessionID)
 	})
 	ctx := context.TODO()
 
@@ -214,7 +214,7 @@ func TestNodeImagingOperations_ImageNodesProgress(t *testing.T) {
 	}
 
 	// checks
-	got, err := op.ImageNodesProgress(ctx, sessionId)
+	got, err := op.ImageNodesProgress(ctx, sessionID)
 	if err != nil {
 		t.Fatalf("NodeImagingOperations.ImageNodesProgress() error = %v", err)
 	}
