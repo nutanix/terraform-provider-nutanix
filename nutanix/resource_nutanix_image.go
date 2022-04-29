@@ -134,7 +134,6 @@ func resourceNutanixImage() *schema.Resource {
 						},
 						"name": {
 							Type:     schema.TypeString,
-							Optional: true,
 							Computed: true,
 						},
 					},
@@ -671,7 +670,6 @@ func resourceNutanixImageInstanceResourceV0() *schema.Resource {
 						},
 						"name": {
 							Type:     schema.TypeString,
-							Optional: true,
 							Computed: true,
 						},
 					},
