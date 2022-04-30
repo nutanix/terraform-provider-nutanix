@@ -75,7 +75,7 @@ func TestNodeImagingOperations_ImageNodes(t *testing.T) {
 			},
 			"clusters": []interface{}{
 				map[string]interface{}{
-					"redundancy_factor":   int64(1),
+					"redundancy_factor":   float64(1),
 					"cluster_init_now":    true,
 					"cluster_external_ip": nil,
 					"cluster_name":        "test_cluster",
@@ -90,7 +90,6 @@ func TestNodeImagingOperations_ImageNodes(t *testing.T) {
 		if err != nil {
 			t.Fatalf("decode json: %v", err)
 		}
-
 		if !reflect.DeepEqual(v, expected) {
 			t.Errorf("Request body\n got=%#v\nwant=%#v", v, expected)
 		}
