@@ -154,7 +154,6 @@ func TestNodeImagingOperations_ImageNodes(t *testing.T) {
 	if !reflect.DeepEqual(got, out) {
 		t.Errorf("NodeImagingOperations.ImageNodes() got = %#v, want = %#v", got, out)
 	}
-
 }
 
 func TestNodeImagingOperations_ImageNodesProgress(t *testing.T) {
@@ -221,5 +220,4 @@ func TestNodeImagingOperations_ImageNodesProgress(t *testing.T) {
 	if !reflect.DeepEqual(got, out) {
 		t.Errorf("NodeImagingOperations.ImageNodesProgress() got = %#v, want = %#v", got, out)
 	}
-
 }
