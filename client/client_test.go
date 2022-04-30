@@ -183,7 +183,8 @@ func TestNewUnAuthFormEncodedRequest(t *testing.T) {
 	}
 
 	inURL, outURL := "/foo", fmt.Sprintf(defaultBaseURL+testAbsolutePath+"/foo", httpPrefix, "foo.com")
-	inBody, outBody := map[string]string{"name": "bar", "fullname": "foobar"}, "name=bar&fullname=foobar"+"\n"
+	inBody := map[string]string{"name": "bar", "fullname": "foobar"}
+	outBody := map[string][]string{"name": {"bar"}, "fullname": {"foobar"}}
 
 	req, _ := c.NewUnAuthFormEncodedRequest(context.TODO(), http.MethodPost, inURL, inBody)
 
@@ -192,10 +193,13 @@ func TestNewUnAuthFormEncodedRequest(t *testing.T) {
 		t.Errorf("NewUnAuthFormEncodedRequest(%v) URL = %v, expected %v", inURL, req.URL, outURL)
 	}
 
-	// test body was JSON encoded
-	body, _ := ioutil.ReadAll(req.Body)
-	if string(body) != outBody {
-		t.Errorf("NewUnAuthFormEncodedRequest(%v) Body = %v, expected %v", inBody, string(body), outBody)
+	// test body
+	// Parse the body form data to a map structure which can be accessed by req.PostForm
+	req.ParseForm()
+
+	// check form encoded key-values as compared to input values
+	if !reflect.DeepEqual(outBody, (map[string][]string)(req.PostForm)) {
+		t.Errorf("NewUnAuthFormEncodedRequest(%v) Form encoded k-v, got = %v, expected %v", inBody, req.PostForm, outBody)
 	}
 
 	// test headers. Authorization header shouldn't exist
