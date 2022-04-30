@@ -7,7 +7,6 @@ import (
 )
 
 func TestNewKarbonAPIClient(t *testing.T) {
-
 	// verifies positive client creation
 	cred := client.Credentials{
 		URL:                "foo.com",

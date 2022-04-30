@@ -42,7 +42,6 @@ func TestFMOperations_ListNOSPackages(t *testing.T) {
 	if !reflect.DeepEqual(got, out) {
 		t.Errorf("FileManagementOperations.ListNOSPackages() got = %#v, want = %#v", got, out)
 	}
-
 }
 
 func TestFMOperations_ListHypervisorISOs(t *testing.T) {
@@ -110,7 +109,6 @@ func TestFMOperations_ListHypervisorISOs(t *testing.T) {
 	if !reflect.DeepEqual(got, out) {
 		t.Errorf("FileManagementOperations.ListHypervisorISOs() got = %#v, want = %#v", got, out)
 	}
-
 }
 
 func TestFMOperations_UploadImage(t *testing.T) {
@@ -161,7 +159,6 @@ func TestFMOperations_UploadImage(t *testing.T) {
 	if !reflect.DeepEqual(got, out) {
 		t.Errorf("FileManagementOperations.UploadImage() got = %#v, want = %#v", got, out)
 	}
-
 }
 
 func TestFMOperations_DeleteImage(t *testing.T) {
@@ -195,5 +192,4 @@ func TestFMOperations_DeleteImage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FileManagementOperations.DeleteImage() error = %v", err)
 	}
-
 }
