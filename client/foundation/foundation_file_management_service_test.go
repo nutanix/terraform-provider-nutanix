@@ -179,7 +179,6 @@ func TestFMOperations_DeleteImage(t *testing.T) {
 		if string(body) != expected {
 			t.Errorf("FileManagementOperations.DeleteImage() request body expected = %v, got = %v", expected, string(body))
 		}
-
 	})
 	ctx := context.TODO()
 
