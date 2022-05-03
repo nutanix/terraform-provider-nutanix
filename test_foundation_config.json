@@ -1,0 +1,79 @@
+{
+	"ipv6_addresses" : ["",""],
+	"ipmi_config": {
+		"ipmi_netmask":"",
+		"ipmi_gateway":"",
+		"ipmi_user":"",
+		"ipmi_password":"",
+		"ipmi_mac":"",
+		"ipmi_ip":""
+	},
+	"blocks":[
+		{
+			"cvm_gateway": "",
+			"hypervisor_gateway":"",
+			"cvm_netmask":"",
+			"hypervisor_netmask":"",
+			"ipmi_user": "",
+			"nodes": [
+				{
+					"ipmi_ip":"",
+					"ipmi_user":"",
+					"ipmi_password":"",
+					"ipmi_netmask":"",
+					"ipmi_gateway":"",
+					"cvm_ip":"",
+					"hypervisor":"",
+					"hypervisor_hostname":"",
+					"hypervisor_ip":"",
+					"node_position":"",
+					"ipv6_address":"",
+					"current_network_interface":""
+				},
+				{
+					"ipmi_ip":"",
+					"ipmi_user":"",
+					"ipmi_password":"",
+					"ipmi_netmask":"",
+					"ipmi_gateway":"",
+					"cvm_ip":"",
+					"hypervisor":"",
+					"hypervisor_hostname":"",
+					"hypervisor_ip":"",
+					"node_position":"",
+					"ipv6_address":"",
+					"current_network_interface":""
+				},
+				{
+					"ipmi_ip":"",
+					"ipmi_user":"",
+					"ipmi_password":"",
+					"ipmi_netmask":"",
+					"ipmi_gateway":"",
+					"cvm_ip":"",
+					"hypervisor":"",
+					"hypervisor_hostname":"",
+					"hypervisor_ip":"",
+					"node_position":"",
+					"ipv6_address":"",
+					"current_network_interface":""
+				},
+				{
+					"ipmi_ip":"",
+					"ipmi_user":"",
+					"ipmi_password":"",
+					"ipmi_netmask":"",
+					"ipmi_gateway":"",
+					"cvm_ip":"",
+					"hypervisor":"",
+					"hypervisor_hostname":"",
+					"hypervisor_ip":"",
+					"node_position":"",
+					"ipv6_address":"",
+					"current_network_interface":""
+				}
+			],
+			"block_id": ""
+		}
+	]
+}
