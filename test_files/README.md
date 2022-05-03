@@ -1,0 +1,1 @@
+This folder should contain files used in tests. For example, .iso or .tar files for testing image upload usecases for foundation and prism central resources.
