@@ -937,15 +937,15 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 	d.Set("session_id", resp.SessionID)
 
 	// set cluster urls in state file
-	cluster_urls := make([]map[string]interface{}, len(request.Clusters))
+	clusterURLs := make([]map[string]interface{}, len(request.Clusters))
 	for k, v := range request.Clusters {
 		c := map[string]interface{}{
 			"cluster_url":  fmt.Sprintf(ClusterURL, v.ClusterMembers[0]),
 			"cluster_name": v.ClusterName,
 		}
-		cluster_urls[k] = c
+		clusterURLs[k] = c
 	}
-	d.Set("cluster_urls", cluster_urls)
+	d.Set("cluster_urls", clusterURLs)
 	return nil
 }
 

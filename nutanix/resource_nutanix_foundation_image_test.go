@@ -23,7 +23,7 @@ func testAccCheckNosImageExists(filename string) resource.TestCheckFunc {
 		ctx := context.TODO()
 		resp, err := conn.FileManagement.ListNOSPackages(ctx)
 		if err != nil {
-			return fmt.Errorf("Failed to fetch nos packages from FVM")
+			return fmt.Errorf("failed to fetch nos packages from FVM")
 		}
 
 		for _, v := range *resp {
@@ -31,7 +31,7 @@ func testAccCheckNosImageExists(filename string) resource.TestCheckFunc {
 				return nil
 			}
 		}
-		return fmt.Errorf("Upload for nos package %s failed. Image not found in FVM", filename)
+		return fmt.Errorf("upload for nos package %s failed. Image not found in FVM", filename)
 	}
 }
 
@@ -41,12 +41,12 @@ func testAccCheckNosImageDestroy(filename string) resource.TestCheckFunc {
 		ctx := context.TODO()
 		resp, err := conn.FileManagement.ListNOSPackages(ctx)
 		if err != nil {
-			return fmt.Errorf("Failed to fetch nos packages from FVM")
+			return fmt.Errorf("failed to fetch nos packages from FVM")
 		}
 
 		for _, v := range *resp {
 			if v == filename {
-				fmt.Errorf("teraform destroy for nos package %s failed. It still exists in FVM", filename)
+				return fmt.Errorf("teraform destroy for nos package %s failed. It still exists in FVM", filename)
 			}
 		}
 		return nil
@@ -105,12 +105,12 @@ func TestAccFoundationImageResource_Error(t *testing.T) {
 	})
 }
 
-func testImageResourceUpload(name, filename, installer_type, filepath string) string {
+func testImageResourceUpload(name, filename, instType, filepath string) string {
 	return fmt.Sprintf(`
 	resource "nutanix_foundation_image" "%s"{
 		filename = "%s"
 		installer_type = "%s"
 		source = "%s"
 	}
-	`, name, filename, installer_type, filepath)
+	`, name, filename, instType, filepath)
 }

@@ -51,7 +51,7 @@ func TestAccFoundationImageNodesResource_InvalidNosError(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testImageNodesResource_InvalidNosError(filepath, blockNum, name),
+				Config:      testImageNodesResourceInvalidNosError(filepath, blockNum, name),
 				ExpectError: regexp.MustCompile("Node imaging process failed due to error: Couldn't find nos_package at"),
 			},
 		},
@@ -128,7 +128,7 @@ func testImageNodesResource(filepath string, blockNum int, name string) string {
 	}`, filepath, blockNum, name)
 }
 
-func testImageNodesResource_InvalidNosError(filepath string, blockNum int, name string) string {
+func testImageNodesResourceInvalidNosError(filepath string, blockNum int, name string) string {
 	return fmt.Sprintf(`
 	locals{
 		config = (jsondecode(file("%s"))).blocks[%v]

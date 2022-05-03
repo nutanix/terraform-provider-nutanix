@@ -52,12 +52,12 @@ type FoundationVars struct {
 			CvmIP                   string `json:"cvm_ip"`
 			HypervisorIP            string `json:"hypervisor_ip"`
 			Hypervisor              string `json:"hypervisor"`
-			HypervisorHostname      string `json:"hypervisor_hostname`
+			HypervisorHostname      string `json:"hypervisor_hostname"`
 			NodePosition            string `json:"node_position"`
 			IPv6Address             string `json:"ipv6_address"`
 			CurrentNetworkInterface string `json:"current_network_interface"`
 		} `json:"nodes"`
-		BlockId           string `json:"block_id"`
+		BlockID           string `json:"block_id"`
 		CvmGateway        string `json:"cvm_gateway"`
 		HypervisorGateway string `json:"hypervisor_gateway"`
 		CvmNetmask        string `json:"cvm_netmask"`
