@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccNutanixKarbonClustersDataSource_basic(t *testing.T) {
+func TestAccKarbonClustersDataSource_basic(t *testing.T) {
 	r := acctest.RandInt()
 	//resourceName := "nutanix_karbon_cluster.cluster"
 	subnetName := testVars.SubnetName
