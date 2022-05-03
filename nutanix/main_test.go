@@ -31,25 +31,62 @@ type TestConfig struct {
 	} `json:"ad_rule_target"`
 }
 
+type IPMIConfig struct {
+	IpmiGateway  string `json:"ipmi_gateway"`
+	IpmiNetmask  string `json:"ipmi_netmask"`
+	IpmiUser     string `json:"ipmi_user"`
+	IpmiPassword string `json:"ipmi_password"`
+	IpmiIP       string `json:"ipmi_ip"`
+	IpmiMac      string `json:"ipmi_mac"`
+}
+type FoundationVars struct {
+	IPv6Addresses []string   `json:"ipv6_addresses"`
+	IpmiConfig    IPMIConfig `json:"ipmi_config"`
+	Blocks        []struct {
+		Nodes []struct {
+			IpmiIP                  string `json:"ipmi_ip"`
+			IpmiPassword            string `json:"ipmi_password"`
+			IpmiUser                string `json:"ipmi_user"`
+			IpmiNetmask             string `json:"ipmi_netmask"`
+			IpmiGateway             string `json:"ipmi_gateway"`
+			CvmIP                   string `json:"cvm_ip"`
+			HypervisorIP            string `json:"hypervisor_ip"`
+			Hypervisor              string `json:"hypervisor"`
+			HypervisorHostname      string `json:"hypervisor_hostname`
+			NodePosition            string `json:"node_position"`
+			IPv6Address             string `json:"ipv6_address"`
+			CurrentNetworkInterface string `json:"current_network_interface"`
+		} `json:"nodes"`
+		BlockId           string `json:"block_id"`
+		CvmGateway        string `json:"cvm_gateway"`
+		HypervisorGateway string `json:"hypervisor_gateway"`
+		CvmNetmask        string `json:"cvm_netmask"`
+		HypervisorNetmask string `json:"hypervisor_netmask"`
+		IpmiUser          string `json:"ipmi_user"`
+	} `json:"blocks"`
+}
+
 var testVars TestConfig
+var foundationVars FoundationVars
 
-func TestMain(m *testing.M) {
-	log.Println("Do some crazy stuff before tests!")
-
+func loadVars(filepath string, varStuct interface{}) {
 	// Read config.json from home current path
-	configData, err := os.ReadFile("../test_config.json")
+	configData, err := os.ReadFile(filepath)
 	if err != nil {
 		log.Printf("Got this error while reading config.json: %s", err.Error())
 		os.Exit(1)
 	}
 
-	err = json.Unmarshal(configData, &testVars)
+	err = json.Unmarshal(configData, varStuct)
 	if err != nil {
 		log.Printf("Got this error while unmarshalling config.json: %s", err.Error())
 		os.Exit(1)
 	}
-
-	log.Println(testVars)
+}
+func TestMain(m *testing.M) {
+	log.Println("Do some crazy stuff before tests!")
+	loadVars("../test_config.json", &testVars)
+	loadVars("../test_foundation_config.json", &foundationVars)
 
 	os.Exit(m.Run())
 }

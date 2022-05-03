@@ -15,6 +15,7 @@ import (
 var (
 	ImageMinTimeout          = 60 * time.Minute
 	AggregatePercentComplete = 100
+	ClusterURL               = "https://%s:9440/"
 )
 
 func resourceFoundationImageNodes() *schema.Resource {
@@ -303,7 +304,8 @@ func resourceFoundationImageNodes() *schema.Resource {
 						},
 						"cluster_init_now": {
 							Type:     schema.TypeBool,
-							Required: true,
+							Optional: true,
+							Default:  true,
 							ForceNew: true,
 						},
 						"hypervisor_ntp_servers": {
@@ -591,6 +593,7 @@ func resourceFoundationImageNodes() *schema.Resource {
 									"image_now": {
 										Type:     schema.TypeBool,
 										Optional: true,
+										Default:  true,
 										ForceNew: true,
 									},
 									"ucsm_managed_mode": {
@@ -707,6 +710,22 @@ func resourceFoundationImageNodes() *schema.Resource {
 			"session_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"cluster_urls": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cluster_url": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"cluster_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -915,7 +934,18 @@ func resourceFoundationImageNodesCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.SetId(resp.SessionID)
+	d.Set("session_id", resp.SessionID)
 
+	// set cluster urls in state file
+	cluster_urls := make([]map[string]interface{}, len(request.Clusters))
+	for k, v := range request.Clusters {
+		c := map[string]interface{}{
+			"cluster_url":  fmt.Sprintf(ClusterURL, v.ClusterMembers[0]),
+			"cluster_name": v.ClusterName,
+		}
+		cluster_urls[k] = c
+	}
+	d.Set("cluster_urls", cluster_urls)
 	return nil
 }
 
