@@ -51,9 +51,10 @@ jobs:
                   index=$((index+1))
               done
               export TESTARGS='-run="'$runFlag'"'
+              echo ${{ github.event.client_payload.slash_command.args.unnamed.all }}
               echo "Running make testacc with test arguments as $TESTARGS"
-              echo ${{ secrets.FOUNDATION_CONFIG }} > test_foundation_config.json
-              ${{ secrets.ACCEPTANCE_TEST_ARGS }} make testacc
+              echo "Foundation config is ${{ secrets.FOUNDATION_CONFIG }}"
+              echo $TESTARGS
       - name: Code Coverage Check
         run:  |
               echo "Code coverage: Checking if code coverage is above threshold..."
