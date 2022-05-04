@@ -52,7 +52,7 @@ jobs:
               done
               export TESTARGS='-run="'$runFlag'"'
               echo "Running make testacc with test arguments as $TESTARGS"
-              ${{ secrets.CONFIG }} echo $config > test_foundation_config.json
+              echo ${{ secrets.FOUNDATION_CONFIG }} > test_foundation_config.json
               ${{ secrets.ACCEPTANCE_TEST_ARGS }} make testacc
       - name: Code Coverage Check
         run:  |
