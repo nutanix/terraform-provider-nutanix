@@ -55,6 +55,7 @@ jobs:
               echo "Running make testacc with test arguments as $TESTARGS"
               echo "Foundation config is ${{ secrets.FOUNDATION_CONFIG }}"
               echo $TESTARGS
+              echo pwd
       - name: Code Coverage Check
         run:  |
               echo "Code coverage: Checking if code coverage is above threshold..."
