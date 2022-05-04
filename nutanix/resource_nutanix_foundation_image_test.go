@@ -73,7 +73,6 @@ func TestAccFoundationImageResource_NOSUpload(t *testing.T) {
 				Config: testImageResourceUpload(nameForUpload, filename, "nos", filepath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNosImageExists(filename),
-					resource.TestCheckResourceAttrSet(resourcePathForUpload, "md5sum"),
 					resource.TestCheckResourceAttrSet(resourcePathForUpload, "in_whitelist"),
 					resource.TestCheckResourceAttrSet(resourcePathForUpload, "name"),
 				),
