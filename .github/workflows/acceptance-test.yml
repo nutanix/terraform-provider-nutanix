@@ -55,6 +55,7 @@ jobs:
               echo '${{ secrets.FOUNDATION_CONFIG }}' > test_foundation_config.json
               ${{ secrets.ACCEPTANCE_TEST_ARGS }} make testacc
       - name: Code Coverage Check
+        if: ${{ always() }}
         run:  |
               echo "Code coverage: Checking if code coverage is above threshold..."
               export TESTCOV_THRESHOLD=50
