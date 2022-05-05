@@ -16,7 +16,7 @@ func TestAccFCImageNodesResource(t *testing.T) {
 	path, _ := os.Getwd()
 	filepath := path + "/../test_foundation_config.json"
 
-	// using block 0 in the test_foundation_config.json for this testcase
+	// using block 1 in the test_foundation_config.json for this testcase
 	blockNum := 1
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -25,7 +25,7 @@ func TestAccFCImageNodesResource(t *testing.T) {
 			{
 				Config: testFCImageNodesResource(filepath, blockNum, name, clusterName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourcePath, "cluster_name", "test"),
+					resource.TestCheckResourceAttr(resourcePath, "cluster_name", clusterName),
 				),
 			},
 		},
@@ -35,10 +35,10 @@ func TestAccFCImageNodesResource(t *testing.T) {
 func testFCImageNodesResource(filepath string, blockNum int, name, clusterName string) string {
 	return fmt.Sprintf(`
 	locals{
-		config = (jsondecode(file("%s"))).blocks[%v]
+		config = (jsondecode(file("%[1]s"))).blocks[%[2]v]
 	}
 	
-	resource "nutanix_foundation_central_image_cluster" "%s" {
+	resource "nutanix_foundation_central_image_cluster" "%[3]s" {
 	  aos_package_url = local.config.aos_package_url
 
 	  node_list{
@@ -96,6 +96,6 @@ func testFCImageNodesResource(filepath string, blockNum int, name, clusterName s
 			hypervisor_ntp_servers = [local.config.common_network_settings.hypervisor_ntp_servers[0]]
 		}
 		redundancy_factor = 2
-		cluster_name =  "%s"
+		cluster_name =  "%[4]s"
 	}`, filepath, blockNum, name, clusterName)
 }
