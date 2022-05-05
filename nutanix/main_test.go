@@ -39,6 +39,7 @@ type IPMIConfig struct {
 	IpmiIP       string `json:"ipmi_ip"`
 	IpmiMac      string `json:"ipmi_mac"`
 }
+
 type FoundationVars struct {
 	IPv6Addresses []string   `json:"ipv6_addresses"`
 	IpmiConfig    IPMIConfig `json:"ipmi_config"`
@@ -56,13 +57,24 @@ type FoundationVars struct {
 			NodePosition            string `json:"node_position"`
 			IPv6Address             string `json:"ipv6_address"`
 			CurrentNetworkInterface string `json:"current_network_interface"`
+			ImagedNodeUUID          string `json:"imaged_node_uuid"`
+			HypervisorType          string `json:"hypervisor_type"`
 		} `json:"nodes"`
-		BlockID           string `json:"block_id"`
-		CvmGateway        string `json:"cvm_gateway"`
-		HypervisorGateway string `json:"hypervisor_gateway"`
-		CvmNetmask        string `json:"cvm_netmask"`
-		HypervisorNetmask string `json:"hypervisor_netmask"`
-		IpmiUser          string `json:"ipmi_user"`
+		BlockID                    string `json:"block_id"`
+		CvmGateway                 string `json:"cvm_gateway"`
+		HypervisorGateway          string `json:"hypervisor_gateway"`
+		CvmNetmask                 string `json:"cvm_netmask"`
+		HypervisorNetmask          string `json:"hypervisor_netmask"`
+		IpmiUser                   string `json:"ipmi_user"`
+		AosPackageURL              string `json:"aos_package_url"`
+		UseExistingNetworkSettings bool   `json:"use_existing_network_settings"`
+		ImageNow                   bool   `json:"image_now"`
+		CommonNetworkSettings      struct {
+			CvmDNSServers        []string `json:"cvm_dns_servers"`
+			HypervisorDNSServers []string `json:"hypervisor_dns_servers"`
+			CvmNtpServers        []string `json:"cvm_ntp_servers"`
+			HypervisorNtpServers []string `json:"hypervisor_ntp_servers"`
+		} `json:"common_network_settings"`
 	} `json:"blocks"`
 }
 

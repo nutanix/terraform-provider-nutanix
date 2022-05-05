@@ -74,6 +74,63 @@
 				}
 			],
 			"block_id": ""
+		},
+		{
+			"common_network_settings":{
+			  "cvm_dns_servers":[
+				  ""
+			  ],
+			  "hypervisor_dns_servers":[
+				  ""
+			  ],
+			  "cvm_ntp_servers":[
+				  ""
+			  ],
+			  "hypervisor_ntp_servers":[
+				  ""
+			  ]
+			},
+			"cvm_gateway":"",
+			"cvm_netmask":"",
+			"hypervisor_gateway":"",
+			"hypervisor_netmask":"",
+			"use_existing_network_settings":false,
+			"image_now":true,
+			
+			 "nodes": [
+				{
+					"cvm_ip":"",
+					"hypervisor_ip":"",
+					"hypervisor_hostname":"",
+					"imaged_node_uuid":"",
+					"ipmi_gateway":"",
+					"ipmi_ip":"",
+					"ipmi_netmask":"",
+					"hypervisor_type":""
+				},
+				{
+					"cvm_ip":"",
+					"hypervisor_ip":"",
+					"hypervisor_hostname":"",
+					"imaged_node_uuid":"",
+					"ipmi_gateway":"",
+					"ipmi_ip":"",
+					"ipmi_netmask":"",
+					"hypervisor_type":""
+				},
+				{
+					"cvm_ip":"",
+					"hypervisor_ip":"",
+					"hypervisor_hostname":"",
+					"imaged_node_uuid":"",
+					"ipmi_gateway":"",
+					"ipmi_ip":"",
+					"ipmi_netmask":"",
+					"hypervisor_type":""
+				}
+				
+			 ],
+			"aos_package_url":""
 		}
 	]
 }

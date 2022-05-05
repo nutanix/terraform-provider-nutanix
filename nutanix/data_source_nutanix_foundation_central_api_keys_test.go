@@ -8,19 +8,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func TestAccNutanixFCAPIKeysDataSource_basic(t *testing.T) {
+func TestAccFCAPIKeysDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIKeysDataSourceConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet("data.nutanix_foundation_central_list_api_keys.test", "api_keys.#"),
+				),
 			},
 		},
 	})
 }
 
-func TestAccNutanixFCAPIKeysDataSource_KeyUUID(t *testing.T) {
+func TestAccFCAPIKeysDataSource_KeyUUID(t *testing.T) {
 	apiKeyName := acctest.RandomWithPrefix("test-key")
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -31,6 +34,8 @@ func TestAccNutanixFCAPIKeysDataSource_KeyUUID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.nutanix_foundation_central_api_keys.k1", "alias", apiKeyName),
 					resource.TestCheckResourceAttrSet("data.nutanix_foundation_central_api_keys.k1", "alias"),
+					resource.TestCheckResourceAttrSet("data.nutanix_foundation_central_api_keys.k1", "created_timestamp"),
+					resource.TestCheckResourceAttrSet("data.nutanix_foundation_central_api_keys.k1", "current_time"),
 				),
 			},
 		},
