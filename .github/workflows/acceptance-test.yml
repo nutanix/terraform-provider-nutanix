@@ -20,42 +20,7 @@ jobs:
         with:
           go-version: 1.17
       - name: Acceptance test cases
-        run: |
-              args=${{ github.event.client_payload.slash_command.args.unnamed.all }}
-              providers=(${args})
-              index=0
-              n=${#providers[@]}
-              runFlag=""
-              for provider in $args
-              do 
-                  if [ "$provider" = "foundation" ]
-                      then 
-                          runFlag+="TestAccFoundation*"
-                  elif [ "$provider" = "foundation_central" ]
-                      then
-                          runFlag+="TestAccFC*"
-                  elif [ "$provider" = "karbon" ]
-                      then
-                          runFlag+="TestAccKarbon*"
-                  elif [ "$provider" = "pc" ]
-                      then
-                          runFlag+="TestAccNutanix*"
-                  else 
-                          echo "Invalid provider=$provider given in arguments."
-                          exit 1
-                  fi
-                  if [ $index -lt $((n-1)) ]
-                      then
-                          runFlag+="|"
-                  fi
-                  index=$((index+1))
-              done
-              export TESTARGS='-run="'$runFlag'"'
-              echo ${{ github.event.client_payload.slash_command.args.unnamed.all }}
-              echo "Running make testacc with test arguments as $TESTARGS"
-              echo "Foundation config is ${{ secrets.FOUNDATION_CONFIG }}"
-              echo $TESTARGS
-              echo pwd
+        run: ${{ secrets.ACCEPTANCE_TEST_ARGS }} make testacc
       - name: Code Coverage Check
         run:  |
               echo "Code coverage: Checking if code coverage is above threshold..."
