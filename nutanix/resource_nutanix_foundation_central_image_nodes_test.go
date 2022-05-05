@@ -11,7 +11,7 @@ import (
 func TestAccFCImageNodesResource(t *testing.T) {
 	name := "batch2"
 	resourcePath := "nutanix_foundation_central_image_cluster." + name
-	cluster_name := "test_cluster"
+	clusterName := "test_cluster"
 	// get file file path to config having nodes info
 	path, _ := os.Getwd()
 	filepath := path + "/../test_foundation_config.json"
@@ -23,7 +23,7 @@ func TestAccFCImageNodesResource(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testFCImageNodesResource(filepath, blockNum, name, cluster_name),
+				Config: testFCImageNodesResource(filepath, blockNum, name, clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "cluster_name", "test"),
 				),
@@ -32,7 +32,7 @@ func TestAccFCImageNodesResource(t *testing.T) {
 	})
 }
 
-func testFCImageNodesResource(filepath string, blockNum int, name, cluster_name string) string {
+func testFCImageNodesResource(filepath string, blockNum int, name, clusterName string) string {
 	return fmt.Sprintf(`
 	locals{
 		config = (jsondecode(file("%s"))).blocks[%v]
@@ -97,5 +97,5 @@ func testFCImageNodesResource(filepath string, blockNum int, name, cluster_name 
 		}
 		redundancy_factor = 2
 		cluster_name =  "%s"
-	}`, filepath, blockNum, name, cluster_name)
+	}`, filepath, blockNum, name, clusterName)
 }
