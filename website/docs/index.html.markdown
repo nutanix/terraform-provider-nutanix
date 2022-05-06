@@ -109,7 +109,6 @@ provider "nutanix" {
   foundation_port     = var.foundation_port
 }
 ```
-**Note : Foundation feature in nutanix provider is in beta mode**
 
 Foundation based examples : https://github.com/nutanix/terraform-provider-nutanix/blob/master/examples/foundation/
 
