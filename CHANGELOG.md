@@ -1,3 +1,35 @@
+## 1.5.0 (May 7, 2022)
+
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.5.0-beta.2...v1.5.0)
+
+**Merged pull requests:**
+
+- Update Acceptance tests workflow to run specific provider tests [\#437](https://github.com/nutanix/terraform-provider-nutanix/pull/437) ([bhatipradeep](https://github.com/bhatipradeep))
+- Foundation unit tests and existing test fixes [\#433](https://github.com/nutanix/terraform-provider-nutanix/pull/433) ([bhatipradeep](https://github.com/bhatipradeep))
+- Foundation Acceptance tests and minor fixes [\#436](https://github.com/nutanix/terraform-provider-nutanix/pull/436) ([bhatipradeep](https://github.com/bhatipradeep))
+- Foundation Central unit tests and acceptance tests [\#439](https://github.com/nutanix/terraform-provider-nutanix/pull/439) ([abhimutant](https://github.com/abhimutant))
+- Optimize Image upload to avoid buffering. Add cluster related fields in image upload resource & data source for PC [\#432](https://github.com/nutanix/terraform-provider-nutanix/pull/432) ([bhatipradeep](https://github.com/bhatipradeep))
+- fixing karbon docs at registry [\#434](https://github.com/nutanix/terraform-provider-nutanix/pull/434)([abhimutant](https://github.com/abhimutant)) 
+- Example for using config downloaded from install.nutanix.com to image nodes[\#444](https://github.com/nutanix/terraform-provider-nutanix/pull/444) ([bhatipradeep](https://github.com/bhatipradeep))
+- Add example to pull secrets from hashicorp vault to use them in node imaging [\#431](https://github.com/nutanix/terraform-provider-nutanix/pull/431) ([bhatipradeep](https://github.com/bhatipradeep))
+
+
+**Fixed Bugs:**
+
+- Image upload failures [\#430](https://github.com/nutanix/terraform-provider-nutanix/issues/430)
+- Not able to upload image to a specific cluster [\#428](https://github.com/nutanix/terraform-provider-nutanix/issues/428)
+- Doc for Nutanix karbon_cluster_kubeConfig pointing to deadlink in registry [\#429](https://github.com/nutanix/terraform-provider-nutanix/issues/429)
+
+
+**Closed Issues:**
+
+- Add Example for using config json file downloaded from install.nutanix.com to image nodes using terraform nutanix foundation [\#435](https://github.com/nutanix/terraform-provider-nutanix/issues/435)
+- Image upload failures [\#430](https://github.com/nutanix/terraform-provider-nutanix/issues/430)
+- Not able to upload image to a specific cluster [\#428](https://github.com/nutanix/terraform-provider-nutanix/issues/428)
+- Add IPMI validations for verifying successfull IPMI configuration [\#425](https://github.com/nutanix/terraform-provider-nutanix/issues/425)
+- Add examples of vault integration with node imaging using foundation [\#424](https://github.com/nutanix/terraform-provider-nutanix/issues/424)
+
+
 ## 1.5.0-beta.2 (April 12, 2022)
 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.5.0-beta...v1.5.0-beta.2)
