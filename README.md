@@ -1,4 +1,4 @@
-# Terraform Nutanix Provider
+#  Terraform Nutanix Provider
 
 Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
