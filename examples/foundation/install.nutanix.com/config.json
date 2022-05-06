@@ -1,0 +1,107 @@
+{
+    "config": {
+        "bond_mode": "",
+        "bond_lacp_rate": null,
+        "rdma_passthrough": false,
+        "hypervisor_netmask": "xx.xx.xx.xx",
+        "cvm_netmask": "xx.xx.xx.xx",
+        "ipmi_netmask": "xx.xx.xx.xx",
+        "hypervisor_gateway": "10.xx.xx.xx",
+        "cvm_gateway": "10.xx.xx.xx",
+        "ipmi_gateway": "10.xx.xx.xx",
+        "ui_skip_network_check": true,
+        "clusters": [
+            {
+                "redundancy_factor": 2,
+                "cluster_members": [
+                    "10.xx.xx.xx",
+                    "10.xx.xx.xx",
+                    "10.xx.xx.xx"
+                ],
+                "cluster_name": "TestCheck",
+                "cluster_external_ip": "10.xx.xx.xx"
+            }
+        ],
+        "blocks": [
+            {
+                "block_id": "XXXXXXXX",
+                "ui_block_id": "XXXXXXXX",
+                "nodes": [
+                    {
+                        "node_position": "A",
+                        "ipmi_ip": "10.xx.xx.xx",
+                        "hypervisor_ip": "10.xx.xx.xx",
+                        "cvm_ip": "10.xx.xx.xx",
+                        "hypervisor_hostname": "Check1",
+                        "ipmi_user": "xxxxx",
+                        "ipmi_password": "xxxx",
+                        "cvm_gb_ram": null
+                    },
+                    {
+                        "node_position": "B",
+                        "ipmi_ip": "10.xx.xx.xx",
+                        "hypervisor_ip": "10.xx.xx.xx",
+                        "cvm_ip": "10.xx.xx.xx",
+                        "hypervisor_hostname": "Check2",
+                        "ipmi_user": "xxxxx",
+                        "ipmi_password": "xxxx",
+                        "cvm_gb_ram": null
+                    },
+                    {
+                        "node_position": "C",
+                        "ipmi_ip": "10.xx.xx.xx",
+                        "hypervisor_ip": "10.xx.xx.xx",
+                        "cvm_ip": "10.xx.xx.xx",
+                        "hypervisor_hostname": "Check3",
+                        "ipmi_user": "xxxxx",
+                        "ipmi_password": "xxxx",
+                        "cvm_gb_ram": null
+                    }
+                ]
+            },
+            {
+                "block_id": "XXXXXXXX",
+                "ui_block_id": "XXXXXXXX",
+                "nodes": [
+                    {
+                        "node_position": "A",
+                        "ipmi_ip": "10.xx.xx.xx",
+                        "hypervisor_ip": "10.xx.xx.xx",
+                        "cvm_ip": "10.xx.xx.xx",
+                        "hypervisor_hostname": "Check11",
+                        "ipmi_user": "xxxxx",
+                        "ipmi_password": "xxxx",
+                        "cvm_gb_ram": null
+                    },
+                    {
+                        "node_position": "B",
+                        "ipmi_ip": "10.xx.xx.xx",
+                        "hypervisor_ip": "10.xx.xx.xx",
+                        "cvm_ip": "10.xx.xx.xx",
+                        "hypervisor_hostname": "Check12",
+                        "ipmi_user": "xxxxx",
+                        "ipmi_password": "xxxx",
+                        "cvm_gb_ram": null
+                    },
+                    {
+                        "node_position": "C",
+                        "ipmi_ip": "10.xx.xx.xx",
+                        "hypervisor_ip": "10.xx.xx.xx",
+                        "cvm_ip": "10.xx.xx.xx",
+                        "hypervisor_hostname": "Check13",
+                        "ipmi_user": "xxxxx",
+                        "ipmi_password": "xxxx",
+                        "cvm_gb_ram": null
+                    }
+                ]
+            }
+        ],
+        "eos_metadata": {
+            "account_name": [
+                "Nutanix Corporate"
+            ],
+            "config_id": "axaskmxaklsmxij92ji2x",
+            "email": "xx.xx@xx.com"
+        }
+    }
+}
