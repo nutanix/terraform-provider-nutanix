@@ -1668,9 +1668,11 @@ type Metadata struct {
 	// Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
 	ShouldForceTranslate *bool `json:"should_force_translate,omitempty" mapstructure:"should_force_translate,omitempty"`
 
+	// Logical entity version of the VM from which to clone the new VM.
+	EntityVersion *string `json:"entity_version,omitempty" mapstructure:"entity_version,omitempty"`
+
 	//TODO: add if necessary
 	//CategoriesMapping    map[string][]string `json:"categories_mapping,omitempty" mapstructure:"categories_mapping,omitempty"`
-	//EntityVersion        *string             `json:"entity_version,omitempty" mapstructure:"entity_version,omitempty"`
 	//UseCategoriesMapping *bool               `json:"use_categories_mapping,omitempty" mapstructure:"use_categories_mapping,omitempty"`
 
 }
@@ -2599,4 +2601,25 @@ type AddressGroupListEntry struct {
 type AddressGroupListResponse struct {
 	Metadata *ListMetadataOutput      `json:"metadata,omitempty"`
 	Entities []*AddressGroupListEntry `json:"entities,omitempty"`
+}
+
+type OverrideSpec struct {
+	Name               *string             `json:"name,omitempty"`
+	NumSockets         *int                `json:"num_sockets,omitempty"`
+	NumVcpusPerSocket  *int                `json:"num_vcpus_per_socket,omitempty"`
+	NumThreadsPerCore  *int                `json:"num_threads_per_core,omitempty"`
+	MemorySizeMib      *int                `json:"memory_size_mib,omitempty"`
+	NicList            []*VMNic            `json:"nic_list,omitempty"`
+	BootConfig         *VMBootConfig       `json:"boot_config,omitempty"`
+	GuestCustomization *GuestCustomization `json:"guest_customization,omitempty"`
+}
+
+type VMCloneInput struct {
+	Metadata     *Metadata     `json:"metadata,omitempty"`
+	OverrideSpec *OverrideSpec `json:"override_spec,omitempty"`
+}
+
+type VMCloneResponse struct {
+	TaskUUID    *string `json:"task_uuid,omitempty"`
+	CloneVMUUID *string `json:"clone_vm_uuid,omitempty"`
 }
