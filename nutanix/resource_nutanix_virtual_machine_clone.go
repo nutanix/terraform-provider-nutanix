@@ -188,9 +188,9 @@ func resourceNutanixVirtualMachineCloneCreate(ctx context.Context, d *schema.Res
 	conn := meta.(*Client).API
 
 	var id string
-	vm_uuid, nok := d.GetOk("vm_uuid")
+	vmUUID, nok := d.GetOk("vm_uuid")
 	if nok {
-		id = *utils.StringPtr(vm_uuid.(string))
+		id = *utils.StringPtr(vmUUID.(string))
 	}
 	spec := &v3.VMCloneInput{}
 
@@ -214,36 +214,36 @@ func resourceNutanixVirtualMachineCloneCreate(ctx context.Context, d *schema.Res
 		MinTimeout: vmMinTimeout,
 	}
 
-	task_info, errWaitTask := stateConf.WaitForStateContext(ctx)
+	taskInfo, errWaitTask := stateConf.WaitForStateContext(ctx)
 	if errWaitTask != nil {
 		return diag.Errorf("error waiting for task (%s) to create: %s", taskUUID, errWaitTask)
 	}
 
 	// Get the cloned VM UUID
-	var cloneVmUUID string
-	task_details, ok := task_info.(*v3.TasksResponse)
+	var cloneVMUUID string
+	taskDetails, ok := taskInfo.(*v3.TasksResponse)
 	if ok {
-		cloneVmUUID = *task_details.EntityReferenceList[0].UUID
+		cloneVMUUID = *taskDetails.EntityReferenceList[0].UUID
 	}
 
 	// State Changed to Power ON
-	if err := changePowerState(ctx, conn, cloneVmUUID, "ON"); err != nil {
-		return diag.Errorf("internal error: cannot turn ON the VM with UUID(%s): %s", cloneVmUUID, err)
+	if er := changePowerState(ctx, conn, cloneVMUUID, "ON"); er != nil {
+		return diag.Errorf("internal error: cannot turn ON the VM with UUID(%s): %s", cloneVMUUID, err)
 	}
 
 	// Wait for IP available
 	waitIPConf := &resource.StateChangeConf{
 		Pending:    []string{WAITING},
 		Target:     []string{"AVAILABLE"},
-		Refresh:    waitForIPRefreshFunc(conn, cloneVmUUID),
+		Refresh:    waitForIPRefreshFunc(conn, cloneVMUUID),
 		Timeout:    vmTimeout,
 		Delay:      vmDelay,
 		MinTimeout: vmMinTimeout,
 	}
 
-	vmIntentResponse, err := waitIPConf.WaitForStateContext(ctx)
-	if err != nil {
-		log.Printf("[WARN] could not get the IP for VM(%s): %s", cloneVmUUID, err)
+	vmIntentResponse, ero := waitIPConf.WaitForStateContext(ctx)
+	if ero != nil {
+		log.Printf("[WARN] could not get the IP for VM(%s): %s", cloneVMUUID, err)
 	} else {
 		vm := vmIntentResponse.(*v3.VMIntentResponse)
 
@@ -255,7 +255,7 @@ func resourceNutanixVirtualMachineCloneCreate(ctx context.Context, d *schema.Res
 		}
 	}
 
-	d.SetId(cloneVmUUID)
+	d.SetId(cloneVMUUID)
 	return nil
 	//return resourceNutanixVirtualMachineCloneRead(ctx, d, meta)
 }
@@ -273,7 +273,6 @@ func resourceNutanixVirtualMachineCloneDelete(ctx context.Context, d *schema.Res
 }
 
 func getMetadataCloneAttributes(d *schema.ResourceData) (out *v3.Metadata) {
-
 	resourceData, ok := d.GetOk("metadata")
 	if !ok {
 		return nil
