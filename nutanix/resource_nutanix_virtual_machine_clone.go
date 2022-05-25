@@ -193,7 +193,9 @@ func resourceNutanixVirtualMachineClone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			// Computed  Resource Argument
+
+			// COMPUTED RESOURCE ARGUMENTS
+
 			"cloud_init_cdrom_uuid": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -322,9 +324,6 @@ func resourceNutanixVirtualMachineClone() *schema.Resource {
 					},
 				},
 			},
-
-			// RESOURCES ARGUMENTS
-
 			"enable_cpu_passthrough": {
 				Type:     schema.TypeBool,
 				Computed: true,
