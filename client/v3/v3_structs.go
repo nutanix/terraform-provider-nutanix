@@ -1668,11 +1668,9 @@ type Metadata struct {
 	// Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
 	ShouldForceTranslate *bool `json:"should_force_translate,omitempty" mapstructure:"should_force_translate,omitempty"`
 
-	// Logical entity version of the VM from which to clone the new VM.
-	EntityVersion *string `json:"entity_version,omitempty" mapstructure:"entity_version,omitempty"`
-
 	//TODO: add if necessary
 	//CategoriesMapping    map[string][]string `json:"categories_mapping,omitempty" mapstructure:"categories_mapping,omitempty"`
+	// EntityVersion *string `json:"entity_version,omitempty" mapstructure:"entity_version,omitempty"`
 	//UseCategoriesMapping *bool               `json:"use_categories_mapping,omitempty" mapstructure:"use_categories_mapping,omitempty"`
 
 }
