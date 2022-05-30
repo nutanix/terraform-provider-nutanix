@@ -1670,7 +1670,7 @@ type Metadata struct {
 
 	//TODO: add if necessary
 	//CategoriesMapping    map[string][]string `json:"categories_mapping,omitempty" mapstructure:"categories_mapping,omitempty"`
-	// EntityVersion *string `json:"entity_version,omitempty" mapstructure:"entity_version,omitempty"`
+	//EntityVersion        *string             `json:"entity_version,omitempty" mapstructure:"entity_version,omitempty"`
 	//UseCategoriesMapping *bool               `json:"use_categories_mapping,omitempty" mapstructure:"use_categories_mapping,omitempty"`
 
 }
