@@ -2600,3 +2600,43 @@ type AddressGroupListResponse struct {
 	Metadata *ListMetadataOutput      `json:"metadata,omitempty"`
 	Entities []*AddressGroupListEntry `json:"entities,omitempty"`
 }
+
+type ActiveGatewayNode struct {
+	HostReference *Reference `json:"host_reference,omitempty"`
+	IPAddress     *string    `json:"ip_address,omitempty"`
+}
+
+type CommonDomainNameServerIPList struct {
+	IP       *string `json:"ip,omitempty"`
+	IPv6     *string `json:"ipv6,omitempty"`
+	Fqdn     *string `json:"fqdn,omitempty"`
+	Port     *string `json:"port,omitempty"`
+	IsBackup *string `json:"is_backup,omitempty"`
+}
+
+type ExternalSubnetList struct {
+	ExternalSubnetReference *ReferenceValues   `json:"external_subnet_reference,omitempty"`
+	GatewayNodeUUIDList     []*string          `json:"gateway_node_uuid_list,omitempty"`
+	ActiveGatewayNode       *ActiveGatewayNode `json:"active_gateway_node,omitempty"`
+}
+
+type VpcResources struct {
+	ExternalSubnetList            []*ExternalSubnetList           `json:"external_subnet_list,omitempty"`
+	AvailabilityZoneReferenceList []*Reference                    `json:"availability_zone_reference_list,omitempty"`
+	CommonDomainNameServerIPList  []*CommonDomainNameServerIPList `json:"common_domain_name_server_ip_list,omitempty"`
+}
+
+type VPC struct {
+	Name      *string       `json:"name,omitempty"`
+	Resources *VpcResources `json:"resources,omitempty"`
+}
+
+type VPCIntentInput struct {
+	APIVersion *string `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
+
+	Metadata *Metadata `json:"metadata" mapstructure:"metadata"`
+
+	Spec *VPC `json:"spec" mapstructure:"spec"`
+}
+
+type VPCIntentResponse struct{}
