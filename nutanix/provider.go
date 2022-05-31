@@ -183,6 +183,7 @@ func Provider() *schema.Provider {
 			"nutanix_foundation_image":                 resourceNutanixFoundationImage(),
 			"nutanix_foundation_central_image_cluster": resourceNutanixFCImageCluster(),
 			"nutanix_foundation_central_api_keys":      resourceNutanixFCAPIKeys(),
+			"nutanix_vpc":                              resourceNutanixVPC(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
