@@ -119,6 +119,7 @@ type Service interface {
 	DeleteAddressGroup(uuid string) error
 	CreateAddressGroup(request *AddressGroupInput) (*Reference, error)
 	UpdateAddressGroup(uuid string, body *AddressGroupInput) error
+	CreateVPC(ctx context.Context, createRequest *VPCIntentInput) (*VPCIntentResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -2427,4 +2428,17 @@ func (op Operations) UpdateAddressGroup(uuid string, body *AddressGroupInput) er
 	}
 
 	return op.client.Do(ctx, req, nil)
+}
+
+func (op Operations) CreateVPC(ctx context.Context, request *VPCIntentInput) (*VPCIntentResponse, error) {
+	//ctx := context.TODO()
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, "/vpc", request)
+	vpcIntentResponse := new(VPCIntentResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return vpcIntentResponse, op.client.Do(ctx, req, vpcIntentResponse)
 }
