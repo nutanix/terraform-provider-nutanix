@@ -120,6 +120,7 @@ type Service interface {
 	CreateAddressGroup(request *AddressGroupInput) (*Reference, error)
 	UpdateAddressGroup(uuid string, body *AddressGroupInput) error
 	CreateVPC(ctx context.Context, createRequest *VPCIntentInput) (*VPCIntentResponse, error)
+	GetVPC(ctx context.Context, uuid string) (*VPCIntentResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -2433,7 +2434,21 @@ func (op Operations) UpdateAddressGroup(uuid string, body *AddressGroupInput) er
 func (op Operations) CreateVPC(ctx context.Context, request *VPCIntentInput) (*VPCIntentResponse, error) {
 	//ctx := context.TODO()
 
-	req, err := op.client.NewRequest(ctx, http.MethodPost, "/vpc", request)
+	req, err := op.client.NewRequest(ctx, http.MethodPost, "/vpcs", request)
+	vpcIntentResponse := new(VPCIntentResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return vpcIntentResponse, op.client.Do(ctx, req, vpcIntentResponse)
+}
+
+func (op Operations) GetVPC(ctx context.Context, uuid string) (*VPCIntentResponse, error) {
+
+	path := fmt.Sprintf("/vpcs/%s", uuid)
+
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
 	vpcIntentResponse := new(VPCIntentResponse)
 
 	if err != nil {

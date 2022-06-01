@@ -2615,15 +2615,20 @@ type CommonDomainNameServerIPList struct {
 }
 
 type ExternalSubnetList struct {
-	ExternalSubnetReference *ReferenceValues   `json:"external_subnet_reference,omitempty"`
-	GatewayNodeUUIDList     []*string          `json:"gateway_node_uuid_list,omitempty"`
+	ExternalSubnetReference *Reference         `json:"external_subnet_reference,omitempty"`
+	ExternalIPList          []*string          `json:"external_ip_list,omitempty"`
 	ActiveGatewayNode       *ActiveGatewayNode `json:"active_gateway_node,omitempty"`
 }
 
+type ExternallyRoutablePrefixList struct {
+	IP           *string `json:"ip,omitempty"`
+	PrefixLength *int    `json:"prefix_length,omitempty"`
+}
+
 type VpcResources struct {
-	ExternalSubnetList            []*ExternalSubnetList           `json:"external_subnet_list,omitempty"`
-	AvailabilityZoneReferenceList []*Reference                    `json:"availability_zone_reference_list,omitempty"`
-	CommonDomainNameServerIPList  []*CommonDomainNameServerIPList `json:"common_domain_name_server_ip_list,omitempty"`
+	ExternalSubnetList           []*ExternalSubnetList           `json:"external_subnet_list,omitempty"`
+	ExternallyRoutablePrefixList []*ExternallyRoutablePrefixList `json:"externally_routable_prefix_list,omitempty"`
+	CommonDomainNameServerIPList []*CommonDomainNameServerIPList `json:"common_domain_name_server_ip_list,omitempty"`
 }
 
 type VPC struct {
@@ -2639,4 +2644,22 @@ type VPCIntentInput struct {
 	Spec *VPC `json:"spec" mapstructure:"spec"`
 }
 
-type VPCIntentResponse struct{}
+type VPCDefStatus struct {
+	State *string `json:"state,omitempty" mapstructure:"state,omitempty"`
+
+	ExecutionContext *ExecutionContext `json:"execution_context,omitempty" mapstructure:"execution_context,omitempty"`
+
+	Resources *VpcResources `json:"resources,omitempty"`
+
+	ExternalSubnetListStatus []*ExternalSubnetList `json:"external_subnet_list,omitempty"`
+}
+
+type VPCIntentResponse struct {
+	APIVersion *string `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
+
+	Metadata *Metadata `json:"metadata" mapstructure:"metadata"`
+
+	Spec *VPC `json:"spec" mapstructure:"spec"`
+
+	Status *VPCDefStatus `json:"status"`
+}
