@@ -32,96 +32,200 @@ func dataSourceNutanixVPC() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"categories": categoriesSchema(),
-			"external_subnet_list": {
+			"status": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"external_subnet_reference": {
-							Type:     schema.TypeMap,
-							Required: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"externally_routable_prefix_list": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ip": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"prefix_length": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-					},
-				},
-			},
-			"common_domain_name_server_ip_list": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ip": {
+						"state": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"ipv6": {
+						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"fqdn": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"is_backup": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"external_subnet_list_status": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"external_subnet_reference": {
-							Type:     schema.TypeMap,
-							Required: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"external_ip_list": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"active_gateway_node": {
+						"resources": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"host_reference": {
-										Type:     schema.TypeMap,
-										Required: true,
+									"external_subnet_list": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"external_subnet_reference": {
+													Type:     schema.TypeMap,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"external_ip_list": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"active_gateway_node": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"host_reference": {
+																Type:     schema.TypeMap,
+																Required: true,
+																Elem: &schema.Schema{
+																	Type: schema.TypeString,
+																},
+															},
+															"ip_address": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"externally_routable_prefix_list": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ip": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"prefix_length": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+											},
+										},
+									},
+									"common_domain_name_server_ip_list": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ip": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"ipv6": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"fqdn": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+												"is_backup": {
+													Type:     schema.TypeBool,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"execution_context": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"task_uuid": {
+										Type:     schema.TypeList,
+										Computed: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
 									},
-									"ip_address": {
-										Type:     schema.TypeString,
+								},
+							},
+						},
+					},
+				},
+			},
+			"spec": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"resources": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"external_subnet_list": {
+										Type:     schema.TypeList,
 										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"external_subnet_reference": {
+													Type:     schema.TypeMap,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+											},
+										},
+									},
+									"externally_routable_prefix_list": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ip": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"prefix_length": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+											},
+										},
+									},
+									"common_domain_name_server_ip_list": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ip": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+												"ipv6": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+												"fqdn": {
+													Type:     schema.TypeInt,
+													Optional: true,
+													Computed: true,
+												},
+												"is_backup": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
 									},
 								},
 							},
@@ -147,16 +251,13 @@ func dataSourceNutanixVPCRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("name", resp.Spec.Name); err != nil {
-		return diag.FromErr(err)
-	}
+	// if err := d.Set("name", resp.Spec.Name); err != nil {
+	// 	return diag.FromErr(err)
+	// }
 
-	m, c := setRSEntityMetadata(resp.Metadata)
+	m, _ := setRSEntityMetadata(resp.Metadata)
 
 	if err := d.Set("metadata", m); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("categories", c); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -164,19 +265,11 @@ func dataSourceNutanixVPCRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(err)
 	}
 
-	if err = d.Set("external_subnet_list", flattenExtSubnetList(resp.Spec.Resources.ExternalSubnetList)); err != nil {
+	if err := d.Set("status", flattenStatusVPC(resp.Status)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err = d.Set("externally_routable_prefix_list", flattenExtRoutableList(resp.Spec.Resources.ExternallyRoutablePrefixList)); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err = d.Set("common_domain_name_server_ip_list", flattenCommonDNSIPList(resp.Spec.Resources.CommonDomainNameServerIPList)); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err = d.Set("external_subnet_list_status", flattenExtSubnetListStatus(resp.Status.Resources.ExternalSubnetList)); err != nil {
+	if err := d.Set("spec", flattenSpecVPC(resp.Spec)); err != nil {
 		return diag.FromErr(err)
 	}
 
