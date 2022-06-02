@@ -3,6 +3,7 @@ package nutanix
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -49,36 +50,6 @@ func resourceNutanixVPC() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						// "gateway_node_uuid_list": {
-						// 	Type:     schema.TypeList,
-						// 	Optional: true,
-						// 	Computed: true,
-						// 	Elem: &schema.Schema{
-						// 		Type: schema.TypeString,
-						// 	},
-						// },
-						// "active_gateway_node": {
-						// 	Type:     schema.TypeList,
-						// 	Optional: true,
-						// 	Computed: true,
-						// 	MaxItems: 1,
-						// 	Elem: &schema.Resource{
-						// 		Schema: map[string]*schema.Schema{
-						// 			"host_reference": {
-						// 				Type:     schema.TypeMap,
-						// 				Required: true,
-						// 				Elem: &schema.Schema{
-						// 					Type: schema.TypeString,
-						// 				},
-						// 			},
-						// 			"ip_address": {
-						// 				Type:     schema.TypeString,
-						// 				Optional: true,
-						// 				Computed: true,
-						// 			},
-						// 		},
-						// 	},
-						// },
 					},
 				},
 			},
@@ -272,14 +243,108 @@ func resourceNutanixVPCRead(ctx context.Context, d *schema.ResourceData, meta in
 	return nil
 }
 func resourceNutanixVPCUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	conn := meta.(*Client).API
+
+	request := &v3.VPCIntentInput{}
+	spec := &v3.VPC{}
+	metadata := &v3.Metadata{}
+	res := &v3.VpcResources{}
+
+	response, err := conn.V3.GetVPC(ctx, d.Id())
+	if err != nil {
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+			return nil
+		}
+		return diag.Errorf("error reading VPC %s: %s", d.Id(), err)
+	}
+	if response.Metadata != nil {
+		metadata = response.Metadata
+	}
+
+	if response.Spec != nil {
+		spec = response.Spec
+
+		if response.Spec.Resources != nil {
+			res = response.Spec.Resources
+		}
+	}
+
+	if d.HasChange("name") {
+		spec.Name = utils.StringPtr(d.Get("name").(string))
+	}
+
+	if d.HasChange("external_subnet_list") {
+		res.ExternalSubnetList = expandExternalSubnet(d.Get("external_subnet_list"))
+	}
+
+	if d.HasChange("common_domain_name_server_ip_list") {
+		res.CommonDomainNameServerIPList = expandCommonDNSIPList(d.Get("common_domain_name_server_ip_list"))
+	}
+
+	if d.HasChange("externally_routable_prefix_list") {
+		res.ExternallyRoutablePrefixList = expandExternallyRoutablePL(d.Get("externally_routable_prefix_list"))
+	}
+
+	spec.Resources = res
+	request.Metadata = metadata
+	request.Spec = spec
+
+	// Make request to the API
+	resp, err := conn.V3.UpdateVPC(ctx, d.Id(), request)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	taskUUID := resp.Status.ExecutionContext.TaskUUID.(string)
+
+	// Wait for the VPC to be available
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"PENDING", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, taskUUID),
+		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Delay:      2 * time.Second,
+		MinTimeout: 5 * 60,
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for vpc (%s) to create: %s", d.Id(), errWaitTask)
+	}
+
+	return resourceNutanixVPCRead(ctx, d, meta)
 }
+
 func resourceNutanixVPCDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*Client).API
+	log.Printf("[DEBUG] Deleting VPC: %s, %s", d.Get("name").(string), d.Id())
+	resp, err := conn.V3.DeleteVPC(ctx, d.Id())
+	if err != nil {
+		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+			return nil
+		}
+		return diag.Errorf("error while deleting VPC UUID(%s): %s", d.Id(), err)
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"DELETE_PENDING", "RUNNING"},
+		Target:     []string{"SUCCEEDED"},
+		Refresh:    taskStateRefreshFunc(conn, resp.Status.ExecutionContext.TaskUUID.(string)),
+		Timeout:    d.Timeout(schema.TimeoutDelete),
+		Delay:      1 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+
+	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
+		return diag.Errorf(
+			"error waiting for vpc (%s) to delete: %s", d.Id(), err)
+	}
+	d.SetId("")
 	return nil
 }
 
 func getVPCResources(d *schema.ResourceData, vpc *v3.VpcResources) error {
-
 	if az, azok := d.GetOk("externally_routable_prefix_list"); azok {
 		vpc.ExternallyRoutablePrefixList = expandExternallyRoutablePL(az)
 	}
@@ -307,15 +372,6 @@ func expandExternalSubnet(exs interface{}) []*v3.ExternalSubnetList {
 			if v1, ok1 := v["external_subnet_reference"]; ok1 {
 				dl.ExternalSubnetReference = validateShortRef(v1.(map[string]interface{}))
 			}
-
-			// if v2, ok1 := v["gateway_node_uuid_list"]; ok1 {
-			// 	vs2 := v2.([]interface{})
-			// 	dl.GatewayNodeUUIDList = expandStringList(vs2)
-			// }
-
-			// if v3, ok1 := v["active_gateway_node"]; ok1 {
-			// 	dl.ActiveGatewayNode = expandActiveGateway(v3.([]interface{}))
-			// }
 
 			dls[k] = (dl)
 		}
@@ -402,7 +458,6 @@ func expandCommonDNSIPList(cms interface{}) []*v3.CommonDomainNameServerIPList {
 }
 
 func flattenExtSubnetList(ext []*v3.ExternalSubnetList) []map[string]interface{} {
-
 	if len(ext) > 0 {
 		extSub := make([]map[string]interface{}, len(ext))
 

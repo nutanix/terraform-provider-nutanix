@@ -121,6 +121,9 @@ type Service interface {
 	UpdateAddressGroup(uuid string, body *AddressGroupInput) error
 	CreateVPC(ctx context.Context, createRequest *VPCIntentInput) (*VPCIntentResponse, error)
 	GetVPC(ctx context.Context, uuid string) (*VPCIntentResponse, error)
+	DeleteVPC(ctx context.Context, uuid string) (*DeleteResponse, error)
+	UpdateVPC(ctx context.Context, uuid string, body *VPCIntentInput) (*VPCIntentResponse, error)
+	ListVPC(ctx context.Context, getEntitiesRequest *DSMetadata) (*VPCListIntentResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -2445,7 +2448,6 @@ func (op Operations) CreateVPC(ctx context.Context, request *VPCIntentInput) (*V
 }
 
 func (op Operations) GetVPC(ctx context.Context, uuid string) (*VPCIntentResponse, error) {
-
 	path := fmt.Sprintf("/vpcs/%s", uuid)
 
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
@@ -2456,4 +2458,42 @@ func (op Operations) GetVPC(ctx context.Context, uuid string) (*VPCIntentRespons
 	}
 
 	return vpcIntentResponse, op.client.Do(ctx, req, vpcIntentResponse)
+}
+
+func (op Operations) DeleteVPC(ctx context.Context, uuid string) (*DeleteResponse, error) {
+	path := fmt.Sprintf("/vpcs/%s", uuid)
+
+	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	deleteResponse := new(DeleteResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return deleteResponse, op.client.Do(ctx, req, deleteResponse)
+}
+
+func (op Operations) UpdateVPC(ctx context.Context, uuid string, body *VPCIntentInput) (*VPCIntentResponse, error) {
+	path := fmt.Sprintf("/vpcs/%s", uuid)
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
+	vpcIntentResponse := new(VPCIntentResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return vpcIntentResponse, op.client.Do(ctx, req, vpcIntentResponse)
+}
+
+func (op Operations) ListVPC(ctx context.Context, getEntitiesRequest *DSMetadata) (*VPCListIntentResponse, error) {
+	path := "/vpcs/list"
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
+	vpcListIntentResponse := new(VPCListIntentResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return vpcListIntentResponse, op.client.Do(ctx, req, vpcListIntentResponse)
 }
