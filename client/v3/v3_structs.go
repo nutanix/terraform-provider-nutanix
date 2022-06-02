@@ -2663,3 +2663,9 @@ type VPCIntentResponse struct {
 
 	Status *VPCDefStatus `json:"status"`
 }
+
+type VPCListIntentResponse struct {
+	ApiVersion *string              `json:"api_version"`
+	Metadata   *ListMetadataOutput  `json:"metadata"`
+	Entities   []*VPCIntentResponse `json:"entities"`
+}
