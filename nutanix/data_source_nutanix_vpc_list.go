@@ -266,7 +266,7 @@ func dataSourceNutanixVPCListRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("api_version", resp.ApiVersion); err != nil {
+	if err := d.Set("api_version", resp.APIVersion); err != nil {
 		return diag.FromErr(err)
 	}
 
