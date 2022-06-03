@@ -37,7 +37,6 @@ func resourceNutanixVPC() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"categories": categoriesSchema(),
 			"external_subnet_list": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -78,21 +77,6 @@ func resourceNutanixVPC() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"ip": {
 							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"ipv6": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
-						},
-						"fqdn": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"is_backup": {
-							Type:     schema.TypeBool,
 							Optional: true,
 							Computed: true,
 						},
@@ -211,13 +195,10 @@ func resourceNutanixVPCRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("error reading VPC %s: %s", d.Id(), err)
 	}
 
-	m, c := setRSEntityMetadata(resp.Metadata)
+	m, _ := setRSEntityMetadata(resp.Metadata)
 
 	if err = d.Set("metadata", m); err != nil {
 		return diag.Errorf("error setting metadata for VPC %s: %s", d.Id(), err)
-	}
-	if err := d.Set("categories", c); err != nil {
-		return diag.FromErr(err)
 	}
 
 	if err = d.Set("external_subnet_list", flattenExtSubnetList(resp.Spec.Resources.ExternalSubnetList)); err != nil {
@@ -239,7 +220,6 @@ func resourceNutanixVPCRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("name", resp.Spec.Name)
 	d.Set("api_version", resp.APIVersion)
 
-	// d.SetId(*resp.Metadata.UUID)
 	return nil
 }
 func resourceNutanixVPCUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
