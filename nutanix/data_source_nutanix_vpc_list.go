@@ -142,18 +142,6 @@ func dataSourceNutanixVPCList() *schema.Resource {
 																Type:     schema.TypeString,
 																Computed: true,
 															},
-															"ipv6": {
-																Type:     schema.TypeString,
-																Computed: true,
-															},
-															"fqdn": {
-																Type:     schema.TypeInt,
-																Computed: true,
-															},
-															"is_backup": {
-																Type:     schema.TypeBool,
-																Computed: true,
-															},
 														},
 													},
 												},
@@ -232,21 +220,6 @@ func dataSourceNutanixVPCList() *schema.Resource {
 														Schema: map[string]*schema.Schema{
 															"ip": {
 																Type:     schema.TypeString,
-																Optional: true,
-																Computed: true,
-															},
-															"ipv6": {
-																Type:     schema.TypeString,
-																Optional: true,
-																Computed: true,
-															},
-															"fqdn": {
-																Type:     schema.TypeInt,
-																Optional: true,
-																Computed: true,
-															},
-															"is_backup": {
-																Type:     schema.TypeBool,
 																Optional: true,
 																Computed: true,
 															},
@@ -334,7 +307,8 @@ func flattenStatusVPC(stat *v3.VPCDefStatus) []interface{} {
 		stats := make(map[string]interface{})
 
 		stats["state"] = stat.State
-		stats["resources"] = flattenResourcesVPC(stat.Resources, stat.ExternalSubnetListStatus)
+		stats["name"] = stat.Name
+		stats["resources"] = flattenResourcesVPC(stat.Resources)
 		stats["execution_context"] = flattenExecutionContext(stat.ExecutionContext)
 
 		statList = append(statList, stats)
@@ -357,17 +331,15 @@ func flattenSpecVPC(vpc *v3.VPC) []interface{} {
 	return vpcList
 }
 
-func flattenResourcesVPC(res *v3.VpcResources, extStat []*v3.ExternalSubnetList) []interface{} {
+func flattenResourcesVPC(res *v3.VpcResources) []interface{} {
 	resList := make([]interface{}, 0)
 
 	if res != nil {
 		ress := make(map[string]interface{})
 
 		ress["common_domain_name_server_ip_list"] = flattenCommonDNSIPList(res.CommonDomainNameServerIPList)
-		ress["external_subnet_list"] = flattenExtSubnetListStatus(extStat)
-		if len(extStat) > 0 {
-			ress["externally_routable_prefix_list"] = flattenExtRoutableList(res.ExternallyRoutablePrefixList)
-		}
+		ress["external_subnet_list"] = flattenExtSubnetListStatus(res.ExternalSubnetList)
+		ress["externally_routable_prefix_list"] = flattenExtRoutableList(res.ExternallyRoutablePrefixList)
 
 		resList = append(resList, ress)
 	}

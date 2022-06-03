@@ -2607,11 +2607,7 @@ type ActiveGatewayNode struct {
 }
 
 type CommonDomainNameServerIPList struct {
-	IP       *string `json:"ip,omitempty"`
-	IPv6     *string `json:"ipv6,omitempty"`
-	Fqdn     *string `json:"fqdn,omitempty"`
-	Port     *string `json:"port,omitempty"`
-	IsBackup *string `json:"is_backup,omitempty"`
+	IP *string `json:"ip,omitempty"`
 }
 
 type ExternalSubnetList struct {
@@ -2646,6 +2642,7 @@ type VPCIntentInput struct {
 
 type VPCDefStatus struct {
 	State *string `json:"state,omitempty" mapstructure:"state,omitempty"`
+	Name  *string `json:"name,omitempty"`
 
 	ExecutionContext *ExecutionContext `json:"execution_context,omitempty" mapstructure:"execution_context,omitempty"`
 

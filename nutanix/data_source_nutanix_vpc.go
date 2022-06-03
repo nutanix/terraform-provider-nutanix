@@ -116,18 +116,6 @@ func dataSourceNutanixVPC() *schema.Resource {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-												"ipv6": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"fqdn": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"is_backup": {
-													Type:     schema.TypeBool,
-													Computed: true,
-												},
 											},
 										},
 									},
@@ -206,21 +194,6 @@ func dataSourceNutanixVPC() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"ip": {
 													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-												"ipv6": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-												"fqdn": {
-													Type:     schema.TypeInt,
-													Optional: true,
-													Computed: true,
-												},
-												"is_backup": {
-													Type:     schema.TypeBool,
 													Optional: true,
 													Computed: true,
 												},
