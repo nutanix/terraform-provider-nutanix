@@ -14,6 +14,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
+const (
+	VpcDelayTime  = 2 * time.Second
+	VpcMinTimeout = 5 * time.Second
+)
+
 func resourceNutanixVPC() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceNutanixVPCCreate,
@@ -170,8 +175,8 @@ func resourceNutanixVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      2 * time.Second,
-		MinTimeout: 5 * 60,
+		Delay:      VpcDelayTime,
+		MinTimeout: VpcMinTimeout,
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -284,8 +289,8 @@ func resourceNutanixVPCUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      2 * time.Second,
-		MinTimeout: 5 * 60,
+		Delay:      VpcDelayTime,
+		MinTimeout: VpcMinTimeout,
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -312,8 +317,8 @@ func resourceNutanixVPCDelete(ctx context.Context, d *schema.ResourceData, meta 
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, resp.Status.ExecutionContext.TaskUUID.(string)),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
-		Delay:      1 * time.Second,
-		MinTimeout: 10 * time.Second,
+		Delay:      VpcDelayTime,
+		MinTimeout: VpcMinTimeout,
 	}
 
 	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
