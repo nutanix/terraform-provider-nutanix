@@ -312,7 +312,6 @@ func flattenStatusVPC(stat *v3.VPCDefStatus) []interface{} {
 		stats["execution_context"] = flattenExecutionContext(stat.ExecutionContext)
 
 		statList = append(statList, stats)
-
 	}
 	return statList
 }
