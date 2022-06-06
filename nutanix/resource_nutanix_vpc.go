@@ -355,7 +355,7 @@ func expandExternalSubnet(exs interface{}) []*v3.ExternalSubnetList {
 			dl := &v3.ExternalSubnetList{}
 
 			if v1, ok1 := v["external_subnet_reference"]; ok1 {
-				dl.ExternalSubnetReference = validateShortRef(v1.(map[string]interface{}))
+				dl.ExternalSubnetReference = expandReference(v1.(map[string]interface{}))
 			}
 
 			dls[k] = (dl)
