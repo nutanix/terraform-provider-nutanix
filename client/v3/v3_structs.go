@@ -2751,3 +2751,40 @@ type PbrListIntentResponse struct {
 	Metadata   *ListMetadataOutput  `json:"metadata"`
 	Entities   []*PbrIntentResponse `json:"entities"`
 }
+
+type FIPResource struct {
+	ExternalSubnetReference *Reference `json:"external_subnet_reference,omitempty"`
+	VPCReference            *Reference `json:"vpc_reference,omitempty"`
+	VmNICReference          *Reference `json:"vm_nic_reference,omitempty"`
+	PrivateIP               *string    `json:"private_ip,omitempty"`
+	FloatingIP              *string    `json:"floating_ip,omitempty"`
+}
+
+type FIPSpec struct {
+	Resource *FIPResource `json:"resources,omitempty"`
+}
+
+type FIPIntentInput struct {
+	APIVersion *string   `json:"api_version,omitempty"`
+	Metadata   *Metadata `json:"metadata,omitempty"`
+	Spec       *FIPSpec  `json:"spec,omitempty"`
+}
+
+type FIPDefStatus struct {
+	State            *string           `json:"state,omitempty"`
+	ExecutionContext *ExecutionContext `json:"execution_context,omitempty"`
+	Resource         *FIPResource      `json:"resources,omitempty"`
+}
+
+type FloatingIPsIntentResponse struct {
+	APIVersion *string       `json:"api_version,omitempty"`
+	Status     *FIPDefStatus `json:"status,omitempty"`
+	Spec       *FIPSpec      `json:"spec,omitempty"`
+	Metadata   *Metadata     `json:"metadata" mapstructure:"metadata"`
+}
+
+type FloatingIPsListIntentResponse struct {
+	APIVersion *string                      `json:"api_version"`
+	Metadata   *ListMetadataOutput          `json:"metadata"`
+	Entities   []*FloatingIPsIntentResponse `json:"entities"`
+}

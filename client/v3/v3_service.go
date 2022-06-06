@@ -131,6 +131,9 @@ type Service interface {
 	DeletePBR(ctx context.Context, uuid string) (*DeleteResponse, error)
 	ListPBR(ctx context.Context, getEntitiesRequest *DSMetadata) (*PbrListIntentResponse, error)
 	ListAllPBR(ctx context.Context, filter string) (*PbrListIntentResponse, error)
+	CreateFloatingIPs(ctx context.Context, createRequest *FIPIntentInput) (*FloatingIPsIntentResponse, error)
+	GetFloatingIPs(ctx context.Context, uuid string) (*FloatingIPsIntentResponse, error)
+	ListFloatingIPs(ctx context.Context, getRequest *DSMetadata) (*FloatingIPsListIntentResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -2515,7 +2518,6 @@ func (op Operations) ListAllVPC(ctx context.Context, filter string) (*VPCListInt
 	if err != nil {
 		return nil, err
 	}
-
 	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
 	remaining := totalEntities
 	offset := utils.Int64Value(resp.Metadata.Offset)
@@ -2615,7 +2617,6 @@ func (op Operations) ListAllPBR(ctx context.Context, filter string) (*PbrListInt
 		Kind:   utils.StringPtr("routing_policy"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -2646,4 +2647,42 @@ func (op Operations) ListAllPBR(ctx context.Context, filter string) (*PbrListInt
 	}
 
 	return resp, nil
+}
+
+func (op Operations) CreateFloatingIPs(ctx context.Context, request *FIPIntentInput) (*FloatingIPsIntentResponse, error) {
+	req, err := op.client.NewRequest(ctx, http.MethodPost, "/floating_ips", request)
+
+	fIPsIntentResponse := new(FloatingIPsIntentResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return fIPsIntentResponse, op.client.Do(ctx, req, fIPsIntentResponse)
+}
+
+func (op Operations) GetFloatingIPs(ctx context.Context, uuid string) (*FloatingIPsIntentResponse, error) {
+	path := fmt.Sprintf("/floating_ips/%s", uuid)
+
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+	fIPsIntentResponse := new(FloatingIPsIntentResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return fIPsIntentResponse, op.client.Do(ctx, req, fIPsIntentResponse)
+}
+
+func (op Operations) ListFloatingIPs(ctx context.Context, getEntitiesRequest *DSMetadata) (*FloatingIPsListIntentResponse, error) {
+	path := "/floating_ips/list"
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
+	fIPsListIntentResponse := new(FloatingIPsListIntentResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return fIPsListIntentResponse, op.client.Do(ctx, req, fIPsListIntentResponse)
 }
