@@ -224,10 +224,6 @@ func dataSourceNutanixVPCRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(err)
 	}
 
-	// if err := d.Set("name", resp.Spec.Name); err != nil {
-	// 	return diag.FromErr(err)
-	// }
-
 	m, _ := setRSEntityMetadata(resp.Metadata)
 
 	if err := d.Set("metadata", m); err != nil {
