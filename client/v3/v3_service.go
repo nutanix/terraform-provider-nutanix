@@ -2657,24 +2657,9 @@ func (op Operations) ListAllPBR(ctx context.Context, filter string) (*PbrListInt
 func (op Operations) GetStaticRoute(ctx context.Context, uuid string) (*StaticRouteIntentResponse, error) {
 	path := fmt.Sprintf("/vpcs/%s/route_tables", uuid)
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
-
 	if err != nil {
 		return nil, err
 	}
-
-	staticIntentResponse := new(StaticRouteIntentResponse)
-
-	return staticIntentResponse, op.client.Do(ctx, req, staticIntentResponse)
-}
-
-func (op Operations) UpdateStaticRoute(ctx context.Context, uuid string, body *StaticRouteIntentInput) (*StaticRouteIntentResponse, error) {
-	path := fmt.Sprintf("/vpcs/%s/route_tables", uuid)
-	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
-
-	if err != nil {
-		return nil, err
-	}
-
 	staticIntentResponse := new(StaticRouteIntentResponse)
 
 	return staticIntentResponse, op.client.Do(ctx, req, staticIntentResponse)
@@ -2690,6 +2675,18 @@ func (op Operations) CreateFloatingIPs(ctx context.Context, request *FIPIntentIn
 	}
 
 	return fIPsIntentResponse, op.client.Do(ctx, req, fIPsIntentResponse)
+}
+
+func (op Operations) UpdateStaticRoute(ctx context.Context, uuid string, body *StaticRouteIntentInput) (*StaticRouteIntentResponse, error) {
+	path := fmt.Sprintf("/vpcs/%s/route_tables", uuid)
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
+	if err != nil {
+		return nil, err
+	}
+
+	staticIntentResponse := new(StaticRouteIntentResponse)
+
+	return staticIntentResponse, op.client.Do(ctx, req, staticIntentResponse)
 }
 
 func (op Operations) GetFloatingIPs(ctx context.Context, uuid string) (*FloatingIPsIntentResponse, error) {
