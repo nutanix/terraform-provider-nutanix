@@ -172,6 +172,21 @@ func dataSourceNutanixSubnet() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"vpc_reference": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"is_external": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"enable_nat": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -342,6 +357,9 @@ func dataSourceNutanixSubnetRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("dhcp_server_address_port", port)
 	d.Set("vlan_id", utils.Int64Value(resp.Status.Resources.VlanID))
 	d.Set("network_function_chain_reference", flattenReferenceValues(resp.Status.Resources.NetworkFunctionChainReference))
+	d.Set("vpc_reference", flattenReferenceValues(resp.Status.Resources.VPCReference))
+	d.Set("is_external", resp.Status.Resources.IsExternal)
+	d.Set("enable_nat", resp.Status.Resources.EnableNAT)
 
 	d.SetId(utils.StringValue(resp.Metadata.UUID))
 

@@ -94,8 +94,9 @@ func resourceNutanixSubnet() *schema.Resource {
 				},
 			},
 			"cluster_uuid": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"vlan_id"},
 			},
 			"cluster_name": {
 				Type:     schema.TypeString,
@@ -172,10 +173,11 @@ func resourceNutanixSubnet() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"vlan_id": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ForceNew:      true,
+				Computed:      true,
+				ConflictsWith: []string{"vpc_reference_uuid"},
 			},
 			"network_function_chain_reference": {
 				Type:     schema.TypeMap,
@@ -185,13 +187,36 @@ func resourceNutanixSubnet() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"vpc_reference_uuid": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"vlan_id"},
+			},
+			"is_external": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				ConflictsWith: []string{"dhcp_options",
+					"dhcp_domain_name_server_list",
+					"dhcp_domain_search_list",
+					"dhcp_server_address",
+					"dhcp_server_address_port",
+					"vpc_reference_uuid"},
+				RequiredWith: []string{"ip_config_pool_list_ranges"},
+			},
+			"enable_nat": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
 
 func resourceNutanixSubnetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).API
-
+	log.Println("HIIIIIIII")
 	request := &v3.SubnetIntentInput{}
 	spec := &v3.Subnet{}
 	metadata := &v3.Metadata{}
@@ -230,6 +255,7 @@ func resourceNutanixSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 	request.Metadata = metadata
 	request.Spec = spec
 
+	log.Println("request123", request.Spec.Resources.EnableNAT)
 	resp, err := conn.V3.CreateSubnet(request)
 	if err != nil {
 		return diag.Errorf("error creating Nutanix Subnet %s: %+v", utils.StringValue(spec.Name), err)
@@ -382,6 +408,10 @@ func resourceNutanixSubnetRead(ctx context.Context, d *schema.ResourceData, meta
 			if res.NetworkFunctionChainReference != nil {
 				nfcr = flattenReferenceValues(res.NetworkFunctionChainReference)
 			}
+
+			if res.VPCReference != nil {
+				d.Set("vpc_reference_uuid", res.VPCReference.UUID)
+			}
 		}
 	}
 
@@ -390,6 +420,8 @@ func resourceNutanixSubnetRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("prefix_length", pl)
 	d.Set("subnet_ip", sIP)
 	d.Set("dhcp_server_address_port", port)
+	d.Set("is_external", resp.Status.Resources.IsExternal)
+	d.Set("enable_nat", resp.Status.Resources.EnableNAT)
 
 	d.SetId(*resp.Metadata.UUID)
 
@@ -486,6 +518,10 @@ func resourceNutanixSubnetUpdate(ctx context.Context, d *schema.ResourceData, me
 		res.NetworkFunctionChainReference =
 			validateRef(d.Get("network_function_chain_reference").(map[string]interface{}))
 	}
+	if d.HasChange("vpc_reference_uuid") {
+		vpcUUID := d.Get("vpc_reference_uuid").(string)
+		res.VPCReference = buildReference(vpcUUID, "vpc")
+	}
 	if d.HasChange("vswitch_name") {
 		res.VswitchName = utils.StringPtr(d.Get("vswitch_name").(string))
 	}
@@ -515,6 +551,13 @@ func resourceNutanixSubnetUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 	if d.HasChange("vlan_id") {
 		res.VlanID = utils.Int64Ptr(int64(d.Get("vlan_id").(int)))
+	}
+
+	if d.HasChange("is_external") {
+		res.IsExternal = utils.BoolPtr(bool(d.Get("is_external").(bool)))
+	}
+	if d.HasChange("enable_nat") {
+		res.EnableNAT = utils.BoolPtr(bool(d.Get("enable_nat").(bool)))
 	}
 
 	ipcfg.DHCPOptions = dhcpO
@@ -671,13 +714,28 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) {
 		dhcpo.DomainSearchList = expandStringList(v.([]interface{}))
 	}
 
-	v, ok := d.GetOk("vlan_id")
-	if v.(int) == 0 || ok {
-		subnet.VlanID = utils.Int64Ptr(int64(v.(int)))
+	if v, ok := d.GetOk("vlan_id"); ok {
+		if v.(int) == 0 || ok {
+			subnet.VlanID = utils.Int64Ptr(int64(v.(int)))
+		}
 	}
 
 	if v, ok := d.GetOk("network_function_chain_reference"); ok {
 		subnet.NetworkFunctionChainReference = validateRef(v.(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("vpc_reference_uuid"); ok {
+		subnet.VPCReference = buildReference(v.(string), "vpc")
+	}
+
+	if isExt, eok := d.GetOkExists("is_external"); eok {
+		subnet.IsExternal = utils.BoolPtr(isExt.(bool))
+	}
+	// log.Println("helllooo")
+	// log.Println(d.Get("enable_nat"))
+	if enableNAT, nok := d.GetOkExists("enable_nat"); nok {
+		// log.Println("Hello", enableNAT.(bool))
+		subnet.EnableNAT = utils.BoolPtr(enableNAT.(bool))
 	}
 
 	ip.DHCPOptions = dhcpo
