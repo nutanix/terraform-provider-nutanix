@@ -720,6 +720,11 @@ type SubnetResources struct {
 	VlanID *int64 `json:"vlan_id,omitempty" mapstructure:"vlan_id,omitempty"`
 
 	VswitchName *string `json:"vswitch_name,omitempty" mapstructure:"vswitch_name,omitempty"`
+
+	VPCReference *Reference `json:"vpc_reference,omitempty" mapstructure:"vpc_reference,omitempty"`
+
+	IsExternal *bool `json:"is_external,omitempty" mapstructure:"is_external,omitempty"`
+	EnableNAT  *bool `json:"enable_nat,omitempty" mapstructure:"enable_nat,omitempty"`
 }
 
 // Subnet An intentful representation of a subnet spec
@@ -772,6 +777,10 @@ type SubnetResourcesDefStatus struct {
 	VlanID *int64 `json:"vlan_id,omitempty" mapstructure:"vlan_id,omitempty"`
 
 	VswitchName *string `json:"vswitch_name,omitempty" mapstructure:"vswitch_name,omitempty"`
+
+	VPCReference *Reference `json:"vpc_reference,omitempty" mapstructure:"vpc_reference,omitempty"`
+	IsExternal   *bool      `json:"is_external,omitempty" mapstructure:"is_external,omitempty"`
+	EnableNAT    *bool      `json:"enable_nat,omitempty" mapstructure:"enable_nat,omitempty"`
 }
 
 // SubnetDefStatus An intentful representation of a subnet status
