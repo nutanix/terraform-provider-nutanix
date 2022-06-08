@@ -557,10 +557,10 @@ func resourceNutanixSubnetUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if d.HasChange("is_external") {
-		res.IsExternal = utils.BoolPtr(bool(d.Get("is_external").(bool)))
+		res.IsExternal = utils.BoolPtr(d.Get("is_external").(bool))
 	}
 	if d.HasChange("enable_nat") {
-		res.EnableNAT = utils.BoolPtr(bool(d.Get("enable_nat").(bool)))
+		res.EnableNAT = utils.BoolPtr(d.Get("enable_nat").(bool))
 	}
 
 	ipcfg.DHCPOptions = dhcpO
