@@ -43,6 +43,8 @@ func resourceNutanixSubnet() *schema.Resource {
 			Update: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
 			Delete: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
 		},
+		CustomizeDiff: resourceNutanixSubnetDiff,
+
 		Schema: map[string]*schema.Schema{
 			"api_version": {
 				Type:     schema.TypeString,
@@ -191,7 +193,8 @@ func resourceNutanixSubnet() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"vlan_id"},
+				ForceNew:      true,
+				ConflictsWith: []string{"vlan_id", "cluster_uuid"},
 			},
 			"is_external": {
 				Type:     schema.TypeBool,
@@ -207,8 +210,10 @@ func resourceNutanixSubnet() *schema.Resource {
 				RequiredWith: []string{"ip_config_pool_list_ranges"},
 			},
 			"enable_nat": {
-				Type:     schema.TypeBool,
-				Optional: true,
+				Type:         schema.TypeBool,
+				Optional:     true,
+				Computed:     true,
+				RequiredWith: []string{"is_external"},
 			},
 		},
 	}
@@ -216,7 +221,6 @@ func resourceNutanixSubnet() *schema.Resource {
 
 func resourceNutanixSubnetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).API
-	log.Println("HIIIIIIII")
 	request := &v3.SubnetIntentInput{}
 	spec := &v3.Subnet{}
 	metadata := &v3.Metadata{}
@@ -255,7 +259,6 @@ func resourceNutanixSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 	request.Metadata = metadata
 	request.Spec = spec
 
-	log.Println("request123", request.Spec.Resources.EnableNAT)
 	resp, err := conn.V3.CreateSubnet(request)
 	if err != nil {
 		return diag.Errorf("error creating Nutanix Subnet %s: %+v", utils.StringValue(spec.Name), err)
@@ -731,10 +734,8 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) {
 	if isExt, eok := d.GetOkExists("is_external"); eok {
 		subnet.IsExternal = utils.BoolPtr(isExt.(bool))
 	}
-	// log.Println("helllooo")
-	// log.Println(d.Get("enable_nat"))
+
 	if enableNAT, nok := d.GetOkExists("enable_nat"); nok {
-		// log.Println("Hello", enableNAT.(bool))
 		subnet.EnableNAT = utils.BoolPtr(enableNAT.(bool))
 	}
 
@@ -898,4 +899,24 @@ func resourceNutanixSubnetInstanceResourceV0() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceNutanixSubnetDiff(ctx context.Context, d *schema.ResourceDiff, m interface{}) error {
+	// check for vlan id
+	if _, vok := d.GetOk("vlan_id"); vok {
+		if subType, sok := d.GetOk("subnet_type"); sok {
+			if subType != "VLAN" {
+				return fmt.Errorf("subnet_type should be vlan if vlan_id is given")
+			}
+		}
+	}
+	// check for vpc reference
+	if _, vok := d.GetOk("vpc_reference_uuid"); vok {
+		if subType, sok := d.GetOk("subnet_type"); sok {
+			if subType != "OVERLAY" {
+				return fmt.Errorf("subnet_type should be overlay if vpc_reference_uuid is given")
+			}
+		}
+	}
+	return nil
 }
