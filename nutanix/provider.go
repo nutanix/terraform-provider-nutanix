@@ -196,6 +196,7 @@ func Provider() *schema.Provider {
 			"nutanix_pbr":                              resourceNutanixPbr(),
 			"nutanix_floating_ip":                      resourceNutanixFloatingIP(),
 			"nutanix_static_routes":                    resourceNutanixStaticRoute(),
+			"nutanix_floating_ip":                      resourceNutanixFloatingIP(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
