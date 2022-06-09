@@ -191,6 +191,7 @@ func Provider() *schema.Provider {
 			"nutanix_foundation_central_api_keys":      resourceNutanixFCAPIKeys(),
 			"nutanix_vpc":                              resourceNutanixVPC(),
 			"nutanix_pbr":                              resourceNutanixPbr(),
+			"nutanix_floating_ip":                      resourceNutanixFloatingIP(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
