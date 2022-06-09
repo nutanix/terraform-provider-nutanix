@@ -23,7 +23,6 @@ func dataSourceNutanixFloatingIPsList() *schema.Resource {
 				Optional: true,
 				Default:  0,
 			},
-
 			// COMPUTED RESOURCES
 			"api_version": {
 				Type:     schema.TypeString,
