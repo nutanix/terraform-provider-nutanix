@@ -133,6 +133,8 @@ type Service interface {
 	ListAllPBR(ctx context.Context, filter string) (*PbrListIntentResponse, error)
 	CreateFloatingIPs(ctx context.Context, createRequest *FIPIntentInput) (*FloatingIPsIntentResponse, error)
 	GetFloatingIPs(ctx context.Context, uuid string) (*FloatingIPsIntentResponse, error)
+	DeleteFloatingIP(ctx context.Context, uuid string) (*DeleteResponse, error)
+	UpdateFloatingIP(ctx context.Context, uuid string, body *FIPIntentInput) (*FloatingIPsIntentResponse, error)
 	ListFloatingIPs(ctx context.Context, getRequest *DSMetadata) (*FloatingIPsListIntentResponse, error)
 }
 
@@ -2685,4 +2687,29 @@ func (op Operations) ListFloatingIPs(ctx context.Context, getEntitiesRequest *DS
 	}
 
 	return fIPsListIntentResponse, op.client.Do(ctx, req, fIPsListIntentResponse)
+}
+
+func (op Operations) DeleteFloatingIP(ctx context.Context, uuid string) (*DeleteResponse, error) {
+	path := fmt.Sprintf("/floating_ips/%s", uuid)
+
+	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	deleteResponse := new(DeleteResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return deleteResponse, op.client.Do(ctx, req, deleteResponse)
+}
+
+func (op Operations) UpdateFloatingIP(ctx context.Context, uuid string, body *FIPIntentInput) (*FloatingIPsIntentResponse, error) {
+	path := fmt.Sprintf("/floating_ips/%s", uuid)
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
+	fIPIntentResponse := new(FloatingIPsIntentResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return fIPIntentResponse, op.client.Do(ctx, req, fIPIntentResponse)
 }
