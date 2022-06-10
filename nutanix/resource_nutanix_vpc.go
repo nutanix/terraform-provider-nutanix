@@ -42,19 +42,11 @@ func resourceNutanixVPC() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"external_subnet_list": {
+			"external_subnet_reference_uuid": {
 				Type:     schema.TypeList,
 				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"external_subnet_reference": {
-							Type:     schema.TypeMap,
-							Required: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
 				},
 			},
 			"externally_routable_prefix_list": {
@@ -206,7 +198,12 @@ func resourceNutanixVPCRead(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("error setting metadata for VPC %s: %s", d.Id(), err)
 	}
 
-	if err = d.Set("external_subnet_list", flattenExtSubnetList(resp.Spec.Resources.ExternalSubnetList)); err != nil {
+	subList := make([]string, 0, len(resp.Status.Resources.ExternalSubnetList))
+	for _, v := range resp.Status.Resources.ExternalSubnetList {
+		subList = append(subList, *v.ExternalSubnetReference.UUID)
+	}
+
+	if err = d.Set("external_subnet_reference_uuid", subList); err != nil {
 		return diag.Errorf("error setting external_subnet_list for VPC %s: %s", d.Id(), err)
 	}
 
@@ -259,8 +256,21 @@ func resourceNutanixVPCUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		spec.Name = utils.StringPtr(d.Get("name").(string))
 	}
 
-	if d.HasChange("external_subnet_list") {
-		res.ExternalSubnetList = expandExternalSubnet(d.Get("external_subnet_list"))
+	// if d.HasChange("external_subnet_list") {
+	// 	res.ExternalSubnetList = expandExternalSubnet(d.Get("external_subnet_list"))
+	// }
+
+	if d.HasChange("external_subnet_reference_uuid") {
+
+		newSubs := d.Get("external_subnet_reference_uuid")
+		exts := newSubs.([]interface{})
+		subsList := make([]*v3.ExternalSubnetList, len(exts))
+		for k, v := range exts {
+			subs := &v3.ExternalSubnetList{}
+			subs.ExternalSubnetReference = buildReference(v.(string), "subnet")
+			subsList[k] = subs
+		}
+		res.ExternalSubnetList = subsList
 	}
 
 	if d.HasChange("common_domain_name_server_ip_list") {
@@ -334,34 +344,21 @@ func getVPCResources(d *schema.ResourceData, vpc *v3.VpcResources) error {
 		vpc.ExternallyRoutablePrefixList = expandExternallyRoutablePL(az)
 	}
 
-	if ext, extok := d.GetOk("external_subnet_list"); extok {
-		vpc.ExternalSubnetList = expandExternalSubnet(ext)
-	}
-
 	if cmn, cmnok := d.GetOk("common_domain_name_server_ip_list"); cmnok {
 		vpc.CommonDomainNameServerIPList = expandCommonDNSIPList(cmn)
 	}
-	return nil
-}
 
-func expandExternalSubnet(exs interface{}) []*v3.ExternalSubnetList {
-	ex := exs.([]interface{})
-
-	if len(ex) > 0 {
-		dls := make([]*v3.ExternalSubnetList, len(ex))
-
-		for k, val := range ex {
-			v := val.(map[string]interface{})
-			dl := &v3.ExternalSubnetList{}
-
-			if v1, ok1 := v["external_subnet_reference"]; ok1 {
-				dl.ExternalSubnetReference = expandReference(v1.(map[string]interface{}))
-			}
-
-			dls[k] = (dl)
+	if ext, extok := d.GetOk("external_subnet_reference_uuid"); extok {
+		exts := ext.([]interface{})
+		subsList := make([]*v3.ExternalSubnetList, len(exts))
+		for k, v := range exts {
+			subs := &v3.ExternalSubnetList{}
+			subs.ExternalSubnetReference = buildReference(v.(string), "subnet")
+			subsList[k] = subs
 		}
-		return dls
+		vpc.ExternalSubnetList = subsList
 	}
+
 	return nil
 }
 
