@@ -2730,6 +2730,46 @@ type PbrIntentInput struct {
 	Spec *PbrSpec `json:"spec" mapstructure:"spec"`
 }
 
+type PbrListIntentResponse struct {
+	APIVersion *string              `json:"api_version"`
+	Metadata   *ListMetadataOutput  `json:"metadata"`
+	Entities   []*PbrIntentResponse `json:"entities"`
+}
+
+type NextHop struct {
+	ExternalSubnetReference *Reference `json:"external_subnet_reference,omitempty"`
+}
+
+type StaticRoutesList struct {
+	NextHop     *NextHop `json:"nexthop,omitempty"`
+	Destination *string  `json:"destination,omitempty"`
+	Priority    *int64   `json:"priority,omitempty"`
+	IsActive    *bool    `json:"is_active,omitempty"`
+}
+
+type StaticRouteResources struct {
+	StaticRoutesList []*StaticRoutesList `json:"static_routes_list,omitempty"`
+}
+
+type StaticRouteSpec struct {
+	Name      *string               `json:"name,omitempty"`
+	Resources *StaticRouteResources `json:"resources,omitempty"`
+}
+
+type StaticRouteDefStatus struct {
+	State            *string               `json:"state,omitempty"`
+	Resources        *StaticRouteResources `json:"resources,omitempty"`
+	ExecutionContext *ExecutionContext     `json:"execution_context,omitempty"`
+}
+
+type StaticRouteIntentInput struct {
+	APIVersion *string `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
+
+	Metadata *Metadata `json:"metadata" mapstructure:"metadata"`
+
+	Spec *StaticRouteSpec `json:"spec" mapstructure:"spec"`
+}
+
 type PbrDefStatus struct {
 	State            *string           `json:"state,omitempty" mapstructure:"state,omitempty"`
 	ExecutionContext *ExecutionContext `json:"execution_context,omitempty" mapstructure:"execution_context,omitempty"`
@@ -2746,10 +2786,14 @@ type PbrIntentResponse struct {
 	Status *PbrDefStatus `json:"status"`
 }
 
-type PbrListIntentResponse struct {
-	APIVersion *string              `json:"api_version"`
-	Metadata   *ListMetadataOutput  `json:"metadata"`
-	Entities   []*PbrIntentResponse `json:"entities"`
+type StaticRouteIntentResponse struct {
+	APIVersion *string `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
+
+	Metadata *Metadata `json:"metadata" mapstructure:"metadata"`
+
+	Spec *StaticRouteSpec `json:"spec" mapstructure:"spec"`
+
+	Status *StaticRouteDefStatus `json:"status"`
 }
 
 type FIPResource struct {
