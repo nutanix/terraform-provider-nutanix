@@ -23,6 +23,7 @@ type Service interface {
 	GetVM(uuid string) (*VMIntentResponse, error)
 	ListVM(getEntitiesRequest *DSMetadata) (*VMListIntentResponse, error)
 	UpdateVM(uuid string, body *VMIntentInput) (*VMIntentResponse, error)
+	CloneVM(uuid string, body *VMCloneInput) (*VMCloneResponse, error)
 	CreateSubnet(createRequest *SubnetIntentInput) (*SubnetIntentResponse, error)
 	DeleteSubnet(uuid string) (*DeleteResponse, error)
 	GetSubnet(uuid string) (*SubnetIntentResponse, error)
@@ -2427,4 +2428,18 @@ func (op Operations) UpdateAddressGroup(uuid string, body *AddressGroupInput) er
 	}
 
 	return op.client.Do(ctx, req, nil)
+}
+
+func (op Operations) CloneVM(uuid string, body *VMCloneInput) (*VMCloneResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/vms/%s/clone", uuid)
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, body)
+	vmIntentResponse := new(VMCloneResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return vmIntentResponse, op.client.Do(ctx, req, vmIntentResponse)
 }

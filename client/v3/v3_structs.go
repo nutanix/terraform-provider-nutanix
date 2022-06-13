@@ -2600,3 +2600,24 @@ type AddressGroupListResponse struct {
 	Metadata *ListMetadataOutput      `json:"metadata,omitempty"`
 	Entities []*AddressGroupListEntry `json:"entities,omitempty"`
 }
+
+type OverrideSpec struct {
+	Name               *string             `json:"name,omitempty"`
+	NumSockets         *int                `json:"num_sockets,omitempty"`
+	NumVcpusPerSocket  *int                `json:"num_vcpus_per_socket,omitempty"`
+	NumThreadsPerCore  *int                `json:"num_threads_per_core,omitempty"`
+	MemorySizeMib      *int                `json:"memory_size_mib,omitempty"`
+	NicList            []*VMNic            `json:"nic_list,omitempty"`
+	BootConfig         *VMBootConfig       `json:"boot_config,omitempty"`
+	GuestCustomization *GuestCustomization `json:"guest_customization,omitempty"`
+}
+
+type VMCloneInput struct {
+	Metadata     *Metadata     `json:"metadata,omitempty"`
+	OverrideSpec *OverrideSpec `json:"override_spec,omitempty"`
+}
+
+type VMCloneResponse struct {
+	TaskUUID    *string `json:"task_uuid,omitempty"`
+	CloneVMUUID *string `json:"clone_vm_uuid,omitempty"`
+}
