@@ -109,7 +109,7 @@ func testAccNutanixVMCloneConfig(r int, name string) string {
 		}
 
 		resource "nutanix_virtual_machine_clone" "vm2"{
-			vm_uuid = nutanix_virtual_machine.vm1.id
+			source_vm_uuid = nutanix_virtual_machine.vm1.id
 			name = "%s"
 			num_vcpus_per_socket = 2
 		}
@@ -136,7 +136,7 @@ func testAccNutanixVMCloneConfigWithBootOrder(r int, name string) string {
 				memory_size_mib      = 186
 			}
 			resource "nutanix_virtual_machine_clone" "vm2"{
-				vm_uuid = nutanix_virtual_machine.vm1.id
+				source_vm_uuid = nutanix_virtual_machine.vm1.id
 				name = "%s"
 				num_vcpus_per_socket = 2
 				num_sockets          = 2
@@ -175,7 +175,7 @@ func testAccNutanixVMCloneConfigWithBootType(r int, name string) string {
 		}
 
 		resource "nutanix_virtual_machine_clone" "vm2"{
-			vm_uuid = nutanix_virtual_machine.vm1.id
+			source_vm_uuid = nutanix_virtual_machine.vm1.id
 			name = "%[2]s"
 			num_vcpus_per_socket = 2
 			num_sockets          = 2
