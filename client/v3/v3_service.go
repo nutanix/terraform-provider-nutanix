@@ -137,6 +137,8 @@ type Service interface {
 	UpdateFloatingIP(ctx context.Context, uuid string, body *FIPIntentInput) (*FloatingIPsIntentResponse, error)
 	ListFloatingIPs(ctx context.Context, getRequest *DSMetadata) (*FloatingIPsListIntentResponse, error)
 	ListAllFloatingIPs(ctx context.Context, filter string) (*FloatingIPsListIntentResponse, error)
+	GetStaticRoute(ctx context.Context, vpcUUID string) (*StaticRouteIntentResponse, error)
+	UpdateStaticRoute(ctx context.Context, uuid string, body *StaticRouteIntentInput) (*StaticRouteIntentResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -2565,11 +2567,12 @@ func (op Operations) CreatePBR(ctx context.Context, body *PbrIntentInput) (*PbrI
 func (op Operations) GetPBR(ctx context.Context, uuid string) (*PbrIntentResponse, error) {
 	path := fmt.Sprintf("/routing_policies/%s", uuid)
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
-	pbrIntentResponse := new(PbrIntentResponse)
 
 	if err != nil {
 		return nil, err
 	}
+
+	pbrIntentResponse := new(PbrIntentResponse)
 	return pbrIntentResponse, op.client.Do(ctx, req, pbrIntentResponse)
 }
 
@@ -2623,7 +2626,6 @@ func (op Operations) ListAllPBR(ctx context.Context, filter string) (*PbrListInt
 	if err != nil {
 		return nil, err
 	}
-
 	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
 	remaining := totalEntities
 	offset := utils.Int64Value(resp.Metadata.Offset)
@@ -2650,6 +2652,33 @@ func (op Operations) ListAllPBR(ctx context.Context, filter string) (*PbrListInt
 	}
 
 	return resp, nil
+
+}
+
+func (op Operations) GetStaticRoute(ctx context.Context, uuid string) (*StaticRouteIntentResponse, error) {
+	path := fmt.Sprintf("/vpcs/%s/route_tables", uuid)
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+
+	if err != nil {
+		return nil, err
+	}
+
+	staticIntentResponse := new(StaticRouteIntentResponse)
+
+	return staticIntentResponse, op.client.Do(ctx, req, staticIntentResponse)
+}
+
+func (op Operations) UpdateStaticRoute(ctx context.Context, uuid string, body *StaticRouteIntentInput) (*StaticRouteIntentResponse, error) {
+	path := fmt.Sprintf("/vpcs/%s/route_tables", uuid)
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
+
+	if err != nil {
+		return nil, err
+	}
+
+	staticIntentResponse := new(StaticRouteIntentResponse)
+
+	return staticIntentResponse, op.client.Do(ctx, req, staticIntentResponse)
 }
 
 func (op Operations) CreateFloatingIPs(ctx context.Context, request *FIPIntentInput) (*FloatingIPsIntentResponse, error) {
