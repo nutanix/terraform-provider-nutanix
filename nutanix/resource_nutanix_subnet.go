@@ -928,7 +928,6 @@ func resourceNutanixSubnetDiff(ctx context.Context, d *schema.ResourceDiff, m in
 			}
 			if _, nok := d.GetOk("subnet_ip"); !nok {
 				return fmt.Errorf("overlay subnet requires subnet_ip")
-
 			}
 		}
 		if st == "VLAN" {
