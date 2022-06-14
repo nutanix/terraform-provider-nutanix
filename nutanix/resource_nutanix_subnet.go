@@ -918,5 +918,24 @@ func resourceNutanixSubnetDiff(ctx context.Context, d *schema.ResourceDiff, m in
 			}
 		}
 	}
+
+	// check for required params for subnets
+
+	if st, ok := d.GetOk("subnet_type"); ok {
+		if st == "OVERLAY" {
+			if _, okk := d.GetOk("vpc_reference_uuid"); !okk {
+				return fmt.Errorf("overlay subnet requires vpc reference")
+			}
+			if _, nok := d.GetOk("subnet_ip"); !nok {
+				return fmt.Errorf("overlay subnet requires subnet_ip")
+
+			}
+		}
+		if st == "VLAN" {
+			if _, okk := d.GetOk("cluster_uuid"); !okk {
+				return fmt.Errorf("vlan subnet requires cluster reference")
+			}
+		}
+	}
 	return nil
 }
