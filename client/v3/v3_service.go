@@ -2675,6 +2675,7 @@ func (op Operations) CreateFloatingIPs(ctx context.Context, request *FIPIntentIn
 	}
 
 	return fIPsIntentResponse, op.client.Do(ctx, req, fIPsIntentResponse)
+
 }
 
 func (op Operations) UpdateStaticRoute(ctx context.Context, uuid string, body *StaticRouteIntentInput) (*StaticRouteIntentResponse, error) {
