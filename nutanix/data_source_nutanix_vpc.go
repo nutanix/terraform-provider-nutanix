@@ -16,7 +16,7 @@ func dataSourceNutanixVPC() *schema.Resource {
 				Required: true,
 			},
 
-			// COMPUTED RESOURCES
+			//  Computed attributes
 			"name": {
 				Type:     schema.TypeString,
 				Computed: true,

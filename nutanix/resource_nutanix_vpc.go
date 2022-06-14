@@ -256,10 +256,6 @@ func resourceNutanixVPCUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		spec.Name = utils.StringPtr(d.Get("name").(string))
 	}
 
-	// if d.HasChange("external_subnet_list") {
-	// 	res.ExternalSubnetList = expandExternalSubnet(d.Get("external_subnet_list"))
-	// }
-
 	if d.HasChange("external_subnet_reference_uuid") {
 		newSubs := d.Get("external_subnet_reference_uuid")
 		exts := newSubs.([]interface{})
