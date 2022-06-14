@@ -2435,8 +2435,6 @@ func (op Operations) UpdateAddressGroup(uuid string, body *AddressGroupInput) er
 }
 
 func (op Operations) CreateVPC(ctx context.Context, request *VPCIntentInput) (*VPCIntentResponse, error) {
-	//ctx := context.TODO()
-
 	req, err := op.client.NewRequest(ctx, http.MethodPost, "/vpcs", request)
 	vpcIntentResponse := new(VPCIntentResponse)
 
