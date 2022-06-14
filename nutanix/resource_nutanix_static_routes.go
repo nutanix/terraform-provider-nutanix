@@ -26,7 +26,7 @@ func resourceNutanixStaticRoute() *schema.Resource {
 			},
 			"static_routes_list": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"destination": {
