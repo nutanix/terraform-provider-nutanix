@@ -2922,3 +2922,54 @@ type FloatingIPsListIntentResponse struct {
 	Metadata   *ListMetadataOutput          `json:"metadata"`
 	Entities   []*FloatingIPsIntentResponse `json:"entities"`
 }
+type PbrIcmp struct {
+	IcmpType *int `json:"icmp_type,omitempty"`
+	IcmpCode *int `json:"icmp_code,omitempty"`
+}
+
+type PbrSourDest struct {
+	AddressType *string   `json:"address_type,omitempty"`
+	IPSubnet    *IPSubnet `json:"ip_subnet,omitempty"`
+}
+
+type PortRangeList struct {
+	SourcePortRangeList      []*PortRange `json:"source_port_range_list,omitempty"`
+	DestinationPortRangeList []*PortRange `json:"destination_port_range_list,omitempty"`
+}
+
+type PbrProtocolParams struct {
+	ProtocolNumber *int           `json:"protocol_number,omitempty"`
+	Icmp           *PbrIcmp       `json:"icmp,omitempty"`
+	UDP            *PortRangeList `json:"udp,omitempty"`
+	TCP            *PortRangeList `json:"tcp,omitempty"`
+}
+
+type PbrAction struct {
+	Action        *string   `json:"action,omitempty"`
+	ServiceIPList []*string `json:"service_ip_list,omitempty"`
+}
+
+type PbrResources struct {
+	Priority           *int               `json:"priority,omitempty"`
+	Source             *PbrSourDest       `json:"source,omitempty"`
+	Destination        *PbrSourDest       `json:"destination,omitempty"`
+	ProtocolType       *string            `json:"protocol_type,omitempty"`
+	ProtocolParameters *PbrProtocolParams `json:"protocol_parameters,omitempty"`
+	Action             *PbrAction         `json:"action,omitempty"`
+	VpcReference       *Reference         `json:"vpc_reference,omitempty"`
+}
+
+type PBRSpec struct {
+	Name      *string       `json:"name,omitempty"`
+	Resources *PbrResources `json:"resources,omitempty"`
+}
+
+type PBRIntentInput struct {
+	APIVersion *string `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
+
+	Metadata *Metadata `json:"metadata" mapstructure:"metadata"`
+
+	Spec *PBRSpec `json:"spec" mapstructure:"spec"`
+}
+
+type PBRIntentResponse struct{}
