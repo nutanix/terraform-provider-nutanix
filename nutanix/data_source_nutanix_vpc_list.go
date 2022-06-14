@@ -24,7 +24,7 @@ func dataSourceNutanixVPCList() *schema.Resource {
 				Default:  0,
 			},
 
-			// COMPUTED RESOURCES
+			//Computed attributes
 			"api_version": {
 				Type:     schema.TypeString,
 				Computed: true,
