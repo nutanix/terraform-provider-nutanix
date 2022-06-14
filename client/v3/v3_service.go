@@ -124,6 +124,7 @@ type Service interface {
 	DeleteVPC(ctx context.Context, uuid string) (*DeleteResponse, error)
 	UpdateVPC(ctx context.Context, uuid string, body *VPCIntentInput) (*VPCIntentResponse, error)
 	ListVPC(ctx context.Context, getEntitiesRequest *DSMetadata) (*VPCListIntentResponse, error)
+	CreatePBR(ctx context.Context, request *PBRIntentInput) (*PBRIntentResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -2494,4 +2495,17 @@ func (op Operations) ListVPC(ctx context.Context, getEntitiesRequest *DSMetadata
 	}
 
 	return vpcListIntentResponse, op.client.Do(ctx, req, vpcListIntentResponse)
+}
+
+func (op Operations) CreatePBR(ctx context.Context, body *PBRIntentInput) (*PBRIntentResponse, error) {
+	path := "/routing_policies"
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, body)
+	pbrIntentResponse := new(PBRIntentResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return pbrIntentResponse, op.client.Do(ctx, req, pbrIntentResponse)
 }
