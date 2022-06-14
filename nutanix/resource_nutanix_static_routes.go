@@ -2,15 +2,18 @@ package nutanix
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
+
+const (
+	StaticRouteDelayTime  = 2 * time.Second
+	StaticRouteMinTimeout = 5 * time.Second
 )
 
 func resourceNutanixStaticRoute() *schema.Resource {
@@ -95,21 +98,12 @@ func resourceNutanixStaticRouteCreate(ctx context.Context, d *schema.ResourceDat
 	if stat, ok := d.GetOk("static_routes_list"); ok {
 		res.StaticRoutesList = expandStaticRouteList(stat)
 	}
-	fmt.Println("heyyyyyy")
-	aJSON, _ := json.Marshal(res.StaticRoutesList)
-	fmt.Printf("JSON Print - \n%s\n", string(aJSON))
-	fmt.Println(&res.StaticRoutesList)
 
 	spec.Resources = res
 	request.Spec = spec
 	request.Metadata = metadata
 
 	// make a request to update the VPC Static Route Table
-
-	fmt.Print("helloooo", &request)
-	bJSON, _ := json.Marshal(request)
-	fmt.Printf("JSON Print 22- \n%s\n", string(bJSON))
-	fmt.Printf("JSON Print 33- \n%s\n", string(vpcUUID.(string)))
 	response, err := conn.V3.UpdateStaticRoute(ctx, vpcUUID.(string), request)
 	if err != nil {
 		return diag.FromErr(err)
@@ -123,8 +117,8 @@ func resourceNutanixStaticRouteCreate(ctx context.Context, d *schema.ResourceDat
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      VpcDelayTime,
-		MinTimeout: VpcMinTimeout,
+		Delay:      StaticRouteDelayTime,
+		MinTimeout: StaticRouteMinTimeout,
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -132,9 +126,6 @@ func resourceNutanixStaticRouteCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.SetId(vpcUUID.(string))
-
-	log.Println(response)
-
 	return resourceNutanixStaticRouteRead(ctx, d, meta)
 }
 
@@ -192,10 +183,6 @@ func resourceNutanixStaticRouteUpdate(ctx context.Context, d *schema.ResourceDat
 	if d.HasChange("static_routes_list") {
 		res.StaticRoutesList = expandStaticRouteList(d.Get("static_routes_list"))
 	}
-	fmt.Println("heyyyyyy")
-	aJSON, _ := json.Marshal(res.StaticRoutesList)
-	fmt.Printf("JSON Print - \n%s\n", string(aJSON))
-	fmt.Println(&res.StaticRoutesList)
 
 	spec.Resources = res
 	request.Spec = spec
@@ -216,8 +203,8 @@ func resourceNutanixStaticRouteUpdate(ctx context.Context, d *schema.ResourceDat
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      VpcDelayTime,
-		MinTimeout: VpcMinTimeout,
+		Delay:      StaticRouteDelayTime,
+		MinTimeout: StaticRouteMinTimeout,
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -249,7 +236,6 @@ func expandStaticRouteList(pr interface{}) []*v3.StaticRoutesList {
 
 				stat.NextHop = nexthop
 			}
-
 			prList[k] = stat
 		}
 		return prList
