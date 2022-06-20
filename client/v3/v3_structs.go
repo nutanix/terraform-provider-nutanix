@@ -2672,9 +2672,15 @@ type PbrIcmp struct {
 	IcmpCode *int `json:"icmp_code,omitempty"`
 }
 
+type PbrIPSubnet struct {
+	IP *string `json:"ip,omitempty" mapstructure:"ip,omitempty"`
+
+	PrefixLength *int `json:"prefix_length,omitempty" mapstructure:"prefix_length,omitempty"`
+}
+
 type PbrSourDest struct {
-	AddressType *string   `json:"address_type,omitempty"`
-	IPSubnet    *IPSubnet `json:"ip_subnet,omitempty"`
+	AddressType *string      `json:"address_type,omitempty"`
+	IPSubnet    *PbrIPSubnet `json:"ip_subnet,omitempty"`
 }
 
 type PortRangeList struct {
@@ -2690,31 +2696,52 @@ type PbrProtocolParams struct {
 }
 
 type PbrAction struct {
-	Action        *string   `json:"action,omitempty"`
-	ServiceIPList []*string `json:"service_ip_list,omitempty"`
+	Action        *string  `json:"action,omitempty"`
+	ServiceIPList []string `json:"service_ip_list,omitempty"`
+}
+
+type PbrRoutePolicyCounter struct {
+	PacketCount *int `json:"packet_count,omitempty"`
+	ByteCount   *int `json:"byte_count,omitempty"`
 }
 
 type PbrResources struct {
-	Priority           *int               `json:"priority,omitempty"`
-	Source             *PbrSourDest       `json:"source,omitempty"`
-	Destination        *PbrSourDest       `json:"destination,omitempty"`
-	ProtocolType       *string            `json:"protocol_type,omitempty"`
-	ProtocolParameters *PbrProtocolParams `json:"protocol_parameters,omitempty"`
-	Action             *PbrAction         `json:"action,omitempty"`
-	VpcReference       *Reference         `json:"vpc_reference,omitempty"`
+	Priority              *int                   `json:"priority,omitempty"`
+	Source                *PbrSourDest           `json:"source,omitempty"`
+	Destination           *PbrSourDest           `json:"destination,omitempty"`
+	ProtocolType          *string                `json:"protocol_type,omitempty"`
+	ProtocolParameters    *PbrProtocolParams     `json:"protocol_parameters,omitempty"`
+	Action                *PbrAction             `json:"action,omitempty"`
+	VpcReference          *Reference             `json:"vpc_reference,omitempty"`
+	IsBidirectional       *bool                  `json:"is_bidirectional,omitempty"`
+	RoutingPolicyCounters *PbrRoutePolicyCounter `json:"routing_policy_counters,omitempty"`
 }
 
-type PBRSpec struct {
+type PbrSpec struct {
 	Name      *string       `json:"name,omitempty"`
 	Resources *PbrResources `json:"resources,omitempty"`
 }
 
-type PBRIntentInput struct {
+type PbrIntentInput struct {
 	APIVersion *string `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
 
 	Metadata *Metadata `json:"metadata" mapstructure:"metadata"`
 
-	Spec *PBRSpec `json:"spec" mapstructure:"spec"`
+	Spec *PbrSpec `json:"spec" mapstructure:"spec"`
 }
 
-type PBRIntentResponse struct{}
+type PbrDefStatus struct {
+	State            *string           `json:"state,omitempty" mapstructure:"state,omitempty"`
+	ExecutionContext *ExecutionContext `json:"execution_context,omitempty" mapstructure:"execution_context,omitempty"`
+	Resources        *PbrResources     `json:"resources,omitempty"`
+}
+
+type PbrIntentResponse struct {
+	APIVersion *string `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
+
+	Metadata *Metadata `json:"metadata" mapstructure:"metadata"`
+
+	Spec *PbrSpec `json:"spec" mapstructure:"spec"`
+
+	Status *PbrDefStatus `json:"status"`
+}
