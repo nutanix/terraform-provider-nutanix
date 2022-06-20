@@ -79,7 +79,7 @@ func resourceNutanixFloatingIPCreate(ctx context.Context, d *schema.ResourceData
 		res.ExternalSubnetReference = buildReference(extSub.(string), "subnet")
 	}
 	if vmNic, vok := d.GetOk("vm_nic_reference_uuid"); vok {
-		res.VmNICReference = buildReference(vmNic.(string), "vm_nic")
+		res.VMNICReference = buildReference(vmNic.(string), "vm_nic")
 	}
 	if vpc, ok := d.GetOk("vpc_reference_uuid"); ok {
 		res.VPCReference = buildReference(vpc.(string), "vpc")
@@ -140,8 +140,8 @@ func resourceNutanixFloatingIPRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("external_subnet_reference_uuid", resp.Status.Resource.ExternalSubnetReference.UUID)
 	}
 
-	if resp.Status.Resource.VmNICReference != nil {
-		d.Set("vm_nic_reference_uuid", resp.Status.Resource.VmNICReference.UUID)
+	if resp.Status.Resource.VMNICReference != nil {
+		d.Set("vm_nic_reference_uuid", resp.Status.Resource.VMNICReference.UUID)
 	}
 
 	if resp.Status.Resource.VPCReference != nil {
@@ -190,7 +190,7 @@ func resourceNutanixFloatingIPUpdate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if d.HasChange("vm_nic_reference_uuid") {
-		res.VmNICReference = buildReference(d.Get("vm_nic_reference_uuid").(string), "vm_nic")
+		res.VMNICReference = buildReference(d.Get("vm_nic_reference_uuid").(string), "vm_nic")
 	}
 
 	if d.HasChange("vpc_reference_uuid") {
