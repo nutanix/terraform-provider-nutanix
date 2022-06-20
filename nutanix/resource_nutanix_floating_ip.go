@@ -14,6 +14,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
+const (
+	FipDelayTime  = 2 * time.Second
+	FipMinTimeout = 5 * time.Second
+)
+
 func resourceNutanixFloatingIP() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceNutanixFloatingIPCreate,
@@ -102,8 +107,8 @@ func resourceNutanixFloatingIPCreate(ctx context.Context, d *schema.ResourceData
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      1 * time.Second,
-		MinTimeout: 5 * time.Second,
+		Delay:      FipDelayTime,
+		MinTimeout: FipMinTimeout,
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -214,8 +219,8 @@ func resourceNutanixFloatingIPUpdate(ctx context.Context, d *schema.ResourceData
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, taskUUID),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      1 * time.Second,
-		MinTimeout: 5 * time.Second,
+		Delay:      FipDelayTime,
+		MinTimeout: FipMinTimeout,
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -243,8 +248,8 @@ func resourceNutanixFloatingIPDelete(ctx context.Context, d *schema.ResourceData
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(conn, resp.Status.ExecutionContext.TaskUUID.(string)),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
-		Delay:      1 * time.Second,
-		MinTimeout: 5 * time.Second,
+		Delay:      FipDelayTime,
+		MinTimeout: FipMinTimeout,
 	}
 
 	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
