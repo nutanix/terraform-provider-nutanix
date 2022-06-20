@@ -2,7 +2,6 @@ package nutanix
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
@@ -240,10 +239,6 @@ func resourceNutanixPbrRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
-	log.Println("HELLLLLOOOOOO")
-	aJSON, _ := json.Marshal(resp)
-	fmt.Printf("JSON Print - \n%s\n", string(aJSON))
 
 	m, _ := setRSEntityMetadata(resp.Metadata)
 
@@ -579,20 +574,13 @@ func flattenProtocolParams(pr *v3.PbrProtocolParams) []map[string]interface{} {
 		res := make([]map[string]interface{}, 0)
 		proto := make(map[string]interface{})
 
-		log.Println("PROOoOOOOOO")
-		bJson, _ := json.Marshal(pr)
-		fmt.Printf("JSON Print - \n%s\n", string(bJson))
-
 		if pr.ProtocolNumber != nil {
-			log.Println("NUMMMMMMMMM")
 			proto["protocol_number"] = strconv.Itoa(*pr.ProtocolNumber)
 		}
 		if pr.Icmp != nil {
-			log.Println("ICCCMMMPPPP")
 			proto["icmp"] = flattenIcmpPbr(pr.Icmp)
 		}
 		if pr.TCP != nil {
-			log.Println("TCPPPPP")
 			proto["tcp"] = flattenRouteSpec(pr.TCP)
 		}
 		if pr.UDP != nil {
