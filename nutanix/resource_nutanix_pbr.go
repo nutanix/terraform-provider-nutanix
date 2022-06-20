@@ -252,7 +252,6 @@ func resourceNutanixPbrRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if err = d.Set("destination", flattenSourceDest(resp.Spec.Resources.Destination)); err != nil {
 		return diag.Errorf("error setting destination for PBR %s: %s", d.Id(), err)
-
 	}
 
 	if err = d.Set("protocol_parameters", flattenProtocolParams(resp.Spec.Resources.ProtocolParameters)); err != nil {
@@ -468,7 +467,6 @@ func getPbrResources(d *schema.ResourceData, pbr *v3.PbrResources) error {
 			act.ServiceIPList = sublist
 		}
 		pbr.Action = act
-
 	}
 
 	if vpc, vok := d.GetOk("vpc_reference_uuid"); vok {
