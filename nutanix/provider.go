@@ -162,6 +162,7 @@ func Provider() *schema.Provider {
 			"nutanix_foundation_central_imaged_node_details":  dataSourceFCImagedNodeDetails(),
 			"nutanix_vpc":                                     dataSourceNutanixVPC(),
 			"nutanix_vpc_list":                                dataSourceNutanixVPCList(),
+			"nutanix_pbr":                                     dataSourceNutanixPbr(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  resourceNutanixVirtualMachine(),
@@ -186,6 +187,7 @@ func Provider() *schema.Provider {
 			"nutanix_foundation_central_image_cluster": resourceNutanixFCImageCluster(),
 			"nutanix_foundation_central_api_keys":      resourceNutanixFCAPIKeys(),
 			"nutanix_vpc":                              resourceNutanixVPC(),
+			"nutanix_pbr":                              resourceNutanixPbr(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
