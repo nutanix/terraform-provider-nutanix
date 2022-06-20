@@ -2669,13 +2669,10 @@ func (op Operations) CreateFloatingIPs(ctx context.Context, request *FIPIntentIn
 	req, err := op.client.NewRequest(ctx, http.MethodPost, "/floating_ips", request)
 
 	fIPsIntentResponse := new(FloatingIPsIntentResponse)
-
 	if err != nil {
 		return nil, err
 	}
-
 	return fIPsIntentResponse, op.client.Do(ctx, req, fIPsIntentResponse)
-
 }
 
 func (op Operations) UpdateStaticRoute(ctx context.Context, uuid string, body *StaticRouteIntentInput) (*StaticRouteIntentResponse, error) {
