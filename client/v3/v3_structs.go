@@ -2755,7 +2755,7 @@ type PbrListIntentResponse struct {
 type FIPResource struct {
 	ExternalSubnetReference *Reference `json:"external_subnet_reference,omitempty"`
 	VPCReference            *Reference `json:"vpc_reference,omitempty"`
-	VmNICReference          *Reference `json:"vm_nic_reference,omitempty"`
+	VMNICReference          *Reference `json:"vm_nic_reference,omitempty"`
 	PrivateIP               *string    `json:"private_ip,omitempty"`
 	FloatingIP              *string    `json:"floating_ip,omitempty"`
 }
