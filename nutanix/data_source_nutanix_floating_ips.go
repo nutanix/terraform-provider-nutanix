@@ -207,7 +207,7 @@ func flattenFIPResource(res *v3.FIPResource) []interface{} {
 		if res.FloatingIP != nil {
 			ress["floating_ip"] = res.FloatingIP
 		}
-		ress["vm_nic_reference"] = flattenReferenceValues(res.VmNICReference)
+		ress["vm_nic_reference"] = flattenReferenceValues(res.VMNICReference)
 		ress["vpc_reference"] = flattenReferenceValues(res.VPCReference)
 
 		resList = append(resList, ress)
