@@ -124,7 +124,10 @@ type Service interface {
 	DeleteVPC(ctx context.Context, uuid string) (*DeleteResponse, error)
 	UpdateVPC(ctx context.Context, uuid string, body *VPCIntentInput) (*VPCIntentResponse, error)
 	ListVPC(ctx context.Context, getEntitiesRequest *DSMetadata) (*VPCListIntentResponse, error)
-	CreatePBR(ctx context.Context, request *PBRIntentInput) (*PBRIntentResponse, error)
+	CreatePBR(ctx context.Context, request *PbrIntentInput) (*PbrIntentResponse, error)
+	GetPBR(ctx context.Context, uuid string) (*PbrIntentResponse, error)
+	UpdatePBR(ctx context.Context, uuid string, body *PbrIntentInput) (*PbrIntentResponse, error)
+	DeletePBR(ctx context.Context, uuid string) (*DeleteResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -2497,11 +2500,48 @@ func (op Operations) ListVPC(ctx context.Context, getEntitiesRequest *DSMetadata
 	return vpcListIntentResponse, op.client.Do(ctx, req, vpcListIntentResponse)
 }
 
-func (op Operations) CreatePBR(ctx context.Context, body *PBRIntentInput) (*PBRIntentResponse, error) {
+func (op Operations) CreatePBR(ctx context.Context, body *PbrIntentInput) (*PbrIntentResponse, error) {
 	path := "/routing_policies"
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, body)
-	pbrIntentResponse := new(PBRIntentResponse)
+	pbrIntentResponse := new(PbrIntentResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return pbrIntentResponse, op.client.Do(ctx, req, pbrIntentResponse)
+}
+
+func (op Operations) GetPBR(ctx context.Context, uuid string) (*PbrIntentResponse, error) {
+	path := fmt.Sprintf("/routing_policies/%s", uuid)
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+	pbrIntentResponse := new(PbrIntentResponse)
+
+	if err != nil {
+		return nil, err
+	}
+	return pbrIntentResponse, op.client.Do(ctx, req, pbrIntentResponse)
+}
+
+func (op Operations) DeletePBR(ctx context.Context, uuid string) (*DeleteResponse, error) {
+	path := fmt.Sprintf("/routing_policies/%s", uuid)
+
+	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	deleteResponse := new(DeleteResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return deleteResponse, op.client.Do(ctx, req, deleteResponse)
+}
+
+func (op Operations) UpdatePBR(ctx context.Context, uuid string, body *PbrIntentInput) (*PbrIntentResponse, error) {
+	path := fmt.Sprintf("/routing_policies/%s", uuid)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
+	pbrIntentResponse := new(PbrIntentResponse)
 
 	if err != nil {
 		return nil, err
