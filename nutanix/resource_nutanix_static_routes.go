@@ -91,8 +91,8 @@ func resourceNutanixStaticRouteCreate(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	if err := getMetadataAttributes(d, metadata, "vpc_route_table"); err != nil {
-		return diag.Errorf("error reading metadata for VPC Route table %s", err)
+	if er := getMetadataAttributes(d, metadata, "vpc_route_table"); er != nil {
+		return diag.Errorf("error reading metadata for VPC Route table %s", er)
 	}
 
 	if stat, ok := d.GetOk("static_routes_list"); ok {
@@ -176,8 +176,8 @@ func resourceNutanixStaticRouteUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	if err := getMetadataAttributes(d, metadata, "vpc_route_table"); err != nil {
-		return diag.Errorf("error reading metadata for VPC Route table %s", err)
+	if er := getMetadataAttributes(d, metadata, "vpc_route_table"); er != nil {
+		return diag.Errorf("error reading metadata for VPC Route table %s", er)
 	}
 
 	if d.HasChange("static_routes_list") {
