@@ -188,7 +188,7 @@ func dataSourceNutanixStaticRouteRead(ctx context.Context, d *schema.ResourceDat
 func flattenStaticRouteSpec(stat *v3.StaticRouteSpec) []interface{} {
 	statList := make([]interface{}, 0)
 	if stat != nil {
-		stats := make(map[string]interface{}, 0)
+		stats := make(map[string]interface{})
 
 		stats["name"] = stat.Name
 		stats["resources"] = flattenStaticRouteSpecResources(stat.Resources)
@@ -217,7 +217,7 @@ func flattenStaticRouteStatus(srs *v3.StaticRouteDefStatus) []interface{} {
 func flattenStaticRouteSpecResources(pr *v3.StaticRouteResources) []interface{} {
 	prList := make([]interface{}, 0)
 	if pr != nil {
-		stats := make(map[string]interface{}, 0)
+		stats := make(map[string]interface{})
 
 		stats["static_routes_list"] = flattenSpecStaticRouteList(pr.StaticRoutesList)
 
