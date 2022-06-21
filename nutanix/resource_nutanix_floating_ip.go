@@ -34,18 +34,15 @@ func resourceNutanixFloatingIP() *schema.Resource {
 			"vm_nic_reference_uuid": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 			"vpc_reference_uuid": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
 				RequiredWith: []string{"private_ip"},
 			},
 			"private_ip": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 			},
 			"api_version": {
 				Type:     schema.TypeString,
@@ -186,19 +183,26 @@ func resourceNutanixFloatingIPUpdate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if d.HasChange("external_subnet_reference_uuid") {
-		res.ExternalSubnetReference = buildReference(d.Get("external_subnet_reference_uuid").(string), "subnet")
+		_, n := d.GetChange("external_subnet_reference_uuid")
+		res.ExternalSubnetReference = buildReference(n.(string), "subnet")
 	}
 
 	if d.HasChange("vm_nic_reference_uuid") {
-		res.VMNICReference = buildReference(d.Get("vm_nic_reference_uuid").(string), "vm_nic")
+		_, vm := d.GetChange("vm_nic_reference_uuid")
+		res.VMNICReference = expandUpdateReference(vm.(string), "vm_nic")
 	}
 
 	if d.HasChange("vpc_reference_uuid") {
-		res.VPCReference = buildReference(d.Get("vpc_reference_uuid").(string), "vpc")
+		_, vpc := d.GetChange("vpc_reference_uuid")
+		res.VPCReference = expandUpdateReference(vpc.(string), "vpc")
 	}
 
 	if d.HasChange("private_ip") {
-		res.PrivateIP = utils.StringPtr(d.Get("private_ip").(string))
+		if len(d.Get("private_ip").(string)) > 0 {
+			res.PrivateIP = utils.StringPtr(d.Get("private_ip").(string))
+		} else {
+			res.PrivateIP = nil
+		}
 	}
 
 	request.Metadata = metadata
@@ -227,7 +231,7 @@ func resourceNutanixFloatingIPUpdate(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("error waiting for Floating IP (%s) to update: %s", d.Id(), errWaitTask)
 	}
 
-	return resourceNutanixVPCRead(ctx, d, meta)
+	return resourceNutanixFloatingIPRead(ctx, d, meta)
 }
 
 func resourceNutanixFloatingIPDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -257,5 +261,15 @@ func resourceNutanixFloatingIPDelete(ctx context.Context, d *schema.ResourceData
 			"error waiting for floating ip (%s) to delete: %s", d.Id(), err)
 	}
 	d.SetId("")
+	return nil
+}
+
+func expandUpdateReference(uuid string, kind string) *v3.Reference {
+	if len(uuid) > 0 {
+		return &v3.Reference{
+			Kind: utils.StringPtr(kind),
+			UUID: utils.StringPtr(uuid),
+		}
+	}
 	return nil
 }
