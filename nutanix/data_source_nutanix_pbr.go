@@ -111,8 +111,8 @@ func dataSourceNutanixPbr() *schema.Resource {
 													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"destination_port_range_list": portRangeSchema(),
-															"source_port_range_list":      portRangeSchema(),
+															"destination_port_range_list": portRangeSchemaForDataSource(),
+															"source_port_range_list":      portRangeSchemaForDataSource(),
 														},
 													},
 												},
@@ -121,8 +121,8 @@ func dataSourceNutanixPbr() *schema.Resource {
 													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"destination_port_range_list": portRangeSchema(),
-															"source_port_range_list":      portRangeSchema(),
+															"destination_port_range_list": portRangeSchemaForDataSource(),
+															"source_port_range_list":      portRangeSchemaForDataSource(),
 														},
 													},
 												},
@@ -249,8 +249,8 @@ func dataSourceNutanixPbr() *schema.Resource {
 													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"destination_port_range_list": portRangeSchema(),
-															"source_port_range_list":      portRangeSchema(),
+															"destination_port_range_list": portRangeSchemaForDataSource(),
+															"source_port_range_list":      portRangeSchemaForDataSource(),
 														},
 													},
 												},
@@ -259,8 +259,8 @@ func dataSourceNutanixPbr() *schema.Resource {
 													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"destination_port_range_list": portRangeSchema(),
-															"source_port_range_list":      portRangeSchema(),
+															"destination_port_range_list": portRangeSchemaForDataSource(),
+															"source_port_range_list":      portRangeSchemaForDataSource(),
 														},
 													},
 												},
@@ -425,4 +425,23 @@ func flattenPbrResources(pr *v3.PbrResources) []interface{} {
 		return res
 	}
 	return nil
+}
+
+func portRangeSchemaForDataSource() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"end_port": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"start_port": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			},
+		},
+	}
 }

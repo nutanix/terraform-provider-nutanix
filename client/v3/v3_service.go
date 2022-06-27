@@ -124,6 +124,7 @@ type Service interface {
 	DeleteVPC(ctx context.Context, uuid string) (*DeleteResponse, error)
 	UpdateVPC(ctx context.Context, uuid string, body *VPCIntentInput) (*VPCIntentResponse, error)
 	ListVPC(ctx context.Context, getEntitiesRequest *DSMetadata) (*VPCListIntentResponse, error)
+	ListAllVPC(ctx context.Context, filter string) (*VPCListIntentResponse, error)
 	CreatePBR(ctx context.Context, request *PbrIntentInput) (*PbrIntentResponse, error)
 	GetPBR(ctx context.Context, uuid string) (*PbrIntentResponse, error)
 	UpdatePBR(ctx context.Context, uuid string, body *PbrIntentInput) (*PbrIntentResponse, error)
@@ -2498,6 +2499,47 @@ func (op Operations) ListVPC(ctx context.Context, getEntitiesRequest *DSMetadata
 	}
 
 	return vpcListIntentResponse, op.client.Do(ctx, req, vpcListIntentResponse)
+}
+
+func (op Operations) ListAllVPC(ctx context.Context, filter string) (*VPCListIntentResponse, error) {
+	entities := make([]*VPCIntentResponse, 0)
+
+	resp, err := op.ListVPC(ctx, &DSMetadata{
+		Filter: &filter,
+		Kind:   utils.StringPtr("vpc"),
+		Length: utils.Int64Ptr(itemsPerPage),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining) {
+			resp, err = op.ListVPC(ctx, &DSMetadata{
+				Filter: &filter,
+				Kind:   utils.StringPtr("vpc"),
+				Length: utils.Int64Ptr(itemsPerPage),
+				Offset: utils.Int64Ptr(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+		}
+
+		resp.Entities = entities
+	}
+
+	return resp, nil
 }
 
 func (op Operations) CreatePBR(ctx context.Context, body *PbrIntentInput) (*PbrIntentResponse, error) {
