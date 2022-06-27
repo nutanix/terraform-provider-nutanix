@@ -163,8 +163,10 @@ func resourceNutanixVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 		subsList := make([]*v3.ExternalSubnetList, len(extnames))
 		for k, v := range extnames {
 			subs := &v3.ExternalSubnetList{}
-			subResp := &v3.SubnetIntentResponse{}
-			subResp, _ = findSubnetByName(conn, v.(string), nil)
+			subResp, err := findSubnetByName(conn, v.(string), nil)
+			if err != nil {
+				return diag.FromErr(err)
+			}
 			subs.ExternalSubnetReference = buildReference(*subResp.Metadata.UUID, "subnet")
 			subsList[k] = subs
 		}
@@ -296,6 +298,22 @@ func resourceNutanixVPCUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if d.HasChange("externally_routable_prefix_list") {
 		res.ExternallyRoutablePrefixList = expandExternallyRoutablePL(d.Get("externally_routable_prefix_list"))
+	}
+
+	if d.HasChange("external_subnet_reference_name") {
+		extname := d.Get("external_subnet_reference_name")
+		extnames := extname.([]interface{})
+		subsList := make([]*v3.ExternalSubnetList, len(extnames))
+		for k, v := range extnames {
+			subs := &v3.ExternalSubnetList{}
+			subResp, err := findSubnetByName(conn, v.(string), nil)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+			subs.ExternalSubnetReference = buildReference(*subResp.Metadata.UUID, "subnet")
+			subsList[k] = subs
+		}
+		res.ExternalSubnetList = subsList
 	}
 
 	spec.Resources = res
