@@ -16,14 +16,14 @@ provider "nutanix"{
   insecure = true
 }
 
-# create PBR with vpc uuid with any source or destination or protocol with permit action
+# create PBR with vpc name with any source or destination or protocol with permit action
 
 resource "nutanix_pbr" "pbr1" {
     name = "test1"
     priority = 123
  
  
-    vpc_reference_uuid = var.vpc_reference_uuid
+    vpc_reference_uuid = "{{vpc_name}}"
     source{
         address_type = "ALL"
     }
@@ -70,13 +70,13 @@ resource "nutanix_pbr" "pbr2" {
     service_ip_list = ["10.2.2.34"]
 }
 
-#create PBR with vpc uuid with source network and destination external with reroute action and  udp port rangelist
+#create PBR with vpc name with source network and destination external with reroute action and  udp port rangelist
 
 resource "nutanix_pbr" "pbr3" {
     name = "test3"
     priority = 212
 
-    vpc_reference_uuid = var.vpc_reference_uuid
+    vpc_reference_uuid = "{{vpc_name}}"
     source{
         subnet_ip=  "1.2.2.0"
         prefix_length=  24
@@ -130,13 +130,13 @@ resource "nutanix_pbr" "pbr4" {
     service_ip_list = ["10.2.2.34"]  
 }
 
-#create PBR with vpc uuid with source Any and destination external and deny action with protocol number
+#create PBR with vpc name with source Any and destination external and deny action with protocol number
 
 resource "nutanix_pbr" "pbr5" {
     name = "test5"
     priority = 252
 
-    vpc_reference_uuid = var.vpc_reference_uuid
+    vpc_reference_uuid = "{{vpc_name}}"
     source{
         address_type = "ALL"
     }

@@ -152,9 +152,18 @@ func resourceNutanixPbr() *schema.Resource {
 				},
 			},
 			"vpc_reference_uuid": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"vpc_name"},
+			},
+			"vpc_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"vpc_reference_uuid"},
 			},
 			"api_version": {
 				Type:     schema.TypeString,
@@ -197,6 +206,15 @@ func resourceNutanixPbrCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if err := getPbrResources(d, res); err != nil {
 		return diag.FromErr(err)
+	}
+
+	if vpcName, vnok := d.GetOk("vpc_name"); vnok {
+		vpcResp, er := findVPCByName(ctx, conn, vpcName.(string))
+		if er != nil {
+			return diag.FromErr(er)
+		}
+
+		res.VpcReference = buildReference(*vpcResp.Metadata.UUID, "vpc")
 	}
 
 	spec.Resources = res
@@ -363,6 +381,15 @@ func resourceNutanixPbrUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if d.HasChange("vpc_reference_uuid") {
 		res.VpcReference = buildReference(d.Get("vpc_reference_uuid").(string), "vpc")
+	}
+
+	if d.HasChange("vpc_name") {
+		vpcName := d.Get("vpc_name")
+		vpcResp, er := findVPCByName(ctx, conn, vpcName.(string))
+		if er != nil {
+			return diag.FromErr(er)
+		}
+		res.VpcReference = buildReference(*vpcResp.Metadata.UUID, "vpc")
 	}
 
 	if d.HasChange("is_bidirectional") {
