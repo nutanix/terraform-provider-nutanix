@@ -68,25 +68,36 @@ resource "nutanix_vpc" "test1" {
 // dataSources for VPC
 
 
-//dataSource to get details for an entity
+//dataSource to get details for an entity with vpc uuid
 
-data "nutanix_vpc" "vpc"{
-    // vpc uuid required to get VPC entity
-    vpc_uuid = ""
+data "nutanix_vpc" "vpc1"{
+    vpc_uuid = "{{vpc_uuid}}"
 }
 
 output "vpcOut1" {
-   value =  data.nutanix_vpc.vpc
+   value =  data.nutanix_vpc.vpc1
 }
 
 
-// dataSource to all vpc present
 
-data "nutanix_vpc_list" "vpclist"{
-    // Optional paramters are length and offset
-    length = 10
+//dataSource to get details for an entity with vpc name
+
+data "nutanix_vpc" "vpc2"{
+    vpc_name = "{{vpc_name}}"
+}
+
+output "vpcOut1" {
+   value =  data.nutanix_vpc.vpc2
+}
+
+// vpc list with filter
+
+data "nutanix_vpcs" "vpc3"{
+   metadata{
+    filter = "name==<vpc_name>"
+   }
 }
 
 output "vpcOut2" {
-   value =  data.nutanix_vpc_list.vpclist
+   value =  data.nutanix_vpcs.vpc3
 }
