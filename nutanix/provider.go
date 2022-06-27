@@ -163,6 +163,7 @@ func Provider() *schema.Provider {
 			"nutanix_vpc":                                     dataSourceNutanixVPC(),
 			"nutanix_vpcs":                                    dataSourceNutanixVPCs(),
 			"nutanix_pbr":                                     dataSourceNutanixPbr(),
+			"nutanix_pbrs":                                    dataSourceNutanixPbrs(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  resourceNutanixVirtualMachine(),

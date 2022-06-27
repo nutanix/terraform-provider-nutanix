@@ -2745,3 +2745,9 @@ type PbrIntentResponse struct {
 
 	Status *PbrDefStatus `json:"status"`
 }
+
+type PbrListIntentResponse struct {
+	APIVersion *string              `json:"api_version"`
+	Metadata   *ListMetadataOutput  `json:"metadata"`
+	Entities   []*PbrIntentResponse `json:"entities"`
+}
