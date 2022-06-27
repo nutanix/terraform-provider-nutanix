@@ -150,3 +150,22 @@ resource "nutanix_pbr" "pbr5" {
     }
     action = "DENY"
 }
+
+# list pbr 
+
+data "nutanix_pbrs" "pbr5" {
+}
+
+output "resp1" {
+  value = data.nutanix_pbrs.pbr5
+}
+
+# get an entity with pbr uuid
+
+data "nutanix_pbr" "pbr6" {
+  pbr_uuid = "{{pbr_uuid}}"
+}
+
+output "resp2" {
+  value = data.nutanix_pbr.pbr6
+}
