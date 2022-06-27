@@ -2,4 +2,4 @@
 nutanix_username = "admin"
 nutanix_password = "password"
 nutanix_endpoint = "10.xx.xx.xx"
-vpc_reference_uuid = "string"
+vpc_reference_uuid = "<vpc_uuid>"

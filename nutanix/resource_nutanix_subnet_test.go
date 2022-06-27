@@ -120,6 +120,97 @@ func TestAccNutanixSubnet_WithCategory(t *testing.T) {
 	})
 }
 
+func TestAccNutanixSubnet_ExternalSubnet(t *testing.T) {
+	r := randIntBetween(31, 40)
+	subnetName := fmt.Sprintf("acctest-managed-%d", r)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixSubnetConfigExternalSubnet(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixSubnetExists(resourceNameSubnet),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "name", subnetName),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "description", "Description of my unit test VLAN"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "subnet_type", "VLAN"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "subnet_ip", "10.250.140.0"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "default_gateway_ip", "10.250.140.1"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "is_external", "true"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "enable_nat", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceNameSubnet,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"description"},
+			},
+		},
+	})
+}
+
+func TestAccNutanixSubnet_ExternalSubnetWithNoNAT(t *testing.T) {
+	r := randIntBetween(31, 40)
+	subnetName := fmt.Sprintf("acctest-managed-%d", r)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixSubnetConfigExternalSubnetNoNAT(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixSubnetExists(resourceNameSubnet),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "name", subnetName),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "description", "Description of my unit test VLAN"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "subnet_type", "VLAN"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "subnet_ip", "10.250.140.0"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "default_gateway_ip", "10.250.140.1"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "is_external", "true"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "enable_nat", "false"),
+				),
+			},
+			{
+				ResourceName:            resourceNameSubnet,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"description"},
+			},
+		},
+	})
+}
+
+func TestAccNutanixSubnet_OverlaySubnet(t *testing.T) {
+	r := randIntBetween(31, 40)
+	subnetName := fmt.Sprintf("acctest-managed-%d", r)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixSubnetConfigOverlaySubnet(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixSubnetExists(resourceNameSubnet),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "name", subnetName),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "description", "Description of my unit test OVERLAY"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "subnet_type", "OVERLAY"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "subnet_ip", "10.250.140.0"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "default_gateway_ip", "10.250.140.1"),
+				),
+			},
+			{
+				ResourceName:            resourceNameSubnet,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"description"},
+			},
+		},
+	})
+}
+
 func TestAccNutanixSubnet_withIpPoolListRanges(t *testing.T) {
 	r := randIntBetween(61, 70)
 	resource.Test(t, resource.TestCase{
@@ -509,4 +600,113 @@ resource "nutanix_subnet" "test1" {
 	dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
 }
 `, r, r, r+2)
+}
+
+func testAccNutanixSubnetConfigExternalSubnet(r int) string {
+	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {}
+
+locals {
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
+}
+
+resource "nutanix_subnet" "acctest-managed" {
+  	cluster_uuid = local.cluster1
+	name        = "acctest-managed-%[1]d"
+	description = "Description of my unit test VLAN"
+	vlan_id     = %[1]d
+	subnet_type = "VLAN"
+	subnet_ip          = "10.250.140.0"
+  	default_gateway_ip = "10.250.140.1"
+	ip_config_pool_list_ranges = ["10.250.140.15 10.250.140.30"]
+
+  	prefix_length = 24
+	is_external = true
+}
+`, r)
+}
+
+func testAccNutanixSubnetConfigExternalSubnetNoNAT(r int) string {
+	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {}
+
+locals {
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
+}
+
+resource "nutanix_subnet" "acctest-managed" {
+  	cluster_uuid = local.cluster1
+	name        = "acctest-managed-%[1]d"
+	description = "Description of my unit test VLAN"
+	vlan_id     = %[1]d
+	subnet_type = "VLAN"
+	subnet_ip          = "10.250.140.0"
+  	default_gateway_ip = "10.250.140.1"
+	ip_config_pool_list_ranges = ["10.250.140.15 10.250.140.30"]
+
+  	prefix_length = 24
+	is_external = true
+	enable_nat = false
+}
+`, r)
+}
+
+func testAccNutanixSubnetConfigOverlaySubnet(r int) string {
+	return fmt.Sprintf(`
+data "nutanix_clusters" "clusters" {}
+
+locals {
+	cluster1 = [
+	for cluster in data.nutanix_clusters.clusters.entities :
+	cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+	][0]
+}
+
+resource "nutanix_subnet" "sub-ext" {
+  	cluster_uuid = local.cluster1
+	name        = "acctest-managed-ext-%[1]d"
+	description = "Description of my unit test VLAN"
+	vlan_id     = %[1]d
+	subnet_type = "VLAN"
+	subnet_ip          = "10.250.142.0"
+  	default_gateway_ip = "10.250.142.1"
+	ip_config_pool_list_ranges = ["10.250.142.15 10.250.142.30"]
+
+  	prefix_length = 24
+	is_external = true
+	enable_nat = false
+}
+
+resource "nutanix_vpc" "acctest-managed-vpc" {
+	name = "acctest-managed-%[1]d"
+	external_subnet_reference_uuid = [
+	  resource.nutanix_subnet.sub-ext.id
+	]
+	common_domain_name_server_ip_list{
+		ip = "8.8.8.9"
+	}
+	externally_routable_prefix_list{
+	  ip=  "172.31.0.0"
+	  prefix_length= 16
+	}
+  }
+
+  resource "nutanix_subnet" "acctest-managed" {
+	name        = "acctest-managed-%[1]d"
+	description = "Description of my unit test OVERLAY"
+	vpc_reference_uuid = resource.nutanix_vpc.acctest-managed-vpc.id
+	subnet_type = "OVERLAY"
+	subnet_ip          = "10.250.140.0"
+	default_gateway_ip = "10.250.140.1"
+	ip_config_pool_list_ranges = ["10.250.140.15 10.250.140.30"]
+	prefix_length = 24
+}
+
+`, r)
 }
