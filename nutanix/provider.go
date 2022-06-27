@@ -169,6 +169,7 @@ func Provider() *schema.Provider {
 			"nutanix_static_routes":                           dataSourceNutanixStaticRoute(),
 			"nutanix_floating_ip":                             dataSourceNutanixFloatingIP(),
 			"nutanix_floating_ips":                            dataSourceNutanixFloatingIPs(),
+			"nutanix_vpcs":                                    dataSourceNutanixVPCs(),
 			"nutanix_pbr":                                     dataSourceNutanixPbr(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
