@@ -164,8 +164,8 @@ func Provider() *schema.Provider {
 			"nutanix_vpcs":                                    dataSourceNutanixVPCs(),
 			"nutanix_pbr":                                     dataSourceNutanixPbr(),
 			"nutanix_pbrs":                                    dataSourceNutanixPbrs(),
+			"nutanix_floating_ip":                             dataSourceNutanixFloatingIP(),
 			"nutanix_floating_ips":                            dataSourceNutanixFloatingIPs(),
-			"nutanix_floating_ips_list":                       dataSourceNutanixFloatingIPsList(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  resourceNutanixVirtualMachine(),

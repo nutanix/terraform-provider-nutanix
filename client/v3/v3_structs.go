@@ -2760,27 +2760,27 @@ type FIPResource struct {
 	FloatingIP              *string    `json:"floating_ip,omitempty"`
 }
 
-type FIPSpec struct {
+type FloatingIPSpec struct {
 	Resource *FIPResource `json:"resources,omitempty"`
 }
 
 type FIPIntentInput struct {
-	APIVersion *string   `json:"api_version,omitempty"`
-	Metadata   *Metadata `json:"metadata,omitempty"`
-	Spec       *FIPSpec  `json:"spec,omitempty"`
+	APIVersion *string         `json:"api_version,omitempty"`
+	Metadata   *Metadata       `json:"metadata,omitempty"`
+	Spec       *FloatingIPSpec `json:"spec,omitempty"`
 }
 
-type FIPDefStatus struct {
+type FloatingIPDefStatus struct {
 	State            *string           `json:"state,omitempty"`
 	ExecutionContext *ExecutionContext `json:"execution_context,omitempty"`
 	Resource         *FIPResource      `json:"resources,omitempty"`
 }
 
 type FloatingIPsIntentResponse struct {
-	APIVersion *string       `json:"api_version,omitempty"`
-	Status     *FIPDefStatus `json:"status,omitempty"`
-	Spec       *FIPSpec      `json:"spec,omitempty"`
-	Metadata   *Metadata     `json:"metadata" mapstructure:"metadata"`
+	APIVersion *string              `json:"api_version,omitempty"`
+	Status     *FloatingIPDefStatus `json:"status,omitempty"`
+	Spec       *FloatingIPSpec      `json:"spec,omitempty"`
+	Metadata   *Metadata            `json:"metadata" mapstructure:"metadata"`
 }
 
 type FloatingIPsListIntentResponse struct {

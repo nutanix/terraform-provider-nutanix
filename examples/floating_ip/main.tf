@@ -37,3 +37,29 @@ resource "nutanix_floating_ip" "fip3" {
     external_subnet_reference_uuid = "{{ext_sub_uuid}}"
     vm_nic_reference_uuid = "{{vm_uuid}}"
 }
+
+# data source floating IP
+
+data "nutanix_floating_ip" "fip4"{
+    floating_ip_uuid = "{{floating_ip_uuid}}"
+}
+
+# list of floating IPs
+
+data "nutanix_floating_ips" "fip5"{ }
+
+output "csf" {
+  value = data.nutanix_floating_ips.fip5
+}
+
+# List pbrs using ip starts with 10 filter criteria
+
+data "nutanix_floating_ips" "fip6"{
+	metadata{
+		filter = "floating_ip==10.*"
+	}
+}
+
+output "csf" {
+  value = data.nutanix_floating_ips.fip6
+}
