@@ -64,7 +64,7 @@ func resourceNutanixFloatingIPCreate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*Client).API
 
 	request := &v3.FIPIntentInput{}
-	spec := &v3.FIPSpec{}
+	spec := &v3.FloatingIPSpec{}
 	res := &v3.FIPResource{}
 	metadata := &v3.Metadata{}
 
@@ -157,7 +157,7 @@ func resourceNutanixFloatingIPUpdate(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*Client).API
 
 	request := &v3.FIPIntentInput{}
-	spec := &v3.FIPSpec{}
+	spec := &v3.FloatingIPSpec{}
 	res := &v3.FIPResource{}
 	metadata := &v3.Metadata{}
 
@@ -258,7 +258,7 @@ func resourceNutanixFloatingIPDelete(ctx context.Context, d *schema.ResourceData
 
 	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
 		return diag.Errorf(
-			"error waiting for floating ip (%s) to delete: %s", d.Id(), err)
+			"error waiting for floating ip (%s) to delete: %s", d.Id(), err.Error())
 	}
 	d.SetId("")
 	return nil

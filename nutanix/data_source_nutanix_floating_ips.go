@@ -4,151 +4,201 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func dataSourceNutanixFloatingIPs() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceNutanixFloatingIPsCreate,
+		ReadContext: dataSourceNutanixFloatingIPsRead,
 		Schema: map[string]*schema.Schema{
-			"floating_ip_uuid": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			// COMPUTED
+			// COMPUTED RESOURCES
 			"api_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			"metadata": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"filter": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"kind": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"sort_order": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"offset": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"length": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"sort_attribute": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"total_matches": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"entities": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"state": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"resources": {
+						"status": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"external_subnet_reference": {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"floating_ip": {
+									"state": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"vm_nic_reference": {
-										Type:     schema.TypeMap,
+									"name": {
+										Type:     schema.TypeString,
 										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
 									},
-									"vpc_reference": {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-								},
-							},
-						},
-						"execution_context": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"task_uuid": {
+									"resources": {
 										Type:     schema.TypeList,
 										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"external_subnet_reference": {
+													Type:     schema.TypeMap,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"floating_ip": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"vm_nic_reference": {
+													Type:     schema.TypeMap,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"vpc_reference": {
+													Type:     schema.TypeMap,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+											},
+										},
+									},
+									"execution_context": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"task_uuid": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+											},
 										},
 									},
 								},
 							},
 						},
-					},
-				},
-			},
-			"spec": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"resources": {
+						"spec": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"external_subnet_reference": {
-										Type:     schema.TypeMap,
+									"resources": {
+										Type:     schema.TypeList,
 										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"vm_nic_reference": {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"vpc_reference": {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"external_subnet_reference": {
+													Type:     schema.TypeMap,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"vm_nic_reference": {
+													Type:     schema.TypeMap,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"vpc_reference": {
+													Type:     schema.TypeMap,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+											},
 										},
 									},
 								},
 							},
 						},
+						"metadata": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 					},
-				},
-			},
-			"metadata": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
 				},
 			},
 		},
 	}
 }
 
-func dataSourceNutanixFloatingIPsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceNutanixFloatingIPsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).API
 
-	fUUID, ok := d.GetOk("floating_ip_uuid")
-	if !ok {
-		return diag.Errorf("please provide `floating_ip_uuid`")
+	req := &v3.DSMetadata{}
+
+	metadata, filtersOk := d.GetOk("metadata")
+
+	if filtersOk {
+		req = buildDataSourceListMetadata(metadata.(*schema.Set))
 	}
 
-	resp, err := conn.V3.GetFloatingIPs(ctx, fUUID.(string))
+	resp, err := conn.V3.ListAllFloatingIPs(ctx, utils.StringValue(req.Filter))
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	m, _ := setRSEntityMetadata(resp.Metadata)
-
-	if err := d.Set("metadata", m); err != nil {
+	if err := d.Set("metadata", flattenFIPsMetadata(resp.Metadata)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -156,62 +206,45 @@ func dataSourceNutanixFloatingIPsCreate(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("status", flattenStatusFIP(resp.Status)); err != nil {
+	if err := d.Set("entities", flattenFIPsEntities(resp.Entities)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("spec", flattenSpecFIP(resp.Spec)); err != nil {
-		return diag.FromErr(err)
-	}
-
-	d.SetId(*resp.Metadata.UUID)
+	d.SetId(resource.UniqueId())
 	return nil
 }
 
-func flattenStatusFIP(stat *v3.FIPDefStatus) []interface{} {
-	statList := make([]interface{}, 0)
+func flattenFIPsEntities(ent []*v3.FloatingIPsIntentResponse) []map[string]interface{} {
+	if len(ent) > 0 {
+		entList := make([]map[string]interface{}, len(ent))
+		for k, v := range ent {
+			ents := make(map[string]interface{})
 
-	if stat != nil {
-		stats := make(map[string]interface{})
-		stats["state"] = stat.State
-		stats["resources"] = flattenFIPResource(stat.Resource)
-		stats["execution_context"] = flattenExecutionContext(stat.ExecutionContext)
+			ents["status"] = flattenStatusFIP(v.Status)
+			ents["spec"] = flattenSpecFIP(v.Spec)
+			m, _ := setRSEntityMetadata(v.Metadata)
+			ents["metadata"] = m
 
-		statList = append(statList, stats)
-
-		return statList
-	}
-	return nil
-}
-
-func flattenSpecFIP(spec *v3.FIPSpec) []interface{} {
-	specList := make([]interface{}, 0)
-
-	if spec != nil {
-		specs := make(map[string]interface{})
-
-		specs["resources"] = flattenFIPResource(spec.Resource)
-
-		specList = append(specList, specs)
-		return specList
-	}
-	return nil
-}
-
-func flattenFIPResource(res *v3.FIPResource) []interface{} {
-	resList := make([]interface{}, 0)
-	if res != nil {
-		ress := make(map[string]interface{})
-
-		ress["external_subnet_reference"] = flattenReferenceValues(res.ExternalSubnetReference)
-		if res.FloatingIP != nil {
-			ress["floating_ip"] = res.FloatingIP
+			entList[k] = ents
 		}
-		ress["vm_nic_reference"] = flattenReferenceValues(res.VMNICReference)
-		ress["vpc_reference"] = flattenReferenceValues(res.VPCReference)
-
-		resList = append(resList, ress)
-		return resList
+		return entList
 	}
 	return nil
+}
+
+func flattenFIPsMetadata(met *v3.ListMetadataOutput) []interface{} {
+	metList := make([]interface{}, 0)
+
+	if met != nil {
+		mets := make(map[string]interface{})
+
+		mets["total_matches"] = met.TotalMatches
+		mets["kind"] = met.Kind
+		mets["length"] = met.Length
+		mets["offset"] = met.Offset
+		mets["filter"] = met.Filter
+
+		metList = append(metList, mets)
+	}
+	return metList
 }
