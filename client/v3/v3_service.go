@@ -2730,12 +2730,11 @@ func (op Operations) UpdateFloatingIP(ctx context.Context, uuid string, body *FI
 	path := fmt.Sprintf("/floating_ips/%s", uuid)
 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
 	fIPIntentResponse := new(FloatingIPsIntentResponse)
-
 	if err != nil {
 		return nil, err
 	}
-
 	return fIPIntentResponse, op.client.Do(ctx, req, fIPIntentResponse)
+
 }
 
 func (op Operations) ListAllFloatingIPs(ctx context.Context, filter string) (*FloatingIPsListIntentResponse, error) {
