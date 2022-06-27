@@ -44,10 +44,19 @@ func resourceNutanixVPC() *schema.Resource {
 			},
 			"external_subnet_reference_uuid": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
+				ConflictsWith: []string{"external_subnet_reference_name"},
+			},
+			"external_subnet_reference_name": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+				ConflictsWith: []string{"external_subnet_reference_uuid"},
 			},
 			"externally_routable_prefix_list": {
 				Type:     schema.TypeList,
@@ -147,6 +156,19 @@ func resourceNutanixVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if err := getVPCResources(d, res); err != nil {
 		return diag.FromErr(err)
+	}
+
+	if extname, extnameok := d.GetOk("external_subnet_reference_name"); extnameok {
+		extnames := extname.([]interface{})
+		subsList := make([]*v3.ExternalSubnetList, len(extnames))
+		for k, v := range extnames {
+			subs := &v3.ExternalSubnetList{}
+			subResp := &v3.SubnetIntentResponse{}
+			subResp, _ = findSubnetByName(conn, v.(string), nil)
+			subs.ExternalSubnetReference = buildReference(*subResp.Metadata.UUID, "subnet")
+			subsList[k] = subs
+		}
+		res.ExternalSubnetList = subsList
 	}
 
 	spec.Resources = res

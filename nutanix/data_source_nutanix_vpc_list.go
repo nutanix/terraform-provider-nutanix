@@ -14,40 +14,50 @@ func dataSourceNutanixVPCList() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceNutanixVPCListRead,
 		Schema: map[string]*schema.Schema{
-			"length": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"offset": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  0,
-			},
-
 			//Computed attributes
 			"api_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"metadata": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
+				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"total_matches": {
-							Type:     schema.TypeInt,
+						"filter": {
+							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 						"kind": {
 							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
-						"length": {
-							Type:     schema.TypeInt,
+						"sort_order": {
+							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 						"offset": {
 							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"length": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"total_matches": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"sort_attribute": {
+							Type:     schema.TypeString,
+							Optional: true,
 							Computed: true,
 						},
 					},
@@ -251,17 +261,12 @@ func dataSourceNutanixVPCListRead(ctx context.Context, d *schema.ResourceData, m
 
 	request := &v3.DSMetadata{}
 
-	length, lok := d.GetOk("length")
-	if lok {
-		request.Length = utils.Int64Ptr(int64(length.(int)))
+	metadata, filtersOk := d.GetOk("metadata")
+	if filtersOk {
+		request = buildDataSourceListMetadata(metadata.(*schema.Set))
 	}
 
-	offset, ok := d.GetOk("offset")
-	if ok {
-		request.Offset = utils.Int64Ptr(int64(offset.(int)))
-	}
-
-	resp, err := conn.V3.ListVPC(ctx, request)
+	resp, err := conn.V3.ListAllVPC(ctx, utils.StringValue(request.Filter))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -384,6 +389,7 @@ func flattenVPCMetadata(met *v3.ListMetadataOutput) []interface{} {
 		mets["kind"] = met.Kind
 		mets["length"] = met.Length
 		mets["offset"] = met.Offset
+		mets["filter"] = met.Filter
 
 		metList = append(metList, mets)
 	}

@@ -392,7 +392,7 @@ func resourceNutanixPbrUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for PBR (%s) to create: %s", d.Id(), errWaitTask)
+		return diag.Errorf("error waiting for PBR (%s) to update: %s", d.Id(), errWaitTask)
 	}
 
 	return resourceNutanixPbrRead(ctx, d, meta)
