@@ -10,9 +10,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func dataSourceNutanixVPCList() *schema.Resource {
+func dataSourceNutanixVPCs() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceNutanixVPCListRead,
+		ReadContext: dataSourceNutanixVPCsRead,
 		Schema: map[string]*schema.Schema{
 			//Computed attributes
 			"api_version": {
@@ -256,7 +256,7 @@ func dataSourceNutanixVPCList() *schema.Resource {
 	}
 }
 
-func dataSourceNutanixVPCListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceNutanixVPCsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).API
 
 	request := &v3.DSMetadata{}
