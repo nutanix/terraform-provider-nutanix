@@ -129,6 +129,8 @@ type Service interface {
 	GetPBR(ctx context.Context, uuid string) (*PbrIntentResponse, error)
 	UpdatePBR(ctx context.Context, uuid string, body *PbrIntentInput) (*PbrIntentResponse, error)
 	DeletePBR(ctx context.Context, uuid string) (*DeleteResponse, error)
+	ListPBR(ctx context.Context, getEntitiesRequest *DSMetadata) (*PbrListIntentResponse, error)
+	ListAllPBR(ctx context.Context, filter string) (*PbrListIntentResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -2590,4 +2592,58 @@ func (op Operations) UpdatePBR(ctx context.Context, uuid string, body *PbrIntent
 	}
 
 	return pbrIntentResponse, op.client.Do(ctx, req, pbrIntentResponse)
+}
+
+func (op Operations) ListPBR(ctx context.Context, getEntitiesRequest *DSMetadata) (*PbrListIntentResponse, error) {
+	path := "/routing_policies/list"
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, getEntitiesRequest)
+	pbrListIntentResponse := new(PbrListIntentResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return pbrListIntentResponse, op.client.Do(ctx, req, pbrListIntentResponse)
+}
+
+func (op Operations) ListAllPBR(ctx context.Context, filter string) (*PbrListIntentResponse, error) {
+	entities := make([]*PbrIntentResponse, 0)
+
+	resp, err := op.ListPBR(ctx, &DSMetadata{
+		Filter: &filter,
+		Kind:   utils.StringPtr("routing_policy"),
+		Length: utils.Int64Ptr(itemsPerPage),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining) {
+			resp, err = op.ListPBR(ctx, &DSMetadata{
+				Filter: &filter,
+				Kind:   utils.StringPtr("routing_policy"),
+				Length: utils.Int64Ptr(itemsPerPage),
+				Offset: utils.Int64Ptr(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+		}
+
+		resp.Entities = entities
+	}
+
+	return resp, nil
 }
