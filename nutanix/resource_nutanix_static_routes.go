@@ -251,7 +251,7 @@ func flattenStaticRouteList(stat []*v3.StaticRoutesList) []map[string]interface{
 			stats := make(map[string]interface{})
 
 			stats["destination"] = v.Destination
-			stats["external_subnet_reference"] = v.NextHop.ExternalSubnetReference.UUID
+			stats["external_subnet_reference_uuid"] = v.NextHop.ExternalSubnetReference.UUID
 
 			statList[k] = stats
 		}

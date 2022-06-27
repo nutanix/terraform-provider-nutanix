@@ -13,46 +13,46 @@ func TestAccNutanixVPCListDataSource_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCListDataSourceConfig(),
+				Config: testAccVPCsDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.nutanix_vpc_list.test", "entities.#"),
-					resource.TestCheckResourceAttrSet("data.nutanix_vpc_list.test", "api_version"),
+					resource.TestCheckResourceAttrSet("data.nutanix_vpcs.test", "entities.#"),
+					resource.TestCheckResourceAttrSet("data.nutanix_vpcs.test", "api_version"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccNutanixVPCListDataSource_Name(t *testing.T) {
+func TestAccNutanixVPCsDataSource_UUID(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCListDataSourceConfigWithName(randIntBetween(25, 45)),
+				Config: testAccVPCsDataSourceConfigWithUUID(randIntBetween(25, 45)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.nutanix_vpc_list.test", "entities.#"),
-					resource.TestCheckResourceAttrSet("data.nutanix_vpc_list.test", "api_version"),
+					resource.TestCheckResourceAttrSet("data.nutanix_vpcs.test", "entities.#"),
+					resource.TestCheckResourceAttrSet("data.nutanix_vpcs.test", "api_version"),
 					resource.TestCheckResourceAttr(
-						"data.nutanix_vpc_list.test", "entities.0.spec.0.resources.0.externally_routable_prefix_list.0.prefix_length", "16"),
+						"data.nutanix_vpcs.test", "entities.0.spec.0.resources.0.externally_routable_prefix_list.0.prefix_length", "16"),
 					resource.TestCheckResourceAttr(
-						"data.nutanix_vpc_list.test", "entities.0.spec.0.resources.0.externally_routable_prefix_list.0.ip", "172.31.0.0"),
+						"data.nutanix_vpcs.test", "entities.0.spec.0.resources.0.externally_routable_prefix_list.0.ip", "172.31.0.0"),
 					resource.TestCheckResourceAttr(
-						"data.nutanix_vpc_list.test", "entities.0.spec.0.resources.0.common_domain_name_server_ip_list.0.ip", "8.8.8.9"),
+						"data.nutanix_vpcs.test", "entities.0.spec.0.resources.0.common_domain_name_server_ip_list.0.ip", "8.8.8.9"),
 				),
 			},
 		},
 	})
 }
 
-func testAccVPCListDataSourceConfig() string {
+func testAccVPCsDataSourceConfig() string {
 	return (`
-	data "nutanix_vpc_list" "test" {
+	data "nutanix_vpcs" "test" {
 	}
 `)
 }
 
-func testAccVPCListDataSourceConfigWithName(r int) string {
+func testAccVPCsDataSourceConfigWithUUID(r int) string {
 	return fmt.Sprintf(`
 data "nutanix_clusters" "clusters" {}
 
@@ -93,7 +93,7 @@ resource "nutanix_vpc" "test" {
 	  prefix_length= 16
 	}
   }
-	data "nutanix_vpc_list" "test" {
+	data "nutanix_vpcs" "test" {
 		depends_on = [
 			resource.nutanix_vpc.test
 		]
