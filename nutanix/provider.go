@@ -161,7 +161,7 @@ func Provider() *schema.Provider {
 			"nutanix_foundation_central_cluster_details":      dataSourceNutanixFCClusterDetails(),
 			"nutanix_foundation_central_imaged_node_details":  dataSourceFCImagedNodeDetails(),
 			"nutanix_vpc":                                     dataSourceNutanixVPC(),
-			"nutanix_vpc_list":                                dataSourceNutanixVPCList(),
+			"nutanix_vpcs":                                    dataSourceNutanixVPCs(),
 			"nutanix_pbr":                                     dataSourceNutanixPbr(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
