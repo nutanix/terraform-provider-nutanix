@@ -306,9 +306,9 @@ func resourceNutanixVPCUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		subsList := make([]*v3.ExternalSubnetList, len(extnames))
 		for k, v := range extnames {
 			subs := &v3.ExternalSubnetList{}
-			subResp, err := findSubnetByName(conn, v.(string), nil)
-			if err != nil {
-				return diag.FromErr(err)
+			subResp, er := findSubnetByName(conn, v.(string), nil)
+			if er != nil {
+				return diag.FromErr(er)
 			}
 			subs.ExternalSubnetReference = buildReference(*subResp.Metadata.UUID, "subnet")
 			subsList[k] = subs
