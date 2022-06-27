@@ -2,9 +2,12 @@ package nutanix
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 )
 
 func dataSourceNutanixVPC() *schema.Resource {
@@ -12,15 +15,17 @@ func dataSourceNutanixVPC() *schema.Resource {
 		ReadContext: dataSourceNutanixVPCRead,
 		Schema: map[string]*schema.Schema{
 			"vpc_uuid": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"vpc_name"},
 			},
-
+			"vpc_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"vpc_uuid"},
+			},
 			//  Computed attributes
-			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+
 			"api_version": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -213,15 +218,27 @@ func dataSourceNutanixVPC() *schema.Resource {
 func dataSourceNutanixVPCRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).API
 
-	vpcUUID, vpcOk := d.GetOk("vpc_uuid")
+	uuid, iok := d.GetOk("vpc_uuid")
+	name, nok := d.GetOk("vpc_name")
 
-	if !vpcOk {
-		return diag.Errorf("please provide `vpc_uuid`")
+	if !iok && !nok {
+		return diag.Errorf("please provide one of vpc_uuid or vpc_name attributes")
 	}
 
-	resp, err := conn.V3.GetVPC(ctx, vpcUUID.(string))
-	if err != nil {
-		return diag.FromErr(err)
+	var reqErr error
+	var resp *v3.VPCIntentResponse
+
+	if iok {
+		resp, reqErr = findVPCByUUID(ctx, conn, uuid.(string))
+	} else {
+		resp, reqErr = findVPCByName(ctx, conn, name.(string))
+	}
+
+	if reqErr != nil {
+		if strings.Contains(fmt.Sprint(reqErr), "ENTITY_NOT_FOUND") {
+			d.SetId("")
+		}
+		return diag.Errorf("error reading user with error %s", reqErr)
 	}
 
 	m, _ := setRSEntityMetadata(resp.Metadata)
@@ -245,4 +262,35 @@ func dataSourceNutanixVPCRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.SetId(*resp.Metadata.UUID)
 
 	return nil
+}
+
+func findVPCByUUID(ctx context.Context, conn *v3.Client, uuid string) (*v3.VPCIntentResponse, error) {
+	return conn.V3.GetVPC(ctx, uuid)
+}
+
+func findVPCByName(ctx context.Context, conn *v3.Client, name string) (*v3.VPCIntentResponse, error) {
+	filter := fmt.Sprintf("name==%s", name)
+	resp, err := conn.V3.ListAllVPC(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	entities := resp.Entities
+
+	found := make([]*v3.VPCIntentResponse, 0)
+	for _, v := range entities {
+		if *v.Status.Name == name {
+			found = append(found, v)
+		}
+	}
+
+	if len(found) > 1 {
+		return nil, fmt.Errorf("your query returned more than one result. Please use uuid argument instead")
+	}
+
+	if len(found) == 0 {
+		return nil, fmt.Errorf("user with the given name, not found")
+	}
+
+	return findVPCByUUID(ctx, conn, *found[0].Metadata.UUID)
 }
