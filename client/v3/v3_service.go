@@ -136,6 +136,7 @@ type Service interface {
 	DeleteFloatingIP(ctx context.Context, uuid string) (*DeleteResponse, error)
 	UpdateFloatingIP(ctx context.Context, uuid string, body *FIPIntentInput) (*FloatingIPsIntentResponse, error)
 	ListFloatingIPs(ctx context.Context, getRequest *DSMetadata) (*FloatingIPsListIntentResponse, error)
+	ListAllFloatingIPs(ctx context.Context, filter string) (*FloatingIPsListIntentResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -2712,4 +2713,45 @@ func (op Operations) UpdateFloatingIP(ctx context.Context, uuid string, body *FI
 	}
 
 	return fIPIntentResponse, op.client.Do(ctx, req, fIPIntentResponse)
+}
+
+func (op Operations) ListAllFloatingIPs(ctx context.Context, filter string) (*FloatingIPsListIntentResponse, error) {
+	entities := make([]*FloatingIPsIntentResponse, 0)
+
+	resp, err := op.ListFloatingIPs(ctx, &DSMetadata{
+		Filter: &filter,
+		Kind:   utils.StringPtr("floating_ip"),
+		Length: utils.Int64Ptr(itemsPerPage),
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	totalEntities := utils.Int64Value(resp.Metadata.TotalMatches)
+	remaining := totalEntities
+	offset := utils.Int64Value(resp.Metadata.Offset)
+
+	if totalEntities > itemsPerPage {
+		for hasNext(&remaining) {
+			resp, err = op.ListFloatingIPs(ctx, &DSMetadata{
+				Filter: &filter,
+				Kind:   utils.StringPtr("floating_ip"),
+				Length: utils.Int64Ptr(itemsPerPage),
+				Offset: utils.Int64Ptr(offset),
+			})
+
+			if err != nil {
+				return nil, err
+			}
+
+			entities = append(entities, resp.Entities...)
+
+			offset += itemsPerPage
+		}
+
+		resp.Entities = entities
+	}
+
+	return resp, nil
 }
