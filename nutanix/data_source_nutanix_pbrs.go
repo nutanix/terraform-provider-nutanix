@@ -197,6 +197,14 @@ func dataSourceNutanixPbrs() *schema.Resource {
 																Type:     schema.TypeString,
 																Computed: true,
 															},
+															"service_ip_list": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																Elem: &schema.Schema{
+																	Type: schema.TypeString,
+																},
+															},
 														},
 													},
 												},
@@ -334,6 +342,14 @@ func dataSourceNutanixPbrs() *schema.Resource {
 															"action": {
 																Type:     schema.TypeString,
 																Computed: true,
+															},
+															"service_ip_list": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																Elem: &schema.Schema{
+																	Type: schema.TypeString,
+																},
 															},
 														},
 													},
