@@ -172,7 +172,7 @@ func TestAccNutanixPbr_WithProtocolICMP(t *testing.T) {
 }
 
 func TestAccNutanixPbr_WithProtocolNumber(t *testing.T) {
-	r := randIntBetween(21, 35)
+	r := randIntBetween(21, 40)
 	pbrName := fmt.Sprintf("acctest-managed-%d", r)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
