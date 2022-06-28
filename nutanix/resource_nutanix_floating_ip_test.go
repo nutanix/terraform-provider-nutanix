@@ -29,7 +29,7 @@ func TestAccNutanixFloatingIP_basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixFloatingIP_WithVPC(t *testing.T) {
+func TestAccNutanixFloatingIP_WithVPCUUID(t *testing.T) {
 	r := randIntBetween(31, 40)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -37,10 +37,29 @@ func TestAccNutanixFloatingIP_WithVPC(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixFloatingIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixFloatingIPConfigWithVpc(r),
+				Config: testAccNutanixFloatingIPConfigWithVpcUUID(r),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameFloatingIP, "external_subnet_reference_uuid"),
 					resource.TestCheckResourceAttrSet(resourceNameFloatingIP, "vpc_reference_uuid"),
+					resource.TestCheckResourceAttr(resourceNameFloatingIP, "private_ip", "10.3.3.6"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNutanixFloatingIP_WithVPCName(t *testing.T) {
+	r := randIntBetween(35, 50)
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixFloatingIPDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixFloatingIPConfigWithVpcName(r),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNameFloatingIP, "external_subnet_reference_uuid"),
+					resource.TestCheckResourceAttr(resourceNameFloatingIP, "vpc_reference_name", fmt.Sprintf("acctest-vpc-%d", r)),
 					resource.TestCheckResourceAttr(resourceNameFloatingIP, "private_ip", "10.3.3.6"),
 				),
 			},
@@ -97,7 +116,7 @@ func testAccNutanixFloatingIPConfig(r int) string {
 	`, r)
 }
 
-func testAccNutanixFloatingIPConfigWithVpc(r int) string {
+func testAccNutanixFloatingIPConfigWithVpcUUID(r int) string {
 	return fmt.Sprintf(`
 
 	data "nutanix_clusters" "clusters" {}
@@ -144,6 +163,61 @@ func testAccNutanixFloatingIPConfigWithVpc(r int) string {
 		external_subnet_reference_uuid = resource.nutanix_subnet.sub-test.id
 		vpc_reference_uuid= resource.nutanix_vpc.test-vpc.id
 		private_ip = "10.3.3.6"
+	}
+	`, r)
+}
+
+func testAccNutanixFloatingIPConfigWithVpcName(r int) string {
+	return fmt.Sprintf(`
+
+	data "nutanix_clusters" "clusters" {}
+	
+	locals {
+		cluster1 = [
+		for cluster in data.nutanix_clusters.clusters.entities :
+		cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+		][0]
+	}
+	
+	resource "nutanix_subnet" "sub-test" {
+		cluster_uuid = local.cluster1
+		name        = "acctest-managed-%[1]d"
+		description = "Description of my unit test VLAN"
+		vlan_id     = %[1]d
+		subnet_type = "VLAN"
+		subnet_ip          = "10.250.140.0"
+	  default_gateway_ip = "10.250.140.1"
+	  prefix_length = 24
+	  is_external = true
+	  ip_config_pool_list_ranges = ["10.250.140.10 10.250.140.20"]
+	}
+
+	resource "nutanix_vpc" "test-vpc" {
+		name = "acctest-vpc-%[1]d"
+	  
+	  
+		external_subnet_reference_uuid = [
+		  resource.nutanix_subnet.sub-test.id
+		]
+	  
+		common_domain_name_server_ip_list{
+				ip = "8.8.8.9"
+		}
+	  
+		externally_routable_prefix_list{
+		  ip=  "172.31.0.0"
+		  prefix_length= 16
+		}
+	}
+
+	resource "nutanix_floating_ip" "acctest-managed" {
+		external_subnet_reference_uuid = resource.nutanix_subnet.sub-test.id
+		vpc_reference_name = resource.nutanix_vpc.test-vpc.name
+		private_ip = "10.3.3.6"
+
+		depends_on = [
+			resource.nutanix_vpc.test-vpc
+		]
 	}
 	`, r)
 }

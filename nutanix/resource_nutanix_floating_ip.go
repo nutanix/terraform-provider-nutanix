@@ -27,18 +27,34 @@ func resourceNutanixFloatingIP() *schema.Resource {
 		DeleteContext: resourceNutanixFloatingIPDelete,
 		Schema: map[string]*schema.Schema{
 			"external_subnet_reference_uuid": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				Computed:      true,
+				ConflictsWith: []string{"external_subnet_reference_name"},
+			},
+			"external_subnet_reference_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"external_subnet_reference_uuid"},
 			},
 			"vm_nic_reference_uuid": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"vpc_reference_uuid": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				RequiredWith: []string{"private_ip"},
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				RequiredWith:  []string{"private_ip"},
+				ConflictsWith: []string{"vpc_reference_name"},
+			},
+			"vpc_reference_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				RequiredWith:  []string{"private_ip"},
+				ConflictsWith: []string{"vpc_reference_uuid"},
 			},
 			"private_ip": {
 				Type:     schema.TypeString,
@@ -75,11 +91,32 @@ func resourceNutanixFloatingIPCreate(ctx context.Context, d *schema.ResourceData
 	if extSub, eok := d.GetOk("external_subnet_reference_uuid"); eok {
 		res.ExternalSubnetReference = buildReference(extSub.(string), "subnet")
 	}
+
+	if extSubName, eok := d.GetOk("external_subnet_reference_name"); eok {
+
+		extResp, er := findSubnetByName(conn, extSubName.(string), nil)
+		if er != nil {
+			return diag.FromErr(er)
+		}
+
+		res.ExternalSubnetReference = buildReference(*extResp.Metadata.UUID, "subnet")
+	}
+
 	if vmNic, vok := d.GetOk("vm_nic_reference_uuid"); vok {
 		res.VMNICReference = buildReference(vmNic.(string), "vm_nic")
 	}
+
 	if vpc, ok := d.GetOk("vpc_reference_uuid"); ok {
 		res.VPCReference = buildReference(vpc.(string), "vpc")
+	}
+
+	if vpcName, ok := d.GetOk("vpc_reference_name"); ok {
+
+		vpcResp, ver := findVPCByName(ctx, conn, vpcName.(string))
+		if ver != nil {
+			return diag.FromErr(ver)
+		}
+		res.VPCReference = buildReference(*vpcResp.Metadata.UUID, "vpc")
 	}
 
 	if pri, pok := d.GetOk("private_ip"); pok {
@@ -184,7 +221,25 @@ func resourceNutanixFloatingIPUpdate(ctx context.Context, d *schema.ResourceData
 
 	if d.HasChange("external_subnet_reference_uuid") {
 		_, n := d.GetChange("external_subnet_reference_uuid")
-		res.ExternalSubnetReference = buildReference(n.(string), "subnet")
+		if len(n.(string)) > 0 {
+			res.ExternalSubnetReference = buildReference(n.(string), "subnet")
+		} else {
+			res.ExternalSubnetReference = nil
+		}
+	}
+
+	if d.HasChange("external_subnet_reference_name") {
+		_, n := d.GetChange("external_subnet_reference_name")
+
+		if len(n.(string)) > 0 {
+			extResp, er := findSubnetByName(conn, n.(string), nil)
+			if er != nil {
+				return diag.FromErr(er)
+			}
+			res.ExternalSubnetReference = buildReference(*extResp.Metadata.UUID, "subnet")
+		} else {
+			res.ExternalSubnetReference = nil
+		}
 	}
 
 	if d.HasChange("vm_nic_reference_uuid") {
@@ -194,7 +249,26 @@ func resourceNutanixFloatingIPUpdate(ctx context.Context, d *schema.ResourceData
 
 	if d.HasChange("vpc_reference_uuid") {
 		_, vpc := d.GetChange("vpc_reference_uuid")
-		res.VPCReference = expandUpdateReference(vpc.(string), "vpc")
+
+		if len(vpc.(string)) > 0 {
+			res.VPCReference = expandUpdateReference(vpc.(string), "vpc")
+		} else {
+			res.VPCReference = nil
+		}
+	}
+
+	if d.HasChange("vpc_reference_name") {
+		_, vpc := d.GetChange("vpc_reference_name")
+
+		if len(vpc.(string)) > 0 {
+			vpcResp, ver := findVPCByName(ctx, conn, vpc.(string))
+			if ver != nil {
+				return diag.FromErr(ver)
+			}
+			res.VPCReference = expandUpdateReference(*vpcResp.Metadata.UUID, "vpc")
+		} else {
+			res.VPCReference = nil
+		}
 	}
 
 	if d.HasChange("private_ip") {
