@@ -207,6 +207,25 @@ func TestAccNutanixPbr_WithProtocolNumber(t *testing.T) {
 	})
 }
 
+func TestAccNutanixPbr_WithVPCName(t *testing.T) {
+	r := randIntBetween(50, 65)
+	pbrName := fmt.Sprintf("acctest-managed-%d", r)
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixPbrConfigWithVpcName(r),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNamePbr, "name", pbrName),
+					resource.TestCheckResourceAttr(resourceNamePbr, "protocol_type", "ALL"),
+					resource.TestCheckResourceAttr(resourceNamePbr, "priority", fmt.Sprintf("%d", r)),
+				),
+			},
+		},
+	})
+}
+
 func testAccNutanixPbrConfig(r int) string {
 	return fmt.Sprintf(`
 
@@ -595,6 +614,65 @@ func testAccNutanixPbrConfigWithSourceAnyDestinationAnyWithProtocolNumber(r int)
 			protocol_number= "50"
 		}
 		action = "DENY"
+	}
+	`, r)
+}
+
+func testAccNutanixPbrConfigWithVpcName(r int) string {
+	return fmt.Sprintf(`
+
+	data "nutanix_clusters" "clusters" {}
+	
+	locals {
+		cluster1 = [
+		for cluster in data.nutanix_clusters.clusters.entities :
+		cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+		][0]
+	}
+	
+	resource "nutanix_subnet" "sub-test" {
+		cluster_uuid = local.cluster1
+		name        = "acctest-managed-%[1]d"
+		description = "Description of my unit test VLAN"
+		vlan_id     = %[1]d
+		subnet_type = "VLAN"
+		subnet_ip          = "10.250.140.0"
+	  default_gateway_ip = "10.250.140.1"
+	  prefix_length = 24
+	  is_external = true
+	  ip_config_pool_list_ranges = ["10.250.140.10 10.250.140.20"]
+	}
+
+	resource "nutanix_vpc" "test-vpc" {
+		name = "acctest-vpc-%[1]d"
+	  
+	  
+		external_subnet_reference_uuid = [
+		  resource.nutanix_subnet.sub-test.id
+		]
+	  
+		common_domain_name_server_ip_list{
+				ip = "8.8.8.9"
+		}
+	  
+		externally_routable_prefix_list{
+		  ip=  "172.31.0.0"
+		  prefix_length= 16
+		}
+	  }
+
+	resource "nutanix_pbr" "acctest-managed" {
+		name = "acctest-managed-%[1]d"
+		priority = %[1]d
+		protocol_type = "ALL"
+		action = "PERMIT"
+		vpc_name = resource.nutanix_vpc.test-vpc.name
+		source{
+		  address_type = "ALL"
+		}
+		destination{
+		  address_type = "ALL"
+		}
 	}
 	`, r)
 }
