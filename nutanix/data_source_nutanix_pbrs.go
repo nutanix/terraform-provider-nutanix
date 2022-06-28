@@ -105,6 +105,14 @@ func dataSourceNutanixPbrs() *schema.Resource {
 																Type:     schema.TypeString,
 																Computed: true,
 															},
+															"subnet_ip": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"prefix_length": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
 														},
 													},
 												},
@@ -116,6 +124,14 @@ func dataSourceNutanixPbrs() *schema.Resource {
 															"address_type": {
 																Type:     schema.TypeString,
 																Computed: true,
+															},
+															"subnet_ip": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"prefix_length": {
+																Type:     schema.TypeInt,
+																Optional: true,
 															},
 														},
 													},
@@ -267,6 +283,14 @@ func dataSourceNutanixPbrs() *schema.Resource {
 																Type:     schema.TypeString,
 																Computed: true,
 															},
+															"subnet_ip": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"prefix_length": {
+																Type:     schema.TypeInt,
+																Optional: true,
+															},
 														},
 													},
 												},
@@ -278,6 +302,14 @@ func dataSourceNutanixPbrs() *schema.Resource {
 															"address_type": {
 																Type:     schema.TypeString,
 																Computed: true,
+															},
+															"subnet_ip": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+															"prefix_length": {
+																Type:     schema.TypeInt,
+																Optional: true,
 															},
 														},
 													},
