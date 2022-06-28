@@ -93,7 +93,6 @@ func resourceNutanixFloatingIPCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if extSubName, eok := d.GetOk("external_subnet_reference_name"); eok {
-
 		extResp, er := findSubnetByName(conn, extSubName.(string), nil)
 		if er != nil {
 			return diag.FromErr(er)
@@ -111,7 +110,6 @@ func resourceNutanixFloatingIPCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	if vpcName, ok := d.GetOk("vpc_reference_name"); ok {
-
 		vpcResp, ver := findVPCByName(ctx, conn, vpcName.(string))
 		if ver != nil {
 			return diag.FromErr(ver)
