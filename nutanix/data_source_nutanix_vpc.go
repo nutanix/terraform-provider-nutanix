@@ -289,7 +289,7 @@ func findVPCByName(ctx context.Context, conn *v3.Client, name string) (*v3.VPCIn
 	}
 
 	if len(found) == 0 {
-		return nil, fmt.Errorf("user with the given name, not found")
+		return nil, fmt.Errorf("vpc with the given name, not found")
 	}
 
 	return findVPCByUUID(ctx, conn, *found[0].Metadata.UUID)
