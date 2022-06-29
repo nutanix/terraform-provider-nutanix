@@ -2652,7 +2652,6 @@ func (op Operations) ListAllPBR(ctx context.Context, filter string) (*PbrListInt
 	}
 
 	return resp, nil
-
 }
 
 func (op Operations) GetStaticRoute(ctx context.Context, uuid string) (*StaticRouteIntentResponse, error) {
