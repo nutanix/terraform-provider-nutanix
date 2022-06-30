@@ -25,18 +25,41 @@ resource "nutanix_static_routes" "scn" {
 }
 ```
 
+
+## create one static route with default route for vpc with external subnet
+
+```hcl
+resource "nutanix_static_routes" "scn" {
+  vpc_uuid = "{{vpc_uuid}}"
+
+  static_routes_list{
+    destination= "10.x.x.x/x"
+    external_subnet_reference_uuid = "{{ext_subnet_uuid}}" 
+  }
+  default_route_nexthop{
+	  external_subnet_reference_uuid = "{{ext_subnet_uuid}}"
+  }
+}
+```
+
+#### Note: destination with 0.0.0.0/0 will be default route. 
+
 ## Argument Reference
 
 The following arguments are supported:
 
 *`vpc_uuid` - (Required) Reference to a VPC .
-*`static_routes_list` - (Required) Static Routes. 
+*`static_routes_list` - (Optional) Static Routes. 
+* `default_route_nexthop`- (Optional) Default Route
 
-## static_routes_list
+### static_routes_list
 
 *`destination` - (Required) Destination ip with prefix. 
 *`external_subnet_reference_uuid` - (Required) Reference to a subnet.
 
+
+### default_route_nexthop
+*`external_subnet_reference_uuid` - (Required) Reference to a subnet.
 
 ## Attributes Reference
 

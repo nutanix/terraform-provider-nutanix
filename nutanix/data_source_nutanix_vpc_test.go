@@ -18,7 +18,7 @@ func TestAccNutanixVPCDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"data.nutanix_vpc.test", "spec.0.resources.0.externally_routable_prefix_list.0.prefix_length", "16"),
 					resource.TestCheckResourceAttr(
-						"data.nutanix_vpc.test", "spec.0.resources.0.externally_routable_prefix_list.0.ip", "172.31.0.0"),
+						"data.nutanix_vpc.test", "spec.0.resources.0.externally_routable_prefix_list.0.ip", "172.32.0.0"),
 					resource.TestCheckResourceAttr(
 						"data.nutanix_vpc.test", "spec.0.resources.0.common_domain_name_server_ip_list.0.ip", "8.8.8.9"),
 				),
@@ -64,7 +64,7 @@ resource "nutanix_vpc" "test" {
 	}
   
 	externally_routable_prefix_list{
-	  ip=  "172.31.0.0"
+	  ip=  "172.32.0.0"
 	  prefix_length= 16
 	}
   }
