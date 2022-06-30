@@ -2,6 +2,9 @@ package nutanix
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"log"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -38,7 +41,43 @@ func resourceNutanixStaticRoute() *schema.Resource {
 						},
 						"external_subnet_reference_uuid": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
+						},
+						"direct_connect_virtual_interface_reference_uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"local_subnet_reference_uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"vpn_connection_reference_uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"default_route_nexthop": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"external_subnet_reference_uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"direct_connect_virtual_interface_reference_uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"local_subnet_reference_uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"vpn_connection_reference_uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
@@ -99,6 +138,10 @@ func resourceNutanixStaticRouteCreate(ctx context.Context, d *schema.ResourceDat
 		res.StaticRoutesList = expandStaticRouteList(stat)
 	}
 
+	if def, ok := d.GetOk("default_route_nexthop"); ok {
+		res.DefaultRouteNexthop = expandDefaultRoute(def)
+	}
+
 	spec.Resources = res
 	request.Spec = spec
 	request.Metadata = metadata
@@ -146,6 +189,7 @@ func resourceNutanixStaticRouteRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("api_version", resp.APIVersion)
 	d.Set("vpc_uuid", d.Id())
 	d.Set("static_routes_list", flattenStaticRouteList(resp.Spec.Resources.StaticRoutesList))
+	d.Set("default_route_nexthop", flattendefaultRouteList(resp.Spec.Resources.DefaultRouteNexthop))
 	return nil
 }
 
@@ -182,6 +226,10 @@ func resourceNutanixStaticRouteUpdate(ctx context.Context, d *schema.ResourceDat
 
 	if d.HasChange("static_routes_list") {
 		res.StaticRoutesList = expandStaticRouteList(d.Get("static_routes_list"))
+	}
+
+	if d.HasChange("default_route_nexthop") {
+		res.DefaultRouteNexthop = expandDefaultRoute(d.Get("default_route_nexthop"))
 	}
 
 	spec.Resources = res
@@ -225,19 +273,33 @@ func expandStaticRouteList(pr interface{}) []*v3.StaticRoutesList {
 		for k, val := range prI {
 			stat := &v3.StaticRoutesList{}
 			v := val.(map[string]interface{})
-
+			nexthop := &v3.NextHop{}
 			if v1, ok1 := v["destination"]; ok1 {
 				stat.Destination = utils.StringPtr(v1.(string))
 			}
-			if v, ok := v["external_subnet_reference_uuid"]; ok {
-				nexthop := &v3.NextHop{}
-
+			if v, ok := v["external_subnet_reference_uuid"]; ok && len(v.(string)) > 0 {
+				log.Println("HELLLLLOOOOOO1111")
 				nexthop.ExternalSubnetReference = buildReference(v.(string), "subnet")
-
-				stat.NextHop = nexthop
 			}
+			if v, ok := v["direct_connect_virtual_interface_reference_uuid"]; ok && len(v.(string)) > 0 {
+				log.Println("HELLLLLOOO22222")
+				nexthop.DirectConnectVirtualInterfaceReference = buildReference(v.(string), "direct_connect_virtual_interface")
+			}
+			if v, ok := v["local_subnet_reference_uuid"]; ok && len(v.(string)) > 0 {
+				log.Println("HELLLLLOOOOOO33333")
+				nexthop.LocalSubnetReference = buildReference(v.(string), "subnet")
+			}
+			if v, ok := v["vpn_connection_reference_uuid"]; ok && len(v.(string)) > 0 {
+				log.Println("HELLLLLOO444")
+				nexthop.VpnConnectionReference = buildReference(v.(string), "vpn_connection")
+			}
+
+			stat.NextHop = nexthop
 			prList[k] = stat
 		}
+		log.Println("HELLLLLOOOOOO")
+		aJSON, _ := json.Marshal(prList)
+		fmt.Printf("JSON Print - \n%s\n", string(aJSON))
 		return prList
 	}
 	return nil
@@ -251,11 +313,73 @@ func flattenStaticRouteList(stat []*v3.StaticRoutesList) []map[string]interface{
 			stats := make(map[string]interface{})
 
 			stats["destination"] = v.Destination
-			stats["external_subnet_reference_uuid"] = v.NextHop.ExternalSubnetReference.UUID
+			if v.NextHop.ExternalSubnetReference != nil {
+				stats["external_subnet_reference_uuid"] = v.NextHop.ExternalSubnetReference.UUID
+			}
+			if v.NextHop.DirectConnectVirtualInterfaceReference != nil {
+				stats["direct_connect_virtual_interface_reference_uuid"] = v.NextHop.DirectConnectVirtualInterfaceReference.UUID
+			}
+			if v.NextHop.LocalSubnetReference != nil {
+				stats["local_subnet_reference_uuid"] = v.NextHop.LocalSubnetReference.UUID
+			}
+			if v.NextHop.VpnConnectionReference != nil {
+				stats["vpn_connection_reference_uuid"] = v.NextHop.VpnConnectionReference.UUID
+			}
 
 			statList[k] = stats
 		}
 		return statList
 	}
 	return nil
+}
+
+func expandDefaultRoute(pr interface{}) *v3.NextHop {
+	prI := pr.([]interface{})
+	if len(prI) > 0 {
+		nexthop := &v3.NextHop{}
+		v := prI[0].(map[string]interface{})
+		if v, ok := v["external_subnet_reference_uuid"]; ok && len(v.(string)) > 0 {
+
+			nexthop.ExternalSubnetReference = buildReference(v.(string), "subnet")
+		}
+		if v, ok := v["direct_connect_virtual_interface_reference_uuid"]; ok && len(v.(string)) > 0 {
+
+			nexthop.DirectConnectVirtualInterfaceReference = buildReference(v.(string), "direct_connect_virtual_interface")
+
+		}
+		if v, ok := v["local_subnet_reference_uuid"]; ok && len(v.(string)) > 0 {
+
+			nexthop.LocalSubnetReference = buildReference(v.(string), "subnet")
+
+		}
+		if v, ok := v["vpn_connection_reference_uuid"]; ok && len(v.(string)) > 0 {
+
+			nexthop.VpnConnectionReference = buildReference(v.(string), "vpn_connection")
+
+		}
+		return nexthop
+	}
+	return nil
+}
+
+func flattendefaultRouteList(pr *v3.NextHop) []map[string]interface{} {
+	defList := make([]map[string]interface{}, 0)
+	if pr != nil {
+		defRoute := make(map[string]interface{})
+		if pr.ExternalSubnetReference != nil {
+			defRoute["external_subnet_reference_uuid"] = pr.ExternalSubnetReference.UUID
+		}
+		if pr.DirectConnectVirtualInterfaceReference != nil {
+			defRoute["direct_connect_virtual_interface_reference_uuid"] = pr.DirectConnectVirtualInterfaceReference.UUID
+		}
+		if pr.LocalSubnetReference != nil {
+			defRoute["local_subnet_reference_uuid"] = pr.LocalSubnetReference.UUID
+		}
+		if pr.VpnConnectionReference != nil {
+			defRoute["vpn_connection_reference_uuid"] = pr.VpnConnectionReference.UUID
+		}
+
+		defList = append(defList, defRoute)
+	}
+	return defList
 }

@@ -119,7 +119,7 @@ func testAccNutanixVpcConfig(r int) string {
 		}
 	  
 		externally_routable_prefix_list{
-		  ip=  "172.31.0.0"
+		  ip=  "172.30.0.0"
 		  prefix_length= 16
 		}
 	  }
