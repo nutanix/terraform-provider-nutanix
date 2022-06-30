@@ -2,9 +2,6 @@ package nutanix
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"log"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -278,28 +275,21 @@ func expandStaticRouteList(pr interface{}) []*v3.StaticRoutesList {
 				stat.Destination = utils.StringPtr(v1.(string))
 			}
 			if v, ok := v["external_subnet_reference_uuid"]; ok && len(v.(string)) > 0 {
-				log.Println("HELLLLLOOOOOO1111")
 				nexthop.ExternalSubnetReference = buildReference(v.(string), "subnet")
 			}
 			if v, ok := v["direct_connect_virtual_interface_reference_uuid"]; ok && len(v.(string)) > 0 {
-				log.Println("HELLLLLOOO22222")
 				nexthop.DirectConnectVirtualInterfaceReference = buildReference(v.(string), "direct_connect_virtual_interface")
 			}
 			if v, ok := v["local_subnet_reference_uuid"]; ok && len(v.(string)) > 0 {
-				log.Println("HELLLLLOOOOOO33333")
 				nexthop.LocalSubnetReference = buildReference(v.(string), "subnet")
 			}
 			if v, ok := v["vpn_connection_reference_uuid"]; ok && len(v.(string)) > 0 {
-				log.Println("HELLLLLOO444")
 				nexthop.VpnConnectionReference = buildReference(v.(string), "vpn_connection")
 			}
 
 			stat.NextHop = nexthop
 			prList[k] = stat
 		}
-		log.Println("HELLLLLOOOOOO")
-		aJSON, _ := json.Marshal(prList)
-		fmt.Printf("JSON Print - \n%s\n", string(aJSON))
 		return prList
 	}
 	return nil
@@ -339,23 +329,16 @@ func expandDefaultRoute(pr interface{}) *v3.NextHop {
 		nexthop := &v3.NextHop{}
 		v := prI[0].(map[string]interface{})
 		if v, ok := v["external_subnet_reference_uuid"]; ok && len(v.(string)) > 0 {
-
 			nexthop.ExternalSubnetReference = buildReference(v.(string), "subnet")
 		}
 		if v, ok := v["direct_connect_virtual_interface_reference_uuid"]; ok && len(v.(string)) > 0 {
-
 			nexthop.DirectConnectVirtualInterfaceReference = buildReference(v.(string), "direct_connect_virtual_interface")
-
 		}
 		if v, ok := v["local_subnet_reference_uuid"]; ok && len(v.(string)) > 0 {
-
 			nexthop.LocalSubnetReference = buildReference(v.(string), "subnet")
-
 		}
 		if v, ok := v["vpn_connection_reference_uuid"]; ok && len(v.(string)) > 0 {
-
 			nexthop.VpnConnectionReference = buildReference(v.(string), "vpn_connection")
-
 		}
 		return nexthop
 	}
