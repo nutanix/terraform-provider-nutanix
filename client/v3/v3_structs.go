@@ -2746,7 +2746,11 @@ type PbrListIntentResponse struct {
 }
 
 type NextHop struct {
-	ExternalSubnetReference *Reference `json:"external_subnet_reference,omitempty"`
+	ExternalSubnetReference                *Reference `json:"external_subnet_reference,omitempty"`
+	LocalSubnetReference                   *Reference `json:"local_subnet_reference,omitempty"`
+	DirectConnectVirtualInterfaceReference *Reference `json:"direct_connect_virtual_interface_reference,omitempty"`
+	NexthopIPAddress                       *string    `json:"nexthop_ip_address,omitempty"`
+	VpnConnectionReference                 *Reference `json:"vpn_connection_reference,omitempty"`
 }
 
 type StaticRoutesList struct {
@@ -2757,7 +2761,11 @@ type StaticRoutesList struct {
 }
 
 type StaticRouteResources struct {
-	StaticRoutesList []*StaticRoutesList `json:"static_routes_list,omitempty"`
+	StaticRoutesList    []*StaticRoutesList `json:"static_routes_list,omitempty"`
+	DefaultRouteNexthop *NextHop            `json:"default_route_nexthop,omitempty"`
+	DefaultRoute        *StaticRoutesList   `json:"default_route,omitempty"`
+	LocalRoutesList     []*StaticRoutesList `json:"local_routes_list,omitempty"`
+	DynamicRoutesList   []*StaticRoutesList `json:"dynamic_routes_list,omitempty"`
 }
 
 type StaticRouteSpec struct {

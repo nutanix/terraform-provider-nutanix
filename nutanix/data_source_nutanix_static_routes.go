@@ -46,21 +46,7 @@ func dataSourceNutanixStaticRoute() *schema.Resource {
 										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"nexthop": {
-													Type:     schema.TypeList,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"external_subnet_reference": {
-																Type:     schema.TypeMap,
-																Computed: true,
-																Elem: &schema.Schema{
-																	Type: schema.TypeString,
-																},
-															},
-														},
-													},
-												},
+												"nexthop": NexthopSpecSchemaForDataSource(),
 												"destination": {
 													Type:     schema.TypeString,
 													Computed: true,
@@ -68,6 +54,7 @@ func dataSourceNutanixStaticRoute() *schema.Resource {
 											},
 										},
 									},
+									"default_route_nexthop": NexthopSpecSchemaForDataSource(),
 								},
 							},
 						},
@@ -97,21 +84,70 @@ func dataSourceNutanixStaticRoute() *schema.Resource {
 													Type:     schema.TypeInt,
 													Computed: true,
 												},
-												"nexthop": {
-													Type:     schema.TypeList,
+												"nexthop": NexthopStatusSchemaForDataSource(),
+												"destination": {
+													Type:     schema.TypeString,
 													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"external_subnet_reference": {
-																Type:     schema.TypeMap,
-																Computed: true,
-																Elem: &schema.Schema{
-																	Type: schema.TypeString,
-																},
-															},
-														},
-													},
 												},
+												"is_active": {
+													Type:     schema.TypeBool,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"default_route": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"priority": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+												"nexthop": NexthopStatusSchemaForDataSource(),
+												"destination": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"is_active": {
+													Type:     schema.TypeBool,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"local_routes_list": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"priority": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+												"nexthop": NexthopStatusSchemaForDataSource(),
+												"destination": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"is_active": {
+													Type:     schema.TypeBool,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"dynamic_routes_list": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"priority": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+												"nexthop": NexthopStatusSchemaForDataSource(),
 												"destination": {
 													Type:     schema.TypeString,
 													Computed: true,
@@ -220,6 +256,7 @@ func flattenStaticRouteSpecResources(pr *v3.StaticRouteResources) []interface{} 
 		stats := make(map[string]interface{})
 
 		stats["static_routes_list"] = flattenSpecStaticRouteList(pr.StaticRoutesList)
+		stats["default_route_nexthop"] = flattenNextHop(pr.DefaultRouteNexthop)
 
 		prList = append(prList, stats)
 		return prList
@@ -233,6 +270,9 @@ func flattenStaticRouteStatusResources(pr *v3.StaticRouteResources) []interface{
 		prs := make(map[string]interface{})
 
 		prs["static_routes_list"] = flattenStatusStaticRouteList(pr.StaticRoutesList)
+		prs["default_route"] = flattenStatusDefaultRouteList(pr.DefaultRoute)
+		prs["local_routes_list"] = flattenStatusStaticRouteList(pr.LocalRoutesList)
+		prs["dynamic_routes_list"] = flattenStatusStaticRouteList(pr.DynamicRoutesList)
 		prList = append(prList, prs)
 		return prList
 	}
@@ -250,6 +290,23 @@ func flattenSpecStaticRouteList(sr []*v3.StaticRoutesList) []map[string]interfac
 
 			srList[k] = srs
 		}
+		return srList
+	}
+	return nil
+}
+
+func flattenStatusDefaultRouteList(sr *v3.StaticRoutesList) []map[string]interface{} {
+	srList := make([]map[string]interface{}, 0)
+	if sr != nil {
+		srs := make(map[string]interface{})
+
+		srs["destination"] = sr.Destination
+		srs["nexthop"] = flattenNextHop(sr.NextHop)
+		srs["is_active"] = sr.IsActive
+		srs["priority"] = sr.Priority
+
+		srList = append(srList, srs)
+
 		return srList
 	}
 	return nil
@@ -280,11 +337,109 @@ func flattenNextHop(nh *v3.NextHop) []interface{} {
 	if nh != nil {
 		nhs := make(map[string]interface{})
 
-		nhs["external_subnet_reference"] = flattenReferenceValues(nh.ExternalSubnetReference)
+		if nh.ExternalSubnetReference != nil {
+			nhs["external_subnet_reference"] = flattenReferenceValues(nh.ExternalSubnetReference)
+		}
+		if nh.LocalSubnetReference != nil {
+			nhs["local_subnet_reference"] = flattenReferenceValues(nh.LocalSubnetReference)
+		}
 
+		if nh.DirectConnectVirtualInterfaceReference != nil {
+			nhs["direct_connect_virtual_interface_reference"] = flattenReferenceValues(nh.DirectConnectVirtualInterfaceReference)
+		}
+
+		if nh.VpnConnectionReference != nil {
+			nhs["vpn_connection_reference"] = flattenReferenceValues(nh.DirectConnectVirtualInterfaceReference)
+		}
+
+		if nh.NexthopIPAddress != nil {
+			nhs["nexthop_ip_address"] = nh.NexthopIPAddress
+		}
 		nhList = append(nhList, nhs)
 
 		return nhList
 	}
 	return nil
+}
+
+func NexthopStatusSchemaForDataSource() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"external_subnet_reference": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"direct_connect_virtual_interface_reference": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"local_subnet_reference": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"vpn_connection_reference": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"nexthop_ip_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
+	}
+}
+
+func NexthopSpecSchemaForDataSource() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"external_subnet_reference": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"direct_connect_virtual_interface_reference": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"local_subnet_reference": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"vpn_connection_reference": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+			},
+		},
+	}
 }

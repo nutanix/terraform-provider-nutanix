@@ -49,6 +49,10 @@ The following attributes are exported:
 ### resources
 
 * `static_routes_list` - list of static routes
+* `default_route_nexthop` - default routes (present in spec resource)
+* `default_route` - default route. (present in status resource only )
+* `local_routes_list` - list of local routes (present in status resource only )
+* `dynamic_routes_list` - list of dynamic routes (present in status resource only)
 
 ### static_routes_list
 
@@ -60,6 +64,9 @@ The following attributes are exported:
 ### nexthop 
 
 * `external_subnet_reference` - The reference to a subnet
+* `direct_connect_virtual_interface_reference` - The reference to a direct_connect_virtual_interface
+* `local_subnet_reference` - The reference to a subnet
+* `vpn_connection_reference` - The reference to a vpn_connection
 
 ### Metadata
 
