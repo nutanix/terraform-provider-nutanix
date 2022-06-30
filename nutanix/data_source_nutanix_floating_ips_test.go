@@ -18,8 +18,8 @@ func TestAccNutanixFloatingIPsDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.nutanix_floating_ips.test", "entities.#"),
 					resource.TestCheckResourceAttrSet("data.nutanix_floating_ips.test", "api_version"),
-					resource.TestCheckResourceAttr("data.nutanix_floating_ips.test", "entities.0.spec.0.resources.0.external_subnet_reference.kind", "subnet"),
-					resource.TestCheckResourceAttr("data.nutanix_floating_ips.test", "entities.0.spec.0.resources.0.vpc_reference.kind", "vpc"),
+					resource.TestCheckResourceAttr("data.nutanix_floating_ips.test", "entities.#", "1"),
+					resource.TestCheckResourceAttr("data.nutanix_floating_ips.test", "status.0.resources.0.vm_nic_reference.#", "0"),
 				),
 			},
 		},

@@ -16,8 +16,9 @@ func TestAccNutanixFloatingIPDataSource_basic(t *testing.T) {
 			{
 				Config: testAccFloatingIPDataSourceConfig(r),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.nutanix_floating_ip.test", "spec.0.resources.0.external_subnet_reference.kind", "subnet"),
-					resource.TestCheckResourceAttr("data.nutanix_floating_ip.test", "spec.0.resources.0.vpc_reference.kind", "vpc"),
+					resource.TestCheckResourceAttrSet("data.nutanix_floating_ip.test", "status.0.resources.0.floating_ip"),
+					resource.TestCheckResourceAttrSet("data.nutanix_floating_ip.test", "status.0.state"),
+					resource.TestCheckResourceAttr("data.nutanix_floating_ip.test", "status.0.resources.0.vm_nic_reference.#", "0"),
 				),
 			},
 		},
