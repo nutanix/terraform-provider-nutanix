@@ -12,7 +12,7 @@ Provides Nutanix resource to create Floating IPs.
 
 ## Example Usage
 
-## create one static route for vpc with external subnet
+## create one static route for vpc uuid with external subnet
 
 ```hcl
 resource "nutanix_static_routes" "scn" {
@@ -26,11 +26,11 @@ resource "nutanix_static_routes" "scn" {
 ```
 
 
-## create one static route with default route for vpc with external subnet
+## create one static route with default route for vpc name with external subnet
 
 ```hcl
 resource "nutanix_static_routes" "scn" {
-  vpc_uuid = "{{vpc_uuid}}"
+  vpc_name = "{{vpc_name}}"
 
   static_routes_list{
     destination= "10.x.x.x/x"
@@ -48,8 +48,9 @@ resource "nutanix_static_routes" "scn" {
 
 The following arguments are supported:
 
-*`vpc_uuid` - (Required) Reference to a VPC .
-*`static_routes_list` - (Optional) Static Routes. 
+* `vpc_uuid` - (Required) Reference to a VPC UUID. Should not be used with `vpc_name`.
+* `vpc_name` - (Required) vpc Name. Should not be used with `vpc_uuid`. 
+* `static_routes_list` - (Optional) Static Routes. 
 * `default_route_nexthop`- (Optional) Default Route
 
 ### static_routes_list
@@ -79,3 +80,13 @@ The metadata attribute exports the following:
 * `spec_hash`: - Hash of the spec. This will be returned from server.
 * `name`: - subnet name.
 * `should_force_translate`: - Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
+
+### lifecylce
+
+Static Route can be managed but there is no destroy for resource. To delete the existing route you can remove the `static_route_list` from the `nutanix_static_routes` resource. Therefore, your existing routes created by resource will be deleted.  Refer example below
+
+```hcl
+resource "nutanix_static_routes" "scn" {
+  vpc_uuid = "{{vpc_uuid}}"
+}
+```
