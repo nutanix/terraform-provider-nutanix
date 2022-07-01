@@ -94,8 +94,8 @@ func resourceNutanixStaticRouteCreate(ctx context.Context, d *schema.ResourceDat
 
 	var vpcUUID string
 
-	if vpcId, ok := d.GetOk("vpc_uuid"); ok {
-		vpcUUID = vpcId.(string)
+	if vpcID, ok := d.GetOk("vpc_uuid"); ok {
+		vpcUUID = vpcID.(string)
 	}
 
 	if vpcName, vnok := d.GetOk("vpc_name"); vnok {
