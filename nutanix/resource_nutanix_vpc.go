@@ -45,6 +45,7 @@ func resourceNutanixVPC() *schema.Resource {
 			"external_subnet_reference_uuid": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},

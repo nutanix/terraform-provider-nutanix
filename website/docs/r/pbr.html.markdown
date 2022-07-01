@@ -70,46 +70,46 @@ resource "nutanix_pbr" "pbr2" {
 
 The following arguments are supported:
 
-*`name` - (Required) name of policy.
-*`priority` - (Required) priority of policy.
-*`protocol_type` - (Required) Protocol type of policy based routing. Must be one of {TCP, UDP, ICMP, PROTOCOL_NUMBER, ALL} .
-*`action` - (Required) Routing policy action. Must be one of {DENY, PERMIT, REROUTE} .
-*`service_ip_list` - (Optional) IP addresses of network services. This field is valid only when action is REROUTE.
-*`vpc_reference_uuid` - (Required) The reference to a vpc . Should not be used with {vpc_name} .
-*`vpc_name` - (Required) The reference to a vpc. Should not be used with {vpc_reference_uuid}
-*`is_bidirectional` - (Optional) Additionally create Policy in reverse direction. 
+* `name` - (Required) name of policy
+* `priority` - (Required) priority of policy
+* `protocol_type` - (Required) Protocol type of policy based routing. Must be one of {TCP, UDP, ICMP, PROTOCOL_NUMBER, ALL} .
+* `action` - (Required) Routing policy action. Must be one of {DENY, PERMIT, REROUTE} .
+* `service_ip_list` - (Optional) IP addresses of network services. This field is valid only when action is REROUTE.
+* `vpc_reference_uuid` - (Required) The reference to a vpc . Should not be used with {vpc_name} .
+* `vpc_name` - (Required) The reference to a vpc. Should not be used with {vpc_reference_uuid}
+* `is_bidirectional` - (Optional) Additionally create Policy in reverse direction. Should be used with {TCP, UDP with start and end port ranges and ICMP with icmp code and type}. 
 
 ## source
 source address of an IP packet. This could be either an ip prefix or an address_type . 
 
-*`address` - (Optional) address type of source. Should be one of {INTERNET, ALL}.
-*`subnet_ip` - (Optional) IP subnet provided as an address.
-*`prefix_length` - (Optional) prefix length of provided subnet. 
+* `address` - (Optional) address type of source. Should be one of {INTERNET, ALL}.
+* `subnet_ip` - (Optional) IP subnet provided as an address.
+* `prefix_length` - (Optional) prefix length of provided subnet. 
 
 ## destination
 destination address of an IP packet. This could be either an ip prefix or an address_type . 
 
-*`address` - (Optional) address type of source. Should be one of {INTERNET, ALL}.
-*`subnet_ip` - (Optional) IP subnet provided as an address.
-*`prefix_length` - (Optional) prefix length of provided subnet. 
+* `address` - (Optional) address type of source. Should be one of {INTERNET, ALL}.
+* `subnet_ip` - (Optional) IP subnet provided as an address.
+* `prefix_length` - (Optional) prefix length of provided subnet. 
 
 ## protocol_parameters
 Routing policy IP protocol parameters
 
-*`tcp` - (Optional) TCP parameters in routing policy
-*`udp` - (Optional) UDP parameters in routing policy
-*`icmp` - (Optional) ICMP parameters in routing policy.
-*`protocol_number` - (Optional) Protocol number in routing policy
+* `tcp` - (Optional) TCP parameters in routing policy
+* `udp` - (Optional) UDP parameters in routing policy
+* `icmp` - (Optional) ICMP parameters in routing policy.
+* `protocol_number` - (Optional) Protocol number in routing policy
 
 ## tcp, udp
 
-*`source_port_range` - (Required) Range of TCP/UDP ports.
-*`destination_port_range` - (Required) Range of TCP/UDP ports.
+* `source_port_range` - (Required) Range of TCP/UDP ports.
+* `destination_port_range` - (Required) Range of TCP/UDP ports.
 
 ## source_port_range, destination_port_range
 
-*`start_port` - (Required) start port number
-*`end_port` - (Required) end port number
+* `start_port` - (Required) start port number
+* `end_port` - (Required) end port number
 
 
 ## Attributes Reference

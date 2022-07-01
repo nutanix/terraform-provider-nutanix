@@ -226,6 +226,30 @@ func TestAccNutanixPbr_WithVPCName(t *testing.T) {
 	})
 }
 
+func TestAccNutanixPbr_WithVPCNameAndBidirectional(t *testing.T) {
+	r := randIntBetween(50, 65)
+	pbrName := fmt.Sprintf("acctest-managed-%d", r)
+	vpcName := fmt.Sprintf("acctest-vpc-%d", r)
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixPbrConfigWithVpcNameAndBidirectional(r),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNamePbr, "name", pbrName),
+					resource.TestCheckResourceAttr(resourceNamePbr, "vpc_name", vpcName),
+					resource.TestCheckResourceAttr(resourceNamePbr, "is_bidirectional", "true"),
+					resource.TestCheckResourceAttr(resourceNamePbr, "protocol_type", "TCP"),
+					resource.TestCheckResourceAttr(resourceNamePbr, "priority", fmt.Sprintf("%d", r)),
+					resource.TestCheckResourceAttr(resourceNamePbr, "protocol_parameters.0.tcp.0.destination_port_range_list.#", "2"),
+					resource.TestCheckResourceAttr(resourceNamePbr, "protocol_parameters.0.tcp.0.source_port_range_list.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccNutanixPbrConfig(r int) string {
 	return fmt.Sprintf(`
 
@@ -673,6 +697,86 @@ func testAccNutanixPbrConfigWithVpcName(r int) string {
 		destination{
 		  address_type = "ALL"
 		}
+	}
+	`, r)
+}
+
+func testAccNutanixPbrConfigWithVpcNameAndBidirectional(r int) string {
+	return fmt.Sprintf(`
+
+	data "nutanix_clusters" "clusters" {}
+	
+	locals {
+		cluster1 = [
+		for cluster in data.nutanix_clusters.clusters.entities :
+		cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+		][0]
+	}
+	
+	resource "nutanix_subnet" "sub-test" {
+		cluster_uuid = local.cluster1
+		name        = "acctest-managed-%[1]d"
+		description = "Description of my unit test VLAN"
+		vlan_id     = %[1]d
+		subnet_type = "VLAN"
+		subnet_ip          = "10.250.140.0"
+	  default_gateway_ip = "10.250.140.1"
+	  prefix_length = 24
+	  is_external = true
+	  ip_config_pool_list_ranges = ["10.250.140.10 10.250.140.20"]
+	}
+
+	resource "nutanix_vpc" "test-vpc" {
+		name = "acctest-vpc-%[1]d"
+	  
+	  
+		external_subnet_reference_uuid = [
+		  resource.nutanix_subnet.sub-test.id
+		]
+	  
+		common_domain_name_server_ip_list{
+				ip = "8.8.8.9"
+		}
+	  
+		externally_routable_prefix_list{
+		  ip=  "172.31.0.0"
+		  prefix_length= 16
+		}
+	  }
+
+	resource "nutanix_pbr" "acctest-managed" {
+		name = "acctest-managed-%[1]d"
+		priority = %[1]d
+		protocol_type = "TCP"
+		action = "PERMIT"
+		vpc_name = resource.nutanix_vpc.test-vpc.name
+		source{
+		  address_type = "ALL"
+		}
+		destination{
+		  address_type = "ALL"
+		}
+		protocol_parameters{
+			tcp{
+				source_port_range_list{
+					end_port  = 40
+					start_port = 30
+				}
+				destination_port_range_list{
+					end_port  = 60
+					start_port = 50
+				}
+				source_port_range_list{
+					end_port  = 70
+					start_port = 65
+				}
+				destination_port_range_list{
+					end_port  = 80
+					start_port = 75
+				}
+			}
+		}
+		is_bidirectional=true
 	}
 	`, r)
 }

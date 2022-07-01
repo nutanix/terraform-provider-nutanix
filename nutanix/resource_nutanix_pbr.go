@@ -651,8 +651,8 @@ func flattenPortRangeList(pr []*v3.PortRange) []map[string]interface{} {
 		res := make([]map[string]interface{}, len(pr))
 		for i, v := range pr {
 			item := make(map[string]interface{})
-			item["end_port"] = v.StartPort
-			item["start_port"] = v.EndPort
+			item["end_port"] = v.EndPort
+			item["start_port"] = v.StartPort
 			res[i] = item
 		}
 		return res
