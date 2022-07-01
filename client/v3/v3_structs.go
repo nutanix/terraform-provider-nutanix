@@ -2592,6 +2592,7 @@ type AddressGroupResponse struct {
 }
 
 type AddressGroupListEntry struct {
+	UUID                   *string            `json:"uuid,omitempty"`
 	AddressGroup           *AddressGroupInput `json:"address_group,omitempty"`
 	AssociatedPoliciesList []*ReferenceValues `json:"associated_policies_list,omitempty"`
 }
