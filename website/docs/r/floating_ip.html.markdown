@@ -34,13 +34,13 @@ resource "nutanix_floating_ip" "fip2" {
 
 The following arguments are supported:
 
-*`external_subnet_reference_uuid` - (Optional) The reference to a subnet. Should not be used with {external_subnet_reference_name} .
-*`external_subnet_reference_name` - (Optional) The reference to a subnet. Should not be used with 
+* `external_subnet_reference_uuid` - (Optional) The reference to a subnet. Should not be used with {external_subnet_reference_name} .
+* `external_subnet_reference_name` - (Optional) The reference to a subnet. Should not be used with 
 {external_subnet_reference_uuid} . 
-*`vm_nic_reference_uuid` - (Optional) The reference to a vm_nic .
-*`vpc_reference_uuid` - (Optional) The reference to a vpc. Should not be used with {vpc_reference_name}.
-*`vpc_reference_name` - (Optional) The reference to a vpc. Should not be used with {vpc_reference_uuid}.
-*`private_ip` - (Optional) Private IP with which floating IP is associated. Should be used with vpc_reference .
+* `vm_nic_reference_uuid` - (Optional) The reference to a vm_nic .
+* `vpc_reference_uuid` - (Optional) The reference to a vpc. Should not be used with {vpc_reference_name}.
+* `vpc_reference_name` - (Optional) The reference to a vpc. Should not be used with {vpc_reference_uuid}.
+* `private_ip` - (Optional) Private IP with which floating IP is associated. Should be used with vpc_reference .
 
 ## Attributes Reference
 
