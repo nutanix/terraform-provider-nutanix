@@ -58,15 +58,15 @@ func dataSourceNutanixAddressGroups() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"uuid": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 						"address_group": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"uuid": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
 									"name": {
 										Type:     schema.TypeString,
 										Required: true,
@@ -162,7 +162,7 @@ func flattenAddressGroup(entries []*v3.AddressGroupListEntry) interface{} {
 				},
 			},
 			"associated_policies_list": flattenReferenceList(entry.AssociatedPoliciesList),
-			"UUID":                     entry.UUID,
+			"uuid":                     entry.UUID,
 		}
 	}
 	return entities
