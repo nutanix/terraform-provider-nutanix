@@ -2745,6 +2745,59 @@ type PbrListIntentResponse struct {
 	Entities   []*PbrIntentResponse `json:"entities"`
 }
 
+type PbrDefStatus struct {
+	State            *string           `json:"state,omitempty" mapstructure:"state,omitempty"`
+	ExecutionContext *ExecutionContext `json:"execution_context,omitempty" mapstructure:"execution_context,omitempty"`
+	Resources        *PbrResources     `json:"resources,omitempty"`
+}
+
+type PbrIntentResponse struct {
+	APIVersion *string `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
+
+	Metadata *Metadata `json:"metadata" mapstructure:"metadata"`
+
+	Spec *PbrSpec `json:"spec" mapstructure:"spec"`
+
+	Status *PbrDefStatus `json:"status"`
+}
+
+type FIPResource struct {
+	ExternalSubnetReference *Reference `json:"external_subnet_reference,omitempty"`
+	VPCReference            *Reference `json:"vpc_reference,omitempty"`
+	VMNICReference          *Reference `json:"vm_nic_reference,omitempty"`
+	PrivateIP               *string    `json:"private_ip,omitempty"`
+	FloatingIP              *string    `json:"floating_ip,omitempty"`
+}
+
+type FloatingIPSpec struct {
+	Resource *FIPResource `json:"resources,omitempty"`
+}
+
+type FIPIntentInput struct {
+	APIVersion *string         `json:"api_version,omitempty"`
+	Metadata   *Metadata       `json:"metadata,omitempty"`
+	Spec       *FloatingIPSpec `json:"spec,omitempty"`
+}
+
+type FloatingIPDefStatus struct {
+	State            *string           `json:"state,omitempty"`
+	ExecutionContext *ExecutionContext `json:"execution_context,omitempty"`
+	Resource         *FIPResource      `json:"resources,omitempty"`
+}
+
+type FloatingIPsIntentResponse struct {
+	APIVersion *string              `json:"api_version,omitempty"`
+	Status     *FloatingIPDefStatus `json:"status,omitempty"`
+	Spec       *FloatingIPSpec      `json:"spec,omitempty"`
+	Metadata   *Metadata            `json:"metadata" mapstructure:"metadata"`
+}
+
+type FloatingIPsListIntentResponse struct {
+	APIVersion *string                      `json:"api_version"`
+	Metadata   *ListMetadataOutput          `json:"metadata"`
+	Entities   []*FloatingIPsIntentResponse `json:"entities"`
+}
+
 type NextHop struct {
 	ExternalSubnetReference                *Reference `json:"external_subnet_reference,omitempty"`
 	LocalSubnetReference                   *Reference `json:"local_subnet_reference,omitempty"`
@@ -2786,23 +2839,6 @@ type StaticRouteIntentInput struct {
 
 	Spec *StaticRouteSpec `json:"spec" mapstructure:"spec"`
 }
-
-type PbrDefStatus struct {
-	State            *string           `json:"state,omitempty" mapstructure:"state,omitempty"`
-	ExecutionContext *ExecutionContext `json:"execution_context,omitempty" mapstructure:"execution_context,omitempty"`
-	Resources        *PbrResources     `json:"resources,omitempty"`
-}
-
-type PbrIntentResponse struct {
-	APIVersion *string `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
-
-	Metadata *Metadata `json:"metadata" mapstructure:"metadata"`
-
-	Spec *PbrSpec `json:"spec" mapstructure:"spec"`
-
-	Status *PbrDefStatus `json:"status"`
-}
-
 type StaticRouteIntentResponse struct {
 	APIVersion *string `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
 
@@ -2811,122 +2847,4 @@ type StaticRouteIntentResponse struct {
 	Spec *StaticRouteSpec `json:"spec" mapstructure:"spec"`
 
 	Status *StaticRouteDefStatus `json:"status"`
-}
-
-type FIPResource struct {
-	ExternalSubnetReference *Reference `json:"external_subnet_reference,omitempty"`
-	VPCReference            *Reference `json:"vpc_reference,omitempty"`
-	VMNICReference          *Reference `json:"vm_nic_reference,omitempty"`
-	PrivateIP               *string    `json:"private_ip,omitempty"`
-	FloatingIP              *string    `json:"floating_ip,omitempty"`
-}
-
-type FloatingIPSpec struct {
-	Resource *FIPResource `json:"resources,omitempty"`
-}
-
-type FIPIntentInput struct {
-	APIVersion *string         `json:"api_version,omitempty"`
-	Metadata   *Metadata       `json:"metadata,omitempty"`
-	Spec       *FloatingIPSpec `json:"spec,omitempty"`
-}
-
-type FloatingIPDefStatus struct {
-	State            *string           `json:"state,omitempty"`
-	ExecutionContext *ExecutionContext `json:"execution_context,omitempty"`
-	Resource         *FIPResource      `json:"resources,omitempty"`
-}
-
-type FloatingIPsIntentResponse struct {
-	APIVersion *string              `json:"api_version,omitempty"`
-	Status     *FloatingIPDefStatus `json:"status,omitempty"`
-	Spec       *FloatingIPSpec      `json:"spec,omitempty"`
-	Metadata   *Metadata            `json:"metadata" mapstructure:"metadata"`
-}
-
-type FloatingIPsListIntentResponse struct {
-	APIVersion *string                      `json:"api_version"`
-	Metadata   *ListMetadataOutput          `json:"metadata"`
-	Entities   []*FloatingIPsIntentResponse `json:"entities"`
-}
-
-type NextHop struct {
-	ExternalSubnetReference *Reference `json:"external_subnet_reference,omitempty"`
-}
-
-type StaticRoutesList struct {
-	NextHop     *NextHop `json:"nexthop,omitempty"`
-	Destination *string  `json:"destination,omitempty"`
-	Priority    *int64   `json:"priority,omitempty"`
-	IsActive    *bool    `json:"is_active,omitempty"`
-}
-
-type StaticRouteResources struct {
-	StaticRoutesList []*StaticRoutesList `json:"static_routes_list,omitempty"`
-}
-
-type StaticRouteSpec struct {
-	Name      *string               `json:"name,omitempty"`
-	Resources *StaticRouteResources `json:"resources,omitempty"`
-}
-
-type StaticRouteDefStatus struct {
-	State            *string               `json:"state,omitempty"`
-	Resources        *StaticRouteResources `json:"resources,omitempty"`
-	ExecutionContext *ExecutionContext     `json:"execution_context,omitempty"`
-}
-
-type StaticRouteIntentInput struct {
-	APIVersion *string `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
-
-	Metadata *Metadata `json:"metadata" mapstructure:"metadata"`
-
-	Spec *StaticRouteSpec `json:"spec" mapstructure:"spec"`
-}
-
-type StaticRouteIntentResponse struct {
-	APIVersion *string `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
-
-	Metadata *Metadata `json:"metadata" mapstructure:"metadata"`
-
-	Spec *StaticRouteSpec `json:"spec" mapstructure:"spec"`
-
-	Status *StaticRouteDefStatus `json:"status"`
-}
-
-type FIPResource struct {
-	ExternalSubnetReference *Reference `json:"external_subnet_reference,omitempty"`
-	VPCReference            *Reference `json:"vpc_reference,omitempty"`
-	VmNICReference          *Reference `json:"vm_nic_reference,omitempty"`
-	PrivateIP               *string    `json:"private_ip,omitempty"`
-	FloatingIP              *string    `json:"floating_ip,omitempty"`
-}
-
-type FloatingIPSpec struct {
-	Resource *FIPResource `json:"resources,omitempty"`
-}
-
-type FIPIntentInput struct {
-	APIVersion *string         `json:"api_version,omitempty"`
-	Metadata   *Metadata       `json:"metadata,omitempty"`
-	Spec       *FloatingIPSpec `json:"spec,omitempty"`
-}
-
-type FloatingIPDefStatus struct {
-	State            *string           `json:"state,omitempty"`
-	ExecutionContext *ExecutionContext `json:"execution_context,omitempty"`
-	Resource         *FIPResource      `json:"resources,omitempty"`
-}
-
-type FloatingIPsIntentResponse struct {
-	APIVersion *string              `json:"api_version,omitempty"`
-	Status     *FloatingIPDefStatus `json:"status,omitempty"`
-	Spec       *FloatingIPSpec      `json:"spec,omitempty"`
-	Metadata   *Metadata            `json:"metadata" mapstructure:"metadata"`
-}
-
-type FloatingIPsListIntentResponse struct {
-	APIVersion *string                      `json:"api_version"`
-	Metadata   *ListMetadataOutput          `json:"metadata"`
-	Entities   []*FloatingIPsIntentResponse `json:"entities"`
 }
