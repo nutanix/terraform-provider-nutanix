@@ -13,8 +13,14 @@ func dataSourceNutanixStaticRoute() *schema.Resource {
 		ReadContext: dataSourceNutanixStaticRouteRead,
 		Schema: map[string]*schema.Schema{
 			"vpc_reference_uuid": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"vpc_name"},
+			},
+			"vpc_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"vpc_reference_uuid"},
 			},
 			"api_version": {
 				Type:     schema.TypeString,
@@ -188,13 +194,27 @@ func dataSourceNutanixStaticRouteRead(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*Client).API
 
 	vpc, ok := d.GetOk("vpc_reference_uuid")
-	if !ok {
-		return diag.Errorf("please provide one of vpc_reference_uuid attributes")
+	vName, nok := d.GetOk("vpc_name")
+	if !ok && !nok {
+		return diag.Errorf("please provide one of vpc_reference_uuid or vpc_name attributes")
+	}
+
+	var vpcName string
+	if ok {
+		vpcName = vpc.(string)
+	} else {
+		var reqErr error
+		var resp *v3.VPCIntentResponse
+		resp, reqErr = findVPCByName(ctx, conn, vName.(string))
+		if reqErr != nil {
+			return diag.FromErr(reqErr)
+		}
+		vpcName = *resp.Metadata.UUID
 	}
 
 	// Get request to static Routes
 
-	resp, err := conn.V3.GetStaticRoute(ctx, vpc.(string))
+	resp, err := conn.V3.GetStaticRoute(ctx, vpcName)
 	if err != nil {
 		return diag.FromErr(err)
 	}
