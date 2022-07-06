@@ -3,7 +3,7 @@ layout: "nutanix"
 page_title: "NUTANIX: nutanix_pbr"
 sidebar_current: "docs-nutanix-resource-pbr"
 description: |-
-  Create a PBR within VPC .
+  Create Policy Based Routing within VPCs .
 ---
 
 # nutanix_pbr

@@ -3,7 +3,7 @@ layout: "nutanix"
 page_title: "NUTANIX: nutanix_floating_ip"
 sidebar_current: "docs-nutanix-resource-floating-ip"
 description: |-
-  Create a Floating IPs .
+  Create Floating IPs .
 ---
 
 # nutanix_floating_ip
