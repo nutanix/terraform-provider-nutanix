@@ -47,7 +47,7 @@ func TestAccNutanixPbr_WithSourceExternalDestinationNetwork(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNutanixPbrConfigWithSourceExternalDestinationNetwork(r),
+				Config: testAccNutanixPbrConfigUpdateWithSourceExternalDestinationNetwork(r),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNamePbr, "name", fmt.Sprintf("acctest-managed-%d-updated", r)),
 					resource.TestCheckResourceAttr(resourceNamePbr, "protocol_type", "ALL"),
@@ -69,17 +69,6 @@ func TestAccNutanixPbr_WithTCP(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixPbrConfigWithSourceExternalDestinationNetwork(r),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNamePbr, "name", fmt.Sprintf("acctest-managed-%d-updated", r)),
-					resource.TestCheckResourceAttr(resourceNamePbr, "protocol_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceNamePbr, "priority", fmt.Sprintf("%d", r)),
-					resource.TestCheckResourceAttr(resourceNamePbr, "source.0.address_type", "INTERNET"),
-					resource.TestCheckResourceAttr(resourceNamePbr, "destination.0.prefix_length", "24"),
-					resource.TestCheckResourceAttr(resourceNamePbr, "action", "DENY"),
-				),
-			},
-			{
 				Config: testAccNutanixPbrConfigWithSourceNetworkDestinationExternalWithTCP(r),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNamePbr, "name", pbrName),
@@ -90,6 +79,17 @@ func TestAccNutanixPbr_WithTCP(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNamePbr, "source.0.prefix_length", "24"),
 					resource.TestCheckResourceAttr(resourceNamePbr, "protocol_parameters.0.tcp.0.source_port_range_list.0.start_port", "50"),
 					resource.TestCheckResourceAttr(resourceNamePbr, "protocol_parameters.0.tcp.0.destination_port_range_list.0.end_port", "40"),
+				),
+			},
+			{
+				Config: testAccNutanixPbrConfigUpdateWithSourceExternalDestinationNetwork(r),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNamePbr, "name", fmt.Sprintf("acctest-managed-%d-updated", r)),
+					resource.TestCheckResourceAttr(resourceNamePbr, "protocol_type", "ALL"),
+					resource.TestCheckResourceAttr(resourceNamePbr, "priority", fmt.Sprintf("%d", r)),
+					resource.TestCheckResourceAttr(resourceNamePbr, "source.0.address_type", "INTERNET"),
+					resource.TestCheckResourceAttr(resourceNamePbr, "destination.0.prefix_length", "24"),
+					resource.TestCheckResourceAttr(resourceNamePbr, "action", "DENY"),
 				),
 			},
 		},
@@ -192,7 +192,7 @@ func TestAccNutanixPbr_WithProtocolNumber(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNutanixPbrConfigWithSourceAnyDestinationAnyWithProtocolNumber(r),
+				Config: testAccNutanixPbrConfigUpdateWithSourceAnyDestinationAnyWithProtocolNumber(r),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNamePbr, "name", fmt.Sprintf("acctest-managed-%d-updated", r)),
 					resource.TestCheckResourceAttr(resourceNamePbr, "protocol_type", "PROTOCOL_NUMBER"),
@@ -309,7 +309,7 @@ func testAccNutanixPbrConfig(r int) string {
 	`, r)
 }
 
-func testAccNutanixPbrConfigWithSourceExternalDestinationNetwork(r int) string {
+func testAccNutanixPbrConfigUpdateWithSourceExternalDestinationNetwork(r int) string {
 	return fmt.Sprintf(`
 
 	data "nutanix_clusters" "clusters" {}
@@ -580,7 +580,7 @@ func testAccNutanixPbrConfigWithSourceAnyDestinationExternalWithICMP(r int) stri
 	`, r)
 }
 
-func testAccNutanixPbrConfigWithSourceAnyDestinationAnyWithProtocolNumber(r int) string {
+func testAccNutanixPbrConfigUpdateWithSourceAnyDestinationAnyWithProtocolNumber(r int) string {
 	return fmt.Sprintf(`
 
 	data "nutanix_clusters" "clusters" {}
