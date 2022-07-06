@@ -48,8 +48,8 @@ resource "nutanix_static_routes" "scn" {
 
 The following arguments are supported:
 
-* `vpc_uuid` - (Required) Reference to a VPC UUID. Should not be used with `vpc_name`.
-* `vpc_name` - (Required) vpc Name. Should not be used with `vpc_uuid`. 
+* `vpc_uuid` - (Required) Reference to a VPC UUID. Should not be used with vpc_name.
+* `vpc_name` - (Required) vpc Name. Should not be used with vpc_uuid. 
 * `static_routes_list` - (Optional) Static Routes. 
 * `default_route_nexthop`- (Optional) Default Route
 
