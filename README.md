@@ -148,6 +148,10 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 * nutanix_foundation_image
 * nutanix_foundation_central_api_keys
 * nutanix_foundation_central_image_cluster
+* nutanix_vpc
+* nutanix_pbr
+* nutanix_static_routes
+* nutanix_floating_ip
 
 ## Data Sources
 
@@ -195,6 +199,13 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 * nutanix_foundation_central_imaged_clusters_list
 * nutanix_foundation_central_cluster_details
 * nutanix_foundation_central_imaged_node_details
+* nutanix_vpc
+* nutanix_vpcs
+* nutanix_pbr
+* nutanix_pbrs
+* nutanix_floating_ip
+* nutanix_floating_ips
+* nutanix_static_routes
 
 ## Quick Install
 
