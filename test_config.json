@@ -2,9 +2,9 @@
     "subnet_name": "vlan.154",
     "default_container_name": "default-container-95673204421578",
     "user_group_with_distinguished_name": {
-        "distinguished_name": "cn=sspadmin,cn=users,dc=qa,dc=nucalm,dc=io",
-        "display_name": "sspadmin",
-        "uuid": "30d270f3-2c41-5bf5-9cc9-25cd78073089"
+        "distinguished_name": "cn=sspadmins,cn=users,dc=qa,dc=nucalm,dc=io",
+        "display_name": "sspadmins",
+        "uuid": "2c420da6-94df-4889-abed-f8025efcb154"
     },
     "permissions": [
         {
@@ -36,8 +36,9 @@
     "node_os_version": "ntnx-1.0",
     "ad_rule_target": {
         "name": "ADGroup",
-        "values": "sspadmin"
+        "values": "sspadmins"
     }
 }
+
 
 
