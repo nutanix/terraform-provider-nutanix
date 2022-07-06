@@ -1,3 +1,39 @@
+## 1.6.0 (July 7, 2022)
+
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.5.0...v1.6.0)
+
+**New Feature:**
+
+- Add Datasource and Resource for Flow Networking [\#473] (https://github.com/nutanix/terraform-provider-nutanix/pull/473)
+
+    New Data Sources :
+    - nutanix_floating_ip
+    - nutanix_floating_ips
+    - nutanix_pbr
+    - nutanix_pbrs
+    - nutanix_static_routes
+    - nutanix_vpc
+    - nutanix_vpcs
+
+    New Resources :
+    - nutanix_floating_ip
+    - nutanix_pbr
+    - nutanix_static_routes
+    - nutanix_vpc
+
+**Merged pull requests:**
+
+- VPC Feature [\#457](https://github.com/nutanix/terraform-provider-nutanix/pull/457) ([abhimutant](https://github.com/abhimutant))
+- Policy Based Routing Feature [\#464](https://github.com/nutanix/terraform-provider-nutanix/pull/464) ([abhimutant](https://github.com/abhimutant))
+- Floating IP Feature [\#466](https://github.com/nutanix/terraform-provider-nutanix/pull/466) ([abhimutant](https://github.com/abhimutant))
+- Static Routes Feature [\#468] (https://github.com/nutanix/terraform-provider-nutanix/pull/468) [abhimutant](https://github.com/abhimutant))
+- Examples and testcases related to Networking Features [\#470] (https://github.com/nutanix/terraform-provider-nutanix/pull/470) ([abhimutant](https://github.com/abhimutant))
+
+**Implemented enhancements:**
+
+- Support of External and Overlay Subnets [\#460](https://github.com/nutanix/terraform-provider-nutanix/pull/460)
+
+
 ## 1.5.0 (May 7, 2022)
 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.5.0-beta.2...v1.5.0)

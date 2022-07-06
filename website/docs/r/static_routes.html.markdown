@@ -55,12 +55,13 @@ The following arguments are supported:
 
 ### static_routes_list
 
-*`destination` - (Required) Destination ip with prefix. 
-*`external_subnet_reference_uuid` - (Required) Reference to a subnet.
+* `destination` - (Required) Destination ip with prefix. 
+* `external_subnet_reference_uuid` - (Optional) Reference to a subnet. Supported with 2022.x . 
+* `vpn_connection_reference_uuid` - (Optional) Reference to a vpn connection.
 
 
 ### default_route_nexthop
-*`external_subnet_reference_uuid` - (Required) Reference to a subnet.
+* `external_subnet_reference_uuid` - (Required) Reference to a subnet.
 
 ## Attributes Reference
 

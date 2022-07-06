@@ -3,7 +3,7 @@ layout: "nutanix"
 page_title: "NUTANIX: nutanix_vpc"
 sidebar_current: "docs-nutanix-resource-vpc"
 description: |-
-  Create a VPC .
+  Create Virtual Private Cloud .
 ---
 
 # nutanix_vpc
