@@ -77,7 +77,7 @@ The following arguments are supported:
 * `service_ip_list` - (Optional) IP addresses of network services. This field is valid only when action is REROUTE.
 * `vpc_reference_uuid` - (Required) The reference to a vpc . Should not be used with {vpc_name} .
 * `vpc_name` - (Required) The reference to a vpc. Should not be used with {vpc_reference_uuid}
-* `is_bidirectional` - (Optional) Additionally create Policy in reverse direction. Should be used with {TCP, UDP with start and end port ranges and ICMP with icmp code and type}. 
+* `is_bidirectional` - (Optional) Additionally create Policy in reverse direction. Should be used with {TCP, UDP with start and end port ranges and ICMP with icmp code and type}. Supported with 2022.x.
 
 ## source
 source address of an IP packet. This could be either an ip prefix or an address_type . 
