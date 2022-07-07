@@ -1,6 +1,6 @@
-## 1.6.0 (July 7, 2022)
+## 1.6.1 (July 7, 2022)
 
-[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.5.0...v1.6.0)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.5.0...v1.6.1)
 
 **New Feature:**
 

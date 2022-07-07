@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
-NOTE: The latest version of the Nutanix provider is [v1.6.0](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.6.0)
+NOTE: The latest version of the Nutanix provider is [v1.6.1](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.6.1)
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 ## Build, Quality Status
@@ -40,10 +40,10 @@ The Terraform Nutanix provider is designed to work with Nutanix Prism Central an
 
 > For the 1.5.0 release of the provider it will have N-2 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc2022.1.0.2 pc.2021.9.0.4 and pc.2021.8.0.1.
 
-> For the 1.6.0 release of the provider it will have N-2 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc2022.4 pc2022.1.0.2 and pc2021.9.0.4.
+> For the 1.6.1 release of the provider it will have N-2 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc2022.4 pc2022.1.0.2 and pc2021.9.0.4.
 
 ### note
-With v1.6.0 release of flow networking feature in provider, IAMv2 setups would be mandate. 
+With v1.6.1 release of flow networking feature in provider, IAMv2 setups would be mandate. 
 Also, there is known issue for access_control_policies resource where update would be failing. We are continuously tracking the issue internally.
 
 ## Foundation
