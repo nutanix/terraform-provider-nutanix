@@ -89,9 +89,11 @@ type Service interface {
 	DeleteUser(uuid string) (*DeleteResponse, error)
 	ListUser(getEntitiesRequest *DSMetadata) (*UserListResponse, error)
 	ListAllUser(filter string) (*UserListResponse, error)
+	CreateUserGroup(ctx context.Context, body *UserGroupIntentInput) (*UserGroupIntentResponse, error)
 	GetUserGroup(userUUID string) (*UserGroupIntentResponse, error)
 	ListUserGroup(getEntitiesRequest *DSMetadata) (*UserGroupListResponse, error)
 	ListAllUserGroup(filter string) (*UserGroupListResponse, error)
+	DeleteUserGroup(ctx context.Context, uuid string) (*DeleteResponse, error)
 	GetPermission(permissionUUID string) (*PermissionIntentResponse, error)
 	ListPermission(getEntitiesRequest *DSMetadata) (*PermissionListResponse, error)
 	ListAllPermission(filter string) (*PermissionListResponse, error)
@@ -1862,6 +1864,17 @@ func (op Operations) GetUserGroup(userGroupUUID string) (*UserGroupIntentRespons
 	return User, op.client.Do(ctx, req, User)
 }
 
+func (op Operations) CreateUserGroup(ctx context.Context, body *UserGroupIntentInput) (*UserGroupIntentResponse, error) {
+	req, err := op.client.NewRequest(ctx, http.MethodPost, "/user_groups", body)
+	userGroupResponse := new(UserGroupIntentResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return userGroupResponse, op.client.Do(ctx, req, userGroupResponse)
+}
+
 /*ListUserGroup gets a list of UserGroups.
  *
  * @param metadata allows create filters to get specific data - *DSMetadata.
@@ -1879,6 +1892,19 @@ func (op Operations) ListUserGroup(getEntitiesRequest *DSMetadata) (*UserGroupLi
 	}
 
 	return UserGroupList, op.client.Do(ctx, req, UserGroupList)
+}
+
+func (op Operations) DeleteUserGroup(ctx context.Context, uuid string) (*DeleteResponse, error) {
+	path := fmt.Sprintf("/user_groups/%s", uuid)
+
+	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
+	deleteResponse := new(DeleteResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return deleteResponse, op.client.Do(ctx, req, deleteResponse)
 }
 
 // ListAllUserGroup ...
