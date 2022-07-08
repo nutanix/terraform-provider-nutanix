@@ -2266,9 +2266,15 @@ type UserGroupResources struct {
 
 // User group status definition.
 type UserGroupStatus struct {
-	MessageList []MessageResource   `json:"message_list,omitempty"`
-	Resources   *UserGroupResources `json:"resources,omitempty"` // User Group Resource Definition.
-	State       *string             `json:"state,omitempty"`     // The state of the entity.
+	MessageList      []MessageResource   `json:"message_list,omitempty"`
+	Resources        *UserGroupResources `json:"resources,omitempty"` // User Group Resource Definition.
+	State            *string             `json:"state,omitempty"`     // The state of the entity.
+	ExecutionContext *ExecutionContext   `json:"execution_context,omitempty"`
+}
+
+type UserGroupIntentInput struct {
+	Metadata *Metadata      `json:"metadata,omitempty"`
+	Spec     *UserGroupSpec `json:"spec,omitempty"`
 }
 
 // A Directory Service user group.
