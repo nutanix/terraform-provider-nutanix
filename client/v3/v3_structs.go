@@ -2255,6 +2255,11 @@ type UserGroupSpec struct {
 	Resources *UserGroupResources `json:"resources,omitempty"` // User Group Resource Definition
 }
 
+type SamlUserGroup struct {
+	IdpUUID *string `json:"idpUuid,omitempty"`
+	Name    *string `json:"name,omitempty"`
+}
+
 // User Group Resource Definition
 type UserGroupResources struct {
 	AccessControlPolicyReferenceList []*Reference               `json:"access_control_policy_reference_list,omitempty"` // List of ACP references.
@@ -2262,6 +2267,8 @@ type UserGroupResources struct {
 	DisplayName                      *string                    `json:"display_name,omitempty"`                         // The display name for the user group.
 	ProjectsReferenceList            []*Reference               `json:"projects_reference_list,omitempty"`              // A list of projects the user group is part of.
 	UserGroupType                    *string                    `json:"user_group_type,omitempty"`
+	DirectoryServiceOU               *DirectoryServiceUserGroup `json:"directory_service_ou,omitempty"`
+	SamlUserGroup                    *SamlUserGroup             `json:"saml_user_group,omitempty"`
 }
 
 // User group status definition.
