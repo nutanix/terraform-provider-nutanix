@@ -13,17 +13,26 @@ import (
 const resourceNameUserGroups = "nutanix_user_groups.acctest-managed"
 
 func TestAccNutanixUserGroups_basic(t *testing.T) {
-	directoryServiceUUID := "cn=sspgroupqa2,cn=users,dc=qa,dc=nucalm,dc=io"
+	directoryServiceDistName := testVars.UserGroupWithDistinguishedName[1].DistinguishedName
+	updatedDirectoryServiceDistName := testVars.UserGroupWithDistinguishedName[1].DistinguishedName
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixUserGroupsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixUserGroupsConfig(directoryServiceUUID),
+				Config: testAccNutanixUserGroupsConfig(directoryServiceDistName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_user_group.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_user_group.0.distinguished_name", directoryServiceUUID),
+					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_user_group.0.distinguished_name", directoryServiceDistName),
+					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_ou.#", "0"),
+				),
+			},
+			{
+				Config: testAccNutanixUserGroupsConfigUpdated(updatedDirectoryServiceDistName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_user_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_user_group.0.distinguished_name", updatedDirectoryServiceDistName),
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_ou.#", "0"),
 				),
 			},
@@ -32,18 +41,27 @@ func TestAccNutanixUserGroups_basic(t *testing.T) {
 }
 
 func TestAccNutanixUserGroups_WithOrgUnit(t *testing.T) {
-	directoryServiceUUID := "ou=testou,dc=calsoftcalm,dc=com"
+	directoryServiceOUDistName := testVars.UserGroupWithDistinguishedName[3].DistinguishedName
+	updatedDirectoryServiceUserGroupName := testVars.UserGroupWithDistinguishedName[2].DistinguishedName
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixUserGroupsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixUserGroupsConfigWithOrg(directoryServiceUUID),
+				Config: testAccNutanixUserGroupsConfigWithOrg(directoryServiceOUDistName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_user_group.#", "0"),
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_ou.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_ou.0.distinguished_name", directoryServiceUUID),
+					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_ou.0.distinguished_name", directoryServiceOUDistName),
+				),
+			},
+			{
+				Config: testAccNutanixUserGroupsConfigUpdated(updatedDirectoryServiceUserGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_user_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_ou.#", "0"),
+					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_user_group.0.distinguished_name", updatedDirectoryServiceUserGroupName),
 				),
 			},
 		},
@@ -51,14 +69,14 @@ func TestAccNutanixUserGroups_WithOrgUnit(t *testing.T) {
 }
 
 func TestAccNutanixUserGroups_DuplicateEntity(t *testing.T) {
-	directoryServiceUUID := testVars.UserGroupWithDistinguishedName.DistinguishedName
+	directoryServiceDistName := testVars.UserGroupWithDistinguishedName[0].DistinguishedName
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixUserGroupsDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccNutanixUserGroupsConfig(directoryServiceUUID),
+				Config:      testAccNutanixUserGroupsConfig(directoryServiceDistName),
 				ExpectError: regexp.MustCompile("DUPLICATE_ENTITY"),
 			},
 		},
