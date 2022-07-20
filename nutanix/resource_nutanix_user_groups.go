@@ -92,6 +92,12 @@ func resourceNutanixUserGroups() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"use_categories_mapping": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"categories_mapping": categoriesMappingSchema(),
 		},
 	}
 }
@@ -122,6 +128,14 @@ func resourceNutanixUserGroupsCreate(ctx context.Context, d *schema.ResourceData
 
 	if prRef, ok := d.GetOk("project_reference_uuid"); ok {
 		metadata.ProjectReference = buildReference(prRef.(string), "project")
+	}
+
+	if useCatMapp, ok := d.GetOk("use_categories_mapping"); ok {
+		metadata.UseCategoriesMapping = utils.BoolPtr(useCatMapp.(bool))
+	}
+
+	if catMapp, ok := d.GetOk("categories_mapping"); ok {
+		metadata.CategoriesMapping = expandCategoriesMapping(catMapp)
 	}
 
 	spec.Resources = res
@@ -193,6 +207,14 @@ func resourceNutanixUserGroupsRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("error setting saml_user_group for user group %s: %s", d.Id(), err)
 	}
 
+	if err = d.Set("categories_mapping", flattenCategoriesMapping(resp.Metadata.CategoriesMapping)); err != nil {
+		return diag.Errorf("error setting categories mapping for user group %s: %s", d.Id(), err)
+	}
+
+	if err = d.Set("use_categories_mapping", resp.Metadata.UseCategoriesMapping); err != nil {
+		return diag.Errorf("error setting use categories mapping for user group %s: %s", d.Id(), err)
+	}
+
 	return nil
 }
 
@@ -248,6 +270,10 @@ func resourceNutanixUserGroupsUpdate(ctx context.Context, d *schema.ResourceData
 	if d.HasChange("project_reference") {
 		pr := d.Get("project_reference").(map[string]interface{})
 		metadata.ProjectReference = validateRef(pr)
+	}
+
+	if d.HasChange("use_categories_mapping") {
+		metadata.CategoriesMapping = expandCategoriesMapping(d.Get("use_categories_mapping"))
 	}
 
 	spec.Resources = res

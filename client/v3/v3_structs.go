@@ -1678,10 +1678,9 @@ type Metadata struct {
 	ShouldForceTranslate *bool `json:"should_force_translate,omitempty" mapstructure:"should_force_translate,omitempty"`
 
 	//TODO: add if necessary
-	//CategoriesMapping    map[string][]string `json:"categories_mapping,omitempty" mapstructure:"categories_mapping,omitempty"`
+	CategoriesMapping map[string][]string `json:"categories_mapping,omitempty" mapstructure:"categories_mapping,omitempty"`
 	//EntityVersion        *string             `json:"entity_version,omitempty" mapstructure:"entity_version,omitempty"`
-	//UseCategoriesMapping *bool               `json:"use_categories_mapping,omitempty" mapstructure:"use_categories_mapping,omitempty"`
-
+	UseCategoriesMapping *bool `json:"use_categories_mapping,omitempty" mapstructure:"use_categories_mapping,omitempty"`
 }
 
 // NetworkSecurityRuleIntentInput An intentful representation of a network_security_rule
