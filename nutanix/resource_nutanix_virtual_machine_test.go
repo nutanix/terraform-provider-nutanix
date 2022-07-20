@@ -534,6 +534,35 @@ func TestAccNutanixVirtualMachine_Ngt(t *testing.T) {
 	})
 }
 
+func TestAccNutanixVirtualMachine_SysprepCustomKeyValues(t *testing.T) {
+	r := acctest.RandInt()
+	resourceName := "nutanix_virtual_machine.vm13"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixVMConfigSysprepCustomKeyValues(r),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", "100"),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"disk_list", "cloud_init_cdrom_uuid"},
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixVirtualMachineExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1383,6 +1412,38 @@ func testAccNutanixVMConfigWithNgt(r int) string {
         		username = "root"
        			password = "pass"
       		}
+		}
+	`, r)
+}
+
+func testAccNutanixVMConfigSysprepCustomKeyValues(r int) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+			? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+		}
+		resource "nutanix_virtual_machine" "vm13" {
+		  	name = "terf__cloud_init-%d"
+		  	cluster_uuid = "${local.cluster1}"
+		  	num_vcpus_per_socket = 1
+		  	num_sockets          = 1
+		  	memory_size_mib      = 100
+			guest_customization_sysprep_custom_key_values = {
+				vm_hostname = "TEST12"
+			}
+
+		  	disk_list {
+		   		device_properties {
+		      		device_type = "CDROM"
+		      		disk_address = {
+		        		device_index = 0
+		        		adapter_type = "IDE"
+		     		}
+		    	}
+		 	}
+		  	enable_cpu_passthrough = true
 		}
 	`, r)
 }
