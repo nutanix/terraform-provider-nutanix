@@ -1562,7 +1562,7 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 		if guestCustom.Sysprep == nil {
 			guestCustom.Sysprep = &v3.GuestCustomizationSysprep{}
 		}
-		guestCustom.Sysprep.CustomKeyValues = v.(map[string]string)
+		guestCustom.Sysprep.CustomKeyValues = utils.ConvertMapString(v.(map[string]interface{}))
 	}
 
 	if !reflect.DeepEqual(*guestCustom, (v3.GuestCustomization{})) {
