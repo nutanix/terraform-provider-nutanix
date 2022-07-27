@@ -14,7 +14,6 @@ const resourceNameUserGroups = "nutanix_user_groups.acctest-managed"
 
 func TestAccNutanixUserGroups_basic(t *testing.T) {
 	directoryServiceDistName := testVars.UserGroupWithDistinguishedName[1].DistinguishedName
-	updatedDirectoryServiceDistName := testVars.UserGroupWithDistinguishedName[1].DistinguishedName
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -28,21 +27,12 @@ func TestAccNutanixUserGroups_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_ou.#", "0"),
 				),
 			},
-			{
-				Config: testAccNutanixUserGroupsConfigUpdated(updatedDirectoryServiceDistName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_user_group.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_user_group.0.distinguished_name", updatedDirectoryServiceDistName),
-					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_ou.#", "0"),
-				),
-			},
 		},
 	})
 }
 
 func TestAccNutanixUserGroups_WithOrgUnit(t *testing.T) {
-	directoryServiceOUDistName := testVars.UserGroupWithDistinguishedName[3].DistinguishedName
-	updatedDirectoryServiceUserGroupName := testVars.UserGroupWithDistinguishedName[2].DistinguishedName
+	directoryServiceOUDistName := testVars.UserGroupWithDistinguishedName[2].DistinguishedName
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -54,14 +44,6 @@ func TestAccNutanixUserGroups_WithOrgUnit(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_user_group.#", "0"),
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_ou.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_ou.0.distinguished_name", directoryServiceOUDistName),
-				),
-			},
-			{
-				Config: testAccNutanixUserGroupsConfigUpdated(updatedDirectoryServiceUserGroupName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_user_group.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_ou.#", "0"),
-					resource.TestCheckResourceAttr(resourceNameUserGroups, "directory_service_user_group.0.distinguished_name", updatedDirectoryServiceUserGroupName),
 				),
 			},
 		},
@@ -102,16 +84,6 @@ func testAccCheckNutanixUserGroupsDestroy(s *terraform.State) error {
 }
 
 func testAccNutanixUserGroupsConfig(dsuuid string) string {
-	return fmt.Sprintf(`
-	resource "nutanix_user_groups" "acctest-managed" {
-		directory_service_user_group {
-			distinguished_name = "%s"
-		}
-	}
-`, dsuuid)
-}
-
-func testAccNutanixUserGroupsConfigUpdated(dsuuid string) string {
 	return fmt.Sprintf(`
 	resource "nutanix_user_groups" "acctest-managed" {
 		directory_service_user_group {

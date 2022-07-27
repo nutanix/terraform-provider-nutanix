@@ -8,10 +8,7 @@
             "uuid": "7fdb4b93-af49-4f3c-9422-d37c5b9b4dd8"
         },
         {
-            "distinguished_name": "cn=sspgroupqa3,cn=users,dc=qa,dc=nucalm,dc=io"
-        },
-        {
-            "distinguished_name": "cn=sspgroupqa4,cn=users,dc=qa,dc=nucalm,dc=io"
+            "distinguished_name": "cn=sspgroupqa2,cn=users,dc=qa,dc=nucalm,dc=io"
         },
         {
             "distinguished_name": "ou=testou,dc=calsoftcalm,dc=com"
