@@ -8,7 +8,7 @@ description: |-
 
 # nutanix_static_routes
 
-Provides Nutanix resource to create Floating IPs. 
+Provides Nutanix resource to create Static Routes within VPCs.
 
 ## Example Usage
 
