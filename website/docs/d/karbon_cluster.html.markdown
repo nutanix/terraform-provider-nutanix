@@ -27,7 +27,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-The following arguments are supported:
+The following attributes are exported:
 
 * `name`: - The name for the k8s cluster.
 * `wait_timeout_minutes`: - Maximum wait time for the Karbon cluster to provision.
@@ -74,7 +74,7 @@ The `etcd_node_pool`, `master_node_pool`, `worker_node_pool` attribute supports 
 
 ### cni_config
 
-The boot_device_disk_address attribute supports the following:
+The cni_config attribute exports the following:
 
 * `node_cidr_mask_size`: - The size of the subnet from the pod_ipv4_cidr assigned to each host. A value of 24 would allow up to 255 pods per node.
 * `pod_ipv4_cidr`: - CIDR for pods in the cluster.
