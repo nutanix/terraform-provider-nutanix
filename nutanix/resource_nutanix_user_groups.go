@@ -79,9 +79,12 @@ func resourceNutanixUserGroups() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"project_reference_uuid": {
-				Type:     schema.TypeString,
+			"project_reference": {
+				Type:     schema.TypeMap,
 				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			"categories": categoriesSchema(),
 			"owner_reference": {
@@ -92,12 +95,6 @@ func resourceNutanixUserGroups() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"use_categories_mapping": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"categories_mapping": categoriesMappingSchema(),
 		},
 	}
 }
@@ -124,18 +121,6 @@ func resourceNutanixUserGroupsCreate(ctx context.Context, d *schema.ResourceData
 
 	if su, ok := d.GetOk("saml_user_group"); ok {
 		res.SamlUserGroup = expandSamlUserGroup(su.([]interface{}))
-	}
-
-	if prRef, ok := d.GetOk("project_reference_uuid"); ok {
-		metadata.ProjectReference = buildReference(prRef.(string), "project")
-	}
-
-	if useCatMapp, ok := d.GetOk("use_categories_mapping"); ok {
-		metadata.UseCategoriesMapping = utils.BoolPtr(useCatMapp.(bool))
-	}
-
-	if catMapp, ok := d.GetOk("categories_mapping"); ok {
-		metadata.CategoriesMapping = expandCategoriesMapping(catMapp)
 	}
 
 	spec.Resources = res
@@ -205,14 +190,6 @@ func resourceNutanixUserGroupsRead(ctx context.Context, d *schema.ResourceData, 
 
 	if err = d.Set("saml_user_group", flattenSamlUserGroup(resp.Spec.Resources.SamlUserGroup)); err != nil {
 		return diag.Errorf("error setting saml_user_group for user group %s: %s", d.Id(), err)
-	}
-
-	if err = d.Set("categories_mapping", flattenCategoriesMapping(resp.Metadata.CategoriesMapping)); err != nil {
-		return diag.Errorf("error setting categories mapping for user group %s: %s", d.Id(), err)
-	}
-
-	if err = d.Set("use_categories_mapping", resp.Metadata.UseCategoriesMapping); err != nil {
-		return diag.Errorf("error setting use categories mapping for user group %s: %s", d.Id(), err)
 	}
 
 	return nil
