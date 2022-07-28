@@ -94,7 +94,6 @@ type Service interface {
 	ListUserGroup(getEntitiesRequest *DSMetadata) (*UserGroupListResponse, error)
 	ListAllUserGroup(filter string) (*UserGroupListResponse, error)
 	DeleteUserGroup(ctx context.Context, uuid string) (*DeleteResponse, error)
-	UpdateUserGroup(ctx context.Context, uuid string, body *UserGroupIntentInput) (*UserGroupIntentResponse, error)
 	GetPermission(permissionUUID string) (*PermissionIntentResponse, error)
 	ListPermission(getEntitiesRequest *DSMetadata) (*PermissionListResponse, error)
 	ListAllPermission(filter string) (*PermissionListResponse, error)
@@ -1906,18 +1905,6 @@ func (op Operations) DeleteUserGroup(ctx context.Context, uuid string) (*DeleteR
 	}
 
 	return deleteResponse, op.client.Do(ctx, req, deleteResponse)
-}
-
-func (op Operations) UpdateUserGroup(ctx context.Context, uuid string, body *UserGroupIntentInput) (*UserGroupIntentResponse, error) {
-	path := fmt.Sprintf("/user_groups/%s", uuid)
-	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
-	userGroupResponse := new(UserGroupIntentResponse)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return userGroupResponse, op.client.Do(ctx, req, userGroupResponse)
 }
 
 // ListAllUserGroup ...
