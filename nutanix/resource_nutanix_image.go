@@ -500,14 +500,7 @@ func resourceNutanixImageUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
-		delErr := resourceNutanixImageDelete(ctx, d, meta)
-		if delErr != nil {
-			delErr = append(delErr, diag.Errorf("error waiting for image (%s) to delete in update", d.Id())...)
-			return delErr
-		}
-		uuid := d.Id()
-		d.SetId("")
-		return diag.Errorf("error waiting for image (%s) to update: %s", uuid, err)
+		return diag.Errorf("error waiting for image (%s) to update: %s", d.Id(), err)
 	}
 
 	return resourceNutanixImageRead(ctx, d, meta)
