@@ -51,6 +51,7 @@ func TestAccNutanixImage_Update(t *testing.T) {
 				Config: testAccNutanixImageConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixImageExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "image_type", "ISO_IMAGE"),
 				),
 			},
 			{
