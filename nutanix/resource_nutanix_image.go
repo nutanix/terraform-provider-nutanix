@@ -302,7 +302,6 @@ func resourceNutanixImageCreate(ctx context.Context, d *schema.ResourceData, met
 
 		// check if any recent tasks related to image upload failed or not
 		for _, tUUID := range resp.Status.ExecutionContext.TaskUUID.([]interface{}) {
-
 			u := tUUID.(string)
 			// get image upload task status
 			uploadTaskInfo, err := conn.V3.GetTask(u)
@@ -319,9 +318,7 @@ func resourceNutanixImageCreate(ctx context.Context, d *schema.ResourceData, met
 				return diag.Errorf("error_detail: %s, progress_message: %s", utils.StringValue(uploadTaskInfo.ErrorDetail), utils.StringValue(uploadTaskInfo.ProgressMessage))
 			}
 		}
-
 	}
-
 	return resourceNutanixImageRead(ctx, d, meta)
 }
 
