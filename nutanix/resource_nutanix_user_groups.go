@@ -161,7 +161,7 @@ func resourceNutanixUserGroupsRead(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
-			return nil
+			return diag.FromErr(err)
 		}
 		return diag.Errorf("error reading user group %s: %s", d.Id(), err)
 	}
@@ -206,7 +206,7 @@ func resourceNutanixUserGroupsDelete(ctx context.Context, d *schema.ResourceData
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
-			return nil
+			return diag.FromErr(err)
 		}
 		return diag.Errorf("error while deleting user group UUID(%s): %s", d.Id(), err)
 	}
