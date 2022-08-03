@@ -108,6 +108,7 @@ resource "nutanix_foundation_image_nodes" "batch1" {
         cluster_init_now = true
         cluster_external_ip = "10.xx.xx.xx"
         cluster_members = ["10.xx.xx.xx","10.xx.xx.xx","10.xx.xx.xx"]
+        timezone = "Africa/Conakry"
     }
 }
 
@@ -230,6 +231,7 @@ The following arguments are supported for each cluster:
 * `cvm_dns_servers` : - DNS servers of CVM.
 * `cluster_init_now` : - (Optional, Default = true) If cluster should be created.
 * `hypervisor_ntp_servers` : - NTP servers of hypervisor.
+* `timezone`: - Set timezone for every CVM
 
 ### hypervisor_iso
 
