@@ -254,6 +254,46 @@ $ make cibuild
 
 This command will create a `pkg/` directory with all the binaries for the most popular OS.
 
+### Running tests of provider
+
+For running unit tests:
+```sh
+make test
+```
+
+For running integration tests:
+
+1. Add environment variables for setup related details:
+```ssh
+export NUTANIX_USERNAME="<username>"
+export NUTANIX_PASSWORD="<password>"
+export NUTANIX_INSECURE=true
+export NUTANIX_PORT=9440
+export NUTANIX_ENDPOINT="<pc-ip>"
+export NUTANIX_STORAGE_CONTAINER="<storage-container-uuid-for-vm-tests>"
+export FOUNDATION_ENDPOINT="<foundation-vm-ip-for-foundation-related-tests>"
+export FOUNDATION_PORT=8000
+export NOS_IMAGE_TEST_URL="<test-image-url>"
+```
+
+2. Some tests need setup related constants for resource creation. So add/replace details in test_config.json (for pc tests) and test_foundation_config.json (for foundation and foundation central tests)
+
+3. To run all tests:
+```ssh
+make testacc
+```
+
+4. To run specific tests:
+```ssh 
+export TESTARGS='-run=TestAccNutanixPbr_WithSourceExternalDestinationNetwork'
+make testacc
+```
+
+5. To run collection of tests:
+``` ssh
+export TESTARGS='-run=TestAccNutanixPbr*'
+make testacc
+```
 
 ### Common Issues using the development binary.
 
