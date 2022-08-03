@@ -53,6 +53,7 @@ jobs:
               export TESTARGS='-run="'$runFlag'"'
               echo "TESTARGS = $TESTARGS"
               echo '${{ secrets.FOUNDATION_CONFIG }}' > test_foundation_config.json
+              echo '${{ secrets.PC_CONFIG }}' > test_config.json
               ${{ secrets.ACCEPTANCE_TEST_ARGS }} make testacc
       - name: Code Coverage Check
         if: ${{ always() }}
