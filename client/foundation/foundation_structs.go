@@ -82,6 +82,7 @@ type Clusters struct {
 	CvmDNSServers         string   `json:"cvm_dns_servers,omitempty"`
 	ClusterInitNow        *bool    `json:"cluster_init_now"`
 	HypervisorNtpServers  string   `json:"hypervisor_ntp_servers,omitempty"`
+	Timezone              string   `json:"timezone,omitempty"`
 }
 
 // EOS metadata struct used in node imaging when importing cluster config got from install.nutanix.com
