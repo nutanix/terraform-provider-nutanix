@@ -43,8 +43,8 @@
     ],
     "node_os_version": "",
     "ad_rule_target": {
-        "name": "ADGroup",
-        "values": "sspadmins"
+        "name": "",
+        "values": ""
     },
     "protection_policy":{
         "local_az":{
