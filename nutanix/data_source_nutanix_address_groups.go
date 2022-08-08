@@ -60,7 +60,7 @@ func dataSourceNutanixAddressGroups() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"uuid": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 						"address_group": {
 							Type:     schema.TypeList,
@@ -69,24 +69,24 @@ func dataSourceNutanixAddressGroups() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
-										Required: true,
+										Computed: true,
 									},
 									"description": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Computed: true,
 									},
 									"ip_address_block_list": {
 										Type:     schema.TypeList,
-										Required: true,
+										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"ip": {
 													Type:     schema.TypeString,
-													Required: true,
+													Computed: true,
 												},
 												"prefix_length": {
 													Type:     schema.TypeInt,
-													Required: true,
+													Computed: true,
 												},
 											},
 										},
