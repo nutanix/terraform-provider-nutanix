@@ -36,7 +36,7 @@
 - Allow project definiation by name and not just ID [\#406] (https://github.com/nutanix/terraform-provider-nutanix/issues/406)
 - Upload images to Foundation VM from a remote server using nutanix_foundation_image resource [\#455] (https://github.com/nutanix/terraform-provider-nutanix/issues/455)
 - Change catagories from list to dictionary for more straightforward use [\#407] (https://github.com/nutanix/terraform-provider-nutanix/issues/407)
--VM creation fails when boot_type = LEGACY [\#304] (https://github.com/nutanix/terraform-provider-nutanix/issues/304)
+- VM creation fails when boot_type = LEGACY [\#304] (https://github.com/nutanix/terraform-provider-nutanix/issues/304)
 - Add attributes to set timezone during cluster creation using image_nodes [\#449] (https://github.com/nutanix/terraform-provider-nutanix/issues/449)
 - Enable multi-pc tests [\#448] (https://github.com/nutanix/terraform-provider-nutanix/issues/448)
 
