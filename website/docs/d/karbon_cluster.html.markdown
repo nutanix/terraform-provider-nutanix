@@ -27,12 +27,11 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-The following arguments are supported:
+The following attributes are exported:
 
 * `name`: - The name for the k8s cluster.
 * `wait_timeout_minutes`: - Maximum wait time for the Karbon cluster to provision.
 * `version`: - K8s version of the cluster.
-* `storage_class_config`: - Storage class configuration attribute for defining the persistent volume attributes.
 * `single_master_config`: - Configuration of a single master node.
 * `active_passive_config`: - The active passive mode uses the Virtual Router Redundancy Protocol (VRRP) protocol to provide high availability of the master.
 * `external_lb_config`: - The external load balancer configuration in the case of a multi-master-external-load-balancer type master deployment.
@@ -40,20 +39,6 @@ The following arguments are supported:
 * `etcd_node_pool`: - Configuration of the node pools that the nodes in the etcd cluster belong to. The etcd nodes require a minimum of 8,192 MiB memory and 409,60 MiB disk space.
 * `master_node_pool`: - Configuration of the master node pools.
 * `cni_config`: - K8s cluster networking configuration. The flannel or the calico configuration needs to be provided.
-
-### Storage Class Config
-
-The storage_class_config attribute supports the following:
-
-* `name`: - The name of the storage class.
-* `reclaim_policy` - Reclaim policy for persistent volumes provisioned using the specified storage class.
-* `volumes_config.#.file_system` - Karbon uses either the ext4 or xfs file-system on the volume disk.
-* `volumes_config.#.flash_mode` - Pins the persistent volumes to the flash tier in case of a `true` value.
-* `volumes_config.#.password` - The password of the Prism Element user that the API calls use to provision volumes.
-* `volumes_config.#.prism_element_cluster_uuid` - The universally unique identifier (UUID) of the Prism Element cluster.
-* `volumes_config.#.storage_container` - Name of the storage container the storage container uses to provision volumes.
-* `volumes_config.#.username` - Username of the Prism Element user that the API calls use to provision volumes.
-
 
 ### External LB Config
 
@@ -89,7 +74,7 @@ The `etcd_node_pool`, `master_node_pool`, `worker_node_pool` attribute supports 
 
 ### cni_config
 
-The boot_device_disk_address attribute supports the following:
+The cni_config attribute exports the following:
 
 * `node_cidr_mask_size`: - The size of the subnet from the pod_ipv4_cidr assigned to each host. A value of 24 would allow up to 255 pods per node.
 * `pod_ipv4_cidr`: - CIDR for pods in the cluster.

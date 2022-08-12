@@ -1681,7 +1681,6 @@ type Metadata struct {
 	//CategoriesMapping    map[string][]string `json:"categories_mapping,omitempty" mapstructure:"categories_mapping,omitempty"`
 	//EntityVersion        *string             `json:"entity_version,omitempty" mapstructure:"entity_version,omitempty"`
 	//UseCategoriesMapping *bool               `json:"use_categories_mapping,omitempty" mapstructure:"use_categories_mapping,omitempty"`
-
 }
 
 // NetworkSecurityRuleIntentInput An intentful representation of a network_security_rule
@@ -2255,6 +2254,11 @@ type UserGroupSpec struct {
 	Resources *UserGroupResources `json:"resources,omitempty"` // User Group Resource Definition
 }
 
+type SamlUserGroup struct {
+	IdpUUID *string `json:"idpUuid,omitempty"`
+	Name    *string `json:"name,omitempty"`
+}
+
 // User Group Resource Definition
 type UserGroupResources struct {
 	AccessControlPolicyReferenceList []*Reference               `json:"access_control_policy_reference_list,omitempty"` // List of ACP references.
@@ -2262,13 +2266,21 @@ type UserGroupResources struct {
 	DisplayName                      *string                    `json:"display_name,omitempty"`                         // The display name for the user group.
 	ProjectsReferenceList            []*Reference               `json:"projects_reference_list,omitempty"`              // A list of projects the user group is part of.
 	UserGroupType                    *string                    `json:"user_group_type,omitempty"`
+	DirectoryServiceOU               *DirectoryServiceUserGroup `json:"directory_service_ou,omitempty"`
+	SamlUserGroup                    *SamlUserGroup             `json:"saml_user_group,omitempty"`
 }
 
 // User group status definition.
 type UserGroupStatus struct {
-	MessageList []MessageResource   `json:"message_list,omitempty"`
-	Resources   *UserGroupResources `json:"resources,omitempty"` // User Group Resource Definition.
-	State       *string             `json:"state,omitempty"`     // The state of the entity.
+	MessageList      []MessageResource   `json:"message_list,omitempty"`
+	Resources        *UserGroupResources `json:"resources,omitempty"` // User Group Resource Definition.
+	State            *string             `json:"state,omitempty"`     // The state of the entity.
+	ExecutionContext *ExecutionContext   `json:"execution_context,omitempty"`
+}
+
+type UserGroupIntentInput struct {
+	Metadata *Metadata      `json:"metadata,omitempty"`
+	Spec     *UserGroupSpec `json:"spec,omitempty"`
 }
 
 // A Directory Service user group.
@@ -2601,6 +2613,7 @@ type AddressGroupResponse struct {
 }
 
 type AddressGroupListEntry struct {
+	UUID                   *string            `json:"uuid,omitempty"`
 	AddressGroup           *AddressGroupInput `json:"address_group,omitempty"`
 	AssociatedPoliciesList []*ReferenceValues `json:"associated_policies_list,omitempty"`
 }

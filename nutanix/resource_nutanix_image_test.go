@@ -51,6 +51,7 @@ func TestAccNutanixImage_Update(t *testing.T) {
 				Config: testAccNutanixImageConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixImageExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "image_type", "ISO_IMAGE"),
 				),
 			},
 			{
@@ -58,7 +59,7 @@ func TestAccNutanixImage_Update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixImageExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("Ubuntu-%d-updated", rInt)),
-					//resource.TestCheckResourceAttr(resourceName, "description", "Ubuntu Updated"), Removed for GCP reasons
+					resource.TestCheckResourceAttr(resourceName, "image_type", "DISK_IMAGE"),
 				),
 			},
 			{
@@ -240,6 +241,7 @@ resource "nutanix_image" "acctest-test" {
   name        = "Ubuntu-%d"
   description = "Ubuntu"
   source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
+  image_type = "ISO_IMAGE"
 }
 `, r)
 }
@@ -250,6 +252,7 @@ resource "nutanix_image" "acctest-test" {
   name        = "Ubuntu-%d-updated"
   description = "Ubuntu Updated"
   source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
+  image_type = "DISK_IMAGE"
 }
 `, r)
 }

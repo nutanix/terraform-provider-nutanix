@@ -283,8 +283,9 @@ func resourceNutanixImageCreate(ctx context.Context, d *schema.ResourceData, met
 	if pok {
 		path := d.Get("source_path")
 
-		err = conn.V3.UploadImage(UUID, path.(string))
+		err = conn.V3.UploadImage(UUID, path.(string), spec.Resources.Checksum)
 		if err != nil {
+			// delete image if upload image from local fails in between of chunks upload
 			delErr := resourceNutanixImageDelete(ctx, d, meta)
 			if delErr != nil {
 				return delErr
@@ -292,8 +293,32 @@ func resourceNutanixImageCreate(ctx context.Context, d *schema.ResourceData, met
 
 			return diag.Errorf("failed uploading image: %s", err)
 		}
-	}
 
+		// read image info to get most recent task reference pointing to image upload task
+		resp, err := conn.V3.GetImage(UUID)
+		if err != nil {
+			return diag.Errorf("error reading image UUID (%s) with error %s", UUID, err)
+		}
+
+		// check if any recent tasks related to image upload failed or not
+		for _, tUUID := range resp.Status.ExecutionContext.TaskUUID.([]interface{}) {
+			u := tUUID.(string)
+			// get image upload task status
+			uploadTaskInfo, err := conn.V3.GetTask(u)
+			if err != nil {
+				diag.Errorf("failed getting task info: %s", err)
+			}
+
+			if *uploadTaskInfo.Status == "FAILED" {
+				// delete image if upload image task fails due to PC side checks
+				delErr := resourceNutanixImageDelete(ctx, d, meta)
+				if delErr != nil {
+					return delErr
+				}
+				return diag.Errorf("error_detail: %s, progress_message: %s", utils.StringValue(uploadTaskInfo.ErrorDetail), utils.StringValue(uploadTaskInfo.ProgressMessage))
+			}
+		}
+	}
 	return resourceNutanixImageRead(ctx, d, meta)
 }
 
@@ -445,11 +470,12 @@ func resourceNutanixImageUpdate(ctx context.Context, d *schema.ResourceData, met
 		spec.Description = utils.StringPtr(d.Get("description").(string))
 	}
 
-	if d.HasChange("source_uri") || d.HasChange("checksum") || d.HasChange("source_path") {
-		if err := getImageResource(d, res); err != nil {
-			return diag.FromErr(err)
-		}
-		spec.Resources = res
+	if d.HasChange("image_type") {
+		spec.Resources.ImageType = utils.StringPtr(d.Get("image_type").(string))
+	}
+
+	if d.HasChange("checksum") {
+		return diag.Errorf("Checksum update is not allowed. Previous checksum algorithm is %s and value is %s", *res.Checksum.ChecksumAlgorithm, *res.Checksum.ChecksumValue)
 	}
 
 	request.Metadata = metadata
@@ -474,14 +500,7 @@ func resourceNutanixImageUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if _, err := stateConf.WaitForStateContext(ctx); err != nil {
-		delErr := resourceNutanixImageDelete(ctx, d, meta)
-		if delErr != nil {
-			delErr = append(delErr, diag.Errorf("error waiting for image (%s) to delete in update", d.Id())...)
-			return delErr
-		}
-		uuid := d.Id()
-		d.SetId("")
-		return diag.Errorf("error waiting for image (%s) to update: %s", uuid, err)
+		return diag.Errorf("error waiting for image (%s) to update: %s", d.Id(), err)
 	}
 
 	return resourceNutanixImageRead(ctx, d, meta)

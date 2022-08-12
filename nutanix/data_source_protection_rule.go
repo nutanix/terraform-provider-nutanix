@@ -273,6 +273,9 @@ func dataSourceNutanixProtectionRuleRead(ctx context.Context, d *schema.Resource
 	if err := d.Set("name", resp.Spec.Name); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("description", resp.Spec.Description); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("start_time", resp.Spec.Resources.StartTime); err != nil {
 		return diag.FromErr(err)
 	}

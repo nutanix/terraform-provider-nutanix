@@ -1,3 +1,47 @@
+## 1.7.0 (August 12, 2022)
+
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.6.1...v1.7.0)
+
+**New Feature:**
+- Added a resource for user groups. [\#477] (https://github.com/nutanix/terraform-provider-nutanix/pull/477)
+
+    New Resource :
+    -  nutanix_user_groups
+
+**Merged pull request:**
+
+- Feature user groups [\#477] (https://github.com/nutanix/terraform-provider-nutanix/pull/477) ([abhimutant](https://github.com/abhimutant))
+- Fix checksum issue in image resource [\#481] (https://github.com/nutanix/terraform-provider-nutanix/pull/481) ([bhatipradeep](https://github.com/bhatipradeep))
+- Fix image resource issues [\#480] (https://github.com/nutanix/terraform-provider-nutanix/pull/480) ([bhatipradeep](https://github.com/bhatipradeep))
+- Add field to set time zone for cluster created using foundation [\#484] (https://github.com/nutanix/terraform-provider-nutanix/pull/484) ([bhatipradeep](https://github.com/bhatipradeep))
+- fixed the issue and added testcase for sysprep custom key values guest customisation [\#478] (https://github.com/nutanix/terraform-provider-nutanix/pull/478) ([abhimutant](https://github.com/abhimutant))
+- Changes in karbon cluster documentation for storage config [\#479] (https://github.com/nutanix/terraform-provider-nutanix/pull/479) ([abhimutant](https://github.com/abhimutant))
+- Enable tests for protection rules based datasources and resources [\#366] (https://github.com/nutanix/terraform-provider-nutanix/pull/366) ([bhatipradeep](https://github.com/bhatipradeep))
+- Add uuid to address_groups data source [\#472] (https://github.com/nutanix/terraform-provider-nutanix/pull/472) ([mcguppy](https://github.com/mcguppy))
+
+
+**Fixed bugs:**
+
+- Terraform provider crashes when using guest_customization_sysprep_custom_key_values [\#441] (https://github.com/nutanix/terraform-provider-nutanix/issues/441) 
+- Nutanix terraform- Karbon clusters, the storage_class_config is not been displayed. [\#417] (https://github.com/nutanix/terraform-provider-nutanix/issues/417)
+- Checksum is not considered while uploading image from local using nutanix_image resource. [\#469] (https://github.com/nutanix/terraform-provider-nutanix/issues/469)
+- Not able to update image_type of PC image [\#454] (https://github.com/nutanix/terraform-provider-nutanix/issues/454)
+- Image gets deleted from PC if nutanix_image update errors out [\#453] (https://github.com/nutanix/terraform-provider-nutanix/issues/453)
+
+**Closed issues:**
+
+- Support for User Groups [\#475] (https://github.com/nutanix/terraform-provider-nutanix/issues/475)
+- Resizing disk identified in plan, but not actually done during apply [\#463] (https://github.com/nutanix/terraform-provider-nutanix/issues/463) 
+- uuid of address_groups are not available [\#461] (https://github.com/nutanix/terraform-provider-nutanix/issues/461)
+- ntx provider have ENTITY_READ_ERROR when try to recreate a VM deleted manually [\#451] (https://github.com/nutanix/terraform-provider-nutanix/issues/451)
+- Allow project definiation by name and not just ID [\#406] (https://github.com/nutanix/terraform-provider-nutanix/issues/406)
+- Upload images to Foundation VM from a remote server using nutanix_foundation_image resource [\#455] (https://github.com/nutanix/terraform-provider-nutanix/issues/455)
+- Change catagories from list to dictionary for more straightforward use [\#407] (https://github.com/nutanix/terraform-provider-nutanix/issues/407)
+- VM creation fails when boot_type = LEGACY [\#304] (https://github.com/nutanix/terraform-provider-nutanix/issues/304)
+- Add attributes to set timezone during cluster creation using image_nodes [\#449] (https://github.com/nutanix/terraform-provider-nutanix/issues/449)
+- Enable multi-pc tests [\#448] (https://github.com/nutanix/terraform-provider-nutanix/issues/448)
+
+
 ## 1.6.1 (July 7, 2022)
 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.5.0...v1.6.1)
