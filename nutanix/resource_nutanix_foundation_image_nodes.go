@@ -313,6 +313,11 @@ func resourceFoundationImageNodes() *schema.Resource {
 							Optional: true,
 							ForceNew: true,
 						},
+						"timezone": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
 					},
 				},
 			},
@@ -1171,6 +1176,9 @@ func expandCluster(d *schema.ResourceData) ([]*foundation.Clusters, error) {
 				}
 				if hypervntps, ok := clst["hypervisor_ntp_servers"]; ok {
 					clusterList.HypervisorNtpServers = (hypervntps.(string))
+				}
+				if timezone, ok := clst["timezone"]; ok {
+					clusterList.Timezone = (timezone.(string))
 				}
 				if clsmembers, ok := clst["cluster_members"]; ok {
 					clsm := clsmembers.([]interface{})

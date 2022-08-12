@@ -126,6 +126,7 @@ func testImageNodesResource(filepath string, blockNum int, name string) string {
 		]
 		redundancy_factor = 2
 		cluster_name =  local.config.nodes[0].hypervisor_hostname
+		timezone = "Asia/Kolkata"
 	  }
 	}`, filepath, blockNum, name)
 }

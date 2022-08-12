@@ -987,7 +987,7 @@ func TestOperations_UploadImageError(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
 			}
-			if err := op.UploadImage(tt.args.UUID, tt.args.filepath); (err != nil) != tt.wantErr {
+			if err := op.UploadImage(tt.args.UUID, tt.args.filepath, nil); (err != nil) != tt.wantErr {
 				t.Errorf("Operations.UploadImage() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1037,7 +1037,7 @@ func TestOperations_UploadImage(t *testing.T) {
 			op := Operations{
 				client: tt.fields.client,
 			}
-			if err := op.UploadImage(tt.args.UUID, tt.args.filepath); err != nil {
+			if err := op.UploadImage(tt.args.UUID, tt.args.filepath, nil); err != nil {
 				t.Errorf("Operations.UploadImage() error = %v", err)
 			}
 		})

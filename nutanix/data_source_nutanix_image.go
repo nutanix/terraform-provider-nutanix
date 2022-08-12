@@ -234,6 +234,16 @@ func dataSourceNutanixImageRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(err)
 	}
 
+	checksum := make(map[string]string)
+	if resp.Status.Resources.Checksum != nil {
+		checksum["checksum_algorithm"] = utils.StringValue(resp.Status.Resources.Checksum.ChecksumAlgorithm)
+		checksum["checksum_value"] = utils.StringValue(resp.Status.Resources.Checksum.ChecksumValue)
+	}
+
+	if err := d.Set("checksum", checksum); err != nil {
+		return diag.FromErr(err)
+	}
+
 	d.SetId(utils.StringValue(resp.Metadata.UUID))
 
 	return nil

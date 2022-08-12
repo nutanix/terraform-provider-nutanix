@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -13,15 +14,17 @@ import (
 )
 
 func TestAccNutanixProtectionRule_basic(t *testing.T) {
-	t.Skip()
+	if os.Getenv("PROTECTION_RULES_TEST_FLAG") != "true" {
+		t.Skip()
+	}
 	resourceName := "nutanix_protection_rule.test"
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")
 	description := acctest.RandomWithPrefix("test-protection-desc-dou")
-	aZUrlSource := "c99ab7cd-9191-4fcb-8fc0-232eff76e595"
-	uuidSource := "4db9adc1-8d13-4585-a901-a3ce1276ecb0"
-	aZUrlTarget := "45a97947-4b09-4179-8e9b-0c2859020539"
-	uuidTarget := "40cc9ba1-4c3c-4deb-a04e-a5e33c09d767"
+	aZUUIDSource := testVars.ProtectionPolicy.LocalAz.UUID
+	clusterUUIDSource := testVars.ProtectionPolicy.LocalAz.ClusterUUID
+	aZUUIDTarget := testVars.ProtectionPolicy.DestinationAz.UUID
+	clusterUUIDTarget := testVars.ProtectionPolicy.DestinationAz.UUID
 
 	nameUpdated := acctest.RandomWithPrefix("test-protection-name-dou")
 	descriptionUpdated := acctest.RandomWithPrefix("test-protection-desc-dou")
@@ -29,10 +32,10 @@ func TestAccNutanixProtectionRule_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNutanixProtectionRUleDestroy,
+		CheckDestroy: testAccCheckNutanixProtectionRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixProtectionRuleConfig(name, description, aZUrlSource, uuidSource, aZUrlTarget, uuidTarget, 1),
+				Config: testAccNutanixProtectionRuleConfig(name, description, aZUUIDSource, clusterUUIDSource, aZUUIDTarget, clusterUUIDTarget, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixProtectionRuleExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -40,7 +43,7 @@ func TestAccNutanixProtectionRule_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNutanixProtectionRuleConfig(nameUpdated, descriptionUpdated, aZUrlSource, uuidSource, aZUrlTarget, uuidTarget, 2),
+				Config: testAccNutanixProtectionRuleConfig(nameUpdated, descriptionUpdated, aZUUIDSource, clusterUUIDSource, aZUUIDTarget, clusterUUIDTarget, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixProtectionRuleExists(&resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", nameUpdated),
@@ -51,24 +54,26 @@ func TestAccNutanixProtectionRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixProtectionRule_importBasic(t *testing.T) {
-	t.Skip()
+func TestAccResourceNutanixProtectionRule_importBasic(t *testing.T) {
+	if os.Getenv("PROTECTION_RULES_TEST_FLAG") != "true" {
+		t.Skip()
+	}
 	resourceName := "nutanix_protection_rule.test"
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")
 	description := acctest.RandomWithPrefix("test-protection-desc-dou")
-	aZUrlSource := "c99ab7cd-9191-4fcb-8fc0-232eff76e595"
-	uuidSource := "4db9adc1-8d13-4585-a901-a3ce1276ecb0"
-	aZUrlTarget := "45a97947-4b09-4179-8e9b-0c2859020539"
-	uuidTarget := "40cc9ba1-4c3c-4deb-a04e-a5e33c09d767"
+	aZUUIDSource := testVars.ProtectionPolicy.LocalAz.UUID
+	clusterUUIDSource := testVars.ProtectionPolicy.LocalAz.ClusterUUID
+	aZUUIDTarget := testVars.ProtectionPolicy.DestinationAz.UUID
+	clusterUUIDTarget := testVars.ProtectionPolicy.DestinationAz.UUID
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckNutanixProtectionRUleDestroy,
+		CheckDestroy: testAccCheckNutanixProtectionRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixProtectionRuleConfig(name, description, aZUrlSource, uuidSource, aZUrlTarget, uuidTarget, 1),
+				Config: testAccNutanixProtectionRuleConfig(name, description, aZUUIDSource, clusterUUIDSource, aZUUIDTarget, clusterUUIDTarget, 1),
 			},
 			{
 				ResourceName:      resourceName,
@@ -104,7 +109,7 @@ func testAccCheckNutanixProtectionRuleExists(resourceName *string) resource.Test
 	}
 }
 
-func testAccCheckNutanixProtectionRUleDestroy(s *terraform.State) error {
+func testAccCheckNutanixProtectionRuleDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*Client)
 
 	for _, rs := range s.RootModule().Resources {
@@ -125,7 +130,7 @@ func testAccCheckNutanixProtectionRUleDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccNutanixProtectionRuleConfig(name, description, aZUrlSource, clusterUUIDSource, aZUrlTarget, clusterUUIDTarget string, snapshots int64) string {
+func testAccNutanixProtectionRuleConfig(name, description, aZUUIDSource, clusterUUIDSource, aZUUIDTarget, clusterUUIDTarget string, snapshots int64) string {
 	return fmt.Sprintf(`
 		resource "nutanix_protection_rule" "test" {
 			name        = "%s"
@@ -168,5 +173,5 @@ func testAccNutanixProtectionRuleConfig(name, description, aZUrlSource, clusterU
 				}
 			}
 		}
-	`, name, description, aZUrlSource, clusterUUIDSource, aZUrlTarget, clusterUUIDTarget, snapshots)
+	`, name, description, aZUUIDSource, clusterUUIDSource, aZUUIDTarget, clusterUUIDTarget, snapshots)
 }
