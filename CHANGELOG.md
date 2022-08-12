@@ -1,11 +1,12 @@
-## 1.7.0 (August 11, 2022)
+## 1.7.0 (August 12, 2022)
 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.6.1...v1.7.0)
 
 **New Feature:**
 - Added a resource for user groups. [\#477] (https://github.com/nutanix/terraform-provider-nutanix/pull/477)
+
     New Resource :
-    - nutanix_user_groups
+    -  nutanix_user_groups
 
 **Merged pull request:**
 
