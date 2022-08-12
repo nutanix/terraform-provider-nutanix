@@ -156,6 +156,7 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 * nutanix_pbr
 * nutanix_static_routes
 * nutanix_floating_ip
+* nutanix_user_groups
 
 ## Data Sources
 
