@@ -111,6 +111,12 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("FOUNDATION_PORT", nil),
 				Description: descriptions["foundation_port"],
 			},
+			"era_endpoint": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("ERA_ENDPOINT", nil),
+				Description: descriptions["era_endpoint"],
+			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"nutanix_image":                                   dataSourceNutanixImage(),
@@ -238,6 +244,7 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		ProxyURL:           d.Get("proxy_url").(string),
 		FoundationEndpoint: d.Get("foundation_endpoint").(string),
 		FoundationPort:     d.Get("foundation_port").(string),
+		EraEndpoint:        d.Get("era_endpoint").(string),
 		RequiredFields:     requiredProviderFields,
 	}
 	c, err := config.Client()

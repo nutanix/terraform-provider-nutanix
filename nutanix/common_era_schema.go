@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	client "github.com/terraform-providers/terraform-provider-nutanix/client/era"
+	era "github.com/terraform-providers/terraform-provider-nutanix/client/era"
 )
 
 func timeMachineInfoSchema() *schema.Schema {
@@ -364,9 +365,9 @@ func tryToConvertBool(v interface{}) (bool, bool) {
 	return b, true
 }
 
-func buildActionArgumentsFromResourceData(d *schema.Set) []client.Actionarguments {
+func buildActionArgumentsFromResourceData(d *schema.Set, args []era.Actionarguments) []client.Actionarguments {
 	argSet := d.List()
-	args := []client.Actionarguments{}
+	// args := []client.Actionarguments{}
 	for _, arg := range argSet {
 		var val interface{}
 		val = arg.(map[string]interface{})["value"]

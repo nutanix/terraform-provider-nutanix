@@ -72,6 +72,7 @@ type Credentials struct {
 	FoundationEndpoint string              // Required field for connecting to foundation VM APIs
 	FoundationPort     string              // Port for connecting to foundation VM APIs
 	RequiredFields     map[string][]string // RequiredFields is client to its required fields mapping for validations and usage in every client
+	EraEndpoint        string
 }
 
 // AdditionalFilter specification for client side filters
@@ -146,7 +147,8 @@ func NewBaseClient(credentials *Credentials, absolutePath string, isHTTP bool) (
 	if absolutePath == "" {
 		return nil, fmt.Errorf("absolutePath argument must be passed")
 	}
-
+	fmt.Println("absolutePath111")
+	fmt.Println(absolutePath)
 	httpClient := http.DefaultClient
 
 	transCfg := &http.Transport{
@@ -166,7 +168,8 @@ func NewBaseClient(credentials *Credentials, absolutePath string, isHTTP bool) (
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Println("baseURL11111")
+	fmt.Println(baseURL)
 	c := &Client{credentials, httpClient, baseURL, "", nil, nil, absolutePath, ""}
 
 	return c, nil
@@ -185,6 +188,8 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 	}
 
 	u := c.BaseURL.ResolveReference(rel)
+	fmt.Println("url111111")
+	fmt.Println(u)
 
 	buf := new(bytes.Buffer)
 

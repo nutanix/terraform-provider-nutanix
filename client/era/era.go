@@ -1,6 +1,9 @@
 package Era
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
 )
 
@@ -8,6 +11,7 @@ const (
 	libraryVersion = "v0.9"
 	absolutePath   = "era/" + libraryVersion
 	//userAgent      = "nutanix/" + libraryVersion // Check whether user-agent will be same as that of nutanix.
+	clientName = "ERA"
 )
 
 type Client struct {
@@ -15,19 +19,30 @@ type Client struct {
 	Service Service
 }
 
-func NewV3Client(credentials client.Credentials) (*Client, error) {
-	c, err := client.NewClient(&credentials, "", absolutePath, false)
+func NewEraClient(credentials client.Credentials) (*Client, error) {
+	var baseClient *client.Client
 
-	if err != nil {
-		return nil, err
+	// check if all required fields are present. Else create an empty client
+	if credentials.Username != "" && credentials.Password != "" && credentials.EraEndpoint != "" {
+		credentials.URL = fmt.Sprintf(credentials.EraEndpoint)
+		c, err := client.NewBaseClient(&credentials, absolutePath, false)
+		if err != nil {
+			return nil, err
+		}
+		baseClient = c
+	} else {
+		errorMsg := fmt.Sprintf("Era Client is missing. "+
+			"Please provide required details - %s in provider configuration.", strings.Join(credentials.RequiredFields[clientName], ", "))
+
+		baseClient = &client.Client{ErrorMsg: errorMsg}
 	}
 
-	f := &Client{
-		client: c,
+	fc := &Client{
+		client: baseClient,
 		Service: ServiceClient{
-			c: c,
+			c: baseClient,
 		},
 	}
+	return fc, nil
 
-	return f, nil
 }

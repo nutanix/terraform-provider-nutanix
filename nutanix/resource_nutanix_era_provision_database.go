@@ -3,10 +3,11 @@ package nutanix
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 
-	client "github.com/terraform-providers/terraform-provider-nutanix/client/era"
+	era "github.com/terraform-providers/terraform-provider-nutanix/client/era"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -176,6 +177,100 @@ func resourceDatabaseInstance() *schema.Resource {
 					},
 				},
 			},
+
+			"postgresql_info": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"listener_port": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"database_size": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"db_password": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"database_names": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"auto_tune_staging_drive": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"allocate_pg_hugepage": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"cluster_database": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"auth_method": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"is_high_availability": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"proxy_read_port": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"proxy_write_port": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"provision_virtual_ip": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+
+									"deploy_haproxy": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"enable_synchronous_mode": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"cluster_name": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"patroni_cluster_name": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"failover_mode": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"node_type": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"archive_wal_expire_days": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"backup_policy": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -187,9 +282,9 @@ func createDatabaseInstance(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.FromErr(err)
 	}
 
-	c := meta.(*client.Client)
+	c := meta.(*Client).Era
 	if c == nil {
-		return diag.Errorf("client is nil")
+		return diag.Errorf("era is nil")
 	}
 
 	log.Println("Request:\n")
@@ -203,6 +298,13 @@ func createDatabaseInstance(ctx context.Context, d *schema.ResourceData, meta in
 
 	resp, err := c.Service.ProvisionDatabase(req)
 	if err != nil {
+		log.Println("Response from server:")
+		log.Println(resp)
+		log.Println("\n\n\n\n")
+
+		b, _ = json.Marshal(resp)
+
+		log.Println("Json blob: \n")
 		return diag.Errorf("error while sending request...........:\n %s\n\n", err.Error())
 	}
 	d.SetId(resp.Entityid)
@@ -223,7 +325,7 @@ func createDatabaseInstance(ctx context.Context, d *schema.ResourceData, meta in
 	if opID == "" {
 		return diag.Errorf("error: operation ID is an empty string")
 	}
-	opReq := client.GetOperationRequest{
+	opReq := era.GetOperationRequest{
 		OperationID: opID,
 	}
 
@@ -258,8 +360,8 @@ func createDatabaseInstance(ctx context.Context, d *schema.ResourceData, meta in
 //return d.Get(string).(string)
 //}
 
-func buildEraRequest(d *schema.ResourceData) (*client.ProvisionDatabaseRequest, error) {
-	return &client.ProvisionDatabaseRequest{
+func buildEraRequest(d *schema.ResourceData) (*era.ProvisionDatabaseRequest, error) {
+	return &era.ProvisionDatabaseRequest{
 		Databasetype:             d.Get("databasetype").(string),
 		Name:                     d.Get("name").(string),
 		Databasedescription:      d.Get("description").(string),
@@ -271,7 +373,7 @@ func buildEraRequest(d *schema.ResourceData) (*client.ProvisionDatabaseRequest, 
 		Newdbservertimezone:      d.Get("newdbservertimezone").(string),
 		DatabaseServerID:         d.Get("dbserverid").(string),
 		Timemachineinfo:          *buildTimeMachineFromResourceData(d.Get("timemachineinfo").(*schema.Set)),
-		Actionarguments:          buildActionArgumentsFromResourceData(d.Get("actionarguments").(*schema.Set)),
+		Actionarguments:          expandActionArguments(d),
 		Createdbserver:           d.Get("createdbserver").(bool),
 		Nodecount:                d.Get("nodecount").(int),
 		Nxclusterid:              d.Get("nxclusterid").(string),
@@ -282,11 +384,12 @@ func buildEraRequest(d *schema.ResourceData) (*client.ProvisionDatabaseRequest, 
 	}, nil
 }
 
+// buildActionArgumentsFromResourceData(d.Get("actionarguments").(*schema.Set))
 func readDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
-	c := m.(*client.Client)
+	c := m.(*Client).Era
 	if c == nil {
-		return diag.Errorf("client is nil")
+		return diag.Errorf("era is nil")
 	}
 
 	databaseInstanceID := d.Id()
@@ -320,16 +423,16 @@ func readDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interfa
 }
 
 func updateDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(*client.Client)
+	c := m.(*Client).Era
 	if c == nil {
-		return diag.Errorf("client is nil")
+		return diag.Errorf("era is nil")
 	}
 
 	dbID := d.Id()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
 
-	updateReq := client.UpdateDatabaseRequest{
+	updateReq := era.UpdateDatabaseRequest{
 		Name:             name,
 		Description:      description,
 		Tags:             []interface{}{},
@@ -357,14 +460,14 @@ func updateDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 }
 
 func deleteDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(*client.Client)
+	c := m.(*Client).Era
 	if c == nil {
-		return diag.Errorf("client is nil")
+		return diag.Errorf("era is nil")
 	}
 
 	dbID := d.Id()
 
-	req := client.DeleteDatabaseRequest{
+	req := era.DeleteDatabaseRequest{
 		Delete:               false,
 		Remove:               true,
 		Softremove:           false,
@@ -381,4 +484,261 @@ func deleteDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 	// TODO: Use retry timeout mechanism provided by terraform to poll for operation
 
 	return nil
+}
+
+func expandActionArguments(d *schema.ResourceData) []era.Actionarguments {
+	args := []era.Actionarguments{}
+	// resp := []era.Actionarguments{}
+	if post, ok := d.GetOk("postgresql_info"); ok {
+		brr := post.([]interface{})
+
+		for _, arg := range brr {
+			val := arg.(map[string]interface{})
+			var values interface{}
+			if plist, pok := val["listener_port"]; pok {
+				values = plist
+				b, ok := tryToConvertBool(plist)
+				if ok {
+					values = b
+				}
+
+				args = append(args, era.Actionarguments{
+					Name:  "listener_port",
+					Value: values,
+				})
+			}
+			if plist, pok := val["database_size"]; pok {
+				values = plist
+				b, ok := tryToConvertBool(plist)
+				if ok {
+					values = b
+				}
+
+				args = append(args, era.Actionarguments{
+					Name:  "database_size",
+					Value: values,
+				})
+			}
+			if plist, pok := val["db_password"]; pok {
+				values = plist
+				b, ok := tryToConvertBool(plist)
+				if ok {
+					values = b
+				}
+
+				args = append(args, era.Actionarguments{
+					Name:  "db_password",
+					Value: values,
+				})
+			}
+			if plist, pok := val["database_names"]; pok {
+				values = plist
+				b, ok := tryToConvertBool(plist)
+				if ok {
+					values = b
+				}
+
+				args = append(args, era.Actionarguments{
+					Name:  "database_names",
+					Value: values,
+				})
+			}
+			if plist, pok := val["auto_tune_staging_drive"]; pok {
+				values = plist
+				b, ok := tryToConvertBool(plist)
+				if ok {
+					values = b
+				}
+
+				args = append(args, era.Actionarguments{
+					Name:  "auto_tune_staging_drive",
+					Value: values,
+				})
+			}
+			if plist, pok := val["allocate_pg_hugepage"]; pok {
+				values = plist
+				b, ok := tryToConvertBool(plist)
+				if ok {
+					values = b
+				}
+
+				args = append(args, era.Actionarguments{
+					Name:  "allocate_pg_hugepage",
+					Value: values,
+				})
+			}
+			if plist, pok := val["auth_method"]; pok && len(plist.(string)) > 0 {
+				fmt.Println("22222222")
+				values = plist
+				b, ok := tryToConvertBool(plist)
+				if ok {
+					values = b
+				}
+
+				args = append(args, era.Actionarguments{
+					Name:  "auth_method",
+					Value: values,
+				})
+			}
+			if plist, clok := val["cluster_database"]; clok && len(plist.(string)) > 0 {
+				fmt.Println("111111111")
+				values = plist
+				b, ok := tryToConvertBool(plist)
+				if ok {
+					values = b
+				}
+
+				args = append(args, era.Actionarguments{
+					Name:  "cluster_database",
+					Value: values,
+				})
+			}
+
+			if plist, ok := val["is_high_availability"]; ok && len(plist.([]interface{})) > 0 {
+				high := plist.([]interface{})
+
+				for _, v := range high {
+					val := v.(map[string]interface{})
+					var values interface{}
+					if plist, pok := val["proxy_read_port"]; pok {
+						values = plist
+						b, ok := tryToConvertBool(plist)
+						if ok {
+							values = b
+						}
+
+						args = append(args, era.Actionarguments{
+							Name:  "proxy_read_port",
+							Value: values,
+						})
+					}
+					if plist, pok := val["proxy_write_port"]; pok {
+						values = plist
+						b, ok := tryToConvertBool(plist)
+						if ok {
+							values = b
+						}
+
+						args = append(args, era.Actionarguments{
+							Name:  "proxy_write_port",
+							Value: values,
+						})
+					}
+					if plist, pok := val["provision_virtual_ip"]; pok {
+						values = plist
+						b, ok := tryToConvertBool(plist)
+						if ok {
+							values = b
+						}
+
+						args = append(args, era.Actionarguments{
+							Name:  "provision_virtual_ip",
+							Value: values,
+						})
+					}
+					if plist, pok := val["deploy_haproxy"]; pok {
+						values = plist
+						b, ok := tryToConvertBool(plist)
+						if ok {
+							values = b
+						}
+
+						args = append(args, era.Actionarguments{
+							Name:  "deploy_haproxy",
+							Value: values,
+						})
+					}
+
+					if plist, pok := val["enable_synchronous_mode"]; pok {
+						values = plist
+						b, ok := tryToConvertBool(plist)
+						if ok {
+							values = b
+						}
+
+						args = append(args, era.Actionarguments{
+							Name:  "enable_synchronous_mode",
+							Value: values,
+						})
+					}
+					if plist, pok := val["cluster_name"]; pok {
+						values = plist
+						b, ok := tryToConvertBool(plist)
+						if ok {
+							values = b
+						}
+
+						args = append(args, era.Actionarguments{
+							Name:  "cluster_name",
+							Value: values,
+						})
+					}
+					if plist, pok := val["patroni_cluster_name"]; pok {
+						values = plist
+						b, ok := tryToConvertBool(plist)
+						if ok {
+							values = b
+						}
+
+						args = append(args, era.Actionarguments{
+							Name:  "patroni_cluster_name",
+							Value: values,
+						})
+					}
+
+					if plist, pok := val["failover_mode"]; pok {
+						values = plist
+						b, ok := tryToConvertBool(plist)
+						if ok {
+							values = b
+						}
+
+						args = append(args, era.Actionarguments{
+							Name:  "failover_mode",
+							Value: values,
+						})
+					}
+					if plist, pok := val["node_type"]; pok {
+						values = plist
+						b, ok := tryToConvertBool(plist)
+						if ok {
+							values = b
+						}
+
+						args = append(args, era.Actionarguments{
+							Name:  "node_type",
+							Value: values,
+						})
+					}
+					if plist, pok := val["archive_wal_expire_days"]; pok {
+						values = plist
+						b, ok := tryToConvertBool(plist)
+						if ok {
+							values = b
+						}
+
+						args = append(args, era.Actionarguments{
+							Name:  "archive_wal_expire_days",
+							Value: values,
+						})
+					}
+					if plist, pok := val["backup_policy"]; pok {
+						values = plist
+						b, ok := tryToConvertBool(plist)
+						if ok {
+							values = b
+						}
+
+						args = append(args, era.Actionarguments{
+							Name:  "backup_policy",
+							Value: values,
+						})
+					}
+				}
+			}
+		}
+	}
+	resp := buildActionArgumentsFromResourceData(d.Get("actionarguments").(*schema.Set), args)
+
+	return resp
 }
