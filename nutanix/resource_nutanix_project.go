@@ -987,7 +987,7 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 		spec := &v3.ProjectInternalSpec{}
 		metadata := &v3.Metadata{}
 		projDetails := &v3.ProjectDetails{}
-		accessControlPolicy := make([]*v3.AccessControlPolicyList, 0)
+		var accessControlPolicy []*v3.AccessControlPolicyList
 
 		response, err := conn.V3.GetProjectInternal(ctx, d.Id())
 		if err != nil {
@@ -1006,7 +1006,7 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 
 			if response.Spec.ProjectDetail != nil || response.Spec.AccessControlPolicyList != nil {
 				projDetails = response.Spec.ProjectDetail
-				accessControlPolicy = response.Spec.AccessControlPolicyList
+				// accessControlPolicy = response.Spec.AccessControlPolicyList
 			}
 
 			if len(response.Spec.ProjectDetail.Resources.ResourceDomain.Resources) > 0 {

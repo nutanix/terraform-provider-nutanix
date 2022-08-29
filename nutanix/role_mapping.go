@@ -472,9 +472,9 @@ func getFilterCollaboration(collab bool, projectUUID string) []*v3.ContextList {
 
 // Custom Roles
 
-func generateCustomFilters(PermissionList []string) []interface{} {
+func generateCustomFilters(permissionList []string) []interface{} {
 	customMap := make(map[string]v3.EntityFilterExpressionList)
-	view_image := v3.EntityFilterExpressionList{
+	viewImage := v3.EntityFilterExpressionList{
 		Operator: "IN",
 		LeftHandSide: v3.LeftHandSide{
 			EntityType: utils.StringPtr("image"),
@@ -483,9 +483,9 @@ func generateCustomFilters(PermissionList []string) []interface{} {
 			Collection: utils.StringPtr("ALL"),
 		},
 	}
-	customMap["view_image"] = view_image
+	customMap["view_image"] = viewImage
 
-	view_app_icon := v3.EntityFilterExpressionList{
+	viewAppIcon := v3.EntityFilterExpressionList{
 		Operator: "IN",
 		LeftHandSide: v3.LeftHandSide{
 			EntityType: utils.StringPtr("app_icon"),
@@ -494,9 +494,9 @@ func generateCustomFilters(PermissionList []string) []interface{} {
 			Collection: utils.StringPtr("ALL"),
 		},
 	}
-	customMap["View_App_Icon"] = view_app_icon
+	customMap["View_App_Icon"] = viewAppIcon
 
-	view_name_category := v3.EntityFilterExpressionList{
+	viewNameCategory := v3.EntityFilterExpressionList{
 		Operator: "IN",
 		LeftHandSide: v3.LeftHandSide{
 			EntityType: utils.StringPtr("category"),
@@ -505,9 +505,9 @@ func generateCustomFilters(PermissionList []string) []interface{} {
 			Collection: utils.StringPtr("ALL"),
 		},
 	}
-	customMap["View_Name_Category"] = view_name_category
+	customMap["View_Name_Category"] = viewNameCategory
 
-	create_or_update_name_category := v3.EntityFilterExpressionList{
+	createOrUpdateNameCategory := v3.EntityFilterExpressionList{
 		Operator: "IN",
 		LeftHandSide: v3.LeftHandSide{
 			EntityType: utils.StringPtr("category"),
@@ -516,9 +516,9 @@ func generateCustomFilters(PermissionList []string) []interface{} {
 			Collection: utils.StringPtr("ALL"),
 		},
 	}
-	customMap["Create_Or_Update_Name_Category"] = create_or_update_name_category
+	customMap["Create_Or_Update_Name_Category"] = createOrUpdateNameCategory
 
-	view_environment := v3.EntityFilterExpressionList{
+	viewEnvironment := v3.EntityFilterExpressionList{
 		Operator: "IN",
 		LeftHandSide: v3.LeftHandSide{
 			EntityType: utils.StringPtr("environment"),
@@ -527,9 +527,9 @@ func generateCustomFilters(PermissionList []string) []interface{} {
 			Collection: utils.StringPtr("SELF_OWNED"),
 		},
 	}
-	customMap["View_Environment"] = view_environment
+	customMap["View_Environment"] = viewEnvironment
 
-	view_marketplace_item := v3.EntityFilterExpressionList{
+	viewMarketplaceItem := v3.EntityFilterExpressionList{
 		Operator: "IN",
 		LeftHandSide: v3.LeftHandSide{
 			EntityType: utils.StringPtr("marketplace_item"),
@@ -538,9 +538,9 @@ func generateCustomFilters(PermissionList []string) []interface{} {
 			Collection: utils.StringPtr("SELF_OWNED"),
 		},
 	}
-	customMap["View_Marketplace_Item"] = view_marketplace_item
+	customMap["View_Marketplace_Item"] = viewMarketplaceItem
 
-	view_user := v3.EntityFilterExpressionList{
+	viewUser := v3.EntityFilterExpressionList{
 		Operator: "IN",
 		LeftHandSide: v3.LeftHandSide{
 			EntityType: utils.StringPtr("user_group"),
@@ -549,9 +549,9 @@ func generateCustomFilters(PermissionList []string) []interface{} {
 			Collection: utils.StringPtr("ALL"),
 		},
 	}
-	customMap["View_User"] = view_user
+	customMap["View_User"] = viewUser
 
-	view_user_group := v3.EntityFilterExpressionList{
+	viewUserGroup := v3.EntityFilterExpressionList{
 		Operator: "IN",
 		LeftHandSide: v3.LeftHandSide{
 			EntityType: utils.StringPtr("image"),
@@ -560,9 +560,9 @@ func generateCustomFilters(PermissionList []string) []interface{} {
 			Collection: utils.StringPtr("ALL"),
 		},
 	}
-	customMap["View_User_Group"] = view_user_group
+	customMap["View_User_Group"] = viewUserGroup
 
-	view_role := v3.EntityFilterExpressionList{
+	viewRole := v3.EntityFilterExpressionList{
 		Operator: "IN",
 		LeftHandSide: v3.LeftHandSide{
 			EntityType: utils.StringPtr("role"),
@@ -571,9 +571,9 @@ func generateCustomFilters(PermissionList []string) []interface{} {
 			Collection: utils.StringPtr("ALL"),
 		},
 	}
-	customMap["View_Role"] = view_role
+	customMap["View_Role"] = viewRole
 
-	view_directory_service := v3.EntityFilterExpressionList{
+	viewDirectoryService := v3.EntityFilterExpressionList{
 		Operator: "IN",
 		LeftHandSide: v3.LeftHandSide{
 			EntityType: utils.StringPtr("directory_service"),
@@ -582,9 +582,9 @@ func generateCustomFilters(PermissionList []string) []interface{} {
 			Collection: utils.StringPtr("ALL"),
 		},
 	}
-	customMap["View_Directory_Service"] = view_directory_service
+	customMap["View_Directory_Service"] = viewDirectoryService
 
-	search_directory_service := v3.EntityFilterExpressionList{
+	searchDirectoryService := v3.EntityFilterExpressionList{
 		Operator: "IN",
 		LeftHandSide: v3.LeftHandSide{
 			EntityType: utils.StringPtr("directory_service"),
@@ -593,9 +593,9 @@ func generateCustomFilters(PermissionList []string) []interface{} {
 			Collection: utils.StringPtr("ALL"),
 		},
 	}
-	customMap["Search_Directory_Service"] = search_directory_service
+	customMap["Search_Directory_Service"] = searchDirectoryService
 
-	view_identity_provider := v3.EntityFilterExpressionList{
+	viewIdentityProvider := v3.EntityFilterExpressionList{
 		Operator: "IN",
 		LeftHandSide: v3.LeftHandSide{
 			EntityType: utils.StringPtr("identity_provider"),
@@ -604,9 +604,9 @@ func generateCustomFilters(PermissionList []string) []interface{} {
 			Collection: utils.StringPtr("ALL"),
 		},
 	}
-	customMap["View_Identity_Provider"] = view_identity_provider
+	customMap["View_Identity_Provider"] = viewIdentityProvider
 
-	view_app_task := v3.EntityFilterExpressionList{
+	viewAppTask := v3.EntityFilterExpressionList{
 		Operator: "IN",
 		LeftHandSide: v3.LeftHandSide{
 			EntityType: utils.StringPtr("app_task"),
@@ -615,9 +615,9 @@ func generateCustomFilters(PermissionList []string) []interface{} {
 			Collection: utils.StringPtr("SELF_OWNED"),
 		},
 	}
-	customMap["View_App_Task"] = view_app_task
+	customMap["View_App_Task"] = viewAppTask
 
-	view_app_variable := v3.EntityFilterExpressionList{
+	viewAppVariable := v3.EntityFilterExpressionList{
 		Operator: "IN",
 		LeftHandSide: v3.LeftHandSide{
 			EntityType: utils.StringPtr("app_variable"),
@@ -626,11 +626,11 @@ func generateCustomFilters(PermissionList []string) []interface{} {
 			Collection: utils.StringPtr("SELF_OWNED"),
 		},
 	}
-	customMap["View_App_Variable"] = view_app_variable
+	customMap["View_App_Variable"] = viewAppVariable
 
 	filterLIST := make([]interface{}, 0)
 
-	for _, v := range PermissionList {
+	for _, v := range permissionList {
 		val := v
 		if vals, ok := customMap[val]; ok {
 			filterLIST = append(filterLIST, vals)
@@ -640,15 +640,14 @@ func generateCustomFilters(PermissionList []string) []interface{} {
 	return filterLIST
 }
 
-func getRolesPermission(roleId string, meta interface{}, projectUUID string, clusterUUID string, pcCollab bool) []*v3.ContextList {
+func getRolesPermission(roleID string, meta interface{}, projectUUID string, clusterUUID string, pcCollab bool) []*v3.ContextList {
 	conn := meta.(*Client).API
 
-	resp, _ := conn.V3.GetRole(roleId)
+	resp, _ := conn.V3.GetRole(roleID)
 
 	roleName := utils.StringValue(resp.Status.Name)
 
 	if roleName == "Developer" || roleName == "Consumer" || roleName == ("Operator") || roleName == ("Project Admin") {
-
 		contextOut := make([]*v3.ContextList, 0)
 
 		contextOut = append(contextOut, getFilterCollaboration(pcCollab, projectUUID)...)
@@ -658,46 +657,45 @@ func getRolesPermission(roleId string, meta interface{}, projectUUID string, clu
 		contextOut = append(contextOut, getDefaultContext(projectUUID)...)
 
 		return contextOut
-	} else {
-		permList := resp.Status.Resources.PermissionReferenceList
-
-		permS := []string{}
-
-		for _, v := range permList {
-			permS = append(permS, utils.StringValue(v.Name))
-		}
-
-		customPerms := generateCustomFilters(permS)
-
-		ans := make([]v3.EntityFilterExpressionList, 0)
-		for _, v := range customPerms {
-			val := v.(v3.EntityFilterExpressionList)
-			ans = append(ans, val)
-		}
-
-		if clusterUUID != "" {
-			ans = append(ans, v3.EntityFilterExpressionList{
-				LeftHandSide: v3.LeftHandSide{
-					EntityType: utils.StringPtr("cluster"),
-				},
-				Operator: "IN",
-				RightHandSide: v3.RightHandSide{
-					UUIDList: []string{clusterUUID},
-				},
-			})
-		}
-
-		out := &v3.ContextList{}
-		out.EntityFilterExpressionList = ans
-
-		contextOut := make([]*v3.ContextList, 0)
-
-		contextOut = append(contextOut, getFilterCollaboration(pcCollab, projectUUID)...)
-
-		contextOut = append(contextOut, out)
-
-		contextOut = append(contextOut, getDefaultContext(projectUUID)...)
-
-		return contextOut
 	}
+	permList := resp.Status.Resources.PermissionReferenceList
+
+	permS := []string{}
+
+	for _, v := range permList {
+		permS = append(permS, utils.StringValue(v.Name))
+	}
+
+	customPerms := generateCustomFilters(permS)
+
+	ans := make([]v3.EntityFilterExpressionList, 0)
+	for _, v := range customPerms {
+		val := v.(v3.EntityFilterExpressionList)
+		ans = append(ans, val)
+	}
+
+	if clusterUUID != "" {
+		ans = append(ans, v3.EntityFilterExpressionList{
+			LeftHandSide: v3.LeftHandSide{
+				EntityType: utils.StringPtr("cluster"),
+			},
+			Operator: "IN",
+			RightHandSide: v3.RightHandSide{
+				UUIDList: []string{clusterUUID},
+			},
+		})
+	}
+
+	out := &v3.ContextList{}
+	out.EntityFilterExpressionList = ans
+
+	contextOut := make([]*v3.ContextList, 0)
+
+	contextOut = append(contextOut, getFilterCollaboration(pcCollab, projectUUID)...)
+
+	contextOut = append(contextOut, out)
+
+	contextOut = append(contextOut, getDefaultContext(projectUUID)...)
+
+	return contextOut
 }
