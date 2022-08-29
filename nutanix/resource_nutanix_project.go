@@ -856,7 +856,6 @@ func resourceNutanixProjectCreate(ctx context.Context, d *schema.ResourceData, m
 		if _, errWaitTask := UpstateConf.WaitForStateContext(ctx); errWaitTask != nil {
 			return diag.Errorf("error waiting for project(%s) to update: %s", uuid, errWaitTask)
 		}
-
 	} else {
 		req := &v3.Project{
 			Spec:       expandProjectSpec(d),
@@ -1097,7 +1096,6 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		uuid = *resp.Metadata.UUID
 		taskUUID = resp.Status.ExecutionContext.TaskUUID.(string)
-
 	} else {
 		project, err := conn.V3.GetProject(d.Id())
 		if err != nil {
@@ -1312,7 +1310,6 @@ func expandProjectDetails(d *schema.ResourceData) *v3.ProjectDetails {
 }
 
 func expandProjectInternalSpec(d *schema.ResourceData, meta interface{}) *v3.ProjectInternalSpec {
-
 	proSpec := &v3.ProjectInternalSpec{}
 	accessControlPolicyList := []*v3.AccessControlPolicyList{}
 	userList := make([]*v3.UserList, 0)
@@ -1369,7 +1366,6 @@ func expandAcp(pr []interface{}, d *schema.ResourceData) []*v3.AccessControlPoli
 			}
 
 			if cfl, ok := v["context_filter_list"]; ok && len(cfl.([]interface{})) > 0 {
-
 				filterList := &v3.FilterList{}
 				filterList.ContextList = expandProjectContextFilterList(cfl)
 				if filterList.ContextList != nil {
@@ -1520,10 +1516,8 @@ func UpdateExpandAcp(pr []interface{}, res *v3.ProjectInternalIntentResponse, ki
 			if v1, ok1 := v["operation"]; ok1 {
 				if kind == "old" {
 					acps.Operation = utils.StringPtr("UPDATE")
-
 				} else {
 					acps.Operation = utils.StringPtr(v1.(string))
-
 				}
 			}
 			if v1, ok1 := v["name"]; ok1 {
