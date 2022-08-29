@@ -1650,7 +1650,6 @@ func expandCreateAcp(pr []interface{}, d *schema.ResourceData, projectUUID strin
 			}
 			if v1, ok := v["user_reference_list"]; ok {
 				acpRes.UserReferenceList = validateArrayRef(v1.(*schema.Set), utils.StringPtr("user"))
-
 			}
 
 			if v1, ok := v["user_group_reference_list"]; ok {
@@ -1763,7 +1762,6 @@ func UpdateExpandAcpRM(pr []interface{}, res *v3.ProjectInternalIntentResponse, 
 		if ck {
 			acpList = append(acpList, delacp)
 		}
-
 		return acpList
 	}
 	return nil
