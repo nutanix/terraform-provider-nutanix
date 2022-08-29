@@ -396,7 +396,6 @@ func resourceNutanixProject() *schema.Resource {
 									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
 									},
 								},
 							},
@@ -404,12 +403,11 @@ func resourceNutanixProject() *schema.Resource {
 						"user_group_reference_list": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"kind": {
 										Type:     schema.TypeString,
-										Computed: true,
+										Optional: true,
 									},
 									"uuid": {
 										Type:     schema.TypeString,
@@ -418,7 +416,6 @@ func resourceNutanixProject() *schema.Resource {
 									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
 									},
 								},
 							},
@@ -1322,7 +1319,7 @@ func expandProjectInternalSpec(d *schema.ResourceData, meta interface{}) *v3.Pro
 	}
 
 	if usergroup, ok := d.GetOk("user_group_list"); ok {
-		userGroupList = expandUserGroup(usergroup.([]interface{}), d, projDetail.Resources.UserReferenceList, meta)
+		userGroupList = expandUserGroup(usergroup.([]interface{}), d, projDetail.Resources.ExternalUserGroupReferenceList, meta)
 	}
 
 	proSpec.ProjectDetail = projDetail

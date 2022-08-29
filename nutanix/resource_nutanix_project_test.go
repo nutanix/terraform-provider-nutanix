@@ -201,6 +201,41 @@ func TestAccNutanixProject_withInternalWithACP(t *testing.T) {
 	})
 }
 
+func TestAccNutanixProject_withInternalWithACPUserGroup(t *testing.T) {
+	resourceName := "nutanix_project.project_test"
+
+	subnetName := acctest.RandomWithPrefix("test-subnateName")
+	name := acctest.RandomWithPrefix("test-project-name-dou")
+	description := acctest.RandomWithPrefix("test-project-desc-dou")
+	categoryName := "Environment"
+	categoryVal := "Staging"
+	limit := cast.ToString(acctest.RandIntRange(2, 4))
+	rsType := "STORAGE"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, description, categoryName, categoryVal, limit, rsType),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "resource_domain.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.limit", limit),
+					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.resource_type", rsType),
+					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "api_version", "3.1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_reference_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "acp.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "external_user_group_reference_list.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixProjectImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -576,4 +611,105 @@ func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, c
 			}
 		}
 	`, subnetName, name, description, categoryName, categoryVal, limit, rsType, testVars.Permissions[0].UUID)
+}
+
+func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, description, categoryName, categoryVal, limit, rsType string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster1 = [
+				for cluster in data.nutanix_clusters.clusters.entities :
+				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+			][0]
+		}
+
+		resource "nutanix_subnet" "subnet" {
+			cluster_uuid       = local.cluster1
+			name               = "%[1]s"
+			description        = "Description of my unit test VLAN"
+			vlan_id            = 31
+			subnet_type        = "VLAN"
+			subnet_ip          = "10.250.140.0"
+			default_gateway_ip = "10.250.140.1"
+			prefix_length      = 24
+
+			dhcp_options = {
+				boot_file_name   = "bootfile"
+				domain_name      = "nutanix"
+				tftp_server_name = "10.250.140.200"
+			}
+
+			dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+			dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
+		}
+
+		resource "nutanix_role" "test" {
+			name        = "project-role-acctest"
+			description = "description role"
+			permission_reference_list {
+				kind = "permission"
+				uuid = "%[8]s"
+			}
+		}
+
+		resource "nutanix_user_groups" "acctest-managed" {
+			directory_service_user_group {
+				distinguished_name = "%[9]s"
+			}
+		}
+
+		resource "nutanix_project" "project_test" {
+			name        = "%[2]s"
+			description = "%[3]s"
+			cluster_uuid = local.cluster1
+			categories {
+				name  = "%[4]s"
+				value = "%[5]s"
+			}
+
+			resource_domain {
+				resources {
+					limit         = %[6]s
+					resource_type = "%[7]s"
+				}
+			}
+
+			default_subnet_reference {
+				uuid = nutanix_subnet.subnet.metadata.uuid
+			}
+
+			use_project_internal = true
+
+			api_version = "3.1"
+
+			subnet_reference_list{
+				kind="subnet"
+				uuid=nutanix_subnet.subnet.metadata.uuid
+			}
+
+			external_user_group_reference_list {
+				name= "%[9]s"
+			   	kind= "user_group"
+			   	uuid= nutanix_user_groups.acctest-managed.id
+			}
+
+			acp{
+				name="nuCalmAcp-97c623"
+
+				role_reference {
+					kind = "role"
+					uuid = nutanix_role.test.id
+				}
+			
+				user_group_reference_list {
+					name= "%[9]s"
+					kind= "user_group"
+					uuid= nutanix_user_groups.acctest-managed.id
+				}
+
+				description= "untitledAcp-54acc50f-ab94-640a-5f06-5c855cc09539"
+			}
+		}
+	`, subnetName, name, description, categoryName, categoryVal, limit, rsType, testVars.Permissions[0].UUID, testVars.UserGroupWithDistinguishedName[3].DistinguishedName)
 }
