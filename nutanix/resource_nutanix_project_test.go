@@ -108,13 +108,6 @@ func TestAccNutanixProject_withInternal(t *testing.T) {
 	limit := cast.ToString(acctest.RandIntRange(2, 4))
 	rsType := "STORAGE"
 
-	// updateName := acctest.RandomWithPrefix("test-project-name-dou")
-	// updateDescription := acctest.RandomWithPrefix("test-project-desc-dou")
-	// updateCategoryName := "Environment"
-	// updateCategoryVal := "Production"
-	// updateLimit := cast.ToString(acctest.RandIntRange(4, 8))
-	// updateRSType := "MEMORY"
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -135,20 +128,75 @@ func TestAccNutanixProject_withInternal(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_reference_list.#", "1"),
 				),
 			},
-			// {
-			// 	Config: testAccNutanixProjectInternalConfig(
-			// 		subnetName, updateName, updateDescription, updateCategoryName, updateCategoryVal, updateLimit, updateRSType),
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		resource.TestCheckResourceAttr(resourceName, "name", updateName),
-			// 		resource.TestCheckResourceAttr(resourceName, "description", updateDescription),
-			// 		resource.TestCheckResourceAttr(resourceName, "resource_domain.#", "1"),
-			// 		resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.#", "1"),
-			// 		resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.limit", updateLimit),
-			// 		resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.resource_type", updateRSType),
-			// 		resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
-			// 		resource.TestCheckResourceAttr(resourceName, "api_version", "3.1"),
-			// 	),
-			// },
+		},
+	})
+}
+
+func TestAccNutanixProject_withInternalUpdate(t *testing.T) {
+	resourceName := "nutanix_project.project_test"
+	subnetName := acctest.RandomWithPrefix("test-subnateName")
+	name := acctest.RandomWithPrefix("test-project-name-dou")
+	description := acctest.RandomWithPrefix("test-project-desc-dou")
+
+	updatedName := acctest.RandomWithPrefix("test-project-updated")
+	updateDes := acctest.RandomWithPrefix("test-desc-got-updated")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixProjectInternalConfigUpdate(subnetName, name, description),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "api_version", "3.1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_reference_list.#", "1"),
+				),
+			},
+			{
+				Config: testAccNutanixProjectInternalConfigUpdate(subnetName, updatedName, updateDes),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
+					resource.TestCheckResourceAttr(resourceName, "description", updateDes),
+					resource.TestCheckResourceAttr(resourceName, "api_version", "3.1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_reference_list.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNutanixProject_withInternalWithACP(t *testing.T) {
+	resourceName := "nutanix_project.project_test"
+
+	subnetName := acctest.RandomWithPrefix("test-subnateName")
+	name := acctest.RandomWithPrefix("test-project-name-dou")
+	description := acctest.RandomWithPrefix("test-project-desc-dou")
+	categoryName := "Environment"
+	categoryVal := "Staging"
+	limit := cast.ToString(acctest.RandIntRange(2, 4))
+	rsType := "STORAGE"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, categoryName, categoryVal, limit, rsType),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "resource_domain.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.limit", limit),
+					resource.TestCheckResourceAttr(resourceName, "resource_domain.0.resources.0.resource_type", rsType),
+					resource.TestCheckResourceAttr(resourceName, "categories.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "api_version", "3.1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_reference_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "acp.#", "1"),
+				),
+			},
 		},
 	})
 }
@@ -369,4 +417,163 @@ func testAccNutanixProjectInternalConfig(subnetName, name, description, category
 			}
 		}
 	`, subnetName, name, description, categoryName, categoryVal, limit, rsType)
+}
+
+func testAccNutanixProjectInternalConfigUpdate(subnetName, name, description string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster1 = [
+				for cluster in data.nutanix_clusters.clusters.entities :
+				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+			][0]
+		}
+
+		resource "nutanix_subnet" "subnet" {
+			cluster_uuid       = local.cluster1
+			name               = "%s"
+			description        = "Description of my unit test VLAN"
+			vlan_id            = 31
+			subnet_type        = "VLAN"
+			subnet_ip          = "10.250.140.0"
+			default_gateway_ip = "10.250.140.1"
+			prefix_length      = 24
+
+			dhcp_options = {
+				boot_file_name   = "bootfile"
+				domain_name      = "nutanix"
+				tftp_server_name = "10.250.140.200"
+			}
+
+			dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+			dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
+		}
+
+
+		resource "nutanix_subnet" "overlay-subnet" {
+			cluster_uuid = local.cluster1
+			name        = "acctest-subnet-updated"
+			description = "Description of my unit test VLAN"
+			vlan_id     = 876
+			subnet_type = "VLAN"
+			subnet_ip          = "10.250.144.0"
+		  default_gateway_ip = "10.250.144.1"
+		  prefix_length = 24
+		  is_external = true
+		  ip_config_pool_list_ranges = ["10.250.144.10 10.250.144.20"]
+		}
+
+		resource "nutanix_project" "project_test" {
+			name        = "%s"
+			description = "%s"
+
+			default_subnet_reference {
+				uuid = nutanix_subnet.subnet.metadata.uuid
+			}
+
+			use_project_internal = true
+
+			api_version = "3.1"
+
+			subnet_reference_list{
+				kind="subnet"
+				uuid=nutanix_subnet.subnet.metadata.uuid
+			}
+		}
+	`, subnetName, name, description)
+}
+
+func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, categoryName, categoryVal, limit, rsType string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster1 = [
+				for cluster in data.nutanix_clusters.clusters.entities :
+				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+			][0]
+		}
+
+		resource "nutanix_subnet" "subnet" {
+			cluster_uuid       = local.cluster1
+			name               = "%[1]s"
+			description        = "Description of my unit test VLAN"
+			vlan_id            = 31
+			subnet_type        = "VLAN"
+			subnet_ip          = "10.250.140.0"
+			default_gateway_ip = "10.250.140.1"
+			prefix_length      = 24
+
+			dhcp_options = {
+				boot_file_name   = "bootfile"
+				domain_name      = "nutanix"
+				tftp_server_name = "10.250.140.200"
+			}
+
+			dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+			dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
+		}
+
+		resource "nutanix_role" "test" {
+			name        = "project-role-acctest"
+			description = "description role"
+			permission_reference_list {
+				kind = "permission"
+				uuid = "%[8]s"
+			}
+		}
+
+		resource "nutanix_project" "project_test" {
+			name        = "%[2]s"
+			description = "%[3]s"
+			cluster_uuid = local.cluster1
+			categories {
+				name  = "%[4]s"
+				value = "%[5]s"
+			}
+
+			resource_domain {
+				resources {
+					limit         = %[6]s
+					resource_type = "%[7]s"
+				}
+			}
+
+			default_subnet_reference {
+				uuid = nutanix_subnet.subnet.metadata.uuid
+			}
+
+			use_project_internal = true
+
+			api_version = "3.1"
+
+			subnet_reference_list{
+				kind="subnet"
+				uuid=nutanix_subnet.subnet.metadata.uuid
+			}
+
+			user_reference_list{
+			uuid = "00000000-0000-0000-0000-000000000000"
+			name = "admin"
+			}
+
+			acp{
+				name="nuCalmAcp-97c623"
+
+				role_reference {
+					kind = "role"
+					uuid = nutanix_role.test.id
+				}
+			
+				user_reference_list{
+					uuid = "00000000-0000-0000-0000-000000000000"
+					name = "admin"
+					kind = "user"
+				}
+
+				description= "untitledAcp-54acc50f-ab94-640a-5f06-5c855cc09539"
+			}
+		}
+	`, subnetName, name, description, categoryName, categoryVal, limit, rsType, testVars.Permissions[0].UUID)
 }

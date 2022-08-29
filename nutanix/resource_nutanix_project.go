@@ -1681,9 +1681,8 @@ func expandCreateAcp(pr []interface{}, d *schema.ResourceData, projectUUID strin
 			}
 
 			metadata := &v3.Metadata{}
-			if err := getMetadataAttributes(d, metadata, "access_control_policy"); err != nil {
-				return nil
-			}
+			metadata.Kind = utils.StringPtr("access_control_policy")
+
 			acps.Operation = utils.StringPtr("ADD")
 			acps.Metadata = metadata
 			acpSpec.Resources = acpRes
