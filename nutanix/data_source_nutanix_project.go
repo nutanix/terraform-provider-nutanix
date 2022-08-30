@@ -225,6 +225,278 @@ func dataSourceNutanixProject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tunnel_reference_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"cluster_reference_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"vpc_reference_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"default_environment_reference": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"acp": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"user_reference_list": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"user_group_reference_list": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"role_reference": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"context_filter_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"scope_filter_expression_list": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"left_hand_side": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"operator": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"right_hand_side": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"collection": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+															"categories": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"name": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"value": {
+																			Type:     schema.TypeSet,
+																			Computed: true,
+																			Elem:     &schema.Schema{Type: schema.TypeString},
+																		},
+																	},
+																},
+															},
+															"uuid_list": {
+																Type:     schema.TypeSet,
+																Computed: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"entity_filter_expression_list": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"left_hand_side_entity_type": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"operator": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"right_hand_side": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"collection": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+															"categories": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"name": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"value": {
+																			Type:     schema.TypeSet,
+																			Computed: true,
+																			Elem:     &schema.Schema{Type: schema.TypeString},
+																		},
+																	},
+																},
+															},
+															"uuid_list": {
+																Type:     schema.TypeSet,
+																Computed: true,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"metadata": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -240,13 +512,14 @@ func dataSourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	var err error
-	var project *v3.Project
-
+	var project *v3.ProjectInternalIntentResponse
+	var projectID string
 	if iok {
-		project, err = conn.V3.GetProject(id.(string))
+		project, err = conn.V3.GetProjectInternal(ctx, id.(string))
 	}
 	if nOk {
-		project, err = findProjectByName(conn, name.(string))
+		projectID, err = findProjectByName(conn, name.(string))
+		project, err = conn.V3.GetProjectInternal(ctx, projectID)
 	}
 
 	if err != nil {
@@ -255,41 +528,41 @@ func dataSourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, m
 
 	m, c := setRSEntityMetadata(project.Metadata)
 
-	if err := d.Set("name", project.Status.Name); err != nil {
+	if err := d.Set("name", project.Status.ProjectStatus.Name); err != nil {
 		return diag.Errorf("error setting `name` for Project(%s): %s", d.Id(), err)
 	}
-	if err := d.Set("description", project.Status.Descripion); err != nil {
+	if err := d.Set("description", project.Status.ProjectStatus.Description); err != nil {
 		return diag.Errorf("error setting `description` for Project(%s): %s", d.Id(), err)
 	}
 	if err := d.Set("state", project.Status.State); err != nil {
 		return diag.Errorf("error setting `state` for Project(%s): %s", d.Id(), err)
 	}
-	if err := d.Set("is_default", project.Status.Resources.IsDefault); err != nil {
+	if err := d.Set("is_default", project.Status.ProjectStatus.Resources.IsDefault); err != nil {
 		return diag.Errorf("error setting `is_default` for Project(%s): %s", d.Id(), err)
 	}
-	if err := d.Set("resource_domain", flattenResourceDomain(project.Spec.Resources.ResourceDomain)); err != nil {
+	if err := d.Set("resource_domain", flattenResourceDomain(project.Spec.ProjectDetail.Resources.ResourceDomain)); err != nil {
 		return diag.Errorf("error setting `resource_domain` for Project(%s): %s", d.Id(), err)
 	}
-	if err := d.Set("account_reference_list", flattenReferenceList(project.Spec.Resources.AccountReferenceList)); err != nil {
+	if err := d.Set("account_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.AccountReferenceList)); err != nil {
 		return diag.Errorf("error setting `account_reference_list` for Project(%s): %s", d.Id(), err)
 	}
-	if err := d.Set("environment_reference_list", flattenReferenceList(project.Spec.Resources.EnvironmentReferenceList)); err != nil {
+	if err := d.Set("environment_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.EnvironmentReferenceList)); err != nil {
 		return diag.Errorf("error setting `environment_reference_list` for Project(%s): %s", d.Id(), err)
 	}
-	if err := d.Set("default_subnet_reference", flattenReference(project.Spec.Resources.DefaultSubnetReference)); err != nil {
+	if err := d.Set("default_subnet_reference", flattenReference(project.Spec.ProjectDetail.Resources.DefaultSubnetReference)); err != nil {
 		return diag.Errorf("error setting `default_subnet_reference` for Project(%s): %s", d.Id(), err)
 	}
-	if err := d.Set("user_reference_list", flattenReferenceList(project.Spec.Resources.UserReferenceList)); err != nil {
+	if err := d.Set("user_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.UserReferenceList)); err != nil {
 		return diag.Errorf("error setting `user_reference_list` for Project(%s): %s", d.Id(), err)
 	}
 	if err := d.Set("external_user_group_reference_list",
-		flattenReferenceList(project.Spec.Resources.ExternalUserGroupReferenceList)); err != nil {
+		flattenReferenceList(project.Spec.ProjectDetail.Resources.ExternalUserGroupReferenceList)); err != nil {
 		return diag.Errorf("error setting `external_user_group_reference_list` for Project(%s): %s", d.Id(), err)
 	}
-	if err := d.Set("subnet_reference_list", flattenReferenceList(project.Spec.Resources.SubnetReferenceList)); err != nil {
+	if err := d.Set("subnet_reference_list", flattenReferenceList(project.Status.ProjectStatus.Resources.SubnetReferenceList)); err != nil {
 		return diag.Errorf("error setting `subnet_reference_list` for Project(%s): %s", d.Id(), err)
 	}
-	if err := d.Set("external_network_list", flattenExternalNetworkListReferenceList(project.Spec.Resources.ExternalNetworkList)); err != nil {
+	if err := d.Set("external_network_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.ExternalNetworkList)); err != nil {
 		return diag.Errorf("error setting `external_network_list` for Project(%s): %s", d.Id(), err)
 	}
 	if err := d.Set("metadata", m); err != nil {
@@ -308,16 +581,32 @@ func dataSourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("error setting `api_version` for Project(%s): %s", d.Id(), err)
 	}
 
+	if err := d.Set("tunnel_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.TunnelReferenceList)); err != nil {
+		return diag.Errorf("error setting `tunnel_reference_list` for Project(%s): %s", d.Id(), err)
+	}
+	if err := d.Set("vpc_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.VPCReferenceList)); err != nil {
+		return diag.Errorf("error setting `vpc_reference_list` for Project(%s): %s", d.Id(), err)
+	}
+	if err := d.Set("cluster_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.ClusterReferenceList)); err != nil {
+		return diag.Errorf("error setting `cluster_reference_list` for Project(%s): %s", d.Id(), err)
+	}
+	if err := d.Set("default_environment_reference", flattenReferenceValuesList(project.Spec.ProjectDetail.Resources.DefaultEnvironmentReference)); err != nil {
+		return diag.Errorf("error setting `default_environment_reference` for Project(%s): %s", d.Id(), err)
+	}
+	if err := d.Set("acp", flattenProjectAcp(project.Status.AccessControlPolicyListStatus)); err != nil {
+		return diag.Errorf("error setting `acp` for Project(%s): %s", d.Id(), err)
+	}
+
 	d.SetId(utils.StringValue(project.Metadata.UUID))
 
 	return nil
 }
 
-func findProjectByName(conn *v3.Client, name string) (*v3.Project, error) {
+func findProjectByName(conn *v3.Client, name string) (string, error) {
 	filter := fmt.Sprintf("name==%s", name)
 	resp, err := conn.V3.ListAllProject(filter)
 	if err != nil {
-		return nil, err
+		return "nil", err
 	}
 
 	entities := resp.Entities
@@ -330,12 +619,12 @@ func findProjectByName(conn *v3.Client, name string) (*v3.Project, error) {
 	}
 
 	if len(found) > 1 {
-		return nil, fmt.Errorf("your query returned more than one result. Please use project_id argument instead")
+		return "nil", fmt.Errorf("your query returned more than one result. Please use project_id argument instead")
 	}
 
 	if len(found) == 0 {
-		return nil, fmt.Errorf("project with the given name, not found")
+		return "nil", fmt.Errorf("project with the given name, not found")
 	}
 
-	return found[0], nil
+	return utils.StringValue(found[0].Metadata.UUID), nil
 }
