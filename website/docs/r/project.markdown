@@ -91,7 +91,7 @@ resource "nutanix_project" "project_test" {
       kind= "user"
       uuid= "{{user_uuid}}"
     }
-    description= "descripton"
+    description= "{{description}}"
   }
   api_version = "3.1"
 }
@@ -131,7 +131,7 @@ resource "nutanix_project" "project_test" {
       kind= "user"
       uuid= "{{user_uuid}}"
     }
-    description= "descripton"
+    description= "{{description}}"
   }
   user_list{
     metadata={
