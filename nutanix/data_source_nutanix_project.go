@@ -512,13 +512,17 @@ func dataSourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	var err error
+	var er error
 	var project *v3.ProjectInternalIntentResponse
 	var projectID string
 	if iok {
 		project, err = conn.V3.GetProjectInternal(ctx, id.(string))
 	}
 	if nOk {
-		projectID, err = findProjectByName(conn, name.(string))
+		projectID, er = findProjectByName(conn, name.(string))
+		if er != nil {
+			return diag.FromErr(er)
+		}
 		project, err = conn.V3.GetProjectInternal(ctx, projectID)
 	}
 
