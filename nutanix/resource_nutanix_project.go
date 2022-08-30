@@ -241,9 +241,10 @@ func resourceNutanixProject() *schema.Resource {
 				},
 			},
 			"tunnel_reference_list": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeList,
+				Optional:     true,
+				Computed:     true,
+				RequiredWith: []string{"use_project_internal"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"kind": {
@@ -264,9 +265,10 @@ func resourceNutanixProject() *schema.Resource {
 				},
 			},
 			"cluster_reference_list": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeList,
+				Optional:     true,
+				Computed:     true,
+				RequiredWith: []string{"use_project_internal"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"kind": {
@@ -287,9 +289,10 @@ func resourceNutanixProject() *schema.Resource {
 				},
 			},
 			"vpc_reference_list": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeList,
+				Optional:     true,
+				Computed:     true,
+				RequiredWith: []string{"use_project_internal"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"kind": {
@@ -310,10 +313,11 @@ func resourceNutanixProject() *schema.Resource {
 				},
 			},
 			"default_environment_reference": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
+				Type:         schema.TypeList,
+				Optional:     true,
+				Computed:     true,
+				RequiredWith: []string{"use_project_internal"},
+				MaxItems:     1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"kind": {
@@ -367,8 +371,9 @@ func resourceNutanixProject() *schema.Resource {
 				Optional: true,
 			},
 			"acp": {
-				Type:     schema.TypeList,
-				Optional: true,
+				Type:         schema.TypeList,
+				Optional:     true,
+				RequiredWith: []string{"use_project_internal"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
@@ -692,7 +697,6 @@ func resourceNutanixProject() *schema.Resource {
 									"distinguished_name": {
 										Type:     schema.TypeString,
 										Required: true,
-										ForceNew: true,
 									},
 								},
 							},
@@ -705,7 +709,6 @@ func resourceNutanixProject() *schema.Resource {
 									"idp_uuid": {
 										Type:     schema.TypeString,
 										Required: true,
-										ForceNew: true,
 									},
 									"name": {
 										Type:     schema.TypeString,
@@ -722,7 +725,6 @@ func resourceNutanixProject() *schema.Resource {
 									"distinguished_name": {
 										Type:     schema.TypeString,
 										Required: true,
-										ForceNew: true,
 									},
 								},
 							},
@@ -890,86 +892,151 @@ func resourceNutanixProjectCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).API
 
-	project, err := conn.V3.GetProjectInternal(ctx, d.Id())
-	if err != nil {
-		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-			d.SetId("")
-			return nil
+	if _, ok := d.GetOkExists("use_project_internal"); ok {
+		project, err := conn.V3.GetProjectInternal(ctx, d.Id())
+		if err != nil {
+			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+				d.SetId("")
+				return nil
+			}
+			return diag.FromErr(err)
 		}
-		return diag.FromErr(err)
-	}
 
-	m, c := setRSEntityMetadata(project.Metadata)
+		m, c := setRSEntityMetadata(project.Metadata)
 
-	if err := d.Set("name", project.Status.ProjectStatus.Name); err != nil {
-		return diag.Errorf("error setting `name` for Project(%s): %s", d.Id(), err)
-	}
-	if err := d.Set("description", project.Status.ProjectStatus.Description); err != nil {
-		return diag.Errorf("error setting `description` for Project(%s): %s", d.Id(), err)
-	}
-	if err := d.Set("state", project.Status.State); err != nil {
-		return diag.Errorf("error setting `state` for Project(%s): %s", d.Id(), err)
-	}
-	if err := d.Set("is_default", project.Status.ProjectStatus.Resources.IsDefault); err != nil {
-		return diag.Errorf("error setting `is_default` for Project(%s): %s", d.Id(), err)
-	}
-	if err := d.Set("resource_domain", flattenResourceDomain(project.Spec.ProjectDetail.Resources.ResourceDomain)); err != nil {
-		return diag.Errorf("error setting `resource_domain` for Project(%s): %s", d.Id(), err)
-	}
-	if err := d.Set("account_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.AccountReferenceList)); err != nil {
-		return diag.Errorf("error setting `account_reference_list` for Project(%s): %s", d.Id(), err)
-	}
-	if err := d.Set("environment_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.EnvironmentReferenceList)); err != nil {
-		return diag.Errorf("error setting `environment_reference_list` for Project(%s): %s", d.Id(), err)
-	}
-	if err := d.Set("default_subnet_reference", []interface{}{flattenReference(project.Spec.ProjectDetail.Resources.DefaultSubnetReference)}); err != nil {
-		return diag.Errorf("error setting `default_subnet_reference` for Project(%s): %s", d.Id(), err)
-	}
-	if err := d.Set("user_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.UserReferenceList)); err != nil {
-		return diag.Errorf("error setting `user_reference_list` for Project(%s): %s", d.Id(), err)
-	}
-	if err := d.Set("external_user_group_reference_list",
-		flattenReferenceList(project.Spec.ProjectDetail.Resources.ExternalUserGroupReferenceList)); err != nil {
-		return diag.Errorf("error setting `external_user_group_reference_list` for Project(%s): %s", d.Id(), err)
-	}
-	if err := d.Set("subnet_reference_list", flattenReferenceList(project.Status.ProjectStatus.Resources.SubnetReferenceList)); err != nil {
-		return diag.Errorf("error setting `subnet_reference_list` for Project(%s): %s", d.Id(), err)
-	}
-	if err := d.Set("external_network_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.ExternalNetworkList)); err != nil {
-		return diag.Errorf("error setting `external_network_list` for Project(%s): %s", d.Id(), err)
-	}
-	if err := d.Set("metadata", m); err != nil {
-		return diag.Errorf("error setting `metadata` for Project(%s): %s", d.Id(), err)
-	}
-	if err := d.Set("project_reference", flattenReferenceValues(project.Metadata.ProjectReference)); err != nil {
-		return diag.Errorf("error setting `project_reference` for Project(%s): %s", d.Id(), err)
-	}
-	if err := d.Set("owner_reference", flattenReferenceValues(project.Metadata.OwnerReference)); err != nil {
-		return diag.Errorf("error setting `owner_reference` for Project(%s): %s", d.Id(), err)
-	}
-	if err := d.Set("categories", c); err != nil {
-		return diag.Errorf("error setting `categories` for Project(%s): %s", d.Id(), err)
-	}
-	if err := d.Set("api_version", project.APIVersion); err != nil {
-		return diag.Errorf("error setting `api_version` for Project(%s): %s", d.Id(), err)
-	}
+		if err := d.Set("name", project.Status.ProjectStatus.Name); err != nil {
+			return diag.Errorf("error setting `name` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("description", project.Status.ProjectStatus.Description); err != nil {
+			return diag.Errorf("error setting `description` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("state", project.Status.State); err != nil {
+			return diag.Errorf("error setting `state` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("is_default", project.Status.ProjectStatus.Resources.IsDefault); err != nil {
+			return diag.Errorf("error setting `is_default` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("resource_domain", flattenResourceDomain(project.Spec.ProjectDetail.Resources.ResourceDomain)); err != nil {
+			return diag.Errorf("error setting `resource_domain` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("account_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.AccountReferenceList)); err != nil {
+			return diag.Errorf("error setting `account_reference_list` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("environment_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.EnvironmentReferenceList)); err != nil {
+			return diag.Errorf("error setting `environment_reference_list` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("default_subnet_reference", []interface{}{flattenReference(project.Spec.ProjectDetail.Resources.DefaultSubnetReference)}); err != nil {
+			return diag.Errorf("error setting `default_subnet_reference` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("user_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.UserReferenceList)); err != nil {
+			return diag.Errorf("error setting `user_reference_list` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("external_user_group_reference_list",
+			flattenReferenceList(project.Spec.ProjectDetail.Resources.ExternalUserGroupReferenceList)); err != nil {
+			return diag.Errorf("error setting `external_user_group_reference_list` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("subnet_reference_list", flattenReferenceList(project.Status.ProjectStatus.Resources.SubnetReferenceList)); err != nil {
+			return diag.Errorf("error setting `subnet_reference_list` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("external_network_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.ExternalNetworkList)); err != nil {
+			return diag.Errorf("error setting `external_network_list` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("metadata", m); err != nil {
+			return diag.Errorf("error setting `metadata` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("project_reference", flattenReferenceValues(project.Metadata.ProjectReference)); err != nil {
+			return diag.Errorf("error setting `project_reference` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("owner_reference", flattenReferenceValues(project.Metadata.OwnerReference)); err != nil {
+			return diag.Errorf("error setting `owner_reference` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("categories", c); err != nil {
+			return diag.Errorf("error setting `categories` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("api_version", project.APIVersion); err != nil {
+			return diag.Errorf("error setting `api_version` for Project(%s): %s", d.Id(), err)
+		}
 
-	if err := d.Set("tunnel_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.TunnelReferenceList)); err != nil {
-		return diag.Errorf("error setting `tunnel_reference_list` for Project(%s): %s", d.Id(), err)
-	}
-	if err := d.Set("vpc_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.VPCReferenceList)); err != nil {
-		return diag.Errorf("error setting `vpc_reference_list` for Project(%s): %s", d.Id(), err)
-	}
-	if err := d.Set("cluster_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.ClusterReferenceList)); err != nil {
-		return diag.Errorf("error setting `cluster_reference_list` for Project(%s): %s", d.Id(), err)
-	}
-	if err := d.Set("default_environment_reference", flattenReferenceValuesList(project.Spec.ProjectDetail.Resources.DefaultEnvironmentReference)); err != nil {
-		return diag.Errorf("error setting `default_environment_reference` for Project(%s): %s", d.Id(), err)
-	}
-	if err := d.Set("acp", flattenProjectAcp(project.Status.AccessControlPolicyListStatus)); err != nil {
-		return diag.Errorf("error setting `acp` for Project(%s): %s", d.Id(), err)
-	}
+		if err := d.Set("tunnel_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.TunnelReferenceList)); err != nil {
+			return diag.Errorf("error setting `tunnel_reference_list` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("vpc_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.VPCReferenceList)); err != nil {
+			return diag.Errorf("error setting `vpc_reference_list` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("cluster_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.ClusterReferenceList)); err != nil {
+			return diag.Errorf("error setting `cluster_reference_list` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("default_environment_reference", flattenReferenceValuesList(project.Spec.ProjectDetail.Resources.DefaultEnvironmentReference)); err != nil {
+			return diag.Errorf("error setting `default_environment_reference` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("acp", flattenProjectAcp(project.Status.AccessControlPolicyListStatus)); err != nil {
+			return diag.Errorf("error setting `acp` for Project(%s): %s", d.Id(), err)
+		}
+	} else {
+		project, err := conn.V3.GetProject(d.Id())
+		if err != nil {
+			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+				d.SetId("")
+				return nil
+			}
+			return diag.FromErr(err)
+		}
 
+		m, c := setRSEntityMetadata(project.Metadata)
+
+		if err := d.Set("name", project.Status.Name); err != nil {
+			return diag.Errorf("error setting `name` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("description", project.Status.Descripion); err != nil {
+			return diag.Errorf("error setting `description` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("state", project.Status.State); err != nil {
+			return diag.Errorf("error setting `state` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("is_default", project.Status.Resources.IsDefault); err != nil {
+			return diag.Errorf("error setting `is_default` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("resource_domain", flattenResourceDomain(project.Spec.Resources.ResourceDomain)); err != nil {
+			return diag.Errorf("error setting `resource_domain` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("account_reference_list", flattenReferenceList(project.Spec.Resources.AccountReferenceList)); err != nil {
+			return diag.Errorf("error setting `account_reference_list` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("environment_reference_list", flattenReferenceList(project.Spec.Resources.EnvironmentReferenceList)); err != nil {
+			return diag.Errorf("error setting `environment_reference_list` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("default_subnet_reference", []interface{}{flattenReference(project.Spec.Resources.DefaultSubnetReference)}); err != nil {
+			return diag.Errorf("error setting `default_subnet_reference` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("user_reference_list", flattenReferenceList(project.Spec.Resources.UserReferenceList)); err != nil {
+			return diag.Errorf("error setting `user_reference_list` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("external_user_group_reference_list",
+			flattenReferenceList(project.Spec.Resources.ExternalUserGroupReferenceList)); err != nil {
+			return diag.Errorf("error setting `external_user_group_reference_list` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("subnet_reference_list", flattenReferenceList(project.Spec.Resources.SubnetReferenceList)); err != nil {
+			return diag.Errorf("error setting `subnet_reference_list` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("external_network_list", flattenReferenceList(project.Spec.Resources.ExternalNetworkList)); err != nil {
+			return diag.Errorf("error setting `external_network_list` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("metadata", m); err != nil {
+			return diag.Errorf("error setting `metadata` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("project_reference", flattenReferenceValues(project.Metadata.ProjectReference)); err != nil {
+			return diag.Errorf("error setting `project_reference` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("owner_reference", flattenReferenceValues(project.Metadata.OwnerReference)); err != nil {
+			return diag.Errorf("error setting `owner_reference` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("categories", c); err != nil {
+			return diag.Errorf("error setting `categories` for Project(%s): %s", d.Id(), err)
+		}
+		if err := d.Set("api_version", project.APIVersion); err != nil {
+			return diag.Errorf("error setting `api_version` for Project(%s): %s", d.Id(), err)
+		}
+	}
 	return nil
 }
 
@@ -1002,7 +1069,6 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 
 			if response.Spec.ProjectDetail != nil || response.Spec.AccessControlPolicyList != nil {
 				projDetails = response.Spec.ProjectDetail
-				// accessControlPolicy = response.Spec.AccessControlPolicyList
 			}
 
 			if len(response.Spec.ProjectDetail.Resources.ResourceDomain.Resources) > 0 {
@@ -1478,19 +1544,27 @@ func flattenProjectAcp(acp []*v3.ProjectAccessControlPolicyListStatus) []map[str
 		for k, v := range acp {
 			exts := make(map[string]interface{})
 
-			exts["name"] = v.ProjectAccessControlPolicyStatus.Name
-			exts["description"] = v.ProjectAccessControlPolicyStatus.Description
+			if v.ProjectAccessControlPolicyStatus != nil {
+				if v.ProjectAccessControlPolicyStatus.Name != nil {
+					exts["name"] = v.ProjectAccessControlPolicyStatus.Name
+				}
 
-			if v.ProjectAccessControlPolicyStatus.Resources != nil {
-				exts["user_reference_list"] = flattenArrayReferenceValues(v.ProjectAccessControlPolicyStatus.Resources.UserReferenceList)
-				exts["user_group_reference_list"] = flattenArrayReferenceValues(v.ProjectAccessControlPolicyStatus.Resources.UserGroupReferenceList)
-				exts["role_reference"] = flattenReferenceValuesList(v.ProjectAccessControlPolicyStatus.Resources.RoleReference)
-				exts["context_filter_list"] = flattenContextList(v.ProjectAccessControlPolicyStatus.Resources.FilterList.ContextList)
+				if v.ProjectAccessControlPolicyStatus.Description != nil {
+					exts["description"] = v.ProjectAccessControlPolicyStatus.Description
+				}
+
+				if v.ProjectAccessControlPolicyStatus.Resources != nil {
+					exts["user_reference_list"] = flattenArrayReferenceValues(v.ProjectAccessControlPolicyStatus.Resources.UserReferenceList)
+					exts["user_group_reference_list"] = flattenArrayReferenceValues(v.ProjectAccessControlPolicyStatus.Resources.UserGroupReferenceList)
+					exts["role_reference"] = flattenReferenceValuesList(v.ProjectAccessControlPolicyStatus.Resources.RoleReference)
+					exts["context_filter_list"] = flattenContextList(v.ProjectAccessControlPolicyStatus.Resources.FilterList.ContextList)
+				}
 			}
 
-			m, _ := setRSEntityMetadata(v.Metadata)
-			exts["metadata"] = m
-
+			if v.Metadata != nil {
+				m, _ := setRSEntityMetadata(v.Metadata)
+				exts["metadata"] = m
+			}
 			extSub[k] = exts
 		}
 		return extSub
