@@ -935,7 +935,7 @@ func resourceNutanixProjectRead(ctx context.Context, d *schema.ResourceData, met
 			flattenReferenceList(project.Spec.ProjectDetail.Resources.ExternalUserGroupReferenceList)); err != nil {
 			return diag.Errorf("error setting `external_user_group_reference_list` for Project(%s): %s", d.Id(), err)
 		}
-		if err := d.Set("subnet_reference_list", flattenReferenceList(project.Status.ProjectStatus.Resources.SubnetReferenceList)); err != nil {
+		if err := d.Set("subnet_reference_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.SubnetReferenceList)); err != nil {
 			return diag.Errorf("error setting `subnet_reference_list` for Project(%s): %s", d.Id(), err)
 		}
 		if err := d.Set("external_network_list", flattenReferenceList(project.Spec.ProjectDetail.Resources.ExternalNetworkList)); err != nil {
@@ -1669,19 +1669,9 @@ func expandProjectInternalResourceDomain(pr interface{}) *v3.ResourceDomain {
 }
 
 func expandOptionalReference(d *schema.ResourceData, key string, kind string) *v3.Reference {
-	if v1, ok := d.GetOk(key); ok {
-		val := v1.(map[string]interface{})
-		res := &v3.Reference{}
-		if v1, ok1 := val["uuid"]; ok1 && len(v1.(string)) > 0 {
-			res.UUID = utils.StringPtr(v1.(string))
-		}
-		if v1, ok1 := val["name"]; ok1 && len(v1.(string)) > 0 {
-			res.Name = utils.StringPtr(v1.(string))
-		}
-		if v1, ok1 := val["kind"]; ok1 && len(v1.(string)) > 0 {
-			res.Kind = utils.StringPtr(key)
-		}
-		return res
+	if v, ok := d.GetOk(key); ok {
+		val := v.([]interface{})[0].(map[string]interface{})
+		return validateRef(val)
 	}
 	return nil
 }
