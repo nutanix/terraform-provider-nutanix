@@ -52,7 +52,7 @@ Also, there is known issue for access_control_policies resource where update wou
 
 with v1.7.0 release of user groups feature in provider, pc version should be minimum 2022.1 to support organisational and saml user group. 
 
-With v1.7.1 release of project internal  in provider is supported. Note to use this, set "use_project_internal" to true.
+With v1.7.1 release of project internal  in provider is supported. Note to use this, set "use_project_internal" to true. It also enables the ACP mapping with projects. 
 
 ## Foundation
 > For the 1.5.0-beta release of the provider it will have N-1 compatibility with the Foundation. This release was tested against Foundation versions v5.2 and v5.1.1
