@@ -2861,3 +2861,97 @@ type StaticRouteIntentResponse struct {
 
 	Status *StaticRouteDefStatus `json:"status"`
 }
+
+// ProjectResources ...
+type ProjectInternalResources struct {
+	ResourceDomain                 *ResourceDomain    `json:"resource_domain,omitempty"`
+	AccountReferenceList           []*ReferenceValues `json:"account_reference_list,omitempty"`
+	EnvironmentReferenceList       []*ReferenceValues `json:"environment_reference_list,omitempty"`
+	DefaultSubnetReference         *ReferenceValues   `json:"default_subnet_reference,omitempty"`
+	UserReferenceList              []*ReferenceValues `json:"user_reference_list,omitempty"`
+	TunnelReferenceList            []*ReferenceValues `json:"tunnel_reference_list,omitempty"`
+	ExternalUserGroupReferenceList []*ReferenceValues `json:"external_user_group_reference_list,omitempty"`
+	ClusterReferenceList           []*ReferenceValues `json:"cluster_reference_list,omitempty"`
+	SubnetReferenceList            []*ReferenceValues `json:"subnet_reference_list,omitempty"`
+	VPCReferenceList               []*ReferenceValues `json:"vpc_reference_list,omitempty"`
+	ExternalNetworkList            []*ReferenceValues `json:"external_network_list,omitempty"`
+	DefaultEnvironmentReference    *Reference         `json:"default_environment_reference,omitempty"`
+	IsDefault                      bool               `json:"is_default,omitempty"`
+}
+
+type ProjectStatusResources struct {
+	Name        *string                   `json:"name,omitempty"`
+	State       *string                   `json:"state,omitempty"`
+	Reason      *string                   `json:"reason,omitempty"`
+	Message     *string                   `json:"message,omitempty"`
+	Resources   *ProjectInternalResources `json:"resources,omitempty"`
+	Description *string                   `json:"description,omitempty"`
+}
+
+type ProjectAccessControlPolicyStatus struct {
+	Name            *string                       `json:"name,omitempty"`
+	IsSystemDefined bool                          `json:"is_system_defined,omitempty"`
+	State           *string                       `json:"state,omitempty"`
+	MessageList     []*MessageResource            `json:"message_list,omitempty"`
+	Resources       *AccessControlPolicyResources `json:"resources,omitempty"`
+	Description     *string                       `json:"description,omitempty"`
+}
+
+type ProjectAccessControlPolicyListStatus struct {
+	Metadata                         *Metadata                         `json:"metadata,omitempty"`
+	ProjectAccessControlPolicyStatus *ProjectAccessControlPolicyStatus `json:"access_control_policy_status,omitempty"`
+}
+
+// ProjectStatus ...
+type ProjectInternalStatus struct {
+	AccessControlPolicyListStatus []*ProjectAccessControlPolicyListStatus `json:"access_control_policy_list_status,omitempty"`
+	ProjectStatus                 *ProjectStatusResources                 `json:"project_status,omitempty"`
+	ExecutionContext              *ExecutionContext                       `json:"execution_context,omitempty"`
+	State                         *string                                 `json:"state,omitempty"`
+}
+
+type ProjectDetails struct {
+	Name        *string                   `json:"name,omitempty"`
+	Resources   *ProjectInternalResources `json:"resources,omitempty"`
+	Description *string                   `json:"description,omitempty"`
+}
+
+type AccessControlPolicyList struct {
+	Operation *string                  `json:"operation,omitempty"`
+	ACP       *AccessControlPolicySpec `json:"acp,omitempty"`
+	Metadata  *Metadata                `json:"metadata,omitempty"`
+}
+
+type UserList struct {
+	Operation *string   `json:"operation,omitempty"`
+	User      *UserSpec `json:"user,omitempty"`
+	Metadata  *Metadata `json:"metadata,omitempty"`
+}
+
+type UserGroupList struct {
+	Operation *string        `json:"operation,omitempty"`
+	UserGroup *UserGroupSpec `json:"user_group,omitempty"`
+	Metadata  *Metadata      `json:"metadata,omitempty"`
+}
+
+// ProjectSpec ...
+type ProjectInternalSpec struct {
+	ProjectDetail           *ProjectDetails            `json:"project_detail,omitempty"`
+	AccessControlPolicyList []*AccessControlPolicyList `json:"access_control_policy_list,omitempty"`
+	UserList                []*UserList                `json:"user_list"`
+	UserGroupList           []*UserGroupList           `json:"user_group_list"`
+}
+
+type ProjectInternalIntentInput struct {
+	Spec       *ProjectInternalSpec `json:"spec,omitempty"`
+	Metadata   *Metadata            `json:"metadata,omitempty"`
+	APIVersion string               `json:"api_version,omitempty"`
+}
+
+// Project Response object for intentful operations on a Host
+type ProjectInternalIntentResponse struct {
+	Status     *ProjectInternalStatus `json:"status,omitempty"`
+	Spec       *ProjectInternalSpec   `json:"spec,omitempty"`
+	APIVersion string                 `json:"api_version,omitempty"`
+	Metadata   *Metadata              `json:"metadata,omitempty"`
+}
