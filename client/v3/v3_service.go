@@ -142,6 +142,9 @@ type Service interface {
 	ListAllFloatingIPs(ctx context.Context, filter string) (*FloatingIPsListIntentResponse, error)
 	GetStaticRoute(ctx context.Context, vpcUUID string) (*StaticRouteIntentResponse, error)
 	UpdateStaticRoute(ctx context.Context, uuid string, body *StaticRouteIntentInput) (*StaticRouteIntentResponse, error)
+	CreateProjectInternal(ctx context.Context, request *ProjectInternalIntentInput) (*ProjectInternalIntentResponse, error)
+	GetProjectInternal(ctx context.Context, uuid string) (*ProjectInternalIntentResponse, error)
+	UpdateProjectInternal(ctx context.Context, uuid string, body *ProjectInternalIntentInput) (*ProjectInternalIntentResponse, error)
 }
 
 /*CreateVM Creates a VM
@@ -2821,4 +2824,40 @@ func (op Operations) ListAllFloatingIPs(ctx context.Context, filter string) (*Fl
 	}
 
 	return resp, nil
+}
+
+func (op Operations) CreateProjectInternal(ctx context.Context, request *ProjectInternalIntentInput) (*ProjectInternalIntentResponse, error) {
+	req, err := op.client.NewRequest(ctx, http.MethodPost, "/projects_internal", request)
+	if err != nil {
+		return nil, err
+	}
+
+	projectResponse := new(ProjectInternalIntentResponse)
+
+	return projectResponse, op.client.Do(ctx, req, projectResponse)
+}
+
+func (op Operations) GetProjectInternal(ctx context.Context, projectUUID string) (*ProjectInternalIntentResponse, error) {
+	path := fmt.Sprintf("/projects_internal/%s", projectUUID)
+	project := new(ProjectInternalIntentResponse)
+
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return project, op.client.Do(ctx, req, project)
+}
+
+func (op Operations) UpdateProjectInternal(ctx context.Context, uuid string, body *ProjectInternalIntentInput) (*ProjectInternalIntentResponse, error) {
+	path := fmt.Sprintf("/projects_internal/%s", uuid)
+
+	projectInput := new(ProjectInternalIntentResponse)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return projectInput, op.client.Do(ctx, req, projectInput)
 }

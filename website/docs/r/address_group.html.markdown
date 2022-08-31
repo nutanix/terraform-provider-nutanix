@@ -6,7 +6,7 @@ description: |-
   This operation submits a request to create a address group based on the input parameters.
 ---
 
-# nutanix_service_group
+# nutanix_address_group
 
 Provides a resource to create a address group based on the input parameters.
 

@@ -1,3 +1,14 @@
+## 1.7.1 (August 31, 2022)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.7.0...v1.7.1)
+
+**Implemented enhancements:**
+
+- Support for /projects_internal API in nutanix projects [\#487](https://github.com/nutanix/terraform-provider-nutanix/pull/487)
+
+**Closed Issues:**
+- project internal changes [\#488] (https://github.com/nutanix/terraform-provider-nutanix/pull/488)
+
+
 ## 1.7.0 (August 12, 2022)
 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.6.1...v1.7.0)
