@@ -1,4 +1,4 @@
-## 1.7.1 (August 30, 2022)
+## 1.7.1 (August 31, 2022)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.7.0...v1.7.1)
 
 **Implemented enhancements:**

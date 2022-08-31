@@ -784,76 +784,78 @@ func resourceNutanixProjectCreate(ctx context.Context, d *schema.ResourceData, m
 		d.SetId(uuid)
 
 		// once project is created , create acp .
+		// check if acp is given in resource
+		if _, ok1 := d.GetOk("acp"); ok1 {
+			request := &v3.ProjectInternalIntentInput{}
+			spec := &v3.ProjectInternalSpec{}
+			metadata := &v3.Metadata{}
+			projDetails := &v3.ProjectDetails{}
+			accessControlPolicy := make([]*v3.AccessControlPolicyList, 0)
 
-		request := &v3.ProjectInternalIntentInput{}
-		spec := &v3.ProjectInternalSpec{}
-		metadata := &v3.Metadata{}
-		projDetails := &v3.ProjectDetails{}
-		accessControlPolicy := make([]*v3.AccessControlPolicyList, 0)
-
-		var clusterUUID string
-		if clusterID, ok := d.GetOk("cluster_uuid"); ok {
-			clusterUUID = clusterID.(string)
-		}
-		response, err := conn.V3.GetProjectInternal(ctx, d.Id())
-		if err != nil {
-			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-				d.SetId("")
-				return nil
+			var clusterUUID string
+			if clusterID, ok := d.GetOk("cluster_uuid"); ok {
+				clusterUUID = clusterID.(string)
 			}
-			return diag.Errorf("error reading Project %s: %s", d.Id(), err)
-		}
-		if response.Metadata != nil {
-			metadata = response.Metadata
-		}
-
-		if response.Spec != nil {
-			spec = response.Spec
-
-			if response.Spec.ProjectDetail != nil || response.Spec.AccessControlPolicyList != nil {
-				projDetails = response.Spec.ProjectDetail
-				accessControlPolicy = response.Spec.AccessControlPolicyList
+			response, err := conn.V3.GetProjectInternal(ctx, d.Id())
+			if err != nil {
+				if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+					d.SetId("")
+					return nil
+				}
+				return diag.Errorf("error reading Project %s: %s", d.Id(), err)
+			}
+			if response.Metadata != nil {
+				metadata = response.Metadata
 			}
 
-			if len(response.Spec.ProjectDetail.Resources.ResourceDomain.Resources) > 0 {
-				projDetails.Resources.ResourceDomain = response.Spec.ProjectDetail.Resources.ResourceDomain
-			} else {
-				projDetails.Resources.ResourceDomain = nil
+			if response.Spec != nil {
+				spec = response.Spec
+
+				if response.Spec.ProjectDetail != nil || response.Spec.AccessControlPolicyList != nil {
+					projDetails = response.Spec.ProjectDetail
+					accessControlPolicy = response.Spec.AccessControlPolicyList
+				}
+
+				if len(response.Spec.ProjectDetail.Resources.ResourceDomain.Resources) > 0 {
+					projDetails.Resources.ResourceDomain = response.Spec.ProjectDetail.Resources.ResourceDomain
+				} else {
+					projDetails.Resources.ResourceDomain = nil
+				}
 			}
-		}
 
-		if acp, ok := d.GetOk("acp"); ok {
-			accessControlPolicy = expandCreateAcp(acp.([]interface{}), d, d.Id(), clusterUUID, meta)
-		}
-		spec.AccessControlPolicyList = accessControlPolicy
-		spec.ProjectDetail = projDetails
-
-		request.Spec = spec
-		request.Metadata = metadata
-		request.APIVersion = response.APIVersion
-
-		UpdateResp, err := conn.V3.UpdateProjectInternal(ctx, d.Id(), request)
-		if err != nil {
-			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
-				d.SetId("")
+			if acp, ok := d.GetOk("acp"); ok {
+				accessControlPolicy = expandCreateAcp(acp.([]interface{}), d, d.Id(), clusterUUID, meta)
 			}
-			return diag.FromErr(err)
-		}
+			spec.AccessControlPolicyList = accessControlPolicy
+			spec.ProjectDetail = projDetails
 
-		uuid = *UpdateResp.Metadata.UUID
-		taskUUID = UpdateResp.Status.ExecutionContext.TaskUUID.(string)
-		// Wait for the Project to be available
-		UpstateConf := &resource.StateChangeConf{
-			Pending:    []string{"QUEUED", "RUNNING"},
-			Target:     []string{"SUCCEEDED"},
-			Refresh:    taskStateRefreshFunc(conn, taskUUID),
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
-			Delay:      vmDelay,
-			MinTimeout: vmMinTimeout,
-		}
+			request.Spec = spec
+			request.Metadata = metadata
+			request.APIVersion = response.APIVersion
 
-		if _, errWaitTask := UpstateConf.WaitForStateContext(ctx); errWaitTask != nil {
-			return diag.Errorf("error waiting for project(%s) to update: %s", uuid, errWaitTask)
+			UpdateResp, err := conn.V3.UpdateProjectInternal(ctx, d.Id(), request)
+			if err != nil {
+				if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
+					d.SetId("")
+				}
+				return diag.FromErr(err)
+			}
+
+			uuid = *UpdateResp.Metadata.UUID
+			taskUUID = UpdateResp.Status.ExecutionContext.TaskUUID.(string)
+			// Wait for the Project to be available
+			UpstateConf := &resource.StateChangeConf{
+				Pending:    []string{"QUEUED", "RUNNING"},
+				Target:     []string{"SUCCEEDED"},
+				Refresh:    taskStateRefreshFunc(conn, taskUUID),
+				Timeout:    d.Timeout(schema.TimeoutUpdate),
+				Delay:      vmDelay,
+				MinTimeout: vmMinTimeout,
+			}
+
+			if _, errWaitTask := UpstateConf.WaitForStateContext(ctx); errWaitTask != nil {
+				return diag.Errorf("error waiting for project(%s) to update: %s", uuid, errWaitTask)
+			}
 		}
 	} else {
 		req := &v3.Project{
@@ -1786,7 +1788,14 @@ func UpdateExpandAcpRM(pr []interface{}, res *v3.ProjectInternalIntentResponse, 
 
 				// get permissions based on role
 				roleID := acpRes.RoleReference.UUID
-				conList := getRolesPermission(*roleID, meta, projectUUID, clusterUUID, true)
+
+				// check for project collaboration. default is set to true
+				pcCollab := true
+				if pc, ok1 := d.GetOkExists("enable_collab"); ok1 {
+					pcCollab = pc.(bool)
+				}
+
+				conList := getRolesPermission(*roleID, meta, projectUUID, clusterUUID, pcCollab)
 
 				// get the filter list based on role
 				filterList := &v3.FilterList{}

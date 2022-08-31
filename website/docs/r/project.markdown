@@ -235,7 +235,7 @@ The following arguments are supported:
 
 
 ### ACP
-* `acp` - (Optional) The list of ACPs to be attached to the users belonging to a project.
+* `acp` - (Optional) The list of ACPs to be attached to the users belonging to a project. It is mandate to provide cluster_uuid while using ACP. It helps to get the context list based on user role. 
 * `acp.#.name` - (Required) Name of the Access Control Policy.  
 * `acp.#.description` -  The description of the association of a role to a user in a given context.
 
@@ -359,5 +359,7 @@ The `project_reference`, `owner_reference` attributes supports the following:
 * `kind` - (Required) The kind name (Default value: `project`).
 * `name` - (Optional) the name.
 * `uuid` - (Required) the UUID.
+
+Note: Few attributes which are added to support ACPs for Project are dependent on PC version. Features such as VPC, Cluster Reference requires pc2022.4 while Tunnel Reference requires pc2022.6 . 
 
 See detailed information in [Nutanix Project](https://www.nutanix.dev/reference/prism_central/v3/api/projects/postprojects/).
