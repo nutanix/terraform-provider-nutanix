@@ -138,6 +138,11 @@ type ListProfileResponse []struct {
 	Clusteravailability []Clusteravailability `json:"clusterAvailability,omitempty"`
 }
 
+type InputProfile struct {
+	Engine *string `json:"engine,omitempty"`
+	Type   *string `json:"type,omitempty"`
+}
+
 // Properties are redeclared in the block with additional information along with ListClusterResponse
 // type Properties struct {
 // 	Name   string `json:"name"`
@@ -203,7 +208,9 @@ type ListClusterResponse []struct {
 	Resourceconfig       Resourceconfig `json:"resourceConfig"`
 	Managementserverinfo interface{}    `json:"managementServerInfo"`
 	Entitycounts         interface{}    `json:"entityCounts"`
+	Healthy              string         `json:"healthy"`
 }
+
 type Properties struct {
 	RefID       interface{} `json:"ref_id"`
 	Name        string      `json:"name"`
@@ -218,23 +225,27 @@ type Resourceconfig struct {
 }
 
 // ListSLAResponse structs
-type ListSLAResponse []struct {
-	ID                  string `json:"id"`
-	Name                string `json:"name"`
-	Uniquename          string `json:"uniqueName"`
-	Description         string `json:"description"`
-	Ownerid             string `json:"ownerId"`
-	Systemsla           bool   `json:"systemSla"`
-	Datecreated         string `json:"dateCreated"`
-	Datemodified        string `json:"dateModified"`
-	Continuousretention int    `json:"continuousRetention"`
-	Dailyretention      int    `json:"dailyRetention"`
-	Weeklyretention     int    `json:"weeklyRetention"`
-	Monthlyretention    int    `json:"monthlyRetention"`
-	Quarterlyretention  int    `json:"quarterlyRetention"`
-	Yearlyretention     int    `json:"yearlyRetention"`
-	Referencecount      int    `json:"referenceCount"`
+type ListSLAResponse struct {
+	ID                     string `json:"id"`
+	Name                   string `json:"name"`
+	Uniquename             string `json:"uniqueName"`
+	Description            string `json:"description"`
+	Ownerid                string `json:"ownerId"`
+	Systemsla              bool   `json:"systemSla"`
+	Datecreated            string `json:"dateCreated"`
+	Datemodified           string `json:"dateModified"`
+	Continuousretention    int    `json:"continuousRetention"`
+	Dailyretention         int    `json:"dailyRetention"`
+	Weeklyretention        int    `json:"weeklyRetention"`
+	Monthlyretention       int    `json:"monthlyRetention"`
+	Quarterlyretention     int    `json:"quarterlyRetention"`
+	Yearlyretention        int    `json:"yearlyRetention"`
+	Referencecount         int    `json:"referenceCount"`
+	PitrEnabled            bool   `json:"pitrEnabled,omitempty"`
+	CurrentActiveFrequency string `json:"currentActiveFrequency,omitempty"`
 }
+
+type SLAResponse []*ListSLAResponse
 
 // ListDatabaseParamsResponse structs
 type ListDatabaseParamsResponse struct {

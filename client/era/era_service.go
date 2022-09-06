@@ -12,10 +12,10 @@ import (
 
 type Service interface {
 	ProvisionDatabase(*ProvisionDatabaseRequest) (*ProvisionDatabaseResponse, error)
-	ListProfiles() (*ListProfileResponse, error)
-	ListClusters() (*ListClusterResponse, error)
+	ListProfiles(ctx context.Context, engine string, profileType string) (*ListProfileResponse, error)
+	ListClusters(ctx context.Context) (*ListClusterResponse, error)
 	ListDatabaseTypes() (*ListDatabaseTypesResponse, error)
-	ListSLA() (*ListSLAResponse, error)
+	ListSLA(ctx context.Context) (*SLAResponse, error)
 	ListDatabaseParams() (*ListDatabaseParamsResponse, error)
 	ListDatabaseInstances() (*ListDatabaseInstancesResponse, error)
 	ListDatabaseServerVMs() (*ListDatabaseServerVMResponse, error)
@@ -80,34 +80,36 @@ func (sc ServiceClient) DeleteDatabase(req *DeleteDatabaseRequest, databaseID st
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) ListProfiles() (*ListProfileResponse, error) {
-	ctx := context.TODO()
+func (sc ServiceClient) ListProfiles(ctx context.Context, engine string, profile_type string) (*ListProfileResponse, error) {
+	var httpReq *http.Request
+	var err error
+	if engine != "" {
+		path := fmt.Sprintf("/profiles?engine=%s", engine)
+		httpReq, err = sc.c.NewRequest(ctx, http.MethodGet, path, nil)
+	} else if profile_type != "" {
+		path := fmt.Sprintf("/profiles?type=%s", profile_type)
+		httpReq, err = sc.c.NewRequest(ctx, http.MethodGet, path, nil)
+	} else if engine != "" && profile_type != "" {
+		path := fmt.Sprintf("/profiles?engine=%s&type=%s", engine, profile_type)
+		httpReq, err = sc.c.NewRequest(ctx, http.MethodGet, path, nil)
+	} else {
+		httpReq, err = sc.c.NewRequest(ctx, http.MethodGet, "/profiles", nil)
+	}
 
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/profiles", nil)
 	if err != nil {
 		return nil, err
 	}
 	res := new(ListProfileResponse)
 
-	log.Println("Request dump in service: ")
-	b, _ := httputil.DumpRequest(httpReq, true)
-	log.Println(string(b))
-
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) ListClusters() (*ListClusterResponse, error) {
-	ctx := context.TODO()
-
+func (sc ServiceClient) ListClusters(ctx context.Context) (*ListClusterResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/clusters", nil)
 	if err != nil {
 		return nil, err
 	}
 	res := new(ListClusterResponse)
-
-	log.Println("Request dump in service: ")
-	b, _ := httputil.DumpRequest(httpReq, true)
-	log.Println(string(b))
 
 	return res, sc.c.Do(ctx, httpReq, res)
 }
@@ -128,18 +130,16 @@ func (sc ServiceClient) ListDatabaseTypes() (*ListDatabaseTypesResponse, error) 
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) ListSLA() (*ListSLAResponse, error) {
-	ctx := context.TODO()
-
+func (sc ServiceClient) ListSLA(ctx context.Context) (*SLAResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/slas", nil)
 	if err != nil {
 		return nil, err
 	}
-	res := new(ListSLAResponse)
+	res := new(SLAResponse)
 
-	log.Println("Request dump in service: ")
-	b, _ := httputil.DumpRequest(httpReq, true)
-	log.Println(string(b))
+	// log.Println("Request dump in service: ")
+	// b, _ := httputil.DumpRequest(httpReq, true)
+	// log.Println(string(b))
 
 	return res, sc.c.Do(ctx, httpReq, res)
 }
