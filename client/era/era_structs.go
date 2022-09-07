@@ -1,5 +1,14 @@
 package era
 
+type Clusteravailability struct {
+	Nxclusterid  string `json:"nxClusterId,omitempty"`
+	Datecreated  string `json:"dateCreated,omitempty"`
+	Datemodified string `json:"dateModified,omitempty"`
+	Ownerid      string `json:"ownerId,omitempty"`
+	Status       string `json:"status,omitempty"`
+	Profileid    string `json:"profileId,omitempty"`
+}
+
 // ListProfile response
 type ListProfileResponse struct {
 	ID                  string                 `json:"id,omitempty"`
@@ -30,6 +39,14 @@ type ProfileListResponse []*ListProfileResponse
 type Propertiesmap struct {
 	DefaultContainer string `json:"DEFAULT_CONTAINER"`
 	MaxVdiskSize     string `json:"MAX_VDISK_SIZE"`
+}
+
+type Properties struct {
+	RefID       interface{} `json:"ref_id,omitempty"`
+	Name        string      `json:"name,omitempty"`
+	Value       string      `json:"value,omitempty"`
+	Secure      bool        `json:"secure,omitempty"`
+	Description interface{} `json:"description,omitempty"`
 }
 
 type VersionClusterAssociation struct {
@@ -65,15 +82,6 @@ type Versions struct {
 	VersionClusterAssociation []*VersionClusterAssociation `json:"versionClusterAssociation,omitempty"`
 }
 
-type Clusteravailability struct {
-	Nxclusterid  string `json:"nxClusterId,omitempty"`
-	Datecreated  string `json:"dateCreated,omitempty"`
-	Datemodified string `json:"dateModified,omitempty"`
-	Ownerid      string `json:"ownerId,omitempty"`
-	Status       string `json:"status,omitempty"`
-	Profileid    string `json:"profileId,omitempty"`
-}
-
 // ListClustersResponse structs
 type ListClusterResponse []struct {
 	ID                   string          `json:"id,omitempty"`
@@ -100,14 +108,6 @@ type ListClusterResponse []struct {
 	Managementserverinfo interface{}     `json:"managementServerInfo,omitempty"`
 	Entitycounts         interface{}     `json:"entityCounts,omitempty"`
 	Healthy              bool            `json:"healthy,omitempty"`
-}
-
-type Properties struct {
-	RefID       interface{} `json:"ref_id,omitempty"`
-	Name        string      `json:"name,omitempty"`
-	Value       string      `json:"value,omitempty"`
-	Secure      bool        `json:"secure,omitempty"`
-	Description interface{} `json:"description,omitempty"`
 }
 
 type Resourceconfig struct {

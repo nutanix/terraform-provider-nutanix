@@ -43,5 +43,4 @@ func NewEraClient(credentials client.Credentials) (*Client, error) {
 		},
 	}
 	return era, nil
-
 }

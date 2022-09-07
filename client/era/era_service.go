@@ -22,18 +22,9 @@ type ServiceClient struct {
 func (sc ServiceClient) ListProfiles(ctx context.Context, engine string, profileType string) (*ProfileListResponse, error) {
 	var httpReq *http.Request
 	var err error
-	if engine != "" && profileType != "" {
-		path := fmt.Sprintf("/profiles?engine=%s&type=%s", engine, profileType)
-		httpReq, err = sc.c.NewRequest(ctx, http.MethodGet, path, nil)
-	} else if engine != "" {
-		path := fmt.Sprintf("/profiles?engine=%s", engine)
-		httpReq, err = sc.c.NewRequest(ctx, http.MethodGet, path, nil)
-	} else if profileType != "" {
-		path := fmt.Sprintf("/profiles?type=%s", profileType)
-		httpReq, err = sc.c.NewRequest(ctx, http.MethodGet, path, nil)
-	} else {
-		httpReq, err = sc.c.NewRequest(ctx, http.MethodGet, "/profiles", nil)
-	}
+
+	path := makeListProfilePath(engine, profileType)
+	httpReq, err = sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 
 	if err != nil {
 		return nil, err
@@ -76,6 +67,18 @@ func (sc ServiceClient) ListSLA(ctx context.Context) (*SLAResponse, error) {
 	res := new(SLAResponse)
 
 	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func makeListProfilePath(engine string, profileType string) string {
+	if engine != "" && profileType != "" {
+		return fmt.Sprintf("/profiles?engine=%s&type=%s", engine, profileType)
+	}
+	if engine != "" {
+		return fmt.Sprintf("/profiles?engine=%s", engine)
+	} else if profileType != "" {
+		return fmt.Sprintf("/profiles?type=%s", profileType)
+	}
+	return "/profiles"
 }
 
 func makePathProfiles(engine string, ptype string, id string, name string) string {
