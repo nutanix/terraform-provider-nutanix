@@ -10,9 +10,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func dataSourceNutanixEraCluster() *schema.Resource {
+func dataSourceNutanixEraClusters() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceNutanixEraClusterRead,
+		ReadContext: dataSourceNutanixEraClustersRead,
 		Schema: map[string]*schema.Schema{
 			"clusters": {
 				Type:     schema.TypeList,
@@ -161,7 +161,7 @@ func dataSourceNutanixEraCluster() *schema.Resource {
 	}
 }
 
-func dataSourceNutanixEraClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceNutanixEraClustersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
 	resp, err := conn.Service.ListClusters(ctx)
@@ -182,7 +182,7 @@ func dataSourceNutanixEraClusterRead(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func flattenClustersResponse(crsp *Era.ListClusterResponse) []map[string]interface{} {
+func flattenClustersResponse(crsp *Era.ClusterListResponse) []map[string]interface{} {
 	if crsp != nil {
 		lst := []map[string]interface{}{}
 		for _, v := range *crsp {

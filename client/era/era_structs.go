@@ -81,7 +81,7 @@ type Versions struct {
 }
 
 // ListClustersResponse structs
-type ListClusterResponse []struct {
+type ListClusterResponse struct {
 	ID                   *string         `json:"id,omitempty"`
 	Name                 *string         `json:"name,omitempty"`
 	Uniquename           *string         `json:"uniqueName,omitempty"`
@@ -107,6 +107,8 @@ type ListClusterResponse []struct {
 	Entitycounts         interface{}     `json:"entityCounts,omitempty"`
 	Healthy              bool            `json:"healthy,omitempty"`
 }
+
+type ClusterListResponse []ListClusterResponse
 
 type Resourceconfig struct {
 	Storagethresholdpercentage float64 `json:"storageThresholdPercentage,omitempty"`

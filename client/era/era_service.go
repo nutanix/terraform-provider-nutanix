@@ -11,7 +11,9 @@ import (
 type Service interface {
 	ListProfiles(ctx context.Context, engine string, profileType string) (*ProfileListResponse, error)
 	GetProfiles(ctx context.Context, engine string, profileType string, id string, name string) (*ListProfileResponse, error)
-	ListClusters(ctx context.Context) (*ListClusterResponse, error)
+	GetCluster(ctx context.Context, id string, name string) (*ListClusterResponse, error)
+	ListClusters(ctx context.Context) (*ClusterListResponse, error)
+	GetSLA(ctx context.Context, id string, name string) (*ListSLAResponse, error)
 	ListSLA(ctx context.Context) (*SLAResponse, error)
 }
 
@@ -49,12 +51,46 @@ func (sc ServiceClient) GetProfiles(ctx context.Context, engine string, profileT
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) ListClusters(ctx context.Context) (*ListClusterResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/clusters", nil)
+func (sc ServiceClient) GetCluster(ctx context.Context, id string, name string) (*ListClusterResponse, error) {
+	var path string
+	if id != "" {
+		path = fmt.Sprintf("/clusters/%s", id)
+	}
+	if name != "" {
+		path = fmt.Sprintf("/clusters/name/%s", name)
+	}
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}
 	res := new(ListClusterResponse)
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ListClusters(ctx context.Context) (*ClusterListResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/clusters", nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(ClusterListResponse)
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) GetSLA(ctx context.Context, id string, name string) (*ListSLAResponse, error) {
+	var path string
+	if id != "" {
+		path = fmt.Sprintf("/slas/%s", id)
+	}
+	if name != "" {
+		path = fmt.Sprintf("/slas/name/%s", name)
+	}
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(ListSLAResponse)
 
 	return res, sc.c.Do(ctx, httpReq, res)
 }
