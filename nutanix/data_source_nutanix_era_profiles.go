@@ -288,23 +288,23 @@ func dataSourceNutanixEraProfilesRead(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*Client).Era
 
 	engine := ""
-	profile_type := ""
+	profileType := ""
 
 	if engineType, ok := d.GetOk("engine"); ok {
 		engine = engineType.(string)
 	}
 
 	if ptype, ok := d.GetOk("profile_type"); ok {
-		profile_type = ptype.(string)
+		profileType = ptype.(string)
 	}
 
-	resp, err := conn.Service.ListProfiles(ctx, engine, profile_type)
+	resp, err := conn.Service.ListProfiles(ctx, engine, profileType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("profiles", flattenProfilesResponse(resp)); err != nil {
-		return diag.FromErr(err)
+	if e := d.Set("profiles", flattenProfilesResponse(resp)); err != nil {
+		return diag.FromErr(e)
 	}
 
 	uuid, er := uuid.GenerateUUID()
@@ -316,7 +316,7 @@ func dataSourceNutanixEraProfilesRead(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func flattenVersions(erv []Era.Versions) []map[string]interface{} {
+func flattenVersions(erv []*Era.Versions) []map[string]interface{} {
 	if len(erv) > 0 {
 		res := make([]map[string]interface{}, len(erv))
 
@@ -351,7 +351,7 @@ func flattenVersions(erv []Era.Versions) []map[string]interface{} {
 	return nil
 }
 
-func flattenProperties(erp []Era.Properties) []map[string]interface{} {
+func flattenProperties(erp []*Era.Properties) []map[string]interface{} {
 	if len(erp) > 0 {
 		res := make([]map[string]interface{}, len(erp))
 
@@ -393,7 +393,7 @@ func flattenProfilesResponse(erp *Era.ProfileListResponse) []map[string]interfac
 	return nil
 }
 
-func flattenClusterAssociation(erc []Era.VersionClusterAssociation) []map[string]interface{} {
+func flattenClusterAssociation(erc []*Era.VersionClusterAssociation) []map[string]interface{} {
 	if len(erc) > 0 {
 		res := make([]map[string]interface{}, len(erc))
 

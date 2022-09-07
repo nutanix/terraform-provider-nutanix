@@ -169,8 +169,8 @@ func dataSourceNutanixEraClusterRead(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("clusters", flattenClustersResponse(resp)); err != nil {
-		return diag.FromErr(err)
+	if e := d.Set("clusters", flattenClustersResponse(resp)); err != nil {
+		return diag.FromErr(e)
 	}
 
 	uuid, er := uuid.GenerateUUID()

@@ -287,7 +287,7 @@ func dataSourceNutanixEraProfileRead(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*Client).Era
 
 	engine := ""
-	profile_type := ""
+	profileType := ""
 	pID := ""
 	pName := ""
 	if engineType, ok := d.GetOk("engine"); ok {
@@ -295,25 +295,24 @@ func dataSourceNutanixEraProfileRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	if ptype, ok := d.GetOk("profile_type"); ok {
-		profile_type = ptype.(string)
+		profileType = ptype.(string)
 	}
 
-	profile_ID, pIDOk := d.GetOk("profile_id")
+	profileID, pIDOk := d.GetOk("profile_id")
 
 	profileName, pNameOk := d.GetOk("profile_name")
 
 	if !pIDOk && !pNameOk {
 		return diag.Errorf("please provide one of profile_id or profile_name attributes")
-	} else {
-		if pIDOk {
-			pID = profile_ID.(string)
-		}
-		if pNameOk {
-			pName = profileName.(string)
-		}
+	}
+	if pIDOk {
+		pID = profileID.(string)
+	}
+	if pNameOk {
+		pName = profileName.(string)
 	}
 
-	resp, err := conn.Service.GetProfiles(ctx, engine, profile_type, pID, pName)
+	resp, err := conn.Service.GetProfiles(ctx, engine, profileType, pID, pName)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -386,7 +385,7 @@ func dataSourceNutanixEraProfileRead(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func flattenClusterAvailability(erc []Era.Clusteravailability) []map[string]interface{} {
+func flattenClusterAvailability(erc []*Era.Clusteravailability) []map[string]interface{} {
 	if len(erc) > 0 {
 		res := make([]map[string]interface{}, len(erc))
 

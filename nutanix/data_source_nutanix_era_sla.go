@@ -101,8 +101,8 @@ func dataSourceNutanixEraSLARead(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("slas", flattenSLAsResponse(resp)); err != nil {
-		return diag.FromErr(err)
+	if e := d.Set("slas", flattenSLAsResponse(resp)); err != nil {
+		return diag.FromErr(e)
 	}
 
 	uuid, er := uuid.GenerateUUID()

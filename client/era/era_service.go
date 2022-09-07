@@ -1,4 +1,4 @@
-package Era
+package era
 
 import (
 	"context"
@@ -19,23 +19,21 @@ type ServiceClient struct {
 	c *client.Client
 }
 
-func (sc ServiceClient) ListProfiles(ctx context.Context, engine string, profile_type string) (*ProfileListResponse, error) {
+func (sc ServiceClient) ListProfiles(ctx context.Context, engine string, profileType string) (*ProfileListResponse, error) {
 	var httpReq *http.Request
 	var err error
-
-	if engine != "" && profile_type != "" {
-		path := fmt.Sprintf("/profiles?engine=%s&type=%s", engine, profile_type)
+	if engine != "" && profileType != "" {
+		path := fmt.Sprintf("/profiles?engine=%s&type=%s", engine, profileType)
 		httpReq, err = sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 	} else if engine != "" {
 		path := fmt.Sprintf("/profiles?engine=%s", engine)
 		httpReq, err = sc.c.NewRequest(ctx, http.MethodGet, path, nil)
-	} else if profile_type != "" {
-		path := fmt.Sprintf("/profiles?type=%s", profile_type)
+	} else if profileType != "" {
+		path := fmt.Sprintf("/profiles?type=%s", profileType)
 		httpReq, err = sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 	} else {
 		httpReq, err = sc.c.NewRequest(ctx, http.MethodGet, "/profiles", nil)
 	}
-	// httpReq, err = sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 
 	if err != nil {
 		return nil, err
@@ -45,10 +43,10 @@ func (sc ServiceClient) ListProfiles(ctx context.Context, engine string, profile
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) GetProfiles(ctx context.Context, engine string, profile_type string, id string, name string) (*ListProfileResponse, error) {
+func (sc ServiceClient) GetProfiles(ctx context.Context, engine string, profileType string, id string, name string) (*ListProfileResponse, error) {
 	var httpReq *http.Request
 	var err error
-	path := makePathProfiles(engine, profile_type, id, name)
+	path := makePathProfiles(engine, profileType, id, name)
 
 	httpReq, err = sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 

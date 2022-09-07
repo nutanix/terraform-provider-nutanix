@@ -1,4 +1,4 @@
-package Era
+package era
 
 import (
 	"fmt"

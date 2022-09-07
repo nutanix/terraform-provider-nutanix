@@ -1,28 +1,26 @@
-package Era
-
-import "time"
+package era
 
 // ListProfile response
 type ListProfileResponse struct {
-	ID                  string                `json:"id"`
-	Name                string                `json:"name"`
-	Description         string                `json:"description"`
-	Status              string                `json:"status"`
-	Datecreated         time.Time             `json:"dateCreated"`
-	Datemodified        time.Time             `json:"dateModified"`
-	Owner               string                `json:"owner"`
-	Enginetype          string                `json:"engineType"`
-	Type                string                `json:"type"`
-	Topology            string                `json:"topology"`
-	Dbversion           string                `json:"dbVersion"`
-	Systemprofile       bool                  `json:"systemProfile"`
-	Latestversion       string                `json:"latestVersion"`
-	Latestversionid     string                `json:"latestVersionId"`
-	Versions            []Versions            `json:"versions"`
-	Assocdbservers      []interface{}         `json:"assocDbServers,omitempty"`
-	Assocdatabases      []string              `json:"assocDatabases,omitempty"`
-	Nxclusterid         string                `json:"nxClusterId,omitempty"`
-	Clusteravailability []Clusteravailability `json:"clusterAvailability,omitempty"`
+	ID                  string                 `json:"id,omitempty"`
+	Name                string                 `json:"name,omitempty"`
+	Description         string                 `json:"description,omitempty"`
+	Status              string                 `json:"status,omitempty"`
+	Datecreated         string                 `json:"dateCreated,omitempty"`
+	Datemodified        string                 `json:"dateModified,omitempty"`
+	Owner               string                 `json:"owner,omitempty"`
+	Enginetype          string                 `json:"engineType,omitempty"`
+	Type                string                 `json:"type,omitempty"`
+	Topology            string                 `json:"topology,omitempty"`
+	Dbversion           string                 `json:"dbVersion,omitempty"`
+	Systemprofile       bool                   `json:"systemProfile,omitempty"`
+	Latestversion       string                 `json:"latestVersion,omitempty"`
+	Latestversionid     string                 `json:"latestVersionId,omitempty"`
+	Versions            []*Versions            `json:"versions,omitempty"`
+	Assocdbservers      []interface{}          `json:"assocDbServers,omitempty"`
+	Assocdatabases      []string               `json:"assocDatabases,omitempty"`
+	Nxclusterid         string                 `json:"nxClusterId,omitempty"`
+	Clusteravailability []*Clusteravailability `json:"clusterAvailability,omitempty"`
 }
 
 type ProfileResponse *ListProfileResponse
@@ -35,105 +33,105 @@ type Propertiesmap struct {
 }
 
 type VersionClusterAssociation struct {
-	NxClusterID              *string      `json:"nxClusterId,omitempty"`
-	DateCreated              *string      `json:"dateCreated,omitempty"`
-	DateModified             *string      `json:"dateModified,omitempty"`
-	OwnerID                  *string      `json:"ownerId,omitempty"`
-	Status                   *string      `json:"status,omitempty"`
-	ProfileVersionID         *string      `json:"profileVersionId,omitempty"`
-	Properties               []Properties `json:"properties,omitempty"`
-	OptimizedForProvisioning bool         `json:"optimizedForProvisioning,omitempty"`
+	NxClusterID              *string       `json:"nxClusterId,omitempty"`
+	DateCreated              *string       `json:"dateCreated,omitempty"`
+	DateModified             *string       `json:"dateModified,omitempty"`
+	OwnerID                  *string       `json:"ownerId,omitempty"`
+	Status                   *string       `json:"status,omitempty"`
+	ProfileVersionID         *string       `json:"profileVersionId,omitempty"`
+	Properties               []*Properties `json:"properties,omitempty"`
+	OptimizedForProvisioning bool          `json:"optimizedForProvisioning,omitempty"`
 }
 
 type Versions struct {
-	ID                        string                      `json:"id"`
-	Name                      string                      `json:"name"`
-	Description               string                      `json:"description"`
-	Status                    string                      `json:"status"`
-	Datecreated               string                      `json:"dateCreated"`
-	Datemodified              string                      `json:"dateModified"`
-	Owner                     string                      `json:"owner"`
-	Enginetype                string                      `json:"engineType"`
-	Type                      string                      `json:"type"`
-	Topology                  string                      `json:"topology"`
-	Dbversion                 string                      `json:"dbVersion"`
-	Systemprofile             bool                        `json:"systemProfile"`
-	Version                   string                      `json:"version"`
-	Profileid                 string                      `json:"profileId"`
-	Published                 bool                        `json:"published"`
-	Deprecated                bool                        `json:"deprecated"`
-	Properties                []Properties                `json:"properties"`
-	Propertiesmap             map[string]interface{}      `json:"propertiesMap"`
-	VersionClusterAssociation []VersionClusterAssociation `json:"versionClusterAssociation"`
+	ID                        string                       `json:"id,omitempty"`
+	Name                      string                       `json:"name,omitempty"`
+	Description               string                       `json:"description,omitempty"`
+	Status                    string                       `json:"status,omitempty"`
+	Datecreated               string                       `json:"dateCreated,omitempty"`
+	Datemodified              string                       `json:"dateModified,omitempty"`
+	Owner                     string                       `json:"owner,omitempty"`
+	Enginetype                string                       `json:"engineType,omitempty"`
+	Type                      string                       `json:"type,omitempty"`
+	Topology                  string                       `json:"topology,omitempty"`
+	Dbversion                 string                       `json:"dbVersion,omitempty"`
+	Systemprofile             bool                         `json:"systemProfile,omitempty"`
+	Version                   string                       `json:"version,omitempty"`
+	Profileid                 string                       `json:"profileId,omitempty"`
+	Published                 bool                         `json:"published,omitempty"`
+	Deprecated                bool                         `json:"deprecated,omitempty"`
+	Properties                []*Properties                `json:"properties,omitempty"`
+	Propertiesmap             map[string]interface{}       `json:"propertiesMap,omitempty"`
+	VersionClusterAssociation []*VersionClusterAssociation `json:"versionClusterAssociation,omitempty"`
 }
 
 type Clusteravailability struct {
-	Nxclusterid  string `json:"nxClusterId"`
-	Datecreated  string `json:"dateCreated"`
-	Datemodified string `json:"dateModified"`
-	Ownerid      string `json:"ownerId"`
-	Status       string `json:"status"`
-	Profileid    string `json:"profileId"`
+	Nxclusterid  string `json:"nxClusterId,omitempty"`
+	Datecreated  string `json:"dateCreated,omitempty"`
+	Datemodified string `json:"dateModified,omitempty"`
+	Ownerid      string `json:"ownerId,omitempty"`
+	Status       string `json:"status,omitempty"`
+	Profileid    string `json:"profileId,omitempty"`
 }
 
 // ListClustersResponse structs
 type ListClusterResponse []struct {
-	ID                   string          `json:"id"`
-	Name                 string          `json:"name"`
-	Uniquename           string          `json:"uniqueName"`
-	Ipaddresses          []string        `json:"ipAddresses"`
-	Fqdns                interface{}     `json:"fqdns"`
-	Nxclusteruuid        string          `json:"nxClusterUUID"`
-	Description          string          `json:"description"`
-	Cloudtype            string          `json:"cloudType"`
-	Datecreated          string          `json:"dateCreated"`
-	Datemodified         string          `json:"dateModified"`
-	Ownerid              string          `json:"ownerId"`
-	Status               string          `json:"status"`
-	Version              string          `json:"version"`
-	Hypervisortype       string          `json:"hypervisorType"`
-	Hypervisorversion    string          `json:"hypervisorVersion"`
-	Properties           []*Properties   `json:"properties"`
-	Referencecount       int             `json:"referenceCount"`
-	Username             interface{}     `json:"username"`
-	Password             interface{}     `json:"password"`
-	Cloudinfo            interface{}     `json:"cloudInfo"`
-	Resourceconfig       *Resourceconfig `json:"resourceConfig"`
-	Managementserverinfo interface{}     `json:"managementServerInfo"`
-	Entitycounts         interface{}     `json:"entityCounts"`
-	Healthy              bool            `json:"healthy"`
+	ID                   string          `json:"id,omitempty"`
+	Name                 string          `json:"name,omitempty"`
+	Uniquename           string          `json:"uniqueName,omitempty"`
+	Ipaddresses          []string        `json:"ipAddresses,omitempty"`
+	Fqdns                interface{}     `json:"fqdns,omitempty"`
+	Nxclusteruuid        string          `json:"nxClusterUUID,omitempty"`
+	Description          string          `json:"description,omitempty"`
+	Cloudtype            string          `json:"cloudType,omitempty"`
+	Datecreated          string          `json:"dateCreated,omitempty"`
+	Datemodified         string          `json:"dateModified,omitempty"`
+	Ownerid              string          `json:"ownerId,omitempty"`
+	Status               string          `json:"status,omitempty"`
+	Version              string          `json:"version,omitempty"`
+	Hypervisortype       string          `json:"hypervisorType,omitempty"`
+	Hypervisorversion    string          `json:"hypervisorVersion,omitempty"`
+	Properties           []*Properties   `json:"properties,omitempty"`
+	Referencecount       int             `json:"referenceCount,omitempty"`
+	Username             interface{}     `json:"username,omitempty"`
+	Password             interface{}     `json:"password,omitempty"`
+	Cloudinfo            interface{}     `json:"cloudInfo,omitempty"`
+	Resourceconfig       *Resourceconfig `json:"resourceConfig,omitempty"`
+	Managementserverinfo interface{}     `json:"managementServerInfo,omitempty"`
+	Entitycounts         interface{}     `json:"entityCounts,omitempty"`
+	Healthy              bool            `json:"healthy,omitempty"`
 }
 
 type Properties struct {
-	RefID       interface{} `json:"ref_id"`
-	Name        string      `json:"name"`
-	Value       string      `json:"value"`
-	Secure      bool        `json:"secure"`
-	Description interface{} `json:"description"`
+	RefID       interface{} `json:"ref_id,omitempty"`
+	Name        string      `json:"name,omitempty"`
+	Value       string      `json:"value,omitempty"`
+	Secure      bool        `json:"secure,omitempty"`
+	Description interface{} `json:"description,omitempty"`
 }
 
 type Resourceconfig struct {
-	Storagethresholdpercentage float64 `json:"storageThresholdPercentage"`
-	Memorythresholdpercentage  float64 `json:"memoryThresholdPercentage"`
+	Storagethresholdpercentage float64 `json:"storageThresholdPercentage,omitempty"`
+	Memorythresholdpercentage  float64 `json:"memoryThresholdPercentage,omitempty"`
 }
 
 // ListSLAResponse structs
 type ListSLAResponse struct {
-	ID                     string `json:"id"`
-	Name                   string `json:"name"`
-	Uniquename             string `json:"uniqueName"`
-	Description            string `json:"description"`
-	Ownerid                string `json:"ownerId"`
-	Systemsla              bool   `json:"systemSla"`
-	Datecreated            string `json:"dateCreated"`
-	Datemodified           string `json:"dateModified"`
-	Continuousretention    int    `json:"continuousRetention"`
-	Dailyretention         int    `json:"dailyRetention"`
-	Weeklyretention        int    `json:"weeklyRetention"`
-	Monthlyretention       int    `json:"monthlyRetention"`
-	Quarterlyretention     int    `json:"quarterlyRetention"`
-	Yearlyretention        int    `json:"yearlyRetention"`
-	Referencecount         int    `json:"referenceCount"`
+	ID                     string `json:"id,omitempty"`
+	Name                   string `json:"name,omitempty"`
+	Uniquename             string `json:"uniqueName,omitempty"`
+	Description            string `json:"description,omitempty"`
+	Ownerid                string `json:"ownerId,omitempty"`
+	Systemsla              bool   `json:"systemSla,omitempty"`
+	Datecreated            string `json:"dateCreated,omitempty"`
+	Datemodified           string `json:"dateModified,omitempty"`
+	Continuousretention    int    `json:"continuousRetention,omitempty"`
+	Dailyretention         int    `json:"dailyRetention,omitempty"`
+	Weeklyretention        int    `json:"weeklyRetention,omitempty"`
+	Monthlyretention       int    `json:"monthlyRetention,omitempty"`
+	Quarterlyretention     int    `json:"quarterlyRetention,omitempty"`
+	Yearlyretention        int    `json:"yearlyRetention,omitempty"`
+	Referencecount         int    `json:"referenceCount,omitempty"`
 	PitrEnabled            bool   `json:"pitrEnabled,omitempty"`
 	CurrentActiveFrequency string `json:"currentActiveFrequency,omitempty"`
 }
