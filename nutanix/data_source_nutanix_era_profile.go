@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	Era "github.com/terraform-providers/terraform-provider-nutanix/client/era"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func dataSourceNutanixEraProfile() *schema.Resource {
@@ -381,7 +382,7 @@ func dataSourceNutanixEraProfileRead(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 
-	d.SetId(resp.ID)
+	d.SetId(utils.StringValue(resp.ID))
 	return nil
 }
 

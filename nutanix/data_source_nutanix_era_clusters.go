@@ -190,7 +190,7 @@ func flattenClustersResponse(crsp *Era.ListClusterResponse) []map[string]interfa
 			d["id"] = v.ID
 			d["name"] = v.Name
 			d["unique_name"] = v.Uniquename
-			d["ip_addresses"] = utils.StringSlice(v.Ipaddresses)
+			d["ip_addresses"] = utils.StringValueSlice(v.Ipaddresses)
 			d["fqdns"] = v.Fqdns
 			d["nx_cluster_uuid"] = v.Nxclusteruuid
 			d["description"] = v.Description
