@@ -10,8 +10,7 @@ import (
 const (
 	libraryVersion = "v0.9"
 	absolutePath   = "era/" + libraryVersion
-	//userAgent      = "nutanix/" + libraryVersion // Check whether user-agent will be same as that of nutanix.
-	clientName = "ERA"
+	clientName     = "ERA"
 )
 
 type Client struct {
@@ -37,12 +36,12 @@ func NewEraClient(credentials client.Credentials) (*Client, error) {
 		baseClient = &client.Client{ErrorMsg: errorMsg}
 	}
 
-	fc := &Client{
+	era := &Client{
 		client: baseClient,
 		Service: ServiceClient{
 			c: baseClient,
 		},
 	}
-	return fc, nil
+	return era, nil
 
 }

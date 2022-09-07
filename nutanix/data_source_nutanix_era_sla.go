@@ -2,12 +2,8 @@ package nutanix
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"log"
-	"strconv"
-	"time"
 
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	Era "github.com/terraform-providers/terraform-provider-nutanix/client/era"
@@ -104,16 +100,17 @@ func dataSourceNutanixEraSLARead(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	log.Println("HELLLLLOOOOOO")
-	aJSON, _ := json.Marshal(resp)
-	fmt.Printf("JSON Print - \n%s\n", string(aJSON))
 
 	if err := d.Set("slas", flattenSLAsResponse(resp)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	d.SetId(strconv.FormatInt(time.Now().Unix(), 10))
+	uuid, er := uuid.GenerateUUID()
 
+	if er != nil {
+		return diag.Errorf("Error generating UUID for era clusters: %+v", err)
+	}
+	d.SetId(uuid)
 	return nil
 }
 

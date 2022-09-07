@@ -2,12 +2,8 @@ package nutanix
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"log"
-	"strconv"
-	"time"
 
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -75,6 +71,20 @@ func dataSourceNutanixEraProfiles() *schema.Resource {
 						"system_profile": {
 							Type:     schema.TypeBool,
 							Computed: true,
+						},
+						"assoc_db_servers": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"assoc_databases": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
 						},
 						"latest_version": {
 							Type:     schema.TypeString,
@@ -165,8 +175,107 @@ func dataSourceNutanixEraProfiles() *schema.Resource {
 											},
 										},
 									},
+									"properties_map": {
+										Type:     schema.TypeMap,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"version_cluster_association": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"nx_cluster_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"date_created": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"date_modified": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"owner_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"status": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"profile_version_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"properties": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"name": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+															"value": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+															"secure": {
+																Type:     schema.TypeBool,
+																Computed: true,
+															},
+														},
+													},
+												},
+												"optimized_for_provisioning": {
+													Type:     schema.TypeBool,
+													Computed: true,
+												},
+											},
+										},
+									},
 								},
 							},
+						},
+						"cluster_availability": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"nx_cluster_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"date_created": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"date_modified": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"owner_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"status": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"profile_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"nx_cluster_id": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
@@ -180,6 +289,7 @@ func dataSourceNutanixEraProfilesRead(ctx context.Context, d *schema.ResourceDat
 
 	engine := ""
 	profile_type := ""
+
 	if engineType, ok := d.GetOk("engine"); ok {
 		engine = engineType.(string)
 	}
@@ -197,12 +307,12 @@ func dataSourceNutanixEraProfilesRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	log.Println("HELLLLLOOOOOO")
-	aJSON, _ := json.Marshal(resp)
-	fmt.Printf("JSON Print - \n%s\n", string(aJSON))
+	uuid, er := uuid.GenerateUUID()
 
-	d.SetId(strconv.FormatInt(time.Now().Unix(), 10))
-
+	if er != nil {
+		return diag.Errorf("Error generating UUID for era clusters: %+v", err)
+	}
+	d.SetId(uuid)
 	return nil
 }
 
@@ -232,6 +342,8 @@ func flattenVersions(erv []Era.Versions) []map[string]interface{} {
 			ents["deprecated"] = v.Deprecated
 
 			ents["properties"] = flattenProperties(v.Properties)
+			ents["properties_map"] = flattenPropertiesMap(v.Propertiesmap)
+			ents["version_cluster_association"] = flattenClusterAssociation(v.VersionClusterAssociation)
 			res[k] = ents
 		}
 		return res
@@ -255,14 +367,12 @@ func flattenProperties(erp []Era.Properties) []map[string]interface{} {
 	return nil
 }
 
-func flattenProfilesResponse(erp *Era.ListProfileResponse) []map[string]interface{} {
+func flattenProfilesResponse(erp *Era.ProfileListResponse) []map[string]interface{} {
 	if erp != nil {
 		lst := []map[string]interface{}{}
 		for _, v := range *erp {
 			d := map[string]interface{}{}
-			if v.ID != "" {
-				d["id"] = v.ID
-			}
+			d["id"] = v.ID
 			d["name"] = v.Name
 			d["description"] = v.Description
 			d["status"] = v.Status
@@ -279,6 +389,36 @@ func flattenProfilesResponse(erp *Era.ListProfileResponse) []map[string]interfac
 			lst = append(lst, d)
 		}
 		return lst
+	}
+	return nil
+}
+
+func flattenClusterAssociation(erc []Era.VersionClusterAssociation) []map[string]interface{} {
+	if len(erc) > 0 {
+		res := make([]map[string]interface{}, len(erc))
+
+		for k, v := range erc {
+			ercs := map[string]interface{}{}
+
+			ercs["nx_cluster_id"] = v.NxClusterID
+			ercs["date_created"] = v.DateCreated
+			ercs["date_modified"] = v.DateModified
+			ercs["owner_id"] = v.OwnerID
+			ercs["status"] = v.Status
+			ercs["profile_version_id"] = v.ProfileVersionID
+			ercs["properties"] = flattenProperties(v.Properties)
+			ercs["optimized_for_provisioning"] = v.OptimizedForProvisioning
+
+			res[k] = ercs
+		}
+		return res
+	}
+	return nil
+}
+
+func flattenPropertiesMap(prm map[string]interface{}) map[string]interface{} {
+	if prm != nil {
+		return prm
 	}
 	return nil
 }
