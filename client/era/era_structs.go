@@ -32,9 +32,7 @@ type ListProfileResponse struct {
 	Clusteravailability []*Clusteravailability `json:"clusterAvailability,omitempty"`
 }
 
-type ProfileResponse *ListProfileResponse
-
-type ProfileListResponse []*ListProfileResponse
+type ProfileListResponse []ListProfileResponse
 
 type Propertiesmap struct {
 	DefaultContainer *string `json:"DEFAULT_CONTAINER"`
@@ -72,13 +70,13 @@ type Versions struct {
 	Type                      *string                      `json:"type,omitempty"`
 	Topology                  *string                      `json:"topology,omitempty"`
 	Dbversion                 *string                      `json:"dbVersion,omitempty"`
-	Systemprofile             bool                         `json:"systemProfile,omitempty"`
 	Version                   *string                      `json:"version,omitempty"`
 	Profileid                 *string                      `json:"profileId,omitempty"`
 	Published                 bool                         `json:"published,omitempty"`
 	Deprecated                bool                         `json:"deprecated,omitempty"`
-	Properties                []*Properties                `json:"properties,omitempty"`
+	Systemprofile             bool                         `json:"systemProfile,omitempty"`
 	Propertiesmap             map[string]interface{}       `json:"propertiesMap,omitempty"`
+	Properties                []*Properties                `json:"properties,omitempty"`
 	VersionClusterAssociation []*VersionClusterAssociation `json:"versionClusterAssociation,omitempty"`
 }
 
@@ -122,9 +120,9 @@ type ListSLAResponse struct {
 	Uniquename             *string `json:"uniqueName,omitempty"`
 	Description            *string `json:"description,omitempty"`
 	Ownerid                *string `json:"ownerId,omitempty"`
-	Systemsla              bool    `json:"systemSla,omitempty"`
 	Datecreated            *string `json:"dateCreated,omitempty"`
 	Datemodified           *string `json:"dateModified,omitempty"`
+	CurrentActiveFrequency *string `json:"currentActiveFrequency,omitempty"`
 	Continuousretention    int     `json:"continuousRetention,omitempty"`
 	Dailyretention         int     `json:"dailyRetention,omitempty"`
 	Weeklyretention        int     `json:"weeklyRetention,omitempty"`
@@ -133,7 +131,7 @@ type ListSLAResponse struct {
 	Yearlyretention        int     `json:"yearlyRetention,omitempty"`
 	Referencecount         int     `json:"referenceCount,omitempty"`
 	PitrEnabled            bool    `json:"pitrEnabled,omitempty"`
-	CurrentActiveFrequency *string `json:"currentActiveFrequency,omitempty"`
+	Systemsla              bool    `json:"systemSla,omitempty"`
 }
 
-type SLAResponse []*ListSLAResponse
+type SLAResponse []ListSLAResponse
