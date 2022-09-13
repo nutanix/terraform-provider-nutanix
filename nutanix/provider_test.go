@@ -55,7 +55,6 @@ func testAccEraPreCheck(t *testing.T) {
 		os.Getenv("ERA_PASSWORD") == "" {
 		t.Fatal("`ERA_USERNAME`,`ERA_PASSWORD`,`ERA_ENDPOINT` must be set for acceptance testing")
 	}
-
 }
 
 func randIntBetween(min, max int) int {
