@@ -27,7 +27,7 @@ func timeMachineInfoSchema() *schema.Schema {
 				"description": {
 					Type:        schema.TypeString,
 					Required:    true,
-					Description: "description of time machine's name",
+					Description: "description of time machine's",
 				},
 
 				"slaid": {
@@ -54,25 +54,6 @@ func timeMachineInfoSchema() *schema.Schema {
 								Required:    true,
 								Description: "description of schedule of time machine",
 								Elem:        &schema.Schema{Type: schema.TypeString},
-								// Elem: &schema.Resource{
-								// 	Schema: map[string]*schema.Schema{
-								// 		"hours": {
-								// 			Type: schema.TypeInt,
-								// 			// Required:    true,
-								// 			Description: "",
-								// 		},
-								// 		"minutes": {
-								// 			Type: schema.TypeInt,
-								// 			// Required:    true,
-								// 			Description: "",
-								// 		},
-								// 		"seconds": {
-								// 			Type: schema.TypeInt,
-								// 			// Required:    true,
-								// 			Description: "",
-								// 		},
-								// 	},
-								// },
 							},
 
 							"continuousschedule": {
@@ -80,26 +61,6 @@ func timeMachineInfoSchema() *schema.Schema {
 								Required:    true,
 								Description: "description of schedule of time machine",
 								Elem:        &schema.Schema{Type: schema.TypeString},
-								// Elem: &schema.Resource{
-								// 	Schema: map[string]*schema.Schema{
-								// 		"enabled": {
-								// 			Type:        schema.TypeBool,
-								// 			Description: "",
-								// 			Optional:    true,
-								// 			Default:     true, // Recheck it multiple times...
-								// 		},
-								// 		"logBackupInterval": {
-								// 			Type: schema.TypeInt,
-								// 			// Required:    true,
-								// 			Description: "",
-								// 		},
-								// 		"snapshotsPerDay": {
-								// 			Type: schema.TypeInt,
-								// 			// Required:    true,
-								// 			Description: "",
-								// 		},
-								// 	},
-								// },
 							},
 
 							"weeklyschedule": {
@@ -107,21 +68,6 @@ func timeMachineInfoSchema() *schema.Schema {
 								Required:    true,
 								Description: "description of schedule of time machine",
 								Elem:        &schema.Schema{Type: schema.TypeString},
-								// Elem: &schema.Resource{
-								// 	Schema: map[string]*schema.Schema{
-								// 		"enabled": {
-								// 			Type:        schema.TypeBool,
-								// 			Description: "",
-								// 			Optional:    true,
-								// 			Default:     true, // Recheck it multiple times...
-								// 		},
-								// 		"dayOfWeek": {
-								// 			Type:        schema.TypeString,
-								// 			Description: "",
-								// 			// Required:    true, // Write validation function to validate whether it is actual day of week.
-								// 		},
-								// 	},
-								// },
 							},
 
 							"monthlyschedule": {
@@ -129,21 +75,6 @@ func timeMachineInfoSchema() *schema.Schema {
 								Required:    true,
 								Description: "description of schedule of time machine",
 								Elem:        &schema.Schema{Type: schema.TypeString},
-								// Elem: &schema.Resource{
-								// 	Schema: map[string]*schema.Schema{
-								// 		"enabled": {
-								// 			Type:        schema.TypeBool,
-								// 			Description: "",
-								// 			Optional:    true,
-								// 			Default:     true, // Recheck it multiple times...
-								// 		},
-								// 		"dayOfMonth": {
-								// 			Type:        schema.TypeString,
-								// 			Description: "",
-								// 			// Required:    true, // Write validation function to validate whether it is actual day of month in numeric as string. // check if we can change it to TypeInt
-								// 		},
-								// 	},
-								// },
 							},
 
 							"quartelyschedule": {
@@ -151,26 +82,6 @@ func timeMachineInfoSchema() *schema.Schema {
 								Required:    true,
 								Description: "description of schedule of time machine",
 								Elem:        &schema.Schema{Type: schema.TypeString},
-								// Elem: &schema.Resource{
-								// 	Schema: map[string]*schema.Schema{
-								// 		"enabled": {
-								// 			Type:        schema.TypeBool,
-								// 			Description: "",
-								// 			Optional:    true,
-								// 			// Default:     true, // Recheck it multiple times...
-								// 		},
-								// 		"startMonth": {
-								// 			Type:        schema.TypeString,
-								// 			Description: "",
-								// 			// Required:    true, // Write validation function to validate whether it is actual day of month.
-								// 		},
-								// 		"dayOfMonth": {
-								// 			Type:        schema.TypeString,
-								// 			Description: "",
-								// 			// Required:    true, // Write validation function to validate whether it is actual day of month in numeric as string. // check if we can change it to TypeInt
-								// 		},
-								// 	},
-								// },
 							},
 
 							"yearlyschedule": {
@@ -178,35 +89,14 @@ func timeMachineInfoSchema() *schema.Schema {
 								Required:    true,
 								Description: "description of schedule of time machine",
 								Elem:        &schema.Schema{Type: schema.TypeString},
-								// Elem: &schema.Resource{
-								// 	Schema: map[string]*schema.Schema{
-								// 		"enabled": {
-								// 			Type:        schema.TypeBool,
-								// 			Description: "",
-								// 			Optional:    true,
-								// 			Default:     true, // Recheck it multiple times...
-								// 		},
-								// 		"dayOfMonth": {
-								// 			Type: schema.TypeInt,
-								// 			// Required:    true,
-								// 			Description: "",
-								// 		},
-								// 		"month": {
-								// 			Type:        schema.TypeString,
-								// 			Description: "",
-								// 			// Required:    true, // Write validation function to validate whether it is actual day of month in numeric as string. // check if we can change it to TypeInt
-								// 		},
-								// 	},
-								// },
 							},
 						},
 					},
 				},
 				"tags": {
-					Type:     schema.TypeSet,
-					Optional: true,
-					Computed: true,
-					// Required:    true,
+					Type:        schema.TypeSet,
+					Optional:    true,
+					Computed:    true,
 					Description: "description of schedule of time machine",
 					Elem:        &schema.Schema{Type: schema.TypeString},
 				},
@@ -232,30 +122,30 @@ func buildTimeMachineSchedule(set *schema.Set) *client.Schedule {
 	schedMap := d[0].(map[string]interface{})
 	log.Printf("%T", schedMap["snapshottimeofday"].(map[string]interface{})["hours"])
 	return &client.Schedule{
-		Snapshottimeofday: client.Snapshottimeofday{
+		Snapshottimeofday: &client.Snapshottimeofday{
 			Hours:   ConvToInt(schedMap["snapshottimeofday"].(map[string]interface{})["hours"]),
 			Minutes: ConvToInt(schedMap["snapshottimeofday"].(map[string]interface{})["minutes"]),
 			Seconds: ConvToInt(schedMap["snapshottimeofday"].(map[string]interface{})["seconds"]),
 		},
-		Continuousschedule: client.Continuousschedule{
+		Continuousschedule: &client.Continuousschedule{
 			Enabled:           ConvToBool(schedMap["continuousschedule"].(map[string]interface{})["enabled"]),
 			Logbackupinterval: ConvToInt(schedMap["continuousschedule"].(map[string]interface{})["logbackupinterval"]),
 			Snapshotsperday:   ConvToInt(schedMap["continuousschedule"].(map[string]interface{})["snapshotsperday"]),
 		},
-		Weeklyschedule: client.Weeklyschedule{
+		Weeklyschedule: &client.Weeklyschedule{
 			Enabled:   ConvToBool(schedMap["weeklyschedule"].(map[string]interface{})["enabled"]),
 			Dayofweek: schedMap["weeklyschedule"].(map[string]interface{})["dayofweek"].(string),
 		},
-		Monthlyschedule: client.Monthlyschedule{
+		Monthlyschedule: &client.Monthlyschedule{
 			Enabled:    ConvToBool(schedMap["monthlyschedule"].(map[string]interface{})["enabled"]),
-			Dayofmonth: schedMap["monthlyschedule"].(map[string]interface{})["dayofmonth"].(string),
+			Dayofmonth: ConvToInt(schedMap["monthlyschedule"].(map[string]interface{})["dayofmonth"]),
 		},
-		Quartelyschedule: client.Quartelyschedule{
+		Quartelyschedule: &client.Quartelyschedule{
 			Enabled:    ConvToBool(schedMap["quartelyschedule"].(map[string]interface{})["enabled"]),
 			Startmonth: schedMap["quartelyschedule"].(map[string]interface{})["startmonth"].(string),
-			Dayofmonth: schedMap["quartelyschedule"].(map[string]interface{})["dayofmonth"].(string),
+			Dayofmonth: ConvToInt(schedMap["quartelyschedule"].(map[string]interface{})["dayofmonth"]),
 		},
-		Yearlyschedule: client.Yearlyschedule{
+		Yearlyschedule: &client.Yearlyschedule{
 			Enabled:    ConvToBool(schedMap["yearlyschedule"].(map[string]interface{})["enabled"]),
 			Dayofmonth: ConvToInt(schedMap["yearlyschedule"].(map[string]interface{})["dayofmonth"]),
 			Month:      schedMap["yearlyschedule"].(map[string]interface{})["month"].(string),
@@ -290,7 +180,7 @@ func nodesSchema() *schema.Schema {
 					Optional:    true,
 					ConfigMode:  schema.SchemaConfigModeAttr,
 					Description: "",
-					Elem:        &schema.Schema{Type: schema.TypeString}, // Confirm this..... If this value is coming from different API then use that API directly.
+					Elem:        &schema.Schema{Type: schema.TypeString},
 				},
 				"vmname": {
 					Type:        schema.TypeString,
@@ -336,8 +226,7 @@ func buildNodesFromResourceData(d *schema.Set) []client.Nodes {
 func actionArgumentsSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:        schema.TypeSet,
-		Required:    true,
-		ForceNew:    true,
+		Optional:    true,
 		Description: "description of action arguments",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -367,7 +256,6 @@ func tryToConvertBool(v interface{}) (bool, bool) {
 
 func buildActionArgumentsFromResourceData(d *schema.Set, args []era.Actionarguments) []client.Actionarguments {
 	argSet := d.List()
-	// args := []client.Actionarguments{}
 	for _, arg := range argSet {
 		var val interface{}
 		val = arg.(map[string]interface{})["value"]

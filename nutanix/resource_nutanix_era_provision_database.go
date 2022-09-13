@@ -2,15 +2,19 @@ package nutanix
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"log"
 	"time"
 
 	era "github.com/terraform-providers/terraform-provider-nutanix/client/era"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
+
+var (
+	eraDelay            = 1 * time.Minute
+	EraProvisionTimeout = 35 * time.Minute
 )
 
 func resourceDatabaseInstance() *schema.Resource {
@@ -19,136 +23,107 @@ func resourceDatabaseInstance() *schema.Resource {
 		ReadContext:   readDatabaseInstance,
 		UpdateContext: updateDatabaseInstance,
 		DeleteContext: deleteDatabaseInstance,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(EraProvisionTimeout),
+		},
 		Schema: map[string]*schema.Schema{
 			"database_instance_id": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Optional:    true,
-				ForceNew:    true, // TODO: Check whether it is required or not
-				Description: "represent id of database instance",
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
 			},
 
 			"description": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "represent id of database instance",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 
 			"databasetype": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "databast_type: Database type description",
-				Default:     "",
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 
 			"name": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				Description: "databast_type: Database type description",
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 
 			"softwareprofileid": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "databast_type: Database type description",
-				Default:     "",
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 
 			"softwareprofileversionid": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "databast_type: Database type description",
-				Default:     "",
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 
 			"computeprofileid": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "databast_type: Database type description",
-				Default:     "",
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 
 			"networkprofileid": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "databast_type: Database type description",
-				Default:     "",
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 			"dbparameterprofileid": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "databast_type: Database type description",
-				Default:     "",
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 
 			"newdbservertimezone": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "databast_type: Database type description",
-				Default:     "UTC",
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 
 			"nxclusterid": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "databast_type: Database type description",
-				Default:     "",
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 
 			"sshpublickey": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "databast_type: Database type description",
-				Default:     "",
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 
 			"createdbserver": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "databast_type: Database type description",
-				Default:     true,
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
 			},
 
 			"dbserverid": {
-				Type:        schema.TypeString,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "database server ID if createDbserver is false.",
-				Default:     "",
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 
 			"clustered": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "databast_type: Database type description",
-				Default:     false,
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
 			},
 
 			"autotunestagingdrive": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "databast_type: Database type description",
-				Default:     true,
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
 			},
 
 			"nodecount": {
-				Type:        schema.TypeInt,
-				Optional:    true,
-				ForceNew:    true,
-				Description: "database_type: Database type description",
-				Default:     1,
+				Type:     schema.TypeInt,
+				Optional: true,
+				ForceNew: true,
 			},
 
 			"actionarguments": actionArgumentsSchema(),
@@ -177,7 +152,6 @@ func resourceDatabaseInstance() *schema.Resource {
 					},
 				},
 			},
-
 			"postgresql_info": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -188,14 +162,6 @@ func resourceDatabaseInstance() *schema.Resource {
 							Optional: true,
 						},
 						"database_size": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"db_password": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"database_names": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -215,58 +181,21 @@ func resourceDatabaseInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"is_high_availability": {
-							Type:     schema.TypeList,
+						"database_names": {
+							Type:     schema.TypeString,
 							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"proxy_read_port": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"proxy_write_port": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"provision_virtual_ip": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-
-									"deploy_haproxy": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"enable_synchronous_mode": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"cluster_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"patroni_cluster_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"failover_mode": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"node_type": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"archive_wal_expire_days": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"backup_policy": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
+						},
+						"db_password": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"pre_create_script": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"post_create_script": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
@@ -276,49 +205,18 @@ func resourceDatabaseInstance() *schema.Resource {
 }
 
 func createDatabaseInstance(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*Client).Era
 	log.Println("Creating the request!!!")
 	req, err := buildEraRequest(d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	c := meta.(*Client).Era
-	if c == nil {
-		return diag.Errorf("era is nil")
-	}
-
-	log.Println("Request:\n")
-
-	b, _ := json.Marshal(req)
-
-	log.Println("Json blob: \n")
-	log.Println(string(b))
-
-	log.Println("Sending request to server...............")
-
-	resp, err := c.Service.ProvisionDatabase(req)
+	resp, err := conn.Service.ProvisionDatabase(ctx, req)
 	if err != nil {
-		log.Println("Response from server:")
-		log.Println(resp)
-		log.Println("\n\n\n\n")
-
-		b, _ = json.Marshal(resp)
-
-		log.Println("Json blob: \n")
 		return diag.Errorf("error while sending request...........:\n %s\n\n", err.Error())
 	}
 	d.SetId(resp.Entityid)
-	log.Println("Response from server:")
-	log.Println(resp)
-
-	log.Println("\n\n\n\n")
-
-	b, _ = json.Marshal(resp)
-
-	log.Println("Json blob: \n")
-	log.Println(string(b))
-
-	// TODO: Poll for operation by using operation id we get from response.
 
 	// Get Operation ID from response of ProvisionDatabaseResponse and poll for the operation to get completed.
 	opID := resp.Operationid
@@ -331,34 +229,22 @@ func createDatabaseInstance(ctx context.Context, d *schema.ResourceData, meta in
 
 	log.Printf("polling for operation with id: %s\n", opID)
 
-	// TODO: change following code to retry timeout mechanism provided by terraform to poll for operation
-	for { // Have a timeout too depending upon the time it takes for database instance provision
-		log.Println("Waiting for 5 seconds.............")
-		time.Sleep(5 * time.Second)
-		opRes, err := c.Service.GetOperation(opReq)
-		if err != nil {
-			return diag.Errorf("error occured while polling for operation with id.. %s: \n%s\n\n", opID, err.Error())
-		}
-		if opRes.Status == "4" || opRes.Status == "5" {
-			if opRes.Status == "4" {
-				log.Println("operation with id: %s has failed", opRes.ID)
-				return diag.Errorf("operation: %v has failed", opRes)
-			} else {
-				log.Println("operation with id: %s has completed", opRes.ID)
-				log.Println("database instance has successfully created")
-			}
-			break
-		}
+	// Poll for operation here - Operation GET Call
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING"},
+		Target:  []string{"COMPLETED", "FAILED"},
+		Refresh: eraRefresh(ctx, conn, opReq),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+		Delay:   eraDelay,
 	}
 
-	// TODO: Remove all stupid debug statements only have valid debug logs and return response values to schema in computed values.
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for db Instance	 (%s) to create: %s", resp.Entityid, errWaitTask)
+	}
+
 	return readDatabaseInstance(ctx, d, meta)
 
 }
-
-//func getStr(d *schema.ResourceData, key string) string {
-//return d.Get(string).(string)
-//}
 
 func buildEraRequest(d *schema.ResourceData) (*era.ProvisionDatabaseRequest, error) {
 	return &era.ProvisionDatabaseRequest{
@@ -384,7 +270,6 @@ func buildEraRequest(d *schema.ResourceData) (*era.ProvisionDatabaseRequest, err
 	}, nil
 }
 
-// buildActionArgumentsFromResourceData(d.Get("actionarguments").(*schema.Set))
 func readDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 
 	c := m.(*Client).Era
@@ -394,7 +279,7 @@ func readDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interfa
 
 	databaseInstanceID := d.Id()
 
-	res, err := c.Service.GetDatabaseInstance(databaseInstanceID)
+	res, err := c.Service.GetDatabaseInstance(ctx, databaseInstanceID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -441,7 +326,7 @@ func updateDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 		Resettags:        true,
 	}
 
-	res, err := c.Service.UpdateDatabase(&updateReq, dbID)
+	res, err := c.Service.UpdateDatabase(ctx, &updateReq, dbID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -460,35 +345,54 @@ func updateDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 }
 
 func deleteDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-	c := m.(*Client).Era
-	if c == nil {
+	conn := m.(*Client).Era
+	if conn == nil {
 		return diag.Errorf("era is nil")
 	}
 
 	dbID := d.Id()
 
 	req := era.DeleteDatabaseRequest{
-		Delete:               false,
-		Remove:               true,
+		Delete:               true,
+		Remove:               false,
 		Softremove:           false,
 		Forced:               false,
-		Deletetimemachine:    false,
+		Deletetimemachine:    true,
 		Deletelogicalcluster: true,
 	}
-	res, err := c.Service.DeleteDatabase(&req, dbID)
+	res, err := conn.Service.DeleteDatabase(ctx, &req, dbID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	log.Printf("Operation to delete instance with id %s has started, operation id: %s", dbID, res.Operationid)
-	// TODO: Use retry timeout mechanism provided by terraform to poll for operation
+	opID := res.Operationid
+	if opID == "" {
+		return diag.Errorf("error: operation ID is an empty string")
+	}
+	opReq := era.GetOperationRequest{
+		OperationID: opID,
+	}
 
+	log.Printf("polling for operation with id: %s\n", opID)
+
+	// Poll for operation here - Cluster GET Call
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING"},
+		Target:  []string{"COMPLETED", "FAILED"},
+		Refresh: eraRefresh(ctx, conn, opReq),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+		Delay:   eraDelay,
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for db Instance (%s) to delete: %s", res.Entityid, errWaitTask)
+	}
 	return nil
 }
 
 func expandActionArguments(d *schema.ResourceData) []era.Actionarguments {
 	args := []era.Actionarguments{}
-	// resp := []era.Actionarguments{}
 	if post, ok := d.GetOk("postgresql_info"); ok {
 		brr := post.([]interface{})
 
@@ -568,7 +472,6 @@ func expandActionArguments(d *schema.ResourceData) []era.Actionarguments {
 				})
 			}
 			if plist, pok := val["auth_method"]; pok && len(plist.(string)) > 0 {
-				fmt.Println("22222222")
 				values = plist
 				b, ok := tryToConvertBool(plist)
 				if ok {
@@ -581,7 +484,6 @@ func expandActionArguments(d *schema.ResourceData) []era.Actionarguments {
 				})
 			}
 			if plist, clok := val["cluster_database"]; clok && len(plist.(string)) > 0 {
-				fmt.Println("111111111")
 				values = plist
 				b, ok := tryToConvertBool(plist)
 				if ok {
@@ -593,152 +495,22 @@ func expandActionArguments(d *schema.ResourceData) []era.Actionarguments {
 					Value: values,
 				})
 			}
-
-			if plist, ok := val["is_high_availability"]; ok && len(plist.([]interface{})) > 0 {
-				high := plist.([]interface{})
-
-				for _, v := range high {
-					val := v.(map[string]interface{})
-					var values interface{}
-					if plist, pok := val["proxy_read_port"]; pok {
-						values = plist
-						b, ok := tryToConvertBool(plist)
-						if ok {
-							values = b
-						}
-
-						args = append(args, era.Actionarguments{
-							Name:  "proxy_read_port",
-							Value: values,
-						})
-					}
-					if plist, pok := val["proxy_write_port"]; pok {
-						values = plist
-						b, ok := tryToConvertBool(plist)
-						if ok {
-							values = b
-						}
-
-						args = append(args, era.Actionarguments{
-							Name:  "proxy_write_port",
-							Value: values,
-						})
-					}
-					if plist, pok := val["provision_virtual_ip"]; pok {
-						values = plist
-						b, ok := tryToConvertBool(plist)
-						if ok {
-							values = b
-						}
-
-						args = append(args, era.Actionarguments{
-							Name:  "provision_virtual_ip",
-							Value: values,
-						})
-					}
-					if plist, pok := val["deploy_haproxy"]; pok {
-						values = plist
-						b, ok := tryToConvertBool(plist)
-						if ok {
-							values = b
-						}
-
-						args = append(args, era.Actionarguments{
-							Name:  "deploy_haproxy",
-							Value: values,
-						})
-					}
-
-					if plist, pok := val["enable_synchronous_mode"]; pok {
-						values = plist
-						b, ok := tryToConvertBool(plist)
-						if ok {
-							values = b
-						}
-
-						args = append(args, era.Actionarguments{
-							Name:  "enable_synchronous_mode",
-							Value: values,
-						})
-					}
-					if plist, pok := val["cluster_name"]; pok {
-						values = plist
-						b, ok := tryToConvertBool(plist)
-						if ok {
-							values = b
-						}
-
-						args = append(args, era.Actionarguments{
-							Name:  "cluster_name",
-							Value: values,
-						})
-					}
-					if plist, pok := val["patroni_cluster_name"]; pok {
-						values = plist
-						b, ok := tryToConvertBool(plist)
-						if ok {
-							values = b
-						}
-
-						args = append(args, era.Actionarguments{
-							Name:  "patroni_cluster_name",
-							Value: values,
-						})
-					}
-
-					if plist, pok := val["failover_mode"]; pok {
-						values = plist
-						b, ok := tryToConvertBool(plist)
-						if ok {
-							values = b
-						}
-
-						args = append(args, era.Actionarguments{
-							Name:  "failover_mode",
-							Value: values,
-						})
-					}
-					if plist, pok := val["node_type"]; pok {
-						values = plist
-						b, ok := tryToConvertBool(plist)
-						if ok {
-							values = b
-						}
-
-						args = append(args, era.Actionarguments{
-							Name:  "node_type",
-							Value: values,
-						})
-					}
-					if plist, pok := val["archive_wal_expire_days"]; pok {
-						values = plist
-						b, ok := tryToConvertBool(plist)
-						if ok {
-							values = b
-						}
-
-						args = append(args, era.Actionarguments{
-							Name:  "archive_wal_expire_days",
-							Value: values,
-						})
-					}
-					if plist, pok := val["backup_policy"]; pok {
-						values = plist
-						b, ok := tryToConvertBool(plist)
-						if ok {
-							values = b
-						}
-
-						args = append(args, era.Actionarguments{
-							Name:  "backup_policy",
-							Value: values,
-						})
-					}
-				}
-			}
 		}
 	}
 	resp := buildActionArgumentsFromResourceData(d.Get("actionarguments").(*schema.Set), args)
 
 	return resp
+}
+
+func eraRefresh(ctx context.Context, conn *era.Client, opId era.GetOperationRequest) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		opRes, err := conn.Service.GetOperation(opId)
+		if err != nil {
+			return nil, "FAILED", err
+		}
+		if opRes.Status == "5" {
+			return opRes, "COMPLETED", nil
+		}
+		return opRes, "PENDING", nil
+	}
 }

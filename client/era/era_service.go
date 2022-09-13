@@ -251,22 +251,6 @@ func (sc ServiceClient) ListDatabaseParams() (*ListDatabaseParamsResponse, error
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) ListDatabaseInstances() (*ListDatabaseInstancesResponse, error) {
-	ctx := context.TODO()
-
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/databases?detailed=true&order-by-dbserver-logical-cluster=true", nil) // TODO: Check this API, is this api used to generate second page?, What is the sense of these params and do we get response of all database types ?
-	if err != nil {
-		return nil, err
-	}
-	res := new(ListDatabaseInstancesResponse)
-
-	log.Println("Request dump in service: ")
-	b, _ := httputil.DumpRequest(httpReq, true)
-	log.Println(string(b))
-
-	return res, sc.c.Do(ctx, httpReq, res)
-}
-
 func (sc ServiceClient) ListDatabaseServerVMs() (*ListDatabaseServerVMResponse, error) {
 	ctx := context.TODO()
 
