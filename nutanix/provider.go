@@ -16,6 +16,7 @@ var requiredProviderFields map[string][]string = map[string][]string{
 	"karbon":             {"username", "password", "endpoint"},
 	"foundation":         {"foundation_endpoint"},
 	"foundation_central": {"username", "password", "endpoint"},
+	"era":                {"era_endpoint", "era_username", "era_password"},
 }
 
 // Provider function returns the object that implements the terraform.ResourceProvider interface, specifically a schema.Provider
@@ -44,6 +45,8 @@ func Provider() *schema.Provider {
 		"foundation_endpoint": "endpoint for foundation VM (eg. Foundation VM IP)",
 
 		"foundation_port": "Port for foundation VM",
+
+		"era_endpoint": "endpoint for Era VM (era ip)",
 	}
 
 	// Nutanix provider schema
@@ -116,6 +119,18 @@ func Provider() *schema.Provider {
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("ERA_ENDPOINT", nil),
 				Description: descriptions["era_endpoint"],
+			},
+			"era_username": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("ERA_USERNAME", nil),
+				Description: descriptions["era_username"],
+			},
+			"era_password": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("ERA_PASSWORD", nil),
+				Description: descriptions["era_password"],
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
@@ -250,6 +265,8 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		FoundationEndpoint: d.Get("foundation_endpoint").(string),
 		FoundationPort:     d.Get("foundation_port").(string),
 		EraEndpoint:        d.Get("era_endpoint").(string),
+		EraUsername:        d.Get("era_username").(string),
+		EraPassword:        d.Get("era_password").(string),
 		RequiredFields:     requiredProviderFields,
 	}
 	c, err := config.Client()

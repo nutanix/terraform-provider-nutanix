@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	Era "github.com/terraform-providers/terraform-provider-nutanix/client/era"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func dataSourceNutanixEraProfiles() *schema.Resource {
@@ -342,7 +343,7 @@ func flattenVersions(erv []*Era.Versions) []map[string]interface{} {
 			ents["deprecated"] = v.Deprecated
 
 			ents["properties"] = flattenProperties(v.Properties)
-			ents["properties_map"] = flattenPropertiesMap(v.Propertiesmap)
+			ents["properties_map"] = utils.ConvertMapString(v.Propertiesmap)
 			ents["version_cluster_association"] = flattenClusterAssociation(v.VersionClusterAssociation)
 			res[k] = ents
 		}
@@ -412,13 +413,6 @@ func flattenClusterAssociation(erc []*Era.VersionClusterAssociation) []map[strin
 			res[k] = ercs
 		}
 		return res
-	}
-	return nil
-}
-
-func flattenPropertiesMap(prm map[string]interface{}) map[string]interface{} {
-	if prm != nil {
-		return prm
 	}
 	return nil
 }

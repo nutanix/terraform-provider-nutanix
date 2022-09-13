@@ -10,7 +10,7 @@ import (
 const (
 	libraryVersion = "v0.9"
 	absolutePath   = "era/" + libraryVersion
-	clientName     = "ERA"
+	clientName     = "era"
 )
 
 type Client struct {
@@ -22,8 +22,11 @@ func NewEraClient(credentials client.Credentials) (*Client, error) {
 	var baseClient *client.Client
 
 	// check if all required fields are present. Else create an empty client
-	if credentials.Username != "" && credentials.Password != "" && credentials.EraEndpoint != "" {
+	if credentials.EraUsername != "" && credentials.EraPassword != "" && credentials.EraEndpoint != "" {
 		credentials.URL = fmt.Sprintf(credentials.EraEndpoint)
+		credentials.Password = credentials.EraPassword
+		credentials.Username = credentials.EraUsername
+
 		c, err := client.NewBaseClient(&credentials, absolutePath, false)
 		if err != nil {
 			return nil, err

@@ -40,11 +40,11 @@ type Propertiesmap struct {
 }
 
 type Properties struct {
-	RefID       interface{} `json:"ref_id,omitempty"`
-	Name        *string     `json:"name,omitempty"`
-	Value       *string     `json:"value,omitempty"`
-	Secure      bool        `json:"secure,omitempty"`
-	Description interface{} `json:"description,omitempty"`
+	RefID       *string `json:"ref_id,omitempty"`
+	Name        *string `json:"name,omitempty"`
+	Value       *string `json:"value,omitempty"`
+	Secure      bool    `json:"secure,omitempty"`
+	Description *string `json:"description,omitempty"`
 }
 
 type VersionClusterAssociation struct {

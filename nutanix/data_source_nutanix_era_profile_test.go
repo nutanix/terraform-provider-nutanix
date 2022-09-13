@@ -8,7 +8,7 @@ import (
 
 func TestAccEraProfileDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccEraPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -25,7 +25,7 @@ func TestAccEraProfileDataSource_basic(t *testing.T) {
 
 func TestAccEraProfileDataSource_ById(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccEraPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -45,7 +45,7 @@ func TestAccEraProfileDataSource_ById(t *testing.T) {
 
 func TestAccEraProfileDataSource_ByName(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccEraPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{

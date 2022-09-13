@@ -28,6 +28,8 @@ type Config struct {
 	FoundationPort     string              // Port for connecting to foundation VM APIs
 	RequiredFields     map[string][]string // RequiredFields is client name to its required fields mapping for validations and usage in every client
 	EraEndpoint        string
+	EraUsername        string
+	EraPassword        string
 }
 
 // Client ...
@@ -44,6 +46,8 @@ func (c *Config) Client() (*Client, error) {
 		FoundationEndpoint: c.FoundationEndpoint,
 		FoundationPort:     c.FoundationPort,
 		EraEndpoint:        c.EraEndpoint,
+		EraUsername:        c.EraUsername,
+		EraPassword:        c.EraPassword,
 		RequiredFields:     c.RequiredFields,
 	}
 

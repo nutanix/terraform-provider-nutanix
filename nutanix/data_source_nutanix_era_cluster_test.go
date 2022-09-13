@@ -9,7 +9,7 @@ import (
 func TestAccEraClusterDataSource_basic(t *testing.T) {
 	// r := randIntBetween(31, 40)
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccEraPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -29,7 +29,7 @@ func TestAccEraClusterDataSource_basic(t *testing.T) {
 
 func TestAccEraClusterDataSource_ByName(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccEraPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
