@@ -40,6 +40,9 @@ jobs:
                   elif [ "$provider" = "pc" ]
                       then
                           runFlag+="TestAccNutanix*"
+                  elif [ "$provider" = "era" ]
+                      then
+                          runFlag+="TestAccEra*"
                   else 
                           echo "Invalid provider=$provider given in arguments."
                           exit 1
