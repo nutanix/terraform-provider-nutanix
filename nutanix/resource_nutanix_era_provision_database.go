@@ -19,7 +19,7 @@ var (
 
 func resourceDatabaseInstance() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: createDatabaseInstance, // TODO: Use CreateContext etc functions
+		CreateContext: createDatabaseInstance,
 		ReadContext:   readDatabaseInstance,
 		UpdateContext: updateDatabaseInstance,
 		DeleteContext: deleteDatabaseInstance,
@@ -401,10 +401,10 @@ func expandActionArguments(d *schema.ResourceData) []era.Actionarguments {
 			var values interface{}
 			if plist, pok := val["listener_port"]; pok {
 				values = plist
-				b, ok := tryToConvertBool(plist)
-				if ok {
-					values = b
-				}
+				// b, ok := tryToConvertBool(plist)
+				// if ok {
+				// 	values = b
+				// }
 
 				args = append(args, era.Actionarguments{
 					Name:  "listener_port",
@@ -413,10 +413,10 @@ func expandActionArguments(d *schema.ResourceData) []era.Actionarguments {
 			}
 			if plist, pok := val["database_size"]; pok {
 				values = plist
-				b, ok := tryToConvertBool(plist)
-				if ok {
-					values = b
-				}
+				// b, ok := tryToConvertBool(plist)
+				// if ok {
+				// 	values = b
+				// }
 
 				args = append(args, era.Actionarguments{
 					Name:  "database_size",
@@ -425,10 +425,10 @@ func expandActionArguments(d *schema.ResourceData) []era.Actionarguments {
 			}
 			if plist, pok := val["db_password"]; pok {
 				values = plist
-				b, ok := tryToConvertBool(plist)
-				if ok {
-					values = b
-				}
+				// b, ok := tryToConvertBool(plist)
+				// if ok {
+				// 	values = b
+				// }
 
 				args = append(args, era.Actionarguments{
 					Name:  "db_password",
@@ -437,10 +437,10 @@ func expandActionArguments(d *schema.ResourceData) []era.Actionarguments {
 			}
 			if plist, pok := val["database_names"]; pok {
 				values = plist
-				b, ok := tryToConvertBool(plist)
-				if ok {
-					values = b
-				}
+				// b, ok := tryToConvertBool(plist)
+				// if ok {
+				// 	values = b
+				// }
 
 				args = append(args, era.Actionarguments{
 					Name:  "database_names",
@@ -449,10 +449,10 @@ func expandActionArguments(d *schema.ResourceData) []era.Actionarguments {
 			}
 			if plist, pok := val["auto_tune_staging_drive"]; pok {
 				values = plist
-				b, ok := tryToConvertBool(plist)
-				if ok {
-					values = b
-				}
+				// b, ok := tryToConvertBool(plist)
+				// if ok {
+				// 	values = b
+				// }
 
 				args = append(args, era.Actionarguments{
 					Name:  "auto_tune_staging_drive",
@@ -461,10 +461,10 @@ func expandActionArguments(d *schema.ResourceData) []era.Actionarguments {
 			}
 			if plist, pok := val["allocate_pg_hugepage"]; pok {
 				values = plist
-				b, ok := tryToConvertBool(plist)
-				if ok {
-					values = b
-				}
+				// b, ok := tryToConvertBool(plist)
+				// if ok {
+				// 	values = b
+				// }
 
 				args = append(args, era.Actionarguments{
 					Name:  "allocate_pg_hugepage",
@@ -473,10 +473,10 @@ func expandActionArguments(d *schema.ResourceData) []era.Actionarguments {
 			}
 			if plist, pok := val["auth_method"]; pok && len(plist.(string)) > 0 {
 				values = plist
-				b, ok := tryToConvertBool(plist)
-				if ok {
-					values = b
-				}
+				// b, ok := tryToConvertBool(plist)
+				// if ok {
+				// 	values = b
+				// }
 
 				args = append(args, era.Actionarguments{
 					Name:  "auth_method",
@@ -485,10 +485,10 @@ func expandActionArguments(d *schema.ResourceData) []era.Actionarguments {
 			}
 			if plist, clok := val["cluster_database"]; clok && len(plist.(string)) > 0 {
 				values = plist
-				b, ok := tryToConvertBool(plist)
-				if ok {
-					values = b
-				}
+				// b, ok := tryToConvertBool(plist)
+				// if ok {
+				// 	values = b
+				// }
 
 				args = append(args, era.Actionarguments{
 					Name:  "cluster_database",
