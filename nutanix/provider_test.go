@@ -49,6 +49,14 @@ func testAccFoundationPreCheck(t *testing.T) {
 	}
 }
 
+func testAccEraPreCheck(t *testing.T) {
+	if os.Getenv("ERA_ENDPOINT") == "" ||
+		os.Getenv("ERA_USERNAME") == "" ||
+		os.Getenv("ERA_PASSWORD") == "" {
+		t.Fatal("`ERA_USERNAME`,`ERA_PASSWORD`,`ERA_ENDPOINT` must be set for acceptance testing")
+	}
+}
+
 func randIntBetween(min, max int) int {
 	rand.Seed(time.Now().UnixNano())
 	return rand.Intn(max-min) + min

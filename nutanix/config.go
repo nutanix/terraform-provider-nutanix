@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
+	era "github.com/terraform-providers/terraform-provider-nutanix/client/era"
 	foundation_central "github.com/terraform-providers/terraform-provider-nutanix/client/fc"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/foundation"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/karbon"
@@ -26,6 +27,9 @@ type Config struct {
 	FoundationEndpoint string              // Required field for connecting to foundation VM APIs
 	FoundationPort     string              // Port for connecting to foundation VM APIs
 	RequiredFields     map[string][]string // RequiredFields is client name to its required fields mapping for validations and usage in every client
+	EraEndpoint        string
+	EraUsername        string
+	EraPassword        string
 }
 
 // Client ...
@@ -41,6 +45,9 @@ func (c *Config) Client() (*Client, error) {
 		ProxyURL:           c.ProxyURL,
 		FoundationEndpoint: c.FoundationEndpoint,
 		FoundationPort:     c.FoundationPort,
+		EraEndpoint:        c.EraEndpoint,
+		EraUsername:        c.EraUsername,
+		EraPassword:        c.EraPassword,
 		RequiredFields:     c.RequiredFields,
 	}
 
@@ -60,12 +67,17 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	eraClient, err := era.NewEraClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 	return &Client{
 		WaitTimeout:         c.WaitTimeout,
 		API:                 v3Client,
 		KarbonAPI:           karbonClient,
 		FoundationClientAPI: foundationClient,
 		FoundationCentral:   fcClient,
+		Era:                 eraClient,
 	}, nil
 }
 
@@ -76,4 +88,5 @@ type Client struct {
 	FoundationClientAPI *foundation.Client
 	WaitTimeout         int64
 	FoundationCentral   *foundation_central.Client
+	Era                 *era.Client
 }
