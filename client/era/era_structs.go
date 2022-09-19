@@ -150,25 +150,25 @@ type DatabaseTypeProperties struct {
 
 // ProvisionDatabaseRequestStructs
 type ProvisionDatabaseRequest struct {
-	Databasetype             string            `json:"databaseType,omitempty"`
-	Name                     string            `json:"name,omitempty"`
-	Databasedescription      string            `json:"databaseDescription,omitempty"`
-	DatabaseServerID         string            `json:"dbserverId,omitempty"`
-	Softwareprofileid        string            `json:"softwareProfileId,omitempty"`
-	Softwareprofileversionid string            `json:"softwareProfileVersionId,omitempty"`
-	Computeprofileid         string            `json:"computeProfileId,omitempty"`
-	Networkprofileid         string            `json:"networkProfileId,omitempty"`
-	Dbparameterprofileid     string            `json:"dbParameterProfileId,omitempty"`
-	Newdbservertimezone      string            `json:"newDbServerTimeZone,omitempty"`
-	Timemachineinfo          Timemachineinfo   `json:"timeMachineInfo,omitempty"`
-	Actionarguments          []Actionarguments `json:"actionArguments,omitempty"`
-	Createdbserver           bool              `json:"createDbserver,omitempty"`
-	Nodecount                int               `json:"nodeCount,omitempty"`
-	Nxclusterid              string            `json:"nxClusterId,omitempty"`
-	Sshpublickey             string            `json:"sshPublicKey,omitempty"`
-	Clustered                bool              `json:"clustered,omitempty"`
-	Nodes                    []Nodes           `json:"nodes,omitempty"`
-	Autotunestagingdrive     bool              `json:"autoTuneStagingDrive,omitempty"`
+	Databasetype             *string            `json:"databaseType,omitempty"`
+	Name                     *string            `json:"name,omitempty"`
+	Databasedescription      *string            `json:"databaseDescription,omitempty"`
+	DatabaseServerID         *string            `json:"dbserverId,omitempty"`
+	Softwareprofileid        *string            `json:"softwareProfileId,omitempty"`
+	Softwareprofileversionid *string            `json:"softwareProfileVersionId,omitempty"`
+	Computeprofileid         *string            `json:"computeProfileId,omitempty"`
+	Networkprofileid         *string            `json:"networkProfileId,omitempty"`
+	Dbparameterprofileid     *string            `json:"dbParameterProfileId,omitempty"`
+	Newdbservertimezone      *string            `json:"newDbServerTimeZone,omitempty"`
+	Timemachineinfo          Timemachineinfo    `json:"timeMachineInfo,omitempty"`
+	Actionarguments          []*Actionarguments `json:"actionArguments,omitempty"`
+	Createdbserver           bool               `json:"createDbserver,omitempty"`
+	Nodecount                *int               `json:"nodeCount,omitempty"`
+	Nxclusterid              *string            `json:"nxClusterId,omitempty"`
+	Sshpublickey             *string            `json:"sshPublicKey,omitempty"`
+	Clustered                bool               `json:"clustered,omitempty"`
+	Nodes                    []*Nodes           `json:"nodes,omitempty"`
+	Autotunestagingdrive     bool               `json:"autoTuneStagingDrive,omitempty"`
 }
 
 type Snapshottimeofday struct {
@@ -322,12 +322,12 @@ type Metadata struct {
 	Secureinfo                      interface{} `json:"secureInfo"`
 	Info                            interface{} `json:"info"`
 	Deregisterinfo                  interface{} `json:"deregisterInfo"`
-	Databasetype                    string      `json:"databaseType"`
+	Databasetype                    *string     `json:"databaseType"`
 	Physicaleradrive                bool        `json:"physicalEraDrive"`
 	Clustered                       bool        `json:"clustered"`
 	Singleinstance                  bool        `json:"singleInstance"`
 	Eradriveinitialised             bool        `json:"eraDriveInitialised"`
-	Provisionoperationid            string      `json:"provisionOperationId"`
+	Provisionoperationid            *string     `json:"provisionOperationId"`
 	Markedfordeletion               bool        `json:"markedForDeletion"`
 	Associatedtimemachines          interface{} `json:"associatedTimeMachines"`
 	Softwaresnaphotinterval         int         `json:"softwareSnaphotInterval"`
@@ -335,52 +335,52 @@ type Metadata struct {
 	Lastclocksyncalerttime          interface{} `json:"lastClockSyncAlertTime"`
 }
 type Dbservers struct {
-	ID                       string                     `json:"id"`
-	Name                     string                     `json:"name"`
-	Description              string                     `json:"description"`
-	Ownerid                  string                     `json:"ownerId"`
-	Datecreated              string                     `json:"dateCreated"`
-	Datemodified             string                     `json:"dateModified"`
-	Properties               []DatabaseServerProperties `json:"properties"`
-	Tags                     []interface{}              `json:"tags"`
-	Eracreated               bool                       `json:"eraCreated"`
-	Internal                 bool                       `json:"internal"`
-	Dbserverclusterid        interface{}                `json:"dbserverClusterId"`
-	Vmclustername            string                     `json:"vmClusterName"`
-	Vmclusteruuid            string                     `json:"vmClusterUuid"`
-	Ipaddresses              []string                   `json:"ipAddresses"`
-	Fqdns                    interface{}                `json:"fqdns"`
-	Macaddresses             []string                   `json:"macAddresses"`
-	Type                     string                     `json:"type"`
-	Placeholder              bool                       `json:"placeholder"`
-	Status                   string                     `json:"status"`
-	Clientid                 string                     `json:"clientId"`
-	Nxclusterid              string                     `json:"nxClusterId"`
-	Eradriveid               string                     `json:"eraDriveId"`
-	Eraversion               string                     `json:"eraVersion"`
-	Vmtimezone               string                     `json:"vmTimeZone"`
-	Vminfo                   interface{}                `json:"vmInfo"`
-	Info                     interface{}                `json:"info"`
-	Metadata                 Metadata                   `json:"metadata"`
-	Metric                   interface{}                `json:"metric"`
-	Lcmconfig                interface{}                `json:"lcmConfig"`
-	Clustered                bool                       `json:"clustered"`
-	Requestedversion         interface{}                `json:"requestedVersion"`
-	IsServerDriven           bool                       `json:"is_server_driven"`
-	AssociatedTimeMachineID  interface{}                `json:"associated_time_machine_id"`
-	TimeMachineInfo          interface{}                `json:"time_machine_info"`
-	Eradrive                 interface{}                `json:"eraDrive"`
-	Databases                interface{}                `json:"databases"`
-	Clones                   interface{}                `json:"clones"`
-	Accesskey                interface{}                `json:"accessKey"`
-	Softwareinstallations    interface{}                `json:"softwareInstallations"`
-	Protectiondomainid       string                     `json:"protectionDomainId"`
-	Protectiondomain         interface{}                `json:"protectionDomain"`
-	Databasetype             string                     `json:"databaseType"`
-	Accesskeyid              string                     `json:"accessKeyId"`
-	Associatedtimemachineids interface{}                `json:"associatedTimeMachineIds"`
-	Dbserverinvalideastate   bool                       `json:"dbserverInValidEaState"`
-	Workingdirectory         string                     `json:"workingDirectory"`
+	ID                       *string                     `json:"id"`
+	Name                     *string                     `json:"name"`
+	Description              *string                     `json:"description"`
+	Ownerid                  *string                     `json:"ownerId"`
+	Datecreated              *string                     `json:"dateCreated"`
+	Datemodified             *string                     `json:"dateModified"`
+	Properties               []*DatabaseServerProperties `json:"properties"`
+	Tags                     []interface{}               `json:"tags"`
+	Eracreated               bool                        `json:"eraCreated"`
+	Internal                 bool                        `json:"internal"`
+	Dbserverclusterid        interface{}                 `json:"dbserverClusterId"`
+	Vmclustername            *string                     `json:"vmClusterName"`
+	Vmclusteruuid            *string                     `json:"vmClusterUuid"`
+	Ipaddresses              []*string                   `json:"ipAddresses"`
+	Fqdns                    interface{}                 `json:"fqdns"`
+	Macaddresses             []*string                   `json:"macAddresses"`
+	Type                     *string                     `json:"type"`
+	Placeholder              bool                        `json:"placeholder"`
+	Status                   *string                     `json:"status"`
+	Clientid                 *string                     `json:"clientId"`
+	Nxclusterid              *string                     `json:"nxClusterId"`
+	Eradriveid               *string                     `json:"eraDriveId"`
+	Eraversion               *string                     `json:"eraVersion"`
+	Vmtimezone               *string                     `json:"vmTimeZone"`
+	Vminfo                   interface{}                 `json:"vmInfo"`
+	Info                     interface{}                 `json:"info"`
+	Metadata                 *Metadata                   `json:"metadata"`
+	Metric                   interface{}                 `json:"metric"`
+	Lcmconfig                interface{}                 `json:"lcmConfig"`
+	Clustered                bool                        `json:"clustered"`
+	Requestedversion         interface{}                 `json:"requestedVersion"`
+	IsServerDriven           bool                        `json:"is_server_driven"`
+	AssociatedTimeMachineID  interface{}                 `json:"associated_time_machine_id"`
+	TimeMachineInfo          interface{}                 `json:"time_machine_info"`
+	Eradrive                 interface{}                 `json:"eraDrive"`
+	Databases                interface{}                 `json:"databases"`
+	Clones                   interface{}                 `json:"clones"`
+	Accesskey                interface{}                 `json:"accessKey"`
+	Softwareinstallations    interface{}                 `json:"softwareInstallations"`
+	Protectiondomainid       *string                     `json:"protectionDomainId"`
+	Protectiondomain         interface{}                 `json:"protectionDomain"`
+	Databasetype             *string                     `json:"databaseType"`
+	Accesskeyid              *string                     `json:"accessKeyId"`
+	Associatedtimemachineids interface{}                 `json:"associatedTimeMachineIds"`
+	Dbserverinvalideastate   bool                        `json:"dbserverInValidEaState"`
+	Workingdirectory         *string                     `json:"workingDirectory"`
 }
 
 // GetOperationRequest struct
@@ -390,42 +390,42 @@ type GetOperationRequest struct {
 
 // GetOperationResponse struct
 type GetOperationResponse struct {
-	Entityname              string            `json:"entityName"`
-	Work                    interface{}       `json:"work"`
-	Stepgenenabled          bool              `json:"stepGenEnabled"`
-	Setstarttime            bool              `json:"setStartTime"`
-	Timezone                string            `json:"timeZone"`
-	ID                      string            `json:"id"`
-	Name                    string            `json:"name"`
-	Uniquename              interface{}       `json:"uniqueName"`
-	Type                    string            `json:"type"`
-	Starttime               string            `json:"startTime"`
-	Timeout                 int               `json:"timeout"`
-	Endtime                 string            `json:"endTime"`
-	Instanceid              interface{}       `json:"instanceId"`
-	Ownerid                 string            `json:"ownerId"`
-	Status                  string            `json:"status"`
-	Percentagecomplete      string            `json:"percentageComplete"`
-	Steps                   []Steps           `json:"steps"`
-	Properties              []interface{}     `json:"properties"`
-	Parentid                interface{}       `json:"parentId"`
-	Parentstep              int               `json:"parentStep"`
-	Message                 interface{}       `json:"message"`
-	Metadata                OperationMetadata `json:"metadata"`
-	Entityid                string            `json:"entityId"`
-	Entitytype              string            `json:"entityType"`
-	Systemtriggered         bool              `json:"systemTriggered"`
-	Uservisible             bool              `json:"userVisible"`
-	Dbserverid              string            `json:"dbserverId"`
-	Datesubmitted           string            `json:"dateSubmitted"`
-	Deferredby              interface{}       `json:"deferredBy"`
-	Scheduletime            interface{}       `json:"scheduleTime"`
-	Isinternal              bool              `json:"isInternal"`
-	Nxclusterid             string            `json:"nxClusterId"`
-	Dbserverstatus          string            `json:"dbserverStatus"`
-	Childoperations         []interface{}     `json:"childOperations"`
-	Userrequestedaction     string            `json:"userRequestedAction"`
-	Userrequestedactiontime interface{}       `json:"userRequestedActionTime"`
+	Entityname              *string            `json:"entityName"`
+	Work                    interface{}        `json:"work"`
+	Stepgenenabled          bool               `json:"stepGenEnabled"`
+	Setstarttime            bool               `json:"setStartTime"`
+	Timezone                *string            `json:"timeZone"`
+	ID                      *string            `json:"id"`
+	Name                    *string            `json:"name"`
+	Uniquename              interface{}        `json:"uniqueName"`
+	Type                    *string            `json:"type"`
+	Starttime               *string            `json:"startTime"`
+	Timeout                 int                `json:"timeout"`
+	Endtime                 *string            `json:"endTime"`
+	Instanceid              interface{}        `json:"instanceId"`
+	Ownerid                 *string            `json:"ownerId"`
+	Status                  *string            `json:"status"`
+	Percentagecomplete      *string            `json:"percentageComplete"`
+	Steps                   []*Steps           `json:"steps"`
+	Properties              []interface{}      `json:"properties"`
+	Parentid                interface{}        `json:"parentId"`
+	Parentstep              int                `json:"parentStep"`
+	Message                 interface{}        `json:"message"`
+	Metadata                *OperationMetadata `json:"metadata"`
+	Entityid                *string            `json:"entityId"`
+	Entitytype              *string            `json:"entityType"`
+	Systemtriggered         bool               `json:"systemTriggered"`
+	Uservisible             bool               `json:"userVisible"`
+	Dbserverid              *string            `json:"dbserverId"`
+	Datesubmitted           *string            `json:"dateSubmitted"`
+	Deferredby              interface{}        `json:"deferredBy"`
+	Scheduletime            interface{}        `json:"scheduleTime"`
+	Isinternal              bool               `json:"isInternal"`
+	Nxclusterid             *string            `json:"nxClusterId"`
+	Dbserverstatus          *string            `json:"dbserverStatus"`
+	Childoperations         []interface{}      `json:"childOperations"`
+	Userrequestedaction     *string            `json:"userRequestedAction"`
+	Userrequestedactiontime interface{}        `json:"userRequestedActionTime"`
 }
 type Steps struct {
 	Stepgenenabled     bool        `json:"stepGenEnabled"`
@@ -523,18 +523,18 @@ type UpdateDatabaseResponse struct {
 }
 
 type EraDbExpiryDetails struct {
-	RemindBeforeInDays int    `json:"remindBeforeInDays,omitempty"`
-	EffectiveTimestamp string `json:"effectiveTimestamp,omitempty"`
-	ExpiryTimestamp    string `json:"expiryTimestamp,omitempty"`
-	ExpiryDateTimezone string `json:"expiryDateTimezone,omitempty"`
-	UserCreated        bool   `json:"userCreated,omitempty"`
-	ExpireInDays       int    `json:"expireInDays,omitempty"`
-	DeleteDatabase     bool   `json:"deleteDatabase,omitempty"`
-	DeleteTimeMachine  bool   `json:"deleteTimeMachine,omitempty"`
-	DeleteVM           bool   `json:"deleteVM,omitempty"`
+	EffectiveTimestamp *string `json:"effectiveTimestamp,omitempty"`
+	ExpiryTimestamp    *string `json:"expiryTimestamp,omitempty"`
+	ExpiryDateTimezone *string `json:"expiryDateTimezone,omitempty"`
+	RemindBeforeInDays *int    `json:"remindBeforeInDays,omitempty"`
+	ExpireInDays       *int    `json:"expireInDays,omitempty"`
+	DeleteDatabase     bool    `json:"deleteDatabase,omitempty"`
+	DeleteTimeMachine  bool    `json:"deleteTimeMachine,omitempty"`
+	DeleteVM           bool    `json:"deleteVM,omitempty"`
+	UserCreated        bool    `json:"userCreated,omitempty"`
 }
 
-type EraDbRefreshDetails struct {
+type DbRefreshDetails struct {
 	RefreshInDays       int    `json:"refreshInDays,omitempty"`
 	RefreshInHours      int    `json:"refreshInHours,omitempty"`
 	RefreshInMonths     int    `json:"refreshInMonths,omitempty"`
@@ -544,57 +544,57 @@ type EraDbRefreshDetails struct {
 	RefreshDateTimezone string `json:"refreshDateTimezone,omitempty"`
 }
 
-type EraDbPrePostDeleteCommand struct {
+type DbPrePostDeleteCommand struct {
 	Command string `json:"command,omitempty"`
 }
 
-type EraDbPostDeleteCommand struct{}
+type DbPostDeleteCommand struct{}
 
 type LcmConfig struct {
-	ExpiryDetails     *EraDbExpiryDetails        `json:"expiryDetails,omitempty"`
-	RefreshDetails    *EraDbRefreshDetails       `json:"refreshDetails,omitempty"`
-	PreDeleteCommand  *EraDbPrePostDeleteCommand `json:"preDeleteCommand,omitempty"`
-	PostDeleteCommand *EraDbPrePostDeleteCommand `json:"postDeleteCommand,omitempty"`
+	ExpiryDetails     *EraDbExpiryDetails     `json:"expiryDetails,omitempty"`
+	RefreshDetails    *DbRefreshDetails       `json:"refreshDetails,omitempty"`
+	PreDeleteCommand  *DbPrePostDeleteCommand `json:"preDeleteCommand,omitempty"`
+	PostDeleteCommand *DbPrePostDeleteCommand `json:"postDeleteCommand,omitempty"`
 }
 
 type GetDatabaseResponse struct {
-	ID                       string                 `json:"id"`
-	Name                     string                 `json:"name"`
-	Description              string                 `json:"description"`
-	Ownerid                  string                 `json:"ownerId"`
-	Datecreated              string                 `json:"dateCreated"`
-	Datemodified             string                 `json:"dateModified"`
-	AccessLevel              interface{}            `json:"accessLevel"`
-	Properties               []DBInstanceProperties `json:"properties"`
-	Tags                     []EraTags              `json:"tags"`
-	Clustered                bool                   `json:"clustered"`
-	Clone                    bool                   `json:"clone"`
-	Eracreated               bool                   `json:"eraCreated"`
-	Internal                 bool                   `json:"internal"`
-	Placeholder              bool                   `json:"placeholder"`
-	Databasename             string                 `json:"databaseName"`
-	Type                     string                 `json:"type"`
-	Databaseclustertype      interface{}            `json:"databaseClusterType"`
-	Status                   string                 `json:"status"`
-	Databasestatus           string                 `json:"databaseStatus"`
-	Dbserverlogicalclusterid interface{}            `json:"dbserverLogicalClusterId"`
-	Timemachineid            string                 `json:"timeMachineId"`
-	Parenttimemachineid      interface{}            `json:"parentTimeMachineId"`
-	Timezone                 string                 `json:"timeZone"`
-	Info                     *Info                  `json:"info"`
-	GroupInfo                interface{}            `json:"groupInfo"`
-	Metadata                 *DBInstanceMetadata    `json:"metadata"`
-	Metric                   interface{}            `json:"metric"`
-	Category                 string                 `json:"category"`
-	ParentDatabaseId         interface{}            `json:"parentDatabaseId,omitempty"`
-	ParentSourceDatabaseId   interface{}            `json:"parentSourceDatabaseId,omitempty"`
-	Lcmconfig                *LcmConfig             `json:"lcmConfig"`
-	TimeMachine              *TimeMachine           `json:"timeMachine"`
-	Dbserverlogicalcluster   interface{}            `json:"dbserverlogicalCluster"`
-	Databasenodes            []Databasenodes        `json:"databaseNodes"`
-	Linkeddatabases          []Linkeddatabases      `json:"linkedDatabases"`
-	Databases                interface{}            `json:"databases,omitempty"`
-	DatabaseGroupStateInfo   interface{}            `json:"databaseGroupStateInfo"`
+	ID                       string                  `json:"id"`
+	Name                     string                  `json:"name"`
+	Description              string                  `json:"description"`
+	Ownerid                  string                  `json:"ownerId"`
+	Datecreated              string                  `json:"dateCreated"`
+	Datemodified             string                  `json:"dateModified"`
+	AccessLevel              interface{}             `json:"accessLevel"`
+	Properties               []*DBInstanceProperties `json:"properties"`
+	Tags                     []*Tags                 `json:"tags"`
+	Clustered                bool                    `json:"clustered"`
+	Clone                    bool                    `json:"clone"`
+	Eracreated               bool                    `json:"eraCreated"`
+	Internal                 bool                    `json:"internal"`
+	Placeholder              bool                    `json:"placeholder"`
+	Databasename             string                  `json:"databaseName"`
+	Type                     string                  `json:"type"`
+	Databaseclustertype      interface{}             `json:"databaseClusterType"`
+	Status                   string                  `json:"status"`
+	Databasestatus           string                  `json:"databaseStatus"`
+	Dbserverlogicalclusterid interface{}             `json:"dbserverLogicalClusterId"`
+	Timemachineid            string                  `json:"timeMachineId"`
+	Parenttimemachineid      interface{}             `json:"parentTimeMachineId"`
+	Timezone                 string                  `json:"timeZone"`
+	Info                     *Info                   `json:"info"`
+	GroupInfo                interface{}             `json:"groupInfo"`
+	Metadata                 *DBInstanceMetadata     `json:"metadata"`
+	Metric                   interface{}             `json:"metric"`
+	Category                 string                  `json:"category"`
+	ParentDatabaseID         interface{}             `json:"parentDatabaseId,omitempty"`
+	ParentSourceDatabaseID   interface{}             `json:"parentSourceDatabaseId,omitempty"`
+	Lcmconfig                *LcmConfig              `json:"lcmConfig"`
+	TimeMachine              *TimeMachine            `json:"timeMachine"`
+	Dbserverlogicalcluster   interface{}             `json:"dbserverlogicalCluster"`
+	Databasenodes            []Databasenodes         `json:"databaseNodes"`
+	Linkeddatabases          []Linkeddatabases       `json:"linkedDatabases"`
+	Databases                interface{}             `json:"databases,omitempty"`
+	DatabaseGroupStateInfo   interface{}             `json:"databaseGroupStateInfo"`
 }
 
 type DBInstanceProperties struct {
@@ -633,7 +633,7 @@ type VMProperties struct {
 	DirtyWritebackCentisecs float64 `json:"dirty_writeback_centisecs"`
 	Swappiness              float64 `json:"swappiness"`
 }
-type BpgDbParam struct {
+type BpgDBParam struct {
 	SharedBuffers               string `json:"shared_buffers"`
 	MaintenanceWorkMem          string `json:"maintenance_work_mem"`
 	WorkMem                     string `json:"work_mem"`
@@ -644,7 +644,7 @@ type BpgDbParam struct {
 type BpgConfigs struct {
 	Storage      *Storage      `json:"storage"`
 	VMProperties *VMProperties `json:"vm_properties"`
-	BpgDbParam   *BpgDbParam   `json:"bpg_db_param"`
+	BpgDBParam   *BpgDBParam   `json:"bpg_db_param"`
 }
 type InfoBpgConfig struct {
 	BpgConfigs *BpgConfigs `json:"bpg_configs"`
@@ -657,7 +657,7 @@ type DBInstanceMetadata struct {
 	Secureinfo                          interface{} `json:"secureInfo,omitempty"`
 	Info                                interface{} `json:"info,omitempty"`
 	Deregisterinfo                      interface{} `json:"deregisterInfo,omitempty"`
-	Tmactivateoperationid               string      `json:"tmActivateOperationId,omitempty"`
+	Tmactivateoperationid               *string     `json:"tmActivateOperationId,omitempty"`
 	Createddbservers                    interface{} `json:"createdDbservers,omitempty"`
 	Registereddbservers                 interface{} `json:"registeredDbservers,omitempty"`
 	Lastrefreshtimestamp                interface{} `json:"lastRefreshTimestamp,omitempty"`
@@ -670,10 +670,10 @@ type DBInstanceMetadata struct {
 	Lastlogcatchupforrestoreoperationid interface{} `json:"lastLogCatchUpForRestoreOperationId,omitempty"`
 	BaseSizeComputed                    bool        `json:"baseSizeComputed,omitempty"`
 	Originaldatabasename                interface{} `json:"originalDatabaseName,omitempty"`
-	ProvisionOperationId                string      `json:"provisionOperationId,omitempty"`
-	SourceSnapshotId                    interface{} `json:"sourceSnapshotId,omitempty"`
+	ProvisionOperationID                *string     `json:"provisionOperationId,omitempty"`
+	SourceSnapshotID                    interface{} `json:"sourceSnapshotId,omitempty"`
 	PitrBased                           bool        `json:"pitrBased,omitempty"`
-	Sanitised                           bool        `json:"sanitised,omitempty"`
+	Sanitized                           bool        `json:"sanitised,omitempty"`
 	RefreshBlockerInfo                  interface{} `json:"refreshBlockerInfo,omitempty"`
 	DeregisteredWithDeleteTimeMachine   bool        `json:"deregisteredWithDeleteTimeMachine,omitempty"`
 }
@@ -682,12 +682,12 @@ type DbserverMetadata struct {
 	Secureinfo                      interface{} `json:"secureInfo"`
 	Info                            interface{} `json:"info"`
 	Deregisterinfo                  interface{} `json:"deregisterInfo"`
-	Databasetype                    string      `json:"databaseType"`
+	Databasetype                    *string     `json:"databaseType"`
 	Physicaleradrive                bool        `json:"physicalEraDrive"`
 	Clustered                       bool        `json:"clustered"`
 	Singleinstance                  bool        `json:"singleInstance"`
 	Eradriveinitialised             bool        `json:"eraDriveInitialised"`
-	Provisionoperationid            string      `json:"provisionOperationId"`
+	Provisionoperationid            *string     `json:"provisionOperationId"`
 	Markedfordeletion               bool        `json:"markedForDeletion"`
 	Associatedtimemachines          interface{} `json:"associatedTimeMachines"`
 	Softwaresnaphotinterval         int         `json:"softwareSnaphotInterval"`
@@ -696,77 +696,77 @@ type DbserverMetadata struct {
 }
 
 type Dbserver struct {
-	ID                       string           `json:"id"`
-	Name                     string           `json:"name"`
-	Description              string           `json:"description"`
-	Ownerid                  string           `json:"ownerId"`
-	Datecreated              string           `json:"dateCreated"`
-	Datemodified             string           `json:"dateModified"`
-	Properties               []Properties     `json:"properties"`
-	Tags                     []interface{}    `json:"tags"`
-	Eracreated               bool             `json:"eraCreated"`
-	Internal                 bool             `json:"internal"`
-	Dbserverclusterid        interface{}      `json:"dbserverClusterId"`
-	Vmclustername            string           `json:"vmClusterName"`
-	Vmclusteruuid            string           `json:"vmClusterUuid"`
-	Ipaddresses              []string         `json:"ipAddresses"`
-	Fqdns                    interface{}      `json:"fqdns"`
-	Macaddresses             []string         `json:"macAddresses"`
-	Type                     string           `json:"type"`
-	Placeholder              bool             `json:"placeholder"`
-	Status                   string           `json:"status"`
-	Clientid                 string           `json:"clientId"`
-	Nxclusterid              string           `json:"nxClusterId"`
-	Eradriveid               string           `json:"eraDriveId"`
-	Eraversion               string           `json:"eraVersion"`
-	Vmtimezone               string           `json:"vmTimeZone"`
-	Vminfo                   interface{}      `json:"vmInfo"`
-	Info                     interface{}      `json:"info"`
-	Metadata                 DbserverMetadata `json:"metadata"`
-	Metric                   interface{}      `json:"metric"`
-	Lcmconfig                interface{}      `json:"lcmConfig"`
-	Clustered                bool             `json:"clustered"`
-	Requestedversion         interface{}      `json:"requestedVersion"`
-	IsServerDriven           bool             `json:"is_server_driven"`
-	AssociatedTimeMachineID  interface{}      `json:"associated_time_machine_id"`
-	TimeMachineInfo          interface{}      `json:"time_machine_info"`
-	Eradrive                 interface{}      `json:"eraDrive"`
-	Databases                interface{}      `json:"databases"`
-	Clones                   interface{}      `json:"clones"`
-	Accesskey                interface{}      `json:"accessKey"`
-	Softwareinstallations    interface{}      `json:"softwareInstallations"`
-	Protectiondomainid       string           `json:"protectionDomainId"`
-	Protectiondomain         interface{}      `json:"protectionDomain"`
-	Databasetype             string           `json:"databaseType"`
-	Accesskeyid              string           `json:"accessKeyId"`
-	Associatedtimemachineids interface{}      `json:"associatedTimeMachineIds"`
-	Dbserverinvalideastate   bool             `json:"dbserverInValidEaState"`
-	Workingdirectory         string           `json:"workingDirectory"`
+	ID                       *string           `json:"id"`
+	Name                     *string           `json:"name"`
+	Description              *string           `json:"description"`
+	Ownerid                  *string           `json:"ownerId"`
+	Datecreated              *string           `json:"dateCreated"`
+	Datemodified             *string           `json:"dateModified"`
+	Properties               []*Properties     `json:"properties"`
+	Tags                     []interface{}     `json:"tags"`
+	Eracreated               bool              `json:"eraCreated"`
+	Internal                 bool              `json:"internal"`
+	Dbserverclusterid        interface{}       `json:"dbserverClusterId"`
+	Vmclustername            *string           `json:"vmClusterName"`
+	Vmclusteruuid            *string           `json:"vmClusterUuid"`
+	Ipaddresses              []*string         `json:"ipAddresses"`
+	Fqdns                    interface{}       `json:"fqdns"`
+	Macaddresses             []*string         `json:"macAddresses"`
+	Type                     *string           `json:"type"`
+	Placeholder              bool              `json:"placeholder"`
+	Status                   *string           `json:"status"`
+	Clientid                 *string           `json:"clientId"`
+	Nxclusterid              *string           `json:"nxClusterId"`
+	Eradriveid               *string           `json:"eraDriveId"`
+	Eraversion               *string           `json:"eraVersion"`
+	Vmtimezone               *string           `json:"vmTimeZone"`
+	Vminfo                   interface{}       `json:"vmInfo"`
+	Info                     interface{}       `json:"info"`
+	Metadata                 *DbserverMetadata `json:"metadata"`
+	Metric                   interface{}       `json:"metric"`
+	Lcmconfig                interface{}       `json:"lcmConfig"`
+	Clustered                bool              `json:"clustered"`
+	Requestedversion         interface{}       `json:"requestedVersion"`
+	IsServerDriven           bool              `json:"is_server_driven"`
+	AssociatedTimeMachineID  interface{}       `json:"associated_time_machine_id"`
+	TimeMachineInfo          interface{}       `json:"time_machine_info"`
+	Eradrive                 interface{}       `json:"eraDrive"`
+	Databases                interface{}       `json:"databases"`
+	Clones                   interface{}       `json:"clones"`
+	Accesskey                interface{}       `json:"accessKey"`
+	Softwareinstallations    interface{}       `json:"softwareInstallations"`
+	Protectiondomainid       *string           `json:"protectionDomainId"`
+	Protectiondomain         interface{}       `json:"protectionDomain"`
+	Databasetype             *string           `json:"databaseType"`
+	Accesskeyid              *string           `json:"accessKeyId"`
+	Associatedtimemachineids interface{}       `json:"associatedTimeMachineIds"`
+	Dbserverinvalideastate   bool              `json:"dbserverInValidEaState"`
+	Workingdirectory         *string           `json:"workingDirectory"`
 }
 
-type EraTags struct {
-	TagId      string      `json:"tagId,omitempty"`
-	EntityId   string      `json:"entityId,omitempty"`
+type Tags struct {
+	TagID      string      `json:"tagId,omitempty"`
+	EntityID   string      `json:"entityId,omitempty"`
 	EntityType interface{} `json:"entityType,omitempty"`
 	Value      string      `json:"value,omitempty"`
 	TagName    string      `json:"tagName,omitempty"`
 }
 
 type Protectiondomain struct {
-	ID            string                 `json:"id"`
-	Name          string                 `json:"name"`
-	Eracreated    bool                   `json:"eraCreated"`
-	Description   string                 `json:"description"`
-	Type          string                 `json:"type"`
-	Cloudid       string                 `json:"cloudId"`
-	Datecreated   string                 `json:"dateCreated"`
-	Datemodified  string                 `json:"dateModified"`
-	Ownerid       string                 `json:"ownerId"`
-	Status        string                 `json:"status"`
-	PrimaryHost   string                 `json:"primaryHost,omitempty"`
-	Properties    []DBInstanceProperties `json:"properties"`
-	Tags          []EraTags              `json:"tags,omitempty"`
-	AssocEntities []string               `json:"assocEntities,omitempty"`
+	ID            string                  `json:"id"`
+	Name          string                  `json:"name"`
+	Eracreated    bool                    `json:"eraCreated"`
+	Description   string                  `json:"description"`
+	Type          string                  `json:"type"`
+	Cloudid       string                  `json:"cloudId"`
+	Datecreated   string                  `json:"dateCreated"`
+	Datemodified  string                  `json:"dateModified"`
+	Ownerid       string                  `json:"ownerId"`
+	Status        string                  `json:"status"`
+	PrimaryHost   string                  `json:"primaryHost,omitempty"`
+	Properties    []*DBInstanceProperties `json:"properties"`
+	Tags          []*Tags                 `json:"tags,omitempty"`
+	AssocEntities []string                `json:"assocEntities,omitempty"`
 }
 type Databasenodes struct {
 	ID                     string            `json:"id"`
@@ -777,7 +777,7 @@ type Databasenodes struct {
 	Datemodified           string            `json:"dateModified"`
 	AccessLevel            interface{}       `json:"accessLevel,omitempty"`
 	Properties             []interface{}     `json:"properties"`
-	Tags                   []EraTags         `json:"tags"`
+	Tags                   []*Tags           `json:"tags"`
 	Databaseid             string            `json:"databaseId"`
 	Status                 string            `json:"status"`
 	Databasestatus         string            `json:"databaseStatus"`
@@ -798,8 +798,8 @@ type Linkeddatabases struct {
 	Description            string      `json:"description"`
 	Status                 string      `json:"status"`
 	Databasestatus         string      `json:"databaseStatus"`
-	ParentDatabaseId       string      `json:"parentDatabaseId"`
-	ParentLinkedDatabaseId string      `json:"parentLinkedDatabaseId"`
+	ParentDatabaseID       string      `json:"parentDatabaseId"`
+	ParentLinkedDatabaseID string      `json:"parentLinkedDatabaseId"`
 	Ownerid                string      `json:"ownerId"`
 	Datecreated            string      `json:"dateCreated"`
 	Datemodified           string      `json:"dateModified"`
@@ -807,41 +807,41 @@ type Linkeddatabases struct {
 	Info                   Info        `json:"info"`
 	Metadata               interface{} `json:"metadata"`
 	Metric                 interface{} `json:"metric"`
-	SnapshotId             string      `json:"snapshotId"`
+	SnapshotID             string      `json:"snapshotId"`
 }
 
 type TimeMachine struct {
-	ID                  string                 `json:"id,omitempty"`
-	Name                string                 `json:"name,omitempty"`
-	Description         string                 `json:"description,omitempty"`
-	OwnerID             string                 `json:"ownerId,omitempty"`
-	DateCreated         string                 `json:"dateCreated,omitempty"`
-	DateModified        string                 `json:"dateModified,omitempty"`
-	AccessLevel         interface{}            `json:"accessLevel,omitempty"`
-	Properties          []DBInstanceProperties `json:"properties,omitempty"`
-	Tags                []EraTags              `json:"tags,omitempty"`
-	Clustered           bool                   `json:"clustered,omitempty"`
-	Clone               bool                   `json:"clone,omitempty"`
-	Internal            bool                   `json:"internal,omitempty"`
-	DatabaseID          string                 `json:"databaseId,omitempty"`
-	Type                string                 `json:"type,omitempty"`
-	Category            string                 `json:"category,omitempty"`
-	Status              string                 `json:"status,omitempty"`
-	EaStatus            string                 `json:"eaStatus,omitempty"`
-	Scope               string                 `json:"scope,omitempty"`
-	SLAID               string                 `json:"slaId,omitempty"`
-	ScheduleID          string                 `json:"scheduleId,omitempty"`
-	Info                interface{}            `json:"info,omitempty"`
-	Metadata            *TimeMachineMetadata   `json:"metadata,omitempty"`
-	Metric              interface{}            `json:"metric,omitempty"`
-	SLAUpdateMetadata   interface{}            `json:"slaUpdateMetadata,omitempty"`
-	SLA                 *ListSLAResponse       `json:"sla,omitempty"`
-	Schedule            *Schedule              `json:"schedule,omitempty"`
-	Database            interface{}            `json:"database,omitempty"`
-	Clones              interface{}            `json:"clones,omitempty"`
-	AssociatedClusters  interface{}            `json:"associatedClusters,omitempty"`
-	SourceNxClusters    []string               `json:"sourceNxClusters,omitempty"`
-	SLAUpdateInProgress bool                   `json:"slaUpdateInProgress,omitempty"`
+	ID                  *string                 `json:"id,omitempty"`
+	Name                *string                 `json:"name,omitempty"`
+	Description         *string                 `json:"description,omitempty"`
+	OwnerID             *string                 `json:"ownerId,omitempty"`
+	DateCreated         *string                 `json:"dateCreated,omitempty"`
+	DateModified        *string                 `json:"dateModified,omitempty"`
+	AccessLevel         interface{}             `json:"accessLevel,omitempty"`
+	Properties          []*DBInstanceProperties `json:"properties,omitempty"`
+	Tags                []*Tags                 `json:"tags,omitempty"`
+	Clustered           bool                    `json:"clustered,omitempty"`
+	Clone               bool                    `json:"clone,omitempty"`
+	Internal            bool                    `json:"internal,omitempty"`
+	DatabaseID          *string                 `json:"databaseId,omitempty"`
+	Type                *string                 `json:"type,omitempty"`
+	Category            *string                 `json:"category,omitempty"`
+	Status              *string                 `json:"status,omitempty"`
+	EaStatus            *string                 `json:"eaStatus,omitempty"`
+	Scope               *string                 `json:"scope,omitempty"`
+	SLAID               *string                 `json:"slaId,omitempty"`
+	ScheduleID          *string                 `json:"scheduleId,omitempty"`
+	Info                interface{}             `json:"info,omitempty"`
+	Metadata            *TimeMachineMetadata    `json:"metadata,omitempty"`
+	Metric              interface{}             `json:"metric,omitempty"`
+	SLAUpdateMetadata   interface{}             `json:"slaUpdateMetadata,omitempty"`
+	SLA                 *ListSLAResponse        `json:"sla,omitempty"`
+	Schedule            *Schedule               `json:"schedule,omitempty"`
+	Database            interface{}             `json:"database,omitempty"`
+	Clones              interface{}             `json:"clones,omitempty"`
+	AssociatedClusters  interface{}             `json:"associatedClusters,omitempty"`
+	SourceNxClusters    []*string               `json:"sourceNxClusters,omitempty"`
+	SLAUpdateInProgress bool                    `json:"slaUpdateInProgress,omitempty"`
 }
 
 type TimeMachineMetadata struct {
@@ -855,17 +855,17 @@ type TimeMachineMetadata struct {
 	AutoHealLogCatchupCount                             *int        `json:"autoHealLogCatchupCount,omitempty"`
 	FirstSnapshotCaptured                               bool        `json:"firstSnapshotCaptured,omitempty"`
 	FirstSnapshotDispatched                             bool        `json:"firstSnapshotDispatched,omitempty"`
-	LastSnapshotTime                                    string      `json:"lastSnapshotTime,omitempty"`
-	LastAutoSnapshotTime                                string      `json:"lastAutoSnapshotTime,omitempty"`
-	LastSnapshotOperationID                             string      `json:"lastSnapshotOperationId,omitempty"`
-	LastAutoSnapshotOperationID                         string      `json:"lastAutoSnapshotOperationId,omitempty"`
-	LastSuccessfulSnapshotOperationID                   string      `json:"lastSuccessfulSnapshotOperationId,omitempty"`
+	LastSnapshotTime                                    *string     `json:"lastSnapshotTime,omitempty"`
+	LastAutoSnapshotTime                                *string     `json:"lastAutoSnapshotTime,omitempty"`
+	LastSnapshotOperationID                             *string     `json:"lastSnapshotOperationId,omitempty"`
+	LastAutoSnapshotOperationID                         *string     `json:"lastAutoSnapshotOperationId,omitempty"`
+	LastSuccessfulSnapshotOperationID                   *string     `json:"lastSuccessfulSnapshotOperationId,omitempty"`
 	SnapshotSuccessiveFailureCount                      *int        `json:"snapshotSuccessiveFailureCount,omitempty"`
 	LastHealSnapshotOperation                           interface{} `json:"lastHealSnapshotOperation,omitempty"`
 	DatabasesFirstSnapshotInfo                          interface{} `json:"databasesFirstSnapshotInfo,omitempty"`
 	DispatchOnboardingSnapshot                          bool        `json:"dispatchOnboardingSnapshot,omitempty"`
 	OnboardingSnapshotProperties                        interface{} `json:"onboardingSnapshotProperties,omitempty"`
-	LastNonExtraAutoSnapshotTime                        string      `json:"lastNonExtraAutoSnapshotTime,omitempty"`
+	LastNonExtraAutoSnapshotTime                        *string     `json:"lastNonExtraAutoSnapshotTime,omitempty"`
 	SnapshotCapturedForTheDay                           bool        `json:"snapshotCapturedForTheDay,omitempty"`
 	FirstSnapshotRetryCount                             *int        `json:"firstSnapshotRetryCount,omitempty"`
 	LastLogCatchupTime                                  interface{} `json:"lastLogCatchupTime,omitempty"`

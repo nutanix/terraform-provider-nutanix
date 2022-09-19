@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	client "github.com/terraform-providers/terraform-provider-nutanix/client/era"
 	era "github.com/terraform-providers/terraform-provider-nutanix/client/era"
 )
 
@@ -117,35 +116,35 @@ func ConvToBool(s interface{}) bool {
 	return b
 }
 
-func buildTimeMachineSchedule(set *schema.Set) *client.Schedule {
+func buildTimeMachineSchedule(set *schema.Set) *era.Schedule {
 	d := set.List()
 	schedMap := d[0].(map[string]interface{})
 	log.Printf("%T", schedMap["snapshottimeofday"].(map[string]interface{})["hours"])
-	return &client.Schedule{
-		Snapshottimeofday: &client.Snapshottimeofday{
+	return &era.Schedule{
+		Snapshottimeofday: &era.Snapshottimeofday{
 			Hours:   ConvToInt(schedMap["snapshottimeofday"].(map[string]interface{})["hours"]),
 			Minutes: ConvToInt(schedMap["snapshottimeofday"].(map[string]interface{})["minutes"]),
 			Seconds: ConvToInt(schedMap["snapshottimeofday"].(map[string]interface{})["seconds"]),
 		},
-		Continuousschedule: &client.Continuousschedule{
+		Continuousschedule: &era.Continuousschedule{
 			Enabled:           ConvToBool(schedMap["continuousschedule"].(map[string]interface{})["enabled"]),
 			Logbackupinterval: ConvToInt(schedMap["continuousschedule"].(map[string]interface{})["logbackupinterval"]),
 			Snapshotsperday:   ConvToInt(schedMap["continuousschedule"].(map[string]interface{})["snapshotsperday"]),
 		},
-		Weeklyschedule: &client.Weeklyschedule{
+		Weeklyschedule: &era.Weeklyschedule{
 			Enabled:   ConvToBool(schedMap["weeklyschedule"].(map[string]interface{})["enabled"]),
 			Dayofweek: schedMap["weeklyschedule"].(map[string]interface{})["dayofweek"].(string),
 		},
-		Monthlyschedule: &client.Monthlyschedule{
+		Monthlyschedule: &era.Monthlyschedule{
 			Enabled:    ConvToBool(schedMap["monthlyschedule"].(map[string]interface{})["enabled"]),
 			Dayofmonth: ConvToInt(schedMap["monthlyschedule"].(map[string]interface{})["dayofmonth"]),
 		},
-		Quartelyschedule: &client.Quartelyschedule{
+		Quartelyschedule: &era.Quartelyschedule{
 			Enabled:    ConvToBool(schedMap["quartelyschedule"].(map[string]interface{})["enabled"]),
 			Startmonth: schedMap["quartelyschedule"].(map[string]interface{})["startmonth"].(string),
 			Dayofmonth: ConvToInt(schedMap["quartelyschedule"].(map[string]interface{})["dayofmonth"]),
 		},
-		Yearlyschedule: &client.Yearlyschedule{
+		Yearlyschedule: &era.Yearlyschedule{
 			Enabled:    ConvToBool(schedMap["yearlyschedule"].(map[string]interface{})["enabled"]),
 			Dayofmonth: ConvToInt(schedMap["yearlyschedule"].(map[string]interface{})["dayofmonth"]),
 			Month:      schedMap["yearlyschedule"].(map[string]interface{})["month"].(string),
@@ -153,10 +152,10 @@ func buildTimeMachineSchedule(set *schema.Set) *client.Schedule {
 	}
 }
 
-func buildTimeMachineFromResourceData(set *schema.Set) *client.Timemachineinfo {
+func buildTimeMachineFromResourceData(set *schema.Set) *era.Timemachineinfo {
 	d := set.List()
 	tMap := d[0].(map[string]interface{})
-	return &client.Timemachineinfo{
+	return &era.Timemachineinfo{
 		Name:             tMap["name"].(string),
 		Description:      tMap["description"].(string),
 		Slaid:            tMap["slaid"].(string),
@@ -208,12 +207,12 @@ func nodesSchema() *schema.Schema {
 	}
 }
 
-func buildNodesFromResourceData(d *schema.Set) []client.Nodes {
+func buildNodesFromResourceData(d *schema.Set) []*era.Nodes {
 	argSet := d.List()
-	args := []client.Nodes{}
+	args := []*era.Nodes{}
 
 	for _, arg := range argSet {
-		args = append(args, client.Nodes{
+		args = append(args, &era.Nodes{
 			Properties:       arg.(map[string]interface{})["properties"].(*schema.Set).List(),
 			Vmname:           arg.(map[string]interface{})["vmname"].(string),
 			Networkprofileid: arg.(map[string]interface{})["networkprofileid"].(string),
@@ -254,7 +253,7 @@ func tryToConvertBool(v interface{}) (bool, bool) {
 	return b, true
 }
 
-func buildActionArgumentsFromResourceData(d *schema.Set, args []era.Actionarguments) []client.Actionarguments {
+func buildActionArgumentsFromResourceData(d *schema.Set, args []*era.Actionarguments) []*era.Actionarguments {
 	argSet := d.List()
 	for _, arg := range argSet {
 		var val interface{}
@@ -264,7 +263,7 @@ func buildActionArgumentsFromResourceData(d *schema.Set, args []era.Actionargume
 			val = b
 		}
 
-		args = append(args, client.Actionarguments{
+		args = append(args, &era.Actionarguments{
 			Name:  arg.(map[string]interface{})["name"].(string),
 			Value: val,
 		})

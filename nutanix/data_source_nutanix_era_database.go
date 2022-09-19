@@ -1195,10 +1195,10 @@ func dataSourceNutanixEraDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("properties", flattenDbInstanceProperties(resp.Properties)); err != nil {
+	if err := d.Set("properties", flattenDBInstanceProperties(resp.Properties)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("tags", flattenDbTags(resp.Tags)); err != nil {
+	if err := d.Set("tags", flattenDBTags(resp.Tags)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -1254,7 +1254,7 @@ func dataSourceNutanixEraDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("info", flattenDbInfo(resp.Info)); err != nil {
+	if err := d.Set("info", flattenDBInfo(resp.Info)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -1262,7 +1262,7 @@ func dataSourceNutanixEraDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("metadata", flattenDbInstanceMetadata(resp.Metadata)); err != nil {
+	if err := d.Set("metadata", flattenDBInstanceMetadata(resp.Metadata)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -1274,19 +1274,19 @@ func dataSourceNutanixEraDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("parent_database_id", resp.ParentDatabaseId); err != nil {
+	if err := d.Set("parent_database_id", resp.ParentDatabaseID); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("parent_source_database_id", resp.ParentSourceDatabaseId); err != nil {
+	if err := d.Set("parent_source_database_id", resp.ParentSourceDatabaseID); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("lcm_config", flattenDbLcmConfig(resp.Lcmconfig)); err != nil {
+	if err := d.Set("lcm_config", flattenDBLcmConfig(resp.Lcmconfig)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("time_machine", flattenDbTimeMachine(resp.TimeMachine)); err != nil {
+	if err := d.Set("time_machine", flattenDBTimeMachine(resp.TimeMachine)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -1294,11 +1294,11 @@ func dataSourceNutanixEraDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("database_nodes", flattenDbNodes(resp.Databasenodes)); err != nil {
+	if err := d.Set("database_nodes", flattenDBNodes(resp.Databasenodes)); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("linked_databases", flattenDbLinkedDbs(resp.Linkeddatabases)); err != nil {
+	if err := d.Set("linked_databases", flattenDBLinkedDbs(resp.Linkeddatabases)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -1313,7 +1313,7 @@ func dataSourceNutanixEraDatabaseRead(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func flattenDbInstanceProperties(pr []Era.DBInstanceProperties) []map[string]interface{} {
+func flattenDBInstanceProperties(pr []*Era.DBInstanceProperties) []map[string]interface{} {
 	if len(pr) > 0 {
 		res := []map[string]interface{}{}
 		for _, v := range pr {
@@ -1332,7 +1332,7 @@ func flattenDbInstanceProperties(pr []Era.DBInstanceProperties) []map[string]int
 	return nil
 }
 
-func flattenDbInstanceMetadata(pr *Era.DBInstanceMetadata) map[string]interface{} {
+func flattenDBInstanceMetadata(pr *Era.DBInstanceMetadata) map[string]interface{} {
 	if pr != nil {
 		pmeta := make(map[string]interface{})
 
@@ -1352,17 +1352,17 @@ func flattenDbInstanceMetadata(pr *Era.DBInstanceMetadata) map[string]interface{
 		pmeta["last_log_catch_up_for_restore_operation_id"] = pr.Lastlogcatchupforrestoreoperationid
 		pmeta["base_size_computed"] = pr.BaseSizeComputed
 		pmeta["original_database_name"] = pr.Originaldatabasename
-		pmeta["provision_operation_id"] = pr.ProvisionOperationId
-		pmeta["source_snapshot_id"] = pr.SourceSnapshotId
+		pmeta["provision_operation_id"] = pr.ProvisionOperationID
+		pmeta["source_snapshot_id"] = pr.SourceSnapshotID
 		pmeta["pitr_based"] = pr.PitrBased
-		pmeta["sanitised"] = pr.Sanitised
+		pmeta["sanitised"] = pr.Sanitized
 		pmeta["refresh_blocker_info"] = pr.RefreshBlockerInfo
 		pmeta["deregistered_with_delete_time_machine"] = pr.DeregisteredWithDeleteTimeMachine
 	}
 	return nil
 }
 
-func flattenDbNodes(pr []Era.Databasenodes) []map[string]interface{} {
+func flattenDBNodes(pr []Era.Databasenodes) []map[string]interface{} {
 	if len(pr) > 0 {
 		res := make([]map[string]interface{}, len(pr))
 
@@ -1382,11 +1382,11 @@ func flattenDbNodes(pr []Era.Databasenodes) []map[string]interface{} {
 			db["owner_id"] = v.Ownerid
 			db["primary"] = v.Primary
 			db["properties"] = v.Properties
-			db["protection_domain"] = flattenDbProtectionDomain(v.Protectiondomain)
+			db["protection_domain"] = flattenDBProtectionDomain(v.Protectiondomain)
 			db["protection_domain_id"] = v.Protectiondomainid
 			db["software_installation_id"] = v.Softwareinstallationid
 			db["status"] = v.Status
-			db["tags"] = flattenDbTags(v.Tags)
+			db["tags"] = flattenDBTags(v.Tags)
 
 			res[k] = db
 		}
@@ -1395,7 +1395,7 @@ func flattenDbNodes(pr []Era.Databasenodes) []map[string]interface{} {
 	return nil
 }
 
-func flattenDbLinkedDbs(pr []Era.Linkeddatabases) []map[string]interface{} {
+func flattenDBLinkedDbs(pr []Era.Linkeddatabases) []map[string]interface{} {
 	if len(pr) > 0 {
 		res := make([]map[string]interface{}, len(pr))
 
@@ -1412,9 +1412,9 @@ func flattenDbLinkedDbs(pr []Era.Linkeddatabases) []map[string]interface{} {
 			ld["metric"] = v.Metric
 			ld["name"] = v.Name
 			ld["owner_id"] = v.Ownerid
-			ld["parent_database_id"] = v.ParentDatabaseId
-			ld["parent_linked_database_id"] = v.ParentLinkedDatabaseId
-			ld["snapshot_id"] = v.SnapshotId
+			ld["parent_database_id"] = v.ParentDatabaseID
+			ld["parent_linked_database_id"] = v.ParentLinkedDatabaseID
+			ld["snapshot_id"] = v.SnapshotID
 			ld["status"] = v.Status
 			ld["timezone"] = v.TimeZone
 
@@ -1425,10 +1425,10 @@ func flattenDbLinkedDbs(pr []Era.Linkeddatabases) []map[string]interface{} {
 	return nil
 }
 
-func flattenDbProtectionDomain(pr *Era.Protectiondomain) []map[string]interface{} {
+func flattenDBProtectionDomain(pr *Era.Protectiondomain) []map[string]interface{} {
 	pDList := make([]map[string]interface{}, 0)
 	if pr != nil {
-		pmeta := make(map[string]interface{}, 0)
+		pmeta := make(map[string]interface{})
 
 		pmeta["cloud_id"] = pr.Cloudid
 		pmeta["date_created"] = pr.Datecreated
@@ -1439,10 +1439,10 @@ func flattenDbProtectionDomain(pr *Era.Protectiondomain) []map[string]interface{
 		pmeta["name"] = pr.Name
 		pmeta["owner_id"] = pr.Ownerid
 		pmeta["primary_host"] = pr.PrimaryHost
-		pmeta["properties"] = flattenDbInstanceProperties(pr.Properties)
+		pmeta["properties"] = flattenDBInstanceProperties(pr.Properties)
 		pmeta["status"] = pr.Status
 		if pr.Tags != nil {
-			pmeta["tags"] = flattenDbTags(pr.Tags)
+			pmeta["tags"] = flattenDBTags(pr.Tags)
 		}
 		pmeta["type"] = pr.Type
 
@@ -1452,16 +1452,16 @@ func flattenDbProtectionDomain(pr *Era.Protectiondomain) []map[string]interface{
 	return nil
 }
 
-func flattenDbTags(pr []Era.EraTags) []map[string]interface{} {
+func flattenDBTags(pr []*Era.Tags) []map[string]interface{} {
 	if len(pr) > 0 {
 		res := make([]map[string]interface{}, len(pr))
 
 		for k, v := range pr {
 			tag := map[string]interface{}{}
 
-			tag["entity_id"] = v.EntityId
+			tag["entity_id"] = v.EntityID
 			tag["entity_name"] = v.EntityType
-			tag["id"] = v.TagId
+			tag["id"] = v.TagID
 			tag["tag_name"] = v.TagName
 			tag["value"] = v.Value
 
@@ -1472,10 +1472,10 @@ func flattenDbTags(pr []Era.EraTags) []map[string]interface{} {
 	return nil
 }
 
-func flattenDbInfo(pr *Era.Info) []map[string]interface{} {
+func flattenDBInfo(pr *Era.Info) []map[string]interface{} {
 	infoList := make([]map[string]interface{}, 0)
 	if pr != nil {
-		info := make(map[string]interface{}, 0)
+		info := make(map[string]interface{})
 
 		if pr.Secureinfo != nil {
 			info["secure_info"] = pr.Secureinfo
@@ -1492,17 +1492,17 @@ func flattenDbInfo(pr *Era.Info) []map[string]interface{} {
 func flattenBpgConfig(pr *Era.BpgConfigs) []map[string]interface{} {
 	bpgList := make([]map[string]interface{}, 0)
 	if pr != nil {
-		bpg := make(map[string]interface{}, 0)
+		bpg := make(map[string]interface{})
 
 		var bgdbParams []map[string]interface{}
-		if pr.BpgDbParam != nil {
+		if pr.BpgDBParam != nil {
 			bg := make(map[string]interface{})
-			bg["maintenance_work_mem"] = utils.StringValue(&pr.BpgDbParam.MaintenanceWorkMem)
-			bg["effective_cache_size"] = utils.StringValue(&pr.BpgDbParam.EffectiveCacheSize)
-			bg["max_parallel_workers_per_gather"] = utils.StringValue(&pr.BpgDbParam.MaxParallelWorkersPerGather)
-			bg["max_worker_processes"] = utils.StringValue(&pr.BpgDbParam.MaxWorkerProcesses)
-			bg["shared_buffers"] = utils.StringValue(&pr.BpgDbParam.SharedBuffers)
-			bg["work_mem"] = utils.StringValue(&pr.BpgDbParam.WorkMem)
+			bg["maintenance_work_mem"] = utils.StringValue(&pr.BpgDBParam.MaintenanceWorkMem)
+			bg["effective_cache_size"] = utils.StringValue(&pr.BpgDBParam.EffectiveCacheSize)
+			bg["max_parallel_workers_per_gather"] = utils.StringValue(&pr.BpgDBParam.MaxParallelWorkersPerGather)
+			bg["max_worker_processes"] = utils.StringValue(&pr.BpgDBParam.MaxWorkerProcesses)
+			bg["shared_buffers"] = utils.StringValue(&pr.BpgDBParam.SharedBuffers)
+			bg["work_mem"] = utils.StringValue(&pr.BpgDBParam.WorkMem)
 			bgdbParams = append(bgdbParams, bg)
 		}
 		bpg["bpg_db_param"] = bgdbParams
@@ -1565,7 +1565,7 @@ func flattenBpgConfig(pr *Era.BpgConfigs) []map[string]interface{} {
 	return nil
 }
 
-func flattenDbLcmConfig(pr *Era.LcmConfig) []map[string]interface{} {
+func flattenDBLcmConfig(pr *Era.LcmConfig) []map[string]interface{} {
 	res := make([]map[string]interface{}, 0)
 	if pr != nil {
 		lcm := map[string]interface{}{}
@@ -1580,7 +1580,6 @@ func flattenDbLcmConfig(pr *Era.LcmConfig) []map[string]interface{} {
 			pre["command"] = pr.PreDeleteCommand.Command
 
 			preLcmComm = append(preLcmComm, pre)
-
 		}
 		lcm["pre_delete_command"] = preLcmComm
 
@@ -1591,7 +1590,6 @@ func flattenDbLcmConfig(pr *Era.LcmConfig) []map[string]interface{} {
 			pre["command"] = pr.PostDeleteCommand.Command
 
 			postLcmComm = append(postLcmComm, pre)
-
 		}
 		lcm["post_delete_command"] = postLcmComm
 
@@ -1622,7 +1620,7 @@ func flattenEraExpiryDetails(pr *Era.EraDbExpiryDetails) []map[string]interface{
 	return nil
 }
 
-func flattenEraRefreshDetails(pr *Era.EraDbRefreshDetails) []map[string]interface{} {
+func flattenEraRefreshDetails(pr *Era.DbRefreshDetails) []map[string]interface{} {
 	res := make([]map[string]interface{}, 0)
 	if pr != nil {
 		refresh := map[string]interface{}{}
@@ -1641,7 +1639,7 @@ func flattenEraRefreshDetails(pr *Era.EraDbRefreshDetails) []map[string]interfac
 	return nil
 }
 
-func flattenDbTimeMachine(pr *Era.TimeMachine) []map[string]interface{} {
+func flattenDBTimeMachine(pr *Era.TimeMachine) []map[string]interface{} {
 	res := make([]map[string]interface{}, 0)
 	if pr != nil {
 		tmac := map[string]interface{}{}
@@ -1653,8 +1651,8 @@ func flattenDbTimeMachine(pr *Era.TimeMachine) []map[string]interface{} {
 		tmac["date_created"] = pr.DateCreated
 		tmac["date_modified"] = pr.DateModified
 		tmac["access_level"] = pr.AccessLevel
-		tmac["properties"] = flattenDbInstanceProperties(pr.Properties)
-		tmac["tags"] = flattenDbTags(pr.Tags)
+		tmac["properties"] = flattenDBInstanceProperties(pr.Properties)
+		tmac["tags"] = flattenDBTags(pr.Tags)
 		tmac["clustered"] = pr.Clustered
 		tmac["clone"] = pr.Clone
 		tmac["internal"] = pr.Internal
@@ -1672,17 +1670,16 @@ func flattenDbTimeMachine(pr *Era.TimeMachine) []map[string]interface{} {
 		tmac["clones"] = pr.Clones
 		tmac["source_nx_clusters"] = pr.SourceNxClusters
 		tmac["sla_update_in_progress"] = pr.SLAUpdateInProgress
-		tmac["sla"] = flattenDbSla(pr.SLA)
+		tmac["sla"] = flattenDbSLA(pr.SLA)
 		tmac["schedule"] = flattenSchedule(pr.Schedule)
 
 		res = append(res, tmac)
 		return res
-
 	}
 	return nil
 }
 
-func flattenDbSla(pr *Era.ListSLAResponse) []map[string]interface{} {
+func flattenDbSLA(pr *Era.ListSLAResponse) []map[string]interface{} {
 	res := []map[string]interface{}{}
 	if pr != nil {
 		sla := map[string]interface{}{}

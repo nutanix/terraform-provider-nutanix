@@ -6,6 +6,7 @@ import (
 	"time"
 
 	era "github.com/terraform-providers/terraform-provider-nutanix/client/era"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -40,41 +41,41 @@ func resourceDatabaseInstance() *schema.Resource {
 
 			"databasetype": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 			},
 
 			"name": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 
 			"softwareprofileid": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 			},
 
 			"softwareprofileversionid": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 			},
 
 			"computeprofileid": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 			},
 
 			"networkprofileid": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 			},
 			"dbparameterprofileid": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 			},
 
@@ -86,13 +87,13 @@ func resourceDatabaseInstance() *schema.Resource {
 
 			"nxclusterid": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 			},
 
 			"sshpublickey": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 				ForceNew: true,
 			},
 
@@ -159,43 +160,43 @@ func resourceDatabaseInstance() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"listener_port": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 						"database_size": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 						"auto_tune_staging_drive": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 						"allocate_pg_hugepage": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 						"cluster_database": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 						"auth_method": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 						"database_names": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 						"db_password": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 						"pre_create_script": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 						"post_create_script": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Required: true,
 						},
 					},
 				},
@@ -248,22 +249,22 @@ func createDatabaseInstance(ctx context.Context, d *schema.ResourceData, meta in
 
 func buildEraRequest(d *schema.ResourceData) (*era.ProvisionDatabaseRequest, error) {
 	return &era.ProvisionDatabaseRequest{
-		Databasetype:             d.Get("databasetype").(string),
-		Name:                     d.Get("name").(string),
-		Databasedescription:      d.Get("description").(string),
-		Softwareprofileid:        d.Get("softwareprofileid").(string),
-		Softwareprofileversionid: d.Get("softwareprofileversionid").(string),
-		Computeprofileid:         d.Get("computeprofileid").(string),
-		Networkprofileid:         d.Get("networkprofileid").(string),
-		Dbparameterprofileid:     d.Get("dbparameterprofileid").(string),
-		Newdbservertimezone:      d.Get("newdbservertimezone").(string),
-		DatabaseServerID:         d.Get("dbserverid").(string),
+		Databasetype:             utils.StringPtr(d.Get("databasetype").(string)),
+		Name:                     utils.StringPtr(d.Get("name").(string)),
+		Databasedescription:      utils.StringPtr(d.Get("description").(string)),
+		Softwareprofileid:        utils.StringPtr(d.Get("softwareprofileid").(string)),
+		Softwareprofileversionid: utils.StringPtr(d.Get("softwareprofileversionid").(string)),
+		Computeprofileid:         utils.StringPtr(d.Get("computeprofileid").(string)),
+		Networkprofileid:         utils.StringPtr(d.Get("networkprofileid").(string)),
+		Dbparameterprofileid:     utils.StringPtr(d.Get("dbparameterprofileid").(string)),
+		Newdbservertimezone:      utils.StringPtr(d.Get("newdbservertimezone").(string)),
+		DatabaseServerID:         utils.StringPtr(d.Get("dbserverid").(string)),
 		Timemachineinfo:          *buildTimeMachineFromResourceData(d.Get("timemachineinfo").(*schema.Set)),
 		Actionarguments:          expandActionArguments(d),
 		Createdbserver:           d.Get("createdbserver").(bool),
-		Nodecount:                d.Get("nodecount").(int),
-		Nxclusterid:              d.Get("nxclusterid").(string),
-		Sshpublickey:             d.Get("sshpublickey").(string),
+		Nodecount:                utils.IntPtr(d.Get("nodecount").(int)),
+		Nxclusterid:              utils.StringPtr(d.Get("nxclusterid").(string)),
+		Sshpublickey:             utils.StringPtr(d.Get("sshpublickey").(string)),
 		Clustered:                d.Get("clustered").(bool),
 		Nodes:                    buildNodesFromResourceData(d.Get("nodes").(*schema.Set)),
 		Autotunestagingdrive:     d.Get("autotunestagingdrive").(bool),
@@ -271,7 +272,6 @@ func buildEraRequest(d *schema.ResourceData) (*era.ProvisionDatabaseRequest, err
 }
 
 func readDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
-
 	c := m.(*Client).Era
 	if c == nil {
 		return diag.Errorf("era is nil")
@@ -391,8 +391,8 @@ func deleteDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 	return nil
 }
 
-func expandActionArguments(d *schema.ResourceData) []era.Actionarguments {
-	args := []era.Actionarguments{}
+func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
+	args := []*era.Actionarguments{}
 	if post, ok := d.GetOk("postgresql_info"); ok {
 		brr := post.([]interface{})
 
@@ -401,96 +401,64 @@ func expandActionArguments(d *schema.ResourceData) []era.Actionarguments {
 			var values interface{}
 			if plist, pok := val["listener_port"]; pok {
 				values = plist
-				// b, ok := tryToConvertBool(plist)
-				// if ok {
-				// 	values = b
-				// }
 
-				args = append(args, era.Actionarguments{
+				args = append(args, &era.Actionarguments{
 					Name:  "listener_port",
 					Value: values,
 				})
 			}
 			if plist, pok := val["database_size"]; pok {
 				values = plist
-				// b, ok := tryToConvertBool(plist)
-				// if ok {
-				// 	values = b
-				// }
 
-				args = append(args, era.Actionarguments{
+				args = append(args, &era.Actionarguments{
 					Name:  "database_size",
 					Value: values,
 				})
 			}
 			if plist, pok := val["db_password"]; pok {
 				values = plist
-				// b, ok := tryToConvertBool(plist)
-				// if ok {
-				// 	values = b
-				// }
 
-				args = append(args, era.Actionarguments{
+				args = append(args, &era.Actionarguments{
 					Name:  "db_password",
 					Value: values,
 				})
 			}
 			if plist, pok := val["database_names"]; pok {
 				values = plist
-				// b, ok := tryToConvertBool(plist)
-				// if ok {
-				// 	values = b
-				// }
 
-				args = append(args, era.Actionarguments{
+				args = append(args, &era.Actionarguments{
 					Name:  "database_names",
 					Value: values,
 				})
 			}
 			if plist, pok := val["auto_tune_staging_drive"]; pok {
 				values = plist
-				// b, ok := tryToConvertBool(plist)
-				// if ok {
-				// 	values = b
-				// }
 
-				args = append(args, era.Actionarguments{
+				args = append(args, &era.Actionarguments{
 					Name:  "auto_tune_staging_drive",
 					Value: values,
 				})
 			}
 			if plist, pok := val["allocate_pg_hugepage"]; pok {
 				values = plist
-				// b, ok := tryToConvertBool(plist)
-				// if ok {
-				// 	values = b
-				// }
 
-				args = append(args, era.Actionarguments{
+				args = append(args, &era.Actionarguments{
 					Name:  "allocate_pg_hugepage",
 					Value: values,
 				})
 			}
 			if plist, pok := val["auth_method"]; pok && len(plist.(string)) > 0 {
 				values = plist
-				// b, ok := tryToConvertBool(plist)
-				// if ok {
-				// 	values = b
-				// }
 
-				args = append(args, era.Actionarguments{
+				args = append(args, &era.Actionarguments{
 					Name:  "auth_method",
 					Value: values,
 				})
 			}
 			if plist, clok := val["cluster_database"]; clok && len(plist.(string)) > 0 {
 				values = plist
-				// b, ok := tryToConvertBool(plist)
-				// if ok {
-				// 	values = b
-				// }
 
-				args = append(args, era.Actionarguments{
+				args = append(args, &era.Actionarguments{
 					Name:  "cluster_database",
 					Value: values,
 				})
@@ -502,13 +470,13 @@ func expandActionArguments(d *schema.ResourceData) []era.Actionarguments {
 	return resp
 }
 
-func eraRefresh(ctx context.Context, conn *era.Client, opId era.GetOperationRequest) resource.StateRefreshFunc {
+func eraRefresh(ctx context.Context, conn *era.Client, opID era.GetOperationRequest) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		opRes, err := conn.Service.GetOperation(opId)
+		opRes, err := conn.Service.GetOperation(opID)
 		if err != nil {
 			return nil, "FAILED", err
 		}
-		if opRes.Status == "5" {
+		if opRes.Status == utils.StringPtr("5") {
 			return opRes, "COMPLETED", nil
 		}
 		return opRes, "PENDING", nil

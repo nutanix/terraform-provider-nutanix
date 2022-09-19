@@ -216,7 +216,7 @@ func (sc ServiceClient) ListDatabaseTypes() (*ListDatabaseTypesResponse, error) 
 func (sc ServiceClient) ListDatabaseParams() (*ListDatabaseParamsResponse, error) {
 	ctx := context.TODO()
 
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/app_types/postgres_database/provision/input-file?category=db_server;database", nil) // TODO: Check this API, is this api used to generate second page?, What is the sense of these params and do we get response of all database types ?
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/app_types/postgres_database/provision/input-file?category=db_server;database", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +228,7 @@ func (sc ServiceClient) ListDatabaseParams() (*ListDatabaseParamsResponse, error
 func (sc ServiceClient) ListDatabaseServerVMs() (*ListDatabaseServerVMResponse, error) {
 	ctx := context.TODO()
 
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/dbservers?detailed=true&load-dbserver-cluster=true", nil) // TODO: Check this API, is this api used to generate second page?, What is the sense of these params and do we get response of all database types ?
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/dbservers?detailed=true&load-dbserver-cluster=true", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +241,7 @@ func (sc ServiceClient) GetOperation(req GetOperationRequest) (*GetOperationResp
 	ctx := context.TODO()
 
 	opID := req.OperationID
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/operations/%s", opID), nil) // TODO: Check this API, is this api used to generate second page?, What is the sense of these params and do we get response of all database types ?
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/operations/%s", opID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -251,8 +251,7 @@ func (sc ServiceClient) GetOperation(req GetOperationRequest) (*GetOperationResp
 }
 
 func (sc ServiceClient) GetDatabaseInstance(ctx context.Context, dbInstanceID string) (*GetDatabaseResponse, error) {
-	// TODO: Use dbInstanceID in the request
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/databases/%s?detailed=true&load-dbserver-cluster=true", dbInstanceID), nil) // TODO: Check this API, is this api used to generate second page?, What is the sense of these params and do we get response of all database types ?
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/databases/%s?detailed=true&load-dbserver-cluster=true", dbInstanceID), nil)
 	if err != nil {
 		return nil, err
 	}
