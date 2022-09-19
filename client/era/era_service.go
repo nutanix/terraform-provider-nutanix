@@ -3,23 +3,20 @@ package era
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
-	"net/http/httputil"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
 )
 
 type Service interface {
-	ProvisionDatabase(*ProvisionDatabaseRequest) (*ProvisionDatabaseResponse, error)
+	ProvisionDatabase(ctx context.Context, req *ProvisionDatabaseRequest) (*ProvisionDatabaseResponse, error)
 	ListDatabaseTypes() (*ListDatabaseTypesResponse, error)
 	ListDatabaseParams() (*ListDatabaseParamsResponse, error)
-	ListDatabaseInstances() (*ListDatabaseInstancesResponse, error)
 	ListDatabaseServerVMs() (*ListDatabaseServerVMResponse, error)
 	GetOperation(GetOperationRequest) (*GetOperationResponse, error)
-	GetDatabaseInstance(string) (*GetDatabaseResponse, error)
-	UpdateDatabase(*UpdateDatabaseRequest, string) (*UpdateDatabaseResponse, error)
-	DeleteDatabase(*DeleteDatabaseRequest, string) (*DeleteDatabaseResponse, error)
+	GetDatabaseInstance(ctx context.Context, uuid string) (*GetDatabaseResponse, error)
+	UpdateDatabase(ctx context.Context, req *UpdateDatabaseRequest, uuid string) (*UpdateDatabaseResponse, error)
+	DeleteDatabase(ctx context.Context, req *DeleteDatabaseRequest, uuid string) (*DeleteDatabaseResponse, error)
 	ListProfiles(ctx context.Context, engine string, profileType string) (*ProfileListResponse, error)
 	GetProfiles(ctx context.Context, engine string, profileType string, id string, name string) (*ListProfileResponse, error)
 	GetCluster(ctx context.Context, id string, name string) (*ListClusterResponse, error)
@@ -168,9 +165,7 @@ func makePathProfiles(engine string, ptype string, id string, name string) strin
 	return ""
 }
 
-func (sc ServiceClient) ProvisionDatabase(req *ProvisionDatabaseRequest) (*ProvisionDatabaseResponse, error) {
-	ctx := context.TODO()
-
+func (sc ServiceClient) ProvisionDatabase(ctx context.Context, req *ProvisionDatabaseRequest) (*ProvisionDatabaseResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/databases/provision", req)
 	//res := new(ProvisionDatabaseResponse) // TODO: patch the response, take care of the error messages as well.
 	res := new(ProvisionDatabaseResponse)
@@ -178,16 +173,11 @@ func (sc ServiceClient) ProvisionDatabase(req *ProvisionDatabaseRequest) (*Provi
 	if err != nil {
 		return nil, err
 	}
-	log.Println("Request dump in service: ")
-	b, _ := httputil.DumpRequest(httpReq, true)
-	log.Println(string(b))
 
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) UpdateDatabase(req *UpdateDatabaseRequest, databaseID string) (*UpdateDatabaseResponse, error) {
-	ctx := context.TODO()
-
+func (sc ServiceClient) UpdateDatabase(ctx context.Context, req *UpdateDatabaseRequest, databaseID string) (*UpdateDatabaseResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("/databases/%s", databaseID), req)
 	//res := new(ProvisionDatabaseResponse) // TODO: patch the response, take care of the error messages as well.
 	res := new(UpdateDatabaseResponse)
@@ -195,16 +185,11 @@ func (sc ServiceClient) UpdateDatabase(req *UpdateDatabaseRequest, databaseID st
 	if err != nil {
 		return nil, err
 	}
-	log.Println("Request dump in service: ")
-	b, _ := httputil.DumpRequest(httpReq, true)
-	log.Println(string(b))
 
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) DeleteDatabase(req *DeleteDatabaseRequest, databaseID string) (*DeleteDatabaseResponse, error) {
-	ctx := context.TODO()
-
+func (sc ServiceClient) DeleteDatabase(ctx context.Context, req *DeleteDatabaseRequest, databaseID string) (*DeleteDatabaseResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/databases/%s", databaseID), req)
 	//res := new(ProvisionDatabaseResponse) // TODO: patch the response, take care of the error messages as well.
 	res := new(DeleteDatabaseResponse)
@@ -212,9 +197,6 @@ func (sc ServiceClient) DeleteDatabase(req *DeleteDatabaseRequest, databaseID st
 	if err != nil {
 		return nil, err
 	}
-	log.Println("Request dump in service: ")
-	b, _ := httputil.DumpRequest(httpReq, true)
-	log.Println(string(b))
 
 	return res, sc.c.Do(ctx, httpReq, res)
 }
@@ -228,10 +210,6 @@ func (sc ServiceClient) ListDatabaseTypes() (*ListDatabaseTypesResponse, error) 
 	}
 	res := new(ListDatabaseTypesResponse)
 
-	log.Println("Request dump in service: ")
-	b, _ := httputil.DumpRequest(httpReq, true)
-	log.Println(string(b))
-
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
@@ -244,10 +222,6 @@ func (sc ServiceClient) ListDatabaseParams() (*ListDatabaseParamsResponse, error
 	}
 	res := new(ListDatabaseParamsResponse)
 
-	log.Println("Request dump in service: ")
-	b, _ := httputil.DumpRequest(httpReq, true)
-	log.Println(string(b))
-
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
@@ -259,10 +233,6 @@ func (sc ServiceClient) ListDatabaseServerVMs() (*ListDatabaseServerVMResponse, 
 		return nil, err
 	}
 	res := new(ListDatabaseServerVMResponse)
-
-	log.Println("Request dump in service: ")
-	b, _ := httputil.DumpRequest(httpReq, true)
-	log.Println(string(b))
 
 	return res, sc.c.Do(ctx, httpReq, res)
 }
@@ -277,26 +247,16 @@ func (sc ServiceClient) GetOperation(req GetOperationRequest) (*GetOperationResp
 	}
 	res := new(GetOperationResponse)
 
-	log.Println("Request dump in service: ")
-	b, _ := httputil.DumpRequest(httpReq, true)
-	log.Println(string(b))
-
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) GetDatabaseInstance(dbInstanceID string) (*GetDatabaseResponse, error) {
-	ctx := context.TODO()
-
+func (sc ServiceClient) GetDatabaseInstance(ctx context.Context, dbInstanceID string) (*GetDatabaseResponse, error) {
 	// TODO: Use dbInstanceID in the request
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/databases/%s?detailed=true&load-dbserver-cluster=true", dbInstanceID), nil) // TODO: Check this API, is this api used to generate second page?, What is the sense of these params and do we get response of all database types ?
 	if err != nil {
 		return nil, err
 	}
 	res := new(GetDatabaseResponse)
-
-	log.Println("Request dump in service: ")
-	b, _ := httputil.DumpRequest(httpReq, true)
-	log.Println(string(b))
 
 	return res, sc.c.Do(ctx, httpReq, res)
 }

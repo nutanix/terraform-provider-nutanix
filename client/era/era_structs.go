@@ -268,13 +268,6 @@ type ProvisionDatabaseResponse struct {
 	Dependencyreport     interface{} `json:"dependencyReport"`
 }
 
-// Properties are redeclared in the block with additional information along with ListClusterResponse
-// type Properties struct {
-// 	Name   string `json:"name"`
-// 	Value  string `json:"value"`
-// 	Secure bool   `json:"secure"`
-// }
-
 // ListDatabaseParamsResponse structs
 type ListDatabaseParamsResponse struct {
 	Properties []DatabaseProperties `json:"properties"`
