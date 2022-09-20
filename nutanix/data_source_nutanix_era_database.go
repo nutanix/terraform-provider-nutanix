@@ -1355,7 +1355,6 @@ func flattenDBInstanceMetadata(pr *Era.DBInstanceMetadata) map[string]interface{
 		pmeta["provision_operation_id"] = pr.ProvisionOperationID
 		pmeta["source_snapshot_id"] = pr.SourceSnapshotID
 		pmeta["pitr_based"] = pr.PitrBased
-		// pmeta["sanitised"] = pr.Sanitized
 		pmeta["refresh_blocker_info"] = pr.RefreshBlockerInfo
 		pmeta["deregistered_with_delete_time_machine"] = pr.DeregisteredWithDeleteTimeMachine
 	}

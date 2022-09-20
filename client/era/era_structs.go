@@ -676,7 +676,6 @@ type DBInstanceMetadata struct {
 	CapabilityResetTime                 interface{}     `json:"capabilityResetTime,omitempty"`
 	Originaldatabasename                interface{}     `json:"originalDatabaseName,omitempty"`
 	RefreshBlockerInfo                  interface{}     `json:"refreshBlockerInfo,omitempty"`
-	// Sanitized                           bool            `json:"sanitised,omitempty"`
 }
 
 type DbserverMetadata struct {
@@ -734,52 +733,52 @@ type Metric struct {
 }
 
 type Dbserver struct {
+	Placeholder              bool              `json:"placeholder,omitempty"`
+	Eracreated               bool              `json:"eraCreated,omitempty"`
+	Internal                 bool              `json:"internal,omitempty"`
+	IsServerDriven           bool              `json:"is_server_driven,omitempty"`
+	Clustered                bool              `json:"clustered,omitempty"`
+	Dbserverinvalideastate   bool              `json:"dbserverInValidEaState,omitempty"`
 	ID                       *string           `json:"id,omitempty"`
 	Name                     *string           `json:"name,omitempty"`
 	Description              *string           `json:"description,omitempty"`
 	Ownerid                  *string           `json:"ownerId,omitempty"`
 	Datecreated              *string           `json:"dateCreated,omitempty"`
 	Datemodified             *string           `json:"dateModified,omitempty"`
-	Properties               []*Properties     `json:"properties,omitempty"`
-	Tags                     []interface{}     `json:"tags,omitempty"`
-	Eracreated               bool              `json:"eraCreated,omitempty"`
-	Internal                 bool              `json:"internal,omitempty"`
-	Dbserverclusterid        interface{}       `json:"dbserverClusterId,omitempty"`
 	Vmclustername            *string           `json:"vmClusterName,omitempty"`
 	Vmclusteruuid            *string           `json:"vmClusterUuid,omitempty"`
-	Ipaddresses              []*string         `json:"ipAddresses,omitempty"`
-	Fqdns                    interface{}       `json:"fqdns,omitempty"`
-	Macaddresses             []*string         `json:"macAddresses,omitempty"`
 	Type                     *string           `json:"type,omitempty"`
-	Placeholder              bool              `json:"placeholder,omitempty"`
 	Status                   *string           `json:"status,omitempty"`
 	Clientid                 *string           `json:"clientId,omitempty"`
 	Nxclusterid              *string           `json:"nxClusterId,omitempty"`
 	Eradriveid               *string           `json:"eraDriveId,omitempty"`
 	Eraversion               *string           `json:"eraVersion,omitempty"`
 	Vmtimezone               *string           `json:"vmTimeZone,omitempty"`
+	Requestedversion         *string           `json:"requestedVersion,omitempty"`
+	AssociatedTimeMachineID  *string           `json:"associated_time_machine_id,omitempty"`
+	Accesskey                *string           `json:"accessKey,omitempty"`
+	Protectiondomainid       *string           `json:"protectionDomainId,omitempty"`
+	Databasetype             *string           `json:"databaseType,omitempty"`
+	Accesskeyid              *string           `json:"accessKeyId,omitempty"`
+	Associatedtimemachineids []*string         `json:"associatedTimeMachineIds,omitempty"`
+	Workingdirectory         *string           `json:"workingDirectory,omitempty"`
+	Ipaddresses              []*string         `json:"ipAddresses,omitempty"`
+	Macaddresses             []*string         `json:"macAddresses,omitempty"`
 	Vminfo                   *VMInfo           `json:"vmInfo,omitempty"`
 	Info                     *Info             `json:"info,omitempty"`
 	Metadata                 *DbserverMetadata `json:"metadata,omitempty"`
 	Metric                   *Metric           `json:"metric,omitempty"`
 	Lcmconfig                *LcmConfig        `json:"lcmConfig,omitempty"`
-	Clustered                bool              `json:"clustered,omitempty"`
-	Requestedversion         *string           `json:"requestedVersion,omitempty"`
-	IsServerDriven           bool              `json:"is_server_driven,omitempty"`
-	AssociatedTimeMachineID  *string           `json:"associated_time_machine_id,omitempty"`
 	TimeMachineInfo          []*Properties     `json:"time_machine_info"`
+	Properties               []*Properties     `json:"properties,omitempty"`
 	Eradrive                 interface{}       `json:"eraDrive,omitempty"`
 	Databases                interface{}       `json:"databases,omitempty"`
 	Clones                   interface{}       `json:"clones,omitempty"`
-	Accesskey                *string           `json:"accessKey,omitempty"`
 	Softwareinstallations    interface{}       `json:"softwareInstallations,omitempty"`
-	Protectiondomainid       *string           `json:"protectionDomainId,omitempty"`
 	Protectiondomain         interface{}       `json:"protectionDomain,omitempty"`
-	Databasetype             *string           `json:"databaseType,omitempty"`
-	Accesskeyid              *string           `json:"accessKeyId,omitempty"`
-	Associatedtimemachineids []*string         `json:"associatedTimeMachineIds,omitempty"`
-	Dbserverinvalideastate   bool              `json:"dbserverInValidEaState,omitempty"`
-	Workingdirectory         *string           `json:"workingDirectory,omitempty"`
+	Dbserverclusterid        interface{}       `json:"dbserverClusterId,omitempty"`
+	Fqdns                    interface{}       `json:"fqdns,omitempty"`
+	Tags                     []interface{}     `json:"tags,omitempty"`
 }
 
 type Tags struct {
