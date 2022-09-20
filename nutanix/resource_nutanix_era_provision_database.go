@@ -156,6 +156,7 @@ func resourceDatabaseInstance() *schema.Resource {
 			"postgresql_info": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"listener_port": {
@@ -192,11 +193,11 @@ func resourceDatabaseInstance() *schema.Resource {
 						},
 						"pre_create_script": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"post_create_script": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 					},
 				},
@@ -244,7 +245,6 @@ func createDatabaseInstance(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return readDatabaseInstance(ctx, d, meta)
-
 }
 
 func buildEraRequest(d *schema.ResourceData) (*era.ProvisionDatabaseRequest, error) {
@@ -259,7 +259,7 @@ func buildEraRequest(d *schema.ResourceData) (*era.ProvisionDatabaseRequest, err
 		Dbparameterprofileid:     utils.StringPtr(d.Get("dbparameterprofileid").(string)),
 		Newdbservertimezone:      utils.StringPtr(d.Get("newdbservertimezone").(string)),
 		DatabaseServerID:         utils.StringPtr(d.Get("dbserverid").(string)),
-		Timemachineinfo:          *buildTimeMachineFromResourceData(d.Get("timemachineinfo").(*schema.Set)),
+		Timemachineinfo:          buildTimeMachineFromResourceData(d.Get("timemachineinfo").(*schema.Set)),
 		Actionarguments:          expandActionArguments(d),
 		Createdbserver:           d.Get("createdbserver").(bool),
 		Nodecount:                utils.IntPtr(d.Get("nodecount").(int)),
@@ -460,6 +460,22 @@ func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 
 				args = append(args, &era.Actionarguments{
 					Name:  "cluster_database",
+					Value: values,
+				})
+			}
+			if plist, clok := val["pre_create_script"]; clok && len(plist.(string)) > 0 {
+				values = plist
+
+				args = append(args, &era.Actionarguments{
+					Name:  "pre_create_script",
+					Value: values,
+				})
+			}
+			if plist, clok := val["post_create_script"]; clok && len(plist.(string)) > 0 {
+				values = plist
+
+				args = append(args, &era.Actionarguments{
+					Name:  "post_create_script",
 					Value: values,
 				})
 			}

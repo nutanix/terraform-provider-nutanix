@@ -1355,7 +1355,7 @@ func flattenDBInstanceMetadata(pr *Era.DBInstanceMetadata) map[string]interface{
 		pmeta["provision_operation_id"] = pr.ProvisionOperationID
 		pmeta["source_snapshot_id"] = pr.SourceSnapshotID
 		pmeta["pitr_based"] = pr.PitrBased
-		pmeta["sanitised"] = pr.Sanitized
+		// pmeta["sanitised"] = pr.Sanitized
 		pmeta["refresh_blocker_info"] = pr.RefreshBlockerInfo
 		pmeta["deregistered_with_delete_time_machine"] = pr.DeregisteredWithDeleteTimeMachine
 	}
@@ -1599,7 +1599,7 @@ func flattenDBLcmConfig(pr *Era.LcmConfig) []map[string]interface{} {
 	return nil
 }
 
-func flattenEraExpiryDetails(pr *Era.EraDbExpiryDetails) []map[string]interface{} {
+func flattenEraExpiryDetails(pr *Era.DBExpiryDetails) []map[string]interface{} {
 	res := make([]map[string]interface{}, 0)
 	if pr != nil {
 		expiry := map[string]interface{}{}
@@ -1620,7 +1620,7 @@ func flattenEraExpiryDetails(pr *Era.EraDbExpiryDetails) []map[string]interface{
 	return nil
 }
 
-func flattenEraRefreshDetails(pr *Era.DbRefreshDetails) []map[string]interface{} {
+func flattenEraRefreshDetails(pr *Era.DBRefreshDetails) []map[string]interface{} {
 	res := make([]map[string]interface{}, 0)
 	if pr != nil {
 		refresh := map[string]interface{}{}
@@ -1665,12 +1665,12 @@ func flattenDBTimeMachine(pr *Era.TimeMachine) []map[string]interface{} {
 		tmac["sla_id"] = pr.SLAID
 		tmac["schedule_id"] = pr.ScheduleID
 		tmac["metric"] = pr.Metric
-		tmac["sla_update_metadata"] = pr.SLAUpdateMetadata
+		// tmac["sla_update_metadata"] = pr.SLAUpdateMetadata
 		tmac["database"] = pr.Database
 		tmac["clones"] = pr.Clones
 		tmac["source_nx_clusters"] = pr.SourceNxClusters
 		tmac["sla_update_in_progress"] = pr.SLAUpdateInProgress
-		tmac["sla"] = flattenDbSLA(pr.SLA)
+		tmac["sla"] = flattenDBSLA(pr.SLA)
 		tmac["schedule"] = flattenSchedule(pr.Schedule)
 
 		res = append(res, tmac)
@@ -1679,7 +1679,7 @@ func flattenDBTimeMachine(pr *Era.TimeMachine) []map[string]interface{} {
 	return nil
 }
 
-func flattenDbSLA(pr *Era.ListSLAResponse) []map[string]interface{} {
+func flattenDBSLA(pr *Era.ListSLAResponse) []map[string]interface{} {
 	res := []map[string]interface{}{}
 	if pr != nil {
 		sla := map[string]interface{}{}
