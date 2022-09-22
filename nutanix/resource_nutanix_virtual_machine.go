@@ -1337,6 +1337,12 @@ func changePowerState(ctx context.Context, conn *v3.Client, id string, powerStat
 	spec.AvailabilityZoneReference = response.Status.AvailabilityZoneReference
 	spec.ClusterReference = response.Status.ClusterReference
 
+	// check if SECURE_BOOT is set, we need to set MachineType to Q35 if that's the case.
+	if *res.BootConfig.BootType == "SECURE_BOOT" {
+		log.Printf("[DEBUG] Machine Boot is set to Secure Boot, set MachineType to Q35")
+		res.MachineType = response.Spec.Resources.MachineType
+	}
+
 	res.PowerStateMechanism = pw
 	spec.Resources = res
 	request.Metadata = metadata
