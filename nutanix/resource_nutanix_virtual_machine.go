@@ -1203,6 +1203,12 @@ func resourceNutanixVirtualMachineUpdate(ctx context.Context, d *schema.Resource
 		metadata.SpecVersion = specVersion
 	}
 
+	// Check if we are dealing with SECURE_BOOT machine, MachineType is needed then set to Q35
+	if *res.BootConfig.BootType == "SECURE_BOOT" {
+		log.Printf("[DEBUG] UpdateVM: Machine Boot is set to Secure Boot, set MachineType to Q35")
+		res.MachineType = response.Spec.Resources.MachineType
+	}
+
 	spec.Resources = res
 	request.Metadata = metadata
 	request.Spec = spec
@@ -1336,6 +1342,12 @@ func changePowerState(ctx context.Context, conn *v3.Client, id string, powerStat
 	spec.Description = response.Status.Description
 	spec.AvailabilityZoneReference = response.Status.AvailabilityZoneReference
 	spec.ClusterReference = response.Status.ClusterReference
+
+	// check if SECURE_BOOT is set, we need to set MachineType to Q35 if that's the case.
+	if *res.BootConfig.BootType == "SECURE_BOOT" {
+		log.Printf("[DEBUG] Machine Boot is set to Secure Boot, set MachineType to Q35")
+		res.MachineType = response.Spec.Resources.MachineType
+	}
 
 	res.PowerStateMechanism = pw
 	spec.Resources = res
