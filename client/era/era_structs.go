@@ -558,6 +558,8 @@ type LcmConfig struct {
 	PostDeleteCommand *DBPrePostDeleteCommand `json:"postDeleteCommand,omitempty"`
 }
 
+type ListDatabaseInstance []GetDatabaseResponse
+
 type GetDatabaseResponse struct {
 	ID                       string                  `json:"id"`
 	Name                     string                  `json:"name"`

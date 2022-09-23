@@ -41,35 +41,7 @@ func dataSourceNutanixEraDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"properties": {
-				Type:        schema.TypeList,
-				Description: "List of all the properties",
-				Computed:    true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"value": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ref_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"secure": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"description": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
+			"properties": dataSourceEraDatabaseProperties(),
 			"tags": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -133,145 +105,7 @@ func dataSourceNutanixEraDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"info": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"secure_info": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"bpg_configs": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"storage": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"data_disks": {
-													Type:     schema.TypeList,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"count": {
-																Type:     schema.TypeFloat,
-																Computed: true,
-															},
-														},
-													},
-												},
-												"log_disks": {
-													Type:     schema.TypeList,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"count": {
-																Type:     schema.TypeFloat,
-																Computed: true,
-															},
-															"size": {
-																Type:     schema.TypeFloat,
-																Computed: true,
-															},
-														},
-													},
-												},
-												"archive_storage": {
-													Type:     schema.TypeList,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"size": {
-																Type:     schema.TypeFloat,
-																Computed: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"vm_properties": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"nr_hugepages": {
-													Type:     schema.TypeFloat,
-													Computed: true,
-												},
-												"overcommit_memory": {
-													Type:     schema.TypeFloat,
-													Computed: true,
-												},
-												"dirty_ratio": {
-													Type:     schema.TypeFloat,
-													Computed: true,
-												},
-												"dirty_background_ratio": {
-													Type:     schema.TypeFloat,
-													Computed: true,
-												},
-												"dirty_expire_centisecs": {
-													Type:     schema.TypeFloat,
-													Computed: true,
-												},
-												"dirty_writeback_centisecs": {
-													Type:     schema.TypeFloat,
-													Computed: true,
-												},
-												"swappiness": {
-													Type:     schema.TypeFloat,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"bpg_db_param": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"shared_buffers": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"maintenance_work_mem": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"work_mem": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"effective_cache_size": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"max_worker_processes": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"max_parallel_workers_per_gather": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			"info": dataSourceEraDatabaseInfo(),
 			"group_info": {
 				Type:     schema.TypeMap,
 				Computed: true,
@@ -305,534 +139,8 @@ func dataSourceNutanixEraDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"lcm_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"expiry_details": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"remind_before_in_days": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"effective_timestamp": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"expiry_timestamp": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"expiry_date_timezone": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"user_created": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"expire_in_days": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"delete_database": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"delete_time_machine": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"delete_vm": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"refresh_details": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"refresh_in_days": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"refresh_in_hours": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"refresh_in_months": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"last_refresh_date": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"next_refresh_date": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"refresh_time": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"refresh_date_timezone": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"pre_delete_command": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"command": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"post_delete_command": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"command": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"time_machine": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"description": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"owner_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"date_created": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"date_modified": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"access_level": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"properties": {
-							Type:        schema.TypeList,
-							Description: "List of all the properties",
-							Computed:    true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"value": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"ref_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"secure": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"description": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"tags": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"clustered": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"clone": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"internal": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"database_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"category": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ea_status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"scope": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"sla_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"schedule_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"database": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"clones": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"source_nx_clusters": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"sla_update_in_progress": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"metric": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"sla_update_metadata": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"sla": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"unique_name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"description": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"owner_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"system_sla": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"date_created": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"date_modified": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-
-									"continuous_retention": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"daily_retention": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"weekly_retention": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"monthly_retention": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"quarterly_retention": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"yearly_retention": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"reference_count": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"pitr_enabled": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"current_active_frequency": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"schedule": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"unique_name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"description": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"owner_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"system_policy": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"global_policy": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"date_created": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"date_modified": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"snapshot_time_of_day": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"hours": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"minutes": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"seconds": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"extra": {
-													Type:     schema.TypeBool,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"continuous_schedule": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"log_backup_interval": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"snapshots_per_day": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"enabled": {
-													Type:     schema.TypeBool,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"weekly_schedule": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"day_of_week": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"day_of_week_value": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"enabled": {
-													Type:     schema.TypeBool,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"monthly_schedule": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"day_of_month": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"enabled": {
-													Type:     schema.TypeBool,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"yearly_schedule": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"month": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"month_value": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"day_of_month": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"enabled": {
-													Type:     schema.TypeBool,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"quartely_schedule": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"start_month": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"start_month_value": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"day_of_month": {
-													Type:     schema.TypeInt,
-													Computed: true,
-												},
-												"enabled": {
-													Type:     schema.TypeBool,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"daily_schedule": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"enabled": {
-													Type:     schema.TypeBool,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"reference_count": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"start_time": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"time_zone": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			"lcm_config":   dataSourceEraLCMConfig(),
+			"time_machine": dataSourceEraTimeMachine(),
 			"dbserver_logical_cluster": {
 				Type:     schema.TypeMap,
 				Computed: true,
@@ -840,307 +148,8 @@ func dataSourceNutanixEraDatabase() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"database_nodes": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"description": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"owner_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"date_created": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"date_modified": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"access_level": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"properties": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"tags": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"database_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"database_status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"primary": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"dbserver_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"software_installation_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"protection_domain_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"metadata": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"info": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"secure_info": {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"info": {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-								},
-							},
-						},
-						"dbserver": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"protection_domain": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"description": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"type": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"cloud_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"date_created": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"date_modified": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"owner_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"status": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"primary_host": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"properties": {
-										Type:        schema.TypeList,
-										Description: "List of all the properties",
-										Computed:    true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"name": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"value": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"ref_id": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"secure": {
-													Type:     schema.TypeBool,
-													Computed: true,
-												},
-												"description": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"era_created": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"assoc_entities": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"linked_databases": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"description": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"database_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"database_status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"parent_database_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"parent_linked_database_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"owner_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"date_created": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"date_modified": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"timezone": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"info": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"secure_info": {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"info": {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-								},
-							},
-						},
-						"metadata": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"metric": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"snapshot_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
+			"database_nodes":   dataSourceEraDatabaseNodes(),
+			"linked_databases": dataSourceEraLinkedDatabases(),
 			"databases": {
 				Type:     schema.TypeMap,
 				Computed: true,
@@ -1834,4 +843,991 @@ func flattenDailySchedule(pr *Era.Dailyschedule) []map[string]interface{} {
 		return res
 	}
 	return nil
+}
+
+func dataSourceEraDatabaseProperties() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeList,
+		Description: "List of all the properties",
+		Computed:    true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"value": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ref_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"secure": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
+	}
+}
+
+func dataSourceEraDatabaseInfo() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"secure_info": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"bpg_configs": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"storage": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"data_disks": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"count": {
+														Type:     schema.TypeFloat,
+														Computed: true,
+													},
+												},
+											},
+										},
+										"log_disks": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"count": {
+														Type:     schema.TypeFloat,
+														Computed: true,
+													},
+													"size": {
+														Type:     schema.TypeFloat,
+														Computed: true,
+													},
+												},
+											},
+										},
+										"archive_storage": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"size": {
+														Type:     schema.TypeFloat,
+														Computed: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"vm_properties": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"nr_hugepages": {
+											Type:     schema.TypeFloat,
+											Computed: true,
+										},
+										"overcommit_memory": {
+											Type:     schema.TypeFloat,
+											Computed: true,
+										},
+										"dirty_ratio": {
+											Type:     schema.TypeFloat,
+											Computed: true,
+										},
+										"dirty_background_ratio": {
+											Type:     schema.TypeFloat,
+											Computed: true,
+										},
+										"dirty_expire_centisecs": {
+											Type:     schema.TypeFloat,
+											Computed: true,
+										},
+										"dirty_writeback_centisecs": {
+											Type:     schema.TypeFloat,
+											Computed: true,
+										},
+										"swappiness": {
+											Type:     schema.TypeFloat,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"bpg_db_param": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"shared_buffers": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"maintenance_work_mem": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"work_mem": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"effective_cache_size": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"max_worker_processes": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"max_parallel_workers_per_gather": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func dataSourceEraLCMConfig() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"expiry_details": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"remind_before_in_days": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"effective_timestamp": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"expiry_timestamp": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"expiry_date_timezone": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"user_created": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"expire_in_days": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"delete_database": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"delete_time_machine": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"delete_vm": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"refresh_details": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"refresh_in_days": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"refresh_in_hours": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"refresh_in_months": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"last_refresh_date": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"next_refresh_date": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"refresh_time": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"refresh_date_timezone": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"pre_delete_command": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"command": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"post_delete_command": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"command": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func dataSourceEraTimeMachine() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"owner_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"date_created": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"date_modified": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"access_level": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"properties": dataSourceEraDatabaseProperties(),
+				"tags": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"clustered": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"clone": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"internal": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"database_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"category": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ea_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"scope": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"sla_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"schedule_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"database": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"clones": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_nx_clusters": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"sla_update_in_progress": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"metric": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"sla_update_metadata": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"sla": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"unique_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"description": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"owner_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"system_sla": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"date_created": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"date_modified": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+
+							"continuous_retention": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"daily_retention": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"weekly_retention": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"monthly_retention": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"quarterly_retention": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"yearly_retention": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"reference_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"pitr_enabled": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"current_active_frequency": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"schedule": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"unique_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"description": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"owner_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"system_policy": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"global_policy": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"date_created": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"date_modified": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"snapshot_time_of_day": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"hours": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"minutes": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"seconds": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"extra": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"continuous_schedule": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"log_backup_interval": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"snapshots_per_day": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"enabled": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"weekly_schedule": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"day_of_week": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"day_of_week_value": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"enabled": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"monthly_schedule": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"day_of_month": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"enabled": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"yearly_schedule": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"month": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"month_value": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"day_of_month": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"enabled": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"quartely_schedule": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"start_month": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"start_month_value": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"day_of_month": {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										"enabled": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"daily_schedule": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"enabled": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"reference_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"start_time": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"time_zone": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func dataSourceEraDatabaseNodes() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"owner_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"date_created": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"date_modified": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"access_level": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"properties": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"tags": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"database_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"database_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"primary": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"dbserver_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"software_installation_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"protection_domain_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"metadata": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"info": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"secure_info": {
+								Type:     schema.TypeMap,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"info": {
+								Type:     schema.TypeMap,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
+					},
+				},
+				"dbserver": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"protection_domain": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"description": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"cloud_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"date_created": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"date_modified": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"owner_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"status": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"primary_host": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"properties": {
+								Type:        schema.TypeList,
+								Description: "List of all the properties",
+								Computed:    true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"name": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"value": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"ref_id": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"secure": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+										"description": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"era_created": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"assoc_entities": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func dataSourceEraLinkedDatabases() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"database_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"database_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"parent_database_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"parent_linked_database_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"owner_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"date_created": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"date_modified": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"timezone": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"info": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"secure_info": {
+								Type:     schema.TypeMap,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"info": {
+								Type:     schema.TypeMap,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
+					},
+				},
+				"metadata": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"metric": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"snapshot_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
+	}
 }

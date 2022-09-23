@@ -15,6 +15,7 @@ type Service interface {
 	ListDatabaseServerVMs() (*ListDatabaseServerVMResponse, error)
 	GetOperation(GetOperationRequest) (*GetOperationResponse, error)
 	GetDatabaseInstance(ctx context.Context, uuid string) (*GetDatabaseResponse, error)
+	ListDatabaseInstance(ctx context.Context) (*ListDatabaseInstance, error)
 	UpdateDatabase(ctx context.Context, req *UpdateDatabaseRequest, uuid string) (*UpdateDatabaseResponse, error)
 	DeleteDatabase(ctx context.Context, req *DeleteDatabaseRequest, uuid string) (*DeleteDatabaseResponse, error)
 	ListProfiles(ctx context.Context, engine string, profileType string) (*ProfileListResponse, error)
@@ -256,6 +257,16 @@ func (sc ServiceClient) GetDatabaseInstance(ctx context.Context, dbInstanceID st
 		return nil, err
 	}
 	res := new(GetDatabaseResponse)
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ListDatabaseInstance(ctx context.Context) (*ListDatabaseInstance, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, ("/databases?detailed=false&load-dbserver-cluster=false&order-by-dbserver-cluster=false"), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(ListDatabaseInstance)
 
 	return res, sc.c.Do(ctx, httpReq, res)
 }
