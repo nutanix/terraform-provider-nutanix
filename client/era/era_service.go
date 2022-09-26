@@ -168,7 +168,6 @@ func makePathProfiles(engine string, ptype string, id string, name string) strin
 
 func (sc ServiceClient) ProvisionDatabase(ctx context.Context, req *ProvisionDatabaseRequest) (*ProvisionDatabaseResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/databases/provision", req)
-	//res := new(ProvisionDatabaseResponse) // TODO: patch the response, take care of the error messages as well.
 	res := new(ProvisionDatabaseResponse)
 
 	if err != nil {
@@ -180,7 +179,6 @@ func (sc ServiceClient) ProvisionDatabase(ctx context.Context, req *ProvisionDat
 
 func (sc ServiceClient) UpdateDatabase(ctx context.Context, req *UpdateDatabaseRequest, databaseID string) (*UpdateDatabaseResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("/databases/%s", databaseID), req)
-	//res := new(ProvisionDatabaseResponse) // TODO: patch the response, take care of the error messages as well.
 	res := new(UpdateDatabaseResponse)
 
 	if err != nil {
@@ -192,7 +190,6 @@ func (sc ServiceClient) UpdateDatabase(ctx context.Context, req *UpdateDatabaseR
 
 func (sc ServiceClient) DeleteDatabase(ctx context.Context, req *DeleteDatabaseRequest, databaseID string) (*DeleteDatabaseResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/databases/%s", databaseID), req)
-	//res := new(ProvisionDatabaseResponse) // TODO: patch the response, take care of the error messages as well.
 	res := new(DeleteDatabaseResponse)
 
 	if err != nil {

@@ -1,7 +1,6 @@
 package nutanix
 
 import (
-	"log"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,25 +21,22 @@ func timeMachineInfoSchema() *schema.Schema {
 					Required:    true,
 					Description: "description of time machine's name",
 				},
-
 				"description": {
 					Type:        schema.TypeString,
-					Required:    true,
+					Optional:    true,
 					Description: "description of time machine's",
 				},
-
 				"slaid": {
 					Type:        schema.TypeString,
 					Required:    true,
 					Description: "description of SLA ID.",
 				},
-
 				"autotunelogdrive": {
 					Type:        schema.TypeBool,
-					Required:    true,
+					Optional:    true,
+					Default:     true,
 					Description: "description of autoTuneLogDrive",
 				},
-
 				"schedule": {
 					Type:        schema.TypeSet,
 					MaxItems:    1,
@@ -49,45 +45,128 @@ func timeMachineInfoSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"snapshottimeofday": {
-								Type:        schema.TypeMap,
-								Required:    true,
+								Type:        schema.TypeList,
+								Optional:    true,
+								MaxItems:    1,
 								Description: "description of schedule of time machine",
-								Elem:        &schema.Schema{Type: schema.TypeString},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"hours": {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
+										"minutes": {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
+										"seconds": {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
+									},
+								},
 							},
-
 							"continuousschedule": {
-								Type:        schema.TypeMap,
-								Required:    true,
+								Type:        schema.TypeList,
+								Optional:    true,
+								MaxItems:    1,
 								Description: "description of schedule of time machine",
-								Elem:        &schema.Schema{Type: schema.TypeString},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"enabled": {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
+										"logbackupinterval": {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
+										"snapshotsperday": {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
+									},
+								},
 							},
-
 							"weeklyschedule": {
-								Type:        schema.TypeMap,
-								Required:    true,
+								Type:        schema.TypeList,
+								Optional:    true,
+								MaxItems:    1,
 								Description: "description of schedule of time machine",
-								Elem:        &schema.Schema{Type: schema.TypeString},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"enabled": {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
+										"dayofweek": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
 							},
-
 							"monthlyschedule": {
-								Type:        schema.TypeMap,
-								Required:    true,
+								Type:        schema.TypeList,
+								Optional:    true,
+								MaxItems:    1,
 								Description: "description of schedule of time machine",
-								Elem:        &schema.Schema{Type: schema.TypeString},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"enabled": {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
+										"dayofmonth": {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
+									},
+								},
 							},
-
 							"quartelyschedule": {
-								Type:        schema.TypeMap,
-								Required:    true,
+								Type:        schema.TypeList,
+								Optional:    true,
+								MaxItems:    1,
 								Description: "description of schedule of time machine",
-								Elem:        &schema.Schema{Type: schema.TypeString},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"enabled": {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
+										"startmonth": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"dayofmonth": {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
+									},
+								},
 							},
-
 							"yearlyschedule": {
-								Type:        schema.TypeMap,
-								Required:    true,
+								Type:        schema.TypeList,
+								Optional:    true,
+								MaxItems:    1,
 								Description: "description of schedule of time machine",
-								Elem:        &schema.Schema{Type: schema.TypeString},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"enabled": {
+											Type:     schema.TypeBool,
+											Required: true,
+										},
+										"dayofmonth": {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
+										"month": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
 							},
 						},
 					},
@@ -119,37 +198,111 @@ func ConvToBool(s interface{}) bool {
 func buildTimeMachineSchedule(set *schema.Set) *era.Schedule {
 	d := set.List()
 	schedMap := d[0].(map[string]interface{})
-	log.Printf("%T", schedMap["snapshottimeofday"].(map[string]interface{})["hours"])
-	return &era.Schedule{
-		Snapshottimeofday: &era.Snapshottimeofday{
-			Hours:   ConvToInt(schedMap["snapshottimeofday"].(map[string]interface{})["hours"]),
-			Minutes: ConvToInt(schedMap["snapshottimeofday"].(map[string]interface{})["minutes"]),
-			Seconds: ConvToInt(schedMap["snapshottimeofday"].(map[string]interface{})["seconds"]),
-		},
-		Continuousschedule: &era.Continuousschedule{
-			Enabled:           ConvToBool(schedMap["continuousschedule"].(map[string]interface{})["enabled"]),
-			Logbackupinterval: ConvToInt(schedMap["continuousschedule"].(map[string]interface{})["logbackupinterval"]),
-			Snapshotsperday:   ConvToInt(schedMap["continuousschedule"].(map[string]interface{})["snapshotsperday"]),
-		},
-		Weeklyschedule: &era.Weeklyschedule{
-			Enabled:   ConvToBool(schedMap["weeklyschedule"].(map[string]interface{})["enabled"]),
-			Dayofweek: schedMap["weeklyschedule"].(map[string]interface{})["dayofweek"].(string),
-		},
-		Monthlyschedule: &era.Monthlyschedule{
-			Enabled:    ConvToBool(schedMap["monthlyschedule"].(map[string]interface{})["enabled"]),
-			Dayofmonth: ConvToInt(schedMap["monthlyschedule"].(map[string]interface{})["dayofmonth"]),
-		},
-		Quartelyschedule: &era.Quartelyschedule{
-			Enabled:    ConvToBool(schedMap["quartelyschedule"].(map[string]interface{})["enabled"]),
-			Startmonth: schedMap["quartelyschedule"].(map[string]interface{})["startmonth"].(string),
-			Dayofmonth: ConvToInt(schedMap["quartelyschedule"].(map[string]interface{})["dayofmonth"]),
-		},
-		Yearlyschedule: &era.Yearlyschedule{
-			Enabled:    ConvToBool(schedMap["yearlyschedule"].(map[string]interface{})["enabled"]),
-			Dayofmonth: ConvToInt(schedMap["yearlyschedule"].(map[string]interface{})["dayofmonth"]),
-			Month:      schedMap["yearlyschedule"].(map[string]interface{})["month"].(string),
-		},
+	sch := &era.Schedule{}
+
+	if cs, ok := schedMap["snapshottimeofday"]; ok && len(cs.([]interface{})) > 0 {
+		conSch := &era.Snapshottimeofday{}
+
+		icmps := (cs.([]interface{}))[0].(map[string]interface{})
+		if hours, cok := icmps["hours"]; cok {
+			conSch.Hours = hours.(int)
+		}
+
+		if mins, tok := icmps["minutes"]; tok {
+			conSch.Minutes = mins.(int)
+		}
+		if secs, tok := icmps["seconds"]; tok {
+			conSch.Seconds = secs.(int)
+		}
+
+		sch.Snapshottimeofday = conSch
 	}
+
+	if cs, ok := schedMap["continuousschedule"]; ok && len(cs.([]interface{})) > 0 {
+		conSch := &era.Continuousschedule{}
+
+		icmps := (cs.([]interface{}))[0].(map[string]interface{})
+		if enabled, cok := icmps["enabled"]; cok {
+			conSch.Enabled = enabled.(bool)
+		}
+
+		if mins, tok := icmps["logbackupinterval"]; tok {
+			conSch.Logbackupinterval = mins.(int)
+		}
+		if secs, tok := icmps["snapshotsperday"]; tok {
+			conSch.Snapshotsperday = secs.(int)
+		}
+
+		sch.Continuousschedule = conSch
+	}
+
+	if cs, ok := schedMap["weeklyschedule"]; ok && len(cs.([]interface{})) > 0 {
+		conSch := &era.Weeklyschedule{}
+
+		icmps := (cs.([]interface{}))[0].(map[string]interface{})
+		if hours, cok := icmps["enabled"]; cok {
+			conSch.Enabled = hours.(bool)
+		}
+
+		if mins, tok := icmps["dayofweek"]; tok {
+			conSch.Dayofweek = mins.(string)
+		}
+
+		sch.Weeklyschedule = conSch
+	}
+
+	if cs, ok := schedMap["monthlyschedule"]; ok && len(cs.([]interface{})) > 0 {
+		conSch := &era.Monthlyschedule{}
+
+		icmps := (cs.([]interface{}))[0].(map[string]interface{})
+		if hours, cok := icmps["enabled"]; cok {
+			conSch.Enabled = hours.(bool)
+		}
+
+		if mins, tok := icmps["dayofmonth"]; tok {
+			conSch.Dayofmonth = mins.(int)
+		}
+
+		sch.Monthlyschedule = conSch
+	}
+
+	if cs, ok := schedMap["quartelyschedule"]; ok && len(cs.([]interface{})) > 0 {
+		conSch := &era.Quartelyschedule{}
+
+		icmps := (cs.([]interface{}))[0].(map[string]interface{})
+		if hours, cok := icmps["enabled"]; cok {
+			conSch.Enabled = hours.(bool)
+		}
+
+		if mins, tok := icmps["dayofmonth"]; tok {
+			conSch.Dayofmonth = mins.(int)
+		}
+		if secs, tok := icmps["startmonth"]; tok {
+			conSch.Startmonth = secs.(string)
+		}
+
+		sch.Quartelyschedule = conSch
+	}
+
+	if cs, ok := schedMap["yearlyschedule"]; ok && len(cs.([]interface{})) > 0 {
+		conSch := &era.Yearlyschedule{}
+
+		icmps := (cs.([]interface{}))[0].(map[string]interface{})
+		if hours, cok := icmps["enabled"]; cok {
+			conSch.Enabled = hours.(bool)
+		}
+
+		if mins, tok := icmps["dayofmonth"]; tok {
+			conSch.Dayofmonth = mins.(int)
+		}
+		if secs, tok := icmps["month"]; tok {
+			conSch.Month = secs.(string)
+		}
+
+		sch.Yearlyschedule = conSch
+	}
+
+	return sch
 }
 
 func buildTimeMachineFromResourceData(set *schema.Set) *era.Timemachineinfo {
@@ -175,25 +328,31 @@ func nodesSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"properties": {
-					Type:        schema.TypeSet,
-					Optional:    true,
-					ConfigMode:  schema.SchemaConfigModeAttr,
-					Description: "",
-					Elem:        &schema.Schema{Type: schema.TypeString},
+					Type:       schema.TypeSet,
+					Optional:   true,
+					ConfigMode: schema.SchemaConfigModeAttr,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"value": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
 				},
 				"vmname": {
-					Type:        schema.TypeString,
-					Description: "",
-					Optional:    true,
-					ConfigMode:  schema.SchemaConfigModeAttr,
-					Default:     "",
+					Type:       schema.TypeString,
+					Required:   true,
+					ConfigMode: schema.SchemaConfigModeAttr,
 				},
 				"networkprofileid": {
-					Type:        schema.TypeString,
-					Description: "",
-					Optional:    true,
-					ConfigMode:  schema.SchemaConfigModeAttr,
-					Default:     "",
+					Type:       schema.TypeString,
+					Required:   true,
+					ConfigMode: schema.SchemaConfigModeAttr,
 				},
 				"dbserverid": { // When createDbServer is false, we can use this field to set the target db server.
 					Type:        schema.TypeString,

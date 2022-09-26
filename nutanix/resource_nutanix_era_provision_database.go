@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -27,6 +28,9 @@ func resourceDatabaseInstance() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(EraProvisionTimeout),
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"database_instance_id": {
 				Type:     schema.TypeString,
@@ -41,7 +45,7 @@ func resourceDatabaseInstance() *schema.Resource {
 
 			"databasetype": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 
@@ -52,30 +56,30 @@ func resourceDatabaseInstance() *schema.Resource {
 
 			"softwareprofileid": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 
 			"softwareprofileversionid": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 
 			"computeprofileid": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 
 			"networkprofileid": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			"dbparameterprofileid": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 
@@ -87,20 +91,21 @@ func resourceDatabaseInstance() *schema.Resource {
 
 			"nxclusterid": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 
 			"sshpublickey": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				ForceNew:  true,
+				Sensitive: true,
 			},
 
 			"createdbserver": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: true,
+				Default:  true,
 			},
 
 			"dbserverid": {
@@ -112,19 +117,24 @@ func resourceDatabaseInstance() *schema.Resource {
 			"clustered": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: true,
+				Default:  false,
 			},
 
 			"autotunestagingdrive": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: true,
+				Default:  true,
 			},
 
 			"nodecount": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				ForceNew: true,
+				Default:  1,
+			},
+
+			"vm_password": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 
 			"actionarguments": actionArgumentsSchema(),
@@ -168,28 +178,33 @@ func resourceDatabaseInstance() *schema.Resource {
 							Required: true,
 						},
 						"auto_tune_staging_drive": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
 						},
 						"allocate_pg_hugepage": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 						"cluster_database": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 						"auth_method": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
+							Default:  "md5",
 						},
 						"database_names": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
 						"db_password": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:      schema.TypeString,
+							Required:  true,
+							Sensitive: true,
 						},
 						"pre_create_script": {
 							Type:     schema.TypeString,
@@ -208,6 +223,13 @@ func resourceDatabaseInstance() *schema.Resource {
 
 func createDatabaseInstance(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
+
+	// check for resource schema validation
+	er := schemaValidation("era_provision_database", d)
+	if er != nil {
+		return diag.FromErr(er)
+	}
+
 	log.Println("Creating the request!!!")
 	req, err := buildEraRequest(d)
 	if err != nil {
@@ -268,6 +290,7 @@ func buildEraRequest(d *schema.ResourceData) (*era.ProvisionDatabaseRequest, err
 		Clustered:                d.Get("clustered").(bool),
 		Nodes:                    buildNodesFromResourceData(d.Get("nodes").(*schema.Set)),
 		Autotunestagingdrive:     d.Get("autotunestagingdrive").(bool),
+		VmPassword:               utils.StringPtr(d.Get("vm_password").(string)),
 	}, nil
 }
 
@@ -399,7 +422,7 @@ func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 		for _, arg := range brr {
 			val := arg.(map[string]interface{})
 			var values interface{}
-			if plist, pok := val["listener_port"]; pok {
+			if plist, pok := val["listener_port"]; pok && len(plist.(string)) > 0 {
 				values = plist
 
 				args = append(args, &era.Actionarguments{
@@ -407,7 +430,7 @@ func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 					Value: values,
 				})
 			}
-			if plist, pok := val["database_size"]; pok {
+			if plist, pok := val["database_size"]; pok && len(plist.(string)) > 0 {
 				values = plist
 
 				args = append(args, &era.Actionarguments{
@@ -415,7 +438,7 @@ func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 					Value: values,
 				})
 			}
-			if plist, pok := val["db_password"]; pok {
+			if plist, pok := val["db_password"]; pok && len(plist.(string)) > 0 {
 				values = plist
 
 				args = append(args, &era.Actionarguments{
@@ -423,7 +446,7 @@ func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 					Value: values,
 				})
 			}
-			if plist, pok := val["database_names"]; pok {
+			if plist, pok := val["database_names"]; pok && len(plist.(string)) > 0 {
 				values = plist
 
 				args = append(args, &era.Actionarguments{
@@ -431,7 +454,7 @@ func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 					Value: values,
 				})
 			}
-			if plist, pok := val["auto_tune_staging_drive"]; pok {
+			if plist, pok := val["auto_tune_staging_drive"]; pok && plist.(bool) {
 				values = plist
 
 				args = append(args, &era.Actionarguments{
@@ -455,7 +478,7 @@ func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 					Value: values,
 				})
 			}
-			if plist, clok := val["cluster_database"]; clok && len(plist.(string)) > 0 {
+			if plist, clok := val["cluster_database"]; clok {
 				values = plist
 
 				args = append(args, &era.Actionarguments{
@@ -492,8 +515,13 @@ func eraRefresh(ctx context.Context, conn *era.Client, opID era.GetOperationRequ
 		if err != nil {
 			return nil, "FAILED", err
 		}
-		if opRes.Status == utils.StringPtr("5") {
-			return opRes, "COMPLETED", nil
+		if *opRes.Status == "5" || *opRes.Status == "4" {
+			if *opRes.Status == "5" {
+				return opRes, "COMPLETED", nil
+			} else {
+				return opRes, "FAILED",
+					fmt.Errorf("error_detail: %s, percentage_complete: %s", utils.StringValue(opRes.Message), utils.StringValue(opRes.Percentagecomplete))
+			}
 		}
 		return opRes, "PENDING", nil
 	}
