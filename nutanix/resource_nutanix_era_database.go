@@ -279,7 +279,6 @@ func buildEraRequest(d *schema.ResourceData) (*era.ProvisionDatabaseRequest, err
 		Computeprofileid:         utils.StringPtr(d.Get("computeprofileid").(string)),
 		Networkprofileid:         utils.StringPtr(d.Get("networkprofileid").(string)),
 		Dbparameterprofileid:     utils.StringPtr(d.Get("dbparameterprofileid").(string)),
-		Newdbservertimezone:      utils.StringPtr(d.Get("newdbservertimezone").(string)),
 		DatabaseServerID:         utils.StringPtr(d.Get("dbserverid").(string)),
 		Timemachineinfo:          buildTimeMachineFromResourceData(d.Get("timemachineinfo").(*schema.Set)),
 		Actionarguments:          expandActionArguments(d),
