@@ -166,7 +166,7 @@ type ProvisionDatabaseRequest struct {
 	Newdbservertimezone      *string            `json:"newFVMbServerTimeZone,omitempty"`
 	Nxclusterid              *string            `json:"nxClusterId,omitempty"`
 	Sshpublickey             *string            `json:"sshPublicKey,omitempty"`
-	VMPassword               *string            `json:"vm_password,omitempty"`
+	VMPassword               *string            `json:"vmPassword,omitempty"`
 	Timemachineinfo          *Timemachineinfo   `json:"timeMachineInfo,omitempty"`
 	Actionarguments          []*Actionarguments `json:"actionArguments,omitempty"`
 	Nodes                    []*Nodes           `json:"nodes,omitempty"`
