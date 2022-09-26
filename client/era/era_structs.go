@@ -163,10 +163,10 @@ type ProvisionDatabaseRequest struct {
 	Computeprofileid         *string            `json:"computeProfileId,omitempty"`
 	Networkprofileid         *string            `json:"networkProfileId,omitempty"`
 	Dbparameterprofileid     *string            `json:"dbParameterProfileId,omitempty"`
-	Newdbservertimezone      *string            `json:"newDbServerTimeZone,omitempty"`
+	Newdbservertimezone      *string            `json:"newFVMbServerTimeZone,omitempty"`
 	Nxclusterid              *string            `json:"nxClusterId,omitempty"`
 	Sshpublickey             *string            `json:"sshPublicKey,omitempty"`
-	VmPassword               *string            `json:"vm_password,omitempty"`
+	VMPassword               *string            `json:"vm_password,omitempty"`
 	Timemachineinfo          *Timemachineinfo   `json:"timeMachineInfo,omitempty"`
 	Actionarguments          []*Actionarguments `json:"actionArguments,omitempty"`
 	Nodes                    []*Nodes           `json:"nodes,omitempty"`

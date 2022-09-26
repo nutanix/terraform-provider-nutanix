@@ -290,7 +290,7 @@ func buildEraRequest(d *schema.ResourceData) (*era.ProvisionDatabaseRequest, err
 		Clustered:                d.Get("clustered").(bool),
 		Nodes:                    buildNodesFromResourceData(d.Get("nodes").(*schema.Set)),
 		Autotunestagingdrive:     d.Get("autotunestagingdrive").(bool),
-		VmPassword:               utils.StringPtr(d.Get("vm_password").(string)),
+		VMPassword:               utils.StringPtr(d.Get("vm_password").(string)),
 	}, nil
 }
 
@@ -518,10 +518,9 @@ func eraRefresh(ctx context.Context, conn *era.Client, opID era.GetOperationRequ
 		if *opRes.Status == "5" || *opRes.Status == "4" {
 			if *opRes.Status == "5" {
 				return opRes, "COMPLETED", nil
-			} else {
-				return opRes, "FAILED",
-					fmt.Errorf("error_detail: %s, percentage_complete: %s", utils.StringValue(opRes.Message), utils.StringValue(opRes.Percentagecomplete))
 			}
+			return opRes, "FAILED",
+				fmt.Errorf("error_detail: %s, percentage_complete: %s", utils.StringValue(opRes.Message), utils.StringValue(opRes.Percentagecomplete))
 		}
 		return opRes, "PENDING", nil
 	}
