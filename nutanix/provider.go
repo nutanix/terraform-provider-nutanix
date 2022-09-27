@@ -224,7 +224,7 @@ func Provider() *schema.Provider {
 			"nutanix_floating_ip":                      resourceNutanixFloatingIP(),
 			"nutanix_static_routes":                    resourceNutanixStaticRoute(),
 			"nutanix_user_groups":                      resourceNutanixUserGroups(),
-			"nutanix_ndb_database_provision":           resourceDatabaseInstance(),
+			"nutanix_ndb_database":                     resourceDatabaseInstance(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
