@@ -133,8 +133,9 @@ func resourceDatabaseInstance() *schema.Resource {
 			},
 
 			"vm_password": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 
 			"actionarguments": actionArgumentsSchema(),
