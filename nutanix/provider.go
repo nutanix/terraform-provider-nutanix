@@ -16,7 +16,7 @@ var requiredProviderFields map[string][]string = map[string][]string{
 	"karbon":             {"username", "password", "endpoint"},
 	"foundation":         {"foundation_endpoint"},
 	"foundation_central": {"username", "password", "endpoint"},
-	"era":                {"era_endpoint", "era_username", "era_password"},
+	"ndb":                {"ndb_endpoint", "ndb_username", "ndb_password"},
 }
 
 // Provider function returns the object that implements the terraform.ResourceProvider interface, specifically a schema.Provider
@@ -46,7 +46,7 @@ func Provider() *schema.Provider {
 
 		"foundation_port": "Port for foundation VM",
 
-		"era_endpoint": "endpoint for Era VM (era ip)",
+		"ndb_endpoint": "endpoint for Era VM (era ip)",
 	}
 
 	// Nutanix provider schema
@@ -114,23 +114,23 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("FOUNDATION_PORT", nil),
 				Description: descriptions["foundation_port"],
 			},
-			"era_endpoint": {
+			"ndb_endpoint": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ERA_ENDPOINT", nil),
-				Description: descriptions["era_endpoint"],
+				DefaultFunc: schema.EnvDefaultFunc("NDB_ENDPOINT", nil),
+				Description: descriptions["ndb_endpoint"],
 			},
-			"era_username": {
+			"ndb_username": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ERA_USERNAME", nil),
-				Description: descriptions["era_username"],
+				DefaultFunc: schema.EnvDefaultFunc("NDB_USERNAME", nil),
+				Description: descriptions["ndb_username"],
 			},
-			"era_password": {
+			"ndb_password": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("ERA_PASSWORD", nil),
-				Description: descriptions["era_password"],
+				DefaultFunc: schema.EnvDefaultFunc("NDB_PASSWORD", nil),
+				Description: descriptions["ndb_password"],
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
@@ -267,9 +267,9 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		ProxyURL:           d.Get("proxy_url").(string),
 		FoundationEndpoint: d.Get("foundation_endpoint").(string),
 		FoundationPort:     d.Get("foundation_port").(string),
-		EraEndpoint:        d.Get("era_endpoint").(string),
-		EraUsername:        d.Get("era_username").(string),
-		EraPassword:        d.Get("era_password").(string),
+		NdbEndpoint:        d.Get("ndb_endpoint").(string),
+		NdbUsername:        d.Get("ndb_username").(string),
+		NdbPassword:        d.Get("ndb_password").(string),
 		RequiredFields:     requiredProviderFields,
 	}
 	c, err := config.Client()
