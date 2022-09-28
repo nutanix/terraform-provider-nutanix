@@ -114,7 +114,7 @@ func dataSourceNutanixEraDatabases() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"metadata": dataSourceEraDbInstanceMetadata(),
+						"metadata": dataSourceEraDBInstanceMetadata(),
 						"metric": {
 							Type:     schema.TypeMap,
 							Computed: true,

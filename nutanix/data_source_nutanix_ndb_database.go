@@ -113,7 +113,7 @@ func dataSourceNutanixEraDatabase() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"metadata": dataSourceEraDbInstanceMetadata(),
+			"metadata": dataSourceEraDBInstanceMetadata(),
 			"metric": {
 				Type:     schema.TypeMap,
 				Computed: true,
@@ -2013,7 +2013,7 @@ func dataSourceEraLinkedDatabases() *schema.Schema {
 	}
 }
 
-func dataSourceEraDbInstanceMetadata() *schema.Schema {
+func dataSourceEraDBInstanceMetadata() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Computed: true,
@@ -2107,10 +2107,6 @@ func dataSourceEraDbInstanceMetadata() *schema.Schema {
 					Computed: true,
 				},
 				"pitr_based": {
-					Type:     schema.TypeBool,
-					Computed: true,
-				},
-				"sanitised": {
 					Type:     schema.TypeBool,
 					Computed: true,
 				},
