@@ -927,7 +927,7 @@ type TimeMachineMetadata struct {
 	LastImplicitResumeTime                              *string         `json:"lastImplicitResumeTime,omitempty"`
 	LastEaBreakdownTime                                 *string         `json:"lastEaBreakdownTime,omitempty"`
 	LastHealTime                                        *string         `json:"lastHealTime,omitempty"`
-	AuthorizedDbservers                                 []*string       `json:"authorizedDbservers,omitempty"`
+	AuthorizedDbservers                                 []string        `json:"authorizedDbservers,omitempty"`
 	DeregisterInfo                                      *DeregisterInfo `json:"deregisterInfo,omitempty"`
 	SecureInfo                                          interface{}     `json:"secureInfo,omitempty"`
 	Info                                                interface{}     `json:"info,omitempty"`

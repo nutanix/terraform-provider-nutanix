@@ -113,13 +113,7 @@ func dataSourceNutanixEraDatabase() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"metadata": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
+			"metadata": dataSourceEraDbInstanceMetadata(),
 			"metric": {
 				Type:     schema.TypeMap,
 				Computed: true,
@@ -341,10 +335,11 @@ func flattenDBInstanceProperties(pr []*Era.DBInstanceProperties) []map[string]in
 	return nil
 }
 
-func flattenDBInstanceMetadata(pr *Era.DBInstanceMetadata) map[string]interface{} {
+func flattenDBInstanceMetadata(pr *Era.DBInstanceMetadata) []map[string]interface{} {
 	if pr != nil {
-		pmeta := make(map[string]interface{})
+		pdbmeta := make([]map[string]interface{}, 0)
 
+		pmeta := make(map[string]interface{})
 		pmeta["secure_info"] = pr.Secureinfo
 		pmeta["info"] = pr.Info
 		pmeta["deregister_info"] = pr.Deregisterinfo
@@ -357,8 +352,8 @@ func flattenDBInstanceMetadata(pr *Era.DBInstanceMetadata) map[string]interface{
 		pmeta["state_before_refresh"] = pr.Statebeforerefresh
 		pmeta["state_before_restore"] = pr.Statebeforerestore
 		pmeta["state_before_scaling"] = pr.Statebeforescaling
-		pmeta["log_catch_up_for_restore_dispatched"] = pr.Logcatchupforrestoredispatched
-		pmeta["last_log_catch_up_for_restore_operation_id"] = pr.Lastlogcatchupforrestoreoperationid
+		pmeta["log_catchup_for_restore_dispatched"] = pr.Logcatchupforrestoredispatched
+		pmeta["last_log_catchup_for_restore_operation_id"] = pr.Lastlogcatchupforrestoreoperationid
 		pmeta["base_size_computed"] = pr.BaseSizeComputed
 		pmeta["original_database_name"] = pr.Originaldatabasename
 		pmeta["provision_operation_id"] = pr.ProvisionOperationID
@@ -366,6 +361,9 @@ func flattenDBInstanceMetadata(pr *Era.DBInstanceMetadata) map[string]interface{
 		pmeta["pitr_based"] = pr.PitrBased
 		pmeta["refresh_blocker_info"] = pr.RefreshBlockerInfo
 		pmeta["deregistered_with_delete_time_machine"] = pr.DeregisteredWithDeleteTimeMachine
+
+		pdbmeta = append(pdbmeta, pmeta)
+		return pdbmeta
 	}
 	return nil
 }
@@ -680,6 +678,7 @@ func flattenDBTimeMachine(pr *Era.TimeMachine) []map[string]interface{} {
 		tmac["sla_update_in_progress"] = pr.SLAUpdateInProgress
 		tmac["sla"] = flattenDBSLA(pr.SLA)
 		tmac["schedule"] = flattenSchedule(pr.Schedule)
+		tmac["metadata"] = flattenTimeMachineMetadata(pr.Metadata)
 
 		res = append(res, tmac)
 		return res
@@ -841,6 +840,48 @@ func flattenDailySchedule(pr *Era.Dailyschedule) []map[string]interface{} {
 		cr["enabled"] = pr.Enabled
 		res = append(res, cr)
 		return res
+	}
+	return nil
+}
+
+func flattenTimeMachineMetadata(pr *Era.TimeMachineMetadata) []map[string]interface{} {
+	if pr != nil {
+		tmMeta := make([]map[string]interface{}, 0)
+		tm := make(map[string]interface{})
+
+		tm["secure_info"] = pr.SecureInfo
+		tm["info"] = pr.Info
+		tm["deregister_info"] = pr.DeregisterInfo
+		tm["capability_reset_time"] = pr.CapabilityResetTime
+		tm["auto_heal"] = pr.AutoHeal
+		tm["auto_heal_snapshot_count"] = pr.AutoSnapshotRetryInfo
+		tm["auto_heal_log_catchup_count"] = pr.AutoHealLogCatchupCount
+		tm["first_snapshot_captured"] = pr.FirstSnapshotCaptured
+		tm["first_snapshot_dispatched"] = pr.FirstSnapshotDispatched
+		tm["last_snapshot_time"] = pr.LastSnapshotTime
+		tm["last_auto_snapshot_time"] = pr.LastAutoSnapshotTime
+		tm["last_snapshot_operation_id"] = pr.LastSnapshotOperationID
+		tm["last_auto_snapshot_operation_id"] = pr.LastAutoSnapshotOperationID
+		tm["last_successful_snapshot_operation_id"] = pr.LastSuccessfulSnapshotOperationID
+		tm["snapshot_successive_failure_count"] = pr.SnapshotSuccessiveFailureCount
+		tm["last_heal_snapshot_operation"] = pr.LastHealSnapshotOperation
+		tm["last_log_catchup_time"] = pr.LastLogCatchupTime
+		tm["last_successful_log_catchup_operation_id"] = pr.LastSuccessfulLogCatchupOperationID
+		tm["last_log_catchup_operation_id"] = pr.LastLogCatchupOperationID
+		tm["log_catchup_successive_failure_count"] = pr.LogCatchupSuccessiveFailureCount
+		tm["last_pause_time"] = pr.LastPauseTime
+		tm["last_pause_by_force"] = pr.LastPauseByForce
+		tm["last_resume_time"] = pr.LastResumeTime
+		tm["last_pause_reason"] = pr.LastPauseReason
+		tm["state_before_restore"] = pr.StateBeforeRestore
+		tm["last_health_alerted_time"] = pr.LastHealthAlertedTime
+		tm["last_ea_breakdown_time"] = pr.LastEaBreakdownTime
+		tm["authorized_dbservers"] = pr.AuthorizedDbservers
+		tm["last_heal_time"] = pr.LastHealTime
+		tm["last_heal_system_triggered"] = pr.LastHealSystemTriggered
+
+		tmMeta = append(tmMeta, tm)
+		return tmMeta
 	}
 	return nil
 }
@@ -1520,6 +1561,146 @@ func dataSourceEraTimeMachine() *schema.Schema {
 						},
 					},
 				},
+				"metadata": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"secure_info": {
+								Type:     schema.TypeMap,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"info": {
+								Type:     schema.TypeMap,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"deregister_info": {
+								Type:     schema.TypeMap,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"capability_reset_time": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"auto_heal": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"auto_heal_snapshot_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"auto_heal_log_catchup_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"first_snapshot_captured": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"first_snapshot_dispatched": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"last_snapshot_time": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_auto_snapshot_time": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_snapshot_operation_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_auto_snapshot_operation_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_successful_snapshot_operation_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"snapshot_successive_failure_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"last_heal_snapshot_operation": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_log_catchup_time": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_successful_log_catchup_operation_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_log_catchup_operation_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"log_catchup_successive_failure_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"last_pause_time": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_pause_by_force": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"last_resume_time": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_pause_reason": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"state_before_restore": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_health_alerted_time": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_ea_breakdown_time": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"authorized_dbservers": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"last_heal_time": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_heal_system_triggered": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -1825,6 +2006,120 @@ func dataSourceEraLinkedDatabases() *schema.Schema {
 				},
 				"snapshot_id": {
 					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
+	}
+}
+
+func dataSourceEraDbInstanceMetadata() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"secure_info": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"info": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"deregister_info": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"tm_activate_operation_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"created_dbservers": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"registered_dbservers": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"last_refresh_timestamp": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"last_requested_refresh_timestamp": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"capability_reset_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"state_before_refresh": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"state_before_restore": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"state_before_scaling": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"log_catchup_for_restore_dispatched": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"last_log_catchup_for_restore_operation_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"base_size_computed": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"original_database_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"provision_operation_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_snapshot_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"pitr_based": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"sanitised": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"refresh_blocker_info": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"deregistered_with_delete_time_machine": {
+					Type:     schema.TypeBool,
 					Computed: true,
 				},
 			},

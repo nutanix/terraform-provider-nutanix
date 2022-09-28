@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -299,6 +300,12 @@ func dataSourceNutanixEraProfilesRead(ctx context.Context, d *schema.ResourceDat
 		profileType = ptype.(string)
 	}
 
+	//check for profile type and engine
+	_, eror := dataSourceEraProfileEngineDiff(ctx, d, meta)
+	if eror != nil {
+		return diag.FromErr(eror)
+	}
+
 	resp, err := conn.Service.ListProfiles(ctx, engine, profileType)
 	if err != nil {
 		return diag.FromErr(err)
@@ -415,4 +422,16 @@ func flattenClusterAssociation(erc []*Era.VersionClusterAssociation) []map[strin
 		return res
 	}
 	return nil
+}
+
+func dataSourceEraProfileEngineDiff(ctx context.Context, d *schema.ResourceData, m interface{}) (bool, error) {
+	// check for profile type
+	if ptype, vok := d.GetOk("profile_type"); vok {
+		if ptype == "Compute" {
+			if _, sok := d.GetOk("engine"); sok {
+				return false, fmt.Errorf("compute profile type should not be used if engine is given")
+			}
+		}
+	}
+	return true, nil
 }

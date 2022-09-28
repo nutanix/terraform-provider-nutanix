@@ -9,15 +9,15 @@ terraform{
 
 #definig nutanix configuration
 provider "nutanix"{
-  era_username = var.era_username
-  era_password = var.era_password
-  era_endpoint = var.era_endpoint
+  ndb_username = var.ndb_username
+  ndb_password = var.ndb_password
+  ndb_endpoint = var.ndb_endpoint
   insecure = true
 }
 
 ## provision PostgreSQL database with single instance
 
-resource "nutanix_era_database_provision" "dbp" {
+resource "nutanix_ndb_database" "dbp" {
 
     // name of database type
     databasetype = "postgres_database"

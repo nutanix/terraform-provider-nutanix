@@ -1,10 +1,10 @@
 #define the type of variables to be used in terraform file
-variable "era_username" {
+variable "ndb_username" {
   type = string
 }
-variable "era_password" {
+variable "ndb_password" {
   type = string
 }
-variable "era_endpoint" {
+variable "ndb_endpoint" {
   type = string
 }
