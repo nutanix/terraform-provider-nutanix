@@ -300,13 +300,7 @@ func resourceDatabaseInstance() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"metadata": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
+			"metadata": dataSourceEraDBInstanceMetadata(),
 			"metric": {
 				Type:     schema.TypeMap,
 				Computed: true,

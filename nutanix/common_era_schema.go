@@ -183,18 +183,6 @@ func timeMachineInfoSchema() *schema.Schema {
 	}
 }
 
-func ConvToInt(s interface{}) int {
-	str := s.(string)
-	i, _ := strconv.Atoi(str)
-	return i
-}
-
-func ConvToBool(s interface{}) bool {
-	str := s.(string)
-	b, _ := strconv.ParseBool(str)
-	return b
-}
-
 func buildTimeMachineSchedule(set *schema.Set) *era.Schedule {
 	d := set.List()
 	schedMap := d[0].(map[string]interface{})
