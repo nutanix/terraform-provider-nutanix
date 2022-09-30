@@ -1341,7 +1341,6 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 				return diag.FromErr(err)
 			}
 		}
-
 	} else {
 		project, err := conn.V3.GetProject(d.Id())
 		if err != nil {
