@@ -236,6 +236,48 @@ func TestAccNutanixProject_withInternalWithACPUserGroup(t *testing.T) {
 	})
 }
 
+func TestAccNutanixProject_withProjectQuotaUpdate(t *testing.T) {
+	resourceName := "nutanix_project.project_test"
+	subnetName := acctest.RandomWithPrefix("test-subnateName")
+	name := acctest.RandomWithPrefix("test-project-name-dou")
+	description := acctest.RandomWithPrefix("test-project-desc-dou")
+	vcpu := "1"
+	updatedName := acctest.RandomWithPrefix("test-project-updated")
+	updateDes := acctest.RandomWithPrefix("test-desc-got-updated")
+	updatedVCPU := "2"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixProjectInternalProjectQuotaUpdate(subnetName, name, description, vcpu),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, "api_version", "3.1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_reference_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "project_quota.0.vcpu", vcpu),
+					resource.TestCheckResourceAttr(resourceName, "project_quota.0.memory", "2147483648"),
+					resource.TestCheckResourceAttr(resourceName, "project_quota.0.disk", "2147483648"),
+				),
+			},
+			{
+				Config: testAccNutanixProjectInternalProjectQuotaUpdate(subnetName, updatedName, updateDes, updatedVCPU),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
+					resource.TestCheckResourceAttr(resourceName, "description", updateDes),
+					resource.TestCheckResourceAttr(resourceName, "api_version", "3.1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_reference_list.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "project_quota.0.vcpu", updatedVCPU),
+					resource.TestCheckResourceAttr(resourceName, "project_quota.0.memory", "2147483648"),
+					resource.TestCheckResourceAttr(resourceName, "project_quota.0.disk", "2147483648"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixProjectImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -714,4 +756,61 @@ func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, descr
 			}
 		}
 	`, subnetName, name, description, categoryName, categoryVal, limit, rsType, testVars.Permissions[0].UUID, testVars.UserGroupWithDistinguishedName[3].DistinguishedName)
+}
+
+func testAccNutanixProjectInternalProjectQuotaUpdate(subnetName, name, description, vcpu string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster1 = [
+				for cluster in data.nutanix_clusters.clusters.entities :
+				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+			][0]
+		}
+
+		resource "nutanix_subnet" "subnet" {
+			cluster_uuid       = local.cluster1
+			name               = "%s"
+			description        = "Description of my unit test VLAN"
+			vlan_id            = 31
+			subnet_type        = "VLAN"
+			subnet_ip          = "10.250.140.0"
+			default_gateway_ip = "10.250.140.1"
+			prefix_length      = 24
+
+			dhcp_options = {
+				boot_file_name   = "bootfile"
+				domain_name      = "nutanix"
+				tftp_server_name = "10.250.140.200"
+			}
+
+			dhcp_domain_name_server_list = ["8.8.8.8", "4.2.2.2"]
+			dhcp_domain_search_list      = ["terraform.nutanix.com", "terraform.unit.test.com"]
+		}
+
+		resource "nutanix_project" "project_test" {
+			name        = "%s"
+			description = "%s"
+
+			default_subnet_reference {
+				uuid = nutanix_subnet.subnet.metadata.uuid
+			}
+
+			use_project_internal = true
+
+			api_version = "3.1"
+
+			subnet_reference_list{
+				kind="subnet"
+				uuid=nutanix_subnet.subnet.metadata.uuid
+			}
+
+			project_quota{
+				vcpu= "%s"
+				disk=2147483648
+				memory=2147483648
+			}
+		}
+	`, subnetName, name, description, vcpu)
 }

@@ -93,6 +93,13 @@ resource "nutanix_project" "project_test" {
     }
     description= "{{description}}"
   }
+
+# to enable projects quotas once policy engine is enabled
+  project_quota{
+      vcpu = 1
+      disk = 2147483648
+      memory = 2147483648
+    }
   api_version = "3.1"
 }
 
@@ -288,6 +295,11 @@ The following arguments are supported:
 * `user_group.#.metadata.uuid` - (Required) UUID of the USER Group
 * `user_group.#.metadata.Kind` - Kind of the USER Group. 
 
+### Project Quota
+* `vcpu` - (Optional) The amount of vcpu resource needed 
+* `memory` - (Optional) The amount of memory resource needed
+* `disk` - (Optional) The amount of disk resource needed
+* `enable` - (Optional) Enabled or disabled the state of quota . Default is enabled. 
 
 ## Attributes Reference
 The following attributes are exported:

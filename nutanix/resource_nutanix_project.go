@@ -7,11 +7,13 @@ import (
 	"strings"
 	"time"
 
+	randUUID "github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/spf13/cast"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/calm"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -743,6 +745,37 @@ func resourceNutanixProject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"project_quota": {
+				Type:         schema.TypeList,
+				Optional:     true,
+				RequiredWith: []string{"use_project_internal"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"disk": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"vcpu": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"memory": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"enable": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      "enabled",
+							ValidateFunc: validation.StringInSlice([]string{"enabled", "disabled"}, false),
+						},
+					},
+				},
+			},
+			"quota_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -782,6 +815,82 @@ func resourceNutanixProjectCreate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		d.SetId(uuid)
+
+		// create quotas with calm APIs
+
+		if pq, ok2 := d.GetOk("project_quota"); ok2 {
+			quotaSpec := &calm.ProjectQuotaIntentInput{}
+			spec := &calm.ProjectQuotaSpec{}
+			quotaMeta := &calm.ProjectQuotaMetadata{}
+			resor := &calm.ProjectQuotaResources{}
+
+			quotaMeta.Kind = utils.StringPtr("quota")
+
+			// get project info
+			projSpec := &calm.Reference{}
+
+			projSpec.Kind = utils.StringPtr("project")
+			projSpec.Name = utils.StringPtr(*resp.Spec.ProjectDetail.Name)
+			projSpec.UUID = utils.StringPtr(uuid)
+
+			quotaMeta.ProjectReference = projSpec
+
+			// random generate uuid
+			quotaUUID, _ := randUUID.GenerateUUID()
+			quotaMeta.UUID = utils.StringPtr(quotaUUID)
+
+			resorData := &calm.ProjectQuotaData{}
+			quotaState := "enabled"
+			pqData := pq.([]interface{})
+			for _, val := range pqData {
+				v := val.(map[string]interface{})
+				if v1, ok1 := v["disk"]; ok1 {
+					resorData.Disk = utils.IntPtr(v1.(int))
+				}
+				if v1, ok1 := v["memory"]; ok1 {
+					resorData.Memory = utils.IntPtr(v1.(int))
+				}
+				if v1, ok1 := v["vcpu"]; ok1 {
+					resorData.VCPU = utils.IntPtr(v1.(int))
+				}
+				if v1, ok1 := v["enable"]; ok1 {
+					quotaState = v1.(string)
+				}
+			}
+			resor.Data = resorData
+
+			enty := &calm.ProjectQuotaEntities{}
+			enty.Project = &uuid
+			resor.Entities = enty
+			resor.UUID = utils.StringPtr(quotaUUID)
+			spec.Resources = resor
+			quotaSpec.Metadata = quotaMeta
+			quotaSpec.Spec = spec
+
+			// making request
+			con2 := meta.(*Client).Calm
+			res, er := con2.V3.CreateProjectQuota(ctx, quotaSpec)
+			if er != nil {
+				return diag.FromErr(err)
+			}
+			d.Set("quota_id", res.Metadata.UUID)
+
+			// making quota enable request
+			enableQuotaInput := &calm.EnableProjectQuotaInput{}
+
+			enableQuotaSpec := &calm.ProjectQuotaSpec{}
+			enableQuotaRes := &calm.ProjectQuotaResources{}
+
+			enableQuotaRes.Entities = enty
+			enableQuotaRes.State = utils.StringPtr(quotaState)
+
+			enableQuotaSpec.Resources = enableQuotaRes
+			enableQuotaInput.Spec = enableQuotaSpec
+			_, err := con2.V3.EnableProjectQuota(ctx, enableQuotaInput)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
 
 		// once project is created , create acp .
 		// check if acp is given in resource
@@ -1161,6 +1270,77 @@ func resourceNutanixProjectUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		uuid = *resp.Metadata.UUID
 		taskUUID = resp.Status.ExecutionContext.TaskUUID.(string)
+
+		// update spec for project Quota
+		if d.HasChange("project_quota") {
+			quotaSpec := &calm.ProjectQuotaIntentInput{}
+			spec := &calm.ProjectQuotaSpec{}
+			quotaMeta := &calm.ProjectQuotaMetadata{}
+			resor := &calm.ProjectQuotaResources{}
+
+			// setting Quota Metadata
+
+			quotaMeta.Kind = utils.StringPtr("quota")
+			quotaMeta.UUID = utils.StringPtr(d.Get("quota_id").(string))
+
+			resorData := &calm.ProjectQuotaData{}
+			quotaState := "enabled"
+			pq := d.Get("project_quota")
+			pqData := pq.([]interface{})
+			for _, val := range pqData {
+				v := val.(map[string]interface{})
+				if v1, ok1 := v["disk"]; ok1 {
+					resorData.Disk = utils.IntPtr(v1.(int))
+				}
+				if v1, ok1 := v["memory"]; ok1 {
+					resorData.Memory = utils.IntPtr(v1.(int))
+				}
+				if v1, ok1 := v["vcpu"]; ok1 {
+					resorData.VCPU = utils.IntPtr(v1.(int))
+				}
+				if v1, ok1 := v["enable"]; ok1 {
+					quotaState = v1.(string)
+				}
+			}
+			resor.Data = resorData
+
+			// setting entity_type as vm to match the UI spec
+			resor.EntityType = utils.StringPtr("vm")
+			// setting project entities
+			enty := &calm.ProjectQuotaEntities{}
+			enty.Project = &uuid
+			resor.Entities = enty
+
+			resor.UUID = utils.StringPtr(d.Get("quota_id").(string))
+
+			spec.Resources = resor
+			quotaSpec.Metadata = quotaMeta
+			quotaSpec.Spec = spec
+
+			quotaID := (d.Get("quota_id").(string))
+			// making request
+			con2 := meta.(*Client).Calm
+			_, er := con2.V3.UpdateProjectQuota(ctx, quotaID, quotaSpec)
+			if er != nil {
+				return diag.FromErr(err)
+			}
+
+			// making quota enable request
+			enableQuotaInput := &calm.EnableProjectQuotaInput{}
+
+			enableQuotaSpec := &calm.ProjectQuotaSpec{}
+			enableQuotaRes := &calm.ProjectQuotaResources{}
+
+			enableQuotaRes.Entities = enty
+			enableQuotaRes.State = utils.StringPtr(quotaState)
+
+			enableQuotaSpec.Resources = enableQuotaRes
+			enableQuotaInput.Spec = enableQuotaSpec
+			_, err := con2.V3.EnableProjectQuota(ctx, enableQuotaInput)
+			if err != nil {
+				return diag.FromErr(err)
+			}
+		}
 	} else {
 		project, err := conn.V3.GetProject(d.Id())
 		if err != nil {
@@ -1857,4 +2037,13 @@ func checkACPdelete(resp *v3.ProjectInternalIntentResponse, acpList []*v3.Access
 		return false, nil
 	}
 	return false, nil
+}
+
+func SetQuota(ctx context.Context, d *schema.ResourceData) {
+	// req := &v3.ProjectQuotaIntentInput{}
+	// spec := &v3.ProjectQuotaSpec{}
+	// res := &v3.ProjectQuotaResources{}
+
+	// rd := expandResourceDomain(d)
+
 }
