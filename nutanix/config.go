@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/client"
+	"github.com/terraform-providers/terraform-provider-nutanix/client/calm"
 	foundation_central "github.com/terraform-providers/terraform-provider-nutanix/client/fc"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/foundation"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/karbon"
@@ -60,12 +61,17 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	calmClient, err := calm.NewV3Client(configCreds)
+	if err != nil {
+		return nil, err
+	}
 	return &Client{
 		WaitTimeout:         c.WaitTimeout,
 		API:                 v3Client,
 		KarbonAPI:           karbonClient,
 		FoundationClientAPI: foundationClient,
 		FoundationCentral:   fcClient,
+		Calm:                calmClient,
 	}, nil
 }
 
@@ -76,4 +82,5 @@ type Client struct {
 	FoundationClientAPI *foundation.Client
 	WaitTimeout         int64
 	FoundationCentral   *foundation_central.Client
+	Calm                *calm.Client
 }

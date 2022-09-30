@@ -102,4 +102,11 @@ resource "nutanix_project" "testp1" {
         description= "descripton"
     }
     api_version = "3.1"
+
+  # to enable project quotas
+    project_quota{
+      vcpu = 1
+      disk = 2147483648
+      memory = 2147483648
+    }
 }
