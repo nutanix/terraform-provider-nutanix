@@ -14,9 +14,9 @@ func TestAccEraSLAsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEraSLAsDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.nutanix_era_slas.test", "slas.#"),
-					resource.TestCheckResourceAttrSet("data.nutanix_era_slas.test", "slas.0.id"),
-					resource.TestCheckResourceAttrSet("data.nutanix_era_slas.test", "slas.0.name"),
+					resource.TestCheckResourceAttrSet("data.nutanix_ndb_slas.test", "slas.#"),
+					resource.TestCheckResourceAttrSet("data.nutanix_ndb_slas.test", "slas.0.id"),
+					resource.TestCheckResourceAttrSet("data.nutanix_ndb_slas.test", "slas.0.name"),
 				),
 			},
 		},
@@ -25,6 +25,6 @@ func TestAccEraSLAsDataSource_basic(t *testing.T) {
 
 func testAccEraSLAsDataSourceConfig() string {
 	return `
-		data "nutanix_era_slas" "test" { }
+		data "nutanix_ndb_slas" "test" { }
 	`
 }

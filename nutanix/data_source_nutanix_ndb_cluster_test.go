@@ -15,12 +15,11 @@ func TestAccEraClusterDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEraClusterDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.nutanix_era_cluster.test", "status", "UP"),
-					resource.TestCheckResourceAttr("data.nutanix_era_cluster.test", "cloud_type", "NTNX"),
-					resource.TestCheckResourceAttr("data.nutanix_era_cluster.test", "hypervisor_type", "AHV"),
-					resource.TestCheckResourceAttr("data.nutanix_era_cluster.test", "hypervisor_version", "master"),
-					resource.TestCheckResourceAttrSet("data.nutanix_era_cluster.test", "properties.#"),
-					resource.TestCheckResourceAttr("data.nutanix_era_cluster.test", "healthy", "true"),
+					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "status", "UP"),
+					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "cloud_type", "NTNX"),
+					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "hypervisor_type", "AHV"),
+					resource.TestCheckResourceAttrSet("data.nutanix_ndb_cluster.test", "properties.#"),
+					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "healthy", "true"),
 				),
 			},
 		},
@@ -35,12 +34,11 @@ func TestAccEraClusterDataSource_ByName(t *testing.T) {
 			{
 				Config: testAccEraClusterDataSourceConfigByName(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.nutanix_era_cluster.test", "status", "UP"),
-					resource.TestCheckResourceAttr("data.nutanix_era_cluster.test", "cloud_type", "NTNX"),
-					resource.TestCheckResourceAttr("data.nutanix_era_cluster.test", "hypervisor_type", "AHV"),
-					resource.TestCheckResourceAttr("data.nutanix_era_cluster.test", "hypervisor_version", "master"),
-					resource.TestCheckResourceAttr("data.nutanix_era_cluster.test", "properties.#", "0"),
-					resource.TestCheckResourceAttr("data.nutanix_era_cluster.test", "healthy", "true"),
+					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "status", "UP"),
+					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "cloud_type", "NTNX"),
+					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "hypervisor_type", "AHV"),
+					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "properties.#", "0"),
+					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "healthy", "true"),
 				),
 			},
 		},
@@ -49,22 +47,22 @@ func TestAccEraClusterDataSource_ByName(t *testing.T) {
 
 func testAccEraClusterDataSourceConfig() string {
 	return `
-		data "nutanix_era_clusters" "test1" {}
+		data "nutanix_ndb_clusters" "test1" {}
 
-		data "nutanix_era_cluster" "test" {
-			depends_on = [data.nutanix_era_clusters.test1]
-			cluster_id = data.nutanix_era_clusters.test1.clusters[0].id
+		data "nutanix_ndb_cluster" "test" {
+			depends_on = [data.nutanix_ndb_clusters.test1]
+			cluster_id = data.nutanix_ndb_clusters.test1.clusters[0].id
 		}	
 	`
 }
 
 func testAccEraClusterDataSourceConfigByName() string {
 	return `
-		data "nutanix_era_clusters" "test1" {}
+		data "nutanix_ndb_clusters" "test1" {}
 
-		data "nutanix_era_cluster" "test" {
-			depends_on = [data.nutanix_era_clusters.test1]
-			cluster_name = data.nutanix_era_clusters.test1.clusters[0].name
+		data "nutanix_ndb_cluster" "test" {
+			depends_on = [data.nutanix_ndb_clusters.test1]
+			cluster_name = data.nutanix_ndb_clusters.test1.clusters[0].name
 		}	
 	`
 }
