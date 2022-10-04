@@ -40,6 +40,8 @@ type TestConfig struct {
 			ClusterUUID string `json:"cluster_uuid"`
 		} `json:"destination_az"`
 	} `json:"protection_policy"`
+	// sshKey required for ndb database provision test
+	SSHKey string `json:"ssh_key"`
 }
 
 type IPMIConfig struct {

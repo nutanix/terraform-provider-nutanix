@@ -50,10 +50,10 @@ func testAccFoundationPreCheck(t *testing.T) {
 }
 
 func testAccEraPreCheck(t *testing.T) {
-	if os.Getenv("ERA_ENDPOINT") == "" ||
-		os.Getenv("ERA_USERNAME") == "" ||
-		os.Getenv("ERA_PASSWORD") == "" {
-		t.Fatal("`ERA_USERNAME`,`ERA_PASSWORD`,`ERA_ENDPOINT` must be set for acceptance testing")
+	if os.Getenv("NDB_ENDPOINT") == "" ||
+		os.Getenv("NDB_USERNAME") == "" ||
+		os.Getenv("NDB_PASSWORD") == "" {
+		t.Fatal("`NDB_USERNAME`,`NDB_PASSWORD`,`NDB_ENDPOINT` must be set for acceptance testing")
 	}
 }
 

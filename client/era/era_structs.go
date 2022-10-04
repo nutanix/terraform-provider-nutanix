@@ -421,7 +421,8 @@ type GetOperationResponse struct {
 	Entitytype              *string            `json:"entityType"`
 	Dbserverid              *string            `json:"dbserverId"`
 	Datesubmitted           *string            `json:"dateSubmitted"`
-	Deferredby              []*string          `json:"deferredBy"`
+	Deferredby              *string            `json:"deferredBy"`
+	DeferredByOpIDs         []*string          `json:"deferredByOpIds"`
 	Steps                   []*Steps           `json:"steps"`
 	Properties              []*Properties      `json:"properties"`
 	Metadata                *OperationMetadata `json:"metadata"`

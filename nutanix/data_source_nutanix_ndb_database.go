@@ -854,7 +854,7 @@ func flattenTimeMachineMetadata(pr *Era.TimeMachineMetadata) []map[string]interf
 		tm["deregister_info"] = pr.DeregisterInfo
 		tm["capability_reset_time"] = pr.CapabilityResetTime
 		tm["auto_heal"] = pr.AutoHeal
-		tm["auto_heal_snapshot_count"] = pr.AutoSnapshotRetryInfo
+		tm["auto_heal_snapshot_count"] = pr.AutoHealSnapshotCount
 		tm["auto_heal_log_catchup_count"] = pr.AutoHealLogCatchupCount
 		tm["first_snapshot_captured"] = pr.FirstSnapshotCaptured
 		tm["first_snapshot_dispatched"] = pr.FirstSnapshotDispatched
