@@ -9,7 +9,7 @@ import (
 
 const resourceNameDB = "nutanix_ndb_database.acctest-managed"
 
-func TestAccNutanixEra_basic(t *testing.T) {
+func TestAccEra_basic(t *testing.T) {
 	name := "test-pg-inst-tf"
 	desc := "this is desc"
 	vmName := "testvm12"
@@ -19,7 +19,7 @@ func TestAccNutanixEra_basic(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixEraDatabaseConfig(name, desc, vmName, sshKey),
+				Config: testAccEraDatabaseConfig(name, desc, vmName, sshKey),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameDB, "name", name),
 					resource.TestCheckResourceAttr(resourceNameDB, "description", desc),
@@ -29,7 +29,7 @@ func TestAccNutanixEra_basic(t *testing.T) {
 	})
 }
 
-func testAccNutanixEraDatabaseConfig(name, desc, vmName, sshKey string) string {
+func testAccEraDatabaseConfig(name, desc, vmName, sshKey string) string {
 	return fmt.Sprintf(`
 	data "nutanix_ndb_profiles" "p"{
 	}
