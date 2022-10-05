@@ -249,3 +249,10 @@ The `project_reference`, `owner_reference`, `availability_zone_reference`, `netw
 * `uuid`: - the UUID(Required).
 
 See detailed information in [Nutanix Virtual Machine](http://developer.nutanix.com/reference/prism_central/v3/#vms).
+
+## Import
+Nutanix Virtual machines can be imported using the `UUID` eg,
+
+`
+terraform import nutanix_virtual_machine.vm01 0F75E6A7-55FB-44D9-A50D-14AD72E2CF7C
+`
