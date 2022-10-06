@@ -233,13 +233,7 @@ func resourceDatabaseInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
+			"tags": dataSourceEraDBInstanceTags(),
 			"clone": {
 				Type:     schema.TypeBool,
 				Computed: true,
