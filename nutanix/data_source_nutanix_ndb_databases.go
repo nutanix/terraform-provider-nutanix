@@ -43,13 +43,7 @@ func dataSourceNutanixEraDatabases() *schema.Resource {
 							Computed: true,
 						},
 						"properties": dataSourceEraDatabaseProperties(),
-						"tags": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
+						"tags":       dataSourceEraDBInstanceTags(),
 						"clustered": {
 							Type:     schema.TypeBool,
 							Computed: true,
@@ -174,7 +168,7 @@ func dataSourceNutanixEraDatabaseIntancesRead(ctx context.Context, d *schema.Res
 		return diag.FromErr(err)
 	}
 
-	if e := d.Set("database_instances", flattenDatabaseIntancesList(resp)); err != nil {
+	if e := d.Set("database_instances", flattenDatabaseIntancesList(resp)); e != nil {
 		return diag.FromErr(e)
 	}
 

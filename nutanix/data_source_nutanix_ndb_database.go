@@ -42,13 +42,7 @@ func dataSourceNutanixEraDatabase() *schema.Resource {
 				Computed: true,
 			},
 			"properties": dataSourceEraDatabaseProperties(),
-			"tags": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
+			"tags":       dataSourceEraDBInstanceTags(),
 			"clustered": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -466,8 +460,8 @@ func flattenDBTags(pr []*Era.Tags) []map[string]interface{} {
 			tag := map[string]interface{}{}
 
 			tag["entity_id"] = v.EntityID
-			tag["entity_name"] = v.EntityType
-			tag["id"] = v.TagID
+			tag["entity_type"] = v.EntityType
+			tag["tag_id"] = v.TagID
 			tag["tag_name"] = v.TagName
 			tag["value"] = v.Value
 
@@ -1210,13 +1204,7 @@ func dataSourceEraTimeMachine() *schema.Schema {
 					Computed: true,
 				},
 				"properties": dataSourceEraDatabaseProperties(),
-				"tags": {
-					Type:     schema.TypeList,
-					Computed: true,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
-					},
-				},
+				"tags":       dataSourceEraDBInstanceTags(),
 				"clustered": {
 					Type:     schema.TypeBool,
 					Computed: true,
@@ -1750,13 +1738,7 @@ func dataSourceEraDatabaseNodes() *schema.Schema {
 						Type: schema.TypeString,
 					},
 				},
-				"tags": {
-					Type:     schema.TypeList,
-					Computed: true,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
-					},
-				},
+				"tags": dataSourceEraDBInstanceTags(),
 				"database_id": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -2116,6 +2098,37 @@ func dataSourceEraDBInstanceMetadata() *schema.Schema {
 				},
 				"deregistered_with_delete_time_machine": {
 					Type:     schema.TypeBool,
+					Computed: true,
+				},
+			},
+		},
+	}
+}
+
+func dataSourceEraDBInstanceTags() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"tag_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"entity_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"entity_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"value": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"tag_name": {
+					Type:     schema.TypeString,
 					Computed: true,
 				},
 			},
