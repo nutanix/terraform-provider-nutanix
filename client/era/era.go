@@ -10,7 +10,7 @@ import (
 const (
 	libraryVersion = "v0.9"
 	absolutePath   = "era/" + libraryVersion
-	clientName     = "era"
+	clientName     = "ndb"
 )
 
 type Client struct {
@@ -22,10 +22,10 @@ func NewEraClient(credentials client.Credentials) (*Client, error) {
 	var baseClient *client.Client
 
 	// check if all required fields are present. Else create an empty client
-	if credentials.EraUsername != "" && credentials.EraPassword != "" && credentials.EraEndpoint != "" {
-		credentials.URL = fmt.Sprintf(credentials.EraEndpoint)
-		credentials.Password = credentials.EraPassword
-		credentials.Username = credentials.EraUsername
+	if credentials.NdbUsername != "" && credentials.NdbPassword != "" && credentials.NdbEndpoint != "" {
+		credentials.URL = fmt.Sprintf(credentials.NdbEndpoint)
+		credentials.Password = credentials.NdbPassword
+		credentials.Username = credentials.NdbUsername
 
 		c, err := client.NewBaseClient(&credentials, absolutePath, false)
 		if err != nil {
@@ -33,7 +33,7 @@ func NewEraClient(credentials client.Credentials) (*Client, error) {
 		}
 		baseClient = c
 	} else {
-		errorMsg := fmt.Sprintf("Era Client is missing. "+
+		errorMsg := fmt.Sprintf("NDB Client is missing. "+
 			"Please provide required details - %s in provider configuration.", strings.Join(credentials.RequiredFields[clientName], ", "))
 
 		baseClient = &client.Client{ErrorMsg: errorMsg}

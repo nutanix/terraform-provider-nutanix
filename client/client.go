@@ -72,9 +72,9 @@ type Credentials struct {
 	FoundationEndpoint string              // Required field for connecting to foundation VM APIs
 	FoundationPort     string              // Port for connecting to foundation VM APIs
 	RequiredFields     map[string][]string // RequiredFields is client to its required fields mapping for validations and usage in every client
-	EraEndpoint        string              // Required field for connecting to Era VM APIs.
-	EraUsername        string
-	EraPassword        string
+	NdbEndpoint        string              // Required field for connecting to Era VM APIs.
+	NdbUsername        string
+	NdbPassword        string
 }
 
 // AdditionalFilter specification for client side filters

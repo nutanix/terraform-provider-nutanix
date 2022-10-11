@@ -14,8 +14,8 @@ func TestAccEraClustersDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEraClustersDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.nutanix_era_clusters.test", "clusters.#"),
-					resource.TestCheckResourceAttrSet("data.nutanix_era_clusters.test", "clusters.0.id"),
+					resource.TestCheckResourceAttrSet("data.nutanix_ndb_clusters.test", "clusters.#"),
+					resource.TestCheckResourceAttrSet("data.nutanix_ndb_clusters.test", "clusters.0.id"),
 				),
 			},
 		},
@@ -24,6 +24,6 @@ func TestAccEraClustersDataSource_basic(t *testing.T) {
 
 func testAccEraClustersDataSourceConfig() string {
 	return `
-		data "nutanix_era_clusters" "test" { }
+		data "nutanix_ndb_clusters" "test" { }
 	`
 }
