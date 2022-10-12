@@ -49,6 +49,14 @@ func testAccFoundationPreCheck(t *testing.T) {
 	}
 }
 
+func testAccEraPreCheck(t *testing.T) {
+	if os.Getenv("NDB_ENDPOINT") == "" ||
+		os.Getenv("NDB_USERNAME") == "" ||
+		os.Getenv("NDB_PASSWORD") == "" {
+		t.Fatal("`NDB_USERNAME`,`NDB_PASSWORD`,`NDB_ENDPOINT` must be set for acceptance testing")
+	}
+}
+
 func randIntBetween(min, max int) int {
 	rand.Seed(time.Now().UnixNano())
 	return rand.Intn(max-min) + min
