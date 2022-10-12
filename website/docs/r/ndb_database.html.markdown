@@ -3,12 +3,13 @@ layout: "nutanix"
 page_title: "NUTANIX: nutanix_ndb_database"
 sidebar_current: "docs-nutanix-resource-ndb-database"
 description: |-
-  This operation submits a request to create, update and delete database instance in Nutanix database service (NDB)
+  This operation submits a request to create, update and delete database instance in Nutanix database service (NDB).
+  Note: For 1.8.0-beta.1 release, only postgress database type is qualified and officially supported.
 ---
 
 # nutanix_ndb_database
 
-Provides a resource to create database instance based on the input parameters.
+Provides a resource to create database instance based on the input parameters. For 1.8.0-beta.1 release, only postgress database type is qualified and officially supported.
 
 ## Example Usage
 

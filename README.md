@@ -75,6 +75,8 @@ Foundation Central based modules and examples : Foundation based modules & examp
 ## Nutanix Database Service
 > For the 1.8.0-beta.1 release of the provider, it will have N-1 compatibility with the Nutanix database service. This release was tested with v2.4 and v2.4.1 versions.
 
+Note: For 1.8.0-beta.1 release, only postgress database type is qualified and officially supported.
+
 Checkout example : https://github.com/nutanix/terraform-provider-nutanix/blob/master/examples/ndb/database_instance
 
 ## Example Usage
