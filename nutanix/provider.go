@@ -16,6 +16,7 @@ var requiredProviderFields map[string][]string = map[string][]string{
 	"karbon":             {"username", "password", "endpoint"},
 	"foundation":         {"foundation_endpoint"},
 	"foundation_central": {"username", "password", "endpoint"},
+	"ndb":                {"ndb_endpoint", "ndb_username", "ndb_password"},
 }
 
 // Provider function returns the object that implements the terraform.ResourceProvider interface, specifically a schema.Provider
@@ -44,6 +45,8 @@ func Provider() *schema.Provider {
 		"foundation_endpoint": "endpoint for foundation VM (eg. Foundation VM IP)",
 
 		"foundation_port": "Port for foundation VM",
+
+		"ndb_endpoint": "endpoint for Era VM (era ip)",
 	}
 
 	// Nutanix provider schema
@@ -111,6 +114,24 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("FOUNDATION_PORT", nil),
 				Description: descriptions["foundation_port"],
 			},
+			"ndb_endpoint": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("NDB_ENDPOINT", nil),
+				Description: descriptions["ndb_endpoint"],
+			},
+			"ndb_username": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("NDB_USERNAME", nil),
+				Description: descriptions["ndb_username"],
+			},
+			"ndb_password": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("NDB_PASSWORD", nil),
+				Description: descriptions["ndb_password"],
+			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"nutanix_image":                                   dataSourceNutanixImage(),
@@ -167,6 +188,14 @@ func Provider() *schema.Provider {
 			"nutanix_floating_ip":                             dataSourceNutanixFloatingIP(),
 			"nutanix_floating_ips":                            dataSourceNutanixFloatingIPs(),
 			"nutanix_static_routes":                           dataSourceNutanixStaticRoute(),
+			"nutanix_ndb_sla":                                 dataSourceNutanixEraSLA(),
+			"nutanix_ndb_slas":                                dataSourceNutanixEraSLAs(),
+			"nutanix_ndb_profile":                             dataSourceNutanixEraProfile(),
+			"nutanix_ndb_profiles":                            dataSourceNutanixEraProfiles(),
+			"nutanix_ndb_cluster":                             dataSourceNutanixEraCluster(),
+			"nutanix_ndb_clusters":                            dataSourceNutanixEraClusters(),
+			"nutanix_ndb_database":                            dataSourceNutanixEraDatabase(),
+			"nutanix_ndb_databases":                           dataSourceNutanixEraDatabases(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  resourceNutanixVirtualMachine(),
@@ -195,6 +224,7 @@ func Provider() *schema.Provider {
 			"nutanix_floating_ip":                      resourceNutanixFloatingIP(),
 			"nutanix_static_routes":                    resourceNutanixStaticRoute(),
 			"nutanix_user_groups":                      resourceNutanixUserGroups(),
+			"nutanix_ndb_database":                     resourceDatabaseInstance(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
@@ -237,6 +267,9 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 		ProxyURL:           d.Get("proxy_url").(string),
 		FoundationEndpoint: d.Get("foundation_endpoint").(string),
 		FoundationPort:     d.Get("foundation_port").(string),
+		NdbEndpoint:        d.Get("ndb_endpoint").(string),
+		NdbUsername:        d.Get("ndb_username").(string),
+		NdbPassword:        d.Get("ndb_password").(string),
 		RequiredFields:     requiredProviderFields,
 	}
 	c, err := config.Client()

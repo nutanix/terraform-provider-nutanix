@@ -7,6 +7,7 @@ require (
 	github.com/client9/misspell v0.3.4
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/golangci/golangci-lint v1.25.0
+	github.com/hashicorp/go-uuid v1.0.2 // indirect
 	github.com/hashicorp/terraform-plugin-go v0.5.0 // indirect
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1
 	github.com/keybase/go-crypto v0.0.0-20161004153544-93f5b35093ba // indirect

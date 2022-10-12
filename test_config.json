@@ -58,7 +58,8 @@
             "uuid":"",
             "cluster_uuid":""
         }
-    }
+    },
+    "ssh_key":""
 }
 
 

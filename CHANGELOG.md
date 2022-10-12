@@ -1,3 +1,24 @@
+## 1.8.0-beta.1 (Oct 12, 2022)
+
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.7.1...v1.8.0-beta.1)
+
+**New Feature:**
+
+- Feat/1.8.0-beta.1 Release with Nutanix Database Service based resources and datasources  [\#501] (https://github.com/nutanix/terraform-provider-nutanix/pull/501)
+
+    New Data Sources :
+    - nutanix_ndb_cluster
+    - nutanix_ndb_clusters
+    - nutanix_ndb_database
+    - nutanix_ndb_databases
+    - nutanix_ndb_profile
+    - nutanix_ndb_profiles
+    - nutanix_ndb_sla
+    - nutanix_ndb_slas
+
+    New Resources :
+    - nutanix_ndb_database
+
 ## 1.7.1 (August 31, 2022)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.7.0...v1.7.1)
 
