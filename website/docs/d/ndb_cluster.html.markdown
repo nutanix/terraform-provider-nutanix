@@ -30,7 +30,7 @@ The following arguments are supported:
 * `cluster_id`: ID of cluster
 * `cluster_name`: name of cluster
 
-* `cluster_name` and `cluster_id` are mutually exlcusive.
+* `cluster_name` and `cluster_id` are mutually exclusive.
 
 ## Attribute Reference
 
