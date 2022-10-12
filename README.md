@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
-NOTE: The latest version of the Nutanix provider is [v1.7.1](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.7.1)
+NOTE: The latest version of the Nutanix provider is [v1.8.0-beta.1](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.8.0-beta.1)
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 ## Build, Quality Status
@@ -72,6 +72,11 @@ Foundation Central based examples : https://github.com/nutanix/terraform-provide
 
 Foundation Central based modules and examples : Foundation based modules & examples : https://github.com/nutanix/terraform-provider-nutanix/blob/master/modules/foundationCentral/
 
+## Nutanix Database Service
+> For the 1.8.0-beta.1 release of the provider, it will have N-1 compatibility with the Nutanix database service. This release was tested with v2.4 and v2.4.1 versions.
+
+Checkout example : https://github.com/nutanix/terraform-provider-nutanix/blob/master/examples/ndb/database_instance
+
 ## Example Usage
 
 See the Examples folder for a handful of main.tf demos as well as some pre-compiled binaries.
@@ -128,11 +133,25 @@ provider "nutanix" {
 }
 ```
 
+## Additional fields for using Nutanix Database Service:
+
+* **ndb_username** - (Optional) Username of Nutanix Database Service server
+* **ndb_password** - (Optional) Password of Nutanix Database Service server
+* **ndb_endpoint** - (Optional) IP of Nutanix Database Service server
+
+```hcl
+provider "nutanix" {
+  ndb_username = var.ndb_username
+  ndb_password = var.ndb_password
+  ndb_endpoint = var.ndb_endpoint
+}
+```
+
 ### Provider Configuration Requirements & Warnings
 From foundation getting released in 1.5.0-beta, provider configuration will accomodate prism central and foundation apis connection details. **It will show warnings for disabled api connections as per the attributes given in provider configuration in above mentioned format**. The below are the required attributes for corresponding provider componenets :
 * endpoint, username and password are required fields for using Prism Central & Karbon based resources and data sources
 * foundation_endpoint is required field for using Foundation based resources and data sources
-
+* ndb_username, ndb_password and ndb_endpoint are required fields for using NDB based resources and data sources
 ## Resources
 
 * nutanix_access_control_policy
@@ -161,6 +180,7 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 * nutanix_static_routes
 * nutanix_floating_ip
 * nutanix_user_groups
+* nutanix_ndb_database
 
 ## Data Sources
 
@@ -215,6 +235,14 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 * nutanix_floating_ip
 * nutanix_floating_ips
 * nutanix_static_routes
+* nutanix_ndb_cluster
+* nutanix_ndb_clusters
+* nutanix_ndb_database
+* nutanix_ndb_databases
+* nutanix_ndb_profile
+* nutanix_ndb_profiles
+* nutanix_ndb_sla
+* nutanix_ndb_slas
 
 ## Quick Install
 
