@@ -232,6 +232,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_software_version_profile":     resourceNutanixNDBSoftwareVersionProfile(),
 			"nutanix_ndb_scale_database":               resourceNutanixNDBScaleDatabase(),
 			"nutanix_ndb_database_scale":               resourceNutanixNDBScaleDatabase(),
+			"nutanix_ndb_register_database":            resourceNutanixNDBRegisterDatabase(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
