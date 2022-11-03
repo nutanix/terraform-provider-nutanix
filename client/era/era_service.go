@@ -24,6 +24,9 @@ type Service interface {
 	ListClusters(ctx context.Context) (*ClusterListResponse, error)
 	GetSLA(ctx context.Context, id string, name string) (*ListSLAResponse, error)
 	ListSLA(ctx context.Context) (*SLAResponse, error)
+	CreateSLA(ctx context.Context, req *SlaIntentInput) (*ListSLAResponse, error)
+	UpdateSLA(ctx context.Context, req *SlaIntentInput, id string) (*ListSLAResponse, error)
+	DeleteSLA(ctx context.Context, uuid string) (*SlaDeleteResponse, error)
 }
 
 type ServiceClient struct {
@@ -264,6 +267,38 @@ func (sc ServiceClient) ListDatabaseInstance(ctx context.Context) (*ListDatabase
 		return nil, err
 	}
 	res := new(ListDatabaseInstance)
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) CreateSLA(ctx context.Context, req *SlaIntentInput) (*ListSLAResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/slas", req)
+	res := new(ListSLAResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteSLA(ctx context.Context, uuid string) (*SlaDeleteResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/slas/%s", uuid), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(SlaDeleteResponse)
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) UpdateSLA(ctx context.Context, req *SlaIntentInput, id string) (*ListSLAResponse, error) {
+	path := fmt.Sprintf("/slas/%s", id)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPut, path, req)
+	if err != nil {
+		return nil, err
+	}
+	res := new(ListSLAResponse)
 
 	return res, sc.c.Do(ctx, httpReq, res)
 }
