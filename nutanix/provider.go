@@ -228,6 +228,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_sla":                          resourceNutanixNDBSla(),
 			"nutanix_ndb_database_restore":             resourceNutanixNDBDatabaseRestore(),
 			"nutanix_ndb_log_catchups":                 resourceNutanixNDBLogCatchUps(),
+			"nutanix_ndb_profile":                      resourceNutanixNDBProfile(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

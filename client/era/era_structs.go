@@ -48,14 +48,14 @@ type Properties struct {
 }
 
 type VersionClusterAssociation struct {
-	NxClusterID              *string       `json:"nxClusterId,omitempty"`
-	DateCreated              *string       `json:"dateCreated,omitempty"`
-	DateModified             *string       `json:"dateModified,omitempty"`
-	OwnerID                  *string       `json:"ownerId,omitempty"`
-	Status                   *string       `json:"status,omitempty"`
-	ProfileVersionID         *string       `json:"profileVersionId,omitempty"`
-	Properties               []*Properties `json:"properties,omitempty"`
-	OptimizedForProvisioning bool          `json:"optimizedForProvisioning,omitempty"`
+	NxClusterID              *string              `json:"nxClusterId,omitempty"`
+	DateCreated              *string              `json:"dateCreated,omitempty"`
+	DateModified             *string              `json:"dateModified,omitempty"`
+	OwnerID                  *string              `json:"ownerId,omitempty"`
+	Status                   *string              `json:"status,omitempty"`
+	ProfileVersionID         *string              `json:"profileVersionId,omitempty"`
+	Properties               []*ProfileProperties `json:"properties,omitempty"`
+	OptimizedForProvisioning bool                 `json:"optimizedForProvisioning,omitempty"`
 }
 
 type Versions struct {
@@ -76,7 +76,7 @@ type Versions struct {
 	Deprecated                bool                         `json:"deprecated,omitempty"`
 	Systemprofile             bool                         `json:"systemProfile,omitempty"`
 	Propertiesmap             map[string]interface{}       `json:"propertiesMap,omitempty"`
-	Properties                []*Properties                `json:"properties,omitempty"`
+	Properties                []*ProfileProperties         `json:"properties,omitempty"`
 	VersionClusterAssociation []*VersionClusterAssociation `json:"versionClusterAssociation,omitempty"`
 }
 
@@ -1006,4 +1006,41 @@ type DatabaseRestoreRequest struct {
 type LogCatchUpRequest struct {
 	ForRestore      bool               `json:"for_restore,omitempty"`
 	Actionarguments []*Actionarguments `json:"actionArguments,omitempty"`
+}
+
+type ProfileProperties struct {
+	Name        *string `json:"name,omitempty"`
+	Value       *string `json:"value,omitempty"`
+	Secure      bool    `json:"secure"`
+	Description *string `json:"description,omitempty"`
+}
+
+type ProfileRequest struct {
+	EngineType                *string                      `json:"engineType,omitempty"`
+	Type                      *string                      `json:"type,omitempty"`
+	Topology                  *string                      `json:"topology,omitempty"`
+	DBVersion                 *string                      `json:"dbVersion,omitempty"`
+	Name                      *string                      `json:"name,omitempty"`
+	Description               *string                      `json:"description,omitempty"`
+	AvailableClusterIds       []*string                    `json:"availableClusterIds,omitempty"`
+	SystemProfile             bool                         `json:"systemProfile,omitempty"`
+	Properties                []*ProfileProperties         `json:"properties,omitempty"`
+	VersionClusterAssociation []*VersionClusterAssociation `json:"versionClusterAssociation,omitempty"`
+	Published                 bool                         `json:"published"`
+}
+
+type SoftwareProfileResponse struct {
+	Name        *string `json:"name,omitempty"`
+	WorkId      *string `json:"workId,omitempty"`
+	OperationId *string `json:"operationId,omitempty"`
+	DbserverId  *string `json:"dbserverId,omitempty"`
+	EntityId    *string `json:"entityId,omitempty"`
+	EntityName  *string `json:"entityName,omitempty"`
+	EntityType  *string `json:"entityType,omitempty"`
+	Status      *string `json:"status,omitempty"`
+}
+
+type UpdateProfileRequest struct {
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
 }
