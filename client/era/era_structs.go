@@ -959,7 +959,7 @@ type TimeMachineMetadata struct {
 	AutoSnapshotRetryInfo                               interface{}     `json:"autoSnapshotRetryInfo,omitempty"`
 }
 
-type SlaIntentInput struct {
+type SLAIntentInput struct {
 	Name                *string `json:"name,omitempty"`
 	Description         *string `json:"description,omitempty"`
 	ContinuousRetention *int    `json:"continuousRetention,omitempty"`
@@ -969,6 +969,6 @@ type SlaIntentInput struct {
 	QuarterlyRetention  *int    `json:"quarterlyRetention,omitempty"`
 }
 
-type SlaDeleteResponse struct {
+type SLADeleteResponse struct {
 	Status *string `json:"status,omitempty"`
 }

@@ -24,9 +24,9 @@ type Service interface {
 	ListClusters(ctx context.Context) (*ClusterListResponse, error)
 	GetSLA(ctx context.Context, id string, name string) (*ListSLAResponse, error)
 	ListSLA(ctx context.Context) (*SLAResponse, error)
-	CreateSLA(ctx context.Context, req *SlaIntentInput) (*ListSLAResponse, error)
-	UpdateSLA(ctx context.Context, req *SlaIntentInput, id string) (*ListSLAResponse, error)
-	DeleteSLA(ctx context.Context, uuid string) (*SlaDeleteResponse, error)
+	CreateSLA(ctx context.Context, req *SLAIntentInput) (*ListSLAResponse, error)
+	UpdateSLA(ctx context.Context, req *SLAIntentInput, id string) (*ListSLAResponse, error)
+	DeleteSLA(ctx context.Context, uuid string) (*SLADeleteResponse, error)
 }
 
 type ServiceClient struct {
@@ -271,7 +271,7 @@ func (sc ServiceClient) ListDatabaseInstance(ctx context.Context) (*ListDatabase
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) CreateSLA(ctx context.Context, req *SlaIntentInput) (*ListSLAResponse, error) {
+func (sc ServiceClient) CreateSLA(ctx context.Context, req *SLAIntentInput) (*ListSLAResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/slas", req)
 	res := new(ListSLAResponse)
 
@@ -282,17 +282,17 @@ func (sc ServiceClient) CreateSLA(ctx context.Context, req *SlaIntentInput) (*Li
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) DeleteSLA(ctx context.Context, uuid string) (*SlaDeleteResponse, error) {
+func (sc ServiceClient) DeleteSLA(ctx context.Context, uuid string) (*SLADeleteResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/slas/%s", uuid), nil)
 	if err != nil {
 		return nil, err
 	}
-	res := new(SlaDeleteResponse)
+	res := new(SLADeleteResponse)
 
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) UpdateSLA(ctx context.Context, req *SlaIntentInput, id string) (*ListSLAResponse, error) {
+func (sc ServiceClient) UpdateSLA(ctx context.Context, req *SLAIntentInput, id string) (*ListSLAResponse, error) {
 	path := fmt.Sprintf("/slas/%s", id)
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPut, path, req)
 	if err != nil {

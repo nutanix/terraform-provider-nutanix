@@ -89,7 +89,7 @@ func resourceNutanixNDBSla() *schema.Resource {
 func resourceNutanixNDBSlaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
-	req := &era.SlaIntentInput{}
+	req := &era.SLAIntentInput{}
 
 	if name, ok1 := d.GetOk("name"); ok1 {
 		req.Name = utils.StringPtr(name.(string))
@@ -176,7 +176,7 @@ func resourceNutanixNDBSlaRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceNutanixNDBSlaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
-	req := &era.SlaIntentInput{}
+	req := &era.SLAIntentInput{}
 	// get the current sla
 
 	resp, er := conn.Service.GetSLA(ctx, d.Id(), "")
