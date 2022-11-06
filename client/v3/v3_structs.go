@@ -875,6 +875,12 @@ type ImageVersionResources struct {
 	ProductVersion *string `json:"product_version" mapstructure:"product_version"`
 }
 
+// SourceOptions Options while accessing image source.
+type SourceOptions struct {
+	// Option to ignore the server certificate verification while accessing source_uri (image location).
+	AllowInsecureConnection *bool `json:"allow_insecure_connection,omitempty" mapstructure:"allow_insecure_connection,omitempty"`
+}
+
 // ImageResources describes the image spec resources object.
 type ImageResources struct {
 
@@ -890,6 +896,9 @@ type ImageResources struct {
 
 	// The source URI points at the location of a source image which is used to create/update image.
 	SourceURI *string `json:"source_uri,omitempty" mapstructure:"source_uri,omitempty"`
+
+	// SourceOptions Options while accessing image source.
+	SourceOptions *SourceOptions `json:"source_options,omitempty" mapstructure:"source_options,omitempty"`
 
 	// The image version
 	Version *ImageVersionResources `json:"version,omitempty" mapstructure:"version,omitempty"`
