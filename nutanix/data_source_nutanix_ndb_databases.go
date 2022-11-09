@@ -179,7 +179,6 @@ func dataSourceNutanixEraDatabaseIntancesRead(ctx context.Context, d *schema.Res
 		if err != nil {
 			return diag.FromErr(err)
 		}
-
 	} else {
 		resp, err = conn.Service.ListDatabaseInstance(ctx)
 		if err != nil {
