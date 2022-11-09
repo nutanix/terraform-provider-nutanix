@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	era "github.com/terraform-providers/terraform-provider-nutanix/client/era"
 )
 
@@ -13,6 +14,12 @@ func dataSourceNutanixEraDatabases() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceNutanixEraDatabaseIntancesRead,
 		Schema: map[string]*schema.Schema{
+			"database_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{"oracle_database",
+					"postgres_database", "sqlserver_database", "mariadb_database",
+					"mysql_database"}, false)},
 			"database_instances": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -162,10 +169,22 @@ func dataSourceNutanixEraDatabases() *schema.Resource {
 
 func dataSourceNutanixEraDatabaseIntancesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
+	var resp *era.ListDatabaseInstance
+	var err error
+	if dbEng, ok := d.GetOk("database_type"); ok {
+		// todo : when era have query params for db egine type call , API here
+		// filter the database based on db engine type provided
+		respon, _ := conn.Service.ListDatabaseInstance(ctx)
+		resp, err = filterDatabaseBasedOnDatabaseEngine(respon, dbEng.(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
 
-	resp, err := conn.Service.ListDatabaseInstance(ctx)
-	if err != nil {
-		return diag.FromErr(err)
+	} else {
+		resp, err = conn.Service.ListDatabaseInstance(ctx)
+		if err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	if e := d.Set("database_instances", flattenDatabaseIntancesList(resp)); e != nil {
@@ -228,4 +247,19 @@ func flattenDatabaseIntancesList(db *era.ListDatabaseInstance) []map[string]inte
 		return lst
 	}
 	return nil
+}
+
+func filterDatabaseBasedOnDatabaseEngine(resp *era.ListDatabaseInstance, dbengine string) (*era.ListDatabaseInstance, error) {
+	found := make(era.ListDatabaseInstance, 0)
+
+	for _, v := range *resp {
+		if dbengine == v.Type {
+			found = append(found, v)
+		}
+	}
+
+	// if len(found) == 0 {
+	// 	return nil, fmt.Errorf("database  with the given type, not found")
+	// }
+	return &found, nil
 }
