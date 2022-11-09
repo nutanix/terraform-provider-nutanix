@@ -19,7 +19,7 @@ func dataSourceNutanixEraDatabases() *schema.Resource {
 				Optional: true,
 				ValidateFunc: validation.StringInSlice([]string{"oracle_database",
 					"postgres_database", "sqlserver_database", "mariadb_database",
-					"mysql_database"}, false)},
+					"mysql_database", "mssql_database", "saphana_database", "mongodb_database"}, false)},
 			"database_instances": {
 				Type:     schema.TypeList,
 				Computed: true,
