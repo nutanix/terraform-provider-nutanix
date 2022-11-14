@@ -972,3 +972,11 @@ type SLAIntentInput struct {
 type SLADeleteResponse struct {
 	Status *string `json:"status,omitempty"`
 }
+
+type DatabaseRestoreRequest struct {
+	SnapshotId        *string            `json:"snapshotId,omitempty"`
+	LatestSnapshot    *string            `json:"latestSnapshot,omitempty"`
+	UserPitrTimestamp *string            `json:"userPitrTimestamp,omitempty"`
+	TimeZone          *string            `json:"timeZone,omitempty"`
+	ActionArguments   []*Actionarguments `json:"actionArguments,omitempty"`
+}

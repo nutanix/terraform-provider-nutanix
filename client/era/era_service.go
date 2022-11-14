@@ -27,6 +27,7 @@ type Service interface {
 	CreateSLA(ctx context.Context, req *SLAIntentInput) (*ListSLAResponse, error)
 	UpdateSLA(ctx context.Context, req *SLAIntentInput, id string) (*ListSLAResponse, error)
 	DeleteSLA(ctx context.Context, uuid string) (*SLADeleteResponse, error)
+	DatabaseRestore(ctx context.Context, databaseId string, req *DatabaseRestoreRequest) (*ProvisionDatabaseResponse, error)
 }
 
 type ServiceClient struct {
@@ -299,6 +300,15 @@ func (sc ServiceClient) UpdateSLA(ctx context.Context, req *SLAIntentInput, id s
 		return nil, err
 	}
 	res := new(ListSLAResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
 
+func (sc ServiceClient) DatabaseRestore(ctx context.Context, databaseId string, req *DatabaseRestoreRequest) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/databases/%s/restore", databaseId), req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ProvisionDatabaseResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
