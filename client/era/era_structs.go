@@ -1004,7 +1004,11 @@ type DatabaseRestoreRequest struct {
 }
 
 type LogCatchUpRequest struct {
-	ForRestore      bool               `json:"for_restore,omitempty"`
+	ForRestore bool `json:"for_restore,omitempty"`
+}
+
+type DatabaseScale struct {
+	ApplicationType *string            `json:"applicationType,omitempty"`
 	Actionarguments []*Actionarguments `json:"actionArguments,omitempty"`
 }
 
