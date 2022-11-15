@@ -39,6 +39,8 @@ type Service interface {
 	DeleteProfileVersion(ctx context.Context, profileID string, profileVersionID string) (*string, error)
 	DatabaseScale(ctx context.Context, id string, req *DatabaseScale) (*ProvisionDatabaseResponse, error)
 	RegisterDatabase(ctx context.Context, request *RegisterDBInputRequest) (*ProvisionDatabaseResponse, error)
+	ListTimeMachines(ctx context.Context) (*ListTimeMachines, error)
+	DatabaseSnapshot(ctx context.Context, id *string, req *DatabaseSnapshotRequest) (*ProvisionDatabaseResponse, error)
 }
 
 type ServiceClient struct {
@@ -362,6 +364,15 @@ func (sc ServiceClient) DatabaseRestore(ctx context.Context, databaseID string, 
 	res := new(ProvisionDatabaseResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
+func (sc ServiceClient) DatabaseSnapshot(ctx context.Context, id string, req *DatabaseSnapshotRequest) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/tms/%s/snapshots", id), req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
 
 func (sc ServiceClient) LogCatchUp(ctx context.Context, tmsID string, req *LogCatchUpRequest) (*ProvisionDatabaseResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/tms/%s/log-catchups", tmsID), req)
@@ -434,5 +445,15 @@ func (sc ServiceClient) DeleteProfileVersion(ctx context.Context, profileID stri
 	}
 	res := new(string)
 
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ListTimeMachines(ctx context.Context) (*ListTimeMachines, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/tms", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ListTimeMachines)
 	return res, sc.c.Do(ctx, httpReq, res)
 }

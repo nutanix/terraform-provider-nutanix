@@ -1086,3 +1086,9 @@ type UnRegisterDatabaseRequest struct {
 	Delete            bool `json:"delete,omitempty"`
 	DeleteTimeMachine bool `json:"deleteTimeMachine,omitempty"`
 }
+type DatabaseSnapshotRequest struct {
+	Name      *string    `json:"name,omitempty"`
+	LcmConfig *LcmConfig `json:"lcmConfig,omitempty"`
+}
+
+type ListTimeMachines []*TimeMachine

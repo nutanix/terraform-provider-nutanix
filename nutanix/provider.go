@@ -196,6 +196,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_clusters":                            dataSourceNutanixEraClusters(),
 			"nutanix_ndb_database":                            dataSourceNutanixEraDatabase(),
 			"nutanix_ndb_databases":                           dataSourceNutanixEraDatabases(),
+			"nutanix_ndb_time_machines":                       dataSourceNutanixNDBTimeMachines(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  resourceNutanixVirtualMachine(),
@@ -233,6 +234,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_scale_database":               resourceNutanixNDBScaleDatabase(),
 			"nutanix_ndb_database_scale":               resourceNutanixNDBScaleDatabase(),
 			"nutanix_ndb_register_database":            resourceNutanixNDBRegisterDatabase(),
+			"nutanix_ndb_database_snapshot":            resourceNutanixNDBDatabaseSnapshot(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
