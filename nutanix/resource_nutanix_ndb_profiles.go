@@ -2,11 +2,13 @@ package nutanix
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/era"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -65,8 +67,9 @@ func resourceNutanixNDBProfile() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"topology": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice([]string{"cluster", "single"}, false),
 						},
 						"postgres_database": {
 							Type:     schema.TypeList,
@@ -113,21 +116,63 @@ func resourceNutanixNDBProfile() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"topology": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice([]string{"cluster", "single"}, false),
 						},
 						"postgres_database": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"vlan_name": {
-										Type:     schema.TypeString,
+									"single_instance": {
+										Type:     schema.TypeList,
 										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"vlan_name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"enable_ip_address_selection": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
 									},
-									"enable_ip_address_selection": {
-										Type:     schema.TypeString,
+									"ha_instance": {
+										Type:     schema.TypeList,
 										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"vlan_name": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"cluster_name": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"cluster_id": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"num_of_clusters": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
 									},
 								},
 							},
@@ -556,7 +601,7 @@ func resourceNutanixNDBProfileCreate(ctx context.Context, d *schema.ResourceData
 			}
 
 			if ps, ok := val["postgres_database"]; ok {
-				req.Properties = expandNetworkProfileProperties(ps.([]interface{}))
+				req.Properties = expandNetworkProfileProperties(ps.([]interface{}), ctx, meta)
 			}
 
 			if cls, ok := val["version_cluster_association"]; ok {
@@ -757,7 +802,7 @@ func resourceNutanixNDBProfileUpdate(ctx context.Context, d *schema.ResourceData
 			val := v.(map[string]interface{})
 
 			if ps, ok := val["postgres_database"]; ok {
-				req.Properties = expandNetworkProfileProperties(ps.([]interface{}))
+				req.Properties = expandNetworkProfileProperties(ps.([]interface{}), ctx, meta)
 			}
 
 			if cls, ok := val["version_cluster_association"]; ok {
@@ -867,27 +912,21 @@ func buildComputeProfileRequest(p interface{}) []*era.ProfileProperties {
 	return nil
 }
 
-func expandNetworkProfileProperties(ps []interface{}) []*era.ProfileProperties {
+func expandNetworkProfileProperties(ps []interface{}, ctx context.Context, meta interface{}) []*era.ProfileProperties {
 	prop := []*era.ProfileProperties{}
 
 	if len(ps) > 0 {
 		for _, v := range ps {
-			val := v.(map[string]interface{})
+			inst := v.(map[string]interface{})
 
-			if p1, ok1 := val["vlan_name"]; ok1 {
-				prop = append(prop, &era.ProfileProperties{
-					Name:        utils.StringPtr("VLAN_NAME"),
-					Value:       utils.StringPtr(p1.(string)),
-					Secure:      false,
-					Description: utils.StringPtr("Name of the vLAN"),
-				})
+			fmt.Println("Hellooooooooo")
+			if sIns, ok := inst["single_instance"]; ok && len(sIns.([]interface{})) > 0 {
+				fmt.Println("SINGLEEEEEEEEEE")
+				prop = expandNetworkSingleInstance(sIns.([]interface{}))
 			}
 
-			if p1, ok1 := val["enable_ip_address_selection"]; ok1 {
-				prop = append(prop, &era.ProfileProperties{
-					Name:  utils.StringPtr("ENABLE_IP_ADDRESS_SELECTION"),
-					Value: utils.StringPtr(p1.(string)),
-				})
+			if hIns, ok := inst["ha_instance"]; ok && len(hIns.([]interface{})) > 0 {
+				prop = expandNetworkHAInstance(hIns.([]interface{}), ctx, meta)
 			}
 		}
 	}
@@ -1153,4 +1192,109 @@ func expandSoftwareProfileProp(ps []interface{}) []*era.ProfileProperties {
 		return prop
 	}
 	return nil
+}
+
+func expandNetworkSingleInstance(ps []interface{}) []*era.ProfileProperties {
+	if len(ps) > 0 {
+		prop := []*era.ProfileProperties{}
+
+		for _, v := range ps {
+			val := v.(map[string]interface{})
+
+			if p1, ok1 := val["vlan_name"]; ok1 {
+				prop = append(prop, &era.ProfileProperties{
+					Name:        utils.StringPtr("VLAN_NAME"),
+					Value:       utils.StringPtr(p1.(string)),
+					Secure:      false,
+					Description: utils.StringPtr("Name of the vLAN"),
+				})
+			}
+
+			if p1, ok1 := val["enable_ip_address_selection"]; ok1 {
+				prop = append(prop, &era.ProfileProperties{
+					Name:  utils.StringPtr("ENABLE_IP_ADDRESS_SELECTION"),
+					Value: utils.StringPtr(p1.(string)),
+				})
+			}
+		}
+		fmt.Println("INSIDE NETWORKINGGGGGGG")
+		return prop
+	}
+	return nil
+}
+
+func expandNetworkHAInstance(ps []interface{}, ctx context.Context, meta interface{}) []*era.ProfileProperties {
+	prop := []*era.ProfileProperties{}
+
+	for _, v := range ps {
+		val := v.(map[string]interface{})
+
+		if numCls, ok := val["num_of_clusters"]; ok {
+			prop = append(prop, &era.ProfileProperties{
+				Name:  utils.StringPtr("NUM_CLUSTERS"),
+				Value: utils.StringPtr(numCls.(string)),
+			})
+		}
+
+		if p1, ok1 := val["enable_ip_address_selection"]; ok1 {
+			prop = append(prop, &era.ProfileProperties{
+				Name:  utils.StringPtr("ENABLE_IP_ADDRESS_SELECTION"),
+				Value: utils.StringPtr(p1.(string)),
+			})
+		}
+
+		if numVlan, ok := val["vlan_name"]; ok {
+
+			vlans := numVlan.([]interface{})
+
+			for k, vl := range vlans {
+				prop = append(prop, &era.ProfileProperties{
+					Name:  utils.StringPtr(fmt.Sprintf("VLAN_NAME_%d", k)),
+					Value: utils.StringPtr(vl.(string)),
+				})
+			}
+		}
+
+		if clsName, ok := val["cluster_name"]; ok && len(clsName.([]interface{})) > 0 {
+
+			vlans := clsName.([]interface{})
+
+			for k, vl := range vlans {
+				prop = append(prop, &era.ProfileProperties{
+					Name:  utils.StringPtr(fmt.Sprintf("CLUSTER_NAME_%d", k)),
+					Value: utils.StringPtr(vl.(string)),
+				})
+
+				// call the cluster API to fetch cluster id
+				conn := meta.(*Client).Era
+				resp, _ := conn.Service.GetCluster(ctx, "", vl.(string))
+
+				prop = append(prop, &era.ProfileProperties{
+					Name:  utils.StringPtr(fmt.Sprintf("CLUSTER_ID_%d", k)),
+					Value: utils.StringPtr(*resp.ID),
+				})
+			}
+		}
+
+		if clsId, ok := val["cluster_id"]; ok && len(clsId.([]interface{})) > 0 {
+
+			vlans := clsId.([]interface{})
+
+			for k, vl := range vlans {
+				prop = append(prop, &era.ProfileProperties{
+					Name:  utils.StringPtr(fmt.Sprintf("CLUSTER_ID_%d", k)),
+					Value: utils.StringPtr(vl.(string)),
+				})
+
+				conn := meta.(*Client).Era
+				resp, _ := conn.Service.GetCluster(ctx, vl.(string), "")
+
+				prop = append(prop, &era.ProfileProperties{
+					Name:  utils.StringPtr(fmt.Sprintf("CLUSTER_NAME_%d", k)),
+					Value: utils.StringPtr(*resp.Uniquename),
+				})
+			}
+		}
+	}
+	return prop
 }
