@@ -38,11 +38,6 @@ func resourceNutanixNDBDatabaseRestore() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"same_location": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
 		},
 	}
 }
