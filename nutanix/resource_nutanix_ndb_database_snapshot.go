@@ -61,7 +61,7 @@ func resourceNutanixNDBDatabaseSnapshotCreate(ctx context.Context, d *schema.Res
 
 	// call the snapshot API
 
-	resp, err := conn.Service.DatabaseSnapshot(ctx, &timeMachineID, req)
+	resp, err := conn.Service.DatabaseSnapshot(ctx, timeMachineID, req)
 	if err != nil {
 		return diag.FromErr(err)
 	}

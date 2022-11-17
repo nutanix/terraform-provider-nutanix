@@ -196,6 +196,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_clusters":                            dataSourceNutanixEraClusters(),
 			"nutanix_ndb_database":                            dataSourceNutanixEraDatabase(),
 			"nutanix_ndb_databases":                           dataSourceNutanixEraDatabases(),
+			"nutanix_ndb_time_machine":                        dataSourceNutanixNDBTimeMachine(),
 			"nutanix_ndb_time_machines":                       dataSourceNutanixNDBTimeMachines(),
 		},
 		ResourcesMap: map[string]*schema.Resource{

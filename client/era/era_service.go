@@ -39,8 +39,9 @@ type Service interface {
 	DeleteProfileVersion(ctx context.Context, profileID string, profileVersionID string) (*string, error)
 	DatabaseScale(ctx context.Context, id string, req *DatabaseScale) (*ProvisionDatabaseResponse, error)
 	RegisterDatabase(ctx context.Context, request *RegisterDBInputRequest) (*ProvisionDatabaseResponse, error)
+	GetTimeMachine(ctx context.Context, tmsId string) (*TimeMachine, error)
 	ListTimeMachines(ctx context.Context) (*ListTimeMachines, error)
-	DatabaseSnapshot(ctx context.Context, id *string, req *DatabaseSnapshotRequest) (*ProvisionDatabaseResponse, error)
+	DatabaseSnapshot(ctx context.Context, id string, req *DatabaseSnapshotRequest) (*ProvisionDatabaseResponse, error)
 }
 
 type ServiceClient struct {
@@ -445,6 +446,16 @@ func (sc ServiceClient) DeleteProfileVersion(ctx context.Context, profileID stri
 	}
 	res := new(string)
 
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) GetTimeMachine(ctx context.Context, tmsId string) (*TimeMachine, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/tms/%s", tmsId), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(TimeMachine)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
