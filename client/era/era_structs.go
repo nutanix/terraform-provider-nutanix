@@ -980,3 +980,7 @@ type DatabaseRestoreRequest struct {
 	TimeZone          *string            `json:"timeZone,omitempty"`
 	ActionArguments   []*Actionarguments `json:"actionArguments,omitempty"`
 }
+
+type LogCatchUpRequest struct {
+	Actionarguments []*Actionarguments `json:"actionArguments,omitempty"`
+}
