@@ -27,6 +27,11 @@ func resourceNutanixNDBLogCatchUps() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"time_machine_id"},
 			},
+			"for_restore": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -63,6 +68,17 @@ func resourceNutanixNDBLogCatchUpsCreate(ctx context.Context, d *schema.Resource
 	// call log-catchup API
 
 	actargs := []*era.Actionarguments{}
+
+	if restore, rok := d.GetOkExists("for_restore"); rok {
+		forRestore := restore.(bool)
+
+		req.ForRestore = forRestore
+
+		actargs = append(actargs, &era.Actionarguments{
+			Name:  "preRestoreLogCatchup",
+			Value: forRestore,
+		})
+	}
 
 	actargs = append(actargs, &era.Actionarguments{
 		Name:  "switch_log",

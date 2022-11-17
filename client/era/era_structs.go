@@ -982,5 +982,6 @@ type DatabaseRestoreRequest struct {
 }
 
 type LogCatchUpRequest struct {
+	ForRestore      bool               `json:"for_restore,omitempty"`
 	Actionarguments []*Actionarguments `json:"actionArguments,omitempty"`
 }
