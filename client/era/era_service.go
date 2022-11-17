@@ -54,6 +54,7 @@ type Service interface {
 	AuthorizeDBServer(ctx context.Context, id string, req []*string) (*AuthorizeDBServerResponse, error)
 	DeAuthorizeDBServer(ctx context.Context, id string, req []*string) (*AuthorizeDBServerResponse, error)
 	TimeMachineCapability(ctx context.Context, tmsID string) (*TimeMachineCapability, error)
+	AddRemoveDatabase(ctx context.Context, id string, req *AddRemoveDatabasesRequest)
 }
 
 type ServiceClient struct {

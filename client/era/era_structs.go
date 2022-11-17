@@ -1398,3 +1398,11 @@ type LastContinuousSnapshot struct {
 	Metadata                       *LastContinuousSnapshotMetadata `json:"metadata,omitempty"`
 	LcmConfig                      *LcmConfig                      `json:"lcmConfig,omitempty"`
 }
+
+type Databases struct {
+	DatabaseName *string `json:"databaseName,omitempty"`
+}
+
+type AddRemoveDatabasesRequest struct {
+	Databases []*Databases `json:"databases,omitempty"`
+}
