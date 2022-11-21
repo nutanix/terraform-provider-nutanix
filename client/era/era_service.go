@@ -33,7 +33,10 @@ type Service interface {
 	LogCatchUp(ctx context.Context, id string, req *LogCatchUpRequest) (*ProvisionDatabaseResponse, error)
 	CreateSoftwareProfiles(ctx context.Context, req *ProfileRequest) (*SoftwareProfileResponse, error)
 	UpdateProfile(ctx context.Context, req *UpdateProfileRequest, id string) (*ListProfileResponse, error)
+	GetSoftwareProfileVersion(ctx context.Context, profileId string, profileVersionId string) (*Versions, error)
+	CreateSoftwareProfileVersion(ctx context.Context, id string, req *ProfileRequest) (*SoftwareProfileResponse, error)
 	UpdateProfileVersion(ctx context.Context, req *ProfileRequest, id string, vid string) (*ListProfileResponse, error)
+	DeleteProfileVersion(ctx context.Context, profileId string, profileVersionId string) (*string, error)
 }
 
 type ServiceClient struct {
@@ -374,6 +377,38 @@ func (sc ServiceClient) CreateSoftwareProfiles(ctx context.Context, req *Profile
 	if err != nil {
 		return nil, err
 	}
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) GetSoftwareProfileVersion(ctx context.Context, profileId string, profileVersionId string) (*Versions, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/profiles/%s/versions/%s", profileId, profileVersionId), nil)
+	res := new(Versions)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) CreateSoftwareProfileVersion(ctx context.Context, id string, req *ProfileRequest) (*SoftwareProfileResponse, error) {
+	path := fmt.Sprintf("/profiles/%s/versions", id)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, path, req)
+	if err != nil {
+		return nil, err
+	}
+	res := new(SoftwareProfileResponse)
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteProfileVersion(ctx context.Context, profileId string, profileVersionId string) (*string, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/profiles/%s/versions/%s", profileId, profileVersionId), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(string)
 
 	return res, sc.c.Do(ctx, httpReq, res)
 }

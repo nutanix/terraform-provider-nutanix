@@ -1148,7 +1148,7 @@ func expandSoftwareProfileProp(ps []interface{}) []*era.ProfileProperties {
 		for _, v := range ps {
 			val := v.(map[string]interface{})
 
-			if p1, ok1 := val["source_dbserver_id"]; ok1 {
+			if p1, ok1 := val["source_dbserver_id"]; ok1 && len(p1.(string)) > 0 {
 				prop = append(prop, &era.ProfileProperties{
 					Name:        utils.StringPtr("SOURCE_DBSERVER_ID"),
 					Value:       utils.StringPtr(p1.(string)),
@@ -1156,7 +1156,7 @@ func expandSoftwareProfileProp(ps []interface{}) []*era.ProfileProperties {
 					Description: utils.StringPtr("ID of the database server that should be used as a reference to create the software profile"),
 				})
 			}
-			if p1, ok1 := val["base_profile_version_name"]; ok1 {
+			if p1, ok1 := val["base_profile_version_name"]; ok1 && len(p1.(string)) > 0 {
 				prop = append(prop, &era.ProfileProperties{
 					Name:        utils.StringPtr("BASE_PROFILE_VERSION_NAME"),
 					Value:       utils.StringPtr(p1.(string)),
@@ -1164,7 +1164,7 @@ func expandSoftwareProfileProp(ps []interface{}) []*era.ProfileProperties {
 					Description: utils.StringPtr("Name of the base profile version."),
 				})
 			}
-			if p1, ok1 := val["base_profile_version_description"]; ok1 {
+			if p1, ok1 := val["base_profile_version_description"]; ok1 && len(p1.(string)) > 0 {
 				prop = append(prop, &era.ProfileProperties{
 					Name:        utils.StringPtr("BASE_PROFILE_VERSION_DESCRIPTION"),
 					Value:       utils.StringPtr(p1.(string)),
@@ -1172,7 +1172,7 @@ func expandSoftwareProfileProp(ps []interface{}) []*era.ProfileProperties {
 					Description: utils.StringPtr("Description of the base profile version."),
 				})
 			}
-			if p1, ok1 := val["os_notes"]; ok1 {
+			if p1, ok1 := val["os_notes"]; ok1 && len(p1.(string)) > 0 {
 				prop = append(prop, &era.ProfileProperties{
 					Name:        utils.StringPtr("OS_NOTES"),
 					Value:       utils.StringPtr(p1.(string)),
@@ -1180,7 +1180,7 @@ func expandSoftwareProfileProp(ps []interface{}) []*era.ProfileProperties {
 					Description: utils.StringPtr("Notes or description for the Operating System."),
 				})
 			}
-			if p1, ok1 := val["db_software_notes"]; ok1 {
+			if p1, ok1 := val["db_software_notes"]; ok1 && len(p1.(string)) > 0 {
 				prop = append(prop, &era.ProfileProperties{
 					Name:        utils.StringPtr("DB_SOFTWARE_NOTES"),
 					Value:       utils.StringPtr(p1.(string)),

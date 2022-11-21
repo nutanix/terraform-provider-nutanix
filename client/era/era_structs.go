@@ -1027,6 +1027,7 @@ type ProfileRequest struct {
 	Properties                []*ProfileProperties         `json:"properties,omitempty"`
 	VersionClusterAssociation []*VersionClusterAssociation `json:"versionClusterAssociation,omitempty"`
 	Published                 bool                         `json:"published"`
+	Deprecated                bool                         `json:"deprecated"`
 }
 
 type SoftwareProfileResponse struct {
