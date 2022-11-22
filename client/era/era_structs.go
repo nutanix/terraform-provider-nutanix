@@ -1066,7 +1066,7 @@ type RegisterDBInputRequest struct {
 	Clustered                   bool               `json:"clustered,omitempty"`
 	ForcedInstall               bool               `json:"forcedInstall,omitempty"`
 	Category                    *string            `json:"category,omitempty"`
-	VMIP                        *string            `json:"vmIP,omitempty"`
+	VMIP                        *string            `json:"vmIp,omitempty"`
 	VMUsername                  *string            `json:"vmUsername,omitempty"`
 	VMPassword                  *string            `json:"vmPassword,omitempty"`
 	VMSshkey                    *string            `json:"vmSshkey,omitempty"`
@@ -1077,4 +1077,11 @@ type RegisterDBInputRequest struct {
 	TimeMachineInfo             *Timemachineinfo   `json:"timeMachineInfo,omitempty"`
 	Tags                        []*Tags            `json:"tags,omitempty"`
 	Actionarguments             []*Actionarguments `json:"actionArguments,omitempty"`
+}
+
+type UnRegisterDatabaseRequest struct {
+	SoftRemove        bool `json:"softRemove,omitempty"`
+	Remove            bool `json:"remove,omitempty"`
+	Delete            bool `json:"delete,omitempty"`
+	DeleteTimeMachine bool `json:"deleteTimeMachine,omitempty"`
 }

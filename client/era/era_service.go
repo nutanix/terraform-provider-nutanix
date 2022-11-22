@@ -38,7 +38,8 @@ type Service interface {
 	UpdateProfileVersion(ctx context.Context, req *ProfileRequest, id string, vid string) (*ListProfileResponse, error)
 	DeleteProfileVersion(ctx context.Context, profileID string, profileVersionID string) (*string, error)
 	DatabaseScale(ctx context.Context, id string, req *DatabaseScale) (*ProvisionDatabaseResponse, error)
-	RegisterDatabase(ctx context.Context, request *RegisterDBInputRequest) (*RegisterDBInputRequest, error)
+	RegisterDatabase(ctx context.Context, request *RegisterDBInputRequest) (*ProvisionDatabaseResponse, error)
+	UnRegisterDatabase(ctx context.Context, id string, req *UnRegisterDatabaseRequest) (*ProvisionDatabaseResponse, error)
 }
 
 type ServiceClient struct {
@@ -303,9 +304,10 @@ func (sc ServiceClient) CreateProfiles(ctx context.Context, req *ProfileRequest)
 
 	return res, sc.c.Do(ctx, httpReq, res)
 }
-func (sc ServiceClient) RegisterDatabase(ctx context.Context, req *RegisterDBInputRequest) (*RegisterDBInputRequest, error) {
+
+func (sc ServiceClient) RegisterDatabase(ctx context.Context, req *RegisterDBInputRequest) (*ProvisionDatabaseResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/databases/register", req)
-	res := new(RegisterDBInputRequest)
+	res := new(ProvisionDatabaseResponse)
 
 	if err != nil {
 		return nil, err
@@ -433,5 +435,15 @@ func (sc ServiceClient) DeleteProfileVersion(ctx context.Context, profileID stri
 	}
 	res := new(string)
 
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) UnRegisterDatabase(ctx context.Context, id string, req *UnRegisterDatabaseRequest) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/databases/%s", id), req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ProvisionDatabaseResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
