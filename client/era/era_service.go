@@ -39,9 +39,12 @@ type Service interface {
 	DeleteProfileVersion(ctx context.Context, profileID string, profileVersionID string) (*string, error)
 	DatabaseScale(ctx context.Context, id string, req *DatabaseScale) (*ProvisionDatabaseResponse, error)
 	RegisterDatabase(ctx context.Context, request *RegisterDBInputRequest) (*ProvisionDatabaseResponse, error)
-	GetTimeMachine(ctx context.Context, tmsId string) (*TimeMachine, error)
+	GetTimeMachine(ctx context.Context, tmsId string, tmsName string) (*TimeMachine, error)
 	ListTimeMachines(ctx context.Context) (*ListTimeMachines, error)
 	DatabaseSnapshot(ctx context.Context, id string, req *DatabaseSnapshotRequest) (*ProvisionDatabaseResponse, error)
+	CreateClone(ctx context.Context, id string, req *CloneRequest) (*ProvisionDatabaseResponse, error)
+	GetClone(ctx context.Context, id string) (*GetDatabaseResponse, error)
+	DeleteClone(ctx context.Context, id string, req *DeleteDatabaseRequest) (*ProvisionDatabaseResponse, error)
 }
 
 type ServiceClient struct {
@@ -449,8 +452,15 @@ func (sc ServiceClient) DeleteProfileVersion(ctx context.Context, profileID stri
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) GetTimeMachine(ctx context.Context, tmsId string) (*TimeMachine, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/tms/%s", tmsId), nil)
+func (sc ServiceClient) GetTimeMachine(ctx context.Context, tmsId string, tmsName string) (*TimeMachine, error) {
+	path := ""
+
+	if len(tmsName) > 0 {
+		path = fmt.Sprintf("/tms/%s?value-type=name&detailed=false&load-database=false&load-clones=false&time-zone=UTC", tmsName)
+	} else {
+		path = fmt.Sprintf("/tms/%s?value-type=id&detailed=false&load-database=false&load-clones=false&time-zone=UTC", tmsId)
+	}
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -466,5 +476,35 @@ func (sc ServiceClient) ListTimeMachines(ctx context.Context) (*ListTimeMachines
 	}
 
 	res := new(ListTimeMachines)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) CreateClone(ctx context.Context, id string, req *CloneRequest) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/tms/%s/clones", id), req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) GetClone(ctx context.Context, id string) (*GetDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/clones/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(GetDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteClone(ctx context.Context, cloneId string, req *DeleteDatabaseRequest) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/clones/%s", cloneId), req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ProvisionDatabaseResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }

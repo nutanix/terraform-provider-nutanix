@@ -1092,3 +1092,42 @@ type DatabaseSnapshotRequest struct {
 }
 
 type ListTimeMachines []*TimeMachine
+
+type CloneLCMConfig struct {
+	DatabaseLCMConfig *DatabaseLCMConfig `json:"databaseLCMConfig,omitempty"`
+}
+
+type DatabaseLCMConfig struct {
+	ExpiryDetails  *DBExpiryDetails  `json:"expiryDetails,omitempty"`
+	RefreshDetails *DBRefreshDetails `json:"refreshDetails,omitempty"`
+}
+
+type CloneRequest struct {
+	Name                       *string            `json:"name,omitempty"`
+	Description                *string            `json:"description,omitempty"`
+	NxClusterID                *string            `json:"nxClusterId,omitempty"`
+	SSHPublicKey               *string            `json:"sshPublicKey,omitempty"`
+	DbserverID                 *string            `json:"dbserverId,omitempty"`
+	DbserverClusterID          *string            `json:"dbserverClusterId,omitempty"`
+	DbserverLogicalClusterID   *string            `json:"dbserverLogicalClusterId,omitempty"`
+	TimeMachineID              *string            `json:"timeMachineId,omitempty"`
+	SnapshotID                 *string            `json:"snapshotId,omitempty"`
+	UserPitrTimestamp          *string            `json:"userPitrTimestamp,omitempty"`
+	TimeZone                   *string            `json:"timeZone,omitempty"`
+	VMPassword                 *string            `json:"vmPassword,omitempty"`
+	ComputeProfileID           *string            `json:"computeProfileId,omitempty"`
+	NetworkProfileID           *string            `json:"networkProfileId,omitempty"`
+	DatabaseParameterProfileID *string            `json:"databaseParameterProfileId,omitempty"`
+	NodeCount                  *int               `json:"nodeCount,omitempty"`
+	Nodes                      []*Nodes           `json:"nodes,omitempty"`
+	ActionArguments            []*Actionarguments `json:"actionArguments,omitempty"`
+	Tags                       []interface{}      `json:"tags,omitempty"`
+	LatestSnapshot             bool               `json:"latestSnapshot,omitempty"`
+	CreateDbserver             bool               `json:"createDbserver,omitempty"`
+	Clustered                  bool               `json:"clustered,omitempty"`
+	LcmConfig                  *CloneLCMConfig    `json:"lcmConfig,omitempty"`
+}
+
+// type CloneResponse struct {
+// 	id *string `json:"id,omitempty"`
+// }

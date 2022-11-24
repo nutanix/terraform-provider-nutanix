@@ -12,8 +12,14 @@ func dataSourceNutanixNDBTimeMachine() *schema.Resource {
 		ReadContext: dataSourceNutanixNDBTimeMachineRead,
 		Schema: map[string]*schema.Schema{
 			"time_machine_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"time_machine_name"},
+			},
+			"time_machine_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"time_machine_id"},
 			},
 			"id": {
 				Type:     schema.TypeString,
@@ -536,14 +542,16 @@ func dataSourceNutanixNDBTimeMachine() *schema.Resource {
 func dataSourceNutanixNDBTimeMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
-	timeMachineID := ""
-	if tmsId, ok := d.GetOk("time_machine_id"); ok {
-		timeMachineID = tmsId.(string)
+	tmsId, tok := d.GetOk("time_machine_id")
+	tmsName, tnOk := d.GetOk("time_machine_name")
+
+	if !tok && !tnOk {
+		return diag.Errorf("Atleast one of time_machine_id or time_machine_name is required to perform clone")
 	}
 
 	// call time Machine API
 
-	resp, err := conn.Service.GetTimeMachine(ctx, timeMachineID)
+	resp, err := conn.Service.GetTimeMachine(ctx, tmsId.(string), tmsName.(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -663,6 +671,6 @@ func dataSourceNutanixNDBTimeMachineRead(ctx context.Context, d *schema.Resource
 		return diag.FromErr(err)
 	}
 
-	d.SetId(timeMachineID)
+	d.SetId(*resp.ID)
 	return nil
 }
