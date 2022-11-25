@@ -55,6 +55,8 @@ type Service interface {
 	DeAuthorizeDBServer(ctx context.Context, id string, req []*string) (*AuthorizeDBServerResponse, error)
 	TimeMachineCapability(ctx context.Context, tmsID string) (*TimeMachineCapability, error)
 	AddRemoveDatabase(ctx context.Context, id string, req *AddRemoveDatabasesRequest)
+	CreateLinkedDatabase(ctx context.Context, id string, req *CreateLinkedDatabasesRequest) (*ProvisionDatabaseResponse, error)
+	DeleteLinkedDatabase(ctx context.Context, dbId string, linkeddbId string, req *DeleteLinkedDatabaseRequest) (*ProvisionDatabaseResponse, error)
 }
 
 type ServiceClient struct {
@@ -378,6 +380,15 @@ func (sc ServiceClient) DatabaseRestore(ctx context.Context, databaseID string, 
 	res := new(ProvisionDatabaseResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
+func (sc ServiceClient) CreateLinkedDatabase(ctx context.Context, id string, req *CreateLinkedDatabasesRequest) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/databases/%s/linked-databases", id), req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
 func (sc ServiceClient) DatabaseSnapshot(ctx context.Context, id string, req *DatabaseSnapshotRequest) (*ProvisionDatabaseResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/tms/%s/snapshots", id), req)
 	if err != nil {
@@ -390,11 +401,21 @@ func (sc ServiceClient) DatabaseSnapshot(ctx context.Context, id string, req *Da
 
 func (sc ServiceClient) LogCatchUp(ctx context.Context, tmsID string, req *LogCatchUpRequest) (*ProvisionDatabaseResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/tms/%s/log-catchups", tmsID), req)
+	if err != nil {
+		return nil, err
+	}
+
 	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteLinkedDatabase(ctx context.Context, id string, linkDbId string, req *DeleteLinkedDatabaseRequest) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/databases/%s/linked-databases/%s", id, linkDbId), req)
 
 	if err != nil {
 		return nil, err
 	}
+	res := new(ProvisionDatabaseResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
@@ -626,6 +647,5 @@ func (sc ServiceClient) TimeMachineCapability(ctx context.Context, tmsID string)
 	}
 
 	res := new(TimeMachineCapability)
-
 	return res, sc.c.Do(ctx, httpReq, res)
 }
