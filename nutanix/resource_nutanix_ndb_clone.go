@@ -91,6 +91,10 @@ func resourceNutanixNDBClone() *schema.Resource {
 								},
 							},
 						},
+						"dbserver_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -221,7 +225,7 @@ func resourceNutanixNDBClone() *schema.Resource {
 						},
 						"dbserver_description": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"db_password": {
 							Type:     schema.TypeString,
@@ -535,6 +539,43 @@ func resourceNutanixNDBCloneRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceNutanixNDBCloneUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*Client).Era
+	dbID := d.Id()
+
+	name := ""
+	description := ""
+
+	if d.HasChange("name") {
+		name = d.Get("name").(string)
+	}
+
+	if d.HasChange("description") {
+		description = d.Get("description").(string)
+	}
+
+	updateReq := era.UpdateDatabaseRequest{
+		Name:             name,
+		Description:      description,
+		Tags:             []interface{}{},
+		Resetname:        true,
+		Resetdescription: true,
+		Resettags:        true,
+	}
+
+	res, err := conn.Service.UpdateCloneDatabase(ctx, dbID, &updateReq)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if res != nil {
+		if err = d.Set("description", res.Description); err != nil {
+			return diag.FromErr(err)
+		}
+
+		if err = d.Set("name", res.Name); err != nil {
+			return diag.FromErr(err)
+		}
+	}
 	return nil
 }
 
@@ -662,27 +703,31 @@ func expandClonesNodes(pr []interface{}) []*era.Nodes {
 			val := v.(map[string]interface{})
 			node := &era.Nodes{}
 
-			if v1, ok1 := val["network_profile_id"]; ok1 {
-				node.Networkprofileid = v1.(string)
+			if v1, ok1 := val["network_profile_id"]; ok1 && len(v1.(string)) > 0 {
+				node.Networkprofileid = (v1.(string))
 			}
 
-			if v1, ok1 := val["compute_profile_id"]; ok1 {
+			if v1, ok1 := val["compute_profile_id"]; ok1 && len(v1.(string)) > 0 {
 				node.ComputeProfileId = utils.StringPtr(v1.(string))
 			}
 
-			if v1, ok1 := val["vm_name"]; ok1 {
-				node.Vmname = v1.(string)
+			if v1, ok1 := val["vm_name"]; ok1 && len(v1.(string)) > 0 {
+				node.Vmname = (v1.(string))
 			}
 
-			if v1, ok1 := val["nx_cluster_id"]; ok1 {
+			if v1, ok1 := val["nx_cluster_id"]; ok1 && len(v1.(string)) > 0 {
 				node.NxClusterId = utils.StringPtr(v1.(string))
 			}
 
-			if v1, ok1 := val["new_db_server_time_zone"]; ok1 {
+			if v1, ok1 := val["new_db_server_time_zone"]; ok1 && len(v1.(string)) > 0 {
 				node.NewDbServerTimeZone = utils.StringPtr(v1.(string))
 			}
-			if v1, ok1 := val["properties"]; ok1 {
+			if v1, ok1 := val["properties"]; ok1 && len(v1.(string)) > 0 {
 				node.Properties = v1.([]interface{})
+			}
+
+			if v1, ok1 := val["dbserver_id"]; ok1 && len(v1.(string)) > 0 {
+				node.DatabaseServerID = (v1.(string))
 			}
 			nodes[k] = node
 		}
@@ -698,26 +743,40 @@ func expandPostgreSQLCloneActionArgs(d *schema.ResourceData, pr []interface{}) [
 		for _, v := range pr {
 			val := v.(map[string]interface{})
 
-			if v1, ok1 := val["vm_name"]; ok1 {
+			if v1, ok1 := val["vm_name"]; ok1 && len(v1.(string)) > 0 {
 				args = append(args, &era.Actionarguments{
 					Name:  "vm_name",
 					Value: v1.(string),
 				})
 			}
 
-			if v1, ok1 := val["db_password"]; ok1 {
+			if v1, ok1 := val["db_password"]; ok1 && len(v1.(string)) > 0 {
 				args = append(args, &era.Actionarguments{
 					Name:  "db_password",
 					Value: v1.(string),
 				})
 			}
 
-			if v1, ok1 := val["dbserver_description"]; ok1 {
+			if v1, ok1 := val["dbserver_description"]; ok1 && len(v1.(string)) > 0 {
 				args = append(args, &era.Actionarguments{
 					Name:  "dbserver_description",
 					Value: v1.(string),
 				})
 			}
+			if v1, ok1 := val["pre_clone_cmd"]; ok1 && len(v1.(string)) > 0 {
+				args = append(args, &era.Actionarguments{
+					Name:  "pre_clone_cmd",
+					Value: v1.(string),
+				})
+			}
+
+			if v1, ok1 := val["post_clone_cmd"]; ok1 && len(v1.(string)) > 0 {
+				args = append(args, &era.Actionarguments{
+					Name:  "post_clone_cmd",
+					Value: v1.(string),
+				})
+			}
+
 		}
 		resp := buildActionArgumentsFromResourceData(d.Get("actionarguments").(*schema.Set), args)
 		return resp

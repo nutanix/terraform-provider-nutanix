@@ -43,8 +43,10 @@ type Service interface {
 	ListTimeMachines(ctx context.Context) (*ListTimeMachines, error)
 	DatabaseSnapshot(ctx context.Context, id string, req *DatabaseSnapshotRequest) (*ProvisionDatabaseResponse, error)
 	CreateClone(ctx context.Context, id string, req *CloneRequest) (*ProvisionDatabaseResponse, error)
+	UpdateCloneDatabase(ctx context.Context, id string, req *UpdateDatabaseRequest) (*UpdateDatabaseResponse, error)
 	GetClone(ctx context.Context, id string) (*GetDatabaseResponse, error)
 	DeleteClone(ctx context.Context, id string, req *DeleteDatabaseRequest) (*ProvisionDatabaseResponse, error)
+	AuthorizeDbServer(ctx context.Context, id string, req []*string) (*AuthorizeDbServerResponse, error)
 }
 
 type ServiceClient struct {
@@ -499,6 +501,17 @@ func (sc ServiceClient) GetClone(ctx context.Context, id string) (*GetDatabaseRe
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
+func (sc ServiceClient) UpdateCloneDatabase(ctx context.Context, id string, req *UpdateDatabaseRequest) (*UpdateDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("/clones/%s", id), req)
+	res := new(UpdateDatabaseResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
 func (sc ServiceClient) DeleteClone(ctx context.Context, cloneId string, req *DeleteDatabaseRequest) (*ProvisionDatabaseResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/clones/%s", cloneId), req)
 	if err != nil {
@@ -506,5 +519,16 @@ func (sc ServiceClient) DeleteClone(ctx context.Context, cloneId string, req *De
 	}
 
 	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) AuthorizeDbServer(ctx context.Context, tmsId string, req []*string) (*AuthorizeDbServerResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("tms/%s/dbservers", tmsId), req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(AuthorizeDbServerResponse)
+
 	return res, sc.c.Do(ctx, httpReq, res)
 }

@@ -19,8 +19,14 @@ func resourceNutanixNDBDatabaseSnapshot() *schema.Resource {
 		DeleteContext: resourceNutanixNDBDatabaseSnapshotDelete,
 		Schema: map[string]*schema.Schema{
 			"time_machine_id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"time_machine_name"},
+			},
+			"time_machine_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"time_machine_id"},
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -38,10 +44,22 @@ func resourceNutanixNDBDatabaseSnapshotCreate(ctx context.Context, d *schema.Res
 	conn := meta.(*Client).Era
 
 	req := &era.DatabaseSnapshotRequest{}
-	timeMachineID := ""
 
-	if tm, ok := d.GetOk("time_machine_id"); ok {
-		timeMachineID = tm.(string)
+	tmsId, tok := d.GetOk("time_machine_id")
+	tmsName, tnOk := d.GetOk("time_machine_name")
+
+	if !tok && !tnOk {
+		return diag.Errorf("Atleast one of time_machine_id or time_machine_name is required to perform clone")
+	}
+
+	if len(tmsName.(string)) > 0 {
+		// call time machine API with value-type name
+		res, err := conn.Service.GetTimeMachine(ctx, "", tmsName.(string))
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		tmsId = *res.ID
 	}
 
 	if name, ok := d.GetOk("name"); ok {
@@ -61,7 +79,7 @@ func resourceNutanixNDBDatabaseSnapshotCreate(ctx context.Context, d *schema.Res
 
 	// call the snapshot API
 
-	resp, err := conn.Service.DatabaseSnapshot(ctx, timeMachineID, req)
+	resp, err := conn.Service.DatabaseSnapshot(ctx, tmsId.(string), req)
 	if err != nil {
 		return diag.FromErr(err)
 	}
