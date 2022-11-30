@@ -184,13 +184,13 @@ func resourceNutanixNDBDatabaseRestoreCreate(ctx context.Context, d *schema.Reso
 	conn := meta.(*Client).Era
 	req := &era.DatabaseRestoreRequest{}
 
-	databaseId := ""
-	if dbId, ok := d.GetOk("database_id"); ok {
-		databaseId = dbId.(string)
+	databaseID := ""
+	if dbID, ok := d.GetOk("database_id"); ok {
+		databaseID = dbID.(string)
 	}
 
-	if snapId, ok := d.GetOk("snapshot_id"); ok {
-		req.SnapshotId = utils.StringPtr(snapId.(string))
+	if snapID, ok := d.GetOk("snapshot_id"); ok {
+		req.SnapshotID = utils.StringPtr(snapID.(string))
 	}
 
 	if latestsnap, ok := d.GetOk("latest_snapshot"); ok {
@@ -218,7 +218,7 @@ func resourceNutanixNDBDatabaseRestoreCreate(ctx context.Context, d *schema.Reso
 
 	// call the database restore API
 
-	resp, er := conn.Service.DatabaseRestore(ctx, databaseId, req)
+	resp, er := conn.Service.DatabaseRestore(ctx, databaseID, req)
 	if er != nil {
 		return diag.FromErr(er)
 	}

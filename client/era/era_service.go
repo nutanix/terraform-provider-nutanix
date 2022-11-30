@@ -314,8 +314,8 @@ func (sc ServiceClient) DatabaseRestore(ctx context.Context, databaseId string, 
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) LogCatchUp(ctx context.Context, tmsId string, req *LogCatchUpRequest) (*ProvisionDatabaseResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/tms/%s/log-catchups", tmsId), req)
+func (sc ServiceClient) LogCatchUp(ctx context.Context, tmsID string, req *LogCatchUpRequest) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/tms/%s/log-catchups", tmsID), req)
 	if err != nil {
 		return nil, err
 	}

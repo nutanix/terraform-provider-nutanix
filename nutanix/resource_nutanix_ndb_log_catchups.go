@@ -40,29 +40,29 @@ func resourceNutanixNDBLogCatchUpsCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*Client).Era
 	req := &era.LogCatchUpRequest{}
 
-	tmsId := ""
+	tmsID := ""
 
 	tm, tmOk := d.GetOk("time_machine_id")
 
-	dbId, dbOk := d.GetOk("database_id")
+	dbID, dbOk := d.GetOk("database_id")
 
 	if !tmOk && !dbOk {
 		return diag.Errorf("please provide the required `time_machine_id` or `database_id`  attribute")
 	}
 
 	if tmOk {
-		tmsId = tm.(string)
+		tmsID = tm.(string)
 	}
 
 	if dbOk {
 		// get the time machine id by getting database details
 
-		dbResp, er := conn.Service.GetDatabaseInstance(ctx, dbId.(string))
+		dbResp, er := conn.Service.GetDatabaseInstance(ctx, dbID.(string))
 		if er != nil {
 			return diag.FromErr(er)
 		}
 
-		tmsId = dbResp.Timemachineid
+		tmsID = dbResp.Timemachineid
 	}
 
 	// call log-catchup API
@@ -86,7 +86,7 @@ func resourceNutanixNDBLogCatchUpsCreate(ctx context.Context, d *schema.Resource
 	})
 
 	req.Actionarguments = actargs
-	resp, err := conn.Service.LogCatchUp(ctx, tmsId, req)
+	resp, err := conn.Service.LogCatchUp(ctx, tmsID, req)
 	if err != nil {
 		return diag.FromErr(err)
 	}

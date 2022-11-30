@@ -974,7 +974,7 @@ type SLADeleteResponse struct {
 }
 
 type DatabaseRestoreRequest struct {
-	SnapshotId        *string            `json:"snapshotId,omitempty"`
+	SnapshotID        *string            `json:"snapshotId,omitempty"`
 	LatestSnapshot    *string            `json:"latestSnapshot,omitempty"`
 	UserPitrTimestamp *string            `json:"userPitrTimestamp,omitempty"`
 	TimeZone          *string            `json:"timeZone,omitempty"`
