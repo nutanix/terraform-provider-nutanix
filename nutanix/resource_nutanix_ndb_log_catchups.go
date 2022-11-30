@@ -69,7 +69,7 @@ func resourceNutanixNDBLogCatchUpsCreate(ctx context.Context, d *schema.Resource
 
 	actargs := []*era.Actionarguments{}
 
-	if restore, rok := d.GetOkExists("for_restore"); rok {
+	if restore, rok := d.GetOkExists("for_restore"); rok && restore.(bool) {
 		forRestore := restore.(bool)
 
 		req.ForRestore = forRestore
