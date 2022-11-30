@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	era "github.com/terraform-providers/terraform-provider-nutanix/client/era"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 type dbID string
@@ -46,8 +47,36 @@ func timeMachineInfoSchema() *schema.Schema {
 				},
 				"slaid": {
 					Type:        schema.TypeString,
-					Required:    true,
+					Optional:    true,
 					Description: "description of SLA ID.",
+				},
+				"sla_details": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"primary_sla": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"sla_id": {
+											Type:        schema.TypeString,
+											Required:    true,
+											Description: "description of SLA ID.",
+										},
+										"nx_cluster_ids": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 				"autotunelogdrive": {
 					Type:        schema.TypeBool,
@@ -308,14 +337,49 @@ func buildTimeMachineSchedule(set *schema.Set) *era.Schedule {
 func buildTimeMachineFromResourceData(set *schema.Set) *era.Timemachineinfo {
 	d := set.List()
 	tMap := d[0].(map[string]interface{})
-	return &era.Timemachineinfo{
-		Name:             tMap["name"].(string),
-		Description:      tMap["description"].(string),
-		Slaid:            tMap["slaid"].(string),
-		Schedule:         *buildTimeMachineSchedule(tMap["schedule"].(*schema.Set)), // NULL Pointer check
-		Tags:             expandTags(tMap["tags"].([]interface{})),
-		Autotunelogdrive: tMap["autotunelogdrive"].(bool),
+
+	out := &era.Timemachineinfo{}
+
+	if tMap != nil {
+		if name, ok := tMap["name"]; ok && len(name.(string)) > 0 {
+			out.Name = name.(string)
+		}
+
+		if des, ok := tMap["description"]; ok && len(des.(string)) > 0 {
+			out.Description = des.(string)
+		}
+
+		if slaid, ok := tMap["slaid"]; ok && len(slaid.(string)) > 0 {
+			out.Slaid = slaid.(string)
+		}
+
+		if schedule, ok := tMap["schedule"]; ok && len(schedule.(*schema.Set).List()) > 0 {
+			out.Schedule = *buildTimeMachineSchedule(schedule.(*schema.Set))
+		}
+
+		if tags, ok := tMap["tags"]; ok && len(tags.(*schema.Set).List()) > 0 {
+			out.Tags = tags.(*schema.Set).List()
+		}
+
+		if autotunelogdrive, ok := tMap["autotunelogdrive"]; ok && autotunelogdrive.(bool) {
+			out.Autotunelogdrive = autotunelogdrive.(bool)
+		}
+
+		if sla_details, ok := tMap["sla_details"]; ok && len(sla_details.([]interface{})) > 0 {
+			out.SlaDetails = buildSlaDetails(sla_details.([]interface{}))
+		}
+		return out
 	}
+	return nil
+	// return &era.Timemachineinfo{
+	// 	Name:             tMap["name"].(string),
+	// 	Description:      tMap["description"].(string),
+	// 	Slaid:            tMap["slaid"].(string),
+	// 	Schedule:         *buildTimeMachineSchedule(tMap["schedule"].(*schema.Set)), // NULL Pointer check
+	// 	Tags:             tMap["tags"].(*schema.Set).List(),
+	// 	Autotunelogdrive: tMap["autotunelogdrive"].(bool),
+	// 	SlaDetails:       buildSlaDetails(tMap["sla_details"].([]interface{})),
+	// }
 }
 
 func nodesSchema() *schema.Schema {
@@ -328,9 +392,8 @@ func nodesSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"properties": {
-					Type:       schema.TypeSet,
-					Optional:   true,
-					ConfigMode: schema.SchemaConfigModeAttr,
+					Type:     schema.TypeSet,
+					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"name": {
@@ -345,21 +408,26 @@ func nodesSchema() *schema.Schema {
 					},
 				},
 				"vmname": {
-					Type:       schema.TypeString,
-					Required:   true,
-					ConfigMode: schema.SchemaConfigModeAttr,
+					Type:     schema.TypeString,
+					Required: true,
 				},
 				"networkprofileid": {
-					Type:       schema.TypeString,
-					Required:   true,
-					ConfigMode: schema.SchemaConfigModeAttr,
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+
+				"computeprofileid": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"nx_cluster_id": {
+					Type:     schema.TypeString,
+					Optional: true,
 				},
 				"dbserverid": { // When createDbServer is false, we can use this field to set the target db server.
-					Type:        schema.TypeString,
-					Description: "",
-					Optional:    true,
-					ConfigMode:  schema.SchemaConfigModeAttr,
-					Default:     "",
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "",
 				},
 			},
 		},
@@ -372,10 +440,12 @@ func buildNodesFromResourceData(d *schema.Set) []*era.Nodes {
 
 	for _, arg := range argSet {
 		args = append(args, &era.Nodes{
-			Properties:       arg.(map[string]interface{})["properties"].(*schema.Set).List(),
-			Vmname:           arg.(map[string]interface{})["vmname"].(string),
-			Networkprofileid: arg.(map[string]interface{})["networkprofileid"].(string),
-			DatabaseServerID: arg.(map[string]interface{})["dbserverid"].(string),
+			Properties:       expandNodesProperties(arg.(map[string]interface{})["properties"].(*schema.Set)),
+			Vmname:           utils.StringPtr(arg.(map[string]interface{})["vmname"].(string)),
+			Networkprofileid: utils.StringPtr(arg.(map[string]interface{})["networkprofileid"].(string)),
+			DatabaseServerID: utils.StringPtr(arg.(map[string]interface{})["dbserverid"].(string)),
+			NxClusterId:      utils.StringPtr(arg.(map[string]interface{})["nx_cluster_id"].(string)),
+			ComputeProfileId: utils.StringPtr(arg.(map[string]interface{})["computeprofileid"].(string)),
 		})
 	}
 	return args
@@ -428,4 +498,66 @@ func buildActionArgumentsFromResourceData(d *schema.Set, args []*era.Actionargum
 		})
 	}
 	return args
+}
+
+func buildSlaDetails(pr []interface{}) *era.SlaDetails {
+	if len(pr) > 0 {
+		res := &era.SlaDetails{}
+
+		for _, v := range pr {
+			val := v.(map[string]interface{})
+
+			if priSla, pok := val["primary_sla"]; pok {
+				res.PrimarySla = expandPrimarySla(priSla.([]interface{}))
+			}
+		}
+		return res
+	}
+	return nil
+}
+
+func expandPrimarySla(pr []interface{}) *era.PrimarySla {
+	if len(pr) > 0 {
+		out := &era.PrimarySla{}
+
+		for _, v := range pr {
+			val := v.(map[string]interface{})
+
+			if slaid, ok := val["sla_id"]; ok {
+				out.SlaId = utils.StringPtr(slaid.(string))
+			}
+
+			if nxcls, ok := val["nx_cluster_ids"]; ok {
+				res := make([]*string, 0)
+				nxclster := nxcls.([]interface{})
+
+				for _, v := range nxclster {
+					res = append(res, utils.StringPtr(v.(string)))
+				}
+				out.NxClusterIds = res
+			}
+		}
+		return out
+	}
+	return nil
+}
+
+func expandNodesProperties(pr *schema.Set) []*era.NodesProperties {
+	argSet := pr.List()
+
+	out := make([]*era.NodesProperties, 0)
+	for _, arg := range argSet {
+		var val interface{}
+		val = arg.(map[string]interface{})["value"]
+		b, ok := tryToConvertBool(arg.(map[string]interface{})["value"])
+		if ok {
+			val = b
+		}
+
+		out = append(out, &era.NodesProperties{
+			Name:  arg.(map[string]interface{})["name"].(string),
+			Value: val,
+		})
+	}
+	return out
 }

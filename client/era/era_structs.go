@@ -253,14 +253,23 @@ type Schedule struct {
 	TimeZone           string              `json:"timeZone"`
 }
 
-type Timemachineinfo struct {
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Slaid       string   `json:"slaId"`
-	Schedule    Schedule `json:"schedule"`
-	Tags        []*Tags  `json:"tags,omitempty"`
+type PrimarySla struct {
+	SlaId        *string   `json:"slaId,omitempty"`
+	NxClusterIds []*string `json:"nxClusterIds,omitempty"`
+}
 
-	Autotunelogdrive bool `json:"autoTuneLogDrive"`
+type SlaDetails struct {
+	PrimarySla *PrimarySla `json:"primarySla,omitempty"`
+}
+
+type Timemachineinfo struct {
+	Name             string        `json:"name,omitempty"`
+	Description      string        `json:"description,omitempty"`
+	Slaid            string        `json:"slaId,omitempty"`
+	Schedule         Schedule      `json:"schedule,omitempty"`
+	Tags             []interface{} `json:"tags,omitempty"`
+	Autotunelogdrive bool          `json:"autoTuneLogDrive,omitempty"`
+	SlaDetails       *SlaDetails   `json:"slaDetails,omitempty"`
 }
 
 type Actionarguments struct {
@@ -268,11 +277,18 @@ type Actionarguments struct {
 	Value interface{} `json:"value"`
 }
 
+type NodesProperties struct {
+	Name  string      `json:"name"`
+	Value interface{} `json:"value"`
+}
+
 type Nodes struct {
-	Properties       []interface{} `json:"properties"`
-	Vmname           string        `json:"vmName,omitempty"`
-	Networkprofileid string        `json:"networkProfileId,omitempty"`
-	DatabaseServerID string        `json:"dbserverId,omitempty"`
+	Properties       []*NodesProperties `json:"properties"`
+	Vmname           *string            `json:"vmName,omitempty"`
+	Networkprofileid *string            `json:"networkProfileId,omitempty"`
+	DatabaseServerID *string            `json:"dbserverId,omitempty"`
+	NxClusterId      *string            `json:"nxClusterId,omitempty"`
+	ComputeProfileId *string            `json:"computeProfileId,omitempty"`
 }
 
 // ProvisionDatabaseResponse structs

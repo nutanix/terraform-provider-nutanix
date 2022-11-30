@@ -17,7 +17,7 @@ import (
 
 var (
 	eraDelay            = 1 * time.Minute
-	EraProvisionTimeout = 35 * time.Minute
+	EraProvisionTimeout = 75 * time.Minute
 )
 
 func resourceDatabaseInstance() *schema.Resource {
@@ -215,6 +215,70 @@ func resourceDatabaseInstance() *schema.Resource {
 						"post_create_script": {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"ha_availability": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cluster_name": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"patroni_cluster_name": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"proxy_read_port": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"proxy_write_port": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"provision_virtual_ip": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  true,
+									},
+									"deploy_haproxy": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  true,
+									},
+									"enable_synchronous_mode": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  true,
+									},
+									"failover_mode": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"node_type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "database",
+									},
+									"archive_wal_expire_days": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Default:  -1,
+									},
+									"backup_policy": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "primary_only",
+									},
+									"enable_peer_auth": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -679,7 +743,7 @@ func deleteDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 
 func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 	args := []*era.Actionarguments{}
-	if post, ok := d.GetOk("postgresql_info"); ok {
+	if post, ok := d.GetOk("postgresql_info"); ok && (len(post.([]interface{}))) > 0 {
 		brr := post.([]interface{})
 
 		for _, arg := range brr {
@@ -764,6 +828,123 @@ func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 					Name:  "post_create_script",
 					Value: values,
 				})
+			}
+
+			if ha, ok := val["ha_availability"]; ok && len(ha.([]interface{})) > 0 {
+				ha_list := ha.([]interface{})
+
+				for _, v := range ha_list {
+					val := v.(map[string]interface{})
+					var values interface{}
+
+					if ha_proxy, pok := val["proxy_read_port"]; pok && len(ha_proxy.(string)) > 0 {
+						values = ha_proxy
+
+						args = append(args, &era.Actionarguments{
+							Name:  "proxy_read_port",
+							Value: values,
+						})
+					}
+
+					if ha_proxy, pok := val["proxy_write_port"]; pok && len(ha_proxy.(string)) > 0 {
+						values = ha_proxy
+
+						args = append(args, &era.Actionarguments{
+							Name:  "proxy_write_port",
+							Value: values,
+						})
+					}
+
+					if ha_proxy, pok := val["backup_policy"]; pok && len(ha_proxy.(string)) > 0 {
+						values = ha_proxy
+
+						args = append(args, &era.Actionarguments{
+							Name:  "backup_policy",
+							Value: values,
+						})
+					}
+
+					if ha_proxy, pok := val["cluster_name"]; pok && len(ha_proxy.(string)) > 0 {
+						values = ha_proxy
+
+						args = append(args, &era.Actionarguments{
+							Name:  "cluster_name",
+							Value: values,
+						})
+					}
+
+					if ha_proxy, pok := val["patroni_cluster_name"]; pok && len(ha_proxy.(string)) > 0 {
+						values = ha_proxy
+
+						args = append(args, &era.Actionarguments{
+							Name:  "patroni_cluster_name",
+							Value: values,
+						})
+					}
+
+					if ha_proxy, pok := val["node_type"]; pok && len(ha_proxy.(string)) > 0 {
+						values = ha_proxy
+
+						args = append(args, &era.Actionarguments{
+							Name:  "node_type",
+							Value: values,
+						})
+					}
+
+					if proVip, pok := val["provision_virtual_ip"]; pok && proVip.(bool) {
+						values = proVip
+
+						args = append(args, &era.Actionarguments{
+							Name:  "provision_virtual_ip",
+							Value: values,
+						})
+					}
+
+					if deploy_haproxy, pok := val["deploy_haproxy"]; pok && deploy_haproxy.(bool) {
+						values = deploy_haproxy
+
+						args = append(args, &era.Actionarguments{
+							Name:  "deploy_haproxy",
+							Value: values,
+						})
+					}
+
+					if enableSyncMode, pok := val["enable_synchronous_mode"]; pok && (enableSyncMode.(bool)) {
+						values = enableSyncMode
+
+						args = append(args, &era.Actionarguments{
+							Name:  "enable_synchronous_mode",
+							Value: values,
+						})
+					}
+
+					if failoverMode, pok := val["failover_mode"]; pok && len(failoverMode.(string)) > 0 {
+						values = failoverMode
+
+						args = append(args, &era.Actionarguments{
+							Name:  "failover_mode",
+							Value: values,
+						})
+					}
+
+					if wal_exp, pok := val["archive_wal_expire_days"]; pok {
+						values = wal_exp
+
+						args = append(args, &era.Actionarguments{
+							Name:  "archive_wal_expire_days",
+							Value: values,
+						})
+					}
+
+					if enablePeerAuth, pok := val["enable_peer_auth"]; pok && enablePeerAuth.(bool) {
+						values = enablePeerAuth
+
+						args = append(args, &era.Actionarguments{
+							Name:  "enable_peer_auth",
+							Value: values,
+						})
+					}
+				}
 			}
 		}
 	}
