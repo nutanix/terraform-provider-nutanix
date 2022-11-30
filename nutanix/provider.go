@@ -237,7 +237,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_register_database":            resourceNutanixNDBRegisterDatabase(),
 			"nutanix_ndb_database_snapshot":            resourceNutanixNDBDatabaseSnapshot(),
 			"nutanix_ndb_clone":                        resourceNutanixNDBClone(),
-			"nutanix_ndb_authorize_dbserver":           resourceNutanixNDBAuthorizeDbServer(),
+			"nutanix_ndb_authorize_dbserver":           resourceNutanixNDBAuthorizeDBServer(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

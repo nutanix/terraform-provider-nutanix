@@ -1128,7 +1128,7 @@ type CloneRequest struct {
 	LcmConfig                  *CloneLCMConfig    `json:"lcmConfig,omitempty"`
 }
 
-type AuthorizeDbServerResponse struct {
+type AuthorizeDBServerResponse struct {
 	ErrorCode *int    `json:"errorCode,omitempty"`
 	Info      *string `json:"info,omitempty"`
 	Message   *string `json:"message,omitempty"`

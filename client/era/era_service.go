@@ -46,7 +46,7 @@ type Service interface {
 	UpdateCloneDatabase(ctx context.Context, id string, req *UpdateDatabaseRequest) (*UpdateDatabaseResponse, error)
 	GetClone(ctx context.Context, id string) (*GetDatabaseResponse, error)
 	DeleteClone(ctx context.Context, id string, req *DeleteDatabaseRequest) (*ProvisionDatabaseResponse, error)
-	AuthorizeDbServer(ctx context.Context, id string, req []*string) (*AuthorizeDbServerResponse, error)
+	AuthorizeDbServer(ctx context.Context, id string, req []*string) (*AuthorizeDBServerResponse, error)
 }
 
 type ServiceClient struct {
@@ -454,13 +454,13 @@ func (sc ServiceClient) DeleteProfileVersion(ctx context.Context, profileID stri
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) GetTimeMachine(ctx context.Context, tmsId string, tmsName string) (*TimeMachine, error) {
+func (sc ServiceClient) GetTimeMachine(ctx context.Context, tmsID string, tmsName string) (*TimeMachine, error) {
 	path := ""
 
 	if len(tmsName) > 0 {
 		path = fmt.Sprintf("/tms/%s?value-type=name&detailed=false&load-database=false&load-clones=false&time-zone=UTC", tmsName)
 	} else {
-		path = fmt.Sprintf("/tms/%s?value-type=id&detailed=false&load-database=false&load-clones=false&time-zone=UTC", tmsId)
+		path = fmt.Sprintf("/tms/%s?value-type=id&detailed=false&load-database=false&load-clones=false&time-zone=UTC", tmsID)
 	}
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
@@ -512,8 +512,8 @@ func (sc ServiceClient) UpdateCloneDatabase(ctx context.Context, id string, req 
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) DeleteClone(ctx context.Context, cloneId string, req *DeleteDatabaseRequest) (*ProvisionDatabaseResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/clones/%s", cloneId), req)
+func (sc ServiceClient) DeleteClone(ctx context.Context, cloneID string, req *DeleteDatabaseRequest) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/clones/%s", cloneID), req)
 	if err != nil {
 		return nil, err
 	}
@@ -522,13 +522,13 @@ func (sc ServiceClient) DeleteClone(ctx context.Context, cloneId string, req *De
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) AuthorizeDbServer(ctx context.Context, tmsId string, req []*string) (*AuthorizeDbServerResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("tms/%s/dbservers", tmsId), req)
+func (sc ServiceClient) AuthorizeDbServer(ctx context.Context, tmsID string, req []*string) (*AuthorizeDBServerResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("tms/%s/dbservers", tmsID), req)
 	if err != nil {
 		return nil, err
 	}
 
-	res := new(AuthorizeDbServerResponse)
+	res := new(AuthorizeDBServerResponse)
 
 	return res, sc.c.Do(ctx, httpReq, res)
 }

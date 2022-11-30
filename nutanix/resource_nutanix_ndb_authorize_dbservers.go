@@ -8,12 +8,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func resourceNutanixNDBAuthorizeDbServer() *schema.Resource {
+func resourceNutanixNDBAuthorizeDBServer() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceNutanixNDBAuthorizeDbServerCreate,
-		ReadContext:   resourceNutanixNDBAuthorizeDbServerRead,
-		UpdateContext: resourceNutanixNDBAuthorizeDbServerUpdate,
-		DeleteContext: resourceNutanixNDBAuthorizeDbServerDelete,
+		CreateContext: resourceNutanixNDBAuthorizeDBServerCreate,
+		ReadContext:   resourceNutanixNDBAuthorizeDBServerRead,
+		UpdateContext: resourceNutanixNDBAuthorizeDBServerUpdate,
+		DeleteContext: resourceNutanixNDBAuthorizeDBServerDelete,
 		Schema: map[string]*schema.Schema{
 			"time_machine_id": {
 				Type:          schema.TypeString,
@@ -36,11 +36,11 @@ func resourceNutanixNDBAuthorizeDbServer() *schema.Resource {
 	}
 }
 
-func resourceNutanixNDBAuthorizeDbServerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNutanixNDBAuthorizeDBServerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 	req := make([]*string, 0)
 
-	tmsId, tok := d.GetOk("time_machine_id")
+	tmsID, tok := d.GetOk("time_machine_id")
 	tmsName, tnOk := d.GetOk("time_machine_name")
 
 	if !tok && !tnOk {
@@ -54,11 +54,11 @@ func resourceNutanixNDBAuthorizeDbServerCreate(ctx context.Context, d *schema.Re
 			return diag.FromErr(er)
 		}
 
-		tmsId = *res.ID
+		tmsID = *res.ID
 	}
 
-	if dbservers_id, ok := d.GetOk("dbservers_id"); ok {
-		dbser := dbservers_id.([]interface{})
+	if dbserversID, ok := d.GetOk("dbservers_id"); ok {
+		dbser := dbserversID.([]interface{})
 
 		for _, v := range dbser {
 			req = append(req, utils.StringPtr(v.(string)))
@@ -66,26 +66,26 @@ func resourceNutanixNDBAuthorizeDbServerCreate(ctx context.Context, d *schema.Re
 	}
 	// call for Authorize API
 
-	resp, err := conn.Service.AuthorizeDbServer(ctx, tmsId.(string), req)
+	resp, err := conn.Service.AuthorizeDbServer(ctx, tmsID.(string), req)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	if resp.Status == utils.StringPtr("success") {
-		d.SetId(tmsId.(string))
+		d.SetId(tmsID.(string))
 	}
 
 	return nil
 }
 
-func resourceNutanixNDBAuthorizeDbServerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNutanixNDBAuthorizeDBServerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func resourceNutanixNDBAuthorizeDbServerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNutanixNDBAuthorizeDBServerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func resourceNutanixNDBAuthorizeDbServerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNutanixNDBAuthorizeDBServerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }

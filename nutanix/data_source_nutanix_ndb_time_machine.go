@@ -542,7 +542,7 @@ func dataSourceNutanixNDBTimeMachine() *schema.Resource {
 func dataSourceNutanixNDBTimeMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
-	tmsId, tok := d.GetOk("time_machine_id")
+	tmsID, tok := d.GetOk("time_machine_id")
 	tmsName, tnOk := d.GetOk("time_machine_name")
 
 	if !tok && !tnOk {
@@ -551,7 +551,7 @@ func dataSourceNutanixNDBTimeMachineRead(ctx context.Context, d *schema.Resource
 
 	// call time Machine API
 
-	resp, err := conn.Service.GetTimeMachine(ctx, tmsId.(string), tmsName.(string))
+	resp, err := conn.Service.GetTimeMachine(ctx, tmsID.(string), tmsName.(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}

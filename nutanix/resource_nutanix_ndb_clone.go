@@ -341,7 +341,7 @@ func resourceNutanixNDBCloneCreate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*Client).Era
 	req := &era.CloneRequest{}
 
-	tmsId, tok := d.GetOk("time_machine_id")
+	tmsID, tok := d.GetOk("time_machine_id")
 	tmsName, tnOk := d.GetOk("time_machine_name")
 
 	if !tok && !tnOk {
@@ -355,10 +355,10 @@ func resourceNutanixNDBCloneCreate(ctx context.Context, d *schema.ResourceData, 
 			return diag.FromErr(err)
 		}
 
-		tmsId = *res.ID
+		tmsID = *res.ID
 	}
 
-	req.TimeMachineID = utils.StringPtr(tmsId.(string))
+	req.TimeMachineID = utils.StringPtr(tmsID.(string))
 
 	// build request for clone
 	if err := builCloneRequest(d, req); err != nil {
@@ -367,7 +367,7 @@ func resourceNutanixNDBCloneCreate(ctx context.Context, d *schema.ResourceData, 
 
 	// call clone API
 
-	resp, err := conn.Service.CreateClone(ctx, tmsId.(string), req)
+	resp, err := conn.Service.CreateClone(ctx, tmsID.(string), req)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -648,27 +648,27 @@ func builCloneRequest(d *schema.ResourceData, res *era.CloneRequest) error {
 	if timeZone, ok := d.GetOk("time_zone"); ok && len(timeZone.(string)) > 0 {
 		res.TimeZone = utils.StringPtr(timeZone.(string))
 	}
-	if computeProfileId, ok := d.GetOk("compute_profile_id"); ok {
-		res.ComputeProfileID = utils.StringPtr(computeProfileId.(string))
+	if computeProfileID, ok := d.GetOk("compute_profile_id"); ok {
+		res.ComputeProfileID = utils.StringPtr(computeProfileID.(string))
 	}
-	if networkProfileId, ok := d.GetOk("network_profile_id"); ok {
-		res.NetworkProfileID = utils.StringPtr(networkProfileId.(string))
+	if networkProfileID, ok := d.GetOk("network_profile_id"); ok {
+		res.NetworkProfileID = utils.StringPtr(networkProfileID.(string))
 	}
-	if databaseParameterProfileId, ok := d.GetOk("database_parameter_profile_id"); ok {
-		res.DatabaseParameterProfileID = utils.StringPtr(databaseParameterProfileId.(string))
+	if databaseParameterProfileID, ok := d.GetOk("database_parameter_profile_id"); ok {
+		res.DatabaseParameterProfileID = utils.StringPtr(databaseParameterProfileID.(string))
 	}
-	if snapshotId, ok := d.GetOk("snapshot_id"); ok {
-		res.SnapshotID = utils.StringPtr(snapshotId.(string))
+	if snapshotID, ok := d.GetOk("snapshot_id"); ok {
+		res.SnapshotID = utils.StringPtr(snapshotID.(string))
 	}
 
-	if dbserverId, ok := d.GetOk("dbserver_id"); ok {
-		res.DbserverID = utils.StringPtr(dbserverId.(string))
+	if dbserverID, ok := d.GetOk("dbserver_id"); ok {
+		res.DbserverID = utils.StringPtr(dbserverID.(string))
 	}
-	if dbserverClusterId, ok := d.GetOk("dbserver_cluster_id"); ok {
-		res.DbserverClusterID = utils.StringPtr(dbserverClusterId.(string))
+	if dbserverClusterID, ok := d.GetOk("dbserver_cluster_id"); ok {
+		res.DbserverClusterID = utils.StringPtr(dbserverClusterID.(string))
 	}
-	if dbserverLogicalClusterId, ok := d.GetOk("dbserver_logical_cluster_id"); ok {
-		res.DbserverLogicalClusterID = utils.StringPtr(dbserverLogicalClusterId.(string))
+	if dbserverLogicalClusterID, ok := d.GetOk("dbserver_logical_cluster_id"); ok {
+		res.DbserverLogicalClusterID = utils.StringPtr(dbserverLogicalClusterID.(string))
 	}
 	if createDbserver, ok := d.GetOk("create_dbserver"); ok {
 		res.CreateDbserver = createDbserver.(bool)
@@ -684,9 +684,8 @@ func builCloneRequest(d *schema.ResourceData, res *era.CloneRequest) error {
 		res.Nodes = expandClonesNodes(nodes.([]interface{}))
 	}
 
-	if lcm_config, ok := d.GetOk("lcm_config"); ok {
-		res.LcmConfig = expandLCMConfig(lcm_config.([]interface{}))
-
+	if lcmConfig, ok := d.GetOk("lcm_config"); ok {
+		res.LcmConfig = expandLCMConfig(lcmConfig.([]interface{}))
 	}
 
 	if postgres, ok := d.GetOk("postgresql_info"); ok && len(postgres.([]interface{})) > 0 {
@@ -708,7 +707,7 @@ func expandClonesNodes(pr []interface{}) []*era.Nodes {
 			}
 
 			if v1, ok1 := val["compute_profile_id"]; ok1 && len(v1.(string)) > 0 {
-				node.ComputeProfileId = utils.StringPtr(v1.(string))
+				node.ComputeProfileID = utils.StringPtr(v1.(string))
 			}
 
 			if v1, ok1 := val["vm_name"]; ok1 && len(v1.(string)) > 0 {
@@ -716,11 +715,11 @@ func expandClonesNodes(pr []interface{}) []*era.Nodes {
 			}
 
 			if v1, ok1 := val["nx_cluster_id"]; ok1 && len(v1.(string)) > 0 {
-				node.NxClusterId = utils.StringPtr(v1.(string))
+				node.NxClusterID = utils.StringPtr(v1.(string))
 			}
 
 			if v1, ok1 := val["new_db_server_time_zone"]; ok1 && len(v1.(string)) > 0 {
-				node.NewDbServerTimeZone = utils.StringPtr(v1.(string))
+				node.NewDBServerTimeZone = utils.StringPtr(v1.(string))
 			}
 			if v1, ok1 := val["properties"]; ok1 && len(v1.(string)) > 0 {
 				node.Properties = v1.([]interface{})
@@ -776,7 +775,6 @@ func expandPostgreSQLCloneActionArgs(d *schema.ResourceData, pr []interface{}) [
 					Value: v1.(string),
 				})
 			}
-
 		}
 		resp := buildActionArgumentsFromResourceData(d.Get("actionarguments").(*schema.Set), args)
 		return resp
@@ -786,72 +784,72 @@ func expandPostgreSQLCloneActionArgs(d *schema.ResourceData, pr []interface{}) [
 
 func expandLCMConfig(pr []interface{}) *era.CloneLCMConfig {
 	if len(pr) > 0 {
-		clone_lcm := &era.CloneLCMConfig{}
+		cloneLcm := &era.CloneLCMConfig{}
 		for _, v := range pr {
 			val := v.(map[string]interface{})
 
 			if v1, ok1 := val["database_lcm_config"]; ok1 && len(v1.([]interface{})) > 0 {
-				db_lcm := v1.([]interface{})
-				db_lcm_config := &era.DatabaseLCMConfig{}
-				for _, v := range db_lcm {
+				dbLcm := v1.([]interface{})
+				dbLcmConfig := &era.DatabaseLCMConfig{}
+				for _, v := range dbLcm {
 					val := v.(map[string]interface{})
 
 					if exp, ok1 := val["expiry_details"]; ok1 {
-						db_lcm_config.ExpiryDetails = expandDBExpiryDetails(exp.([]interface{}))
+						dbLcmConfig.ExpiryDetails = expandDBExpiryDetails(exp.([]interface{}))
 					}
 
 					if ref, ok1 := val["refresh_details"]; ok1 {
-						db_lcm_config.RefreshDetails = expandDBRefreshDetails(ref.([]interface{}))
+						dbLcmConfig.RefreshDetails = expandDBRefreshDetails(ref.([]interface{}))
 					}
 				}
-				clone_lcm.DatabaseLCMConfig = db_lcm_config
+				cloneLcm.DatabaseLCMConfig = dbLcmConfig
 			}
 		}
-		return clone_lcm
+		return cloneLcm
 	}
 	return nil
 }
 
 func expandDBExpiryDetails(pr []interface{}) *era.DBExpiryDetails {
 	if len(pr) > 0 {
-		exp_details := &era.DBExpiryDetails{}
+		expDetails := &era.DBExpiryDetails{}
 
 		for _, v := range pr {
 			val := v.(map[string]interface{})
 
 			if v1, ok1 := val["expire_in_days"]; ok1 {
-				exp_details.ExpireInDays = utils.IntPtr(v1.(int))
+				expDetails.ExpireInDays = utils.IntPtr(v1.(int))
 			}
 			if v1, ok1 := val["expiry_date_timezone"]; ok1 && len(v1.(string)) > 0 {
-				exp_details.ExpiryDateTimezone = utils.StringPtr(v1.(string))
+				expDetails.ExpiryDateTimezone = utils.StringPtr(v1.(string))
 			}
 			if v1, ok1 := val["delete_database"]; ok1 {
-				exp_details.DeleteDatabase = v1.(bool)
+				expDetails.DeleteDatabase = v1.(bool)
 			}
 		}
-		return exp_details
+		return expDetails
 	}
 	return nil
 }
 
 func expandDBRefreshDetails(pr []interface{}) *era.DBRefreshDetails {
 	if len(pr) > 0 {
-		ref_details := &era.DBRefreshDetails{}
+		refDetails := &era.DBRefreshDetails{}
 
 		for _, v := range pr {
 			val := v.(map[string]interface{})
 
 			if v1, ok1 := val["refresh_in_days"]; ok1 {
-				ref_details.RefreshInDays = v1.(int)
+				refDetails.RefreshInDays = v1.(int)
 			}
 			if v1, ok1 := val["refresh_time"]; ok1 && len(v1.(string)) > 0 {
-				ref_details.RefreshTime = v1.(string)
+				refDetails.RefreshTime = v1.(string)
 			}
 			if v1, ok1 := val["refresh_date_timezone"]; ok1 && len(v1.(string)) > 0 {
-				ref_details.RefreshDateTimezone = v1.(string)
+				refDetails.RefreshDateTimezone = v1.(string)
 			}
 		}
-		return ref_details
+		return refDetails
 	}
 	return nil
 }

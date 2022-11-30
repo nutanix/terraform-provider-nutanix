@@ -67,7 +67,6 @@ func resourceNutanixNDBDatabaseSnapshotCreate(ctx context.Context, d *schema.Res
 	}
 
 	if rm, ok := d.GetOk("remove_schedule_in_days"); ok {
-
 		lcmConfig := &era.LcmConfig{}
 		expDetails := &era.DBExpiryDetails{}
 
