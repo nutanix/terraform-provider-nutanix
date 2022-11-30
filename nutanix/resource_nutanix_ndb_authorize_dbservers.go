@@ -66,7 +66,7 @@ func resourceNutanixNDBAuthorizeDBServerCreate(ctx context.Context, d *schema.Re
 	}
 	// call for Authorize API
 
-	resp, err := conn.Service.AuthorizeDbServer(ctx, tmsID.(string), req)
+	resp, err := conn.Service.AuthorizeDBServer(ctx, tmsID.(string), req)
 	if err != nil {
 		return diag.FromErr(err)
 	}

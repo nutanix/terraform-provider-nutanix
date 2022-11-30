@@ -45,7 +45,7 @@ func resourceNutanixNDBDatabaseSnapshotCreate(ctx context.Context, d *schema.Res
 
 	req := &era.DatabaseSnapshotRequest{}
 
-	tmsId, tok := d.GetOk("time_machine_id")
+	tmsID, tok := d.GetOk("time_machine_id")
 	tmsName, tnOk := d.GetOk("time_machine_name")
 
 	if !tok && !tnOk {
@@ -59,7 +59,7 @@ func resourceNutanixNDBDatabaseSnapshotCreate(ctx context.Context, d *schema.Res
 			return diag.FromErr(err)
 		}
 
-		tmsId = *res.ID
+		tmsID = *res.ID
 	}
 
 	if name, ok := d.GetOk("name"); ok {
@@ -78,7 +78,7 @@ func resourceNutanixNDBDatabaseSnapshotCreate(ctx context.Context, d *schema.Res
 
 	// call the snapshot API
 
-	resp, err := conn.Service.DatabaseSnapshot(ctx, tmsId.(string), req)
+	resp, err := conn.Service.DatabaseSnapshot(ctx, tmsID.(string), req)
 	if err != nil {
 		return diag.FromErr(err)
 	}
