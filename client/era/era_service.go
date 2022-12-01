@@ -362,7 +362,7 @@ func (sc ServiceClient) LogCatchUp(ctx context.Context, tmsID string, req *LogCa
 }
 
 func (sc ServiceClient) DatabaseScale(ctx context.Context, databaseID string, req *DatabaseScale) (*ProvisionDatabaseResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("/databases/%s/update/extend-storage", databaseID), req)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/databases/%s/update/extend-storage", databaseID), req)
 	res := new(ProvisionDatabaseResponse)
 
 	if err != nil {

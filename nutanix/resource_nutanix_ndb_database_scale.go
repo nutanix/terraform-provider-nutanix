@@ -42,7 +42,7 @@ func resourceNutanixNDBScaleDatabase() *schema.Resource {
 			// Computed values
 			"name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -217,6 +217,13 @@ func resourceNutanixNDBScaleDatabaseCreate(ctx context.Context, d *schema.Resour
 			Value: utils.StringPtr(post.(string)),
 		})
 	}
+
+	// adding working dir
+
+	args = append(args, &era.Actionarguments{
+		Name:  "working_dir",
+		Value: "/tmp",
+	})
 
 	req.Actionarguments = args
 

@@ -1759,35 +1759,8 @@ func dataSourceEraDatabaseNodes() *schema.Schema {
 						Type: schema.TypeString,
 					},
 				},
-				"properties": {
-					Type:     schema.TypeList,
-					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"name": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"value": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"ref_id": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"secure": {
-								Type:     schema.TypeBool,
-								Computed: true,
-							},
-							"description": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-						},
-					},
-				},
-				"tags": dataSourceEraDBInstanceTags(),
+				"properties": dataSourceEraDatabaseProperties(),
+				"tags":       dataSourceEraDBInstanceTags(),
 				"database_id": {
 					Type:     schema.TypeString,
 					Computed: true,
