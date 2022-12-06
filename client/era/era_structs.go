@@ -253,13 +253,13 @@ type Schedule struct {
 	TimeZone           string              `json:"timeZone"`
 }
 
-type PrimarySla struct {
-	SlaId        *string   `json:"slaId,omitempty"`
+type PrimarySLA struct {
+	SLAID        *string   `json:"slaId,omitempty"`
 	NxClusterIds []*string `json:"nxClusterIds,omitempty"`
 }
 
-type SlaDetails struct {
-	PrimarySla *PrimarySla `json:"primarySla,omitempty"`
+type SLADetails struct {
+	PrimarySLA *PrimarySLA `json:"primarySla,omitempty"`
 }
 
 type Timemachineinfo struct {
@@ -269,7 +269,7 @@ type Timemachineinfo struct {
 	Schedule         Schedule      `json:"schedule,omitempty"`
 	Tags             []interface{} `json:"tags,omitempty"`
 	Autotunelogdrive bool          `json:"autoTuneLogDrive,omitempty"`
-	SlaDetails       *SlaDetails   `json:"slaDetails,omitempty"`
+	SLADetails       *SLADetails   `json:"slaDetails,omitempty"`
 }
 
 type Actionarguments struct {
@@ -287,8 +287,8 @@ type Nodes struct {
 	Vmname           *string            `json:"vmName,omitempty"`
 	Networkprofileid *string            `json:"networkProfileId,omitempty"`
 	DatabaseServerID *string            `json:"dbserverId,omitempty"`
-	NxClusterId      *string            `json:"nxClusterId,omitempty"`
-	ComputeProfileId *string            `json:"computeProfileId,omitempty"`
+	NxClusterID      *string            `json:"nxClusterId,omitempty"`
+	ComputeProfileID *string            `json:"computeProfileId,omitempty"`
 }
 
 // ProvisionDatabaseResponse structs

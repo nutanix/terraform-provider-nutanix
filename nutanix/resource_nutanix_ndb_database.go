@@ -831,14 +831,14 @@ func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 			}
 
 			if ha, ok := val["ha_availability"]; ok && len(ha.([]interface{})) > 0 {
-				ha_list := ha.([]interface{})
+				haList := ha.([]interface{})
 
-				for _, v := range ha_list {
+				for _, v := range haList {
 					val := v.(map[string]interface{})
 					var values interface{}
 
-					if ha_proxy, pok := val["proxy_read_port"]; pok && len(ha_proxy.(string)) > 0 {
-						values = ha_proxy
+					if haProxy, pok := val["proxy_read_port"]; pok && len(haProxy.(string)) > 0 {
+						values = haProxy
 
 						args = append(args, &era.Actionarguments{
 							Name:  "proxy_read_port",
@@ -846,8 +846,8 @@ func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 						})
 					}
 
-					if ha_proxy, pok := val["proxy_write_port"]; pok && len(ha_proxy.(string)) > 0 {
-						values = ha_proxy
+					if proxyWrite, pok := val["proxy_write_port"]; pok && len(proxyWrite.(string)) > 0 {
+						values = proxyWrite
 
 						args = append(args, &era.Actionarguments{
 							Name:  "proxy_write_port",
@@ -855,8 +855,8 @@ func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 						})
 					}
 
-					if ha_proxy, pok := val["backup_policy"]; pok && len(ha_proxy.(string)) > 0 {
-						values = ha_proxy
+					if backupPolicy, pok := val["backup_policy"]; pok && len(backupPolicy.(string)) > 0 {
+						values = backupPolicy
 
 						args = append(args, &era.Actionarguments{
 							Name:  "backup_policy",
@@ -864,8 +864,8 @@ func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 						})
 					}
 
-					if ha_proxy, pok := val["cluster_name"]; pok && len(ha_proxy.(string)) > 0 {
-						values = ha_proxy
+					if clsName, pok := val["cluster_name"]; pok && len(clsName.(string)) > 0 {
+						values = clsName
 
 						args = append(args, &era.Actionarguments{
 							Name:  "cluster_name",
@@ -873,8 +873,8 @@ func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 						})
 					}
 
-					if ha_proxy, pok := val["patroni_cluster_name"]; pok && len(ha_proxy.(string)) > 0 {
-						values = ha_proxy
+					if patroniClsName, pok := val["patroni_cluster_name"]; pok && len(patroniClsName.(string)) > 0 {
+						values = patroniClsName
 
 						args = append(args, &era.Actionarguments{
 							Name:  "patroni_cluster_name",
@@ -882,8 +882,8 @@ func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 						})
 					}
 
-					if ha_proxy, pok := val["node_type"]; pok && len(ha_proxy.(string)) > 0 {
-						values = ha_proxy
+					if nodeType, pok := val["node_type"]; pok && len(nodeType.(string)) > 0 {
+						values = nodeType
 
 						args = append(args, &era.Actionarguments{
 							Name:  "node_type",
@@ -891,8 +891,8 @@ func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 						})
 					}
 
-					if proVip, pok := val["provision_virtual_ip"]; pok && proVip.(bool) {
-						values = proVip
+					if proVIP, pok := val["provision_virtual_ip"]; pok && proVIP.(bool) {
+						values = proVIP
 
 						args = append(args, &era.Actionarguments{
 							Name:  "provision_virtual_ip",
@@ -900,8 +900,8 @@ func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 						})
 					}
 
-					if deploy_haproxy, pok := val["deploy_haproxy"]; pok && deploy_haproxy.(bool) {
-						values = deploy_haproxy
+					if deployHaproxy, pok := val["deploy_haproxy"]; pok && deployHaproxy.(bool) {
+						values = deployHaproxy
 
 						args = append(args, &era.Actionarguments{
 							Name:  "deploy_haproxy",
@@ -927,8 +927,8 @@ func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 						})
 					}
 
-					if wal_exp, pok := val["archive_wal_expire_days"]; pok {
-						values = wal_exp
+					if walExp, pok := val["archive_wal_expire_days"]; pok {
+						values = walExp
 
 						args = append(args, &era.Actionarguments{
 							Name:  "archive_wal_expire_days",

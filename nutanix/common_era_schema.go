@@ -365,8 +365,8 @@ func buildTimeMachineFromResourceData(set *schema.Set) *era.Timemachineinfo {
 			out.Autotunelogdrive = autotunelogdrive.(bool)
 		}
 
-		if sla_details, ok := tMap["sla_details"]; ok && len(sla_details.([]interface{})) > 0 {
-			out.SlaDetails = buildSlaDetails(sla_details.([]interface{}))
+		if slaDetails, ok := tMap["sla_details"]; ok && len(slaDetails.([]interface{})) > 0 {
+			out.SLADetails = buildSLADetails(slaDetails.([]interface{}))
 		}
 		return out
 	}
@@ -444,8 +444,8 @@ func buildNodesFromResourceData(d *schema.Set) []*era.Nodes {
 			Vmname:           utils.StringPtr(arg.(map[string]interface{})["vmname"].(string)),
 			Networkprofileid: utils.StringPtr(arg.(map[string]interface{})["networkprofileid"].(string)),
 			DatabaseServerID: utils.StringPtr(arg.(map[string]interface{})["dbserverid"].(string)),
-			NxClusterId:      utils.StringPtr(arg.(map[string]interface{})["nx_cluster_id"].(string)),
-			ComputeProfileId: utils.StringPtr(arg.(map[string]interface{})["computeprofileid"].(string)),
+			NxClusterID:      utils.StringPtr(arg.(map[string]interface{})["nx_cluster_id"].(string)),
+			ComputeProfileID: utils.StringPtr(arg.(map[string]interface{})["computeprofileid"].(string)),
 		})
 	}
 	return args
@@ -500,15 +500,15 @@ func buildActionArgumentsFromResourceData(d *schema.Set, args []*era.Actionargum
 	return args
 }
 
-func buildSlaDetails(pr []interface{}) *era.SlaDetails {
+func buildSLADetails(pr []interface{}) *era.SLADetails {
 	if len(pr) > 0 {
-		res := &era.SlaDetails{}
+		res := &era.SLADetails{}
 
 		for _, v := range pr {
 			val := v.(map[string]interface{})
 
-			if priSla, pok := val["primary_sla"]; pok {
-				res.PrimarySla = expandPrimarySla(priSla.([]interface{}))
+			if priSLA, pok := val["primary_sla"]; pok {
+				res.PrimarySLA = expandPrimarySLA(priSLA.([]interface{}))
 			}
 		}
 		return res
@@ -516,15 +516,15 @@ func buildSlaDetails(pr []interface{}) *era.SlaDetails {
 	return nil
 }
 
-func expandPrimarySla(pr []interface{}) *era.PrimarySla {
+func expandPrimarySLA(pr []interface{}) *era.PrimarySLA {
 	if len(pr) > 0 {
-		out := &era.PrimarySla{}
+		out := &era.PrimarySLA{}
 
 		for _, v := range pr {
 			val := v.(map[string]interface{})
 
 			if slaid, ok := val["sla_id"]; ok {
-				out.SlaId = utils.StringPtr(slaid.(string))
+				out.SLAID = utils.StringPtr(slaid.(string))
 			}
 
 			if nxcls, ok := val["nx_cluster_ids"]; ok {
