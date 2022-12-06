@@ -126,24 +126,23 @@ resource "nutanix_ndb_database" "dbp" {
 
     // min required details for provisioning HA instance
     postgresql_info{
+      listener_port = "5432"
 
-        listener_port = "5432"
+      database_size= "200"
 
-        database_size= "200"
+      db_password =  "{{ database password}}"
 
-        db_password =  "{{ database password}}"
+      database_names= "testdb1"
 
-        database_names= "testdb1"
+      ha_availability{
+      proxy_read_port= "5001"
 
-        ha_availability{
-        proxy_read_port= "5001"
+      proxy_write_port = "5000"
 
-        proxy_write_port = "5000"
+      cluster_name= "{{ cluster_name }}"
 
-        cluster_name= "{{ cluster_name }}"
-
-        patroni_cluster_name = " {{ patroni_cluster_name }}"
-        }
+      patroni_cluster_name = " {{ patroni_cluster_name }}"
+      }
     }
   
   nxclusterid= "1c42ca25-32f4-42d9-a2bd-6a21f925b725"

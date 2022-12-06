@@ -847,25 +847,25 @@ type Protectiondomain struct {
 	AssocEntities []string                `json:"assocEntities,omitempty"`
 }
 type Databasenodes struct {
-	ID                     string            `json:"id"`
-	Name                   string            `json:"name"`
-	Description            string            `json:"description"`
-	Ownerid                string            `json:"ownerId"`
-	Datecreated            string            `json:"dateCreated"`
-	Datemodified           string            `json:"dateModified"`
-	AccessLevel            interface{}       `json:"accessLevel,omitempty"`
-	Properties             []interface{}     `json:"properties"`
-	Tags                   []*Tags           `json:"tags"`
-	Databaseid             string            `json:"databaseId"`
-	Status                 string            `json:"status"`
-	Databasestatus         string            `json:"databaseStatus"`
-	Primary                bool              `json:"primary"`
-	Dbserverid             string            `json:"dbserverId"`
-	Softwareinstallationid string            `json:"softwareInstallationId"`
-	Protectiondomainid     string            `json:"protectionDomainId"`
-	Info                   Info              `json:"info"`
-	Metadata               interface{}       `json:"metadata"`
-	Protectiondomain       *Protectiondomain `json:"protectionDomain"`
+	ID                     string                  `json:"id"`
+	Name                   string                  `json:"name"`
+	Description            string                  `json:"description"`
+	Ownerid                string                  `json:"ownerId"`
+	Datecreated            string                  `json:"dateCreated"`
+	Datemodified           string                  `json:"dateModified"`
+	AccessLevel            interface{}             `json:"accessLevel,omitempty"`
+	Properties             []*DBInstanceProperties `json:"properties"`
+	Tags                   []*Tags                 `json:"tags"`
+	Databaseid             string                  `json:"databaseId"`
+	Status                 string                  `json:"status"`
+	Databasestatus         string                  `json:"databaseStatus"`
+	Primary                bool                    `json:"primary"`
+	Dbserverid             string                  `json:"dbserverId"`
+	Softwareinstallationid string                  `json:"softwareInstallationId"`
+	Protectiondomainid     string                  `json:"protectionDomainId"`
+	Info                   Info                    `json:"info"`
+	Metadata               interface{}             `json:"metadata"`
+	Protectiondomain       *Protectiondomain       `json:"protectionDomain"`
 	// Valideastate           bool             `json:"validEaState"`
 }
 

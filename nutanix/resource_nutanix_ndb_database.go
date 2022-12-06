@@ -224,19 +224,19 @@ func resourceDatabaseInstance() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"cluster_name": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Required: true,
 									},
 									"patroni_cluster_name": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Required: true,
 									},
 									"proxy_read_port": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Required: true,
 									},
 									"proxy_write_port": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Required: true,
 									},
 									"provision_virtual_ip": {
 										Type:     schema.TypeBool,
