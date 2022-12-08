@@ -700,6 +700,7 @@ type InfoBpgConfig struct {
 type Info struct {
 	Secureinfo interface{}    `json:"secureInfo"`
 	Info       *InfoBpgConfig `json:"info"`
+	CreatedBy  *string        `json:"created_by,omitempty"`
 }
 type DBInstanceMetadata struct {
 	Logcatchupforrestoredispatched      bool            `json:"logCatchUpForRestoreDispatched,omitempty"`
@@ -763,13 +764,13 @@ type MetricMemoryInfo struct {
 }
 
 type MetricStorageInfo struct {
-	LastUpdatedTimeInUTC        *string `json:"lastUpdatedTimeInUTC,omitempty"`
-	ControllerNumIops           []*int  `json:"controllerNumIops,omitempty"`
-	ControllerAvgIoLatencyUsecs []*int  `json:"controllerAvgIoLatencyUsecs,omitempty"`
-	Size                        *int    `json:"size,omitempty"`
-	AllocatedSize               *int    `json:"allocatedSize,omitempty"`
-	UsedSize                    *int    `json:"usedSize,omitempty"`
-	Unit                        *string `json:"unit,omitempty"`
+	LastUpdatedTimeInUTC        interface{} `json:"lastUpdatedTimeInUTC,omitempty"`
+	ControllerNumIops           []*int      `json:"controllerNumIops,omitempty"`
+	ControllerAvgIoLatencyUsecs []*int      `json:"controllerAvgIoLatencyUsecs,omitempty"`
+	Size                        interface{} `json:"size,omitempty"`
+	AllocatedSize               interface{} `json:"allocatedSize,omitempty"`
+	UsedSize                    interface{} `json:"usedSize,omitempty"`
+	Unit                        interface{} `json:"unit,omitempty"`
 }
 
 type Metric struct {
@@ -1133,4 +1134,103 @@ type AuthorizeDBServerResponse struct {
 	Info      *string `json:"info,omitempty"`
 	Message   *string `json:"message,omitempty"`
 	Status    *string `json:"status,omitempty"`
+}
+
+type FilterParams struct {
+	Detailed                      string `json:"detailed,omitempty"`
+	AnyStatus                     string `json:"any-status,omitempty"`
+	LoadDBServerCluster           string `json:"load-dbserver-cluster"`
+	TimeZone                      string `json:"time-zone,omitempty"`
+	OrderByDBServerCluster        string `json:"order-by-dbserver-cluster,omitempty"`
+	OrderByDBServerLogicalCluster string `json:"order-by-dbserver-logical-cluster,omitempty"`
+	LoadReplicatedChildSnapshots  string `json:"load-replicated-child-snapshots,omitempty"`
+}
+
+type ListSnapshots []SnapshotResponse
+
+type SnapshotResponse struct {
+	Id                             *string                 `json:"id,omitempty"`
+	Name                           *string                 `json:"name,omitempty"`
+	Description                    *string                 `json:"description,omitempty"`
+	OwnerID                        *string                 `json:"ownerId,omitempty"`
+	DateCreated                    *string                 `json:"dateCreated,omitempty"`
+	DateModified                   *string                 `json:"dateModified,omitempty"`
+	AccessLevel                    interface{}             `json:"accessLevel"`
+	Properties                     []*DBInstanceProperties `json:"properties"`
+	Tags                           []*Tags                 `json:"tags"`
+	SnapshotId                     *string                 `json:"snapshotId,omitempty"`
+	SnapshotUUID                   *string                 `json:"snapshotUuid,omitempty"`
+	NxClusterID                    *string                 `json:"ncClusterId,omitempty"`
+	ProtectionDomainId             *string                 `json:"protectionDomainId,omitempty"`
+	ParentSnapshotID               *string                 `json:"parentSnapshotId,omitempty"`
+	TimeMachineID                  *string                 `json:"timeMachineId,omitempty"`
+	DatabaseNodeID                 *string                 `json:"databaseNodeId,omitempty"`
+	AppInfoVersion                 *string                 `json:"appInfoVersion,omitempty"`
+	Status                         *string                 `json:"status,omitempty"`
+	Type                           *string                 `json:"type,omitempty"`
+	ApplicableTypes                []*string               `json:"applicableTypes,omitempty"`
+	SnapshotTimeStamp              *string                 `json:"snapshotTimeStamp,omitempty"`
+	Info                           *CloneInfo              `json:"info,omitempty"`
+	Metadata                       *ClonedMetadata         `json:"metadata,omitempty"`
+	Metric                         *Metric                 `json:"metric,omitempty"`
+	SoftwareSnapshotID             *string                 `json:"softwareSnapshotId,omitempty"`
+	SoftwareDatabaseSnapshot       bool                    `json:"softwareDatabaseSnapshot,omitempty"`
+	DbServerStorageMetadataVersion *int                    `json:"dbServerStorageMetadataVersion,omitempty"`
+	Sanitised                      bool                    `json:"sanitised,omitempty"`
+	SanitisedFromSnapshotID        interface{}             `json:"sanitisedFromSnapshotId,omitempty"`
+	TimeZone                       *string                 `json:"timeZone,omitempty"`
+	Processed                      bool                    `json:"processed,omitempty"`
+	DatabaseSnapshot               bool                    `json:"databaseSnapshot,omitempty"`
+	FromTimeStamp                  *string                 `json:"fromTimeStamp,omitempty"`
+	ToTimeStamp                    *string                 `json:"toTimeStamp,omitempty"`
+	DbserverID                     interface{}             `json:"dbserverId,omitempty"`
+	DbserverName                   interface{}             `json:"dbserverName,omitempty"`
+	DbserverIP                     interface{}             `json:"dbserverIp,omitempty"`
+	ReplicatedSnapshots            interface{}             `json:"replicatedSnapshots,omitempty"`
+	SoftwareSnapshot               interface{}             `json:"softwareSnapshot,omitempty"`
+	SanitisedSnapshots             interface{}             `json:"sanitisedSnapshots,omitempty"`
+	SnapshotFamily                 interface{}             `json:"snapshotFamily,omitempty"`
+	SnapshotTimeStampDate          *int64                  `json:"snapshotTimeStampDate,omitempty"`
+	LcmConfig                      *LcmConfig              `json:"lcmConfig,omitempty"`
+	ParentSnapshot                 *bool                   `json:"parentSnapshot,omitempty"`
+	SnapshotSize                   *float64                `json:"snapshotSize,omitempty"`
+}
+
+type LinkedDBInfo struct {
+	Info *Info `json:"info,omitempty"`
+}
+
+type CloneLinkedDBInfo struct {
+	ID            string        `json:"id,omitempty"`
+	DatabaseName  string        `json:"databaseName,omitempty"`
+	Status        string        `json:"status,omitempty"`
+	Info          *LinkedDBInfo `json:"info,omitempty"`
+	AppConsistent bool          `json:"appConsistent,omitempty"`
+	Message       interface{}   `json:"message,omitempty"`
+	Clone         bool          `json:"clone,omitempty"`
+}
+
+type CloneInfo struct {
+	SecureInfo         interface{}          `json:"secureInfo,omitempty"`
+	Info               interface{}          `json:"info,omitempty"`
+	LinkedDatabases    []*CloneLinkedDBInfo `json:"linkedDatabases,omitempty"`
+	Databases          interface{}          `json:"databases,omitempty"`
+	DatabaseGroupID    interface{}          `json:"databaseGroupId,omitempty"`
+	MissingDatabases   interface{}          `json:"missingDatabases,omitempty"`
+	ReplicationHistory interface{}          `json:"replicationHistory,omitempty"`
+}
+
+type ClonedMetadata struct {
+	SecureInfo                           interface{}   `json:"secureInfo,omitempty"`
+	Info                                 interface{}   `json:"info,omitempty"`
+	DeregisterInfo                       interface{}   `json:"deregisterInfo,omitempty"`
+	FromTimeStamp                        string        `json:"fromTimeStamp,omitempty"`
+	ToTimeStamp                          string        `json:"toTimeStamp,omitempty"`
+	ReplicationRetryCount                int           `json:"replicationRetryCount,omitempty"`
+	LastReplicationRetryTimestamp        interface{}   `json:"lastReplicationRetryTimestamp,omitempty"`
+	LastReplicationRetrySourceSnapshotID interface{}   `json:"lastReplicationRetrySourceSnapshotId,omitempty"`
+	Async                                bool          `json:"async,omitempty"`
+	Standby                              bool          `json:"standby,omitempty"`
+	CurationRetryCount                   int           `json:"curationRetryCount,omitempty"`
+	OperationsUsingSnapshot              []interface{} `json:"operationsUsingSnapshot,omitempty"`
 }

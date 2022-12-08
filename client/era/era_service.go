@@ -42,9 +42,12 @@ type Service interface {
 	GetTimeMachine(ctx context.Context, tmsId string, tmsName string) (*TimeMachine, error)
 	ListTimeMachines(ctx context.Context) (*ListTimeMachines, error)
 	DatabaseSnapshot(ctx context.Context, id string, req *DatabaseSnapshotRequest) (*ProvisionDatabaseResponse, error)
+	GetSnapshot(ctx context.Context, id string, filter *FilterParams) (*SnapshotResponse, error)
+	ListSnapshots(ctx context.Context) (*ListSnapshots, error)
 	CreateClone(ctx context.Context, id string, req *CloneRequest) (*ProvisionDatabaseResponse, error)
 	UpdateCloneDatabase(ctx context.Context, id string, req *UpdateDatabaseRequest) (*UpdateDatabaseResponse, error)
-	GetClone(ctx context.Context, id string) (*GetDatabaseResponse, error)
+	GetClone(ctx context.Context, id string, name string, filterParams *FilterParams) (*GetDatabaseResponse, error)
+	ListClones(ctx context.Context, filter *FilterParams) (*ListDatabaseInstance, error)
 	DeleteClone(ctx context.Context, id string, req *DeleteDatabaseRequest) (*ProvisionDatabaseResponse, error)
 	AuthorizeDBServer(ctx context.Context, id string, req []*string) (*AuthorizeDBServerResponse, error)
 }
@@ -454,6 +457,28 @@ func (sc ServiceClient) DeleteProfileVersion(ctx context.Context, profileID stri
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
+func (sc ServiceClient) GetSnapshot(ctx context.Context, snapshotID string, filter *FilterParams) (*SnapshotResponse, error) {
+	path := fmt.Sprintf("/snapshots/%s/?load-replicated-child-snapshots=%s&time-zone=%s", snapshotID, filter.LoadReplicatedChildSnapshots, filter.TimeZone)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(SnapshotResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ListSnapshots(ctx context.Context) (*ListSnapshots, error) {
+	path := ("/snapshots?all=false&time-zone=UTC")
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ListSnapshots)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
 func (sc ServiceClient) GetTimeMachine(ctx context.Context, tmsID string, tmsName string) (*TimeMachine, error) {
 	path := ""
 
@@ -491,13 +516,31 @@ func (sc ServiceClient) CreateClone(ctx context.Context, id string, req *CloneRe
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) GetClone(ctx context.Context, id string) (*GetDatabaseResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/clones/%s", id), nil)
+func (sc ServiceClient) GetClone(ctx context.Context, id string, name string, filter *FilterParams) (*GetDatabaseResponse, error) {
+	path := ""
+
+	if name != "" {
+		path = fmt.Sprintf("/clones/%s?value-type=name&detailed=%s&any-status=%s&load-dbserver-cluster=%s&time-zone=%s", name, filter.Detailed, filter.AnyStatus, filter.LoadDBServerCluster, filter.TimeZone)
+	} else {
+		path = fmt.Sprintf("/clones/%s?value-type=id&detailed=%s&any-status=%s&load-dbserver-cluster=%s&time-zone=%s", id, filter.Detailed, filter.AnyStatus, filter.LoadDBServerCluster, filter.TimeZone)
+	}
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}
 
 	res := new(GetDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ListClones(ctx context.Context, filter *FilterParams) (*ListDatabaseInstance, error) {
+	path := fmt.Sprintf("/clones?detailed=%s&any-status=%s&load-dbserver-cluster=%s&order-by-dbserver-cluster=%s&order-by-dbserver-logical-cluster=%s&time-zone=%s", filter.Detailed, filter.AnyStatus, filter.LoadDBServerCluster, filter.OrderByDBServerCluster, filter.OrderByDBServerLogicalCluster, filter.TimeZone)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ListDatabaseInstance)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 

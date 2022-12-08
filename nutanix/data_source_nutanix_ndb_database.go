@@ -572,7 +572,7 @@ func flattenDBLcmConfig(pr *Era.LcmConfig) []map[string]interface{} {
 	if pr != nil {
 		lcm := map[string]interface{}{}
 
-		lcm["expiryDetails"] = flattenEraExpiryDetails(pr.ExpiryDetails)
+		lcm["expiry_details"] = flattenEraExpiryDetails(pr.ExpiryDetails)
 		lcm["refresh_details"] = flattenEraRefreshDetails(pr.RefreshDetails)
 
 		var preLcmComm []map[string]interface{}

@@ -198,6 +198,10 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_databases":                           dataSourceNutanixEraDatabases(),
 			"nutanix_ndb_time_machine":                        dataSourceNutanixNDBTimeMachine(),
 			"nutanix_ndb_time_machines":                       dataSourceNutanixNDBTimeMachines(),
+			"nutanix_ndb_clone":                               dataSourceNutanixNDBClone(),
+			"nutanix_ndb_clones":                              dataSourceNutanixNDBClones(),
+			"nutanix_ndb_snapshot":                            dataSourceNutanixNDBSnapshot(),
+			"nutanix_ndb_snapshots":                           dataSourceNutanixNDBSnapshots(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  resourceNutanixVirtualMachine(),

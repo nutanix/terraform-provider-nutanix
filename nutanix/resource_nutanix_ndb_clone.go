@@ -402,7 +402,7 @@ func resourceNutanixNDBCloneCreate(ctx context.Context, d *schema.ResourceData, 
 func resourceNutanixNDBCloneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
-	resp, err := conn.Service.GetClone(ctx, d.Id())
+	resp, err := conn.Service.GetClone(ctx, d.Id(), "", nil)
 	if err != nil {
 		return diag.FromErr(err)
 	}
