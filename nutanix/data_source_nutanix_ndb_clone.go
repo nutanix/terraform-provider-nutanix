@@ -195,7 +195,7 @@ func dataSourceNutanixNDBClone() *schema.Resource {
 func dataSourceNutanixNDBCloneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
-	cloneId, ok := d.GetOk("clone_id")
+	cloneID, ok := d.GetOk("clone_id")
 	cloneName, cok := d.GetOk("clone_name")
 
 	if !ok && !cok {
@@ -231,7 +231,7 @@ func dataSourceNutanixNDBCloneRead(ctx context.Context, d *schema.ResourceData, 
 		filterParams.TimeZone = "UTC"
 	}
 
-	resp, err := conn.Service.GetClone(ctx, cloneId.(string), cloneName.(string), filterParams)
+	resp, err := conn.Service.GetClone(ctx, cloneID.(string), cloneName.(string), filterParams)
 	if err != nil {
 		return diag.FromErr(err)
 	}

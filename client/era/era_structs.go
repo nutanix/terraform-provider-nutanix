@@ -1149,40 +1149,44 @@ type FilterParams struct {
 type ListSnapshots []SnapshotResponse
 
 type SnapshotResponse struct {
-	Id                             *string                 `json:"id,omitempty"`
+	ID                             *string                 `json:"id,omitempty"`
 	Name                           *string                 `json:"name,omitempty"`
 	Description                    *string                 `json:"description,omitempty"`
 	OwnerID                        *string                 `json:"ownerId,omitempty"`
 	DateCreated                    *string                 `json:"dateCreated,omitempty"`
 	DateModified                   *string                 `json:"dateModified,omitempty"`
-	AccessLevel                    interface{}             `json:"accessLevel"`
-	Properties                     []*DBInstanceProperties `json:"properties"`
-	Tags                           []*Tags                 `json:"tags"`
-	SnapshotId                     *string                 `json:"snapshotId,omitempty"`
+	SnapshotID                     *string                 `json:"snapshotId,omitempty"`
 	SnapshotUUID                   *string                 `json:"snapshotUuid,omitempty"`
 	NxClusterID                    *string                 `json:"ncClusterId,omitempty"`
-	ProtectionDomainId             *string                 `json:"protectionDomainId,omitempty"`
+	ProtectionDomainID             *string                 `json:"protectionDomainId,omitempty"`
 	ParentSnapshotID               *string                 `json:"parentSnapshotId,omitempty"`
 	TimeMachineID                  *string                 `json:"timeMachineId,omitempty"`
 	DatabaseNodeID                 *string                 `json:"databaseNodeId,omitempty"`
 	AppInfoVersion                 *string                 `json:"appInfoVersion,omitempty"`
 	Status                         *string                 `json:"status,omitempty"`
 	Type                           *string                 `json:"type,omitempty"`
-	ApplicableTypes                []*string               `json:"applicableTypes,omitempty"`
 	SnapshotTimeStamp              *string                 `json:"snapshotTimeStamp,omitempty"`
+	TimeZone                       *string                 `json:"timeZone,omitempty"`
+	SoftwareSnapshotID             *string                 `json:"softwareSnapshotId,omitempty"`
+	FromTimeStamp                  *string                 `json:"fromTimeStamp,omitempty"`
+	ToTimeStamp                    *string                 `json:"toTimeStamp,omitempty"`
+	ApplicableTypes                []*string               `json:"applicableTypes,omitempty"`
+	DBServerStorageMetadataVersion *int                    `json:"dbServerStorageMetadataVersion,omitempty"`
+	SnapshotTimeStampDate          *int64                  `json:"snapshotTimeStampDate,omitempty"`
+	SnapshotSize                   *float64                `json:"snapshotSize,omitempty"`
+	ParentSnapshot                 *bool                   `json:"parentSnapshot,omitempty"`
+	SoftwareDatabaseSnapshot       bool                    `json:"softwareDatabaseSnapshot,omitempty"`
+	Sanitized                      bool                    `json:"sanitised,omitempty"`
+	Processed                      bool                    `json:"processed,omitempty"`
+	DatabaseSnapshot               bool                    `json:"databaseSnapshot,omitempty"`
+	Properties                     []*DBInstanceProperties `json:"properties"`
+	Tags                           []*Tags                 `json:"tags"`
 	Info                           *CloneInfo              `json:"info,omitempty"`
 	Metadata                       *ClonedMetadata         `json:"metadata,omitempty"`
 	Metric                         *Metric                 `json:"metric,omitempty"`
-	SoftwareSnapshotID             *string                 `json:"softwareSnapshotId,omitempty"`
-	SoftwareDatabaseSnapshot       bool                    `json:"softwareDatabaseSnapshot,omitempty"`
-	DbServerStorageMetadataVersion *int                    `json:"dbServerStorageMetadataVersion,omitempty"`
-	Sanitised                      bool                    `json:"sanitised,omitempty"`
+	LcmConfig                      *LcmConfig              `json:"lcmConfig,omitempty"`
 	SanitisedFromSnapshotID        interface{}             `json:"sanitisedFromSnapshotId,omitempty"`
-	TimeZone                       *string                 `json:"timeZone,omitempty"`
-	Processed                      bool                    `json:"processed,omitempty"`
-	DatabaseSnapshot               bool                    `json:"databaseSnapshot,omitempty"`
-	FromTimeStamp                  *string                 `json:"fromTimeStamp,omitempty"`
-	ToTimeStamp                    *string                 `json:"toTimeStamp,omitempty"`
+	AccessLevel                    interface{}             `json:"accessLevel"`
 	DbserverID                     interface{}             `json:"dbserverId,omitempty"`
 	DbserverName                   interface{}             `json:"dbserverName,omitempty"`
 	DbserverIP                     interface{}             `json:"dbserverIp,omitempty"`
@@ -1190,10 +1194,6 @@ type SnapshotResponse struct {
 	SoftwareSnapshot               interface{}             `json:"softwareSnapshot,omitempty"`
 	SanitisedSnapshots             interface{}             `json:"sanitisedSnapshots,omitempty"`
 	SnapshotFamily                 interface{}             `json:"snapshotFamily,omitempty"`
-	SnapshotTimeStampDate          *int64                  `json:"snapshotTimeStampDate,omitempty"`
-	LcmConfig                      *LcmConfig              `json:"lcmConfig,omitempty"`
-	ParentSnapshot                 *bool                   `json:"parentSnapshot,omitempty"`
-	SnapshotSize                   *float64                `json:"snapshotSize,omitempty"`
 }
 
 type LinkedDBInfo struct {
@@ -1201,13 +1201,13 @@ type LinkedDBInfo struct {
 }
 
 type CloneLinkedDBInfo struct {
-	ID            string        `json:"id,omitempty"`
-	DatabaseName  string        `json:"databaseName,omitempty"`
-	Status        string        `json:"status,omitempty"`
+	ID            *string       `json:"id,omitempty"`
+	DatabaseName  *string       `json:"databaseName,omitempty"`
+	Status        *string       `json:"status,omitempty"`
 	Info          *LinkedDBInfo `json:"info,omitempty"`
 	AppConsistent bool          `json:"appConsistent,omitempty"`
-	Message       interface{}   `json:"message,omitempty"`
 	Clone         bool          `json:"clone,omitempty"`
+	Message       interface{}   `json:"message,omitempty"`
 }
 
 type CloneInfo struct {

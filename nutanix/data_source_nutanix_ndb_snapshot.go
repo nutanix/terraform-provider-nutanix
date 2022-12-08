@@ -288,7 +288,7 @@ func dataSourceNutanixNDBSnapshotRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("id", resp.Id); err != nil {
+	if err := d.Set("id", resp.ID); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -327,7 +327,7 @@ func dataSourceNutanixNDBSnapshotRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("protection_domain_id", resp.ProtectionDomainId); err != nil {
+	if err := d.Set("protection_domain_id", resp.ProtectionDomainID); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -371,11 +371,11 @@ func dataSourceNutanixNDBSnapshotRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("dbserver_storage_metadata_version", resp.DbServerStorageMetadataVersion); err != nil {
+	if err := d.Set("dbserver_storage_metadata_version", resp.DBServerStorageMetadataVersion); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("santised", resp.Sanitised); err != nil {
+	if err := d.Set("santised", resp.Sanitized); err != nil {
 		return diag.FromErr(err)
 	}
 

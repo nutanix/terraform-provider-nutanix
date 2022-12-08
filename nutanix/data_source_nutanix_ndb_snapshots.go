@@ -266,7 +266,7 @@ func flattenSnapshotsList(sn *era.ListSnapshots) []map[string]interface{} {
 		for _, val := range *sn {
 			snap := map[string]interface{}{}
 
-			snap["id"] = val.Id
+			snap["id"] = val.ID
 			snap["name"] = val.Name
 			snap["description"] = val.Description
 			snap["owner_id"] = val.OwnerID
@@ -276,7 +276,7 @@ func flattenSnapshotsList(sn *era.ListSnapshots) []map[string]interface{} {
 			snap["tags"] = flattenDBTags(val.Tags)
 			snap["snapshot_uuid"] = val.SnapshotUUID
 			snap["nx_cluster_id"] = val.NxClusterID
-			snap["protection_domain_id"] = val.ProtectionDomainId
+			snap["protection_domain_id"] = val.ProtectionDomainID
 			snap["parent_snapshot_id"] = val.ParentSnapshotID
 			snap["time_machine_id"] = val.TimeMachineID
 			snap["database_node_id"] = val.DatabaseNodeID
@@ -288,8 +288,8 @@ func flattenSnapshotsList(sn *era.ListSnapshots) []map[string]interface{} {
 			snap["metadata"] = flattenClonedMetadata(val.Metadata)
 			snap["software_snapshot_id"] = val.SoftwareSnapshotID
 			snap["software_database_snapshot"] = val.SoftwareDatabaseSnapshot
-			snap["dbserver_storage_metadata_version"] = val.DbServerStorageMetadataVersion
-			snap["santised"] = val.Sanitised
+			snap["dbserver_storage_metadata_version"] = val.DBServerStorageMetadataVersion
+			snap["santised"] = val.Sanitized
 			snap["santised_from_snapshot_id"] = val.SanitisedFromSnapshotID
 			snap["timezone"] = val.TimeZone
 			snap["processed"] = val.Processed
