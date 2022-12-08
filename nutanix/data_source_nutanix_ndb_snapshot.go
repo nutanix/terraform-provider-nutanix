@@ -375,9 +375,9 @@ func dataSourceNutanixNDBSnapshotRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("santised", resp.Sanitized); err != nil {
-		return diag.FromErr(err)
-	}
+	// if err := d.Set("santised", resp.Sanitized); err != nil {
+	// 	return diag.FromErr(err)
+	// }
 
 	if err := d.Set("santised_from_snapshot_id", resp.SanitisedFromSnapshotID); err != nil {
 		return diag.FromErr(err)

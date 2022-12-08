@@ -230,7 +230,6 @@ func dataSourceNutanixNDBClonesRead(ctx context.Context, d *schema.ResourceData,
 			if orderLogicalCls, ok := val["order_by_dbserver_logical_cluster"]; ok {
 				filterParams.OrderByDBServerLogicalCluster = orderLogicalCls.(string)
 			}
-
 		}
 	} else {
 		filterParams.Detailed = "false"
