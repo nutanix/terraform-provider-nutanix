@@ -67,6 +67,10 @@ func resourceNutanixNDBRegisterDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"nx_cluster_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"reset_description_in_nx_cluster": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -79,11 +83,12 @@ func resourceNutanixNDBRegisterDatabase() *schema.Resource {
 			},
 			"working_directory": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Default:  "/tmp",
 			},
-			"time_machine":    timeMachineInfoSchema(),
-			"tags":            dataSourceEraDBInstanceTags(),
-			"actionarguments": actionArgumentsSchema(),
+			"time_machine_info": timeMachineInfoSchema(),
+			"tags":              dataSourceEraDBInstanceTags(),
+			"actionarguments":   actionArgumentsSchema(),
 			"postgress_info": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -122,7 +127,7 @@ func resourceNutanixNDBRegisterDatabase() *schema.Resource {
 						},
 						"software_home": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 						"db_password": {
 							Type:      schema.TypeString,
@@ -139,10 +144,35 @@ func resourceNutanixNDBRegisterDatabase() *schema.Resource {
 
 			// computed values
 
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"properties": {
+				Type:        schema.TypeList,
+				Description: "List of all the properties",
+				Computed:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "",
+						},
+
+						"value": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "",
+						},
+					},
+				},
+			},
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"time_machine": dataSourceEraTimeMachine(),
 			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -501,24 +531,74 @@ func resourceNutanixNDBRegisterDatabaseDelete(ctx context.Context, d *schema.Res
 }
 
 func buildReisterDbRequest(d *schema.ResourceData) (*era.RegisterDBInputRequest, error) {
-	return &era.RegisterDBInputRequest{
-		DatabaseType:                utils.StringPtr(d.Get("database_type").(string)),
-		DatabaseName:                utils.StringPtr(d.Get("database_name").(string)),
-		Description:                 utils.StringPtr(d.Get("description").(string)),
-		Clustered:                   d.Get("clustered").(bool),
-		ForcedInstall:               d.Get("forced_install").(bool),
-		Category:                    utils.StringPtr(d.Get("category").(string)),
-		VMIP:                        utils.StringPtr(d.Get("vm_ip").(string)),
-		VMUsername:                  utils.StringPtr(d.Get("vm_username").(string)),
-		VMPassword:                  utils.StringPtr(d.Get("vm_password").(string)),
-		VMSshkey:                    utils.StringPtr(d.Get("vm_sshkey").(string)),
-		VMDescription:               utils.StringPtr(d.Get("vm_description").(string)),
-		ResetDescriptionInNxCluster: d.Get("reset_description_in_nx_cluster").(bool),
-		AutoTuneStagingDrive:        d.Get("auto_tune_staging_drive").(bool),
-		WorkingDirectory:            utils.StringPtr(d.Get("working_directory").(string)),
-		TimeMachineInfo:             buildTimeMachineFromResourceData(d.Get("time_machine").(*schema.Set)),
-		Actionarguments:             expandRegisterDbActionArguments(d),
-	}, nil
+	res := &era.RegisterDBInputRequest{}
+
+	if dbType, ok := d.GetOk("database_type"); ok && len(dbType.(string)) > 0 {
+		res.DatabaseType = utils.StringPtr(dbType.(string))
+	}
+
+	if dbName, ok := d.GetOk("database_name"); ok && len(dbName.(string)) > 0 {
+		res.DatabaseName = utils.StringPtr(dbName.(string))
+	}
+
+	if desc, ok := d.GetOk("description"); ok && len(desc.(string)) > 0 {
+		res.Description = utils.StringPtr(desc.(string))
+	}
+
+	if cls, ok := d.GetOk("clustered"); ok {
+		res.Clustered = cls.(bool)
+	}
+
+	if forcedInstall, ok := d.GetOk("forced_install"); ok {
+		res.ForcedInstall = forcedInstall.(bool)
+	}
+
+	if category, ok := d.GetOk("category"); ok && len(category.(string)) > 0 {
+		res.Category = utils.StringPtr(category.(string))
+	}
+
+	if vmIP, ok := d.GetOk("vm_ip"); ok && len(vmIP.(string)) > 0 {
+		res.VMIP = utils.StringPtr(vmIP.(string))
+	}
+
+	if vmUsername, ok := d.GetOk("vm_username"); ok && len(vmUsername.(string)) > 0 {
+		res.VMUsername = utils.StringPtr(vmUsername.(string))
+	}
+
+	if vmPass, ok := d.GetOk("vm_password"); ok && len(vmPass.(string)) > 0 {
+		res.VMPassword = utils.StringPtr(vmPass.(string))
+	}
+
+	if vmSshkey, ok := d.GetOk("vm_sshkey"); ok && len(vmSshkey.(string)) > 0 {
+		res.VMSshkey = utils.StringPtr(vmSshkey.(string))
+	}
+
+	if forcedInstall, ok := d.GetOk("vm_description"); ok && len(forcedInstall.(string)) > 0 {
+		res.ForcedInstall = forcedInstall.(bool)
+	}
+
+	if nxCls, ok := d.GetOk("nx_cluster_id"); ok && len(nxCls.(string)) > 0 {
+		res.NxClusterID = utils.StringPtr(nxCls.(string))
+	}
+
+	if resetDesc, ok := d.GetOk("reset_description_in_nx_cluster"); ok {
+		res.ResetDescriptionInNxCluster = resetDesc.(bool)
+	}
+
+	if autoTune, ok := d.GetOk("auto_tune_staging_drive"); ok {
+		res.AutoTuneStagingDrive = (autoTune.(bool))
+	}
+
+	if wrk, ok := d.GetOk("working_directory"); ok && len(wrk.(string)) > 0 {
+		res.WorkingDirectory = utils.StringPtr(wrk.(string))
+	}
+
+	if tms, ok := d.GetOk("time_machine_info"); ok && len(tms.(*schema.Set).List()) > 0 {
+		res.TimeMachineInfo = buildTimeMachineFromResourceData(tms.(*schema.Set))
+	}
+
+	res.Actionarguments = expandRegisterDbActionArguments(d)
+	return res, nil
 }
 
 func expandRegisterDbActionArguments(d *schema.ResourceData) []*era.Actionarguments {
