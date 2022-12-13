@@ -1063,17 +1063,17 @@ type RegisterDBInputRequest struct {
 	DatabaseType                *string            `json:"databaseType,omitempty"`
 	DatabaseName                *string            `json:"databaseName,omitempty"`
 	Description                 *string            `json:"description,omitempty"`
-	Clustered                   bool               `json:"clustered,omitempty"`
-	ForcedInstall               bool               `json:"forcedInstall,omitempty"`
 	Category                    *string            `json:"category,omitempty"`
 	VMIP                        *string            `json:"vmIp,omitempty"`
+	WorkingDirectory            *string            `json:"workingDirectory,omitempty"`
 	VMUsername                  *string            `json:"vmUsername,omitempty"`
 	VMPassword                  *string            `json:"vmPassword,omitempty"`
 	VMSshkey                    *string            `json:"vmSshkey,omitempty"`
 	VMDescription               *string            `json:"vmDescription,omitempty"`
 	ResetDescriptionInNxCluster bool               `json:"resetDescriptionInNxCluster,omitempty"`
 	AutoTuneStagingDrive        bool               `json:"autoTuneStagingDrive,omitempty"`
-	WorkingDirectory            *string            `json:"workingDirectory,omitempty"`
+	Clustered                   bool               `json:"clustered,omitempty"`
+	ForcedInstall               bool               `json:"forcedInstall,omitempty"`
 	TimeMachineInfo             *Timemachineinfo   `json:"timeMachineInfo,omitempty"`
 	Tags                        []*Tags            `json:"tags,omitempty"`
 	Actionarguments             []*Actionarguments `json:"actionArguments,omitempty"`

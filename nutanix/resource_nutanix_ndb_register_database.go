@@ -271,7 +271,7 @@ func resourceNutanixNDBRegisterDatabaseCreate(ctx context.Context, d *schema.Res
 	conn := meta.(*Client).Era
 
 	log.Println("Creating the request!!!")
-	req, err := buildReisterDbRequest(d)
+	req, err := buildReisterDBRequest(d)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -530,7 +530,7 @@ func resourceNutanixNDBRegisterDatabaseDelete(ctx context.Context, d *schema.Res
 	return nil
 }
 
-func buildReisterDbRequest(d *schema.ResourceData) (*era.RegisterDBInputRequest, error) {
+func buildReisterDBRequest(d *schema.ResourceData) (*era.RegisterDBInputRequest, error) {
 	res := &era.RegisterDBInputRequest{}
 
 	if dbType, ok := d.GetOk("database_type"); ok && len(dbType.(string)) > 0 {
@@ -597,11 +597,11 @@ func buildReisterDbRequest(d *schema.ResourceData) (*era.RegisterDBInputRequest,
 		res.TimeMachineInfo = buildTimeMachineFromResourceData(tms.(*schema.Set))
 	}
 
-	res.Actionarguments = expandRegisterDbActionArguments(d)
+	res.Actionarguments = expandRegisterDBActionArguments(d)
 	return res, nil
 }
 
-func expandRegisterDbActionArguments(d *schema.ResourceData) []*era.Actionarguments {
+func expandRegisterDBActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 	args := []*era.Actionarguments{}
 	if post, ok := d.GetOk("postgress_info"); ok {
 		brr := post.([]interface{})
