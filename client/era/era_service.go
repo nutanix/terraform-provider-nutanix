@@ -42,8 +42,10 @@ type Service interface {
 	GetTimeMachine(ctx context.Context, tmsId string, tmsName string) (*TimeMachine, error)
 	ListTimeMachines(ctx context.Context) (*ListTimeMachines, error)
 	DatabaseSnapshot(ctx context.Context, id string, req *DatabaseSnapshotRequest) (*ProvisionDatabaseResponse, error)
+	UpdateSnapshot(ctx context.Context, id string, req *UpdateSnapshotRequest) (*SnapshotResponse, error)
 	GetSnapshot(ctx context.Context, id string, filter *FilterParams) (*SnapshotResponse, error)
-	ListSnapshots(ctx context.Context) (*ListSnapshots, error)
+	DeleteSnapshot(ctx context.Context, id string) (*ProvisionDatabaseResponse, error)
+	ListSnapshots(ctx context.Context, tmsID string) (*ListSnapshots, error)
 	CreateClone(ctx context.Context, id string, req *CloneRequest) (*ProvisionDatabaseResponse, error)
 	UpdateCloneDatabase(ctx context.Context, id string, req *UpdateDatabaseRequest) (*UpdateDatabaseResponse, error)
 	GetClone(ctx context.Context, id string, name string, filterParams *FilterParams) (*GetDatabaseResponse, error)
@@ -457,8 +459,31 @@ func (sc ServiceClient) DeleteProfileVersion(ctx context.Context, profileID stri
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
+func (sc ServiceClient) UpdateSnapshot(ctx context.Context, snapshotID string, req *UpdateSnapshotRequest) (*SnapshotResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("/snapshots/i/%s", snapshotID), req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(SnapshotResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteSnapshot(ctx context.Context, snapshotID string) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/snapshots/%s", snapshotID), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
 func (sc ServiceClient) GetSnapshot(ctx context.Context, snapshotID string, filter *FilterParams) (*SnapshotResponse, error) {
-	path := fmt.Sprintf("/snapshots/%s/?load-replicated-child-snapshots=%s&time-zone=%s", snapshotID, filter.LoadReplicatedChildSnapshots, filter.TimeZone)
+	path := fmt.Sprintf("/snapshots/%s", snapshotID)
+	if filter != nil {
+		path = path + "?load-replicated-child-snapshots=" + filter.LoadReplicatedChildSnapshots + "&time-zone=" + filter.TimeZone
+	}
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
@@ -468,8 +493,11 @@ func (sc ServiceClient) GetSnapshot(ctx context.Context, snapshotID string, filt
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) ListSnapshots(ctx context.Context) (*ListSnapshots, error) {
+func (sc ServiceClient) ListSnapshots(ctx context.Context, tmsID string) (*ListSnapshots, error) {
 	path := ("/snapshots?all=false&time-zone=UTC")
+	if tmsID != "" {
+		path = path + "&value-type=time-machine&value=" + tmsID
+	}
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err

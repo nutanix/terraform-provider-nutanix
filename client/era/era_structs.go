@@ -1088,8 +1088,9 @@ type UnRegisterDatabaseRequest struct {
 	DeleteTimeMachine bool `json:"deleteTimeMachine,omitempty"`
 }
 type DatabaseSnapshotRequest struct {
-	Name      *string    `json:"name,omitempty"`
-	LcmConfig *LcmConfig `json:"lcmConfig,omitempty"`
+	Name                *string    `json:"name,omitempty"`
+	LcmConfig           *LcmConfig `json:"lcmConfig,omitempty"`
+	ReplicateToClusters []*string  `json:"replicateToClusterIds,omitempty"`
 }
 
 type ListTimeMachines []*TimeMachine
@@ -1144,6 +1145,11 @@ type FilterParams struct {
 	OrderByDBServerCluster        string `json:"order-by-dbserver-cluster,omitempty"`
 	OrderByDBServerLogicalCluster string `json:"order-by-dbserver-logical-cluster,omitempty"`
 	LoadReplicatedChildSnapshots  string `json:"load-replicated-child-snapshots,omitempty"`
+}
+
+type UpdateSnapshotRequest struct {
+	Name      *string `json:"name,omitempty"`
+	ResetName bool    `json:"resetName,omitempty"`
 }
 
 type ListSnapshots []SnapshotResponse

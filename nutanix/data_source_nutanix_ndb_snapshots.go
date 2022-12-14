@@ -13,6 +13,18 @@ func dataSourceNutanixNDBSnapshots() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceNutanixNDBSnapshotsRead,
 		Schema: map[string]*schema.Schema{
+			"filters": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"time_machine_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"snapshots": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -243,7 +255,20 @@ func dataSourceNutanixNDBSnapshots() *schema.Resource {
 func dataSourceNutanixNDBSnapshotsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
-	resp, err := conn.Service.ListSnapshots(ctx)
+	tmsID := ""
+	if filter, ok := d.GetOk("filters"); ok {
+		filterList := filter.([]interface{})
+
+		for _, v := range filterList {
+			val := v.(map[string]interface{})
+
+			if tms, ok := val["time_machine_id"]; ok {
+				tmsID = tms.(string)
+			}
+		}
+	}
+
+	resp, err := conn.Service.ListSnapshots(ctx, tmsID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
