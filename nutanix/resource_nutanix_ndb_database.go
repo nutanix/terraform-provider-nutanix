@@ -144,27 +144,6 @@ func resourceDatabaseInstance() *schema.Resource {
 
 			"nodes": nodesSchema(),
 
-			// "tags": {
-			// 	Type:     schema.TypeList,
-			// 	Optional: true,
-			// 	Elem: &schema.Resource{
-			// 		Schema: map[string]*schema.Schema{
-			// 			"tag_id": {
-			// 				Type:     schema.TypeString,
-			// 				Optional: true,
-			// 			},
-			// 			"tag_name": {
-			// 				Type:     schema.TypeString,
-			// 				Optional: true,
-			// 			},
-			// 			"value": {
-			// 				Type:     schema.TypeString,
-			// 				Optional: true,
-			// 			},
-			// 		},
-			// 	},
-			// },
-
 			"properties": {
 				Type:        schema.TypeList,
 				Description: "List of all the properties",
