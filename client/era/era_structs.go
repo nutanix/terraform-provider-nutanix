@@ -170,6 +170,7 @@ type ProvisionDatabaseRequest struct {
 	Timemachineinfo          *Timemachineinfo   `json:"timeMachineInfo,omitempty"`
 	Actionarguments          []*Actionarguments `json:"actionArguments,omitempty"`
 	Nodes                    []*Nodes           `json:"nodes,omitempty"`
+	Tags                     []*Tags            `json:"tags,omitempty"`
 }
 
 type Snapshottimeofday struct {
@@ -233,11 +234,11 @@ type Schedule struct {
 }
 
 type Timemachineinfo struct {
-	Name        string        `json:"name"`
-	Description string        `json:"description"`
-	Slaid       string        `json:"slaId"`
-	Schedule    Schedule      `json:"schedule"`
-	Tags        []interface{} `json:"tags"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Slaid       string   `json:"slaId"`
+	Schedule    Schedule `json:"schedule"`
+	Tags        []*Tags  `json:"tags,omitempty"`
 
 	Autotunelogdrive bool `json:"autoTuneLogDrive"`
 }
@@ -511,12 +512,12 @@ type DeleteDatabaseResponse struct {
 
 // UpdateDatabase models
 type UpdateDatabaseRequest struct {
-	Name             string        `json:"name"`
-	Description      string        `json:"description"`
-	Tags             []interface{} `json:"tags"`
-	Resetname        bool          `json:"resetName"`
-	Resetdescription bool          `json:"resetDescription"`
-	Resettags        bool          `json:"resetTags"`
+	Name             string  `json:"name,omitempty"`
+	Description      string  `json:"description,omitempty"`
+	Tags             []*Tags `json:"tags,omitempty"`
+	Resetname        bool    `json:"resetName,omitempty"`
+	Resetdescription bool    `json:"resetDescription,omitempty"`
+	Resettags        bool    `json:"resetTags,omitempty"`
 }
 
 type UpdateDatabaseResponse struct {

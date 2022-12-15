@@ -144,6 +144,27 @@ func resourceDatabaseInstance() *schema.Resource {
 
 			"nodes": nodesSchema(),
 
+			// "tags": {
+			// 	Type:     schema.TypeList,
+			// 	Optional: true,
+			// 	Elem: &schema.Resource{
+			// 		Schema: map[string]*schema.Schema{
+			// 			"tag_id": {
+			// 				Type:     schema.TypeString,
+			// 				Optional: true,
+			// 			},
+			// 			"tag_name": {
+			// 				Type:     schema.TypeString,
+			// 				Optional: true,
+			// 			},
+			// 			"value": {
+			// 				Type:     schema.TypeString,
+			// 				Optional: true,
+			// 			},
+			// 		},
+			// 	},
+			// },
+
 			"properties": {
 				Type:        schema.TypeList,
 				Description: "List of all the properties",
@@ -398,6 +419,7 @@ func buildEraRequest(d *schema.ResourceData) (*era.ProvisionDatabaseRequest, err
 		Nodes:                    buildNodesFromResourceData(d.Get("nodes").(*schema.Set)),
 		Autotunestagingdrive:     d.Get("autotunestagingdrive").(bool),
 		VMPassword:               utils.StringPtr(d.Get("vm_password").(string)),
+		Tags:                     expandTags(d.Get("tags").([]interface{})),
 	}, nil
 }
 
@@ -555,10 +577,15 @@ func updateDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
 
+	tags := make([]*era.Tags, 0)
+	if d.HasChange("tags") {
+		tags = expandTags(d.Get("tags").([]interface{}))
+	}
+
 	updateReq := era.UpdateDatabaseRequest{
 		Name:             name,
 		Description:      description,
-		Tags:             []interface{}{},
+		Tags:             tags,
 		Resetname:        true,
 		Resetdescription: true,
 		Resettags:        true,
@@ -739,4 +766,30 @@ func eraRefresh(ctx context.Context, conn *era.Client, opID era.GetOperationRequ
 		}
 		return opRes, "PENDING", nil
 	}
+}
+
+func expandTags(pr []interface{}) []*era.Tags {
+	if len(pr) > 0 {
+		tags := make([]*era.Tags, 0)
+
+		for _, v := range pr {
+			tag := &era.Tags{}
+			val := v.(map[string]interface{})
+
+			if tagName, ok := val["tag_name"]; ok {
+				tag.TagName = tagName.(string)
+			}
+
+			if tagID, ok := val["tag_id"]; ok {
+				tag.TagID = tagID.(string)
+			}
+
+			if tagVal, ok := val["value"]; ok {
+				tag.Value = tagVal.(string)
+			}
+			tags = append(tags, tag)
+		}
+		return tags
+	}
+	return nil
 }
