@@ -148,6 +148,25 @@ type DatabaseTypeProperties struct {
 	Defaultlogdriveautotune       bool   `json:"defaultLogDriveAutoTune"`
 }
 
+type PrePostCommand struct {
+	PreCommand  *string `json:"preCommand,omitempty"`
+	PostCommand *string `json:"postCommand,omitempty"`
+}
+
+type Payload struct {
+	PrePostCommand *PrePostCommand `json:"prePostCommand,omitempty"`
+}
+
+type Tasks struct {
+	TaskType *string  `json:"taskType,omitempty"`
+	Payload  *Payload `json:"payload,omitempty"`
+}
+
+type MaintenanceTasks struct {
+	MaintenanceWindowId *string  `json:"maintenanceWindowId,omitempty"`
+	Tasks               []*Tasks `json:"tasks,omitempty"`
+}
+
 // ProvisionDatabaseRequestStructs
 type ProvisionDatabaseRequest struct {
 	Createdbserver           bool               `json:"createDbserver,omitempty"`
@@ -171,6 +190,7 @@ type ProvisionDatabaseRequest struct {
 	Actionarguments          []*Actionarguments `json:"actionArguments,omitempty"`
 	Nodes                    []*Nodes           `json:"nodes,omitempty"`
 	Tags                     []*Tags            `json:"tags,omitempty"`
+	MaintenanceTasks         *MaintenanceTasks  `json:"maintenanceTasks,omitempty"`
 }
 
 type Snapshottimeofday struct {
