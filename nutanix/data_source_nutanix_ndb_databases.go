@@ -256,9 +256,5 @@ func filterDatabaseBasedOnDatabaseEngine(resp *era.ListDatabaseInstance, dbengin
 			found = append(found, v)
 		}
 	}
-
-	// if len(found) == 0 {
-	// 	return nil, fmt.Errorf("database  with the given type, not found")
-	// }
 	return &found, nil
 }
