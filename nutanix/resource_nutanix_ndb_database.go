@@ -816,7 +816,7 @@ func expandMaintenanceTasks(pr []interface{}) *era.MaintenanceTasks {
 		val := pr[0].(map[string]interface{})
 
 		if windowID, ok := val["maintenance_window_id"]; ok {
-			maintenanceTask.MaintenanceWindowId = utils.StringPtr(windowID.(string))
+			maintenanceTask.MaintenanceWindowID = utils.StringPtr(windowID.(string))
 		}
 
 		if task, ok := val["tasks"]; ok {

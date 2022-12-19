@@ -163,7 +163,7 @@ type Tasks struct {
 }
 
 type MaintenanceTasks struct {
-	MaintenanceWindowId *string  `json:"maintenanceWindowId,omitempty"`
+	MaintenanceWindowID *string  `json:"maintenanceWindowId,omitempty"`
 	Tasks               []*Tasks `json:"tasks,omitempty"`
 }
 
