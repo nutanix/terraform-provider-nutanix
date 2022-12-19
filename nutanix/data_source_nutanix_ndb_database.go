@@ -336,7 +336,7 @@ func flattenDBInstanceMetadata(pr *Era.DBInstanceMetadata) []map[string]interfac
 		pmeta := make(map[string]interface{})
 		pmeta["secure_info"] = pr.Secureinfo
 		pmeta["info"] = pr.Info
-		pmeta["deregister_info"] = pr.Deregisterinfo
+		pmeta["deregister_info"] = flattenDeRegiserInfo(pr.Deregisterinfo)
 		pmeta["tm_activate_operation_id"] = pr.Tmactivateoperationid
 		pmeta["created_dbservers"] = pr.Createddbservers
 		pmeta["registered_dbservers"] = pr.Registereddbservers
@@ -845,7 +845,7 @@ func flattenTimeMachineMetadata(pr *Era.TimeMachineMetadata) []map[string]interf
 
 		tm["secure_info"] = pr.SecureInfo
 		tm["info"] = pr.Info
-		tm["deregister_info"] = pr.DeregisterInfo
+		tm["deregister_info"] = flattenDeRegiserInfo(pr.DeregisterInfo)
 		tm["capability_reset_time"] = pr.CapabilityResetTime
 		tm["auto_heal"] = pr.AutoHeal
 		tm["auto_heal_snapshot_count"] = pr.AutoHealSnapshotCount
@@ -876,6 +876,20 @@ func flattenTimeMachineMetadata(pr *Era.TimeMachineMetadata) []map[string]interf
 
 		tmMeta = append(tmMeta, tm)
 		return tmMeta
+	}
+	return nil
+}
+
+func flattenDeRegiserInfo(pr *Era.DeregisterInfo) []map[string]interface{} {
+	if pr != nil {
+		Deregis := make([]map[string]interface{}, 0)
+		regis := map[string]interface{}{}
+
+		regis["message"] = pr.Message
+		regis["operations"] = utils.StringValueSlice(pr.Operations)
+
+		Deregis = append(Deregis, regis)
+		return Deregis
 	}
 	return nil
 }
@@ -1569,10 +1583,22 @@ func dataSourceEraTimeMachine() *schema.Schema {
 								},
 							},
 							"deregister_info": {
-								Type:     schema.TypeMap,
+								Type:     schema.TypeList,
 								Computed: true,
-								Elem: &schema.Schema{
-									Type: schema.TypeString,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"message": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"operations": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+									},
 								},
 							},
 							"capability_reset_time": {
@@ -2016,10 +2042,22 @@ func dataSourceEraDBInstanceMetadata() *schema.Schema {
 					},
 				},
 				"deregister_info": {
-					Type:     schema.TypeMap,
+					Type:     schema.TypeList,
 					Computed: true,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"message": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"operations": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
 					},
 				},
 				"tm_activate_operation_id": {
