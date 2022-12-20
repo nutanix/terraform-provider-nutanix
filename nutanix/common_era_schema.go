@@ -415,7 +415,25 @@ func nodesSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
-
+				"ip_infos": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ip_type": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"ip_addresses": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
+					},
+				},
 				"computeprofileid": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -446,6 +464,7 @@ func buildNodesFromResourceData(d *schema.Set) []*era.Nodes {
 			DatabaseServerID: utils.StringPtr(arg.(map[string]interface{})["dbserverid"].(string)),
 			NxClusterID:      utils.StringPtr(arg.(map[string]interface{})["nx_cluster_id"].(string)),
 			ComputeProfileID: utils.StringPtr(arg.(map[string]interface{})["computeprofileid"].(string)),
+			IPInfos:          expandIPInfos(arg.(map[string]interface{})["ip_infos"].([]interface{})),
 		})
 	}
 	return args
@@ -560,4 +579,27 @@ func expandNodesProperties(pr *schema.Set) []*era.NodesProperties {
 		})
 	}
 	return out
+}
+
+func expandIPInfos(pr []interface{}) []*era.IPInfos {
+	if len(pr) > 0 {
+		IPInfos := make([]*era.IPInfos, 0)
+
+		for _, v := range pr {
+			val := v.(map[string]interface{})
+			IPInfo := &era.IPInfos{}
+
+			if ipType, ok := val["ip_type"]; ok {
+				IPInfo.IPType = utils.StringPtr(ipType.(string))
+			}
+
+			if addr, ok := val["ip_addresses"]; ok {
+				IPInfo.IPAddresses = utils.StringSlice(addr.([]string))
+			}
+
+			IPInfos = append(IPInfos, IPInfo)
+		}
+		return IPInfos
+	}
+	return nil
 }

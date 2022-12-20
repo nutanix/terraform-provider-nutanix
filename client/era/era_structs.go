@@ -282,6 +282,11 @@ type NodesProperties struct {
 	Value interface{} `json:"value"`
 }
 
+type IPInfos struct {
+	IPType      *string   `json:"ipType,omitempty"`
+	IPAddresses []*string `json:"ipAddresses,omitempty"`
+}
+
 type Nodes struct {
 	Properties       []*NodesProperties `json:"properties"`
 	Vmname           *string            `json:"vmName,omitempty"`
@@ -289,6 +294,7 @@ type Nodes struct {
 	DatabaseServerID *string            `json:"dbserverId,omitempty"`
 	NxClusterID      *string            `json:"nxClusterId,omitempty"`
 	ComputeProfileID *string            `json:"computeProfileId,omitempty"`
+	IPInfos          []*IPInfos         `json:"ipInfos,omitempty"`
 }
 
 // ProvisionDatabaseResponse structs
