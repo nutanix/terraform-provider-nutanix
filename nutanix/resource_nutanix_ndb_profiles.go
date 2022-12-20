@@ -204,142 +204,119 @@ func resourceNutanixNDBProfile() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"max_connections": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "100",
-										Description: "Determines the maximum number of concurrent connections to the database server. The default is typically 100, but might be less if your kernel settings will not support it (as determined during initdb).",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "100",
 									},
 									"max_replication_slots": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "10",
-										Description: "Specifies the maximum number of replication slots that the server can support. The default is zero. wal_level must be set to archive or higher to allow replication slots to be used. Setting it to a lower value than the number of currently existing replication slots will prevent the server from starting.",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "10",
 									},
 									"effective_io_concurrency": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "1",
-										Description: "Sets the number of concurrent disk I/O operations that PostgreSQL expects can be executed simultaneously. Raising this value will increase the number of I/O operations that any individual PostgreSQL session attempts to initiate in parallel.",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "1",
 									},
 									"timezone": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "UTC",
-										Description: "Sets the time zone for displaying and interpreting time stamps",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "UTC",
 									},
 									"max_prepared_transactions": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "0",
-										Description: "Sets the maximum number of transactions that can be in the prepared state simultaneously. Setting this parameter to zero (which is the default) disables the prepared-transaction feature. If you are not planning to use prepared transactions, this parameter should be set to zero to prevent accidental creation of prepared transactions. If you are using prepared transactions, you will probably want max_prepared_transactions to be at least as large as max_connections, so that every session can have a prepared transaction pending.",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "0",
 									},
 									"max_locks_per_transaction": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "64",
-										Description: "The shared lock table tracks locks on max_locks_per_transaction * (max_connections + max_prepared_transactions) objects (e.g., tables); hence, no more than this many distinct objects can be locked at any one time. This parameter controls the average number of object locks allocated for each transaction; individual transactions can lock more objects as long as the locks of all transactions fit in the lock table. This is not the number of rows that can be locked; that value is unlimited. The default, 64, has historically proven sufficient, but you might need to raise this value if you have clients that touch many different tables in a single transaction. Increasing this parameter might cause PostgreSQL to request more System V shared memory than your operating system's default configuration allows.",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "64",
 									},
 									"max_wal_senders": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "10",
-										Description: "Specifies the maximum number of concurrent connections from standby servers or streaming base backup clients (i.e., the maximum number of simultaneously running WAL sender processes). The default is 10. The value 0 means replication is disabled. WAL sender processes count towards the total number of connections, so the parameter cannot be set higher than max_connections. Abrupt streaming client disconnection might cause an orphaned connection slot until a timeout is reached, so this parameter should be set slightly higher than the maximum number of expected clients so disconnected clients can immediately reconnect. wal_level must be set to replica or higher to allow connections from standby servers.",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "10",
 									},
 									"max_worker_processes": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "8",
-										Description: "Sets the maximum number of background processes that the system can support. The default is 8. When running a standby server, you must set this parameter to the same or higher value than on the master server. Otherwise, queries will not be allowed in the standby server.",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "8",
 									},
 									"min_wal_size": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "80MB",
-										Description: "As long as WAL disk usage stays below this setting, old WAL files are always recycled for future use at a checkpoint, rather than removed. This can be used to ensure that enough WAL space is reserved to handle spikes in WAL usage, for example when running large batch jobs. The default is 80 MB.",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "80MB",
 									},
 									"max_wal_size": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "1GB",
-										Description: "Maximum size to let the WAL grow to between automatic WAL checkpoints. This is a soft limit; WAL size can exceed max_wal_size under special circumstances, like under heavy load, a failing archive_command, or a high wal_keep_segments setting. The default is 1 GB. Increasing this parameter can increase the amount of time needed for crash recovery.",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "1GB",
 									},
 									"checkpoint_timeout": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "5min",
-										Description: "Sets the maximum time between automatic WAL checkpoints . High Value gives Good Performance, but takes More Recovery Time, Reboot time. can reduce the I/O load on your system, especially when using large values for shared_buffers.",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "5min",
 									},
 									"autovacuum": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "on",
-										Description: "Controls whether the server should run the autovacuum launcher daemon. This is on by default; however, track_counts must also be enabled for autovacuum to work.",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "on",
 									},
 									"checkpoint_completion_target": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "0.5",
-										Description: "Specifies the target of checkpoint completion, as a fraction of total time between checkpoints. Time spent flushing dirty buffers during checkpoint, as fraction of checkpoint interval . Formula - (checkpoint_timeout - 2min) / checkpoint_timeout. The default is 0.5.",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "0.5",
 									},
 									"autovacuum_freeze_max_age": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "200000000",
-										Description: "Age at which to autovacuum a table to prevent transaction ID wraparound",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "200000000",
 									},
 									"autovacuum_vacuum_threshold": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "50",
-										Description: "Min number of row updates before vacuum. Minimum number of tuple updates or deletes prior to vacuum. Take value in KB",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "50",
 									},
 									"autovacuum_vacuum_scale_factor": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "0.2",
-										Description: "Number of tuple updates or deletes prior to vacuum as a fraction of reltuples",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "0.2",
 									},
 									"autovacuum_work_mem": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "-1",
-										Description: "Sets the maximum memory to be used by each autovacuum worker process. Unit is in KB",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "-1",
 									},
 									"autovacuum_max_workers": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "3",
-										Description: "Sets the maximum number of simultaneously running autovacuum worker processes",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "3",
 									},
 									"autovacuum_vacuum_cost_delay": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "2ms",
-										Description: "Vacuum cost delay in milliseconds, for autovacuum. Specifies the cost delay value that will be used in automatic VACUUM operations",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "2ms",
 									},
 									"wal_buffers": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "-1",
-										Description: "Sets the number of disk-page buffers in shared memory for WAL. The amount of shared memory used for WAL data that has not yet been written to disk. The default setting of -1 selects a size equal to 1/32nd (about 3%) of shared_buffers, but not less than 64kB nor more than the size of one WAL segment, typically 16MB",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "-1",
 									},
 									"synchronous_commit": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "on",
-										Description: "Sets the current transaction's synchronization level. Specifies whether transaction commit will wait for WAL records to be written to disk before the command returns a success indication to the client. https://www.postgresql.org/docs/12/runtime-config-wal.html#GUC-SYNCHRONOUS-COMMIT",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "on",
 									},
 									"random_page_cost": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "4",
-										Description: "Sets the planner's estimate of the cost of a nonsequentially fetched disk page. Sets the planner's estimate of the cost of a non-sequentially-fetched disk page. The default is 4.0. This value can be overridden for tables and indexes in a particular tablespace by setting the tablespace",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "4",
 									},
 									"wal_keep_segments": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Default:     "700",
-										Description: "Sets the number of WAL files held for standby servers, Specifies the minimum number of past log file segments kept in the pg_wal directory, in case a standby server needs to fetch them for streaming replication. Each segment is normally 16 megabytes.",
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "700",
 									},
 								},
 							},
@@ -517,6 +494,13 @@ func resourceNutanixNDBProfile() *schema.Resource {
 				Computed: true,
 			},
 			"assoc_databases": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+			"assoc_db_servers": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -702,6 +686,36 @@ func resourceNutanixNDBProfileCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.SetId(*resp.ID)
+
+	// Now if published is present args
+
+	if publish, ok := d.GetOk("published"); ok {
+		req := &era.ProfileRequest{}
+		netReq := &era.UpdateProfileRequest{}
+
+		req.Published = publish.(bool)
+		res, err := conn.Service.GetProfiles(ctx, "", "", d.Id(), "")
+		if err != nil {
+			diag.FromErr(err)
+		}
+
+		if res != nil {
+			netReq.Name = res.Name
+			netReq.Description = res.Description
+			req.Properties = res.Versions[0].Properties
+		}
+		version_id := res.Versions[0].ID
+
+		_, eror := conn.Service.UpdateProfile(ctx, netReq, d.Id())
+		if eror != nil {
+			return diag.FromErr(eror)
+		}
+
+		_, er := conn.Service.UpdateProfileVersion(ctx, req, d.Id(), *version_id)
+		if er != nil {
+			return diag.FromErr(er)
+		}
+	}
 	return resourceNutanixNDBProfileRead(ctx, d, meta)
 }
 
@@ -919,9 +933,7 @@ func expandNetworkProfileProperties(ps []interface{}, ctx context.Context, meta 
 		for _, v := range ps {
 			inst := v.(map[string]interface{})
 
-			fmt.Println("Hellooooooooo")
 			if sIns, ok := inst["single_instance"]; ok && len(sIns.([]interface{})) > 0 {
-				fmt.Println("SINGLEEEEEEEEEE")
 				prop = expandNetworkSingleInstance(sIns.([]interface{}))
 			}
 
@@ -1217,7 +1229,6 @@ func expandNetworkSingleInstance(ps []interface{}) []*era.ProfileProperties {
 				})
 			}
 		}
-		fmt.Println("INSIDE NETWORKINGGGGGGG")
 		return prop
 	}
 	return nil
