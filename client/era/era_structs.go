@@ -1032,10 +1032,10 @@ type ProfileRequest struct {
 
 type SoftwareProfileResponse struct {
 	Name        *string `json:"name,omitempty"`
-	WorkId      *string `json:"workId,omitempty"`
-	OperationId *string `json:"operationId,omitempty"`
-	DbserverId  *string `json:"dbserverId,omitempty"`
-	EntityId    *string `json:"entityId,omitempty"`
+	WorkID      *string `json:"workId,omitempty"`
+	OperationID *string `json:"operationId,omitempty"`
+	DbserverID  *string `json:"dbserverId,omitempty"`
+	EntityID    *string `json:"entityId,omitempty"`
 	EntityName  *string `json:"entityName,omitempty"`
 	EntityType  *string `json:"entityType,omitempty"`
 	Status      *string `json:"status,omitempty"`

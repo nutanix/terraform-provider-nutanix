@@ -279,15 +279,15 @@ func resourceNutanixNDBSoftwareVersionProfileCreate(ctx context.Context, d *sche
 	conn := meta.(*Client).Era
 
 	req := &era.ProfileRequest{}
-	profileId := ""
+	profileID := ""
 	// pre-filled requests
 
 	req.DBVersion = utils.StringPtr("ALL")
 	req.SystemProfile = false
 	req.Type = utils.StringPtr("Software")
 
-	if pId, ok := d.GetOk("profile_id"); ok {
-		profileId = pId.(string)
+	if pID, ok := d.GetOk("profile_id"); ok {
+		profileID = pID.(string)
 	}
 
 	if name, ok := d.GetOk("name"); ok {
@@ -318,13 +318,13 @@ func resourceNutanixNDBSoftwareVersionProfileCreate(ctx context.Context, d *sche
 
 	// API to create software versions
 
-	resp, err := conn.Service.CreateSoftwareProfileVersion(ctx, profileId, req)
+	resp, err := conn.Service.CreateSoftwareProfileVersion(ctx, profileID, req)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	// Get Operation ID from response of SoftwareProfileVersion  and poll for the operation to get completed.
-	opID := resp.OperationId
+	opID := resp.OperationID
 	if opID == utils.StringPtr("") {
 		return diag.Errorf("error: operation ID is an empty string")
 	}
@@ -344,9 +344,9 @@ func resourceNutanixNDBSoftwareVersionProfileCreate(ctx context.Context, d *sche
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for software profile	version (%s) to create: %s", *resp.EntityId, errWaitTask)
+		return diag.Errorf("error waiting for software profile	version (%s) to create: %s", *resp.EntityID, errWaitTask)
 	}
-	d.SetId(*resp.EntityId)
+	d.SetId(*resp.EntityID)
 
 	// spec for update profile request
 
@@ -371,7 +371,7 @@ func resourceNutanixNDBSoftwareVersionProfileCreate(ctx context.Context, d *sche
 	}
 
 	//update for software profile version
-	_, er := conn.Service.UpdateProfileVersion(ctx, updateSpec, profileId, d.Id())
+	_, er := conn.Service.UpdateProfileVersion(ctx, updateSpec, profileID, d.Id())
 	if er != nil {
 		return diag.FromErr(er)
 	}
@@ -388,10 +388,10 @@ func resourceNutanixNDBSoftwareVersionProfileUpdate(ctx context.Context, d *sche
 
 	req := &era.ProfileRequest{}
 
-	profileId := d.Get("profile_id")
+	profileID := d.Get("profile_id")
 	// get the software profile version
 
-	oldResp, err := conn.Service.GetSoftwareProfileVersion(ctx, profileId.(string), d.Id())
+	oldResp, err := conn.Service.GetSoftwareProfileVersion(ctx, profileID.(string), d.Id())
 	if err != nil {
 		diag.FromErr(err)
 	}
@@ -423,7 +423,7 @@ func resourceNutanixNDBSoftwareVersionProfileUpdate(ctx context.Context, d *sche
 	}
 
 	//update for software profile version
-	_, er := conn.Service.UpdateProfileVersion(ctx, req, profileId.(string), d.Id())
+	_, er := conn.Service.UpdateProfileVersion(ctx, req, profileID.(string), d.Id())
 	if er != nil {
 		return diag.FromErr(er)
 	}
