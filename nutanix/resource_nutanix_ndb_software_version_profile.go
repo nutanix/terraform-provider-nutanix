@@ -359,13 +359,15 @@ func resourceNutanixNDBSoftwareVersionProfileCreate(ctx context.Context, d *sche
 	// now call the Update Profile API if publish params given
 	if status, ok := d.GetOk("status"); ok {
 		statusValue := status.(string)
-		if statusValue == "published" {
+
+		switch {
+		case statusValue == "published":
 			updateSpec.Published = true
 			updateSpec.Deprecated = false
-		} else if statusValue == "unpublished" {
+		case statusValue == "unpublished":
 			updateSpec.Published = false
 			updateSpec.Deprecated = false
-		} else {
+		default:
 			updateSpec.Published = false
 			updateSpec.Deprecated = true
 		}
@@ -412,13 +414,14 @@ func resourceNutanixNDBSoftwareVersionProfileUpdate(ctx context.Context, d *sche
 
 	if status, ok := d.GetOk("status"); ok {
 		statusValue := status.(string)
-		if statusValue == "published" {
+		switch {
+		case statusValue == "published":
 			req.Published = true
 			req.Deprecated = false
-		} else if statusValue == "unpublished" {
+		case statusValue == "unpublished":
 			req.Published = false
 			req.Deprecated = false
-		} else {
+		default:
 			req.Published = false
 			req.Deprecated = true
 		}
