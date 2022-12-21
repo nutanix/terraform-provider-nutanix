@@ -45,17 +45,17 @@ func resourceNutanixNDBProfile() *schema.Resource {
 						"cpus": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  1,
+							Default:  "1",
 						},
 						"core_per_cpu": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  1,
+							Default:  "1",
 						},
 						"memory_size": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  2,
+							Default:  "2",
 						},
 					},
 				},
@@ -585,7 +585,7 @@ func resourceNutanixNDBProfileCreate(ctx context.Context, d *schema.ResourceData
 			}
 
 			if ps, ok := val["postgres_database"]; ok {
-				req.Properties = expandNetworkProfileProperties(ps.([]interface{}), ctx, meta)
+				req.Properties = expandNetworkProfileProperties(ctx, meta, ps.([]interface{}))
 			}
 
 			if cls, ok := val["version_cluster_association"]; ok {
@@ -816,7 +816,7 @@ func resourceNutanixNDBProfileUpdate(ctx context.Context, d *schema.ResourceData
 			val := v.(map[string]interface{})
 
 			if ps, ok := val["postgres_database"]; ok {
-				req.Properties = expandNetworkProfileProperties(ps.([]interface{}), ctx, meta)
+				req.Properties = expandNetworkProfileProperties(ctx, meta, ps.([]interface{}))
 			}
 
 			if cls, ok := val["version_cluster_association"]; ok {
@@ -926,7 +926,7 @@ func buildComputeProfileRequest(p interface{}) []*era.ProfileProperties {
 	return nil
 }
 
-func expandNetworkProfileProperties(ps []interface{}, ctx context.Context, meta interface{}) []*era.ProfileProperties {
+func expandNetworkProfileProperties(ctx context.Context, meta interface{}, ps []interface{}) []*era.ProfileProperties {
 	prop := []*era.ProfileProperties{}
 	if len(ps) > 0 {
 		for _, v := range ps {
@@ -937,7 +937,7 @@ func expandNetworkProfileProperties(ps []interface{}, ctx context.Context, meta 
 			}
 
 			if hIns, ok := inst["ha_instance"]; ok && len(hIns.([]interface{})) > 0 {
-				prop = expandNetworkHAInstance(hIns.([]interface{}), ctx, meta)
+				prop = expandNetworkHAInstance(ctx, meta, hIns.([]interface{}))
 			}
 		}
 	}
@@ -960,7 +960,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("max_connections"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Determines the maximum number of concurrent connections to the database server. The default is typically 100, but might be less if your kernel settings will not support it (as determined during initdb)."),
 						})
 					}
 
@@ -969,7 +968,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("max_replication_slots"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Specifies the maximum number of replication slots that the server can support. The default is zero. wal_level must be set to archive or higher to allow replication slots to be used. Setting it to a lower value than the number of currently existing replication slots will prevent the server from starting."),
 						})
 					}
 					if p1, ok1 := val["effective_io_concurrency"]; ok1 {
@@ -977,7 +975,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("effective_io_concurrency"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Sets the number of concurrent disk I/O operations that PostgreSQL expects can be executed simultaneously. Raising this value will increase the number of I/O operations that any individual PostgreSQL session attempts to initiate in parallel."),
 						})
 					}
 					if p1, ok1 := val["timezone"]; ok1 {
@@ -985,7 +982,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("timezone"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Sets the time zone for displaying and interpreting time stamps"),
 						})
 					}
 					if p1, ok1 := val["max_prepared_transactions"]; ok1 {
@@ -993,7 +989,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("max_prepared_transactions"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Sets the maximum number of transactions that can be in the prepared state simultaneously. Setting this parameter to zero (which is the default) disables the prepared-transaction feature. If you are not planning to use prepared transactions, this parameter should be set to zero to prevent accidental creation of prepared transactions. If you are using prepared transactions, you will probably want max_prepared_transactions to be at least as large as max_connections, so that every session can have a prepared transaction pending."),
 						})
 					}
 					if p1, ok1 := val["max_locks_per_transaction"]; ok1 {
@@ -1001,7 +996,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("max_locks_per_transaction"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr(" The shared lock table tracks locks on max_locks_per_transaction * (max_connections + max_prepared_transactions) objects (e.g., tables); hence, no more than this many distinct objects can be locked at any one time. This parameter controls the average number of object locks allocated for each transaction; individual transactions can lock more objects as long as the locks of all transactions fit in the lock table. This is not the number of rows that can be locked; that value is unlimited. The default, 64, has historically proven sufficient, but you might need to raise this value if you have clients that touch many different tables in a single transaction. Increasing this parameter might cause PostgreSQL to request more System V shared memory than your operating system's default configuration allows."),
 						})
 					}
 					if p1, ok1 := val["max_wal_senders"]; ok1 {
@@ -1009,7 +1003,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("max_wal_senders"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Specifies the maximum number of concurrent connections from standby servers or streaming base backup clients (i.e., the maximum number of simultaneously running WAL sender processes). The default is 10. The value 0 means replication is disabled. WAL sender processes count towards the total number of connections, so the parameter cannot be set higher than max_connections. Abrupt streaming client disconnection might cause an orphaned connection slot until a timeout is reached, so this parameter should be set slightly higher than the maximum number of expected clients so disconnected clients can immediately reconnect. wal_level must be set to replica or higher to allow connections from standby servers."),
 						})
 					}
 					if p1, ok1 := val["max_worker_processes"]; ok1 {
@@ -1017,7 +1010,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("max_worker_processes"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Sets the maximum number of background processes that the system can support. The default is 8. When running a standby server, you must set this parameter to the same or higher value than on the master server. Otherwise, queries will not be allowed in the standby server."),
 						})
 					}
 					if p1, ok1 := val["min_wal_size"]; ok1 {
@@ -1025,7 +1017,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("min_wal_size"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("As long as WAL disk usage stays below this setting, old WAL files are always recycled for future use at a checkpoint, rather than removed. This can be used to ensure that enough WAL space is reserved to handle spikes in WAL usage, for example when running large batch jobs. The default is 80 MB."),
 						})
 					}
 					if p1, ok1 := val["max_wal_size"]; ok1 {
@@ -1033,7 +1024,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("max_wal_size"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Maximum size to let the WAL grow to between automatic WAL checkpoints. This is a soft limit; WAL size can exceed max_wal_size under special circumstances, like under heavy load, a failing archive_command, or a high wal_keep_segments setting. The default is 1 GB. Increasing this parameter can increase the amount of time needed for crash recovery."),
 						})
 					}
 					if p1, ok1 := val["checkpoint_timeout"]; ok1 {
@@ -1041,7 +1031,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("checkpoint_timeout"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Sets the maximum time between automatic WAL checkpoints . High Value gives Good Performance, but takes More Recovery Time, Reboot time. can reduce the I/O load on your system, especially when using large values for shared_buffers."),
 						})
 					}
 					if p1, ok1 := val["autovacuum"]; ok1 {
@@ -1049,7 +1038,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("autovacuum"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Controls whether the server should run the autovacuum launcher daemon. This is on by default; however, track_counts must also be enabled for autovacuum to work."),
 						})
 					}
 					if p1, ok1 := val["checkpoint_completion_target"]; ok1 {
@@ -1057,7 +1045,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("checkpoint_completion_target"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Specifies the target of checkpoint completion, as a fraction of total time between checkpoints. Time spent flushing dirty buffers during checkpoint, as fraction of checkpoint interval . Formula - (checkpoint_timeout - 2min) / checkpoint_timeout. The default is 0.5."),
 						})
 					}
 					if p1, ok1 := val["autovacuum_freeze_max_age"]; ok1 {
@@ -1065,7 +1052,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("autovacuum_freeze_max_age"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Age at which to autovacuum a table to prevent transaction ID wraparound"),
 						})
 					}
 					if p1, ok1 := val["autovacuum_vacuum_threshold"]; ok1 {
@@ -1073,7 +1059,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("autovacuum_vacuum_threshold"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Min number of row updates before vacuum. Minimum number of tuple updates or deletes prior to vacuum. Take value in KB"),
 						})
 					}
 					if p1, ok1 := val["autovacuum_vacuum_scale_factor"]; ok1 {
@@ -1081,7 +1066,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("autovacuum_vacuum_scale_factor"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Number of tuple updates or deletes prior to vacuum as a fraction of reltuples"),
 						})
 					}
 					if p1, ok1 := val["autovacuum_work_mem"]; ok1 {
@@ -1089,7 +1073,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("autovacuum_work_mem"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Sets the maximum memory to be used by each autovacuum worker process. Unit is in KB"),
 						})
 					}
 					if p1, ok1 := val["autovacuum_max_workers"]; ok1 {
@@ -1097,7 +1080,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("autovacuum_max_workers"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Sets the maximum number of simultaneously running autovacuum worker processes"),
 						})
 					}
 					if p1, ok1 := val["autovacuum_vacuum_cost_delay"]; ok1 {
@@ -1105,7 +1087,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("autovacuum_vacuum_cost_delay"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Vacuum cost delay in milliseconds, for autovacuum. Specifies the cost delay value that will be used in automatic VACUUM operations"),
 						})
 					}
 					if p1, ok1 := val["wal_buffers"]; ok1 {
@@ -1113,7 +1094,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("wal_buffers"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Sets the number of disk-page buffers in shared memory for WAL. The amount of shared memory used for WAL data that has not yet been written to disk. The default setting of -1 selects a size equal to 1/32nd (about 3%) of shared_buffers, but not less than 64kB nor more than the size of one WAL segment, typically 16MB"),
 						})
 					}
 
@@ -1122,7 +1102,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("synchronous_commit"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Sets the current transaction's synchronization level. Specifies whether transaction commit will wait for WAL records to be written to disk before the command returns a success indication to the client. https://www.postgresql.org/docs/12/runtime-config-wal.html#GUC-SYNCHRONOUS-COMMIT"),
 						})
 					}
 					if p1, ok1 := val["random_page_cost"]; ok1 {
@@ -1130,7 +1109,6 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("random_page_cost"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Sets the planner's estimate of the cost of a nonsequentially fetched disk page. Sets the planner's estimate of the cost of a non-sequentially-fetched disk page. The default is 4.0. This value can be overridden for tables and indexes in a particular tablespace by setting the tablespace"),
 						})
 					}
 					if p1, ok1 := val["wal_keep_segments"]; ok1 {
@@ -1138,15 +1116,12 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 							Name:   utils.StringPtr("wal_keep_segments"),
 							Value:  utils.StringPtr(p1.(string)),
 							Secure: false,
-							// Description: utils.StringPtr("Sets the number of WAL files held for standby servers, Specifies the minimum number of past log file segments kept in the pg_wal directory, in case a standby server needs to fetch them for streaming replication. Each segment is normally 16 megabytes."),
 						})
 					}
 				}
 			}
 		}
-
 	}
-
 	return prop
 }
 
@@ -1229,7 +1204,7 @@ func expandNetworkSingleInstance(ps []interface{}) []*era.ProfileProperties {
 	return nil
 }
 
-func expandNetworkHAInstance(ps []interface{}, ctx context.Context, meta interface{}) []*era.ProfileProperties {
+func expandNetworkHAInstance(ctx context.Context, meta interface{}, ps []interface{}) []*era.ProfileProperties {
 	prop := []*era.ProfileProperties{}
 	for _, v := range ps {
 		val := v.(map[string]interface{})

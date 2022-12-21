@@ -1024,10 +1024,10 @@ type ProfileRequest struct {
 	Description               *string                      `json:"description,omitempty"`
 	AvailableClusterIds       []*string                    `json:"availableClusterIds,omitempty"`
 	SystemProfile             bool                         `json:"systemProfile,omitempty"`
-	Properties                []*ProfileProperties         `json:"properties,omitempty"`
-	VersionClusterAssociation []*VersionClusterAssociation `json:"versionClusterAssociation,omitempty"`
 	Published                 bool                         `json:"published"`
 	Deprecated                bool                         `json:"deprecated"`
+	Properties                []*ProfileProperties         `json:"properties,omitempty"`
+	VersionClusterAssociation []*VersionClusterAssociation `json:"versionClusterAssociation,omitempty"`
 }
 
 type SoftwareProfileResponse struct {

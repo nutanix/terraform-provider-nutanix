@@ -433,9 +433,8 @@ func resourceNutanixNDBSoftwareVersionProfileUpdate(ctx context.Context, d *sche
 
 func resourceNutanixNDBSoftwareVersionProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
-
-	profileId := d.Get("profile_id")
-	resp, err := conn.Service.DeleteProfileVersion(ctx, profileId.(string), d.Id())
+	profileID := d.Get("profile_id")
+	resp, err := conn.Service.DeleteProfileVersion(ctx, profileID.(string), d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
