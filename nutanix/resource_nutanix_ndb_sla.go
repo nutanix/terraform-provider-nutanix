@@ -27,27 +27,27 @@ func resourceNutanixNDBSla() *schema.Resource {
 			"continuous_retention": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  30,
+				Default:  "30",
 			},
 			"daily_retention": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  7,
+				Default:  "7",
 			},
 			"weekly_retention": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  2,
+				Default:  "2",
 			},
 			"monthly_retention": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  2,
+				Default:  "2",
 			},
 			"quarterly_retention": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  1,
+				Default:  "1",
 			},
 
 			// computed
