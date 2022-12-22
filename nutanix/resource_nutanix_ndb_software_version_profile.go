@@ -73,173 +73,58 @@ func resourceNutanixNDBSoftwareVersionProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"latest_version": {
+			"db_version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"latest_version_id": {
+			"topology": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"versions": {
+			"system_profile": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"published": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"deprecated": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"properties": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"description": {
+						"value": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"owner": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"engine_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"topology": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"db_version": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"system_profile": {
+						"secure": {
 							Type:     schema.TypeBool,
 							Computed: true,
-						},
-						"version": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"profile_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"published": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"deprecated": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"properties": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"value": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"secure": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"properties_map": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"version_cluster_association": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"nx_cluster_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"date_created": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"date_modified": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"owner_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"status": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"profile_version_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"properties": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"name": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"value": {
-													Type:     schema.TypeString,
-													Computed: true,
-												},
-												"secure": {
-													Type:     schema.TypeBool,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"optimized_for_provisioning": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-								},
-							},
 						},
 					},
 				},
 			},
-			"nx_cluster_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"assoc_databases": {
-				Type:     schema.TypeList,
+			"properties_map": {
+				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
 			},
-			"cluster_availability": {
+			"version_cluster_association": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -264,8 +149,32 @@ func resourceNutanixNDBSoftwareVersionProfile() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"profile_id": {
+						"profile_version_id": {
 							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"properties": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"secure": {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"optimized_for_provisioning": {
+							Type:     schema.TypeBool,
 							Computed: true,
 						},
 					},
@@ -379,10 +288,61 @@ func resourceNutanixNDBSoftwareVersionProfileCreate(ctx context.Context, d *sche
 		return diag.FromErr(er)
 	}
 
-	return nil
+	return resourceNutanixNDBSoftwareVersionProfileRead(ctx, d, meta)
 }
 
 func resourceNutanixNDBSoftwareVersionProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*Client).Era
+
+	// Get Profile Version API
+	profileVersionID := d.Get("profile_id")
+	resp, err := conn.Service.GetSoftwareProfileVersion(ctx, profileVersionID.(string), d.Id())
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("name", resp.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("description", resp.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("engine_type", resp.Enginetype); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("owner", resp.Owner); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("db_version", resp.Dbversion); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("topology", resp.Topology); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("system_profile", resp.Systemprofile); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("version", resp.Version); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("published", resp.Published); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("deprecated", resp.Deprecated); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("properties", flattenProperties(resp.Properties)); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := d.Set("properties_map", utils.ConvertMapString(resp.Propertiesmap)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("version_cluster_association", flattenClusterAssociation(resp.VersionClusterAssociation)); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 
@@ -433,7 +393,7 @@ func resourceNutanixNDBSoftwareVersionProfileUpdate(ctx context.Context, d *sche
 		return diag.FromErr(er)
 	}
 
-	return nil
+	return resourceNutanixNDBSoftwareVersionProfileRead(ctx, d, meta)
 }
 
 func resourceNutanixNDBSoftwareVersionProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

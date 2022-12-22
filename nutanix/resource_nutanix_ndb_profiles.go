@@ -677,15 +677,13 @@ func resourceNutanixNDBProfileCreate(ctx context.Context, d *schema.ResourceData
 			return diag.Errorf("error waiting for software profile	 (%s) to create: %s", *resp.EntityID, errWaitTask)
 		}
 		d.SetId(*resp.EntityID)
-		return resourceNutanixNDBProfileRead(ctx, d, meta)
+	} else {
+		resp, err := conn.Service.CreateProfiles(ctx, req)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+		d.SetId(*resp.ID)
 	}
-
-	resp, err := conn.Service.CreateProfiles(ctx, req)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	d.SetId(*resp.ID)
 
 	// Now if published is present args
 
