@@ -136,6 +136,34 @@ func resourceNutanixNDBSlaRead(ctx context.Context, d *schema.ResourceData, meta
 		return diag.FromErr(err)
 	}
 
+	if err = d.Set("name", resp.Name); err != nil {
+		return diag.Errorf("error setting name for sla %s: %s", d.Id(), err)
+	}
+
+	if err = d.Set("description", resp.Description); err != nil {
+		return diag.Errorf("error setting description for sla %s: %s", d.Id(), err)
+	}
+
+	if err = d.Set("continuous_retention", resp.Continuousretention); err != nil {
+		return diag.Errorf("error setting continuous_retention for sla %s: %s", d.Id(), err)
+	}
+
+	if err = d.Set("daily_retention", resp.Dailyretention); err != nil {
+		return diag.Errorf("error setting daily_retention for sla %s: %s", d.Id(), err)
+	}
+
+	if err = d.Set("weekly_retention", resp.Weeklyretention); err != nil {
+		return diag.Errorf("error setting weekly_retention for sla %s: %s", d.Id(), err)
+	}
+
+	if err = d.Set("monthly_retention", resp.Monthlyretention); err != nil {
+		return diag.Errorf("error setting monthly_retention for sla %s: %s", d.Id(), err)
+	}
+
+	if err = d.Set("quarterly_retention", resp.Quarterlyretention); err != nil {
+		return diag.Errorf("error setting quarterly_retention for sla %s: %s", d.Id(), err)
+	}
+
 	if err = d.Set("unique_name", resp.Uniquename); err != nil {
 		return diag.Errorf("error setting unique_name for sla %s: %s", d.Id(), err)
 	}
