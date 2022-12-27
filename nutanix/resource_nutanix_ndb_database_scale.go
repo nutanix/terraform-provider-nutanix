@@ -234,8 +234,6 @@ func resourceNutanixNDBScaleDatabaseCreate(ctx context.Context, d *schema.Resour
 		return diag.FromErr(err)
 	}
 
-	d.SetId(resp.Entityid)
-
 	// Get Operation ID from response of ProvisionDatabaseResponse and poll for the operation to get completed.
 	opID := resp.Operationid
 	if opID == "" {
@@ -260,6 +258,7 @@ func resourceNutanixNDBScaleDatabaseCreate(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error waiting for db Instance    (%s) to scale: %s", resp.Entityid, errWaitTask)
 	}
 
+	d.SetId(resp.Entityid)
 	return resourceNutanixNDBScaleDatabaseRead(ctx, d, meta)
 }
 
@@ -413,7 +412,76 @@ func resourceNutanixNDBScaleDatabaseRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceNutanixNDBScaleDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	conn := meta.(*Client).Era
+
+	req := &era.DatabaseScale{}
+
+	if app, ok := d.GetOk("application_type"); ok {
+		req.ApplicationType = utils.StringPtr(app.(string))
+	}
+
+	// action arguments
+
+	args := []*era.Actionarguments{}
+
+	dataSize := d.Get("data_storage_size")
+	args = append(args, &era.Actionarguments{
+		Name:  "data_storage_size",
+		Value: utils.IntPtr(dataSize.(int)),
+	})
+
+	pre := d.Get("pre_script_cmd")
+	args = append(args, &era.Actionarguments{
+		Name:  "pre_script_cmd",
+		Value: utils.StringPtr(pre.(string)),
+	})
+
+	post := d.Get("post_script_cmd")
+	args = append(args, &era.Actionarguments{
+		Name:  "post_script_cmd",
+		Value: utils.StringPtr(post.(string)),
+	})
+
+	// adding working dir
+
+	args = append(args, &era.Actionarguments{
+		Name:  "working_dir",
+		Value: "/tmp",
+	})
+
+	req.Actionarguments = args
+
+	// call API
+
+	resp, err := conn.Service.DatabaseScale(ctx, d.Id(), req)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	// Get Operation ID from response of ProvisionDatabaseResponse and poll for the operation to get completed.
+	opID := resp.Operationid
+	if opID == "" {
+		return diag.Errorf("error: operation ID is an empty string")
+	}
+	opReq := era.GetOperationRequest{
+		OperationID: opID,
+	}
+
+	log.Printf("polling for operation with id: %s\n", opID)
+
+	// Poll for operation here - Operation GET Call
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING"},
+		Target:  []string{"COMPLETED", "FAILED"},
+		Refresh: eraRefresh(ctx, conn, opReq),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+		Delay:   eraDelay,
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for db Instance    (%s) to scale: %s", resp.Entityid, errWaitTask)
+	}
+	return resourceNutanixNDBScaleDatabaseRead(ctx, d, meta)
 }
 
 func resourceNutanixNDBScaleDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
