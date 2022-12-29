@@ -38,6 +38,10 @@ func resourceNutanixNDBScaleDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"scale_count": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 
 			// Computed values
 			"name": {
@@ -258,7 +262,7 @@ func resourceNutanixNDBScaleDatabaseCreate(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error waiting for db Instance    (%s) to scale: %s", resp.Entityid, errWaitTask)
 	}
 
-	d.SetId(resp.Entityid)
+	d.SetId(resp.Operationid)
 	return resourceNutanixNDBScaleDatabaseRead(ctx, d, meta)
 }
 
@@ -268,7 +272,7 @@ func resourceNutanixNDBScaleDatabaseRead(ctx context.Context, d *schema.Resource
 		return diag.Errorf("era is nil")
 	}
 
-	databaseInstanceID := d.Id()
+	databaseInstanceID := d.Get("database_uuid").(string)
 
 	resp, err := c.Service.GetDatabaseInstance(ctx, databaseInstanceID)
 	if err != nil {
@@ -424,23 +428,29 @@ func resourceNutanixNDBScaleDatabaseUpdate(ctx context.Context, d *schema.Resour
 
 	args := []*era.Actionarguments{}
 
-	dataSize := d.Get("data_storage_size")
-	args = append(args, &era.Actionarguments{
-		Name:  "data_storage_size",
-		Value: utils.IntPtr(dataSize.(int)),
-	})
+	if d.HasChange("data_storage_size") {
+		dataSize := d.Get("data_storage_size")
+		args = append(args, &era.Actionarguments{
+			Name:  "data_storage_size",
+			Value: utils.IntPtr(dataSize.(int)),
+		})
+	}
 
-	pre := d.Get("pre_script_cmd")
-	args = append(args, &era.Actionarguments{
-		Name:  "pre_script_cmd",
-		Value: utils.StringPtr(pre.(string)),
-	})
+	if d.HasChange("pre_script_cmd") {
+		pre := d.Get("pre_script_cmd")
+		args = append(args, &era.Actionarguments{
+			Name:  "pre_script_cmd",
+			Value: utils.StringPtr(pre.(string)),
+		})
+	}
 
-	post := d.Get("post_script_cmd")
-	args = append(args, &era.Actionarguments{
-		Name:  "post_script_cmd",
-		Value: utils.StringPtr(post.(string)),
-	})
+	if d.HasChange("post_script_cmd") {
+		post := d.Get("post_script_cmd")
+		args = append(args, &era.Actionarguments{
+			Name:  "post_script_cmd",
+			Value: utils.StringPtr(post.(string)),
+		})
+	}
 
 	// adding working dir
 
