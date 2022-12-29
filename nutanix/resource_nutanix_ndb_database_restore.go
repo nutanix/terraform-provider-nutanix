@@ -21,6 +21,7 @@ func resourceNutanixNDBDatabaseRestore() *schema.Resource {
 			"database_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"snapshot_id": {
 				Type:          schema.TypeString,
@@ -35,13 +36,16 @@ func resourceNutanixNDBDatabaseRestore() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ConflictsWith: []string{"snapshot_id"},
-				RequiredWith:  []string{"time_zone"},
+				RequiredWith:  []string{"time_zone_pitr"},
 			},
 			"time_zone_pitr": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
+			"restore_version": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			// computed Values
 
 			"name": {
@@ -201,7 +205,7 @@ func resourceNutanixNDBDatabaseRestoreCreate(ctx context.Context, d *schema.Reso
 		req.UserPitrTimestamp = utils.StringPtr(uptime.(string))
 	}
 
-	if timezone, ok := d.GetOk("time_zone"); ok {
+	if timezone, ok := d.GetOk("time_zone_pitr"); ok {
 		req.TimeZone = utils.StringPtr(timezone.(string))
 	}
 
@@ -222,8 +226,6 @@ func resourceNutanixNDBDatabaseRestoreCreate(ctx context.Context, d *schema.Reso
 	if er != nil {
 		return diag.FromErr(er)
 	}
-
-	d.SetId(resp.Entityid)
 
 	// Get Operation ID from response of database restore and poll for the operation to get completed.
 	opID := resp.Operationid
@@ -249,6 +251,7 @@ func resourceNutanixNDBDatabaseRestoreCreate(ctx context.Context, d *schema.Reso
 		return diag.Errorf("error waiting to perform db restore	 (%s) to create: %s", resp.Entityid, errWaitTask)
 	}
 
+	d.SetId(resp.Operationid)
 	return resourceNutanixNDBDatabaseRestoreRead(ctx, d, meta)
 }
 
@@ -258,7 +261,7 @@ func resourceNutanixNDBDatabaseRestoreRead(ctx context.Context, d *schema.Resour
 		return diag.Errorf("era is nil")
 	}
 
-	databaseInstanceID := d.Id()
+	databaseInstanceID := d.Get("database_id").(string)
 
 	resp, err := c.Service.GetDatabaseInstance(ctx, databaseInstanceID)
 	if err != nil {
@@ -398,7 +401,70 @@ func resourceNutanixNDBDatabaseRestoreRead(ctx context.Context, d *schema.Resour
 }
 
 func resourceNutanixNDBDatabaseRestoreUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	conn := meta.(*Client).Era
+	req := &era.DatabaseRestoreRequest{}
+
+	databaseID := d.Get("database_id").(string)
+
+	if snapID, ok := d.GetOk("snapshot_id"); ok {
+		req.SnapshotID = utils.StringPtr(snapID.(string))
+	}
+
+	if latestsnap, ok := d.GetOk("latest_snapshot"); ok {
+		req.LatestSnapshot = utils.StringPtr(latestsnap.(string))
+	}
+
+	if uptime, ok := d.GetOk("user_pitr_timestamp"); ok {
+		req.UserPitrTimestamp = utils.StringPtr(uptime.(string))
+	}
+
+	if timezone, ok := d.GetOk("time_zone_pitr"); ok {
+		req.TimeZone = utils.StringPtr(timezone.(string))
+	}
+
+	// getting action arguments
+
+	actargs := []*era.Actionarguments{}
+
+	actargs = append(actargs, &era.Actionarguments{
+		Name:  "sameLocation",
+		Value: "true",
+	})
+
+	req.ActionArguments = actargs
+
+	// call the database restore API
+
+	resp, er := conn.Service.DatabaseRestore(ctx, databaseID, req)
+	if er != nil {
+		return diag.FromErr(er)
+	}
+
+	// Get Operation ID from response of database restore and poll for the operation to get completed.
+	opID := resp.Operationid
+	if opID == "" {
+		return diag.Errorf("error: operation ID is an empty string")
+	}
+	opReq := era.GetOperationRequest{
+		OperationID: opID,
+	}
+
+	log.Printf("polling for operation with id: %s\n", opID)
+
+	// Poll for operation here - Operation GET Call
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING"},
+		Target:  []string{"COMPLETED", "FAILED"},
+		Refresh: eraRefresh(ctx, conn, opReq),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+		Delay:   eraDelay,
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting to perform db restore	 (%s) to create: %s", resp.Entityid, errWaitTask)
+	}
+
+	return resourceNutanixNDBDatabaseRestoreRead(ctx, d, meta)
 }
 
 func resourceNutanixNDBDatabaseRestoreDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
