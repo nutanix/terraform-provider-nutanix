@@ -86,6 +86,26 @@ func TestAccEra_ByNetwork(t *testing.T) {
 	})
 }
 
+func TestAccEra_ByNetworkHAPostgres(t *testing.T) {
+	name := "test-network-tf"
+	desc := "this is network desc for HA postgres"
+	subnet := testVars.SubnetName
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccEraPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEraProfileConfigByNetworkHA(name, desc, subnet),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameProfile, "name", name),
+					resource.TestCheckResourceAttr(resourceNameProfile, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameProfile, "versions.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccEraProfileConfigByCompute(name, desc string) string {
 	return fmt.Sprintf(`
 		resource "nutanix_ndb_profile" "acctest-managed-profile" {
@@ -117,7 +137,7 @@ func testAccEraProfileConfigBySoftware(name, desc string) string {
 			software_profile {
 				topology = "single"
 				postgres_database{
-					source_dbserver_id = "d2f12bd9-bc08-4c17-bd00-c0f7d1a48f5c"
+					source_dbserver_id = ""
 					base_profile_version_name = "test1"
 					base_profile_version_description= "test1 desc"
 				}
@@ -179,4 +199,32 @@ func testAccEraProfileConfigByDatabaseParams(name, desc string) string {
 			published = true
 		}
 	`, name, desc)
+}
+
+func testAccEraProfileConfigByNetworkHA(name, desc, subnet string) string {
+	return fmt.Sprintf(`
+		data "nutanix_ndb_clusters" "clusters"{}
+
+		locals{
+			clusters = {
+				for p in data.nutanix_ndb_clusters.clusters.clusters: p.name => p
+			}  
+		}
+		resource "nutanix_ndb_profile" "acctest-managed-profile" {
+			name = "%[1]s"
+			description = "%[2]s"
+			engine_type = "postgres_database"
+			network_profile{
+			  topology = "cluster"
+			  postgres_database{  
+				ha_instance{
+				 num_of_clusters= "1"
+				 vlan_name = ["%[3]s"]
+				 cluster_name = [local.clusters.EraCluster.name]
+				}
+			  }
+			}
+			published = true
+		}
+	`, name, desc, subnet)
 }
