@@ -148,6 +148,25 @@ type DatabaseTypeProperties struct {
 	Defaultlogdriveautotune       bool   `json:"defaultLogDriveAutoTune"`
 }
 
+type PrePostCommand struct {
+	PreCommand  *string `json:"preCommand,omitempty"`
+	PostCommand *string `json:"postCommand,omitempty"`
+}
+
+type Payload struct {
+	PrePostCommand *PrePostCommand `json:"prePostCommand,omitempty"`
+}
+
+type Tasks struct {
+	TaskType *string  `json:"taskType,omitempty"`
+	Payload  *Payload `json:"payload,omitempty"`
+}
+
+type MaintenanceTasks struct {
+	MaintenanceWindowID *string  `json:"maintenanceWindowId,omitempty"`
+	Tasks               []*Tasks `json:"tasks,omitempty"`
+}
+
 // ProvisionDatabaseRequestStructs
 type ProvisionDatabaseRequest struct {
 	Createdbserver           bool               `json:"createDbserver,omitempty"`
@@ -170,6 +189,8 @@ type ProvisionDatabaseRequest struct {
 	Timemachineinfo          *Timemachineinfo   `json:"timeMachineInfo,omitempty"`
 	Actionarguments          []*Actionarguments `json:"actionArguments,omitempty"`
 	Nodes                    []*Nodes           `json:"nodes,omitempty"`
+	Tags                     []*Tags            `json:"tags,omitempty"`
+	MaintenanceTasks         *MaintenanceTasks  `json:"maintenanceTasks,omitempty"`
 }
 
 type Snapshottimeofday struct {
@@ -233,11 +254,11 @@ type Schedule struct {
 }
 
 type Timemachineinfo struct {
-	Name        string        `json:"name"`
-	Description string        `json:"description"`
-	Slaid       string        `json:"slaId"`
-	Schedule    Schedule      `json:"schedule"`
-	Tags        []interface{} `json:"tags"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Slaid       string   `json:"slaId"`
+	Schedule    Schedule `json:"schedule"`
+	Tags        []*Tags  `json:"tags,omitempty"`
 
 	Autotunelogdrive bool `json:"autoTuneLogDrive"`
 }
@@ -511,12 +532,12 @@ type DeleteDatabaseResponse struct {
 
 // UpdateDatabase models
 type UpdateDatabaseRequest struct {
-	Name             string        `json:"name"`
-	Description      string        `json:"description"`
-	Tags             []interface{} `json:"tags"`
-	Resetname        bool          `json:"resetName"`
-	Resetdescription bool          `json:"resetDescription"`
-	Resettags        bool          `json:"resetTags"`
+	Name             string  `json:"name,omitempty"`
+	Description      string  `json:"description,omitempty"`
+	Tags             []*Tags `json:"tags,omitempty"`
+	Resetname        bool    `json:"resetName,omitempty"`
+	Resetdescription bool    `json:"resetDescription,omitempty"`
+	Resettags        bool    `json:"resetTags,omitempty"`
 }
 
 type UpdateDatabaseResponse struct {

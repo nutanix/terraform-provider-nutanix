@@ -171,13 +171,7 @@ func timeMachineInfoSchema() *schema.Schema {
 						},
 					},
 				},
-				"tags": {
-					Type:        schema.TypeSet,
-					Optional:    true,
-					Computed:    true,
-					Description: "description of schedule of time machine",
-					Elem:        &schema.Schema{Type: schema.TypeString},
-				},
+				"tags": dataSourceEraDBInstanceTags(),
 			},
 		},
 	}
@@ -301,7 +295,7 @@ func buildTimeMachineFromResourceData(set *schema.Set) *era.Timemachineinfo {
 		Description:      tMap["description"].(string),
 		Slaid:            tMap["slaid"].(string),
 		Schedule:         *buildTimeMachineSchedule(tMap["schedule"].(*schema.Set)), // NULL Pointer check
-		Tags:             tMap["tags"].(*schema.Set).List(),
+		Tags:             expandTags(tMap["tags"].([]interface{})),
 		Autotunelogdrive: tMap["autotunelogdrive"].(bool),
 	}
 }

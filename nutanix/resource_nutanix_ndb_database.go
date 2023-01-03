@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var (
@@ -219,6 +220,41 @@ func resourceDatabaseInstance() *schema.Resource {
 				},
 			},
 
+			"maintenance_tasks": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"maintenance_window_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"tasks": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"task_type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice([]string{"OS_PATCHING", "DB_PATCHING"}, false),
+									},
+									"pre_command": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"post_command": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
 			// Computed values
 
 			"owner_id": {
@@ -398,6 +434,8 @@ func buildEraRequest(d *schema.ResourceData) (*era.ProvisionDatabaseRequest, err
 		Nodes:                    buildNodesFromResourceData(d.Get("nodes").(*schema.Set)),
 		Autotunestagingdrive:     d.Get("autotunestagingdrive").(bool),
 		VMPassword:               utils.StringPtr(d.Get("vm_password").(string)),
+		Tags:                     expandTags(d.Get("tags").([]interface{})),
+		MaintenanceTasks:         expandMaintenanceTasks(d.Get("maintenance_tasks").([]interface{})),
 	}, nil
 }
 
@@ -555,10 +593,15 @@ func updateDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
 
+	tags := make([]*era.Tags, 0)
+	if d.HasChange("tags") {
+		tags = expandTags(d.Get("tags").([]interface{}))
+	}
+
 	updateReq := era.UpdateDatabaseRequest{
 		Name:             name,
 		Description:      description,
-		Tags:             []interface{}{},
+		Tags:             tags,
 		Resetname:        true,
 		Resetdescription: true,
 		Resettags:        true,
@@ -739,4 +782,72 @@ func eraRefresh(ctx context.Context, conn *era.Client, opID era.GetOperationRequ
 		}
 		return opRes, "PENDING", nil
 	}
+}
+
+func expandTags(pr []interface{}) []*era.Tags {
+	if len(pr) > 0 {
+		tags := make([]*era.Tags, 0)
+
+		for _, v := range pr {
+			tag := &era.Tags{}
+			val := v.(map[string]interface{})
+
+			if tagName, ok := val["tag_name"]; ok {
+				tag.TagName = tagName.(string)
+			}
+
+			if tagID, ok := val["tag_id"]; ok {
+				tag.TagID = tagID.(string)
+			}
+
+			if tagVal, ok := val["value"]; ok {
+				tag.Value = tagVal.(string)
+			}
+			tags = append(tags, tag)
+		}
+		return tags
+	}
+	return nil
+}
+
+func expandMaintenanceTasks(pr []interface{}) *era.MaintenanceTasks {
+	if len(pr) > 0 {
+		maintenanceTask := &era.MaintenanceTasks{}
+		val := pr[0].(map[string]interface{})
+
+		if windowID, ok := val["maintenance_window_id"]; ok {
+			maintenanceTask.MaintenanceWindowID = utils.StringPtr(windowID.(string))
+		}
+
+		if task, ok := val["tasks"]; ok {
+			taskList := make([]*era.Tasks, 0)
+			tasks := task.([]interface{})
+
+			for _, v := range tasks {
+				out := &era.Tasks{}
+				value := v.(map[string]interface{})
+
+				if taskType, ok := value["task_type"]; ok {
+					out.TaskType = utils.StringPtr(taskType.(string))
+				}
+
+				payload := &era.Payload{}
+				prepostCommand := &era.PrePostCommand{}
+				if preCommand, ok := value["pre_command"]; ok {
+					prepostCommand.PreCommand = utils.StringPtr(preCommand.(string))
+				}
+				if postCommand, ok := value["post_command"]; ok {
+					prepostCommand.PostCommand = utils.StringPtr(postCommand.(string))
+				}
+
+				payload.PrePostCommand = prepostCommand
+				out.Payload = payload
+
+				taskList = append(taskList, out)
+			}
+			maintenanceTask.Tasks = taskList
+		}
+		return maintenanceTask
+	}
+	return nil
 }

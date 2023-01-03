@@ -2108,11 +2108,13 @@ func dataSourceEraDBInstanceMetadata() *schema.Schema {
 func dataSourceEraDBInstanceTags() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
+		Optional: true,
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"tag_id": {
 					Type:     schema.TypeString,
+					Optional: true,
 					Computed: true,
 				},
 				"entity_id": {
@@ -2125,10 +2127,12 @@ func dataSourceEraDBInstanceTags() *schema.Schema {
 				},
 				"value": {
 					Type:     schema.TypeString,
+					Optional: true,
 					Computed: true,
 				},
 				"tag_name": {
 					Type:     schema.TypeString,
+					Optional: true,
 					Computed: true,
 				},
 			},
