@@ -19,6 +19,10 @@ func resourceNutanixNDBSoftwareVersionProfile() *schema.Resource {
 		UpdateContext: resourceNutanixNDBSoftwareVersionProfileUpdate,
 		DeleteContext: resourceNutanixNDBSoftwareVersionProfileDelete,
 		Schema: map[string]*schema.Schema{
+			"profile_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -26,10 +30,6 @@ func resourceNutanixNDBSoftwareVersionProfile() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-			},
-			"profile_id": {
-				Type:     schema.TypeString,
-				Required: true,
 			},
 			"engine_type": {
 				Type:     schema.TypeString,

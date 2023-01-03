@@ -725,6 +725,15 @@ func resourceNutanixNDBProfileRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 
+	if err := d.Set("name", resp.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("description", resp.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("engine_type", resp.Enginetype); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("status", resp.Status); err != nil {
 		return diag.FromErr(err)
 	}
