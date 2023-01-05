@@ -232,25 +232,25 @@ type Dailyschedule struct {
 }
 
 type Schedule struct {
-	ID                 string              `json:"id"`
-	Name               string              `json:"name"`
-	Description        string              `json:"description"`
-	UniqueName         string              `json:"uniqueName"`
-	OwnerID            string              `json:"ownerId"`
-	SystemPolicy       bool                `json:"systemPolicy"`
-	GlobalPolicy       bool                `json:"globalPolicy"`
-	Datecreated        string              `json:"dateCreated"`
-	Datemodified       string              `json:"dateModified"`
-	Snapshottimeofday  *Snapshottimeofday  `json:"snapshotTimeOfDay"`
-	Continuousschedule *Continuousschedule `json:"continuousSchedule"`
-	Weeklyschedule     *Weeklyschedule     `json:"weeklySchedule"`
-	Dailyschedule      *Dailyschedule      `json:"dailySchedule"`
-	Monthlyschedule    *Monthlyschedule    `json:"monthlySchedule"`
-	Quartelyschedule   *Quartelyschedule   `json:"quartelySchedule"`
-	Yearlyschedule     *Yearlyschedule     `json:"yearlySchedule"`
-	ReferenceCount     int                 `json:"referenceCount"`
-	StartTime          string              `json:"startTime"`
-	TimeZone           string              `json:"timeZone"`
+	ID                 *string             `json:"id,omitempty"`
+	Name               *string             `json:"name,omitempty"`
+	Description        *string             `json:"description,omitempty"`
+	UniqueName         *string             `json:"uniqueName,omitempty"`
+	OwnerID            *string             `json:"ownerId,omitempty"`
+	StartTime          *string             `json:"startTime,omitempty"`
+	TimeZone           *string             `json:"timeZone,omitempty"`
+	Datecreated        *string             `json:"dateCreated,omitempty"`
+	Datemodified       *string             `json:"dateModified,omitempty"`
+	ReferenceCount     *int                `json:"referenceCount,omitempty"`
+	SystemPolicy       bool                `json:"systemPolicy,omitempty"`
+	GlobalPolicy       bool                `json:"globalPolicy,omitempty"`
+	Snapshottimeofday  *Snapshottimeofday  `json:"snapshotTimeOfDay,omitempty"`
+	Continuousschedule *Continuousschedule `json:"continuousSchedule,omitempty"`
+	Weeklyschedule     *Weeklyschedule     `json:"weeklySchedule,omitempty"`
+	Dailyschedule      *Dailyschedule      `json:"dailySchedule,omitempty"`
+	Monthlyschedule    *Monthlyschedule    `json:"monthlySchedule,omitempty"`
+	Quartelyschedule   *Quartelyschedule   `json:"quartelySchedule,omitempty"`
+	Yearlyschedule     *Yearlyschedule     `json:"yearlySchedule,omitempty"`
 }
 
 type PrimarySLA struct {
@@ -263,13 +263,13 @@ type SLADetails struct {
 }
 
 type Timemachineinfo struct {
-	Name             string        `json:"name,omitempty"`
-	Description      string        `json:"description,omitempty"`
-	Slaid            string        `json:"slaId,omitempty"`
-	Schedule         Schedule      `json:"schedule,omitempty"`
-	Tags             []interface{} `json:"tags,omitempty"`
-	Autotunelogdrive bool          `json:"autoTuneLogDrive,omitempty"`
-	SLADetails       *SLADetails   `json:"slaDetails,omitempty"`
+	Name             string      `json:"name,omitempty"`
+	Description      string      `json:"description,omitempty"`
+	Slaid            string      `json:"slaId,omitempty"`
+	Schedule         Schedule    `json:"schedule,omitempty"`
+	Tags             []*Tags     `json:"tags,omitempty"`
+	Autotunelogdrive bool        `json:"autoTuneLogDrive,omitempty"`
+	SLADetails       *SLADetails `json:"slaDetails,omitempty"`
 }
 
 type Actionarguments struct {

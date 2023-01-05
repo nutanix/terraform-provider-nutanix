@@ -357,8 +357,8 @@ func buildTimeMachineFromResourceData(set *schema.Set) *era.Timemachineinfo {
 			out.Schedule = *buildTimeMachineSchedule(schedule.(*schema.Set))
 		}
 
-		if tags, ok := tMap["tags"]; ok && len(tags.(*schema.Set).List()) > 0 {
-			out.Tags = tags.(*schema.Set).List()
+		if tags, ok := tMap["tags"]; ok && len(tags.([]interface{})) > 0 {
+			out.Tags = expandTags(tags.([]interface{}))
 		}
 
 		if autotunelogdrive, ok := tMap["autotunelogdrive"]; ok && autotunelogdrive.(bool) {
@@ -371,15 +371,6 @@ func buildTimeMachineFromResourceData(set *schema.Set) *era.Timemachineinfo {
 		return out
 	}
 	return nil
-	// return &era.Timemachineinfo{
-	// 	Name:             tMap["name"].(string),
-	// 	Description:      tMap["description"].(string),
-	// 	Slaid:            tMap["slaid"].(string),
-	// 	Schedule:         *buildTimeMachineSchedule(tMap["schedule"].(*schema.Set)), // NULL Pointer check
-	// 	Tags:             tMap["tags"].(*schema.Set).List(),
-	// 	Autotunelogdrive: tMap["autotunelogdrive"].(bool),
-	// 	SlaDetails:       buildSlaDetails(tMap["sla_details"].([]interface{})),
-	// }
 }
 
 func nodesSchema() *schema.Schema {
@@ -454,20 +445,36 @@ func nodesSchema() *schema.Schema {
 
 func buildNodesFromResourceData(d *schema.Set) []*era.Nodes {
 	argSet := d.List()
-	args := []*era.Nodes{}
+	nodes := []*era.Nodes{}
 
 	for _, arg := range argSet {
-		args = append(args, &era.Nodes{
-			Properties:       expandNodesProperties(arg.(map[string]interface{})["properties"].(*schema.Set)),
-			Vmname:           utils.StringPtr(arg.(map[string]interface{})["vmname"].(string)),
-			Networkprofileid: utils.StringPtr(arg.(map[string]interface{})["networkprofileid"].(string)),
-			DatabaseServerID: utils.StringPtr(arg.(map[string]interface{})["dbserverid"].(string)),
-			NxClusterID:      utils.StringPtr(arg.(map[string]interface{})["nx_cluster_id"].(string)),
-			ComputeProfileID: utils.StringPtr(arg.(map[string]interface{})["computeprofileid"].(string)),
-			IPInfos:          expandIPInfos(arg.(map[string]interface{})["ip_infos"].([]interface{})),
-		})
+		val := arg.(map[string]interface{})
+		node := &era.Nodes{}
+
+		if prop, ok := val["properties"]; ok {
+			node.Properties = expandNodesProperties(prop.(*schema.Set))
+		}
+		if vmName, ok := val["vmname"]; ok && len(vmName.(string)) > 0 {
+			node.Vmname = utils.StringPtr(vmName.(string))
+		}
+		if networkProfile, ok := val["networkprofileid"]; ok && len(networkProfile.(string)) > 0 {
+			node.Networkprofileid = utils.StringPtr(networkProfile.(string))
+		}
+		if dbServer, ok := val["dbserverid"]; ok && len(dbServer.(string)) > 0 {
+			node.DatabaseServerID = utils.StringPtr(dbServer.(string))
+		}
+		if nxCls, ok := val["nx_cluster_id"]; ok && len(nxCls.(string)) > 0 {
+			node.NxClusterID = utils.StringPtr(nxCls.(string))
+		}
+		if computeProfile, ok := val["computeprofileid"]; ok && len(computeProfile.(string)) > 0 {
+			node.ComputeProfileID = utils.StringPtr(computeProfile.(string))
+		}
+		if infos, ok := val["ip_infos"]; ok && len(infos.([]interface{})) > 0 {
+			node.IPInfos = expandIPInfos(infos.([]interface{}))
+		}
+		nodes = append(nodes, node)
 	}
-	return args
+	return nodes
 }
 
 func actionArgumentsSchema() *schema.Schema {

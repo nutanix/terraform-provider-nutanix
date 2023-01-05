@@ -23,6 +23,9 @@ func TestAccEra_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameDB, "name", name),
 					resource.TestCheckResourceAttr(resourceNameDB, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameDB, "databasetype", "postgres_database"),
+					resource.TestCheckResourceAttr(resourceNameDB, "database_nodes.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceNameDB, "time_machine_id"),
 				),
 			},
 		},
@@ -105,7 +108,7 @@ func testAccEraDatabaseConfig(name, desc, vmName, sshKey string) string {
 				networkprofileid= local.network_profiles.DEFAULT_OOB_POSTGRESQL_NETWORK.id
 			}
 		timemachineinfo {
-			name= "test-pg-inst"
+			name= "test-pg-inst-12"
 			description=""
 			slaid=local.slas["DEFAULT_OOB_BRONZE_SLA"].id
 			schedule {

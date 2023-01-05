@@ -134,7 +134,7 @@ resource "nutanix_ndb_database" "dbp" {
 
       database_names= "testdb1"
 
-      ha_availability{
+      ha_instance{
       proxy_read_port= "5001"
 
       proxy_write_port = "5000"
