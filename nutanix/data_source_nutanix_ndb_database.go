@@ -287,8 +287,10 @@ func dataSourceNutanixEraDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("dbserver_logical_cluster", resp.Dbserverlogicalcluster); err != nil {
-		return diag.FromErr(err)
+	if resp.Dbserverlogicalcluster != nil {
+		if err := d.Set("dbserver_logical_cluster", resp.Dbserverlogicalcluster); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	if err := d.Set("database_nodes", flattenDBNodes(resp.Databasenodes)); err != nil {

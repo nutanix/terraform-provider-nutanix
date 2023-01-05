@@ -246,7 +246,7 @@ func resourceDatabaseInstance() *schema.Resource {
 									"deploy_haproxy": {
 										Type:     schema.TypeBool,
 										Optional: true,
-										Default:  true,
+										Default:  false,
 									},
 									"enable_synchronous_mode": {
 										Type:     schema.TypeBool,

@@ -45,6 +45,10 @@ func TestAccEraDatabaseProvisionHA(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameDB, "name", name),
 					resource.TestCheckResourceAttr(resourceNameDB, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameDB, "databasetype", "postgres_database"),
+					resource.TestCheckResourceAttr(resourceNameDB, "database_nodes.#", "3"),
+					resource.TestCheckResourceAttr(resourceNameDB, "linked_databases.#", "4"),
+					resource.TestCheckResourceAttrSet(resourceNameDB, "time_machine_id"),
 				),
 			},
 		},
@@ -199,7 +203,7 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string) string {
 			database_size= "200"
 			db_password =  "password"
 			database_names= "testdb1"
-			ha_availability{
+			ha_instance{
 				proxy_read_port= "5001"
 		  
 				proxy_write_port = "5000"
