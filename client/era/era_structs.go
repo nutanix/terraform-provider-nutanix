@@ -1123,7 +1123,7 @@ type CloneRequest struct {
 	NodeCount                  *int               `json:"nodeCount,omitempty"`
 	Nodes                      []*Nodes           `json:"nodes,omitempty"`
 	ActionArguments            []*Actionarguments `json:"actionArguments,omitempty"`
-	Tags                       []interface{}      `json:"tags,omitempty"`
+	Tags                       []*Tags            `json:"tags,omitempty"`
 	LatestSnapshot             bool               `json:"latestSnapshot,omitempty"`
 	CreateDbserver             bool               `json:"createDbserver,omitempty"`
 	Clustered                  bool               `json:"clustered,omitempty"`
@@ -1163,7 +1163,7 @@ type SnapshotResponse struct {
 	DateModified                   *string                 `json:"dateModified,omitempty"`
 	SnapshotID                     *string                 `json:"snapshotId,omitempty"`
 	SnapshotUUID                   *string                 `json:"snapshotUuid,omitempty"`
-	NxClusterID                    *string                 `json:"ncClusterId,omitempty"`
+	NxClusterID                    *string                 `json:"nxClusterId,omitempty"`
 	ProtectionDomainID             *string                 `json:"protectionDomainId,omitempty"`
 	ParentSnapshotID               *string                 `json:"parentSnapshotId,omitempty"`
 	TimeMachineID                  *string                 `json:"timeMachineId,omitempty"`

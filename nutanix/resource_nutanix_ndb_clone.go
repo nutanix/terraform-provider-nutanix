@@ -553,10 +553,15 @@ func resourceNutanixNDBCloneUpdate(ctx context.Context, d *schema.ResourceData, 
 		description = d.Get("description").(string)
 	}
 
+	tags := make([]*era.Tags, 0)
+	if d.HasChange("tags") {
+		tags = expandTags(d.Get("tags").([]interface{}))
+	}
+
 	updateReq := era.UpdateDatabaseRequest{
 		Name:             name,
 		Description:      description,
-		Tags:             []interface{}{},
+		Tags:             tags,
 		Resetname:        true,
 		Resetdescription: true,
 		Resettags:        true,
@@ -692,6 +697,9 @@ func builCloneRequest(d *schema.ResourceData, res *era.CloneRequest) error {
 		res.ActionArguments = expandPostgreSQLCloneActionArgs(d, postgres.([]interface{}))
 	}
 
+	if tags, ok := d.GetOk("tags"); ok && len(tags.([]interface{})) > 0 {
+		res.Tags = expandTags(tags.([]interface{}))
+	}
 	return nil
 }
 
@@ -721,7 +729,7 @@ func expandClonesNodes(pr []interface{}) []*era.Nodes {
 			if v1, ok1 := val["new_db_server_time_zone"]; ok1 && len(v1.(string)) > 0 {
 				node.NewDBServerTimeZone = utils.StringPtr(v1.(string))
 			}
-			if v1, ok1 := val["properties"]; ok1 && len(v1.(string)) > 0 {
+			if v1, ok1 := val["properties"]; ok1 && len(v1.([]interface{})) > 0 {
 				node.Properties = v1.([]interface{})
 			}
 
