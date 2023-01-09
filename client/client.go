@@ -550,7 +550,11 @@ func CheckResponse(r *http.Response) error {
 	// Nutanix returns non-json response with code 401 when
 	// invalid credentials are used
 	if c == http.StatusUnauthorized {
-		return fmt.Errorf("invalid Nutanix Credentials")
+		return fmt.Errorf("invalid Credentials")
+	}
+
+	if c == http.StatusBadRequest {
+		return fmt.Errorf("bad Request")
 	}
 
 	buf, err := ioutil.ReadAll(r.Body)
@@ -574,7 +578,6 @@ func CheckResponse(r *http.Response) error {
 	if err != nil {
 		return fmt.Errorf("unmarshalling error response %s for response body %s", err, string(buf))
 	}
-	log.Print("[DEBUG] after json.Unmarshal")
 
 	errRes := &ErrorResponse{}
 	if status, ok := res["status"]; ok {
@@ -590,11 +593,9 @@ func CheckResponse(r *http.Response) error {
 		return nil
 	}
 
-	log.Print("[DEBUG] after bunch of switch cases")
 	if err != nil {
 		return err
 	}
-	log.Print("[DEBUG] first nil check")
 
 	// karbon error check
 	if messageInfo, ok := res["message_info"]; ok {
@@ -610,7 +611,6 @@ func CheckResponse(r *http.Response) error {
 		return nil
 	}
 
-	log.Print("[DEBUG] after errRes.State")
 	pretty, _ := json.MarshalIndent(errRes, "", "  ")
 	return fmt.Errorf("error: %s", string(pretty))
 }
