@@ -31,6 +31,7 @@ func resourceNutanixNDBProfile() *schema.Resource {
 			"engine_type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"published": {
 				Type:     schema.TypeBool,
@@ -63,6 +64,7 @@ func resourceNutanixNDBProfile() *schema.Resource {
 			"software_profile": {
 				Type:          schema.TypeList,
 				Optional:      true,
+				MaxItems:      1,
 				ConflictsWith: []string{"compute_profile", "network_profile", "database_parameter_profile"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -959,172 +961,13 @@ func buildDatabaseProfileProperties(ps []interface{}) []*era.ProfileProperties {
 			if psdb, ok := val["postgres_database"]; ok {
 				brr := psdb.([]interface{})
 
-				for _, v := range brr {
-					val := v.(map[string]interface{})
-
-					if p1, ok1 := val["max_connections"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("max_connections"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-
-					if p1, ok1 := val["max_replication_slots"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("max_replication_slots"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-					if p1, ok1 := val["effective_io_concurrency"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("effective_io_concurrency"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-					if p1, ok1 := val["timezone"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("timezone"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-					if p1, ok1 := val["max_prepared_transactions"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("max_prepared_transactions"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-					if p1, ok1 := val["max_locks_per_transaction"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("max_locks_per_transaction"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-					if p1, ok1 := val["max_wal_senders"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("max_wal_senders"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-					if p1, ok1 := val["max_worker_processes"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("max_worker_processes"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-					if p1, ok1 := val["min_wal_size"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("min_wal_size"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-					if p1, ok1 := val["max_wal_size"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("max_wal_size"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-					if p1, ok1 := val["checkpoint_timeout"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("checkpoint_timeout"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-					if p1, ok1 := val["autovacuum"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("autovacuum"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-					if p1, ok1 := val["checkpoint_completion_target"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("checkpoint_completion_target"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-					if p1, ok1 := val["autovacuum_freeze_max_age"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("autovacuum_freeze_max_age"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-					if p1, ok1 := val["autovacuum_vacuum_threshold"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("autovacuum_vacuum_threshold"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-					if p1, ok1 := val["autovacuum_vacuum_scale_factor"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("autovacuum_vacuum_scale_factor"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-					if p1, ok1 := val["autovacuum_work_mem"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("autovacuum_work_mem"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-					if p1, ok1 := val["autovacuum_max_workers"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("autovacuum_max_workers"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-					if p1, ok1 := val["autovacuum_vacuum_cost_delay"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("autovacuum_vacuum_cost_delay"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-					if p1, ok1 := val["wal_buffers"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("wal_buffers"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-
-					if p1, ok1 := val["synchronous_commit"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("synchronous_commit"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-					if p1, ok1 := val["random_page_cost"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("random_page_cost"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
-					if p1, ok1 := val["wal_keep_segments"]; ok1 {
-						prop = append(prop, &era.ProfileProperties{
-							Name:   utils.StringPtr("wal_keep_segments"),
-							Value:  utils.StringPtr(p1.(string)),
-							Secure: false,
-						})
-					}
+				postgresProp := brr[0].(map[string]interface{})
+				for key, value := range postgresProp {
+					prop = append(prop, &era.ProfileProperties{
+						Name:   utils.StringPtr(key),
+						Value:  utils.StringPtr(value.(string)),
+						Secure: false,
+					})
 				}
 			}
 		}

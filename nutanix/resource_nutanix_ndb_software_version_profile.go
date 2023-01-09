@@ -253,7 +253,7 @@ func resourceNutanixNDBSoftwareVersionProfileCreate(ctx context.Context, d *sche
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for software profile	version (%s) to create: %s", *resp.EntityID, errWaitTask)
+		return diag.Errorf("error waiting for software profile version (%s) to create: %s", *resp.EntityID, errWaitTask)
 	}
 	d.SetId(*resp.EntityID)
 
