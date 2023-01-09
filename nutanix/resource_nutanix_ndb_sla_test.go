@@ -58,7 +58,7 @@ func TestAccEra_SlaUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameSLA, "name", updatedName),
 					resource.TestCheckResourceAttr(resourceNameSLA, "description", updatedDesc),
-					resource.TestCheckResourceAttr(resourceNameSLA, "continuous_retention", "30"),
+					resource.TestCheckResourceAttr(resourceNameSLA, "continuous_retention", "25"),
 					resource.TestCheckResourceAttr(resourceNameSLA, "daily_retention", "1"),
 					resource.TestCheckResourceAttr(resourceNameSLA, "weekly_retention", "3"),
 					resource.TestCheckResourceAttr(resourceNameSLA, "monthly_retention", "1"),
@@ -88,7 +88,7 @@ func testAccEraSLAConfigUpdated(name, desc string) string {
 	resource "nutanix_ndb_sla" "acctest-managed" {
 		name= "%[1]s"
 		description = "%[2]s"
-		continuous_retention = 30
+		continuous_retention = 25
 		daily_retention = 1
 		weekly_retention = 3
 		monthly_retention= 1

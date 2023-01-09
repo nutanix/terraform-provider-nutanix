@@ -49,7 +49,11 @@ func resourceNutanixNDBSla() *schema.Resource {
 				Optional: true,
 				Default:  "1",
 			},
-
+			"yearly_retention": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			// computed
 			"unique_name": {
 				Type:     schema.TypeString,
@@ -69,10 +73,6 @@ func resourceNutanixNDBSla() *schema.Resource {
 			},
 			"date_modified": {
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"yearly_retention": {
-				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"reference_count": {
