@@ -16,11 +16,9 @@ func NewContext(ctx context.Context, dbID dbID) context.Context {
 	return context.WithValue(ctx, dbIDKey, dbID)
 }
 
-func FromContext(ctx context.Context) (dbID, bool) {
-	// ctx.Value returns nil if ctx has no value for the key;
-	// the net.IP type assertion returns ok=false for nil.
-	dbID, ok := ctx.Value(dbIDKey).(dbID)
-	return dbID, ok
+func FromContext(ctx context.Context) (string, bool) {
+	databaseID, ok := ctx.Value(dbIDKey).(dbID)
+	return string(databaseID), ok
 }
 
 func timeMachineInfoSchema() *schema.Schema {
