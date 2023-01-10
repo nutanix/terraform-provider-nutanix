@@ -447,7 +447,7 @@ func readDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interfa
 
 	databaseInstanceID := ""
 	if databaseInsID, ok := FromContext(ctx); ok {
-		databaseInstanceID = string(databaseInsID)
+		databaseInstanceID = databaseInsID
 	} else {
 		databaseInstanceID = d.Id()
 	}
