@@ -445,7 +445,12 @@ func readDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interfa
 		return diag.Errorf("era is nil")
 	}
 
-	databaseInstanceID := d.Id()
+	databaseInstanceID := ""
+	if databaseInsID, ok := FromContext(ctx); ok {
+		databaseInstanceID = string(databaseInsID)
+	} else {
+		databaseInstanceID = d.Id()
+	}
 
 	resp, err := c.Service.GetDatabaseInstance(ctx, databaseInstanceID)
 	if err != nil {

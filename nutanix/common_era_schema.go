@@ -1,11 +1,27 @@
 package nutanix
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	era "github.com/terraform-providers/terraform-provider-nutanix/client/era"
 )
+
+type dbID string
+
+const dbIDKey dbID = ""
+
+func NewContext(ctx context.Context, dbID dbID) context.Context {
+	return context.WithValue(ctx, dbIDKey, dbID)
+}
+
+func FromContext(ctx context.Context) (dbID, bool) {
+	// ctx.Value returns nil if ctx has no value for the key;
+	// the net.IP type assertion returns ok=false for nil.
+	dbID, ok := ctx.Value(dbIDKey).(dbID)
+	return dbID, ok
+}
 
 func timeMachineInfoSchema() *schema.Schema {
 	return &schema.Schema{
