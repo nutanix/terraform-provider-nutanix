@@ -1,11 +1,29 @@
 package nutanix
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	era "github.com/terraform-providers/terraform-provider-nutanix/client/era"
 )
+
+type dbID string
+
+const dbIDKey dbID = ""
+
+// this method is used to pass the key-value pair to different modules using context to avoid duplicate code.
+
+// NewContext returns a new Context that carries a provided key value
+func NewContext(ctx context.Context, dbID dbID) context.Context {
+	return context.WithValue(ctx, dbIDKey, dbID)
+}
+
+// FromContext extracts a value from a Context
+func FromContext(ctx context.Context) (string, bool) {
+	databaseID, ok := ctx.Value(dbIDKey).(dbID)
+	return string(databaseID), ok
+}
 
 func timeMachineInfoSchema() *schema.Schema {
 	return &schema.Schema{
