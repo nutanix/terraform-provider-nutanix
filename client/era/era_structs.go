@@ -958,3 +958,17 @@ type TimeMachineMetadata struct {
 	LastSuccessfulLogCatchupPostHealWithResetCapability interface{}     `json:"lastSuccessfulLogCatchupPostHealWithResetCapability,omitempty"`
 	AutoSnapshotRetryInfo                               interface{}     `json:"autoSnapshotRetryInfo,omitempty"`
 }
+
+type SLAIntentInput struct {
+	Name                *string `json:"name,omitempty"`
+	Description         *string `json:"description,omitempty"`
+	ContinuousRetention *int    `json:"continuousRetention,omitempty"`
+	DailyRetention      *int    `json:"dailyRetention,omitempty"`
+	WeeklyRetention     *int    `json:"weeklyRetention,omitempty"`
+	MonthlyRetention    *int    `json:"monthlyRetention,omitempty"`
+	QuarterlyRetention  *int    `json:"quarterlyRetention,omitempty"`
+}
+
+type SLADeleteResponse struct {
+	Status *string `json:"status,omitempty"`
+}

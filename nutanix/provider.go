@@ -225,6 +225,7 @@ func Provider() *schema.Provider {
 			"nutanix_static_routes":                    resourceNutanixStaticRoute(),
 			"nutanix_user_groups":                      resourceNutanixUserGroups(),
 			"nutanix_ndb_database":                     resourceDatabaseInstance(),
+			"nutanix_ndb_sla":                          resourceNutanixNDBSla(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
