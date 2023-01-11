@@ -287,8 +287,10 @@ func dataSourceNutanixEraDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("dbserver_logical_cluster", resp.Dbserverlogicalcluster); err != nil {
-		return diag.FromErr(err)
+	if resp.Dbserverlogicalcluster != nil {
+		if err := d.Set("dbserver_logical_cluster", resp.Dbserverlogicalcluster); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	if err := d.Set("database_nodes", flattenDBNodes(resp.Databasenodes)); err != nil {
@@ -381,7 +383,7 @@ func flattenDBNodes(pr []Era.Databasenodes) []map[string]interface{} {
 			db["name"] = v.Name
 			db["owner_id"] = v.Ownerid
 			db["primary"] = v.Primary
-			db["properties"] = v.Properties
+			db["properties"] = flattenDBInstanceProperties(v.Properties)
 			db["protection_domain"] = flattenDBProtectionDomain(v.Protectiondomain)
 			db["protection_domain_id"] = v.Protectiondomainid
 			db["software_installation_id"] = v.Softwareinstallationid
@@ -1760,8 +1762,29 @@ func dataSourceEraDatabaseNodes() *schema.Schema {
 				"properties": {
 					Type:     schema.TypeList,
 					Computed: true,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"value": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"ref_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"secure": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							"description": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
 					},
 				},
 				"tags": dataSourceEraDBInstanceTags(),

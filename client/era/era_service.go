@@ -254,7 +254,7 @@ func (sc ServiceClient) GetOperation(req GetOperationRequest) (*GetOperationResp
 }
 
 func (sc ServiceClient) GetDatabaseInstance(ctx context.Context, dbInstanceID string) (*GetDatabaseResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/databases/%s?detailed=true&load-dbserver-cluster=true", dbInstanceID), nil)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/databases/%s?detailed=false&load-dbserver-cluster=false", dbInstanceID), nil)
 	if err != nil {
 		return nil, err
 	}

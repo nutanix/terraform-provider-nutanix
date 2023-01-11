@@ -232,35 +232,44 @@ type Dailyschedule struct {
 }
 
 type Schedule struct {
-	ID                 string              `json:"id"`
-	Name               string              `json:"name"`
-	Description        string              `json:"description"`
-	UniqueName         string              `json:"uniqueName"`
-	OwnerID            string              `json:"ownerId"`
-	SystemPolicy       bool                `json:"systemPolicy"`
-	GlobalPolicy       bool                `json:"globalPolicy"`
-	Datecreated        string              `json:"dateCreated"`
-	Datemodified       string              `json:"dateModified"`
-	Snapshottimeofday  *Snapshottimeofday  `json:"snapshotTimeOfDay"`
-	Continuousschedule *Continuousschedule `json:"continuousSchedule"`
-	Weeklyschedule     *Weeklyschedule     `json:"weeklySchedule"`
-	Dailyschedule      *Dailyschedule      `json:"dailySchedule"`
-	Monthlyschedule    *Monthlyschedule    `json:"monthlySchedule"`
-	Quartelyschedule   *Quartelyschedule   `json:"quartelySchedule"`
-	Yearlyschedule     *Yearlyschedule     `json:"yearlySchedule"`
-	ReferenceCount     int                 `json:"referenceCount"`
-	StartTime          string              `json:"startTime"`
-	TimeZone           string              `json:"timeZone"`
+	ID                 *string             `json:"id,omitempty"`
+	Name               *string             `json:"name,omitempty"`
+	Description        *string             `json:"description,omitempty"`
+	UniqueName         *string             `json:"uniqueName,omitempty"`
+	OwnerID            *string             `json:"ownerId,omitempty"`
+	StartTime          *string             `json:"startTime,omitempty"`
+	TimeZone           *string             `json:"timeZone,omitempty"`
+	Datecreated        *string             `json:"dateCreated,omitempty"`
+	Datemodified       *string             `json:"dateModified,omitempty"`
+	ReferenceCount     *int                `json:"referenceCount,omitempty"`
+	SystemPolicy       bool                `json:"systemPolicy,omitempty"`
+	GlobalPolicy       bool                `json:"globalPolicy,omitempty"`
+	Snapshottimeofday  *Snapshottimeofday  `json:"snapshotTimeOfDay,omitempty"`
+	Continuousschedule *Continuousschedule `json:"continuousSchedule,omitempty"`
+	Weeklyschedule     *Weeklyschedule     `json:"weeklySchedule,omitempty"`
+	Dailyschedule      *Dailyschedule      `json:"dailySchedule,omitempty"`
+	Monthlyschedule    *Monthlyschedule    `json:"monthlySchedule,omitempty"`
+	Quartelyschedule   *Quartelyschedule   `json:"quartelySchedule,omitempty"`
+	Yearlyschedule     *Yearlyschedule     `json:"yearlySchedule,omitempty"`
+}
+
+type PrimarySLA struct {
+	SLAID        *string   `json:"slaId,omitempty"`
+	NxClusterIds []*string `json:"nxClusterIds,omitempty"`
+}
+
+type SLADetails struct {
+	PrimarySLA *PrimarySLA `json:"primarySla,omitempty"`
 }
 
 type Timemachineinfo struct {
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Slaid       string   `json:"slaId"`
-	Schedule    Schedule `json:"schedule"`
-	Tags        []*Tags  `json:"tags,omitempty"`
-
-	Autotunelogdrive bool `json:"autoTuneLogDrive"`
+	Name             string      `json:"name,omitempty"`
+	Description      string      `json:"description,omitempty"`
+	Slaid            string      `json:"slaId,omitempty"`
+	Schedule         Schedule    `json:"schedule,omitempty"`
+	Tags             []*Tags     `json:"tags,omitempty"`
+	Autotunelogdrive bool        `json:"autoTuneLogDrive,omitempty"`
+	SLADetails       *SLADetails `json:"slaDetails,omitempty"`
 }
 
 type Actionarguments struct {
@@ -268,11 +277,24 @@ type Actionarguments struct {
 	Value interface{} `json:"value"`
 }
 
+type NodesProperties struct {
+	Name  string      `json:"name"`
+	Value interface{} `json:"value"`
+}
+
+type IPInfos struct {
+	IPType      *string   `json:"ipType,omitempty"`
+	IPAddresses []*string `json:"ipAddresses,omitempty"`
+}
+
 type Nodes struct {
-	Properties       []interface{} `json:"properties"`
-	Vmname           string        `json:"vmName,omitempty"`
-	Networkprofileid string        `json:"networkProfileId,omitempty"`
-	DatabaseServerID string        `json:"dbserverId,omitempty"`
+	Properties       []*NodesProperties `json:"properties"`
+	Vmname           *string            `json:"vmName,omitempty"`
+	Networkprofileid *string            `json:"networkProfileId,omitempty"`
+	DatabaseServerID *string            `json:"dbserverId,omitempty"`
+	NxClusterID      *string            `json:"nxClusterId,omitempty"`
+	ComputeProfileID *string            `json:"computeProfileId,omitempty"`
+	IPInfos          []*IPInfos         `json:"ipInfos,omitempty"`
 }
 
 // ProvisionDatabaseResponse structs
@@ -831,25 +853,25 @@ type Protectiondomain struct {
 	AssocEntities []string                `json:"assocEntities,omitempty"`
 }
 type Databasenodes struct {
-	ID                     string            `json:"id"`
-	Name                   string            `json:"name"`
-	Description            string            `json:"description"`
-	Ownerid                string            `json:"ownerId"`
-	Datecreated            string            `json:"dateCreated"`
-	Datemodified           string            `json:"dateModified"`
-	AccessLevel            interface{}       `json:"accessLevel,omitempty"`
-	Properties             []interface{}     `json:"properties"`
-	Tags                   []*Tags           `json:"tags"`
-	Databaseid             string            `json:"databaseId"`
-	Status                 string            `json:"status"`
-	Databasestatus         string            `json:"databaseStatus"`
-	Primary                bool              `json:"primary"`
-	Dbserverid             string            `json:"dbserverId"`
-	Softwareinstallationid string            `json:"softwareInstallationId"`
-	Protectiondomainid     string            `json:"protectionDomainId"`
-	Info                   Info              `json:"info"`
-	Metadata               interface{}       `json:"metadata"`
-	Protectiondomain       *Protectiondomain `json:"protectionDomain"`
+	ID                     string                  `json:"id"`
+	Name                   string                  `json:"name"`
+	Description            string                  `json:"description"`
+	Ownerid                string                  `json:"ownerId"`
+	Datecreated            string                  `json:"dateCreated"`
+	Datemodified           string                  `json:"dateModified"`
+	AccessLevel            interface{}             `json:"accessLevel,omitempty"`
+	Properties             []*DBInstanceProperties `json:"properties"`
+	Tags                   []*Tags                 `json:"tags"`
+	Databaseid             string                  `json:"databaseId"`
+	Status                 string                  `json:"status"`
+	Databasestatus         string                  `json:"databaseStatus"`
+	Primary                bool                    `json:"primary"`
+	Dbserverid             string                  `json:"dbserverId"`
+	Softwareinstallationid string                  `json:"softwareInstallationId"`
+	Protectiondomainid     string                  `json:"protectionDomainId"`
+	Info                   Info                    `json:"info"`
+	Metadata               interface{}             `json:"metadata"`
+	Protectiondomain       *Protectiondomain       `json:"protectionDomain"`
 	// Valideastate           bool             `json:"validEaState"`
 }
 
