@@ -39,7 +39,7 @@ type Service interface {
 	DeleteProfileVersion(ctx context.Context, profileID string, profileVersionID string) (*string, error)
 	DatabaseScale(ctx context.Context, id string, req *DatabaseScale) (*ProvisionDatabaseResponse, error)
 	RegisterDatabase(ctx context.Context, request *RegisterDBInputRequest) (*ProvisionDatabaseResponse, error)
-	GetTimeMachine(ctx context.Context, tmsId string, tmsName string) (*TimeMachine, error)
+	GetTimeMachine(ctx context.Context, tmsID string, tmsName string) (*TimeMachine, error)
 	ListTimeMachines(ctx context.Context) (*ListTimeMachines, error)
 	DatabaseSnapshot(ctx context.Context, id string, req *DatabaseSnapshotRequest) (*ProvisionDatabaseResponse, error)
 	UpdateSnapshot(ctx context.Context, id string, req *UpdateSnapshotRequest) (*SnapshotResponse, error)
