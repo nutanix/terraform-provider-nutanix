@@ -456,11 +456,12 @@ func resourceNutanixNDBRegisterDatabaseUpdate(ctx context.Context, d *schema.Res
 	dbID := d.Id()
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
+	tags := make([]*era.Tags, 0)
 
 	updateReq := era.UpdateDatabaseRequest{
 		Name:             name,
 		Description:      description,
-		Tags:             []interface{}{},
+		Tags:             tags,
 		Resetname:        true,
 		Resetdescription: true,
 		Resettags:        true,
