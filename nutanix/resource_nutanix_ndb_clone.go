@@ -711,7 +711,7 @@ func expandClonesNodes(pr []interface{}) []*era.Nodes {
 			node := &era.Nodes{}
 
 			if v1, ok1 := val["network_profile_id"]; ok1 && len(v1.(string)) > 0 {
-				node.Networkprofileid = (v1.(string))
+				node.Networkprofileid = utils.StringPtr(v1.(string))
 			}
 
 			if v1, ok1 := val["compute_profile_id"]; ok1 && len(v1.(string)) > 0 {
@@ -719,7 +719,7 @@ func expandClonesNodes(pr []interface{}) []*era.Nodes {
 			}
 
 			if v1, ok1 := val["vm_name"]; ok1 && len(v1.(string)) > 0 {
-				node.Vmname = (v1.(string))
+				node.Vmname = utils.StringPtr(v1.(string))
 			}
 
 			if v1, ok1 := val["nx_cluster_id"]; ok1 && len(v1.(string)) > 0 {
@@ -730,11 +730,11 @@ func expandClonesNodes(pr []interface{}) []*era.Nodes {
 				node.NewDBServerTimeZone = utils.StringPtr(v1.(string))
 			}
 			if v1, ok1 := val["properties"]; ok1 && len(v1.([]interface{})) > 0 {
-				node.Properties = v1.([]interface{})
+				node.Properties = v1.([]*era.NodesProperties)
 			}
 
 			if v1, ok1 := val["dbserver_id"]; ok1 && len(v1.(string)) > 0 {
-				node.DatabaseServerID = (v1.(string))
+				node.DatabaseServerID = utils.StringPtr(v1.(string))
 			}
 			nodes[k] = node
 		}

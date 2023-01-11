@@ -288,13 +288,14 @@ type IPInfos struct {
 }
 
 type Nodes struct {
-	Properties       []*NodesProperties `json:"properties"`
-	Vmname           *string            `json:"vmName,omitempty"`
-	Networkprofileid *string            `json:"networkProfileId,omitempty"`
-	DatabaseServerID *string            `json:"dbserverId,omitempty"`
-	NxClusterID      *string            `json:"nxClusterId,omitempty"`
-	ComputeProfileID *string            `json:"computeProfileId,omitempty"`
-	IPInfos          []*IPInfos         `json:"ipInfos,omitempty"`
+	Properties          []*NodesProperties `json:"properties"`
+	Vmname              *string            `json:"vmName,omitempty"`
+	Networkprofileid    *string            `json:"networkProfileId,omitempty"`
+	DatabaseServerID    *string            `json:"dbserverId,omitempty"`
+	NxClusterID         *string            `json:"nxClusterId,omitempty"`
+	ComputeProfileID    *string            `json:"computeProfileId,omitempty"`
+	NewDBServerTimeZone *string            `json:"newDbServerTimeZone,omitempty"`
+	IPInfos             []*IPInfos         `json:"ipInfos,omitempty"`
 }
 
 // ProvisionDatabaseResponse structs
