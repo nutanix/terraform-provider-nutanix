@@ -337,7 +337,6 @@ func (sc ServiceClient) UpdateProfile(ctx context.Context, req *UpdateProfileReq
 	res := new(ListProfileResponse)
 
 	return res, sc.c.Do(ctx, httpReq, res)
-
 }
 
 func (sc ServiceClient) DatabaseRestore(ctx context.Context, databaseID string, req *DatabaseRestoreRequest) (*ProvisionDatabaseResponse, error) {
