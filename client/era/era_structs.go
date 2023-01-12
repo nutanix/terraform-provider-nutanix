@@ -1089,9 +1089,17 @@ type UnRegisterDatabaseRequest struct {
 	DeleteTimeMachine bool `json:"deleteTimeMachine,omitempty"`
 }
 type DatabaseSnapshotRequest struct {
-	Name                *string    `json:"name,omitempty"`
-	LcmConfig           *LcmConfig `json:"lcmConfig,omitempty"`
-	ReplicateToClusters []*string  `json:"replicateToClusterIds,omitempty"`
+	Name                *string            `json:"name,omitempty"`
+	LcmConfig           *LCMConfigSnapshot `json:"lcmConfig,omitempty"`
+	ReplicateToClusters []*string          `json:"replicateToClusterIds,omitempty"`
+}
+
+type LCMConfigSnapshot struct {
+	SnapshotLCMConfig *SnapshotLCMConfig `json:"snapshotLCMConfig,omitempty"`
+}
+
+type SnapshotLCMConfig struct {
+	ExpiryDetails *DBExpiryDetails `json:"expiryDetails,omitempty"`
 }
 
 type ListTimeMachines []*TimeMachine

@@ -36,6 +36,11 @@ func resourceNutanixNDBDatabaseSnapshot() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
+			"expiry_date_timezone": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "Asia/Calcutta",
+			},
 			"replicate_to_clusters": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -283,12 +288,18 @@ func resourceNutanixNDBDatabaseSnapshotCreate(ctx context.Context, d *schema.Res
 	}
 
 	if rm, ok := d.GetOk("remove_schedule_in_days"); ok {
-		lcmConfig := &era.LcmConfig{}
+		lcmConfig := &era.LCMConfigSnapshot{}
+		snapshotLCM := &era.SnapshotLCMConfig{}
 		expDetails := &era.DBExpiryDetails{}
 
 		expDetails.ExpireInDays = utils.IntPtr(rm.(int))
 
-		lcmConfig.ExpiryDetails = expDetails
+		if tmzone, pk := d.GetOk("expiry_date_timezone"); pk {
+			expDetails.ExpiryDateTimezone = utils.StringPtr(tmzone.(string))
+		}
+
+		snapshotLCM.ExpiryDetails = expDetails
+		lcmConfig.SnapshotLCMConfig = snapshotLCM
 		req.LcmConfig = lcmConfig
 	}
 
