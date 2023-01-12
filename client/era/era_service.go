@@ -19,7 +19,7 @@ type Service interface {
 	UpdateDatabase(ctx context.Context, req *UpdateDatabaseRequest, uuid string) (*UpdateDatabaseResponse, error)
 	DeleteDatabase(ctx context.Context, req *DeleteDatabaseRequest, uuid string) (*DeleteDatabaseResponse, error)
 	ListProfiles(ctx context.Context, engine string, profileType string) (*ProfileListResponse, error)
-	GetProfiles(ctx context.Context, engine string, profileType string, id string, name string) (*ListProfileResponse, error)
+	GetProfile(ctx context.Context, filters *ProfileFilter) (*ListProfileResponse, error)
 	CreateProfiles(ctx context.Context, req *ProfileRequest) (*ListProfileResponse, error)
 	DeleteProfile(ctx context.Context, uuid string) (*string, error)
 	GetCluster(ctx context.Context, id string, name string) (*ListClusterResponse, error)
@@ -58,10 +58,11 @@ func (sc ServiceClient) ListProfiles(ctx context.Context, engine string, profile
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) GetProfiles(ctx context.Context, engine string, profileType string, id string, name string) (*ListProfileResponse, error) {
+func (sc ServiceClient) GetProfile(ctx context.Context, filter *ProfileFilter) (*ListProfileResponse, error) {
 	var httpReq *http.Request
 	var err error
-	path := makePathProfiles(engine, profileType, id, name)
+
+	path := makePathProfiles(filter.Engine, filter.ProfileType, filter.ProfileID, filter.ProfileName)
 
 	httpReq, err = sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 

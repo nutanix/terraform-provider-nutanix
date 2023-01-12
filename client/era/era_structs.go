@@ -1045,3 +1045,10 @@ type UpdateProfileRequest struct {
 	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
 }
+
+type ProfileFilter struct {
+	Engine      string `json:"engine,omitempty"`
+	ProfileType string `json:"profile_type,omitempty"`
+	ProfileID   string `json:"profile_id,omitempty"`
+	ProfileName string `json:"profile_name,omitempty"`
+}

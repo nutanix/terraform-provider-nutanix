@@ -694,7 +694,11 @@ func resourceNutanixNDBProfileCreate(ctx context.Context, d *schema.ResourceData
 		netReq := &era.UpdateProfileRequest{}
 
 		req.Published = publish.(bool)
-		res, err := conn.Service.GetProfiles(ctx, "", "", d.Id(), "")
+
+		// profile filter spec
+		profileFilter := &era.ProfileFilter{}
+		profileFilter.ProfileID = d.Id()
+		res, err := conn.Service.GetProfile(ctx, profileFilter)
 		if err != nil {
 			diag.FromErr(err)
 		}
@@ -722,7 +726,11 @@ func resourceNutanixNDBProfileCreate(ctx context.Context, d *schema.ResourceData
 func resourceNutanixNDBProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
-	resp, err := conn.Service.GetProfiles(ctx, "", "", d.Id(), "")
+	// profile filter spec
+	profileFilter := &era.ProfileFilter{}
+	profileFilter.ProfileID = d.Id()
+
+	resp, err := conn.Service.GetProfile(ctx, profileFilter)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -786,7 +794,11 @@ func resourceNutanixNDBProfileUpdate(ctx context.Context, d *schema.ResourceData
 
 	netReq := &era.UpdateProfileRequest{}
 
-	res, err := conn.Service.GetProfiles(ctx, "", "", d.Id(), "")
+	// profile filter spec
+	profileFilter := &era.ProfileFilter{}
+	profileFilter.ProfileID = d.Id()
+
+	res, err := conn.Service.GetProfile(ctx, profileFilter)
 	if err != nil {
 		diag.FromErr(err)
 	}

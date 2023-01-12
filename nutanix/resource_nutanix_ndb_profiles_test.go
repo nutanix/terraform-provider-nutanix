@@ -9,7 +9,7 @@ import (
 
 const resourceNameProfile = "nutanix_ndb_profile.acctest-managed-profile"
 
-func TestAccEra_ByCompute(t *testing.T) {
+func TestAccEraProfile_ByCompute(t *testing.T) {
 	name := "test-compute-tf"
 	desc := "this is compute desc"
 	resource.Test(t, resource.TestCase{
@@ -30,7 +30,7 @@ func TestAccEra_ByCompute(t *testing.T) {
 		},
 	})
 }
-func TestAccEra_BySoftware(t *testing.T) {
+func TestAccEraProfile_BySoftware(t *testing.T) {
 	t.Skip()
 	name := "test-software-tf"
 	desc := "this is software desc"
@@ -50,7 +50,7 @@ func TestAccEra_BySoftware(t *testing.T) {
 	})
 }
 
-func TestAccEra_ByDatabaseParams(t *testing.T) {
+func TestAccEraProfile_ByDatabaseParams(t *testing.T) {
 	name := "test-software-tf"
 	desc := "this is software desc"
 	resource.Test(t, resource.TestCase{
@@ -79,7 +79,7 @@ func TestAccEra_ByDatabaseParams(t *testing.T) {
 	})
 }
 
-func TestAccEra_ByNetwork(t *testing.T) {
+func TestAccEraProfile_ByNetwork(t *testing.T) {
 	name := "test-network-tf"
 	desc := "this is network desc"
 	subnet := testVars.SubnetName
@@ -99,7 +99,7 @@ func TestAccEra_ByNetwork(t *testing.T) {
 	})
 }
 
-func TestAccEra_ByNetworkHAPostgres(t *testing.T) {
+func TestAccEraProfile_ByNetworkHAPostgres(t *testing.T) {
 	name := "test-network-tf"
 	desc := "this is network desc for HA postgres"
 	subnet := testVars.SubnetName
