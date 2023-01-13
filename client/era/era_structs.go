@@ -1008,6 +1008,11 @@ type LogCatchUpRequest struct {
 	Actionarguments []*Actionarguments `json:"actionArguments,omitempty"`
 }
 
+type DatabaseScale struct {
+	ApplicationType *string            `json:"applicationType,omitempty"`
+	Actionarguments []*Actionarguments `json:"actionArguments,omitempty"`
+}
+
 type ProfileProperties struct {
 	Name        *string `json:"name,omitempty"`
 	Value       *string `json:"value,omitempty"`

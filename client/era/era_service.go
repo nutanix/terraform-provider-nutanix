@@ -37,6 +37,7 @@ type Service interface {
 	CreateSoftwareProfileVersion(ctx context.Context, id string, req *ProfileRequest) (*SoftwareProfileResponse, error)
 	UpdateProfileVersion(ctx context.Context, req *ProfileRequest, id string, vid string) (*ListProfileResponse, error)
 	DeleteProfileVersion(ctx context.Context, profileID string, profileVersionID string) (*string, error)
+	DatabaseScale(ctx context.Context, id string, req *DatabaseScale) (*ProvisionDatabaseResponse, error)
 }
 
 type ServiceClient struct {
@@ -352,10 +353,21 @@ func (sc ServiceClient) DatabaseRestore(ctx context.Context, databaseID string, 
 
 func (sc ServiceClient) LogCatchUp(ctx context.Context, tmsID string, req *LogCatchUpRequest) (*ProvisionDatabaseResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/tms/%s/log-catchups", tmsID), req)
+	res := new(ProvisionDatabaseResponse)
+
 	if err != nil {
 		return nil, err
 	}
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DatabaseScale(ctx context.Context, databaseID string, req *DatabaseScale) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/databases/%s/update/extend-storage", databaseID), req)
 	res := new(ProvisionDatabaseResponse)
+
+	if err != nil {
+		return nil, err
+	}
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
