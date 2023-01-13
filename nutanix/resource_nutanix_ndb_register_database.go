@@ -280,7 +280,6 @@ func resourceNutanixNDBRegisterDatabaseCreate(ctx context.Context, d *schema.Res
 	if er != nil {
 		return diag.FromErr(er)
 	}
-	log.Println(resp)
 	d.SetId(resp.Entityid)
 
 	// Get Operation ID from response of RegisterDatabaseResponse and poll for the operation to get completed.
@@ -310,178 +309,13 @@ func resourceNutanixNDBRegisterDatabaseCreate(ctx context.Context, d *schema.Res
 }
 
 func resourceNutanixNDBRegisterDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*Client).Era
-
-	resp, err := conn.Service.GetDatabaseInstance(ctx, d.Id())
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	if resp != nil {
-		if err = d.Set("description", resp.Description); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err = d.Set("name", resp.Name); err != nil {
-			return diag.FromErr(err)
-		}
-
-		props := []interface{}{}
-		for _, prop := range resp.Properties {
-			props = append(props, map[string]interface{}{
-				"name":  prop.Name,
-				"value": prop.Value,
-			})
-		}
-		if err := d.Set("properties", props); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("date_created", resp.Datecreated); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("date_modified", resp.Datemodified); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("tags", flattenDBTags(resp.Tags)); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("clone", resp.Clone); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("internal", resp.Internal); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("placeholder", resp.Placeholder); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("database_name", resp.Databasename); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("type", resp.Type); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("database_cluster_type", resp.Databaseclustertype); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("status", resp.Status); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("database_status", resp.Databasestatus); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("dbserver_logical_cluster_id", resp.Dbserverlogicalclusterid); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("time_machine_id", resp.Timemachineid); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("parent_time_machine_id", resp.Parenttimemachineid); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("time_zone", resp.Timezone); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("info", flattenDBInfo(resp.Info)); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("group_info", resp.GroupInfo); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("metadata", flattenDBInstanceMetadata(resp.Metadata)); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("metric", resp.Metric); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("category", resp.Category); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("parent_database_id", resp.ParentDatabaseID); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("parent_source_database_id", resp.ParentSourceDatabaseID); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("lcm_config", flattenDBLcmConfig(resp.Lcmconfig)); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("time_machine", flattenDBTimeMachine(resp.TimeMachine)); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("dbserver_logical_cluster", resp.Dbserverlogicalcluster); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("database_nodes", flattenDBNodes(resp.Databasenodes)); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("linked_databases", flattenDBLinkedDbs(resp.Linkeddatabases)); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	return nil
+	databaseID := d.Id()
+	ctx = NewContext(ctx, dbID(databaseID))
+	return readDatabaseInstance(ctx, d, meta)
 }
+
 func resourceNutanixNDBRegisterDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	c := meta.(*Client).Era
-	if c == nil {
-		return diag.Errorf("era is nil")
-	}
-
-	dbID := d.Id()
-	name := d.Get("name").(string)
-	description := d.Get("description").(string)
-	tags := make([]*era.Tags, 0)
-
-	updateReq := era.UpdateDatabaseRequest{
-		Name:             name,
-		Description:      description,
-		Tags:             tags,
-		Resetname:        true,
-		Resetdescription: true,
-		Resettags:        true,
-	}
-
-	res, err := c.Service.UpdateDatabase(ctx, &updateReq, dbID)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if res != nil {
-		if err = d.Set("description", res.Description); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err = d.Set("name", res.Name); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-	return nil
+	return updateDatabaseInstance(ctx, d, meta)
 }
 
 func resourceNutanixNDBRegisterDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
