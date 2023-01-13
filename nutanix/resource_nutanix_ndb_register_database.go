@@ -436,8 +436,8 @@ func buildReisterDBRequest(d *schema.ResourceData) (*era.RegisterDBInputRequest,
 		res.Tags = expandTags(tags.([]interface{}))
 	}
 
-	if maintenence, ok := d.GetOk("maintenance_tasks"); ok && len(maintenence.([]interface{})) > 0 {
-		res.MaintenanceTasks = expandMaintenanceTasks(maintenence.([]interface{}))
+	if maintenance, ok := d.GetOk("maintenance_tasks"); ok && len(maintenance.([]interface{})) > 0 {
+		res.MaintenanceTasks = expandMaintenanceTasks(maintenance.([]interface{}))
 	}
 
 	res.Actionarguments = expandRegisterDBActionArguments(d)
