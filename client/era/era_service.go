@@ -19,7 +19,9 @@ type Service interface {
 	UpdateDatabase(ctx context.Context, req *UpdateDatabaseRequest, uuid string) (*UpdateDatabaseResponse, error)
 	DeleteDatabase(ctx context.Context, req *DeleteDatabaseRequest, uuid string) (*DeleteDatabaseResponse, error)
 	ListProfiles(ctx context.Context, engine string, profileType string) (*ProfileListResponse, error)
-	GetProfiles(ctx context.Context, engine string, profileType string, id string, name string) (*ListProfileResponse, error)
+	GetProfile(ctx context.Context, filters *ProfileFilter) (*ListProfileResponse, error)
+	CreateProfiles(ctx context.Context, req *ProfileRequest) (*ListProfileResponse, error)
+	DeleteProfile(ctx context.Context, uuid string) (*string, error)
 	GetCluster(ctx context.Context, id string, name string) (*ListClusterResponse, error)
 	ListClusters(ctx context.Context) (*ClusterListResponse, error)
 	GetSLA(ctx context.Context, id string, name string) (*ListSLAResponse, error)
@@ -29,6 +31,12 @@ type Service interface {
 	DeleteSLA(ctx context.Context, uuid string) (*SLADeleteResponse, error)
 	DatabaseRestore(ctx context.Context, databaseID string, req *DatabaseRestoreRequest) (*ProvisionDatabaseResponse, error)
 	LogCatchUp(ctx context.Context, id string, req *LogCatchUpRequest) (*ProvisionDatabaseResponse, error)
+	CreateSoftwareProfiles(ctx context.Context, req *ProfileRequest) (*SoftwareProfileResponse, error)
+	UpdateProfile(ctx context.Context, req *UpdateProfileRequest, id string) (*ListProfileResponse, error)
+	GetSoftwareProfileVersion(ctx context.Context, profileID string, profileVersionID string) (*Versions, error)
+	CreateSoftwareProfileVersion(ctx context.Context, id string, req *ProfileRequest) (*SoftwareProfileResponse, error)
+	UpdateProfileVersion(ctx context.Context, req *ProfileRequest, id string, vid string) (*ListProfileResponse, error)
+	DeleteProfileVersion(ctx context.Context, profileID string, profileVersionID string) (*string, error)
 }
 
 type ServiceClient struct {
@@ -50,10 +58,11 @@ func (sc ServiceClient) ListProfiles(ctx context.Context, engine string, profile
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) GetProfiles(ctx context.Context, engine string, profileType string, id string, name string) (*ListProfileResponse, error) {
+func (sc ServiceClient) GetProfile(ctx context.Context, filter *ProfileFilter) (*ListProfileResponse, error) {
 	var httpReq *http.Request
 	var err error
-	path := makePathProfiles(engine, profileType, id, name)
+
+	path := makePathProfiles(filter.Engine, filter.ProfileType, filter.ProfileID, filter.ProfileName)
 
 	httpReq, err = sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 
@@ -264,7 +273,7 @@ func (sc ServiceClient) GetDatabaseInstance(ctx context.Context, dbInstanceID st
 }
 
 func (sc ServiceClient) ListDatabaseInstance(ctx context.Context) (*ListDatabaseInstance, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, ("/databases?detailed=false&load-dbserver-cluster=false&order-by-dbserver-cluster=false"), nil)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, ("/databases?detailed=true&load-dbserver-cluster=true&order-by-dbserver-cluster=false"), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -276,6 +285,15 @@ func (sc ServiceClient) ListDatabaseInstance(ctx context.Context) (*ListDatabase
 func (sc ServiceClient) CreateSLA(ctx context.Context, req *SLAIntentInput) (*ListSLAResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/slas", req)
 	res := new(ListSLAResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+func (sc ServiceClient) CreateProfiles(ctx context.Context, req *ProfileRequest) (*ListProfileResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/profiles", req)
+	res := new(ListProfileResponse)
 
 	if err != nil {
 		return nil, err
@@ -290,6 +308,14 @@ func (sc ServiceClient) DeleteSLA(ctx context.Context, uuid string) (*SLADeleteR
 		return nil, err
 	}
 	res := new(SLADeleteResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+func (sc ServiceClient) DeleteProfile(ctx context.Context, uuid string) (*string, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/profiles/%s", uuid), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(string)
 
 	return res, sc.c.Do(ctx, httpReq, res)
 }
@@ -301,6 +327,16 @@ func (sc ServiceClient) UpdateSLA(ctx context.Context, req *SLAIntentInput, id s
 		return nil, err
 	}
 	res := new(ListSLAResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+func (sc ServiceClient) UpdateProfile(ctx context.Context, req *UpdateProfileRequest, id string) (*ListProfileResponse, error) {
+	path := fmt.Sprintf("/profiles/%s", id)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPut, path, req)
+	if err != nil {
+		return nil, err
+	}
+	res := new(ListProfileResponse)
+
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
@@ -319,7 +355,60 @@ func (sc ServiceClient) LogCatchUp(ctx context.Context, tmsID string, req *LogCa
 	if err != nil {
 		return nil, err
 	}
-
 	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) UpdateProfileVersion(ctx context.Context, req *ProfileRequest, id string, vid string) (*ListProfileResponse, error) {
+	path := fmt.Sprintf("/profiles/%s/versions/%s", id, vid)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPut, path, req)
+	if err != nil {
+		return nil, err
+	}
+	res := new(ListProfileResponse)
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) CreateSoftwareProfiles(ctx context.Context, req *ProfileRequest) (*SoftwareProfileResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/profiles", req)
+	res := new(SoftwareProfileResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) GetSoftwareProfileVersion(ctx context.Context, profileID string, profileVersionID string) (*Versions, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/profiles/%s/versions/%s", profileID, profileVersionID), nil)
+	res := new(Versions)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) CreateSoftwareProfileVersion(ctx context.Context, id string, req *ProfileRequest) (*SoftwareProfileResponse, error) {
+	path := fmt.Sprintf("/profiles/%s/versions", id)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, path, req)
+	if err != nil {
+		return nil, err
+	}
+	res := new(SoftwareProfileResponse)
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteProfileVersion(ctx context.Context, profileID string, profileVersionID string) (*string, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/profiles/%s/versions/%s", profileID, profileVersionID), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(string)
+
 	return res, sc.c.Do(ctx, httpReq, res)
 }
