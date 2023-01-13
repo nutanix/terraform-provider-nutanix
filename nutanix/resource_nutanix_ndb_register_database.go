@@ -432,6 +432,14 @@ func buildReisterDBRequest(d *schema.ResourceData) (*era.RegisterDBInputRequest,
 		res.TimeMachineInfo = buildTimeMachineFromResourceData(tms.(*schema.Set))
 	}
 
+	if tags, ok := d.GetOk("tags"); ok && len(tags.([]interface{})) > 0 {
+		res.Tags = expandTags(tags.([]interface{}))
+	}
+
+	if maintenence, ok := d.GetOk("maintenance_tasks"); ok && len(maintenence.([]interface{})) > 0 {
+		res.MaintenanceTasks = expandMaintenanceTasks(maintenence.([]interface{}))
+	}
+
 	res.Actionarguments = expandRegisterDBActionArguments(d)
 	return res, nil
 }

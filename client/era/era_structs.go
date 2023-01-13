@@ -1077,6 +1077,7 @@ type RegisterDBInputRequest struct {
 	TimeMachineInfo             *Timemachineinfo   `json:"timeMachineInfo,omitempty"`
 	Tags                        []*Tags            `json:"tags,omitempty"`
 	Actionarguments             []*Actionarguments `json:"actionArguments,omitempty"`
+	MaintenanceTasks            *MaintenanceTasks  `json:"maintenanceTasks,omitempty"`
 }
 
 type UnRegisterDatabaseRequest struct {
