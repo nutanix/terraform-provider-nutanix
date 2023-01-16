@@ -571,9 +571,7 @@ func resourceNutanixNDBDatabaseSnapshotDelete(ctx context.Context, d *schema.Res
 	}
 
 	opID := resp.Operationid
-	if opID == "" {
-		return diag.Errorf("error: operation ID is an empty string")
-	}
+
 	opReq := era.GetOperationRequest{
 		OperationID: opID,
 	}
