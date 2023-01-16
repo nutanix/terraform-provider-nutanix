@@ -98,7 +98,7 @@ func resourceNutanixNDBAuthorizeDBServerDelete(ctx context.Context, d *schema.Re
 
 	if len(tmsName.(string)) > 0 {
 		// call time machine API with value-type name
-		res, er := conn.Service.GetTimeMachine(ctx, tmsID.(string), tmsName.(string))
+		res, er := conn.Service.GetTimeMachine(ctx, "", tmsName.(string))
 		if er != nil {
 			return diag.FromErr(er)
 		}
@@ -116,7 +116,7 @@ func resourceNutanixNDBAuthorizeDBServerDelete(ctx context.Context, d *schema.Re
 		}
 	}
 
-	_, err := conn.Service.DeAuthorizeDBServer(ctx, d.Id(), deauthorizeDBs)
+	_, err := conn.Service.DeAuthorizeDBServer(ctx, tmsID.(string), deauthorizeDBs)
 	if err != nil {
 		return diag.FromErr(err)
 	}
