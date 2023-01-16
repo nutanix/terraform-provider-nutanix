@@ -87,5 +87,39 @@ func resourceNutanixNDBAuthorizeDBServerUpdate(ctx context.Context, d *schema.Re
 }
 
 func resourceNutanixNDBAuthorizeDBServerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*Client).Era
+
+	tmsID, tok := d.GetOk("time_machine_id")
+	tmsName, tnOk := d.GetOk("time_machine_name")
+
+	if !tok && !tnOk {
+		return diag.Errorf("Atleast one of time_machine_id or time_machine_name is required to perform clone")
+	}
+
+	if len(tmsName.(string)) > 0 {
+		// call time machine API with value-type name
+		res, er := conn.Service.GetTimeMachine(ctx, tmsID.(string), tmsName.(string))
+		if er != nil {
+			return diag.FromErr(er)
+		}
+
+		tmsID = *res.ID
+	}
+
+	deauthorizeDBs := make([]*string, 0)
+
+	if dbserversID, ok := d.GetOk("dbservers_id"); ok {
+		dbser := dbserversID.([]interface{})
+
+		for _, v := range dbser {
+			deauthorizeDBs = append(deauthorizeDBs, utils.StringPtr(v.(string)))
+		}
+	}
+
+	_, err := conn.Service.DeAuthorizeDBServer(ctx, d.Id(), deauthorizeDBs)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId("")
 	return nil
 }

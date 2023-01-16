@@ -52,6 +52,7 @@ type Service interface {
 	ListClones(ctx context.Context, filter *FilterParams) (*ListDatabaseInstance, error)
 	DeleteClone(ctx context.Context, id string, req *DeleteDatabaseRequest) (*ProvisionDatabaseResponse, error)
 	AuthorizeDBServer(ctx context.Context, id string, req []*string) (*AuthorizeDBServerResponse, error)
+	DeAuthorizeDBServer(ctx context.Context, id string, req []*string) (*AuthorizeDBServerResponse, error)
 }
 
 type ServiceClient struct {
@@ -596,6 +597,17 @@ func (sc ServiceClient) DeleteClone(ctx context.Context, cloneID string, req *De
 
 func (sc ServiceClient) AuthorizeDBServer(ctx context.Context, tmsID string, req []*string) (*AuthorizeDBServerResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("tms/%s/dbservers", tmsID), req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(AuthorizeDBServerResponse)
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeAuthorizeDBServer(ctx context.Context, tmsID string, req []*string) (*AuthorizeDBServerResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("tms/%s/dbservers", tmsID), req)
 	if err != nil {
 		return nil, err
 	}

@@ -361,7 +361,7 @@ func resourceNutanixNDBCloneCreate(ctx context.Context, d *schema.ResourceData, 
 	req.TimeMachineID = utils.StringPtr(tmsID.(string))
 
 	// build request for clone
-	if err := builCloneRequest(d, req); err != nil {
+	if err := buildCloneRequest(d, req); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -631,7 +631,7 @@ func resourceNutanixNDBCloneDelete(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func builCloneRequest(d *schema.ResourceData, res *era.CloneRequest) error {
+func buildCloneRequest(d *schema.ResourceData, res *era.CloneRequest) error {
 	if name, ok := d.GetOk("name"); ok {
 		res.Name = utils.StringPtr(name.(string))
 	}
@@ -747,43 +747,50 @@ func expandPostgreSQLCloneActionArgs(d *schema.ResourceData, pr []interface{}) [
 	if len(pr) > 0 {
 		args := []*era.Actionarguments{}
 
-		for _, v := range pr {
-			val := v.(map[string]interface{})
-
-			if v1, ok1 := val["vm_name"]; ok1 && len(v1.(string)) > 0 {
-				args = append(args, &era.Actionarguments{
-					Name:  "vm_name",
-					Value: v1.(string),
-				})
-			}
-
-			if v1, ok1 := val["db_password"]; ok1 && len(v1.(string)) > 0 {
-				args = append(args, &era.Actionarguments{
-					Name:  "db_password",
-					Value: v1.(string),
-				})
-			}
-
-			if v1, ok1 := val["dbserver_description"]; ok1 && len(v1.(string)) > 0 {
-				args = append(args, &era.Actionarguments{
-					Name:  "dbserver_description",
-					Value: v1.(string),
-				})
-			}
-			if v1, ok1 := val["pre_clone_cmd"]; ok1 && len(v1.(string)) > 0 {
-				args = append(args, &era.Actionarguments{
-					Name:  "pre_clone_cmd",
-					Value: v1.(string),
-				})
-			}
-
-			if v1, ok1 := val["post_clone_cmd"]; ok1 && len(v1.(string)) > 0 {
-				args = append(args, &era.Actionarguments{
-					Name:  "post_clone_cmd",
-					Value: v1.(string),
-				})
-			}
+		postgresProp := pr[0].(map[string]interface{})
+		for key, value := range postgresProp {
+			args = append(args, &era.Actionarguments{
+				Name:  key,
+				Value: utils.StringPtr(value.(string)),
+			})
 		}
+		// for _, v := range pr {
+		// 	val := v.(map[string]interface{})
+
+		// 	if v1, ok1 := val["vm_name"]; ok1 && len(v1.(string)) > 0 {
+		// 		args = append(args, &era.Actionarguments{
+		// 			Name:  "vm_name",
+		// 			Value: v1.(string),
+		// 		})
+		// 	}
+
+		// 	if v1, ok1 := val["db_password"]; ok1 && len(v1.(string)) > 0 {
+		// 		args = append(args, &era.Actionarguments{
+		// 			Name:  "db_password",
+		// 			Value: v1.(string),
+		// 		})
+		// 	}
+
+		// 	if v1, ok1 := val["dbserver_description"]; ok1 && len(v1.(string)) > 0 {
+		// 		args = append(args, &era.Actionarguments{
+		// 			Name:  "dbserver_description",
+		// 			Value: v1.(string),
+		// 		})
+		// 	}
+		// 	if v1, ok1 := val["pre_clone_cmd"]; ok1 && len(v1.(string)) > 0 {
+		// 		args = append(args, &era.Actionarguments{
+		// 			Name:  "pre_clone_cmd",
+		// 			Value: v1.(string),
+		// 		})
+		// 	}
+
+		// 	if v1, ok1 := val["post_clone_cmd"]; ok1 && len(v1.(string)) > 0 {
+		// 		args = append(args, &era.Actionarguments{
+		// 			Name:  "post_clone_cmd",
+		// 			Value: v1.(string),
+		// 		})
+		// 	}
+		// }
 		resp := buildActionArgumentsFromResourceData(d.Get("actionarguments").(*schema.Set), args)
 		return resp
 	}

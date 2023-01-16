@@ -274,7 +274,7 @@ func resourceNutanixNDBDatabaseSnapshotCreate(ctx context.Context, d *schema.Res
 
 	if len(tmsName.(string)) > 0 {
 		// call time machine API with value-type name
-		res, err := conn.Service.GetTimeMachine(ctx, "", tmsName.(string))
+		res, err := conn.Service.GetTimeMachine(ctx, tmsID.(string), tmsName.(string))
 		if err != nil {
 			return diag.FromErr(err)
 		}
