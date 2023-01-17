@@ -1266,17 +1266,17 @@ type TimeMachineCapability struct {
 	OutputTimeZone                *string                `json:"outputTimeZone,omitempty"`
 	Type                          *string                `json:"type,omitempty"`
 	NxClusterID                   *string                `json:"nxClusterId,omitempty"`
-	Source                        bool                   `json:"source,omitempty"`
 	NxClusterAssociationType      *string                `json:"nxClusterAssociationType,omitempty"`
 	SLAID                         *string                `json:"slaId,omitempty"`
-	OverallContinuousRangeEndTime interface{}            `json:"overallContinuousRangeEndTime,omitempty"`
+	CapabilityResetTime           *string                `json:"capabilityResetTime,omitempty"`
 	LastContinuousSnapshotTime    *string                `json:"lastContinuousSnapshotTime,omitempty"`
 	LogCatchupStartTime           *string                `json:"logCatchupStartTime,omitempty"`
-	HealWithResetCapability       bool                   `json:"healWithResetCapability,omitempty"`
 	DatabaseIds                   []*string              `json:"databaseIds,omitempty"`
-	LogTimeInfo                   map[string]interface{} `json:"logTimeInfo,omitempty"`
+	HealWithResetCapability       bool                   `json:"healWithResetCapability,omitempty"`
+	Source                        bool                   `json:"source,omitempty"`
 	Capability                    []*Capability          `json:"capability,omitempty"`
-	CapabilityResetTime           *string                `json:"capabilityResetTime,omitempty"`
+	LogTimeInfo                   map[string]interface{} `json:"logTimeInfo,omitempty"`
 	LastDBLog                     interface{}            `json:"lastDbLog,omitempty"`
 	LastContinuousSnapshot        interface{}            `json:"lastContinuousSnapshot,omitempty"`
+	OverallContinuousRangeEndTime interface{}            `json:"overallContinuousRangeEndTime,omitempty"`
 }
