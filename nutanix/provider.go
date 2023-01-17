@@ -202,6 +202,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_clones":                              dataSourceNutanixNDBClones(),
 			"nutanix_ndb_snapshot":                            dataSourceNutanixNDBSnapshot(),
 			"nutanix_ndb_snapshots":                           dataSourceNutanixNDBSnapshots(),
+			"nutanix_ndb_tms_capability":                      dataSourceNutanixNDBTmsCapability(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  resourceNutanixVirtualMachine(),

@@ -1248,3 +1248,35 @@ type ClonedMetadata struct {
 	CurationRetryCount                   int           `json:"curationRetryCount,omitempty"`
 	OperationsUsingSnapshot              []interface{} `json:"operationsUsingSnapshot,omitempty"`
 }
+
+type Capability struct {
+	Mode                      *string        `json:"mode,omitempty"`
+	From                      *string        `json:"from,omitempty"`
+	To                        *string        `json:"to,omitempty"`
+	TimeUnit                  *string        `json:"timeUnit,omitempty"`
+	TimeUnitNumber            *string        `json:"timeUnitNumber,omitempty"`
+	DatabaseIds               []*string      `json:"databaseIds,omitempty"`
+	Snapshots                 *ListSnapshots `json:"snapshots,omitempty"`
+	ContinuousRegion          interface{}    `json:"continuousRegion,omitempty"`
+	DatabasesContinuousRegion interface{}    `json:"databasesContinuousRegion,omitempty"`
+}
+
+type TimeMachineCapability struct {
+	TimeMachineID                 *string                `json:"timeMachineId,omitempty"`
+	OutputTimeZone                *string                `json:"outputTimeZone,omitempty"`
+	Type                          *string                `json:"type,omitempty"`
+	NxClusterID                   *string                `json:"nxClusterId,omitempty"`
+	Source                        bool                   `json:"source,omitempty"`
+	NxClusterAssociationType      *string                `json:"nxClusterAssociationType,omitempty"`
+	SLAID                         *string                `json:"slaId,omitempty"`
+	OverallContinuousRangeEndTime interface{}            `json:"overallContinuousRangeEndTime,omitempty"`
+	LastContinuousSnapshotTime    *string                `json:"lastContinuousSnapshotTime,omitempty"`
+	LogCatchupStartTime           *string                `json:"logCatchupStartTime,omitempty"`
+	HealWithResetCapability       bool                   `json:"healWithResetCapability,omitempty"`
+	DatabaseIds                   []*string              `json:"databaseIds,omitempty"`
+	LogTimeInfo                   map[string]interface{} `json:"logTimeInfo,omitempty"`
+	Capability                    []*Capability          `json:"capability,omitempty"`
+	CapabilityResetTime           *string                `json:"capabilityResetTime,omitempty"`
+	LastDbLog                     interface{}            `json:"lastDbLog,omitempty"`
+	LastContinuousSnapshot        interface{}            `json:"lastContinuousSnapshot,omitempty"`
+}
