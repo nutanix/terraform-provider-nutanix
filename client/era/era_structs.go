@@ -1277,6 +1277,6 @@ type TimeMachineCapability struct {
 	LogTimeInfo                   map[string]interface{} `json:"logTimeInfo,omitempty"`
 	Capability                    []*Capability          `json:"capability,omitempty"`
 	CapabilityResetTime           *string                `json:"capabilityResetTime,omitempty"`
-	LastDbLog                     interface{}            `json:"lastDbLog,omitempty"`
+	LastDBLog                     interface{}            `json:"lastDbLog,omitempty"`
 	LastContinuousSnapshot        interface{}            `json:"lastContinuousSnapshot,omitempty"`
 }

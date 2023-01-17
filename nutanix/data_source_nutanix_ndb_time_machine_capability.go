@@ -360,9 +360,9 @@ func dataSourceNutanixNDBTmsCapabilityRead(ctx context.Context, d *schema.Resour
 	conn := meta.(*Client).Era
 
 	tmsID := d.Get("time_machine_id")
-	resp, err := conn.Service.TimeMachineCapability(ctx, tmsID.(string))
-	if err != nil {
-		return diag.FromErr(err)
+	resp, er := conn.Service.TimeMachineCapability(ctx, tmsID.(string))
+	if er != nil {
+		return diag.FromErr(er)
 	}
 
 	if err := d.Set("output_time_zone", resp.OutputTimeZone); err != nil {
@@ -417,17 +417,17 @@ func dataSourceNutanixNDBTmsCapabilityRead(ctx context.Context, d *schema.Resour
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("last_db_log", resp.LastDbLog); err != nil {
+	if err := d.Set("last_db_log", resp.LastDBLog); err != nil {
 		return diag.FromErr(err)
 	}
 
 	if err := d.Set("last_continuous_snapshot", resp.LastContinuousSnapshot); err != nil {
 		return diag.FromErr(err)
 	}
-	uuid, er := uuid.GenerateUUID()
+	uuid, e := uuid.GenerateUUID()
 
-	if er != nil {
-		return diag.Errorf("Error generating UUID for era tms capability: %+v", err)
+	if e != nil {
+		return diag.Errorf("Error generating UUID for era tms capability: %+v", e)
 	}
 	d.SetId(uuid)
 	return nil
