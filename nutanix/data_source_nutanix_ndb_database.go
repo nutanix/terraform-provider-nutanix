@@ -572,7 +572,7 @@ func flattenDBLcmConfig(pr *Era.LcmConfig) []map[string]interface{} {
 	if pr != nil {
 		lcm := map[string]interface{}{}
 
-		lcm["expiryDetails"] = flattenEraExpiryDetails(pr.ExpiryDetails)
+		lcm["expiry_details"] = flattenEraExpiryDetails(pr.ExpiryDetails)
 		lcm["refresh_details"] = flattenEraRefreshDetails(pr.RefreshDetails)
 
 		var preLcmComm []map[string]interface{}
@@ -847,7 +847,9 @@ func flattenTimeMachineMetadata(pr *Era.TimeMachineMetadata) []map[string]interf
 
 		tm["secure_info"] = pr.SecureInfo
 		tm["info"] = pr.Info
-		tm["deregister_info"] = flattenDeRegiserInfo(pr.DeregisterInfo)
+		if pr.DeregisterInfo != nil {
+			tm["deregister_info"] = flattenDeRegiserInfo(pr.DeregisterInfo)
+		}
 		tm["capability_reset_time"] = pr.CapabilityResetTime
 		tm["auto_heal"] = pr.AutoHeal
 		tm["auto_heal_snapshot_count"] = pr.AutoHealSnapshotCount

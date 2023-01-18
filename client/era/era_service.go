@@ -39,6 +39,21 @@ type Service interface {
 	DeleteProfileVersion(ctx context.Context, profileID string, profileVersionID string) (*string, error)
 	DatabaseScale(ctx context.Context, id string, req *DatabaseScale) (*ProvisionDatabaseResponse, error)
 	RegisterDatabase(ctx context.Context, request *RegisterDBInputRequest) (*ProvisionDatabaseResponse, error)
+	GetTimeMachine(ctx context.Context, tmsID string, tmsName string) (*TimeMachine, error)
+	ListTimeMachines(ctx context.Context) (*ListTimeMachines, error)
+	DatabaseSnapshot(ctx context.Context, id string, req *DatabaseSnapshotRequest) (*ProvisionDatabaseResponse, error)
+	UpdateSnapshot(ctx context.Context, id string, req *UpdateSnapshotRequest) (*SnapshotResponse, error)
+	GetSnapshot(ctx context.Context, id string, filter *FilterParams) (*SnapshotResponse, error)
+	DeleteSnapshot(ctx context.Context, id string) (*ProvisionDatabaseResponse, error)
+	ListSnapshots(ctx context.Context, tmsID string) (*ListSnapshots, error)
+	CreateClone(ctx context.Context, id string, req *CloneRequest) (*ProvisionDatabaseResponse, error)
+	UpdateCloneDatabase(ctx context.Context, id string, req *UpdateDatabaseRequest) (*UpdateDatabaseResponse, error)
+	GetClone(ctx context.Context, id string, name string, filterParams *FilterParams) (*GetDatabaseResponse, error)
+	ListClones(ctx context.Context, filter *FilterParams) (*ListDatabaseInstance, error)
+	DeleteClone(ctx context.Context, id string, req *DeleteDatabaseRequest) (*ProvisionDatabaseResponse, error)
+	AuthorizeDBServer(ctx context.Context, id string, req []*string) (*AuthorizeDBServerResponse, error)
+	DeAuthorizeDBServer(ctx context.Context, id string, req []*string) (*AuthorizeDBServerResponse, error)
+	TimeMachineCapability(ctx context.Context, tmsID string) (*TimeMachineCapability, error)
 }
 
 type ServiceClient struct {
@@ -362,6 +377,15 @@ func (sc ServiceClient) DatabaseRestore(ctx context.Context, databaseID string, 
 	res := new(ProvisionDatabaseResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
+func (sc ServiceClient) DatabaseSnapshot(ctx context.Context, id string, req *DatabaseSnapshotRequest) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/tms/%s/snapshots", id), req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
 
 func (sc ServiceClient) LogCatchUp(ctx context.Context, tmsID string, req *LogCatchUpRequest) (*ProvisionDatabaseResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/tms/%s/log-catchups", tmsID), req)
@@ -433,6 +457,174 @@ func (sc ServiceClient) DeleteProfileVersion(ctx context.Context, profileID stri
 		return nil, err
 	}
 	res := new(string)
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) UpdateSnapshot(ctx context.Context, snapshotID string, req *UpdateSnapshotRequest) (*SnapshotResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("/snapshots/i/%s", snapshotID), req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(SnapshotResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteSnapshot(ctx context.Context, snapshotID string) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/snapshots/%s", snapshotID), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) GetSnapshot(ctx context.Context, snapshotID string, filter *FilterParams) (*SnapshotResponse, error) {
+	path := fmt.Sprintf("/snapshots/%s", snapshotID)
+	if filter != nil {
+		path = path + "?load-replicated-child-snapshots=" + filter.LoadReplicatedChildSnapshots + "&time-zone=" + filter.TimeZone
+	}
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(SnapshotResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ListSnapshots(ctx context.Context, tmsID string) (*ListSnapshots, error) {
+	path := ("/snapshots?all=false&time-zone=UTC")
+	if tmsID != "" {
+		path = path + "&value-type=time-machine&value=" + tmsID
+	}
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ListSnapshots)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) GetTimeMachine(ctx context.Context, tmsID string, tmsName string) (*TimeMachine, error) {
+	path := ""
+
+	if len(tmsName) > 0 {
+		path = fmt.Sprintf("/tms/%s?value-type=name&detailed=false&load-database=false&load-clones=false&time-zone=UTC", tmsName)
+	} else {
+		path = fmt.Sprintf("/tms/%s?value-type=id&detailed=false&load-database=false&load-clones=false&time-zone=UTC", tmsID)
+	}
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(TimeMachine)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ListTimeMachines(ctx context.Context) (*ListTimeMachines, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/tms", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ListTimeMachines)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) CreateClone(ctx context.Context, id string, req *CloneRequest) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/tms/%s/clones", id), req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) GetClone(ctx context.Context, id string, name string, filter *FilterParams) (*GetDatabaseResponse, error) {
+	path := ""
+
+	if name != "" {
+		path = fmt.Sprintf("/clones/%s?value-type=name&detailed=%s&any-status=%s&load-dbserver-cluster=%s&time-zone=%s", name, filter.Detailed, filter.AnyStatus, filter.LoadDBServerCluster, filter.TimeZone)
+	} else {
+		path = fmt.Sprintf("/clones/%s?value-type=id&detailed=%s&any-status=%s&load-dbserver-cluster=%s&time-zone=%s", id, filter.Detailed, filter.AnyStatus, filter.LoadDBServerCluster, filter.TimeZone)
+	}
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(GetDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ListClones(ctx context.Context, filter *FilterParams) (*ListDatabaseInstance, error) {
+	path := fmt.Sprintf("/clones?detailed=%s&any-status=%s&load-dbserver-cluster=%s&order-by-dbserver-cluster=%s&order-by-dbserver-logical-cluster=%s&time-zone=%s",
+		filter.Detailed, filter.AnyStatus, filter.LoadDBServerCluster, filter.OrderByDBServerCluster, filter.OrderByDBServerLogicalCluster, filter.TimeZone)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ListDatabaseInstance)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) UpdateCloneDatabase(ctx context.Context, id string, req *UpdateDatabaseRequest) (*UpdateDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("/clones/%s", id), req)
+	res := new(UpdateDatabaseResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteClone(ctx context.Context, cloneID string, req *DeleteDatabaseRequest) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/clones/%s", cloneID), req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) AuthorizeDBServer(ctx context.Context, tmsID string, req []*string) (*AuthorizeDBServerResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("/tms/%s/dbservers", tmsID), req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(AuthorizeDBServerResponse)
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeAuthorizeDBServer(ctx context.Context, tmsID string, req []*string) (*AuthorizeDBServerResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/tms/%s/dbservers", tmsID), req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(AuthorizeDBServerResponse)
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) TimeMachineCapability(ctx context.Context, tmsID string) (*TimeMachineCapability, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/tms/%s/capability?time-zone=UTC&type=detailed&load-db-logs=true&load-snapshots=true", tmsID), "")
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(TimeMachineCapability)
 
 	return res, sc.c.Do(ctx, httpReq, res)
 }
