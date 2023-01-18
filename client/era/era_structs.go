@@ -1400,9 +1400,6 @@ type LastContinuousSnapshot struct {
 	LcmConfig                      *LcmConfig                      `json:"lcmConfig,omitempty"`
 }
 
-type Databases struct {
-	DatabaseName *string `json:"databaseName,omitempty"`
-}
 type LinkedDatabases struct {
 	DatabaseName *string `json:"databaseName,omitempty"`
 }

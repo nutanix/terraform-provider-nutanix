@@ -54,9 +54,8 @@ type Service interface {
 	AuthorizeDBServer(ctx context.Context, id string, req []*string) (*AuthorizeDBServerResponse, error)
 	DeAuthorizeDBServer(ctx context.Context, id string, req []*string) (*AuthorizeDBServerResponse, error)
 	TimeMachineCapability(ctx context.Context, tmsID string) (*TimeMachineCapability, error)
-	AddRemoveDatabase(ctx context.Context, id string, req *AddRemoveDatabasesRequest)
 	CreateLinkedDatabase(ctx context.Context, id string, req *CreateLinkedDatabasesRequest) (*ProvisionDatabaseResponse, error)
-	DeleteLinkedDatabase(ctx context.Context, dbId string, linkeddbId string, req *DeleteLinkedDatabaseRequest) (*ProvisionDatabaseResponse, error)
+	DeleteLinkedDatabase(ctx context.Context, DBID string, linkedDBID string, req *DeleteLinkedDatabaseRequest) (*ProvisionDatabaseResponse, error)
 }
 
 type ServiceClient struct {
