@@ -13,10 +13,10 @@ import (
 
 func resourceNutanixNDBLinkedDb() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceNutanixNDBLinkedDbCreate,
-		ReadContext:   resourceNutanixNDBLinkedDbRead,
-		UpdateContext: resourceNutanixNDBLinkedDbUpdate,
-		DeleteContext: resourceNutanixNDBLinkedDbDelete,
+		CreateContext: resourceNutanixNDBLinkedDBCreate,
+		ReadContext:   resourceNutanixNDBLinkedDBRead,
+		UpdateContext: resourceNutanixNDBLinkedDBUpdate,
+		DeleteContext: resourceNutanixNDBLinkedDBDelete,
 		Schema: map[string]*schema.Schema{
 			"database_id": {
 				Type:     schema.TypeString,
@@ -122,16 +122,16 @@ func resourceNutanixNDBLinkedDb() *schema.Resource {
 	}
 }
 
-func resourceNutanixNDBLinkedDbCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNutanixNDBLinkedDBCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
 	req := &era.CreateLinkedDatabasesRequest{}
 
-	databaseId := ""
+	databaseID := ""
 	databaseName := ""
-	SetId := ""
-	if dbId, dok := d.GetOk("database_id"); dok {
-		databaseId = dbId.(string)
+	SetID := ""
+	if dbID, dok := d.GetOk("database_id"); dok {
+		databaseID = dbID.(string)
 	}
 
 	dbNames := []*era.LinkedDatabases{}
@@ -147,7 +147,7 @@ func resourceNutanixNDBLinkedDbCreate(ctx context.Context, d *schema.ResourceDat
 
 	// call the Linked Databases API
 
-	resp, err := conn.Service.CreateLinkedDatabase(ctx, databaseId, req)
+	resp, err := conn.Service.CreateLinkedDatabase(ctx, databaseID, req)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -188,15 +188,15 @@ func resourceNutanixNDBLinkedDbCreate(ctx context.Context, d *schema.ResourceDat
 
 	for _, v := range linkDbs {
 		if v.DatabaseName == databaseName {
-			SetId = v.ID
+			SetID = v.ID
 			break
 		}
 	}
 
-	d.SetId(SetId)
-	return resourceNutanixNDBLinkedDbRead(ctx, d, meta)
+	d.SetId(SetID)
+	return resourceNutanixNDBLinkedDBRead(ctx, d, meta)
 }
-func resourceNutanixNDBLinkedDbRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNutanixNDBLinkedDBRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
 	databaseId := d.Get("database_id")
@@ -266,10 +266,10 @@ func resourceNutanixNDBLinkedDbRead(ctx context.Context, d *schema.ResourceData,
 
 	return nil
 }
-func resourceNutanixNDBLinkedDbUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNutanixNDBLinkedDBUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
-func resourceNutanixNDBLinkedDbDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNutanixNDBLinkedDBDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
 	dbId := d.Get("database_id")
@@ -322,7 +322,6 @@ func flattenLinkedDBInfo(pr era.Info) []interface{} {
 	}
 
 	if pr.Info != nil {
-
 		inf := make([]interface{}, 0)
 		infval := make(map[string]interface{})
 
@@ -331,11 +330,9 @@ func flattenLinkedDBInfo(pr era.Info) []interface{} {
 		}
 
 		inf = append(inf, infval)
-
 		info["info"] = inf
 	}
 
 	res = append(res, info)
-
 	return res
 }

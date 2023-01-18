@@ -408,8 +408,8 @@ func (sc ServiceClient) LogCatchUp(ctx context.Context, tmsID string, req *LogCa
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) DeleteLinkedDatabase(ctx context.Context, id string, linkDbId string, req *DeleteLinkedDatabaseRequest) (*ProvisionDatabaseResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/databases/%s/linked-databases/%s", id, linkDbId), req)
+func (sc ServiceClient) DeleteLinkedDatabase(ctx context.Context, id string, linkDBID string, req *DeleteLinkedDatabaseRequest) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/databases/%s/linked-databases/%s", id, linkDBID), req)
 
 	if err != nil {
 		return nil, err
