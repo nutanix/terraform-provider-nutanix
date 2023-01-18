@@ -11,7 +11,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func resourceNutanixNDBLinkedDb() *schema.Resource {
+func resourceNutanixNDBLinkedDB() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceNutanixNDBLinkedDBCreate,
 		ReadContext:   resourceNutanixNDBLinkedDBRead,
@@ -199,9 +199,9 @@ func resourceNutanixNDBLinkedDBCreate(ctx context.Context, d *schema.ResourceDat
 func resourceNutanixNDBLinkedDBRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
-	databaseId := d.Get("database_id")
+	databaseID := d.Get("database_id")
 
-	response, er := conn.Service.GetDatabaseInstance(ctx, databaseId.(string))
+	response, er := conn.Service.GetDatabaseInstance(ctx, databaseID.(string))
 	if er != nil {
 		return diag.FromErr(er)
 	}
@@ -211,7 +211,7 @@ func resourceNutanixNDBLinkedDBRead(ctx context.Context, d *schema.ResourceData,
 
 	for _, v := range linkDbs {
 		if v.ID == d.Id() {
-			currentLinkedDB = &v
+			*currentLinkedDB = v
 			break
 		}
 	}
@@ -272,7 +272,7 @@ func resourceNutanixNDBLinkedDBUpdate(ctx context.Context, d *schema.ResourceDat
 func resourceNutanixNDBLinkedDBDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
-	dbId := d.Get("database_id")
+	dbID := d.Get("database_id")
 
 	req := &era.DeleteLinkedDatabaseRequest{
 		Delete: true,
@@ -281,7 +281,7 @@ func resourceNutanixNDBLinkedDBDelete(ctx context.Context, d *schema.ResourceDat
 
 	// API to delete linked databases
 
-	res, err := conn.Service.DeleteLinkedDatabase(ctx, dbId.(string), d.Id(), req)
+	res, err := conn.Service.DeleteLinkedDatabase(ctx, dbID.(string), d.Id(), req)
 	if err != nil {
 		return diag.FromErr(err)
 	}
