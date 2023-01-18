@@ -1156,9 +1156,9 @@ func flattenLastContinousSnapshot(pr *era.LastContinuousSnapshot) []map[string]i
 		snap["database_snapshot"] = pr.DatabaseSnapshot
 		snap["from_timestamp"] = pr.FromTimeStamp
 		snap["to_timestamp"] = pr.ToTimeStamp
-		snap["dbserver_id"] = pr.DbserverID
-		snap["dbserver_name"] = pr.DbserverName
-		snap["dbserver_ip"] = pr.DbserverIP
+		snap["dbserver_id"] = pr.DBserverID
+		snap["dbserver_name"] = pr.DBserverName
+		snap["dbserver_ip"] = pr.DBserverIP
 		snap["replicated_snapshots"] = pr.ReplicatedSnapshots
 		snap["software_snapshot"] = pr.SoftwareSnapshot
 		snap["santised_snapshots"] = pr.SanitisedSnapshots
