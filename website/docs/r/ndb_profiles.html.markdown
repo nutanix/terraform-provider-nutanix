@@ -9,7 +9,7 @@ description: |-
 
 # nutanix_ndb_profile
 
-Provides a resource to create profiles (Software, Network, Database Paramter, Compute) based on the input parameters. 
+Provides a resource to create profiles (Software, Network, Database Parameter, Compute) based on the input parameters. 
 
 ## Example Usage
 

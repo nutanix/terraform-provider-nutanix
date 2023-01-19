@@ -31,7 +31,7 @@ Describes the snapshot present in Nutanix Database Service
 * `timezone`: (Optional) Default is UTC
 * `load_replicated_child_snapshots`: (Optional) load child snapshots. Default is false
 
-## Attribute Refrence
+## Attribute Reference
 
 * `id`: name of snapshot
 * `description`: description of snapshot
