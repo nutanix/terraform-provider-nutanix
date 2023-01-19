@@ -473,7 +473,7 @@ func createDatabaseInstance(ctx context.Context, d *schema.ResourceData, meta in
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for db Instance	 (%s) to create: %s", resp.Entityid, errWaitTask)
 	}
-
+	log.Printf("NDB database with %s id created successfully", d.Id())
 	return readDatabaseInstance(ctx, d, meta)
 }
 
@@ -690,8 +690,8 @@ func updateDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 			return diag.FromErr(err)
 		}
 	}
-
-	return nil
+	log.Printf("NDB database with %s id updated successfully", d.Id())
+	return readDatabaseInstance(ctx, d, m)
 }
 
 func deleteDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {

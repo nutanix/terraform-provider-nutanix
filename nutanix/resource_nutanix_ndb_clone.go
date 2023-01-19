@@ -167,8 +167,9 @@ func resourceNutanixNDBClone() *schema.Resource {
 				Required: true,
 			},
 			"ssh_public_key": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 			"compute_profile_id": {
 				Type:     schema.TypeString,
@@ -183,8 +184,9 @@ func resourceNutanixNDBClone() *schema.Resource {
 				Optional: true,
 			},
 			"vm_password": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 			"create_dbserver": {
 				Type:     schema.TypeBool,
@@ -228,8 +230,9 @@ func resourceNutanixNDBClone() *schema.Resource {
 							Optional: true,
 						},
 						"db_password": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:      schema.TypeString,
+							Required:  true,
+							Sensitive: true,
 						},
 						"pre_clone_cmd": {
 							Type:     schema.TypeString,
@@ -396,7 +399,9 @@ func resourceNutanixNDBCloneCreate(ctx context.Context, d *schema.ResourceData, 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for time machine clone (%s) to create: %s", resp.Entityid, errWaitTask)
 	}
-	return nil
+
+	log.Printf("NDB clone with %s id created successfully", d.Id())
+	return resourceNutanixNDBCloneRead(ctx, d, meta)
 }
 
 func resourceNutanixNDBCloneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -573,15 +578,10 @@ func resourceNutanixNDBCloneUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if res != nil {
-		if err = d.Set("description", res.Description); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err = d.Set("name", res.Name); err != nil {
-			return diag.FromErr(err)
-		}
+		log.Printf("NDB clone with %s id update successfully", d.Id())
 	}
-	return nil
+
+	return resourceNutanixNDBCloneRead(ctx, d, meta)
 }
 
 func resourceNutanixNDBCloneDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -628,6 +628,7 @@ func resourceNutanixNDBCloneDelete(ctx context.Context, d *schema.ResourceData, 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for clone Instance (%s) to unregister: %s", res.Entityid, errWaitTask)
 	}
+	log.Printf("NDB clone with %s id deleted successfully", d.Id())
 	return nil
 }
 

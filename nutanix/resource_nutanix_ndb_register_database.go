@@ -305,7 +305,8 @@ func resourceNutanixNDBRegisterDatabaseCreate(ctx context.Context, d *schema.Res
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for db register	 (%s) to create: %s", resp.Entityid, errWaitTask)
 	}
-	return nil
+	log.Printf("NDB register database with %s id created successfully", d.Id())
+	return resourceNutanixNDBRegisterDatabaseRead(ctx, d, meta)
 }
 
 func resourceNutanixNDBRegisterDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -362,6 +363,7 @@ func resourceNutanixNDBRegisterDatabaseDelete(ctx context.Context, d *schema.Res
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for unregister db Instance (%s) to delete: %s", res.Entityid, errWaitTask)
 	}
+	log.Printf("NDB register database with %s id deleted successfully", d.Id())
 	return nil
 }
 

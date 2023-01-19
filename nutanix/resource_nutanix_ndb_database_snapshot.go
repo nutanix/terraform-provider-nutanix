@@ -361,6 +361,7 @@ func resourceNutanixNDBDatabaseSnapshotCreate(ctx context.Context, d *schema.Res
 		}
 	}
 	d.SetId(uniqueID)
+	log.Printf("NDB database snapshot with %s id created successfully", d.Id())
 	return resourceNutanixNDBDatabaseSnapshotRead(ctx, d, meta)
 }
 
@@ -559,6 +560,7 @@ func resourceNutanixNDBDatabaseSnapshotUpdate(ctx context.Context, d *schema.Res
 		}
 	}
 
+	log.Printf("NDB database snapshot with %s id updated successfully", d.Id())
 	return resourceNutanixNDBDatabaseSnapshotRead(ctx, d, meta)
 }
 

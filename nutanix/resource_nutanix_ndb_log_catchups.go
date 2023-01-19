@@ -121,6 +121,7 @@ func resourceNutanixNDBLogCatchUpsCreate(ctx context.Context, d *schema.Resource
 		return diag.Errorf("error waiting to perform log-catchups	 (%s) to create: %s", resp.Entityid, errWaitTask)
 	}
 	d.SetId(resp.Operationid)
+	log.Printf("NDB log catchup with %s id created successfully", d.Id())
 	return nil
 }
 

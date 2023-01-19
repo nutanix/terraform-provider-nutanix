@@ -287,7 +287,7 @@ func resourceNutanixNDBSoftwareVersionProfileCreate(ctx context.Context, d *sche
 	if er != nil {
 		return diag.FromErr(er)
 	}
-
+	log.Printf("NDB Software Version Profile with %s id created successfully", d.Id())
 	return resourceNutanixNDBSoftwareVersionProfileRead(ctx, d, meta)
 }
 
@@ -392,7 +392,7 @@ func resourceNutanixNDBSoftwareVersionProfileUpdate(ctx context.Context, d *sche
 	if er != nil {
 		return diag.FromErr(er)
 	}
-
+	log.Printf("NDB Software Version Profile with %s id updated successfully", d.Id())
 	return resourceNutanixNDBSoftwareVersionProfileRead(ctx, d, meta)
 }
 
@@ -405,6 +405,7 @@ func resourceNutanixNDBSoftwareVersionProfileDelete(ctx context.Context, d *sche
 	}
 
 	if resp == utils.StringPtr("Profile Successfully Deleted.") {
+		log.Printf("NDB Software Version Profile with %s id deleted successfully", d.Id())
 		d.SetId("")
 	}
 	return nil

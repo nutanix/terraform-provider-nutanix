@@ -252,6 +252,7 @@ func resourceNutanixNDBDatabaseRestoreCreate(ctx context.Context, d *schema.Reso
 	}
 
 	d.SetId(resp.Operationid)
+	log.Printf("NDB database restore  with %s id created successfully", d.Id())
 	return resourceNutanixNDBDatabaseRestoreRead(ctx, d, meta)
 }
 

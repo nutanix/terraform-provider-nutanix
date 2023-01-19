@@ -2,7 +2,9 @@ package nutanix
 
 import (
 	"context"
+	"log"
 
+	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -72,9 +74,14 @@ func resourceNutanixNDBAuthorizeDBServerCreate(ctx context.Context, d *schema.Re
 	}
 
 	if resp.Status == utils.StringPtr("success") {
-		d.SetId(tmsID.(string))
-	}
+		uuid, er := uuid.GenerateUUID()
 
+		if er != nil {
+			return diag.Errorf("Error generating UUID for era clusters: %+v", err)
+		}
+		d.SetId(uuid)
+	}
+	log.Printf("NDB Authorize dbservers with %s id created successfully", d.Id())
 	return nil
 }
 
@@ -120,6 +127,7 @@ func resourceNutanixNDBAuthorizeDBServerDelete(ctx context.Context, d *schema.Re
 	if err != nil {
 		return diag.FromErr(err)
 	}
+	log.Printf("NDB Authorize dbservers with %s id deleted successfully", d.Id())
 	d.SetId("")
 	return nil
 }
