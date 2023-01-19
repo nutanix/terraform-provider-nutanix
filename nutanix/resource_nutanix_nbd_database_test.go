@@ -10,16 +10,17 @@ import (
 const resourceNameDB = "nutanix_ndb_database.acctest-managed"
 
 func TestAccEra_basic(t *testing.T) {
-	name := "test-pg-inst-tf"
+	r := randIntBetween(1, 10)
+	name := fmt.Sprintf("test-pg-inst-tf-%d", r)
 	desc := "this is desc"
-	vmName := "testvm12"
+	vmName := fmt.Sprintf("testvm-%d", r)
 	sshKey := testVars.SSHKey
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccEraPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEraDatabaseConfig(name, desc, vmName, sshKey),
+				Config: testAccEraDatabaseConfig(name, desc, vmName, sshKey, r),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameDB, "name", name),
 					resource.TestCheckResourceAttr(resourceNameDB, "description", desc),
@@ -33,7 +34,8 @@ func TestAccEra_basic(t *testing.T) {
 }
 
 func TestAccEraDatabaseProvisionHA(t *testing.T) {
-	name := "test-pg-inst-HA-tf"
+	r := randIntBetween(11, 25)
+	name := fmt.Sprintf("test-pg-inst-HA-tf-%d", r)
 	desc := "this is desc"
 	sshKey := testVars.SSHKey
 	resource.Test(t, resource.TestCase{
@@ -41,7 +43,7 @@ func TestAccEraDatabaseProvisionHA(t *testing.T) {
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEraDatabaseHAConfig(name, desc, sshKey),
+				Config: testAccEraDatabaseHAConfig(name, desc, sshKey, r),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameDB, "name", name),
 					resource.TestCheckResourceAttr(resourceNameDB, "description", desc),
@@ -55,7 +57,7 @@ func TestAccEraDatabaseProvisionHA(t *testing.T) {
 	})
 }
 
-func testAccEraDatabaseConfig(name, desc, vmName, sshKey string) string {
+func testAccEraDatabaseConfig(name, desc, vmName, sshKey string, r int) string {
 	return fmt.Sprintf(`
 	data "nutanix_ndb_profiles" "p"{
 	}
@@ -112,7 +114,7 @@ func testAccEraDatabaseConfig(name, desc, vmName, sshKey string) string {
 				networkprofileid= local.network_profiles.DEFAULT_OOB_POSTGRESQL_NETWORK.id
 			}
 		timemachineinfo {
-			name= "test-pg-inst-12"
+			name= "test-pg-inst-%[5]d"
 			description=""
 			slaid=local.slas["DEFAULT_OOB_BRONZE_SLA"].id
 			schedule {
@@ -147,10 +149,10 @@ func testAccEraDatabaseConfig(name, desc, vmName, sshKey string) string {
 			}
 	  }
 	}
-	`, name, desc, vmName, sshKey)
+	`, name, desc, vmName, sshKey, r)
 }
 
-func testAccEraDatabaseHAConfig(name, desc, sshKey string) string {
+func testAccEraDatabaseHAConfig(name, desc, sshKey string, r int) string {
 	return fmt.Sprintf(`
 	data "nutanix_ndb_profiles" "p"{
 	}
@@ -208,7 +210,7 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string) string {
 		  
 				proxy_write_port = "5000"
 		  
-				cluster_name= "ha-cls"
+				cluster_name= "ha-cls-%[4]d"
 		  
 				patroni_cluster_name = "ha-patroni-cluster"
 			}
@@ -220,7 +222,7 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string) string {
 				name =  "node_type"
 				value = "haproxy"
 			}
-			vmname =  "ha-cls_haproxy1"
+			vmname =  "ha-cls_haproxy-%[4]d"
 			nx_cluster_id =  local.clusters.EraCluster.id
 		}
 		nodes{
@@ -236,7 +238,7 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string) string {
 				name= "node_type"
 				value=  "database"
 			}
-			vmname = "ha-cls-1"
+			vmname = "ha-cls-1%[4]d"
 			networkprofileid=local.network_profiles.DEFAULT_OOB_POSTGRESQL_NETWORK.id
 			computeprofileid= local.compute_profiles["DEFAULT_OOB_SMALL_COMPUTE"].id
 			nx_cluster_id=  local.clusters.EraCluster.id
@@ -254,7 +256,7 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string) string {
 				name= "node_type"
 				value=  "database"
 			}
-			vmname = "ha-cls-2"
+			vmname = "ha-cls-2%[4]d"
 			networkprofileid=local.network_profiles.DEFAULT_OOB_POSTGRESQL_NETWORK.id
 			computeprofileid= local.compute_profiles["DEFAULT_OOB_SMALL_COMPUTE"].id
 			nx_cluster_id=  local.clusters.EraCluster.id
@@ -273,13 +275,13 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string) string {
 				name= "node_type"
 				value=  "database"
 			}
-			vmname = "ha-cls-3"
+			vmname = "ha-cls-3%[4]d"
 			networkprofileid=local.network_profiles.DEFAULT_OOB_POSTGRESQL_NETWORK.id
 			computeprofileid= local.compute_profiles["DEFAULT_OOB_SMALL_COMPUTE"].id
 			nx_cluster_id= local.clusters.EraCluster.id
 		}
 		timemachineinfo {
-			name= "test-pg-inst"
+			name= "test-pg-inst-%[4]d"
 			description=""
 
 			sla_details{
@@ -322,5 +324,5 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string) string {
 			}
 	  }
 	}
-	`, name, desc, sshKey)
+	`, name, desc, sshKey, r)
 }

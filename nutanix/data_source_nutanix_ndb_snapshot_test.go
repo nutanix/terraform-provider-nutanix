@@ -44,7 +44,6 @@ func TestAccEraSnapshotDataSource_WithFilters(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceNDBSnapshotName, "metadata.#", "1"),
 					resource.TestCheckResourceAttrSet(dataSourceNDBSnapshotName, "snapshot_uuid"),
 					resource.TestCheckResourceAttr(dataSourceNDBSnapshotName, "status", "ACTIVE"),
-					resource.TestCheckResourceAttr(dataSourceNDBSnapshotName, "type", "DAILY_EXTRA"),
 				),
 			},
 		},

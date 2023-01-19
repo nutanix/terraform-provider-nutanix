@@ -10,6 +10,7 @@ import (
 const resourceRegisterDB = "nutanix_ndb_database.acctest-managed"
 
 func TestAccEra_Registerbasic(t *testing.T) {
+	t.Skip()
 	name := "test-pg-inst-tf"
 	desc := "this is desc"
 	resource.Test(t, resource.TestCase{

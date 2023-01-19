@@ -37,7 +37,7 @@ func testAccEraDatabaseScaleConfig(size string) string {
 
 		resource "nutanix_ndb_database_scale" "acctest-managed" {
 			application_type = "postgres_database"
-			database_uuid = data.nutanix_ndb_databases.test.database_instances.1.id
+			database_uuid = data.nutanix_ndb_databases.test.database_instances.0.id
 			data_storage_size = %[1]s
 	  	}
 	`, size)
