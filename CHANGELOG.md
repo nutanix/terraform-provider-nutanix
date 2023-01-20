@@ -16,6 +16,7 @@
     - nutanix_ndb_log_catchups
     - nutanix_ndb_authorize_dbservers
     - nutanix_ndb_software_version_profile
+    - nutanix_ndb_linked_databases
 
     New Data Sources:
     - nutanix_ndb_snapshot
@@ -31,7 +32,7 @@
  - Support for HA instance in nutanix_ndb_database resource. [\#518](https://github.com/nutanix/terraform-provider-nutanix/pull/518)
  - Improving the error when server is unreachable. [\#530](https://github.com/nutanix/terraform-provider-nutanix/pull/530)
  - Fetching of database based on database_type filter [\#513](https://github.com/nutanix/terraform-provider-nutanix/pull/513)
- - Support of Tags and Maintance Window in provisioning [\#528](https://github.com/nutanix/terraform-provider-nutanix/pull/528) 
+ - Support of Tags and Maintainence Window in provisioning [\#528](https://github.com/nutanix/terraform-provider-nutanix/pull/528) 
 
 
 ## 1.8.0-beta.1 (Oct 12, 2022)
