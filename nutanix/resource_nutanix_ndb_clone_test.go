@@ -24,11 +24,12 @@ func TestAccEra_Clonebasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceClone, "name", name),
 					resource.TestCheckResourceAttr(resourceClone, "description", desc),
+					resource.TestCheckResourceAttr(resourceClone, "clone", "true"),
 					resource.TestCheckResourceAttrSet(resourceClone, "date_created"),
 					resource.TestCheckResourceAttrSet(resourceClone, "database_name"),
 					resource.TestCheckResourceAttrSet(resourceClone, "database_status"),
 					resource.TestCheckResourceAttrSet(resourceClone, "metadata.#"),
-					resource.TestCheckResourceAttrSet(resourceClone, "time_machine.#"),
+					resource.TestCheckResourceAttrSet(resourceClone, "database_nodes.#"),
 					resource.TestCheckResourceAttrSet(resourceClone, "linked_databases.#"),
 				),
 			},

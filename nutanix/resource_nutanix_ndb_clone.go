@@ -249,6 +249,26 @@ func resourceNutanixNDBClone() *schema.Resource {
 			"actionarguments": actionArgumentsSchema(),
 			// Computed values
 
+			"properties": {
+				Type:        schema.TypeList,
+				Description: "List of all the properties",
+				Computed:    true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "",
+						},
+						"value": {
+							Type:        schema.TypeString,
+							Computed:    true,
+							Description: "",
+						},
+					},
+				},
+			},
+
 			"owner_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -315,6 +335,10 @@ func resourceNutanixNDBClone() *schema.Resource {
 				},
 			},
 			"category": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"parent_time_machine_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -407,7 +431,13 @@ func resourceNutanixNDBCloneCreate(ctx context.Context, d *schema.ResourceData, 
 func resourceNutanixNDBCloneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
-	resp, err := conn.Service.GetClone(ctx, d.Id(), "", nil)
+	filterParams := &era.FilterParams{}
+	filterParams.Detailed = "false"
+	filterParams.AnyStatus = "false"
+	filterParams.LoadDBServerCluster = "false"
+	filterParams.TimeZone = "UTC"
+
+	resp, err := conn.Service.GetClone(ctx, d.Id(), "", filterParams)
 	if err != nil {
 		return diag.FromErr(err)
 	}
