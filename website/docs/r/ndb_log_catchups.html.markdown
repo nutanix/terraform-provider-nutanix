@@ -1,3 +1,4 @@
+---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_ndb_log_catchups"
 sidebar_current: "docs-nutanix-resource-ndb-log-catchups"
