@@ -75,3 +75,6 @@ List all snapshots present in Nutanix Database Service
 * `lcm_config`: LCM config
 * `parent_snapshot`: parent snapshot
 * `snapshot_size`: snapshot size
+
+
+See detailed information in [NDB Snapshots](https://www.nutanix.dev/api_references/ndb/#/e10c0725f8541-get-list-of-all-snapshots).

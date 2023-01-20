@@ -78,3 +78,5 @@ Describes the clone present in Nutanix Database Service
 * `linked_databases`: linked databases within database instance
 * `databases`: database for a cloned instance
 * `database_group_state_info`: database group state info
+
+See detailed information in [NDB Clone](https://www.nutanix.dev/api_references/ndb/#/2f225874df95a-get-clone-by-value-type).

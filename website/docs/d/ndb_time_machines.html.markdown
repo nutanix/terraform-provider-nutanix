@@ -53,3 +53,6 @@ List all time machines present in Nutanix Database Service
 * `sla`: sla info
 * `schedule`: schedule info
 * `metadata`: metadata info
+
+
+See detailed information in [NDB Time Machines](https://www.nutanix.dev/api_references/ndb/#/256497800ee3c-get-list-of-all-time-machines) .

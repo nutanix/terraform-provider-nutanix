@@ -6,7 +6,7 @@ description: |-
     This operation submits a request to register the database in Nutanix database service (NDB).
 ---
 
-# nutanix_ndb_database_scale
+# nutanix_ndb_register_database
 
 Provides a resource to register the database based on the input parameters. 
 

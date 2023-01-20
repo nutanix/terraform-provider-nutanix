@@ -80,3 +80,6 @@ List all the clone present in Nutanix Database Service
 * `linked_databases`: linked databases within database instance
 * `databases`: database for a cloned instance
 * `database_group_state_info`: database group state info
+
+
+See detailed information in [NDB Clones](https://www.nutanix.dev/api_references/ndb/#/fc568988b42e5-get-a-list-of-all-clones).

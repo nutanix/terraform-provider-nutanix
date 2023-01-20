@@ -57,3 +57,4 @@ description: |-
 * `schedule`: schedule info
 * `metadata`: metadata info
 
+See detailed information in [NDB Time Machine](https://www.nutanix.dev/api_references/ndb/#/cb7ba8c0c3284-get-time-machine-by-value-type) .
