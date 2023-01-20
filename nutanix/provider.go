@@ -243,6 +243,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_database_snapshot":            resourceNutanixNDBDatabaseSnapshot(),
 			"nutanix_ndb_clone":                        resourceNutanixNDBClone(),
 			"nutanix_ndb_authorize_dbserver":           resourceNutanixNDBAuthorizeDBServer(),
+			"nutanix_ndb_linked_databases":             resourceNutanixNDBLinkedDB(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

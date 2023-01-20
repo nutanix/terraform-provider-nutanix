@@ -696,6 +696,7 @@ type BpgConfigs struct {
 	BpgDBParam   *BpgDBParam   `json:"bpg_db_param"`
 }
 type InfoBpgConfig struct {
+	CreatedBy  *string     `json:"created_by,omitempty"`
 	BpgConfigs *BpgConfigs `json:"bpg_configs"`
 }
 type Info struct {
@@ -1397,4 +1398,17 @@ type LastContinuousSnapshot struct {
 	Info                           *CloneInfo                      `json:"info,omitempty"`
 	Metadata                       *LastContinuousSnapshotMetadata `json:"metadata,omitempty"`
 	LcmConfig                      *LcmConfig                      `json:"lcmConfig,omitempty"`
+}
+
+type LinkedDatabases struct {
+	DatabaseName *string `json:"databaseName,omitempty"`
+}
+
+type CreateLinkedDatabasesRequest struct {
+	Databases []*LinkedDatabases `json:"databases,omitempty"`
+}
+
+type DeleteLinkedDatabaseRequest struct {
+	Delete bool `json:"delete,omitempty"`
+	Forced bool `json:"forced,omitempty"`
 }

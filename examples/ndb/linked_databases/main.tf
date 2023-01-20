@@ -15,10 +15,9 @@ provider "nutanix"{
   insecure = true
 }
 
-## resource to scale database
+## resource to add linked databases with an instance
 
-resource "nutanix_ndb_database_scale" "scale" {
-  application_type = "{{ Application Type }}"
-  database_uuid = "{{ database_id }}"
-  data_storage_size = 1
+resource "nutanix_ndb_linked_databases" "name" {
+  database_id= "{{ database_id }}"
+  database_name = "check"
 }
