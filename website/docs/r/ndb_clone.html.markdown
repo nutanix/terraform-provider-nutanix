@@ -1,3 +1,4 @@
+---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_ndb_clone"
 sidebar_current: "docs-nutanix-resource-ndb-clone"
