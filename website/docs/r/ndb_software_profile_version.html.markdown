@@ -1,3 +1,4 @@
+---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_ndb_software_version_profile"
 sidebar_current: "docs-nutanix-resource-ndb-software-version-profile"
