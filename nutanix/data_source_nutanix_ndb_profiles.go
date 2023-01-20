@@ -359,7 +359,7 @@ func flattenVersions(erv []*Era.Versions) []map[string]interface{} {
 	return nil
 }
 
-func flattenProperties(erp []*Era.Properties) []map[string]interface{} {
+func flattenProperties(erp []*Era.ProfileProperties) []map[string]interface{} {
 	if len(erp) > 0 {
 		res := make([]map[string]interface{}, len(erp))
 
