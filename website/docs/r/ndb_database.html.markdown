@@ -95,6 +95,173 @@ resource "nutanix_ndb_database" "dbp" {
         }
     }
 }
+
+
+// resource to provision HA instance
+
+resource "nutanix_ndb_database" "dbp" {
+    databasetype = "postgres_database"
+    name = "test-pg-inst-HA-tf"
+    description = "adding description"
+
+    // adding the profiles details
+    softwareprofileid = "{{ software_profile_id }}"
+    softwareprofileversionid =  "{{ software_profile_version_id }}"
+    computeprofileid =  "{{ compute_profile_id }}"
+    networkprofileid = "{{ network_profile_id }}"
+    dbparameterprofileid = "{{ db_parameter_profile_id }}"
+
+    // required for HA instance
+    createdbserver = true
+    clustered = true
+
+    // node count (with haproxy server node)
+    nodecount= 4 
+
+    // min required details for provisioning HA instance
+    postgresql_info{
+      listener_port = "5432"
+
+      database_size= "200"
+
+      db_password =  "{{ database password}}"
+
+      database_names= "testdb1"
+
+      ha_instance{
+      proxy_read_port= "5001"
+
+      proxy_write_port = "5000"
+
+      cluster_name= "{{ cluster_name }}"
+
+      patroni_cluster_name = " {{ patroni_cluster_name }}"
+      }
+    }
+  
+  nxclusterid= "1c42ca25-32f4-42d9-a2bd-6a21f925b725"
+  sshpublickey= "{{ ssh_public_key }}"
+  
+  // nodes are required.
+
+  // HA proxy node 
+  nodes{
+    properties{
+      name =  "node_type"
+      value = "haproxy"
+    }
+    vmname =  "{{ vm name }}"
+    nx_cluster_id =  "{{ nx_cluster_id }}"
+  }
+
+  // Primary node for read/write ops
+  nodes{
+    properties{
+      name= "role"
+      value=  "Primary"
+    }
+    properties{
+      name= "failover_mode"
+      value=  "Automatic"
+    }
+    properties{
+      name= "node_type"
+      value=  "database"
+    }
+
+    vmname = "{{ name of vm }}"
+    networkprofileid="{{ network_profile_id }}"
+    computeprofileid= "{{ compute_profile_id }}"
+    nx_cluster_id=  "{{ nx_cluster_id }}"
+  }
+
+  // secondary nodes for read ops
+  nodes{
+    properties{
+      name= "role"
+      value=  "Secondary"
+    }
+    properties{
+      name= "failover_mode"
+      value=  "Automatic"
+    }
+    properties{
+      name= "node_type"
+      value=  "database"
+    }
+    vmname = "{{ name of vm }}"
+    networkprofileid="{{ network_profile_id }}"
+    computeprofileid= "{{ compute_profile_id }}"
+    nx_cluster_id=  "{{ nx_cluster_id }}"
+  }
+  nodes{
+    properties{
+      name= "role"
+      value=  "Secondary"
+    }
+    properties{
+      name= "failover_mode"
+      value=  "Automatic"
+    }
+    properties{
+      name= "node_type"
+      value=  "database"
+    }
+    
+    vmname = "{{ name of vm }}"
+    networkprofileid="{{ network_profile_id }}"
+    computeprofileid= "{{ compute_profile_id }}"
+    nx_cluster_id=  "{{ nx_cluster_id }}"
+  }
+
+  // time machine required 
+  timemachineinfo {
+    name= "test-pg-inst-HA"
+    description=""
+    sla_details{
+      primary_sla{
+        sla_id= "{{ required SLA}}0"
+        nx_cluster_ids=  [
+          "{{ nx_cluster_id}}"
+        ]
+      }
+    }
+    // schedule fields are optional
+    schedule {
+      snapshottimeofday{
+        hours= 16
+        minutes= 0
+        seconds= 0
+      }
+      continuousschedule{
+        enabled=true
+        logbackupinterval= 30
+        snapshotsperday=1
+      }
+      weeklyschedule{
+        enabled=true
+        dayofweek= "WEDNESDAY"
+      }
+      monthlyschedule{
+        enabled = true
+        dayofmonth= "27"
+      }
+      quartelyschedule{
+        enabled=true
+        startmonth="JANUARY"
+        dayofmonth= 27
+      }
+      yearlyschedule{
+        enabled= false
+        dayofmonth= 31
+        month="DECEMBER"
+      }
+    }
+  }
+  
+  vm_password= "{{ vm_password}}"
+  autotunestagingdrive= true
+}
 ```
 
 ## Argument Reference
@@ -138,6 +305,9 @@ Each node in nodes supports the following:
 * `vmname`: - (Required) name of vm
 * `networkprofileid`: - (Required) network profile ID
 * `dbserverid`: - (Optional) Database server ID required for existing VM
+* `ip_infos` :- (Optional) IP infos for custom network profile. 
+* `computeprofileid` :- (Optional) compute profile id
+* `nx_cluster_id` :- (Optional) cluster id. 
 
 ### timemachineinfo
 
@@ -145,10 +315,18 @@ The timemachineinfo attribute supports the following:
 
 * `name`: - (Required) name of time machine
 * `description`: - (Optional) description of time machine
-* `slaid`: - (Required) SLA ID
+* `slaid`: - (Optional) SLA ID for single instance 
+* `sla_details`:-  (optional) SLA details for HA instance
 * `autotunelogdrive`: - (Optional) enable auto tune log drive. Default: true
 * `schedule`: - (Optional) schedule for snapshots
 * `tags`: - (Optional) tags
+
+### sla_details
+
+* `primary_sla`:- (Required) primary sla details
+* `primary_sla.sla_id` :- (Required) sla id
+* `primary_sla.nx_cluster_ids` -: (Optioanl) cluster ids
+
 
 ### schedule
 
@@ -221,6 +399,22 @@ The postgresql_info attribute supports the following:
 * `db_password`: - (Required) database instance password
 * `pre_create_script`: - (Optional) pre instance create script
 * `post_create_script`: - (Optional) post instance create script
+* `ha_instance` :- (Optional) High Availability instance
+
+### ha_instance
+
+* `cluster_name` :- (Required) cluster name
+* `patroni_cluster_name` :- (Required) patroni cluster name
+* `proxy_read_port` :-  (Required) proxy read port
+* `proxy_write_port` :- (Required) proxy write port
+* `provision_virtual_ip` :- (Optional) provisional virtual ip. Default is set to true
+* `deploy_haproxy` :- (Optional) HA proxy node. Default is set to false
+* `enable_synchronous_mode` :- (Optional) enable synchronous mode. Default is set to true
+* `failover_mode` :- (Optional) failover mode of nodes. 
+* `node_type` :- (Optional) node type of instance. Default is set to database
+* `archive_wal_expire_days` :- (Optional) archive wal expire days. Default is set to -1 
+* `backup_policy` :- (Optional) backup policy for instance. Default is "primary_only"
+* `enable_peer_auth` :- (Optional) enable peer auth . Default is set to false. 
 
 ## lifecycle
 

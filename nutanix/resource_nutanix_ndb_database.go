@@ -12,11 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var (
 	eraDelay            = 1 * time.Minute
-	EraProvisionTimeout = 35 * time.Minute
+	EraProvisionTimeout = 75 * time.Minute
 )
 
 func resourceDatabaseInstance() *schema.Resource {
@@ -215,6 +216,105 @@ func resourceDatabaseInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"ha_instance": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cluster_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"patroni_cluster_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"proxy_read_port": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"proxy_write_port": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"provision_virtual_ip": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  true,
+									},
+									"deploy_haproxy": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
+									"enable_synchronous_mode": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  true,
+									},
+									"failover_mode": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"node_type": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "database",
+									},
+									"archive_wal_expire_days": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Default:  -1,
+									},
+									"backup_policy": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Default:  "primary_only",
+									},
+									"enable_peer_auth": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+
+			"maintenance_tasks": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"maintenance_window_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"tasks": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"task_type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice([]string{"OS_PATCHING", "DB_PATCHING"}, false),
+									},
+									"pre_command": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"post_command": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -373,7 +473,7 @@ func createDatabaseInstance(ctx context.Context, d *schema.ResourceData, meta in
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for db Instance	 (%s) to create: %s", resp.Entityid, errWaitTask)
 	}
-
+	log.Printf("NDB database with %s id created successfully", d.Id())
 	return readDatabaseInstance(ctx, d, meta)
 }
 
@@ -398,6 +498,8 @@ func buildEraRequest(d *schema.ResourceData) (*era.ProvisionDatabaseRequest, err
 		Nodes:                    buildNodesFromResourceData(d.Get("nodes").(*schema.Set)),
 		Autotunestagingdrive:     d.Get("autotunestagingdrive").(bool),
 		VMPassword:               utils.StringPtr(d.Get("vm_password").(string)),
+		Tags:                     expandTags(d.Get("tags").([]interface{})),
+		MaintenanceTasks:         expandMaintenanceTasks(d.Get("maintenance_tasks").([]interface{})),
 	}, nil
 }
 
@@ -407,7 +509,12 @@ func readDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interfa
 		return diag.Errorf("era is nil")
 	}
 
-	databaseInstanceID := d.Id()
+	databaseInstanceID := ""
+	if databaseInsID, ok := FromContext(ctx); ok {
+		databaseInstanceID = databaseInsID
+	} else {
+		databaseInstanceID = d.Id()
+	}
 
 	resp, err := c.Service.GetDatabaseInstance(ctx, databaseInstanceID)
 	if err != nil {
@@ -555,10 +662,15 @@ func updateDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 	name := d.Get("name").(string)
 	description := d.Get("description").(string)
 
+	tags := make([]*era.Tags, 0)
+	if d.HasChange("tags") {
+		tags = expandTags(d.Get("tags").([]interface{}))
+	}
+
 	updateReq := era.UpdateDatabaseRequest{
 		Name:             name,
 		Description:      description,
-		Tags:             []interface{}{},
+		Tags:             tags,
 		Resetname:        true,
 		Resetdescription: true,
 		Resettags:        true,
@@ -578,8 +690,8 @@ func updateDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 			return diag.FromErr(err)
 		}
 	}
-
-	return nil
+	log.Printf("NDB database with %s id updated successfully", d.Id())
+	return readDatabaseInstance(ctx, d, m)
 }
 
 func deleteDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -631,91 +743,162 @@ func deleteDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 
 func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 	args := []*era.Actionarguments{}
-	if post, ok := d.GetOk("postgresql_info"); ok {
+	if post, ok := d.GetOk("postgresql_info"); ok && (len(post.([]interface{}))) > 0 {
 		brr := post.([]interface{})
 
 		for _, arg := range brr {
 			val := arg.(map[string]interface{})
-			var values interface{}
 			if plist, pok := val["listener_port"]; pok && len(plist.(string)) > 0 {
-				values = plist
-
 				args = append(args, &era.Actionarguments{
 					Name:  "listener_port",
-					Value: values,
+					Value: plist,
 				})
 			}
-			if plist, pok := val["database_size"]; pok && len(plist.(string)) > 0 {
-				values = plist
-
+			if dbSize, pok := val["database_size"]; pok && len(dbSize.(string)) > 0 {
 				args = append(args, &era.Actionarguments{
 					Name:  "database_size",
-					Value: values,
+					Value: dbSize,
 				})
 			}
-			if plist, pok := val["db_password"]; pok && len(plist.(string)) > 0 {
-				values = plist
-
+			if dbPass, pok := val["db_password"]; pok && len(dbPass.(string)) > 0 {
 				args = append(args, &era.Actionarguments{
 					Name:  "db_password",
-					Value: values,
+					Value: dbPass,
 				})
 			}
-			if plist, pok := val["database_names"]; pok && len(plist.(string)) > 0 {
-				values = plist
-
+			if dbName, pok := val["database_names"]; pok && len(dbName.(string)) > 0 {
 				args = append(args, &era.Actionarguments{
 					Name:  "database_names",
-					Value: values,
+					Value: dbName,
 				})
 			}
-			if plist, pok := val["auto_tune_staging_drive"]; pok && plist.(bool) {
-				values = plist
-
+			if autoTune, pok := val["auto_tune_staging_drive"]; pok && autoTune.(bool) {
 				args = append(args, &era.Actionarguments{
 					Name:  "auto_tune_staging_drive",
-					Value: values,
+					Value: autoTune,
 				})
 			}
-			if plist, pok := val["allocate_pg_hugepage"]; pok {
-				values = plist
-
+			if allocatePG, pok := val["allocate_pg_hugepage"]; pok {
 				args = append(args, &era.Actionarguments{
 					Name:  "allocate_pg_hugepage",
-					Value: values,
+					Value: allocatePG,
 				})
 			}
-			if plist, pok := val["auth_method"]; pok && len(plist.(string)) > 0 {
-				values = plist
-
+			if authMethod, pok := val["auth_method"]; pok && len(authMethod.(string)) > 0 {
 				args = append(args, &era.Actionarguments{
 					Name:  "auth_method",
-					Value: values,
+					Value: authMethod,
 				})
 			}
-			if plist, clok := val["cluster_database"]; clok {
-				values = plist
-
+			if clsDB, clok := val["cluster_database"]; clok {
 				args = append(args, &era.Actionarguments{
 					Name:  "cluster_database",
-					Value: values,
+					Value: clsDB,
 				})
 			}
-			if plist, clok := val["pre_create_script"]; clok && len(plist.(string)) > 0 {
-				values = plist
-
+			if preScript, clok := val["pre_create_script"]; clok && len(preScript.(string)) > 0 {
 				args = append(args, &era.Actionarguments{
 					Name:  "pre_create_script",
-					Value: values,
+					Value: preScript,
 				})
 			}
-			if plist, clok := val["post_create_script"]; clok && len(plist.(string)) > 0 {
-				values = plist
-
+			if postScript, clok := val["post_create_script"]; clok && len(postScript.(string)) > 0 {
 				args = append(args, &era.Actionarguments{
 					Name:  "post_create_script",
-					Value: values,
+					Value: postScript,
 				})
+			}
+
+			if ha, ok := val["ha_instance"]; ok && len(ha.([]interface{})) > 0 {
+				haList := ha.([]interface{})
+
+				for _, v := range haList {
+					val := v.(map[string]interface{})
+
+					if haProxy, pok := val["proxy_read_port"]; pok && len(haProxy.(string)) > 0 {
+						args = append(args, &era.Actionarguments{
+							Name:  "proxy_read_port",
+							Value: haProxy,
+						})
+					}
+
+					if proxyWrite, pok := val["proxy_write_port"]; pok && len(proxyWrite.(string)) > 0 {
+						args = append(args, &era.Actionarguments{
+							Name:  "proxy_write_port",
+							Value: proxyWrite,
+						})
+					}
+
+					if backupPolicy, pok := val["backup_policy"]; pok && len(backupPolicy.(string)) > 0 {
+						args = append(args, &era.Actionarguments{
+							Name:  "backup_policy",
+							Value: backupPolicy,
+						})
+					}
+
+					if clsName, pok := val["cluster_name"]; pok && len(clsName.(string)) > 0 {
+						args = append(args, &era.Actionarguments{
+							Name:  "cluster_name",
+							Value: clsName,
+						})
+					}
+
+					if patroniClsName, pok := val["patroni_cluster_name"]; pok && len(patroniClsName.(string)) > 0 {
+						args = append(args, &era.Actionarguments{
+							Name:  "patroni_cluster_name",
+							Value: patroniClsName,
+						})
+					}
+
+					if nodeType, pok := val["node_type"]; pok && len(nodeType.(string)) > 0 {
+						args = append(args, &era.Actionarguments{
+							Name:  "node_type",
+							Value: nodeType,
+						})
+					}
+
+					if proVIP, pok := val["provision_virtual_ip"]; pok && proVIP.(bool) {
+						args = append(args, &era.Actionarguments{
+							Name:  "provision_virtual_ip",
+							Value: proVIP,
+						})
+					}
+
+					if deployHaproxy, pok := val["deploy_haproxy"]; pok && deployHaproxy.(bool) {
+						args = append(args, &era.Actionarguments{
+							Name:  "deploy_haproxy",
+							Value: deployHaproxy,
+						})
+					}
+
+					if enableSyncMode, pok := val["enable_synchronous_mode"]; pok && (enableSyncMode.(bool)) {
+						args = append(args, &era.Actionarguments{
+							Name:  "enable_synchronous_mode",
+							Value: enableSyncMode,
+						})
+					}
+
+					if failoverMode, pok := val["failover_mode"]; pok && len(failoverMode.(string)) > 0 {
+						args = append(args, &era.Actionarguments{
+							Name:  "failover_mode",
+							Value: failoverMode,
+						})
+					}
+
+					if walExp, pok := val["archive_wal_expire_days"]; pok {
+						args = append(args, &era.Actionarguments{
+							Name:  "archive_wal_expire_days",
+							Value: walExp,
+						})
+					}
+
+					if enablePeerAuth, pok := val["enable_peer_auth"]; pok && enablePeerAuth.(bool) {
+						args = append(args, &era.Actionarguments{
+							Name:  "enable_peer_auth",
+							Value: enablePeerAuth,
+						})
+					}
+				}
 			}
 		}
 	}
@@ -739,4 +922,72 @@ func eraRefresh(ctx context.Context, conn *era.Client, opID era.GetOperationRequ
 		}
 		return opRes, "PENDING", nil
 	}
+}
+
+func expandTags(pr []interface{}) []*era.Tags {
+	if len(pr) > 0 {
+		tags := make([]*era.Tags, 0)
+
+		for _, v := range pr {
+			tag := &era.Tags{}
+			val := v.(map[string]interface{})
+
+			if tagName, ok := val["tag_name"]; ok {
+				tag.TagName = tagName.(string)
+			}
+
+			if tagID, ok := val["tag_id"]; ok {
+				tag.TagID = tagID.(string)
+			}
+
+			if tagVal, ok := val["value"]; ok {
+				tag.Value = tagVal.(string)
+			}
+			tags = append(tags, tag)
+		}
+		return tags
+	}
+	return nil
+}
+
+func expandMaintenanceTasks(pr []interface{}) *era.MaintenanceTasks {
+	if len(pr) > 0 {
+		maintenanceTask := &era.MaintenanceTasks{}
+		val := pr[0].(map[string]interface{})
+
+		if windowID, ok := val["maintenance_window_id"]; ok {
+			maintenanceTask.MaintenanceWindowID = utils.StringPtr(windowID.(string))
+		}
+
+		if task, ok := val["tasks"]; ok {
+			taskList := make([]*era.Tasks, 0)
+			tasks := task.([]interface{})
+
+			for _, v := range tasks {
+				out := &era.Tasks{}
+				value := v.(map[string]interface{})
+
+				if taskType, ok := value["task_type"]; ok {
+					out.TaskType = utils.StringPtr(taskType.(string))
+				}
+
+				payload := &era.Payload{}
+				prepostCommand := &era.PrePostCommand{}
+				if preCommand, ok := value["pre_command"]; ok {
+					prepostCommand.PreCommand = utils.StringPtr(preCommand.(string))
+				}
+				if postCommand, ok := value["post_command"]; ok {
+					prepostCommand.PostCommand = utils.StringPtr(postCommand.(string))
+				}
+
+				payload.PrePostCommand = prepostCommand
+				out.Payload = payload
+
+				taskList = append(taskList, out)
+			}
+			maintenanceTask.Tasks = taskList
+		}
+		return maintenanceTask
+	}
+	return nil
 }

@@ -287,8 +287,10 @@ func dataSourceNutanixEraDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("dbserver_logical_cluster", resp.Dbserverlogicalcluster); err != nil {
-		return diag.FromErr(err)
+	if resp.Dbserverlogicalcluster != nil {
+		if err := d.Set("dbserver_logical_cluster", resp.Dbserverlogicalcluster); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	if err := d.Set("database_nodes", flattenDBNodes(resp.Databasenodes)); err != nil {
@@ -336,7 +338,7 @@ func flattenDBInstanceMetadata(pr *Era.DBInstanceMetadata) []map[string]interfac
 		pmeta := make(map[string]interface{})
 		pmeta["secure_info"] = pr.Secureinfo
 		pmeta["info"] = pr.Info
-		pmeta["deregister_info"] = pr.Deregisterinfo
+		pmeta["deregister_info"] = flattenDeRegiserInfo(pr.Deregisterinfo)
 		pmeta["tm_activate_operation_id"] = pr.Tmactivateoperationid
 		pmeta["created_dbservers"] = pr.Createddbservers
 		pmeta["registered_dbservers"] = pr.Registereddbservers
@@ -381,7 +383,7 @@ func flattenDBNodes(pr []Era.Databasenodes) []map[string]interface{} {
 			db["name"] = v.Name
 			db["owner_id"] = v.Ownerid
 			db["primary"] = v.Primary
-			db["properties"] = v.Properties
+			db["properties"] = flattenDBInstanceProperties(v.Properties)
 			db["protection_domain"] = flattenDBProtectionDomain(v.Protectiondomain)
 			db["protection_domain_id"] = v.Protectiondomainid
 			db["software_installation_id"] = v.Softwareinstallationid
@@ -570,7 +572,7 @@ func flattenDBLcmConfig(pr *Era.LcmConfig) []map[string]interface{} {
 	if pr != nil {
 		lcm := map[string]interface{}{}
 
-		lcm["expiryDetails"] = flattenEraExpiryDetails(pr.ExpiryDetails)
+		lcm["expiry_details"] = flattenEraExpiryDetails(pr.ExpiryDetails)
 		lcm["refresh_details"] = flattenEraRefreshDetails(pr.RefreshDetails)
 
 		var preLcmComm []map[string]interface{}
@@ -845,7 +847,9 @@ func flattenTimeMachineMetadata(pr *Era.TimeMachineMetadata) []map[string]interf
 
 		tm["secure_info"] = pr.SecureInfo
 		tm["info"] = pr.Info
-		tm["deregister_info"] = pr.DeregisterInfo
+		if pr.DeregisterInfo != nil {
+			tm["deregister_info"] = flattenDeRegiserInfo(pr.DeregisterInfo)
+		}
 		tm["capability_reset_time"] = pr.CapabilityResetTime
 		tm["auto_heal"] = pr.AutoHeal
 		tm["auto_heal_snapshot_count"] = pr.AutoHealSnapshotCount
@@ -876,6 +880,20 @@ func flattenTimeMachineMetadata(pr *Era.TimeMachineMetadata) []map[string]interf
 
 		tmMeta = append(tmMeta, tm)
 		return tmMeta
+	}
+	return nil
+}
+
+func flattenDeRegiserInfo(pr *Era.DeregisterInfo) []map[string]interface{} {
+	if pr != nil {
+		Deregis := make([]map[string]interface{}, 0)
+		regis := map[string]interface{}{}
+
+		regis["message"] = pr.Message
+		regis["operations"] = utils.StringValueSlice(pr.Operations)
+
+		Deregis = append(Deregis, regis)
+		return Deregis
 	}
 	return nil
 }
@@ -1569,10 +1587,22 @@ func dataSourceEraTimeMachine() *schema.Schema {
 								},
 							},
 							"deregister_info": {
-								Type:     schema.TypeMap,
+								Type:     schema.TypeList,
 								Computed: true,
-								Elem: &schema.Schema{
-									Type: schema.TypeString,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"message": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"operations": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+									},
 								},
 							},
 							"capability_reset_time": {
@@ -1731,14 +1761,8 @@ func dataSourceEraDatabaseNodes() *schema.Schema {
 						Type: schema.TypeString,
 					},
 				},
-				"properties": {
-					Type:     schema.TypeList,
-					Computed: true,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
-					},
-				},
-				"tags": dataSourceEraDBInstanceTags(),
+				"properties": dataSourceEraDatabaseProperties(),
+				"tags":       dataSourceEraDBInstanceTags(),
 				"database_id": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -2016,10 +2040,22 @@ func dataSourceEraDBInstanceMetadata() *schema.Schema {
 					},
 				},
 				"deregister_info": {
-					Type:     schema.TypeMap,
+					Type:     schema.TypeList,
 					Computed: true,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"message": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"operations": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
 					},
 				},
 				"tm_activate_operation_id": {
@@ -2108,11 +2144,13 @@ func dataSourceEraDBInstanceMetadata() *schema.Schema {
 func dataSourceEraDBInstanceTags() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
+		Optional: true,
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"tag_id": {
 					Type:     schema.TypeString,
+					Optional: true,
 					Computed: true,
 				},
 				"entity_id": {
@@ -2125,10 +2163,12 @@ func dataSourceEraDBInstanceTags() *schema.Schema {
 				},
 				"value": {
 					Type:     schema.TypeString,
+					Optional: true,
 					Computed: true,
 				},
 				"tag_name": {
 					Type:     schema.TypeString,
+					Optional: true,
 					Computed: true,
 				},
 			},

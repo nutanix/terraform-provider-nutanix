@@ -291,12 +291,16 @@ func dataSourceNutanixEraProfileRead(ctx context.Context, d *schema.ResourceData
 	profileType := ""
 	pID := ""
 	pName := ""
+	profileFilters := &Era.ProfileFilter{}
+
 	if engineType, ok := d.GetOk("engine"); ok {
 		engine = engineType.(string)
+		profileFilters.Engine = engine
 	}
 
 	if ptype, ok := d.GetOk("profile_type"); ok {
 		profileType = ptype.(string)
+		profileFilters.ProfileType = profileType
 	}
 
 	profileID, pIDOk := d.GetOk("profile_id")
@@ -308,12 +312,14 @@ func dataSourceNutanixEraProfileRead(ctx context.Context, d *schema.ResourceData
 	}
 	if pIDOk {
 		pID = profileID.(string)
+		profileFilters.ProfileID = pID
 	}
 	if pNameOk {
 		pName = profileName.(string)
+		profileFilters.ProfileName = pName
 	}
 
-	resp, err := conn.Service.GetProfiles(ctx, engine, profileType, pID, pName)
+	resp, err := conn.Service.GetProfile(ctx, profileFilters)
 	if err != nil {
 		return diag.FromErr(err)
 	}
