@@ -1,3 +1,4 @@
+---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_ndb_database_snapshot"
 sidebar_current: "docs-nutanix-resource-ndb-database-snapshot"

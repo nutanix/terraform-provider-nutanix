@@ -1,3 +1,4 @@
+---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_ndb_database_restore"
 sidebar_current: "docs-nutanix-resource-ndb-database-restore"
