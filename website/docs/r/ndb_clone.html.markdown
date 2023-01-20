@@ -7,12 +7,12 @@ description: |-
 
 # nutanix_ndb_clone
 
-Provides a resource to perform the clone for database instance based on the input parameters. 
+Provides a resource to perform the clone of database instance based on the input parameters. 
 
 ## Example Usage
 
 ```hcl
-## resource for ndb_clone with Point in time given time machine name
+## resource for cloning using Point in time given time machine name
 
     resource "nutanix_ndb_clone" "name" {
         time_machine_name = "test-pg-inst"

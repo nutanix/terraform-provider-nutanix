@@ -30,12 +30,12 @@ List all the clone present in Nutanix Database Service
 
 ### filters
 
-* `detailed`: (Optional) Default is false
-* `any_status`: (Optional) Default is false
-* `load_dbserver_cluster`: (Optional) Default is false
+* `detailed`: (Optional) Load entities with complete details. Default is false
+* `any_status`: (Optional) Get entity(s) if it satisfies query criteria irrespective of status (retrieve even deleted). Default is false
+* `load_dbserver_cluster`: (Optional) Load cluster info. Default is false
 * `timezone`: (Optional) Default is UTC
-* `order_by_dbserver_cluster`: (Optional) Default is false
-* `order_by_dbserver_logical_cluster`: (Optional) Default is false
+* `order_by_dbserver_cluster`: (Optional) Sorted by dbserver cluster. Default is false
+* `order_by_dbserver_logical_cluster`: (Optional) Sorted by dbserver logical cluster.  Default is false
 
 
 ## Attribute Reference

@@ -1,3 +1,39 @@
+## 1.8.0-beta-2 (Jan 20, 2023)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.8.0-beta.1...v1.8.0-beta.2)
+
+**New Feature:**
+
+- Feat/1.8.0-beta.2 Release with Nutanix Database Service based resource and datasources [\#533] (https://github.com/nutanix/terraform-provider-nutanix/pull/533)
+
+    New Resources:
+    - nutanix_ndb_profile
+    - nutanix_ndb_sla
+    - nutanix_ndb_database_scale
+    - nutanix_ndb_database_restore
+    - nutanix_ndb_database_snapshot
+    - nutanix_ndb_register_database
+    - nutanix_ndb_clone
+    - nutanix_ndb_log_catchups
+    - nutanix_ndb_authorize_dbservers
+    - nutanix_ndb_software_version_profile
+
+    New Data Sources:
+    - nutanix_ndb_snapshot
+    - nutanix_ndb_snapshots
+    - nutanix_ndb_time_machine
+    - nutanix_ndb_time_machines
+    - nutanix_ndb_tms_capability
+    - nutanix_ndb_clone
+    - nutanix_ndb_clones
+
+
+**Implemented enhancements:**
+ - Support for HA instance in nutanix_ndb_database resource. [\#518](https://github.com/nutanix/terraform-provider-nutanix/pull/518)
+ - Improving the error when server is unreachable. [\#530](https://github.com/nutanix/terraform-provider-nutanix/pull/530)
+ - Fetching of database based on database_type filter [\#513](https://github.com/nutanix/terraform-provider-nutanix/pull/513)
+ - Support of Tags and Maintance Window in provisioning [\#528](https://github.com/nutanix/terraform-provider-nutanix/pull/528) 
+
+
 ## 1.8.0-beta.1 (Oct 12, 2022)
 
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.7.1...v1.8.0-beta.1)
