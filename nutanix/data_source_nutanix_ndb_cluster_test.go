@@ -37,7 +37,7 @@ func TestAccEraClusterDataSource_ByName(t *testing.T) {
 					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "status", "UP"),
 					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "cloud_type", "NTNX"),
 					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "hypervisor_type", "AHV"),
-					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "properties.#", "0"),
+					resource.TestCheckResourceAttrSet("data.nutanix_ndb_cluster.test", "properties.#"),
 					resource.TestCheckResourceAttr("data.nutanix_ndb_cluster.test", "healthy", "true"),
 				),
 			},

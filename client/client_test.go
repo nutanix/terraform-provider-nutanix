@@ -283,7 +283,7 @@ func TestGetResponse(t *testing.T) {
 		StatusCode: http.StatusBadRequest,
 		Body: ioutil.NopCloser(strings.NewReader(
 			`{"api_version": "3.1", "code": 400, "kind": "error", "message_list":
-				 [{"message": "This field may not be blank."}], "state": "ERROR"}`)),
+				 [{"message": "bad Request"}], "state": "ERROR"}`)),
 	}
 
 	err := CheckResponse(res)
@@ -292,8 +292,8 @@ func TestGetResponse(t *testing.T) {
 		t.Fatal("Expected error response.")
 	}
 
-	if !strings.Contains(fmt.Sprint(err), "This field may not be blank.") {
-		t.Errorf("error = %#v, expected %#v", err, "This field may not be blank.")
+	if !strings.Contains(fmt.Sprint(err), "bad Request") {
+		t.Errorf("error = %#v, expected %#v", err, "bad Request")
 	}
 }
 
@@ -303,7 +303,7 @@ func TestCheckResponse(t *testing.T) {
 		StatusCode: http.StatusBadRequest,
 		Body: ioutil.NopCloser(strings.NewReader(
 			`{"api_version": "3.1", "code": 400, "kind": "error", "message_list":
-				 [{"message": "This field may not be blank."}], "state": "ERROR"}`)),
+				 [{"message": "bad Request"}], "state": "ERROR"}`)),
 	}
 	err := CheckResponse(res)
 
@@ -311,8 +311,8 @@ func TestCheckResponse(t *testing.T) {
 		t.Fatalf("Expected error response.")
 	}
 
-	if !strings.Contains(fmt.Sprint(err), "This field may not be blank.") {
-		t.Errorf("error = %#v, expected %#v", err, "This field may not be blank.")
+	if !strings.Contains(fmt.Sprint(err), "bad Request") {
+		t.Errorf("error = %#v, expected %#v", err, "bad Request")
 	}
 }
 

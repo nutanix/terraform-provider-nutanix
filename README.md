@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
-NOTE: The latest version of the Nutanix provider is [v1.8.0-beta.1](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.8.0-beta.1)
+NOTE: The latest version of the Nutanix provider is [v1.8.0-beta.2](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.8.0-beta.2)
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 ## Build, Quality Status
@@ -75,7 +75,9 @@ Foundation Central based modules and examples : Foundation based modules & examp
 ## Nutanix Database Service
 > For the 1.8.0-beta.1 release of the provider, it will have N-1 compatibility with the Nutanix database service. This release was tested with v2.4 and v2.4.1 versions.
 
-Note: For 1.8.0-beta.1 release, only postgress database type is qualified and officially supported.
+> For the 1.8.0-beta.2 release of the provider, it will have N-2 compatibilty with the Nutanix Database Service. This release was tested with v2.5.1.1 , v2.5.0.2 and v2.4.1
+
+Note: For 1.8.0-beta.2 release, only postgress database type is qualified and officially supported.
 
 Checkout example : https://github.com/nutanix/terraform-provider-nutanix/blob/master/examples/ndb/database_instance
 
