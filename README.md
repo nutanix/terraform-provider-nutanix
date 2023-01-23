@@ -185,6 +185,17 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 * nutanix_floating_ip
 * nutanix_user_groups
 * nutanix_ndb_database
+* nutanix_ndb_authorize_dbserver
+* nutanix_ndb_clone
+* nutanix_ndb_database_restore
+* nutanix_ndb_database_scale
+* nutanix_ndb_database_snapshot
+* nutanix_ndb_linked_databases
+* nutanix_ndb_log_catchups
+* nutanix_ndb_profile
+* nutanix_ndb_register_database
+* nutanix_ndb_sla
+* nutanix_ndb_software_version_profile
 
 ## Data Sources
 
@@ -247,6 +258,13 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 * nutanix_ndb_profiles
 * nutanix_ndb_sla
 * nutanix_ndb_slas
+* nutanix_ndb_clone
+* nutanix_ndb_clones
+* nutanix_ndb_snapshot
+* nutanix_ndb_snapshots
+* nutanix_ndb_tms_capability
+* nutanix_ndb_time_machine
+* nutanix_ndb_time_machines
 
 ## Quick Install
 
