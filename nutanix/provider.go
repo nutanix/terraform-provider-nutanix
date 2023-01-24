@@ -255,6 +255,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_tms_cluster":                  resourceNutanixNDBTmsCluster(),
 			"nutanix_ndb_tag":                          resourceNutanixNDBTags(),
 			"nutanix_ndb_network":                      resourceNutanixNDBNetwork(),
+			"nutanix_ndb_dbserver_vm":                  resourceNutanixNDBServerVM(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

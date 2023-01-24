@@ -76,6 +76,10 @@ type Service interface {
 	UpdateNetwork(ctx context.Context, body *NetworkIntentInput, id string) (*NetworkIntentResponse, error)
 	DeleteNetwork(ctx context.Context, id string) (*string, error)
 	ListNetwork(ctx context.Context) (*ListNetworkResponse, error)
+	CreateDBServerVM(ctx context.Context, body *DBServerInputRequest) (*ProvisionDatabaseResponse, error)
+	ReadDBServerVM(ctx context.Context, id string) (*DBServerVMResponse, error)
+	UpdateDBServerVM(ctx context.Context, body *UpdateDBServerVMRequest, dbserverid string) (*DBServerVMResponse, error)
+	DeleteDBServerVM(ctx context.Context, req *DeleteDBServerVMRequest, dbserverid string) (*DeleteDatabaseResponse, error)
 }
 
 type ServiceClient struct {
@@ -779,7 +783,15 @@ func (sc ServiceClient) DeleteTimeMachineCluster(ctx context.Context, tmsID stri
 	if err != nil {
 		return nil, err
 	}
+	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
 
+func (sc ServiceClient) CreateDBServerVM(ctx context.Context, body *DBServerInputRequest) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/dbservers/provision", body)
+	if err != nil {
+		return nil, err
+	}
 	res := new(ProvisionDatabaseResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
@@ -864,5 +876,35 @@ func (sc ServiceClient) ListNetwork(ctx context.Context) (*ListNetworkResponse, 
 	}
 
 	res := new(ListNetworkResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ReadDBServerVM(ctx context.Context, id string) (*DBServerVMResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/dbservers/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(DBServerVMResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) UpdateDBServerVM(ctx context.Context, body *UpdateDBServerVMRequest, dbServerID string) (*DBServerVMResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("/dbservers/%s", dbServerID), body)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(DBServerVMResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteDBServerVM(ctx context.Context, req *DeleteDBServerVMRequest, dbServerVMID string) (*DeleteDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/dbservers/%s", dbServerVMID), req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(DeleteDatabaseResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
