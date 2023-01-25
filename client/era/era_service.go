@@ -56,6 +56,10 @@ type Service interface {
 	TimeMachineCapability(ctx context.Context, tmsID string) (*TimeMachineCapability, error)
 	CreateLinkedDatabase(ctx context.Context, id string, req *CreateLinkedDatabasesRequest) (*ProvisionDatabaseResponse, error)
 	DeleteLinkedDatabase(ctx context.Context, DBID string, linkedDBID string, req *DeleteLinkedDatabaseRequest) (*ProvisionDatabaseResponse, error)
+	CreateMaintenanceWindow(ctx context.Context, body *MaintenanceWindowInput) (*MaintenaceTaskResponse, error)
+	ReadMaintenanceWindow(ctx context.Context, id string) (*MaintenaceTaskResponse, error)
+	UpdateMaintenaceWindow(ctx context.Context, body *MaintenanceWindowInput, id string) (*MaintenaceTaskResponse, error)
+	DeleteMaintenanceWindow(ctx context.Context, id string) (*AuthorizeDBServerResponse, error)
 }
 
 type ServiceClient struct {
@@ -648,5 +652,41 @@ func (sc ServiceClient) DeleteLinkedDatabase(ctx context.Context, id string, lin
 		return nil, err
 	}
 	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) CreateMaintenanceWindow(ctx context.Context, body *MaintenanceWindowInput) (*MaintenaceTaskResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/maintenance", body)
+	if err != nil {
+		return nil, err
+	}
+	res := new(MaintenaceTaskResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ReadMaintenanceWindow(ctx context.Context, id string) (*MaintenaceTaskResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/maintenance/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(MaintenaceTaskResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) UpdateMaintenaceWindow(ctx context.Context, body *MaintenanceWindowInput, id string) (*MaintenaceTaskResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("/maintenance/%s", id), body)
+	if err != nil {
+		return nil, err
+	}
+	res := new(MaintenaceTaskResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteMaintenanceWindow(ctx context.Context, id string) (*AuthorizeDBServerResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/maintenance/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(AuthorizeDBServerResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }

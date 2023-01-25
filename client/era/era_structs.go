@@ -1412,3 +1412,42 @@ type DeleteLinkedDatabaseRequest struct {
 	Delete bool `json:"delete,omitempty"`
 	Forced bool `json:"forced,omitempty"`
 }
+
+type MaintenaceSchedule struct {
+	Recurrence  *string     `json:"recurrence,omitempty"`
+	StartTime   *string     `json:"startTime,omitempty"`
+	DayOfWeek   *string     `json:"dayOfWeek,omitempty"`
+	WeekOfMonth *int        `json:"weekOfMonth,omitempty"`
+	Duration    *int        `json:"duration,omitempty"`
+	Threshold   interface{} `json:"threshold,omitempty"`
+	Hour        *int        `json:"hour,omitempty"`
+	Minute      *int        `json:"minute,omitempty"`
+	TimeZone    *string     `json:"timeZone,omitempty"`
+}
+
+type MaintenanceWindowInput struct {
+	Name             *string             `json:"name,omitempty"`
+	Description      *string             `json:"description,omitempty"`
+	Timezone         *string             `json:"timezone,omitempty"`
+	Schedule         *MaintenaceSchedule `json:"schedule,omitempty"`
+	ResetSchedule    *bool               `json:"resetSchedule,omitempty"`
+	ResetDescription *bool               `json:"resetDescription,omitempty"`
+	ResetName        *bool               `json:"resetName,omitempty"`
+}
+
+type MaintenaceTaskResponse struct {
+	ID              *string             `json:"id,omitempty"`
+	Name            *string             `json:"name,omitempty"`
+	Description     *string             `json:"description,omitempty"`
+	OwnerId         *string             `json:"ownerId,omitempty"`
+	DateCreated     *string             `json:"dateCreated,omitempty"`
+	DateModified    *string             `json:"dateModified,omitempty"`
+	AccessLevel     interface{}         `json:"accessLevel,omitempty"`
+	Properties      []*Properties       `json:"properties,omitempty"`
+	Tags            []*Tags             `json:"tags,omitempty"`
+	Schedule        *MaintenaceSchedule `json:"schedule,omitempty"`
+	Status          *string             `json:"status,omitempty"`
+	NextRunTime     *string             `json:"nextRunTime,omitempty"`
+	EntityTaskAssoc interface{}         `json:"entityTaskAssoc,omitempty"`
+	Timezone        *string             `json:"timezone,omitempty"`
+}
