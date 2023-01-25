@@ -40,7 +40,7 @@ func resourceNutanixNDBMaintenanceWindow() *schema.Resource {
 			"duration": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  2,
+				Default:  "2",
 			},
 			"start_time": {
 				Type:     schema.TypeString,
@@ -220,7 +220,7 @@ func resourceNutanixNDBMaintenanceWindowRead(ctx context.Context, d *schema.Reso
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("owner_id", resp.OwnerId); err != nil {
+	if err := d.Set("owner_id", resp.OwnerID); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("date_created", resp.DateCreated); err != nil {
@@ -347,7 +347,7 @@ func resourceNutanixNDBMaintenanceWindowDelete(ctx context.Context, d *schema.Re
 	}
 
 	if resp.Status == utils.StringPtr("success") {
-		log.Printf("NDB Maintenace Window with %s id is deleted successfully", d.Id())
+		log.Printf("NDB Maintenance Window with %s id is deleted successfully", d.Id())
 		d.SetId("")
 	}
 	return nil
