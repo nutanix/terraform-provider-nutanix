@@ -1526,3 +1526,34 @@ type DeleteTmsClusterInput struct {
 	DeleteReplicatedSnapshots         *bool `json:"deleteReplicatedSnapshots,omitempty"`
 	DeleteReplicatedProtectionDomains *bool `json:"deleteReplicatedProtectionDomains,omitempty"`
 }
+type CreateTagsInput struct {
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
+	EntityType  *string `json:"entityType,omitempty"`
+	Required    *bool   `json:"required,omitempty"`
+}
+
+type TagsIntentResponse struct {
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Owner       *string `json:"owner,omitempty"`
+	Required    bool    `json:"required,omitempty"`
+	Status      *string `json:"status,omitempty"`
+	EntityType  *string `json:"entityType,omitempty"`
+	Values      int     `json:"values,omitempty"`
+}
+
+type GetTagsResponse struct {
+	ID           *string `json:"id,omitempty"`
+	Name         *string `json:"name,omitempty"`
+	Description  *string `json:"description,omitempty"`
+	DateCreated  *string `json:"dateCreated,omitempty"`
+	DateModified *string `json:"dateModified,omitempty"`
+	Owner        *string `json:"owner,omitempty"`
+	Status       *string `json:"status,omitempty"`
+	EntityType   *string `json:"entityType,omitempty"`
+	Required     *bool   `json:"required,omitempty"`
+	Values       *int    `json:"values,omitempty"`
+}
+
+type ListTagsResponse []*GetTagsResponse

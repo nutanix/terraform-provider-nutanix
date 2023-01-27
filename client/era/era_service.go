@@ -66,6 +66,11 @@ type Service interface {
 	ReadTimeMachineCluster(ctx context.Context, tmsID string, clsID string) (*TmsClusterResponse, error)
 	UpdateTimeMachineCluster(ctx context.Context, tmsID string, clsID string, body *TmsClusterIntentInput) (*TmsClusterResponse, error)
 	DeleteTimeMachineCluster(ctx context.Context, tmsID string, clsID string, body *DeleteTmsClusterInput) (*ProvisionDatabaseResponse, error)
+	CreateTags(ctx context.Context, body *CreateTagsInput) (*TagsIntentResponse, error)
+	ReadTags(ctx context.Context, id string) (*GetTagsResponse, error)
+	UpdateTags(ctx context.Context, body *GetTagsResponse, id string) (*GetTagsResponse, error)
+	DeleteTags(ctx context.Context, id string) (*string, error)
+	ListTags(ctx context.Context) (*ListTagsResponse, error)
 }
 
 type ServiceClient struct {
@@ -716,13 +721,31 @@ func (sc ServiceClient) CreateMaintenanceTask(ctx context.Context, req *Maintena
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
+func (sc ServiceClient) CreateTags(ctx context.Context, body *CreateTagsInput) (*TagsIntentResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/tags", body)
+	if err != nil {
+		return nil, err
+	}
+	res := new(TagsIntentResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
 func (sc ServiceClient) CreateTimeMachineCluster(ctx context.Context, tmsID string, body *TmsClusterIntentInput) (*TmsClusterResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/tms/%s/clusters", tmsID), body)
 	if err != nil {
 		return nil, err
 	}
-
 	res := new(TmsClusterResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ReadTags(ctx context.Context, id string) (*GetTagsResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/tags?id=%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(GetTagsResponse)
+
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
@@ -753,5 +776,33 @@ func (sc ServiceClient) DeleteTimeMachineCluster(ctx context.Context, tmsID stri
 	}
 
 	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) UpdateTags(ctx context.Context, body *GetTagsResponse, id string) (*GetTagsResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPut, fmt.Sprintf("/tags/%s", id), body)
+	if err != nil {
+		return nil, err
+	}
+	res := new(GetTagsResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteTags(ctx context.Context, id string) (*string, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/tags/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(string)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ListTags(ctx context.Context) (*ListTagsResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/tags", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ListTagsResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
