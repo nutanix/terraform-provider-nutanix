@@ -205,6 +205,8 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_tms_capability":                      dataSourceNutanixNDBTmsCapability(),
 			"nutanix_ndb_maintenance_window":                  dataSourceNutanixNDBMaintenanceWindow(),
 			"nutanix_ndb_maintenance_windows":                 dataSourceNutanixNDBMaintenanceWindows(),
+			"nutanix_ndb_tag":                                 dataSourceNutanixNDBTag(),
+			"nutanix_ndb_tags":                                dataSourceNutanixNDBTags(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  resourceNutanixVirtualMachine(),

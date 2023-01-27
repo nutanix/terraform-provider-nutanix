@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-const resourceNameTag = "nutanix_ndb_tags.acctest-managed"
+const resourceNameTag = "nutanix_ndb_tag.acctest-managed"
 
-func TestAccEra_Tagbasic(t *testing.T) {
+func TestAccEraTag_basic(t *testing.T) {
 	name := "test-tag-tf"
 	desc := "this is tag desc"
 	resource.Test(t, resource.TestCase{
@@ -32,7 +32,7 @@ func TestAccEra_Tagbasic(t *testing.T) {
 	})
 }
 
-func TestAccEra_TagWithUpdate(t *testing.T) {
+func TestAccEraTag_WithUpdate(t *testing.T) {
 	name := "test-tag-tf"
 	updateName := "test-tag-updated"
 	desc := "this is tag desc"
@@ -71,7 +71,7 @@ func TestAccEra_TagWithUpdate(t *testing.T) {
 
 func testAccEraTagConfig(name, desc string) string {
 	return fmt.Sprintf(`
-		resource "nutanix_ndb_tags" "acctest-managed" {
+		resource "nutanix_ndb_tag" "acctest-managed" {
 			name= "%[1]s"
 			description = "%[2]s"
 			entity_type = "DATABASE"
@@ -82,7 +82,7 @@ func testAccEraTagConfig(name, desc string) string {
 
 func testAccEraTagUpdatedConfig(name, desc string) string {
 	return fmt.Sprintf(`
-		resource "nutanix_ndb_tags" "acctest-managed" {
+		resource "nutanix_ndb_tag" "acctest-managed" {
 			name= "%[1]s"
 			description = "%[2]s"
 			entity_type = "DATABASE"
