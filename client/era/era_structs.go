@@ -1837,3 +1837,15 @@ type VMInfo struct {
 	DeregisterInfo interface{}    `json:"deregisterInfo,omitempty"`
 	NetworkInfo    []*NetworkInfo `json:"networkInfo,omitempty"`
 }
+
+type DBServerRegisterInput struct {
+	DatabaseType     *string            `json:"databaseType,omitempty"`
+	VmIP             *string            `json:"vmIp,omitempty"`
+	NxClusterUUID    *string            `json:"nxClusterUuid,omitempty"`
+	ForcedInstall    *bool              `json:"forcedInstall,omitempty"`
+	WorkingDirectory *string            `json:"workingDirectory,omitempty"`
+	Username         *string            `json:"username,omitempty"`
+	Password         *string            `json:"password,omitempty"`
+	SshPrivateKey    *string            `json:"sshPrivateKey,omitempty"`
+	ActionArguments  []*Actionarguments `json:"actionArguments,omitempty"`
+}

@@ -80,6 +80,7 @@ type Service interface {
 	ReadDBServerVM(ctx context.Context, id string) (*DBServerVMResponse, error)
 	UpdateDBServerVM(ctx context.Context, body *UpdateDBServerVMRequest, dbserverid string) (*DBServerVMResponse, error)
 	DeleteDBServerVM(ctx context.Context, req *DeleteDBServerVMRequest, dbserverid string) (*DeleteDatabaseResponse, error)
+	RegisterDBServerVM(ctx context.Context, body *DBServerRegisterInput) (*ProvisionDatabaseResponse, error)
 }
 
 type ServiceClient struct {
@@ -906,5 +907,14 @@ func (sc ServiceClient) DeleteDBServerVM(ctx context.Context, req *DeleteDBServe
 	}
 
 	res := new(DeleteDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) RegisterDBServerVM(ctx context.Context, body *DBServerRegisterInput) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/dbservers/register", body)
+	if err != nil {
+		return nil, err
+	}
+	res := new(ProvisionDatabaseResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
