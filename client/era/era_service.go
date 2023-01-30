@@ -87,6 +87,7 @@ type Service interface {
 	GetStretchedVlan(ctx context.Context, id string) (*StretchedVlanResponse, error)
 	UpdateStretchedVlan(ctx context.Context, id string, req *StretchedVlansInput) (*StretchedVlanResponse, error)
 	DeleteStretchedVlan(ctx context.Context, id string) (*string, error)
+	RefreshClone(ctx context.Context, body *CloneRefreshInput, id string) (*ProvisionDatabaseResponse, error)
 }
 
 type ServiceClient struct {
@@ -782,6 +783,16 @@ func (sc ServiceClient) UpdateTimeMachineCluster(ctx context.Context, tmsID stri
 	}
 
 	res := new(TmsClusterResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) RefreshClone(ctx context.Context, body *CloneRefreshInput, id string) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/clones/%s/refresh", id), body)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ProvisionDatabaseResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
