@@ -1598,6 +1598,7 @@ type NetworkIntentResponse struct {
 }
 
 type ListNetworkResponse []*NetworkIntentResponse
+
 type DBServerInputRequest struct {
 	DatabaseType             *string            `json:"databaseType,omitempty"`
 	SoftwareProfileID        *string            `json:"softwareProfileId,omitempty"`
