@@ -71,6 +71,10 @@ type Service interface {
 	UpdateTags(ctx context.Context, body *GetTagsResponse, id string) (*GetTagsResponse, error)
 	DeleteTags(ctx context.Context, id string) (*string, error)
 	ListTags(ctx context.Context) (*ListTagsResponse, error)
+	CreateNetwork(ctx context.Context, body *NetworkIntentInput) (*NetworkIntentResponse, error)
+	GetNetwork(ctx context.Context, id string, name string) (*NetworkIntentResponse, error)
+	DeleteNetwork(ctx context.Context, id string) (*string, error)
+	ListNetwork(ctx context.Context) (*ListNetworkResponse, error)
 }
 
 type ServiceClient struct {
@@ -797,6 +801,42 @@ func (sc ServiceClient) DeleteTags(ctx context.Context, id string) (*string, err
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
+func (sc ServiceClient) CreateNetwork(ctx context.Context, body *NetworkIntentInput) (*NetworkIntentResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/resources/networks", body)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(NetworkIntentResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) GetNetwork(ctx context.Context, name, id string) (*NetworkIntentResponse, error) {
+	path := "/resources/networks?"
+	if name != "" {
+		path = path + fmt.Sprintf("name=%s", name)
+	} else {
+		path = path + fmt.Sprintf("id=%s", id)
+	}
+
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(NetworkIntentResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteNetwork(ctx context.Context, id string) (*string, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/resources/networks/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(string)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
 func (sc ServiceClient) ListTags(ctx context.Context) (*ListTagsResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/tags", nil)
 	if err != nil {
@@ -804,5 +844,15 @@ func (sc ServiceClient) ListTags(ctx context.Context) (*ListTagsResponse, error)
 	}
 
 	res := new(ListTagsResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ListNetwork(ctx context.Context) (*ListNetworkResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/resources/networks", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ListNetworkResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
