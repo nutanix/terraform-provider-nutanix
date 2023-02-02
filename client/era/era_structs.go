@@ -1891,3 +1891,41 @@ type CloneRefreshInput struct {
 	UserPitrTimestamp *string `json:"userPitrTimestamp,omitempty"`
 	Timezone          *string `json:"timeZone,omitempty"`
 }
+
+type NameValueParams struct {
+	Name  *string `json:"name,omitempty"`
+	Value *string `json:"value,omitempty"`
+}
+
+type NetworksInfo struct {
+	Type        *string            `json:"type,omitempty"`
+	NetworkInfo []*NameValueParams `json:"networkInfo,omitempty"`
+	AccessType  []*string          `json:"accessType,omitempty"`
+}
+
+type ClusterIntentInput struct {
+	ClusterName        *string            `json:"clusterName,omitempty"`
+	ClusterDescription *string            `json:"clusterDescription,omitempty"`
+	ClusterIP          *string            `json:"clusterIP,omitempty"`
+	StorageContainer   *string            `json:"storageContainer,omitempty"`
+	AgentVMPrefix      *string            `json:"agentVMPrefix,omitempty"`
+	Port               *int               `json:"port,omitempty"`
+	Protocol           *string            `json:"protocol,omitempty"`
+	ClusterType        *string            `json:"clusterType,omitempty"`
+	Version            *string            `json:"version,omitempty"`
+	CredentialsInfo    []*NameValueParams `json:"credentialsInfo,omitempty"`
+	AgentNetworkInfo   []*NameValueParams `json:"agentNetworkInfo,omitempty"`
+	NetworksInfo       []*NetworksInfo    `json:"networksInfo,omitempty"`
+}
+
+type DeleteClusterInput struct {
+	DeleteRemoteSites bool `json:"deleteRemoteSites,omitempty"`
+}
+
+type ClusterUpdateInput struct {
+	Username    *string   `json:"username,omitempty"`
+	Password    *string   `json:"password,omitempty"`
+	Name        *string   `json:"name,omitempty"`
+	Description *string   `json:"description,omitempty"`
+	IPAddresses []*string `json:"ipAddresses,omitempty"`
+}
