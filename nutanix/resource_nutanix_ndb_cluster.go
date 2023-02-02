@@ -51,7 +51,7 @@ func resourceNutanixNDBCluster() *schema.Resource {
 			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  9440,
+				Default:  "9440",
 			},
 			"protocol": {
 				Type:     schema.TypeString,
