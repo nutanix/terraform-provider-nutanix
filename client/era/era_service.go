@@ -815,9 +815,9 @@ func (sc ServiceClient) CreateNetwork(ctx context.Context, body *NetworkIntentIn
 func (sc ServiceClient) GetNetwork(ctx context.Context, id, name string) (*NetworkIntentResponse, error) {
 	path := "/resources/networks?detailed=true&"
 	if name != "" {
-		path = path + fmt.Sprintf("name=%s", name)
+		path += fmt.Sprintf("name=%s", name)
 	} else {
-		path = path + fmt.Sprintf("id=%s", id)
+		path += fmt.Sprintf("id=%s", id)
 	}
 
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
