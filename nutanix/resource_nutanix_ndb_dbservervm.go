@@ -398,6 +398,7 @@ func resourceNutanixNDBServerVMUpdate(ctx context.Context, d *schema.ResourceDat
 	req.ResetName = false
 	req.ResetDescription = false
 	req.ResetCredential = false
+	req.ResetTags = false
 
 	if d.HasChange("description") {
 		req.Description = utils.StringPtr(d.Get("description").(string))
@@ -410,6 +411,11 @@ func resourceNutanixNDBServerVMUpdate(ctx context.Context, d *schema.ResourceDat
 		vmName := ps["vm_name"]
 		req.Name = utils.StringPtr(vmName.(string))
 		req.ResetName = true
+	}
+
+	if d.HasChange("tags") {
+		req.Tags = expandTags(d.Get("tags").([]interface{}))
+		req.ResetTags = true
 	}
 
 	if d.HasChange("credential") {
