@@ -73,6 +73,7 @@ type Service interface {
 	ListTags(ctx context.Context) (*ListTagsResponse, error)
 	CreateNetwork(ctx context.Context, body *NetworkIntentInput) (*NetworkIntentResponse, error)
 	GetNetwork(ctx context.Context, id string, name string) (*NetworkIntentResponse, error)
+	UpdateNetwork(ctx context.Context, body *NetworkIntentInput, id string) (*NetworkIntentResponse, error)
 	DeleteNetwork(ctx context.Context, id string) (*string, error)
 	ListNetwork(ctx context.Context) (*ListNetworkResponse, error)
 }
@@ -811,8 +812,8 @@ func (sc ServiceClient) CreateNetwork(ctx context.Context, body *NetworkIntentIn
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) GetNetwork(ctx context.Context, name, id string) (*NetworkIntentResponse, error) {
-	path := "/resources/networks?"
+func (sc ServiceClient) GetNetwork(ctx context.Context, id, name string) (*NetworkIntentResponse, error) {
+	path := "/resources/networks?detailed=true&"
 	if name != "" {
 		path = path + fmt.Sprintf("name=%s", name)
 	} else {
@@ -824,6 +825,15 @@ func (sc ServiceClient) GetNetwork(ctx context.Context, name, id string) (*Netwo
 		return nil, err
 	}
 
+	res := new(NetworkIntentResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) UpdateNetwork(ctx context.Context, body *NetworkIntentInput, id string) (*NetworkIntentResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPut, fmt.Sprintf("/resources/networks/%s", id), body)
+	if err != nil {
+		return nil, err
+	}
 	res := new(NetworkIntentResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }

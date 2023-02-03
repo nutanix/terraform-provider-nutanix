@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/era"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -22,8 +23,9 @@ func resourceNutanixNDBNetwork() *schema.Resource {
 				Required: true,
 			},
 			"type": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice([]string{"DHCP", "Static"}, false),
 			},
 			"cluster_id": {
 				Type:     schema.TypeString,
@@ -32,42 +34,68 @@ func resourceNutanixNDBNetwork() *schema.Resource {
 			"ip_pools": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"start_ip": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"end_ip": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
+						},
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"modified_by": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ip_addresses": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ip": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"status": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
 						},
 					},
 				},
 			},
-			"vlan_gateway": {
+			"gateway": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"vlan_subnet_mask": {
+			"subnet_mask": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"vlan_primary_dns": {
+			"primary_dns": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"vlan_secondary_dns": {
+			"secondary_dns": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"vlan_dns_doamin": {
+			"dns_domain": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 
 			// computed
-
 			"managed": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -158,35 +186,35 @@ func resourceNutanixNDBNetworkCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	props := make([]*era.Properties, 0)
-	if vlanGateway, ok := d.GetOk("vlan_gateway"); ok {
+	if vlanGateway, ok := d.GetOk("gateway"); ok {
 		props = append(props, &era.Properties{
 			Name:  utils.StringPtr("VLAN_GATEWAY"),
 			Value: utils.StringPtr(vlanGateway.(string)),
 		})
 	}
 
-	if vlanSubnetMask, ok := d.GetOk("vlan_subnet_mask"); ok {
+	if vlanSubnetMask, ok := d.GetOk("subnet_mask"); ok {
 		props = append(props, &era.Properties{
 			Name:  utils.StringPtr("VLAN_SUBNET_MASK"),
 			Value: utils.StringPtr(vlanSubnetMask.(string)),
 		})
 	}
 
-	if vlanPrimaryDns, ok := d.GetOk("vlan_primary_dns"); ok {
+	if vlanPrimaryDns, ok := d.GetOk("primary_dns"); ok {
 		props = append(props, &era.Properties{
 			Name:  utils.StringPtr("VLAN_PRIMARY_DNS"),
 			Value: utils.StringPtr(vlanPrimaryDns.(string)),
 		})
 	}
 
-	if vlanSecDns, ok := d.GetOk("vlan_secondary_dns"); ok {
+	if vlanSecDns, ok := d.GetOk("secondary_dns"); ok {
 		props = append(props, &era.Properties{
 			Name:  utils.StringPtr("VLAN_SECONDARY_DNS"),
 			Value: utils.StringPtr(vlanSecDns.(string)),
 		})
 	}
 
-	if vlanDnsDomain, ok := d.GetOk("vlan_dns_domain"); ok {
+	if vlanDnsDomain, ok := d.GetOk("dns_domain"); ok {
 		props = append(props, &era.Properties{
 			Name:  utils.StringPtr("VLAN_DNS_DOMAIN"),
 			Value: utils.StringPtr(vlanDnsDomain.(string)),
@@ -201,6 +229,7 @@ func resourceNutanixNDBNetworkCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.SetId(*resp.ID)
+	log.Printf("NDB Network with %s id created successfully", d.Id())
 	return resourceNutanixNDBNetworkRead(ctx, d, meta)
 }
 
@@ -239,10 +268,82 @@ func resourceNutanixNDBNetworkRead(ctx context.Context, d *schema.ResourceData, 
 	if resp.PropertiesMap != nil {
 		d.Set("properties_map", flattenPropertiesMap(resp.PropertiesMap))
 	}
+
+	if resp.IPPools != nil {
+		d.Set("ip_pools", flattenIPPools(resp.IPPools))
+	}
 	return nil
 }
 func resourceNutanixNDBNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	conn := meta.(*Client).Era
+
+	updateReq := &era.NetworkIntentInput{}
+
+	resp, err := conn.Service.GetNetwork(ctx, d.Id(), "")
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if resp != nil {
+		updateReq.Name = resp.Name
+		updateReq.ClusterID = resp.ClusterID
+		updateReq.Type = resp.Type
+		updateReq.Properties = resp.Properties
+	}
+
+	if d.HasChange("type") {
+		updateReq.Type = utils.StringPtr(d.Get("type").(string))
+	}
+
+	if d.HasChange("gateway") || d.HasChange("subnet_mask") ||
+		d.HasChange("primary_dns") || d.HasChange("secondary_dns") || d.HasChange("dns_domain") {
+		props := make([]*era.Properties, 0)
+		if vlanGateway, ok := d.GetOk("gateway"); ok {
+			props = append(props, &era.Properties{
+				Name:  utils.StringPtr("VLAN_GATEWAY"),
+				Value: utils.StringPtr(vlanGateway.(string)),
+			})
+		}
+
+		if vlanSubnetMask, ok := d.GetOk("subnet_mask"); ok {
+			props = append(props, &era.Properties{
+				Name:  utils.StringPtr("VLAN_SUBNET_MASK"),
+				Value: utils.StringPtr(vlanSubnetMask.(string)),
+			})
+		}
+
+		if vlanPrimaryDns, ok := d.GetOk("primary_dns"); ok {
+			props = append(props, &era.Properties{
+				Name:  utils.StringPtr("VLAN_PRIMARY_DNS"),
+				Value: utils.StringPtr(vlanPrimaryDns.(string)),
+			})
+		}
+
+		if vlanSecDns, ok := d.GetOk("secondary_dns"); ok {
+			props = append(props, &era.Properties{
+				Name:  utils.StringPtr("VLAN_SECONDARY_DNS"),
+				Value: utils.StringPtr(vlanSecDns.(string)),
+			})
+		}
+
+		if vlanDnsDomain, ok := d.GetOk("dns_domain"); ok {
+			props = append(props, &era.Properties{
+				Name:  utils.StringPtr("VLAN_DNS_DOMAIN"),
+				Value: utils.StringPtr(vlanDnsDomain.(string)),
+			})
+		}
+
+		updateReq.Properties = props
+	}
+
+	// API to update
+
+	_, er := conn.Service.UpdateNetwork(ctx, updateReq, d.Id())
+	if er != nil {
+		return diag.FromErr(er)
+	}
+	log.Printf("NDB Network with %s id is updated successfully", d.Id())
+	return resourceNutanixNDBNetworkRead(ctx, d, meta)
 }
 func resourceNutanixNDBNetworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
@@ -271,6 +372,38 @@ func flattenPropertiesMap(pm *era.NetworkPropertiesmap) []interface{} {
 
 		propMap = append(propMap, prop)
 		return propMap
+	}
+	return nil
+}
+
+func flattenIPPools(pools []*era.IPPools) []interface{} {
+	if len(pools) > 0 {
+		ipList := make([]interface{}, 0)
+
+		for _, v := range pools {
+			ips := map[string]interface{}{}
+
+			ips["id"] = v.ID
+			ips["modified_by"] = v.ModifiedBy
+			ips["start_ip"] = v.StartIP
+			ips["end_ip"] = v.EndIP
+			if v.IPAddresses != nil {
+				ipAdd := make([]interface{}, 0)
+
+				for _, v := range v.IPAddresses {
+					adds := map[string]interface{}{}
+
+					adds["ip"] = v.IP
+					adds["status"] = v.Status
+
+					ipAdd = append(ipAdd, adds)
+				}
+				ips["ip_addressess"] = ipAdd
+			}
+
+			ipList = append(ipList, ips)
+		}
+		return ipList
 	}
 	return nil
 }

@@ -94,7 +94,7 @@ func dataSourceNutanixEraNetworkRead(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("either name or id is required to get the network details")
 	}
 
-	resp, err := conn.Service.GetNetwork(ctx, name.(string), networkID.(string))
+	resp, err := conn.Service.GetNetwork(ctx, networkID.(string), name.(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
