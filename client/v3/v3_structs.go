@@ -13,6 +13,14 @@ type Reference struct {
 	UUID *string `json:"uuid" mapstructure:"uuid"`
 }
 
+// DataSourceReference Reference to a kind. Either one of (kind, uuid) or url needs to be specified.
+type DataSourceReference struct {
+	Kind *string `json:"kind,omitempty" mapstructure:"kind,omitempty"`
+	Name *string `json:"name,omitempty" mapstructure:"name,omitempty"`
+	UUID *string `json:"uuid,omitempty" mapstructure:"uuid,omitempty"`
+	URL  *string `json:"url,omitempty" mapstructure:"url,omitempty"`
+}
+
 // VMVnumaConfig Indicates how VM vNUMA should be configured
 type VMVnumaConfig struct {
 
@@ -297,6 +305,9 @@ type VMResources struct {
 	// Information regarding vNUMA configuration.
 	VMVnumaConfig *VMVnumaConfig `json:"vnuma_config,omitempty" mapstructure:"vnuma_config,omitempty"`
 
+	// VM vTPM configuration.
+	VtpmConfig *VtpmConfig `json:"vtpm_config,omitempty" mapstructure:"vtpm_config,omitempty"`
+
 	SerialPortList []*VMSerialPort `json:"serial_port_list,omitempty" mapstructure:"serial_port_list,omitempty"`
 
 	MachineType *string `json:"machine_type,omitempty" mapstructure:"machine_type,omitempty"`
@@ -324,6 +335,15 @@ type VMIntentInput struct {
 	Metadata *Metadata `json:"metadata" mapstructure:"metadata"`
 
 	Spec *VM `json:"spec" mapstructure:"spec"`
+}
+
+// VtpmConfig VM vTPM configuration.
+type VtpmConfig struct {
+	// Indicates whether virtual trusted platform module should be enabled for the Guest OS.
+	VtpmEnabled *bool `json:"vtpm_enabled,omitempty" mapstructure:"vtpm_enabled,omitempty"`
+
+	// Reference to a kind. Either one of (kind, uuid) or url needs to be specified.
+	DataSourceReference *DataSourceReference `json:"data_source_reference,omitempty" mapstructure:"data_source_reference,omitempty"`
 }
 
 // MessageResource ...
@@ -532,6 +552,9 @@ type VMResourcesDefStatus struct {
 
 	// Information regarding vNUMA configuration.
 	VnumaConfig *VMVnumaConfig `json:"vnuma_config,omitempty" mapstructure:"vnuma_config,omitempty"`
+
+	// VM vTPM configuration.
+	VtpmConfig *VtpmConfig `json:"vtpm_config,omitempty" mapstructure:"vtpm_config,omitempty"`
 
 	SerialPortList []*VMSerialPort `json:"serial_port_list,omitempty" mapstructure:"serial_port_list,omitempty"`
 
@@ -2339,7 +2362,7 @@ type PermissionListResponse struct {
 	Metadata   *ListMetadataOutput         `json:"metadata,omitempty"` // All api calls that return a list will have this metadata block
 }
 
-//ProtectionRuleResources represents the resources of protection rules
+// ProtectionRuleResources represents the resources of protection rules
 type ProtectionRuleResources struct {
 	StartTime                        string                              `json:"start_time,omitempty"`
 	AvailabilityZoneConnectivityList []*AvailabilityZoneConnectivityList `json:"availability_zone_connectivity_list,omitempty"`
@@ -2347,14 +2370,14 @@ type ProtectionRuleResources struct {
 	CategoryFilter                   *CategoryFilter                     `json:"category_filter,omitempty"`
 }
 
-//AvailabilityZoneConnectivityList represents a object for resource of protection rule
+// AvailabilityZoneConnectivityList represents a object for resource of protection rule
 type AvailabilityZoneConnectivityList struct {
 	DestinationAvailabilityZoneIndex *int64                  `json:"destination_availability_zone_index,omitempty"`
 	SourceAvailabilityZoneIndex      *int64                  `json:"source_availability_zone_index,omitempty"`
 	SnapshotScheduleList             []*SnapshotScheduleList `json:"snapshot_schedule_list,omitempty"`
 }
 
-//SnapshotScheduleList represents a object for resource of protection rule
+// SnapshotScheduleList represents a object for resource of protection rule
 type SnapshotScheduleList struct {
 	RecoveryPointObjectiveSecs    *int64                   `json:"recovery_point_objective_secs,omitempty"`
 	LocalSnapshotRetentionPolicy  *SnapshotRetentionPolicy `json:"local_snapshot_retention_policy,omitempty"`
@@ -2363,25 +2386,25 @@ type SnapshotScheduleList struct {
 	RemoteSnapshotRetentionPolicy *SnapshotRetentionPolicy `json:"remote_snapshot_retention_policy,omitempty"`
 }
 
-//SnapshotRetentionPolicy represents a object for resource of protection rule
+// SnapshotRetentionPolicy represents a object for resource of protection rule
 type SnapshotRetentionPolicy struct {
 	NumSnapshots          *int64                 `json:"num_snapshots,omitempty"`
 	RollupRetentionPolicy *RollupRetentionPolicy `json:"rollup_retention_policy,omitempty"`
 }
 
-//RollupRetentionPolicy represents a object for resource of protection rule
+// RollupRetentionPolicy represents a object for resource of protection rule
 type RollupRetentionPolicy struct {
 	Multiple             *int64 `json:"multiple,omitempty"`
 	SnapshotIntervalType string `json:"snapshot_interval_type,omitempty"`
 }
 
-//OrderedAvailabilityZoneList represents a object for resource of protection rule
+// OrderedAvailabilityZoneList represents a object for resource of protection rule
 type OrderedAvailabilityZoneList struct {
 	ClusterUUID         string `json:"cluster_uuid,omitempty"`
 	AvailabilityZoneURL string `json:"availability_zone_url,omitempty"`
 }
 
-//ProtectionRuleStatus represents a status of a protection rule
+// ProtectionRuleStatus represents a status of a protection rule
 type ProtectionRuleStatus struct {
 	State            string                   `json:"state,omitempty"`
 	MessageList      []*MessageResource       `json:"message_list,omitempty"`
@@ -2390,14 +2413,14 @@ type ProtectionRuleStatus struct {
 	ExecutionContext *ExecutionContext        `json:"execution_context,omitempty"`
 }
 
-//ProtectionRuleSpec represents a spec of protection rules
+// ProtectionRuleSpec represents a spec of protection rules
 type ProtectionRuleSpec struct {
 	Name        string                   `json:"name,omitempty"`
 	Description string                   `json:"description,omitempty"`
 	Resources   *ProtectionRuleResources `json:"resources,omitempty"`
 }
 
-//ProtectionRuleResponse represents a response object of a protection rule
+// ProtectionRuleResponse represents a response object of a protection rule
 type ProtectionRuleResponse struct {
 	APIVersion string                `json:"api_version,omitempty"`
 	Metadata   *Metadata             `json:"metadata,omitempty"`
@@ -2405,39 +2428,39 @@ type ProtectionRuleResponse struct {
 	Status     *ProtectionRuleStatus `json:"status,omitempty"`
 }
 
-//ProtectionRulesListResponse represents the response of a list of protection rules
+// ProtectionRulesListResponse represents the response of a list of protection rules
 type ProtectionRulesListResponse struct {
 	APIVersion string                    `json:"api_version,omitempty"`
 	Entities   []*ProtectionRuleResponse `json:"entities,omitempty"`
 	Metadata   *ListMetadataOutput       `json:"metadata,omitempty"`
 }
 
-//ProtectionRuleInput Represents the request of create protection rule
+// ProtectionRuleInput Represents the request of create protection rule
 type ProtectionRuleInput struct {
 	APIVersion string              `json:"api_version,omitempty"`
 	Metadata   *Metadata           `json:"metadata,omitempty"`
 	Spec       *ProtectionRuleSpec `json:"spec,omitempty"`
 }
 
-//RecoveryPlanResources represents the resources of recovery plan
+// RecoveryPlanResources represents the resources of recovery plan
 type RecoveryPlanResources struct {
 	StageList  []*StageList `json:"stage_list,omitempty"`
 	Parameters *Parameters  `json:"parameters,omitempty"`
 }
 
-//Parameters represents a object for resource of recovery plan
+// Parameters represents a object for resource of recovery plan
 type Parameters struct {
 	FloatingIPAssignmentList []*FloatingIPAssignmentList `json:"floating_ip_assignment_list,omitempty"`
 	NetworkMappingList       []*NetworkMappingList       `json:"network_mapping_list,omitempty"`
 }
 
-//FloatingIPAssignmentList represents a object for resource of recovery plan
+// FloatingIPAssignmentList represents a object for resource of recovery plan
 type FloatingIPAssignmentList struct {
 	AvailabilityZoneURL string                `json:"availability_zone_url,omitempty"`
 	VMIPAssignmentList  []*VMIPAssignmentList `json:"vm_ip_assignment_list,omitempty"`
 }
 
-//VMIPAssignmentList represents a object for resource of recovery plan
+// VMIPAssignmentList represents a object for resource of recovery plan
 type VMIPAssignmentList struct {
 	TestFloatingIPConfig     *FloatingIPConfig `json:"test_floating_ip_config,omitempty"`
 	RecoveryFloatingIPConfig *FloatingIPConfig `json:"recovery_floating_ip_config,omitempty"`
@@ -2445,13 +2468,13 @@ type VMIPAssignmentList struct {
 	VMNICInformation         *VMNICInformation `json:"vm_nic_information,omitempty"`
 }
 
-//FloatingIPConfig represents a object for resource of recovery plan
+// FloatingIPConfig represents a object for resource of recovery plan
 type FloatingIPConfig struct {
 	IP                        string `json:"ip,omitempty"`
 	ShouldAllocateDynamically *bool  `json:"should_allocate_dynamically,omitempty"`
 }
 
-//VMNICInformation represents a object for resource of recovery plan
+// VMNICInformation represents a object for resource of recovery plan
 type VMNICInformation struct {
 	IP   string `json:"ip,omitempty"`
 	UUID string `json:"uuid,omitempty"`
@@ -2463,7 +2486,7 @@ type NetworkMappingList struct {
 	AreNetworksStretched               *bool                                 `json:"are_networks_stretched,omitempty"`
 }
 
-//AvailabilityZoneNetworkMappingList represents a object for resource of recovery plan
+// AvailabilityZoneNetworkMappingList represents a object for resource of recovery plan
 type AvailabilityZoneNetworkMappingList struct {
 	RecoveryNetwork          *Network            `json:"recovery_network,omitempty"`
 	AvailabilityZoneURL      string              `json:"availability_zone_url,omitempty"`
@@ -2482,7 +2505,7 @@ type IPConfigList struct {
 	IPAddress string `json:"ip_address,omitempty"`
 }
 
-//Network represents a object for resource of recovery plan
+// Network represents a object for resource of recovery plan
 type Network struct {
 	VirtualNetworkReference *Reference    `json:"virtual_network_reference,omitempty"`
 	SubnetList              []*SubnetList `json:"subnet_list,omitempty"`
@@ -2491,31 +2514,31 @@ type Network struct {
 	UseVPCReference         *bool         `json:"use_vpc_reference,omitempty"`
 }
 
-//SubnetList represents a object for resource of recovery plan
+// SubnetList represents a object for resource of recovery plan
 type SubnetList struct {
 	GatewayIP                 string `json:"gateway_ip,omitempty"`
 	ExternalConnectivityState string `json:"external_connectivity_state,omitempty"`
 	PrefixLength              *int64 `json:"prefix_length,omitempty"`
 }
 
-//StageList represents a object for resource of recovery plan
+// StageList represents a object for resource of recovery plan
 type StageList struct {
 	StageWork     *StageWork `json:"stage_work,omitempty"`
 	StageUUID     string     `json:"stage_uuid,omitempty"`
 	DelayTimeSecs *int64     `json:"delay_time_secs,omitempty"`
 }
 
-//StageWork represents a object for resource of recovery plan
+// StageWork represents a object for resource of recovery plan
 type StageWork struct {
 	RecoverEntities *RecoverEntities `json:"recover_entities,omitempty"`
 }
 
-//RecoverEntities represents a object for resource of recovery plan
+// RecoverEntities represents a object for resource of recovery plan
 type RecoverEntities struct {
 	EntityInfoList []*EntityInfoList `json:"entity_info_list,omitempty"`
 }
 
-//EntityInfoList represents a object for resource of recovery plan
+// EntityInfoList represents a object for resource of recovery plan
 type EntityInfoList struct {
 	AnyEntityReference *Reference        `json:"any_entity_reference,omitempty"`
 	Categories         map[string]string `json:"categories,omitempty"`
@@ -2527,7 +2550,7 @@ type ScriptList struct {
 	Timeout          *int64 `json:"timeout,omitempty"`
 }
 
-//RecoveryPlanStatus represents a status of a recovery plan
+// RecoveryPlanStatus represents a status of a recovery plan
 type RecoveryPlanStatus struct {
 	State            string                 `json:"state,omitempty"`
 	MessageList      []*MessageResource     `json:"message_list,omitempty"`
@@ -2536,14 +2559,14 @@ type RecoveryPlanStatus struct {
 	ExecutionContext *ExecutionContext      `json:"execution_context,omitempty"`
 }
 
-//RecoveryPlanSpec represents a spec of recovery plans
+// RecoveryPlanSpec represents a spec of recovery plans
 type RecoveryPlanSpec struct {
 	Name        string                 `json:"name,omitempty"`
 	Description string                 `json:"description,omitempty"`
 	Resources   *RecoveryPlanResources `json:"resources,omitempty"`
 }
 
-//RecoveryPlanResponse represents a response object of a recovery plan
+// RecoveryPlanResponse represents a response object of a recovery plan
 type RecoveryPlanResponse struct {
 	APIVersion string              `json:"api_version,omitempty"`
 	Metadata   *Metadata           `json:"metadata,omitempty"`
@@ -2551,14 +2574,14 @@ type RecoveryPlanResponse struct {
 	Status     *RecoveryPlanStatus `json:"status,omitempty"`
 }
 
-//RecoveryPlanListResponse represents the response of a list of recovery plans
+// RecoveryPlanListResponse represents the response of a list of recovery plans
 type RecoveryPlanListResponse struct {
 	APIVersion string                  `json:"api_version,omitempty"`
 	Entities   []*RecoveryPlanResponse `json:"entities,omitempty"`
 	Metadata   *ListMetadataOutput     `json:"metadata,omitempty"`
 }
 
-//RecoveryPlanInput Represents the request of create recovery plan
+// RecoveryPlanInput Represents the request of create recovery plan
 type RecoveryPlanInput struct {
 	APIVersion string            `json:"api_version,omitempty"`
 	Metadata   *Metadata         `json:"metadata,omitempty"`

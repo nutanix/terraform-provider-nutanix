@@ -505,6 +505,11 @@ func resourceNutanixVirtualMachine() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"vtpm_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"disk_list": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -882,6 +887,12 @@ func resourceNutanixVirtualMachineRead(ctx context.Context, d *schema.ResourceDa
 		return diag.Errorf("error setting guest_customization_sysprep for Virtual Machine %s: %s", d.Id(), err)
 	}
 
+	if resp.Status.Resources.VtpmConfig != nil {
+		d.Set("vtpm_enabled", utils.BoolValue(resp.Status.Resources.VtpmConfig.VtpmEnabled))
+	} else {
+		d.Set("vtpm_enabled", false)
+	}
+
 	d.Set("enable_cpu_passthrough", resp.Status.Resources.EnableCPUPassthrough)
 	d.Set("is_vcpu_hard_pinned", resp.Status.Resources.EnableCPUPinning)
 	d.Set("guest_customization_cloud_init_user_data", cloudInitUser)
@@ -1048,6 +1059,13 @@ func resourceNutanixVirtualMachineUpdate(ctx context.Context, d *schema.Resource
 	if d.HasChange("vga_console_enabled") {
 		_, n := d.GetChange("vga_console_enabled")
 		res.VgaConsoleEnabled = utils.BoolPtr(n.(bool))
+		hotPlugChange = false
+	}
+	if d.HasChange("vtpm_enabled") {
+		_, n := d.GetChange("vtpm_enabled")
+		res.VtpmConfig = &v3.VtpmConfig{
+			VtpmEnabled: utils.BoolPtr(n.(bool)),
+		}
 		hotPlugChange = false
 	}
 	if d.HasChange("guest_customization_is_overridable") {
@@ -1569,6 +1587,16 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 		vm.GuestCustomization = guestCustom
 	}
 
+	vtpmConfig := &v3.VtpmConfig{}
+
+	if v, ok := d.GetOk("vtpm_enabled"); ok {
+		vtpmConfig.VtpmEnabled = utils.BoolPtr(v.(bool))
+	}
+
+	if !reflect.DeepEqual(*vtpmConfig, v3.VtpmConfig{}) {
+		vm.VtpmConfig = vtpmConfig
+	}
+
 	if v, ok := d.GetOk("vga_console_enabled"); ok {
 		vm.VgaConsoleEnabled = utils.BoolPtr(v.(bool))
 	}
@@ -1876,6 +1904,7 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 	res.VgaConsoleEnabled = response.Spec.Resources.VgaConsoleEnabled
 	res.HardwareClockTimezone = response.Spec.Resources.HardwareClockTimezone
 	res.DiskList = response.Spec.Resources.DiskList
+	res.VtpmConfig = &v3.VtpmConfig{VtpmEnabled: response.Spec.Resources.VtpmConfig.VtpmEnabled}
 
 	nold := make([]*v3.VMNic, len(response.Spec.Resources.NicList))
 

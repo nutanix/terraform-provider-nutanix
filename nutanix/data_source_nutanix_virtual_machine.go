@@ -361,6 +361,10 @@ func dataSourceNutanixVirtualMachine() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"vtpm_enabled": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"disk_list": {
 				Type:     schema.TypeList,
 				Computed: true,
