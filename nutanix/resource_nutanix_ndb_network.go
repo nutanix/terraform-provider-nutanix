@@ -312,24 +312,24 @@ func resourceNutanixNDBNetworkUpdate(ctx context.Context, d *schema.ResourceData
 			})
 		}
 
-		if vlanPrimaryDns, ok := d.GetOk("primary_dns"); ok {
+		if vlanPrimaryDNS, ok := d.GetOk("primary_dns"); ok {
 			props = append(props, &era.Properties{
 				Name:  utils.StringPtr("VLAN_PRIMARY_DNS"),
-				Value: utils.StringPtr(vlanPrimaryDns.(string)),
+				Value: utils.StringPtr(vlanPrimaryDNS.(string)),
 			})
 		}
 
-		if vlanSecDns, ok := d.GetOk("secondary_dns"); ok {
+		if vlanSecDNS, ok := d.GetOk("secondary_dns"); ok {
 			props = append(props, &era.Properties{
 				Name:  utils.StringPtr("VLAN_SECONDARY_DNS"),
-				Value: utils.StringPtr(vlanSecDns.(string)),
+				Value: utils.StringPtr(vlanSecDNS.(string)),
 			})
 		}
 
-		if vlanDnsDomain, ok := d.GetOk("dns_domain"); ok {
+		if vlanDNSDomain, ok := d.GetOk("dns_domain"); ok {
 			props = append(props, &era.Properties{
 				Name:  utils.StringPtr("VLAN_DNS_DOMAIN"),
-				Value: utils.StringPtr(vlanDnsDomain.(string)),
+				Value: utils.StringPtr(vlanDNSDomain.(string)),
 			})
 		}
 
