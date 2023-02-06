@@ -259,6 +259,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_network":                      resourceNutanixNDBNetwork(),
 			"nutanix_ndb_dbserver_vm":                  resourceNutanixNDBServerVM(),
 			"nutanix_ndb_register_dbserver":            resourceNutanixNDBRegisterDBServer(),
+			"nutanix_ndb_stretched_vlan":               resourceNutanixNDBStretchedVlan(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

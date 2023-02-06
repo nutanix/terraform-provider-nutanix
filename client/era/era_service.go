@@ -83,6 +83,10 @@ type Service interface {
 	RegisterDBServerVM(ctx context.Context, body *DBServerRegisterInput) (*ProvisionDatabaseResponse, error)
 	GetDBServerVM(ctx context.Context, filter *DBServerFilterRequest) (*DBServerVMResponse, error)
 	ListDBServerVM(ctx context.Context) (*ListDBServerVMResponse, error)
+	CreateStretchedVlan(ctx context.Context, req *StretchedVlansInput) (*StretchedVlanResponse, error)
+	GetStretchedVlan(ctx context.Context, id string) (*StretchedVlanResponse, error)
+	UpdateStretchedVlan(ctx context.Context, id string, req *StretchedVlansInput) (*StretchedVlanResponse, error)
+	DeleteStretchedVlan(ctx context.Context, id string) (*string, error)
 }
 
 type ServiceClient struct {
@@ -974,6 +978,41 @@ func (sc ServiceClient) ListDBServerVM(ctx context.Context) (*ListDBServerVMResp
 		return nil, err
 	}
 	res := new(ListDBServerVMResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
 
+func (sc ServiceClient) CreateStretchedVlan(ctx context.Context, req *StretchedVlansInput) (*StretchedVlanResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/resources/networks/stretched-vlan", req)
+	if err != nil {
+		return nil, err
+	}
+	res := new(StretchedVlanResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) GetStretchedVlan(ctx context.Context, id string) (*StretchedVlanResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/resources/networks/stretched-vlan/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(StretchedVlanResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) UpdateStretchedVlan(ctx context.Context, id string, req *StretchedVlansInput) (*StretchedVlanResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPut, fmt.Sprintf("/resources/networks/stretched-vlan/%s", id), req)
+	if err != nil {
+		return nil, err
+	}
+	res := new(StretchedVlanResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteStretchedVlan(ctx context.Context, id string) (*string, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/resources/networks/stretched-vlan/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(string)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
