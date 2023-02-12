@@ -249,30 +249,30 @@ func resourceNutanixNDBRegisterDBServerUpdate(ctx context.Context, d *schema.Res
 	req := &era.UpdateDBServerVMRequest{}
 
 	// default for update request
-	req.ResetName = false
-	req.ResetDescription = false
-	req.ResetCredential = false
-	req.ResetTags = true
-	req.ResetDescriptionInNxCluster = false
-	req.ResetNameInNxCluster = false
+	req.ResetName = utils.BoolPtr(false)
+	req.ResetDescription = utils.BoolPtr(false)
+	req.ResetCredential = utils.BoolPtr(false)
+	req.ResetTags = utils.BoolPtr(true)
+	req.ResetDescriptionInNxCluster = utils.BoolPtr(false)
+	req.ResetNameInNxCluster = utils.BoolPtr(false)
 
 	if d.HasChange("name") {
 		req.Name = utils.StringPtr(d.Get("name").(string))
-		req.ResetName = true
+		req.ResetName = utils.BoolPtr(true)
 	}
 
 	if d.HasChange("description") {
 		req.Description = utils.StringPtr(d.Get("description").(string))
-		req.ResetDescription = true
+		req.ResetDescription = utils.BoolPtr(true)
 	}
 
 	if _, ok := d.GetOkExists("update_name_description_in_cluster"); ok {
-		req.ResetDescriptionInNxCluster = true
-		req.ResetNameInNxCluster = true
+		req.ResetDescriptionInNxCluster = utils.BoolPtr(true)
+		req.ResetNameInNxCluster = utils.BoolPtr(true)
 	}
 
 	if d.HasChange("credential") {
-		req.ResetCredential = true
+		req.ResetCredential = utils.BoolPtr(true)
 
 		creds := d.Get("credentials")
 		credList := creds.([]interface{})
@@ -324,7 +324,7 @@ func resourceNutanixNDBRegisterDBServerDelete(ctx context.Context, d *schema.Res
 		Remove:            true,
 		Delete:            false,
 		DeleteVgs:         true,
-		DeleteVmSnapshots: true,
+		DeleteVMSnapshots: true,
 	}
 
 	resp, err := conn.Service.DeleteDBServerVM(ctx, req, d.Id())
@@ -364,7 +364,7 @@ func buildRegisterDBServerVMRequest(d *schema.ResourceData, req *era.DBServerReg
 	}
 
 	if vmip, ok := d.GetOk("vm_ip"); ok {
-		req.VmIP = utils.StringPtr(vmip.(string))
+		req.VMIP = utils.StringPtr(vmip.(string))
 	}
 
 	if nxcls, ok := d.GetOk("nxcluster_id"); ok {
@@ -377,7 +377,7 @@ func buildRegisterDBServerVMRequest(d *schema.ResourceData, req *era.DBServerReg
 		req.Password = utils.StringPtr(pass.(string))
 	}
 	if sshkey, ok := d.GetOk("ssh_key"); ok {
-		req.SshPrivateKey = utils.StringPtr(sshkey.(string))
+		req.SSHPrivateKey = utils.StringPtr(sshkey.(string))
 	}
 	if workd, ok := d.GetOk("working_directory"); ok {
 		req.WorkingDirectory = utils.StringPtr(workd.(string))

@@ -302,7 +302,7 @@ func dataSourceNutanixNDBDBServers() *schema.Resource {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
-									"era_drive_initialised": {
+									"era_drive_initialized": {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},

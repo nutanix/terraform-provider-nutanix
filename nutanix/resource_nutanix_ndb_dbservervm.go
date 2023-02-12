@@ -395,14 +395,14 @@ func resourceNutanixNDBServerVMUpdate(ctx context.Context, d *schema.ResourceDat
 	req := &era.UpdateDBServerVMRequest{}
 
 	// setting default values
-	req.ResetName = false
-	req.ResetDescription = false
-	req.ResetCredential = false
-	req.ResetTags = false
+	req.ResetName = utils.BoolPtr(false)
+	req.ResetDescription = utils.BoolPtr(false)
+	req.ResetCredential = utils.BoolPtr(false)
+	req.ResetTags = utils.BoolPtr(false)
 
 	if d.HasChange("description") {
 		req.Description = utils.StringPtr(d.Get("description").(string))
-		req.ResetDescription = true
+		req.ResetDescription = utils.BoolPtr(true)
 	}
 
 	if d.HasChange("postgres_database") {
@@ -410,16 +410,16 @@ func resourceNutanixNDBServerVMUpdate(ctx context.Context, d *schema.ResourceDat
 
 		vmName := ps["vm_name"]
 		req.Name = utils.StringPtr(vmName.(string))
-		req.ResetName = true
+		req.ResetName = utils.BoolPtr(true)
 	}
 
 	if d.HasChange("tags") {
 		req.Tags = expandTags(d.Get("tags").([]interface{}))
-		req.ResetTags = true
+		req.ResetTags = utils.BoolPtr(true)
 	}
 
 	if d.HasChange("credential") {
-		req.ResetCredential = true
+		req.ResetCredential = utils.BoolPtr(true)
 
 		creds := d.Get("credentials")
 		credList := creds.([]interface{})
@@ -473,7 +473,7 @@ func resourceNutanixNDBServerVMDelete(ctx context.Context, d *schema.ResourceDat
 		Remove:            false,
 		SoftRemove:        false,
 		DeleteVgs:         true,
-		DeleteVmSnapshots: true,
+		DeleteVMSnapshots: true,
 	}
 
 	res, err := conn.Service.DeleteDBServerVM(ctx, &req, d.Id())
@@ -526,11 +526,11 @@ func buildDBServerVMRequest(d *schema.ResourceData, res *era.DBServerInputReques
 	}
 
 	if timeMachine, ok := d.GetOk("time_machine_id"); ok {
-		res.TimeMachineId = utils.StringPtr(timeMachine.(string))
+		res.TimeMachineID = utils.StringPtr(timeMachine.(string))
 
 		// if snapshot id is provided
 		if snapshotid, ok := d.GetOk("snapshot_id"); ok {
-			res.SnapshotId = utils.StringPtr(snapshotid.(string))
+			res.SnapshotID = utils.StringPtr(snapshotid.(string))
 			res.LatestSnapshot = false
 		} else {
 			res.LatestSnapshot = true

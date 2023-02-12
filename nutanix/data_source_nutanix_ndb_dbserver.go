@@ -321,7 +321,7 @@ func dataSourceNutanixNDBDBServer() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"era_drive_initialised": {
+						"era_drive_initialized": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -588,7 +588,7 @@ func flattenDBServerMetadata(pr *era.DBServerMetadata) []interface{} {
 		meta["physical_era_drive"] = pr.Physicaleradrive
 		meta["clustered"] = pr.Clustered
 		meta["single_instance"] = pr.Singleinstance
-		meta["era_drive_initialised"] = pr.Eradriveinitialised
+		meta["era_drive_initialized"] = pr.Eradriveinitialised
 		meta["provision_operation_id"] = pr.Provisionoperationid
 		meta["marked_for_deletion"] = pr.Markedfordeletion
 		if pr.Associatedtimemachines != nil {
