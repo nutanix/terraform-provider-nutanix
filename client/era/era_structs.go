@@ -1799,13 +1799,15 @@ type DBServerVMResponse struct {
 	ProtectionDomain           interface{}                 `json:"protectionDomain,omitempty"`
 	QueryCount                 int                         `json:"queryCount,omitempty"`
 	DatabaseType               *string                     `json:"databaseType,omitempty"`
-	AssociatedTimeMachineIds   interface{}                 `json:"associatedTimeMachineIds,omitempty"`
+	AssociatedTimeMachineIds   []*string                   `json:"associatedTimeMachineIds,omitempty"`
 	AccessKeyID                *string                     `json:"accessKeyId,omitempty"`
 	DbserverInValidEaState     bool                        `json:"dbserverInValidEaState,omitempty"`
 	WorkingDirectory           *string                     `json:"workingDirectory,omitempty"`
 	ValidDiagnosticBundleState bool                        `json:"validDiagnosticBundleState,omitempty"`
 	WindowsDBServer            bool                        `json:"windowsDBServer,omitempty"`
 }
+
+type ListDBServerVMResponse []DBServerVMResponse
 
 type AccessInfo struct {
 	AccessType        *string `json:"accessType,omitempty"`
@@ -1829,13 +1831,13 @@ type NetworkInfo struct {
 }
 
 type VMInfo struct {
-	OsType         *string        `json:"osType,omitempty"`
-	OsVersion      *string        `json:"osVersion,omitempty"`
-	Distribution   *string        `json:"distribution,omitempty"`
-	SecureInfo     interface{}    `json:"secureInfo,omitempty"`
-	Info           interface{}    `json:"info,omitempty"`
-	DeregisterInfo interface{}    `json:"deregisterInfo,omitempty"`
-	NetworkInfo    []*NetworkInfo `json:"networkInfo,omitempty"`
+	OsType         *string         `json:"osType,omitempty"`
+	OsVersion      *string         `json:"osVersion,omitempty"`
+	Distribution   *string         `json:"distribution,omitempty"`
+	SecureInfo     interface{}     `json:"secureInfo,omitempty"`
+	Info           interface{}     `json:"info,omitempty"`
+	DeregisterInfo *DeregisterInfo `json:"deregisterInfo,omitempty"`
+	NetworkInfo    []*NetworkInfo  `json:"networkInfo,omitempty"`
 }
 
 type DBServerRegisterInput struct {
@@ -1848,4 +1850,14 @@ type DBServerRegisterInput struct {
 	Password         *string            `json:"password,omitempty"`
 	SshPrivateKey    *string            `json:"sshPrivateKey,omitempty"`
 	ActionArguments  []*Actionarguments `json:"actionArguments,omitempty"`
+}
+
+type DBServerFilterRequest struct {
+	ID                *string `json:"id,omitempty"`
+	Name              *string `json:"name,omitempty"`
+	IP                *string `json:"ip,omitempty"`
+	VMClusterName     *string `json:"vm-cluster-name,omitempty"`
+	VMClusterID       *string `json:"vm-cluster-uuid,omitempty"`
+	DBServerClusterID *string `json:"dbserver-cluster-id,omitempty"`
+	NxClusterID       *string `json:"nx-cluster-id,omitempty"`
 }
