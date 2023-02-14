@@ -1485,3 +1485,44 @@ type MaintenanceTasksResponse struct {
 }
 
 type ListMaintenanceTasksResponse []MaintenanceTasksResponse
+type TmsClusterIntentInput struct {
+	NxClusterID *string `json:"nxClusterId,omitempty"`
+	Type        *string `json:"type,omitempty"`
+	SlaID       *string `json:"slaId,omitempty"`
+	ResetSlaID  *bool   `json:"resetSlaId,omitempty"`
+}
+
+type TmsClusterResponse struct {
+	TimeMachineID               *string     `json:"timeMachineId,omitempty"`
+	NxClusterID                 *string     `json:"nxClusterId,omitempty"`
+	LogDriveID                  *string     `json:"logDriveId,omitempty"`
+	LogDriveStatus              *string     `json:"logDriveStatus,omitempty"`
+	Type                        *string     `json:"type,omitempty"`
+	Description                 *string     `json:"description,omitempty"`
+	Status                      *string     `json:"status,omitempty"`
+	SlaID                       *string     `json:"slaId,omitempty"`
+	ScheduleID                  *string     `json:"scheduleId,omitempty"`
+	OwnerID                     *string     `json:"ownerId,omitempty"`
+	DateCreated                 *string     `json:"dateCreated,omitempty"`
+	DateModified                *string     `json:"dateModified,omitempty"`
+	Info                        interface{} `json:"info,omitempty"`
+	Metadata                    interface{} `json:"metadata,omitempty"`
+	NxCluster                   interface{} `json:"nxCluster,omitempty"`
+	LogDrive                    interface{} `json:"logDrive,omitempty"`
+	Sla                         interface{} `json:"sla,omitempty"`
+	Schedule                    interface{} `json:"schedule,omitempty"`
+	SourceClusters              []*string   `json:"sourceClusters,omitempty"`
+	ResetSlaID                  *bool       `json:"resetSlaId,omitempty"`
+	ResetDescription            *bool       `json:"resetDescription,omitempty"`
+	ResetType                   *bool       `json:"resetType,omitempty"`
+	SubmitActivateTimeMachineOp *bool       `json:"submitActivateTimeMachineOp,omitempty"`
+	UpdateOperationSummary      interface{} `json:"updateOperationSummary,omitempty"`
+	StorageResourceID           *string     `json:"storageResourceId,omitempty"`
+	ForceVGBasedLogDrive        *bool       `json:"forceVGBasedLogDrive,omitempty"`
+	Source                      *bool       `json:"source,omitempty"`
+}
+
+type DeleteTmsClusterInput struct {
+	DeleteReplicatedSnapshots         *bool `json:"deleteReplicatedSnapshots,omitempty"`
+	DeleteReplicatedProtectionDomains *bool `json:"deleteReplicatedProtectionDomains,omitempty"`
+}
