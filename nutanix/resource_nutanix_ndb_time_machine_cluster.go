@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"context"
+	"log"
 
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -94,7 +95,7 @@ func resourceNutanixNDBTmsClusterCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if slaid, ok := d.GetOk("sla_id"); ok {
-		req.SlaID = utils.StringPtr(slaid.(string))
+		req.SLAID = utils.StringPtr(slaid.(string))
 	}
 
 	if clsType, ok := d.GetOk("type"); ok {
@@ -112,6 +113,7 @@ func resourceNutanixNDBTmsClusterCreate(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("Error generating UUID for era clusters: %+v", err)
 	}
 	d.SetId(uuid)
+	log.Printf("NDB Time Machine Cluster with %s id is created successfully", d.Id())
 	return resourceNutanixNDBTmsClusterRead(ctx, d, meta)
 }
 
@@ -189,8 +191,8 @@ func resourceNutanixNDBTmsClusterUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if d.HasChange("sla_id") {
-		updateReq.SlaID = utils.StringPtr(d.Get("sla_id").(string))
-		updateReq.ResetSlaID = utils.BoolPtr(true)
+		updateReq.SLAID = utils.StringPtr(d.Get("sla_id").(string))
+		updateReq.ResetSLAID = utils.BoolPtr(true)
 	}
 
 	if d.HasChange("nx_cluster_id") {
@@ -203,7 +205,7 @@ func resourceNutanixNDBTmsClusterUpdate(ctx context.Context, d *schema.ResourceD
 	if er != nil {
 		return diag.FromErr(er)
 	}
-
+	log.Printf("NDB Time Machine Cluster with %s id is updated successfully", d.Id())
 	return resourceNutanixNDBTmsClusterRead(ctx, d, meta)
 }
 func resourceNutanixNDBTmsClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -224,6 +226,7 @@ func resourceNutanixNDBTmsClusterDelete(ctx context.Context, d *schema.ResourceD
 
 	if resp.Status == "" {
 		d.SetId("")
+		log.Printf("NDB Time Machine Cluster with %s id is deleted successfully", d.Id())
 	}
 	return nil
 }

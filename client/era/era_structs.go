@@ -1488,8 +1488,8 @@ type ListMaintenanceTasksResponse []MaintenanceTasksResponse
 type TmsClusterIntentInput struct {
 	NxClusterID *string `json:"nxClusterId,omitempty"`
 	Type        *string `json:"type,omitempty"`
-	SlaID       *string `json:"slaId,omitempty"`
-	ResetSlaID  *bool   `json:"resetSlaId,omitempty"`
+	SLAID       *string `json:"slaId,omitempty"`
+	ResetSLAID  *bool   `json:"resetSlaId,omitempty"`
 }
 
 type TmsClusterResponse struct {
@@ -1500,7 +1500,7 @@ type TmsClusterResponse struct {
 	Type                        *string     `json:"type,omitempty"`
 	Description                 *string     `json:"description,omitempty"`
 	Status                      *string     `json:"status,omitempty"`
-	SlaID                       *string     `json:"slaId,omitempty"`
+	SLAID                       *string     `json:"slaId,omitempty"`
 	ScheduleID                  *string     `json:"scheduleId,omitempty"`
 	OwnerID                     *string     `json:"ownerId,omitempty"`
 	DateCreated                 *string     `json:"dateCreated,omitempty"`
@@ -1509,10 +1509,10 @@ type TmsClusterResponse struct {
 	Metadata                    interface{} `json:"metadata,omitempty"`
 	NxCluster                   interface{} `json:"nxCluster,omitempty"`
 	LogDrive                    interface{} `json:"logDrive,omitempty"`
-	Sla                         interface{} `json:"sla,omitempty"`
+	SLA                         interface{} `json:"sla,omitempty"`
 	Schedule                    interface{} `json:"schedule,omitempty"`
 	SourceClusters              []*string   `json:"sourceClusters,omitempty"`
-	ResetSlaID                  *bool       `json:"resetSlaId,omitempty"`
+	ResetSLAID                  *bool       `json:"resetSlaId,omitempty"`
 	ResetDescription            *bool       `json:"resetDescription,omitempty"`
 	ResetType                   *bool       `json:"resetType,omitempty"`
 	SubmitActivateTimeMachineOp *bool       `json:"submitActivateTimeMachineOp,omitempty"`
