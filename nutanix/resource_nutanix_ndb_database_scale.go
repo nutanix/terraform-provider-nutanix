@@ -17,6 +17,9 @@ func resourceNutanixNDBScaleDatabase() *schema.Resource {
 		ReadContext:   resourceNutanixNDBScaleDatabaseRead,
 		UpdateContext: resourceNutanixNDBScaleDatabaseUpdate,
 		DeleteContext: resourceNutanixNDBScaleDatabaseDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(EraProvisionTimeout),
+		},
 		Schema: map[string]*schema.Schema{
 			"database_uuid": {
 				Type:     schema.TypeString,
@@ -263,7 +266,7 @@ func resourceNutanixNDBScaleDatabaseCreate(ctx context.Context, d *schema.Resour
 	}
 
 	d.SetId(resp.Operationid)
-	log.Printf("NDB database scale with %s id created successfully", d.Id())
+	log.Printf("NDB database with %s id is scaled successfully", d.Id())
 	return resourceNutanixNDBScaleDatabaseRead(ctx, d, meta)
 }
 

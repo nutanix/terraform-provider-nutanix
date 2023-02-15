@@ -17,6 +17,10 @@ func resourceNutanixNDBDatabaseSnapshot() *schema.Resource {
 		ReadContext:   resourceNutanixNDBDatabaseSnapshotRead,
 		UpdateContext: resourceNutanixNDBDatabaseSnapshotUpdate,
 		DeleteContext: resourceNutanixNDBDatabaseSnapshotDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(EraProvisionTimeout),
+			Delete: schema.DefaultTimeout(EraProvisionTimeout),
+		},
 		Schema: map[string]*schema.Schema{
 			"time_machine_id": {
 				Type:          schema.TypeString,
@@ -361,7 +365,7 @@ func resourceNutanixNDBDatabaseSnapshotCreate(ctx context.Context, d *schema.Res
 		}
 	}
 	d.SetId(uniqueID)
-	log.Printf("NDB database snapshot with %s id created successfully", d.Id())
+	log.Printf("NDB database snapshot with %s id is created successfully", d.Id())
 	return resourceNutanixNDBDatabaseSnapshotRead(ctx, d, meta)
 }
 
@@ -560,7 +564,7 @@ func resourceNutanixNDBDatabaseSnapshotUpdate(ctx context.Context, d *schema.Res
 		}
 	}
 
-	log.Printf("NDB database snapshot with %s id updated successfully", d.Id())
+	log.Printf("NDB database snapshot with %s id is updated successfully", d.Id())
 	return resourceNutanixNDBDatabaseSnapshotRead(ctx, d, meta)
 }
 
@@ -585,14 +589,15 @@ func resourceNutanixNDBDatabaseSnapshotDelete(ctx context.Context, d *schema.Res
 		Pending: []string{"PENDING"},
 		Target:  []string{"COMPLETED", "FAILED"},
 		Refresh: eraRefresh(ctx, conn, opReq),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 		Delay:   eraDelay,
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for snapshot	 (%s) to delete: %s", resp.Entityid, errWaitTask)
+		return diag.Errorf("error waiting for snapshot (%s) to delete: %s", resp.Entityid, errWaitTask)
 	}
 
+	log.Printf("NDB database snapshot with %s id is deleted successfully", d.Id())
 	d.SetId("")
 	return nil
 }
