@@ -25,6 +25,10 @@ func resourceNutanixNDBServerVM() *schema.Resource {
 		DeleteContext: resourceNutanixNDBServerVMDelete,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(EraDBProvisionTimeout),
+			Delete: schema.DefaultTimeout(EraDBProvisionTimeout),
+		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"database_type": {
@@ -497,7 +501,7 @@ func resourceNutanixNDBServerVMDelete(ctx context.Context, d *schema.ResourceDat
 		Pending: []string{"PENDING"},
 		Target:  []string{"COMPLETED", "FAILED"},
 		Refresh: eraRefresh(ctx, conn, opReq),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 		Delay:   eraDelay,
 	}
 
