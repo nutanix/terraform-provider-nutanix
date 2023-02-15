@@ -21,6 +21,9 @@ func resourceNutanixNDBDatabaseSnapshot() *schema.Resource {
 			Create: schema.DefaultTimeout(EraProvisionTimeout),
 			Delete: schema.DefaultTimeout(EraProvisionTimeout),
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"time_machine_id": {
 				Type:          schema.TypeString,

@@ -22,6 +22,9 @@ func resourceNutanixNDBRegisterDatabase() *schema.Resource {
 			Update: schema.DefaultTimeout(EraProvisionTimeout),
 			Delete: schema.DefaultTimeout(EraProvisionTimeout),
 		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"database_type": {
 				Type:     schema.TypeString,
