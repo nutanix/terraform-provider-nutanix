@@ -60,6 +60,7 @@ type Service interface {
 	ReadMaintenanceWindow(ctx context.Context, id string) (*MaintenaceTaskResponse, error)
 	UpdateMaintenaceWindow(ctx context.Context, body *MaintenanceWindowInput, id string) (*MaintenaceTaskResponse, error)
 	DeleteMaintenanceWindow(ctx context.Context, id string) (*AuthorizeDBServerResponse, error)
+	ListMaintenanceWindow(ctx context.Context) (*ListMaintenanceWindowResponse, error)
 }
 
 type ServiceClient struct {
@@ -688,5 +689,14 @@ func (sc ServiceClient) DeleteMaintenanceWindow(ctx context.Context, id string) 
 		return nil, err
 	}
 	res := new(AuthorizeDBServerResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ListMaintenanceWindow(ctx context.Context) (*ListMaintenanceWindowResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/maintenance", nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(ListMaintenanceWindowResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }

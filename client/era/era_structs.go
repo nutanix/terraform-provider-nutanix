@@ -1451,3 +1451,5 @@ type MaintenaceTaskResponse struct {
 	EntityTaskAssoc interface{}         `json:"entityTaskAssoc,omitempty"`
 	Timezone        *string             `json:"timezone,omitempty"`
 }
+
+type ListMaintenanceWindowResponse []MaintenaceTaskResponse
