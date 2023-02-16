@@ -104,7 +104,32 @@ func resourceNutanixNDBRegisterDBServer() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-
+			// delete values
+			"delete": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"remove": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"soft_remove": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"delete_vgs": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"delete_vm_snapshots": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			// computed
 			"properties": {
 				Type:        schema.TypeList,
@@ -319,12 +344,21 @@ func resourceNutanixNDBRegisterDBServerUpdate(ctx context.Context, d *schema.Res
 func resourceNutanixNDBRegisterDBServerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
-	req := &era.DeleteDBServerVMRequest{
-		SoftRemove:        false,
-		Remove:            true,
-		Delete:            false,
-		DeleteVgs:         true,
-		DeleteVMSnapshots: true,
+	req := &era.DeleteDBServerVMRequest{}
+	if delete, ok := d.GetOk("delete"); ok {
+		req.Delete = delete.(bool)
+	}
+	if remove, ok := d.GetOk("remove"); ok {
+		req.Remove = remove.(bool)
+	}
+	if softremove, ok := d.GetOk("soft_remove"); ok {
+		req.SoftRemove = softremove.(bool)
+	}
+	if deleteVgs, ok := d.GetOk("delete_vgs"); ok {
+		req.DeleteVgs = deleteVgs.(bool)
+	}
+	if deleteVMSnaps, ok := d.GetOk("delete_vm_snapshots"); ok {
+		req.DeleteVMSnapshots = deleteVMSnaps.(bool)
 	}
 
 	resp, err := conn.Service.DeleteDBServerVM(ctx, req, d.Id())
