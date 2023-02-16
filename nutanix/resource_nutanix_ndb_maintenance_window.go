@@ -53,8 +53,9 @@ func resourceNutanixNDBMaintenanceWindow() *schema.Resource {
 					"FRIDAY", "SATURDAY", "SUNDAY"}, false),
 			},
 			"week_of_month": {
-				Type:     schema.TypeInt,
-				Optional: true,
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.IntInSlice([]int{1, 2, 3, 4}),
 			},
 
 			// compute
