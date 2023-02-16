@@ -45,9 +45,9 @@ Provides a resource to add a Nutanix cluster based on the input parameters.
 
 * `name`: (Required) name of the cluster to be registered
 * `description`: (Optional) description of cluster
-* `cluster_ip`: (Required) Type the Prism Element IP address
-* `username`: (Required) Type the username of the Prism Element administrator
-* `password`: (Required) Type the Prism Element password
+* `cluster_ip`: (Required) Prism Element IP address
+* `username`: (Required) username of the Prism Element administrator
+* `password`: (Required) Prism Element password
 * `storage_container`: (Required) select a storage container which is used for performing database operations in the cluster
 * `agent_network_info`: (Required) agent network info to register cluster 
 * `networks_info`: (Required) network segmentation to segment the network traffic of the agent VM.

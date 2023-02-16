@@ -303,7 +303,7 @@ func flattenEngineCounts(pr *era.EngineCounts) []interface{} {
 
 		engine["mariadb_database"] = flattenProfileTmsCount(pr.MariadbDatabase)
 		engine["mongodb_database"] = flattenProfileTmsCount(pr.MongodbDatabase)
-		engine["mysql_database"] = flattenProfileTmsCount(pr.MySqlDatabase)
+		engine["mysql_database"] = flattenProfileTmsCount(pr.MySQLDatabase)
 		engine["oracle_database"] = flattenProfileTmsCount(pr.OracleDatabase)
 		engine["postgres_database"] = flattenProfileTmsCount(pr.PostgresDatabase)
 		engine["saphana_database"] = flattenProfileTmsCount(pr.SaphanaDatabase)

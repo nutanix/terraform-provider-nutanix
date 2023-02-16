@@ -101,7 +101,7 @@ type EngineCounts struct {
 	SqlserverDatabase *ProfileTimeMachinesCount `json:"sqlserver_database,omitempty"`
 	SaphanaDatabase   *ProfileTimeMachinesCount `json:"saphana_database,omitempty"`
 	MariadbDatabase   *ProfileTimeMachinesCount `json:"mariadb_database,omitempty"`
-	MySqlDatabase     *ProfileTimeMachinesCount `json:"mysql_database,omitempty"`
+	MySQLDatabase     *ProfileTimeMachinesCount `json:"mysql_database,omitempty"`
 }
 
 type EntityCounts struct {
