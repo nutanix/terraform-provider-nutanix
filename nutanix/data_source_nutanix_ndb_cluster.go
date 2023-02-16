@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	era "github.com/terraform-providers/terraform-provider-nutanix/client/era"
 )
 
 func dataSourceNutanixEraCluster() *schema.Resource {
@@ -149,8 +150,17 @@ func dataSourceNutanixEraCluster() *schema.Resource {
 				Computed: true,
 			},
 			"entity_counts": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeList,
 				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"db_servers": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"engine_counts": engineCountSchema(),
+					},
+				},
 			},
 			"healthy": {
 				Type:     schema.TypeBool,
@@ -260,7 +270,7 @@ func dataSourceNutanixEraClusterRead(ctx context.Context, d *schema.ResourceData
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("entity_counts", resp.Entitycounts); err != nil {
+	if err := d.Set("entity_counts", flattenEntityCounts(resp.EntityCounts)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("healthy", resp.Healthy); err != nil {
@@ -269,4 +279,138 @@ func dataSourceNutanixEraClusterRead(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(*resp.ID)
 	return nil
+}
+
+func flattenEntityCounts(pr *era.EntityCounts) []interface{} {
+	if pr != nil {
+		res := make([]interface{}, 0)
+
+		entity := map[string]interface{}{}
+
+		entity["db_servers"] = pr.DBServers
+		entity["engine_counts"] = flattenEngineCounts(pr.EngineCounts)
+
+		res = append(res, entity)
+		return res
+	}
+	return nil
+}
+
+func flattenEngineCounts(pr *era.EngineCounts) []interface{} {
+	if pr != nil {
+		engineCounts := make([]interface{}, 0)
+		engine := map[string]interface{}{}
+
+		engine["mariadb_database"] = flattenProfileTmsCount(pr.MariadbDatabase)
+		engine["mongodb_database"] = flattenProfileTmsCount(pr.MongodbDatabase)
+		engine["mysql_database"] = flattenProfileTmsCount(pr.MySqlDatabase)
+		engine["oracle_database"] = flattenProfileTmsCount(pr.OracleDatabase)
+		engine["postgres_database"] = flattenProfileTmsCount(pr.PostgresDatabase)
+		engine["saphana_database"] = flattenProfileTmsCount(pr.SaphanaDatabase)
+		engine["sqlserver_database"] = flattenProfileTmsCount(pr.SqlserverDatabase)
+
+		engineCounts = append(engineCounts, engine)
+		return engineCounts
+	}
+	return nil
+}
+
+func flattenProfileTmsCount(pr *era.ProfileTimeMachinesCount) []interface{} {
+	if pr != nil {
+		engineCounts := make([]interface{}, 0)
+		count := map[string]interface{}{}
+
+		count["profiles"] = flattenProfilesCount(pr.Profiles)
+		count["time_machines"] = pr.TimeMachines
+		engineCounts = append(engineCounts, count)
+		return engineCounts
+	}
+	return nil
+}
+
+func flattenProfilesCount(pr *era.ProfilesEntity) []interface{} {
+	if pr != nil {
+		profileCounts := make([]interface{}, 0)
+		count := map[string]interface{}{}
+
+		count["compute"] = pr.Compute
+		count["database_parameter"] = pr.DatabaseParameter
+		count["software"] = pr.Software
+		count["network"] = pr.Network
+		count["storage"] = pr.Storage
+		count["windows_domain"] = pr.WindowsDomain
+
+		profileCounts = append(profileCounts, count)
+		return profileCounts
+	}
+	return nil
+}
+
+func engineCountSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"oracle_database":    profileTimeMachineCountSchema(),
+				"postgres_database":  profileTimeMachineCountSchema(),
+				"mongodb_database":   profileTimeMachineCountSchema(),
+				"sqlserver_database": profileTimeMachineCountSchema(),
+				"saphana_database":   profileTimeMachineCountSchema(),
+				"mariadb_database":   profileTimeMachineCountSchema(),
+				"mysql_database":     profileTimeMachineCountSchema(),
+			},
+		},
+	}
+}
+
+func profileTimeMachineCountSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"profiles": profilesCountSchema(),
+				"time_machines": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			},
+		},
+	}
+}
+
+func profilesCountSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"windows_domain": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"software": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"compute": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"network": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"storage": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"database_parameter": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			},
+		},
+	}
 }

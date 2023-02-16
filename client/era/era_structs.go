@@ -80,6 +80,35 @@ type Versions struct {
 	VersionClusterAssociation []*VersionClusterAssociation `json:"versionClusterAssociation,omitempty"`
 }
 
+type ProfilesEntity struct {
+	WindowsDomain     *int `json:"WindowsDomain,omitempty"`
+	Software          *int `json:"Software,omitempty"`
+	Compute           *int `json:"Compute,omitempty"`
+	Network           *int `json:"Network,omitempty"`
+	Storage           *int `json:"Storage,omitempty"`
+	DatabaseParameter *int `json:"Database_Parameter,omitempty"`
+}
+
+type ProfileTimeMachinesCount struct {
+	Profiles     *ProfilesEntity `json:"profiles,omitempty"`
+	TimeMachines *int            `json:"timeMachines,omitempty"`
+}
+
+type EngineCounts struct {
+	OracleDatabase    *ProfileTimeMachinesCount `json:"oracle_database,omitempty"`
+	PostgresDatabase  *ProfileTimeMachinesCount `json:"postgres_database,omitempty"`
+	MongodbDatabase   *ProfileTimeMachinesCount `json:"mongodb_database,omitempty"`
+	SqlserverDatabase *ProfileTimeMachinesCount `json:"sqlserver_database,omitempty"`
+	SaphanaDatabase   *ProfileTimeMachinesCount `json:"saphana_database,omitempty"`
+	MariadbDatabase   *ProfileTimeMachinesCount `json:"mariadb_database,omitempty"`
+	MySqlDatabase     *ProfileTimeMachinesCount `json:"mysql_database,omitempty"`
+}
+
+type EntityCounts struct {
+	DBServers    *int          `json:"dbServers,omitempty"`
+	EngineCounts *EngineCounts `json:"engineCounts,omitempty"`
+}
+
 // ListClustersResponse structs
 type ListClusterResponse struct {
 	ID                   *string         `json:"id,omitempty"`
@@ -104,7 +133,7 @@ type ListClusterResponse struct {
 	Cloudinfo            interface{}     `json:"cloudInfo,omitempty"`
 	Resourceconfig       *Resourceconfig `json:"resourceConfig,omitempty"`
 	Managementserverinfo interface{}     `json:"managementServerInfo,omitempty"`
-	Entitycounts         interface{}     `json:"entityCounts,omitempty"`
+	EntityCounts         *EntityCounts   `json:"entityCounts,omitempty"`
 	Healthy              bool            `json:"healthy,omitempty"`
 }
 

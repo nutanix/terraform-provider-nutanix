@@ -237,8 +237,17 @@ func resourceNutanixNDBCluster() *schema.Resource {
 				Computed: true,
 			},
 			"entity_counts": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeList,
 				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"db_servers": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"engine_counts": engineCountSchema(),
+					},
+				},
 			},
 			"healthy": {
 				Type:     schema.TypeBool,
@@ -430,7 +439,7 @@ func resourceNutanixNDBClusterRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("entity_counts", resp.Entitycounts); err != nil {
+	if err := d.Set("entity_counts", flattenEntityCounts(resp.EntityCounts)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("healthy", resp.Healthy); err != nil {
