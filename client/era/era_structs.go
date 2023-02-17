@@ -1435,7 +1435,7 @@ type MaintenanceWindowInput struct {
 	ResetName        *bool               `json:"resetName,omitempty"`
 }
 
-type MaintenaceTaskResponse struct {
+type MaintenaceWindowResponse struct {
 	ID              *string             `json:"id,omitempty"`
 	Name            *string             `json:"name,omitempty"`
 	Description     *string             `json:"description,omitempty"`
@@ -1452,4 +1452,4 @@ type MaintenaceTaskResponse struct {
 	Timezone        *string             `json:"timezone,omitempty"`
 }
 
-type ListMaintenanceWindowResponse []MaintenaceTaskResponse
+type ListMaintenanceWindowResponse []MaintenaceWindowResponse
