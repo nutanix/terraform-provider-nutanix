@@ -203,6 +203,8 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_snapshot":                            dataSourceNutanixNDBSnapshot(),
 			"nutanix_ndb_snapshots":                           dataSourceNutanixNDBSnapshots(),
 			"nutanix_ndb_tms_capability":                      dataSourceNutanixNDBTmsCapability(),
+			"nutanix_ndb_maintenance_window":                  dataSourceNutanixNDBMaintenanceWindow(),
+			"nutanix_ndb_maintenance_windows":                 dataSourceNutanixNDBMaintenanceWindows(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  resourceNutanixVirtualMachine(),
@@ -244,6 +246,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_clone":                        resourceNutanixNDBClone(),
 			"nutanix_ndb_authorize_dbserver":           resourceNutanixNDBAuthorizeDBServer(),
 			"nutanix_ndb_linked_databases":             resourceNutanixNDBLinkedDB(),
+			"nutanix_ndb_maintenance_window":           resourceNutanixNDBMaintenanceWindow(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
