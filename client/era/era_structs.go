@@ -1453,3 +1453,35 @@ type MaintenaceWindowResponse struct {
 }
 
 type ListMaintenanceWindowResponse []MaintenaceWindowResponse
+type MaintenanceEntities struct {
+	EraDBServer        []*string `json:"ERA_DBSERVER,omitempty"`
+	EraDBServerCluster []*string `json:"ERA_DBSERVER_CLUSTER,omitempty"`
+}
+
+type MaintenanceTasksInput struct {
+	Entities            *MaintenanceEntities `json:"entities,omitempty"`
+	MaintenanceWindowId *string              `json:"maintenanceWindowId,omitempty"`
+	Tasks               []*Tasks             `json:"tasks"`
+}
+
+type MaintenanceTasksResponse struct {
+	ID                       *string     `json:"id,omitempty"`
+	Name                     *string     `json:"name,omitempty"`
+	Description              *string     `json:"description,omitempty"`
+	OwnerID                  *string     `json:"ownerId,omitempty"`
+	DateCreated              *string     `json:"dateCreated,omitempty"`
+	DateModified             *string     `json:"dateModified,omitempty"`
+	AccessLevel              *string     `json:"accessLevel,omitempty"`
+	Properties               interface{} `json:"properties,omitempty"`
+	Tags                     interface{} `json:"tags,omitempty"`
+	MaintenanceWindowID      *string     `json:"maintenanceWindowId,omitempty"`
+	MaintenanceWindowOwnerID *string     `json:"maintenanceWindowOwnerId,omitempty"`
+	EntityID                 *string     `json:"entityId,omitempty"`
+	EntityType               *string     `json:"entityType,omitempty"`
+	Status                   *string     `json:"status,omitempty"`
+	TaskType                 *string     `json:"taskType,omitempty"`
+	Payload                  *Payload    `json:"payload,omitempty"`
+	Entity                   interface{} `json:"entity,omitempty"`
+}
+
+type ListMaintenanceTasksResponse []MaintenanceTasksResponse
