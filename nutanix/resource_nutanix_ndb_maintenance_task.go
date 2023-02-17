@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"context"
+	"log"
 
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -57,6 +58,8 @@ func resourceNutanixNDBMaintenanceTask() *schema.Resource {
 					},
 				},
 			},
+			//computed
+			"entity_task_association": EntityTaskAssocSchema(),
 		},
 	}
 }
@@ -132,9 +135,19 @@ func resourceNutanixNDBMaintenanceTaskCreate(ctx context.Context, d *schema.Reso
 		return diag.Errorf("Error generating UUID for ndb maintenance tasks: %+v", err)
 	}
 	d.SetId(uuid)
-	return nil
+	log.Printf("NDB maintenance task with %s id is performed", d.Id())
+	return resourceNutanixNDBMaintenanceTaskRead(ctx, d, meta)
 }
 func resourceNutanixNDBMaintenanceTaskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*Client).Era
+	maintenanceID := d.Get("maintenance_window_id")
+	resp, err := conn.Service.ReadMaintenanceWindow(ctx, maintenanceID.(string))
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.Set("entity_task_association", flattenEntityTaskAssoc(resp.EntityTaskAssoc))
+
 	return nil
 }
 

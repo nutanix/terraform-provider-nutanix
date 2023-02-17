@@ -667,7 +667,7 @@ func (sc ServiceClient) CreateMaintenanceWindow(ctx context.Context, body *Maint
 }
 
 func (sc ServiceClient) ReadMaintenanceWindow(ctx context.Context, id string) (*MaintenaceWindowResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/maintenance/%s", id), nil)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/maintenance/%s?load-task-associations=true", id), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -694,7 +694,7 @@ func (sc ServiceClient) DeleteMaintenanceWindow(ctx context.Context, id string) 
 }
 
 func (sc ServiceClient) ListMaintenanceWindow(ctx context.Context) (*ListMaintenanceWindowResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/maintenance", nil)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/maintenance?load-task-associations=true", nil)
 	if err != nil {
 		return nil, err
 	}

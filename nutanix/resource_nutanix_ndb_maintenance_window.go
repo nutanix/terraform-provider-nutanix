@@ -148,10 +148,7 @@ func resourceNutanixNDBMaintenanceWindow() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"entity_task_assoc": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			"entity_task_assoc": EntityTaskAssocSchema(),
 		},
 	}
 }
@@ -242,7 +239,7 @@ func resourceNutanixNDBMaintenanceWindowRead(ctx context.Context, d *schema.Reso
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("entity_task_assoc", resp.EntityTaskAssoc); err != nil {
+	if err := d.Set("entity_task_assoc", flattenEntityTaskAssoc(resp.EntityTaskAssoc)); err != nil {
 		return diag.FromErr(err)
 	}
 

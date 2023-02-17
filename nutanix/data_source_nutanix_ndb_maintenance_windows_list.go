@@ -117,10 +117,7 @@ func dataSourceNutanixNDBMaintenanceWindows() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"entity_task_assoc": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
+						"entity_task_assoc": EntityTaskAssocSchema(),
 						"timezone": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -169,7 +166,7 @@ func flattenMaintenanceWindowsResponse(pr *era.ListMaintenanceWindowResponse) []
 			window["tags"] = flattenDBTags(v.Tags)
 			window["status"] = v.Status
 			window["next_run_time"] = v.NextRunTime
-			window["entity_task_assoc"] = v.EntityTaskAssoc
+			window["entity_task_assoc"] = flattenEntityTaskAssoc(v.EntityTaskAssoc)
 			window["timezone"] = v.Timezone
 			if v.Properties != nil {
 				props := []interface{}{}
