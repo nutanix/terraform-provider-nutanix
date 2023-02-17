@@ -1460,7 +1460,7 @@ type MaintenanceEntities struct {
 
 type MaintenanceTasksInput struct {
 	Entities            *MaintenanceEntities `json:"entities,omitempty"`
-	MaintenanceWindowId *string              `json:"maintenanceWindowId,omitempty"`
+	MaintenanceWindowID *string              `json:"maintenanceWindowId,omitempty"`
 	Tasks               []*Tasks             `json:"tasks"`
 }
 

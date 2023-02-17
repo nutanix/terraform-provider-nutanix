@@ -92,7 +92,7 @@ func resourceNutanixNDBMaintenanceTaskCreate(ctx context.Context, d *schema.Reso
 	req.Entities = entities
 
 	if windowID, ok := d.GetOk("maintenance_window_id"); ok {
-		req.MaintenanceWindowId = utils.StringPtr(windowID.(string))
+		req.MaintenanceWindowID = utils.StringPtr(windowID.(string))
 	}
 
 	taskList := make([]*era.Tasks, 0)
