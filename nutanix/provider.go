@@ -205,6 +205,8 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_tms_capability":                      dataSourceNutanixNDBTmsCapability(),
 			"nutanix_ndb_maintenance_window":                  dataSourceNutanixNDBMaintenanceWindow(),
 			"nutanix_ndb_maintenance_windows":                 dataSourceNutanixNDBMaintenanceWindows(),
+			"nutanix_ndb_tag":                                 dataSourceNutanixNDBTag(),
+			"nutanix_ndb_tags":                                dataSourceNutanixNDBTags(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  resourceNutanixVirtualMachine(),
@@ -249,6 +251,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_maintenance_window":           resourceNutanixNDBMaintenanceWindow(),
 			"nutanix_ndb_maintenance_task":             resourceNutanixNDBMaintenanceTask(),
 			"nutanix_ndb_tms_cluster":                  resourceNutanixNDBTmsCluster(),
+			"nutanix_ndb_tag":                          resourceNutanixNDBTags(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
