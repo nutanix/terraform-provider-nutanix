@@ -1598,6 +1598,7 @@ type NetworkIntentResponse struct {
 }
 
 type ListNetworkResponse []*NetworkIntentResponse
+
 type DBServerInputRequest struct {
 	DatabaseType             *string            `json:"databaseType,omitempty"`
 	SoftwareProfileID        *string            `json:"softwareProfileId,omitempty"`
@@ -1860,4 +1861,27 @@ type DBServerFilterRequest struct {
 	VMClusterID       *string `json:"vm-cluster-uuid,omitempty"`
 	DBServerClusterID *string `json:"dbserver-cluster-id,omitempty"`
 	NxClusterID       *string `json:"nx-cluster-id,omitempty"`
+}
+
+type StretchedVlanMetadata struct {
+	Gateway    *string `json:"gateway,omitempty"`
+	SubnetMask *string `json:"subnetMask,omitempty"`
+}
+
+type StretchedVlansInput struct {
+	Name        *string                `json:"name,omitempty"`
+	Description *string                `json:"description,omitempty"`
+	Type        *string                `json:"type,omitempty"`
+	Metadata    *StretchedVlanMetadata `json:"metadata,omitempty"`
+	VlanIDs     []*string              `json:"vlanIds,omitempty"`
+}
+
+type StretchedVlanResponse struct {
+	ID          *string                  `json:"id,omitempty"`
+	Name        *string                  `json:"name,omitempty"`
+	Type        *string                  `json:"type,omitempty"`
+	Description *string                  `json:"description,omitempty"`
+	Metadata    *StretchedVlanMetadata   `json:"metadata,omitempty"`
+	Vlans       []*NetworkIntentResponse `json:"vlans,omitempty"`
+	VlanIDs     []*string                `json:"vlanIds,omitempty"`
 }

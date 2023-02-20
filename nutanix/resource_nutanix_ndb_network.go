@@ -274,6 +274,7 @@ func resourceNutanixNDBNetworkRead(ctx context.Context, d *schema.ResourceData, 
 	}
 	return nil
 }
+
 func resourceNutanixNDBNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
@@ -345,6 +346,7 @@ func resourceNutanixNDBNetworkUpdate(ctx context.Context, d *schema.ResourceData
 	log.Printf("NDB Network with %s id is updated successfully", d.Id())
 	return resourceNutanixNDBNetworkRead(ctx, d, meta)
 }
+
 func resourceNutanixNDBNetworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
