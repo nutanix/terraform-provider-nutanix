@@ -208,14 +208,6 @@ func resourceNutanixNDBServerVM() *schema.Resource {
 				},
 			},
 			"tags": dataSourceEraDBInstanceTags(),
-			"era_created": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"internal": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
 			"dbserver_cluster_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -248,10 +240,6 @@ func resourceNutanixNDBServerVM() *schema.Resource {
 			},
 			"type": {
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"placeholder": {
-				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"status": {
@@ -355,14 +343,6 @@ func resourceNutanixNDBServerVMRead(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("era_created", resp.EraCreated); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("internal", resp.Internal); err != nil {
-		return diag.FromErr(err)
-	}
-
 	if err := d.Set("dbserver_cluster_id", resp.DbserverClusterID); err != nil {
 		return diag.FromErr(err)
 	}
@@ -388,10 +368,6 @@ func resourceNutanixNDBServerVMRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if err := d.Set("type", resp.Type); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("placeholder", resp.Placeholder); err != nil {
 		return diag.FromErr(err)
 	}
 

@@ -55,14 +55,6 @@ func dataSourceNutanixEraDatabase() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"internal": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"placeholder": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
 			"database_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -79,10 +71,6 @@ func dataSourceNutanixEraDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"dbserver_logical_cluster_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -91,22 +79,11 @@ func dataSourceNutanixEraDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"parent_time_machine_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"time_zone": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"info": dataSourceEraDatabaseInfo(),
-			"group_info": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
+			"info":     dataSourceEraDatabaseInfo(),
 			"metadata": dataSourceEraDBInstanceMetadata(),
 			"metric": {
 				Type:     schema.TypeMap,
@@ -115,15 +92,7 @@ func dataSourceNutanixEraDatabase() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"category": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"parent_database_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"parent_source_database_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,13 +108,6 @@ func dataSourceNutanixEraDatabase() *schema.Resource {
 			"database_nodes":   dataSourceEraDatabaseNodes(),
 			"linked_databases": dataSourceEraLinkedDatabases(),
 			"databases": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"database_group_state_info": {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -176,10 +138,6 @@ func dataSourceNutanixEraDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("owner_id", resp.Ownerid); err != nil {
-		return diag.FromErr(err)
-	}
-
 	if err := d.Set("description", resp.Description); err != nil {
 		return diag.FromErr(err)
 	}
@@ -207,14 +165,6 @@ func dataSourceNutanixEraDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("internal", resp.Internal); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("placeholder", resp.Placeholder); err != nil {
-		return diag.FromErr(err)
-	}
-
 	if err := d.Set("database_name", resp.Databasename); err != nil {
 		return diag.FromErr(err)
 	}
@@ -231,19 +181,11 @@ func dataSourceNutanixEraDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("database_status", resp.Databasestatus); err != nil {
-		return diag.FromErr(err)
-	}
-
 	if err := d.Set("dbserver_logical_cluster_id", resp.Dbserverlogicalclusterid); err != nil {
 		return diag.FromErr(err)
 	}
 
 	if err := d.Set("time_machine_id", resp.Timemachineid); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("parent_time_machine_id", resp.Parenttimemachineid); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -255,10 +197,6 @@ func dataSourceNutanixEraDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("group_info", resp.GroupInfo); err != nil {
-		return diag.FromErr(err)
-	}
-
 	if err := d.Set("metadata", flattenDBInstanceMetadata(resp.Metadata)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -267,15 +205,7 @@ func dataSourceNutanixEraDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("category", resp.Category); err != nil {
-		return diag.FromErr(err)
-	}
-
 	if err := d.Set("parent_database_id", resp.ParentDatabaseID); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("parent_source_database_id", resp.ParentSourceDatabaseID); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -302,9 +232,6 @@ func dataSourceNutanixEraDatabaseRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err := d.Set("databases", resp.Databases); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("database_group_state_info", resp.DatabaseGroupStateInfo); err != nil {
 		return diag.FromErr(err)
 	}
 

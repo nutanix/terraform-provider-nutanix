@@ -64,10 +64,6 @@ func resourceNutanixNDBDatabaseSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -382,10 +378,6 @@ func resourceNutanixNDBDatabaseSnapshotRead(ctx context.Context, d *schema.Resou
 
 	resp, err := conn.Service.GetSnapshot(ctx, d.Id(), filterParams)
 	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("owner_id", resp.OwnerID); err != nil {
 		return diag.FromErr(err)
 	}
 

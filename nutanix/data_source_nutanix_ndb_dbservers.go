@@ -27,10 +27,6 @@ func dataSourceNutanixNDBDBServers() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"owner_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"description": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -68,14 +64,6 @@ func dataSourceNutanixNDBDBServers() *schema.Resource {
 							},
 						},
 						"tags": dataSourceEraDBInstanceTags(),
-						"era_created": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"internal": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
 						"vm_cluster_uuid": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -100,10 +88,6 @@ func dataSourceNutanixNDBDBServers() *schema.Resource {
 						},
 						"type": {
 							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"placeholder": {
-							Type:     schema.TypeBool,
 							Computed: true,
 						},
 						"status": {
@@ -428,7 +412,6 @@ func flattenDBServerVMResponse(pr *era.ListDBServerVMResponse) []interface{} {
 
 			vms["id"] = v.ID
 			vms["name"] = v.Name
-			vms["owner_id"] = v.OwnerID
 			vms["description"] = v.Description
 			vms["date_created"] = v.DateCreated
 			vms["date_modified"] = v.DateModified
@@ -444,14 +427,11 @@ func flattenDBServerVMResponse(pr *era.ListDBServerVMResponse) []interface{} {
 				vms["properties"] = props
 			}
 			vms["tags"] = flattenDBTags(v.Tags)
-			vms["era_created"] = v.EraCreated
-			vms["internal"] = v.Internal
 			vms["vm_cluster_uuid"] = v.VMClusterUUID
 			vms["ip_addresses"] = utils.StringValueSlice(v.IPAddresses)
 			vms["fqdns"] = v.Fqdns
 			vms["mac_addresses"] = utils.StringValueSlice(v.MacAddresses)
 			vms["type"] = v.Type
-			vms["placeholder"] = v.Placeholder
 			vms["status"] = v.Status
 			vms["client_id"] = v.ClientID
 			vms["era_drive_id"] = v.EraDriveID

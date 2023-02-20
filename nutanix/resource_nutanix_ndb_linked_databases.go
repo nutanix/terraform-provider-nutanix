@@ -61,10 +61,6 @@ func resourceNutanixNDBLinkedDB() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -247,9 +243,6 @@ func resourceNutanixNDBLinkedDBRead(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 	if err := d.Set("name", currentLinkedDB.Name); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("owner_id", currentLinkedDB.Ownerid); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("parent_database_id", currentLinkedDB.ParentDatabaseID); err != nil {
