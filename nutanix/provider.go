@@ -251,7 +251,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_maintenance_window":           resourceNutanixNDBMaintenanceWindow(),
 			"nutanix_ndb_maintenance_task":             resourceNutanixNDBMaintenanceTask(),
 			"nutanix_ndb_tms_cluster":                  resourceNutanixNDBTmsCluster(),
-			"nutanix_ndb_tags":                         resourceNutanixNDBTags(),
+			"nutanix_ndb_tag":                          resourceNutanixNDBTags(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
