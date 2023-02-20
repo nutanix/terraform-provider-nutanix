@@ -30,6 +30,13 @@ func TestAccEraTagsDataSource_basic(t *testing.T) {
 
 func testAccEraTagsDataSourceConfig() string {
 	return `
+		resource "nutanix_ndb_tag" "acctest-managed" {
+			name= "test-tag"
+			description = "test tag description"
+			entity_type = "DATABASE"
+			required = false
+		}
+
 		data "nutanix_ndb_tags" "tags"{ }
 	`
 }
