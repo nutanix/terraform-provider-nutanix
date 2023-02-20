@@ -519,7 +519,7 @@ func resourceNutanixKarbonClusterCreate(ctx context.Context, d *schema.ResourceD
 	}
 	// Set terraform state id
 	d.SetId(createClusterResponse.ClusterUUID)
-	err = WaitForKarbonCluster(ctx, client, timeout, createClusterResponse.TaskUUID, d)
+	err = WaitForKarbonCluster(ctx, client, timeout, createClusterResponse.TaskUUID, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -644,7 +644,7 @@ func resourceNutanixKarbonClusterUpdate(ctx context.Context, d *schema.ResourceD
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		err = WaitForKarbonCluster(ctx, client, timeout, taskUUID, d)
+		err = WaitForKarbonCluster(ctx, client, timeout, taskUUID, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -691,7 +691,7 @@ func resourceNutanixKarbonClusterDelete(ctx context.Context, d *schema.ResourceD
 	if err != nil {
 		return diag.Errorf("error while deleting Karbon Cluster UUID(%s): %s", d.Id(), err)
 	}
-	err = WaitForKarbonCluster(ctx, client, timeout, clusterDeleteResponse.TaskUUID, d)
+	err = WaitForKarbonCluster(ctx, client, timeout, clusterDeleteResponse.TaskUUID, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return diag.Errorf("error while waiting for Karbon Cluster deletion with UUID(%s): %s", d.Id(), err)
 	}
@@ -990,12 +990,12 @@ func GetNodePoolsForCluster(conn *karbon.Client, karbonClusterName string, nodep
 	return nodepoolStructs, nil
 }
 
-func WaitForKarbonCluster(ctx context.Context, client *Client, waitTimeoutMinutes int64, taskUUID string, d *schema.ResourceData) error {
+func WaitForKarbonCluster(ctx context.Context, client *Client, waitTimeoutMinutes int64, taskUUID string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(client.API, taskUUID),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
+		Timeout:    timeout,
 		Delay:      WAITDELAY,
 		MinTimeout: WAITMINTIMEOUT,
 	}
