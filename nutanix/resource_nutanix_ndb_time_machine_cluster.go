@@ -127,43 +127,43 @@ func resourceNutanixNDBTmsClusterRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 	if err = d.Set("log_drive_id", resp.LogDrive); err != nil {
-		return diag.Errorf("error setting log_drive_id for tms clusters %s: %s", d.Id(), err)
+		return diag.Errorf("error occurred while setting log_drive_id for time machine cluster with id: %s : %s", d.Id(), err)
 	}
 
 	if err = d.Set("log_drive_status", resp.LogDriveStatus); err != nil {
-		return diag.Errorf("error setting description for tms clusters %s: %s", d.Id(), err)
+		return diag.Errorf("error occurred while setting log_drive_status for time machine cluster with id: %s: %s", d.Id(), err)
 	}
 
 	if err = d.Set("type", resp.Type); err != nil {
-		return diag.Errorf("error setting name for tms clusters %s: %s", d.Id(), err)
+		return diag.Errorf("error occurred while setting type for time machine cluster with id: %s: %s", d.Id(), err)
 	}
 
 	if err = d.Set("description", resp.Description); err != nil {
-		return diag.Errorf("error setting description for tms clusters %s: %s", d.Id(), err)
+		return diag.Errorf("error occurred while setting description for time machine cluster with id: %s: %s", d.Id(), err)
 	}
 
 	if err = d.Set("status", resp.Status); err != nil {
-		return diag.Errorf("error setting status for tms clusters %s: %s", d.Id(), err)
+		return diag.Errorf("error occurred while setting status for time machine cluster with id: %s: %s", d.Id(), err)
 	}
 
 	if err = d.Set("schedule_id", resp.ScheduleID); err != nil {
-		return diag.Errorf("error setting scheduleId for tms clusters %s: %s", d.Id(), err)
+		return diag.Errorf("error occurred while setting schedule_id for time machine cluster with id: %s: %s", d.Id(), err)
 	}
 
 	if err = d.Set("owner_id", resp.OwnerID); err != nil {
-		return diag.Errorf("error setting ownerId for tms clusters %s: %s", d.Id(), err)
+		return diag.Errorf("error occurred while setting owner_id for time machine cluster with id: %s: %s", d.Id(), err)
 	}
 
 	if err = d.Set("date_created", resp.DateCreated); err != nil {
-		return diag.Errorf("error setting dateCreated for tms clusters %s: %s", d.Id(), err)
+		return diag.Errorf("error occurred while setting date_created for time machine cluster with id: %s: %s", d.Id(), err)
 	}
 
 	if err = d.Set("source", resp.Source); err != nil {
-		return diag.Errorf("error setting source for tms clusters %s: %s", d.Id(), err)
+		return diag.Errorf("error occurred while setting source for time machine cluster with id: %s: %s", d.Id(), err)
 	}
 
 	if err = d.Set("date_modified", resp.DateModified); err != nil {
-		return diag.Errorf("error setting dateModified for tms clusters %s: %s", d.Id(), err)
+		return diag.Errorf("error occurred while setting date_modified for time machine cluster with id: %s: %s", d.Id(), err)
 	}
 	if resp.SourceClusters != nil {
 		sourceCls := make([]*string, 0)
@@ -173,6 +173,7 @@ func resourceNutanixNDBTmsClusterRead(ctx context.Context, d *schema.ResourceDat
 	}
 	return nil
 }
+
 func resourceNutanixNDBTmsClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
@@ -199,7 +200,7 @@ func resourceNutanixNDBTmsClusterUpdate(ctx context.Context, d *schema.ResourceD
 		updateReq.NxClusterID = utils.StringPtr(d.Get("nx_cluster_id").(string))
 	}
 
-	// update Call
+	// update Call for time machine cluster
 
 	_, er := conn.Service.UpdateTimeMachineCluster(ctx, tmsID.(string), clsID.(string), updateReq)
 	if er != nil {
@@ -208,6 +209,7 @@ func resourceNutanixNDBTmsClusterUpdate(ctx context.Context, d *schema.ResourceD
 	log.Printf("NDB Time Machine Cluster with %s id is updated successfully", d.Id())
 	return resourceNutanixNDBTmsClusterRead(ctx, d, meta)
 }
+
 func resourceNutanixNDBTmsClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
