@@ -1436,20 +1436,52 @@ type MaintenanceWindowInput struct {
 }
 
 type MaintenaceWindowResponse struct {
-	ID              *string             `json:"id,omitempty"`
-	Name            *string             `json:"name,omitempty"`
-	Description     *string             `json:"description,omitempty"`
-	OwnerID         *string             `json:"ownerId,omitempty"`
-	DateCreated     *string             `json:"dateCreated,omitempty"`
-	DateModified    *string             `json:"dateModified,omitempty"`
-	AccessLevel     interface{}         `json:"accessLevel,omitempty"`
-	Properties      []*Properties       `json:"properties,omitempty"`
-	Tags            []*Tags             `json:"tags,omitempty"`
-	Schedule        *MaintenaceSchedule `json:"schedule,omitempty"`
-	Status          *string             `json:"status,omitempty"`
-	NextRunTime     *string             `json:"nextRunTime,omitempty"`
-	EntityTaskAssoc interface{}         `json:"entityTaskAssoc,omitempty"`
-	Timezone        *string             `json:"timezone,omitempty"`
+	ID              *string                     `json:"id,omitempty"`
+	Name            *string                     `json:"name,omitempty"`
+	Description     *string                     `json:"description,omitempty"`
+	OwnerID         *string                     `json:"ownerId,omitempty"`
+	DateCreated     *string                     `json:"dateCreated,omitempty"`
+	DateModified    *string                     `json:"dateModified,omitempty"`
+	AccessLevel     interface{}                 `json:"accessLevel,omitempty"`
+	Properties      []*Properties               `json:"properties,omitempty"`
+	Tags            []*Tags                     `json:"tags,omitempty"`
+	Schedule        *MaintenaceSchedule         `json:"schedule,omitempty"`
+	Status          *string                     `json:"status,omitempty"`
+	NextRunTime     *string                     `json:"nextRunTime,omitempty"`
+	EntityTaskAssoc []*MaintenanceTasksResponse `json:"entityTaskAssoc,omitempty"`
+	Timezone        *string                     `json:"timezone,omitempty"`
 }
 
 type ListMaintenanceWindowResponse []MaintenaceWindowResponse
+type MaintenanceEntities struct {
+	EraDBServer        []*string `json:"ERA_DBSERVER,omitempty"`
+	EraDBServerCluster []*string `json:"ERA_DBSERVER_CLUSTER,omitempty"`
+}
+
+type MaintenanceTasksInput struct {
+	Entities            *MaintenanceEntities `json:"entities,omitempty"`
+	MaintenanceWindowID *string              `json:"maintenanceWindowId,omitempty"`
+	Tasks               []*Tasks             `json:"tasks"`
+}
+
+type MaintenanceTasksResponse struct {
+	ID                       *string       `json:"id,omitempty"`
+	Name                     *string       `json:"name,omitempty"`
+	Description              *string       `json:"description,omitempty"`
+	OwnerID                  *string       `json:"ownerId,omitempty"`
+	DateCreated              *string       `json:"dateCreated,omitempty"`
+	DateModified             *string       `json:"dateModified,omitempty"`
+	AccessLevel              *string       `json:"accessLevel,omitempty"`
+	Properties               []*Properties `json:"properties,omitempty"`
+	Tags                     []*Tags       `json:"tags,omitempty"`
+	MaintenanceWindowID      *string       `json:"maintenanceWindowId,omitempty"`
+	MaintenanceWindowOwnerID *string       `json:"maintenanceWindowOwnerId,omitempty"`
+	EntityID                 *string       `json:"entityId,omitempty"`
+	EntityType               *string       `json:"entityType,omitempty"`
+	Status                   *string       `json:"status,omitempty"`
+	TaskType                 *string       `json:"taskType,omitempty"`
+	Payload                  *Payload      `json:"payload,omitempty"`
+	Entity                   interface{}   `json:"entity,omitempty"`
+}
+
+type ListMaintenanceTasksResponse []MaintenanceTasksResponse

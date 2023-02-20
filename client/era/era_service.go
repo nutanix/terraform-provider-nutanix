@@ -61,6 +61,7 @@ type Service interface {
 	UpdateMaintenaceWindow(ctx context.Context, body *MaintenanceWindowInput, id string) (*MaintenaceWindowResponse, error)
 	DeleteMaintenanceWindow(ctx context.Context, id string) (*AuthorizeDBServerResponse, error)
 	ListMaintenanceWindow(ctx context.Context) (*ListMaintenanceWindowResponse, error)
+	CreateMaintenanceTask(ctx context.Context, body *MaintenanceTasksInput) (*ListMaintenanceTasksResponse, error)
 }
 
 type ServiceClient struct {
@@ -666,7 +667,7 @@ func (sc ServiceClient) CreateMaintenanceWindow(ctx context.Context, body *Maint
 }
 
 func (sc ServiceClient) ReadMaintenanceWindow(ctx context.Context, id string) (*MaintenaceWindowResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/maintenance/%s", id), nil)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/maintenance/%s?load-task-associations=true", id), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -693,10 +694,20 @@ func (sc ServiceClient) DeleteMaintenanceWindow(ctx context.Context, id string) 
 }
 
 func (sc ServiceClient) ListMaintenanceWindow(ctx context.Context) (*ListMaintenanceWindowResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/maintenance", nil)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/maintenance?load-task-associations=true", nil)
 	if err != nil {
 		return nil, err
 	}
 	res := new(ListMaintenanceWindowResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) CreateMaintenanceTask(ctx context.Context, req *MaintenanceTasksInput) (*ListMaintenanceTasksResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/maintenance/tasks", req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ListMaintenanceTasksResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
