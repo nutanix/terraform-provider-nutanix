@@ -253,7 +253,7 @@ func resourceNutanixNDBClone() *schema.Resource {
 			},
 
 			"actionarguments": actionArgumentsSchema(),
-			// delete values
+			// delete arguments for clone resource.
 			"delete": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -650,7 +650,7 @@ func resourceNutanixNDBCloneUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if res != nil {
-		log.Printf("NDB clone with %s id is update successfully", d.Id())
+		log.Printf("NDB clone with %s id is updated successfully", d.Id())
 	}
 
 	return resourceNutanixNDBCloneRead(ctx, d, meta)

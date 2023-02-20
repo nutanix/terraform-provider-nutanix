@@ -321,7 +321,7 @@ func resourceDatabaseInstance() *schema.Resource {
 				},
 			},
 
-			// delete attributes
+			// delete arguments for database instance
 			"delete": {
 				Type:     schema.TypeBool,
 				Optional: true,
