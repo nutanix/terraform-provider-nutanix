@@ -42,6 +42,20 @@ type TestConfig struct {
 	} `json:"protection_policy"`
 	// sshKey required for ndb database provision test
 	SSHKey string `json:"ssh_key"`
+	// NDB config
+	NDB struct {
+		RegisterClusterInfo struct {
+			ClusterIP        string `json:"cluster_ip"`
+			Username         string `json:"username"`
+			Password         string `json:"password"`
+			DNS              string `json:"dns"`
+			NTP              string `json:"ntp"`
+			StaticIP         string `json:"static_ip"`
+			Gateway          string `json:"gateway"`
+			SubnetMask       string `json:"subnet_mask"`
+			StorageContainer string `json:"strorage_container"`
+		} `json:"register_cluster_info"`
+	} `json:"ndb"`
 }
 
 type IPMIConfig struct {
