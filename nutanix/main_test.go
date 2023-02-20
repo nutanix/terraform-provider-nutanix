@@ -42,7 +42,8 @@ type TestConfig struct {
 	} `json:"protection_policy"`
 	// sshKey required for ndb database provision test
 	SSHKey string `json:"ssh_key"`
-	NDB    struct {
+	// NDB config
+	NDB struct {
 		RegisterClusterInfo struct {
 			ClusterIP        string `json:"cluster_ip"`
 			Username         string `json:"username"`
