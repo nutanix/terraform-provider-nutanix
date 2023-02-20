@@ -17,6 +17,9 @@ func resourceNutanixNDBDatabaseRestore() *schema.Resource {
 		ReadContext:   resourceNutanixNDBDatabaseRestoreRead,
 		UpdateContext: resourceNutanixNDBDatabaseRestoreUpdate,
 		DeleteContext: resourceNutanixNDBDatabaseRestoreDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(EraProvisionTimeout),
+		},
 		Schema: map[string]*schema.Schema{
 			"database_id": {
 				Type:     schema.TypeString,
@@ -252,7 +255,7 @@ func resourceNutanixNDBDatabaseRestoreCreate(ctx context.Context, d *schema.Reso
 	}
 
 	d.SetId(resp.Operationid)
-	log.Printf("NDB database restore  with %s id created successfully", d.Id())
+	log.Printf("NDB database restore  with %s id is performed successfully", d.Id())
 	return resourceNutanixNDBDatabaseRestoreRead(ctx, d, meta)
 }
 

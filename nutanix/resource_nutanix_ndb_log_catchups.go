@@ -16,6 +16,9 @@ func resourceNutanixNDBLogCatchUps() *schema.Resource {
 		ReadContext:   resourceNutanixNDBLogCatchUpsRead,
 		UpdateContext: resourceNutanixNDBLogCatchUpsUpdate,
 		DeleteContext: resourceNutanixNDBLogCatchUpsDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(EraProvisionTimeout),
+		},
 		Schema: map[string]*schema.Schema{
 			"time_machine_id": {
 				Type:          schema.TypeString,
@@ -121,7 +124,7 @@ func resourceNutanixNDBLogCatchUpsCreate(ctx context.Context, d *schema.Resource
 		return diag.Errorf("error waiting to perform log-catchups	 (%s) to create: %s", resp.Entityid, errWaitTask)
 	}
 	d.SetId(resp.Operationid)
-	log.Printf("NDB log catchup with %s id created successfully", d.Id())
+	log.Printf("NDB log catchup with %s id is performed successfully", d.Id())
 	return nil
 }
 

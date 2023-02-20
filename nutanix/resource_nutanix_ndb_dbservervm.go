@@ -156,7 +156,7 @@ func resourceNutanixNDBServerVM() *schema.Resource {
 					},
 				},
 			},
-			// delete values
+			// delete arguments for database server vm
 			"delete": {
 				Type:     schema.TypeBool,
 				Optional: true,

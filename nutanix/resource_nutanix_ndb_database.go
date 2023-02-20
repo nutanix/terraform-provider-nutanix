@@ -28,6 +28,8 @@ func resourceDatabaseInstance() *schema.Resource {
 		DeleteContext: deleteDatabaseInstance,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(EraProvisionTimeout),
+			Update: schema.DefaultTimeout(EraProvisionTimeout),
+			Delete: schema.DefaultTimeout(EraProvisionTimeout),
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -317,6 +319,38 @@ func resourceDatabaseInstance() *schema.Resource {
 						},
 					},
 				},
+			},
+
+			// delete arguments for database instance
+			"delete": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"remove": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"soft_remove": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"forced": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"delete_time_machine": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"delete_logical_cluster": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
 			},
 
 			// Computed values
@@ -702,15 +736,33 @@ func deleteDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 
 	dbID := d.Id()
 
-	req := era.DeleteDatabaseRequest{
-		Delete:               true,
-		Remove:               false,
-		Softremove:           false,
-		Forced:               false,
-		Deletetimemachine:    true,
-		Deletelogicalcluster: true,
+	req := &era.DeleteDatabaseRequest{}
+
+	if delete, ok := d.GetOk("delete"); ok {
+		req.Delete = delete.(bool)
 	}
-	res, err := conn.Service.DeleteDatabase(ctx, &req, dbID)
+
+	if remove, ok := d.GetOk("remove"); ok {
+		req.Remove = remove.(bool)
+	}
+
+	if softremove, ok := d.GetOk("soft_remove"); ok {
+		req.Softremove = softremove.(bool)
+	}
+
+	if forced, ok := d.GetOk("forced"); ok {
+		req.Forced = forced.(bool)
+	}
+
+	if deltms, ok := d.GetOk("delete_time_machine"); ok {
+		req.Deletetimemachine = deltms.(bool)
+	}
+
+	if dellogicalcls, ok := d.GetOk("delete_logical_cluster"); ok {
+		req.Deletelogicalcluster = dellogicalcls.(bool)
+	}
+
+	res, err := conn.Service.DeleteDatabase(ctx, req, dbID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -731,13 +783,14 @@ func deleteDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 		Pending: []string{"PENDING"},
 		Target:  []string{"COMPLETED", "FAILED"},
 		Refresh: eraRefresh(ctx, conn, opReq),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 		Delay:   eraDelay,
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for db Instance (%s) to delete: %s", res.Entityid, errWaitTask)
 	}
+	log.Printf("NDB database with %s id is deleted successfully", d.Id())
 	return nil
 }
 
