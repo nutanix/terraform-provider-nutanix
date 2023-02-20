@@ -80,6 +80,35 @@ type Versions struct {
 	VersionClusterAssociation []*VersionClusterAssociation `json:"versionClusterAssociation,omitempty"`
 }
 
+type ProfilesEntity struct {
+	WindowsDomain     *int `json:"WindowsDomain,omitempty"`
+	Software          *int `json:"Software,omitempty"`
+	Compute           *int `json:"Compute,omitempty"`
+	Network           *int `json:"Network,omitempty"`
+	Storage           *int `json:"Storage,omitempty"`
+	DatabaseParameter *int `json:"Database_Parameter,omitempty"`
+}
+
+type ProfileTimeMachinesCount struct {
+	Profiles     *ProfilesEntity `json:"profiles,omitempty"`
+	TimeMachines *int            `json:"timeMachines,omitempty"`
+}
+
+type EngineCounts struct {
+	OracleDatabase    *ProfileTimeMachinesCount `json:"oracle_database,omitempty"`
+	PostgresDatabase  *ProfileTimeMachinesCount `json:"postgres_database,omitempty"`
+	MongodbDatabase   *ProfileTimeMachinesCount `json:"mongodb_database,omitempty"`
+	SqlserverDatabase *ProfileTimeMachinesCount `json:"sqlserver_database,omitempty"`
+	SaphanaDatabase   *ProfileTimeMachinesCount `json:"saphana_database,omitempty"`
+	MariadbDatabase   *ProfileTimeMachinesCount `json:"mariadb_database,omitempty"`
+	MySQLDatabase     *ProfileTimeMachinesCount `json:"mysql_database,omitempty"`
+}
+
+type EntityCounts struct {
+	DBServers    *int          `json:"dbServers,omitempty"`
+	EngineCounts *EngineCounts `json:"engineCounts,omitempty"`
+}
+
 // ListClustersResponse structs
 type ListClusterResponse struct {
 	ID                   *string         `json:"id,omitempty"`
@@ -104,7 +133,7 @@ type ListClusterResponse struct {
 	Cloudinfo            interface{}     `json:"cloudInfo,omitempty"`
 	Resourceconfig       *Resourceconfig `json:"resourceConfig,omitempty"`
 	Managementserverinfo interface{}     `json:"managementServerInfo,omitempty"`
-	Entitycounts         interface{}     `json:"entityCounts,omitempty"`
+	EntityCounts         *EntityCounts   `json:"entityCounts,omitempty"`
 	Healthy              bool            `json:"healthy,omitempty"`
 }
 
@@ -1890,4 +1919,42 @@ type CloneRefreshInput struct {
 	SnapshotID        *string `json:"snapshotId,omitempty"`
 	UserPitrTimestamp *string `json:"userPitrTimestamp,omitempty"`
 	Timezone          *string `json:"timeZone,omitempty"`
+}
+
+type NameValueParams struct {
+	Name  *string `json:"name,omitempty"`
+	Value *string `json:"value,omitempty"`
+}
+
+type NetworksInfo struct {
+	Type        *string            `json:"type,omitempty"`
+	NetworkInfo []*NameValueParams `json:"networkInfo,omitempty"`
+	AccessType  []*string          `json:"accessType,omitempty"`
+}
+
+type ClusterIntentInput struct {
+	ClusterName        *string            `json:"clusterName,omitempty"`
+	ClusterDescription *string            `json:"clusterDescription,omitempty"`
+	ClusterIP          *string            `json:"clusterIP,omitempty"`
+	StorageContainer   *string            `json:"storageContainer,omitempty"`
+	AgentVMPrefix      *string            `json:"agentVMPrefix,omitempty"`
+	Port               *int               `json:"port,omitempty"`
+	Protocol           *string            `json:"protocol,omitempty"`
+	ClusterType        *string            `json:"clusterType,omitempty"`
+	Version            *string            `json:"version,omitempty"`
+	CredentialsInfo    []*NameValueParams `json:"credentialsInfo,omitempty"`
+	AgentNetworkInfo   []*NameValueParams `json:"agentNetworkInfo,omitempty"`
+	NetworksInfo       []*NetworksInfo    `json:"networksInfo,omitempty"`
+}
+
+type DeleteClusterInput struct {
+	DeleteRemoteSites bool `json:"deleteRemoteSites,omitempty"`
+}
+
+type ClusterUpdateInput struct {
+	Username    *string   `json:"username,omitempty"`
+	Password    *string   `json:"password,omitempty"`
+	Name        *string   `json:"name,omitempty"`
+	Description *string   `json:"description,omitempty"`
+	IPAddresses []*string `json:"ipAddresses,omitempty"`
 }

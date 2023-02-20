@@ -88,6 +88,9 @@ type Service interface {
 	UpdateStretchedVlan(ctx context.Context, id string, req *StretchedVlansInput) (*StretchedVlanResponse, error)
 	DeleteStretchedVlan(ctx context.Context, id string) (*string, error)
 	RefreshClone(ctx context.Context, body *CloneRefreshInput, id string) (*ProvisionDatabaseResponse, error)
+	CreateCluster(ctx context.Context, body *ClusterIntentInput) (*ProvisionDatabaseResponse, error)
+	UpdateCluster(ctx context.Context, req *ClusterUpdateInput, id string) (*ListClusterResponse, error)
+	DeleteCluster(ctx context.Context, req *DeleteClusterInput, id string) (*ProvisionDatabaseResponse, error)
 }
 
 type ServiceClient struct {
@@ -128,10 +131,10 @@ func (sc ServiceClient) GetProfile(ctx context.Context, filter *ProfileFilter) (
 func (sc ServiceClient) GetCluster(ctx context.Context, id string, name string) (*ListClusterResponse, error) {
 	var path string
 	if id != "" {
-		path = fmt.Sprintf("/clusters/%s", id)
+		path = fmt.Sprintf("/clusters/%s?count_entities=true", id)
 	}
 	if name != "" {
-		path = fmt.Sprintf("/clusters/name/%s", name)
+		path = fmt.Sprintf("/clusters/name/%s?count_entities=true", name)
 	}
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
@@ -143,7 +146,7 @@ func (sc ServiceClient) GetCluster(ctx context.Context, id string, name string) 
 }
 
 func (sc ServiceClient) ListClusters(ctx context.Context) (*ClusterListResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/clusters", nil)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/clusters?count_entities=true", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -805,8 +808,26 @@ func (sc ServiceClient) DeleteTimeMachineCluster(ctx context.Context, tmsID stri
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
+func (sc ServiceClient) CreateCluster(ctx context.Context, body *ClusterIntentInput) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/clusters", body)
+	if err != nil {
+		return nil, err
+	}
+	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
 func (sc ServiceClient) CreateDBServerVM(ctx context.Context, body *DBServerInputRequest) (*ProvisionDatabaseResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/dbservers/provision", body)
+	if err != nil {
+		return nil, err
+	}
+	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteCluster(ctx context.Context, body *DeleteClusterInput, id string) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/clusters/%s", id), body)
 	if err != nil {
 		return nil, err
 	}
@@ -1025,5 +1046,14 @@ func (sc ServiceClient) DeleteStretchedVlan(ctx context.Context, id string) (*st
 		return nil, err
 	}
 	res := new(string)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) UpdateCluster(ctx context.Context, req *ClusterUpdateInput, id string) (*ListClusterResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("/clusters/%s", id), req)
+	if err != nil {
+		return nil, err
+	}
+	res := new(ListClusterResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
