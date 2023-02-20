@@ -209,6 +209,8 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_tags":                                dataSourceNutanixNDBTags(),
 			"nutanix_ndb_network":                             dataSourceNutanixEraNetwork(),
 			"nutanix_ndb_networks":                            dataSourceNutanixEraNetworks(),
+			"nutanix_ndb_dbserver":                            dataSourceNutanixNDBDBServer(),
+			"nutanix_ndb_dbservers":                           dataSourceNutanixNDBDBServers(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  resourceNutanixVirtualMachine(),
@@ -255,6 +257,8 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_tms_cluster":                  resourceNutanixNDBTmsCluster(),
 			"nutanix_ndb_tag":                          resourceNutanixNDBTags(),
 			"nutanix_ndb_network":                      resourceNutanixNDBNetwork(),
+			"nutanix_ndb_dbserver_vm":                  resourceNutanixNDBServerVM(),
+			"nutanix_ndb_register_dbserver":            resourceNutanixNDBRegisterDBServer(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

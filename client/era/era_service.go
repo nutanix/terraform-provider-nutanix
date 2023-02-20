@@ -76,6 +76,13 @@ type Service interface {
 	UpdateNetwork(ctx context.Context, body *NetworkIntentInput, id string) (*NetworkIntentResponse, error)
 	DeleteNetwork(ctx context.Context, id string) (*string, error)
 	ListNetwork(ctx context.Context) (*ListNetworkResponse, error)
+	CreateDBServerVM(ctx context.Context, body *DBServerInputRequest) (*ProvisionDatabaseResponse, error)
+	ReadDBServerVM(ctx context.Context, id string) (*DBServerVMResponse, error)
+	UpdateDBServerVM(ctx context.Context, body *UpdateDBServerVMRequest, dbserverid string) (*DBServerVMResponse, error)
+	DeleteDBServerVM(ctx context.Context, req *DeleteDBServerVMRequest, dbserverid string) (*DeleteDatabaseResponse, error)
+	RegisterDBServerVM(ctx context.Context, body *DBServerRegisterInput) (*ProvisionDatabaseResponse, error)
+	GetDBServerVM(ctx context.Context, filter *DBServerFilterRequest) (*DBServerVMResponse, error)
+	ListDBServerVM(ctx context.Context) (*ListDBServerVMResponse, error)
 }
 
 type ServiceClient struct {
@@ -779,7 +786,15 @@ func (sc ServiceClient) DeleteTimeMachineCluster(ctx context.Context, tmsID stri
 	if err != nil {
 		return nil, err
 	}
+	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
 
+func (sc ServiceClient) CreateDBServerVM(ctx context.Context, body *DBServerInputRequest) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/dbservers/provision", body)
+	if err != nil {
+		return nil, err
+	}
 	res := new(ProvisionDatabaseResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
@@ -864,5 +879,101 @@ func (sc ServiceClient) ListNetwork(ctx context.Context) (*ListNetworkResponse, 
 	}
 
 	res := new(ListNetworkResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ReadDBServerVM(ctx context.Context, id string) (*DBServerVMResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/dbservers/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(DBServerVMResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) UpdateDBServerVM(ctx context.Context, body *UpdateDBServerVMRequest, dbServerID string) (*DBServerVMResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("/dbservers/%s", dbServerID), body)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(DBServerVMResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteDBServerVM(ctx context.Context, req *DeleteDBServerVMRequest, dbServerVMID string) (*DeleteDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/dbservers/%s", dbServerVMID), req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(DeleteDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) RegisterDBServerVM(ctx context.Context, body *DBServerRegisterInput) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/dbservers/register", body)
+	if err != nil {
+		return nil, err
+	}
+	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) GetDBServerVM(ctx context.Context, filter *DBServerFilterRequest) (*DBServerVMResponse, error) {
+	var httpReq *http.Request
+	var err error
+
+	path := makeDBServerPath(filter.DBServerClusterID, filter.ID, filter.IP, filter.Name, filter.NxClusterID, filter.VMClusterID, filter.VMClusterName)
+
+	httpReq, err = sc.c.NewRequest(ctx, http.MethodGet, path, nil)
+
+	if err != nil {
+		return nil, err
+	}
+	res := new(DBServerVMResponse)
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func makeDBServerPath(dbserverClsid, id, ip, name, nxClsid, vmclsid, vmclsName *string) string {
+	path := "/dbservers"
+
+	if dbserverClsid != nil {
+		path += fmt.Sprintf("/%s?value-type=dbserver-cluster-id", *dbserverClsid)
+	}
+	if id != nil {
+		path += fmt.Sprintf("/%s?value-type=id", *id)
+	}
+	if ip != nil {
+		path += fmt.Sprintf("/%s?value-type=ip", *ip)
+	}
+	if name != nil {
+		path += fmt.Sprintf("/%s?value-type=name", *name)
+	}
+	if nxClsid != nil {
+		path += fmt.Sprintf("/%s?value-type=nx-cluster-id", *nxClsid)
+	}
+	if vmclsid != nil {
+		path += fmt.Sprintf("/%s?value-type=vm-cluster-id", *vmclsid)
+	}
+	if vmclsName != nil {
+		path += fmt.Sprintf("/%s?value-type=vm-cluster-name", *vmclsName)
+	}
+
+	path += "&load-dbserver-cluster=false&load-databases=false&load-clones=false&load-metrics=false&detailed=false&curator=false&time-zone=UTC"
+
+	return path
+}
+
+func (sc ServiceClient) ListDBServerVM(ctx context.Context) (*ListDBServerVMResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/dbservers?load-dbserver-cluster=false&load-databases=false&load-clones=false&detailed=false&load-metrics=false&time-zone=UTC", nil)
+
+	if err != nil {
+		return nil, err
+	}
+	res := new(ListDBServerVMResponse)
+
 	return res, sc.c.Do(ctx, httpReq, res)
 }

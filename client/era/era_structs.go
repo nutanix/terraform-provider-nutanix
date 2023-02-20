@@ -363,7 +363,7 @@ type DatabaseServerProperties struct {
 	Secure      bool        `json:"secure"`
 	Description interface{} `json:"description"`
 }
-type Metadata struct {
+type DBServerMetadata struct {
 	Physicaleradrive        bool            `json:"physicalEraDrive"`
 	Clustered               bool            `json:"clustered"`
 	Singleinstance          bool            `json:"singleInstance"`
@@ -417,7 +417,7 @@ type Dbservers struct {
 	Tags                     []*Tags                     `json:"tags"`
 	Vminfo                   *VMInfo                     `json:"vmInfo"`
 	Info                     *Info                       `json:"info"`
-	Metadata                 *Metadata                   `json:"metadata"`
+	Metadata                 *DBServerMetadata           `json:"metadata"`
 	Metric                   *Metric                     `json:"metric"`
 	Lcmconfig                *LcmConfig                  `json:"lcmConfig"`
 	TimeMachineInfo          []*Properties               `json:"time_machine_info"`
@@ -745,11 +745,11 @@ type DbserverMetadata struct {
 	// Lastclocksyncalerttime          interface{}     `json:"lastClockSyncAlertTime"`
 }
 
-type VMInfo struct {
-	OsType       *string `json:"osType,omitempty"`
-	OsVersion    *string `json:"osVersion,omitempty"`
-	Distribution *string `json:"distribution,omitempty"`
-}
+// type VMInfo struct {
+// 	OsType       *string `json:"osType,omitempty"`
+// 	OsVersion    *string `json:"osVersion,omitempty"`
+// 	Distribution *string `json:"distribution,omitempty"`
+// }
 
 type MetricVMInfo struct {
 	NumVCPUs              *int    `json:"numVCPUs,omitempty"`
@@ -1598,3 +1598,266 @@ type NetworkIntentResponse struct {
 }
 
 type ListNetworkResponse []*NetworkIntentResponse
+type DBServerInputRequest struct {
+	DatabaseType             *string            `json:"databaseType,omitempty"`
+	SoftwareProfileID        *string            `json:"softwareProfileId,omitempty"`
+	SoftwareProfileVersionID *string            `json:"softwareProfileVersionId,omitempty"`
+	NetworkProfileID         *string            `json:"networkProfileId,omitempty"`
+	ComputeProfileID         *string            `json:"computeProfileId,omitempty"`
+	VMPassword               *string            `json:"vmPassword,omitempty"`
+	NxClusterID              *string            `json:"nxClusterId,omitempty"`
+	LatestSnapshot           bool               `json:"latestSnapshot,omitempty"`
+	ActionArguments          []*Actionarguments `json:"actionArguments,omitempty"`
+	Description              *string            `json:"description,omitempty"`
+	TimeMachineID            *string            `json:"timeMachineId,omitempty"`
+	SnapshotID               *string            `json:"snapshotId,omitempty"`
+	TimeZone                 *string            `json:"timeZone,omitempty"`
+	MaintenanceTasks         *MaintenanceTasks  `json:"maintenanceTasks,omitempty"`
+}
+
+type DeleteDBServerVMRequest struct {
+	SoftRemove        bool `json:"softRemove,omitempty"`
+	Remove            bool `json:"remove,omitempty"`
+	Delete            bool `json:"delete,omitempty"`
+	DeleteVgs         bool `json:"deleteVgs,omitempty"`
+	DeleteVMSnapshots bool `json:"deleteVmSnapshots,omitempty"`
+}
+
+type VMCredentials struct {
+	Username *string     `json:"username,omitempty"`
+	Password *string     `json:"password,omitempty"`
+	Label    interface{} `json:"label,omitempty"`
+}
+
+type UpdateDBServerVMRequest struct {
+	Name                        *string          `json:"name,omitempty"`
+	Description                 *string          `json:"description,omitempty"`
+	ResetNameInNxCluster        *bool            `json:"resetNameInNxCluster,omitempty"`
+	ResetDescriptionInNxCluster *bool            `json:"resetDescriptionInNxCluster,omitempty"`
+	ResetCredential             *bool            `json:"resetCredential,omitempty"`
+	ResetTags                   *bool            `json:"resetTags,omitempty"`
+	ResetName                   *bool            `json:"resetName,omitempty"`
+	ResetDescription            *bool            `json:"resetDescription,omitempty"`
+	Tags                        []*Tags          `json:"tags,omitempty"`
+	Credentials                 []*VMCredentials `json:"credentials,omitempty"`
+}
+
+type DiskList struct {
+	DeviceName    *string `json:"device_name,omitempty"`
+	LocalMapping  *string `json:"local_mapping,omitempty"`
+	DiskIndex     *string `json:"disk_index,omitempty"`
+	Path          *string `json:"path,omitempty"`
+	DiskID        *string `json:"disk_id,omitempty"`
+	Hypervisor    *string `json:"hypervisor,omitempty"`
+	MountPoint    *string `json:"mount_point,omitempty"`
+	DiskUUID      *string `json:"disk_uuid,omitempty"`
+	DiskUser      *string `json:"disk_user,omitempty"`
+	DiskGroup     *string `json:"disk_group,omitempty"`
+	DiskMode      *string `json:"disk_mode,omitempty"`
+	DiskType      *string `json:"disk_type,omitempty"`
+	VirtualDiskID *string `json:"virtual_disk_id,omitempty"`
+	FsType        *string `json:"fs_type,omitempty"`
+	Size          *string `json:"size,omitempty"`
+	DateCreated   *string `json:"date_created,omitempty"`
+	IsEncrypted   bool    `json:"is_encrypted,omitempty"`
+}
+
+type StorageProfileVGList struct {
+	Name          *string     `json:"name,omitempty"`
+	VgID          *string     `json:"vg_id,omitempty"`
+	VgType        *string     `json:"vg_type,omitempty"`
+	VgIscsiTarget *string     `json:"vg_iscsi_target,omitempty"`
+	DiskList      []*DiskList `json:"disk_list,omitempty"`
+}
+
+type StorageProfile struct {
+	HostOsType      *string                 `json:"host_os_type,omitempty"`
+	Hypervisor      *string                 `json:"hypervisor,omitempty"`
+	IsEraDriveOnEsx *bool                   `json:"is_era_drive_on_esx,omitempty"`
+	LvmBased        *bool                   `json:"lvm_based,omitempty"`
+	LvPath          []*string               `json:"lv_path,omitempty"`
+	DiskList        []interface{}           `json:"disk_list,omitempty"`
+	VgList          []*StorageProfileVGList `json:"vg_list,omitempty"`
+}
+
+type DriveSoftware struct {
+	StorageProfile *StorageProfile `json:"storage_profile,omitempty"`
+}
+
+type DriveStorageInfo struct {
+	AttachedVM *string        `json:"attachedVm,omitempty"`
+	VgName     *string        `json:"vgName,omitempty"`
+	VgUUID     *string        `json:"vgUuid,omitempty"`
+	PdName     *string        `json:"pdName,omitempty"`
+	Software   *DriveSoftware `json:"software,omitempty"`
+}
+
+type DriveInfo struct {
+	StorageInfo   *DriveStorageInfo `json:"storage_info,omitempty"`
+	SourceEraPath *string           `json:"source_era_path,omitempty"`
+}
+
+type Disks struct {
+	ID            *string     `json:"id,omitempty"`
+	VdiskUUID     *string     `json:"vdiskUuid,omitempty"`
+	TimeMachineID interface{} `json:"timeMachineId,omitempty"`
+	EraDriveID    *string     `json:"eraDriveId,omitempty"`
+	EraCreated    *string     `json:"eraCreated,omitempty"`
+	Status        *string     `json:"status,omitempty"`
+	Type          *string     `json:"type,omitempty"`
+	TotalSize     int         `json:"totalSize,omitempty"`
+	UsedSize      int         `json:"usedSize,omitempty"`
+	Info          interface{} `json:"info,omitempty"`
+	DateCreated   *string     `json:"dateCreated,omitempty"`
+	DateModified  *string     `json:"dateModified,omitempty"`
+	OwnerID       *string     `json:"ownerId,omitempty"`
+	Message       interface{} `json:"message,omitempty"`
+}
+
+type Drive struct {
+	ID                 *string     `json:"id,omitempty"`
+	Path               *string     `json:"path,omitempty"`
+	HostID             *string     `json:"hostId,omitempty"`
+	VgUUID             *string     `json:"vgUuid,omitempty"`
+	ClusterID          string      `json:"clusterId,omitempty"`
+	ProtectionDomainID *string     `json:"protectionDomainId,omitempty"`
+	EraCreated         bool        `json:"eraCreated,omitempty"`
+	Status             *string     `json:"status,omitempty"`
+	TotalSize          int         `json:"totalSize,omitempty"`
+	UsedSize           int         `json:"usedSize,omitempty"`
+	Info               *DriveInfo  `json:"info,omitempty"`
+	DateCreated        *string     `json:"dateCreated,omitempty"`
+	DateModified       *string     `json:"dateModified,omitempty"`
+	OwnerID            *string     `json:"ownerId,omitempty"`
+	Metadata           interface{} `json:"metadata,omitempty"`
+	EraDisks           []*Disks    `json:"eraDisks,omitempty"`
+	ProtectionDomain   interface{} `json:"protectionDomain,omitempty"`
+	Message            interface{} `json:"message,omitempty"`
+}
+
+type SoftwareInstallationsInfo struct {
+	Owner *string `json:"owner,omitempty"`
+}
+type SoftwareInstallations struct {
+	ID                       *string                    `json:"id,omitempty"`
+	Name                     *string                    `json:"name,omitempty"`
+	EraCreated               bool                       `json:"eraCreated,omitempty"`
+	Type                     *string                    `json:"type,omitempty"`
+	DbserverID               *string                    `json:"dbserverId,omitempty"`
+	SoftwareProfileID        *string                    `json:"softwareProfileId,omitempty"`
+	SoftwareProfileVersionID *string                    `json:"softwareProfileVersionId,omitempty"`
+	Version                  *string                    `json:"version,omitempty"`
+	OwnerID                  *string                    `json:"ownerId,omitempty"`
+	Info                     *SoftwareInstallationsInfo `json:"info,omitempty"`
+	Metadata                 interface{}                `json:"metadata,omitempty"`
+	DateCreated              *string                    `json:"dateCreated,omitempty"`
+	DateModified             *string                    `json:"dateModified,omitempty"`
+}
+
+type DBServerVMResponse struct {
+	ID                         *string                     `json:"id,omitempty"`
+	Name                       *string                     `json:"name,omitempty"`
+	Description                *string                     `json:"description,omitempty"`
+	OwnerID                    *string                     `json:"ownerId,omitempty"`
+	DateCreated                *string                     `json:"dateCreated,omitempty"`
+	DateModified               *string                     `json:"dateModified,omitempty"`
+	DbserverClusterID          *string                     `json:"dbserverClusterId,omitempty"`
+	VMClusterName              *string                     `json:"vmClusterName,omitempty"`
+	VMClusterUUID              *string                     `json:"vmClusterUuid,omitempty"`
+	Status                     *string                     `json:"status,omitempty"`
+	ClientID                   *string                     `json:"clientId,omitempty"`
+	NxClusterID                *string                     `json:"nxClusterId,omitempty"`
+	EraDriveID                 *string                     `json:"eraDriveId,omitempty"`
+	EraVersion                 *string                     `json:"eraVersion,omitempty"`
+	VMTimeZone                 *string                     `json:"vmTimeZone,omitempty"`
+	WorkingDirectory           *string                     `json:"workingDirectory,omitempty"`
+	Type                       *string                     `json:"type,omitempty"`
+	DatabaseType               *string                     `json:"databaseType,omitempty"`
+	AccessKeyID                *string                     `json:"accessKeyId,omitempty"`
+	DbserverInValidEaState     *bool                       `json:"dbserverInValidEaState,omitempty"`
+	ValidDiagnosticBundleState *bool                       `json:"validDiagnosticBundleState,omitempty"`
+	WindowsDBServer            *bool                       `json:"windowsDBServer,omitempty"`
+	EraCreated                 *bool                       `json:"eraCreated,omitempty"`
+	Internal                   *bool                       `json:"internal,omitempty"`
+	Placeholder                *bool                       `json:"placeholder,omitempty"`
+	Clustered                  *bool                       `json:"clustered,omitempty"`
+	IsServerDriven             *bool                       `json:"is_server_driven,omitempty"`
+	QueryCount                 *int                        `json:"queryCount,omitempty"`
+	IPAddresses                []*string                   `json:"ipAddresses,omitempty"`
+	AssociatedTimeMachineIds   []*string                   `json:"associatedTimeMachineIds,omitempty"`
+	MacAddresses               []*string                   `json:"macAddresses,omitempty"`
+	VMInfo                     *VMInfo                     `json:"vmInfo,omitempty"`
+	Metadata                   *DBServerMetadata           `json:"metadata,omitempty"`
+	Metric                     *Metric                     `json:"metric,omitempty"`
+	LcmConfig                  *LcmConfig                  `json:"lcmConfig,omitempty"`
+	EraDrive                   *Drive                      `json:"eraDrive,omitempty"`
+	SoftwareInstallations      []*SoftwareInstallations    `json:"softwareInstallations,omitempty"`
+	Properties                 []*DatabaseServerProperties `json:"properties,omitempty"`
+	Tags                       []*Tags                     `json:"tags,omitempty"`
+	Databases                  interface{}                 `json:"databases,omitempty"`
+	Clones                     interface{}                 `json:"clones,omitempty"`
+	AccessKey                  interface{}                 `json:"accessKey,omitempty"`
+	ProtectionDomainID         interface{}                 `json:"protectionDomainId,omitempty"`
+	AccessLevel                interface{}                 `json:"accessLevel,omitempty"`
+	Fqdns                      interface{}                 `json:"fqdns,omitempty"`
+	Info                       interface{}                 `json:"info,omitempty"`
+	RequestedVersion           interface{}                 `json:"requestedVersion,omitempty"`
+	AssociatedTimeMachineID    interface{}                 `json:"associated_time_machine_id,omitempty"`
+	TimeMachineInfo            interface{}                 `json:"time_machine_info,omitempty"`
+	ProtectionDomain           interface{}                 `json:"protectionDomain,omitempty"`
+}
+
+type ListDBServerVMResponse []DBServerVMResponse
+
+type AccessInfo struct {
+	AccessType        *string `json:"accessType,omitempty"`
+	DestinationSubnet *string `json:"destinationSubnet,omitempty"`
+}
+type NetworkInfo struct {
+	VlanName             *string       `json:"vlanName,omitempty"`
+	VlanUUID             *string       `json:"vlanUuid,omitempty"`
+	VlanType             *string       `json:"vlanType,omitempty"`
+	Gateway              *string       `json:"gateway,omitempty"`
+	SubnetMask           *string       `json:"subnetMask,omitempty"`
+	Hostname             *string       `json:"hostname,omitempty"`
+	DeviceName           *string       `json:"deviceName,omitempty"`
+	MacAddress           *string       `json:"macAddress,omitempty"`
+	Flags                *string       `json:"flags,omitempty"`
+	Mtu                  *string       `json:"mtu,omitempty"`
+	DefaultGatewayDevice *bool         `json:"defaultGatewayDevice,omitempty"`
+	EraConfigured        *bool         `json:"eraConfigured,omitempty"`
+	IPAddresses          []*string     `json:"ipAddresses,omitempty"`
+	AccessInfo           []*AccessInfo `json:"accessInfo,omitempty"`
+}
+
+type VMInfo struct {
+	OsType         *string         `json:"osType,omitempty"`
+	OsVersion      *string         `json:"osVersion,omitempty"`
+	Distribution   *string         `json:"distribution,omitempty"`
+	SecureInfo     interface{}     `json:"secureInfo,omitempty"`
+	Info           interface{}     `json:"info,omitempty"`
+	DeregisterInfo *DeregisterInfo `json:"deregisterInfo,omitempty"`
+	NetworkInfo    []*NetworkInfo  `json:"networkInfo,omitempty"`
+}
+
+type DBServerRegisterInput struct {
+	DatabaseType     *string            `json:"databaseType,omitempty"`
+	VMIP             *string            `json:"vmIp,omitempty"`
+	NxClusterUUID    *string            `json:"nxClusterUuid,omitempty"`
+	ForcedInstall    *bool              `json:"forcedInstall,omitempty"`
+	WorkingDirectory *string            `json:"workingDirectory,omitempty"`
+	Username         *string            `json:"username,omitempty"`
+	Password         *string            `json:"password,omitempty"`
+	SSHPrivateKey    *string            `json:"sshPrivateKey,omitempty"`
+	ActionArguments  []*Actionarguments `json:"actionArguments,omitempty"`
+}
+
+type DBServerFilterRequest struct {
+	ID                *string `json:"id,omitempty"`
+	Name              *string `json:"name,omitempty"`
+	IP                *string `json:"ip,omitempty"`
+	VMClusterName     *string `json:"vm-cluster-name,omitempty"`
+	VMClusterID       *string `json:"vm-cluster-uuid,omitempty"`
+	DBServerClusterID *string `json:"dbserver-cluster-id,omitempty"`
+	NxClusterID       *string `json:"nx-cluster-id,omitempty"`
+}
