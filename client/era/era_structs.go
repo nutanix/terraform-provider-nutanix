@@ -1557,3 +1557,44 @@ type GetTagsResponse struct {
 }
 
 type ListTagsResponse []*GetTagsResponse
+type IPAddresses struct {
+	IP     *string `json:"ip,omitempty"`
+	Status *string `json:"status,omitempty"`
+}
+
+type IPPools struct {
+	StartIP     *string        `json:"startIP,omitempty"`
+	EndIP       *string        `json:"endIP,omitempty"`
+	ID          *string        `json:"id,omitempty"`
+	ModifiedBy  *string        `json:"modifiedBy,omitempty"`
+	IPAddresses []*IPAddresses `json:"ipAddresses,omitempty"`
+}
+
+type NetworkIntentInput struct {
+	Name       *string       `json:"name,omitempty"`
+	Type       *string       `json:"type,omitempty"`
+	Properties []*Properties `json:"properties,omitempty"`
+	ClusterID  *string       `json:"clusterId,omitempty"`
+	IPPools    []*IPPools    `json:"ipPools,omitempty"`
+}
+
+type NetworkPropertiesmap struct {
+	VLANSecondaryDNS *string `json:"VLAN_SECONDARY_DNS,omitempty"`
+	VLANSubnetMask   *string `json:"VLAN_SUBNET_MASK,omitempty"`
+	VLANPrimaryDNS   *string `json:"VLAN_PRIMARY_DNS,omitempty"`
+	VLANGateway      *string `json:"VLAN_GATEWAY,omitempty"`
+}
+
+type NetworkIntentResponse struct {
+	ID              *string               `json:"id,omitempty"`
+	Name            *string               `json:"name,omitempty"`
+	Type            *string               `json:"type,omitempty"`
+	ClusterID       *string               `json:"clusterId,omitempty"`
+	Managed         *bool                 `json:"managed,omitempty"`
+	Properties      []*Properties         `json:"properties,omitempty"`
+	PropertiesMap   *NetworkPropertiesmap `json:"propertiesMap,omitempty"`
+	StretchedVlanID *string               `json:"stretchedVlanId,omitempty"`
+	IPPools         []*IPPools            `json:"ipPools,omitempty"`
+}
+
+type ListNetworkResponse []*NetworkIntentResponse
