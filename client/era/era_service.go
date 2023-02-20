@@ -62,6 +62,10 @@ type Service interface {
 	DeleteMaintenanceWindow(ctx context.Context, id string) (*AuthorizeDBServerResponse, error)
 	ListMaintenanceWindow(ctx context.Context) (*ListMaintenanceWindowResponse, error)
 	CreateMaintenanceTask(ctx context.Context, body *MaintenanceTasksInput) (*ListMaintenanceTasksResponse, error)
+	CreateTimeMachineCluster(ctx context.Context, tmsID string, body *TmsClusterIntentInput) (*TmsClusterResponse, error)
+	ReadTimeMachineCluster(ctx context.Context, tmsID string, clsID string) (*TmsClusterResponse, error)
+	UpdateTimeMachineCluster(ctx context.Context, tmsID string, clsID string, body *TmsClusterIntentInput) (*TmsClusterResponse, error)
+	DeleteTimeMachineCluster(ctx context.Context, tmsID string, clsID string, body *DeleteTmsClusterInput) (*ProvisionDatabaseResponse, error)
 }
 
 type ServiceClient struct {
@@ -709,5 +713,45 @@ func (sc ServiceClient) CreateMaintenanceTask(ctx context.Context, req *Maintena
 	}
 
 	res := new(ListMaintenanceTasksResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) CreateTimeMachineCluster(ctx context.Context, tmsID string, body *TmsClusterIntentInput) (*TmsClusterResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/tms/%s/clusters", tmsID), body)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(TmsClusterResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ReadTimeMachineCluster(ctx context.Context, tmsID string, clsID string) (*TmsClusterResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/tms/%s/clusters/%s", tmsID, clsID), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(TmsClusterResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) UpdateTimeMachineCluster(ctx context.Context, tmsID string, clsID string, body *TmsClusterIntentInput) (*TmsClusterResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("/tms/%s/clusters/%s", tmsID, clsID), body)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(TmsClusterResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteTimeMachineCluster(ctx context.Context, tmsID string, clsID string, body *DeleteTmsClusterInput) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/tms/%s/clusters/%s", tmsID, clsID), body)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ProvisionDatabaseResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
