@@ -1885,3 +1885,9 @@ type StretchedVlanResponse struct {
 	Vlans       []*NetworkIntentResponse `json:"vlans,omitempty"`
 	VlanIDs     []*string                `json:"vlanIds,omitempty"`
 }
+
+type CloneRefreshInput struct {
+	SnapshotID        *string `json:"snapshotId,omitempty"`
+	UserPitrTimestamp *string `json:"userPitrTimestamp,omitempty"`
+	Timezone          *string `json:"timeZone,omitempty"`
+}
