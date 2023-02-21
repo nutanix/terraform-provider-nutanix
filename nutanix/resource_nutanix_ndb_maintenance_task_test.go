@@ -109,7 +109,7 @@ func testAccEraMaintenanceTask(name, desc string) string {
 
 		resource nutanix_ndb_maintenance_task acctest-managed{
 			dbserver_id = [
-				"data.nutanix_ndb_dbservers.dbservers.dbservers.0.id"
+				data.nutanix_ndb_dbservers.dbservers.dbservers.0.id
 			]
 			maintenance_window_id = resource.nutanix_ndb_maintenance_window.acctest-managed.id
 			tasks{
@@ -137,7 +137,7 @@ func testAccEraMaintenanceTaskUpdate(name, desc string) string {
 
 		resource nutanix_ndb_maintenance_task acctest-managed{
 			dbserver_id = [
-				"data.nutanix_ndb_dbservers.dbservers.dbservers.0.id"
+				data.nutanix_ndb_dbservers.dbservers.dbservers.0.id
 			]
 			maintenance_window_id = resource.nutanix_ndb_maintenance_window.acctest-managed.id
 			tasks {
@@ -162,7 +162,7 @@ func testAccEraMaintenanceTaskUpdateWithNoTask(name, desc string) string {
 
 		resource nutanix_ndb_maintenance_task acctest-managed{
 			dbserver_id = [
-				"data.nutanix_ndb_dbservers.dbservers.dbservers.0.id"
+				data.nutanix_ndb_dbservers.dbservers.dbservers.0.id
 			]
 			maintenance_window_id = resource.nutanix_ndb_maintenance_window.acctest-managed.id
 		}

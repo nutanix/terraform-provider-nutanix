@@ -77,7 +77,9 @@ Foundation Central based modules and examples : Foundation based modules & examp
 
 > For the 1.8.0-beta.2 release of the provider, it will have N-2 compatibilty with the Nutanix Database Service. This release was tested with v2.5.1.1 , v2.5.0.2 and v2.4.1
 
-Note: For 1.8.0-beta.2 release, only postgress database type is qualified and officially supported.
+> For the 1.8.0 release of the provider, it will have N-1 compatibility with the Nutanix database service. This release was tested with v2.5.1 and v2.5 versions.
+
+Note: For 1.8.0 release, only postgress database type is qualified and officially supported.
 
 Checkout example : https://github.com/nutanix/terraform-provider-nutanix/blob/master/examples/ndb/database_instance
 
@@ -196,6 +198,16 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 * nutanix_ndb_register_database
 * nutanix_ndb_sla
 * nutanix_ndb_software_version_profile
+* nutanix_ndb_tms_cluster
+* nutanix_ndb_tag
+* nutanix_ndb_dbserver_vm
+* nutanix_ndb_register_dbserver
+* nutanix_ndb_clone_refresh
+* nutanix_ndb_network
+* nutanix_ndb_stretched_vlan
+* nutanix_ndb_cluster
+* nutanix_ndb_maintenance_task
+* nutanix_ndb_maintenance_window
 
 ## Data Sources
 
@@ -265,6 +277,14 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 * nutanix_ndb_tms_capability
 * nutanix_ndb_time_machine
 * nutanix_ndb_time_machines
+* nutanix_ndb_dbserver
+* nutanix_ndb_dbservers
+* nutanix_ndb_tag
+* nutanix_ndb_tags
+* nutanix_ndb_network
+* nutanix_ndb_networks
+* nutanix_ndb_maintenance_window
+* nutanix_ndb_maintenance_windows
 
 ## Quick Install
 

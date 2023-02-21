@@ -49,8 +49,8 @@ Provides a resource to perform the clone of database instance based on the input
 * `node_count`: Node count. Default is 1 for single instance
 * `nodes`: Nodes contain info about dbservers vm
 * `lcm_config`: LCM Config contains the expiry details and refresh details
-* `name`: Clone name
-* `description`: Clone description
+* `name`: database instance name
+* `description`: database instance description
 * `nx_cluster_id`: cluster id on where clone will be present
 * `ssh_public_key`: ssh public key
 * `compute_profile_id`: specify the compute profile id
