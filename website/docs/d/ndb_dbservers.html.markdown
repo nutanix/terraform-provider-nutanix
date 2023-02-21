@@ -28,20 +28,16 @@ The following attributes are exported:
 
 * `name`: name of dbserver vm
 * `description`: description of dbserver vm
-* `owner_id`: owner id
 * `description`: description of db server vm
 * `date_created`: date created of db server vm
 * `date_modified`: date modified of db server vm
 * `access_level`: access level
 * `properties`: properties of db server vm
 * `tags`: tags for db server vm
-* `era_created`: created by ndb or not
-* `internal`: is internal or not.
 * `vm_cluster_uuid`: clusetr uuid for dbserver vm
 * `ip_addresses`: IP addresses of the dbserver vm
 * `mac_addresses`: Mac addresses of dbserver vm
 * `type`: Type of entity. i.e. Dbserver
-* `placeholder`: placeholder for dbserver
 * `status`: Status of Dbserver . Active or not.
 * `client_id`:  client id
 * `era_drive_id`: era drive id

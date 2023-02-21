@@ -194,10 +194,6 @@ func resourceNutanixNDBRegisterDBServer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"placeholder": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,

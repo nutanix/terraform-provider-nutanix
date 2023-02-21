@@ -47,7 +47,6 @@ Provides a resource to perform the snapshot for database instance based on the i
 * `id`: name of snapshot
 * `description`: description of snapshot
 * `properties`: properties 
-* `owner_id`: owner id 
 * `date_created`: created date
 * `date_modified`: modified date
 * `properties`: properties 

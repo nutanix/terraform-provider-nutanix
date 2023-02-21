@@ -79,10 +79,6 @@ func resourceNutanixNDBDatabaseRestore() *schema.Resource {
 					},
 				},
 			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -93,18 +89,6 @@ func resourceNutanixNDBDatabaseRestore() *schema.Resource {
 			},
 			"tags": dataSourceEraDBInstanceTags(),
 			"clone": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"era_created": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"internal": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"placeholder": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -128,10 +112,6 @@ func resourceNutanixNDBDatabaseRestore() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"dbserver_logical_cluster_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -140,18 +120,7 @@ func resourceNutanixNDBDatabaseRestore() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"parent_time_machine_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"info": dataSourceEraDatabaseInfo(),
-			"group_info": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
+			"info":     dataSourceEraDatabaseInfo(),
 			"metadata": dataSourceEraDBInstanceMetadata(),
 			"metric": {
 				Type:     schema.TypeMap,
@@ -160,15 +129,7 @@ func resourceNutanixNDBDatabaseRestore() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"category": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"parent_database_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"parent_source_database_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

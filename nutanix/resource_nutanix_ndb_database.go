@@ -354,11 +354,6 @@ func resourceDatabaseInstance() *schema.Resource {
 			},
 
 			// Computed values
-
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -369,18 +364,6 @@ func resourceDatabaseInstance() *schema.Resource {
 			},
 			"tags": dataSourceEraDBInstanceTags(),
 			"clone": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"era_created": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"internal": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"placeholder": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -400,10 +383,6 @@ func resourceDatabaseInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"dbserver_logical_cluster_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -412,22 +391,11 @@ func resourceDatabaseInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"parent_time_machine_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"time_zone": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"info": dataSourceEraDatabaseInfo(),
-			"group_info": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
+			"info":     dataSourceEraDatabaseInfo(),
 			"metadata": dataSourceEraDBInstanceMetadata(),
 			"metric": {
 				Type:     schema.TypeMap,
@@ -436,15 +404,7 @@ func resourceDatabaseInstance() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"category": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"parent_database_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"parent_source_database_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -591,14 +551,6 @@ func readDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interfa
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("internal", resp.Internal); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("placeholder", resp.Placeholder); err != nil {
-			return diag.FromErr(err)
-		}
-
 		if err := d.Set("database_name", resp.Databasename); err != nil {
 			return diag.FromErr(err)
 		}
@@ -615,19 +567,11 @@ func readDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interfa
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("database_status", resp.Databasestatus); err != nil {
-			return diag.FromErr(err)
-		}
-
 		if err := d.Set("dbserver_logical_cluster_id", resp.Dbserverlogicalclusterid); err != nil {
 			return diag.FromErr(err)
 		}
 
 		if err := d.Set("time_machine_id", resp.Timemachineid); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("parent_time_machine_id", resp.Parenttimemachineid); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -639,10 +583,6 @@ func readDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interfa
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("group_info", resp.GroupInfo); err != nil {
-			return diag.FromErr(err)
-		}
-
 		if err := d.Set("metadata", flattenDBInstanceMetadata(resp.Metadata)); err != nil {
 			return diag.FromErr(err)
 		}
@@ -651,15 +591,7 @@ func readDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interfa
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("category", resp.Category); err != nil {
-			return diag.FromErr(err)
-		}
-
 		if err := d.Set("parent_database_id", resp.ParentDatabaseID); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("parent_source_database_id", resp.ParentSourceDatabaseID); err != nil {
 			return diag.FromErr(err)
 		}
 

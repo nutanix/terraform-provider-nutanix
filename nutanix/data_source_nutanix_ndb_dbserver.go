@@ -46,10 +46,6 @@ func dataSourceNutanixNDBDBServer() *schema.Resource {
 				Optional: true,
 			},
 			// computed
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -87,14 +83,6 @@ func dataSourceNutanixNDBDBServer() *schema.Resource {
 				},
 			},
 			"tags": dataSourceEraDBInstanceTags(),
-			"era_created": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"internal": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
 			"vm_cluster_uuid": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -119,10 +107,6 @@ func dataSourceNutanixNDBDBServer() *schema.Resource {
 			},
 			"type": {
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"placeholder": {
-				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"status": {
@@ -452,10 +436,6 @@ func dataSourceNutanixNDBDBServerRead(ctx context.Context, d *schema.ResourceDat
 	if err := d.Set("name", resp.Name); err != nil {
 		return diag.FromErr(err)
 	}
-
-	if err := d.Set("owner_id", resp.OwnerID); err != nil {
-		return diag.FromErr(err)
-	}
 	if err := d.Set("description", resp.Description); err != nil {
 		return diag.FromErr(err)
 	}
@@ -469,13 +449,7 @@ func dataSourceNutanixNDBDBServerRead(ctx context.Context, d *schema.ResourceDat
 	if err := d.Set("access_level", resp.AccessLevel); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("era_created", resp.EraCreated); err != nil {
-		return diag.FromErr(err)
-	}
 
-	if err := d.Set("internal", resp.Internal); err != nil {
-		return diag.FromErr(err)
-	}
 	if err := d.Set("vm_cluster_uuid", resp.VMClusterUUID); err != nil {
 		return diag.FromErr(err)
 	}
@@ -490,10 +464,6 @@ func dataSourceNutanixNDBDBServerRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 	if err := d.Set("type", resp.Type); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("placeholder", resp.Placeholder); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("status", resp.Status); err != nil {

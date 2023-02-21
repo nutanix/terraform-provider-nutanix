@@ -88,15 +88,12 @@ Structure for each action argument in actionarguments list:
 
 * `name`: name of the dbserver vm
 * `properties`: Properties of dbserver vm
-* `era_created`: created by era or not.
-*  `internal`: is internal or not.
 * `dbserver_cluster_id`: dbserver cluster id.
 * `vm_cluster_name`: cluster name for dbserver vm
 * `vm_cluster_uuid`: clusetr uuid for dbserver vm
 * `ip_addresses`: IP addresses of the dbserver vm
 * `mac_addresses`: Mac addresses of dbserver vm
 * `type`: Type of entity. i.e. Dbserver
-* `placeholder`: placeholder for dbserver
 * `status`: Status of Dbserver . Active or not.
 * `client_id`:  client id
 * `era_drive_id`: era drive id
