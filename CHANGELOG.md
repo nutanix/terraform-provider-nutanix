@@ -1,3 +1,32 @@
+## 1.8.0 (Feb 22, 2023)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.8.0-beta.3...v1.8.0)
+
+**New Features:**
+- Feat/1.8.0-ga Release with Nutanix Database Service based resource and datasources [\#553](https://github.com/nutanix/terraform-provider-nutanix/pull/553)
+
+    New Resources:
+    - nutanix_ndb_maintenance_window
+    - nutanix_ndb_maintenance_task
+    - nutanix_ndb_tms_cluster
+    - nutanix_ndb_tag
+    - nutanix_ndb_network
+    - nutanix_ndb_dbserver_vm
+    - nutanix_ndb_register_dbserver
+    - nutanix_ndb_stretched_vlan
+    - nutanix_ndb_clone_refresh
+    - nutanix_ndb_cluster
+
+    New Data Sources:
+    - nutanix_ndb_maintenance_window
+    - nutanix_ndb_maintenance_windows
+    - nutanix_ndb_tag
+    - nutanix_ndb_tags
+    - nutanix_ndb_network
+    - nutanix_ndb_networks
+    - nutanix_ndb_dbserver
+    - nutanix_ndb_dbservers
+    
+
 ## 1.8.0-beta-2 (Jan 20, 2023)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.8.0-beta.1...v1.8.0-beta.2)
 
