@@ -94,26 +94,17 @@ Structure for each action argument in actionarguments list:
 
 ## Attributes Reference
 
-* `owner_id`: owner id
 * `date_created`: date created for clone
 * `date_modified`: last modified date for clone
 * `tags`: allows you to assign metadata to entities (clones, time machines, databases, and database servers) by using tags.
 * `clone`: cloned or not
-* `era_created`: era created or not
-* `internal`: internal
-* `placeholder`: placeholder
 * `database_name`: database name
 * `type`: type of clone
 * `database_cluster_type`: database cluster type
 * `status`: status of clone
-* `database_status`: database status 
 * `info`: info of clone
-* `group_info`: group info of clone
 * `metadata`: metadata about clone
 * `metric`: Stores storage info regarding size, allocatedSize, usedSize and unit of calculation that seems to have been fetched from PRISM.
-* `category`:category of clone
-* `parent_database_id`: parent database id
-* `parent_source_database_id`: parent source database id
 * `dbserver_logical_cluster`: dbserver logical cluster
 * `database_nodes`: database nodes associated with database instance 
 * `linked_databases`: linked databases within database instance

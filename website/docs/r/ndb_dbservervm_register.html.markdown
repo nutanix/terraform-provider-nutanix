@@ -65,7 +65,6 @@ Structure for each action argument in actionarguments list:
 * `ip_addresses`: IP addresses of the dbserver vm
 * `mac_addresses`: Mac addresses of dbserver vm
 * `type`: Type of entity. i.e. Dbserver
-* `placeholder`: placeholder for dbserver
 * `status`: Status of Dbserver . Active or not.
 * `client_id`:  client id
 * `era_drive_id`: era drive id
