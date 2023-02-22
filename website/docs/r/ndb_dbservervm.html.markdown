@@ -70,6 +70,14 @@ The following arguments are supported:
 * `postgres_database`: (Optional) Postgres database server vm
 * `maintenance_tasks`: (Optional) maintenance window configured to enable automated patching.
 
+
+* `delete`:- (Optional) Delete the VM and associated storage. Default value is true
+* `remove`:- (Optional) Unregister the database from NDB. Default value is false
+* `soft_remove`:- (Optional) Soft remove. Default will be false
+* `delete_vgs`:- (Optional) Delete volume grous. Default value is true
+* `delete_vm_snapshots`:- (Optional) Delete the vm snapshots. Default is true
+
+
 ### postgres_database
 * `vm_name`: (Required) name for the database server VM.
 * `client_public_key`: (Required) use SSH public keys to access the database server VM.

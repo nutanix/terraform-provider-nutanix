@@ -61,7 +61,6 @@ Describes the clone present in Nutanix Database Service
 * `parent_time_machine_id`: parent time machine id
 * `time_zone`: time zone
 * `info`: cloned info 
-* `metadata`: metadata of clone
 * `metric`: Metric of clone
 * `parent_database_id`: parent database id
 * `parent_source_database_id`: parent source database id

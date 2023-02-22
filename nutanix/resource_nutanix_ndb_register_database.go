@@ -207,10 +207,6 @@ func resourceNutanixNDBRegisterDatabase() *schema.Resource {
 					},
 				},
 			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"time_machine": dataSourceEraTimeMachine(),
 			"date_created": {
 				Type:     schema.TypeString,
@@ -221,18 +217,6 @@ func resourceNutanixNDBRegisterDatabase() *schema.Resource {
 				Computed: true,
 			},
 			"clone": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"era_created": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"internal": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"placeholder": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -276,7 +260,6 @@ func resourceNutanixNDBRegisterDatabase() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"metadata": dataSourceEraDBInstanceMetadata(),
 			"metric": {
 				Type:     schema.TypeMap,
 				Computed: true,

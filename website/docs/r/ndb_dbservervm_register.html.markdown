@@ -45,6 +45,12 @@ The following arguments are supported:
 * `working_directory`: (Optional) working directory of postgres. Default is "/tmp"
 * `forced_install`: (Optional) forced install the packages. Default is true 
 
+* `delete`:- (Optional) Delete the VM and associated storage. Default value is false
+* `remove`:- (Optional) Unregister the database from NDB. Default value is true
+* `soft_remove`:- (Optional) Soft remove. Default will be false
+* `delete_vgs`:- (Optional) Delete volume grous. Default value is true
+* `delete_vm_snapshots`:- (Optional) Delete the vm snapshots. Default is true
+
 
 ### postgres_database
 * `listener_port`: (Optional) listener port of db server

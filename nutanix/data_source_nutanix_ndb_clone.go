@@ -119,8 +119,7 @@ func dataSourceNutanixNDBClone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"info":     dataSourceEraDatabaseInfo(),
-			"metadata": dataSourceEraDBInstanceMetadata(),
+			"info": dataSourceEraDatabaseInfo(),
 			"metric": {
 				Type:     schema.TypeMap,
 				Computed: true,
@@ -274,10 +273,6 @@ func dataSourceNutanixNDBCloneRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err := d.Set("info", flattenDBInfo(resp.Info)); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("metadata", flattenDBInstanceMetadata(resp.Metadata)); err != nil {
 		return diag.FromErr(err)
 	}
 

@@ -14,7 +14,6 @@ func TestAccEraDatabaseDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEraDatabaseDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.nutanix_ndb_database.test", "metadata.#", "1"),
 					resource.TestCheckResourceAttr("data.nutanix_ndb_database.test", "time_zone", "UTC"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_database.test", "name"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_database.test", "linked_databases.#"),

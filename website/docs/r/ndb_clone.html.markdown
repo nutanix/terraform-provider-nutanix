@@ -66,6 +66,14 @@ Provides a resource to perform the clone of database instance based on the input
 * `postgresql_info`: postgresql info for the clone
 * `actionarguments`: (Optional) if any action arguments is required
 
+* `delete`:- (Optional) Delete the database clone from the VM. Default value is true
+* `remove`:- (Optional) Unregister the database clone from NDB. Default value is false
+* `soft_remove`:- (Optional) Soft remove. Default will be false
+* `forced`:- (Optional) Force delete of instance. Default is false
+* `delete_time_machine`:- (Optional) Delete the database's Time Machine (snapshots/logs) from the NDB. Default value is true
+* `delete_logical_cluster`:- (Optional) Delete the logical cluster. Default is true
+* `remove_logical_cluster`: (Optional) remove logical cluster. Default value is false
+
 ### nodes
 
 * `vm_name`: name for the database server VM.
@@ -103,7 +111,6 @@ Structure for each action argument in actionarguments list:
 * `database_cluster_type`: database cluster type
 * `status`: status of clone
 * `info`: info of clone
-* `metadata`: metadata about clone
 * `metric`: Stores storage info regarding size, allocatedSize, usedSize and unit of calculation that seems to have been fetched from PRISM.
 * `dbserver_logical_cluster`: dbserver logical cluster
 * `database_nodes`: database nodes associated with database instance 

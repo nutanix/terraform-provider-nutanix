@@ -177,6 +177,14 @@ Provides a resource to register the database based on the input parameters.
 * `actionarguments`: (Optional) action arguments
 * `postgress_info`:  (Optional) Postgress_Info for registering. 
 
+
+* `delete`:- (Optional) Delete the database from the VM. Default value is false
+* `remove`:- (Optional) Unregister the database from NDB. Default value is true
+* `soft_remove`:- (Optional) Soft remove. Default will be false
+* `forced`:- (Optional) Force delete of instance. Default is false
+* `delete_time_machine`:- (Optional) Delete the database's Time Machine (snapshots/logs) from the NDB. Default value is true
+* `delete_logical_cluster`:- (Optional) Delete the logical cluster. Default is true
+
 ### postgress_info
 
 * `listener_port`: (Required) listner port of database
@@ -235,14 +243,10 @@ Structure for each action argument in actionarguments list:
 * `description`: description of database instance
 * `databasetype`: type of database
 * `properties`: properties of database created
-* `owner_id`: owner id
 * `date_created`: date created for db instance
 * `date_modified`: date modified for instance
 * `tags`: allows you to assign metadata to entities (clones, time machines, databases, and database servers) by using tags.
 * `clone`: whether instance is cloned or not
-* `era_created`: whether era created or not
-* `internal`: is internal
-* `placeholder`: placeholder 
 * `database_name`: name of database
 * `type`: type of database
 * `database_cluster_type`: database cluster type
@@ -253,8 +257,6 @@ Structure for each action argument in actionarguments list:
 * `parent_time_machine_id`: parent time machine id
 * `time_zone`: timezone on which instance is created xw
 * `info`: info of instance
-* `group_info`: group info of instance
-* `metadata`: metadata of instance
 * `metric`: Stores storage info regarding size, allocatedSize, usedSize and unit of calculation that seems to have been fetched from PRISM.
 * `category`: category of instance
 * `parent_database_id`: parent database id

@@ -174,7 +174,6 @@ func flattenDatabaseIntancesList(db *era.ListDatabaseInstance) []map[string]inte
 			d["info"] = flattenDBInfo(data.Info)
 			d["lcm_config"] = flattenDBLcmConfig(data.Lcmconfig)
 			d["linked_databases"] = flattenDBLinkedDbs(data.Linkeddatabases)
-			d["metadata"] = flattenDBInstanceMetadata(data.Metadata)
 			d["metric"] = data.Metric
 			d["name"] = data.Name
 			d["parent_database_id"] = data.ParentDatabaseID

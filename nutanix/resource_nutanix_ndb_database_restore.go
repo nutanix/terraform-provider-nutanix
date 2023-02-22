@@ -120,8 +120,7 @@ func resourceNutanixNDBDatabaseRestore() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"info":     dataSourceEraDatabaseInfo(),
-			"metadata": dataSourceEraDBInstanceMetadata(),
+			"info": dataSourceEraDatabaseInfo(),
 			"metric": {
 				Type:     schema.TypeMap,
 				Computed: true,
