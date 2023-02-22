@@ -44,7 +44,6 @@ The following attributes are exported:
 * `era_version`: era version
 * `vm_timezone`:  timezone of dbserver vm
 * `vm_info`: info of dbserver vm
-* `metadata`: metadata of dbserver vm
 * `clustered`: clustered or not
 * `is_server_driven`: is server down or not
 * `protection_domain_id`: protection domain id

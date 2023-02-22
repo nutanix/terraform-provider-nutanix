@@ -52,7 +52,6 @@ Provides a resource to scale the database instance based on the input parameters
 * `time_machine_id`: time machine id of instance 
 * `time_zone`: timezone on which instance is created xw
 * `info`: info of instance
-* `metadata`: metadata of instance
 * `metric`: Stores storage info regarding size, allocatedSize, usedSize and unit of calculation that seems to have been fetched from PRISM.
 * `parent_database_id`: parent database id
 * `lcm_config`: LCM config of instance

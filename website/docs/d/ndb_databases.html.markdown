@@ -47,7 +47,6 @@ The following attributes are exported for each database_instances:
 * `time_machine_id`: - time machine ID
 * `time_zone`: - timezone
 * `info`: - info regarding disks, vm, storage, etc.
-* `metadata`: - metadata of database instance
 * `metric`: - metrics
 * `parent_database_id`: - parent database ID
 * `lcm_config`: - lcm configuration

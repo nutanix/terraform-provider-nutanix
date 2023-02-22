@@ -38,12 +38,10 @@ The following attributes are exported:
 * `description`: - description
 * `date_created`: - creation date
 * `date_modified`: - date modified 
-* `owner_id`: - owner ID
 * `properties`: - properties
 * `tags`: - tags attached
 * `clustered`: - if clustered or not
 * `clone`: - if cloned
-* `era_created`: - if era created
 * `database_name`: - database instance name
 * `type`: - database engine type
 * `status`: - status of database instance
@@ -51,7 +49,6 @@ The following attributes are exported:
 * `time_machine_id`: - time machine ID
 * `time_zone`: - timezone
 * `info`: - info regarding disks, vm, storage, etc.
-* `metadata`: - metadata of database instance
 * `metric`: - metrics
 * `parent_database_id`: - parent database ID
 * `lcm_config`: - lcm configuration

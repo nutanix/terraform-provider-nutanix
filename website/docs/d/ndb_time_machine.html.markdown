@@ -30,7 +30,6 @@ description: |-
 * `id`: time machine id
 * `name`: time machine name
 * `description`: time machine description
-* `owner_id`: owner id
 * `date_created`: date created
 * `date_modified`: date modified
 * `access_level`: access level to time machines
@@ -38,7 +37,6 @@ description: |-
 * `tags`: tags
 * `clustered`: clustered or not
 * `clone`: clone time machine or not
-* `internal`: internal 
 * `database_id`: database id 
 * `type`: type of time machine
 * `category`:  category of time machine
@@ -55,6 +53,5 @@ description: |-
 * `sla_update_metadata`: sla update metadata
 * `sla`: sla info
 * `schedule`: schedule info
-* `metadata`: metadata info
 
 See detailed information in [NDB Time Machine](https://www.nutanix.dev/api_references/ndb/#/cb7ba8c0c3284-get-time-machine-by-value-type) .

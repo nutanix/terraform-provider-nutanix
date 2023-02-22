@@ -66,7 +66,6 @@ func flattenTimeMachines(tms *era.ListTimeMachines) []map[string]interface{} {
 			tmac["sla_id"] = pr.SLAID
 			tmac["schedule_id"] = pr.ScheduleID
 			tmac["metric"] = pr.Metric
-			// tmac["sla_update_metadata"] = pr.SLAUpdateMetadata
 			tmac["database"] = pr.Database
 			tmac["clones"] = pr.Clones
 			tmac["source_nx_clusters"] = pr.SourceNxClusters
