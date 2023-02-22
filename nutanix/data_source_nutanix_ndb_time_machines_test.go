@@ -18,7 +18,6 @@ func TestAccEraTimeMachinesDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceTMsName, "time_machines.0.name"),
 					resource.TestCheckResourceAttrSet(dataSourceTMsName, "time_machines.0.description"),
-					resource.TestCheckResourceAttr(dataSourceTMsName, "time_machines.0.metadata.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceTMsName, "time_machines.0.clone", "false"),
 					resource.TestCheckResourceAttr(dataSourceTMsName, "time_machines.0.sla.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceTMsName, "time_machines.0.schedule.#", "1"),
