@@ -114,9 +114,43 @@ Foundation based examples : https://github.com/nutanix/terraform-provider-nutani
 
 Foundation based modules & examples : https://github.com/nutanix/terraform-provider-nutanix/blob/master/modules/foundation/
 
+## Nutanix Database Service (NDB) (>=v1.8.0)
+
+Going from 1.8.0 release of nutanix provider, some params are added to provider configuration to support Nutanix Database Service (NDB) components :
+
+* `ndb_username` - (Optional) This is the username for the NDB instance. This can also be specified with the `NDB_USERNAME` environment variable.
+* `ndb_password` - (Optional) This is the password for the NDB instance. This can also be specified with the `NDB_PASSWORD` environment variable.
+* `ndb_endpoint` - (Optional) This is the endpoint for the NDB instance. This can also be specified with the `NDB_ENDPOINT` environment variable.
+
+```terraform
+terraform {
+  required_providers {
+    nutanix = {
+      source = "nutanix/nutanix"
+      version = ">=1.8.0"
+    }
+  }
+}
+
+provider "nutanix" {
+  username            = var.nutanix_username
+  password            = var.nutanix_password
+  endpoint            = var.nutanix_endpoint
+  port                = var.nutanix_port
+  insecure            = true
+  wait_timeout        = 10
+  ndb_endpoint        = var.ndb_endpoint 
+  ndb_username        = var.ndb_username
+  ndb_password        = var.ndb_password
+}
+```
+
+NDB based examples : https://github.com/nutanix/terraform-provider-nutanix/blob/master/examples/ndb/
+
 ## Provider configuration required details
 
-Going from 1.5.0-beta release of nutanix provider, fields inside provider configuration would be mandatory as per the usecase : 
+Going from 1.8.0-beta release of nutanix provider, fields inside provider configuration would be mandatory as per the usecase : 
 
 * `Prism Central & Karbon` : For prism central and karbon related resources and data sources, `username`, `password` & `endpoint` are manadatory.
 * `Foundation` : For foundation related resources and data sources, `foundation_endpoint` in manadatory.
+* `NDB` : For Nutanix Database Service (NDB) related resources and data sources. 
