@@ -197,7 +197,7 @@ type MaintenanceTasks struct {
 }
 
 type ClusterIPInfos struct {
-	NxClusterId *string    `json:"nxClusterId,omitempty"`
+	NxClusterID *string    `json:"nxClusterId,omitempty"`
 	IPInfos     []*IPInfos `json:"ipInfos,omitempty"`
 }
 

@@ -1044,7 +1044,7 @@ func expandClusterIPInfos(pr []interface{}) []*era.ClusterIPInfos {
 			info := &era.ClusterIPInfos{}
 
 			if clsid, ok := val["nx_cluster_id"]; ok {
-				info.NxClusterId = utils.StringPtr(clsid.(string))
+				info.NxClusterID = utils.StringPtr(clsid.(string))
 			}
 
 			if ips, ok := val["ip_infos"]; ok {
