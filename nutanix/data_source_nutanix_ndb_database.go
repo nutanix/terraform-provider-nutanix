@@ -570,7 +570,6 @@ func flattenDBTimeMachine(pr *Era.TimeMachine) []map[string]interface{} {
 		tmac["tags"] = flattenDBTags(pr.Tags)
 		tmac["clustered"] = pr.Clustered
 		tmac["clone"] = pr.Clone
-		tmac["internal"] = pr.Internal
 		tmac["database_id"] = pr.DatabaseID
 		tmac["type"] = pr.Type
 		tmac["status"] = pr.Status
