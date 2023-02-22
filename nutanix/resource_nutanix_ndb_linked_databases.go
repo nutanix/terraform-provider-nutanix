@@ -100,13 +100,6 @@ func resourceNutanixNDBLinkedDB() *schema.Resource {
 					},
 				},
 			},
-			"metadata": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
 			"metric": {
 				Type:     schema.TypeMap,
 				Computed: true,
@@ -234,9 +227,6 @@ func resourceNutanixNDBLinkedDBRead(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(err)
 	}
 	if err := d.Set("info", flattenLinkedDBInfo(currentLinkedDB.Info)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("metadata", currentLinkedDB.Metadata); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("metric", currentLinkedDB.Metric); err != nil {

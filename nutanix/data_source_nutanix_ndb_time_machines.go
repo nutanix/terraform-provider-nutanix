@@ -51,7 +51,6 @@ func flattenTimeMachines(tms *era.ListTimeMachines) []map[string]interface{} {
 			tmac["id"] = pr.ID
 			tmac["name"] = pr.Name
 			tmac["description"] = pr.Description
-			tmac["owner_id"] = pr.OwnerID
 			tmac["date_created"] = pr.DateCreated
 			tmac["date_modified"] = pr.DateModified
 			tmac["access_level"] = pr.AccessLevel
@@ -59,10 +58,8 @@ func flattenTimeMachines(tms *era.ListTimeMachines) []map[string]interface{} {
 			tmac["tags"] = flattenDBTags(pr.Tags)
 			tmac["clustered"] = pr.Clustered
 			tmac["clone"] = pr.Clone
-			tmac["internal"] = pr.Internal
 			tmac["database_id"] = pr.DatabaseID
 			tmac["type"] = pr.Type
-			tmac["category"] = pr.Category
 			tmac["status"] = pr.Status
 			tmac["ea_status"] = pr.EaStatus
 			tmac["scope"] = pr.Scope
@@ -76,7 +73,6 @@ func flattenTimeMachines(tms *era.ListTimeMachines) []map[string]interface{} {
 			tmac["sla_update_in_progress"] = pr.SLAUpdateInProgress
 			tmac["sla"] = flattenDBSLA(pr.SLA)
 			tmac["schedule"] = flattenSchedule(pr.Schedule)
-			tmac["metadata"] = flattenTimeMachineMetadata(pr.Metadata)
 
 			lst = append(lst, tmac)
 		}

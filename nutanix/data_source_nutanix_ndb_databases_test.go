@@ -14,7 +14,6 @@ func TestAccEraDatabasesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEraDatabasesDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.nutanix_ndb_databases.test", "database_instances.0.metadata.#"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_databases.test", "database_instances.0.time_zone"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_databases.test", "database_instances.#"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_databases.test", "database_instances.0.id"),
@@ -33,7 +32,6 @@ func TestAccEraDatabasesDataSource_ByFilters(t *testing.T) {
 			{
 				Config: testAccEraDatabasesDataSourceConfigByFilters(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.nutanix_ndb_databases.test", "database_instances.0.metadata.#"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_databases.test", "database_instances.0.time_zone"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_databases.test", "database_instances.#"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_databases.test", "database_instances.0.id"),

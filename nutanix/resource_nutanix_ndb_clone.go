@@ -339,8 +339,7 @@ func resourceNutanixNDBClone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"info":     dataSourceEraDatabaseInfo(),
-			"metadata": dataSourceEraDBInstanceMetadata(),
+			"info": dataSourceEraDatabaseInfo(),
 			"metric": {
 				Type:     schema.TypeMap,
 				Computed: true,
@@ -499,19 +498,11 @@ func resourceNutanixNDBCloneRead(ctx context.Context, d *schema.ResourceData, me
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("time_machine_id", resp.Timemachineid); err != nil {
-			return diag.FromErr(err)
-		}
-
 		if err := d.Set("time_zone", resp.Timezone); err != nil {
 			return diag.FromErr(err)
 		}
 
 		if err := d.Set("info", flattenDBInfo(resp.Info)); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("metadata", flattenDBInstanceMetadata(resp.Metadata)); err != nil {
 			return diag.FromErr(err)
 		}
 

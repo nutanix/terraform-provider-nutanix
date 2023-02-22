@@ -18,9 +18,7 @@ func TestAccEraSnapshotDataSource_basic(t *testing.T) {
 				Config: testAccEraSnapshotDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceNDBSnapshotName, "name"),
-					resource.TestCheckResourceAttrSet(dataSourceNDBSnapshotName, "owner_id"),
 					resource.TestCheckResourceAttrSet(dataSourceNDBSnapshotName, "properties.#"),
-					resource.TestCheckResourceAttr(dataSourceNDBSnapshotName, "metadata.#", "1"),
 					resource.TestCheckResourceAttrSet(dataSourceNDBSnapshotName, "snapshot_uuid"),
 					resource.TestCheckResourceAttr(dataSourceNDBSnapshotName, "status", "ACTIVE"),
 				),
@@ -38,10 +36,8 @@ func TestAccEraSnapshotDataSource_WithFilters(t *testing.T) {
 				Config: testAccEraSnapshotDataSourceConfigWithFilters(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceNDBSnapshotName, "name"),
-					resource.TestCheckResourceAttrSet(dataSourceNDBSnapshotName, "owner_id"),
 					resource.TestCheckResourceAttrSet(dataSourceNDBSnapshotName, "properties.#"),
 					resource.TestCheckResourceAttrSet(dataSourceNDBSnapshotName, "nx_cluster_id"),
-					resource.TestCheckResourceAttr(dataSourceNDBSnapshotName, "metadata.#", "1"),
 					resource.TestCheckResourceAttrSet(dataSourceNDBSnapshotName, "snapshot_uuid"),
 					resource.TestCheckResourceAttr(dataSourceNDBSnapshotName, "status", "ACTIVE"),
 				),

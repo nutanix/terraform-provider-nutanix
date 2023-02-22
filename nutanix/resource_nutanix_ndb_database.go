@@ -395,8 +395,7 @@ func resourceDatabaseInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"info":     dataSourceEraDatabaseInfo(),
-			"metadata": dataSourceEraDBInstanceMetadata(),
+			"info": dataSourceEraDatabaseInfo(),
 			"metric": {
 				Type:     schema.TypeMap,
 				Computed: true,
@@ -580,10 +579,6 @@ func readDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interfa
 		}
 
 		if err := d.Set("info", flattenDBInfo(resp.Info)); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("metadata", flattenDBInstanceMetadata(resp.Metadata)); err != nil {
 			return diag.FromErr(err)
 		}
 

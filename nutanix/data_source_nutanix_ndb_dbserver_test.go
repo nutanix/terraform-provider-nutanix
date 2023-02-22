@@ -14,7 +14,6 @@ func TestAccEraDBServerVMDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEraDBServerVMDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.nutanix_ndb_dbserver.dbserver", "metadata.#"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_dbserver.dbserver", "properties.#"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_dbserver.dbserver", "vm_info.#"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_dbserver.dbserver", "vm_cluster_uuid"),
@@ -36,7 +35,6 @@ func TestAccEraDBServerVMDataSource_ByName(t *testing.T) {
 			{
 				Config: testAccEraDBServerVMDataSourceConfigByName(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.nutanix_ndb_dbserver.dbserver", "metadata.#"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_dbserver.dbserver", "properties.#"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_dbserver.dbserver", "vm_info.#"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_dbserver.dbserver", "vm_cluster_uuid"),

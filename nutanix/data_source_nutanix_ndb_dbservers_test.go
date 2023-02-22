@@ -14,7 +14,6 @@ func TestAccEradbserversVMDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEradbserversVMDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.nutanix_ndb_dbservers.dbservers", "dbservers.0.metadata.#"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_dbservers.dbservers", "dbservers.0.properties.#"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_dbservers.dbservers", "dbservers.0.vm_info.#"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_dbservers.dbservers", "dbservers.0.vm_info.0.network_info.#"),

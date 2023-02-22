@@ -257,96 +257,6 @@ func dataSourceNutanixNDBDBServer() *schema.Resource {
 					},
 				},
 			},
-			"metadata": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"secure_info": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"info": dataSourceEraDatabaseInfo(),
-						"deregister_info": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"message": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"operations": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-								},
-							},
-						},
-						"database_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"physical_era_drive": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"clustered": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"single_instance": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"era_drive_initialized": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"provision_operation_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"marked_for_deletion": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"associated_time_machines": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"software_snaphot_interval": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"protection_domain_migration_status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_clock_synca_alert_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"pinned_host_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"leader_metadata": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
 			"clustered": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -535,9 +445,6 @@ func dataSourceNutanixNDBDBServerRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err := d.Set("vm_info", flattenDBServerVMInfo(resp.VMInfo)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("metadata", flattenDBServerMetadata(resp.Metadata)); err != nil {
 		return diag.FromErr(err)
 	}
 
