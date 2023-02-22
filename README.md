@@ -77,7 +77,7 @@ Foundation Central based modules and examples : Foundation based modules & examp
 
 > For the 1.8.0-beta.2 release of the provider, it will have N-2 compatibilty with the Nutanix Database Service. This release was tested with v2.5.1.1 , v2.5.0.2 and v2.4.1
 
-> For the 1.8.0 release of the provider, it will have N-1 compatibility with the Nutanix database service. This release was tested with v2.5.1 and v2.5 versions.
+> For the 1.8.0 release of the provider, it will have N-2 compatibility with the Nutanix database service. This release was tested with v2.5.1.1, v2.5.1 and v2.5 versions.
 
 Note: For 1.8.0 release, only postgress database type is qualified and officially supported. Older versions of NDB may not support some resources. 
 
