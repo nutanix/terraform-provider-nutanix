@@ -228,6 +228,10 @@ func resourceDatabaseInstance() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
+									"cluster_description": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
 									"patroni_cluster_name": {
 										Type:     schema.TypeString,
 										Required: true,
@@ -320,7 +324,45 @@ func resourceDatabaseInstance() *schema.Resource {
 					},
 				},
 			},
-
+			"cluster_info": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cluster_ip_infos": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"nx_cluster_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"ip_infos": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ip_type": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"ip_addresses": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			// delete arguments for database instance
 			"delete": {
 				Type:     schema.TypeBool,
@@ -493,6 +535,7 @@ func buildEraRequest(d *schema.ResourceData) (*era.ProvisionDatabaseRequest, err
 		VMPassword:               utils.StringPtr(d.Get("vm_password").(string)),
 		Tags:                     expandTags(d.Get("tags").([]interface{})),
 		MaintenanceTasks:         expandMaintenanceTasks(d.Get("maintenance_tasks").([]interface{})),
+		ClusterInfo:              expandClusterInfo(d.Get("cluster_info").([]interface{})),
 	}, nil
 }
 
@@ -823,6 +866,13 @@ func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 						})
 					}
 
+					if clsDesc, pok := val["cluster_description"]; pok && len(clsDesc.(string)) > 0 {
+						args = append(args, &era.Actionarguments{
+							Name:  "cluster_description",
+							Value: clsDesc,
+						})
+					}
+
 					if patroniClsName, pok := val["patroni_cluster_name"]; pok && len(patroniClsName.(string)) > 0 {
 						args = append(args, &era.Actionarguments{
 							Name:  "patroni_cluster_name",
@@ -968,6 +1018,41 @@ func expandMaintenanceTasks(pr []interface{}) *era.MaintenanceTasks {
 			maintenanceTask.Tasks = taskList
 		}
 		return maintenanceTask
+	}
+	return nil
+}
+
+func expandClusterInfo(pr []interface{}) *era.ClusterInfo {
+	if len(pr) > 0 {
+		clsInfos := &era.ClusterInfo{}
+		val := pr[0].(map[string]interface{})
+
+		if clsip, ok := val["cluster_ip_infos"]; ok {
+			clsInfos.ClusterIPInfos = expandClusterIPInfos(clsip.([]interface{}))
+		}
+		return clsInfos
+	}
+	return nil
+}
+
+func expandClusterIPInfos(pr []interface{}) []*era.ClusterIPInfos {
+	if len(pr) > 0 {
+		ipinfos := make([]*era.ClusterIPInfos, 0)
+
+		for _, v := range pr {
+			val := v.(map[string]interface{})
+			info := &era.ClusterIPInfos{}
+
+			if clsid, ok := val["nx_cluster_id"]; ok {
+				info.NxClusterId = utils.StringPtr(clsid.(string))
+			}
+
+			if ips, ok := val["ip_infos"]; ok {
+				info.IPInfos = expandIPInfos(ips.([]interface{}))
+			}
+			ipinfos = append(ipinfos, info)
+		}
+		return ipinfos
 	}
 	return nil
 }

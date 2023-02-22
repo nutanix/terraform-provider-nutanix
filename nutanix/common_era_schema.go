@@ -601,7 +601,13 @@ func expandIPInfos(pr []interface{}) []*era.IPInfos {
 			}
 
 			if addr, ok := val["ip_addresses"]; ok {
-				IPInfo.IPAddresses = utils.StringSlice(addr.([]string))
+				res := make([]*string, 0)
+				ips := addr.([]interface{})
+
+				for _, v := range ips {
+					res = append(res, utils.StringPtr(v.(string)))
+				}
+				IPInfo.IPAddresses = res
 			}
 
 			IPInfos = append(IPInfos, IPInfo)

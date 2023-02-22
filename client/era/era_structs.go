@@ -196,6 +196,15 @@ type MaintenanceTasks struct {
 	Tasks               []*Tasks `json:"tasks,omitempty"`
 }
 
+type ClusterIPInfos struct {
+	NxClusterId *string    `json:"nxClusterId,omitempty"`
+	IPInfos     []*IPInfos `json:"ipInfos,omitempty"`
+}
+
+type ClusterInfo struct {
+	ClusterIPInfos []*ClusterIPInfos `json:"clusterIpInfos,omitempty"`
+}
+
 // ProvisionDatabaseRequestStructs
 type ProvisionDatabaseRequest struct {
 	Createdbserver           bool               `json:"createDbserver,omitempty"`
@@ -220,6 +229,7 @@ type ProvisionDatabaseRequest struct {
 	Nodes                    []*Nodes           `json:"nodes,omitempty"`
 	Tags                     []*Tags            `json:"tags,omitempty"`
 	MaintenanceTasks         *MaintenanceTasks  `json:"maintenanceTasks,omitempty"`
+	ClusterInfo              *ClusterInfo       `json:"clusterInfo,omitempty"`
 }
 
 type Snapshottimeofday struct {
