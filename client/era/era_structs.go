@@ -1233,7 +1233,7 @@ type SnapshotResponse struct {
 	SoftwareDatabaseSnapshot       bool                    `json:"softwareDatabaseSnapshot,omitempty"`
 	Processed                      bool                    `json:"processed,omitempty"`
 	DatabaseSnapshot               bool                    `json:"databaseSnapshot,omitempty"`
-	Sanitized                      bool                    `json:"sanitised,omitempty"`
+	Sanitized                      bool                    `json:"sanitised,omitempty"` //nolint:all
 	Properties                     []*DBInstanceProperties `json:"properties"`
 	Tags                           []*Tags                 `json:"tags"`
 	Info                           *CloneInfo              `json:"info,omitempty"`
