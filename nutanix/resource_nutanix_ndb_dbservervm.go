@@ -77,7 +77,7 @@ func resourceNutanixNDBServerVM() *schema.Resource {
 			},
 			"vm_password": {
 				Type:      schema.TypeString,
-				Required:  true,
+				Optional:  true,
 				Sensitive: true,
 			},
 			"latest_snapshot": {
@@ -96,7 +96,7 @@ func resourceNutanixNDBServerVM() *schema.Resource {
 						},
 						"client_public_key": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 						},
 					},
 				},
@@ -594,7 +594,7 @@ func expandDBServerPostgresInput(pr []interface{}) []*era.Actionarguments {
 					Value: vmName,
 				})
 			}
-			if clientKey, ok := val["client_public_key"]; ok {
+			if clientKey, ok := val["client_public_key"]; ok && len(clientKey.(string)) > 0 {
 				args = append(args, &era.Actionarguments{
 					Name:  "client_public_key",
 					Value: clientKey,
