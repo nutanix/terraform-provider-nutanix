@@ -1,5 +1,5 @@
-## 1.8.0 (Feb 22, 2023)
-[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v1.8.0-beta.3...v1.8.0)
+## 1.8.0 (Feb 23, 2023)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/v1.8.0-beta-2...feat/1.8.0-ga)
 
 **New Features:**
 - Feat/1.8.0-ga Release with Nutanix Database Service based resource and datasources [\#553](https://github.com/nutanix/terraform-provider-nutanix/pull/553)
