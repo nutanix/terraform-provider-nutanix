@@ -117,11 +117,11 @@ func dataSourceNutanixNDBSnapshot() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"santised": {
+			"santized": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"santised_from_snapshot_id": {
+			"santized_from_snapshot_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -168,7 +168,7 @@ func dataSourceNutanixNDBSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"santised_snapshots": {
+			"santized_snapshots": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -309,11 +309,11 @@ func dataSourceNutanixNDBSnapshotRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("santised", resp.Sanitised); err != nil {
+	if err := d.Set("santized", resp.Sanitized); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("santised_from_snapshot_id", resp.SanitisedFromSnapshotID); err != nil {
+	if err := d.Set("santized_from_snapshot_id", resp.SanitizedFromSnapshotID); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -357,7 +357,7 @@ func dataSourceNutanixNDBSnapshotRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("santised_snapshots", resp.SanitisedSnapshots); err != nil {
+	if err := d.Set("santized_snapshots", resp.SanitizedSnapshots); err != nil {
 		return diag.FromErr(err)
 	}
 

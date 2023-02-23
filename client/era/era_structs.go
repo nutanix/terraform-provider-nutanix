@@ -1233,21 +1233,21 @@ type SnapshotResponse struct {
 	SoftwareDatabaseSnapshot       bool                    `json:"softwareDatabaseSnapshot,omitempty"`
 	Processed                      bool                    `json:"processed,omitempty"`
 	DatabaseSnapshot               bool                    `json:"databaseSnapshot,omitempty"`
-	Sanitised                      bool                    `json:"sanitised,omitempty"`
+	Sanitized                      bool                    `json:"sanitised,omitempty"`
 	Properties                     []*DBInstanceProperties `json:"properties"`
 	Tags                           []*Tags                 `json:"tags"`
 	Info                           *CloneInfo              `json:"info,omitempty"`
 	Metadata                       *ClonedMetadata         `json:"metadata,omitempty"`
 	Metric                         *Metric                 `json:"metric,omitempty"`
 	LcmConfig                      *LcmConfig              `json:"lcmConfig,omitempty"`
-	SanitisedFromSnapshotID        interface{}             `json:"sanitisedFromSnapshotId,omitempty"`
+	SanitizedFromSnapshotID        interface{}             `json:"sanitisedFromSnapshotId,omitempty"`
 	AccessLevel                    interface{}             `json:"accessLevel"`
 	DbserverID                     interface{}             `json:"dbserverId,omitempty"`
 	DbserverName                   interface{}             `json:"dbserverName,omitempty"`
 	DbserverIP                     interface{}             `json:"dbserverIp,omitempty"`
 	ReplicatedSnapshots            interface{}             `json:"replicatedSnapshots,omitempty"`
 	SoftwareSnapshot               interface{}             `json:"softwareSnapshot,omitempty"`
-	SanitisedSnapshots             interface{}             `json:"sanitisedSnapshots,omitempty"`
+	SanitizedSnapshots             interface{}             `json:"sanitisedSnapshots,omitempty"`
 	SnapshotFamily                 interface{}             `json:"snapshotFamily,omitempty"`
 }
 
@@ -1423,13 +1423,13 @@ type LastContinuousSnapshot struct {
 	SnapshotSize                   float64                         `json:"snapshotSize,omitempty"`
 	AccessLevel                    interface{}                     `json:"accessLevel,omitempty"`
 	Metric                         interface{}                     `json:"metric,omitempty"`
-	SanitisedFromSnapshotID        interface{}                     `json:"sanitisedFromSnapshotId,omitempty"`
+	SanitizedFromSnapshotID        interface{}                     `json:"sanitisedFromSnapshotId,omitempty"`
 	DBserverID                     interface{}                     `json:"dbserverId,omitempty"`
 	DBserverName                   interface{}                     `json:"dbserverName,omitempty"`
 	DBserverIP                     interface{}                     `json:"dbserverIp,omitempty"`
 	ReplicatedSnapshots            interface{}                     `json:"replicatedSnapshots,omitempty"`
 	SoftwareSnapshot               interface{}                     `json:"softwareSnapshot,omitempty"`
-	SanitisedSnapshots             interface{}                     `json:"sanitisedSnapshots,omitempty"`
+	SanitizedSnapshots             interface{}                     `json:"sanitisedSnapshots,omitempty"`
 	Description                    interface{}                     `json:"description,omitempty"`
 	SnapshotFamily                 interface{}                     `json:"snapshotFamily,omitempty"`
 	ParentSnapshotID               interface{}                     `json:"parentSnapshotId,omitempty"`

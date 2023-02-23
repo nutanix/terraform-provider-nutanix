@@ -111,11 +111,11 @@ func dataSourceNutanixNDBSnapshots() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"santised": {
+						"santized": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"santised_from_snapshot_id": {
+						"santized_from_snapshot_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -162,7 +162,7 @@ func dataSourceNutanixNDBSnapshots() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"santised_snapshots": {
+						"santized_snapshots": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -250,8 +250,8 @@ func flattenSnapshotsList(sn *era.ListSnapshots) []map[string]interface{} {
 			snap["software_snapshot_id"] = val.SoftwareSnapshotID
 			snap["software_database_snapshot"] = val.SoftwareDatabaseSnapshot
 			snap["dbserver_storage_metadata_version"] = val.DBServerStorageMetadataVersion
-			snap["santised_from_snapshot_id"] = val.SanitisedFromSnapshotID
-			snap["santised"] = val.Sanitised
+			snap["santized_from_snapshot_id"] = val.SanitizedFromSnapshotID
+			snap["santized"] = val.Sanitized
 			snap["timezone"] = val.TimeZone
 			snap["processed"] = val.Processed
 			snap["database_snapshot"] = val.DatabaseSnapshot
@@ -262,7 +262,7 @@ func flattenSnapshotsList(sn *era.ListSnapshots) []map[string]interface{} {
 			snap["dbserver_ip"] = val.DbserverIP
 			snap["replicated_snapshots"] = val.ReplicatedSnapshots
 			snap["software_snapshot"] = val.SoftwareSnapshot
-			snap["santised_snapshots"] = val.SanitisedSnapshots
+			snap["santized_snapshots"] = val.SanitizedSnapshots
 			snap["snapshot_family"] = val.SnapshotFamily
 			snap["snapshot_timestamp_date"] = val.SnapshotTimeStampDate
 			snap["lcm_config"] = flattenDBLcmConfig(val.LcmConfig)
