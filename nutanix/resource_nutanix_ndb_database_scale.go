@@ -17,6 +17,9 @@ func resourceNutanixNDBScaleDatabase() *schema.Resource {
 		ReadContext:   resourceNutanixNDBScaleDatabaseRead,
 		UpdateContext: resourceNutanixNDBScaleDatabaseUpdate,
 		DeleteContext: resourceNutanixNDBScaleDatabaseDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(EraProvisionTimeout),
+		},
 		Schema: map[string]*schema.Schema{
 			"database_uuid": {
 				Type:     schema.TypeString,
@@ -76,10 +79,6 @@ func resourceNutanixNDBScaleDatabase() *schema.Resource {
 					},
 				},
 			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -90,18 +89,6 @@ func resourceNutanixNDBScaleDatabase() *schema.Resource {
 			},
 			"tags": dataSourceEraDBInstanceTags(),
 			"clone": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"era_created": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"internal": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"placeholder": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -121,10 +108,6 @@ func resourceNutanixNDBScaleDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"dbserver_logical_cluster_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -133,33 +116,17 @@ func resourceNutanixNDBScaleDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"parent_time_machine_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"time_zone": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"info": dataSourceEraDatabaseInfo(),
-			"group_info": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"metadata": dataSourceEraDBInstanceMetadata(),
 			"metric": {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-			},
-			"category": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"parent_database_id": {
 				Type:     schema.TypeString,
@@ -263,7 +230,7 @@ func resourceNutanixNDBScaleDatabaseCreate(ctx context.Context, d *schema.Resour
 	}
 
 	d.SetId(resp.Operationid)
-	log.Printf("NDB database scale with %s id created successfully", d.Id())
+	log.Printf("NDB database with %s id is scaled successfully", d.Id())
 	return resourceNutanixNDBScaleDatabaseRead(ctx, d, meta)
 }
 

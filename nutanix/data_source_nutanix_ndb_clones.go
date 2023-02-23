@@ -68,10 +68,6 @@ func dataSourceNutanixNDBClones() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"owner_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"date_created": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -87,18 +83,6 @@ func dataSourceNutanixNDBClones() *schema.Resource {
 							Computed: true,
 						},
 						"clone": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"era_created": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"internal": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"placeholder": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -139,24 +123,12 @@ func dataSourceNutanixNDBClones() *schema.Resource {
 							Computed: true,
 						},
 						"info": dataSourceEraDatabaseInfo(),
-						"group_info": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"metadata": dataSourceEraDBInstanceMetadata(),
 						"metric": {
 							Type:     schema.TypeMap,
 							Computed: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
-						},
-						"category": {
-							Type:     schema.TypeString,
-							Computed: true,
 						},
 						"parent_database_id": {
 							Type:     schema.TypeString,
@@ -178,13 +150,6 @@ func dataSourceNutanixNDBClones() *schema.Resource {
 						"database_nodes":   dataSourceEraDatabaseNodes(),
 						"linked_databases": dataSourceEraLinkedDatabases(),
 						"databases": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"database_group_state_info": {
 							Type:     schema.TypeMap,
 							Computed: true,
 							Elem: &schema.Schema{

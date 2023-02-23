@@ -20,7 +20,6 @@ func TestAccEra_Scalebasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameScaleDB, "application_type", "postgres_database"),
 					resource.TestCheckResourceAttr(resourceNameScaleDB, "data_storage_size", storageSize),
-					resource.TestCheckResourceAttr(resourceNameScaleDB, "metadata.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceNameScaleDB, "name"),
 					resource.TestCheckResourceAttrSet(resourceNameScaleDB, "description"),
 				),

@@ -29,10 +29,6 @@ func dataSourceNutanixEraDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -55,14 +51,6 @@ func dataSourceNutanixEraDatabase() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"internal": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"placeholder": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
 			"database_name": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -79,10 +67,6 @@ func dataSourceNutanixEraDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"dbserver_logical_cluster_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -91,23 +75,11 @@ func dataSourceNutanixEraDatabase() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"parent_time_machine_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"time_zone": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"info": dataSourceEraDatabaseInfo(),
-			"group_info": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"metadata": dataSourceEraDBInstanceMetadata(),
 			"metric": {
 				Type:     schema.TypeMap,
 				Computed: true,
@@ -115,15 +87,7 @@ func dataSourceNutanixEraDatabase() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"category": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"parent_database_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"parent_source_database_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,13 +103,6 @@ func dataSourceNutanixEraDatabase() *schema.Resource {
 			"database_nodes":   dataSourceEraDatabaseNodes(),
 			"linked_databases": dataSourceEraLinkedDatabases(),
 			"databases": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"database_group_state_info": {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -176,10 +133,6 @@ func dataSourceNutanixEraDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("owner_id", resp.Ownerid); err != nil {
-		return diag.FromErr(err)
-	}
-
 	if err := d.Set("description", resp.Description); err != nil {
 		return diag.FromErr(err)
 	}
@@ -207,14 +160,6 @@ func dataSourceNutanixEraDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("internal", resp.Internal); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("placeholder", resp.Placeholder); err != nil {
-		return diag.FromErr(err)
-	}
-
 	if err := d.Set("database_name", resp.Databasename); err != nil {
 		return diag.FromErr(err)
 	}
@@ -231,19 +176,11 @@ func dataSourceNutanixEraDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("database_status", resp.Databasestatus); err != nil {
-		return diag.FromErr(err)
-	}
-
 	if err := d.Set("dbserver_logical_cluster_id", resp.Dbserverlogicalclusterid); err != nil {
 		return diag.FromErr(err)
 	}
 
 	if err := d.Set("time_machine_id", resp.Timemachineid); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("parent_time_machine_id", resp.Parenttimemachineid); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -255,27 +192,11 @@ func dataSourceNutanixEraDatabaseRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("group_info", resp.GroupInfo); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("metadata", flattenDBInstanceMetadata(resp.Metadata)); err != nil {
-		return diag.FromErr(err)
-	}
-
 	if err := d.Set("metric", resp.Metric); err != nil {
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("category", resp.Category); err != nil {
-		return diag.FromErr(err)
-	}
-
 	if err := d.Set("parent_database_id", resp.ParentDatabaseID); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("parent_source_database_id", resp.ParentSourceDatabaseID); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -302,9 +223,6 @@ func dataSourceNutanixEraDatabaseRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err := d.Set("databases", resp.Databases); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("database_group_state_info", resp.DatabaseGroupStateInfo); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -379,9 +297,7 @@ func flattenDBNodes(pr []Era.Databasenodes) []map[string]interface{} {
 			db["dbserver_id"] = v.Dbserverid
 			db["description"] = v.Description
 			db["id"] = v.ID
-			db["metadata"] = v.Metadata
 			db["name"] = v.Name
-			db["owner_id"] = v.Ownerid
 			db["primary"] = v.Primary
 			db["properties"] = flattenDBInstanceProperties(v.Properties)
 			db["protection_domain"] = flattenDBProtectionDomain(v.Protectiondomain)
@@ -410,10 +326,8 @@ func flattenDBLinkedDbs(pr []Era.Linkeddatabases) []map[string]interface{} {
 			ld["date_modified"] = v.Datemodified
 			ld["description"] = v.Description
 			ld["id"] = v.ID
-			ld["metadata"] = v.Metadata
 			ld["metric"] = v.Metric
 			ld["name"] = v.Name
-			ld["owner_id"] = v.Ownerid
 			ld["parent_database_id"] = v.ParentDatabaseID
 			ld["parent_linked_database_id"] = v.ParentLinkedDatabaseID
 			ld["snapshot_id"] = v.SnapshotID
@@ -649,7 +563,6 @@ func flattenDBTimeMachine(pr *Era.TimeMachine) []map[string]interface{} {
 		tmac["id"] = pr.ID
 		tmac["name"] = pr.Name
 		tmac["description"] = pr.Description
-		tmac["owner_id"] = pr.OwnerID
 		tmac["date_created"] = pr.DateCreated
 		tmac["date_modified"] = pr.DateModified
 		tmac["access_level"] = pr.AccessLevel
@@ -657,10 +570,8 @@ func flattenDBTimeMachine(pr *Era.TimeMachine) []map[string]interface{} {
 		tmac["tags"] = flattenDBTags(pr.Tags)
 		tmac["clustered"] = pr.Clustered
 		tmac["clone"] = pr.Clone
-		tmac["internal"] = pr.Internal
 		tmac["database_id"] = pr.DatabaseID
 		tmac["type"] = pr.Type
-		tmac["category"] = pr.Category
 		tmac["status"] = pr.Status
 		tmac["ea_status"] = pr.EaStatus
 		tmac["scope"] = pr.Scope
@@ -674,7 +585,6 @@ func flattenDBTimeMachine(pr *Era.TimeMachine) []map[string]interface{} {
 		tmac["sla_update_in_progress"] = pr.SLAUpdateInProgress
 		tmac["sla"] = flattenDBSLA(pr.SLA)
 		tmac["schedule"] = flattenSchedule(pr.Schedule)
-		tmac["metadata"] = flattenTimeMachineMetadata(pr.Metadata)
 
 		res = append(res, tmac)
 		return res
@@ -1205,10 +1115,6 @@ func dataSourceEraTimeMachine() *schema.Schema {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"owner_id": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
 				"date_created": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -1231,19 +1137,11 @@ func dataSourceEraTimeMachine() *schema.Schema {
 					Type:     schema.TypeBool,
 					Computed: true,
 				},
-				"internal": {
-					Type:     schema.TypeBool,
-					Computed: true,
-				},
 				"database_id": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
 				"type": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"category": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -1567,158 +1465,6 @@ func dataSourceEraTimeMachine() *schema.Schema {
 						},
 					},
 				},
-				"metadata": {
-					Type:     schema.TypeList,
-					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"secure_info": {
-								Type:     schema.TypeMap,
-								Computed: true,
-								Elem: &schema.Schema{
-									Type: schema.TypeString,
-								},
-							},
-							"info": {
-								Type:     schema.TypeMap,
-								Computed: true,
-								Elem: &schema.Schema{
-									Type: schema.TypeString,
-								},
-							},
-							"deregister_info": {
-								Type:     schema.TypeList,
-								Computed: true,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"message": {
-											Type:     schema.TypeString,
-											Computed: true,
-										},
-										"operations": {
-											Type:     schema.TypeList,
-											Computed: true,
-											Elem: &schema.Schema{
-												Type: schema.TypeString,
-											},
-										},
-									},
-								},
-							},
-							"capability_reset_time": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"auto_heal": {
-								Type:     schema.TypeBool,
-								Computed: true,
-							},
-							"auto_heal_snapshot_count": {
-								Type:     schema.TypeInt,
-								Computed: true,
-							},
-							"auto_heal_log_catchup_count": {
-								Type:     schema.TypeInt,
-								Computed: true,
-							},
-							"first_snapshot_captured": {
-								Type:     schema.TypeBool,
-								Computed: true,
-							},
-							"first_snapshot_dispatched": {
-								Type:     schema.TypeBool,
-								Computed: true,
-							},
-							"last_snapshot_time": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"last_auto_snapshot_time": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"last_snapshot_operation_id": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"last_auto_snapshot_operation_id": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"last_successful_snapshot_operation_id": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"snapshot_successive_failure_count": {
-								Type:     schema.TypeInt,
-								Computed: true,
-							},
-							"last_heal_snapshot_operation": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"last_log_catchup_time": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"last_successful_log_catchup_operation_id": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"last_log_catchup_operation_id": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"log_catchup_successive_failure_count": {
-								Type:     schema.TypeInt,
-								Computed: true,
-							},
-							"last_pause_time": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"last_pause_by_force": {
-								Type:     schema.TypeBool,
-								Computed: true,
-							},
-							"last_resume_time": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"last_pause_reason": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"state_before_restore": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"last_health_alerted_time": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"last_ea_breakdown_time": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"authorized_dbservers": {
-								Type:     schema.TypeList,
-								Computed: true,
-								Elem: &schema.Schema{
-									Type: schema.TypeString,
-								},
-							},
-							"last_heal_time": {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							"last_heal_system_triggered": {
-								Type:     schema.TypeBool,
-								Computed: true,
-							},
-						},
-					},
-				},
 			},
 		},
 	}
@@ -1739,10 +1485,6 @@ func dataSourceEraDatabaseNodes() *schema.Schema {
 					Computed: true,
 				},
 				"description": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"owner_id": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -1790,13 +1532,6 @@ func dataSourceEraDatabaseNodes() *schema.Schema {
 				"protection_domain_id": {
 					Type:     schema.TypeString,
 					Computed: true,
-				},
-				"metadata": {
-					Type:     schema.TypeMap,
-					Computed: true,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
-					},
 				},
 				"info": {
 					Type:     schema.TypeList,
@@ -1958,10 +1693,6 @@ func dataSourceEraLinkedDatabases() *schema.Schema {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"owner_id": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
 				"date_created": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -1994,13 +1725,6 @@ func dataSourceEraLinkedDatabases() *schema.Schema {
 								},
 							},
 						},
-					},
-				},
-				"metadata": {
-					Type:     schema.TypeMap,
-					Computed: true,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
 					},
 				},
 				"metric": {

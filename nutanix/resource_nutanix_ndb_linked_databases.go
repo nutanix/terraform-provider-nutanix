@@ -17,6 +17,10 @@ func resourceNutanixNDBLinkedDB() *schema.Resource {
 		ReadContext:   resourceNutanixNDBLinkedDBRead,
 		UpdateContext: resourceNutanixNDBLinkedDBUpdate,
 		DeleteContext: resourceNutanixNDBLinkedDBDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(EraProvisionTimeout),
+			Delete: schema.DefaultTimeout(EraProvisionTimeout),
+		},
 		Schema: map[string]*schema.Schema{
 			"database_id": {
 				Type:     schema.TypeString,
@@ -57,10 +61,6 @@ func resourceNutanixNDBLinkedDB() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -98,13 +98,6 @@ func resourceNutanixNDBLinkedDB() *schema.Resource {
 							},
 						},
 					},
-				},
-			},
-			"metadata": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
 				},
 			},
 			"metric": {
@@ -194,7 +187,7 @@ func resourceNutanixNDBLinkedDBCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.SetId(SetID)
-	log.Printf("NDB linked databases with %s id created successfully", d.Id())
+	log.Printf("NDB linked database with %s id is created successfully", d.Id())
 
 	return resourceNutanixNDBLinkedDBRead(ctx, d, meta)
 }
@@ -236,16 +229,10 @@ func resourceNutanixNDBLinkedDBRead(ctx context.Context, d *schema.ResourceData,
 	if err := d.Set("info", flattenLinkedDBInfo(currentLinkedDB.Info)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("metadata", currentLinkedDB.Metadata); err != nil {
-		return diag.FromErr(err)
-	}
 	if err := d.Set("metric", currentLinkedDB.Metric); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("name", currentLinkedDB.Name); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("owner_id", currentLinkedDB.Ownerid); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("parent_database_id", currentLinkedDB.ParentDatabaseID); err != nil {
@@ -304,14 +291,14 @@ func resourceNutanixNDBLinkedDBDelete(ctx context.Context, d *schema.ResourceDat
 		Pending: []string{"PENDING"},
 		Target:  []string{"COMPLETED", "FAILED"},
 		Refresh: eraRefresh(ctx, conn, opReq),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 		Delay:   eraDelay,
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for linked db (%s) to delete: %s", d.Id(), errWaitTask)
 	}
-	log.Printf("NDB linked databases with %s id deleted successfully", d.Id())
+	log.Printf("NDB linked database with %s id is deleted successfully", d.Id())
 	return nil
 }
 

@@ -65,10 +65,6 @@ func dataSourceNutanixNDBClone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -84,18 +80,6 @@ func dataSourceNutanixNDBClone() *schema.Resource {
 				Computed: true,
 			},
 			"clone": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"era_created": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"internal": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"placeholder": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -136,24 +120,12 @@ func dataSourceNutanixNDBClone() *schema.Resource {
 				Computed: true,
 			},
 			"info": dataSourceEraDatabaseInfo(),
-			"group_info": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"metadata": dataSourceEraDBInstanceMetadata(),
 			"metric": {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
-			},
-			"category": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"parent_database_id": {
 				Type:     schema.TypeString,
@@ -175,13 +147,6 @@ func dataSourceNutanixNDBClone() *schema.Resource {
 			"database_nodes":   dataSourceEraDatabaseNodes(),
 			"linked_databases": dataSourceEraLinkedDatabases(),
 			"databases": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"database_group_state_info": {
 				Type:     schema.TypeMap,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -244,10 +209,6 @@ func dataSourceNutanixNDBCloneRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("owner_id", resp.Ownerid); err != nil {
-		return diag.FromErr(err)
-	}
-
 	if err := d.Set("description", resp.Description); err != nil {
 		return diag.FromErr(err)
 	}
@@ -272,14 +233,6 @@ func dataSourceNutanixNDBCloneRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err := d.Set("clustered", resp.Clustered); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("internal", resp.Internal); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("placeholder", resp.Placeholder); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -323,19 +276,7 @@ func dataSourceNutanixNDBCloneRead(ctx context.Context, d *schema.ResourceData, 
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("group_info", resp.GroupInfo); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("metadata", flattenDBInstanceMetadata(resp.Metadata)); err != nil {
-		return diag.FromErr(err)
-	}
-
 	if err := d.Set("metric", resp.Metric); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("category", resp.Category); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -370,10 +311,6 @@ func dataSourceNutanixNDBCloneRead(ctx context.Context, d *schema.ResourceData, 
 	if err := d.Set("databases", resp.Databases); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("database_group_state_info", resp.DatabaseGroupStateInfo); err != nil {
-		return diag.FromErr(err)
-	}
-
 	d.SetId(resp.ID)
 
 	return nil

@@ -129,7 +129,7 @@ func resourceNutanixNDBSlaCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(*resp.ID)
-	log.Printf("NDB SLA with %s id created successfully", d.Id())
+	log.Printf("NDB SLA with %s id is created successfully", d.Id())
 	return resourceNutanixNDBSlaRead(ctx, d, meta)
 }
 
@@ -259,7 +259,7 @@ func resourceNutanixNDBSlaUpdate(ctx context.Context, d *schema.ResourceData, me
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	log.Printf("NDB SLA with %s id updated successfully", d.Id())
+	log.Printf("NDB SLA with %s id is updated successfully", d.Id())
 	return resourceNutanixNDBSlaRead(ctx, d, meta)
 }
 
@@ -272,7 +272,7 @@ func resourceNutanixNDBSlaDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if resp.Status == utils.StringPtr("success") {
-		log.Printf("NDB SLA with %s id deleted successfully", d.Id())
+		log.Printf("NDB SLA with %s id is deleted successfully", d.Id())
 		d.SetId("")
 	}
 	return nil

@@ -28,6 +28,8 @@ func resourceDatabaseInstance() *schema.Resource {
 		DeleteContext: deleteDatabaseInstance,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(EraProvisionTimeout),
+			Update: schema.DefaultTimeout(EraProvisionTimeout),
+			Delete: schema.DefaultTimeout(EraProvisionTimeout),
 		},
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -226,6 +228,10 @@ func resourceDatabaseInstance() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
+									"cluster_description": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
 									"patroni_cluster_name": {
 										Type:     schema.TypeString,
 										Required: true,
@@ -318,13 +324,78 @@ func resourceDatabaseInstance() *schema.Resource {
 					},
 				},
 			},
+			"cluster_info": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cluster_ip_infos": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"nx_cluster_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"ip_infos": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ip_type": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"ip_addresses": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			// delete arguments for database instance
+			"delete": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"remove": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"soft_remove": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"forced": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"delete_time_machine": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"delete_logical_cluster": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 
 			// Computed values
-
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -335,18 +406,6 @@ func resourceDatabaseInstance() *schema.Resource {
 			},
 			"tags": dataSourceEraDBInstanceTags(),
 			"clone": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"era_created": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"internal": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"placeholder": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -366,10 +425,6 @@ func resourceDatabaseInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"dbserver_logical_cluster_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -378,23 +433,11 @@ func resourceDatabaseInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"parent_time_machine_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"time_zone": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"info": dataSourceEraDatabaseInfo(),
-			"group_info": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"metadata": dataSourceEraDBInstanceMetadata(),
 			"metric": {
 				Type:     schema.TypeMap,
 				Computed: true,
@@ -402,15 +445,7 @@ func resourceDatabaseInstance() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"category": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"parent_database_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"parent_source_database_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -500,6 +535,7 @@ func buildEraRequest(d *schema.ResourceData) (*era.ProvisionDatabaseRequest, err
 		VMPassword:               utils.StringPtr(d.Get("vm_password").(string)),
 		Tags:                     expandTags(d.Get("tags").([]interface{})),
 		MaintenanceTasks:         expandMaintenanceTasks(d.Get("maintenance_tasks").([]interface{})),
+		ClusterInfo:              expandClusterInfo(d.Get("cluster_info").([]interface{})),
 	}, nil
 }
 
@@ -557,14 +593,6 @@ func readDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interfa
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("internal", resp.Internal); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("placeholder", resp.Placeholder); err != nil {
-			return diag.FromErr(err)
-		}
-
 		if err := d.Set("database_name", resp.Databasename); err != nil {
 			return diag.FromErr(err)
 		}
@@ -581,19 +609,11 @@ func readDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interfa
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("database_status", resp.Databasestatus); err != nil {
-			return diag.FromErr(err)
-		}
-
 		if err := d.Set("dbserver_logical_cluster_id", resp.Dbserverlogicalclusterid); err != nil {
 			return diag.FromErr(err)
 		}
 
 		if err := d.Set("time_machine_id", resp.Timemachineid); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("parent_time_machine_id", resp.Parenttimemachineid); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -605,27 +625,11 @@ func readDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interfa
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("group_info", resp.GroupInfo); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("metadata", flattenDBInstanceMetadata(resp.Metadata)); err != nil {
-			return diag.FromErr(err)
-		}
-
 		if err := d.Set("metric", resp.Metric); err != nil {
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("category", resp.Category); err != nil {
-			return diag.FromErr(err)
-		}
-
 		if err := d.Set("parent_database_id", resp.ParentDatabaseID); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("parent_source_database_id", resp.ParentSourceDatabaseID); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -702,15 +706,33 @@ func deleteDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 
 	dbID := d.Id()
 
-	req := era.DeleteDatabaseRequest{
-		Delete:               true,
-		Remove:               false,
-		Softremove:           false,
-		Forced:               false,
-		Deletetimemachine:    true,
-		Deletelogicalcluster: true,
+	req := &era.DeleteDatabaseRequest{}
+
+	if delete, ok := d.GetOk("delete"); ok {
+		req.Delete = delete.(bool)
 	}
-	res, err := conn.Service.DeleteDatabase(ctx, &req, dbID)
+
+	if remove, ok := d.GetOk("remove"); ok {
+		req.Remove = remove.(bool)
+	}
+
+	if softremove, ok := d.GetOk("soft_remove"); ok {
+		req.Softremove = softremove.(bool)
+	}
+
+	if forced, ok := d.GetOk("forced"); ok {
+		req.Forced = forced.(bool)
+	}
+
+	if deltms, ok := d.GetOk("delete_time_machine"); ok {
+		req.Deletetimemachine = deltms.(bool)
+	}
+
+	if dellogicalcls, ok := d.GetOk("delete_logical_cluster"); ok {
+		req.Deletelogicalcluster = dellogicalcls.(bool)
+	}
+
+	res, err := conn.Service.DeleteDatabase(ctx, req, dbID)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -731,13 +753,14 @@ func deleteDatabaseInstance(ctx context.Context, d *schema.ResourceData, m inter
 		Pending: []string{"PENDING"},
 		Target:  []string{"COMPLETED", "FAILED"},
 		Refresh: eraRefresh(ctx, conn, opReq),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 		Delay:   eraDelay,
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for db Instance (%s) to delete: %s", res.Entityid, errWaitTask)
 	}
+	log.Printf("NDB database with %s id is deleted successfully", d.Id())
 	return nil
 }
 
@@ -840,6 +863,13 @@ func expandActionArguments(d *schema.ResourceData) []*era.Actionarguments {
 						args = append(args, &era.Actionarguments{
 							Name:  "cluster_name",
 							Value: clsName,
+						})
+					}
+
+					if clsDesc, pok := val["cluster_description"]; pok && len(clsDesc.(string)) > 0 {
+						args = append(args, &era.Actionarguments{
+							Name:  "cluster_description",
+							Value: clsDesc,
 						})
 					}
 
@@ -988,6 +1018,41 @@ func expandMaintenanceTasks(pr []interface{}) *era.MaintenanceTasks {
 			maintenanceTask.Tasks = taskList
 		}
 		return maintenanceTask
+	}
+	return nil
+}
+
+func expandClusterInfo(pr []interface{}) *era.ClusterInfo {
+	if len(pr) > 0 {
+		clsInfos := &era.ClusterInfo{}
+		val := pr[0].(map[string]interface{})
+
+		if clsip, ok := val["cluster_ip_infos"]; ok {
+			clsInfos.ClusterIPInfos = expandClusterIPInfos(clsip.([]interface{}))
+		}
+		return clsInfos
+	}
+	return nil
+}
+
+func expandClusterIPInfos(pr []interface{}) []*era.ClusterIPInfos {
+	if len(pr) > 0 {
+		ipinfos := make([]*era.ClusterIPInfos, 0)
+
+		for _, v := range pr {
+			val := v.(map[string]interface{})
+			info := &era.ClusterIPInfos{}
+
+			if clsid, ok := val["nx_cluster_id"]; ok {
+				info.NxClusterID = utils.StringPtr(clsid.(string))
+			}
+
+			if ips, ok := val["ip_infos"]; ok {
+				info.IPInfos = expandIPInfos(ips.([]interface{}))
+			}
+			ipinfos = append(ipinfos, info)
+		}
+		return ipinfos
 	}
 	return nil
 }

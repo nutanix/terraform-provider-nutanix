@@ -37,10 +37,6 @@ func dataSourceNutanixEraDatabases() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"owner_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"date_created": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -56,18 +52,6 @@ func dataSourceNutanixEraDatabases() *schema.Resource {
 							Computed: true,
 						},
 						"clone": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"era_created": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"internal": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"placeholder": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
@@ -87,10 +71,6 @@ func dataSourceNutanixEraDatabases() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"database_status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"dbserver_logical_cluster_id": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -99,22 +79,11 @@ func dataSourceNutanixEraDatabases() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"parent_time_machine_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"time_zone": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"info": dataSourceEraDatabaseInfo(),
-						"group_info": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
+						"info":     dataSourceEraDatabaseInfo(),
 						"metadata": dataSourceEraDBInstanceMetadata(),
 						"metric": {
 							Type:     schema.TypeMap,
@@ -123,15 +92,7 @@ func dataSourceNutanixEraDatabases() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"category": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"parent_database_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"parent_source_database_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -147,13 +108,6 @@ func dataSourceNutanixEraDatabases() *schema.Resource {
 						"database_nodes":   dataSourceEraDatabaseNodes(),
 						"linked_databases": dataSourceEraLinkedDatabases(),
 						"databases": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"database_group_state_info": {
 							Type:     schema.TypeMap,
 							Computed: true,
 							Elem: &schema.Schema{
@@ -205,34 +159,24 @@ func flattenDatabaseIntancesList(db *era.ListDatabaseInstance) []map[string]inte
 		for _, data := range *db {
 			d := map[string]interface{}{}
 
-			d["category"] = data.Category
 			d["clone"] = data.Clone
 			d["clustered"] = data.Clustered
-			d["database_group_state_info"] = data.DatabaseGroupStateInfo
 			d["database_cluster_type"] = data.Databaseclustertype
 			d["database_name"] = data.Databasename
 			d["database_nodes"] = flattenDBNodes(data.Databasenodes)
 			d["databases"] = data.Databases
-			d["database_status"] = data.Databasestatus
 			d["date_created"] = data.Datecreated
 			d["date_modified"] = data.Datemodified
 			d["dbserver_logical_cluster"] = data.Dbserverlogicalcluster
 			d["dbserver_logical_cluster_id"] = data.Dbserverlogicalclusterid
 			d["description"] = data.Description
-			d["group_info"] = data.GroupInfo
 			d["id"] = data.ID
 			d["info"] = flattenDBInfo(data.Info)
-			d["internal"] = data.Internal
 			d["lcm_config"] = flattenDBLcmConfig(data.Lcmconfig)
 			d["linked_databases"] = flattenDBLinkedDbs(data.Linkeddatabases)
-			d["metadata"] = flattenDBInstanceMetadata(data.Metadata)
 			d["metric"] = data.Metric
 			d["name"] = data.Name
-			d["owner_id"] = data.Ownerid
 			d["parent_database_id"] = data.ParentDatabaseID
-			d["parent_source_database_id"] = data.ParentSourceDatabaseID
-			d["parent_time_machine_id"] = data.Parenttimemachineid
-			d["placeholder"] = data.Placeholder
 			d["properties"] = flattenDBInstanceProperties(data.Properties)
 			d["status"] = data.Status
 			d["tags"] = flattenDBTags(data.Tags)
