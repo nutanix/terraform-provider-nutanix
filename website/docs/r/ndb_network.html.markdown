@@ -69,3 +69,6 @@ Provides a resource to create VLANs and IP address pools that are managed both i
 * `stretched_vlan_id`: stretched vlan id
 * `properties`: properties of network
 * `properties_map`: properties map of network
+
+
+See detailed information in [NDB Network](https://www.nutanix.dev/api_references/ndb/#/4a4fc22c2843d-add-a-v-lan-to-ndb).

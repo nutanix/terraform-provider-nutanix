@@ -67,3 +67,6 @@ The following attributes are exported:
 * `windows_db_server`: window db server
 * `associated_time_machine_ids`: associated time machines ids
 * `access_key_id`: access key id of dbserver vm
+
+
+See detailed information in [Database Server VM](https://www.nutanix.dev/api_references/ndb/#/c531f4158d5f5-get-a-database-server-by-value-type).

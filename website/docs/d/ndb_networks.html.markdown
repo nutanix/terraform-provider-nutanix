@@ -37,3 +37,6 @@ The following attributes are exported:
 * `vlan_primary_dns`: primary dns of vlan
 * `vlan_secondary_dns`: secondary dns of vlan
 * `vlan_gateway`: gateway of vlan
+
+
+See detailed information in [List of NDB Networks](https://www.nutanix.dev/api_references/ndb/#/283556b78730b-get-vlans).

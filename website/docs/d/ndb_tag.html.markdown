@@ -37,3 +37,6 @@ The following attributes are exported:
 * `values`: value for the tag
 * `date_created`: date created of the tag
 * `date_modified`: modified date of tha tag
+
+
+See detailed information in [NDB Tag](https://www.nutanix.dev/api_references/ndb/#/0a7bf3bdeed86-get-list-of-all-tags).

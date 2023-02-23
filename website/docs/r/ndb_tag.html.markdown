@@ -47,3 +47,6 @@ Provides a resource to create tags based on the input parameters.
 * `values`: value for the tag
 * `date_created`: date created of the tag
 * `date_modified`: modified date of tha tag
+
+
+See detailed information in [NDB Tag](https://www.nutanix.dev/api_references/ndb/#/5d6a2dc1bc153-create-a-tag).

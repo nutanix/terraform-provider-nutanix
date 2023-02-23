@@ -76,3 +76,6 @@ Structure for each action argument in actionarguments list:
 * `era_drive_id`: era drive id
 * `era_version`: era version
 * `vm_timezone`:  timezone of dbserver vm
+
+
+See detailed information in [NDB Register Database Server VM](https://www.nutanix.dev/api_references/ndb/#/5bd6f03bd6ed7-register-an-existing-database-server).

@@ -107,3 +107,6 @@ Structure for each action argument in actionarguments list:
 * `era_drive_id`: era drive id
 * `era_version`: era version
 * `vm_timezone`:  timezone of dbserver vm
+
+
+See detailed information in [NDB Provision Database Server VM](https://www.nutanix.dev/api_references/ndb/#/c9126257bc0fc-provision-database-server).
