@@ -251,6 +251,7 @@ func flattenSnapshotsList(sn *era.ListSnapshots) []map[string]interface{} {
 			snap["software_database_snapshot"] = val.SoftwareDatabaseSnapshot
 			snap["dbserver_storage_metadata_version"] = val.DBServerStorageMetadataVersion
 			snap["santised_from_snapshot_id"] = val.SanitisedFromSnapshotID
+			snap["santised"] = val.Sanitised
 			snap["timezone"] = val.TimeZone
 			snap["processed"] = val.Processed
 			snap["database_snapshot"] = val.DatabaseSnapshot
