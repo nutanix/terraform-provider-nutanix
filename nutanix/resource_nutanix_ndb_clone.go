@@ -17,7 +17,13 @@ func resourceNutanixNDBClone() *schema.Resource {
 		ReadContext:   resourceNutanixNDBCloneRead,
 		UpdateContext: resourceNutanixNDBCloneUpdate,
 		DeleteContext: resourceNutanixNDBCloneDelete,
-
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(EraProvisionTimeout),
+			Delete: schema.DefaultTimeout(EraProvisionTimeout),
+		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"time_machine_id": {
 				Type:          schema.TypeString,
@@ -247,6 +253,42 @@ func resourceNutanixNDBClone() *schema.Resource {
 			},
 
 			"actionarguments": actionArgumentsSchema(),
+			// delete arguments for clone resource.
+			"delete": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"remove": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"soft_remove": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"forced": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"delete_time_machine": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"delete_logical_cluster": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"remove_logical_cluster": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			// Computed values
 
 			"properties": {
@@ -268,11 +310,6 @@ func resourceNutanixNDBClone() *schema.Resource {
 					},
 				},
 			},
-
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -283,18 +320,6 @@ func resourceNutanixNDBClone() *schema.Resource {
 			},
 			"tags": dataSourceEraDBInstanceTags(),
 			"clone": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"era_created": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"internal": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"placeholder": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
@@ -314,19 +339,7 @@ func resourceNutanixNDBClone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"database_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"info": dataSourceEraDatabaseInfo(),
-			"group_info": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
-			},
-			"metadata": dataSourceEraDBInstanceMetadata(),
 			"metric": {
 				Type:     schema.TypeMap,
 				Computed: true,
@@ -334,19 +347,7 @@ func resourceNutanixNDBClone() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
-			"category": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"parent_time_machine_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"parent_database_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"parent_source_database_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -424,7 +425,7 @@ func resourceNutanixNDBCloneCreate(ctx context.Context, d *schema.ResourceData, 
 		return diag.Errorf("error waiting for time machine clone (%s) to create: %s", resp.Entityid, errWaitTask)
 	}
 
-	log.Printf("NDB clone with %s id created successfully", d.Id())
+	log.Printf("NDB clone with %s id is created successfully", d.Id())
 	return resourceNutanixNDBCloneRead(ctx, d, meta)
 }
 
@@ -477,14 +478,6 @@ func resourceNutanixNDBCloneRead(ctx context.Context, d *schema.ResourceData, me
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("internal", resp.Internal); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("placeholder", resp.Placeholder); err != nil {
-			return diag.FromErr(err)
-		}
-
 		if err := d.Set("database_name", resp.Databasename); err != nil {
 			return diag.FromErr(err)
 		}
@@ -501,19 +494,7 @@ func resourceNutanixNDBCloneRead(ctx context.Context, d *schema.ResourceData, me
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("database_status", resp.Databasestatus); err != nil {
-			return diag.FromErr(err)
-		}
-
 		if err := d.Set("dbserver_logical_cluster_id", resp.Dbserverlogicalclusterid); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("time_machine_id", resp.Timemachineid); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("parent_time_machine_id", resp.Parenttimemachineid); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -525,27 +506,11 @@ func resourceNutanixNDBCloneRead(ctx context.Context, d *schema.ResourceData, me
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("group_info", resp.GroupInfo); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("metadata", flattenDBInstanceMetadata(resp.Metadata)); err != nil {
-			return diag.FromErr(err)
-		}
-
 		if err := d.Set("metric", resp.Metric); err != nil {
 			return diag.FromErr(err)
 		}
 
-		if err := d.Set("category", resp.Category); err != nil {
-			return diag.FromErr(err)
-		}
-
 		if err := d.Set("parent_database_id", resp.ParentDatabaseID); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("parent_source_database_id", resp.ParentSourceDatabaseID); err != nil {
 			return diag.FromErr(err)
 		}
 
@@ -608,7 +573,7 @@ func resourceNutanixNDBCloneUpdate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if res != nil {
-		log.Printf("NDB clone with %s id update successfully", d.Id())
+		log.Printf("NDB clone with %s id is updated successfully", d.Id())
 	}
 
 	return resourceNutanixNDBCloneRead(ctx, d, meta)
@@ -622,15 +587,36 @@ func resourceNutanixNDBCloneDelete(ctx context.Context, d *schema.ResourceData, 
 
 	dbID := d.Id()
 
-	req := era.DeleteDatabaseRequest{
-		Delete:               true,
-		Remove:               false,
-		Softremove:           false,
-		Forced:               false,
-		Deletetimemachine:    true,
-		Deletelogicalcluster: true,
+	req := &era.DeleteDatabaseRequest{}
+
+	if delete, ok := d.GetOk("delete"); ok {
+		req.Delete = delete.(bool)
 	}
-	res, err := conn.Service.DeleteClone(ctx, dbID, &req)
+
+	if remove, ok := d.GetOk("remove"); ok {
+		req.Remove = remove.(bool)
+	}
+
+	if softremove, ok := d.GetOk("soft_remove"); ok {
+		req.Softremove = softremove.(bool)
+	}
+
+	if forced, ok := d.GetOk("forced"); ok {
+		req.Forced = forced.(bool)
+	}
+
+	if deltms, ok := d.GetOk("delete_time_machine"); ok {
+		req.Deletetimemachine = deltms.(bool)
+	}
+
+	if dellogicalcls, ok := d.GetOk("delete_logical_cluster"); ok {
+		req.Deletelogicalcluster = dellogicalcls.(bool)
+	}
+	if remlogicalcls, ok := d.GetOk("remove_logical_cluster"); ok {
+		req.Deletelogicalcluster = remlogicalcls.(bool)
+	}
+
+	res, err := conn.Service.DeleteClone(ctx, dbID, req)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -651,14 +637,14 @@ func resourceNutanixNDBCloneDelete(ctx context.Context, d *schema.ResourceData, 
 		Pending: []string{"PENDING"},
 		Target:  []string{"COMPLETED", "FAILED"},
 		Refresh: eraRefresh(ctx, conn, opReq),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 		Delay:   eraDelay,
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for clone Instance (%s) to unregister: %s", res.Entityid, errWaitTask)
 	}
-	log.Printf("NDB clone with %s id deleted successfully", d.Id())
+	log.Printf("NDB clone with %s id is deleted successfully", d.Id())
 	return nil
 }
 

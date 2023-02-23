@@ -42,10 +42,6 @@ func dataSourceNutanixNDBSnapshots() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"owner_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"date_created": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -103,64 +99,6 @@ func dataSourceNutanixNDBSnapshots() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"metadata": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"secure_info": {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"info": dataSourceEraDatabaseInfo(),
-									"deregister_info": {
-										Type:     schema.TypeMap,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-									"from_timestamp": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"to_timestamp": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"replication_retry_count": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"last_replication_retyr_source_snapshot_id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"async": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"stand_by": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"curation_retry_count": {
-										Type:     schema.TypeInt,
-										Computed: true,
-									},
-									"operations_using_snapshot": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
-										},
-									},
-								},
-							},
-						},
 						"software_snapshot_id": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -173,11 +111,11 @@ func dataSourceNutanixNDBSnapshots() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"santised": {
+						"santized": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"santised_from_snapshot_id": {
+						"santized_from_snapshot_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -224,7 +162,7 @@ func dataSourceNutanixNDBSnapshots() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"santised_snapshots": {
+						"santized_snapshots": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -294,7 +232,6 @@ func flattenSnapshotsList(sn *era.ListSnapshots) []map[string]interface{} {
 			snap["id"] = val.ID
 			snap["name"] = val.Name
 			snap["description"] = val.Description
-			snap["owner_id"] = val.OwnerID
 			snap["date_created"] = val.DateCreated
 			snap["date_modified"] = val.DateModified
 			snap["properties"] = flattenDBInstanceProperties(val.Properties)
@@ -310,12 +247,11 @@ func flattenSnapshotsList(sn *era.ListSnapshots) []map[string]interface{} {
 			snap["type"] = val.Type
 			snap["applicable_types"] = val.ApplicableTypes
 			snap["snapshot_timestamp"] = val.SnapshotTimeStamp
-			snap["metadata"] = flattenClonedMetadata(val.Metadata)
 			snap["software_snapshot_id"] = val.SoftwareSnapshotID
 			snap["software_database_snapshot"] = val.SoftwareDatabaseSnapshot
 			snap["dbserver_storage_metadata_version"] = val.DBServerStorageMetadataVersion
-			// snap["santised"] = val.Sanitized
-			snap["santised_from_snapshot_id"] = val.SanitisedFromSnapshotID
+			snap["santized_from_snapshot_id"] = val.SanitizedFromSnapshotID
+			snap["santized"] = val.Sanitized
 			snap["timezone"] = val.TimeZone
 			snap["processed"] = val.Processed
 			snap["database_snapshot"] = val.DatabaseSnapshot
@@ -326,7 +262,7 @@ func flattenSnapshotsList(sn *era.ListSnapshots) []map[string]interface{} {
 			snap["dbserver_ip"] = val.DbserverIP
 			snap["replicated_snapshots"] = val.ReplicatedSnapshots
 			snap["software_snapshot"] = val.SoftwareSnapshot
-			snap["santised_snapshots"] = val.SanitisedSnapshots
+			snap["santized_snapshots"] = val.SanitizedSnapshots
 			snap["snapshot_family"] = val.SnapshotFamily
 			snap["snapshot_timestamp_date"] = val.SnapshotTimeStampDate
 			snap["lcm_config"] = flattenDBLcmConfig(val.LcmConfig)

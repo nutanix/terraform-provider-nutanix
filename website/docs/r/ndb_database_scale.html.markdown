@@ -40,30 +40,20 @@ Provides a resource to scale the database instance based on the input parameters
 * `description`: description of database instance
 * `databasetype`: type of database
 * `properties`: properties of database created
-* `owner_id`: owner id
 * `date_created`: date created for db instance
 * `date_modified`: date modified for instance
 * `tags`: allows you to assign metadata to entities (clones, time machines, databases, and database servers) by using tags.
 * `clone`: whether instance is cloned or not
-* `era_created`: whether era created or not
-* `internal`: is internal
-* `placeholder`: placeholder 
 * `database_name`: name of database
 * `type`: type of database
 * `database_cluster_type`: database cluster type
 * `status`: status of instance
-* `database_status`: status of database
 * `dbserver_logical_cluster_id`: dbserver logical cluster id
 * `time_machine_id`: time machine id of instance 
-* `parent_time_machine_id`: parent time machine id
 * `time_zone`: timezone on which instance is created xw
 * `info`: info of instance
-* `group_info`: group info of instance
-* `metadata`: metadata of instance
 * `metric`: Stores storage info regarding size, allocatedSize, usedSize and unit of calculation that seems to have been fetched from PRISM.
-* `category`: category of instance
 * `parent_database_id`: parent database id
-* `parent_source_database_id`: parent source database id
 * `lcm_config`: LCM config of instance
 * `time_machine`: Time Machine details of instance
 * `dbserver_logical_cluster`: dbserver logical cluster

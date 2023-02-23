@@ -3,6 +3,7 @@ package nutanix
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,12 +13,19 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
+var (
+	SoftwareVersionProfileTimeout = 15 * time.Minute
+)
+
 func resourceNutanixNDBSoftwareVersionProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceNutanixNDBSoftwareVersionProfileCreate,
 		ReadContext:   resourceNutanixNDBSoftwareVersionProfileRead,
 		UpdateContext: resourceNutanixNDBSoftwareVersionProfileUpdate,
 		DeleteContext: resourceNutanixNDBSoftwareVersionProfileDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(SoftwareVersionProfileTimeout),
+		},
 		Schema: map[string]*schema.Schema{
 			"profile_id": {
 				Type:     schema.TypeString,
@@ -287,7 +295,7 @@ func resourceNutanixNDBSoftwareVersionProfileCreate(ctx context.Context, d *sche
 	if er != nil {
 		return diag.FromErr(er)
 	}
-	log.Printf("NDB Software Version Profile with %s id created successfully", d.Id())
+	log.Printf("NDB Software Version Profile with %s id is created successfully", d.Id())
 	return resourceNutanixNDBSoftwareVersionProfileRead(ctx, d, meta)
 }
 
@@ -392,7 +400,7 @@ func resourceNutanixNDBSoftwareVersionProfileUpdate(ctx context.Context, d *sche
 	if er != nil {
 		return diag.FromErr(er)
 	}
-	log.Printf("NDB Software Version Profile with %s id updated successfully", d.Id())
+	log.Printf("NDB Software Version Profile with %s id is updated successfully", d.Id())
 	return resourceNutanixNDBSoftwareVersionProfileRead(ctx, d, meta)
 }
 
@@ -405,7 +413,7 @@ func resourceNutanixNDBSoftwareVersionProfileDelete(ctx context.Context, d *sche
 	}
 
 	if resp == utils.StringPtr("Profile Successfully Deleted.") {
-		log.Printf("NDB Software Version Profile with %s id deleted successfully", d.Id())
+		log.Printf("NDB Software Version Profile with %s id is deleted successfully", d.Id())
 		d.SetId("")
 	}
 	return nil

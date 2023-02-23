@@ -290,6 +290,13 @@ The following arguments are supported:
 * `nodes`: - (Optional) nodes info
 * `postgresql_info`: - (Optional) action arguments for postgress type database.
 
+* `delete`:- (Optional) Delete the database from the VM. Default value is true
+* `remove`:- (Optional) Unregister the database from NDB. Default value is true
+* `soft_remove`:- (Optional) Soft remove. Default will be false
+* `forced`:- (Optional) Force delete of instance. Default is false
+* `delete_time_machine`:- (Optional) Delete the database's Time Machine (snapshots/logs) from the NDB. Default value is true
+* `delete_logical_cluster`:- (Optional) Delete the logical cluster. Default is true
+
 ### actionarguments
 
 Structure for each action argument in actionarguments list:

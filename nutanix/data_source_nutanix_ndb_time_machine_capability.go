@@ -253,11 +253,11 @@ func dataSourceNutanixNDBTmsCapability() *schema.Resource {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"santised": {
+									"santized": {
 										Type:     schema.TypeBool,
 										Computed: true,
 									},
-									"santised_from_snapshot_id": {
+									"santized_from_snapshot_id": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -304,7 +304,7 @@ func dataSourceNutanixNDBTmsCapability() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"santised_snapshots": {
+									"santized_snapshots": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -842,11 +842,11 @@ func dataSourceNutanixNDBTmsCapability() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"santised": {
+						"santized": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"santised_from_snapshot_id": {
+						"santized_from_snapshot_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -893,7 +893,7 @@ func dataSourceNutanixNDBTmsCapability() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"santised_snapshots": {
+						"santized_snapshots": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -1151,7 +1151,7 @@ func flattenLastContinousSnapshot(pr *era.LastContinuousSnapshot) []map[string]i
 		snap["metadata"] = flattenLastContinousSnapshotMetadata(pr.Metadata)
 		snap["software_snapshot_id"] = pr.SoftwareSnapshotID
 		snap["software_database_snapshot"] = pr.SoftwareDatabaseSnapshot
-		snap["santised_from_snapshot_id"] = pr.SanitisedFromSnapshotID
+		snap["santized_from_snapshot_id"] = pr.SanitizedFromSnapshotID
 		snap["processed"] = pr.Processed
 		snap["database_snapshot"] = pr.DatabaseSnapshot
 		snap["from_timestamp"] = pr.FromTimeStamp
@@ -1161,7 +1161,7 @@ func flattenLastContinousSnapshot(pr *era.LastContinuousSnapshot) []map[string]i
 		snap["dbserver_ip"] = pr.DBserverIP
 		snap["replicated_snapshots"] = pr.ReplicatedSnapshots
 		snap["software_snapshot"] = pr.SoftwareSnapshot
-		snap["santised_snapshots"] = pr.SanitisedSnapshots
+		snap["santized_snapshots"] = pr.SanitizedSnapshots
 		snap["snapshot_family"] = pr.SnapshotFamily
 		snap["snapshot_timestamp_date"] = pr.SnapshotTimeStampDate
 		snap["lcm_config"] = flattenDBLcmConfig(pr.LcmConfig)

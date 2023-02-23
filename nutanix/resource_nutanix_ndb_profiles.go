@@ -720,7 +720,7 @@ func resourceNutanixNDBProfileCreate(ctx context.Context, d *schema.ResourceData
 			return diag.FromErr(er)
 		}
 	}
-	log.Printf("NDB Profile with %s id created successfully", d.Id())
+	log.Printf("NDB Profile with %s id is created successfully", d.Id())
 	return resourceNutanixNDBProfileRead(ctx, d, meta)
 }
 
@@ -895,7 +895,7 @@ func resourceNutanixNDBProfileUpdate(ctx context.Context, d *schema.ResourceData
 	if er != nil {
 		return diag.FromErr(er)
 	}
-	log.Printf("NDB Profile with %s id updated successfully", d.Id())
+	log.Printf("NDB Profile with %s id is updated successfully", d.Id())
 	return resourceNutanixNDBProfileRead(ctx, d, meta)
 }
 
@@ -908,7 +908,7 @@ func resourceNutanixNDBProfileDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	if resp == utils.StringPtr("Profile Successfully Deleted.") {
-		log.Printf("NDB Profile with %s id deleted successfully", d.Id())
+		log.Printf("NDB Profile with %s id is deleted successfully", d.Id())
 		d.SetId("")
 	}
 	return nil

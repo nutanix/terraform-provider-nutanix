@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-const resourceNameLogCatchDB = "nutanix_ndb_database_log_catchup.acctest-managed"
+const resourceNameLogCatchDB = "nutanix_ndb_log_catchups.acctest-managed"
 
 func TestAccEra_LogCatchUpbasic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -16,8 +16,6 @@ func TestAccEra_LogCatchUpbasic(t *testing.T) {
 			{
 				Config: testAccEraDatabaseLogCatchUpConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameLogCatchDB, "log_catchup_version", ""),
-					resource.TestCheckResourceAttr(resourceNameLogCatchDB, "database_id", ""),
 					resource.TestCheckResourceAttrSet(resourceNameLogCatchDB, "time_machine_id"),
 				),
 			},
@@ -29,7 +27,7 @@ func testAccEraDatabaseLogCatchUpConfig() string {
 	return (`
 		data "nutanix_ndb_time_machines" "test1" {}
 
-		resource "nutanix_ndb_log_catchups" "name" {
+		resource "nutanix_ndb_log_catchups" "acctest-managed" {
 			time_machine_id = data.nutanix_ndb_time_machines.test1.time_machines.0.id
 		}
 	`)

@@ -21,7 +21,7 @@ func TestAccEraLinkedDB_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameLinkedDB, "name", name),
 					resource.TestCheckResourceAttrSet(resourceNameLinkedDB, "id"),
 					resource.TestCheckResourceAttrSet(resourceNameLinkedDB, "status"),
-					resource.TestCheckResourceAttrSet(resourceNameLinkedDB, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceNameLinkedDB, "parent_database_id"),
 				),
 			},
 		},

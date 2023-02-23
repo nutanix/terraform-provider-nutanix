@@ -21,7 +21,6 @@ func TestAccEra_Snapshotbasic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameSnapshotDB, "name", name),
 					resource.TestCheckResourceAttr(resourceNameSnapshotDB, "remove_schedule_in_days", removalIndays),
-					resource.TestCheckResourceAttr(resourceNameSnapshotDB, "metadata.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameSnapshotDB, "database_snapshot", "false"),
 				),
 			},
@@ -41,7 +40,6 @@ func TestAccEra_Snapshot_ReplicateToClusters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameSnapshotDB, "name", name),
 					resource.TestCheckResourceAttr(resourceNameSnapshotDB, "remove_schedule_in_days", removalIndays),
-					resource.TestCheckResourceAttr(resourceNameSnapshotDB, "metadata.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameSnapshotDB, "database_snapshot", "false"),
 					resource.TestCheckResourceAttr(resourceNameSnapshotDB, "replicate_to_clusters.#", "2"),
 				),

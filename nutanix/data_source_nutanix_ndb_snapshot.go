@@ -48,10 +48,6 @@ func dataSourceNutanixNDBSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -109,64 +105,6 @@ func dataSourceNutanixNDBSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"metadata": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"secure_info": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"info": dataSourceEraDatabaseInfo(),
-						"deregister_info": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"from_timestamp": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"to_timestamp": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"replication_retry_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"last_replication_retyr_source_snapshot_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"async": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"stand_by": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						"curation_retry_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"operations_using_snapshot": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
 			"software_snapshot_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -179,11 +117,11 @@ func dataSourceNutanixNDBSnapshot() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"santised": {
+			"santized": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"santised_from_snapshot_id": {
+			"santized_from_snapshot_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -230,7 +168,7 @@ func dataSourceNutanixNDBSnapshot() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"santised_snapshots": {
+			"santized_snapshots": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -293,10 +231,6 @@ func dataSourceNutanixNDBSnapshotRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err := d.Set("name", resp.Name); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("owner_id", resp.OwnerID); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -375,11 +309,11 @@ func dataSourceNutanixNDBSnapshotRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	// if err := d.Set("santised", resp.Sanitized); err != nil {
-	// 	return diag.FromErr(err)
-	// }
+	if err := d.Set("santized", resp.Sanitized); err != nil {
+		return diag.FromErr(err)
+	}
 
-	if err := d.Set("santised_from_snapshot_id", resp.SanitisedFromSnapshotID); err != nil {
+	if err := d.Set("santized_from_snapshot_id", resp.SanitizedFromSnapshotID); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -423,7 +357,7 @@ func dataSourceNutanixNDBSnapshotRead(ctx context.Context, d *schema.ResourceDat
 		return diag.FromErr(err)
 	}
 
-	if err := d.Set("santised_snapshots", resp.SanitisedSnapshots); err != nil {
+	if err := d.Set("santized_snapshots", resp.SanitizedSnapshots); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -444,10 +378,6 @@ func dataSourceNutanixNDBSnapshotRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err := d.Set("lcm_config", flattenDBLcmConfig(resp.LcmConfig)); err != nil {
-		return diag.FromErr(err)
-	}
-
-	if err := d.Set("metadata", flattenClonedMetadata(resp.Metadata)); err != nil {
 		return diag.FromErr(err)
 	}
 

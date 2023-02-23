@@ -18,7 +18,6 @@ func TestAccEraTimeMachineDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceTMName, "name"),
 					resource.TestCheckResourceAttrSet(dataSourceTMName, "description"),
-					resource.TestCheckResourceAttr(dataSourceTMName, "metadata.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceTMName, "clone", "false"),
 					resource.TestCheckResourceAttr(dataSourceTMName, "sla.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceTMName, "schedule.#", "1"),
@@ -38,7 +37,6 @@ func TestAccEraTimeMachineDataSource_basicWithID(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceTMName, "name"),
 					resource.TestCheckResourceAttrSet(dataSourceTMName, "description"),
-					resource.TestCheckResourceAttr(dataSourceTMName, "metadata.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceTMName, "clone", "false"),
 					resource.TestCheckResourceAttr(dataSourceTMName, "sla.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceTMName, "schedule.#", "1"),

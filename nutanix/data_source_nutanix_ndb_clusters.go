@@ -147,8 +147,17 @@ func dataSourceNutanixEraClusters() *schema.Resource {
 							Computed: true,
 						},
 						"entity_counts": {
-							Type:     schema.TypeString,
+							Type:     schema.TypeList,
 							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"db_servers": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"engine_counts": engineCountSchema(),
+								},
+							},
 						},
 						"healthy": {
 							Type:     schema.TypeBool,
@@ -209,7 +218,7 @@ func flattenClustersResponse(crsp *Era.ClusterListResponse) []map[string]interfa
 			d["cloud_info"] = v.Cloudinfo
 			d["resource_config"] = flattenResourceConfig(v.Resourceconfig)
 			d["management_server_info"] = v.Managementserverinfo
-			d["entity_counts"] = v.Entitycounts
+			d["entity_counts"] = flattenEntityCounts(v.EntityCounts)
 			d["healthy"] = v.Healthy
 			lst = append(lst, d)
 		}

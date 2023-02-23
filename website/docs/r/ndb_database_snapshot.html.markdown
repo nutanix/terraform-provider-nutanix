@@ -47,7 +47,6 @@ Provides a resource to perform the snapshot for database instance based on the i
 * `id`: name of snapshot
 * `description`: description of snapshot
 * `properties`: properties 
-* `owner_id`: owner id 
 * `date_created`: created date
 * `date_modified`: modified date
 * `properties`: properties 
@@ -62,7 +61,6 @@ Provides a resource to perform the snapshot for database instance based on the i
 * `type`: type
 * `applicable_types`: Applicable types
 * `snapshot_timestamp`: snapshot timeStamp
-* `metadata`: metadata of snapshot 
 * `software_snapshot_id`: software snapshot id
 * `software_database_snapshot`: software database snapshot
 * `dbserver_storage_metadata_version`: dbserver storage metadata version

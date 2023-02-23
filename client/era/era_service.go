@@ -56,6 +56,41 @@ type Service interface {
 	TimeMachineCapability(ctx context.Context, tmsID string) (*TimeMachineCapability, error)
 	CreateLinkedDatabase(ctx context.Context, id string, req *CreateLinkedDatabasesRequest) (*ProvisionDatabaseResponse, error)
 	DeleteLinkedDatabase(ctx context.Context, DBID string, linkedDBID string, req *DeleteLinkedDatabaseRequest) (*ProvisionDatabaseResponse, error)
+	CreateMaintenanceWindow(ctx context.Context, body *MaintenanceWindowInput) (*MaintenaceWindowResponse, error)
+	ReadMaintenanceWindow(ctx context.Context, id string) (*MaintenaceWindowResponse, error)
+	UpdateMaintenaceWindow(ctx context.Context, body *MaintenanceWindowInput, id string) (*MaintenaceWindowResponse, error)
+	DeleteMaintenanceWindow(ctx context.Context, id string) (*AuthorizeDBServerResponse, error)
+	ListMaintenanceWindow(ctx context.Context) (*ListMaintenanceWindowResponse, error)
+	CreateMaintenanceTask(ctx context.Context, body *MaintenanceTasksInput) (*ListMaintenanceTasksResponse, error)
+	CreateTimeMachineCluster(ctx context.Context, tmsID string, body *TmsClusterIntentInput) (*TmsClusterResponse, error)
+	ReadTimeMachineCluster(ctx context.Context, tmsID string, clsID string) (*TmsClusterResponse, error)
+	UpdateTimeMachineCluster(ctx context.Context, tmsID string, clsID string, body *TmsClusterIntentInput) (*TmsClusterResponse, error)
+	DeleteTimeMachineCluster(ctx context.Context, tmsID string, clsID string, body *DeleteTmsClusterInput) (*ProvisionDatabaseResponse, error)
+	CreateTags(ctx context.Context, body *CreateTagsInput) (*TagsIntentResponse, error)
+	ReadTags(ctx context.Context, id string) (*GetTagsResponse, error)
+	UpdateTags(ctx context.Context, body *GetTagsResponse, id string) (*GetTagsResponse, error)
+	DeleteTags(ctx context.Context, id string) (*string, error)
+	ListTags(ctx context.Context) (*ListTagsResponse, error)
+	CreateNetwork(ctx context.Context, body *NetworkIntentInput) (*NetworkIntentResponse, error)
+	GetNetwork(ctx context.Context, id string, name string) (*NetworkIntentResponse, error)
+	UpdateNetwork(ctx context.Context, body *NetworkIntentInput, id string) (*NetworkIntentResponse, error)
+	DeleteNetwork(ctx context.Context, id string) (*string, error)
+	ListNetwork(ctx context.Context) (*ListNetworkResponse, error)
+	CreateDBServerVM(ctx context.Context, body *DBServerInputRequest) (*ProvisionDatabaseResponse, error)
+	ReadDBServerVM(ctx context.Context, id string) (*DBServerVMResponse, error)
+	UpdateDBServerVM(ctx context.Context, body *UpdateDBServerVMRequest, dbserverid string) (*DBServerVMResponse, error)
+	DeleteDBServerVM(ctx context.Context, req *DeleteDBServerVMRequest, dbserverid string) (*DeleteDatabaseResponse, error)
+	RegisterDBServerVM(ctx context.Context, body *DBServerRegisterInput) (*ProvisionDatabaseResponse, error)
+	GetDBServerVM(ctx context.Context, filter *DBServerFilterRequest) (*DBServerVMResponse, error)
+	ListDBServerVM(ctx context.Context) (*ListDBServerVMResponse, error)
+	CreateStretchedVlan(ctx context.Context, req *StretchedVlansInput) (*StretchedVlanResponse, error)
+	GetStretchedVlan(ctx context.Context, id string) (*StretchedVlanResponse, error)
+	UpdateStretchedVlan(ctx context.Context, id string, req *StretchedVlansInput) (*StretchedVlanResponse, error)
+	DeleteStretchedVlan(ctx context.Context, id string) (*string, error)
+	RefreshClone(ctx context.Context, body *CloneRefreshInput, id string) (*ProvisionDatabaseResponse, error)
+	CreateCluster(ctx context.Context, body *ClusterIntentInput) (*ProvisionDatabaseResponse, error)
+	UpdateCluster(ctx context.Context, req *ClusterUpdateInput, id string) (*ListClusterResponse, error)
+	DeleteCluster(ctx context.Context, req *DeleteClusterInput, id string) (*ProvisionDatabaseResponse, error)
 }
 
 type ServiceClient struct {
@@ -96,10 +131,10 @@ func (sc ServiceClient) GetProfile(ctx context.Context, filter *ProfileFilter) (
 func (sc ServiceClient) GetCluster(ctx context.Context, id string, name string) (*ListClusterResponse, error) {
 	var path string
 	if id != "" {
-		path = fmt.Sprintf("/clusters/%s", id)
+		path = fmt.Sprintf("/clusters/%s?count_entities=true", id)
 	}
 	if name != "" {
-		path = fmt.Sprintf("/clusters/name/%s", name)
+		path = fmt.Sprintf("/clusters/name/%s?count_entities=true", name)
 	}
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
@@ -111,7 +146,7 @@ func (sc ServiceClient) GetCluster(ctx context.Context, id string, name string) 
 }
 
 func (sc ServiceClient) ListClusters(ctx context.Context) (*ClusterListResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/clusters", nil)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/clusters?count_entities=true", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -648,5 +683,377 @@ func (sc ServiceClient) DeleteLinkedDatabase(ctx context.Context, id string, lin
 		return nil, err
 	}
 	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) CreateMaintenanceWindow(ctx context.Context, body *MaintenanceWindowInput) (*MaintenaceWindowResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/maintenance", body)
+	if err != nil {
+		return nil, err
+	}
+	res := new(MaintenaceWindowResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ReadMaintenanceWindow(ctx context.Context, id string) (*MaintenaceWindowResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/maintenance/%s?load-task-associations=true", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(MaintenaceWindowResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) UpdateMaintenaceWindow(ctx context.Context, body *MaintenanceWindowInput, id string) (*MaintenaceWindowResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("/maintenance/%s", id), body)
+	if err != nil {
+		return nil, err
+	}
+	res := new(MaintenaceWindowResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteMaintenanceWindow(ctx context.Context, id string) (*AuthorizeDBServerResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/maintenance/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(AuthorizeDBServerResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ListMaintenanceWindow(ctx context.Context) (*ListMaintenanceWindowResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/maintenance?load-task-associations=true", nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(ListMaintenanceWindowResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) CreateMaintenanceTask(ctx context.Context, req *MaintenanceTasksInput) (*ListMaintenanceTasksResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/maintenance/tasks", req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ListMaintenanceTasksResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) CreateTags(ctx context.Context, body *CreateTagsInput) (*TagsIntentResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/tags", body)
+	if err != nil {
+		return nil, err
+	}
+	res := new(TagsIntentResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) CreateTimeMachineCluster(ctx context.Context, tmsID string, body *TmsClusterIntentInput) (*TmsClusterResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/tms/%s/clusters", tmsID), body)
+	if err != nil {
+		return nil, err
+	}
+	res := new(TmsClusterResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ReadTags(ctx context.Context, id string) (*GetTagsResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/tags?id=%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(GetTagsResponse)
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ReadTimeMachineCluster(ctx context.Context, tmsID string, clsID string) (*TmsClusterResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/tms/%s/clusters/%s", tmsID, clsID), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(TmsClusterResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) UpdateTimeMachineCluster(ctx context.Context, tmsID string, clsID string, body *TmsClusterIntentInput) (*TmsClusterResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("/tms/%s/clusters/%s", tmsID, clsID), body)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(TmsClusterResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) RefreshClone(ctx context.Context, body *CloneRefreshInput, id string) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/clones/%s/refresh", id), body)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteTimeMachineCluster(ctx context.Context, tmsID string, clsID string, body *DeleteTmsClusterInput) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/tms/%s/clusters/%s", tmsID, clsID), body)
+	if err != nil {
+		return nil, err
+	}
+	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) CreateCluster(ctx context.Context, body *ClusterIntentInput) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/clusters", body)
+	if err != nil {
+		return nil, err
+	}
+	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) CreateDBServerVM(ctx context.Context, body *DBServerInputRequest) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/dbservers/provision", body)
+	if err != nil {
+		return nil, err
+	}
+	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteCluster(ctx context.Context, body *DeleteClusterInput, id string) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/clusters/%s", id), body)
+	if err != nil {
+		return nil, err
+	}
+	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) UpdateTags(ctx context.Context, body *GetTagsResponse, id string) (*GetTagsResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPut, fmt.Sprintf("/tags/%s", id), body)
+	if err != nil {
+		return nil, err
+	}
+	res := new(GetTagsResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteTags(ctx context.Context, id string) (*string, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/tags/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(string)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) CreateNetwork(ctx context.Context, body *NetworkIntentInput) (*NetworkIntentResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/resources/networks", body)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(NetworkIntentResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) GetNetwork(ctx context.Context, id, name string) (*NetworkIntentResponse, error) {
+	path := "/resources/networks?detailed=true&"
+	if name != "" {
+		path += fmt.Sprintf("name=%s", name)
+	} else {
+		path += fmt.Sprintf("id=%s", id)
+	}
+
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(NetworkIntentResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) UpdateNetwork(ctx context.Context, body *NetworkIntentInput, id string) (*NetworkIntentResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPut, fmt.Sprintf("/resources/networks/%s", id), body)
+	if err != nil {
+		return nil, err
+	}
+	res := new(NetworkIntentResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteNetwork(ctx context.Context, id string) (*string, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/resources/networks/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(string)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ListTags(ctx context.Context) (*ListTagsResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/tags", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ListTagsResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ListNetwork(ctx context.Context) (*ListNetworkResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/resources/networks", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(ListNetworkResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) ReadDBServerVM(ctx context.Context, id string) (*DBServerVMResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/dbservers/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(DBServerVMResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) UpdateDBServerVM(ctx context.Context, body *UpdateDBServerVMRequest, dbServerID string) (*DBServerVMResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("/dbservers/%s", dbServerID), body)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(DBServerVMResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteDBServerVM(ctx context.Context, req *DeleteDBServerVMRequest, dbServerVMID string) (*DeleteDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/dbservers/%s", dbServerVMID), req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(DeleteDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) RegisterDBServerVM(ctx context.Context, body *DBServerRegisterInput) (*ProvisionDatabaseResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/dbservers/register", body)
+	if err != nil {
+		return nil, err
+	}
+	res := new(ProvisionDatabaseResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) GetDBServerVM(ctx context.Context, filter *DBServerFilterRequest) (*DBServerVMResponse, error) {
+	var httpReq *http.Request
+	var err error
+
+	path := makeDBServerPath(filter.DBServerClusterID, filter.ID, filter.IP, filter.Name, filter.NxClusterID, filter.VMClusterID, filter.VMClusterName)
+
+	httpReq, err = sc.c.NewRequest(ctx, http.MethodGet, path, nil)
+
+	if err != nil {
+		return nil, err
+	}
+	res := new(DBServerVMResponse)
+
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func makeDBServerPath(dbserverClsid, id, ip, name, nxClsid, vmclsid, vmclsName *string) string {
+	path := "/dbservers"
+
+	if dbserverClsid != nil {
+		path += fmt.Sprintf("/%s?value-type=dbserver-cluster-id", *dbserverClsid)
+	}
+	if id != nil {
+		path += fmt.Sprintf("/%s?value-type=id", *id)
+	}
+	if ip != nil {
+		path += fmt.Sprintf("/%s?value-type=ip", *ip)
+	}
+	if name != nil {
+		path += fmt.Sprintf("/%s?value-type=name", *name)
+	}
+	if nxClsid != nil {
+		path += fmt.Sprintf("/%s?value-type=nx-cluster-id", *nxClsid)
+	}
+	if vmclsid != nil {
+		path += fmt.Sprintf("/%s?value-type=vm-cluster-id", *vmclsid)
+	}
+	if vmclsName != nil {
+		path += fmt.Sprintf("/%s?value-type=vm-cluster-name", *vmclsName)
+	}
+
+	path += "&load-dbserver-cluster=false&load-databases=false&load-clones=false&load-metrics=false&detailed=false&curator=false&time-zone=UTC"
+
+	return path
+}
+
+func (sc ServiceClient) ListDBServerVM(ctx context.Context) (*ListDBServerVMResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/dbservers?load-dbserver-cluster=false&load-databases=false&load-clones=false&detailed=false&load-metrics=false&time-zone=UTC", nil)
+
+	if err != nil {
+		return nil, err
+	}
+	res := new(ListDBServerVMResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) CreateStretchedVlan(ctx context.Context, req *StretchedVlansInput) (*StretchedVlanResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/resources/networks/stretched-vlan", req)
+	if err != nil {
+		return nil, err
+	}
+	res := new(StretchedVlanResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) GetStretchedVlan(ctx context.Context, id string) (*StretchedVlanResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/resources/networks/stretched-vlan/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(StretchedVlanResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) UpdateStretchedVlan(ctx context.Context, id string, req *StretchedVlansInput) (*StretchedVlanResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPut, fmt.Sprintf("/resources/networks/stretched-vlan/%s", id), req)
+	if err != nil {
+		return nil, err
+	}
+	res := new(StretchedVlanResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) DeleteStretchedVlan(ctx context.Context, id string) (*string, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/resources/networks/stretched-vlan/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(string)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) UpdateCluster(ctx context.Context, req *ClusterUpdateInput, id string) (*ListClusterResponse, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodPatch, fmt.Sprintf("/clusters/%s", id), req)
+	if err != nil {
+		return nil, err
+	}
+	res := new(ListClusterResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
