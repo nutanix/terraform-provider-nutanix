@@ -1,12 +1,12 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_ndb_tags"
-sidebar_current: "docs-nutanix-resource-ndb-tags"
+page_title: "NUTANIX: nutanix_ndb_tag"
+sidebar_current: "docs-nutanix-resource-ndb-tag"
 description: |-
   NDB allows you to assign metadata to entities (clones, time machines, databases, and database servers) by using tags. When you are cloning a database, you can associate tags with the database that you are creating. This operation submits a request to create, update and delete tags in Nutanix database service (NDB).
 ---
 
-# nutanix_ndb_tags
+# nutanix_ndb_tag
 
 Provides a resource to create tags based on the input parameters. 
 
@@ -14,7 +14,7 @@ Provides a resource to create tags based on the input parameters.
 
 ### resource to create tag
 ```hcl
-    resource "nutanix_ndb_tags" "name" {
+    resource "nutanix_ndb_tag" "name" {
         name= "testst-up"
         description = "this is desc ok"
         entity_type = "DATABASE"
@@ -24,7 +24,7 @@ Provides a resource to create tags based on the input parameters.
 
 ### resource to update tag with status
 ```hcl
-    resource "nutanix_ndb_tags" "name" {
+    resource "nutanix_ndb_tag" "name" {
         name= "testst-up"
         description = "this is desc ok"
         entity_type = "DATABASE"
