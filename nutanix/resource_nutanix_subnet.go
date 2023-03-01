@@ -717,7 +717,7 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) {
 		dhcpo.DomainSearchList = expandStringList(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("vlan_id"); ok {
+	if v, ok := d.GetOkExists("vlan_id"); ok {
 		if v.(int) == 0 || ok {
 			subnet.VlanID = utils.Int64Ptr(int64(v.(int)))
 		}
