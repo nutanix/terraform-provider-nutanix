@@ -19,6 +19,9 @@ func resourceNutanixNDBProfile() *schema.Resource {
 		ReadContext:   resourceNutanixNDBProfileRead,
 		UpdateContext: resourceNutanixNDBProfileUpdate,
 		DeleteContext: resourceNutanixNDBProfileDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

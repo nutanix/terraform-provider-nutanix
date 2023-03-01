@@ -3,6 +3,7 @@ package nutanix
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -19,6 +20,9 @@ func resourceNutanixNDBScaleDatabase() *schema.Resource {
 		DeleteContext: resourceNutanixNDBScaleDatabaseDelete,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(EraProvisionTimeout),
+		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"database_uuid": {
@@ -229,14 +233,21 @@ func resourceNutanixNDBScaleDatabaseCreate(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error waiting for db Instance    (%s) to scale: %s", resp.Entityid, errWaitTask)
 	}
 
-	d.SetId(resp.Operationid)
+	setID := dbUUID + "/" + resp.Operationid
+	d.SetId(setID)
 	log.Printf("NDB database with %s id is scaled successfully", d.Id())
 	return resourceNutanixNDBScaleDatabaseRead(ctx, d, meta)
 }
 
 func resourceNutanixNDBScaleDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	databaseID := d.Get("database_uuid").(string)
-	ctx = NewContext(ctx, dbID(databaseID))
+	splitID := strings.Split(d.Id(), "/")
+	dbUUID := splitID[0]
+
+	if databaseID, ok := d.GetOk("database_uuid"); ok {
+		ctx = NewContext(ctx, dbID(databaseID.(string)))
+	} else {
+		ctx = NewContext(ctx, dbID(dbUUID))
+	}
 	return readDatabaseInstance(ctx, d, meta)
 }
 

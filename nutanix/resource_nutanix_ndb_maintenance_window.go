@@ -17,6 +17,9 @@ func resourceNutanixNDBMaintenanceWindow() *schema.Resource {
 		ReadContext:   resourceNutanixNDBMaintenanceWindowRead,
 		UpdateContext: resourceNutanixNDBMaintenanceWindowUpdate,
 		DeleteContext: resourceNutanixNDBMaintenanceWindowDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

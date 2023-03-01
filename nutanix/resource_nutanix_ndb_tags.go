@@ -17,6 +17,9 @@ func resourceNutanixNDBTags() *schema.Resource {
 		ReadContext:   resourceNutanixNDBTagsRead,
 		UpdateContext: resourceNutanixNDBTagsUpdate,
 		DeleteContext: resourceNutanixNDBTagsDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

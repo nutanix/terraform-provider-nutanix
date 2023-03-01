@@ -37,7 +37,8 @@ func resourceNutanixNDBDatabaseSnapshot() *schema.Resource {
 			},
 			"name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Default:  "era_manual_snapshot",
 			},
 			"remove_schedule_in_days": {
 				Type:     schema.TypeInt,
@@ -230,6 +231,8 @@ func resourceNutanixNDBDatabaseSnapshotCreate(ctx context.Context, d *schema.Res
 	if name, ok := d.GetOk("name"); ok {
 		req.Name = utils.StringPtr(name.(string))
 		snapshotName = utils.StringValue(req.Name)
+	} else {
+		snapshotName = "era_manual_snapshot"
 	}
 
 	if rm, ok := d.GetOk("remove_schedule_in_days"); ok {

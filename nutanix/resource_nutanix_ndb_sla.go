@@ -16,6 +16,9 @@ func resourceNutanixNDBSla() *schema.Resource {
 		ReadContext:   resourceNutanixNDBSlaRead,
 		UpdateContext: resourceNutanixNDBSlaUpdate,
 		DeleteContext: resourceNutanixNDBSlaDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

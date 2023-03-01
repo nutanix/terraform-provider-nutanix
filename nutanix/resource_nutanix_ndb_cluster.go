@@ -17,6 +17,9 @@ func resourceNutanixNDBCluster() *schema.Resource {
 		ReadContext:   resourceNutanixNDBClusterRead,
 		UpdateContext: resourceNutanixNDBClusterUpdate,
 		DeleteContext: resourceNutanixNDBClusterDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

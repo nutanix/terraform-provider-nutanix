@@ -3,6 +3,7 @@ package nutanix
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -19,6 +20,9 @@ func resourceNutanixNDBDatabaseRestore() *schema.Resource {
 		DeleteContext: resourceNutanixNDBDatabaseRestoreDelete,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(EraProvisionTimeout),
+		},
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"database_id": {
@@ -214,14 +218,21 @@ func resourceNutanixNDBDatabaseRestoreCreate(ctx context.Context, d *schema.Reso
 		return diag.Errorf("error waiting to perform db restore	 (%s) to create: %s", resp.Entityid, errWaitTask)
 	}
 
-	d.SetId(resp.Operationid)
+	setID := databaseID + "/" + resp.Operationid
+	d.SetId(setID)
 	log.Printf("NDB database restore  with %s id is performed successfully", d.Id())
 	return resourceNutanixNDBDatabaseRestoreRead(ctx, d, meta)
 }
 
 func resourceNutanixNDBDatabaseRestoreRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	databaseID := d.Get("database_id").(string)
-	ctx = NewContext(ctx, dbID(databaseID))
+	splitID := strings.Split(d.Id(), "/")
+	dbUUID := splitID[0]
+
+	if databaseID, ok := d.GetOk("database_id"); ok {
+		ctx = NewContext(ctx, dbID(databaseID.(string)))
+	} else {
+		ctx = NewContext(ctx, dbID(dbUUID))
+	}
 	return readDatabaseInstance(ctx, d, meta)
 }
 
