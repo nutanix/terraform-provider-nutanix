@@ -48,6 +48,7 @@ func resourceNutanixNDBClone() *schema.Resource {
 			"time_zone": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"node_count": {
 				Type:     schema.TypeInt,
@@ -511,10 +512,6 @@ func resourceNutanixNDBCloneRead(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if err := d.Set("parent_database_id", resp.ParentDatabaseID); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("lcm_config", flattenDBLcmConfig(resp.Lcmconfig)); err != nil {
 			return diag.FromErr(err)
 		}
 
