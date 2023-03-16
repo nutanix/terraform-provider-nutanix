@@ -211,6 +211,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_networks":                            dataSourceNutanixEraNetworks(),
 			"nutanix_ndb_dbserver":                            dataSourceNutanixNDBDBServer(),
 			"nutanix_ndb_dbservers":                           dataSourceNutanixNDBDBServers(),
+			"nutanix_ndb_profile_available_ips":               dataSourceNutanixNDBProfileAvailableIPs(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  resourceNutanixVirtualMachine(),

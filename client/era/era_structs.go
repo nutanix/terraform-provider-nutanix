@@ -1969,3 +1969,14 @@ type ClusterUpdateInput struct {
 	Description *string   `json:"description,omitempty"`
 	IPAddresses []*string `json:"ipAddresses,omitempty"`
 }
+
+type GetNetworkAvailableIPs []struct {
+	ID           *string   `json:"id,omitempty"`
+	Name         *string   `json:"name,omitempty"`
+	PropertyName *string   `json:"propertyName,omitempty"`
+	Type         *string   `json:"type,omitempty"`
+	ClusterID    *string   `json:"clusterId,omitempty"`
+	ClusterName  *string   `json:"clusterName,omitempty"`
+	IPAddresses  []*string `json:"ipAddresses,omitempty"`
+	Managed      bool      `json:"managed,omitempty"`
+}

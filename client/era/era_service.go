@@ -91,6 +91,7 @@ type Service interface {
 	CreateCluster(ctx context.Context, body *ClusterIntentInput) (*ProvisionDatabaseResponse, error)
 	UpdateCluster(ctx context.Context, req *ClusterUpdateInput, id string) (*ListClusterResponse, error)
 	DeleteCluster(ctx context.Context, req *DeleteClusterInput, id string) (*ProvisionDatabaseResponse, error)
+	GetAvailableIPs(ctx context.Context, id string) (*GetNetworkAvailableIPs, error)
 }
 
 type ServiceClient struct {
@@ -1055,5 +1056,14 @@ func (sc ServiceClient) UpdateCluster(ctx context.Context, req *ClusterUpdateInp
 		return nil, err
 	}
 	res := new(ListClusterResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) GetAvailableIPs(ctx context.Context, id string) (*GetNetworkAvailableIPs, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/profiles/%s/get-available-ips", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(GetNetworkAvailableIPs)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
