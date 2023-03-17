@@ -35,12 +35,6 @@ func resourceDatabaseInstance() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"database_instance_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-			},
-
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
