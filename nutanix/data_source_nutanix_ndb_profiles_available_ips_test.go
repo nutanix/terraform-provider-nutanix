@@ -14,11 +14,11 @@ func TestAccEraProfilesAvailableIPsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEraProfilesAvailableIPsDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.nutanix_ndb_profile_available_ips.ips", "available_ips.#"),
-					resource.TestCheckResourceAttrSet("data.nutanix_ndb_profile_available_ips.ips", "available_ips.0.id"),
-					resource.TestCheckResourceAttrSet("data.nutanix_ndb_profile_available_ips.ips", "available_ips.0.name"),
-					resource.TestCheckResourceAttrSet("data.nutanix_ndb_profile_available_ips.ips", "available_ips.0.type"),
-					resource.TestCheckResourceAttrSet("data.nutanix_ndb_profile_available_ips.ips", "available_ips.0.managed"),
+					resource.TestCheckResourceAttrSet("data.nutanix_ndb_network_available_ips.ips", "available_ips.#"),
+					resource.TestCheckResourceAttrSet("data.nutanix_ndb_network_available_ips.ips", "available_ips.0.id"),
+					resource.TestCheckResourceAttrSet("data.nutanix_ndb_network_available_ips.ips", "available_ips.0.name"),
+					resource.TestCheckResourceAttrSet("data.nutanix_ndb_network_available_ips.ips", "available_ips.0.type"),
+					resource.TestCheckResourceAttrSet("data.nutanix_ndb_network_available_ips.ips", "available_ips.0.managed"),
 				),
 			},
 		},
@@ -31,7 +31,7 @@ func testAccEraProfilesAvailableIPsDataSourceConfig() string {
 			profile_type = "Network"
 		}
 
-		data "nutanix_ndb_profile_available_ips" "ips"{
+		data "nutanix_ndb_network_available_ips" "ips"{
 			profile_id =  data.nutanix_ndb_profiles.test.profiles.0.id
 		}
 	`
