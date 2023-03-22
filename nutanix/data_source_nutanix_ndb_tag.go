@@ -12,12 +12,16 @@ func dataSourceNutanixNDBTag() *schema.Resource {
 		ReadContext: dataSourceNutanixNDBTagRead,
 		Schema: map[string]*schema.Schema{
 			"id": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"name"},
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"id"},
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -58,8 +62,14 @@ func dataSourceNutanixNDBTag() *schema.Resource {
 func dataSourceNutanixNDBTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
-	tagID := d.Get("id")
-	resp, err := conn.Service.ReadTags(ctx, tagID.(string))
+	tagID, iok := d.GetOk("id")
+	tagName, nok := d.GetOk("name")
+
+	if !iok && !nok {
+		return diag.Errorf("please provide one of id or name attributes")
+	}
+
+	resp, err := conn.Service.ReadTags(ctx, tagID.(string), tagName.(string))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -100,6 +110,6 @@ func dataSourceNutanixNDBTagRead(ctx context.Context, d *schema.ResourceData, me
 		return diag.FromErr(err)
 	}
 
-	d.SetId(tagID.(string))
+	d.SetId(*resp.ID)
 	return nil
 }

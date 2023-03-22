@@ -67,10 +67,10 @@ type Service interface {
 	UpdateTimeMachineCluster(ctx context.Context, tmsID string, clsID string, body *TmsClusterIntentInput) (*TmsClusterResponse, error)
 	DeleteTimeMachineCluster(ctx context.Context, tmsID string, clsID string, body *DeleteTmsClusterInput) (*ProvisionDatabaseResponse, error)
 	CreateTags(ctx context.Context, body *CreateTagsInput) (*TagsIntentResponse, error)
-	ReadTags(ctx context.Context, id string) (*GetTagsResponse, error)
+	ReadTags(ctx context.Context, id string, name string) (*GetTagsResponse, error)
 	UpdateTags(ctx context.Context, body *GetTagsResponse, id string) (*GetTagsResponse, error)
 	DeleteTags(ctx context.Context, id string) (*string, error)
-	ListTags(ctx context.Context) (*ListTagsResponse, error)
+	ListTags(ctx context.Context, entityType string) (*ListTagsResponse, error)
 	CreateNetwork(ctx context.Context, body *NetworkIntentInput) (*NetworkIntentResponse, error)
 	GetNetwork(ctx context.Context, id string, name string) (*NetworkIntentResponse, error)
 	UpdateNetwork(ctx context.Context, body *NetworkIntentInput, id string) (*NetworkIntentResponse, error)
@@ -760,8 +760,16 @@ func (sc ServiceClient) CreateTimeMachineCluster(ctx context.Context, tmsID stri
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) ReadTags(ctx context.Context, id string) (*GetTagsResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/tags?id=%s", id), nil)
+func (sc ServiceClient) ReadTags(ctx context.Context, id, name string) (*GetTagsResponse, error) {
+	path := "/tags"
+	if id != "" {
+		path += fmt.Sprintf("?id=%s", id)
+	}
+	if name != "" {
+		path += fmt.Sprintf("?name=%s", name)
+	}
+
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -899,8 +907,12 @@ func (sc ServiceClient) DeleteNetwork(ctx context.Context, id string) (*string, 
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) ListTags(ctx context.Context) (*ListTagsResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/tags", nil)
+func (sc ServiceClient) ListTags(ctx context.Context, entityType string) (*ListTagsResponse, error) {
+	path := "/tags"
+	if entityType != "" {
+		path += fmt.Sprintf("?entityType=%s", entityType)
+	}
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}

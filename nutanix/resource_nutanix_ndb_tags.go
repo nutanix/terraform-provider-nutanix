@@ -99,7 +99,7 @@ func resourceNutanixNDBTagsCreate(ctx context.Context, d *schema.ResourceData, m
 
 	uniqueID := ""
 	// fetch all the tags
-	tagsListResp, er := conn.Service.ListTags(ctx)
+	tagsListResp, er := conn.Service.ListTags(ctx, entityType)
 	if er != nil {
 		return diag.FromErr(er)
 	}
@@ -117,7 +117,7 @@ func resourceNutanixNDBTagsCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceNutanixNDBTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
-	resp, err := conn.Service.ReadTags(ctx, d.Id())
+	resp, err := conn.Service.ReadTags(ctx, d.Id(), "")
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -164,7 +164,7 @@ func resourceNutanixNDBTagsUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	// read the tag
 
-	resp, err := conn.Service.ReadTags(ctx, d.Id())
+	resp, err := conn.Service.ReadTags(ctx, d.Id(), "")
 	if err != nil {
 		return diag.FromErr(err)
 	}
