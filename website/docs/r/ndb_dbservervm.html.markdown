@@ -57,7 +57,7 @@ Provides a resource to create database server VMs based on the input parameters.
 
 The following arguments are supported:
 
-* `database_type`: (Required) database type
+* `database_type`: (Required) database type. Valid values: postgres_database 
 * `software_profile_id`: (Optional) software profile id you want to provision a database server VM from an existing software profile.Required with software_profile_version_id. Conflicts with time_machine_id . 
 * `software_profile_version_id`: (Optional) SOftware Profile Version Id. 
 * `time_machine_id`: (Optional) Time Machine id you want to provision a database server VM by using the database and operating system software stored in a time machine. Conflicts with software_profile_id. 
