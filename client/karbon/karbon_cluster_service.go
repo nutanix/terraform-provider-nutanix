@@ -29,6 +29,8 @@ type ClusterService interface {
 	ListPrivateRegistries(karbonClusterName string) (*PrivateRegistryListResponse, error)
 	AddPrivateRegistry(karbonClusterName string, createRequest PrivateRegistryOperationIntentInput) (*PrivateRegistryResponse, error)
 	DeletePrivateRegistry(karbonClusterName string, privateRegistryName string) (*PrivateRegistryOperationResponse, error)
+	AddWorkerNodePool(karbonClusterName, karbonNodepoolName string, addPoolRequest *ClusterNodePool) (*ClusterActionResponse, error)
+	RemoveWorkerNodePool(karbonClusterName, karbonNodepoolName string, removeWorkerPool *RemoveWorkerNodeRequest) (*ClusterActionResponse, error)
 }
 
 // karbon 2.1
@@ -193,6 +195,34 @@ func (op ClusterOperations) ScaleDownKarbonCluster(karbonClusterName, karbonNode
 
 	path := fmt.Sprintf("/v1-alpha.1/k8s/clusters/%s/node-pools/%s/remove-nodes", karbonClusterName, karbonNodepoolName)
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, scaleDownRequest)
+	karbonClusterActionResponse := new(ClusterActionResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return karbonClusterActionResponse, op.client.Do(ctx, req, karbonClusterActionResponse)
+}
+
+func (op ClusterOperations) AddWorkerNodePool(karbonClusterName, karbonNodepoolName string, addPoolRequest *ClusterNodePool) (*ClusterActionResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/v1-alpha.1/k8s/clusters/%s/node-pools/%s/add-node-pool", karbonClusterName, karbonNodepoolName)
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, addPoolRequest)
+	karbonClusterActionResponse := new(ClusterActionResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return karbonClusterActionResponse, op.client.Do(ctx, req, karbonClusterActionResponse)
+}
+
+func (op ClusterOperations) RemoveWorkerNodePool(karbonClusterName, karbonNodepoolName string, removeWorkerPool *RemoveWorkerNodeRequest) (*ClusterActionResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/v1-alpha.1/k8s/clusters/%s/node-pools/%s/remove-nodes", karbonClusterName, karbonNodepoolName)
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, removeWorkerPool)
 	karbonClusterActionResponse := new(ClusterActionResponse)
 
 	if err != nil {

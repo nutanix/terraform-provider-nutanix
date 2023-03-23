@@ -139,6 +139,7 @@ type ClusterNodePoolAHVConfig struct {
 	MemoryMib               int64  `json:"memory_mib" mapstructure:"memory_mib, omitempty"`
 	NetworkUUID             string `json:"network_uuid" mapstructure:"network_uuid, omitempty"`
 	PrismElementClusterUUID string `json:"prism_element_cluster_uuid" mapstructure:"prism_element_cluster_uuid, omitempty"`
+	IscsiNetworkUUID        string `json:"iscsi_network_uuid" mapstructure:"iscsi_network_uuid"`
 }
 
 type ClusterStorageClassConfigIntentInput struct {
@@ -203,4 +204,8 @@ type ClusterScaleUpIntentInput struct {
 type ClusterScaleDownIntentInput struct {
 	Count    int64     `json:"count" mapstructure:"count, omitempty"`
 	NodeList []*string `json:"node_list" mapstructure:"node_list, omitempty"`
+}
+
+type RemoveWorkerNodeRequest struct {
+	NodeList []*string `json:"node_list,omitempty"`
 }
