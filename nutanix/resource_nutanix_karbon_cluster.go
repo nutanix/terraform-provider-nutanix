@@ -42,7 +42,7 @@ const (
 	MAXMASTERNODES            = 5
 	MINMASTERNODES            = 2
 	CPUDIVISIONAMOUNT         = 2
-	KARBONAPIVERSION          = "2.0.0"
+	KARBONAPIVERSION          = "v1.0.0"
 	MINIMUMWAITTIMEOUT        = 1
 	DEFAULTWAITTIMEOUT        = 60
 	WAITDELAY                 = 10 * time.Second
@@ -372,6 +372,10 @@ func nodePoolSchema(defaultNodepoolName string, forceNewNodes bool, cpuDefault i
 							"prism_element_cluster_uuid": {
 								Type:     schema.TypeString,
 								Required: true,
+							},
+							"iscsi_network_uuid": {
+								Type:     schema.TypeString,
+								Optional: true,
 							},
 						},
 					},
