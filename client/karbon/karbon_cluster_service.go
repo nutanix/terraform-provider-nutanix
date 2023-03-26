@@ -207,7 +207,7 @@ func (op ClusterOperations) ScaleDownKarbonCluster(karbonClusterName, karbonNode
 func (op ClusterOperations) AddWorkerNodePool(karbonClusterName, karbonNodepoolName string, addPoolRequest *ClusterNodePool) (*ClusterActionResponse, error) {
 	ctx := context.TODO()
 
-	path := fmt.Sprintf("/v1-alpha.1/k8s/clusters/%s/node-pools/%s/add-node-pool", karbonClusterName, karbonNodepoolName)
+	path := fmt.Sprintf("/v1-alpha.1/k8s/clusters/%s/add-node-pool", karbonClusterName)
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, addPoolRequest)
 	karbonClusterActionResponse := new(ClusterActionResponse)
 

@@ -316,8 +316,8 @@ func CNISchema() *schema.Schema {
 
 func nodePoolSchema(defaultNodepoolName string, forceNewNodes bool, cpuDefault int, diskMibDefault int, memoryMibDefault int) *schema.Schema {
 	return &schema.Schema{
-		Type:     schema.TypeList,
-		MaxItems: 1,
+		Type: schema.TypeList,
+		// MaxItems: 1,
 		Required: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -325,12 +325,13 @@ func nodePoolSchema(defaultNodepoolName string, forceNewNodes bool, cpuDefault i
 					Type:     schema.TypeString,
 					Optional: true,
 					Default:  defaultNodepoolName,
-					ForceNew: true,
+					// ForceNew: true,
 				},
 				"node_os_version": {
 					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
+					Optional: true,
+					Computed: true,
+					// ForceNew: true,
 				},
 				"num_instances": {
 					Type:         schema.TypeInt,
@@ -343,7 +344,7 @@ func nodePoolSchema(defaultNodepoolName string, forceNewNodes bool, cpuDefault i
 					MaxItems: 1,
 					Optional: true,
 					// Computed: true,
-					ForceNew: true,
+					// ForceNew: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"cpu": {
@@ -370,7 +371,8 @@ func nodePoolSchema(defaultNodepoolName string, forceNewNodes bool, cpuDefault i
 							},
 							"prism_element_cluster_uuid": {
 								Type:     schema.TypeString,
-								Required: true,
+								Optional: true,
+								Computed: true,
 							},
 							"iscsi_network_uuid": {
 								Type:     schema.TypeString,
@@ -655,6 +657,7 @@ func resourceNutanixKarbonClusterUpdate(ctx context.Context, d *schema.ResourceD
 		if err != nil {
 			return diag.FromErr(err)
 		}
+		log.Print("WorkerNodePoolUUID", WorkerNodePoolUUID)
 		err = WaitForKarbonCluster(ctx, client, timeout, WorkerNodePoolUUID, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return diag.FromErr(err)
@@ -1266,12 +1269,21 @@ func calculateCPURequirement(karbonVersion *karbon.MetaSemanticVersionResponse, 
 
 func determineNewlyAddedPool(client *Client, karbonClusterName string, currentNodepools []karbon.ClusterNodePool, newNodepools []karbon.ClusterNodePool) (string, error) {
 	var taskUUID string
-
 	newPoolSize := len(newNodepools)
 	currentPoolSize := len(currentNodepools)
-	for _, nnp := range newNodepools {
+	var MaxPool []karbon.ClusterNodePool
+	var MinPool []karbon.ClusterNodePool
+	if newPoolSize > currentPoolSize {
+		MaxPool = newNodepools
+		MinPool = currentNodepools
+	} else {
+		MaxPool = currentNodepools
+		MinPool = newNodepools
+	}
+
+	for _, nnp := range MaxPool {
 		k := false
-		for _, cnp := range currentNodepools {
+		for _, cnp := range MinPool {
 			if *cnp.Name == *nnp.Name {
 				k = true
 				break
@@ -1295,7 +1307,9 @@ func determineNewlyAddedPool(client *Client, karbonClusterName string, currentNo
 		}
 		if !k && (newPoolSize < currentPoolSize) {
 			nodes := []*string{}
-			nodes = append(nodes, nnp.Name)
+			for _, v := range *nnp.Nodes {
+				nodes = append(nodes, v.Hostname)
+			}
 			removeWorkerRequest := &karbon.RemoveWorkerNodeRequest{
 				NodeList: nodes,
 			}
@@ -1310,6 +1324,5 @@ func determineNewlyAddedPool(client *Client, karbonClusterName string, currentNo
 			taskUUID = karbonClusterActionResponse.TaskUUID
 		}
 	}
-
 	return taskUUID, nil
 }
