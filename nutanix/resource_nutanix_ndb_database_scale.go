@@ -151,6 +151,10 @@ func resourceNutanixNDBScaleDatabase() *schema.Resource {
 			},
 			"database_nodes":   dataSourceEraDatabaseNodes(),
 			"linked_databases": dataSourceEraLinkedDatabases(),
+			"database_instance_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }

@@ -35,6 +35,11 @@ func resourceDatabaseInstance() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
+			"database_instance_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -552,6 +557,10 @@ func readDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interfa
 	}
 
 	if resp != nil {
+		if err = d.Set("database_instance_id", databaseInstanceID); err != nil {
+			return diag.FromErr(err)
+		}
+
 		if err = d.Set("description", resp.Description); err != nil {
 			return diag.FromErr(err)
 		}
@@ -646,6 +655,7 @@ func readDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interfa
 		if err := d.Set("linked_databases", flattenDBLinkedDbs(resp.Linkeddatabases)); err != nil {
 			return diag.FromErr(err)
 		}
+
 	}
 	return nil
 }
