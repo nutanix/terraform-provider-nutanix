@@ -655,7 +655,6 @@ func readDatabaseInstance(ctx context.Context, d *schema.ResourceData, m interfa
 		if err := d.Set("linked_databases", flattenDBLinkedDbs(resp.Linkeddatabases)); err != nil {
 			return diag.FromErr(err)
 		}
-
 	}
 	return nil
 }
