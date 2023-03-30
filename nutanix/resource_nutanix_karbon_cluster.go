@@ -650,9 +650,11 @@ func resourceNutanixKarbonClusterUpdate(ctx context.Context, d *schema.ResourceD
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		err = WaitForKarbonCluster(ctx, client, timeout, taskUUID, d.Timeout(schema.TimeoutUpdate))
-		if err != nil {
-			return diag.FromErr(err)
+		if taskUUID != "" {
+			err = WaitForKarbonCluster(ctx, client, timeout, taskUUID, d.Timeout(schema.TimeoutUpdate))
+			if err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 	if d.HasChange("private_registry") {
