@@ -228,7 +228,7 @@ func resourceNutanixNDBDatabaseSnapshotCreate(ctx context.Context, d *schema.Res
 		tmsID = *res.ID
 	}
 
-	if name, ok := d.GetOk("name"); ok {
+	if name, ok := d.GetOk("name"); ok && len(name.(string)) > 0 {
 		req.Name = utils.StringPtr(name.(string))
 		snapshotName = utils.StringValue(req.Name)
 	} else {
