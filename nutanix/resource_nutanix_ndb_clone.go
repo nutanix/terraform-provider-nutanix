@@ -83,17 +83,17 @@ func resourceNutanixNDBClone() *schema.Resource {
 						"properties": {
 							Type:        schema.TypeList,
 							Description: "List of all the properties",
-							Computed:    true,
+							Optional:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
-										Computed: true,
+										Optional: true,
 									},
 
 									"value": {
 										Type:     schema.TypeString,
-										Computed: true,
+										Optional: true,
 									},
 								},
 							},
