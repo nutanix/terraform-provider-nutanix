@@ -30,9 +30,10 @@ type ClusterService interface {
 	AddPrivateRegistry(karbonClusterName string, createRequest PrivateRegistryOperationIntentInput) (*PrivateRegistryResponse, error)
 	DeletePrivateRegistry(karbonClusterName string, privateRegistryName string) (*PrivateRegistryOperationResponse, error)
 	// worker nodes
-	AddWorkerNodePool(karbonClusterName, karbonNodepoolName string, addPoolRequest *ClusterNodePool) (*ClusterActionResponse, error)
+	AddWorkerNodePool(karbonClusterName string, addPoolRequest *ClusterNodePool) (*ClusterActionResponse, error)
 	RemoveWorkerNodePool(karbonClusterName, karbonNodepoolName string, removeWorkerPool *RemoveWorkerNodeRequest) (*ClusterActionResponse, error)
 	DeleteWorkerNodePool(karbonClusterName, workerNodepoolName string) (*ClusterActionResponse, error)
+	UpdateWorkerNodeLables(karbonClusterName, workerNodepoolName string, body *UpdateWorkerNodeLabels) (*ClusterActionResponse, error)
 }
 
 // karbon 2.1
@@ -206,7 +207,7 @@ func (op ClusterOperations) ScaleDownKarbonCluster(karbonClusterName, karbonNode
 	return karbonClusterActionResponse, op.client.Do(ctx, req, karbonClusterActionResponse)
 }
 
-func (op ClusterOperations) AddWorkerNodePool(karbonClusterName, karbonNodepoolName string, addPoolRequest *ClusterNodePool) (*ClusterActionResponse, error) {
+func (op ClusterOperations) AddWorkerNodePool(karbonClusterName string, addPoolRequest *ClusterNodePool) (*ClusterActionResponse, error) {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/v1-alpha.1/k8s/clusters/%s/add-node-pool", karbonClusterName)
@@ -239,6 +240,20 @@ func (op ClusterOperations) DeleteWorkerNodePool(karbonClusterName, workerNodepo
 
 	path := fmt.Sprintf("/v1-beta.1/k8s/clusters/%s/node-pools/%s", karbonClusterName, workerNodepoolName)
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, "")
+	karbonClusterActionResponse := new(ClusterActionResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return karbonClusterActionResponse, op.client.Do(ctx, req, karbonClusterActionResponse)
+}
+
+func (op ClusterOperations) UpdateWorkerNodeLables(karbonClusterName, workerNodePoolName string, body *UpdateWorkerNodeLabels) (*ClusterActionResponse, error) {
+	ctx := context.TODO()
+
+	path := fmt.Sprintf("/v1-alpha.1/k8s/clusters/%s/node-pools/%s/update-labels", karbonClusterName, workerNodePoolName)
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, body)
 	karbonClusterActionResponse := new(ClusterActionResponse)
 
 	if err != nil {

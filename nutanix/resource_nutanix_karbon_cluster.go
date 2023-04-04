@@ -316,8 +316,8 @@ func CNISchema() *schema.Schema {
 
 func nodePoolSchema(defaultNodepoolName string, forceNewNodes bool, cpuDefault int, diskMibDefault int, memoryMibDefault int) *schema.Schema {
 	return &schema.Schema{
-		Type: schema.TypeList,
-		// MaxItems: 1,
+		Type:     schema.TypeList,
+		MaxItems: 1,
 		Required: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -325,13 +325,13 @@ func nodePoolSchema(defaultNodepoolName string, forceNewNodes bool, cpuDefault i
 					Type:     schema.TypeString,
 					Optional: true,
 					Default:  defaultNodepoolName,
-					// ForceNew: true,
+					ForceNew: true,
 				},
 				"node_os_version": {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
-					// ForceNew: true,
+					ForceNew: true,
 				},
 				"num_instances": {
 					Type:         schema.TypeInt,
@@ -343,8 +343,8 @@ func nodePoolSchema(defaultNodepoolName string, forceNewNodes bool, cpuDefault i
 					Type:     schema.TypeList,
 					MaxItems: 1,
 					Optional: true,
-					// Computed: true,
-					// ForceNew: true,
+					Computed: true,
+					ForceNew: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"cpu": {
@@ -371,12 +371,7 @@ func nodePoolSchema(defaultNodepoolName string, forceNewNodes bool, cpuDefault i
 							},
 							"prism_element_cluster_uuid": {
 								Type:     schema.TypeString,
-								Optional: true,
-								Computed: true,
-							},
-							"iscsi_network_uuid": {
-								Type:     schema.TypeString,
-								Optional: true,
+								Required: true,
 							},
 						},
 					},
@@ -649,35 +644,9 @@ func resourceNutanixKarbonClusterUpdate(ctx context.Context, d *schema.ResourceD
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		if taskUUID != "" {
-			err = WaitForKarbonCluster(ctx, client, timeout, taskUUID, d.Timeout(schema.TimeoutUpdate))
-			if err != nil {
-				return diag.FromErr(err)
-			}
-		}
-		WorkerNodePoolUUID, err := determineNewlyAddedPool(client, karbonClusterName, currentNodePool, newWorkerNodePool)
+		err = WaitForKarbonCluster(ctx, client, timeout, taskUUID, d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return diag.FromErr(err)
-		}
-		if WorkerNodePoolUUID != nil {
-			err = WaitForKarbonCluster(ctx, client, timeout, WorkerNodePoolUUID[0], d.Timeout(schema.TimeoutUpdate))
-			if err != nil {
-				return diag.FromErr(err)
-			}
-			if WorkerNodePoolUUID[1] == "false" {
-				// API to delete NodePool Object
-				workerNodeDeleteResponse, er := client.KarbonAPI.Cluster.DeleteWorkerNodePool(
-					karbonClusterName,
-					WorkerNodePoolUUID[2],
-				)
-				if er != nil {
-					return diag.FromErr(er)
-				}
-				err = WaitForKarbonCluster(ctx, client, timeout, workerNodeDeleteResponse.TaskUUID, d.Timeout(schema.TimeoutDelete))
-				if err != nil {
-					return diag.FromErr(err)
-				}
-			}
 		}
 	}
 	if d.HasChange("private_registry") {
@@ -1282,69 +1251,4 @@ func calculateCPURequirement(karbonVersion *karbon.MetaSemanticVersionResponse, 
 	}
 	log.Printf("[DEBUG] version was 2.2.2 or higher. NOT applying CPU workaround")
 	return amountOfCPU, nil
-}
-
-func determineNewlyAddedPool(client *Client, karbonClusterName string, currentNodepools []karbon.ClusterNodePool, newNodepools []karbon.ClusterNodePool) ([]string, error) {
-	var taskUUID []string
-	newPoolSize := len(newNodepools)
-	currentPoolSize := len(currentNodepools)
-	var MaxPool []karbon.ClusterNodePool
-	var MinPool []karbon.ClusterNodePool
-	if newPoolSize > currentPoolSize {
-		MaxPool = newNodepools
-		MinPool = currentNodepools
-	} else {
-		MaxPool = currentNodepools
-		MinPool = newNodepools
-	}
-	additionOfWorkerNode := "true"
-
-	for _, nnp := range MaxPool {
-		k := false
-		for _, cnp := range MinPool {
-			if *cnp.Name == *nnp.Name {
-				k = true
-				break
-			}
-		}
-		if !k && (newPoolSize > currentPoolSize) {
-			addworkerRequest := &karbon.ClusterNodePool{
-				AHVConfig:    nnp.AHVConfig,
-				Name:         nnp.Name,
-				NumInstances: nnp.NumInstances,
-			}
-			karbonClusterActionResponse, err := client.KarbonAPI.Cluster.AddWorkerNodePool(
-				karbonClusterName,
-				*nnp.Name,
-				addworkerRequest,
-			)
-			if err != nil {
-				return []string{""}, fmt.Errorf("error occurred while scaling up nodepool %s: %s", *nnp.Name, err)
-			}
-			taskUUID = append(taskUUID, karbonClusterActionResponse.TaskUUID)
-			taskUUID = append(taskUUID, additionOfWorkerNode)
-		}
-		if !k && (newPoolSize < currentPoolSize) {
-			additionOfWorkerNode = "false"
-			nodes := []*string{}
-			for _, v := range *nnp.Nodes {
-				nodes = append(nodes, v.Hostname)
-			}
-			removeWorkerRequest := &karbon.RemoveWorkerNodeRequest{
-				NodeList: nodes,
-			}
-			karbonClusterActionResponse, err := client.KarbonAPI.Cluster.RemoveWorkerNodePool(
-				karbonClusterName,
-				*nnp.Name,
-				removeWorkerRequest,
-			)
-			if err != nil {
-				return []string{""}, fmt.Errorf("error occurred while removing nodes from nodepool %s: %s", *nnp.Name, err)
-			}
-			taskUUID = append(taskUUID, karbonClusterActionResponse.TaskUUID)
-			taskUUID = append(taskUUID, additionOfWorkerNode)
-			taskUUID = append(taskUUID, *nnp.Name)
-		}
-	}
-	return taskUUID, nil
 }

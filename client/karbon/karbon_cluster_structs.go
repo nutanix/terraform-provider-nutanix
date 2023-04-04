@@ -58,6 +58,7 @@ type ClusterNodePool struct {
 	NodeOSVersion *string                      `json:"node_os_version" mapstructure:"node_os_version, omitempty"`
 	NumInstances  *int64                       `json:"num_instances" mapstructure:"num_instances, omitempty"`
 	Nodes         *[]ClusterNodeIntentResponse `json:"nodes" mapstructure:"nodes, omitempty"`
+	Labels        map[string]string            `json:"labels,omitempty" mapstructure:"labels,omitempty"`
 }
 
 type ClusterNodeIntentResponse struct {
@@ -208,4 +209,9 @@ type ClusterScaleDownIntentInput struct {
 
 type RemoveWorkerNodeRequest struct {
 	NodeList []*string `json:"node_list,omitempty"`
+}
+
+type UpdateWorkerNodeLabels struct {
+	AddLabel    map[string]string `json:"add_labels,omitempty"`
+	RemoveLabel []string          `json:"remove_labels,omitempty"`
 }
