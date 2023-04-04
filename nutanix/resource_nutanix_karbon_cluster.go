@@ -317,8 +317,8 @@ func CNISchema() *schema.Schema {
 
 func nodePoolSchema(defaultNodepoolName string, forceNewNodes bool, cpuDefault int, diskMibDefault int, memoryMibDefault int) *schema.Schema {
 	return &schema.Schema{
-		Type: schema.TypeList,
-		// MaxItems: 1,
+		Type:     schema.TypeList,
+		MaxItems: 1,
 		Required: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -326,13 +326,13 @@ func nodePoolSchema(defaultNodepoolName string, forceNewNodes bool, cpuDefault i
 					Type:     schema.TypeString,
 					Optional: true,
 					Default:  defaultNodepoolName,
-					// ForceNew: true,
+					ForceNew: true,
 				},
 				"node_os_version": {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
-					// ForceNew: true,
+					ForceNew: true,
 				},
 				"num_instances": {
 					Type:         schema.TypeInt,
@@ -344,8 +344,8 @@ func nodePoolSchema(defaultNodepoolName string, forceNewNodes bool, cpuDefault i
 					Type:     schema.TypeList,
 					MaxItems: 1,
 					Optional: true,
-					// Computed: true,
-					// ForceNew: true,
+					Computed: true,
+					ForceNew: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"cpu": {
@@ -372,12 +372,7 @@ func nodePoolSchema(defaultNodepoolName string, forceNewNodes bool, cpuDefault i
 							},
 							"prism_element_cluster_uuid": {
 								Type:     schema.TypeString,
-								Optional: true,
-								Computed: true,
-							},
-							"iscsi_network_uuid": {
-								Type:     schema.TypeString,
-								Optional: true,
+								Required: true,
 							},
 						},
 					},
