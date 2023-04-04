@@ -434,7 +434,7 @@ func resourceNutanixNDBCloneRead(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*Client).Era
 
 	filterParams := &era.FilterParams{}
-	filterParams.Detailed = "false"
+	filterParams.Detailed = "true"
 	filterParams.AnyStatus = "false"
 	filterParams.LoadDBServerCluster = "false"
 	filterParams.TimeZone = "UTC"

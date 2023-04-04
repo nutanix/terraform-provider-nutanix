@@ -318,7 +318,7 @@ func (sc ServiceClient) GetOperation(req GetOperationRequest) (*GetOperationResp
 }
 
 func (sc ServiceClient) GetDatabaseInstance(ctx context.Context, dbInstanceID string) (*GetDatabaseResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/databases/%s?detailed=false&load-dbserver-cluster=false", dbInstanceID), nil)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/databases/%s?detailed=true&load-dbserver-cluster=false", dbInstanceID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -922,7 +922,7 @@ func (sc ServiceClient) ListTags(ctx context.Context, entityType string) (*ListT
 }
 
 func (sc ServiceClient) ListNetwork(ctx context.Context) (*ListNetworkResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/resources/networks", nil)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/resources/networks?detailed=true", nil)
 	if err != nil {
 		return nil, err
 	}

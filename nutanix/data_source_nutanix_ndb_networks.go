@@ -86,6 +86,62 @@ func dataSourceNutanixEraNetworks() *schema.Resource {
 								},
 							},
 						},
+						"ip_addresses": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ip": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"status": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"dbserver_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"dbserver_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"ip_pools": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"start_ip": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"end_ip": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"addresses": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ip": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"status": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -133,6 +189,12 @@ func flattenNetworkListResponse(ntw *era.ListNetworkResponse) []interface{} {
 			}
 			if v.StretchedVlanID != nil {
 				val["stretched_vlan_id"] = v.StretchedVlanID
+			}
+			if v.IPPools != nil {
+				val["ip_pools"] = flattenIPPools(v.IPPools)
+			}
+			if v.IPAddresses != nil {
+				val["ip_addresses"] = flattenIPAddress(v.IPAddresses)
 			}
 
 			networkList = append(networkList, val)

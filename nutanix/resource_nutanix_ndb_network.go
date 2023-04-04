@@ -385,10 +385,18 @@ func flattenIPPools(pools []*era.IPPools) []interface{} {
 		for _, v := range pools {
 			ips := map[string]interface{}{}
 
-			ips["id"] = v.ID
-			ips["modified_by"] = v.ModifiedBy
-			ips["start_ip"] = v.StartIP
-			ips["end_ip"] = v.EndIP
+			if v.ID != nil {
+				ips["id"] = v.ID
+			}
+			if v.ModifiedBy != nil {
+				ips["modified_by"] = v.ModifiedBy
+			}
+			if v.StartIP != nil {
+				ips["start_ip"] = v.StartIP
+			}
+			if v.EndIP != nil {
+				ips["end_ip"] = v.EndIP
+			}
 			if v.IPAddresses != nil {
 				ipAdd := make([]interface{}, 0)
 
