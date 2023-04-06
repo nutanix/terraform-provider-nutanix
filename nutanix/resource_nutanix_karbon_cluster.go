@@ -330,8 +330,7 @@ func nodePoolSchema(defaultNodepoolName string, forceNewNodes bool, cpuDefault i
 				},
 				"node_os_version": {
 					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
+					Required: true,
 					ForceNew: true,
 				},
 				"num_instances": {
@@ -344,7 +343,7 @@ func nodePoolSchema(defaultNodepoolName string, forceNewNodes bool, cpuDefault i
 					Type:     schema.TypeList,
 					MaxItems: 1,
 					Optional: true,
-					Computed: true,
+					// Computed: true,
 					ForceNew: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
