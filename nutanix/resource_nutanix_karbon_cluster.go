@@ -42,7 +42,7 @@ const (
 	MAXMASTERNODES            = 5
 	MINMASTERNODES            = 2
 	CPUDIVISIONAMOUNT         = 2
-	KARBONAPIVERSION          = "v1.0.0"
+	KARBONAPIVERSION          = "2.0.0"
 	MINIMUMWAITTIMEOUT        = 1
 	DEFAULTWAITTIMEOUT        = 60
 	WAITDELAY                 = 10 * time.Second
