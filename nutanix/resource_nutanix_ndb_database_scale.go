@@ -239,7 +239,7 @@ func resourceNutanixNDBScaleDatabaseCreate(ctx context.Context, d *schema.Resour
 
 	setID := dbUUID + "/" + resp.Operationid
 	d.SetId(setID)
-	log.Printf("NDB database with %s id is scaled successfully", d.Id())
+	log.Printf("NDB database with %s id is scaled successfully", dbUUID)
 	return resourceNutanixNDBScaleDatabaseRead(ctx, d, meta)
 }
 
