@@ -1,13 +1,13 @@
 package nutanix
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccEraClusterDataSource_basic(t *testing.T) {
-	// r := randIntBetween(31, 40)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccEraPreCheck(t) },
 		Providers: testAccProviders,
@@ -45,6 +45,19 @@ func TestAccEraClusterDataSource_ByName(t *testing.T) {
 	})
 }
 
+func TestAccEraClusterDataSource_WithWrongID(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccEraPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccEraClusterDataSourceConfigWithWrongID(),
+				ExpectError: regexp.MustCompile("exit status 1"),
+			},
+		},
+	})
+}
+
 func testAccEraClusterDataSourceConfig() string {
 	return `
 		data "nutanix_ndb_clusters" "test1" {}
@@ -63,6 +76,14 @@ func testAccEraClusterDataSourceConfigByName() string {
 		data "nutanix_ndb_cluster" "test" {
 			depends_on = [data.nutanix_ndb_clusters.test1]
 			cluster_name = data.nutanix_ndb_clusters.test1.clusters[0].name
+		}	
+	`
+}
+
+func testAccEraClusterDataSourceConfigWithWrongID() string {
+	return `
+		data "nutanix_ndb_cluster" "test" {
+			cluster_id = "0000000-0000-0000-0000-00000000000"
 		}	
 	`
 }
