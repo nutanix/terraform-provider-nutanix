@@ -71,7 +71,8 @@
             "static_ip":"",
             "gateway":"",
             "subnet_mask":"" 
-        }
+        },
+        "test_static_network":""
     }
 }
 

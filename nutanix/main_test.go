@@ -55,6 +55,7 @@ type TestConfig struct {
 			SubnetMask       string `json:"subnet_mask"`
 			StorageContainer string `json:"strorage_container"`
 		} `json:"register_cluster_info"`
+		TestStaticNetwork string `json:"test_static_network"`
 	} `json:"ndb"`
 }
 
