@@ -127,7 +127,6 @@ func resourceNutanixNDBLinkedDBCreate(ctx context.Context, d *schema.ResourceDat
 		databaseID = dbID.(string)
 	} else {
 		return diag.Errorf("database_id is a required field")
-
 	}
 
 	dbNames := []*era.LinkedDatabases{}
