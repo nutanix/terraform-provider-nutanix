@@ -164,8 +164,10 @@ func resourceNutanixNDBScaleDatabaseCreate(ctx context.Context, d *schema.Resour
 
 	req := &era.DatabaseScale{}
 	dbUUID := ""
-	if db, ok := d.GetOk("database_uuid"); ok {
+	if db, dok := d.GetOk("database_uuid"); dok && len(db.(string)) > 0 {
 		dbUUID = db.(string)
+	} else {
+		return diag.Errorf("database_id is a required field to perform scale")
 	}
 
 	if app, ok := d.GetOk("application_type"); ok {

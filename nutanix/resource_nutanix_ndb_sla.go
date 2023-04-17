@@ -141,6 +141,10 @@ func resourceNutanixNDBSlaRead(ctx context.Context, d *schema.ResourceData, meta
 
 	// get the sla
 
+	// check if d.Id() is nil
+	if d.Id() == "" {
+		return diag.Errorf("id is required for read operation")
+	}
 	resp, err := conn.Service.GetSLA(ctx, d.Id(), "")
 	if err != nil {
 		return diag.FromErr(err)

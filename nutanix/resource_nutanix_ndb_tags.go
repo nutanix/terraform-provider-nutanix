@@ -117,6 +117,10 @@ func resourceNutanixNDBTagsCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceNutanixNDBTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
+	// check if d.Id() is nil
+	if d.Id() == "" {
+		return diag.Errorf("tag id is required for read operation")
+	}
 	resp, err := conn.Service.ReadTags(ctx, d.Id(), "")
 
 	if err != nil {

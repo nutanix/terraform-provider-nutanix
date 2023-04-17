@@ -160,8 +160,10 @@ func resourceNutanixNDBDatabaseRestoreCreate(ctx context.Context, d *schema.Reso
 	req := &era.DatabaseRestoreRequest{}
 
 	databaseID := ""
-	if dbID, ok := d.GetOk("database_id"); ok {
+	if dbID, ok := d.GetOk("database_id"); ok && len(dbID.(string)) > 0 {
 		databaseID = dbID.(string)
+	} else {
+		return diag.Errorf("database_id is a required field to perform restore")
 	}
 
 	if snapID, ok := d.GetOk("snapshot_id"); ok {

@@ -321,6 +321,11 @@ func resourceNutanixNDBDatabaseSnapshotRead(ctx context.Context, d *schema.Resou
 	filterParams.LoadReplicatedChildSnapshots = "false"
 	filterParams.TimeZone = "UTC"
 
+	// check if d.Id() is nil
+	if d.Id() == "" {
+		return diag.Errorf("id is required for read operation")
+	}
+
 	resp, err := conn.Service.GetSnapshot(ctx, d.Id(), filterParams)
 	if err != nil {
 		return diag.FromErr(err)

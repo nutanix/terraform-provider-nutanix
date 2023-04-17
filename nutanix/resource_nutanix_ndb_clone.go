@@ -439,6 +439,11 @@ func resourceNutanixNDBCloneRead(ctx context.Context, d *schema.ResourceData, me
 	filterParams.LoadDBServerCluster = "false"
 	filterParams.TimeZone = "UTC"
 
+	// check if d.Id() is nil
+	if d.Id() == "" {
+		return diag.Errorf("id is required for read operation")
+	}
+
 	resp, err := conn.Service.GetClone(ctx, d.Id(), "", filterParams)
 	if err != nil {
 		return diag.FromErr(err)

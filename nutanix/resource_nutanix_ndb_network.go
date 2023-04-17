@@ -236,6 +236,11 @@ func resourceNutanixNDBNetworkCreate(ctx context.Context, d *schema.ResourceData
 func resourceNutanixNDBNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
+	// check if d.Id() is nil
+	if d.Id() == "" {
+		return diag.Errorf("id is required for read operation")
+	}
+
 	resp, err := conn.Service.GetNetwork(ctx, d.Id(), "")
 	if err != nil {
 		return diag.FromErr(err)
