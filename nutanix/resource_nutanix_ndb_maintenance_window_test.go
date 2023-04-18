@@ -10,7 +10,8 @@ import (
 const resourceMaintenaceWindowName = "nutanix_ndb_maintenance_window.acctest-managed"
 
 func TestAccEra_MaintenanceWindow(t *testing.T) {
-	name := "test-maintenance"
+	r := randIntBetween(10, 20)
+	name := fmt.Sprintf("test-maintenance-%d", r)
 	desc := "this is desc"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccEraPreCheck(t) },
@@ -31,8 +32,9 @@ func TestAccEra_MaintenanceWindow(t *testing.T) {
 }
 
 func TestAccEra_MaintenanceWindowUpdate(t *testing.T) {
-	name := "test-maintenance"
-	updatedName := "test-maintenance-updated"
+	r := randIntBetween(21, 30)
+	name := fmt.Sprintf("test-maintenance-%d", r)
+	updatedName := fmt.Sprintf("test-maintenance-updated-%d", r)
 	desc := "this is desc"
 	updatedDesc := "this desc is updated"
 	resource.Test(t, resource.TestCase{
@@ -64,7 +66,8 @@ func TestAccEra_MaintenanceWindowUpdate(t *testing.T) {
 }
 
 func TestAccEra_MaintenanceWindow_MonthlyRecurrence(t *testing.T) {
-	name := "test-maintenance"
+	r := randIntBetween(25, 30)
+	name := fmt.Sprintf("test-maintenance-%d", r)
 	desc := "this is desc"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccEraPreCheck(t) },

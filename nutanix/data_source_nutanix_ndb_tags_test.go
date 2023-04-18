@@ -1,18 +1,20 @@
 package nutanix
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccEraTagsDataSource_basic(t *testing.T) {
+	r := randIntBetween(11, 15)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccEraPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEraTagsDataSourceConfig(),
+				Config: testAccEraTagsDataSourceConfig(r),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_tags.tags", "tags.#"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_tags.tags", "tags.0.name"),
@@ -29,12 +31,13 @@ func TestAccEraTagsDataSource_basic(t *testing.T) {
 }
 
 func TestAccEraTagsDataSource_WithEntityType(t *testing.T) {
+	r := randIntBetween(21, 25)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccEraPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEraTagsDataSourceConfigWithEntityType(),
+				Config: testAccEraTagsDataSourceConfigWithEntityType(r),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_tags.tags", "tags.#"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_tags.tags", "tags.0.name"),
@@ -51,23 +54,23 @@ func TestAccEraTagsDataSource_WithEntityType(t *testing.T) {
 	})
 }
 
-func testAccEraTagsDataSourceConfig() string {
-	return `
+func testAccEraTagsDataSourceConfig(r int) string {
+	return fmt.Sprintf(`
 		resource "nutanix_ndb_tag" "acctest-managed" {
-			name= "test-tag"
+			name= "test-tag-%[1]d"
 			description = "test tag description"
 			entity_type = "DATABASE"
 			required = false
 		}
 
 		data "nutanix_ndb_tags" "tags"{ }
-	`
+	`, r)
 }
 
-func testAccEraTagsDataSourceConfigWithEntityType() string {
-	return `
+func testAccEraTagsDataSourceConfigWithEntityType(r int) string {
+	return fmt.Sprintf(`
 		resource "nutanix_ndb_tag" "acctest-managed" {
-			name= "test-tag"
+			name= "test-tag-%[1]d"
 			description = "test tag description"
 			entity_type = "DATABASE"
 			required = false
@@ -76,5 +79,5 @@ func testAccEraTagsDataSourceConfigWithEntityType() string {
 		data "nutanix_ndb_tags" "tags"{ 
 			entity_type= "DATABASE"
 		}
-	`
+	`, r)
 }
