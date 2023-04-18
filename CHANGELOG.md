@@ -1,3 +1,27 @@
+## 1.8.1 (April 18, 2023)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.8.0-ga...feat/1.8.1)
+
+**New Feature:**
+- Added a datasource for NDB network available ips. [\#570](https://github.com/nutanix/terraform-provider-nutanix/pull/570)
+
+    New Data Source :
+    -  nutanix_ndb_network_available_ips
+
+**Implemented enhancements:**
+- Handling the case if ndb cluster id is given wrong. [\#571](https://github.com/nutanix/terraform-provider-nutanix/pull/571)
+- Support for imports on ndb day-2 actions. [\#561](https://github.com/nutanix/terraform-provider-nutanix/pull/561)
+- Changing the provider version in ndb examples from beta to ga. [\#580](https://github.com/nutanix/terraform-provider-nutanix/pull/580)
+
+**Fixed bugs:**
+- Tf ntnx provider crash for wrong ndb cluster id. [\#567](https://github.com/nutanix/terraform-provider-nutanix/issues/567)
+- lcm_config should be Set without plugin crash in clone resource. [\#583](https://github.com/nutanix/terraform-provider-nutanix/issues/583)
+
+**Closed issues:**
+- NDB datasource for network available ips. [\#569](https://github.com/nutanix/terraform-provider-nutanix/issues/569) 
+- Support for adding import on ndb day2 actions. [\#582](https://github.com/nutanix/terraform-provider-nutanix/issues/582)
+- How to configure IP address for Nutanix Packer images. [\#576](https://github.com/nutanix/terraform-provider-nutanix/issues/576)
+
+
 ## 1.8.0 (Feb 23, 2023)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/v1.8.0-beta-2...feat/1.8.0-ga)
 
