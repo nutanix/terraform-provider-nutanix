@@ -21,6 +21,7 @@ List of tags in Nutanix Database Service
 The following attributes are exported:
 
 * `tags`: List of tags present in NDB.
+* `entity_type`: (Optional) entity type of specific tag. Valid values are DATABASE, TIME_MACHINE, CLONE,DATABASE_SERVER. 
 
 ### tags
 * `name`:  name for the tag

@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
-NOTE: The latest version of the Nutanix provider is [v1.8.0-beta.2](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.8.0-beta.2)
+NOTE: The latest version of the Nutanix provider is [v1.8.1](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.8.1)
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 ## Build, Quality Status
@@ -79,7 +79,9 @@ Foundation Central based modules and examples : Foundation based modules & examp
 
 > For the 1.8.0 release of the provider, it will have N-2 compatibility with the Nutanix database service. This release was tested with v2.5.1.1, v2.5.1 and v2.5 versions.
 
-Note: For 1.8.0 release, only postgress database type is qualified and officially supported. Older versions of NDB may not support some resources. 
+> For the 1.8.1 release of the provider, it will have N-2 compatibility with the Nutanix database service. This release was tested with v2.5.1.1, v2.5.1 and v2.5 versions.
+
+Note: For NDB related modules, only postgress database type is qualified and officially supported. Older versions of NDB may not support some resources. 
 
 Checkout example : https://github.com/nutanix/terraform-provider-nutanix/blob/master/examples/ndb/
 
@@ -285,6 +287,7 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 * nutanix_ndb_networks
 * nutanix_ndb_maintenance_window
 * nutanix_ndb_maintenance_windows
+* nutanix_ndb_network_available_ips
 
 ## Quick Install
 

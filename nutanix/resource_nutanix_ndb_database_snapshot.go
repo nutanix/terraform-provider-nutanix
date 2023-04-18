@@ -37,7 +37,8 @@ func resourceNutanixNDBDatabaseSnapshot() *schema.Resource {
 			},
 			"name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Default:  "era_manual_snapshot",
 			},
 			"remove_schedule_in_days": {
 				Type:     schema.TypeInt,
@@ -227,9 +228,11 @@ func resourceNutanixNDBDatabaseSnapshotCreate(ctx context.Context, d *schema.Res
 		tmsID = *res.ID
 	}
 
-	if name, ok := d.GetOk("name"); ok {
+	if name, ok := d.GetOk("name"); ok && len(name.(string)) > 0 {
 		req.Name = utils.StringPtr(name.(string))
 		snapshotName = utils.StringValue(req.Name)
+	} else {
+		snapshotName = "era_manual_snapshot"
 	}
 
 	if rm, ok := d.GetOk("remove_schedule_in_days"); ok {
@@ -317,6 +320,11 @@ func resourceNutanixNDBDatabaseSnapshotRead(ctx context.Context, d *schema.Resou
 	filterParams := &era.FilterParams{}
 	filterParams.LoadReplicatedChildSnapshots = "false"
 	filterParams.TimeZone = "UTC"
+
+	// check if d.Id() is nil
+	if d.Id() == "" {
+		return diag.Errorf("id is required for read operation")
+	}
 
 	resp, err := conn.Service.GetSnapshot(ctx, d.Id(), filterParams)
 	if err != nil {

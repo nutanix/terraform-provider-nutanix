@@ -1598,8 +1598,10 @@ type GetTagsResponse struct {
 
 type ListTagsResponse []*GetTagsResponse
 type IPAddresses struct {
-	IP     *string `json:"ip,omitempty"`
-	Status *string `json:"status,omitempty"`
+	IP           *string `json:"ip,omitempty"`
+	Status       *string `json:"status,omitempty"`
+	DBServerID   *string `json:"dbserverID,omitempty"`
+	DBServerName *string `json:"dbserverName,omitempty"`
 }
 
 type IPPools struct {
@@ -1635,6 +1637,7 @@ type NetworkIntentResponse struct {
 	PropertiesMap   *NetworkPropertiesmap `json:"propertiesMap,omitempty"`
 	StretchedVlanID *string               `json:"stretchedVlanId,omitempty"`
 	IPPools         []*IPPools            `json:"ipPools,omitempty"`
+	IPAddresses     []*IPAddresses        `json:"ipAddresses,omitempty"`
 }
 
 type ListNetworkResponse []*NetworkIntentResponse
@@ -1968,4 +1971,15 @@ type ClusterUpdateInput struct {
 	Name        *string   `json:"name,omitempty"`
 	Description *string   `json:"description,omitempty"`
 	IPAddresses []*string `json:"ipAddresses,omitempty"`
+}
+
+type GetNetworkAvailableIPs []struct {
+	ID           *string   `json:"id,omitempty"`
+	Name         *string   `json:"name,omitempty"`
+	PropertyName *string   `json:"propertyName,omitempty"`
+	Type         *string   `json:"type,omitempty"`
+	ClusterID    *string   `json:"clusterId,omitempty"`
+	ClusterName  *string   `json:"clusterName,omitempty"`
+	IPAddresses  []*string `json:"ipAddresses,omitempty"`
+	Managed      bool      `json:"managed,omitempty"`
 }

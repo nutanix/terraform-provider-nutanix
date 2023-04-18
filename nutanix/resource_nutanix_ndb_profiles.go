@@ -19,6 +19,9 @@ func resourceNutanixNDBProfile() *schema.Resource {
 		ReadContext:   resourceNutanixNDBProfileRead,
 		UpdateContext: resourceNutanixNDBProfileUpdate,
 		DeleteContext: resourceNutanixNDBProfileDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -731,6 +734,10 @@ func resourceNutanixNDBProfileRead(ctx context.Context, d *schema.ResourceData, 
 	profileFilter := &era.ProfileFilter{}
 	profileFilter.ProfileID = d.Id()
 
+	// check if d.Id() is nil
+	if d.Id() == "" {
+		return diag.Errorf("id is required for read operation")
+	}
 	resp, err := conn.Service.GetProfile(ctx, profileFilter)
 	if err != nil {
 		return diag.FromErr(err)

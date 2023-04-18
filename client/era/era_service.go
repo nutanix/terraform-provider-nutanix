@@ -67,10 +67,10 @@ type Service interface {
 	UpdateTimeMachineCluster(ctx context.Context, tmsID string, clsID string, body *TmsClusterIntentInput) (*TmsClusterResponse, error)
 	DeleteTimeMachineCluster(ctx context.Context, tmsID string, clsID string, body *DeleteTmsClusterInput) (*ProvisionDatabaseResponse, error)
 	CreateTags(ctx context.Context, body *CreateTagsInput) (*TagsIntentResponse, error)
-	ReadTags(ctx context.Context, id string) (*GetTagsResponse, error)
+	ReadTags(ctx context.Context, id string, name string) (*GetTagsResponse, error)
 	UpdateTags(ctx context.Context, body *GetTagsResponse, id string) (*GetTagsResponse, error)
 	DeleteTags(ctx context.Context, id string) (*string, error)
-	ListTags(ctx context.Context) (*ListTagsResponse, error)
+	ListTags(ctx context.Context, entityType string) (*ListTagsResponse, error)
 	CreateNetwork(ctx context.Context, body *NetworkIntentInput) (*NetworkIntentResponse, error)
 	GetNetwork(ctx context.Context, id string, name string) (*NetworkIntentResponse, error)
 	UpdateNetwork(ctx context.Context, body *NetworkIntentInput, id string) (*NetworkIntentResponse, error)
@@ -91,6 +91,7 @@ type Service interface {
 	CreateCluster(ctx context.Context, body *ClusterIntentInput) (*ProvisionDatabaseResponse, error)
 	UpdateCluster(ctx context.Context, req *ClusterUpdateInput, id string) (*ListClusterResponse, error)
 	DeleteCluster(ctx context.Context, req *DeleteClusterInput, id string) (*ProvisionDatabaseResponse, error)
+	GetAvailableIPs(ctx context.Context, id string) (*GetNetworkAvailableIPs, error)
 }
 
 type ServiceClient struct {
@@ -317,7 +318,7 @@ func (sc ServiceClient) GetOperation(req GetOperationRequest) (*GetOperationResp
 }
 
 func (sc ServiceClient) GetDatabaseInstance(ctx context.Context, dbInstanceID string) (*GetDatabaseResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/databases/%s?detailed=false&load-dbserver-cluster=false", dbInstanceID), nil)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/databases/%s?detailed=true&load-dbserver-cluster=false", dbInstanceID), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -759,8 +760,16 @@ func (sc ServiceClient) CreateTimeMachineCluster(ctx context.Context, tmsID stri
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) ReadTags(ctx context.Context, id string) (*GetTagsResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/tags?id=%s", id), nil)
+func (sc ServiceClient) ReadTags(ctx context.Context, id, name string) (*GetTagsResponse, error) {
+	path := "/tags"
+	if id != "" {
+		path += fmt.Sprintf("?id=%s", id)
+	}
+	if name != "" {
+		path += fmt.Sprintf("?name=%s", name)
+	}
+
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -898,8 +907,12 @@ func (sc ServiceClient) DeleteNetwork(ctx context.Context, id string) (*string, 
 	return res, sc.c.Do(ctx, httpReq, res)
 }
 
-func (sc ServiceClient) ListTags(ctx context.Context) (*ListTagsResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/tags", nil)
+func (sc ServiceClient) ListTags(ctx context.Context, entityType string) (*ListTagsResponse, error) {
+	path := "/tags"
+	if entityType != "" {
+		path += fmt.Sprintf("?entityType=%s", entityType)
+	}
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -909,7 +922,7 @@ func (sc ServiceClient) ListTags(ctx context.Context) (*ListTagsResponse, error)
 }
 
 func (sc ServiceClient) ListNetwork(ctx context.Context) (*ListNetworkResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/resources/networks", nil)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/resources/networks?detailed=true", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1055,5 +1068,14 @@ func (sc ServiceClient) UpdateCluster(ctx context.Context, req *ClusterUpdateInp
 		return nil, err
 	}
 	res := new(ListClusterResponse)
+	return res, sc.c.Do(ctx, httpReq, res)
+}
+
+func (sc ServiceClient) GetAvailableIPs(ctx context.Context, id string) (*GetNetworkAvailableIPs, error) {
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, fmt.Sprintf("/profiles/%s/get-available-ips", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(GetNetworkAvailableIPs)
 	return res, sc.c.Do(ctx, httpReq, res)
 }

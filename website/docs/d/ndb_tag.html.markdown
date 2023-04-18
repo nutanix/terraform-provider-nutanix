@@ -22,7 +22,8 @@ Describes a tag in Nutanix Database Service
 ## Argument Reference
 
 The following arguments are supported:
-* `id` : tag id
+* `id` : (Optional) tag id. Conflicts with  name.
+* `name`: (Optional) tag name. Conflicts with id.
 
 ## Attribute Reference
 

@@ -36,7 +36,7 @@ Provides a resource to perform the snapshot for database instance based on the i
 
 * `time_machine_id`: (Optional) Time Machine Id
 * `time_machine_name`:(Optional) Time Machine Name
-* `name`: (Required) Snapshot name
+* `name`: (Optional) Snapshot name. Default value is era_manual_snapshot. 
 * `remove_schedule_in_days`: (Optional) Removal schedule after which the snapshot should be removed.
 * `expiry_date_timezone`: (Optional) Default is set to Asia/Calcutta
 * `replicate_to_clusters`: (Optional) snapshots to be replicated to clusters. 

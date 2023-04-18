@@ -29,6 +29,7 @@ func TestAccEra_Clonebasic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceClone, "database_name"),
 					resource.TestCheckResourceAttrSet(resourceClone, "database_nodes.#"),
 					resource.TestCheckResourceAttrSet(resourceClone, "linked_databases.#"),
+					resource.TestCheckResourceAttrSet(resourceClone, "time_machine.#"),
 				),
 			},
 		},
@@ -77,7 +78,6 @@ func testAccEraCloneConfig(name, desc, vmName, sshKey string) string {
 		nx_cluster_id = local.clusters.EraCluster.id
 		ssh_public_key = "%[4]s"
 		snapshot_id = data.nutanix_ndb_tms_capability.test.last_continuous_snapshot.0.id
-		time_zone = "Asia/Calcutta"
 		create_dbserver = true
 		compute_profile_id =  local.compute_profiles["DEFAULT_OOB_SMALL_COMPUTE"].id
 		network_profile_id = local.network_profiles.DEFAULT_OOB_POSTGRESQL_NETWORK.id

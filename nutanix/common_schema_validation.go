@@ -7,8 +7,7 @@ import (
 )
 
 var requiredResourceFields map[string][]string = map[string][]string{
-	"era_provision_database": {"databasetype", "softwareprofileid", "softwareprofileversionid", "computeprofileid",
-		"networkprofileid", "dbparameterprofileid", "nxclusterid", "sshpublickey", "timemachineinfo", "nodes"},
+	"era_provision_database": {"databasetype", "dbparameterprofileid", "timemachineinfo", "nodes"},
 }
 
 func schemaValidation(resourceName string, d *schema.ResourceData) error {
