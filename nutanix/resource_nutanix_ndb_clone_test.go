@@ -29,6 +29,7 @@ func TestAccEra_Clonebasic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceClone, "database_name"),
 					resource.TestCheckResourceAttrSet(resourceClone, "database_nodes.#"),
 					resource.TestCheckResourceAttrSet(resourceClone, "linked_databases.#"),
+					resource.TestCheckResourceAttrSet(resourceClone, "time_machine.#"),
 				),
 			},
 		},

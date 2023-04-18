@@ -48,6 +48,7 @@ func resourceNutanixNDBClone() *schema.Resource {
 			"time_zone": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"node_count": {
 				Type:     schema.TypeInt,
@@ -82,17 +83,17 @@ func resourceNutanixNDBClone() *schema.Resource {
 						"properties": {
 							Type:        schema.TypeList,
 							Description: "List of all the properties",
-							Computed:    true,
+							Optional:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
-										Computed: true,
+										Optional: true,
 									},
 
 									"value": {
 										Type:     schema.TypeString,
-										Computed: true,
+										Optional: true,
 									},
 								},
 							},
@@ -433,10 +434,15 @@ func resourceNutanixNDBCloneRead(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*Client).Era
 
 	filterParams := &era.FilterParams{}
-	filterParams.Detailed = "false"
+	filterParams.Detailed = "true"
 	filterParams.AnyStatus = "false"
 	filterParams.LoadDBServerCluster = "false"
 	filterParams.TimeZone = "UTC"
+
+	// check if d.Id() is nil
+	if d.Id() == "" {
+		return diag.Errorf("id is required for read operation")
+	}
 
 	resp, err := conn.Service.GetClone(ctx, d.Id(), "", filterParams)
 	if err != nil {
@@ -511,10 +517,6 @@ func resourceNutanixNDBCloneRead(ctx context.Context, d *schema.ResourceData, me
 		}
 
 		if err := d.Set("parent_database_id", resp.ParentDatabaseID); err != nil {
-			return diag.FromErr(err)
-		}
-
-		if err := d.Set("lcm_config", flattenDBLcmConfig(resp.Lcmconfig)); err != nil {
 			return diag.FromErr(err)
 		}
 

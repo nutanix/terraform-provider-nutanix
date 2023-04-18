@@ -123,8 +123,10 @@ func resourceNutanixNDBLinkedDBCreate(ctx context.Context, d *schema.ResourceDat
 	databaseID := ""
 	databaseName := ""
 	SetID := ""
-	if dbID, dok := d.GetOk("database_id"); dok {
+	if dbID, dok := d.GetOk("database_id"); dok && len(dbID.(string)) > 0 {
 		databaseID = dbID.(string)
+	} else {
+		return diag.Errorf("database_id is a required field")
 	}
 
 	dbNames := []*era.LinkedDatabases{}
@@ -196,6 +198,10 @@ func resourceNutanixNDBLinkedDBRead(ctx context.Context, d *schema.ResourceData,
 
 	databaseID := d.Get("database_id")
 
+	// check if database id is nil
+	if databaseID == "" {
+		return diag.Errorf("database id is required for read operation")
+	}
 	response, er := conn.Service.GetDatabaseInstance(ctx, databaseID.(string))
 	if er != nil {
 		return diag.FromErr(er)

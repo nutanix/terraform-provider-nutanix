@@ -17,6 +17,9 @@ func resourceNutanixNDBTags() *schema.Resource {
 		ReadContext:   resourceNutanixNDBTagsRead,
 		UpdateContext: resourceNutanixNDBTagsUpdate,
 		DeleteContext: resourceNutanixNDBTagsDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -96,7 +99,7 @@ func resourceNutanixNDBTagsCreate(ctx context.Context, d *schema.ResourceData, m
 
 	uniqueID := ""
 	// fetch all the tags
-	tagsListResp, er := conn.Service.ListTags(ctx)
+	tagsListResp, er := conn.Service.ListTags(ctx, entityType)
 	if er != nil {
 		return diag.FromErr(er)
 	}
@@ -114,7 +117,11 @@ func resourceNutanixNDBTagsCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceNutanixNDBTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
-	resp, err := conn.Service.ReadTags(ctx, d.Id())
+	// check if d.Id() is nil
+	if d.Id() == "" {
+		return diag.Errorf("tag id is required for read operation")
+	}
+	resp, err := conn.Service.ReadTags(ctx, d.Id(), "")
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -161,7 +168,7 @@ func resourceNutanixNDBTagsUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	// read the tag
 
-	resp, err := conn.Service.ReadTags(ctx, d.Id())
+	resp, err := conn.Service.ReadTags(ctx, d.Id(), "")
 	if err != nil {
 		return diag.FromErr(err)
 	}

@@ -1598,8 +1598,10 @@ type GetTagsResponse struct {
 
 type ListTagsResponse []*GetTagsResponse
 type IPAddresses struct {
-	IP     *string `json:"ip,omitempty"`
-	Status *string `json:"status,omitempty"`
+	IP           *string `json:"ip,omitempty"`
+	Status       *string `json:"status,omitempty"`
+	DBServerID   *string `json:"dbserverID,omitempty"`
+	DBServerName *string `json:"dbserverName,omitempty"`
 }
 
 type IPPools struct {
@@ -1635,6 +1637,7 @@ type NetworkIntentResponse struct {
 	PropertiesMap   *NetworkPropertiesmap `json:"propertiesMap,omitempty"`
 	StretchedVlanID *string               `json:"stretchedVlanId,omitempty"`
 	IPPools         []*IPPools            `json:"ipPools,omitempty"`
+	IPAddresses     []*IPAddresses        `json:"ipAddresses,omitempty"`
 }
 
 type ListNetworkResponse []*NetworkIntentResponse

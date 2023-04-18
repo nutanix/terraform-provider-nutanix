@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	era "github.com/terraform-providers/terraform-provider-nutanix/client/era"
 )
 
 func dataSourceNutanixEraNetwork() *schema.Resource {
@@ -81,6 +82,62 @@ func dataSourceNutanixEraNetwork() *schema.Resource {
 					},
 				},
 			},
+			"ip_addresses": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ip": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"dbserver_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"dbserver_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			"ip_pools": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"start_ip": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"end_ip": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"addresses": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ip": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"status": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -135,6 +192,38 @@ func dataSourceNutanixEraNetworkRead(ctx context.Context, d *schema.ResourceData
 		d.Set("stretched_vlan_id", resp.StretchedVlanID)
 	}
 
+	if resp.IPAddresses != nil {
+		d.Set("ip_addresses", flattenIPAddress(resp.IPAddresses))
+	}
+	if resp.IPPools != nil {
+		d.Set("ip_pools", flattenIPPools(resp.IPPools))
+	}
 	d.SetId(*resp.ID)
+	return nil
+}
+
+func flattenIPAddress(ips []*era.IPAddresses) []interface{} {
+	if len(ips) > 0 {
+		ipList := make([]interface{}, 0)
+
+		for _, v := range ips {
+			ip := map[string]interface{}{}
+
+			if v.IP != nil {
+				ip["ip"] = v.IP
+			}
+			if v.Status != nil {
+				ip["status"] = v.Status
+			}
+			if v.DBServerID != nil {
+				ip["dbserver_id"] = v.DBServerID
+			}
+			if v.DBServerName != nil {
+				ip["dbserver_name"] = v.DBServerName
+			}
+			ipList = append(ipList, ip)
+		}
+		return ipList
+	}
 	return nil
 }

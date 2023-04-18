@@ -27,6 +27,7 @@ func TestAccEra_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameDB, "databasetype", "postgres_database"),
 					resource.TestCheckResourceAttr(resourceNameDB, "database_nodes.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceNameDB, "time_machine_id"),
+					resource.TestCheckResourceAttrSet(resourceNameDB, "time_machine.#"),
 				),
 			},
 		},

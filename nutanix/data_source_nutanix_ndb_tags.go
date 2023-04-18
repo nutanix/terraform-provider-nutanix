@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	era "github.com/terraform-providers/terraform-provider-nutanix/client/era"
 )
 
@@ -13,6 +14,12 @@ func dataSourceNutanixNDBTags() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceNutanixNDBTagsRead,
 		Schema: map[string]*schema.Schema{
+			"entity_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{"DATABASE", "TIME_MACHINE",
+					"CLONE", "DATABASE_SERVER"}, false),
+			},
 			"tags": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -68,7 +75,12 @@ func dataSourceNutanixNDBTags() *schema.Resource {
 func dataSourceNutanixNDBTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
-	resp, err := conn.Service.ListTags(ctx)
+	entityType := ""
+	if entity, eok := d.GetOk("entity_type"); eok {
+		entityType = entity.(string)
+	}
+
+	resp, err := conn.Service.ListTags(ctx, entityType)
 	if err != nil {
 		return diag.FromErr(err)
 	}
