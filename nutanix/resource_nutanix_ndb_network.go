@@ -236,6 +236,11 @@ func resourceNutanixNDBNetworkCreate(ctx context.Context, d *schema.ResourceData
 func resourceNutanixNDBNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 
+	// check if d.Id() is nil
+	if d.Id() == "" {
+		return diag.Errorf("id is required for read operation")
+	}
+
 	resp, err := conn.Service.GetNetwork(ctx, d.Id(), "")
 	if err != nil {
 		return diag.FromErr(err)
@@ -385,10 +390,18 @@ func flattenIPPools(pools []*era.IPPools) []interface{} {
 		for _, v := range pools {
 			ips := map[string]interface{}{}
 
-			ips["id"] = v.ID
-			ips["modified_by"] = v.ModifiedBy
-			ips["start_ip"] = v.StartIP
-			ips["end_ip"] = v.EndIP
+			if v.ID != nil {
+				ips["id"] = v.ID
+			}
+			if v.ModifiedBy != nil {
+				ips["modified_by"] = v.ModifiedBy
+			}
+			if v.StartIP != nil {
+				ips["start_ip"] = v.StartIP
+			}
+			if v.EndIP != nil {
+				ips["end_ip"] = v.EndIP
+			}
 			if v.IPAddresses != nil {
 				ipAdd := make([]interface{}, 0)
 

@@ -141,6 +141,12 @@ func resourceNutanixNDBMaintenanceTaskCreate(ctx context.Context, d *schema.Reso
 func resourceNutanixNDBMaintenanceTaskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).Era
 	maintenanceID := d.Get("maintenance_window_id")
+
+	// check if maintenance id is nil
+	if maintenanceID == "" {
+		return diag.Errorf("id is required for read operation")
+	}
+
 	resp, err := conn.Service.ReadMaintenanceWindow(ctx, maintenanceID.(string))
 	if err != nil {
 		return diag.FromErr(err)

@@ -183,7 +183,7 @@ func dataSourceNutanixEraClusterRead(ctx context.Context, d *schema.ResourceData
 	resp, err := conn.Service.GetCluster(ctx, clusterID.(string), clusterName.(string))
 
 	if err != nil {
-		diag.FromErr(err)
+		return diag.FromErr(err)
 	}
 
 	if err := d.Set("id", resp.ID); err != nil {

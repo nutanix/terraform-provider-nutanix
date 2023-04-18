@@ -393,6 +393,12 @@ func flattenProfilesResponse(erp *Era.ProfileListResponse) []map[string]interfac
 			d["latest_version"] = v.Latestversion
 			d["latest_version_id"] = v.Latestversionid
 			d["versions"] = flattenVersions(v.Versions)
+			if v.Clusteravailability != nil {
+				d["cluster_availability"] = flattenClusterAvailability(v.Clusteravailability)
+			}
+			if v.Nxclusterid != nil {
+				d["nx_cluster_id"] = v.Nxclusterid
+			}
 
 			lst = append(lst, d)
 		}

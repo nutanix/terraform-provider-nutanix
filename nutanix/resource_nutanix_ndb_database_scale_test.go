@@ -22,6 +22,7 @@ func TestAccEra_Scalebasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameScaleDB, "data_storage_size", storageSize),
 					resource.TestCheckResourceAttrSet(resourceNameScaleDB, "name"),
 					resource.TestCheckResourceAttrSet(resourceNameScaleDB, "description"),
+					resource.TestCheckResourceAttrSet(resourceNameScaleDB, "time_machine.#"),
 				),
 			},
 		},

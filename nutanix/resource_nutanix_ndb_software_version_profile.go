@@ -304,6 +304,10 @@ func resourceNutanixNDBSoftwareVersionProfileRead(ctx context.Context, d *schema
 
 	// Get Profile Version API
 	profileVersionID := d.Get("profile_id")
+	// check if d.Id() is nil
+	if d.Id() == "" {
+		return diag.Errorf("profile version id is required for read operation")
+	}
 	resp, err := conn.Service.GetSoftwareProfileVersion(ctx, profileVersionID.(string), d.Id())
 	if err != nil {
 		return diag.FromErr(err)

@@ -31,6 +31,23 @@ The following attributes are exported:
 * `stretched_vlan_id`: stretched vlan id
 * `properties`: properties of network
 * `properties_map`: properties map of network
+* `ip_addresses`: IP addresses of network
+* `ip_pools`: IP Pools of network
+
+### ip_addresses
+* `ip`: ip
+* `status`: status of ip
+* `dbserver_id`: dbserver id
+* `dbserver_name`: dbserver name
+
+### ip_pools
+* `start_ip`: start ip 
+* `end_ip`: end ip
+* `addresses`: address of ips ranges
+
+### addresses
+* `ip`: ip of pool
+* `status`: ip status
 
 ### properties_map
 * `vlan_subnet_mask`: subnet mask of vlan

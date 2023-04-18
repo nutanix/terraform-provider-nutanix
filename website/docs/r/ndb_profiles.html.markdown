@@ -4,7 +4,7 @@ page_title: "NUTANIX: nutanix_ndb_profile"
 sidebar_current: "docs-nutanix-resource-ndb-profile"
 description: |-
   This operation submits a request to create, update and delete profiles in Nutanix database service (NDB).
-  Note: For 1.8.0-beta.2 release, only postgress database type is qualified and officially supported.
+  Note: For 1.8.0 release, only postgress database type is qualified and officially supported.
 ---
 
 # nutanix_ndb_profile

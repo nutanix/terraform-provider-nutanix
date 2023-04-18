@@ -4,14 +4,16 @@ page_title: "NUTANIX: nutanix_ndb_database"
 sidebar_current: "docs-nutanix-resource-ndb-database"
 description: |-
   This operation submits a request to create, update and delete database instance in Nutanix database service (NDB).
-  Note: For 1.8.0-beta.1 release, only postgress database type is qualified and officially supported.
+  Note: For 1.8.0 release, only postgress database type is qualified and officially supported.
 ---
 
 # nutanix_ndb_database
 
-Provides a resource to create database instance based on the input parameters. For 1.8.0-beta.1 release, only postgress database type is qualified and officially supported.
+Provides a resource to create database instance based on the input parameters. For 1.8.0 release, only postgress database type is qualified and officially supported.
 
 ## Example Usage
+
+### NDB database resource with new database server VM
 
 ``` hcl
 resource "nutanix_ndb_database" "dbp" {
@@ -95,10 +97,12 @@ resource "nutanix_ndb_database" "dbp" {
         }
     }
 }
+```
 
 
-// resource to provision HA instance
+### NDB database resource to provision HA instance with new database server VM
 
+``` hcl
 resource "nutanix_ndb_database" "dbp" {
     databasetype = "postgres_database"
     name = "test-pg-inst-HA-tf"
@@ -264,13 +268,94 @@ resource "nutanix_ndb_database" "dbp" {
 }
 ```
 
+### NDB database resource with registered database server VM
+
+```hcl
+  resource "nutanix_ndb_database" "dbp" {
+
+    // name of database type
+    databasetype = "postgres_database"
+
+    // required name of db instance
+    name = "test-inst"
+    description = "add description"
+
+    // adding the profiles details
+    dbparameterprofileid = "{{ db_parameter_profile_id }}"
+
+    // required dbserver id 
+    dbserverId = "{{ dbserver_id }}"
+    createdbserver = false
+
+    // postgreSQL Info
+    postgresql_info{
+        listener_port = "{{ listner_port }}"
+
+        database_size= "{{ 200 }}"
+
+        db_password =  "password"
+
+        database_names= "testdb1"
+    }
+	actionarguments{
+		name = "host_ip"
+		value = "{{ hostIP }}"
+	}
+
+    // node for single instance
+    nodes{
+        // id of dbserver vm 
+        dbserverid = "{{ dbserver_id }}"
+    }
+
+    // time machine info 
+    timemachineinfo {
+        name= "test-pg-inst"
+        description="description of time machine"
+        slaid= "{{ sla_id }}"
+
+        // schedule info fields are optional.
+        schedule {
+            snapshottimeofday{
+                hours= 16
+                minutes= 0
+                seconds= 0
+            }
+            continuousschedule{
+                enabled=true
+                logbackupinterval= 30
+                snapshotsperday=1
+            }
+            weeklyschedule{
+                enabled=true
+                dayofweek= "WEDNESDAY"
+            }
+            monthlyschedule{
+                enabled = true
+                dayofmonth= "27"
+            }
+            quartelyschedule{
+                enabled=true
+                startmonth="JANUARY"
+                dayofmonth= 27
+            }
+            yearlyschedule{
+                enabled= false
+                dayofmonth= 31
+                month="DECEMBER"
+            }
+        }
+    }
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `name`: - (Required) Name of the instance.
 * `description`: - (Optional) The description
-* `databasetype`: - (Optional) Type of database. Valid values: oracle_database, postgres_database, sqlserver_database, mariadb_database and mysql_database
+* `databasetype`: - (Required) Type of database. Valid values: postgres_database
 * `softwareprofileid`: - (Optional) ID of software profile
 * `softwareprofileversionid`: - (Optional) ID of version in software profile
 * `computeprofileid`: - (Optional) ID of compute profile

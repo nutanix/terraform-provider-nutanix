@@ -157,7 +157,7 @@ Provides a resource to register the database based on the input parameters.
 
 ## Argument Reference
 
-* `database_type`: (Required) type of database
+* `database_type`: (Required) type of database. Required value: postgres_database 
 * `database_name`: (Required) name of database
 * `description`: (Optional) description
 * `clustered`: (Optional) clustered or not. Default is false
