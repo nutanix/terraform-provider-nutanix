@@ -81,7 +81,7 @@ Foundation Central based modules and examples : Foundation based modules & examp
 
 > For the 1.8.1 release of the provider, it will have N-2 compatibility with the Nutanix database service. This release was tested with v2.5.1.1, v2.5.1 and v2.5 versions.
 
-Note: For 1.8.1 release, only postgress database type is qualified and officially supported. Older versions of NDB may not support some resources. 
+Note: For NDB related modules, only postgress database type is qualified and officially supported. Older versions of NDB may not support some resources. 
 
 Checkout example : https://github.com/nutanix/terraform-provider-nutanix/blob/master/examples/ndb/
 
