@@ -26,7 +26,7 @@ func resourceNutanixKarbonWorkerNodePool() *schema.Resource {
 			Delete: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
-			"nke_cluster_name": {
+			"cluster_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -118,10 +118,10 @@ func resourceNutanixKarbonWorkerNodePoolCreate(ctx context.Context, d *schema.Re
 
 	addworkerRequest := &karbon.ClusterNodePool{}
 	nkeName := ""
-	if karbonNodeName, ok := d.GetOk("nke_cluster_name"); ok && len(karbonNodeName.(string)) > 0 {
+	if karbonNodeName, ok := d.GetOk("cluster_name"); ok && len(karbonNodeName.(string)) > 0 {
 		nkeName = karbonNodeName.(string)
 	} else {
-		return diag.Errorf("nke_cluster_name is a required field")
+		return diag.Errorf("cluster_name is a required field")
 	}
 
 	if workerName, ok := d.GetOk("name"); ok {
@@ -188,7 +188,7 @@ func resourceNutanixKarbonWorkerNodePoolRead(ctx context.Context, d *schema.Reso
 	setTimeout(meta)
 	// Make request to the API
 	var err error
-	karbonClsName := d.Get("nke_cluster_name")
+	karbonClsName := d.Get("cluster_name")
 	resp, err := conn.Cluster.GetKarbonCluster(karbonClsName.(string))
 	if err != nil {
 		d.SetId("")
@@ -232,7 +232,7 @@ func resourceNutanixKarbonWorkerNodePoolUpdate(ctx context.Context, d *schema.Re
 	client := meta.(*Client)
 	conn := client.KarbonAPI
 
-	karbonClsName := d.Get("nke_cluster_name")
+	karbonClsName := d.Get("cluster_name")
 	workerName := d.Get("name")
 	resp, err := conn.Cluster.GetKarbonCluster(karbonClsName.(string))
 	if err != nil {
@@ -332,7 +332,7 @@ func resourceNutanixKarbonWorkerNodePoolDelete(ctx context.Context, d *schema.Re
 	conn := client.KarbonAPI
 
 	var err error
-	karbonClsName := d.Get("nke_cluster_name")
+	karbonClsName := d.Get("cluster_name")
 	resp, err := conn.Cluster.GetKarbonCluster(karbonClsName.(string))
 	if err != nil {
 		d.SetId("")
