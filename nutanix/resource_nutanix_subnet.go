@@ -718,9 +718,7 @@ func getSubnetResources(d *schema.ResourceData, subnet *v3.SubnetResources) {
 	}
 
 	if v, ok := d.GetOkExists("vlan_id"); ok {
-		if v.(int) == 0 || ok {
-			subnet.VlanID = utils.Int64Ptr(int64(v.(int)))
-		}
+		subnet.VlanID = utils.Int64Ptr(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("network_function_chain_reference"); ok {
