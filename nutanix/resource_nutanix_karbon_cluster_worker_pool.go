@@ -183,6 +183,7 @@ func resourceNutanixKarbonWorkerNodePoolCreate(ctx context.Context, d *schema.Re
 	d.SetId(karbonClusterActionResponse.TaskUUID)
 	return resourceNutanixKarbonWorkerNodePoolRead(ctx, d, meta)
 }
+
 func resourceNutanixKarbonWorkerNodePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).KarbonAPI
 	setTimeout(meta)
@@ -223,11 +224,12 @@ func resourceNutanixKarbonWorkerNodePoolRead(ctx context.Context, d *schema.Reso
 	if err = d.Set("labels", nodepool.Labels); err != nil {
 		return diag.Errorf("error setting labels for nke Worker Node Pool %s: %s", d.Id(), err)
 	}
-	if err = d.Set("ahv_config", flattenAHVConfig(nodepool.AHVConfig)); err != nil {
+	if err = d.Set("ahv_config", flattenAHVNodePoolConfig(nodepool.AHVConfig)); err != nil {
 		return diag.Errorf("error setting ahv_config for nke Worker Node Pool %s: %s", d.Id(), err)
 	}
 	return nil
 }
+
 func resourceNutanixKarbonWorkerNodePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*Client)
 	conn := client.KarbonAPI
@@ -327,6 +329,7 @@ func resourceNutanixKarbonWorkerNodePoolUpdate(ctx context.Context, d *schema.Re
 	}
 	return resourceNutanixKarbonWorkerNodePoolRead(ctx, d, meta)
 }
+
 func resourceNutanixKarbonWorkerNodePoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	client := meta.(*Client)
 	conn := client.KarbonAPI
@@ -378,7 +381,7 @@ func resourceNutanixKarbonWorkerNodePoolDelete(ctx context.Context, d *schema.Re
 	return nil
 }
 
-func flattenAHVConfig(ahv *karbon.ClusterNodePoolAHVConfig) []map[string]interface{} {
+func flattenAHVNodePoolConfig(ahv *karbon.ClusterNodePoolAHVConfig) []map[string]interface{} {
 	if ahv != nil {
 		ahvConfig := make([]map[string]interface{}, 0)
 
