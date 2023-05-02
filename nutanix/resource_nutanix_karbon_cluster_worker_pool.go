@@ -183,6 +183,7 @@ func resourceNutanixKarbonWorkerNodePoolCreate(ctx context.Context, d *schema.Re
 	d.SetId(karbonClusterActionResponse.TaskUUID)
 	return resourceNutanixKarbonWorkerNodePoolRead(ctx, d, meta)
 }
+
 func resourceNutanixKarbonWorkerNodePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*Client).KarbonAPI
 	setTimeout(meta)
