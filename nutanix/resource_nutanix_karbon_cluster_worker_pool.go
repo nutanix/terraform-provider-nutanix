@@ -62,13 +62,13 @@ func resourceNutanixKarbonWorkerNodePool() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      "122880",
-							ValidateFunc: validation.IntAtLeast(MINDISKMIB),
+							ValidateFunc: validation.IntAtLeast(DEFAULTWORKERNODEDISKMIB),
 						},
 						"memory_mib": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      "8192",
-							ValidateFunc: validation.IntAtLeast(MINMEMORYMIB),
+							ValidateFunc: validation.IntAtLeast(DEFAULTWORKERNODEEMORYMIB),
 						},
 						"network_uuid": {
 							Type:     schema.TypeString,
