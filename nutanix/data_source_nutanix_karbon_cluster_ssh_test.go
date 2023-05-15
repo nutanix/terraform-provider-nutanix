@@ -8,17 +8,17 @@ import (
 )
 
 func TestAccKarbonClusterSSHDataSource_basicx(t *testing.T) {
-	t.Skip()
 	r := acctest.RandInt()
 	//resourceName := "nutanix_karbon_cluster.cluster"
 	subnetName := testVars.SubnetName
 	defaultContainter := testVars.DefaultContainerName
+	KubernetesVersion := testVars.KubernetesVersion
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKarbonClusterSSHDataSourceConfig(subnetName, r, defaultContainter, 1),
+				Config: testAccKarbonClusterSSHDataSourceConfig(subnetName, r, defaultContainter, 1, KubernetesVersion),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
 						"data.nutanix_karbon_cluster_ssh.ssh", "id"),
@@ -35,12 +35,13 @@ func TestAccKarbonClusterSSHDataSource_basicByName(t *testing.T) {
 	//resourceName := "nutanix_karbon_cluster.cluster"
 	subnetName := testVars.SubnetName
 	defaultContainter := testVars.DefaultContainerName
+	KubernetesVersion := testVars.KubernetesVersion
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKarbonClusterSSHDataSourceConfigByName(subnetName, r, defaultContainter, 1),
+				Config: testAccKarbonClusterSSHDataSourceConfigByName(subnetName, r, defaultContainter, 1, KubernetesVersion),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
 						"data.nutanix_karbon_cluster_ssh.ssh", "id"),
@@ -52,18 +53,22 @@ func TestAccKarbonClusterSSHDataSource_basicByName(t *testing.T) {
 	})
 }
 
-func testAccKarbonClusterSSHDataSourceConfig(subnetName string, r int, containter string, workers int) string {
-	return testAccNutanixKarbonClusterConfig(subnetName, r, containter, workers, "flannel") + `
-	data "nutanix_karbon_cluster_ssh" "ssh" {
-		karbon_cluster_id = nutanix_karbon_cluster.cluster.id
-	}
+func testAccKarbonClusterSSHDataSourceConfig(subnetName string, r int, containter string, workers int, k8s string) string {
+	return `
+		data "nutanix_karbon_clusters" "kclusters" {}
+
+		data "nutanix_karbon_cluster_ssh" "ssh" {
+			karbon_cluster_id = data.nutanix_karbon_clusters.kclusters.clusters.0.uuid
+		}
 	`
 }
 
-func testAccKarbonClusterSSHDataSourceConfigByName(subnetName string, r int, containter string, workers int) string {
-	return testAccNutanixKarbonClusterConfig(subnetName, r, containter, workers, "flannel") + `
-	data "nutanix_karbon_cluster_ssh" "ssh" {
-		karbon_cluster_name = nutanix_karbon_cluster.cluster.name
-	}
+func testAccKarbonClusterSSHDataSourceConfigByName(subnetName string, r int, containter string, workers int, k8s string) string {
+	return `
+		data "nutanix_karbon_clusters" "kclusters" {}
+
+		data "nutanix_karbon_cluster_ssh" "ssh" {
+			karbon_cluster_name = data.nutanix_karbon_clusters.kclusters.clusters.0.name
+		}
 	`
 }
