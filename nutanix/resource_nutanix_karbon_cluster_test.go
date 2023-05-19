@@ -12,18 +12,18 @@ import (
 )
 
 func TestAccKarbonCluster_basic(t *testing.T) {
-	t.Skip()
 	r := acctest.RandInt()
 	resourceName := "nutanix_karbon_cluster.cluster"
 	subnetName := testVars.SubnetName
 	defaultContainter := testVars.DefaultContainerName
+	kubernetesVersion := testVars.KubernetesVersion
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixKarbonClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixKarbonClusterConfig(subnetName, r, defaultContainter, 1, "flannel"),
+				Config: testAccNutanixKarbonClusterConfig(subnetName, r, defaultContainter, 1, "flannel", kubernetesVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixKarbonClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("test-karbon-%d", r)),
@@ -35,7 +35,7 @@ func TestAccKarbonCluster_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNutanixKarbonClusterConfig(subnetName, r, defaultContainter, 2, "flannel"),
+				Config: testAccNutanixKarbonClusterConfig(subnetName, r, defaultContainter, 2, "flannel", kubernetesVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixKarbonClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("test-karbon-%d", r)),
@@ -58,17 +58,17 @@ func TestAccKarbonCluster_basic(t *testing.T) {
 
 func TestAccKarbonCluster_scaleDown(t *testing.T) {
 	r := acctest.RandInt()
-	t.Skip()
 	resourceName := "nutanix_karbon_cluster.cluster"
 	subnetName := testVars.SubnetName
 	defaultContainter := testVars.DefaultContainerName
+	kubernetesVersion := testVars.KubernetesVersion
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixKarbonClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixKarbonClusterConfig(subnetName, r, defaultContainter, 3, "flannel"),
+				Config: testAccNutanixKarbonClusterConfig(subnetName, r, defaultContainter, 3, "flannel", kubernetesVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixKarbonClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("test-karbon-%d", r)),
@@ -80,7 +80,7 @@ func TestAccKarbonCluster_scaleDown(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNutanixKarbonClusterConfig(subnetName, r, defaultContainter, 1, "flannel"),
+				Config: testAccNutanixKarbonClusterConfig(subnetName, r, defaultContainter, 1, "flannel", kubernetesVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixKarbonClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("test-karbon-%d", r)),
@@ -103,17 +103,17 @@ func TestAccKarbonCluster_scaleDown(t *testing.T) {
 
 func TestAccKarbonCluster_updateCNI(t *testing.T) {
 	r := acctest.RandInt()
-	t.Skip()
 	resourceName := "nutanix_karbon_cluster.cluster"
 	subnetName := testVars.SubnetName
 	defaultContainter := testVars.DefaultContainerName
+	kubernetesVersion := testVars.KubernetesVersion
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckNutanixKarbonClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNutanixKarbonClusterConfig(subnetName, r, defaultContainter, 1, "flannel"),
+				Config: testAccNutanixKarbonClusterConfig(subnetName, r, defaultContainter, 1, "flannel", kubernetesVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixKarbonClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("test-karbon-%d", r)),
@@ -125,7 +125,7 @@ func TestAccKarbonCluster_updateCNI(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccNutanixKarbonClusterConfig(subnetName, r, defaultContainter, 2, "calico"),
+				Config: testAccNutanixKarbonClusterConfig(subnetName, r, defaultContainter, 2, "calico", kubernetesVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixKarbonClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("test-karbon-%d", r)),
@@ -182,30 +182,30 @@ func testAccCheckNutanixKarbonClusterExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccNutanixKarbonClusterConfig(subnetName string, r int, containter string, workers int, cni string) string {
+func testAccNutanixKarbonClusterConfig(subnetName string, r int, containter string, workers int, cni, k8sVersion string) string {
 	return fmt.Sprintf(`
 	locals {
 		cluster_id = [
 				for cluster in data.nutanix_clusters.clusters.entities :
 				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 			][0]
-		node_os_version   = "%s"
+		node_os_version   = "%[1]s"
 		deployment_type   = ""
-		amount_of_workers = %d
+		amount_of_workers = %[2]d
 		amount_of_masters = 1
-		cni               = "%s"
+		cni               = "%[3]s"
 		master_vip        = ""
 	}
 
 	data "nutanix_clusters" "clusters" {}
 
 	data "nutanix_subnet" "karbon_subnet" {
-		subnet_name = "%s"
+		subnet_name = "%[4]s"
 	}
 
 	resource "nutanix_karbon_cluster" "cluster" {
-		name    = "test-karbon-%d"
-		version = "1.19.8-0"
+		name    = "test-karbon-%[5]d"
+		version = "%[7]s"
 
 		dynamic "active_passive_config" {
 		  for_each = local.deployment_type == "active-passive" ? [1] : []
@@ -233,7 +233,7 @@ func testAccNutanixKarbonClusterConfig(subnetName string, r int, containter stri
 		  volumes_config {
 			flash_mode                 = false
 			prism_element_cluster_uuid = local.cluster_id
-			storage_container          = "%s"
+			storage_container          = "%[6]s"
 		  }
 		}
 		cni_config {
@@ -281,5 +281,5 @@ func testAccNutanixKarbonClusterConfig(subnetName string, r int, containter stri
 		}
 	  }
 
-	`, testVars.NodeOsVersion, workers, cni, subnetName, r, containter)
+	`, testVars.NodeOsVersion, workers, cni, subnetName, r, containter, k8sVersion)
 }

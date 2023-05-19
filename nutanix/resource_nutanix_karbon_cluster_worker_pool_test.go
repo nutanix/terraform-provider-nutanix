@@ -127,6 +127,7 @@ func testAccNutanixKarbonClusterWorkerNodePoolConfig(subnetName string) string {
 				k1="v1"
 				k2="v2"
 			}
+			depends_on = [ data.nutanix_karbon_clusters.kclusters ]
 		}
 
 	`, subnetName)
@@ -156,6 +157,7 @@ func testAccNutanixKarbonClusterWorkerNodePoolConfigUpdate(subnetName string) st
 				k2="v2"
 				k3="v3"
 			}
+			depends_on = [ data.nutanix_karbon_clusters.kclusters ]
 		}
 
 	`, subnetName)

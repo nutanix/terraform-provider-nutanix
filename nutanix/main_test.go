@@ -24,8 +24,9 @@ type TestConfig struct {
 		ExpectedDisplayName  string `json:"expected_display_name"`
 		DirectoryServiceUUID string `json:"directory_service_uuid"`
 	} `json:"users"`
-	NodeOsVersion string `json:"node_os_version"`
-	AdRuleTarget  struct {
+	KubernetesVersion string `json:"kubernetes_version"`
+	NodeOsVersion     string `json:"node_os_version"`
+	AdRuleTarget      struct {
 		Name   string `json:"name"`
 		Values string `json:"values"`
 	} `json:"ad_rule_target"`
