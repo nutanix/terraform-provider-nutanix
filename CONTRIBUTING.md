@@ -147,47 +147,36 @@ Just follow this steps to get the development binary:
 4. You should see version as “nutanix (unversioned)”
 5. Then run your main.tf
 
-## Release it
 
-1. Install `goreleaser` tool:
+## Step to raise a Pull Request
 
-    ```bash
-    go get -v github.com/goreleaser/goreleaser
-    cd $GOPATH/src/github.com/goreleaser/goreleaser
-    go install
-    ```
+1. Create a github issue with following details.
+  * **Title** should contain one of the following
+    - [Feat] Develop terraform resource for \<api_name>
+    - [Imprv] Modify terraform resource to support \<new_functionality>
+    - [Bug] Fix \<summary of issue> bug in \<terraform_resource_name>
 
-    Alternatively you can download a latest release from [goreleaser Releases Page](https://github.com/goreleaser/goreleaser/releases)
+  * **Labels** should contain one of the following
+    - **feature**
+    - **enhancement**
+    - **bug**
+    - **test**
 
-1. Clean up folder `(builds)` if exists
+  * **Project** should be selected
+  * **Assignees** - assign yourself
 
-1. Make sure that the repository state is clean:
+2. Create one of the following git branch from `master` branch. Use `issue#<id>`.
+ * `feat/<resource_name>_issue#<id>`
+ * `imprv/issue#<id>`
+ * `bug/issue#<id>`
 
-    ```bash
-    git status
-    ```
+3. Please use code comments on the Pull Request. 
 
-1. Tag the release:
-
-    ```bash
-    git tag v1.1.0
-    ```
-
-1. Run `goreleaser`:
-
-    ```bash
-    cd (TODO: go dir)
-    goreleaser --skip-publish v1.1.0
-    ```
-
-1. Check builds inside `(TODO: build dir)` directory.
-
-1. Publish release tag to GitHub:
-
-    ```bash
-    git push origin v1.1.0
-    ```
-    
+4. If a reviewer commented on your PR or asked for changes, please mark the discussion as resolved after you make suggested changes in it. PRs with unresolved issues should not be merged. 
+4. Tests are mandatory for each PRs except documentation changes. 
+5. Ensure 85% code coverage on the pull request. Pull request with less than 85% coverage will be rejected.
+6. Link the pull requested with the associated issue. 
+6. Once PR is merged, close the issue. 
 
 ## Additional Resources
 
