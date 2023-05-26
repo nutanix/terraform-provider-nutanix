@@ -55,7 +55,7 @@ resource "nutanix_subnet" "next-iac-managed" {
 * `owner_reference`: - (Optional) The reference to a user.
 * `project_reference`: - (Optional) The reference to a project.
 * `vswitch_name`: - (Optional).
-* `subnet_type`: - (Optional).
+* `subnet_type`: - (Optional). Valid Types are ["VLAN", "OVERLAY"]
 * `default_gateway_ip`: - (Optional) Default gateway IP address.
 * `prefix_length`: - (Optional).
 * `subnet_ip`: - (Optional) Subnet IP address.

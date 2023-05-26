@@ -45,6 +45,7 @@
         }
     ],
     "node_os_version": "",
+    "kubernetes_version": "",
     "ad_rule_target": {
         "name": "",
         "values": ""

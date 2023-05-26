@@ -8,17 +8,17 @@ import (
 )
 
 func TestAccKarbonClusterDataSource_basic(t *testing.T) {
-	t.Skip()
 	r := acctest.RandInt()
 	dataSourceName := "data.nutanix_karbon_cluster.kcluster"
 	subnetName := testVars.SubnetName
 	defaultContainter := testVars.DefaultContainerName
+	KubernetesVersion := testVars.KubernetesVersion
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKarbonClusterDataSourceConfig(subnetName, r, defaultContainter, 1),
+				Config: testAccKarbonClusterDataSourceConfig(subnetName, r, defaultContainter, 1, KubernetesVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixKarbonClusterExists(dataSourceName),
 					resource.TestCheckResourceAttrSet(
@@ -34,12 +34,13 @@ func TestAccKarbonClusterDataSource_basicByName(t *testing.T) {
 	//resourceName := "nutanix_karbon_cluster.cluster"
 	subnetName := testVars.SubnetName
 	defaultContainter := testVars.DefaultContainerName
+	KubernetesVersion := testVars.KubernetesVersion
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKarbonClusterDataSourceConfigByName(subnetName, r, defaultContainter, 1),
+				Config: testAccKarbonClusterDataSourceConfigByName(subnetName, r, defaultContainter, 1, KubernetesVersion),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
 						"data.nutanix_karbon_cluster.kcluster", "id"),
@@ -49,18 +50,23 @@ func TestAccKarbonClusterDataSource_basicByName(t *testing.T) {
 	})
 }
 
-func testAccKarbonClusterDataSourceConfig(subnetName string, r int, containter string, workers int) string {
-	return testAccNutanixKarbonClusterConfig(subnetName, r, containter, workers, "flannel") + `
-	data "nutanix_karbon_cluster" "kcluster" {
-		karbon_cluster_id = nutanix_karbon_cluster.cluster.id
-	}
+func testAccKarbonClusterDataSourceConfig(subnetName string, r int, containter string, workers int, k8s string) string {
+	return `
+		data "nutanix_karbon_clusters" "kclusters" {}
+
+		data "nutanix_karbon_cluster" "kcluster" {
+			karbon_cluster_id = data.nutanix_karbon_clusters.kclusters.clusters.0.uuid
+		}
 	`
 }
 
-func testAccKarbonClusterDataSourceConfigByName(subnetName string, r int, containter string, workers int) string {
-	return testAccNutanixKarbonClusterConfig(subnetName, r, containter, workers, "flannel") + `
-	data "nutanix_karbon_cluster" "kcluster" {
-		karbon_cluster_name = nutanix_karbon_cluster.cluster.name
-	}
+func testAccKarbonClusterDataSourceConfigByName(subnetName string, r int, containter string, workers int, k8s string) string {
+	return `
+		data "nutanix_karbon_clusters" "kclusters" {}
+
+		data "nutanix_karbon_cluster" "kcluster" {
+			karbon_cluster_name = data.nutanix_karbon_clusters.kclusters.clusters.0.name
+		}
+
 	`
 }

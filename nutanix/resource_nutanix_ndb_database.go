@@ -467,7 +467,7 @@ func createDatabaseInstance(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*Client).Era
 
 	// check for resource schema validation
-	er := schemaValidation("era_provision_database", d)
+	er := schemaValidation("ndb_provision_database", d)
 	if er != nil {
 		return diag.FromErr(er)
 	}

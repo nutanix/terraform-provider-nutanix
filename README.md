@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
-NOTE: The latest version of the Nutanix provider is [v1.8.1](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.8.1)
+NOTE: The latest version of the Nutanix provider is [v1.9.0](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.9.0)
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 ## Build, Quality Status
@@ -45,6 +45,8 @@ The Terraform Nutanix provider is designed to work with Nutanix Prism Central an
 > For the 1.7.0 release of the provider it will have N-2 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc2022.6, pc2022.4 and pc2022.1.0.2.
 
 > For the 1.7.1 release of the provider it will have N-2 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc2022.6, pc2022.4.0.1 and pc2022.1.0.2.
+
+> For the 1.9.0 release of the provider it will have N-1 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc2022.9 and pc2023.1.0.1. 
 
 ### note
 With v1.6.1 release of flow networking feature in provider, IAMv2 setups would be mandate. 
@@ -210,6 +212,7 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 * nutanix_ndb_cluster
 * nutanix_ndb_maintenance_task
 * nutanix_ndb_maintenance_window
+* nutanix_karbon_worker_nodepool
 
 ## Data Sources
 
@@ -289,167 +292,10 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 * nutanix_ndb_maintenance_windows
 * nutanix_ndb_network_available_ips
 
-## Quick Install
 
-### Install Dependencies
+## Developing the provider 
 
-* [Terraform](https://www.terraform.io/downloads.html) 0.12+
+The Nutanix Provider for Terraform is the work of many contributors. We appreciate your help!
 
-### For developing or build from source
-
-
-* [Go](https://golang.org/doc/install) 1.12+ (to build the provider plugin)
-
-
-### Building/Developing Provider
-
-We recomment to use Go 1.12+ to be able to use `go modules`
-
-```sh
-$ git clone https://github.com/nutanix/terraform-provider-nutanix.git
-```
-
-Enter the provider directory and build the provider
-
-```sh
-$ make tools
-$ make build
-```
-
-This will create a binary file `terraform-provider-nutanix` you can copy to your terraform specific project.
-
-Alternative build: with our demo
-
-```sh
-$ make tools
-$ go build -o examples/terraform-provider-nutanix
-$ cd examples
-$ terraform init #to try out our demo
-```
-
-If you need multi-OS binaries such as Linux, macOS, Windows. Run the following command.
-
-```sh
-$ make tools
-$ make cibuild
-```
-
-This command will create a `pkg/` directory with all the binaries for the most popular OS.
-
-### Running tests of provider
-
-For running unit tests:
-```sh
-make test
-```
-
-For running integration tests:
-
-1. Add environment variables for setup related details:
-```ssh
-export NUTANIX_USERNAME="<username>"
-export NUTANIX_PASSWORD="<password>"
-export NUTANIX_INSECURE=true
-export NUTANIX_PORT=9440
-export NUTANIX_ENDPOINT="<pc-ip>"
-export NUTANIX_STORAGE_CONTAINER="<storage-container-uuid-for-vm-tests>"
-export FOUNDATION_ENDPOINT="<foundation-vm-ip-for-foundation-related-tests>"
-export FOUNDATION_PORT=8000
-export NOS_IMAGE_TEST_URL="<test-image-url>"
-```
-
-2. Some tests need setup related constants for resource creation. So add/replace details in test_config.json (for pc tests) and test_foundation_config.json (for foundation and foundation central tests)
-
-3. To run all tests:
-```ssh
-make testacc
-```
-
-4. To run specific tests:
-```ssh 
-export TESTARGS='-run=TestAccNutanixPbr_WithSourceExternalDestinationNetwork'
-make testacc
-```
-
-5. To run collection of tests:
-``` ssh
-export TESTARGS='-run=TestAccNutanixPbr*'
-make testacc
-```
-
-### Common Issues using the development binary.
-
-Terraform download the released binary instead developent one.
-
-Just follow this steps to get the development binary:
-
-1. Copy the development terraform binary in the root folder of the project (i.e. where your main.tf is), this should be named `terraform-provider-nutanix`
-2. Remove the entire “.terraform” directory.
-    ```sh
-    rm -rf .terraform/
-    ```
-
-3. Run the following command in the same folder where you have copied the development terraform binary.
-    ```sh
-    terraform init -upgrade
-    terraform providers -version
-    ```
-
-4. You should see version as “nutanix (unversioned)”
-5. Then run your main.tf
-
-## Release it
-
-1. Install `goreleaser` tool:
-
-    ```bash
-    go get -v github.com/goreleaser/goreleaser
-    cd $GOPATH/src/github.com/goreleaser/goreleaser
-    go install
-    ```
-
-    Alternatively you can download a latest release from [goreleaser Releases Page](https://github.com/goreleaser/goreleaser/releases)
-
-1. Clean up folder `(builds)` if exists
-
-1. Make sure that the repository state is clean:
-
-    ```bash
-    git status
-    ```
-
-1. Tag the release:
-
-    ```bash
-    git tag v1.1.0
-    ```
-
-1. Run `goreleaser`:
-
-    ```bash
-    cd (TODO: go dir)
-    goreleaser --skip-publish v1.1.0
-    ```
-
-1. Check builds inside `(TODO: build dir)` directory.
-
-1. Publish release tag to GitHub:
-
-    ```bash
-    git push origin v1.1.0
-    ```
-
-## Additional Resources
-
-We've got a handful of resources outside of this repository that will help users understand the interactions between terraform and Nutanix
-
-* YouTube
-  _ Overview Video: [](https://www.youtube.com/watch?v=V8_Lu1mxV6g)
-  _ Working with images: [](https://www.youtube.com/watch?v=IW0eQevZ73I)
-* Nutanix GitHub
-  _ [](https://github.com/nutanix/terraform-provider-nutanix)
-  _ Private repo until code goes upstream
-* Jon’s GitHub
-  _ [](https://github.com/JonKohler/ThisOldCloud/tree/master/Terraform-Nutanix)
-  _ Contains sample TF’s and PDFs from the youtube videos
-* Slack channel \* User community slack channel is available on nutanix.slack.com. Email terraform@nutanix.com to gain entry.
+* [Contribution Guidelines](./CONTRIBUTING.md)
+* [Code of Conduct](./CODE_OF_CONDUCT.md)

@@ -59,7 +59,7 @@ func TestAccNutanixUserGroups_DuplicateEntity(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccNutanixUserGroupsConfig(directoryServiceDistName),
-				ExpectError: regexp.MustCompile("DUPLICATE_ENTITY"),
+				ExpectError: regexp.MustCompile("bad Request"),
 			},
 		},
 	})

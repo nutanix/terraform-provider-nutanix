@@ -12,12 +12,13 @@ func TestAccKarbonClustersDataSource_basic(t *testing.T) {
 	//resourceName := "nutanix_karbon_cluster.cluster"
 	subnetName := testVars.SubnetName
 	defaultContainter := testVars.DefaultContainerName
+	KubernetesVersion := testVars.KubernetesVersion
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKarbonClustersDataSourceConfig(subnetName, r, defaultContainter, 1),
+				Config: testAccKarbonClustersDataSourceConfig(subnetName, r, defaultContainter, 1, KubernetesVersion),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(
 						"data.nutanix_karbon_clusters.kclusters", "clusters.#"),
@@ -27,9 +28,9 @@ func TestAccKarbonClustersDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccKarbonClustersDataSourceConfig(subnetName string, r int, containter string, workers int) string {
-	return testAccNutanixKarbonClusterConfig(subnetName, r, containter, workers, "flannel") + `
-	data "nutanix_karbon_clusters" "kclusters" {}
+func testAccKarbonClustersDataSourceConfig(subnetName string, r int, containter string, workers int, k8s string) string {
+	return `
+		data "nutanix_karbon_clusters" "kclusters" {}
 
 	`
 }

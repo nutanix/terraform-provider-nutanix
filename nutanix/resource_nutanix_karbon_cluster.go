@@ -63,6 +63,11 @@ func resourceNutanixKarbonCluster() *schema.Resource {
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Update: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+			Delete: schema.DefaultTimeout(DEFAULTWAITTIMEOUT * time.Minute),
+		},
 		SchemaVersion: 1,
 		Schema:        KarbonClusterResourceMap(),
 	}
@@ -75,6 +80,7 @@ func KarbonClusterResourceMap() map[string]*schema.Schema {
 			Optional:     true,
 			Default:      DEFAULTWAITTIMEOUT,
 			ValidateFunc: validation.IntAtLeast(MINIMUMWAITTIMEOUT),
+			Deprecated:   "use timeouts instead",
 		},
 		"name": {
 			Type:     schema.TypeString,
@@ -513,7 +519,7 @@ func resourceNutanixKarbonClusterCreate(ctx context.Context, d *schema.ResourceD
 	}
 	// Set terraform state id
 	d.SetId(createClusterResponse.ClusterUUID)
-	err = WaitForKarbonCluster(ctx, client, timeout, createClusterResponse.TaskUUID)
+	err = WaitForKarbonCluster(ctx, client, timeout, createClusterResponse.TaskUUID, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -638,9 +644,11 @@ func resourceNutanixKarbonClusterUpdate(ctx context.Context, d *schema.ResourceD
 		if err != nil {
 			return diag.FromErr(err)
 		}
-		err = WaitForKarbonCluster(ctx, client, timeout, taskUUID)
-		if err != nil {
-			return diag.FromErr(err)
+		if taskUUID != "" {
+			err = WaitForKarbonCluster(ctx, client, timeout, taskUUID, d.Timeout(schema.TimeoutUpdate))
+			if err != nil {
+				return diag.FromErr(err)
+			}
 		}
 	}
 	if d.HasChange("private_registry") {
@@ -685,7 +693,7 @@ func resourceNutanixKarbonClusterDelete(ctx context.Context, d *schema.ResourceD
 	if err != nil {
 		return diag.Errorf("error while deleting Karbon Cluster UUID(%s): %s", d.Id(), err)
 	}
-	err = WaitForKarbonCluster(ctx, client, timeout, clusterDeleteResponse.TaskUUID)
+	err = WaitForKarbonCluster(ctx, client, timeout, clusterDeleteResponse.TaskUUID, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return diag.Errorf("error while waiting for Karbon Cluster deletion with UUID(%s): %s", d.Id(), err)
 	}
@@ -984,12 +992,12 @@ func GetNodePoolsForCluster(conn *karbon.Client, karbonClusterName string, nodep
 	return nodepoolStructs, nil
 }
 
-func WaitForKarbonCluster(ctx context.Context, client *Client, waitTimeoutMinutes int64, taskUUID string) error {
+func WaitForKarbonCluster(ctx context.Context, client *Client, waitTimeoutMinutes int64, taskUUID string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"QUEUED", "RUNNING"},
 		Target:     []string{"SUCCEEDED"},
 		Refresh:    taskStateRefreshFunc(client.API, taskUUID),
-		Timeout:    time.Duration(waitTimeoutMinutes) * time.Minute,
+		Timeout:    timeout,
 		Delay:      WAITDELAY,
 		MinTimeout: WAITMINTIMEOUT,
 	}
