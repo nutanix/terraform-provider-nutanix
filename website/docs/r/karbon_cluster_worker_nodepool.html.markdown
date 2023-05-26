@@ -51,7 +51,7 @@ The following arguments are supported:
 
 * `cluster_name`: (Required) Kubernetes cluster name
 * `name`: (Required) unique worker nodepool name
-* `node_os_version`: (Optional)
+* `node_os_version`: (Optional) The version of the node OS image
 * `num_instances`: (Required) number of node instances
 * `ahv_config`: (Optional)  VM configuration in AHV.
 * `labels`: (Optional) labels of node
@@ -74,6 +74,12 @@ The following attributes are exported:
 * `nodes`: List of node details of pool.
 * `nodes.hostname`: hostname of node
 * `nodes.ipv4_address`: ipv4 address of node
+
+## Timeouts
+
+* create
+* update
+* delete
 
 
 See detailed information in [Add Node Pool in NKE](https://www.nutanix.dev/api_references/nke/#/5e68a51e9d3fa-add-a-node-pool-to-a-k8s-cluster)

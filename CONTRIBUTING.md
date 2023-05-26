@@ -156,14 +156,9 @@ Just follow this steps to get the development binary:
     - [Imprv] Modify terraform resource to support \<new_functionality>
     - [Bug] Fix \<summary of issue> bug in \<terraform_resource_name>
 
-  * **Labels** should contain one of the following
-    - **feature**
-    - **enhancement**
-    - **bug**
-    - **test**
-
-  * **Project** should be selected
-  * **Assignees** - assign yourself
+  * **Template** for raising issue is already defined. Refer below for creating any issue. 
+    - [Issue:Bug Report](https://github.com/nutanix/terraform-provider-nutanix/issues/new?assignees=&labels=&projects=&template=bug_report.md&title=)
+    - [Issue:Feature Request](https://github.com/nutanix/terraform-provider-nutanix/issues/new?assignees=&labels=&projects=&template=feature_request.md&title=)
 
 2. Create one of the following git branch from `master` branch. Use `issue#<id>`.
  * `feat/<resource_name>_issue#<id>`

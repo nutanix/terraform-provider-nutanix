@@ -1,3 +1,34 @@
+## 1.9.0 (May 26, 2023)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.8.1...feat/1.9.0)
+
+**New Feature:**
+- Add support for new Karbon features. [\#290](https://github.com/nutanix/terraform-provider-nutanix/issues/290)
+    
+    New Resource :
+    - nutanix_karbon_worker_nodepool
+
+**Implemented enhancements:**
+- Adding timeouts in "nutanix_karbon_cluster" resource. [\#563](https://github.com/nutanix/terraform-provider-nutanix/pull/563)
+- Vlan with 0 vlan_id should be supported in subnet resource. [\#562](https://github.com/nutanix/terraform-provider-nutanix/pull/562)
+- Adding contributing doc and code of conduct in provider. [\#603](https://github.com/nutanix/terraform-provider-nutanix/pull/603)
+- Schema Validation for NDB database provision when profiles are required or optional. [\#591](https://github.com/nutanix/terraform-provider-nutanix/issues/591)
+
+**Fixed bugs:**
+- Intermittent "context deadline exceeded" errors on "nutanix_karbon_cluster" resource. [\#544](https://github.com/nutanix/terraform-provider-nutanix/issues/544)
+- Resource "nutanix_subnet" fails when creating a managed IPAM network using a VLAN that overlaps with existing network. [\#543](https://github.com/nutanix/terraform-provider-nutanix/issues/543)
+- In NDB database resource, Required profile values for provisioning a database with registered dbserver or with new dbserver should be properly listed. [#\604](https://github.com/nutanix/terraform-provider-nutanix/issues/604)
+
+**Closed issues:**
+- Typo in documentation guest_customization_sysrep_custom_key_values. [\#495](https://github.com/nutanix/terraform-provider-nutanix/issues/495)
+- Documentation about subnet_type for nutanix_subnet is missing. [\#506](https://github.com/nutanix/terraform-provider-nutanix/issues/506)
+- parent_reference misspelled. [\#507](https://github.com/nutanix/terraform-provider-nutanix/issues/507)
+- availability_zone_reference not returning in nutanix_clusters. [\#573](https://github.com/nutanix/terraform-provider-nutanix/issues/573)
+
+**Merged pull requests:**
+- Add information about how to import virtual machine to state. [\#500](https://github.com/nutanix/terraform-provider-nutanix/pull/500)
+- Removed UUID field from documentation of nutanix address group. [\#462](https://github.com/nutanix/terraform-provider-nutanix/pull/462)
+
+
 ## 1.8.1 (April 18, 2023)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.8.0-ga...feat/1.8.1)
 
