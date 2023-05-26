@@ -255,6 +255,24 @@ func TestAccNutanixSubnet_nameDuplicated(t *testing.T) {
 	})
 }
 
+func TestAccNutanixSubnet_WithVlan0(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixSubnetConfig(0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixSubnetExists(resourceNameSubnet),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "name", "acctest-managed-0"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "description", "Description of my unit test VLAN"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckNutanixSubnetExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]

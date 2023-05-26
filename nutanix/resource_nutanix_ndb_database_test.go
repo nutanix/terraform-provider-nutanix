@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -15,6 +16,8 @@ func TestAccEra_basic(t *testing.T) {
 	desc := "this is desc"
 	vmName := fmt.Sprintf("testvm-%d", r)
 	sshKey := testVars.SSHKey
+	updatedName := fmt.Sprintf("test-pg-inst-tf-updated-%d", r)
+	updatedesc := "this is updated desc"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccEraPreCheck(t) },
 		Providers: testAccProviders,
@@ -24,6 +27,17 @@ func TestAccEra_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameDB, "name", name),
 					resource.TestCheckResourceAttr(resourceNameDB, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameDB, "databasetype", "postgres_database"),
+					resource.TestCheckResourceAttr(resourceNameDB, "database_nodes.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceNameDB, "time_machine_id"),
+					resource.TestCheckResourceAttrSet(resourceNameDB, "time_machine.#"),
+				),
+			},
+			{
+				Config: testAccEraDatabaseConfig(updatedName, updatedesc, vmName, sshKey, r),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameDB, "name", updatedName),
+					resource.TestCheckResourceAttr(resourceNameDB, "description", updatedesc),
 					resource.TestCheckResourceAttr(resourceNameDB, "databasetype", "postgres_database"),
 					resource.TestCheckResourceAttr(resourceNameDB, "database_nodes.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceNameDB, "time_machine_id"),
@@ -53,6 +67,42 @@ func TestAccEraDatabaseProvisionHA(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameDB, "linked_databases.#", "4"),
 					resource.TestCheckResourceAttrSet(resourceNameDB, "time_machine_id"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEra_SchemaValidationwithCreateDBserver(t *testing.T) {
+	r := randIntBetween(1, 10)
+	name := fmt.Sprintf("test-pg-inst-tf-%d", r)
+	desc := "this is desc"
+	vmName := fmt.Sprintf("testvm-%d", r)
+	sshKey := testVars.SSHKey
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccEraPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccEraDatabaseSchemaValidationConfig(name, desc, vmName, sshKey, r),
+				ExpectError: regexp.MustCompile(`missing required fields are \[softwareprofileid softwareprofileversionid computeprofileid networkprofileid dbparameterprofileid\] for ndb_provision_database`),
+			},
+		},
+	})
+}
+
+func TestAccEra_SchemaValidationwithCreateDBserverFalse(t *testing.T) {
+	r := randIntBetween(1, 10)
+	name := fmt.Sprintf("test-pg-inst-tf-%d", r)
+	desc := "this is desc"
+	vmName := fmt.Sprintf("testvm-%d", r)
+	sshKey := testVars.SSHKey
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { testAccEraPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccEraDatabaseSchemaValidationConfigWithoutCreateDBserver(name, desc, vmName, sshKey, r),
+				ExpectError: regexp.MustCompile(`missing required fields are \[dbparameterprofileid timemachineinfo\] for ndb_provision_database`),
 			},
 		},
 	})
@@ -326,4 +376,150 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string, r int) string {
 	  }
 	}
 	`, name, desc, sshKey, r)
+}
+
+func testAccEraDatabaseSchemaValidationConfig(name, desc, vmName, sshKey string, r int) string {
+	return fmt.Sprintf(`
+	data "nutanix_ndb_profiles" "p"{
+	}
+	data "nutanix_ndb_slas" "slas"{}
+	data "nutanix_ndb_clusters" "clusters"{}
+	
+	locals {
+		profiles_by_type = {
+			for p in data.nutanix_ndb_profiles.p.profiles : p.type => p...
+		}
+		storage_profiles = {
+			for p in local.profiles_by_type.Storage: p.name => p
+		}
+		compute_profiles = {
+			for p in local.profiles_by_type.Compute: p.name => p
+		}
+		network_profiles = {
+			for p in local.profiles_by_type.Network: p.name => p
+		}
+		database_parameter_profiles = {
+			for p in local.profiles_by_type.Database_Parameter: p.name => p
+		}
+		software_profiles = {
+			for p in local.profiles_by_type.Software: p.name => p
+		}
+		slas = {
+			for p in data.nutanix_ndb_slas.slas.slas: p.name => p
+		}
+		clusters = {
+			for p in data.nutanix_ndb_clusters.clusters.clusters: p.name => p
+		}  
+	}
+	
+	resource "nutanix_ndb_database" "acctest-managed" {
+		databasetype = "postgres_database"
+		name = "%[1]s"
+		description = "%[2]s"
+		
+		postgresql_info{
+			listener_port = "5432"
+			database_size= "200"
+			db_password =  "password"
+			database_names= "testdb1"
+		}
+		nxclusterid= local.clusters.EraCluster.id
+		sshpublickey= "%[4]s"
+		nodes{
+				vmname= "%[3]s"
+				networkprofileid= local.network_profiles.DEFAULT_OOB_POSTGRESQL_NETWORK.id
+			}
+		timemachineinfo {
+			name= "test-pg-inst-%[5]d"
+			description=""
+			slaid=local.slas["DEFAULT_OOB_BRONZE_SLA"].id
+			schedule {
+				snapshottimeofday{
+					hours= 16
+					minutes= 0
+					seconds= 0
+				}		
+			continuousschedule{
+					enabled=true
+					logbackupinterval= 30
+					snapshotsperday=1
+				}
+			weeklyschedule{
+					enabled=true
+					dayofweek= "WEDNESDAY"
+				}
+			monthlyschedule{
+					enabled = true
+					dayofmonth= "27"
+				}
+			quartelyschedule{
+					enabled=true
+					startmonth="JANUARY"
+					dayofmonth= 27
+				}
+			yearlyschedule{
+					enabled= false
+					dayofmonth= 31
+					month="DECEMBER"
+				}
+			}
+	  }
+	}
+	`, name, desc, vmName, sshKey, r)
+}
+
+func testAccEraDatabaseSchemaValidationConfigWithoutCreateDBserver(name, desc, vmName, sshKey string, r int) string {
+	return fmt.Sprintf(`
+		data "nutanix_ndb_profiles" "p"{
+		}
+		data "nutanix_ndb_slas" "slas"{}
+		data "nutanix_ndb_clusters" "clusters"{}
+		
+		locals {
+			profiles_by_type = {
+				for p in data.nutanix_ndb_profiles.p.profiles : p.type => p...
+			}
+			storage_profiles = {
+				for p in local.profiles_by_type.Storage: p.name => p
+			}
+			compute_profiles = {
+				for p in local.profiles_by_type.Compute: p.name => p
+			}
+			network_profiles = {
+				for p in local.profiles_by_type.Network: p.name => p
+			}
+			database_parameter_profiles = {
+				for p in local.profiles_by_type.Database_Parameter: p.name => p
+			}
+			software_profiles = {
+				for p in local.profiles_by_type.Software: p.name => p
+			}
+			slas = {
+				for p in data.nutanix_ndb_slas.slas.slas: p.name => p
+			}
+			clusters = {
+				for p in data.nutanix_ndb_clusters.clusters.clusters: p.name => p
+			}  
+		}
+		
+		resource "nutanix_ndb_database" "acctest-managed" {
+			databasetype = "postgres_database"
+			name = "%[1]s"
+			description = "%[2]s"
+			
+			postgresql_info{
+				listener_port = "5432"
+				database_size= "200"
+				db_password =  "password"
+				database_names= "testdb1"
+			}
+			nxclusterid= local.clusters.EraCluster.id
+			sshpublickey= "%[4]s"
+			nodes{
+				vmname= "%[3]s"
+				networkprofileid= local.network_profiles.DEFAULT_OOB_POSTGRESQL_NETWORK.id
+			}
+			createdbserver=false
+		}
+	`, name, desc, vmName, sshKey, r)
 }
