@@ -47,6 +47,7 @@ const (
 	DEFAULTWAITTIMEOUT        = 60
 	WAITDELAY                 = 10 * time.Second
 	WAITMINTIMEOUT            = 10 * time.Second
+	KARBONMINIMUMVERSION      = "2.2.3"
 )
 
 // Known issues:
@@ -570,11 +571,20 @@ func resourceNutanixKarbonClusterRead(ctx context.Context, d *schema.ResourceDat
 
 	// Must use know version because GA API reports different version
 	var versionSet string
-	if version, ok := d.GetOk("version"); ok {
-		versionSet = version.(string)
-	} else {
-		versionSet = utils.StringValue(resp.Version)
+	karbonVersion, er := conn.Meta.GetVersion()
+	if er != nil {
+		return diag.Errorf("error getting karbon version")
 	}
+	if *karbonVersion.Version < KARBONMINIMUMVERSION {
+		if version, ok := d.GetOk("version"); ok {
+			versionSet = version.(string)
+		} else {
+			versionSet = utils.StringValue(resp.Version)
+		}
+	} else {
+		versionSet = *resp.Version
+	}
+
 	if err = d.Set("version", versionSet); err != nil {
 		return diag.Errorf("error setting version for Karbon Cluster %s: %s", d.Id(), err)
 	}
