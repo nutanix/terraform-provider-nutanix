@@ -47,7 +47,6 @@ const (
 	DEFAULTWAITTIMEOUT        = 60
 	WAITDELAY                 = 10 * time.Second
 	WAITMINTIMEOUT            = 10 * time.Second
-	KARBONMINIMUMVERSION      = "2.2.3"
 )
 
 // Known issues:
@@ -570,24 +569,16 @@ func resourceNutanixKarbonClusterRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	// Must use know version because GA API reports different version
-	var versionSet string
-	karbonVersion, er := conn.Meta.GetVersion()
+	karbonVersion, er := conn.Meta.GetSemanticVersion()
 	if er != nil {
 		return diag.Errorf("error getting karbon version")
 	}
-	if *karbonVersion.Version < KARBONMINIMUMVERSION {
-		if version, ok := d.GetOk("version"); ok {
-			versionSet = version.(string)
-		} else {
-			versionSet = utils.StringValue(resp.Version)
-		}
-	} else {
-		versionSet = *resp.Version
-	}
 
-	if err = d.Set("version", versionSet); err != nil {
+	karbonVersionSet := checkKarbonVersion(d, karbonVersion, resp)
+	if err = d.Set("version", karbonVersionSet); err != nil {
 		return diag.Errorf("error setting version for Karbon Cluster %s: %s", d.Id(), err)
 	}
+
 	if err = d.Set("kubeapi_server_ipv4_address", utils.StringValue(resp.KubeAPIServerIPv4Address)); err != nil {
 		return diag.Errorf("error setting kubeapi_server_ipv4_address for Karbon Cluster %s: %s", d.Id(), err)
 	}
@@ -1263,4 +1254,21 @@ func calculateCPURequirement(karbonVersion *karbon.MetaSemanticVersionResponse, 
 	}
 	log.Printf("[DEBUG] version was 2.2.2 or higher. NOT applying CPU workaround")
 	return amountOfCPU, nil
+}
+
+func checkKarbonVersion(d *schema.ResourceData, karbonVersion *karbon.MetaSemanticVersionResponse, karbonResp *karbon.ClusterIntentResponse) string {
+	const baseMajorVersion int64 = 2
+	const baseMinorVersion int64 = 2
+	const baseRevVersion int64 = 3
+	var versionSet string
+	if karbonVersion.MajorVersion <= baseMajorVersion && karbonVersion.MinorVersion <= baseMinorVersion && karbonVersion.RevisionVersion < baseRevVersion {
+		if version, ok := d.GetOk("version"); ok {
+			versionSet = version.(string)
+		} else {
+			versionSet = utils.StringValue(karbonResp.Version)
+		}
+	} else {
+		versionSet = *karbonResp.Version
+	}
+	return versionSet
 }
