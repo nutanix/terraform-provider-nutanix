@@ -132,10 +132,10 @@ func (sc ServiceClient) GetProfile(ctx context.Context, filter *ProfileFilter) (
 func (sc ServiceClient) GetCluster(ctx context.Context, id string, name string) (*ListClusterResponse, error) {
 	var path string
 	if id != "" {
-		path = fmt.Sprintf("/clusters/%s?count_entities=true", id)
+		path = fmt.Sprintf("/clusters/%s", id)
 	}
 	if name != "" {
-		path = fmt.Sprintf("/clusters/name/%s?count_entities=true", name)
+		path = fmt.Sprintf("/clusters/name/%s", name)
 	}
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, path, nil)
 	if err != nil {
@@ -147,7 +147,7 @@ func (sc ServiceClient) GetCluster(ctx context.Context, id string, name string) 
 }
 
 func (sc ServiceClient) ListClusters(ctx context.Context) (*ClusterListResponse, error) {
-	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/clusters?count_entities=true", nil)
+	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/clusters", nil)
 	if err != nil {
 		return nil, err
 	}
