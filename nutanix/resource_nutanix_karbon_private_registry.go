@@ -46,7 +46,7 @@ func KarbonPrivateRegistryResourceMap() map[string]*schema.Schema {
 		},
 		"port": {
 			Type:         schema.TypeInt,
-			Required:     true,
+			Optional:     true,
 			ValidateFunc: validation.IntAtLeast(1),
 		},
 		"endpoint": {
@@ -87,7 +87,7 @@ func resourceNutanixKarbonPrivateRegistryCreate(ctx context.Context, d *schema.R
 	} else {
 		return diag.Errorf("error occurred during private registry creation: url must be set")
 	}
-	if port, ok := d.GetOk("port"); ok {
+	if port, ok := d.GetOk("port"); ok && port.(int) > 0 {
 		p := int64(port.(int))
 		karbonPrivateRegistry.Port = &p
 	}

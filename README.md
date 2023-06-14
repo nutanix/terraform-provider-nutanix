@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
-NOTE: The latest version of the Nutanix provider is [v1.9.0](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.9.0)
+NOTE: The latest version of the Nutanix provider is [v1.9.1](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.9.1)
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 ## Build, Quality Status
@@ -14,6 +14,10 @@ Modules based on Terraform Nutanix Provider can be found here : [Modules](https:
 | Master                                                                                                                                                          | Develop                                                                                                                                                           |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [![Build Status](https://travis-ci.org/nutanix/terraform-provider-nutanix.svg?branch=master)](https://travis-ci.org/nutanix/terraform-provider-nutanix) | [![Build Status](https://travis-ci.org/nutanix/terraform-provider-nutanix.svg?branch=develop)](https://travis-ci.org/nutanix/terraform-provider-nutanix) |
+
+## Support
+
+Terraform Nutanix Provider leverages the community-supported model. See [Open Source Support](https://portal.nutanix.com/page/documents/kbs/details?targetId=kA07V000000LdWPSA0) for more information about its support policy.
 
 ## Community
 
