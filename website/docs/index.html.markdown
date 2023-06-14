@@ -12,6 +12,10 @@ The provider is used to interact with the many resources and data sources suppor
 
 Use the navigation on the left to read about the available resources and data sources this provider can use.
 
+## Support
+
+Terraform Nutanix Provider leverages the community-supported model. See [Open Source Support](https://portal.nutanix.com/page/documents/kbs/details?targetId=kA07V000000LdWPSA0) for more information about its support policy.
+
 ## Example Usage
 
 ### Terraform 0.12 and below
@@ -154,3 +158,4 @@ Going from 1.8.0-beta release of nutanix provider, fields inside provider config
 * `Prism Central & Karbon` : For prism central and karbon related resources and data sources, `username`, `password` & `endpoint` are manadatory.
 * `Foundation` : For foundation related resources and data sources, `foundation_endpoint` in manadatory.
 * `NDB` : For Nutanix Database Service (NDB) related resources and data sources. 
+
