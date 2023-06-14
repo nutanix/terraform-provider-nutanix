@@ -4,7 +4,10 @@
 **Implemented enhancements:**
 - Handling version in ReadContext for "nutanix_karbon_cluster" resource. [\#606](https://github.com/nutanix/terraform-provider-nutanix/pull/606)
 - Changed Port field in "resource_karbon_private_registry" to Optional. [\#607](https://github.com/nutanix/terraform-provider-nutanix/pull/607)
-- NDB clusters endpoint to have support for AD. [\#608](https://github.com/nutanix/terraform-provider-nutanix/pull/608)
+- NDB clusters endpoint to have support for Active Directory. [\#608](https://github.com/nutanix/terraform-provider-nutanix/pull/608)
+
+**Closed issues:**
+- Add support documentation in terraform. [\#611](https://github.com/nutanix/terraform-provider-nutanix/issues/611)
 
 
 ## 1.9.0 (May 26, 2023)
