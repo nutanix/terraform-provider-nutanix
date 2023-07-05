@@ -55,14 +55,14 @@ under:
     go build -o bin/terraform-provider-nutanix_macosx-v1.99.99
     ```
 
-3. Copy Equinix provider **binary file** there.
+3. Copy Nutanix provider **binary file** there.
 
    ```sh
     cp bin/terraform-provider-nutanix_macosx-v1.99.99 ~/.terraform.d/plugins/registry.terraform.io/nutanixtemp/nutanix/1.99.99/darwin_amd64/terraform-provider-nutanix_v1.99.99
     cp bin/terraform-provider-nutanix_macosx-v1.99.99 ~/.terraform.d/plugins/terraform-provider-nutanix_v1.99.99
    ```
 
-4. In every Terraform template directory that uses Equinix provider, ship below
+4. In every Terraform template directory that uses Nutanix provider, ship below
  `terraform.tf` file *(in addition to other Terraform files)*
 
    ```hcl
