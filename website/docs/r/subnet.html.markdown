@@ -63,6 +63,7 @@ resource "nutanix_subnet" "next-iac-managed" {
 * `dhcp_server_address_port`: - (Optional) Port Number.
 * `dhcp_options`: - (Optional) Spec for defining DHCP options.
 * `dhcp_domain_search_list`: - (Optional).
+* `ip_config_pool_list_ranges`: - (Optional) Range of IPs (example: 10.0.0.9 10.0.0.19).
 * `vlan_id`: - (Optional).
 * `network_function_chain_reference`: - (Optional) The reference to a network_function_chain.
 
