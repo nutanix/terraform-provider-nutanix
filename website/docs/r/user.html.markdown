@@ -108,4 +108,4 @@ The `project_reference`, `owner_reference`, `role_reference` `directory_service_
 
 For `access_control_policy_reference_list` and `project_reference_list` are the same as reference but used as list.
 
-See detailed information in [Nutanix Users](https://www.nutanix.dev/reference/prism_central/v3/api/users/).
+See detailed information in [Nutanix Users](https://www.nutanix.dev/api_references/prism-central-v3/#/e7c2691629db9-create-a-new-user).

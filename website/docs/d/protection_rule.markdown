@@ -103,4 +103,4 @@ The `project_reference`, `owner_reference` attributes supports the following:
 * `name` - (Optional) the name.
 * `uuid` - (Required) the UUID.
 
-See detailed information in [Nutanix Protection Rule](https://www.nutanix.dev/reference/prism_central/v3/api/protection-rules/getprotectionrulesuuid/).
+See detailed information in [Nutanix Protection Rule](https://www.nutanix.dev/api_references/prism-central-v3/#/0a291d36f8ddb-get-details-for-a-protection-rule).

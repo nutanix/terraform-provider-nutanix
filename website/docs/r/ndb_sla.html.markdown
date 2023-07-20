@@ -50,4 +50,4 @@ Provides a resource to create SLAs based on the input parameters.
 * `current_active_frequency`: slas current frequency 
 
 
-See detailed information in [NDB SLA](https://www.nutanix.dev/api_references/ndb/#/a0c17eca8b34f-create-sla-from-ndb-service).
+See detailed information in [NDB SLA](https://www.nutanix.dev/api_references/ndb/#/2fbbab4326e22-create-sla-from-ndb-service).

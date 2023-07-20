@@ -45,4 +45,4 @@ The following attributes are exported:
 * `api_version` - The version of the API.
 * `values`: - A list of the values from this category key (if it has them).
 
-See detailed information in [Nutanix Image](https://nutanix.github.io/Automation/experimental/swagger-redoc-sandbox/#tag/category/paths/~1categories~1{name}/get).
+See detailed information in [Nutanix Image](https://www.nutanix.dev/api_references/prism-central-v3/#/d9979ade0b152-get-a-category-key).

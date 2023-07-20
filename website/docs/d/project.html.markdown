@@ -214,4 +214,4 @@ The `project_reference`, `owner_reference` attributes supports the following:
 * `name` - the name.
 * `uuid` - (Required) the UUID.
 
-See detailed information in [Nutanix Project](https://www.nutanix.dev/reference/prism_central/v3/api/projects/getprojectsuuid/).
+See detailed information in [Nutanix Project](https://www.nutanix.dev/api_references/prism-central-v3/#/81f93ec6d7685-get-a-existing-project).

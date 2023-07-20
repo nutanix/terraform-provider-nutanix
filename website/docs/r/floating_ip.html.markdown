@@ -60,3 +60,5 @@ The metadata attribute exports the following:
 * `spec_hash`: - Hash of the spec. This will be returned from server.
 * `name`: - subnet name.
 * `should_force_translate`: - Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
+
+See detailed information in [Nutanix Floating IP](https://www.nutanix.dev/api_references/prism-central-v3/#/a9e06d3bba013-create-a-new-floating-ip).

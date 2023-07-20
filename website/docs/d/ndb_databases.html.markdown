@@ -56,4 +56,4 @@ The following attributes are exported for each database_instances:
 * `linked_databases`: - list of databases created in instance with info
 
 
-See detailed information in [List Database Instances](https://www.nutanix.dev/api_references/era/#/b3A6MjIyMjI1MzY-get-all-source-databases).
+See detailed information in [List Database Instances](https://www.nutanix.dev/api_references/ndb/#/1e508756bcdcc-get-all-the-databases).

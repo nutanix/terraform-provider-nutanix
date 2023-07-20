@@ -43,4 +43,4 @@ description: |-
 * `last_db_log`: last db log info
 * `last_continuous_snapshot`: last continuous snapshot info
 
-See detailed information in [NDB Time Machine Capability](https://www.nutanix.dev/api_references/ndb/#/8f40c26af7837-get-capability-of-given-time-machine) .
+See detailed information in [NDB Time Machine Capability](https://www.nutanix.dev/api_references/ndb/#/011b39e32bdc5-get-capability-of-given-time-machine) .

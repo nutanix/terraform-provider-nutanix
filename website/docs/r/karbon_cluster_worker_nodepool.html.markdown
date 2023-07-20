@@ -82,4 +82,4 @@ The following attributes are exported:
 * delete
 
 
-See detailed information in [Add Node Pool in NKE](https://www.nutanix.dev/api_references/nke/#/5e68a51e9d3fa-add-a-node-pool-to-a-k8s-cluster)
+See detailed information in [Add Node Pool in NKE](https://www.nutanix.dev/api_references/nke/#/c78e2e6b9d9a4-add-a-node-pool-to-a-kubernetes-cluster)

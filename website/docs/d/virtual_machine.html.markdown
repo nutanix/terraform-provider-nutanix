@@ -226,4 +226,4 @@ The `project_reference`, `owner_reference`, `availability_zone_reference`, `netw
 * `name`: - the name.
 * `uud`: - the UUID.
 
-See detailed information in [Nutanix Virtual Machine](http://developer.nutanix.com/reference/prism_central/v3/#vms).
+See detailed information in [Nutanix Virtual Machine](https://www.nutanix.dev/api_references/prism-central-v3/#/1602a9bd46e70-get-an-existing-vm).

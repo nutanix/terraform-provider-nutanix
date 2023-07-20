@@ -91,3 +91,5 @@ resource "nutanix_static_routes" "scn" {
   vpc_uuid = "{{vpc_uuid}}"
 }
 ```
+
+See detailed information in [Nutanix Static Routes](https://www.nutanix.dev/api_references/prism-central-v3/#/56796ae9af040-update-a-existing-vpc-route-table).

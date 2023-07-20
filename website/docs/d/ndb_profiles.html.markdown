@@ -55,4 +55,4 @@ The following attributes are exported for each profile:
 * `cluster_availability`: - list of clusters availability
 * `nx_cluster_id`: - era cluster ID
 
-See detailed information in [Nutanix Database Service Profiles](https://www.nutanix.dev/api_references/era/#/b3A6MjIyMjI1MjY-get-all-profiles).
+See detailed information in [Nutanix Database Service Profiles](https://www.nutanix.dev/api_references/ndb/#/74ae456d63b24-get-all-profiles).

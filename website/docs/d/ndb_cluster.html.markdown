@@ -62,4 +62,4 @@ The following attributes are exported:
 * `healthy`: - if healthy status
 
 
-See detailed information in [NDB Cluster](https://www.nutanix.dev/api_references/era/#/b3A6MjIyMjI1NzY-get-cluster-by-id).
+See detailed information in [NDB Cluster](https://www.nutanix.dev/api_references/ndb/#/b4f28e2f7b6a9-get-a-cluster-by-id).
