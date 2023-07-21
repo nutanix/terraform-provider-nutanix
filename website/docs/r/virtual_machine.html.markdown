@@ -111,7 +111,6 @@ The disk_list attribute supports the following:
 * `disk_size_mib` - Size of the disk in MiB. Must match the size specified in 'disk_size_bytes' - rounded up to the nearest MiB - when that field is present.
 * `device_properties` - Properties to a device.
 * `data_source_reference` - Reference to a data source.
-* `volume_group_reference` - Reference to a volume group.
 
 The disk_size (the disk size_mib and the disk_size_bytes attributes) is only honored by creating an empty disk. When you are creating from an image, the size is ignored and the disk becomes the size of the image from which it was cloned. In VM creation, you can't set either disk size_mib or disk_size_bytes when you set data_source_reference but, you can update the disk_size after creation (second apply).
 
@@ -242,7 +241,7 @@ The categories attribute supports the following:
 
 ### Reference
 
-The `project_reference`, `owner_reference`, `availability_zone_reference`, `network_function_chain_reference`, `data_source_reference`, `volume_group_reference` attributes supports the following:
+The `project_reference`, `owner_reference`, `availability_zone_reference`, `network_function_chain_reference`, `data_source_reference` attributes supports the following:
 
 * `kind`: - The kind name (Default value: project)(Required).
 * `name`: - the name(Optional).
