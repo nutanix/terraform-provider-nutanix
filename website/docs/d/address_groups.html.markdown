@@ -63,4 +63,4 @@ The following attributes are exported as list:
 * `uuid`: - (ReadOnly) UUID of associated policy
 
 
-See detailed information in [Nutanix Address Group List](https://www.nutanix.dev/reference/prism_central/v3/api/address-groups/postaddressgroupslist).
+See detailed information in [Nutanix Address Group List](https://www.nutanix.dev/api_references/prism-central-v3/#/7504287ad168d-address-groups-lists).

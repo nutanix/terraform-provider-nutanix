@@ -52,4 +52,4 @@ List all time machines present in Nutanix Database Service
 * `schedule`: schedule info
 
 
-See detailed information in [NDB Time Machines](https://www.nutanix.dev/api_references/ndb/#/256497800ee3c-get-list-of-all-time-machines) .
+See detailed information in [NDB Time Machines](https://www.nutanix.dev/api_references/ndb/#/e68ba687086ed-get-list-of-all-time-machines).

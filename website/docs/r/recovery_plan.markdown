@@ -145,4 +145,4 @@ The `project_reference`, `owner_reference` attributes supports the following:
 * `name` - (Optional) the name.
 * `uuid` - (Required) the UUID.
 
-See detailed information in [Nutanix Recovery Plan](https://www.nutanix.dev/reference/prism_central/v3/api/recovery-plans/postrecoveryplans/).
+See detailed information in [Nutanix Recovery Plan](https://www.nutanix.dev/api_references/prism-central-v3/#/5fec7d2f52da8-create-recovery-plan).

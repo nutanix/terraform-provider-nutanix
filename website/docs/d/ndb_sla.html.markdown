@@ -56,4 +56,4 @@ The following attributes are exported:
 
 
 
-See detailed information in [Nutanix Database Service SLA](https://www.nutanix.dev/api_references/era/#/b3A6MjIyMjI1ODc-get-sla-by-id).
+See detailed information in [Nutanix Database Service SLA](https://www.nutanix.dev/api_references/ndb/#/eabbbab3f7eff-get-sla-by-name).

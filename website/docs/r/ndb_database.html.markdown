@@ -512,4 +512,4 @@ The postgresql_info attribute supports the following:
 
 * `Update` : - Currently only update of instance's name and description is supported using this resource
 
-See detailed information in [NDB Database Instance](https://www.nutanix.dev/api_references/era/#/b3A6MjIyMjI1Mzg-provision-a-database).
+See detailed information in [NDB Database Instance](https://www.nutanix.dev/api_references/ndb/#/9d9eee4304496-provision-a-database).

@@ -75,4 +75,4 @@ The `project_reference`, `owner_reference`, `availability_zone_reference`, attri
 * `name`: - the name(Optional).
 * `uuid`: - the UUID(Required).
 
-See detailed information in [Nutanix Image](http://developer.nutanix.com/reference/prism_central/v3/#images).
+See detailed information in [Nutanix Image](https://www.nutanix.dev/api_references/prism-central-v3/#/be55b65efba86-create-a-new-image).

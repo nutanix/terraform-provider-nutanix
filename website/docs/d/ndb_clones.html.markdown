@@ -74,4 +74,4 @@ List all the clone present in Nutanix Database Service
 * `databases`: database for a cloned instance
 
 
-See detailed information in [NDB Clones](https://www.nutanix.dev/api_references/ndb/#/fc568988b42e5-get-a-list-of-all-clones).
+See detailed information in [NDB Clones](https://www.nutanix.dev/api_references/ndb/#/02b17b417ac8a-get-a-list-of-all-clones).

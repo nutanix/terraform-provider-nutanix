@@ -66,4 +66,4 @@ Provides a resource to restore the database instance based on the input paramete
 * `linked_databases`: linked databases within database instance
 
 
-See detailed information in [NDB Database Restore](https://www.nutanix.dev/api_references/ndb/#/90eb0c2f2da21-restore-database) .
+See detailed information in [NDB Database Restore](https://www.nutanix.dev/api_references/ndb/#/215deb77fba60-restore-database).

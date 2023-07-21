@@ -67,4 +67,4 @@ The following attributes are exported:
 * `cvm_ip`: IP address of the cvm.
 * `aos_version`: AOS version currently installed on the node.
 
-See detailed information in [Nutanix Foundation Central List all the nodes](https://www.nutanix.dev/api_references/foundation-central/#/b3A6MjIyMjI3NDQ-list-all-the-nodes).
+See detailed information in [Nutanix Foundation Central List all the nodes](https://www.nutanix.dev/api_references/foundation-central/#/26192129ae504-list-all-the-nodes).

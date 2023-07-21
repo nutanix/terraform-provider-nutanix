@@ -117,5 +117,5 @@ Structure for each action argument in actionarguments list:
 * `linked_databases`: linked databases within database instance
 
 
-See detailed information in [NDB Database Instance](https://www.nutanix.dev/api_references/ndb/#/9a50106e42347-create-clone-using-given-time-machine) .
+See detailed information in [NDB Clone](https://www.nutanix.dev/api_references/ndb/#/a1f08020e7a9e-create-clone-using-given-time-machine) .
 

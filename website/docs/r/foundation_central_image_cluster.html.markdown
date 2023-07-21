@@ -160,4 +160,4 @@ Incase of error in any individual node or cluster, terraform will error our afte
 * `Update` : - Resource will trigger new resource create call for any kind of update in resource config.
 * `delete` : - Resource will be deleted from Foundation Central deployment history. For Actual Cluster delete , manually destroy the cluster.   
 
-See detailed information in [Nutanix Foundation Central Create a Cluster](https://www.nutanix.dev/api_references/foundation-central/#/b3A6MjIyMjI3NDE-request-to-create-a-cluster).
+See detailed information in [Nutanix Foundation Central Create a Cluster](https://www.nutanix.dev/api_references/foundation-central/#/cba507f282927-request-to-create-a-cluster).

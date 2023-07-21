@@ -77,4 +77,4 @@ List all snapshots present in Nutanix Database Service
 * `snapshot_size`: snapshot size
 
 
-See detailed information in [NDB Snapshots](https://www.nutanix.dev/api_references/ndb/#/e10c0725f8541-get-list-of-all-snapshots).
+See detailed information in [NDB Snapshots](https://www.nutanix.dev/api_references/ndb/#/d0b89ff892448-get-list-of-all-snapshots).
