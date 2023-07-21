@@ -1,3 +1,15 @@
+## 1.9.2 (July 21, 2023)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.9.1...feat/1.9.2)
+
+**Merged pull request:**
+- Fixing terraform doc link for detailed references. [\#618](https://github.com/nutanix/terraform-provider-nutanix/pull/618)
+
+**Closed issues:**
+- All "see detailed information" at the bottom of the doc pages are broken. [\#617](https://github.com/nutanix/terraform-provider-nutanix/issues/617)
+- Subnet documentation missing attributes. [\#616](https://github.com/nutanix/terraform-provider-nutanix/issues/616)
+- Unsupported attribute for Volume Groups should be removed from VM resource documentation. [\#613](https://github.com/nutanix/terraform-provider-nutanix/issues/613)
+- Typo in documentation guest_customization_sysrep_custom_key_values. [\#495](https://github.com/nutanix/terraform-provider-nutanix/issues/495)
+
 ## 1.9.1 (June 14, 2023)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.9.0...feat/1.9.1)
 

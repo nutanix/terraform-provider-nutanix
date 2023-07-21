@@ -91,7 +91,7 @@ The following arguments are supported:
 * `guest_customization_cloud_init_custom_key_values`: - (Optional) Generic key value pair used for custom attributes in cloud init.
 * `guest_customization_is_overridable`: - (Optional) Flag to allow override of customization by deployer.
 * `guest_customization_sysprep`: - (Optional) VM guests may be customized at boot time using one of several different methods. Currently, cloud-init w/ ConfigDriveV2 (for Linux VMs) and Sysprep (for Windows VMs) are supported. Only ONE OF sysprep or cloud_init should be provided. Note that guest customization can currently only be set during VM creation. Attempting to change it after creation will result in an error. Additional properties can be specified. For example - in the context of VM template creation if \"override_script\" is set to \"True\" then the deployer can upload their own custom script.
-* `guest_customization_sysprep_custom_key_values`: - (Optional) Generic key value pair used for custom attributes in sysrep.
+* `guest_customization_sysprep_custom_key_values`: - (Optional) Generic key value pair used for custom attributes in sysprep.
 * `should_fail_on_script_failure`: - (Optional)  Extra configs related to power state transition. Indicates whether to abort ngt shutdown/reboot if script fails.
 * `enable_script_exec`: - (Optional) Extra configs related to power state transition. Indicates whether to execute set script before ngt shutdown/reboot.
 * `power_state_mechanism`: - (Optional) Indicates the mechanism guiding the VM power state transition. Currently used for the transition to \"OFF\" state. Power state mechanism (ACPI/GUEST/HARD).
