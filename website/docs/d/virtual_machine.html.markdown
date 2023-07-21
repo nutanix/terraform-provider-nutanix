@@ -224,6 +224,6 @@ The `project_reference`, `owner_reference`, `availability_zone_reference`, `netw
 
 * `kind`: - The kind name (Default value: project).
 * `name`: - the name.
-* `uud`: - the UUID.
+* `uuid`: - the UUID.
 
 See detailed information in [Nutanix Virtual Machine](https://www.nutanix.dev/api_references/prism-central-v3/#/1602a9bd46e70-get-an-existing-vm).
