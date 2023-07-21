@@ -83,4 +83,4 @@ Provides a resource to perform the snapshot for database instance based on the i
 * `snapshot_size`: snapshot size
 
 
-See detailed information in [NDB Database Snapshot](https://www.nutanix.dev/api_references/ndb/#/7f53689342db9-take-snapshot) .
+See detailed information in [NDB Database Snapshot](https://www.nutanix.dev/api_references/ndb/#/ca9e7ed109f08-take-snapshot).

@@ -39,4 +39,4 @@ The following attributes are exported:
 * `endpoint`: - Endpoint of the private in format `url:port`.
 
 
-See detailed information in [Nutanix Karbon Registry](https://www.nutanix.dev/reference/karbon/api-reference/registry/).
+See detailed information in [Nutanix Karbon Registry](https://www.nutanix.dev/api_references/nke/#/1ac891e63bef8-create-the-private-registry-entry-in-nke-with-the-provided-configuration-api-format-https-server-nutanix-com-9440-karbon-v1-alpha-1-registries).

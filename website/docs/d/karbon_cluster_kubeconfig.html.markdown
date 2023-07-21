@@ -41,4 +41,4 @@ The following arguments are supported:
 * `cluster_ca_certificate` 
 * `cluster_url`
 
-See detailed information in [Get Nutanix Karbon Cluster KubeConfig](https://www.nutanix.dev/api_references/karbon/#/b3A6NDM0MDU2NjA-get-the-kubeconfig-to-access-the-k8s-cluster).
+See detailed information in [Get Nutanix Karbon Cluster KubeConfig](https://www.nutanix.dev/api_references/nke/#/1afde071b42be-get-the-kubeconfig-to-access-the-kubernetes-cluster).

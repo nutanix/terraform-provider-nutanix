@@ -41,4 +41,4 @@ The following attributes are exported:
 * `system_defined`: - Specifying whether its a system defined category.
 * `api_version` - (Optional) The version of the API.
 
-See detailed information in [Nutanix Image](http://developer.nutanix.com/reference/prism_central/v3/#category).
+See detailed information in [Nutanix Category Value](https://www.nutanix.dev/api_references/prism-central-v3/#/7032d646db45b-create-or-update-a-category-value).

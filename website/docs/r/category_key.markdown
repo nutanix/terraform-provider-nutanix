@@ -33,4 +33,4 @@ The following attributes are exported:
 * `system_defined`: - Specifying whether its a system defined category.
 * `api_version` - (Optional) The version of the API.
 
-See detailed information in [Nutanix Image](https://nutanix.github.io/Automation/experimental/swagger-redoc-sandbox/#tag/category/paths/~1categories~1{name}/get).
+See detailed information in [Nutanix Category Key](https://www.nutanix.dev/api_references/prism-central-v3/#/c67191febf803-create-or-update-a-category-key).

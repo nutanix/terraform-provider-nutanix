@@ -123,4 +123,4 @@ attributes supports the following:
 
 Note: `cluster_reference`, `subnet_reference` does not support the attribute `name`
 
-See detailed information in [Nutanix Subnet](https://www.nutanix.dev/reference/prism_central/v3/api/subnets/getsubnetsuuid/).
+See detailed information in [Nutanix Subnet](https://www.nutanix.dev/api_references/prism-central-v3/#/8ae4f57e0b772-get-a-existing-subnet).

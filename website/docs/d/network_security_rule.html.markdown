@@ -125,4 +125,4 @@ The version attribute supports the following:
 * `product_name`: - Name of the producer/distribution of the image. For example windows or red hat.
 * `product_version`: - Version string for the disk image.
 
-See detailed information in [Nutanix Security Rules](https://www.nutanix.dev/reference/prism_central/v3/api/network-security-rules/getnetworksecurityrulesuuid).
+See detailed information in [Nutanix Security Rules](https://www.nutanix.dev/api_references/prism-central-v3/#/064cd0a641d8d-get-a-existing-network-security-rule).

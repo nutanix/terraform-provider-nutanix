@@ -212,4 +212,4 @@ The `etcd_node_pool`, `master_node_pool`, `worker_node_pool` attribute supports 
 
 **Note:** Updates to this attribute forces new resource creation.
 
-See detailed information in [Nutanix Karbon Cluster](https://www.nutanix.dev/reference/karbon/api-reference/cluster/).
+See detailed information in [Nutanix Karbon Cluster](https://www.nutanix.dev/api_references/nke/#/895c7a174c68b-create-a-new-kubernetes-cluster).

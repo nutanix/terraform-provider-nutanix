@@ -57,4 +57,4 @@ The following attributes are exported for each cluster:
 * `entity_counts`: - no. of entities related
 * `healthy`: - if healthy status
 
-See detailed information in [NDB Clusters](https://www.nutanix.dev/api_references/era/#/b3A6MjIyMjI1NzQ-get-all-clusters).
+See detailed information in [NDB Clusters](https://www.nutanix.dev/api_references/ndb/#/b00cac8329db1-get-a-list-of-all-clusters).

@@ -37,3 +37,5 @@ Provides a resource to perform the refresh clone of database based on the input 
 * `snapshot_id`: (Optional) snapshot id where clone has to be refreshed
 * `user_pitr_stamp`: (Optional) Point in time recovery where clone has to be refreshed
 * `timezone`: (Optional) timezone. Default is Asia/Calcutta. 
+
+See detailed information in [NDB Clone Refresh](https://www.nutanix.dev/api_references/ndb/#/d4e53fff274fa-start-refresh-operation-for-the-given-clone).

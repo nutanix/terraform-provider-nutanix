@@ -48,4 +48,4 @@ The ip_address_block_list argument supports the following:
 * `prefix_length`: - (ReadOnly) Prefix length of address block in int
 
 
-See detailed information in [Nutanix Address Group](https://www.nutanix.dev/reference/prism_central/v3/api/address-groups/getaddressgroupsuuid).
+See detailed information in [Nutanix Address Group](https://www.nutanix.dev/api_references/prism-central-v3/#/7921eaae69b35-get-a-existing-address-group).

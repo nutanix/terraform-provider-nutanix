@@ -33,4 +33,4 @@ The following attributes are exported:
 * `current_time`: Current time of Foundation Central.
 
 
-See detailed information in [Nutanix Foundation Central Get an API key](https://www.nutanix.dev/api_references/foundation-central/#/b3A6MjIyMjI3NDI-get-an-api-key).
+See detailed information in [Nutanix Foundation Central Get an API key](https://www.nutanix.dev/api_references/foundation-central/#/92553fa628770-get-an-api-key).

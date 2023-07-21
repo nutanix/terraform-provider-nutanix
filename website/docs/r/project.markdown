@@ -362,4 +362,4 @@ The `project_reference`, `owner_reference` attributes supports the following:
 
 Note: Few attributes which are added to support ACPs for Project are dependent on PC version. Features such as VPC, Cluster Reference requires pc2022.4 while Tunnel Reference requires pc2022.6 . 
 
-See detailed information in [Nutanix Project](https://www.nutanix.dev/reference/prism_central/v3/api/projects/postprojects/).
+See detailed information in [Nutanix Project](https://www.nutanix.dev/api_references/prism-central-v3/#/8411486d42e4a-create-a-new-project).

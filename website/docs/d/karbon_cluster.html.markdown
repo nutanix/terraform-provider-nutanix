@@ -84,4 +84,4 @@ The cni_config attribute exports the following:
 * `calico_config.ip_pool_config`: - List of IP pools to be configured/managed by calico.
 * `calico_config.ip_pool_config.cidr`: - IP range to use for this pool, it should fall within pod cidr.
 
-See detailed information in [Nutanix Karbon Cluster](https://www.nutanix.dev/api_references/karbon/#/b3A6NDM0MDU2NTc-get-the-k8s-cluster-details).
+See detailed information in [Nutanix Karbon Cluster](https://www.nutanix.dev/api_references/nke/#/31fc4aec34c3d-get-the-kubernetes-cluster-details).

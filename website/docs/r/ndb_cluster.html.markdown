@@ -100,3 +100,5 @@ The following attributes are exported:
 * `management_server_info`: - NA
 * `entity_counts`: - no. of entities related 
 * `healthy`: - if healthy status
+
+See detailed information in [NDB Cluster](https://www.nutanix.dev/api_references/ndb/#/1f392bec2e58b-update-the-given-cluster).

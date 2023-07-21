@@ -54,4 +54,4 @@ description: |-
 * `sla`: sla info
 * `schedule`: schedule info
 
-See detailed information in [NDB Time Machine](https://www.nutanix.dev/api_references/ndb/#/cb7ba8c0c3284-get-time-machine-by-value-type) .
+See detailed information in [NDB Time Machine](https://www.nutanix.dev/api_references/ndb/#/5a3e0962ef442-get-time-machine-by-value-type).

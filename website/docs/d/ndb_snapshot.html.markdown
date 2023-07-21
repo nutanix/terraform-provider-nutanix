@@ -73,4 +73,4 @@ Describes the snapshot present in Nutanix Database Service
 * `parent_snapshot`: parent snapshot
 * `snapshot_size`: snapshot size
 
-See detailed information in [NDB Snapshot](https://www.nutanix.dev/api_references/ndb/#/f0844bb9b0dd4-get-snapshot-by-value-type).
+See detailed information in [NDB Snapshot](https://www.nutanix.dev/api_references/ndb/#/d50fb18097051-get-snapshot-by-value-type).

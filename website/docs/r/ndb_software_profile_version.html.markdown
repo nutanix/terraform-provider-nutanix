@@ -74,5 +74,5 @@ Provides a resource to create software profile versions based on the input param
 * `value`: value of property
 * `secure`: secure or not
 
-See detailed information in [NDB Profile version](https://www.nutanix.dev/api_references/ndb/#/424c8db255367-create-profile-version).
+See detailed information in [NDB Profile version](https://www.nutanix.dev/api_references/ndb/#/351a7caf34bbb-create-profile-version).
 

@@ -84,4 +84,4 @@ The version attribute supports the following:
 * `product_name`: - Name of the producer/distribution of the image. For example windows or red hat.
 * `product_version`: - Version string for the disk image.
 
-See detailed information in [Nutanix Image](http://developer.nutanix.com/reference/prism_central/v3/#images).
+See detailed information in [Nutanix Image](https://www.nutanix.dev/api_references/prism-central-v3/#/7dff8c26aa7ff-get-a-existing-image).
