@@ -86,4 +86,6 @@ The  `external_subnet_reference`  attributes supports the following:
 
 * `kind`: - The kind name (Default value: project).
 * `name`: - the name.
-* `uud`: - the UUID.
+* `uuid`: - the UUID.
+
+See detailed information in [Nutanix Static Route](https://www.nutanix.dev/api_references/prism-central-v3/#/c936631dbba81-get-a-existing-vpc-route-table).

@@ -197,4 +197,4 @@ Sets the number of disk-page buffers in shared memory for WAL. The amount of sha
 * `cluster_availability`: cluster availability of profile
 
 
-See detailed information in [NDB Profiles](https://www.nutanix.dev/api_references/ndb/#/a626231269b79-create-a-profile) .
+See detailed information in [NDB Profiles](https://www.nutanix.dev/api_references/ndb/#/467d68a88c0d2-create-a-profile) .

@@ -268,4 +268,4 @@ Structure for each action argument in actionarguments list:
 * `linked_databases`: linked databases within database instance
 
 
-See detailed information in [NDB Register Database](https://www.nutanix.dev/api_references/ndb/#/00afd58e263e8-register-an-existing-database).
+See detailed information in [NDB Register Database](https://www.nutanix.dev/api_references/ndb/#/40355715d4188-register-an-existing-database).

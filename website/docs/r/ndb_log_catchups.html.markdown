@@ -31,4 +31,4 @@ Provides a resource to perform the log cactup for database instance based on the
 * `log_catchup_version`: (Optional) it helps to perform same operation with same config.
 
 
-See detailed information in [NDB Log Catchups](https://www.nutanix.dev/api_references/ndb/#/6f54fedbb2e07-start-log-catchup-for-given-time-machine) .
+See detailed information in [NDB Log Catchups](https://www.nutanix.dev/api_references/ndb/#/6100cd9959e52-start-log-catchup-for-given-time-machine) .

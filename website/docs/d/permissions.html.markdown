@@ -70,4 +70,4 @@ The `project_reference`, `owner_reference` attributes supports the following:
 * `name` - the name.
 * `uuid` - (Required) the UUID.
 
-See detailed information in [Nutanix Permissions](https://www.nutanix.dev/reference/prism_central/v3/api/permissions/postpermissionslist/).
+See detailed information in [Nutanix Permissions](https://www.nutanix.dev/api_references/prism-central-v3/#/0fabd54b59459-list-the-permissions).

@@ -79,4 +79,4 @@ The boot_device_disk_address attribute supports the following:
 * `calico_config.ip_pool_config`: - List of IP pools to be configured/managed by calico.
 * `calico_config.ip_pool_config.cidr`: - IP range to use for this pool, it should fall within pod cidr.
 
-See detailed information in [Nutanix Karbon Cluster](https://www.nutanix.dev/api_references/karbon/#/b3A6NDM0MDU2NTE-list-all-of-the-k8s-clusters).
+See detailed information in [Nutanix Karbon Clusters](https://www.nutanix.dev/api_references/nke/#/3683a2ec2599a-list-all-the-kubernetes-clusters).

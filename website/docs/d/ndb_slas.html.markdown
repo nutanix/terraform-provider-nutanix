@@ -49,4 +49,4 @@ Each sla in list exports following attributes:
 * `pitr_enabled`: - If point in time recovery enabled
 * `current_active_frequency`: - Current active frequency
 
-See detailed information in [Nutanix Database Service SLAs](https://www.nutanix.dev/api_references/era/#/b3A6MjIyMjI1ODU-get-all-sl-as).
+See detailed information in [Nutanix Database Service SLAs](https://www.nutanix.dev/api_references/ndb/#/fbcfae008ec2a-get-all-sl-as).

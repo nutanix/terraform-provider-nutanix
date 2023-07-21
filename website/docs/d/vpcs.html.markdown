@@ -88,4 +88,6 @@ The `host_reference`, `external_subnet_reference`  attributes supports the follo
 
 * `kind`: - The kind name (Default value: project).
 * `name`: - the name.
-* `uud`: - the UUID.
+* `uuid`: - the UUID.
+
+See detailed information in [Nutanix VPCs](https://www.nutanix.dev/api_references/prism-central-v3/#/66f54e0e5ae08-get-a-list-of-existing-vp-cs).
