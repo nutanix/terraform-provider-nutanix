@@ -3,6 +3,7 @@ package nutanix
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -558,6 +559,84 @@ func TestAccNutanixVirtualMachine_SysprepCustomKeyValues(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"disk_list", "cloud_init_cdrom_uuid"},
+			},
+		},
+	})
+}
+
+func TestAccNutanixVirtualMachine_SecureBoot(t *testing.T) {
+	r := acctest.RandInt()
+	resourceName := "nutanix_virtual_machine.test"
+	name := fmt.Sprintf("test-vm-%d", r)
+	desc := "this is vm desc"
+	updatedName := fmt.Sprintf("test-vm-%d-updated", r)
+	updatedDesc := "this is updated desc"
+	memory := "200"
+	updatedMem := "300"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixVMConfigWithSecureBoot(name, desc, memory),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "description", desc),
+					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", memory),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "3"),
+					resource.TestCheckResourceAttr(resourceName, "machine_type", "Q35"),
+					resource.TestCheckResourceAttr(resourceName, "boot_type", "SECURE_BOOT"),
+				),
+			},
+			{
+				Config: testAccNutanixVMConfigWithSecureBoot(updatedName, updatedDesc, updatedMem),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixVirtualMachineExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
+					resource.TestCheckResourceAttr(resourceName, "description", updatedDesc),
+					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceName, "memory_size_mib", updatedMem),
+					resource.TestCheckResourceAttr(resourceName, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceName, "num_vcpus_per_socket", "3"),
+					resource.TestCheckResourceAttr(resourceName, "machine_type", "Q35"),
+					resource.TestCheckResourceAttr(resourceName, "boot_type", "SECURE_BOOT"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"disk_list"},
+			},
+		},
+	})
+}
+
+func TestAccNutanixVirtualMachine_SecureBootWithNoMachineType(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("test-vm-%d", r)
+	desc := "this is vm desc"
+	memory := "200"
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccNutanixVMConfigWithSecureBootWithNoMachineType(name, desc, memory),
+				ExpectError: regexp.MustCompile("Machine type must be set to Q35 for secure boot."),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"disk_list"},
 			},
 		},
 	})
@@ -1446,4 +1525,86 @@ func testAccNutanixVMConfigSysprepCustomKeyValues(r int) string {
 		  	enable_cpu_passthrough = true
 		}
 	`, r)
+}
+
+func testAccNutanixVMConfigWithSecureBoot(name, desc, mem string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+			? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+		}
+
+		resource "nutanix_virtual_machine" "test" {
+			name                 = "%[1]s"
+			description          = "%[2]s"
+			num_vcpus_per_socket = 3
+			num_sockets          = 1
+			memory_size_mib      = %[3]s
+		  
+			cluster_uuid = "${local.cluster1}"
+
+			boot_type = "SECURE_BOOT"
+			boot_device_order_list = ["DISK", "CDROM"]
+			machine_type = "Q35"
+
+		   disk_list {
+			  disk_size_mib = 40240
+			  device_properties {
+				device_type = "DISK"
+				disk_address = {
+				  "adapter_type" = "SCSI"
+				  "device_index" = "0"
+				}
+			  }
+			}
+			disk_list {
+			  disk_size_mib = 40240
+			  device_properties {
+				device_type = "DISK"
+				disk_address = {
+				  "adapter_type" = "SCSI"
+				  "device_index" = "1"
+				}
+			  }
+			}
+		}
+		  
+	`, name, desc, mem)
+}
+
+func testAccNutanixVMConfigWithSecureBootWithNoMachineType(name, desc, mem string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster1 = "${data.nutanix_clusters.clusters.entities.0.service_list.0 == "PRISM_CENTRAL"
+			? data.nutanix_clusters.clusters.entities.1.metadata.uuid : data.nutanix_clusters.clusters.entities.0.metadata.uuid}"
+		}
+
+		resource "nutanix_virtual_machine" "test" {
+			name                 = "%[1]s"
+			description          = "%[2]s"
+			num_vcpus_per_socket = 3
+			num_sockets          = 1
+			memory_size_mib      = %[3]s
+		  
+			cluster_uuid = "${local.cluster1}"
+
+			boot_type = "SECURE_BOOT"
+			boot_device_order_list = ["DISK", "CDROM"]
+		    disk_list {
+			  disk_size_mib = 40240
+			  device_properties {
+				device_type = "DISK"
+				disk_address = {
+				  "adapter_type" = "SCSI"
+				  "device_index" = "0"
+				}
+			  }
+			}
+		}
+		  
+	`, name, desc, mem)
 }
