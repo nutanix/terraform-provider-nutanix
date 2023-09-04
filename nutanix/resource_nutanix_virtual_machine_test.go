@@ -632,12 +632,6 @@ func TestAccNutanixVirtualMachine_SecureBootWithNoMachineType(t *testing.T) {
 				Config:      testAccNutanixVMConfigWithSecureBootWithNoMachineType(name, desc, memory),
 				ExpectError: regexp.MustCompile("Machine type must be set to Q35 for secure boot."),
 			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"disk_list"},
-			},
 		},
 	})
 }
