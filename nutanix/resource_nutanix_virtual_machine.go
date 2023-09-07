@@ -1876,6 +1876,7 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 	res.VgaConsoleEnabled = response.Spec.Resources.VgaConsoleEnabled
 	res.HardwareClockTimezone = response.Spec.Resources.HardwareClockTimezone
 	res.DiskList = response.Spec.Resources.DiskList
+	res.MachineType = response.Spec.Resources.MachineType
 
 	nold := make([]*v3.VMNic, len(response.Spec.Resources.NicList))
 
