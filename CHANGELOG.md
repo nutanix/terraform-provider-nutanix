@@ -1,3 +1,21 @@
+## 1.9.3 (September 7, 2023)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.9.2...feat/1.9.3)
+
+**Merged pull request:**
+- Setting machine type in updating virtual machines. [\#630](https://github.com/nutanix/terraform-provider-nutanix/pull/630)
+- Added examples of role creation using nutanix terraform provider. [\#632](https://github.com/nutanix/terraform-provider-nutanix/pull/632)
+
+**Fixed bugs:**
+- Updating gives error: Machine type must be set to Q35 for secure boot. [\#622](https://github.com/nutanix/terraform-provider-nutanix/issues/622)
+- Machine type must be set to Q35 for secure boot. [\#494](https://github.com/nutanix/terraform-provider-nutanix/issues/494)
+
+**Closed issues:**
+- Add support documentation in terraform. [\#611](https://github.com/nutanix/terraform-provider-nutanix/issues/611)
+
+**Closed pull request:**
+-  Fix Secure boot VMs when doing updates. [\#496](https://github.com/nutanix/terraform-provider-nutanix/pull/496)
+
+
 ## 1.9.2 (July 21, 2023)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.9.1...feat/1.9.2)
 
