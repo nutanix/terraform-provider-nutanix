@@ -6,7 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	acc "github.com/terraform-providers/terraform-provider-nutanix/acctest"
+	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
 func TestAccNutanixHostDataSource_basic(t *testing.T) {

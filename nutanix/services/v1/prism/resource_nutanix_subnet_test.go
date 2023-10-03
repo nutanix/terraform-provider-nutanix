@@ -11,7 +11,7 @@ import (
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
-	acc "github.com/terraform-providers/terraform-provider-nutanix/acctest"
+	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 )
 
