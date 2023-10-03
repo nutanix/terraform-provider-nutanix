@@ -1,4 +1,4 @@
-package foundationCentral_test
+package foundationcentral_test
 
 import (
 	"fmt"
