@@ -1,18 +1,19 @@
-package nutanix
+package conns
 
 import (
 	"fmt"
 
-	"github.com/terraform-providers/terraform-provider-nutanix/client"
-	era "github.com/terraform-providers/terraform-provider-nutanix/client/era"
-	foundation_central "github.com/terraform-providers/terraform-provider-nutanix/client/fc"
-	"github.com/terraform-providers/terraform-provider-nutanix/client/foundation"
-	"github.com/terraform-providers/terraform-provider-nutanix/client/karbon"
-	v3 "github.com/terraform-providers/terraform-provider-nutanix/client/v3"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/karbon"
+
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
+	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
+	foundation_central "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/fc"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/foundation"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 )
 
 // Version represents api version
-const Version = "3.1"
+// const Version = "3.1"
 
 // Config ...
 type Config struct {
