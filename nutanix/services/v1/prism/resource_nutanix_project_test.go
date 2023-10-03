@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/spf13/cast"
-	acc "github.com/terraform-providers/terraform-provider-nutanix/acctest"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
 func TestAccNutanixProject_basic(t *testing.T) {
