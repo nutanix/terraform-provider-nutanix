@@ -17,7 +17,7 @@ func TestAccFoundationNodeNetworkDetailsDataSource(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testNodeNetworkDetailsConfig(name, acc.FoundationVars.IPv6Addresses),
+				Config: testNodeNetworkDetailsConfig(name, foundationVars.IPv6Addresses),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "nodes.#", "2"),
 					resource.TestCheckResourceAttrSet(resourcePath, "nodes.0.ipmi_ip"),

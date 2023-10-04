@@ -68,7 +68,7 @@ resource "nutanix_role" "test" {
 data "nutanix_role" "test" {
 	role_id = nutanix_role.test.id
 }
-`, name, description, acc.TestVars.Permissions[0].UUID)
+`, name, description, testVars.Permissions[0].UUID)
 }
 
 func testAccRoleDataSourceConfigByName(name, description string) string {
@@ -85,5 +85,5 @@ resource "nutanix_role" "test" {
 data "nutanix_role" "test" {
 	role_name = nutanix_role.test.name
 }
-`, name, description, acc.TestVars.Permissions[0].UUID)
+`, name, description, testVars.Permissions[0].UUID)
 }

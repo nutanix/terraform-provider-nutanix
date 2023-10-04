@@ -611,7 +611,7 @@ func testAccNutanixProjectInternalConfigWithACP(subnetName, name, description, c
 				description= "untitledAcp-54acc50f-ab94-640a-5f06-5c855cc09539"
 			}
 		}
-	`, subnetName, name, description, categoryName, categoryVal, limit, rsType, acc.TestVars.Permissions[0].UUID)
+	`, subnetName, name, description, categoryName, categoryVal, limit, rsType, testVars.Permissions[0].UUID)
 }
 
 func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, description, categoryName, categoryVal, limit, rsType string) string {
@@ -712,5 +712,5 @@ func testAccNutanixProjectInternalConfigWithACPUserGroup(subnetName, name, descr
 				description= "untitledAcp-54acc50f-ab94-640a-5f06-5c855cc09539"
 			}
 		}
-	`, subnetName, name, description, categoryName, categoryVal, limit, rsType, acc.TestVars.Permissions[0].UUID, acc.TestVars.UserGroupWithDistinguishedName[3].DistinguishedName)
+	`, subnetName, name, description, categoryName, categoryVal, limit, rsType, testVars.Permissions[0].UUID, testVars.UserGroupWithDistinguishedName[3].DistinguishedName)
 }

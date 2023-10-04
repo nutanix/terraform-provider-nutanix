@@ -10,7 +10,7 @@ import (
 
 func TestAccKarbonClusterWorkerPool_basic(t *testing.T) {
 	resourceName := "nutanix_karbon_worker_nodepool.nodepool"
-	subnetName := acc.TestVars.SubnetName
+	subnetName := testVars.SubnetName
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
@@ -42,7 +42,7 @@ func TestAccKarbonClusterWorkerPool_basic(t *testing.T) {
 
 func TestAccKarbonClusterWorkerPool_Update(t *testing.T) {
 	resourceName := "nutanix_karbon_worker_nodepool.nodepool"
-	subnetName := acc.TestVars.SubnetName
+	subnetName := testVars.SubnetName
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,

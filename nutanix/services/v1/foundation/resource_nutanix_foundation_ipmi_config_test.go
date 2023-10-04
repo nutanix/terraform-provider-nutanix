@@ -17,7 +17,7 @@ func TestAccFoundationIPMIConfigResource(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testIPMIConfigResource(name, acc.FoundationVars.IpmiConfig),
+				Config: testIPMIConfigResource(name, foundationVars.IpmiConfig),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourcePath, "blocks.0.nodes.0.ipmi_configure_successful", "true"),
 					// verify that again apply would again do create due to "ipmi_configure_now" = true
@@ -36,14 +36,14 @@ func TestAccFoundationIPMIConfigResource_Error(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testIPMIConfigResourceWithWrongPassword(name, acc.FoundationVars.IpmiConfig),
+				Config:      testIPMIConfigResourceWithWrongPassword(name, foundationVars.IpmiConfig),
 				ExpectError: regexp.MustCompile("IPMI config failed for IPMI IP"),
 			},
 		},
 	})
 }
 
-func testIPMIConfigResource(name string, i acc.IPMIConfig) string {
+func testIPMIConfigResource(name string, i IPMIConfig) string {
 	return fmt.Sprintf(`
 	resource "nutanix_foundation_ipmi_config" "%[1]s" {
 		ipmi_gateway = "%[2]s"
@@ -61,7 +61,7 @@ func testIPMIConfigResource(name string, i acc.IPMIConfig) string {
 	}`, name, i.IpmiGateway, i.IpmiNetmask, i.IpmiUser, i.IpmiPassword, i.IpmiMac, i.IpmiIP)
 }
 
-func testIPMIConfigResourceWithWrongPassword(name string, i acc.IPMIConfig) string {
+func testIPMIConfigResourceWithWrongPassword(name string, i IPMIConfig) string {
 	return fmt.Sprintf(`
 	resource "nutanix_foundation_ipmi_config" "%[1]s" {
 		ipmi_gateway = "%[2]s"

@@ -16,7 +16,7 @@ import (
 const resourceNameUserGroups = "nutanix_user_groups.acctest-managed"
 
 func TestAccNutanixUserGroups_basic(t *testing.T) {
-	directoryServiceDistName := acc.TestVars.UserGroupWithDistinguishedName[1].DistinguishedName
+	directoryServiceDistName := testVars.UserGroupWithDistinguishedName[1].DistinguishedName
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
@@ -35,7 +35,7 @@ func TestAccNutanixUserGroups_basic(t *testing.T) {
 }
 
 func TestAccNutanixUserGroups_WithOrgUnit(t *testing.T) {
-	directoryServiceOUDistName := acc.TestVars.UserGroupWithDistinguishedName[2].DistinguishedName
+	directoryServiceOUDistName := testVars.UserGroupWithDistinguishedName[2].DistinguishedName
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
@@ -54,7 +54,7 @@ func TestAccNutanixUserGroups_WithOrgUnit(t *testing.T) {
 }
 
 func TestAccNutanixUserGroups_DuplicateEntity(t *testing.T) {
-	directoryServiceDistName := acc.TestVars.UserGroupWithDistinguishedName[0].DistinguishedName
+	directoryServiceDistName := testVars.UserGroupWithDistinguishedName[0].DistinguishedName
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,

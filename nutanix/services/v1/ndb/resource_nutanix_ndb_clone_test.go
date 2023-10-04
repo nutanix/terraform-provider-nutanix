@@ -15,7 +15,7 @@ func TestAccEra_Clonebasic(t *testing.T) {
 	name := fmt.Sprintf("test-pg-inst-tf-clone-%d", r)
 	desc := "this is desc"
 	vmName := fmt.Sprintf("testvm-%d", r)
-	sshKey := acc.TestVars.SSHKey
+	sshKey := testVars.SSHKey
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccEraPreCheck(t) },
 		Providers: acc.TestAccProviders,

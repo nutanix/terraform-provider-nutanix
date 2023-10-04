@@ -158,7 +158,7 @@ resource "nutanix_role" "test" {
 		uuid = "%[3]s"
 	}
 }
-`, name, description, acc.TestVars.Permissions[0].UUID)
+`, name, description, testVars.Permissions[0].UUID)
 }
 
 func testAccNutanixRoleConfigWithCategory(name, description, categoryValue string) string {
@@ -175,5 +175,5 @@ resource "nutanix_role" "test" {
 		value = "%[3]s"
 	}
 }
-`, name, description, categoryValue, acc.TestVars.Permissions[0].UUID)
+`, name, description, categoryValue, testVars.Permissions[0].UUID)
 }

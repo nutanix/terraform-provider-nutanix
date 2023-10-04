@@ -483,7 +483,7 @@ func testAccNutanixNetworkSecurityRuleConfigAdRule(r int) string {
 		}
 		depends_on = [nutanix_category_value.ad-group-user-1]
 	  }
-`, acc.TestVars.AdRuleTarget.Values, r, acc.TestVars.AdRuleTarget.Values)
+`, testVars.AdRuleTarget.Values, r, testVars.AdRuleTarget.Values)
 }
 
 func testAccNutanixNetworkSecurityRuleConfigAdRuleUpdate(r int) string {
@@ -524,7 +524,7 @@ func testAccNutanixNetworkSecurityRuleConfigAdRuleUpdate(r int) string {
 		}
 		depends_on = [nutanix_category_value.ad-group-user-1]
 	  }
-`, acc.TestVars.AdRuleTarget.Values, r, acc.TestVars.AdRuleTarget.Values)
+`, testVars.AdRuleTarget.Values, r, testVars.AdRuleTarget.Values)
 }
 
 func testNetworkSecurityRuleConfigWithServiceAndAddressGroupsInInbound(sgName, agName, securityPolicyName string) string {
@@ -595,7 +595,7 @@ func testNetworkSecurityRuleConfigWithServiceAndAddressGroupsInInbound(sgName, a
 		  prefix_length = 24
 		}
 	  }
-`, acc.TestVars.AdRuleTarget.Values, securityPolicyName, acc.TestVars.AdRuleTarget.Values, sgName, agName)
+`, testVars.AdRuleTarget.Values, securityPolicyName, testVars.AdRuleTarget.Values, sgName, agName)
 }
 
 func testNetworkSecurityRuleConfigWithServiceAndAddressGroupsInOutbound(sgName, agName, securityPolicyName string) string {
@@ -667,5 +667,5 @@ func testNetworkSecurityRuleConfigWithServiceAndAddressGroupsInOutbound(sgName, 
 		  prefix_length = 24
 		}
 	  }
-`, acc.TestVars.AdRuleTarget.Values, securityPolicyName, acc.TestVars.AdRuleTarget.Values, sgName, agName)
+`, testVars.AdRuleTarget.Values, securityPolicyName, testVars.AdRuleTarget.Values, sgName, agName)
 }

@@ -15,7 +15,7 @@ func TestAccFCImageNodesResource(t *testing.T) {
 	clusterName := "test_cluster"
 	// get file file path to config having nodes info
 	path, _ := os.Getwd()
-	filepath := path + "/../test_foundation_config.json"
+	filepath := path + "/../../../../test_foundation_config.json"
 
 	// using block 1 in the test_foundation_config.json for this testcase
 	blockNum := 1

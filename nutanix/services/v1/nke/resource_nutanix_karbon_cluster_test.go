@@ -17,9 +17,9 @@ import (
 func TestAccKarbonCluster_basic(t *testing.T) {
 	r := acctest.RandInt()
 	resourceName := "nutanix_karbon_cluster.cluster"
-	subnetName := acc.TestVars.SubnetName
-	defaultContainter := acc.TestVars.DefaultContainerName
-	kubernetesVersion := acc.TestVars.KubernetesVersion
+	subnetName := testVars.SubnetName
+	defaultContainter := testVars.DefaultContainerName
+	kubernetesVersion := testVars.KubernetesVersion
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
@@ -62,9 +62,9 @@ func TestAccKarbonCluster_basic(t *testing.T) {
 func TestAccKarbonCluster_scaleDown(t *testing.T) {
 	r := acctest.RandInt()
 	resourceName := "nutanix_karbon_cluster.cluster"
-	subnetName := acc.TestVars.SubnetName
-	defaultContainter := acc.TestVars.DefaultContainerName
-	kubernetesVersion := acc.TestVars.KubernetesVersion
+	subnetName := testVars.SubnetName
+	defaultContainter := testVars.DefaultContainerName
+	kubernetesVersion := testVars.KubernetesVersion
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
@@ -107,9 +107,9 @@ func TestAccKarbonCluster_scaleDown(t *testing.T) {
 func TestAccKarbonCluster_updateCNI(t *testing.T) {
 	r := acctest.RandInt()
 	resourceName := "nutanix_karbon_cluster.cluster"
-	subnetName := acc.TestVars.SubnetName
-	defaultContainter := acc.TestVars.DefaultContainerName
-	kubernetesVersion := acc.TestVars.KubernetesVersion
+	subnetName := testVars.SubnetName
+	defaultContainter := testVars.DefaultContainerName
+	kubernetesVersion := testVars.KubernetesVersion
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
@@ -284,5 +284,5 @@ func testAccNutanixKarbonClusterConfig(subnetName string, r int, containter stri
 		}
 	  }
 
-	`, acc.TestVars.NodeOsVersion, workers, cni, subnetName, r, containter, k8sVersion)
+	`, testVars.NodeOsVersion, workers, cni, subnetName, r, containter, k8sVersion)
 }
