@@ -304,7 +304,7 @@ func testAccNutanixRecoveryPlanConfigWithNetwork(name, description, stageUUID, a
 				}
 			}
 		}
-	`, name, description, stageUUID, aZUrlSource, aZUrlTarget, acc.TestVars.SubnetName)
+	`, name, description, stageUUID, aZUrlSource, aZUrlTarget, testVars.SubnetName)
 }
 
 func testAccNutanixRecoveryPlanConfigWithStageListDynamic(name, description, stageUUID, categories string) string {

@@ -11,9 +11,9 @@ import (
 func TestAccKarbonClustersDataSource_basic(t *testing.T) {
 	r := acctest.RandInt()
 	//resourceName := "nutanix_karbon_cluster.cluster"
-	subnetName := acc.TestVars.SubnetName
-	defaultContainter := acc.TestVars.DefaultContainerName
-	KubernetesVersion := acc.TestVars.KubernetesVersion
+	subnetName := testVars.SubnetName
+	defaultContainter := testVars.DefaultContainerName
+	KubernetesVersion := testVars.KubernetesVersion
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

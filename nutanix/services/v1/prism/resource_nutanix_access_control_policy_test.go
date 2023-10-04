@@ -207,7 +207,7 @@ resource "nutanix_access_control_policy" "test" {
 		uuid = nutanix_role.test.id
 	}
 }
-`, name, description, roleName, acc.TestVars.Permissions[0].UUID)
+`, name, description, roleName, testVars.Permissions[0].UUID)
 }
 
 func testAccNutanixAccessControlPolicyConfigWithCategory(name, description, categoryValue, roleName string) string {
@@ -232,7 +232,7 @@ resource "nutanix_access_control_policy" "test" {
 		value = "%[3]s"
 	}
 }
-`, name, description, categoryValue, roleName, acc.TestVars.Permissions[0].UUID)
+`, name, description, categoryValue, roleName, testVars.Permissions[0].UUID)
 }
 
 func testAccNutanixAccessControlPolicyConfigWithUser(name, description, roleName string) string {
@@ -322,5 +322,5 @@ resource "nutanix_access_control_policy" "test" {
 		}
 	}
 }
-`, name, description, roleName, acc.TestVars.Permissions[0].UUID)
+`, name, description, roleName, testVars.Permissions[0].UUID)
 }

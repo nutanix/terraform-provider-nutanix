@@ -9,7 +9,7 @@ import (
 )
 
 func TestAccEraProfilesAvailableIPsDataSource_basic(t *testing.T) {
-	networkName := acc.TestVars.NDB.TestStaticNetwork
+	networkName := testVars.NDB.TestStaticNetwork
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccEraPreCheck(t) },
 		Providers: acc.TestAccProviders,

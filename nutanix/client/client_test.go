@@ -20,7 +20,7 @@ const (
 	testLibraryVersion = "v3"
 	testAbsolutePath   = "api/nutanix/" + testLibraryVersion
 	testUserAgent      = "nutanix/" + testLibraryVersion
-	fileName           = "v3/v3.go"
+	fileName           = "../sdks/v3/prism/prism.go"
 )
 
 func setup() (*http.ServeMux, *Client, *httptest.Server) {

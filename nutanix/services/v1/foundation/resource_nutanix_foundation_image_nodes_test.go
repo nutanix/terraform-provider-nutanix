@@ -29,7 +29,7 @@ func TestAccFoundationImageNodesResource(t *testing.T) {
 				Config: testImageNodesResource(filepath, blockNum, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourcePath, "session_id"),
-					resource.TestCheckResourceAttr(resourcePath, "cluster_urls.0.cluster_name", acc.FoundationVars.Blocks[0].Nodes[0].HypervisorHostname),
+					resource.TestCheckResourceAttr(resourcePath, "cluster_urls.0.cluster_name", foundationVars.Blocks[0].Nodes[0].HypervisorHostname),
 				),
 			},
 		},

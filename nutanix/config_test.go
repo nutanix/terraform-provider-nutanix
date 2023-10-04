@@ -1,4 +1,4 @@
-package conns
+package nutanix
 
 import (
 	"reflect"

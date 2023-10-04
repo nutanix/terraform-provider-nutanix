@@ -14,10 +14,10 @@ func TestAccNutanixProtectionRulesDataSource_basic(t *testing.T) {
 		t.Skip()
 	}
 	dataSourceName := "data.nutanix_protection_rules.test"
-	aZUUIDSource := acc.TestVars.ProtectionPolicy.LocalAz.UUID
-	clusterUUIDSource := acc.TestVars.ProtectionPolicy.LocalAz.ClusterUUID
-	aZUUIDTarget := acc.TestVars.ProtectionPolicy.DestinationAz.UUID
-	clusterUUIDTarget := acc.TestVars.ProtectionPolicy.DestinationAz.UUID
+	aZUUIDSource := testVars.ProtectionPolicy.LocalAz.UUID
+	clusterUUIDSource := testVars.ProtectionPolicy.LocalAz.ClusterUUID
+	aZUUIDTarget := testVars.ProtectionPolicy.DestinationAz.UUID
+	clusterUUIDTarget := testVars.ProtectionPolicy.DestinationAz.UUID
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },

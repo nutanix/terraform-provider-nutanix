@@ -16,7 +16,7 @@ func TestAccEra_basic(t *testing.T) {
 	name := fmt.Sprintf("test-pg-inst-tf-%d", r)
 	desc := "this is desc"
 	vmName := fmt.Sprintf("testvm-%d", r)
-	sshKey := acc.TestVars.SSHKey
+	sshKey := testVars.SSHKey
 	updatedName := fmt.Sprintf("test-pg-inst-tf-updated-%d", r)
 	updatedesc := "this is updated desc"
 	resource.Test(t, resource.TestCase{
@@ -53,7 +53,7 @@ func TestAccEraDatabaseProvisionHA(t *testing.T) {
 	r := acc.RandIntBetween(11, 25)
 	name := fmt.Sprintf("test-pg-inst-HA-tf-%d", r)
 	desc := "this is desc"
-	sshKey := acc.TestVars.SSHKey
+	sshKey := testVars.SSHKey
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccEraPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -78,7 +78,7 @@ func TestAccEra_SchemaValidationwithCreateDBserver(t *testing.T) {
 	name := fmt.Sprintf("test-pg-inst-tf-%d", r)
 	desc := "this is desc"
 	vmName := fmt.Sprintf("testvm-%d", r)
-	sshKey := acc.TestVars.SSHKey
+	sshKey := testVars.SSHKey
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccEraPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -96,7 +96,7 @@ func TestAccEra_SchemaValidationwithCreateDBserverFalse(t *testing.T) {
 	name := fmt.Sprintf("test-pg-inst-tf-%d", r)
 	desc := "this is desc"
 	vmName := fmt.Sprintf("testvm-%d", r)
-	sshKey := acc.TestVars.SSHKey
+	sshKey := testVars.SSHKey
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccEraPreCheck(t) },
 		Providers: acc.TestAccProviders,

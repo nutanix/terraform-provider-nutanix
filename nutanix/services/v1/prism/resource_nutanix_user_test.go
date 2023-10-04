@@ -15,8 +15,8 @@ import (
 const resourceNameUser = "nutanix_user.user"
 
 func TestAccNutanixUser_basic(t *testing.T) {
-	principalName := acc.TestVars.Users[2].PrincipalName
-	directoryServiceUUID := acc.TestVars.Users[2].DirectoryServiceUUID
+	principalName := testVars.Users[2].PrincipalName
+	directoryServiceUUID := testVars.Users[2].DirectoryServiceUUID
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,

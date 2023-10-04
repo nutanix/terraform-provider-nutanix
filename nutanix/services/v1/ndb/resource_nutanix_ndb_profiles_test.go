@@ -83,7 +83,7 @@ func TestAccEraProfile_ByDatabaseParams(t *testing.T) {
 func TestAccEraProfile_ByNetwork(t *testing.T) {
 	name := "test-network-tf"
 	desc := "this is network desc"
-	subnet := acc.TestVars.SubnetName
+	subnet := testVars.SubnetName
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccEraPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -103,7 +103,7 @@ func TestAccEraProfile_ByNetwork(t *testing.T) {
 func TestAccEraProfile_ByNetworkHAPostgres(t *testing.T) {
 	name := "test-network-tf"
 	desc := "this is network desc for HA postgres"
-	subnet := acc.TestVars.SubnetName
+	subnet := testVars.SubnetName
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccEraPreCheck(t) },
 		Providers: acc.TestAccProviders,

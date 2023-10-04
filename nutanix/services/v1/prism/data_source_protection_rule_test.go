@@ -18,10 +18,10 @@ func TestAccNutanixProtectionRuleDataSource_basic(t *testing.T) {
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")
 	description := acctest.RandomWithPrefix("test-protection-desc-dou")
-	aZUUIDSource := acc.TestVars.ProtectionPolicy.LocalAz.UUID
-	clusterUUIDSource := acc.TestVars.ProtectionPolicy.LocalAz.ClusterUUID
-	aZUUIDTarget := acc.TestVars.ProtectionPolicy.DestinationAz.UUID
-	clusterUUIDTarget := acc.TestVars.ProtectionPolicy.DestinationAz.UUID
+	aZUUIDSource := testVars.ProtectionPolicy.LocalAz.UUID
+	clusterUUIDSource := testVars.ProtectionPolicy.LocalAz.ClusterUUID
+	aZUUIDTarget := testVars.ProtectionPolicy.DestinationAz.UUID
+	clusterUUIDTarget := testVars.ProtectionPolicy.DestinationAz.UUID
 
 	nameUpdated := acctest.RandomWithPrefix("test-protection-name-dou")
 	descriptionUpdated := acctest.RandomWithPrefix("test-protection-desc-dou")

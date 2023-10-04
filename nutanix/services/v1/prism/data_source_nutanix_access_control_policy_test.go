@@ -78,7 +78,7 @@ resource "nutanix_access_control_policy" "test" {
 data "nutanix_access_control_policy" "test" {
 	access_control_policy_id = nutanix_access_control_policy.test.id
 }
-`, name, description, roleName, acc.TestVars.Permissions[0].UUID)
+`, name, description, roleName, testVars.Permissions[0].UUID)
 }
 
 func testAccAccessControlPolicyDataSourceByNameConfig(name, description, roleName string) string {
@@ -103,5 +103,5 @@ resource "nutanix_access_control_policy" "test" {
 data "nutanix_access_control_policy" "test" {
 	access_control_policy_name = nutanix_access_control_policy.test.name
 }
-`, name, description, roleName, acc.TestVars.Permissions[0].UUID)
+`, name, description, roleName, testVars.Permissions[0].UUID)
 }

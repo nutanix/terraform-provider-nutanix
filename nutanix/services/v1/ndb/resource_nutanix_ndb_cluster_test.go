@@ -16,15 +16,15 @@ func TestAccEra_Clusterbasic(t *testing.T) {
 	updatedName := fmt.Sprintf("testcluster-updated-%d", r)
 	desc := "this is cluster desc"
 	updatedDesc := "updated description for cluster"
-	storageContainer := acc.TestVars.NDB.RegisterClusterInfo.StorageContainer
-	clusterIP := acc.TestVars.NDB.RegisterClusterInfo.ClusterIP
-	username := acc.TestVars.NDB.RegisterClusterInfo.Username
-	password := acc.TestVars.NDB.RegisterClusterInfo.Password
-	staticIP := acc.TestVars.NDB.RegisterClusterInfo.StaticIP
-	subnetMask := acc.TestVars.NDB.RegisterClusterInfo.SubnetMask
-	gateway := acc.TestVars.NDB.RegisterClusterInfo.Gateway
-	dns := acc.TestVars.NDB.RegisterClusterInfo.DNS
-	ntp := acc.TestVars.NDB.RegisterClusterInfo.NTP
+	storageContainer := testVars.NDB.RegisterClusterInfo.StorageContainer
+	clusterIP := testVars.NDB.RegisterClusterInfo.ClusterIP
+	username := testVars.NDB.RegisterClusterInfo.Username
+	password := testVars.NDB.RegisterClusterInfo.Password
+	staticIP := testVars.NDB.RegisterClusterInfo.StaticIP
+	subnetMask := testVars.NDB.RegisterClusterInfo.SubnetMask
+	gateway := testVars.NDB.RegisterClusterInfo.Gateway
+	dns := testVars.NDB.RegisterClusterInfo.DNS
+	ntp := testVars.NDB.RegisterClusterInfo.NTP
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccEraPreCheck(t) },
 		Providers: acc.TestAccProviders,

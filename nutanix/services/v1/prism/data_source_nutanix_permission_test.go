@@ -14,10 +14,10 @@ func TestAccNutanixPermissionDataSource_basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionDataSourceConfig(acc.TestVars.Permissions[1].UUID),
+				Config: testAccPermissionDataSourceConfig(testVars.Permissions[1].UUID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"data.nutanix_permission.test", "name", acc.TestVars.Permissions[1].Name),
+						"data.nutanix_permission.test", "name", testVars.Permissions[1].Name),
 					resource.TestCheckResourceAttr(
 						"data.nutanix_permission.test", "operation", "delete"),
 					resource.TestCheckResourceAttr(
@@ -42,10 +42,10 @@ func TestAccNutanixPermissionDataSource_basicByName(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionDataSourceConfigByName(acc.TestVars.Permissions[1].Name),
+				Config: testAccPermissionDataSourceConfigByName(testVars.Permissions[1].Name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(
-						"data.nutanix_permission.test", "name", acc.TestVars.Permissions[1].Name),
+						"data.nutanix_permission.test", "name", testVars.Permissions[1].Name),
 					resource.TestCheckResourceAttr(
 						"data.nutanix_permission.test", "operation", "delete"),
 					resource.TestCheckResourceAttr(

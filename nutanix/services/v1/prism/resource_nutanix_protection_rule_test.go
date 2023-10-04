@@ -24,10 +24,10 @@ func TestAccNutanixProtectionRule_basic(t *testing.T) {
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")
 	description := acctest.RandomWithPrefix("test-protection-desc-dou")
-	aZUUIDSource := acc.TestVars.ProtectionPolicy.LocalAz.UUID
-	clusterUUIDSource := acc.TestVars.ProtectionPolicy.LocalAz.ClusterUUID
-	aZUUIDTarget := acc.TestVars.ProtectionPolicy.DestinationAz.UUID
-	clusterUUIDTarget := acc.TestVars.ProtectionPolicy.DestinationAz.UUID
+	aZUUIDSource := testVars.ProtectionPolicy.LocalAz.UUID
+	clusterUUIDSource := testVars.ProtectionPolicy.LocalAz.ClusterUUID
+	aZUUIDTarget := testVars.ProtectionPolicy.DestinationAz.UUID
+	clusterUUIDTarget := testVars.ProtectionPolicy.DestinationAz.UUID
 
 	nameUpdated := acctest.RandomWithPrefix("test-protection-name-dou")
 	descriptionUpdated := acctest.RandomWithPrefix("test-protection-desc-dou")
@@ -65,10 +65,10 @@ func TestAccResourceNutanixProtectionRule_importBasic(t *testing.T) {
 
 	name := acctest.RandomWithPrefix("test-protection-name-dou")
 	description := acctest.RandomWithPrefix("test-protection-desc-dou")
-	aZUUIDSource := acc.TestVars.ProtectionPolicy.LocalAz.UUID
-	clusterUUIDSource := acc.TestVars.ProtectionPolicy.LocalAz.ClusterUUID
-	aZUUIDTarget := acc.TestVars.ProtectionPolicy.DestinationAz.UUID
-	clusterUUIDTarget := acc.TestVars.ProtectionPolicy.DestinationAz.UUID
+	aZUUIDSource := testVars.ProtectionPolicy.LocalAz.UUID
+	clusterUUIDSource := testVars.ProtectionPolicy.LocalAz.ClusterUUID
+	aZUUIDTarget := testVars.ProtectionPolicy.DestinationAz.UUID
+	clusterUUIDTarget := testVars.ProtectionPolicy.DestinationAz.UUID
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
