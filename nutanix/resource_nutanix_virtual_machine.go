@@ -1251,19 +1251,20 @@ func getVMSpecVersion(conn *v3.Client, vmID string) (*int64, error) {
 func bootConfigHasChange(boot *v3.VMBootConfig, d *schema.ResourceData) (*v3.VMBootConfig, bool) {
 	hotPlugChange := false
 
-	if boot == nil {
-		boot = &v3.VMBootConfig{}
+	var bc = &v3.VMBootConfig{}
+	if boot != nil {
+		*bc = *boot
 	}
 
 	if d.HasChange("boot_device_order_list") {
 		_, n := d.GetChange("boot_device_order_list")
-		boot.BootDeviceOrderList = expandStringList(n.([]interface{}))
+		bc.BootDeviceOrderList = expandStringList(n.([]interface{}))
 		hotPlugChange = false
 	}
 
 	if d.HasChange("boot_type") {
 		_, n := d.GetChange("boot_type")
-		boot.BootType = utils.StringPtr(n.(string))
+		bc.BootType = utils.StringPtr(n.(string))
 		hotPlugChange = false
 	}
 
@@ -1284,13 +1285,13 @@ func bootConfigHasChange(boot *v3.VMBootConfig, d *schema.ResourceData) (*v3.VMB
 		bd.MacAddress = utils.StringPtr(n.(string))
 		hotPlugChange = false
 	}
-	boot.BootDevice = bd
+	bc.BootDevice = bd
 
 	if dska.AdapterType == nil && dska.DeviceIndex == nil && bd.MacAddress == nil {
-		boot.BootDevice = nil
+		bc.BootDevice = nil
 	}
 
-	return boot, hotPlugChange
+	return bc, hotPlugChange
 }
 
 func changePowerState(ctx context.Context, conn *v3.Client, id string, powerState string) error {
