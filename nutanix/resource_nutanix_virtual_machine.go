@@ -1177,7 +1177,7 @@ func resourceNutanixVirtualMachineUpdate(ctx context.Context, d *schema.Resource
 	}
 
 	res.PowerStateMechanism = pw
-	if bc, change := bootConfigHasChange(res.BootConfig, d); !reflect.DeepEqual(*bc, v3.VMBootConfig{}) {
+	if bc, change := bootConfigHasChange(res.BootConfig, d); !reflect.DeepEqual(*bc, *res.BootConfig) {
 		res.BootConfig = bc
 		hotPlugChange = change
 	}
