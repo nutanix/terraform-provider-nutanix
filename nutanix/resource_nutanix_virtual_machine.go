@@ -1930,7 +1930,7 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 	if response.Spec.Resources.BootConfig != nil {
 		res.BootConfig = response.Spec.Resources.BootConfig
 	} else {
-		res.BootConfig = nil
+		res.BootConfig = &v3.VMBootConfig{}
 	}
 }
 
