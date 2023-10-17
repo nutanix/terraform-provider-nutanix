@@ -1177,8 +1177,12 @@ func resourceNutanixVirtualMachineUpdate(ctx context.Context, d *schema.Resource
 	}
 
 	res.PowerStateMechanism = pw
-	if bc, change := bootConfigHasChange(res.BootConfig, d); !reflect.DeepEqual(*bc, *res.BootConfig) {
-		res.BootConfig = bc
+	currentBootConfig := &v3.VMBootConfig{}
+	if res.BootConfig != nil {
+		*currentBootConfig = *res.BootConfig
+	}
+	if newBootConfig, change := bootConfigHasChange(currentBootConfig, d); !reflect.DeepEqual(*newBootConfig, *currentBootConfig) {
+		res.BootConfig = newBootConfig
 		hotPlugChange = change
 	}
 
@@ -1251,20 +1255,15 @@ func getVMSpecVersion(conn *v3.Client, vmID string) (*int64, error) {
 func bootConfigHasChange(boot *v3.VMBootConfig, d *schema.ResourceData) (*v3.VMBootConfig, bool) {
 	hotPlugChange := false
 
-	var bc = &v3.VMBootConfig{}
-	if boot != nil {
-		*bc = *boot
-	}
-
 	if d.HasChange("boot_device_order_list") {
 		_, n := d.GetChange("boot_device_order_list")
-		bc.BootDeviceOrderList = expandStringList(n.([]interface{}))
+		boot.BootDeviceOrderList = expandStringList(n.([]interface{}))
 		hotPlugChange = false
 	}
 
 	if d.HasChange("boot_type") {
 		_, n := d.GetChange("boot_type")
-		bc.BootType = utils.StringPtr(n.(string))
+		boot.BootType = utils.StringPtr(n.(string))
 		hotPlugChange = false
 	}
 
@@ -1285,13 +1284,13 @@ func bootConfigHasChange(boot *v3.VMBootConfig, d *schema.ResourceData) (*v3.VMB
 		bd.MacAddress = utils.StringPtr(n.(string))
 		hotPlugChange = false
 	}
-	bc.BootDevice = bd
+	boot.BootDevice = bd
 
 	if dska.AdapterType == nil && dska.DeviceIndex == nil && bd.MacAddress == nil {
-		bc.BootDevice = nil
+		boot.BootDevice = nil
 	}
 
-	return bc, hotPlugChange
+	return boot, hotPlugChange
 }
 
 func changePowerState(ctx context.Context, conn *v3.Client, id string, powerState string) error {
