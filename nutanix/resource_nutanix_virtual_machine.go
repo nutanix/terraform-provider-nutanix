@@ -965,7 +965,6 @@ func resourceNutanixVirtualMachineUpdate(ctx context.Context, d *schema.Resource
 	if d.HasChange("name") {
 		_, n := d.GetChange("name")
 		spec.Name = utils.StringPtr(n.(string))
-		hotPlugChange = false
 	}
 
 	spec.Description = response.Status.Description
