@@ -571,8 +571,8 @@ func TestAccNutanixVirtualMachine_SecureBoot(t *testing.T) {
 	desc := "this is vm desc"
 	updatedName := fmt.Sprintf("test-vm-%d-updated", r)
 	updatedDesc := "this is updated desc"
-	memory := "200"
-	updatedMem := "300"
+	memory := "1024"
+	updatedMem := "2048"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
