@@ -14,6 +14,12 @@ Describes a list of subnets
 
 ```hcl
 data "nutanix_subnets" "subnets" {}
+
+data "nutanix_subnets" "test" {
+    metadata {
+        filter = "name==vlan0_test_2"
+    }
+}
 ```
 
 ## Attribute Reference

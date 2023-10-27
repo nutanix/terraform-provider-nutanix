@@ -67,10 +67,10 @@ resource "nutanix_vpc" "vpc" {
 The following arguments are supported:
 
 * `name` - (Required) The name for the VPC.
-* `external_subnet_reference_uuid` - (Required) List of external subnets uuid attached to this VPC. Should not be used with external_subnet_reference_name. 
-* `external_subnet_reference_name` - (Required) List of external subnets name attached to this VPC. Should not be used with external_subnet_reference_uuid. 
-* `externally_routable_prefix_list` - (Optional) List Externally Routable IP Addresses. Required when external subnet with NoNAT is used. 
-* `common_domain_name_server_ip_list` - (Optional) List of domain name server IPs. 
+* `external_subnet_reference_uuid` - (Optional) List of external subnets uuid attached to this VPC. Should not be used with external_subnet_reference_name.
+* `external_subnet_reference_name` - (Optional) List of external subnets name attached to this VPC. Should not be used with external_subnet_reference_uuid.
+* `externally_routable_prefix_list` - (Optional) List Externally Routable IP Addresses. Required when external subnet with NoNAT is used.
+* `common_domain_name_server_ip_list` - (Optional) List of domain name server IPs.
 
 ## externally_routable_prefix_list
 Externally Routable IP Addresses

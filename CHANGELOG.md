@@ -1,3 +1,25 @@
+## 1.9.4 (October 27, 2023)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.9.3...feat/1.9.4)
+
+- Feat branch. [\#645](https://github.com/nutanix/terraform-provider-nutanix/pull/645)
+
+**Merged pull request:**
+- Change VM name should not require VM PowerOFF. [\#626](https://github.com/nutanix/terraform-provider-nutanix/pull/626)
+- Fix: compare bootconfig against previous value. [\#641](https://github.com/nutanix/terraform-provider-nutanix/pull/641)
+
+**Implemented enhancements:**
+- Added example to use metadata in nutanix subnets. [\#643](https://github.com/nutanix/terraform-provider-nutanix/pull/643)
+- External subnet name/uuid are Optional args not Required. [\#644](https://github.com/nutanix/terraform-provider-nutanix/pull/644)
+
+**Fixed bugs:**
+- VM rebooted at every change because of hotPlugChange set to false. [\#640](https://github.com/nutanix/terraform-provider-nutanix/issues/640)
+- Changing the VM name forces a reboot. [\#625](https://github.com/nutanix/terraform-provider-nutanix/issues/625)
+
+**Closed issues:**
+- Modify Terraform documentation for nutanix_vpc resource. [\#636](https://github.com/nutanix/terraform-provider-nutanix/issues/636)
+- Include metadata example for data.nutanix_subnets. [\#590](https://github.com/nutanix/terraform-provider-nutanix/issues/590)
+
+
 ## 1.9.3 (September 7, 2023)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.9.2...feat/1.9.3)
 
