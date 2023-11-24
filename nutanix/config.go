@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/karbon"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
@@ -72,6 +73,10 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	networkingClient, err := networking.NewNetworkingClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 	return &Client{
 		WaitTimeout:         c.WaitTimeout,
 		API:                 v3Client,
@@ -79,6 +84,7 @@ func (c *Config) Client() (*Client, error) {
 		FoundationClientAPI: foundationClient,
 		FoundationCentral:   fcClient,
 		Era:                 eraClient,
+		NetworkingAPI:       networkingClient,
 	}, nil
 }
 
@@ -90,4 +96,5 @@ type Client struct {
 	WaitTimeout         int64
 	FoundationCentral   *foundation_central.Client
 	Era                 *era.Client
+	NetworkingAPI       *networking.NetworkingClient
 }

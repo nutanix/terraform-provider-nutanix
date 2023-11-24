@@ -15,6 +15,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/ndb"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/nke"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/networking"
 )
 
 var requiredProviderFields map[string][]string = map[string][]string{
@@ -218,6 +219,12 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_dbserver":                            ndb.DataSourceNutanixNDBDBServer(),
 			"nutanix_ndb_dbservers":                           ndb.DataSourceNutanixNDBDBServers(),
 			"nutanix_ndb_network_available_ips":               ndb.DataSourceNutanixNDBProfileAvailableIPs(),
+			"nutanix_subnet_v4":                               networking.DataSourceNutanixSubnetv4(),
+			"nutanix_subnets_v4":                              networking.DataSourceNutanixSubnetsv4(),
+			"nutanix_vpc_v4":                                  networking.DataSourceNutanixVPCv4(),
+			"nutanix_vpcs_v4":                                 networking.DataSourceNutanixVPCsv4(),
+			"nutanix_floating_ip_v4":                          networking.DatasourceNutanixFloatingIPV4(),
+			"nutanix_floating_ips_v4":                         networking.DatasourceNutanixFloatingIPsV4(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  prism.ResourceNutanixVirtualMachine(),
