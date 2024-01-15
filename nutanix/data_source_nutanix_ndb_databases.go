@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -203,5 +204,5 @@ func filterDatabaseBasedOnDatabaseEngine(resp *era.ListDatabaseInstance, dbengin
 			found = append(found, v)
 		}
 	}
-	return &found, nil
+	return &found, fmt.Errorf("no databases found with provided %s engine", dbengine)
 }
