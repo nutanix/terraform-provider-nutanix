@@ -1,4 +1,4 @@
-## 1.9.5 (January 16m 2024)
+## 1.9.5 (January 16, 2024)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.9.4...feat/1.9.5)
 
 **Merged pull request:**
