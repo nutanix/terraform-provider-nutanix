@@ -1,3 +1,16 @@
+## 1.9.5 (January 16, 2024)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.9.4...feat/1.9.5)
+
+**Merged pull request:**
+- Fixing the error for NDB datasource for databases if creds are invalid. [\#668](https://github.com/nutanix/terraform-provider-nutanix/pull/668)
+
+**Closed issues:**
+- Memory MiB quantity value shows discrepancy in terraform plugin and Prism.. [\#654](https://github.com/nutanix/terraform-provider-nutanix/issues/654)
+
+**Fixed bugs:**
+- Datasource nutanix_ndb_databases doesn't return error if creds are invalid. [\#667](https://github.com/nutanix/terraform-provider-nutanix/issues/667)
+
+
 ## 1.9.4 (October 27, 2023)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.9.3...feat/1.9.4)
 
