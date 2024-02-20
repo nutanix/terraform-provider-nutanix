@@ -1057,7 +1057,6 @@ func resourceNutanixVirtualMachineUpdate(ctx context.Context, d *schema.Resource
 	if d.HasChange("power_state_mechanism") {
 		_, n := d.GetChange("power_state_mechanism")
 		pw.Mechanism = utils.StringPtr(n.(string))
-		hotPlugChange = false
 	}
 	if d.HasChange("power_state_guest_transition_config") {
 		_, n := d.GetChange("power_state_guest_transition_config")
