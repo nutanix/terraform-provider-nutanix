@@ -96,5 +96,5 @@ type Client struct {
 	WaitTimeout         int64
 	FoundationCentral   *foundation_central.Client
 	Era                 *era.Client
-	NetworkingAPI       *networking.NetworkingClient
+	NetworkingAPI       *networking.Client
 }

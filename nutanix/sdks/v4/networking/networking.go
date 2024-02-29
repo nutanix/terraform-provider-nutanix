@@ -6,14 +6,13 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 )
 
-type NetworkingClient struct {
+type Client struct {
 	SubnetAPIInstance     *api.SubnetApi
 	VpcAPIInstance        *api.VpcApi
 	FloatingIPAPIInstance *api.FloatingIpApi
 }
 
-//nolint:all
-func NewNetworkingClient(credentials client.Credentials) (*NetworkingClient, error) {
+func NewNetworkingClient(credentials client.Credentials) (*Client, error) {
 	var baseClient *network.ApiClient
 
 	// check if all required fields are present. Else create an empty client
@@ -29,7 +28,7 @@ func NewNetworkingClient(credentials client.Credentials) (*NetworkingClient, err
 		baseClient = pcClient
 	}
 
-	f := &NetworkingClient{
+	f := &Client{
 		SubnetAPIInstance:     api.NewSubnetApi(baseClient),
 		VpcAPIInstance:        api.NewVpcApi(baseClient),
 		FloatingIPAPIInstance: api.NewFloatingIpApi(baseClient),
