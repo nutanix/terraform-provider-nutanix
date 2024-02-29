@@ -8,10 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/common/v1/config"
-	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/networking/v4/config"
-	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/prism/v4/config"
-
+	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
+	import4 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -723,15 +722,15 @@ func expandVpc(pr interface{}) *import1.Vpc {
 		if ext, ok := val["ext_id"]; ok {
 			vpc.ExtId = utils.StringPtr(ext.(string))
 		}
-		if vpcType, ok := val["vpc_type"]; ok {
-			vpcMap := map[string]interface{}{
-				"REGULAR": 2,
-				"TRANSIT": 3,
-			}
-			pInt := vpcMap[vpcType.(string)]
-			p := import1.VpcType(pInt.(int))
-			vpc.VpcType = &p
-		}
+		// if vpcType, ok := val["vpc_type"]; ok {
+		// 	vpcMap := map[string]interface{}{
+		// 		"REGULAR": 2,
+		// 		"TRANSIT": 3,
+		// 	}
+		// 	pInt := vpcMap[vpcType.(string)]
+		// 	p := import1.VpcTy(pInt.(int))
+		// 	vpc. = &p
+		// }
 		if desc, ok := val["description"]; ok {
 			vpc.Description = utils.StringPtr(desc.(string))
 		}

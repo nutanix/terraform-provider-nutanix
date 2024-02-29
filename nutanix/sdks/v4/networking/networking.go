@@ -1,8 +1,8 @@
 package networking
 
 import (
-	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/api"
-	network "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/client"
+	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/api"
+	network "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 )
 

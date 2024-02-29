@@ -446,6 +446,8 @@ github.com/nsf/jsondiff v0.0.0-20200515183724-f29ed568f4ce h1:RPclfga2SEJmgMmz2k
 github.com/nsf/jsondiff v0.0.0-20200515183724-f29ed568f4ce/go.mod h1:uFMI8w+ref4v2r9jz+c9i1IfIttS/OkmLfrk1jne5hs=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16 v16.8.0-3635 h1:eVNonw1w8i0lVNNK4Ep/P8fAb2j6EEe+VNXAQXPLThc=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16 v16.8.0-3635/go.mod h1:vHyQVF3IKxmip+xGxXDQznKk1ffrVa4HSiEEueiekaE=
+github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.0.1-beta.1 h1:EBTbuV4zFgv+MY7a5MYIELStXPMMds1aULHllA5xdFM=
+github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.0.1-beta.1/go.mod h1:+eZgV1+xL/r84qmuFSVt5R8OFRO70rEz92jOnVgJNco=
 github.com/oklog/run v1.0.0 h1:Ru7dDtJNOyC66gQ5dQmaCa0qIsAUFY3sFpK1Xk8igrw=
 github.com/oklog/run v1.0.0/go.mod h1:dlhp/R75TPv97u0XWUtDeV/lRKWPKSdTuV0TZvrmrQA=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
