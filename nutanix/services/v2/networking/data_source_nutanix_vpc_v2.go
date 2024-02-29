@@ -179,7 +179,7 @@ func dataSourceNutanixVPCv4Read(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	extID := d.Get("ext_id")
-	resp, err := conn.VpcApiInstance.GetVpc(utils.StringPtr(extID.(string)))
+	resp, err := conn.VpcAPIInstance.GetVpc(utils.StringPtr(extID.(string)))
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)

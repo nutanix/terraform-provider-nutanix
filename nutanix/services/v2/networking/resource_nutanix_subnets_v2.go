@@ -406,8 +406,8 @@ func ResourceNutanixSubnetv4Create(ctx context.Context, d *schema.ResourceData, 
 	}
 	if subType, ok := d.GetOk("subnet_type"); ok {
 		subMap := map[string]interface{}{
-			"OVERLAY": 2,
-			"VLAN":    3,
+			"OVERLAY": "2",
+			"VLAN":    "3",
 		}
 		pInt := subMap[subType.(string)]
 		p := import1.SubnetType(pInt.(int))
@@ -466,7 +466,7 @@ func ResourceNutanixSubnetv4Create(ctx context.Context, d *schema.ResourceData, 
 		inputSpec.IpUsage = exapndIPUsage(ipUsage)
 	}
 
-	resp, err := conn.SubnetApiInstance.CreateSubnet(&inputSpec)
+	resp, err := conn.SubnetAPIInstance.CreateSubnet(&inputSpec)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -608,10 +608,10 @@ func expandVirtualSwitch(pr interface{}) *import1.VirtualSwitch {
 		}
 		if bondMode, ok := val["bond_mode"]; ok {
 			bondMap := map[string]interface{}{
-				"ACTIVE_BACKUP": 2,
-				"BALANCE_SLB":   3,
-				"BALANCE_TCP":   4,
-				"NONE":          5,
+				"ACTIVE_BACKUP": "2",
+				"BALANCE_SLB":   "3",
+				"BALANCE_TCP":   "4",
+				"NONE":          "5",
 			}
 			pInt := bondMap[bondMode.(string)]
 			p := import1.BondModeType(pInt.(int))
@@ -746,7 +746,6 @@ func expandVpc(pr interface{}) *import1.Vpc {
 		if extRoutablePrefix, ok := val["externally_routable_prefixes"]; ok {
 			vpc.ExternallyRoutablePrefixes = expandIPSubnet(extRoutablePrefix.([]interface{}))
 		}
-
 	}
 	return nil
 }
@@ -804,7 +803,6 @@ func expandGatewayNodeReference(pr interface{}) *import1.GatewayNodeReference {
 		if nodeipAdd, ok := val["node_ip_address"]; ok {
 			gatewayNodesRef.NodeIpAddress = expandIPAddressMap(nodeipAdd)
 		}
-
 		return gatewayNodesRef
 	}
 	return nil
@@ -903,7 +901,6 @@ func exapndIPUsage(pr interface{}) *import1.IPUsage {
 			ipUsage.NumAssignedIPs = utils.Int64Ptr(numAssgIPs.(int64))
 		}
 		return ipUsage
-
 	}
 	return nil
 }

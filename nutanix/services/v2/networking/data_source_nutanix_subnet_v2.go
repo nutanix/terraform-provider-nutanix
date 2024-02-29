@@ -392,7 +392,7 @@ func dataSourceNutanixSubnetv4Read(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	extID := d.Get("ext_id")
-	resp, err := conn.SubnetApiInstance.GetSubnet(utils.StringPtr(extID.(string)))
+	resp, err := conn.SubnetAPIInstance.GetSubnet(utils.StringPtr(extID.(string)))
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -879,7 +879,7 @@ func flattenDhcpOptions(pr *import1.DhcpOptions) []interface{} {
 	if pr != nil {
 		dhcpOps := make([]interface{}, 0)
 
-		dhcp := make(map[string]interface{}, 0)
+		dhcp := make(map[string]interface{})
 
 		dhcp["domain_name_servers"] = flattenNtpServer(pr.DomainNameServers)
 		dhcp["domain_name"] = pr.DomainName
@@ -916,7 +916,7 @@ func flattenIPv4(pr *config.IPv4Address) []interface{} {
 	if pr != nil {
 		ipv4 := make([]interface{}, 0)
 
-		ip := make(map[string]interface{}, 0)
+		ip := make(map[string]interface{})
 
 		ip["value"] = pr.Value
 		ip["prefix_length"] = pr.PrefixLength
@@ -932,7 +932,7 @@ func flattenIPv6(pr *config.IPv6Address) []interface{} {
 	if pr != nil {
 		ipv6 := make([]interface{}, 0)
 
-		ip := make(map[string]interface{}, 0)
+		ip := make(map[string]interface{})
 
 		ip["value"] = pr.Value
 		ip["prefix_length"] = pr.PrefixLength
@@ -1060,11 +1060,12 @@ func flattenIpv6Config(pr *import1.IPv6Config) []interface{} {
 }
 
 func flattenSubnetType(sb *import1.SubnetType) string {
+	const two, three = 2, 3
 	if sb != nil {
-		if *sb == import1.SubnetType(2) {
+		if *sb == import1.SubnetType(two) {
 			return "OVERLAY"
 		}
-		if *sb == import1.SubnetType(3) {
+		if *sb == import1.SubnetType(three) {
 			return "VLAN"
 		}
 	}
@@ -1116,17 +1117,18 @@ func flattenVirtualSwitch(vs *import1.VirtualSwitch) []map[string]interface{} {
 }
 
 func flattenBondMode(pr *import1.BondModeType) string {
+	const two, three, four, five = 2, 3, 4, 5
 	if pr != nil {
-		if *pr == import1.BondModeType(2) {
+		if *pr == import1.BondModeType(two) {
 			return "ACTIVE_BACKUP"
 		}
-		if *pr == import1.BondModeType(3) {
+		if *pr == import1.BondModeType(three) {
 			return "BALANCE_SLB"
 		}
-		if *pr == import1.BondModeType(4) {
+		if *pr == import1.BondModeType(four) {
 			return "BALANCE_TCP"
 		}
-		if *pr == import1.BondModeType(5) {
+		if *pr == import1.BondModeType(five) {
 			return "NONE"
 		}
 	}
@@ -1300,7 +1302,7 @@ func flattenIPUsage(pr *import1.IPUsage) []map[string]interface{} {
 		ip["num_macs"] = pr.NumMacs
 		ip["num_free_ips"] = pr.NumFreeIPs
 		ip["num_assigned_ips"] = pr.NumAssignedIPs
-		ip["ip_pool_usages"] = flattenIpPoolUsages(pr.IpPoolUsages)
+		ip["ip_pool_usages"] = flattenIPPoolUsages(pr.IpPoolUsages)
 
 		usage = append(usage, ip)
 		return usage
@@ -1308,7 +1310,7 @@ func flattenIPUsage(pr *import1.IPUsage) []map[string]interface{} {
 	return nil
 }
 
-func flattenIpPoolUsages(pr []import1.IPPoolUsage) []map[string]interface{} {
+func flattenIPPoolUsages(pr []import1.IPPoolUsage) []map[string]interface{} {
 	if len(pr) > 0 {
 		ips := make([]map[string]interface{}, len(pr))
 

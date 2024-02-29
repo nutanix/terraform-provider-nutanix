@@ -149,7 +149,7 @@ func DatasourceNutanixFloatingIPV4Read(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	extID := d.Get("ext_id")
-	resp, err := conn.FloatingIpApiInstance.GetFloatingIp(utils.StringPtr(extID.(string)))
+	resp, err := conn.FloatingIPAPIInstance.GetFloatingIp(utils.StringPtr(extID.(string)))
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -208,7 +208,7 @@ func DatasourceNutanixFloatingIPV4Read(ctx context.Context, d *schema.ResourceDa
 	if err := d.Set("vpc", flattenVpc(getResp.Vpc)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("vm_nic", flattenVmNic(getResp.VmNic)); err != nil {
+	if err := d.Set("vm_nic", flattenVMNic(getResp.VmNic)); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -294,7 +294,7 @@ func flattenVpc(pr *import1.Vpc) []map[string]interface{} {
 	return nil
 }
 
-func flattenVmNic(pr *import1.VmNic) []map[string]interface{} {
+func flattenVMNic(pr *import1.VmNic) []map[string]interface{} {
 	if pr != nil {
 		nics := make([]map[string]interface{}, 0)
 		nic := make(map[string]interface{})

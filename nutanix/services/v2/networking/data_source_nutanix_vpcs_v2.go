@@ -50,7 +50,7 @@ func DataSourceNutanixVPCsv4() *schema.Resource {
 func dataSourceNutanixVPCsv4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	// initialise query params
+	// initialize query params
 	var filter, orderBy, selects *string
 	var page, limit *int
 
@@ -79,7 +79,7 @@ func dataSourceNutanixVPCsv4Read(ctx context.Context, d *schema.ResourceData, me
 	} else {
 		selects = nil
 	}
-	resp, err := conn.VpcApiInstance.ListVpcs(page, limit, filter, orderBy, selects)
+	resp, err := conn.VpcAPIInstance.ListVpcs(page, limit, filter, orderBy, selects)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)

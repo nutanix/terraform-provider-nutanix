@@ -7,12 +7,12 @@ import (
 )
 
 type NetworkingClient struct {
-	SubnetApiInstance     *api.SubnetApi
-	VpcApiInstance        *api.VpcApi
-	FloatingIpApiInstance *api.FloatingIpApi
+	SubnetAPIInstance     *api.SubnetApi
+	VpcAPIInstance        *api.VpcApi
+	FloatingIPAPIInstance *api.FloatingIpApi
 }
 
-func NewNetworkingClient(credentials client.Credentials) (*NetworkingClient, error) {
+func NewNetworkingClient(credentials client.Credentials) (*NetworkingClient, error) { //nolint:all
 	var baseClient *network.ApiClient
 
 	// check if all required fields are present. Else create an empty client
@@ -29,9 +29,9 @@ func NewNetworkingClient(credentials client.Credentials) (*NetworkingClient, err
 	}
 
 	f := &NetworkingClient{
-		SubnetApiInstance:     api.NewSubnetApi(baseClient),
-		VpcApiInstance:        api.NewVpcApi(baseClient),
-		FloatingIpApiInstance: api.NewFloatingIpApi(baseClient),
+		SubnetAPIInstance:     api.NewSubnetApi(baseClient),
+		VpcAPIInstance:        api.NewVpcApi(baseClient),
+		FloatingIPAPIInstance: api.NewFloatingIpApi(baseClient),
 	}
 
 	return f, nil

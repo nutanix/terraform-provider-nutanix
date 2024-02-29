@@ -48,7 +48,7 @@ func DatasourceNutanixFloatingIPsV4() *schema.Resource {
 func datasourceNutanixFloatingIPsV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	// initialise query params
+	// initialize query params
 	var filter, orderBy, expand *string
 	var page, limit *int
 
@@ -78,7 +78,7 @@ func datasourceNutanixFloatingIPsV4Read(ctx context.Context, d *schema.ResourceD
 		expand = nil
 	}
 
-	resp, err := conn.FloatingIpApiInstance.ListFloatingIp(page, limit, filter, orderBy, expand)
+	resp, err := conn.FloatingIPAPIInstance.ListFloatingIp(page, limit, filter, orderBy, expand)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -121,7 +121,7 @@ func flattenFloatingIPsEntities(pr []import1.FloatingIp) []map[string]interface{
 			fip["vpc_reference"] = v.VpcReference
 			fip["vm_nic_reference"] = v.VmNicReference
 			fip["vpc"] = flattenVpc(v.Vpc)
-			fip["vm_nic"] = flattenVmNic(v.VmNic)
+			fip["vm_nic"] = flattenVMNic(v.VmNic)
 			fip["links"] = flattenLinks(v.Links)
 			fip["tenant_id"] = v.TenantId
 			fip["metadata"] = flattenMetadata(v.Metadata)

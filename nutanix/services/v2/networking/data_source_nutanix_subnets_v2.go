@@ -52,7 +52,7 @@ func DataSourceNutanixSubnetsv4() *schema.Resource {
 func dataSourceNutanixSubnetsv4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	// initialise query params
+	// initialize query params
 	var filter, orderBy, expand, selects *string
 	var page, limit *int
 
@@ -87,7 +87,7 @@ func dataSourceNutanixSubnetsv4Read(ctx context.Context, d *schema.ResourceData,
 		selects = nil
 	}
 
-	resp, err := conn.SubnetApiInstance.ListSubnets(page, limit, filter, orderBy, expand, selects)
+	resp, err := conn.SubnetAPIInstance.ListSubnets(page, limit, filter, orderBy, expand, selects)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
