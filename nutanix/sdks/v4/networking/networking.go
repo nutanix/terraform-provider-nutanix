@@ -12,7 +12,8 @@ type NetworkingClient struct {
 	FloatingIPAPIInstance *api.FloatingIpApi
 }
 
-func NewNetworkingClient(credentials client.Credentials) (*NetworkingClient, error) { //nolint:all
+//nolint:all
+func NewNetworkingClient(credentials client.Credentials) (*NetworkingClient, error) {
 	var baseClient *network.ApiClient
 
 	// check if all required fields are present. Else create an empty client

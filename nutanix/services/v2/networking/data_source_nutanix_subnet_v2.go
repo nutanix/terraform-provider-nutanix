@@ -949,7 +949,7 @@ func flattenIPConfig(pr []import1.IPConfig) []map[string]interface{} {
 		ipCfgs := make([]map[string]interface{}, len(pr))
 
 		for k, v := range pr {
-			ip := make(map[string]interface{}, 0)
+			ip := make(map[string]interface{})
 
 			ip["ipv4"] = flattenIpv4Config(v.Ipv4)
 			ip["ipv6"] = flattenIpv6Config(v.Ipv6)
