@@ -500,6 +500,12 @@ func DataSourceVPCSchemaV4() map[string]*schema.Schema {
 		},
 		"ext_id": {
 			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"vpc_type": {
+			Type:     schema.TypeString,
+			Optional: true,
 			Computed: true,
 		},
 		"links": {
@@ -520,6 +526,7 @@ func DataSourceVPCSchemaV4() map[string]*schema.Schema {
 		},
 		"metadata": {
 			Type:     schema.TypeList,
+			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: DatasourceMetadataSchemaV4(),
@@ -527,19 +534,23 @@ func DataSourceVPCSchemaV4() map[string]*schema.Schema {
 		},
 		"name": {
 			Type:     schema.TypeString,
+			Optional: true,
 			Computed: true,
 		},
 		"description": {
 			Type:     schema.TypeString,
+			Optional: true,
 			Computed: true,
 		},
 		"common_dhcp_options": {
 			Type:     schema.TypeList,
+			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"domain_name_servers": {
 						Type:     schema.TypeList,
+						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
@@ -563,15 +574,18 @@ func DataSourceVPCSchemaV4() map[string]*schema.Schema {
 		},
 		"external_subnets": {
 			Type:     schema.TypeList,
+			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"subnet_reference": {
 						Type:     schema.TypeString,
+						Optional: true,
 						Computed: true,
 					},
 					"external_ips": {
 						Type:     schema.TypeList,
+						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
@@ -582,6 +596,7 @@ func DataSourceVPCSchemaV4() map[string]*schema.Schema {
 					},
 					"gateway_nodes": {
 						Type:     schema.TypeList,
+						Optional: true,
 						Computed: true,
 						Elem: &schema.Schema{
 							Type: schema.TypeString,
@@ -589,15 +604,18 @@ func DataSourceVPCSchemaV4() map[string]*schema.Schema {
 					},
 					"active_gateway_node": {
 						Type:     schema.TypeList,
+						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"node_id": {
 									Type:     schema.TypeString,
+									Optional: true,
 									Computed: true,
 								},
 								"node_ip_address": {
 									Type:     schema.TypeList,
+									Optional: true,
 									Computed: true,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
@@ -614,21 +632,25 @@ func DataSourceVPCSchemaV4() map[string]*schema.Schema {
 		},
 		"external_routing_domain_reference": {
 			Type:     schema.TypeString,
+			Optional: true,
 			Computed: true,
 		},
 		"externally_routable_prefixes": {
 			Type:     schema.TypeList,
+			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"ipv4": {
 						Type:     schema.TypeList,
+						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"ip": SchemaForValuePrefixLength(),
 								"prefix_length": {
 									Type:     schema.TypeInt,
+									Optional: true,
 									Computed: true,
 								},
 							},
@@ -636,12 +658,14 @@ func DataSourceVPCSchemaV4() map[string]*schema.Schema {
 					},
 					"ipv6": {
 						Type:     schema.TypeList,
+						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"ip": SchemaForValuePrefixLength(),
 								"prefix_length": {
 									Type:     schema.TypeInt,
+									Optional: true,
 									Computed: true,
 								},
 							},
@@ -661,6 +685,7 @@ func DataSourceVirtualSwitchSchemaV4() map[string]*schema.Schema {
 		},
 		"ext_id": {
 			Type:     schema.TypeString,
+			Optional: true,
 			Computed: true,
 		},
 		"links": {
@@ -681,6 +706,7 @@ func DataSourceVirtualSwitchSchemaV4() map[string]*schema.Schema {
 		},
 		"metadata": {
 			Type:     schema.TypeList,
+			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: DatasourceMetadataSchemaV4(),
@@ -688,44 +714,54 @@ func DataSourceVirtualSwitchSchemaV4() map[string]*schema.Schema {
 		},
 		"name": {
 			Type:     schema.TypeString,
+			Optional: true,
 			Computed: true,
 		},
 		"description": {
 			Type:     schema.TypeString,
+			Optional: true,
 			Computed: true,
 		},
 		"is_default": {
 			Type:     schema.TypeBool,
+			Optional: true,
 			Computed: true,
 		},
 		"has_deployment_error": {
 			Type:     schema.TypeBool,
+			Optional: true,
 			Computed: true,
 		},
 		"mtu": {
 			Type:     schema.TypeInt,
+			Optional: true,
 			Computed: true,
 		},
 		"bond_mode": {
 			Type:     schema.TypeBool,
+			Optional: true,
 			Computed: true,
 		},
 		"clusters": {
 			Type:     schema.TypeList,
+			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"ext_id": {
 						Type:     schema.TypeString,
+						Optional: true,
 						Computed: true,
 					},
 					"hosts": {
 						Type:     schema.TypeList,
+						Optional: true,
 						Computed: true,
 						Elem: &schema.Resource{
 							Schema: map[string]*schema.Schema{
 								"ext_id": {
 									Type:     schema.TypeString,
+									Optional: true,
 									Computed: true,
 								},
 								"internal_bridge_name": {
@@ -734,6 +770,7 @@ func DataSourceVirtualSwitchSchemaV4() map[string]*schema.Schema {
 								},
 								"host_nics": {
 									Type:     schema.TypeList,
+									Optional: true,
 									Computed: true,
 									Elem: &schema.Schema{
 										Type: schema.TypeString,
@@ -741,12 +778,14 @@ func DataSourceVirtualSwitchSchemaV4() map[string]*schema.Schema {
 								},
 								"ip_address": {
 									Type:     schema.TypeList,
+									Optional: true,
 									Computed: true,
 									Elem: &schema.Resource{
 										Schema: map[string]*schema.Schema{
 											"ip": SchemaForValuePrefixLength(),
 											"prefix_length": {
 												Type:     schema.TypeInt,
+												Optional: true,
 												Computed: true,
 											},
 										},
@@ -769,15 +808,18 @@ func DataSourceVirtualSwitchSchemaV4() map[string]*schema.Schema {
 func SchemaForValuePrefixLength() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
+		Optional: true,
 		Computed: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"value": {
 					Type:     schema.TypeString,
+					Optional: true,
 					Computed: true,
 				},
 				"prefix_length": {
 					Type:     schema.TypeInt,
+					Optional: true,
 					Computed: true,
 				},
 			},
