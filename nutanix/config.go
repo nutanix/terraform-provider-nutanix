@@ -5,6 +5,7 @@ import (
 
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/karbon"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
@@ -77,6 +78,10 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	prismClient, err := prism.NewPrismClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 	return &Client{
 		WaitTimeout:         c.WaitTimeout,
 		API:                 v3Client,
@@ -85,6 +90,7 @@ func (c *Config) Client() (*Client, error) {
 		FoundationCentral:   fcClient,
 		Era:                 eraClient,
 		NetworkingAPI:       networkingClient,
+		PrismAPI:            prismClient,
 	}, nil
 }
 
@@ -97,4 +103,5 @@ type Client struct {
 	FoundationCentral   *foundation_central.Client
 	Era                 *era.Client
 	NetworkingAPI       *networking.Client
+	PrismAPI            *prism.Client
 }
