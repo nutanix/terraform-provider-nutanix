@@ -12,7 +12,7 @@ Image Nodes and Create a cluster out of nodes registered with Foundation Central
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_foundation_central_image_cluster" "img2"{
   cluster_name = "test-FC"
   cluster_external_ip = "<CLUSTER-IP>"
