@@ -37,6 +37,7 @@ The following arguments are supported:
 * `source_path`: - (Optional) A local path to upload an image.
 * `version`: - (Optional) The image version.
 * `data_source_reference` - (Optional)  Reference to a data source.
+* `allow_insecure_source_uri` - (Optional) Option to ignore the server certificate verification while accessing source_uri.
 
 ### Version
 

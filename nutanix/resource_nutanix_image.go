@@ -172,6 +172,11 @@ func resourceNutanixImage() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"allow_insecure_source_uri": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"source_uri": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -547,10 +552,16 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 	checks := &v3.Checksum{}
 	su, suok := d.GetOk("source_uri")
 	sp, spok := d.GetOk("source_path")
+	ai, aiok := d.GetOk("allow_insecure_source_uri")
 	var furi string
 	if suok {
 		image.SourceURI = utils.StringPtr(su.(string))
 		furi = su.(string)
+
+		if aiok {
+			sourceOptions := &v3.SourceOptions{AllowInsecureConnection: utils.BoolPtr(ai.(bool))}
+			image.SourceOptions = sourceOptions
+		}
 	}
 	if spok {
 		furi = sp.(string)
