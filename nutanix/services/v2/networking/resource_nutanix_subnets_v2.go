@@ -2,9 +2,6 @@ package networking
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -537,10 +534,6 @@ func ResourceNutanixSubnetv4Create(ctx context.Context, d *schema.ResourceData, 
 		inputSpec.IpConfig = expandIPConfig(ipConfig.([]interface{}))
 	}
 
-	log.Println("HELLLLLOOOOOO")
-	aJSON, _ := json.Marshal(inputSpec)
-	fmt.Printf("JSON Print - \n%s\n", string(aJSON))
-
 	resp, err := conn.SubnetAPIInstance.CreateSubnet(&inputSpec)
 	if err != nil {
 		return diag.Errorf("error while creating subnets : %v", err)
@@ -583,11 +576,8 @@ func ResourceNutanixSubnetv4Create(ctx context.Context, d *schema.ResourceData, 
 	getAllSubnetResp := readResp.Data.GetValue().([]import1.Subnet)
 
 	for _, subnet := range getAllSubnetResp {
-		log.Println("Subnet Name : ", utils.StringValue(subnet.Name), subnetName)
-		log.Println("Subnet Type : ", flattenSubnetType(subnet.SubnetType), subnetType)
 		if (utils.StringValue(subnet.Name) == subnetName) && (flattenSubnetType(subnet.SubnetType) == subnetType) {
 			d.SetId(*subnet.ExtId)
-			log.Println("Subnet ID : ", d.Id())
 			break
 		}
 	}
