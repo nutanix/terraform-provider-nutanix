@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
@@ -25,6 +27,7 @@ func ResourceNutanixSubnetv4() *schema.Resource {
 			"ext_id": {
 				Optional: true,
 				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -46,11 +49,13 @@ func ResourceNutanixSubnetv4() *schema.Resource {
 			"dhcp_options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"domain_name_servers": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ipv4": SchemaForValuePrefixLength(),
@@ -61,10 +66,12 @@ func ResourceNutanixSubnetv4() *schema.Resource {
 						"domain_name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"search_domains": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -72,14 +79,17 @@ func ResourceNutanixSubnetv4() *schema.Resource {
 						"tftp_server_name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"boot_file_name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"ntp_servers": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ipv4": SchemaForValuePrefixLength(),
@@ -93,22 +103,26 @@ func ResourceNutanixSubnetv4() *schema.Resource {
 			"ip_config": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ipv4": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ip_subnet": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"ip": SchemaForValuePrefixLength(),
 												"prefix_length": {
 													Type:     schema.TypeInt,
 													Optional: true,
+													Computed: true,
 												},
 											},
 										},
@@ -118,20 +132,24 @@ func ResourceNutanixSubnetv4() *schema.Resource {
 									"pool_list": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"start_ip": {
 													Type:     schema.TypeList,
 													Optional: true,
+													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"value": {
 																Type:     schema.TypeString,
 																Optional: true,
+																Computed: true,
 															},
 															"prefix_length": {
 																Type:     schema.TypeInt,
 																Optional: true,
+																Computed: true,
 															},
 														},
 													},
@@ -139,15 +157,18 @@ func ResourceNutanixSubnetv4() *schema.Resource {
 												"end_ip": {
 													Type:     schema.TypeList,
 													Optional: true,
+													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"value": {
 																Type:     schema.TypeString,
 																Optional: true,
+																Computed: true,
 															},
 															"prefix_length": {
 																Type:     schema.TypeInt,
 																Optional: true,
+																Computed: true,
 															},
 														},
 													},
@@ -161,17 +182,20 @@ func ResourceNutanixSubnetv4() *schema.Resource {
 						"ipv6": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ip_subnet": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"ip": SchemaForValuePrefixLength(),
 												"prefix_length": {
 													Type:     schema.TypeInt,
 													Optional: true,
+													Computed: true,
 												},
 											},
 										},
@@ -181,20 +205,24 @@ func ResourceNutanixSubnetv4() *schema.Resource {
 									"pool_list": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"start_ip": {
 													Type:     schema.TypeList,
 													Optional: true,
+													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"value": {
 																Type:     schema.TypeString,
 																Optional: true,
+																Computed: true,
 															},
 															"prefix_length": {
 																Type:     schema.TypeInt,
 																Optional: true,
+																Computed: true,
 															},
 														},
 													},
@@ -202,15 +230,18 @@ func ResourceNutanixSubnetv4() *schema.Resource {
 												"end_ip": {
 													Type:     schema.TypeList,
 													Optional: true,
+													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"value": {
 																Type:     schema.TypeString,
 																Optional: true,
+																Computed: true,
 															},
 															"prefix_length": {
 																Type:     schema.TypeInt,
 																Optional: true,
+																Computed: true,
 															},
 														},
 													},
@@ -227,27 +258,33 @@ func ResourceNutanixSubnetv4() *schema.Resource {
 			"cluster_reference": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"virtual_switch_reference": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"vpc_reference": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"is_nat_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"is_external": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"reserved_ip_addresses": SchemaForValuePrefixLength(),
 			"dynamic_ip_addresses": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ipv4": SchemaForValuePrefixLength(),
@@ -258,26 +295,32 @@ func ResourceNutanixSubnetv4() *schema.Resource {
 			"network_function_chain_reference": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"bridge_name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"is_advanced_networking": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 			},
 			"cluster_name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"hypervisor_type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"virtual_switch": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: DataSourceVirtualSwitchSchemaV4(),
 				},
@@ -285,6 +328,7 @@ func ResourceNutanixSubnetv4() *schema.Resource {
 			"vpc": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: DataSourceVPCSchemaV4(),
 				},
@@ -292,54 +336,66 @@ func ResourceNutanixSubnetv4() *schema.Resource {
 			"ip_prefix": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"ip_usage": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"num_macs": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"num_free_ips": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"num_assigned_ips": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"ip_pool_usages": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"num_free_ips": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										Computed: true,
 									},
 									"num_total_ips": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										Computed: true,
 									},
 									"range": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"start_ip": {
 													Type:     schema.TypeList,
 													Optional: true,
+													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"value": {
 																Type:     schema.TypeString,
 																Optional: true,
+																Computed: true,
 															},
 															"prefix_length": {
 																Type:     schema.TypeInt,
 																Optional: true,
+																Computed: true,
 															},
 														},
 													},
@@ -347,15 +403,18 @@ func ResourceNutanixSubnetv4() *schema.Resource {
 												"end_ip": {
 													Type:     schema.TypeList,
 													Optional: true,
+													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"value": {
 																Type:     schema.TypeString,
 																Optional: true,
+																Computed: true,
 															},
 															"prefix_length": {
 																Type:     schema.TypeInt,
 																Optional: true,
+																Computed: true,
 															},
 														},
 													},
@@ -375,7 +434,7 @@ func ResourceNutanixSubnetv4() *schema.Resource {
 			},
 			"links": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"href": {
@@ -397,21 +456,29 @@ func ResourceNutanixSubnetv4Create(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	inputSpec := import1.Subnet{}
-
+	subnetName := ""
+	subnetType := ""
 	if name, nok := d.GetOk("name"); nok {
 		inputSpec.Name = utils.StringPtr(name.(string))
+		subnetName = name.(string)
 	}
 	if desc, ok := d.GetOk("description"); ok {
 		inputSpec.Description = utils.StringPtr(desc.(string))
 	}
 	if subType, ok := d.GetOk("subnet_type"); ok {
 		subMap := map[string]interface{}{
-			"OVERLAY": "2",
-			"VLAN":    "3",
+			"OVERLAY": 2,
+			"VLAN":    3,
 		}
-		pInt := subMap[subType.(string)]
-		p := import1.SubnetType(pInt.(int))
+		pVal := subMap[subType.(string)]
+
+		p := import1.SubnetType(pVal.(int))
 		inputSpec.SubnetType = &p
+		subnetType = subType.(string)
+	}
+
+	if networkID, ok := d.GetOk("network_id"); ok {
+		inputSpec.NetworkId = utils.IntPtr(networkID.(int))
 	}
 
 	if dhcp, ok := d.GetOk("dhcp_options"); ok {
@@ -466,34 +533,298 @@ func ResourceNutanixSubnetv4Create(ctx context.Context, d *schema.ResourceData, 
 		inputSpec.IpUsage = exapndIPUsage(ipUsage)
 	}
 
-	resp, err := conn.SubnetAPIInstance.CreateSubnet(&inputSpec)
-	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while creating subnets : %v", errorMessage["message"])
+	if ipConfig, ok := d.GetOk("ip_config"); ok {
+		inputSpec.IpConfig = expandIPConfig(ipConfig.([]interface{}))
 	}
 
-	getResp := resp.Data.GetValue().(import4.TaskReference)
+	log.Println("HELLLLLOOOOOO")
+	aJSON, _ := json.Marshal(inputSpec)
+	fmt.Printf("JSON Print - \n%s\n", string(aJSON))
 
-	fmt.Println(getResp)
-	return nil
+	resp, err := conn.SubnetAPIInstance.CreateSubnet(&inputSpec)
+	if err != nil {
+		return diag.Errorf("error while creating subnets : %v", err)
+	}
+
+	TaskRef := resp.Data.GetValue().(import4.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	// calling group API to poll for completion of task
+
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the Subnet to be available
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"QUEUED", "RUNNING"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for subnet (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+	}
+	// Get UUID from TASK API, Entities not present in Task API
+
+	// resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	// if err != nil {
+	// 	return diag.Errorf("error while fetching subnet UUID : %v", err)
+	// }
+	// rUUID := resourceUUID.Data.GetValue().(import2.Task)
+
+	// uuid := rUUID.EntitiesAffected[0].ExtId
+
+	// Fetch UUID based on Vlan id and vlan Name
+
+	readResp, err := conn.SubnetAPIInstance.ListSubnets(nil, nil, nil, nil, nil, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching subnets : %v", err)
+	}
+
+	getAllSubnetResp := readResp.Data.GetValue().([]import1.Subnet)
+
+	for _, subnet := range getAllSubnetResp {
+		log.Println("Subnet Name : ", utils.StringValue(subnet.Name), subnetName)
+		log.Println("Subnet Type : ", flattenSubnetType(subnet.SubnetType), subnetType)
+		if (utils.StringValue(subnet.Name) == subnetName) && (flattenSubnetType(subnet.SubnetType) == subnetType) {
+			d.SetId(*subnet.ExtId)
+			log.Println("Subnet ID : ", d.Id())
+			break
+		}
+	}
+	return ResourceNutanixSubnetv4Read(ctx, d, meta)
 }
 
 func ResourceNutanixSubnetv4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).NetworkingAPI
+
+	resp, err := conn.SubnetAPIInstance.GetSubnetById(utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.Errorf("error while fetching subnets : %v", err)
+	}
+
+	getResp := resp.Data.GetValue().(import1.Subnet)
+
+	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("name", getResp.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("description", getResp.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("subnet_type", flattenSubnetType(getResp.SubnetType)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("network_id", getResp.NetworkId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("dhcp_options", flattenDhcpOptions(getResp.DhcpOptions)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("ip_config", flattenIPConfig(getResp.IpConfig)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("cluster_reference", getResp.ClusterReference); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("virtual_switch_reference", getResp.VirtualSwitchReference); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("vpc_reference", getResp.VpcReference); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("is_nat_enabled", getResp.IsNatEnabled); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("is_external", getResp.IsExternal); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("reserved_ip_addresses", flattenReservedIPAddresses(getResp.ReservedIpAddresses)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("dynamic_ip_addresses", flattenReservedIPAddresses(getResp.DynamicIpAddresses)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("network_function_chain_reference", getResp.NetworkFunctionChainReference); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("bridge_name", getResp.BridgeName); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("is_advanced_networking", getResp.IsAdvancedNetworking); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("cluster_name", getResp.ClusterName); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("hypervisor_type", getResp.HypervisorType); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("virtual_switch", flattenVirtualSwitch(getResp.VirtualSwitch)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("vpc", flattenVPC(getResp.Vpc)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("ip_prefix", getResp.IpPrefix); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("ip_usage", flattenIPUsage(getResp.IpUsage)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("migration_state", flattenMigrationState(getResp.MigrationState)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
+		return diag.FromErr(err)
+	}
 	return nil
 }
 
 func ResourceNutanixSubnetv4Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	conn := meta.(*conns.Client).NetworkingAPI
+	updateSpec := import1.Subnet{}
+
+	readResp, err := conn.SubnetAPIInstance.GetSubnetById(utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.Errorf("error while fetching subnets : %v", err)
+	}
+
+	updateSpec = readResp.Data.GetValue().(import1.Subnet)
+	// Extract E-Tag Header
+	etagValue := conn.SubnetAPIInstance.ApiClient.GetEtag(readResp)
+
+	args := make(map[string]interface{})
+	args["If-Match"] = etagValue
+
+	if d.HasChange("name") {
+		updateSpec.Name = utils.StringPtr(d.Get("name").(string))
+	}
+	if d.HasChange("description") {
+		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
+	}
+	if d.HasChange("subnet_type") {
+		subMap := map[string]interface{}{
+			"OVERLAY": 2,
+			"VLAN":    3,
+		}
+		pInt := subMap[d.Get("subnet_type").(string)]
+		p := import1.SubnetType(pInt.(int))
+		updateSpec.SubnetType = &p
+	}
+	if d.HasChange("dhcp_options") {
+		updateSpec.DhcpOptions = expandDhcpOptions(d.Get("dhcp_options").([]interface{}))
+	} else {
+		updateSpec.DhcpOptions = nil
+	}
+	if d.HasChange("cluster_reference") {
+		updateSpec.ClusterReference = utils.StringPtr(d.Get("cluster_reference").(string))
+	}
+	if d.HasChange("virtual_switch_reference") {
+		updateSpec.VirtualSwitchReference = utils.StringPtr(d.Get("virtual_switch_reference").(string))
+	}
+	if d.HasChange("vpc_reference") {
+		updateSpec.VirtualSwitchReference = utils.StringPtr(d.Get("vpc_reference").(string))
+	}
+	if d.HasChange("is_nat_enabled") {
+		updateSpec.IsNatEnabled = utils.BoolPtr(d.Get("is_nat_enabled").(bool))
+	}
+	if d.HasChange("is_external") {
+		updateSpec.IsExternal = utils.BoolPtr(d.Get("is_external").(bool))
+	}
+	if d.HasChange("reserved_ip_addresses") {
+		updateSpec.ReservedIpAddresses = expandIPAddress(d.Get("reserved_ip_addresses").([]interface{}))
+	}
+	if d.HasChange("dynamic_ip_addresses") {
+		updateSpec.DynamicIpAddresses = expandIPAddress(d.Get("dynamic_ip_addresses").([]interface{}))
+	}
+
+	if d.HasChange("network_function_chain_reference") {
+		updateSpec.NetworkFunctionChainReference = utils.StringPtr(d.Get("network_function_chain_reference").(string))
+	}
+	if d.HasChange("bridge_name") {
+		updateSpec.BridgeName = utils.StringPtr(d.Get("bridge_name").(string))
+	}
+	if d.HasChange("is_advanced_networking") {
+		updateSpec.IsAdvancedNetworking = utils.BoolPtr(d.Get("is_advanced_networking").(bool))
+	}
+	if d.HasChange("cluster_name") {
+		updateSpec.ClusterName = utils.StringPtr(d.Get("cluster_name").(string))
+	}
+	if d.HasChange("hypervisor_type") {
+		updateSpec.HypervisorType = utils.StringPtr(d.Get("hypervisor_type").(string))
+	}
+	if d.HasChange("virtual_switch") {
+		updateSpec.VirtualSwitch = expandVirtualSwitch(d.Get("virtual_switch"))
+	}
+	if d.HasChange("vpc") {
+		updateSpec.Vpc = expandVpc(d.Get("vpc"))
+	}
+	if d.HasChange("ip_prefix") {
+		updateSpec.IpPrefix = utils.StringPtr(d.Get("ip_prefix").(string))
+	}
+	if d.HasChange("ip_usage") {
+		updateSpec.IpUsage = exapndIPUsage(d.Get("ip_usage"))
+	}
+	if d.HasChange("ip_config") {
+		updateSpec.IpConfig = expandIPConfig(d.Get("ip_config").([]interface{}))
+	} else {
+		updateSpec.IpConfig = nil
+	}
+
+	updateResp, err := conn.SubnetAPIInstance.UpdateSubnetById(utils.StringPtr(d.Id()), &updateSpec, args)
+	if err != nil {
+		return diag.Errorf("error while updating subnets : %v", err)
+	}
+
+	TaskRef := updateResp.Data.GetValue().(import4.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	// calling group API to poll for completion of task
+
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the Subnet to be available
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"QUEUED", "RUNNING"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for subnet (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
+	}
+	return ResourceNutanixSubnetv4Read(ctx, d, meta)
 }
 
 func ResourceNutanixSubnetv4Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).NetworkingAPI
+
+	resp, err := conn.SubnetAPIInstance.DeleteSubnetById(utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.Errorf("error while deleting images : %v", err)
+	}
+	TaskRef := resp.Data.GetValue().(import4.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	// calling group API to poll for completion of task
+
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the Subnet to be available
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"QUEUED", "RUNNING"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for subnet (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
+	}
 	return nil
 }
 
@@ -503,22 +834,22 @@ func expandDhcpOptions(pr []interface{}) *import1.DhcpOptions {
 
 		val := pr[0].(map[string]interface{})
 
-		if bootfn, ok := val["boot_file_name"]; ok {
+		if bootfn, ok := val["boot_file_name"]; ok && len(bootfn.(string)) > 0 {
 			dhcpOps.BootFileName = utils.StringPtr(bootfn.(string))
 		}
-		if dns, ok := val["domain_name_servers"]; ok {
+		if dns, ok := val["domain_name_servers"]; ok && len(dns.([]interface{})) > 0 {
 			dhcpOps.DomainNameServers = expandIPAddress(dns.([]interface{}))
 		}
-		if dn, ok := val["domain_name"]; ok {
+		if dn, ok := val["domain_name"]; ok && len(dn.(string)) > 0 {
 			dhcpOps.DomainName = utils.StringPtr(dn.(string))
 		}
-		if searchDomain, ok := val["search_domains"]; ok {
-			dhcpOps.SearchDomains = utils.StringValueSlice(searchDomain.([]*string))
+		if searchDomain, ok := val["search_domains"]; ok && len(searchDomain.([]interface{})) > 0 {
+			dhcpOps.SearchDomains = expandStringList(searchDomain.([]interface{}))
 		}
-		if tftp, ok := val["tftp_server_name"]; ok {
+		if tftp, ok := val["tftp_server_name"]; ok && len(tftp.(string)) > 0 {
 			dhcpOps.TftpServerName = utils.StringPtr(tftp.(string))
 		}
-		if ntp, ok := val["ntp_servers"]; ok {
+		if ntp, ok := val["ntp_servers"]; ok && len(ntp.([]interface{})) > 0 {
 			dhcpOps.NtpServers = expandIPAddress(ntp.([]interface{}))
 		}
 		return &dhcpOps
@@ -534,10 +865,10 @@ func expandIPAddress(pr []interface{}) []config.IPAddress {
 			val := v.(map[string]interface{})
 			config := config.IPAddress{}
 
-			if ipv4, ok := val["ipv4"]; ok {
+			if ipv4, ok := val["ipv4"]; ok && len(ipv4.([]interface{})) > 0 {
 				config.Ipv4 = expandIPv4Address(ipv4)
 			}
-			if ipv6, ok := val["ipv4"]; ok {
+			if ipv6, ok := val["ipv6"]; ok && len(ipv6.([]interface{})) > 0 {
 				config.Ipv6 = expandIPv6Address(ipv6)
 			}
 
@@ -554,7 +885,7 @@ func expandIPv4Address(pr interface{}) *config.IPv4Address {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
 
-		if value, ok := val["value"]; ok {
+		if value, ok := val["value"]; ok && len(value.(string)) > 0 {
 			ipv4.Value = utils.StringPtr(value.(string))
 		}
 		if prefix, ok := val["prefix_length"]; ok {
@@ -571,7 +902,7 @@ func expandIPv6Address(pr interface{}) *config.IPv6Address {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
 
-		if value, ok := val["value"]; ok {
+		if value, ok := val["value"]; ok && len(value.(string)) > 0 {
 			ipv6.Value = utils.StringPtr(value.(string))
 		}
 		if prefix, ok := val["prefix_length"]; ok {
@@ -623,6 +954,8 @@ func expandVirtualSwitch(pr interface{}) *import1.VirtualSwitch {
 		if name, ok := val["name"]; ok {
 			vSwitch.Name = utils.StringPtr(name.(string))
 		}
+
+		return vSwitch
 	}
 	return nil
 }
@@ -746,6 +1079,7 @@ func expandVpc(pr interface{}) *import1.Vpc {
 		if extRoutablePrefix, ok := val["externally_routable_prefixes"]; ok {
 			vpc.ExternallyRoutablePrefixes = expandIPSubnet(extRoutablePrefix.([]interface{}))
 		}
+		return vpc
 	}
 	return nil
 }
@@ -901,6 +1235,127 @@ func exapndIPUsage(pr interface{}) *import1.IPUsage {
 			ipUsage.NumAssignedIPs = utils.Int64Ptr(numAssgIPs.(int64))
 		}
 		return ipUsage
+	}
+	return nil
+}
+
+func expandIPConfig(pr []interface{}) []import1.IPConfig {
+	if len(pr) > 0 {
+		ipConfigs := make([]import1.IPConfig, len(pr))
+
+		for k, v := range pr {
+			val := v.(map[string]interface{})
+			ipConfig := import1.IPConfig{}
+
+			if ipv4, ok := val["ipv4"]; ok && len(ipv4.([]interface{})) > 0 {
+				ipConfig.Ipv4 = expandIPv4Config(ipv4)
+			}
+			if ipv6, ok := val["ipv6"]; ok && len(ipv6.([]interface{})) > 0 {
+				ipConfig.Ipv6 = expandIPv6Config(ipv6)
+			}
+			ipConfigs[k] = ipConfig
+		}
+		return ipConfigs
+	}
+	return nil
+}
+
+func expandIPv4Config(pr interface{}) *import1.IPv4Config {
+	if pr != nil {
+		ipv4Config := &import1.IPv4Config{}
+		prI := pr.([]interface{})
+		val := prI[0].(map[string]interface{})
+
+		if ipSub, ok := val["ip_subnet"]; ok && len(ipSub.([]interface{})) > 0 {
+			ipv4Config.IpSubnet = expandIPv4Subnet(ipSub)
+		}
+		if defaultGateway, ok := val["default_gateway_ip"]; ok && len(defaultGateway.([]interface{})) > 0 {
+			ipv4Config.DefaultGatewayIp = expandIPv4Address(defaultGateway)
+		}
+		if dhcpServer, ok := val["dhcp_server_address"]; ok && len(dhcpServer.([]interface{})) > 0 {
+			ipv4Config.DhcpServerAddress = expandIPv4Address(dhcpServer)
+		}
+		if pool, ok := val["pool_list"]; ok && len(pool.([]interface{})) > 0 {
+			ipv4Config.PoolList = expandIPv4Pool(pool.([]interface{}))
+		}
+		return ipv4Config
+	}
+	return nil
+}
+
+func expandIPv6Config(pr interface{}) *import1.IPv6Config {
+	if pr != nil {
+		ipv4Config := &import1.IPv6Config{}
+		prI := pr.([]interface{})
+		val := prI[0].(map[string]interface{})
+
+		if ipSub, ok := val["ip_subnet"]; ok && len(ipSub.([]interface{})) > 0 {
+			ipv4Config.IpSubnet = expandIPv6Subnet(ipSub)
+		}
+		if defaultGateway, ok := val["default_gateway_ip"]; ok && len(defaultGateway.([]interface{})) > 0 {
+			ipv4Config.DefaultGatewayIp = expandIPv6Address(defaultGateway)
+		}
+		if dhcpServer, ok := val["dhcp_server_address"]; ok && len(dhcpServer.([]interface{})) > 0 {
+			ipv4Config.DhcpServerAddress = expandIPv6Address(dhcpServer)
+		}
+		if pool, ok := val["pool_list"]; ok && len(pool.([]interface{})) > 0 {
+			ipv4Config.PoolList = expandIPv6Pool(pool.([]interface{}))
+		}
+		return ipv4Config
+	}
+	return nil
+}
+
+func expandIPv4Pool(pr []interface{}) []import1.IPv4Pool {
+	if len(pr) > 0 {
+		pools := make([]import1.IPv4Pool, len(pr))
+
+		for k, v := range pr {
+			val := v.(map[string]interface{})
+			pool := import1.IPv4Pool{}
+
+			if startIP, ok := val["start_ip"]; ok && len(startIP.([]interface{})) > 0 {
+				pool.StartIp = expandIPv4Address(startIP)
+			}
+			if endIP, ok := val["end_ip"]; ok && len(endIP.([]interface{})) > 0 {
+				pool.EndIp = expandIPv4Address(endIP)
+			}
+			pools[k] = pool
+		}
+		return pools
+	}
+	return nil
+}
+
+func expandIPv6Pool(pr []interface{}) []import1.IPv6Pool {
+	if len(pr) > 0 {
+		pools := make([]import1.IPv6Pool, len(pr))
+
+		for k, v := range pr {
+			val := v.(map[string]interface{})
+			pool := import1.IPv6Pool{}
+
+			if startIP, ok := val["start_ip"]; ok && len(startIP.([]interface{})) > 0 {
+				pool.StartIp = expandIPv6Address(startIP)
+			}
+			if endIP, ok := val["end_ip"]; ok && len(endIP.([]interface{})) > 0 {
+				pool.EndIp = expandIPv6Address(endIP)
+			}
+			pools[k] = pool
+		}
+		return pools
+	}
+	return nil
+}
+
+func expandStringList(pr []interface{}) []string {
+	if len(pr) > 0 {
+		strList := make([]string, len(pr))
+
+		for k, v := range pr {
+			strList[k] = v.(string)
+		}
+		return strList
 	}
 	return nil
 }

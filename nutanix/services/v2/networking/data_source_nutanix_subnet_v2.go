@@ -2,7 +2,6 @@ package networking
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -392,17 +391,9 @@ func dataSourceNutanixSubnetv4Read(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	extID := d.Get("ext_id")
-	resp, err := conn.SubnetAPIInstance.GetSubnet(utils.StringPtr(extID.(string)))
+	resp, err := conn.SubnetAPIInstance.GetSubnetById(utils.StringPtr(extID.(string)))
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching subnets : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching subnets : %v", err)
 	}
 
 	getResp := resp.Data.GetValue().(import1.Subnet)
@@ -481,7 +472,7 @@ func dataSourceNutanixSubnetv4Read(ctx context.Context, d *schema.ResourceData, 
 	if err := d.Set("ip_usage", flattenIPUsage(getResp.IpUsage)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("migration_state", getResp.MigrationState); err != nil {
+	if err := d.Set("migration_state", flattenMigrationState(getResp.MigrationState)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
@@ -993,7 +984,7 @@ func flattenIPv6Subnet(pr *import1.IPv6Subnet) []interface{} {
 
 func flattenPoolListIPv4(pr []import1.IPv4Pool) []map[string]interface{} {
 	if len(pr) > 0 {
-		poolList := make([]map[string]interface{}, 0)
+		poolList := make([]map[string]interface{}, len(pr))
 
 		for k, v := range pr {
 			pool := make(map[string]interface{})
@@ -1010,7 +1001,7 @@ func flattenPoolListIPv4(pr []import1.IPv4Pool) []map[string]interface{} {
 
 func flattenPoolListIPv6(pr []import1.IPv6Pool) []map[string]interface{} {
 	if len(pr) > 0 {
-		poolList := make([]map[string]interface{}, 0)
+		poolList := make([]map[string]interface{}, len(pr))
 
 		for k, v := range pr {
 			pool := make(map[string]interface{})
@@ -1341,4 +1332,16 @@ func flattenIPv4Pool(pr *import1.IPv4Pool) []map[string]interface{} {
 		return pool
 	}
 	return nil
+}
+
+func flattenMigrationState(pr *import1.MigrationState) string {
+	if pr != nil {
+		if *pr == import1.MigrationState(2) {
+			return "IN_PROGRESS"
+		}
+		if *pr == import1.MigrationState(3) {
+			return "FAILED"
+		}
+	}
+	return "UNKNOWN"
 }

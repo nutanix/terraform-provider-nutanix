@@ -2,16 +2,15 @@ package networking
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16/models/prism/v4/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -190,7 +189,7 @@ func ResourceNutanixFloatingIPv4Create(ctx context.Context, d *schema.ResourceDa
 func ResourceNutanixFloatingIPv4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	resp, err := conn.FloatingIPAPIInstance.GetFloatingIp(utils.StringPtr(d.Id()))
+	resp, err := conn.FloatingIPAPIInstance.GetFloatingIpById(utils.StringPtr(d.Id()))
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -265,7 +264,7 @@ func ResourceNutanixFloatingIPv4Read(ctx context.Context, d *schema.ResourceData
 func ResourceNutanixFloatingIPv4Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	resp, err := conn.FloatingIPAPIInstance.GetFloatingIp(utils.StringPtr(d.Id()))
+	resp, err := conn.FloatingIPAPIInstance.GetFloatingIpById(utils.StringPtr(d.Id()))
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -319,7 +318,7 @@ func ResourceNutanixFloatingIPv4Update(ctx context.Context, d *schema.ResourceDa
 		updateSpec.VmNic = expandVmNic(d.Get("vm_nic"))
 	}
 
-	getResp, err := conn.FloatingIPAPIInstance.PutFloatingIp(utils.StringPtr(d.Id()), &updateSpec)
+	getResp, err := conn.FloatingIPAPIInstance.UpdateFloatingIpById(utils.StringPtr(d.Id()), &updateSpec)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -346,7 +345,7 @@ func ResourceNutanixFloatingIPv4Update(ctx context.Context, d *schema.ResourceDa
 func ResourceNutanixFloatingIPv4Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
-	resp, err := conn.FloatingIPAPIInstance.DeleteFloatingIp(utils.StringPtr(d.Id()))
+	resp, err := conn.FloatingIPAPIInstance.DeleteFloatingIpById(utils.StringPtr(d.Id()))
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -550,20 +549,10 @@ func expandVmNic(pr interface{}) *import1.VmNic {
 
 func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		data := base64.StdEncoding.EncodeToString([]byte("ergon"))
-		encodeUUID := data + ":" + taskUUID
-		vresp, err := client.TaskRefAPI.TaskGet(utils.StringPtr(encodeUUID))
+		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID))
 
 		if err != nil {
-			var errordata map[string]interface{}
-			e := json.Unmarshal([]byte(err.Error()), &errordata)
-			if e != nil {
-				return nil, "", e
-			}
-			data := errordata["data"].(map[string]interface{})
-			errorList := data["error"].([]interface{})
-			errorMessage := errorList[0].(map[string]interface{})
-			return "", "", (fmt.Errorf("error while polling prism task: %v", errorMessage["message"]))
+			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
 		}
 
 		// get the group results

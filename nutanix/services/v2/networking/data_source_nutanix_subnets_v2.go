@@ -2,7 +2,6 @@ package networking
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -43,7 +42,376 @@ func DataSourceNutanixSubnetsv4() *schema.Resource {
 			"subnets": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem:     DataSourceNutanixSubnetv4(),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ext_id": {
+							Computed: true,
+							Type:     schema.TypeString,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"subnet_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"network_id": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"dhcp_options": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"domain_name_servers": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ipv4": SchemaForValuePrefixLength(),
+												"ipv6": SchemaForValuePrefixLength(),
+											},
+										},
+									},
+									"domain_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"search_domains": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"tftp_server_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"boot_file_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"ntp_servers": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ipv4": SchemaForValuePrefixLength(),
+												"ipv6": SchemaForValuePrefixLength(),
+											},
+										},
+									},
+								},
+							},
+						},
+						"ip_config": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ipv4": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ip_subnet": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"ip": SchemaForValuePrefixLength(),
+															"prefix_length": {
+																Type:     schema.TypeInt,
+																Computed: true,
+															},
+														},
+													},
+												},
+												"default_gateway_ip":  SchemaForValuePrefixLength(),
+												"dhcp_server_address": SchemaForValuePrefixLength(),
+												"pool_list": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"start_ip": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"value": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"prefix_length": {
+																			Type:     schema.TypeInt,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+															"end_ip": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"value": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"prefix_length": {
+																			Type:     schema.TypeInt,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"ipv6": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ip_subnet": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"ip": SchemaForValuePrefixLength(),
+															"prefix_length": {
+																Type:     schema.TypeInt,
+																Computed: true,
+															},
+														},
+													},
+												},
+												"default_gateway_ip":  SchemaForValuePrefixLength(),
+												"dhcp_server_address": SchemaForValuePrefixLength(),
+												"pool_list": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"start_ip": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"value": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"prefix_length": {
+																			Type:     schema.TypeInt,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+															"end_ip": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"value": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"prefix_length": {
+																			Type:     schema.TypeInt,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"cluster_reference": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"virtual_switch_reference": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"vpc_reference": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"is_nat_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"is_external": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"reserved_ip_addresses": SchemaForValuePrefixLength(),
+						"dynamic_ip_addresses": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ipv4": SchemaForValuePrefixLength(),
+									"ipv6": SchemaForValuePrefixLength(),
+								},
+							},
+						},
+						"network_function_chain_reference": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"bridge_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"is_advanced_networking": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"cluster_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"hypervisor_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"virtual_switch": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: DataSourceVirtualSwitchSchemaV4(),
+							},
+						},
+						"vpc": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: DataSourceVPCSchemaV4(),
+							},
+						},
+						"ip_prefix": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ip_usage": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"num_macs": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"num_free_ips": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"num_assigned_ips": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+									"ip_pool_usages": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"num_free_ips": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+												"num_total_ips": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+												"range": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"start_ip": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"value": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"prefix_length": {
+																			Type:     schema.TypeInt,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+															"end_ip": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"value": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"prefix_length": {
+																			Type:     schema.TypeInt,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"migration_state": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"links": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"href": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"rel": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -89,15 +457,7 @@ func dataSourceNutanixSubnetsv4Read(ctx context.Context, d *schema.ResourceData,
 
 	resp, err := conn.SubnetAPIInstance.ListSubnets(page, limit, filter, orderBy, expand, selects)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching subnets : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching subnets : %v", err)
 	}
 
 	getResp := resp.Data.GetValue().([]import1.Subnet)
@@ -117,9 +477,10 @@ func flattenSubnetEntities(pr []import1.Subnet) []interface{} {
 		for k, v := range pr {
 			sub := make(map[string]interface{})
 
+			sub["ext_id"] = v.ExtId
 			sub["name"] = v.Name
 			sub["description"] = v.Description
-			sub["links"] = v.Links
+			sub["links"] = flattenLinks(v.Links)
 			sub["subnet_type"] = flattenSubnetType(v.SubnetType)
 			sub["network_id"] = v.NetworkId
 			sub["dhcp_options"] = flattenDhcpOptions(v.DhcpOptions)
@@ -139,8 +500,8 @@ func flattenSubnetEntities(pr []import1.Subnet) []interface{} {
 			sub["virtual_switch"] = flattenVirtualSwitch(v.VirtualSwitch)
 			sub["vpc"] = flattenVPC(v.Vpc)
 			sub["ip_prefix"] = v.IpPrefix
-			sub["ip_usage"] = v.IpUsage
-			sub["migration_state"] = v.MigrationState
+			sub["ip_usage"] = flattenIPUsage(v.IpUsage)
+			sub["migration_state"] = flattenMigrationState(v.MigrationState)
 
 			subnets[k] = sub
 		}

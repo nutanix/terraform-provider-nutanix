@@ -276,6 +276,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_stretched_vlan":               ndb.ResourceNutanixNDBStretchedVlan(),
 			"nutanix_ndb_clone_refresh":                ndb.ResourceNutanixNDBCloneRefresh(),
 			"nutanix_ndb_cluster":                      ndb.ResourceNutanixNDBCluster(),
+			"nutanix_subnet_v4":                        networking.ResourceNutanixSubnetv4(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

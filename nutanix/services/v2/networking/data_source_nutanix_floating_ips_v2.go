@@ -78,7 +78,7 @@ func datasourceNutanixFloatingIPsV4Read(ctx context.Context, d *schema.ResourceD
 		expand = nil
 	}
 
-	resp, err := conn.FloatingIPAPIInstance.ListFloatingIp(page, limit, filter, orderBy, expand)
+	resp, err := conn.FloatingIPAPIInstance.ListFloatingIps(page, limit, filter, orderBy, expand)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
