@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16/models/prism/v4/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -26,6 +27,7 @@ func ResourceNutanixFloatingIPv4() *schema.Resource {
 			"ext_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -40,21 +42,42 @@ func ResourceNutanixFloatingIPv4() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"vm_nic_reference": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"vpc_reference": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"private_ip": {
+						"vm_nic_association": {
 							Type:     schema.TypeList,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(),
-									"ipv6": SchemaForValuePrefixLength(),
+									"vm_nic_reference": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"vpc_reference": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"private_ip_association": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"vpc_reference": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"private_ip": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ipv4": SchemaForValuePrefixLength(),
+												"ipv6": SchemaForValuePrefixLength(),
+											},
+										},
+									},
 								},
 							},
 						},
@@ -64,6 +87,7 @@ func ResourceNutanixFloatingIPv4() *schema.Resource {
 			"floating_ip": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ipv4": SchemaForValuePrefixLength(),
@@ -78,15 +102,18 @@ func ResourceNutanixFloatingIPv4() *schema.Resource {
 			"external_subnet": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem:     DataSourceNutanixSubnetv4(),
 			},
 			"vpc_reference": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"vm_nic_reference": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"load_balancer_session_reference": {
 				Type:     schema.TypeString,
@@ -95,6 +122,7 @@ func ResourceNutanixFloatingIPv4() *schema.Resource {
 			"vpc": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: DataSourceVPCSchemaV4(),
 				},
@@ -102,6 +130,7 @@ func ResourceNutanixFloatingIPv4() *schema.Resource {
 			"vm_nic": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"private_ip": {
@@ -109,6 +138,45 @@ func ResourceNutanixFloatingIPv4() *schema.Resource {
 							Optional: true,
 						},
 					},
+				},
+			},
+			"links": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"href": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"rel": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"private_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"floating_ip_value": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"association_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"metadata": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: DatasourceMetadataSchemaV4(),
 				},
 			},
 		},
@@ -119,9 +187,11 @@ func ResourceNutanixFloatingIPv4Create(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	inputSpec := import1.FloatingIp{}
+	fipName := ""
 
 	if name, ok := d.GetOk("name"); ok {
 		inputSpec.Name = utils.StringPtr(name.(string))
+		fipName = name.(string)
 	}
 
 	if desc, ok := d.GetOk("description"); ok {
@@ -154,15 +224,7 @@ func ResourceNutanixFloatingIPv4Create(ctx context.Context, d *schema.ResourceDa
 
 	resp, err := conn.FloatingIPAPIInstance.CreateFloatingIp(&inputSpec)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while creating floating IPs : %v", errorMessage["message"])
+		return diag.Errorf("error while creating floating IPs : %v", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(import4.TaskReference)
@@ -173,8 +235,8 @@ func ResourceNutanixFloatingIPv4Create(ctx context.Context, d *schema.ResourceDa
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the FileServer to be available
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING"},
-		Target:  []string{"kSucceeded"},
+		Pending: []string{"QUEUED", "RUNNING"},
+		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
@@ -182,7 +244,20 @@ func ResourceNutanixFloatingIPv4Create(ctx context.Context, d *schema.ResourceDa
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for floating IP (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-	d.SetId(*taskUUID)
+
+	filter := fmt.Sprintf("name eq  '%s'", fipName)
+	readResp, err := conn.FloatingIPAPIInstance.ListFloatingIps(nil, nil, &filter, nil, nil, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching fips : %v", err)
+	}
+
+	getAllFipResp := readResp.Data.GetValue().([]import1.FloatingIp)
+
+	log.Println("HELLLLLOOOOOO")
+	aJSON, _ := json.Marshal(getAllFipResp)
+	fmt.Printf("JSON Print - \n%s\n", string(aJSON))
+
+	d.SetId(*getAllFipResp[0].ExtId)
 	return ResourceNutanixFloatingIPv4Read(ctx, d, meta)
 }
 
@@ -191,20 +266,15 @@ func ResourceNutanixFloatingIPv4Read(ctx context.Context, d *schema.ResourceData
 
 	resp, err := conn.FloatingIPAPIInstance.GetFloatingIpById(utils.StringPtr(d.Id()))
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching floating ips : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching floating ips : %v", err)
 	}
 
 	getResp := resp.Data.GetValue().(import1.FloatingIp)
 	fmt.Println(getResp)
 
+	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("name", getResp.Name); err != nil {
 		return diag.FromErr(err)
 	}
@@ -266,15 +336,7 @@ func ResourceNutanixFloatingIPv4Update(ctx context.Context, d *schema.ResourceDa
 
 	resp, err := conn.FloatingIPAPIInstance.GetFloatingIpById(utils.StringPtr(d.Id()))
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching floating ips : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching floating ips : %v", err)
 	}
 
 	respFloatingIP := resp.Data.GetValue().(import1.FloatingIp)
@@ -330,8 +392,8 @@ func ResourceNutanixFloatingIPv4Update(ctx context.Context, d *schema.ResourceDa
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the FileServer to be available
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING"},
-		Target:  []string{"kSucceeded"},
+		Pending: []string{"QUEUED", "RUNNING"},
+		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
@@ -347,15 +409,7 @@ func ResourceNutanixFloatingIPv4Delete(ctx context.Context, d *schema.ResourceDa
 
 	resp, err := conn.FloatingIPAPIInstance.DeleteFloatingIpById(utils.StringPtr(d.Id()))
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while deleting floating ip : %v", errorMessage["message"])
+		return diag.Errorf("error while deleting floating ip : %v", err)
 	}
 	TaskRef := resp.Data.GetValue().(import4.TaskReference)
 	taskUUID := TaskRef.ExtId
@@ -365,8 +419,8 @@ func ResourceNutanixFloatingIPv4Delete(ctx context.Context, d *schema.ResourceDa
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the FileServer to be available
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING"},
-		Target:  []string{"kSucceeded"},
+		Pending: []string{"QUEUED", "RUNNING"},
+		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
@@ -513,19 +567,29 @@ func expandOneOfFloatingIpAssociation(pr interface{}) *import1.OneOfFloatingIpAs
 
 		fip := &import1.OneOfFloatingIpAssociation{}
 
-		if vmNic, ok := val["vm_nic_reference"]; ok {
-			vmNicAssociation := fip.GetValue().(import1.VmNicAssociation)
-			vmNicAssociation.VmNicReference = utils.StringPtr(vmNic.(string))
-			fip.SetValue(vmNicAssociation)
-		} else {
-			privateIPAssociation := fip.GetValue().(import1.PrivateIpAssociation)
-			if vpc, ok := val["vpc_reference"]; ok {
-				privateIPAssociation.VpcReference = utils.StringPtr(vpc.(string))
+		if vmNic, ok := val["vm_nic_association"]; ok && len(vmNic.([]interface{})) > 0 {
+			nic := import1.NewVmNicAssociation()
+			prI := vmNic.([]interface{})
+			val := prI[0].(map[string]interface{})
+
+			if vmNicRef, ok := val["vm_nic_reference"]; ok {
+				nic.VmNicReference = utils.StringPtr(vmNicRef.(string))
 			}
-			if pIP, ok := val["private_ip"]; ok {
-				privateIPAssociation.PrivateIp = expandIPAddressMap(pIP)
+			fip.SetValue(*nic)
+		}
+
+		if privateIP, ok := val["private_ip_association"]; ok && len(privateIP.([]interface{})) > 0 {
+			pip := import1.NewPrivateIpAssociation()
+			prI := privateIP.([]interface{})
+			val := prI[0].(map[string]interface{})
+
+			if vpcRef, ok := val["vpc_reference"]; ok && len(vpcRef.(string)) > 0 {
+				pip.VpcReference = utils.StringPtr(vpcRef.(string))
 			}
-			fip.SetValue(privateIPAssociation)
+			if pIP, ok := val["private_ip"]; ok && len(pIP.([]interface{})) > 0 {
+				pip.PrivateIp = expandIPAddressMap(pIP)
+			}
+			fip.SetValue(*pip)
 		}
 		return fip
 	}

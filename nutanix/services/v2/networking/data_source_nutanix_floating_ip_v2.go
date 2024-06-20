@@ -2,11 +2,11 @@ package networking
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	config "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
 
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
@@ -35,21 +35,41 @@ func DatasourceNutanixFloatingIPV4() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"vm_nic_reference": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"vpc_reference": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"private_ip": {
+						"vm_nic_association": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForValuePrefixLength(),
-									"ipv6": SchemaForValuePrefixLength(),
+									"vm_nic_reference": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"vpc_reference": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"private_ip_association": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"vpc_reference": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"private_ip": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ipv4": SchemaForValuePrefixLength(),
+												"ipv6": SchemaForValuePrefixLength(),
+											},
+										},
+									},
 								},
 							},
 						},
@@ -151,15 +171,7 @@ func DatasourceNutanixFloatingIPV4Read(ctx context.Context, d *schema.ResourceDa
 	extID := d.Get("ext_id")
 	resp, err := conn.FloatingIPAPIInstance.GetFloatingIpById(utils.StringPtr(extID.(string)))
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching subnets : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching subnets : %v", err)
 	}
 
 	getResp := resp.Data.GetValue().(import1.FloatingIp)
@@ -348,22 +360,103 @@ func flattenAssociation(pr *import1.OneOfFloatingIpAssociation) []map[string]int
 	if pr != nil {
 		resList := make([]map[string]interface{}, 0)
 
-		assc := make(map[string]interface{})
+		vmNic := make(map[string]interface{})
+		vmNicList := make([]map[string]interface{}, 0)
+		privateIP := make(map[string]interface{})
+		privateIPList := make([]map[string]interface{}, 0)
 
-		getVal := pr.ObjectType_
+		if *pr.ObjectType_ == "networking.v4.config.PrivateIpAssociation" {
+			ipAssc := make(map[string]interface{})
+			ipAsscList := make([]map[string]interface{}, 0)
 
-		if utils.StringValue(getVal) == "networking.v4.config.PrivateIpAssociation" {
-			privateIPAssociation := pr.GetValue().(import1.PrivateIpAssociation)
-			assc["private_ip"] = flattenNodeIPAddress(privateIPAssociation.PrivateIp)
-			assc["vpc_reference"] = privateIPAssociation.VpcReference
+			ip := pr.GetValue().(import1.PrivateIpAssociation)
+
+			ipAssc["private_ip"] = flattenIPAddress(ip.PrivateIp)
+			ipAssc["vpc_reference"] = ip.VpcReference
+
+			ipAsscList = append(ipAsscList, ipAssc)
+
+			privateIP["private_ip_association"] = ipAsscList
+
+			privateIPList = append(privateIPList, privateIP)
+
+			resList = privateIPList
 		} else {
-			vmNicAssociation := pr.GetValue().(import1.VmNicAssociation)
-			assc["vm_nic_reference"] = vmNicAssociation.VmNicReference
-			assc["vpc_reference"] = vmNicAssociation.VpcReference
+			vmAssc := make(map[string]interface{})
+			vmAsscList := make([]map[string]interface{}, 0)
+
+			vm := pr.GetValue().(import1.VmNicAssociation)
+
+			vmAssc["vm_nic_reference"] = vm.VmNicReference
+			vmAssc["vpc_reference"] = vm.VpcReference
+
+			vmAsscList = append(vmAsscList, vmAssc)
+
+			vmNic["vm_nic_association"] = vmAsscList
+
+			vmNicList = append(vmNicList, vmNic)
+
+			resList = vmNicList
+		}
+		return resList
+	}
+	return nil
+}
+
+func flattenIPAddress(pr *config.IPAddress) []map[string]interface{} {
+	if pr != nil {
+		ips := make([]map[string]interface{}, 0)
+
+		ip := make(map[string]interface{})
+
+		if pr.Ipv4 != nil {
+			ip["ipv4"] = flattenIPv4Address(pr.Ipv4)
+		}
+		if pr.Ipv6 != nil {
+			ip["ipv6"] = flattenIPv6Address(pr.Ipv6)
 		}
 
-		resList = append(resList, assc)
-		return resList
+		ips = append(ips, ip)
+
+		return ips
+	}
+	return nil
+}
+
+func flattenIPv4Address(pr *config.IPv4Address) []map[string]interface{} {
+	if pr != nil {
+		ips := make([]map[string]interface{}, 0)
+
+		ip := make(map[string]interface{})
+
+		if pr.PrefixLength != nil {
+			ip["prefix_length"] = pr.PrefixLength
+		}
+		if pr.Value != nil {
+			ip["value"] = pr.Value
+		}
+		ips = append(ips, ip)
+
+		return ips
+	}
+	return nil
+}
+
+func flattenIPv6Address(pr *config.IPv6Address) []map[string]interface{} {
+	if pr != nil {
+		ips := make([]map[string]interface{}, 0)
+
+		ip := make(map[string]interface{})
+
+		if pr.PrefixLength != nil {
+			ip["prefix_length"] = pr.PrefixLength
+		}
+		if pr.Value != nil {
+			ip["value"] = pr.Value
+		}
+		ips = append(ips, ip)
+
+		return ips
 	}
 	return nil
 }

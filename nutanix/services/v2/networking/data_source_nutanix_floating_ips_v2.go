@@ -2,7 +2,6 @@ package networking
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -39,7 +38,153 @@ func DatasourceNutanixFloatingIPsV4() *schema.Resource {
 			"floating_ips": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem:     DatasourceNutanixFloatingIPV4(),
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"association": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"vm_nic_association": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"vm_nic_reference": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"vpc_reference": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"private_ip_association": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"vpc_reference": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"private_ip": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"ipv4": SchemaForValuePrefixLength(),
+															"ipv6": SchemaForValuePrefixLength(),
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"floating_ip": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ipv4": SchemaForValuePrefixLength(),
+									"ipv6": SchemaForValuePrefixLength(),
+								},
+							},
+						},
+						"external_subnet_reference": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"external_subnet": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     DataSourceNutanixSubnetv4(),
+						},
+						"private_ip": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"floating_ip_value": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"association_status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"vpc_reference": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"vm_nic_reference": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"vpc": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: DataSourceVPCSchemaV4(),
+							},
+						},
+						"vm_nic": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"private_ip": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"links": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"href": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"rel": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"tenant_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"metadata": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: DatasourceMetadataSchemaV4(),
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -80,21 +225,16 @@ func datasourceNutanixFloatingIPsV4Read(ctx context.Context, d *schema.ResourceD
 
 	resp, err := conn.FloatingIPAPIInstance.ListFloatingIps(page, limit, filter, orderBy, expand)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching floating_ips : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching floating_ips : %v", err)
 	}
 
-	getResp := resp.Data.GetValue().([]import1.FloatingIp)
+	getResp := resp.Data
 
-	if err := d.Set("floating_ips", flattenFloatingIPsEntities(getResp)); err != nil {
-		return diag.FromErr(err)
+	if getResp != nil {
+		tmp := resp.Data.GetValue().([]import1.FloatingIp)
+		if err := d.Set("floating_ips", flattenFloatingIPsEntities(tmp)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	d.SetId(resource.UniqueId())

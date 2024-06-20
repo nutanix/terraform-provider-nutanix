@@ -1042,31 +1042,31 @@ func expandVpc(pr interface{}) *import1.Vpc {
 
 		val := prI[0].(map[string]interface{})
 
-		if ext, ok := val["ext_id"]; ok {
+		if ext, ok := val["ext_id"]; ok && len(ext.(string)) > 0 {
 			vpc.ExtId = utils.StringPtr(ext.(string))
 		}
-		// if vpcType, ok := val["vpc_type"]; ok {
-		// 	vpcMap := map[string]interface{}{
-		// 		"REGULAR": 2,
-		// 		"TRANSIT": 3,
-		// 	}
-		// 	pInt := vpcMap[vpcType.(string)]
-		// 	p := import1.VpcTy(pInt.(int))
-		// 	vpc. = &p
-		// }
-		if desc, ok := val["description"]; ok {
+		if vpcType, ok := val["vpc_type"]; ok && len(vpcType.(string)) > 0 {
+			vpcMap := map[string]interface{}{
+				"REGULAR": 2,
+				"TRANSIT": 3,
+			}
+			pInt := vpcMap[vpcType.(string)]
+			p := import1.VpcType(pInt.(int))
+			vpc.VpcType = &p
+		}
+		if desc, ok := val["description"]; ok && len(desc.(string)) > 0 {
 			vpc.Description = utils.StringPtr(desc.(string))
 		}
-		if dhcpOps, ok := val["common_dhcp_options"]; ok {
+		if dhcpOps, ok := val["common_dhcp_options"]; ok && len(dhcpOps.([]interface{})) > 0 {
 			vpc.CommonDhcpOptions = expandVpcDhcpOptions(dhcpOps)
 		}
-		if extSubs, ok := val["external_subnets"]; ok {
+		if extSubs, ok := val["external_subnets"]; ok && len(extSubs.([]interface{})) > 0 {
 			vpc.ExternalSubnets = expandExternalSubnet(extSubs.([]interface{}))
 		}
-		if extRoutingDomainRef, ok := val["external_routing_domain_reference"]; ok {
+		if extRoutingDomainRef, ok := val["external_routing_domain_reference"]; ok && len(extRoutingDomainRef.(string)) > 0 {
 			vpc.ExternalRoutingDomainReference = utils.StringPtr(extRoutingDomainRef.(string))
 		}
-		if extRoutablePrefix, ok := val["externally_routable_prefixes"]; ok {
+		if extRoutablePrefix, ok := val["externally_routable_prefixes"]; ok && len(extRoutablePrefix.([]interface{})) > 0 {
 			vpc.ExternallyRoutablePrefixes = expandIPSubnet(extRoutablePrefix.([]interface{}))
 		}
 		return vpc
@@ -1096,16 +1096,16 @@ func expandExternalSubnet(pr []interface{}) []import1.ExternalSubnet {
 			val := v.(map[string]interface{})
 			sub := import1.ExternalSubnet{}
 
-			if subRef, ok := val["subnet_reference"]; ok {
+			if subRef, ok := val["subnet_reference"]; ok && len(subRef.(string)) > 0 {
 				sub.SubnetReference = utils.StringPtr(subRef.(string))
 			}
-			if extips, ok := val["external_ips"]; ok {
+			if extips, ok := val["external_ips"]; ok && len(extips.([]interface{})) > 0 {
 				sub.ExternalIps = expandIPAddress(extips.([]interface{}))
 			}
-			if gatewayNodes, ok := val["gateway_nodes"]; ok {
-				sub.GatewayNodes = utils.StringValueSlice(gatewayNodes.([]*string))
+			if gatewayNodes, ok := val["gateway_nodes"]; ok && len(gatewayNodes.([]interface{})) > 0 {
+				sub.GatewayNodes = expandStringList(gatewayNodes.([]interface{}))
 			}
-			if activeGatewayNode, ok := val["active_gateway_node"]; ok {
+			if activeGatewayNode, ok := val["active_gateway_node"]; ok && len(activeGatewayNode.([]interface{})) > 0 {
 				sub.ActiveGatewayNode = expandGatewayNodeReference(activeGatewayNode)
 			}
 			extSubs[k] = sub
@@ -1138,10 +1138,10 @@ func expandIPAddressMap(pr interface{}) *config.IPAddress {
 		val := prI[0].(map[string]interface{})
 		ipAdd := &config.IPAddress{}
 
-		if ipv4, ok := val["ipv4"]; ok {
+		if ipv4, ok := val["ipv4"]; ok && len(ipv4.([]interface{})) > 0 {
 			ipAdd.Ipv4 = expandIPv4AddressMap(ipv4)
 		}
-		if ipv6, ok := val["ipv6"]; ok {
+		if ipv6, ok := val["ipv6"]; ok && len(ipv6.([]interface{})) > 0 {
 			ipAdd.Ipv6 = expandIPv6AddressMap(ipv6)
 		}
 
@@ -1194,10 +1194,10 @@ func expandIPSubnet(pr []interface{}) []import1.IPSubnet {
 			val := v.(map[string]interface{})
 			ip := import1.IPSubnet{}
 
-			if ipv4, ok := val["ipv4"]; ok {
+			if ipv4, ok := val["ipv4"]; ok && len(ipv4.([]interface{})) > 0 {
 				ip.Ipv4 = expandIPv4Subnet(ipv4)
 			}
-			if ipv6, ok := val["ipv6"]; ok {
+			if ipv6, ok := val["ipv6"]; ok && len(ipv6.([]interface{})) > 0 {
 				ip.Ipv6 = expandIPv6Subnet(ipv6)
 			}
 			ips[k] = ip

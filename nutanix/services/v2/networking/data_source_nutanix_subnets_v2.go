@@ -460,10 +460,13 @@ func dataSourceNutanixSubnetsv4Read(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error while fetching subnets : %v", err)
 	}
 
-	getResp := resp.Data.GetValue().([]import1.Subnet)
+	getResp := resp.Data
 
-	if err := d.Set("subnets", flattenSubnetEntities(getResp)); err != nil {
-		return diag.FromErr(err)
+	if getResp != nil {
+		tmp := getResp.GetValue().([]import1.Subnet)
+		if err := d.Set("subnets", flattenSubnetEntities(tmp)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	d.SetId(resource.UniqueId())
