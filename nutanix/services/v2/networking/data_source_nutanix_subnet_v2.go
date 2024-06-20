@@ -1336,10 +1336,11 @@ func flattenIPv4Pool(pr *import1.IPv4Pool) []map[string]interface{} {
 
 func flattenMigrationState(pr *import1.MigrationState) string {
 	if pr != nil {
-		if *pr == import1.MigrationState(2) {
+		const two, three = 2, 3
+		if *pr == import1.MigrationState(two) {
 			return "IN_PROGRESS"
 		}
-		if *pr == import1.MigrationState(3) {
+		if *pr == import1.MigrationState(three) {
 			return "FAILED"
 		}
 	}

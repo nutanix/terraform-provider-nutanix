@@ -54,7 +54,7 @@ func TestAccNutanixFloatingIPV4_WithVmNICAssociation(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testFloatingIPV4ConfigwithVmNic(name, desc),
+				Config: testFloatingIPV4ConfigwithVMNic(name, desc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNamefip, "name", name),
 					resource.TestCheckResourceAttr(resourceNamefip, "description", desc),
@@ -102,7 +102,7 @@ func testFloatingIPV4Config(name, desc string) string {
 `, name, desc)
 }
 
-func testFloatingIPV4ConfigwithVmNic(name, desc string) string {
+func testFloatingIPV4ConfigwithVMNic(name, desc string) string {
 	return fmt.Sprintf(`
 		
 		resource "nutanix_floating_ip_v4" "test" {

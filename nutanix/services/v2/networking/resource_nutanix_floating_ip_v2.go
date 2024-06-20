@@ -2,9 +2,7 @@ package networking
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -198,7 +196,7 @@ func ResourceNutanixFloatingIPv4Create(ctx context.Context, d *schema.ResourceDa
 		inputSpec.Description = utils.StringPtr(desc.(string))
 	}
 	if association, ok := d.GetOk("association"); ok {
-		inputSpec.Association = expandOneOfFloatingIpAssociation(association)
+		inputSpec.Association = expandOneOfFloatingIPAssociation(association)
 	}
 	if fip, ok := d.GetOk("floating_ip"); ok {
 		inputSpec.FloatingIp = expandFloatingIPAddress(fip)
@@ -219,7 +217,7 @@ func ResourceNutanixFloatingIPv4Create(ctx context.Context, d *schema.ResourceDa
 		inputSpec.Vpc = expandVpc(vpc)
 	}
 	if vmNic, ok := d.GetOk("vm_nic"); ok {
-		inputSpec.VmNic = expandVmNic(vmNic)
+		inputSpec.VmNic = expandVMNic(vmNic)
 	}
 
 	resp, err := conn.FloatingIPAPIInstance.CreateFloatingIp(&inputSpec)
@@ -252,10 +250,6 @@ func ResourceNutanixFloatingIPv4Create(ctx context.Context, d *schema.ResourceDa
 	}
 
 	getAllFipResp := readResp.Data.GetValue().([]import1.FloatingIp)
-
-	log.Println("HELLLLLOOOOOO")
-	aJSON, _ := json.Marshal(getAllFipResp)
-	fmt.Printf("JSON Print - \n%s\n", string(aJSON))
 
 	d.SetId(*getAllFipResp[0].ExtId)
 	return ResourceNutanixFloatingIPv4Read(ctx, d, meta)
@@ -356,7 +350,7 @@ func ResourceNutanixFloatingIPv4Update(ctx context.Context, d *schema.ResourceDa
 		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
 	}
 	if d.HasChange("association") {
-		updateSpec.Association = expandOneOfFloatingIpAssociation(d.Get("association"))
+		updateSpec.Association = expandOneOfFloatingIPAssociation(d.Get("association"))
 	}
 	if d.HasChange("floating_ip") {
 		updateSpec.FloatingIp = expandFloatingIPAddress(d.Get("floating_ip"))
@@ -377,7 +371,7 @@ func ResourceNutanixFloatingIPv4Update(ctx context.Context, d *schema.ResourceDa
 		updateSpec.Vpc = expandVpc(d.Get("vpc"))
 	}
 	if d.HasChange("vm_nic") {
-		updateSpec.VmNic = expandVmNic(d.Get("vm_nic"))
+		updateSpec.VmNic = expandVMNic(d.Get("vm_nic"))
 	}
 
 	getResp, err := conn.FloatingIPAPIInstance.UpdateFloatingIpById(utils.StringPtr(d.Id()), &updateSpec)
@@ -560,7 +554,7 @@ func expandSubnet(pr interface{}) *import1.Subnet {
 	return nil
 }
 
-func expandOneOfFloatingIpAssociation(pr interface{}) *import1.OneOfFloatingIpAssociation {
+func expandOneOfFloatingIPAssociation(pr interface{}) *import1.OneOfFloatingIpAssociation {
 	if pr != nil {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -596,7 +590,7 @@ func expandOneOfFloatingIpAssociation(pr interface{}) *import1.OneOfFloatingIpAs
 	return nil
 }
 
-func expandVmNic(pr interface{}) *import1.VmNic {
+func expandVMNic(pr interface{}) *import1.VmNic {
 	if pr != nil {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -633,20 +627,24 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 
 func getTaskStatus(pr *import2.TaskStatus) string {
 	if pr != nil {
-		if *pr == import2.TaskStatus(6) {
-			return "FAILED"
-		}
-		if *pr == import2.TaskStatus(7) {
-			return "CANCELED"
-		}
-		if *pr == import2.TaskStatus(2) {
+		const two, three, four, five, six, seven = 2, 3, 4, 5, 6, 7
+		if *pr == import2.TaskStatus(two) {
 			return "QUEUED"
 		}
-		if *pr == import2.TaskStatus(3) {
+		if *pr == import2.TaskStatus(three) {
 			return "RUNNING"
 		}
-		if *pr == import2.TaskStatus(5) {
+		if *pr == import2.TaskStatus(four) {
+			return "CANCELING"
+		}
+		if *pr == import2.TaskStatus(five) {
 			return "SUCCEEDED"
+		}
+		if *pr == import2.TaskStatus(six) {
+			return "FAILED"
+		}
+		if *pr == import2.TaskStatus(seven) {
+			return "CANCELED"
 		}
 	}
 	return "UNKNOWN"

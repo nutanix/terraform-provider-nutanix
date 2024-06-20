@@ -463,9 +463,10 @@ func ResourceNutanixSubnetv4Create(ctx context.Context, d *schema.ResourceData, 
 		inputSpec.Description = utils.StringPtr(desc.(string))
 	}
 	if subType, ok := d.GetOk("subnet_type"); ok {
+		const two, three = 2, 3
 		subMap := map[string]interface{}{
-			"OVERLAY": 2,
-			"VLAN":    3,
+			"OVERLAY": two,
+			"VLAN":    three,
 		}
 		pVal := subMap[subType.(string)]
 
@@ -698,9 +699,10 @@ func ResourceNutanixSubnetv4Update(ctx context.Context, d *schema.ResourceData, 
 		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
 	}
 	if d.HasChange("subnet_type") {
+		const two, three = 2, 3
 		subMap := map[string]interface{}{
-			"OVERLAY": 2,
-			"VLAN":    3,
+			"OVERLAY": two,
+			"VLAN":    three,
 		}
 		pInt := subMap[d.Get("subnet_type").(string)]
 		p := import1.SubnetType(pInt.(int))
@@ -1046,9 +1048,10 @@ func expandVpc(pr interface{}) *import1.Vpc {
 			vpc.ExtId = utils.StringPtr(ext.(string))
 		}
 		if vpcType, ok := val["vpc_type"]; ok && len(vpcType.(string)) > 0 {
+			const two, three = 2, 3
 			vpcMap := map[string]interface{}{
-				"REGULAR": 2,
-				"TRANSIT": 3,
+				"REGULAR": two,
+				"TRANSIT": three,
 			}
 			pInt := vpcMap[vpcType.(string)]
 			p := import1.VpcType(pInt.(int))

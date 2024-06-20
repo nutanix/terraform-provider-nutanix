@@ -11,7 +11,7 @@ import (
 
 const resourceNameSubnet = "nutanix_subnet_v4.test"
 
-func TestAccNutanixVmsDiskV4_Basic(t *testing.T) {
+func TestAccNutanixSubnetV4_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-subnet-%d", r)
 	desc := "test subnet description"
@@ -47,7 +47,7 @@ func TestAccNutanixVmsDiskV4_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsDiskV4_WithIPPool(t *testing.T) {
+func TestAccNutanixSubnetV4_WithIPPool(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-subnet-%d", r)
 	desc := "test subnet description"
@@ -71,7 +71,7 @@ func TestAccNutanixVmsDiskV4_WithIPPool(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsDiskV4_WithExternalSubnet(t *testing.T) {
+func TestAccNutanixSubnetV4_WithExternalSubnet(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-subnet-%d", r)
 	desc := "test subnet description"
