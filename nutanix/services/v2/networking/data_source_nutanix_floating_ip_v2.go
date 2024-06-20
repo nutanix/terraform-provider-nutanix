@@ -379,23 +379,22 @@ func flattenAssociation(pr *import1.OneOfFloatingIpAssociation) []map[string]int
 			privateIPList = append(privateIPList, privateIP)
 
 			return privateIPList
-		} else {
-			vmAssc := make(map[string]interface{})
-			vmAsscList := make([]map[string]interface{}, 0)
-
-			vm := pr.GetValue().(import1.VmNicAssociation)
-
-			vmAssc["vm_nic_reference"] = vm.VmNicReference
-			vmAssc["vpc_reference"] = vm.VpcReference
-
-			vmAsscList = append(vmAsscList, vmAssc)
-
-			vmNic["vm_nic_association"] = vmAsscList
-
-			vmNicList = append(vmNicList, vmNic)
-
-			return vmNicList
 		}
+		vmAssc := make(map[string]interface{})
+		vmAsscList := make([]map[string]interface{}, 0)
+
+		vm := pr.GetValue().(import1.VmNicAssociation)
+
+		vmAssc["vm_nic_reference"] = vm.VmNicReference
+		vmAssc["vpc_reference"] = vm.VpcReference
+
+		vmAsscList = append(vmAsscList, vmAssc)
+
+		vmNic["vm_nic_association"] = vmAsscList
+
+		vmNicList = append(vmNicList, vmNic)
+
+		return vmNicList
 	}
 	return nil
 }
