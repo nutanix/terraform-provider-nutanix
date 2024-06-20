@@ -358,8 +358,6 @@ func flattenExternalSubnet(pr *import1.Subnet) []map[string]interface{} {
 
 func flattenAssociation(pr *import1.OneOfFloatingIpAssociation) []map[string]interface{} {
 	if pr != nil {
-		resList := make([]map[string]interface{}, 0)
-
 		vmNic := make(map[string]interface{})
 		vmNicList := make([]map[string]interface{}, 0)
 		privateIP := make(map[string]interface{})
@@ -380,7 +378,7 @@ func flattenAssociation(pr *import1.OneOfFloatingIpAssociation) []map[string]int
 
 			privateIPList = append(privateIPList, privateIP)
 
-			resList = privateIPList
+			return privateIPList
 		} else {
 			vmAssc := make(map[string]interface{})
 			vmAsscList := make([]map[string]interface{}, 0)
@@ -396,9 +394,8 @@ func flattenAssociation(pr *import1.OneOfFloatingIpAssociation) []map[string]int
 
 			vmNicList = append(vmNicList, vmNic)
 
-			resList = vmNicList
+			return vmNicList
 		}
-		return resList
 	}
 	return nil
 }
