@@ -2,7 +2,6 @@ package networking
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -72,6 +71,10 @@ func DataSourceNutanixVPCv4() *schema.Resource {
 					},
 				},
 			},
+			"vpc_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"snat_ips": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -130,6 +133,10 @@ func DataSourceNutanixVPCv4() *schema.Resource {
 								},
 							},
 						},
+						"active_gateway_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -181,15 +188,7 @@ func dataSourceNutanixVPCv4Read(ctx context.Context, d *schema.ResourceData, met
 	extID := d.Get("ext_id")
 	resp, err := conn.VpcAPIInstance.GetVpcById(utils.StringPtr(extID.(string)))
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching subnets : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching vpc : %v", err)
 	}
 
 	getResp := resp.Data.GetValue().(import1.Vpc)

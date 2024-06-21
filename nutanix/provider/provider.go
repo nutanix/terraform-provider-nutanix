@@ -278,6 +278,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_cluster":                      ndb.ResourceNutanixNDBCluster(),
 			"nutanix_subnet_v4":                        networking.ResourceNutanixSubnetv4(),
 			"nutanix_floating_ip_v4":                   networking.ResourceNutanixFloatingIPv4(),
+			"nutanix_vpc_v4":                           networking.ResourceNutanixVPCsV4(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

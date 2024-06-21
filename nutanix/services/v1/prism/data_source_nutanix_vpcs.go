@@ -126,6 +126,10 @@ func DataSourceNutanixVPCs() *schema.Resource {
 																	},
 																},
 															},
+															"active_gateway_count": {
+																Type:     schema.TypeInt,
+																Computed: true,
+															},
 														},
 													},
 												},

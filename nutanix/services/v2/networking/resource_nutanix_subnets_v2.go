@@ -798,7 +798,7 @@ func ResourceNutanixSubnetv4Delete(ctx context.Context, d *schema.ResourceData, 
 
 	resp, err := conn.SubnetAPIInstance.DeleteSubnetById(utils.StringPtr(d.Id()))
 	if err != nil {
-		return diag.Errorf("error while deleting images : %v", err)
+		return diag.Errorf("error while deleting subnet : %v", err)
 	}
 	TaskRef := resp.Data.GetValue().(import4.TaskReference)
 	taskUUID := TaskRef.ExtId
@@ -1110,6 +1110,9 @@ func expandExternalSubnet(pr []interface{}) []import1.ExternalSubnet {
 			}
 			if activeGatewayNode, ok := val["active_gateway_node"]; ok && len(activeGatewayNode.([]interface{})) > 0 {
 				sub.ActiveGatewayNode = expandGatewayNodeReference(activeGatewayNode)
+			}
+			if activeGatewayCount, ok := val["active_gateway_count"]; ok && activeGatewayCount.(int) > 0 {
+				sub.ActiveGatewayCount = utils.IntPtr(activeGatewayCount.(int))
 			}
 			extSubs[k] = sub
 		}

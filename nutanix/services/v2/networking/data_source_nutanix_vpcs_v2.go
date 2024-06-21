@@ -2,7 +2,6 @@ package networking
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -40,7 +39,172 @@ func DataSourceNutanixVPCsv4() *schema.Resource {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
-					Schema: DataSourceVPCSchemaV4(),
+					Schema: map[string]*schema.Schema{
+						"ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"tenant_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"links": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"href": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"rel": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"metadata": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: DatasourceMetadataSchemaV4(),
+							},
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"common_dhcp_options": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"domain_name_servers": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ipv4": SchemaForValuePrefixLength(),
+												"ipv6": SchemaForValuePrefixLength(),
+											},
+										},
+									},
+								},
+							},
+						},
+						"vpc_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"snat_ips": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ipv4": SchemaForValuePrefixLength(),
+									"ipv6": SchemaForValuePrefixLength(),
+								},
+							},
+						},
+						"external_subnets": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"subnet_reference": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"external_ips": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ipv4": SchemaForValuePrefixLength(),
+												"ipv6": SchemaForValuePrefixLength(),
+											},
+										},
+									},
+									"gateway_nodes": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"active_gateway_node": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"node_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"node_ip_address": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"ipv4": SchemaForValuePrefixLength(),
+															"ipv6": SchemaForValuePrefixLength(),
+														},
+													},
+												},
+											},
+										},
+									},
+									"active_gateway_count": {
+										Type:     schema.TypeInt,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"external_routing_domain_reference": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"externally_routable_prefixes": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ipv4": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ip": SchemaForValuePrefixLength(),
+												"prefix_length": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"ipv6": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ip": SchemaForValuePrefixLength(),
+												"prefix_length": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -81,20 +245,15 @@ func dataSourceNutanixVPCsv4Read(ctx context.Context, d *schema.ResourceData, me
 	}
 	resp, err := conn.VpcAPIInstance.ListVpcs(page, limit, filter, orderBy, selects)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching subnets : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching vpcs : %v", err)
 	}
-	getResp := resp.Data.GetValue().([]import1.Vpc)
+	getResp := resp.Data
 
-	if err := d.Set("vpcs", flattenVPCsEntities(getResp)); err != nil {
-		return diag.FromErr(err)
+	if getResp != nil {
+		tmp := getResp.GetValue().([]import1.Vpc)
+		if err := d.Set("vpcs", flattenVPCsEntities(tmp)); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	d.SetId(resource.UniqueId())

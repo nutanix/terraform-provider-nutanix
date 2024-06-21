@@ -618,6 +618,10 @@ func DataSourceVPCSchemaV4() map[string]*schema.Schema {
 							},
 						},
 					},
+					"active_gateway_count": {
+						Type:     schema.TypeInt,
+						Computed: true,
+					},
 				},
 			},
 		},
@@ -1230,6 +1234,7 @@ func flattenExternalSubnets(pr []import1.ExternalSubnet) []map[string]interface{
 			sub["external_ips"] = flattenNtpServer(v.ExternalIps)
 			sub["gateway_nodes"] = v.GatewayNodes
 			sub["active_gateway_node"] = flattenActiveGatewayNode(v.ActiveGatewayNode)
+			sub["active_gateway_count"] = v.ActiveGatewayCount
 
 			extSubs[k] = sub
 		}
