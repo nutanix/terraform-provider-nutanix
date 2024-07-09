@@ -545,6 +545,8 @@ func resourceNutanixImageDelete(ctx context.Context, d *schema.ResourceData, met
 func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 	cs, csok := d.GetOk("checksum")
 	checks := &v3.Checksum{}
+	vr, vrok := d.GetOk("version")
+	versionResource := &v3.ImageVersionResources{}
 	su, suok := d.GetOk("source_uri")
 	sp, spok := d.GetOk("source_path")
 	var furi string
@@ -588,6 +590,26 @@ func getImageResource(d *schema.ResourceData, image *v3.ImageResources) error {
 			checks.ChecksumValue = utils.StringPtr(cv.(string))
 		}
 		image.Checksum = checks
+	}
+
+	if vrok {
+		version := vr.(map[string]interface{})
+		pn, pnok := version["product_name"]
+		pv, pvok := version["product_version"]
+
+		if pnok {
+			if pn.(string) == "" {
+				return fmt.Errorf("'product_name' is not given")
+			}
+			versionResource.ProductName = utils.StringPtr(pn.(string))
+		}
+		if pvok {
+			if pv.(string) == "" {
+				return fmt.Errorf("'product_version' is not given")
+			}
+			versionResource.ProductVersion = utils.StringPtr(pv.(string))
+		}
+		image.Version = versionResource
 	}
 
 	// List of clusters where image is requested to be placed at time of creation
