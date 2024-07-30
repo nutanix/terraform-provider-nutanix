@@ -8,8 +8,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/internal"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/categories"
 	fc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/fc"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/foundation"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/ndb"
@@ -146,7 +148,7 @@ func Provider() *schema.Provider {
 			"nutanix_cluster":                                 prism.DataSourceNutanixCluster(),
 			"nutanix_clusters":                                prism.DataSourceNutanixClusters(),
 			"nutanix_virtual_machine":                         prism.DataSourceNutanixVirtualMachine(),
-			"nutanix_category_key":                            prism.DataSourceNutanixCategoryKey(),
+			"nutanix_category_key":                            categories.DataSourceNutanixCategoryKey(),
 			"nutanix_network_security_rule":                   prism.DataSourceNutanixNetworkSecurityRule(),
 			"nutanix_host":                                    prism.DataSourceNutanixHost(),
 			"nutanix_hosts":                                   prism.DataSourceNutanixHosts(),
@@ -223,8 +225,8 @@ func Provider() *schema.Provider {
 			"nutanix_virtual_machine":                  prism.ResourceNutanixVirtualMachine(),
 			"nutanix_image":                            prism.ResourceNutanixImage(),
 			"nutanix_subnet":                           prism.ResourceNutanixSubnet(),
-			"nutanix_category_key":                     prism.ResourceNutanixCategoryKey(),
-			"nutanix_category_value":                   prism.ResourceNutanixCategoryValue(),
+			"nutanix_category_key":                     categories.ResourceNutanixCategoryKey(),
+			"nutanix_category_value":                   categories.ResourceNutanixCategoryValue(),
 			"nutanix_network_security_rule":            prism.ResourceNutanixNetworkSecurityRule(),
 			"nutanix_access_control_policy":            prism.ResourceNutanixAccessControlPolicy(),
 			"nutanix_project":                          prism.ResourceNutanixProject(),
