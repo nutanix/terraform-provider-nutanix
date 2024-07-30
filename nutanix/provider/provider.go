@@ -12,6 +12,7 @@ import (
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/internal"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/categories"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clusters"
 	fc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/fc"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/foundation"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/ndb"
@@ -145,13 +146,13 @@ func Provider() *schema.Provider {
 			"nutanix_image":                                   prism.DataSourceNutanixImage(),
 			"nutanix_subnet":                                  prism.DataSourceNutanixSubnet(),
 			"nutanix_subnets":                                 prism.DataSourceNutanixSubnets(),
-			"nutanix_cluster":                                 prism.DataSourceNutanixCluster(),
-			"nutanix_clusters":                                prism.DataSourceNutanixClusters(),
+			"nutanix_cluster":                                 clusters.DataSourceNutanixCluster(),
+			"nutanix_clusters":                                clusters.DataSourceNutanixClusters(),
 			"nutanix_virtual_machine":                         prism.DataSourceNutanixVirtualMachine(),
 			"nutanix_category_key":                            categories.DataSourceNutanixCategoryKey(),
 			"nutanix_network_security_rule":                   prism.DataSourceNutanixNetworkSecurityRule(),
-			"nutanix_host":                                    prism.DataSourceNutanixHost(),
-			"nutanix_hosts":                                   prism.DataSourceNutanixHosts(),
+			"nutanix_host":                                    clusters.DataSourceNutanixHost(),
+			"nutanix_hosts":                                   clusters.DataSourceNutanixHosts(),
 			"nutanix_access_control_policy":                   prism.DataSourceNutanixAccessControlPolicy(),
 			"nutanix_access_control_policies":                 prism.DataSourceNutanixAccessControlPolicies(),
 			"nutanix_project":                                 prism.DataSourceNutanixProject(),

@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/foundation"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -370,4 +371,45 @@ func flattenArrayOfReferenceValues(refs []*v3.ReferenceValues) []map[string]inte
 		}
 	}
 	return references
+}
+
+func flattenReferenceList(references []*v3.ReferenceValues) []map[string]interface{} {
+	res := make([]map[string]interface{}, len(references))
+	if len(references) > 0 {
+		for i, r := range references {
+			res[i] = flattenReference(r)
+		}
+	}
+	return res
+}
+
+func flattenReference(reference *v3.ReferenceValues) map[string]interface{} {
+	if reference != nil {
+		return map[string]interface{}{
+			"kind": reference.Kind,
+			"uuid": reference.UUID,
+			"name": reference.Name,
+		}
+	}
+	return map[string]interface{}{}
+}
+
+func flattenExternalNetworkListReferenceList(references []*v3.ReferenceValues) []map[string]interface{} {
+	res := make([]map[string]interface{}, len(references))
+	if len(references) > 0 {
+		for i, r := range references {
+			res[i] = flattenExternalNetworkListReference(r)
+		}
+	}
+	return res
+}
+
+func flattenExternalNetworkListReference(reference *v3.ReferenceValues) map[string]interface{} {
+	if reference != nil {
+		return map[string]interface{}{
+			"uuid": reference.UUID,
+			"name": reference.Name,
+		}
+	}
+	return map[string]interface{}{}
 }
