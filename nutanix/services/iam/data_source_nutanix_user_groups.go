@@ -1,4 +1,4 @@
-package prism
+package iam
 
 import (
 	"context"
@@ -9,12 +9,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func DataSourceNutanixPermissions() *schema.Resource {
+func DataSourceNutanixUserGroups() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceNutanixPermissionsRead,
+		ReadContext: dataSourceNutanixUserGroupsRead,
 		Schema: map[string]*schema.Schema{
 			"api_version": {
 				Type:     schema.TypeString,
@@ -78,6 +79,7 @@ func DataSourceNutanixPermissions() *schema.Resource {
 						"categories": categoriesSchema(),
 						"owner_reference": {
 							Type:     schema.TypeMap,
+							Optional: true,
 							Computed: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
@@ -85,49 +87,98 @@ func DataSourceNutanixPermissions() *schema.Resource {
 						},
 						"project_reference": {
 							Type:     schema.TypeMap,
-							Computed: true,
+							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
 						},
-						"name": {
+						"user_group_type": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"state": {
+						"display_name": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"description": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"operation": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"kind": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"fields": {
+						"directory_service_user_group": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"field_mode": {
+									"distinguished_name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"field_name_list": {
+									"directory_service_reference": {
 										Type:     schema.TypeList,
 										Computed: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"kind": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"uuid": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"name": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+											},
 										},
+									},
+									"default_user_principal_name": {
+										Type:     schema.TypeString,
+										Computed: true,
 									},
 								},
 							},
+						},
+						"project_reference_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"access_control_policy_reference_list": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"kind": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"uuid": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"state": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
@@ -136,13 +187,20 @@ func DataSourceNutanixPermissions() *schema.Resource {
 	}
 }
 
-func dataSourceNutanixPermissionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[DEBUG] Reading Permissions: %s", d.Id())
+func dataSourceNutanixUserGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG] Reading User Groups: %s", d.Id())
 
 	// Get client connection
 	conn := meta.(*conns.Client).API
 
-	resp, err := conn.V3.ListAllPermission("")
+	req := &v3.DSMetadata{}
+
+	metadata, filtersOk := d.GetOk("metadata")
+	if filtersOk {
+		req = buildDataSourceListMetadata(metadata.(*schema.Set))
+	}
+
+	resp, err := conn.V3.ListAllUserGroup(utils.StringValue(req.Filter))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -163,11 +221,11 @@ func dataSourceNutanixPermissionsRead(ctx context.Context, d *schema.ResourceDat
 		entity["owner_reference"] = flattenReferenceValues(v.Metadata.OwnerReference)
 		entity["api_version"] = utils.StringValue(v.APIVersion)
 		entity["state"] = utils.StringValue(v.Status.State)
-		entity["name"] = utils.StringValue(v.Status.Name)
-		entity["description"] = utils.StringValue(v.Status.Description)
-		entity["operation"] = utils.StringValue(v.Status.Resources.Operation)
-		entity["kind"] = utils.StringValue(v.Status.Resources.Kind)
-		entity["fields"] = flattenFieldsPermission(v.Status.Resources.Fields)
+		entity["directory_service_user_group"] = flattenDirectoryServiceUserGroup(v.Status.Resources.DirectoryServiceUserGroup)
+		entity["user_group_type"] = utils.StringValue(v.Status.Resources.UserGroupType)
+		entity["display_name"] = utils.StringValue(v.Status.Resources.DisplayName)
+		entity["project_reference_list"] = flattenArrayReferenceValues(v.Status.Resources.ProjectsReferenceList)
+		entity["access_control_policy_reference_list"] = flattenArrayReferenceValues(v.Status.Resources.AccessControlPolicyReferenceList)
 
 		entities[k] = entity
 	}

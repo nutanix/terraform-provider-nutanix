@@ -1,4 +1,4 @@
-package prism_test
+package iam_test
 
 import (
 	"fmt"
@@ -6,14 +6,13 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 const resourceRole = "nutanix_role.test"
@@ -146,6 +145,25 @@ func resourceNutanixRoleExists(conn *v3.Client, name string) (*string, error) {
 		}
 	}
 	return accessUUID, nil
+}
+
+func testAccCheckNutanixCategories(n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("no ID is set")
+		}
+
+		if val, ok := rs.Primary.Attributes["categories.0.name"]; !ok || val == "" {
+			return fmt.Errorf("%s: manual Attribute '%s' expected to be set", n, "categories.0.name")
+		}
+
+		return nil
+	}
 }
 
 func testAccNutanixRoleConfig(name, description string) string {

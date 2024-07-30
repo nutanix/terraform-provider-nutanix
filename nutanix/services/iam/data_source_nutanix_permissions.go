@@ -1,94 +1,24 @@
-package prism
+package iam
 
 import (
 	"context"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 
-	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func DataSourceNutanixRoles() *schema.Resource {
+func DataSourceNutanixPermissions() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceNutanixRolesRead,
+		ReadContext: dataSourceNutanixPermissionsRead,
 		Schema: map[string]*schema.Schema{
 			"api_version": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"entities": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"role_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"api_version": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"metadata": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"categories": categoriesSchema(),
-						"owner_reference": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"project_reference": {
-							Type:     schema.TypeMap,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"state": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"description": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"permission_reference_list": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"kind": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"uuid": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-					},
-				},
 			},
 			"metadata": {
 				Type:     schema.TypeSet,
@@ -129,22 +59,90 @@ func DataSourceNutanixRoles() *schema.Resource {
 					},
 				},
 			},
+			"entities": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"api_version": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"metadata": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"categories": categoriesSchema(),
+						"owner_reference": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"project_reference": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"state": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"operation": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"kind": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"fields": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"field_mode": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"field_name_list": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
 
-func dataSourceNutanixRolesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceNutanixPermissionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG] Reading Permissions: %s", d.Id())
+
 	// Get client connection
 	conn := meta.(*conns.Client).API
 
-	req := &v3.DSMetadata{}
-
-	metadata, filtersOk := d.GetOk("metadata")
-	if filtersOk {
-		req = buildDataSourceListMetadata(metadata.(*schema.Set))
-	}
-
-	resp, err := conn.V3.ListAllRole(utils.StringValue(req.Filter))
+	resp, err := conn.V3.ListAllPermission("")
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -160,19 +158,16 @@ func dataSourceNutanixRolesRead(ctx context.Context, d *schema.ResourceData, met
 		m, c := setRSEntityMetadata(v.Metadata)
 
 		entity["metadata"] = m
+		entity["categories"] = c
 		entity["project_reference"] = flattenReferenceValues(v.Metadata.ProjectReference)
 		entity["owner_reference"] = flattenReferenceValues(v.Metadata.OwnerReference)
-		entity["categories"] = c
-		entity["api_version"] = v.APIVersion
-
-		if status := v.Status; status != nil {
-			entity["name"] = utils.StringValue(v.Status.Name)
-			entity["description"] = utils.StringValue(v.Status.State)
-			entity["state"] = utils.StringValue(v.Status.State)
-			if res := status.Resources; res != nil {
-				entity["permission_reference_list"] = flattenArrayReferenceValues(status.Resources.PermissionReferenceList)
-			}
-		}
+		entity["api_version"] = utils.StringValue(v.APIVersion)
+		entity["state"] = utils.StringValue(v.Status.State)
+		entity["name"] = utils.StringValue(v.Status.Name)
+		entity["description"] = utils.StringValue(v.Status.Description)
+		entity["operation"] = utils.StringValue(v.Status.Resources.Operation)
+		entity["kind"] = utils.StringValue(v.Status.Resources.Kind)
+		entity["fields"] = flattenFieldsPermission(v.Status.Resources.Fields)
 
 		entities[k] = entity
 	}

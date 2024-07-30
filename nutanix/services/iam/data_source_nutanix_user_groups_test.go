@@ -1,4 +1,4 @@
-package prism_test
+package iam_test
 
 import (
 	"testing"
@@ -7,23 +7,23 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-func TestAccNutanixUsersDataSource_basic(t *testing.T) {
+func TestAccNutanixUserGroupsDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsersDataSourceConfig(),
+				Config: testAccUserGroupsDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.nutanix_users.test", "entities.#"),
+					resource.TestCheckResourceAttrSet("data.nutanix_user_groups.test", "entities.#"),
 				),
 			},
 		},
 	})
 }
 
-func testAccUsersDataSourceConfig() string {
+func testAccUserGroupsDataSourceConfig() string {
 	return `
-data "nutanix_users" "test" {}
+data "nutanix_user_groups" "test" {}
 `
 }

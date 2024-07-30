@@ -1,4 +1,4 @@
-package prism_test
+package iam_test
 
 import (
 	"testing"

@@ -1,29 +1,27 @@
-package prism_test
+package iam_test
 
 import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-func TestAccNutanixUserGroupsDataSource_basic(t *testing.T) {
+func TestAccNutanixAccessControlPoliciesDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserGroupsDataSourceConfig(),
+				Config: testAccAccessControlPoliciesDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.nutanix_user_groups.test", "entities.#"),
+					resource.TestCheckResourceAttrSet("data.nutanix_access_control_policies.test", "entities.0.name"),
 				),
 			},
 		},
 	})
 }
-
-func testAccUserGroupsDataSourceConfig() string {
-	return `
-data "nutanix_user_groups" "test" {}
-`
+func testAccAccessControlPoliciesDataSourceConfig() string {
+	return `data "nutanix_access_control_policies" "test" {}`
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/internal"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/categories"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clusters"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iam"
 	fc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/fc"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/foundation"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/ndb"
@@ -153,18 +154,18 @@ func Provider() *schema.Provider {
 			"nutanix_network_security_rule":                   prism.DataSourceNutanixNetworkSecurityRule(),
 			"nutanix_host":                                    clusters.DataSourceNutanixHost(),
 			"nutanix_hosts":                                   clusters.DataSourceNutanixHosts(),
-			"nutanix_access_control_policy":                   prism.DataSourceNutanixAccessControlPolicy(),
-			"nutanix_access_control_policies":                 prism.DataSourceNutanixAccessControlPolicies(),
+			"nutanix_access_control_policy":                   iam.DataSourceNutanixAccessControlPolicy(),
+			"nutanix_access_control_policies":                 iam.DataSourceNutanixAccessControlPolicies(),
 			"nutanix_project":                                 prism.DataSourceNutanixProject(),
 			"nutanix_projects":                                prism.DataSourceNutanixProjects(),
-			"nutanix_role":                                    prism.DataSourceNutanixRole(),
-			"nutanix_roles":                                   prism.DataSourceNutanixRoles(),
-			"nutanix_user":                                    prism.DataSourceNutanixUser(),
-			"nutanix_user_group":                              prism.DataSourceNutanixUserGroup(),
-			"nutanix_users":                                   prism.DataSourceNutanixUsers(),
-			"nutanix_user_groups":                             prism.DataSourceNutanixUserGroups(),
-			"nutanix_permission":                              prism.DataSourceNutanixPermission(),
-			"nutanix_permissions":                             prism.DataSourceNutanixPermissions(),
+			"nutanix_role":                                    iam.DataSourceNutanixRole(),
+			"nutanix_roles":                                   iam.DataSourceNutanixRoles(),
+			"nutanix_user":                                    iam.DataSourceNutanixUser(),
+			"nutanix_user_group":                              iam.DataSourceNutanixUserGroup(),
+			"nutanix_users":                                   iam.DataSourceNutanixUsers(),
+			"nutanix_user_groups":                             iam.DataSourceNutanixUserGroups(),
+			"nutanix_permission":                              iam.DataSourceNutanixPermission(),
+			"nutanix_permissions":                             iam.DataSourceNutanixPermissions(),
 			"nutanix_karbon_cluster_kubeconfig":               nke.DataSourceNutanixKarbonClusterKubeconfig(),
 			"nutanix_karbon_cluster":                          nke.DataSourceNutanixKarbonCluster(),
 			"nutanix_karbon_clusters":                         nke.DataSourceNutanixKarbonClusters(),
@@ -231,8 +232,8 @@ func Provider() *schema.Provider {
 			"nutanix_network_security_rule":            prism.ResourceNutanixNetworkSecurityRule(),
 			"nutanix_access_control_policy":            prism.ResourceNutanixAccessControlPolicy(),
 			"nutanix_project":                          prism.ResourceNutanixProject(),
-			"nutanix_role":                             prism.ResourceNutanixRole(),
-			"nutanix_user":                             prism.ResourceNutanixUser(),
+			"nutanix_role":                             iam.ResourceNutanixRole(),
+			"nutanix_user":                             iam.ResourceNutanixUser(),
 			"nutanix_karbon_cluster":                   nke.ResourceNutanixKarbonCluster(),
 			"nutanix_karbon_private_registry":          nke.ResourceNutanixKarbonPrivateRegistry(),
 			"nutanix_protection_rule":                  prism.ResourceNutanixProtectionRule(),
@@ -248,7 +249,7 @@ func Provider() *schema.Provider {
 			"nutanix_pbr":                              prism.ResourceNutanixPbr(),
 			"nutanix_floating_ip":                      prism.ResourceNutanixFloatingIP(),
 			"nutanix_static_routes":                    prism.ResourceNutanixStaticRoute(),
-			"nutanix_user_groups":                      prism.ResourceNutanixUserGroups(),
+			"nutanix_user_groups":                      iam.ResourceNutanixUserGroups(),
 			"nutanix_ndb_database":                     ndb.ResourceDatabaseInstance(),
 			"nutanix_ndb_sla":                          ndb.ResourceNutanixNDBSla(),
 			"nutanix_ndb_database_restore":             ndb.ResourceNutanixNDBDatabaseRestore(),

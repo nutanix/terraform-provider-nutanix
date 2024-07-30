@@ -1,4 +1,4 @@
-package prism_test
+package iam_test
 
 import (
 	"testing"
@@ -7,25 +7,23 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-func TestAccNutanixPermissionsDataSource_basic(t *testing.T) {
+func TestAccNutanixUsersDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionsDataSourceConfig(),
+				Config: testAccUsersDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.nutanix_permissions.test", "entities.#"),
-					resource.TestCheckResourceAttrSet(
-						"data.nutanix_permissions.test", "entities.#"),
+					resource.TestCheckResourceAttrSet("data.nutanix_users.test", "entities.#"),
 				),
 			},
 		},
 	})
 }
 
-func testAccPermissionsDataSourceConfig() string {
+func testAccUsersDataSourceConfig() string {
 	return `
-data "nutanix_permissions" "test" {}
+data "nutanix_users" "test" {}
 `
 }

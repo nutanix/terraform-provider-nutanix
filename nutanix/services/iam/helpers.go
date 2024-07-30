@@ -1,18 +1,27 @@
-package prism
+package iam
 
 import (
-	"context"
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/foundation"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
+
+const (
+	// ERROR ..
+	ERROR              = "ERROR"
+	DEFAULTWAITTIMEOUT = 60
+)
+
+var (
+	subnetDelay      = 10 * time.Second
+	subnetMinTimeout = 3 * time.Second
 )
 
 func getMetadataAttributes(d *schema.ResourceData, metadata *v3.Metadata, kind string) error {
@@ -96,19 +105,6 @@ func flattenReferenceValues(r *v3.Reference) map[string]interface{} {
 	return reference
 }
 
-func flattenClusterReference(r *v3.Reference, d *schema.ResourceData) error {
-	if r != nil {
-		if err := d.Set("cluster_uuid", utils.StringValue(r.UUID)); err != nil {
-			return err
-		}
-
-		if err := d.Set("cluster_name", utils.StringValue(r.Name)); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func validateRef(ref map[string]interface{}) *v3.Reference {
 	r := &v3.Reference{}
 	hasValue := false
@@ -159,46 +155,6 @@ func expandReference(ref map[string]interface{}) *v3.Reference {
 	return nil
 }
 
-func buildReference(uuid, kind string) *v3.Reference {
-	return &v3.Reference{
-		Kind: utils.StringPtr(kind),
-		UUID: utils.StringPtr(uuid),
-	}
-}
-
-func validateShortRef(ref map[string]interface{}) *v3.Reference {
-	r := &v3.Reference{}
-	hasValue := false
-	if v, ok := ref["kind"]; ok {
-		r.Kind = utils.StringPtr(v.(string))
-		hasValue = true
-	}
-	if v, ok := ref["uuid"]; ok {
-		r.UUID = utils.StringPtr(v.(string))
-		hasValue = true
-	}
-
-	if hasValue {
-		return r
-	}
-
-	return nil
-}
-
-func validateMapStringValue(value map[string]interface{}, key string) *string {
-	if v, ok := value[key]; ok && v != nil && v.(string) != "" {
-		return utils.StringPtr(v.(string))
-	}
-	return nil
-}
-
-func validateMapIntValue(value map[string]interface{}, key string) *int64 {
-	if v, ok := value[key]; ok && v != nil && v.(int) != 0 {
-		return utils.Int64Ptr(int64(v.(int)))
-	}
-	return nil
-}
-
 func taskStateRefreshFunc(client *v3.Client, taskUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := client.V3.GetTask(taskUUID)
@@ -215,24 +171,6 @@ func taskStateRefreshFunc(client *v3.Client, taskUUID string) resource.StateRefr
 				fmt.Errorf("error_detail: %s, progress_message: %s", utils.StringValue(v.ErrorDetail), utils.StringValue(v.ProgressMessage))
 		}
 		return v, *v.Status, nil
-	}
-}
-
-func foundationImageRefresh(ctx context.Context, client *foundation.Client, sessionUUID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		v, err := client.NodeImaging.ImageNodesProgress(ctx, sessionUUID)
-
-		if err != nil {
-			if strings.Contains(err.Error(), "Failed") {
-				return v, ERROR, nil
-			}
-			return nil, "FAILED", err
-		}
-
-		if utils.BoolValue(v.ImagingStopped) {
-			return v, "COMPLETED", nil
-		}
-		return v, "PENDING", nil
 	}
 }
 
@@ -257,31 +195,6 @@ func validateArrayRef(references interface{}, kindValue *string) []*v3.Reference
 		if v, ok := ref["name"]; ok {
 			r.Name = utils.StringPtr(v.(string))
 		}
-
-		refs = append(refs, &r)
-	}
-	if len(refs) > 0 {
-		return refs
-	}
-
-	return nil
-}
-
-func validateArrayRefValues(references interface{}, kindValue string) []*v3.ReferenceValues {
-	refs := make([]*v3.ReferenceValues, 0)
-
-	for _, s := range references.([]interface{}) {
-		ref := s.(map[string]interface{})
-		r := v3.ReferenceValues{}
-
-		if kindValue != "" {
-			r.Kind = kindValue
-		} else {
-			r.Kind = ref["kind"].(string)
-		}
-
-		r.UUID = ref["uuid"].(string)
-		r.Name = ref["name"].(string)
 
 		refs = append(refs, &r)
 	}
@@ -357,114 +270,100 @@ func flattenReferenceValuesList(r *v3.Reference) []interface{} {
 	return references
 }
 
-func flattenArrayOfReferenceValues(refs []*v3.ReferenceValues) []map[string]interface{} {
-	references := make([]map[string]interface{}, 0)
-	for _, r := range refs {
-		reference := make(map[string]interface{})
-		if r != nil {
-			reference["kind"] = r.Kind
-			reference["uuid"] = r.UUID
+func buildDataSourceListMetadata(set *schema.Set) *v3.DSMetadata {
+	filters := v3.DSMetadata{}
+	for _, v := range set.List() {
+		m := v.(map[string]interface{})
 
-			if r.Name != "" {
-				reference["name"] = r.Name
-			}
-			references = append(references, reference)
+		if m["filter"].(string) != "" {
+			filters.Filter = utils.StringPtr(m["filter"].(string))
+		}
+		if m["kind"].(string) != "" {
+			filters.Kind = utils.StringPtr(m["kind"].(string))
+		}
+		if m["sort_order"].(string) != "" {
+			filters.SortOrder = utils.StringPtr(m["sort_order"].(string))
+		}
+		if m["offset"].(int) != 0 {
+			filters.Offset = utils.Int64Ptr(int64(m["offset"].(int)))
+		}
+		if m["length"].(int) != 0 {
+			filters.Length = utils.Int64Ptr(int64(m["length"].(int)))
+		}
+		if m["sort_attribute"].(string) != "" {
+			filters.SortAttribute = utils.StringPtr(m["sort_attribute"].(string))
 		}
 	}
-	return references
+	return &filters
 }
 
-func flattenReferenceList(references []*v3.ReferenceValues) []map[string]interface{} {
-	res := make([]map[string]interface{}, len(references))
-	if len(references) > 0 {
-		for i, r := range references {
-			res[i] = flattenReference(r)
+func flattenContextList(contextList []*v3.ContextList) []interface{} {
+	contexts := make([]interface{}, 0)
+	for _, con := range contextList {
+		if con != nil {
+			scope := make(map[string]interface{})
+			scope["scope_filter_expression_list"] = flattenScopeExpressionList(con.ScopeFilterExpressionList)
+			scope["entity_filter_expression_list"] = flattenEntityExpressionList(con.EntityFilterExpressionList)
+
+			contexts = append(contexts, scope)
 		}
 	}
-	return res
+
+	return contexts
 }
 
-func flattenReference(reference *v3.ReferenceValues) map[string]interface{} {
-	if reference != nil {
-		return map[string]interface{}{
-			"kind": reference.Kind,
-			"uuid": reference.UUID,
-			"name": reference.Name,
-		}
+func flattenScopeExpressionList(scopeList []*v3.ScopeFilterExpressionList) []interface{} {
+	scopes := make([]interface{}, 0)
+
+	for _, sco := range scopeList {
+		scope := make(map[string]interface{})
+		scope["left_hand_side"] = sco.LeftHandSide
+		scope["operator"] = sco.Operator
+		scope["right_hand_side"] = flattenRightHandSide(sco.RightHandSide)
+
+		scopes = append(scopes, scope)
 	}
-	return map[string]interface{}{}
+
+	return scopes
 }
 
-func flattenExternalNetworkListReferenceList(references []*v3.ReferenceValues) []map[string]interface{} {
-	res := make([]map[string]interface{}, len(references))
-	if len(references) > 0 {
-		for i, r := range references {
-			res[i] = flattenExternalNetworkListReference(r)
-		}
+func flattenEntityExpressionList(entities []v3.EntityFilterExpressionList) []interface{} {
+	scopes := make([]interface{}, 0)
+
+	for _, ent := range entities {
+		scope := make(map[string]interface{})
+		scope["left_hand_side_entity_type"] = utils.StringValue(ent.LeftHandSide.EntityType)
+		scope["operator"] = ent.Operator
+		scope["right_hand_side"] = flattenRightHandSide(ent.RightHandSide)
+
+		scopes = append(scopes, scope)
 	}
-	return res
+
+	return scopes
 }
 
-func flattenExternalNetworkListReference(reference *v3.ReferenceValues) map[string]interface{} {
-	if reference != nil {
-		return map[string]interface{}{
-			"uuid": reference.UUID,
-			"name": reference.Name,
-		}
-	}
-	return map[string]interface{}{}
+func flattenRightHandSide(right v3.RightHandSide) []interface{} {
+	rightHand := make([]interface{}, 0)
+
+	r := make(map[string]interface{})
+	r["collection"] = utils.StringValue(right.Collection)
+	r["uuid_list"] = right.UUIDList
+	r["categories"] = flattenTightHandsideCategories(right.Categories)
+
+	rightHand = append(rightHand, r)
+
+	return rightHand
 }
 
-func expandDirectoryUserGroup(pr []interface{}) *v3.DirectoryServiceUserGroup {
-	if len(pr) > 0 {
-		res := &v3.DirectoryServiceUserGroup{}
-		ent := pr[0].(map[string]interface{})
+func flattenTightHandsideCategories(categories map[string][]string) []interface{} {
+	c := make([]interface{}, 0)
 
-		if pnum, pk := ent["distinguished_name"]; pk && len(pnum.(string)) > 0 {
-			res.DistinguishedName = utils.StringPtr(pnum.(string))
-		}
-		return res
-	}
-	return nil
-}
-
-func expandSamlUserGroup(pr []interface{}) *v3.SamlUserGroup {
-	if len(pr) > 0 {
-		res := &v3.SamlUserGroup{}
-		ent := pr[0].(map[string]interface{})
-
-		if idp, iok := ent["idp_uuid"]; iok {
-			res.IdpUUID = utils.StringPtr(idp.(string))
-		}
-
-		if name, nok := ent["name"]; nok {
-			res.Name = utils.StringPtr(name.(string))
-		}
-
-		return res
-	}
-	return nil
-}
-
-func expandIdentityProviderUser(d *schema.ResourceData) *v3.IdentityProvider {
-	identityProviderState, ok := d.GetOk("identity_provider_user")
-	if !ok {
-		return nil
+	for name, value := range categories {
+		c = append(c, map[string]interface{}{
+			"name":  name,
+			"value": value,
+		})
 	}
 
-	identityProviderMap := identityProviderState.([]interface{})[0].(map[string]interface{})
-	identityProvider := &v3.IdentityProvider{}
-
-	if username, ok := identityProviderMap["username"]; ok {
-		identityProvider.Username = utils.StringPtr(username.(string))
-	}
-
-	if ipr, ok := identityProviderMap["identity_provider_reference"]; ok {
-		identityProvider.IdentityProviderReference = expandReference(ipr.([]interface{})[0].(map[string]interface{}))
-	}
-
-	if !reflect.DeepEqual(*identityProvider, v3.IdentityProvider{}) {
-		return identityProvider
-	}
-	return nil
+	return c
 }
