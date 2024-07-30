@@ -1,4 +1,4 @@
-package prism
+package categories
 
 import (
 	"context"

@@ -1,4 +1,4 @@
-package prism_test
+package categories_test
 
 import (
 	"fmt"
