@@ -1,7 +1,6 @@
 package prism
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -11,14 +10,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/foundation"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
+
+const (
+	// ERROR ..
+	ERROR = "ERROR"
 )
 
 var (
 	subnetDelay      = 10 * time.Second
 	subnetMinTimeout = 3 * time.Second
+	vmDelay          = 3 * time.Second
+	vmMinTimeout     = 3 * time.Second
 )
 
 func getMetadataAttributes(d *schema.ResourceData, metadata *v3.Metadata, kind string) error {
@@ -102,19 +107,6 @@ func flattenReferenceValues(r *v3.Reference) map[string]interface{} {
 	return reference
 }
 
-func flattenClusterReference(r *v3.Reference, d *schema.ResourceData) error {
-	if r != nil {
-		if err := d.Set("cluster_uuid", utils.StringValue(r.UUID)); err != nil {
-			return err
-		}
-
-		if err := d.Set("cluster_name", utils.StringValue(r.Name)); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func validateRef(ref map[string]interface{}) *v3.Reference {
 	r := &v3.Reference{}
 	hasValue := false
@@ -165,46 +157,6 @@ func expandReference(ref map[string]interface{}) *v3.Reference {
 	return nil
 }
 
-func buildReference(uuid, kind string) *v3.Reference {
-	return &v3.Reference{
-		Kind: utils.StringPtr(kind),
-		UUID: utils.StringPtr(uuid),
-	}
-}
-
-func validateShortRef(ref map[string]interface{}) *v3.Reference {
-	r := &v3.Reference{}
-	hasValue := false
-	if v, ok := ref["kind"]; ok {
-		r.Kind = utils.StringPtr(v.(string))
-		hasValue = true
-	}
-	if v, ok := ref["uuid"]; ok {
-		r.UUID = utils.StringPtr(v.(string))
-		hasValue = true
-	}
-
-	if hasValue {
-		return r
-	}
-
-	return nil
-}
-
-func validateMapStringValue(value map[string]interface{}, key string) *string {
-	if v, ok := value[key]; ok && v != nil && v.(string) != "" {
-		return utils.StringPtr(v.(string))
-	}
-	return nil
-}
-
-func validateMapIntValue(value map[string]interface{}, key string) *int64 {
-	if v, ok := value[key]; ok && v != nil && v.(int) != 0 {
-		return utils.Int64Ptr(int64(v.(int)))
-	}
-	return nil
-}
-
 func taskStateRefreshFunc(client *v3.Client, taskUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := client.V3.GetTask(taskUUID)
@@ -221,24 +173,6 @@ func taskStateRefreshFunc(client *v3.Client, taskUUID string) resource.StateRefr
 				fmt.Errorf("error_detail: %s, progress_message: %s", utils.StringValue(v.ErrorDetail), utils.StringValue(v.ProgressMessage))
 		}
 		return v, *v.Status, nil
-	}
-}
-
-func foundationImageRefresh(ctx context.Context, client *foundation.Client, sessionUUID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		v, err := client.NodeImaging.ImageNodesProgress(ctx, sessionUUID)
-
-		if err != nil {
-			if strings.Contains(err.Error(), "Failed") {
-				return v, ERROR, nil
-			}
-			return nil, "FAILED", err
-		}
-
-		if utils.BoolValue(v.ImagingStopped) {
-			return v, "COMPLETED", nil
-		}
-		return v, "PENDING", nil
 	}
 }
 
@@ -263,31 +197,6 @@ func validateArrayRef(references interface{}, kindValue *string) []*v3.Reference
 		if v, ok := ref["name"]; ok {
 			r.Name = utils.StringPtr(v.(string))
 		}
-
-		refs = append(refs, &r)
-	}
-	if len(refs) > 0 {
-		return refs
-	}
-
-	return nil
-}
-
-func validateArrayRefValues(references interface{}, kindValue string) []*v3.ReferenceValues {
-	refs := make([]*v3.ReferenceValues, 0)
-
-	for _, s := range references.([]interface{}) {
-		ref := s.(map[string]interface{})
-		r := v3.ReferenceValues{}
-
-		if kindValue != "" {
-			r.Kind = kindValue
-		} else {
-			r.Kind = ref["kind"].(string)
-		}
-
-		r.UUID = ref["uuid"].(string)
-		r.Name = ref["name"].(string)
 
 		refs = append(refs, &r)
 	}
@@ -359,23 +268,6 @@ func flattenReferenceValuesList(r *v3.Reference) []interface{} {
 		}
 
 		references = append(references, reference)
-	}
-	return references
-}
-
-func flattenArrayOfReferenceValues(refs []*v3.ReferenceValues) []map[string]interface{} {
-	references := make([]map[string]interface{}, 0)
-	for _, r := range refs {
-		reference := make(map[string]interface{})
-		if r != nil {
-			reference["kind"] = r.Kind
-			reference["uuid"] = r.UUID
-
-			if r.Name != "" {
-				reference["name"] = r.Name
-			}
-			references = append(references, reference)
-		}
 	}
 	return references
 }
