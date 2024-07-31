@@ -20,6 +20,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/ndb"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/nke"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/vmm"
 )
 
 var requiredProviderFields map[string][]string = map[string][]string{
@@ -145,12 +146,12 @@ func Provider() *schema.Provider {
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"nutanix_image":                                   prism.DataSourceNutanixImage(),
+			"nutanix_image":                                   vmm.DataSourceNutanixImage(),
 			"nutanix_subnet":                                  networks.DataSourceNutanixSubnet(),
 			"nutanix_subnets":                                 networks.DataSourceNutanixSubnets(),
 			"nutanix_cluster":                                 clusters.DataSourceNutanixCluster(),
 			"nutanix_clusters":                                clusters.DataSourceNutanixClusters(),
-			"nutanix_virtual_machine":                         prism.DataSourceNutanixVirtualMachine(),
+			"nutanix_virtual_machine":                         vmm.DataSourceNutanixVirtualMachine(),
 			"nutanix_category_key":                            categories.DataSourceNutanixCategoryKey(),
 			"nutanix_network_security_rule":                   networks.DataSourceNutanixNetworkSecurityRule(),
 			"nutanix_host":                                    clusters.DataSourceNutanixHost(),
@@ -225,8 +226,8 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_network_available_ips":               ndb.DataSourceNutanixNDBProfileAvailableIPs(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"nutanix_virtual_machine":                  prism.ResourceNutanixVirtualMachine(),
-			"nutanix_image":                            prism.ResourceNutanixImage(),
+			"nutanix_virtual_machine":                  vmm.ResourceNutanixVirtualMachine(),
+			"nutanix_image":                            vmm.ResourceNutanixImage(),
 			"nutanix_subnet":                           networks.ResourceNutanixSubnet(),
 			"nutanix_category_key":                     categories.ResourceNutanixCategoryKey(),
 			"nutanix_category_value":                   categories.ResourceNutanixCategoryValue(),
