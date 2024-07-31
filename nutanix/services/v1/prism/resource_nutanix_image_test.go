@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -236,6 +236,10 @@ func testAccCheckNutanixImageDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func isGCPEnvironment() bool {
+	return os.Getenv("NUTANIX_GCP") == "true"
 }
 
 func testAccNutanixImageConfig(r int) string {

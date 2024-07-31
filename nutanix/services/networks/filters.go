@@ -1,4 +1,4 @@
-package prism
+package networks
 
 import (
 	"fmt"
@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func DataSourceFiltersSchema() *schema.Schema {
@@ -65,22 +64,4 @@ func ReplaceFilterPrefixes(filters []*client.AdditionalFilter, mappings map[stri
 	}
 
 	return filters
-}
-
-func filterParamsHash(v interface{}) int {
-	params := v.(map[string]interface{})
-	return utils.HashcodeString(params["name"].(string))
-}
-
-func expandFilterParams(fp map[string][]string) []map[string]interface{} {
-	fpList := make([]map[string]interface{}, 0)
-	if len(fp) > 0 {
-		for name, values := range fp {
-			fpItem := make(map[string]interface{})
-			fpItem["name"] = name
-			fpItem["values"] = values
-			fpList = append(fpList, fpItem)
-		}
-	}
-	return fpList
 }

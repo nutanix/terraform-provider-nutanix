@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -13,6 +14,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/foundation"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
+
+var (
+	subnetDelay      = 10 * time.Second
+	subnetMinTimeout = 3 * time.Second
 )
 
 func getMetadataAttributes(d *schema.ResourceData, metadata *v3.Metadata, kind string) error {
@@ -467,4 +473,31 @@ func expandIdentityProviderUser(d *schema.ResourceData) *v3.IdentityProvider {
 		return identityProvider
 	}
 	return nil
+}
+
+func buildDataSourceListMetadata(set *schema.Set) *v3.DSMetadata {
+	filters := v3.DSMetadata{}
+	for _, v := range set.List() {
+		m := v.(map[string]interface{})
+
+		if m["filter"].(string) != "" {
+			filters.Filter = utils.StringPtr(m["filter"].(string))
+		}
+		if m["kind"].(string) != "" {
+			filters.Kind = utils.StringPtr(m["kind"].(string))
+		}
+		if m["sort_order"].(string) != "" {
+			filters.SortOrder = utils.StringPtr(m["sort_order"].(string))
+		}
+		if m["offset"].(int) != 0 {
+			filters.Offset = utils.Int64Ptr(int64(m["offset"].(int)))
+		}
+		if m["length"].(int) != 0 {
+			filters.Length = utils.Int64Ptr(int64(m["length"].(int)))
+		}
+		if m["sort_attribute"].(string) != "" {
+			filters.SortAttribute = utils.StringPtr(m["sort_attribute"].(string))
+		}
+	}
+	return &filters
 }
