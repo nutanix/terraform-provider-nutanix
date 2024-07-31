@@ -13,13 +13,13 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/internal"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/categories"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clusters"
+	fc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/fc"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/foundation"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iam"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/ndb"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networks"
-	fc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/fc"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/foundation"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/ndb"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/nke"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/nke"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/vmm"
 )
 
