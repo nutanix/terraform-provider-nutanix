@@ -79,7 +79,7 @@ The following arguments are supported:
 * `num_sockets`: - (Optional) Number of vCPU sockets.
 * `gpu_list`: - (Optional) GPUs attached to the VM.
 * `parent_reference`: - (Optional) Reference to an entity that the VM cloned from.
-* `memory_size_mib`: - (Optional) Memory size in MiB.
+* `memory_size_mib`: - (Optional) Memory size in MiB. On updating memory to powered ON VMs should only be done in 1GB increments. 
 * `boot_device_order_list`: - (Optional) Indicates the order of device types in which VM should try to boot from. If boot device order is not provided the system will decide appropriate boot device order.
 * `boot_device_disk_address`: - (Optional) Address of disk to boot from.
 * `boot_device_mac_address`: - (Optional) MAC address of nic to boot from.

@@ -130,7 +130,10 @@ func dataSourceNutanixEraDatabaseIntancesRead(ctx context.Context, d *schema.Res
 	if dbEng, ok := d.GetOk("database_type"); ok {
 		// todo : when era have query params for db egine type call , API here
 		// filter the database based on db engine type provided
-		respon, _ := conn.Service.ListDatabaseInstance(ctx)
+		respon, er := conn.Service.ListDatabaseInstance(ctx)
+		if er != nil {
+			return diag.FromErr(er)
+		}
 		resp, err = filterDatabaseBasedOnDatabaseEngine(respon, dbEng.(string))
 		if err != nil {
 			return diag.FromErr(err)

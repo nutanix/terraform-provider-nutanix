@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
-NOTE: The latest version of the Nutanix provider is [v1.9.2](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.9.2)
+NOTE: The latest version of the Nutanix provider is [v1.9.5](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.9.5)
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 ## Build, Quality Status
@@ -52,6 +52,8 @@ The Terraform Nutanix provider is designed to work with Nutanix Prism Central an
 
 > For the 1.9.0 release of the provider it will have N-1 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc2022.9 and pc2023.1.0.1. 
 
+> For the 1.9.4 release of the provider it will have N-2 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc2023.3, pc2023.1.0.2 and pc2023.1.0.1. 
+
 ### note
 With v1.6.1 release of flow networking feature in provider, IAMv2 setups would be mandate. 
 Also, there is known issue for access_control_policies resource where update would be failing. We are continuously tracking the issue internally.
@@ -86,6 +88,8 @@ Foundation Central based modules and examples : Foundation based modules & examp
 > For the 1.8.0 release of the provider, it will have N-2 compatibility with the Nutanix database service. This release was tested with v2.5.1.1, v2.5.1 and v2.5 versions.
 
 > For the 1.8.1 release of the provider, it will have N-2 compatibility with the Nutanix database service. This release was tested with v2.5.1.1, v2.5.1 and v2.5 versions.
+
+> For the 1.9.5 release of the provider, it will have N-2 compatibility with the Nutanix database service. This release was tested with v2.5.1.1, v2.5.1 and v2.5 versions.
 
 Note: For NDB related modules, only postgress database type is qualified and officially supported. Older versions of NDB may not support some resources. 
 
