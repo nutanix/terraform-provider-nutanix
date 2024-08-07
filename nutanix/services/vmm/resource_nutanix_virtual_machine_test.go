@@ -577,8 +577,8 @@ func TestAccNutanixVirtualMachine_SecureBoot(t *testing.T) {
 	memory := "1024"
 	updatedMem := "2048"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
 		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -627,8 +627,8 @@ func TestAccNutanixVirtualMachine_SecureBootWithNoMachineType(t *testing.T) {
 	desc := "this is vm desc"
 	memory := "200"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
 		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
