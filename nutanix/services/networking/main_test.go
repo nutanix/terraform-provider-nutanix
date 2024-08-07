@@ -1,4 +1,4 @@
-package prism_test
+package networking_test
 
 import (
 	"encoding/json"

@@ -72,7 +72,7 @@ func loadVars(filepath string, varStuct interface{}) {
 }
 func TestMain(m *testing.M) {
 	log.Println("Do some crazy stuff before tests!")
-	loadVars("../../../../test_foundation_config.json", &foundationVars)
+	loadVars("../../../test_foundation_config.json", &foundationVars)
 
 	os.Exit(m.Run())
 }
