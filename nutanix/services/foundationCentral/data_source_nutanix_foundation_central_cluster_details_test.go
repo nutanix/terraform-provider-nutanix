@@ -1,4 +1,4 @@
-package foundationCentral_test
+package fc_test
 
 import (
 	"testing"

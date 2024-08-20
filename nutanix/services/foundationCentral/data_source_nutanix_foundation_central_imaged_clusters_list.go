@@ -1,4 +1,4 @@
-package foundationCentral
+package fc
 
 import (
 	"context"
