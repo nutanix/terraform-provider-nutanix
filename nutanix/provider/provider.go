@@ -13,8 +13,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/internal"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/categories"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clusters"
-	fc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/fc"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/foundation"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/foundationCentral"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/ndb"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networking"
@@ -187,12 +187,12 @@ func Provider() *schema.Provider {
 			"nutanix_foundation_nos_packages":                 foundation.DataSourceFoundationNOSPackages(),
 			"nutanix_foundation_node_network_details":         foundation.DataSourceNodeNetworkDetails(),
 			"nutanix_assert_helper":                           internal.DataSourceAssertHelper(),
-			"nutanix_foundation_central_api_keys":             fc.DataSourceNutanixFCAPIKeys(),
-			"nutanix_foundation_central_list_api_keys":        fc.DataSourceNutanixFCListAPIKeys(),
-			"nutanix_foundation_central_imaged_nodes_list":    fc.DataSourceNutanixFCImagedNodesList(),
-			"nutanix_foundation_central_imaged_clusters_list": fc.DataSourceNutanixFCImagedClustersList(),
-			"nutanix_foundation_central_cluster_details":      fc.DataSourceNutanixFCClusterDetails(),
-			"nutanix_foundation_central_imaged_node_details":  fc.DataSourceFCImagedNodeDetails(),
+			"nutanix_foundation_central_api_keys":             foundationCentral.DataSourceNutanixFCAPIKeys(),
+			"nutanix_foundation_central_list_api_keys":        foundationCentral.DataSourceNutanixFCListAPIKeys(),
+			"nutanix_foundation_central_imaged_nodes_list":    foundationCentral.DataSourceNutanixFCImagedNodesList(),
+			"nutanix_foundation_central_imaged_clusters_list": foundationCentral.DataSourceNutanixFCImagedClustersList(),
+			"nutanix_foundation_central_cluster_details":      foundationCentral.DataSourceNutanixFCClusterDetails(),
+			"nutanix_foundation_central_imaged_node_details":  foundationCentral.DataSourceFCImagedNodeDetails(),
 			"nutanix_vpc":                                     networking.DataSourceNutanixVPC(),
 			"nutanix_vpcs":                                    networking.DataSourceNutanixVPCs(),
 			"nutanix_pbr":                                     networking.DataSourceNutanixPbr(),
@@ -245,8 +245,8 @@ func Provider() *schema.Provider {
 			"nutanix_foundation_image_nodes":           foundation.ResourceFoundationImageNodes(),
 			"nutanix_foundation_ipmi_config":           foundation.ResourceNutanixFoundationIPMIConfig(),
 			"nutanix_foundation_image":                 foundation.ResourceNutanixFoundationImage(),
-			"nutanix_foundation_central_image_cluster": fc.ResourceNutanixFCImageCluster(),
-			"nutanix_foundation_central_api_keys":      fc.ResourceNutanixFCAPIKeys(),
+			"nutanix_foundation_central_image_cluster": foundationCentral.ResourceNutanixFCImageCluster(),
+			"nutanix_foundation_central_api_keys":      foundationCentral.ResourceNutanixFCAPIKeys(),
 			"nutanix_vpc":                              networking.ResourceNutanixVPC(),
 			"nutanix_pbr":                              networking.ResourceNutanixPbr(),
 			"nutanix_floating_ip":                      networking.ResourceNutanixFloatingIP(),
