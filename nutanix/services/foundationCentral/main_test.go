@@ -1,4 +1,4 @@
-package foundationCentral_test
+package foundation_central_test
 
 import (
 	"encoding/json"
