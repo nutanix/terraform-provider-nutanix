@@ -11,9 +11,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func DataSourceNutanixVPCsv4() *schema.Resource {
+func DataSourceNutanixVPCsv2() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceNutanixVPCsv4Read,
+		ReadContext: dataSourceNutanixVPCsv2Read,
 		Schema: map[string]*schema.Schema{
 			"page": {
 				Type:     schema.TypeInt,
@@ -68,7 +68,7 @@ func DataSourceNutanixVPCsv4() *schema.Resource {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
-								Schema: DatasourceMetadataSchemaV4(),
+								Schema: DatasourceMetadataSchemaV2(),
 							},
 						},
 						"name": {
@@ -211,7 +211,7 @@ func DataSourceNutanixVPCsv4() *schema.Resource {
 	}
 }
 
-func dataSourceNutanixVPCsv4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceNutanixVPCsv2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	// initialize query params

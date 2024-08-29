@@ -14,9 +14,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func DatasourceNutanixFloatingIPV4() *schema.Resource {
+func DatasourceNutanixFloatingIPV2() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: DatasourceNutanixFloatingIPV4Read,
+		ReadContext: DatasourceNutanixFloatingIPV2Read,
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -93,7 +93,7 @@ func DatasourceNutanixFloatingIPV4() *schema.Resource {
 			"external_subnet": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem:     DataSourceNutanixSubnetv4(),
+				Elem:     DataSourceNutanixSubnetV2(),
 			},
 			"private_ip": {
 				Type:     schema.TypeString,
@@ -119,7 +119,7 @@ func DatasourceNutanixFloatingIPV4() *schema.Resource {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
-					Schema: DataSourceVPCSchemaV4(),
+					Schema: DataSourceVPCSchemaV2(),
 				},
 			},
 			"vm_nic": {
@@ -158,14 +158,14 @@ func DatasourceNutanixFloatingIPV4() *schema.Resource {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
-					Schema: DatasourceMetadataSchemaV4(),
+					Schema: DatasourceMetadataSchemaV2(),
 				},
 			},
 		},
 	}
 }
 
-func DatasourceNutanixFloatingIPV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func DatasourceNutanixFloatingIPV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	extID := d.Get("ext_id")

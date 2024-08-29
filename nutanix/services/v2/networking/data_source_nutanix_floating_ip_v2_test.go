@@ -9,7 +9,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNamefip = "data.nutanix_floating_ip_v4.test"
+const datasourceNamefip = "data.nutanix_floating_ip_v2.test"
 
 func TestAccNutanixFloatingIPDataSourceV2_basic(t *testing.T) {
 	r := acctest.RandInt()
@@ -37,14 +37,14 @@ func TestAccNutanixFloatingIPDataSourceV2_basic(t *testing.T) {
 func testAccFipDataSourceConfig(name, desc string) string {
 	return fmt.Sprintf(`
 
-		resource "nutanix_floating_ip_v4" "test" {
+		resource "nutanix_floating_ip_v2" "test" {
 			name = "%[1]s"
 			description = "%[2]s"
 			external_subnet_reference = "bd319622-1a45-4075-811a-2b0399bf9a49"
 		}
 
-		data "nutanix_floating_ip_v4" "test" {
-			ext_id = nutanix_floating_ip_v4.test.ext_id
+		data "nutanix_floating_ip_v2" "test" {
+			ext_id = nutanix_floating_ip_v2.test.ext_id
 		}
 	`, name, desc)
 }

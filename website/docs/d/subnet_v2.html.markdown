@@ -1,12 +1,12 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_subnet_v4"
+page_title: "NUTANIX: nutanix_subnet_v2"
 sidebar_current: "docs-nutanix-datasource-subnet-v4"
 description: |-
   This operation retrieves a subnet with the specified UUID.
 ---
 
-# nutanix_subnet_v4
+# nutanix_subnet_v2
 
 Get a subnet with the specified UUID.
 
@@ -14,7 +14,7 @@ Get a subnet with the specified UUID.
 
 ```hcl
 
-    data "nutanix_subnet_v4" "test" {
+    data "nutanix_subnet_v2" "test" {
         ext_id = {{ subnet uuid }}
     }
 ```

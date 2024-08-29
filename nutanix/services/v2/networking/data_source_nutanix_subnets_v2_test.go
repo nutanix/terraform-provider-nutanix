@@ -7,7 +7,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNameSubnets = "data.nutanix_subnets_v4.test"
+const datasourceNameSubnets = "data.nutanix_subnets_v2.test"
 
 func TestAccNutanixSubnetsDataSourceV2_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -30,6 +30,6 @@ func TestAccNutanixSubnetsDataSourceV2_basic(t *testing.T) {
 
 func testAccSubnetsDataSourceConfig() string {
 	return (`
-		data "nutanix_subnets_v4" "test" {}
+		data "nutanix_subnets_v2" "test" {}
 `)
 }

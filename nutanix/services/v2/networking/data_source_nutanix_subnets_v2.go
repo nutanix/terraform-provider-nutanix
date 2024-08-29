@@ -11,9 +11,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func DataSourceNutanixSubnetsv4() *schema.Resource {
+func DataSourceNutanixSubnetsV2() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceNutanixSubnetsv4Read,
+		ReadContext: dataSourceNutanixSubnetsV2Read,
 		Schema: map[string]*schema.Schema{
 			"page": {
 				Type:     schema.TypeInt,
@@ -300,14 +300,14 @@ func DataSourceNutanixSubnetsv4() *schema.Resource {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
-								Schema: DataSourceVirtualSwitchSchemaV4(),
+								Schema: DataSourceVirtualSwitchSchemaV2(),
 							},
 						},
 						"vpc": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
-								Schema: DataSourceVPCSchemaV4(),
+								Schema: DataSourceVPCSchemaV2(),
 							},
 						},
 						"ip_prefix": {
@@ -417,7 +417,7 @@ func DataSourceNutanixSubnetsv4() *schema.Resource {
 	}
 }
 
-func dataSourceNutanixSubnetsv4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceNutanixSubnetsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	// initialize query params

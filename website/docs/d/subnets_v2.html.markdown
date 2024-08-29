@@ -1,12 +1,12 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_subnets_v4"
+page_title: "NUTANIX: nutanix_subnets_v2"
 sidebar_current: "docs-nutanix-datasource-subnets-v4"
 description: |-
   This operation retrieves the list of existing subnets.
 ---
 
-# nutanix_subnets_v4
+# nutanix_subnets_v2
 
 Get the list of existing subnets.
 
@@ -14,7 +14,7 @@ Get the list of existing subnets.
 
 ```hcl
 
-    data "nutanix_subnets_v4" "test" { }
+    data "nutanix_subnets_v2" "test" { }
 
 ```
 

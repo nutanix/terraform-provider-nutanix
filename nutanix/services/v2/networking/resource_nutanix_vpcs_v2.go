@@ -14,12 +14,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func ResourceNutanixVPCsV4() *schema.Resource {
+func ResourceNutanixVPCsV2() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: ResourceNutanixVPCsV4Create,
-		ReadContext:   ResourceNutanixVPCsV4Read,
-		UpdateContext: ResourceNutanixVPCsV4Update,
-		DeleteContext: ResourceNutanixVPCsV4Delete,
+		CreateContext: ResourceNutanixVPCsV2Create,
+		ReadContext:   ResourceNutanixVPCsV2Read,
+		UpdateContext: ResourceNutanixVPCsV2Update,
+		DeleteContext: ResourceNutanixVPCsV2Delete,
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -182,7 +182,7 @@ func ResourceNutanixVPCsV4() *schema.Resource {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
-					Schema: DatasourceMetadataSchemaV4(),
+					Schema: DatasourceMetadataSchemaV2(),
 				},
 			},
 			"snat_ips": {
@@ -203,7 +203,7 @@ func ResourceNutanixVPCsV4() *schema.Resource {
 	}
 }
 
-func ResourceNutanixVPCsV4Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVPCsV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	inputSpec := import1.Vpc{}
@@ -275,10 +275,10 @@ func ResourceNutanixVPCsV4Create(ctx context.Context, d *schema.ResourceData, me
 
 	uuid := rUUID.EntitiesAffected[0].ExtId
 	d.SetId(*uuid)
-	return ResourceNutanixVPCsV4Read(ctx, d, meta)
+	return ResourceNutanixVPCsV2Read(ctx, d, meta)
 }
 
-func ResourceNutanixVPCsV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVPCsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	resp, err := conn.VpcAPIInstance.GetVpcById(utils.StringPtr(d.Id()))
@@ -329,7 +329,7 @@ func ResourceNutanixVPCsV4Read(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func ResourceNutanixVPCsV4Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVPCsV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	resp, err := conn.VpcAPIInstance.GetVpcById(utils.StringPtr(d.Id()))
@@ -392,10 +392,10 @@ func ResourceNutanixVPCsV4Update(ctx context.Context, d *schema.ResourceData, me
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for vpc (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-	return ResourceNutanixVPCsV4Read(ctx, d, meta)
+	return ResourceNutanixVPCsV2Read(ctx, d, meta)
 }
 
-func ResourceNutanixVPCsV4Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVPCsV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	resp, err := conn.VpcAPIInstance.DeleteVpcById(utils.StringPtr(d.Id()))

@@ -9,9 +9,9 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNamefip = "nutanix_floating_ip_v4.test"
+const resourceNamefip = "nutanix_floating_ip_v2.test"
 
-func TestAccNutanixFloatingIPV4_Basic(t *testing.T) {
+func TestAccNutanixFloatingIPv2_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-fip-%d", r)
 	desc := "test fip description"
@@ -22,7 +22,7 @@ func TestAccNutanixFloatingIPV4_Basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testFloatingIPV4Config(name, desc),
+				Config: testFloatingIPv2Config(name, desc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNamefip, "name", name),
 					resource.TestCheckResourceAttr(resourceNamefip, "description", desc),
@@ -32,7 +32,7 @@ func TestAccNutanixFloatingIPV4_Basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testFloatingIPV4Config(updatedName, updatedDesc),
+				Config: testFloatingIPv2Config(updatedName, updatedDesc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNamefip, "name", updatedName),
 					resource.TestCheckResourceAttr(resourceNamefip, "description", updatedDesc),
@@ -45,7 +45,7 @@ func TestAccNutanixFloatingIPV4_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixFloatingIPV4_WithVmNICAssociation(t *testing.T) {
+func TestAccNutanixFloatingIPv2_WithVmNICAssociation(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-fip-%d", r)
 	desc := "test fip description"
@@ -54,7 +54,7 @@ func TestAccNutanixFloatingIPV4_WithVmNICAssociation(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testFloatingIPV4ConfigwithVMNic(name, desc),
+				Config: testFloatingIPv2ConfigwithVMNic(name, desc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNamefip, "name", name),
 					resource.TestCheckResourceAttr(resourceNamefip, "description", desc),
@@ -68,7 +68,7 @@ func TestAccNutanixFloatingIPV4_WithVmNICAssociation(t *testing.T) {
 	})
 }
 
-func TestAccNutanixFloatingIPV4_WithPrivateipAssociation(t *testing.T) {
+func TestAccNutanixFloatingIPv2_WithPrivateipAssociation(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-fip-%d", r)
 	desc := "test fip description"
@@ -77,7 +77,7 @@ func TestAccNutanixFloatingIPV4_WithPrivateipAssociation(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testFloatingIPV4ConfigwithPrivateIP(name, desc),
+				Config: testFloatingIPv2ConfigwithPrivateIP(name, desc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNamefip, "name", name),
 					resource.TestCheckResourceAttr(resourceNamefip, "description", desc),
@@ -91,10 +91,10 @@ func TestAccNutanixFloatingIPV4_WithPrivateipAssociation(t *testing.T) {
 	})
 }
 
-func testFloatingIPV4Config(name, desc string) string {
+func testFloatingIPv2Config(name, desc string) string {
 	return fmt.Sprintf(`
 		
-		resource "nutanix_floating_ip_v4" "test" {
+		resource "nutanix_floating_ip_v2" "test" {
 			name = "%[1]s"
 			description = "%[2]s"
 			external_subnet_reference = "bd319622-1a45-4075-811a-2b0399bf9a49"
@@ -102,10 +102,10 @@ func testFloatingIPV4Config(name, desc string) string {
 `, name, desc)
 }
 
-func testFloatingIPV4ConfigwithVMNic(name, desc string) string {
+func testFloatingIPv2ConfigwithVMNic(name, desc string) string {
 	return fmt.Sprintf(`
 		
-		resource "nutanix_floating_ip_v4" "test" {
+		resource "nutanix_floating_ip_v2" "test" {
 			name = "%[1]s"
 			description = "%[2]s"
 			external_subnet_reference = "bd319622-1a45-4075-811a-2b0399bf9a49"
@@ -118,10 +118,10 @@ func testFloatingIPV4ConfigwithVMNic(name, desc string) string {
 `, name, desc)
 }
 
-func testFloatingIPV4ConfigwithPrivateIP(name, desc string) string {
+func testFloatingIPv2ConfigwithPrivateIP(name, desc string) string {
 	return fmt.Sprintf(`
 		
-		resource "nutanix_floating_ip_v4" "test" {
+		resource "nutanix_floating_ip_v2" "test" {
 			name = "%[1]s"
 			description = "%[2]s"
 			external_subnet_reference = "bd319622-1a45-4075-811a-2b0399bf9a49"

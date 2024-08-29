@@ -13,9 +13,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func DataSourceNutanixSubnetv4() *schema.Resource {
+func DataSourceNutanixSubnetV2() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceNutanixSubnetv4Read,
+		ReadContext: dataSourceNutanixSubnetV2Read,
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Required: true,
@@ -273,14 +273,14 @@ func DataSourceNutanixSubnetv4() *schema.Resource {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
-					Schema: DataSourceVirtualSwitchSchemaV4(),
+					Schema: DataSourceVirtualSwitchSchemaV2(),
 				},
 			},
 			"vpc": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
-					Schema: DataSourceVPCSchemaV4(),
+					Schema: DataSourceVPCSchemaV2(),
 				},
 			},
 			"ip_prefix": {
@@ -387,7 +387,7 @@ func DataSourceNutanixSubnetv4() *schema.Resource {
 	}
 }
 
-func dataSourceNutanixSubnetv4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	extID := d.Get("ext_id")
@@ -483,7 +483,7 @@ func dataSourceNutanixSubnetv4Read(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func DataSourceVPCSchemaV4() map[string]*schema.Schema {
+func DataSourceVPCSchemaV2() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"tenant_id": {
 			Type:     schema.TypeString,
@@ -520,7 +520,7 @@ func DataSourceVPCSchemaV4() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
-				Schema: DatasourceMetadataSchemaV4(),
+				Schema: DatasourceMetadataSchemaV2(),
 			},
 		},
 		"name": {
@@ -672,7 +672,7 @@ func DataSourceVPCSchemaV4() map[string]*schema.Schema {
 	}
 }
 
-func DataSourceVirtualSwitchSchemaV4() map[string]*schema.Schema {
+func DataSourceVirtualSwitchSchemaV2() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"tenant_id": {
 			Type:     schema.TypeString,
@@ -704,7 +704,7 @@ func DataSourceVirtualSwitchSchemaV4() map[string]*schema.Schema {
 			Optional: true,
 			Computed: true,
 			Elem: &schema.Resource{
-				Schema: DatasourceMetadataSchemaV4(),
+				Schema: DatasourceMetadataSchemaV2(),
 			},
 		},
 		"name": {
@@ -822,7 +822,7 @@ func SchemaForValuePrefixLength() *schema.Schema {
 	}
 }
 
-func DatasourceMetadataSchemaV4() map[string]*schema.Schema {
+func DatasourceMetadataSchemaV2() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
 		"owner_reference_id": {
 			Type:     schema.TypeString,

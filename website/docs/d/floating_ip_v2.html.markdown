@@ -1,19 +1,19 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_floating_ip_v4"
+page_title: "NUTANIX: nutanix_floating_ip_v2"
 sidebar_current: "docs-nutanix-datasource-floating-ip-v4"
 description: |-
    Provides a datasource to retrieve floating ip with floating_ip_uuid.
 ---
 
-# nutanix_floating_ip_v4
+# nutanix_floating_ip_v2
 
 Provides a datasource to retrieve floating IP with floating_ip_uuid .
 
 ## Example Usage
 
 ```hcl
-    data "nutanix_floating_ip_v4" "test"{
+    data "nutanix_floating_ip_v2" "test"{
         ext_id ={{ floating_ip_uuid }}
     }
 ```

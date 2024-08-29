@@ -14,12 +14,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func ResourceNutanixSubnetv4() *schema.Resource {
+func ResourceNutanixSubnetV2() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: ResourceNutanixSubnetv4Create,
-		ReadContext:   ResourceNutanixSubnetv4Read,
-		UpdateContext: ResourceNutanixSubnetv4Update,
-		DeleteContext: ResourceNutanixSubnetv4Delete,
+		CreateContext: ResourceNutanixSubnetV2Create,
+		ReadContext:   ResourceNutanixSubnetV2Read,
+		UpdateContext: ResourceNutanixSubnetV2Update,
+		DeleteContext: ResourceNutanixSubnetV2Delete,
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Optional: true,
@@ -319,7 +319,7 @@ func ResourceNutanixSubnetv4() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
-					Schema: DataSourceVirtualSwitchSchemaV4(),
+					Schema: DataSourceVirtualSwitchSchemaV2(),
 				},
 			},
 			"vpc": {
@@ -327,7 +327,7 @@ func ResourceNutanixSubnetv4() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
-					Schema: DataSourceVPCSchemaV4(),
+					Schema: DataSourceVPCSchemaV2(),
 				},
 			},
 			"ip_prefix": {
@@ -449,7 +449,7 @@ func ResourceNutanixSubnetv4() *schema.Resource {
 	}
 }
 
-func ResourceNutanixSubnetv4Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	inputSpec := import1.Subnet{}
@@ -528,7 +528,7 @@ func ResourceNutanixSubnetv4Create(ctx context.Context, d *schema.ResourceData, 
 		inputSpec.IpPrefix = utils.StringPtr(ipPrefix.(string))
 	}
 	if ipUsage, ok := d.GetOk("ip_usage"); ok {
-		inputSpec.IpUsage = exapndIPUsage(ipUsage)
+		inputSpec.IpUsage = expandIPUsage(ipUsage)
 	}
 
 	if ipConfig, ok := d.GetOk("ip_config"); ok {
@@ -582,10 +582,10 @@ func ResourceNutanixSubnetv4Create(ctx context.Context, d *schema.ResourceData, 
 			break
 		}
 	}
-	return ResourceNutanixSubnetv4Read(ctx, d, meta)
+	return ResourceNutanixSubnetV2Read(ctx, d, meta)
 }
 
-func ResourceNutanixSubnetv4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixSubnetV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	resp, err := conn.SubnetAPIInstance.GetSubnetById(utils.StringPtr(d.Id()))
@@ -676,7 +676,7 @@ func ResourceNutanixSubnetv4Read(ctx context.Context, d *schema.ResourceData, me
 	return nil
 }
 
-func ResourceNutanixSubnetv4Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 	updateSpec := import1.Subnet{}
 
@@ -760,7 +760,7 @@ func ResourceNutanixSubnetv4Update(ctx context.Context, d *schema.ResourceData, 
 		updateSpec.IpPrefix = utils.StringPtr(d.Get("ip_prefix").(string))
 	}
 	if d.HasChange("ip_usage") {
-		updateSpec.IpUsage = exapndIPUsage(d.Get("ip_usage"))
+		updateSpec.IpUsage = expandIPUsage(d.Get("ip_usage"))
 	}
 	if d.HasChange("ip_config") {
 		updateSpec.IpConfig = expandIPConfig(d.Get("ip_config").([]interface{}))
@@ -790,10 +790,10 @@ func ResourceNutanixSubnetv4Update(ctx context.Context, d *schema.ResourceData, 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for subnet (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-	return ResourceNutanixSubnetv4Read(ctx, d, meta)
+	return ResourceNutanixSubnetV2Read(ctx, d, meta)
 }
 
-func ResourceNutanixSubnetv4Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixSubnetV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	resp, err := conn.SubnetAPIInstance.DeleteSubnetById(utils.StringPtr(d.Id()))
@@ -1214,7 +1214,7 @@ func expandIPSubnet(pr []interface{}) []import1.IPSubnet {
 	return nil
 }
 
-func exapndIPUsage(pr interface{}) *import1.IPUsage {
+func expandIPUsage(pr interface{}) *import1.IPUsage {
 	if pr != nil {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})

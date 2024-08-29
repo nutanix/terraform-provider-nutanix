@@ -15,12 +15,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func ResourceNutanixFloatingIPv4() *schema.Resource {
+func ResourceNutanixFloatingIPv2() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: ResourceNutanixFloatingIPv4Create,
-		ReadContext:   ResourceNutanixFloatingIPv4Read,
-		UpdateContext: ResourceNutanixFloatingIPv4Update,
-		DeleteContext: ResourceNutanixFloatingIPv4Delete,
+		CreateContext: ResourceNutanixFloatingIPv2Create,
+		ReadContext:   ResourceNutanixFloatingIPv2Read,
+		UpdateContext: ResourceNutanixFloatingIPv2Update,
+		DeleteContext: ResourceNutanixFloatingIPv2Delete,
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -101,7 +101,7 @@ func ResourceNutanixFloatingIPv4() *schema.Resource {
 				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
-				Elem:     DataSourceNutanixSubnetv4(),
+				Elem:     DataSourceNutanixSubnetV2(),
 			},
 			"vpc_reference": {
 				Type:     schema.TypeString,
@@ -122,7 +122,7 @@ func ResourceNutanixFloatingIPv4() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
-					Schema: DataSourceVPCSchemaV4(),
+					Schema: DataSourceVPCSchemaV2(),
 				},
 			},
 			"vm_nic": {
@@ -174,14 +174,14 @@ func ResourceNutanixFloatingIPv4() *schema.Resource {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
-					Schema: DatasourceMetadataSchemaV4(),
+					Schema: DatasourceMetadataSchemaV2(),
 				},
 			},
 		},
 	}
 }
 
-func ResourceNutanixFloatingIPv4Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixFloatingIPv2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	inputSpec := import1.FloatingIp{}
@@ -252,10 +252,10 @@ func ResourceNutanixFloatingIPv4Create(ctx context.Context, d *schema.ResourceDa
 	getAllFipResp := readResp.Data.GetValue().([]import1.FloatingIp)
 
 	d.SetId(*getAllFipResp[0].ExtId)
-	return ResourceNutanixFloatingIPv4Read(ctx, d, meta)
+	return ResourceNutanixFloatingIPv2Read(ctx, d, meta)
 }
 
-func ResourceNutanixFloatingIPv4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixFloatingIPv2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	resp, err := conn.FloatingIPAPIInstance.GetFloatingIpById(utils.StringPtr(d.Id()))
@@ -325,7 +325,7 @@ func ResourceNutanixFloatingIPv4Read(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-func ResourceNutanixFloatingIPv4Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixFloatingIPv2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	resp, err := conn.FloatingIPAPIInstance.GetFloatingIpById(utils.StringPtr(d.Id()))
@@ -398,7 +398,7 @@ func ResourceNutanixFloatingIPv4Update(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func ResourceNutanixFloatingIPv4Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixFloatingIPv2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	resp, err := conn.FloatingIPAPIInstance.DeleteFloatingIpById(utils.StringPtr(d.Id()))
@@ -547,7 +547,7 @@ func expandSubnet(pr interface{}) *import1.Subnet {
 			sub.IpPrefix = utils.StringPtr(ipPrefix.(string))
 		}
 		if ipUsage, ok := val["ip_usage"]; ok {
-			sub.IpUsage = exapndIPUsage(ipUsage)
+			sub.IpUsage = expandIPUsage(ipUsage)
 		}
 		return sub
 	}

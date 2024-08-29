@@ -9,9 +9,9 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameSubnet = "nutanix_subnet_v4.test"
+const resourceNameSubnet = "nutanix_subnet_v2.test"
 
-func TestAccNutanixSubnetV4_Basic(t *testing.T) {
+func TestAccNutanixSubnetV2_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-subnet-%d", r)
 	desc := "test subnet description"
@@ -20,7 +20,7 @@ func TestAccNutanixSubnetV4_Basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testSubnetV4Config(name, desc),
+				Config: testSubnetV2Config(name, desc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameSubnet, "name", name),
 					resource.TestCheckResourceAttr(resourceNameSubnet, "description", desc),
@@ -32,7 +32,7 @@ func TestAccNutanixSubnetV4_Basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testSubnetV4Config("updated-name", "updated-description"),
+				Config: testSubnetV2Config("updated-name", "updated-description"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameSubnet, "name", "updated-name"),
 					resource.TestCheckResourceAttr(resourceNameSubnet, "description", "updated-description"),
@@ -47,7 +47,7 @@ func TestAccNutanixSubnetV4_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixSubnetV4_WithIPPool(t *testing.T) {
+func TestAccNutanixSubnetV2_WithIPPool(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-subnet-%d", r)
 	desc := "test subnet description"
@@ -56,7 +56,7 @@ func TestAccNutanixSubnetV4_WithIPPool(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testSubnetV4ConfigWithIPPool(name, desc),
+				Config: testSubnetV2ConfigWithIPPool(name, desc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameSubnet, "name", name),
 					resource.TestCheckResourceAttr(resourceNameSubnet, "description", desc),
@@ -71,7 +71,7 @@ func TestAccNutanixSubnetV4_WithIPPool(t *testing.T) {
 	})
 }
 
-func TestAccNutanixSubnetV4_WithExternalSubnet(t *testing.T) {
+func TestAccNutanixSubnetV2_WithExternalSubnet(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-subnet-%d", r)
 	desc := "test subnet description"
@@ -80,7 +80,7 @@ func TestAccNutanixSubnetV4_WithExternalSubnet(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testSubnetV4ConfigWithExternalSubnet(name, desc),
+				Config: testSubnetV2ConfigWithExternalSubnet(name, desc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameSubnet, "name", name),
 					resource.TestCheckResourceAttr(resourceNameSubnet, "description", desc),
@@ -96,7 +96,7 @@ func TestAccNutanixSubnetV4_WithExternalSubnet(t *testing.T) {
 	})
 }
 
-func testSubnetV4Config(name, desc string) string {
+func testSubnetV2Config(name, desc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -104,7 +104,7 @@ func testSubnetV4Config(name, desc string) string {
 		cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
 		}
 		
-		resource "nutanix_subnet_v4" "test" {
+		resource "nutanix_subnet_v2" "test" {
 			name = "%[1]s"
 			description = "%[2]s"
 			cluster_reference = local.cluster0
@@ -114,7 +114,7 @@ func testSubnetV4Config(name, desc string) string {
 `, name, desc)
 }
 
-func testSubnetV4ConfigWithIPPool(name, desc string) string {
+func testSubnetV2ConfigWithIPPool(name, desc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -122,7 +122,7 @@ func testSubnetV4ConfigWithIPPool(name, desc string) string {
 		cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
 		}
 		
-		resource "nutanix_subnet_v4" "test" {
+		resource "nutanix_subnet_v2" "test" {
 			name = "%[1]s"
 			description = "%[2]s"
 			cluster_reference = local.cluster0
@@ -165,7 +165,7 @@ func testSubnetV4ConfigWithIPPool(name, desc string) string {
 `, name, desc)
 }
 
-func testSubnetV4ConfigWithExternalSubnet(name, desc string) string {
+func testSubnetV2ConfigWithExternalSubnet(name, desc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -173,7 +173,7 @@ func testSubnetV4ConfigWithExternalSubnet(name, desc string) string {
 		cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
 		}
 		
-		resource "nutanix_subnet_v4" "test" {
+		resource "nutanix_subnet_v2" "test" {
 			name = "%[1]s"
 			description = "%[2]s"
 			cluster_reference = local.cluster0

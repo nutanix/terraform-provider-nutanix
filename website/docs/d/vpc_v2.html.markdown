@@ -1,19 +1,19 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_vpc_v4"
+page_title: "NUTANIX: nutanix_vpc_v2"
 sidebar_current: "docs-nutanix-datasource-vpc-v4"
 description: |-
    This operation retrieves a vpc based on the input parameters.
 ---
 
-# nutanix_vpc_v4
+# nutanix_vpc_v2
 
 Provides a datasource to retrieve VPC with vpc_uuid .
 
 ## Example Usage
 
 ```hcl
-    data "nutanix_vpc_v4" "test1"{
+    data "nutanix_vpc_v2" "test1"{
         ext_id = {{ vpc uuid }}
     }
 

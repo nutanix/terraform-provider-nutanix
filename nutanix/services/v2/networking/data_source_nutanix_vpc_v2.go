@@ -10,9 +10,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func DataSourceNutanixVPCv4() *schema.Resource {
+func DataSourceNutanixVPCv2() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceNutanixVPCv4Read,
+		ReadContext: dataSourceNutanixVPCv2Read,
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -42,7 +42,7 @@ func DataSourceNutanixVPCv4() *schema.Resource {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
-					Schema: DatasourceMetadataSchemaV4(),
+					Schema: DatasourceMetadataSchemaV2(),
 				},
 			},
 			"name": {
@@ -182,7 +182,7 @@ func DataSourceNutanixVPCv4() *schema.Resource {
 	}
 }
 
-func dataSourceNutanixVPCv4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceNutanixVPCv2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	extID := d.Get("ext_id")

@@ -9,7 +9,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNamevpcs = "data.nutanix_vpcs_v4.test"
+const datasourceNamevpcs = "data.nutanix_vpcs_v2.test"
 
 func TestAccNutanixVpcsDataSourceV2_basic(t *testing.T) {
 	r := acctest.RandInt()
@@ -38,7 +38,7 @@ func TestAccNutanixVpcsDataSourceV2_basic(t *testing.T) {
 func testAccVpcsDataSourceConfig(name, desc string) string {
 	return fmt.Sprintf(`
 
-		resource "nutanix_vpc_v4" "rtest" {
+		resource "nutanix_vpc_v2" "rtest" {
 			name =  "%[1]s"
 			description = "%[2]s"
 			external_subnets{
@@ -46,10 +46,10 @@ func testAccVpcsDataSourceConfig(name, desc string) string {
 			}
 		}
 
-		data "nutanix_vpcs_v4" "test" {
+		data "nutanix_vpcs_v2" "test" {
 			filter = "name eq '%[1]s'"
 			depends_on = [
-				resource.nutanix_vpc_v4.rtest
+				resource.nutanix_vpc_v2.rtest
 			]
 		}
 	`, name, desc)

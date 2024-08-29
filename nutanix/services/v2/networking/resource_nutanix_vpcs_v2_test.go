@@ -9,9 +9,9 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameVpc = "nutanix_vpc_v4.test"
+const resourceNameVpc = "nutanix_vpc_v2.test"
 
-func TestAccNutanixVpcV4_Basic(t *testing.T) {
+func TestAccNutanixVpcV2_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vpc-%d", r)
 	desc := "test vpc description"
@@ -45,7 +45,7 @@ func TestAccNutanixVpcV4_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVpcV4_WithExternallyRoutablePrefixes(t *testing.T) {
+func TestAccNutanixVpcV2_WithExternallyRoutablePrefixes(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vpc-%d", r)
 	desc := "test vpc description"
@@ -67,7 +67,7 @@ func TestAccNutanixVpcV4_WithExternallyRoutablePrefixes(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVpcV4_WithDHCP(t *testing.T) {
+func TestAccNutanixVpcV2_WithDHCP(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vpc-%d", r)
 	desc := "test vpc description"
@@ -90,7 +90,7 @@ func TestAccNutanixVpcV4_WithDHCP(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVpcV4_WithTransitType(t *testing.T) {
+func TestAccNutanixVpcV2_WithTransitType(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vpc-%d", r)
 	desc := "test vpc description"
@@ -117,7 +117,7 @@ func TestAccNutanixVpcV4_WithTransitType(t *testing.T) {
 func testVpcConfig(name, desc string) string {
 	return fmt.Sprintf(`
 		
-	resource "nutanix_vpc_v4" "test" {
+	resource "nutanix_vpc_v2" "test" {
 		name =  "%[1]s"
 		description = "%[2]s"
 		external_subnets{
@@ -130,7 +130,7 @@ func testVpcConfig(name, desc string) string {
 func testVpcConfigWithExtRoutablePrefix(name, desc string) string {
 	return fmt.Sprintf(`
 		
-	resource "nutanix_vpc_v4" "test" {
+	resource "nutanix_vpc_v2" "test" {
 		name =  "%[1]s"
 		description = "%[2]s"
 		external_subnets{
@@ -158,7 +158,7 @@ func testVpcConfigWithExtRoutablePrefix(name, desc string) string {
 func testVpcConfigWithDHCP(name, desc string) string {
 	return fmt.Sprintf(`
 		
-	resource "nutanix_vpc_v4" "test" {
+	resource "nutanix_vpc_v2" "test" {
 		name =  "%[1]s"
 		description = "%[2]s"
 		external_subnets{
@@ -185,7 +185,7 @@ func testVpcConfigWithDHCP(name, desc string) string {
 func testVpcConfigWithTransitType(name, desc string) string {
 	return fmt.Sprintf(`
 		
-	resource "nutanix_vpc_v4" "test" {
+	resource "nutanix_vpc_v2" "test" {
 		name =  "%[1]s"
 		description = "%[2]s"
 		external_subnets{

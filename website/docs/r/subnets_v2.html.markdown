@@ -1,12 +1,12 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_subnet_v4"
+page_title: "NUTANIX: nutanix_subnet_v2"
 sidebar_current: "docs-nutanix-resource-subnet-v4"
 description: |-
   This operation submits a request to create a subnet based on the input parameters. A subnet is a block of IP addresses.
 ---
 
-# nutanix_subnet_v4
+# nutanix_subnet_v2
 
 Provides a resource to create a subnet based on the input parameters.
 
@@ -15,7 +15,7 @@ Provides a resource to create a subnet based on the input parameters.
 
 ```hcl
 
-    resource "nutanix_subnet_v4" "test" {
+    resource "nutanix_subnet_v2" "test" {
         name = "{{ subnet name}}"
         description = "{{ subnet desc }}"
         cluster_reference = {{ cluster uuid }}
@@ -23,7 +23,7 @@ Provides a resource to create a subnet based on the input parameters.
         network_id = 112
     }
 
-    resource "nutanix_subnet_v4" "test" {
+    resource "nutanix_subnet_v2" "test" {
         name = "{{ subnet name}}"
         description = "{{ subnet desc }}"
         cluster_reference = {{ cluster uuid }}

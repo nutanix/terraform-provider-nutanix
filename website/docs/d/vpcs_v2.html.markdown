@@ -1,19 +1,19 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_vpcs_v4"
+page_title: "NUTANIX: nutanix_vpcs_v2"
 sidebar_current: "docs-nutanix-datasource-vpcs-v4"
 description: |-
    This operation retrieves the list of existing VPCs. 
 ---
 
-# nutanix_vpcs_v4
+# nutanix_vpcs_v2
 
 Provides a datasource to retrieve the list of existing VPCs.
 
 ## Example Usage
 
 ```hcl
-    data "nutanix_vpcs_v4" "test"{ }
+    data "nutanix_vpcs_v2" "test"{ }
 
 ```
 

@@ -1,12 +1,12 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_vpc_v4"
+page_title: "NUTANIX: nutanix_vpc_v2"
 sidebar_current: "docs-nutanix-resource-vpc-v4"
 description: |-
   Create Virtual Private Cloud .
 ---
 
-# nutanix_vpc_v4
+# nutanix_vpc_v2
 
 Provides Nutanix resource to create VPC.
 
@@ -15,7 +15,7 @@ Provides Nutanix resource to create VPC.
 
 ```hcl
 
-    resource "nutanix_vpc_v4" "test" {
+    resource "nutanix_vpc_v2" "test" {
 		name =  "{{name of vpc }}"
 		description = "{{ desc of vpc }}"
 		external_subnets{

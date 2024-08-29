@@ -1,12 +1,12 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_floating_ip_v4"
+page_title: "NUTANIX: nutanix_floating_ip_v2"
 sidebar_current: "docs-nutanix-resource-floating-ip-v4"
 description: |-
   Create Floating IPs .
 ---
 
-# nutanix_floating_ip_v4
+# nutanix_floating_ip_v2
 
 Provides Nutanix resource to create Floating IPs. 
 
@@ -15,13 +15,13 @@ Provides Nutanix resource to create Floating IPs.
 
 ```hcl
 
-    resource "nutanix_floating_ip_v4" "test" {
+    resource "nutanix_floating_ip_v2" "test" {
         name = "{{ name }}"
         description = "{{ desc }}"
         external_subnet_reference = "{{ ext subnet uuid }}"
     }
 
-    resource "nutanix_floating_ip_v4" "test" {
+    resource "nutanix_floating_ip_v2" "test" {
         name = "{{ name }}"
         description = "{{ desc }}"
         external_subnet_reference = "{{ ext subnet uuid }}"
