@@ -93,25 +93,93 @@ func TestAccNutanixFloatingIPv2_WithPrivateipAssociation(t *testing.T) {
 
 func testFloatingIPv2Config(name, desc string) string {
 	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+		cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+		}
 		
+		resource "nutanix_subnet_v2" "test" {
+			name = "terraform-test-subnet-floating-ip"
+			description = "test subnet description"
+			cluster_reference = local.cluster0
+			subnet_type = "VLAN"
+			network_id = 112
+			is_external = true
+			ip_config {
+				ipv4 {
+					ip_subnet {
+						ip {
+							value = "192.168.0.0"
+						}
+						prefix_length = 24
+					}
+					default_gateway_ip {
+						value = "192.168.0.1"
+					}
+					pool_list{
+						start_ip {
+							value = "192.168.0.20"
+						}
+						end_ip {
+							value = "192.168.0.30"
+						}
+					}
+				}
+			}
+		}
 		resource "nutanix_floating_ip_v2" "test" {
 			name = "%[1]s"
 			description = "%[2]s"
-			external_subnet_reference = "bd319622-1a45-4075-811a-2b0399bf9a49"
+			external_subnet_reference = nutanix_subnet_v2.test.id
 		  }
 `, name, desc)
 }
 
 func testFloatingIPv2ConfigwithVMNic(name, desc string) string {
 	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+		}
 		
+		resource "nutanix_subnet_v2" "test" {
+			name = "terraform-test-subnet-floating-ip"
+			description = "test subnet description"
+			cluster_reference = local.cluster0
+			subnet_type = "VLAN"
+			network_id = 112
+			is_external = true
+			ip_config {
+				ipv4 {
+					ip_subnet {
+						ip {
+							value = "192.168.0.0"
+						}
+						prefix_length = 24
+					}
+					default_gateway_ip {
+						value = "192.168.0.1"
+					}
+					pool_list{
+						start_ip {
+							value = "192.168.0.20"
+						}
+						end_ip {
+							value = "192.168.0.30"
+						}
+					}
+				}
+			}
+		}
 		resource "nutanix_floating_ip_v2" "test" {
 			name = "%[1]s"
 			description = "%[2]s"
-			external_subnet_reference = "bd319622-1a45-4075-811a-2b0399bf9a49"
+			external_subnet_reference = nutanix_subnet_v2.test.id
 			association{
 				vm_nic_association{
-					vm_nic_reference = "ba209e04-87a7-4dbe-a54b-b0b1e1430e48"
+					vm_nic_reference = "ef53e6e8-2eaa-44db-b44a-2e934964d792"
 				}
 			  }
 		  }
@@ -120,21 +188,80 @@ func testFloatingIPv2ConfigwithVMNic(name, desc string) string {
 
 func testFloatingIPv2ConfigwithPrivateIP(name, desc string) string {
 	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+		}
 		
+		resource "nutanix_subnet_v2" "test" {
+			name = "terraform-test-subnet-floating-ip"
+			description = "test subnet description"
+			cluster_reference = local.cluster0
+			subnet_type = "VLAN"
+			network_id = 112
+			is_external = true
+			ip_config {
+				ipv4 {
+					ip_subnet {
+						ip {
+							value = "192.168.0.0"
+						}
+						prefix_length = 24
+					}
+					default_gateway_ip {
+						value = "192.168.0.1"
+					}
+					pool_list{
+						start_ip {
+							value = "192.168.0.20"
+						}
+						end_ip {
+							value = "192.168.0.30"
+						}
+					}
+				}
+			}
+			depends_on = [data.nutanix_clusters.clusters]
+		}
+
+		resource "nutanix_vpc_v2" "test" {
+			name =  "terraform-test-vpc-floating-ip"
+			description = "test vpc description"
+			external_subnets{
+			  subnet_reference = nutanix_subnet_v2.test.id
+			}
+			common_dhcp_options{
+				domain_name_servers{
+					ipv4{
+						value = "8.8.8.9"
+						prefix_length = 32
+					}
+				}
+				domain_name_servers{
+					ipv4{
+						value = "8.8.8.8"
+						prefix_length = 32
+					}
+				}
+			}	
+			depends_on = [nutanix_subnet_v2.test]
+		}
 		resource "nutanix_floating_ip_v2" "test" {
 			name = "%[1]s"
 			description = "%[2]s"
-			external_subnet_reference = "bd319622-1a45-4075-811a-2b0399bf9a49"
+			external_subnet_reference = nutanix_subnet_v2.test.id
 			association{
 				private_ip_association{
-					vpc_reference = "5f79d5e2-5051-4dad-8079-82c2564bb2e1"
+					vpc_reference = nutanix_vpc_v2.test.id
 					private_ip{
 						ipv4{
-							value = "10.44.44.7"
+							value = "8.8.10.13"
 						}
 					}
 				}
 			  }
+			depends_on = [nutanix_vpc_v2.test]
 		  }
 `, name, desc)
 }
