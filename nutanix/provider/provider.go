@@ -15,7 +15,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/ndb"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/nke"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/prism"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/networking"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/networkingv2"
 )
 
 var requiredProviderFields map[string][]string = map[string][]string{
@@ -219,12 +219,12 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_dbserver":                            ndb.DataSourceNutanixNDBDBServer(),
 			"nutanix_ndb_dbservers":                           ndb.DataSourceNutanixNDBDBServers(),
 			"nutanix_ndb_network_available_ips":               ndb.DataSourceNutanixNDBProfileAvailableIPs(),
-			"nutanix_subnet_v2":                               networking.DataSourceNutanixSubnetV2(),
-			"nutanix_subnets_v2":                              networking.DataSourceNutanixSubnetsV2(),
-			"nutanix_vpc_v2":                                  networking.DataSourceNutanixVPCv2(),
-			"nutanix_vpcs_v2":                                 networking.DataSourceNutanixVPCsv2(),
-			"nutanix_floating_ip_v2":                          networking.DatasourceNutanixFloatingIPV2(),
-			"nutanix_floating_ips_v2":                         networking.DatasourceNutanixFloatingIPsV2(),
+			"nutanix_subnet_v2":                               networkingv2.DataSourceNutanixSubnetV2(),
+			"nutanix_subnets_v2":                              networkingv2.DataSourceNutanixSubnetsV2(),
+			"nutanix_vpc_v2":                                  networkingv2.DataSourceNutanixVPCv2(),
+			"nutanix_vpcs_v2":                                 networkingv2.DataSourceNutanixVPCsv2(),
+			"nutanix_floating_ip_v2":                          networkingv2.DatasourceNutanixFloatingIPV2(),
+			"nutanix_floating_ips_v2":                         networkingv2.DatasourceNutanixFloatingIPsV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  prism.ResourceNutanixVirtualMachine(),
@@ -276,9 +276,9 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_stretched_vlan":               ndb.ResourceNutanixNDBStretchedVlan(),
 			"nutanix_ndb_clone_refresh":                ndb.ResourceNutanixNDBCloneRefresh(),
 			"nutanix_ndb_cluster":                      ndb.ResourceNutanixNDBCluster(),
-			"nutanix_subnet_v2":                        networking.ResourceNutanixSubnetV2(),
-			"nutanix_floating_ip_v2":                   networking.ResourceNutanixFloatingIPv2(),
-			"nutanix_vpc_v2":                           networking.ResourceNutanixVPCsV2(),
+			"nutanix_subnet_v2":                        networkingv2.ResourceNutanixSubnetV2(),
+			"nutanix_floating_ip_v2":                   networkingv2.ResourceNutanixFloatingIPv2(),
+			"nutanix_vpc_v2":                           networkingv2.ResourceNutanixVPCsV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
