@@ -7,9 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
-	import4 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/common/v1/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/networking/v4/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -1109,7 +1109,7 @@ func expandExternalSubnet(pr []interface{}) []import1.ExternalSubnet {
 				sub.GatewayNodes = expandStringList(gatewayNodes.([]interface{}))
 			}
 			if activeGatewayNode, ok := val["active_gateway_node"]; ok && len(activeGatewayNode.([]interface{})) > 0 {
-				sub.ActiveGatewayNode = expandGatewayNodeReference(activeGatewayNode)
+				sub.ActiveGatewayNodes = expandGatewayNodeReference(activeGatewayNode)
 			}
 			if activeGatewayCount, ok := val["active_gateway_count"]; ok && activeGatewayCount.(int) > 0 {
 				sub.ActiveGatewayCount = utils.IntPtr(activeGatewayCount.(int))
@@ -1121,7 +1121,7 @@ func expandExternalSubnet(pr []interface{}) []import1.ExternalSubnet {
 	return nil
 }
 
-func expandGatewayNodeReference(pr interface{}) *import1.GatewayNodeReference {
+func expandGatewayNodeReference(pr interface{}) []import1.GatewayNodeReference {
 	if pr != nil {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -1133,7 +1133,9 @@ func expandGatewayNodeReference(pr interface{}) *import1.GatewayNodeReference {
 		if nodeipAdd, ok := val["node_ip_address"]; ok {
 			gatewayNodesRef.NodeIpAddress = expandIPAddressMap(nodeipAdd)
 		}
-		return gatewayNodesRef
+		gatewayNodesRefList := make([]import1.GatewayNodeReference, 1)
+		gatewayNodesRefList[0] = *gatewayNodesRef
+		return gatewayNodesRefList
 	}
 	return nil
 }

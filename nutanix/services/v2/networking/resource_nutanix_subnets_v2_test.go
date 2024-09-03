@@ -161,7 +161,7 @@ func testSubnetV2ConfigWithIPPool(name, desc string) string {
 				tftp_server_name = "10.5.0.10"
 				boot_file_name = "pxelinux.0"
 			}
-			depeds_on = [data.nutanix_clusters.clusters]
+			depends_on = [data.nutanix_clusters.clusters]
 		}
 `, name, desc)
 }
@@ -202,7 +202,7 @@ func testSubnetV2ConfigWithExternalSubnet(name, desc string) string {
 					}
 				}
 			}
-		depeds_on = [data.nutanix_clusters.clusters]
+		depends_on = [data.nutanix_clusters.clusters]
 		}
 `, name, desc)
 }

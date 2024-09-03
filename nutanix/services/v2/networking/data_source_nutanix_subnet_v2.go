@@ -5,9 +5,9 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	config "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/response"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
+	config "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/common/v1/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/common/v1/response"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/networking/v4/config"
 
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -1233,7 +1233,7 @@ func flattenExternalSubnets(pr []import1.ExternalSubnet) []map[string]interface{
 			sub["subnet_reference"] = v.SubnetReference
 			sub["external_ips"] = flattenNtpServer(v.ExternalIps)
 			sub["gateway_nodes"] = v.GatewayNodes
-			sub["active_gateway_node"] = flattenActiveGatewayNode(v.ActiveGatewayNode)
+			sub["active_gateway_node"] = flattenActiveGatewayNode(v.ActiveGatewayNodes)
 			sub["active_gateway_count"] = v.ActiveGatewayCount
 
 			extSubs[k] = sub
@@ -1243,16 +1243,25 @@ func flattenExternalSubnets(pr []import1.ExternalSubnet) []map[string]interface{
 	return nil
 }
 
-func flattenActiveGatewayNode(pr *import1.GatewayNodeReference) []map[string]interface{} {
-	if pr != nil {
-		nodes := make([]map[string]interface{}, 0)
+func flattenActiveGatewayNode(pr []import1.GatewayNodeReference) []map[string]interface{} {
+	if len(pr) > 0 {
+		nodes := make([]map[string]interface{}, len(pr))
 
-		n := make(map[string]interface{})
+		for k, v := range pr {
+			node := make(map[string]interface{})
 
-		n["node_id"] = pr.NodeId
-		n["node_ip_address"] = flattenNodeIPAddress(pr.NodeIpAddress)
+			node["node_id"] = v.NodeId
+			node["node_ip_address"] = flattenNodeIPAddress(v.NodeIpAddress)
 
-		nodes = append(nodes, n)
+			nodes[k] = node
+
+		}
+		//n := make(map[string]interface{})
+		//
+		//n["node_id"] =
+		//n["node_ip_address"] = flattenNodeIPAddress(pr.NodeIpAddress)
+		//
+		//nodes = append(nodes, n)
 		return nodes
 	}
 	return nil

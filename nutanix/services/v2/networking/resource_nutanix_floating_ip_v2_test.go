@@ -2,6 +2,7 @@ package networking_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -46,6 +47,8 @@ func TestAccNutanixFloatingIPv2_Basic(t *testing.T) {
 }
 
 func TestAccNutanixFloatingIPv2_WithVmNICAssociation(t *testing.T) {
+	path, _ := os.Getwd()
+	filepath := path + "/../../../../test_config_v2.json"
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-fip-%d", r)
 	desc := "test fip description"
@@ -54,7 +57,7 @@ func TestAccNutanixFloatingIPv2_WithVmNICAssociation(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testFloatingIPv2ConfigwithVMNic(name, desc),
+				Config: testFloatingIPv2ConfigwithVMNic(filepath, name, desc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNamefip, "name", name),
 					resource.TestCheckResourceAttr(resourceNamefip, "description", desc),
@@ -136,17 +139,19 @@ func testFloatingIPv2Config(name, desc string) string {
 `, name, desc)
 }
 
-func testFloatingIPv2ConfigwithVMNic(name, desc string) string {
+func testFloatingIPv2ConfigwithVMNic(filepath, name, desc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
 		locals {
 			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			config = (jsondecode(file("%s")))
+			floating_ip = local.config.networking.floating_ip
 		}
 		
 		resource "nutanix_subnet_v2" "test" {
-			name = "terraform-test-subnet-floating-ip"
-			description = "test subnet description"
+			name = "terraform-test-subnet-floating-ip-1"
+			description = "test subnet floating ip description"
 			cluster_reference = local.cluster0
 			subnet_type = "VLAN"
 			network_id = 112
@@ -179,11 +184,11 @@ func testFloatingIPv2ConfigwithVMNic(name, desc string) string {
 			external_subnet_reference = nutanix_subnet_v2.test.id
 			association{
 				vm_nic_association{
-					vm_nic_reference = "ef53e6e8-2eaa-44db-b44a-2e934964d792"
+					vm_nic_reference = local.floating_ip.vm_nic_reference
 				}
 			  }
 		  }
-`, name, desc)
+`, filepath, name, desc)
 }
 
 func testFloatingIPv2ConfigwithPrivateIP(name, desc string) string {
