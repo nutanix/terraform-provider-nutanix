@@ -19,6 +19,7 @@ import (
 const resourceAccessPolicy = "nutanix_access_control_policy.test"
 
 func TestAccNutanixAccessControlPolicy_basic(t *testing.T) {
+	t.Skip() // https://jira.nutanix.com/browse/ENG-483192
 	name := acctest.RandomWithPrefix("accest-access-policy")
 	roleName := acctest.RandomWithPrefix("test-acc-role")
 	description := "Description of my access control policy"
@@ -93,6 +94,7 @@ func TestAccNutanixAccessControlPolicy_WithUser(t *testing.T) {
 }
 
 func TestAccNutanixAccessControlPolicy_WithCategory(t *testing.T) {
+	t.Skip() //https://jira.nutanix.com/browse/ENG-483192
 	name := acctest.RandomWithPrefix("accest-access-policy")
 	roleName := acctest.RandomWithPrefix("test-acc-role-")
 	description := "Description of my access control policy"

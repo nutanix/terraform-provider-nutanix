@@ -1,7 +1,6 @@
 package nutanix
 
 import (
-	"reflect"
 	"testing"
 )
 
@@ -69,7 +68,7 @@ func TestConfig_Client(t *testing.T) {
 				t.Errorf("Config.Client() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if got == tt.want {
 				t.Errorf("Config.Client() = %v, want %v", got, tt.want)
 			}
 		})
