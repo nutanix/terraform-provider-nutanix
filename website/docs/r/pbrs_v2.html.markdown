@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_pbr_v2"
-sidebar_current: "docs-nutanix-resource-pbr-v4"
+sidebar_current: "docs-nutanix-resource-pbr-v2"
 description: |-
   Create Routing Policy within VPCs .
 ---

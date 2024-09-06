@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/karbon"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/microseg"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 
@@ -89,6 +90,10 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	microsegClient, err := microseg.NewMicrosegClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 	return &Client{
 		WaitTimeout:         c.WaitTimeout,
 		API:                 v3Client,
@@ -98,6 +103,7 @@ func (c *Config) Client() (*Client, error) {
 		Era:                 eraClient,
 		NetworkingAPI:       networkingClient,
 		PrismAPI:            prismClient,
+		MicroSegAPI:         microsegClient,
 	}, nil
 }
 
@@ -111,4 +117,5 @@ type Client struct {
 	Era                 *era.Client
 	NetworkingAPI       *networking.Client
 	PrismAPI            *prism.Client
+	MicroSegAPI         *microseg.Client
 }
