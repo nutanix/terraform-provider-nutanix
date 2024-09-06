@@ -40,7 +40,7 @@ func testAccFipDataSourceConfig(name, desc string) string {
 		data "nutanix_clusters" "clusters" {}
 
 		locals {
-		cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
 		}
 		
 		resource "nutanix_subnet_v2" "test" {

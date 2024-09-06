@@ -253,7 +253,7 @@ func ResourceNutanixVPCsV2Create(ctx context.Context, d *schema.ResourceData, me
 	// calling group API to poll for completion of task
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the FileServer to be available
+	// Wait for the VPC to be available
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},

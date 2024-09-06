@@ -7,6 +7,7 @@ import (
 )
 
 type Client struct {
+	RoutingPolicy         *api.RoutingPoliciesApi
 	SubnetAPIInstance     *api.SubnetsApi
 	VpcAPIInstance        *api.VpcsApi
 	FloatingIPAPIInstance *api.FloatingIpsApi
@@ -29,6 +30,7 @@ func NewNetworkingClient(credentials client.Credentials) (*Client, error) {
 	}
 
 	f := &Client{
+		RoutingPolicy:         api.NewRoutingPoliciesApi(baseClient),
 		SubnetAPIInstance:     api.NewSubnetsApi(baseClient),
 		VpcAPIInstance:        api.NewVpcsApi(baseClient),
 		FloatingIPAPIInstance: api.NewFloatingIpsApi(baseClient),

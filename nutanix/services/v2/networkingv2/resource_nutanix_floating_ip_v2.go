@@ -231,7 +231,7 @@ func ResourceNutanixFloatingIPv2Create(ctx context.Context, d *schema.ResourceDa
 	// calling group API to poll for completion of task
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the FileServer to be available
+	// Wait for the Routing Policy to be available
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
@@ -490,9 +490,10 @@ func expandSubnet(pr interface{}) *import1.Subnet {
 			sub.Description = utils.StringPtr(desc.(string))
 		}
 		if subType, ok := val["subnet_type"]; ok {
+			const two, three = 2, 3
 			subMap := map[string]interface{}{
-				"OVERLAY": "2",
-				"VLAN":    "3",
+				"OVERLAY": two,
+				"VLAN":    three,
 			}
 			pInt := subMap[subType.(string)]
 			p := import1.SubnetType(pInt.(int))

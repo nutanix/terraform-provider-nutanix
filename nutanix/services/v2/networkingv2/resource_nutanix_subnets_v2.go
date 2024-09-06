@@ -930,11 +930,12 @@ func expandVirtualSwitch(pr interface{}) *import1.VirtualSwitch {
 			vSwitch.Mtu = utils.Int64Ptr(mtu.(int64))
 		}
 		if bondMode, ok := val["bond_mode"]; ok {
+			const two, three, four, five = 2, 3, 4, 5
 			bondMap := map[string]interface{}{
-				"ACTIVE_BACKUP": "2",
-				"BALANCE_SLB":   "3",
-				"BALANCE_TCP":   "4",
-				"NONE":          "5",
+				"ACTIVE_BACKUP": two,
+				"BALANCE_SLB":   three,
+				"BALANCE_TCP":   four,
+				"NONE":          five,
 			}
 			pInt := bondMap[bondMode.(string)]
 			p := import1.BondModeType(pInt.(int))

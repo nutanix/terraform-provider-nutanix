@@ -225,6 +225,8 @@ func Provider() *schema.Provider {
 			"nutanix_vpcs_v2":                                 networkingv2.DataSourceNutanixVPCsv2(),
 			"nutanix_floating_ip_v2":                          networkingv2.DatasourceNutanixFloatingIPV2(),
 			"nutanix_floating_ips_v2":                         networkingv2.DatasourceNutanixFloatingIPsV2(),
+			"nutanix_pbr_v2":                                  networkingv2.DatasourceNutanixPbrV2(),
+			"nutanix_pbrs_v2":                                 networkingv2.DatasourceNutanixPbrsV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  prism.ResourceNutanixVirtualMachine(),
@@ -279,6 +281,7 @@ func Provider() *schema.Provider {
 			"nutanix_subnet_v2":                        networkingv2.ResourceNutanixSubnetV2(),
 			"nutanix_floating_ip_v2":                   networkingv2.ResourceNutanixFloatingIPv2(),
 			"nutanix_vpc_v2":                           networkingv2.ResourceNutanixVPCsV2(),
+			"nutanix_pbr_v2":                           networkingv2.ResourceNutanixPbrsV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
