@@ -1,0 +1,64 @@
+---
+layout: "nutanix"
+page_title: "NUTANIX: nutanix_service_groups_v4"
+sidebar_current: "docs-nutanix-resource-service-groups-v4"
+description: |-
+  This operation submits a request to create a service group based on the input parameters.
+---
+
+# nutanix_service_group
+
+Create an service Group
+
+## Example Usage
+
+``` hcl
+    resource "nutanix_service_groups_v4" "test" {
+        name = "{{ name }}"
+        description = "{{ desc }}"
+        tcp_services {
+		  start_port = "232"
+		  end_port = "232"
+		}
+		udp_services {
+		  start_port = "232"
+		  end_port = "232"
+		}
+	}
+```
+
+
+## Argument Reference
+
+The following arguments are supported:
+
+* `name`: (Required) Name of the service group
+* `description`: (Optional) Description of the service group
+* `tcp_services`: (Optional) List of TCP ports in the service.
+* `udp_services`: (Optional) List of UDP ports in the service.
+* `icmp_services`: (Optional) Icmp Type Code List.
+
+
+### tcp_services, udp_services
+* `start_port`: (Required) start port
+* `end_port`: (Required) end port
+
+### icmp_services
+* `type`: (Optional) Icmp service Type. Ignore this field if Type has to be ANY.
+* `code`: (Optional) Icmp service Code. Ignore this field if Code has to be ANY
+* `is_all_allowed`: (Optional) Set this field to true if both Type and Code is ANY. Default is False.
+
+
+## Attributes Reference
+
+The following attributes are exported:
+
+* `ext_id`: address group uuid.
+* `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
+* `tenant_id`: A globally unique identifier that represents the tenant that owns this entity. 
+* `policy_references`: Reference to policy associated with Address Group.
+* `created_by`: created by.
+* `is_system_defined`: Service Group is system defined or not.
+
+
+See detailed information in [Nutanix Address Groups V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0.b1).

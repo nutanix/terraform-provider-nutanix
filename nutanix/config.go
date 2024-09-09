@@ -4,6 +4,16 @@ import (
 	"fmt"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/karbon"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/microseg"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
+
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
+	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
+	foundation_central "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/fc"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/foundation"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/karbon"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
@@ -72,6 +82,18 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	networkingClient, err := networking.NewNetworkingClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
+	prismClient, err := prism.NewPrismClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
+	microsegClient, err := microseg.NewMicrosegClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 	return &Client{
 		WaitTimeout:         c.WaitTimeout,
 		API:                 v3Client,
@@ -79,6 +101,9 @@ func (c *Config) Client() (*Client, error) {
 		FoundationClientAPI: foundationClient,
 		FoundationCentral:   fcClient,
 		Era:                 eraClient,
+		NetworkingAPI:       networkingClient,
+		PrismAPI:            prismClient,
+		MicroSegAPI:         microsegClient,
 	}, nil
 }
 
@@ -90,4 +115,7 @@ type Client struct {
 	WaitTimeout         int64
 	FoundationCentral   *foundation_central.Client
 	Era                 *era.Client
+	NetworkingAPI       *networking.Client
+	PrismAPI            *prism.Client
+	MicroSegAPI         *microseg.Client
 }

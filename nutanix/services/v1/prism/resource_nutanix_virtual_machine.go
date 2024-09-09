@@ -967,7 +967,6 @@ func resourceNutanixVirtualMachineUpdate(ctx context.Context, d *schema.Resource
 	if d.HasChange("name") {
 		_, n := d.GetChange("name")
 		spec.Name = utils.StringPtr(n.(string))
-		hotPlugChange = false
 	}
 
 	spec.Description = response.Status.Description
@@ -1179,8 +1178,12 @@ func resourceNutanixVirtualMachineUpdate(ctx context.Context, d *schema.Resource
 	}
 
 	res.PowerStateMechanism = pw
-	if bc, change := bootConfigHasChange(res.BootConfig, d); !reflect.DeepEqual(*bc, v3.VMBootConfig{}) {
-		res.BootConfig = bc
+	currentBootConfig := &v3.VMBootConfig{}
+	if res.BootConfig != nil {
+		*currentBootConfig = *res.BootConfig
+	}
+	if newBootConfig, change := bootConfigHasChange(currentBootConfig, d); !reflect.DeepEqual(*newBootConfig, *currentBootConfig) {
+		res.BootConfig = newBootConfig
 		hotPlugChange = change
 	}
 
@@ -1253,19 +1256,20 @@ func getVMSpecVersion(conn *v3.Client, vmID string) (*int64, error) {
 func bootConfigHasChange(boot *v3.VMBootConfig, d *schema.ResourceData) (*v3.VMBootConfig, bool) {
 	hotPlugChange := false
 
-	if boot == nil {
-		boot = &v3.VMBootConfig{}
+	bootConfig := &v3.VMBootConfig{}
+	if boot != nil {
+		*bootConfig = *boot
 	}
 
 	if d.HasChange("boot_device_order_list") {
 		_, n := d.GetChange("boot_device_order_list")
-		boot.BootDeviceOrderList = expandStringList(n.([]interface{}))
+		bootConfig.BootDeviceOrderList = expandStringList(n.([]interface{}))
 		hotPlugChange = false
 	}
 
 	if d.HasChange("boot_type") {
 		_, n := d.GetChange("boot_type")
-		boot.BootType = utils.StringPtr(n.(string))
+		bootConfig.BootType = utils.StringPtr(n.(string))
 		hotPlugChange = false
 	}
 
@@ -1286,13 +1290,13 @@ func bootConfigHasChange(boot *v3.VMBootConfig, d *schema.ResourceData) (*v3.VMB
 		bd.MacAddress = utils.StringPtr(n.(string))
 		hotPlugChange = false
 	}
-	boot.BootDevice = bd
+	bootConfig.BootDevice = bd
 
 	if dska.AdapterType == nil && dska.DeviceIndex == nil && bd.MacAddress == nil {
-		boot.BootDevice = nil
+		bootConfig.BootDevice = nil
 	}
 
-	return boot, hotPlugChange
+	return bootConfig, hotPlugChange
 }
 
 func changePowerState(ctx context.Context, conn *v3.Client, id string, powerState string) error {
@@ -1878,6 +1882,7 @@ func preFillResUpdateRequest(res *v3.VMResources, response *v3.VMIntentResponse)
 	res.VgaConsoleEnabled = response.Spec.Resources.VgaConsoleEnabled
 	res.HardwareClockTimezone = response.Spec.Resources.HardwareClockTimezone
 	res.DiskList = response.Spec.Resources.DiskList
+	res.MachineType = response.Spec.Resources.MachineType
 
 	nold := make([]*v3.VMNic, len(response.Spec.Resources.NicList))
 

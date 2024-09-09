@@ -15,6 +15,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/ndb"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/nke"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/networkingv2"
 )
 
 var requiredProviderFields map[string][]string = map[string][]string{
@@ -218,6 +219,22 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_dbserver":                            ndb.DataSourceNutanixNDBDBServer(),
 			"nutanix_ndb_dbservers":                           ndb.DataSourceNutanixNDBDBServers(),
 			"nutanix_ndb_network_available_ips":               ndb.DataSourceNutanixNDBProfileAvailableIPs(),
+			"nutanix_subnet_v2":                               networkingv2.DataSourceNutanixSubnetV2(),
+			"nutanix_subnets_v2":                              networkingv2.DataSourceNutanixSubnetsV2(),
+			"nutanix_vpc_v2":                                  networkingv2.DataSourceNutanixVPCv2(),
+			"nutanix_vpcs_v2":                                 networkingv2.DataSourceNutanixVPCsv2(),
+			"nutanix_floating_ip_v2":                          networkingv2.DatasourceNutanixFloatingIPV2(),
+			"nutanix_floating_ips_v2":                         networkingv2.DatasourceNutanixFloatingIPsV2(),
+			"nutanix_network_security_policy_v2":              networkingv2.DataSourceNutanixNetworkSecurityPolicyV2(),
+			"nutanix_network_security_policies_v2":            networkingv2.DataSourceNutanixNetworkSecurityPoliciesV2(),
+			"nutanix_route_table_v2":                          networkingv2.DatasourceNutanixRouteTableV2(),
+			"nutanix_route_tables_v2":                         networkingv2.DatasourceNutanixRouteTablesV2(),
+			"nutanix_pbr_v2":                                  networkingv2.DatasourceNutanixPbrV2(),
+			"nutanix_pbrs_v2":                                 networkingv2.DatasourceNutanixPbrsV2(),
+			"nutanix_service_group_v2":                        networkingv2.DatasourceNutanixServiceGroupV2(),
+			"nutanix_service_groups_v2":                       networkingv2.DatasourceNutanixServiceGroupsV2(),
+			"nutanix_address_group_v2":                        networkingv2.DatasourceNutanixAddressGroupV2(),
+			"nutanix_address_groups_v2":                       networkingv2.DatasourceNutanixAddressGroupsV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  prism.ResourceNutanixVirtualMachine(),
@@ -269,6 +286,14 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_stretched_vlan":               ndb.ResourceNutanixNDBStretchedVlan(),
 			"nutanix_ndb_clone_refresh":                ndb.ResourceNutanixNDBCloneRefresh(),
 			"nutanix_ndb_cluster":                      ndb.ResourceNutanixNDBCluster(),
+			"nutanix_subnet_v2":                        networkingv2.ResourceNutanixSubnetV2(),
+			"nutanix_floating_ip_v2":                   networkingv2.ResourceNutanixFloatingIPv2(),
+			"nutanix_vpc_v2":                           networkingv2.ResourceNutanixVPCsV2(),
+			"nutanix_network_security_policy_v2":       networkingv2.ResourceNutanixNetworkSecurityPolicyV2(),
+			"nutanix_route_table_v2":                   networkingv2.ResourceNutanixRouteTablesV2(),
+			"nutanix_pbr_v2":                           networkingv2.ResourceNutanixPbrsV2(),
+			"nutanix_service_groups_v2":                networkingv2.ResourceNutanixServiceGroupsV2(),
+			"nutanix_address_groups_v2":                networkingv2.ResourceNutanixAddressGroupsV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
