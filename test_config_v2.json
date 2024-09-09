@@ -88,5 +88,17 @@
       "group_search_type":"NON_RECURSIVE",
       "white_listed_groups":["test","test_updated"]
     }
+  },
+  "storage_container":{
+    "name": "terraform_storage_container_test",
+    "logical_advertised_capacity_bytes": 1073741824000,
+    "logical_explicit_reserved_capacity_bytes": 20,
+    "replication_factor": 1,
+    "nfs_whitelist_addresses":{
+      "ipv4":{
+        "value":"192.168.14.0",
+        "prefix_length":32
+      }
+    }
   }
 }

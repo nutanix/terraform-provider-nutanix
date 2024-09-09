@@ -21,6 +21,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/foundation"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/iam"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/clusters"
 )
 
 // Version represents api version
@@ -99,6 +100,11 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	clustersClient, err := clusters.NewClustersClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Client{
 		WaitTimeout:         c.WaitTimeout,
 		API:                 v3Client,
@@ -110,6 +116,7 @@ func (c *Config) Client() (*Client, error) {
 		PrismAPI:            prismClient,
 		MicroSegAPI:         microsegClient,
 		IamAPI:              iamClient,
+		ClusterAPI:          clustersClient,
 	}, nil
 }
 
@@ -125,4 +132,5 @@ type Client struct {
 	PrismAPI            *prism.Client
 	MicroSegAPI         *microseg.Client
 	IamAPI              *iam.Client
+	ClusterAPI          *clusters.Client
 }

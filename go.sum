@@ -454,6 +454,10 @@ github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4 v4.0.1-beta.1 h1:h
 github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4 v4.0.1-beta.1/go.mod h1:Yhk+xD4mN90OKEHnk5ARf97CX5p4+MEC/B/YIVoZeZ0=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v16 v16.8.0-5280 h1:sYX9SWnyph1+gjibK8kOQNS5WmbdakCVw2kU8/oCWn8=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v16 v16.8.0-5280/go.mod h1:cSEUNcUEpaGpZq3CXj4wSczM3zzPQLzTDfYwhkl0aLQ=
+github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v16 v16.9.0-8538 h1:cL38XRjDYwwoKMiK9qRXF7ADXO2wxMqI64lpgn2yQR4=
+github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v16 v16.9.0-8538/go.mod h1:Wt2vo6h0QCGvQGKyY2Tw9OOU0dhhtjRL5nTd0Lx8Gho=
+github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16 v16.9.0-8500 h1:UPGaPcMuM30BTQ6FflAgF5LP/8t8/zVDFIOeZAtXn+8=
+github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16 v16.9.0-8500/go.mod h1:qmOw/29LhPpII8cDmbTL0OF3btwp97ss7nFcQz72NDM=
 github.com/oklog/run v1.0.0 h1:Ru7dDtJNOyC66gQ5dQmaCa0qIsAUFY3sFpK1Xk8igrw=
 github.com/oklog/run v1.0.0/go.mod h1:dlhp/R75TPv97u0XWUtDeV/lRKWPKSdTuV0TZvrmrQA=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
