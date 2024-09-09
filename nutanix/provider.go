@@ -212,6 +212,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_dbserver":                            dataSourceNutanixNDBDBServer(),
 			"nutanix_ndb_dbservers":                           dataSourceNutanixNDBDBServers(),
 			"nutanix_ndb_network_available_ips":               dataSourceNutanixNDBProfileAvailableIPs(),
+			"nutanix_calm_app":                                datsourceNutanixCalmApp(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  resourceNutanixVirtualMachine(),
@@ -264,6 +265,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_clone_refresh":                resourceNutanixNDBCloneRefresh(),
 			"nutanix_ndb_cluster":                      resourceNutanixNDBCluster(),
 			"nutanix_karbon_worker_nodepool":           resourceNutanixKarbonWorkerNodePool(),
+			"nutanix_calm_app_provision":               resourceNutanixCalmAppProvision(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
