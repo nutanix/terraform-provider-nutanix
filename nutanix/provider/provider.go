@@ -231,6 +231,10 @@ func Provider() *schema.Provider {
 			"nutanix_route_tables_v2":                         networkingv2.DatasourceNutanixRouteTablesV2(),
 			"nutanix_pbr_v2":                                  networkingv2.DatasourceNutanixPbrV2(),
 			"nutanix_pbrs_v2":                                 networkingv2.DatasourceNutanixPbrsV2(),
+			"nutanix_service_group_v2":                        networkingv2.DatasourceNutanixServiceGroupV2(),
+			"nutanix_service_groups_v2":                       networkingv2.DatasourceNutanixServiceGroupsV2(),
+			"nutanix_address_group_v2":                        networkingv2.DatasourceNutanixAddressGroupV2(),
+			"nutanix_address_groups_v2":                       networkingv2.DatasourceNutanixAddressGroupsV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  prism.ResourceNutanixVirtualMachine(),
@@ -288,6 +292,8 @@ func Provider() *schema.Provider {
 			"nutanix_network_security_policy_v2":       networkingv2.ResourceNutanixNetworkSecurityPolicyV2(),
 			"nutanix_route_table_v2":                   networkingv2.ResourceNutanixRouteTablesV2(),
 			"nutanix_pbr_v2":                           networkingv2.ResourceNutanixPbrsV2(),
+			"nutanix_service_groups_v2":                networkingv2.ResourceNutanixServiceGroupsV2(),
+			"nutanix_address_groups_v2":                networkingv2.ResourceNutanixAddressGroupsV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
