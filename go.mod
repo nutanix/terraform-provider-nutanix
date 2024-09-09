@@ -13,6 +13,7 @@ require (
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16 v16.9.0-8634
 	github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4 v4.0.1-beta.1
 	// github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4 v4.0.3-alpha.2
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v16 v16.8.0-5280
 	github.com/spf13/cast v1.3.1
 	github.com/stretchr/testify v1.7.0
 	gopkg.in/yaml.v2 v2.4.0

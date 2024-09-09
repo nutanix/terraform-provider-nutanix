@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/internal"
 	fc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/fc"
@@ -16,6 +17,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/nke"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/networkingv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/iamv2"
 )
 
 var requiredProviderFields map[string][]string = map[string][]string{
@@ -235,6 +237,20 @@ func Provider() *schema.Provider {
 			"nutanix_service_groups_v2":                       networkingv2.DatasourceNutanixServiceGroupsV2(),
 			"nutanix_address_group_v2":                        networkingv2.DatasourceNutanixAddressGroupV2(),
 			"nutanix_address_groups_v2":                       networkingv2.DatasourceNutanixAddressGroupsV2(),
+			"nutanix_directory_service_v2":                    iamv2.DatasourceNutanixDirectoryServiceV2(),
+			"nutanix_directory_services_v2":                   iamv2.DatasourceNutanixDirectoryServicesV2(),
+			"nutanix_saml_identity_provider_v2":               iamv2.DatasourceNutanixSamlIDPV2(),
+			"nutanix_saml_identity_providers_v2":              iamv2.DatasourceNutanixSamlIDPsV2(),
+			"nutanix_user_group_v2":                           iamv2.DatasourceNutanixUserGroupV2(),
+			"nutanix_user_groups_v2":                          iamv2.DatasourceNutanixUserGroupsV2(),
+			"nutanix_roles_v2":                                iamv2.DatasourceNutanixRolesV2(),
+			"nutanix_role_v2":                                 iamv2.DatasourceNutanixRoleV2(),
+			"nutanix_operation_v2":                            iamv2.DatasourceNutanixOperationV2(),
+			"nutanix_operations_v2":                           iamv2.DatasourceNutanixOperationsV2(),
+			"nutanix_user_v2":                                 iamv2.DatasourceNutanixUserV2(),
+			"nutanix_users_v2":                                iamv2.DatasourceNutanixUsersV2(),
+			"nutanix_authorization_policy_v2":                 iamv2.DatasourceNutanixAuthorizationPolicyV2(),
+			"nutanix_authorization_policies_v2":               iamv2.DatasourceNutanixAuthorizationPoliciesV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  prism.ResourceNutanixVirtualMachine(),
@@ -294,6 +310,12 @@ func Provider() *schema.Provider {
 			"nutanix_pbr_v2":                           networkingv2.ResourceNutanixPbrsV2(),
 			"nutanix_service_groups_v2":                networkingv2.ResourceNutanixServiceGroupsV2(),
 			"nutanix_address_groups_v2":                networkingv2.ResourceNutanixAddressGroupsV2(),
+			"nutanix_directory_services_v2":            iamv2.ResourceNutanixDirectoryServicesV2(),
+			"nutanix_user_groups_v2":                   iamv2.ResourceNutanixUserGroupsV2(),
+			"nutanix_roles_v2":                         iamv2.ResourceNutanixRolesV2(),
+			"nutanix_users_v2":                         iamv2.ResourceNutanixUserV2(),
+			"nutanix_authorization_policy_v2":          iamv2.ResourceNutanixAuthPoliciesV2(),
+			"nutanix_saml_identity_providers_v2":       iamv2.ResourceNutanixSamlIdpV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

@@ -20,6 +20,7 @@ import (
 	foundation_central "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/fc"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/foundation"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/iam"
 )
 
 // Version represents api version
@@ -82,6 +83,10 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	iamClient, err := iam.NewIamClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 	networkingClient, err := networking.NewNetworkingClient(configCreds)
 	if err != nil {
 		return nil, err
@@ -104,6 +109,7 @@ func (c *Config) Client() (*Client, error) {
 		NetworkingAPI:       networkingClient,
 		PrismAPI:            prismClient,
 		MicroSegAPI:         microsegClient,
+		IamAPI:              iamClient,
 	}, nil
 }
 
@@ -118,4 +124,5 @@ type Client struct {
 	NetworkingAPI       *networking.Client
 	PrismAPI            *prism.Client
 	MicroSegAPI         *microseg.Client
+	IamAPI              *iam.Client
 }
