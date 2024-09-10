@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
-	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/networking/v4/config"
-	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/prism/v4/config"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
+	import4 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
 
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -189,7 +189,7 @@ func ResourceNutanixRouteTablesV2Create(ctx context.Context, d *schema.ResourceD
 		req.ExternalRoutingDomainReference = utils.StringPtr(extRouting.(string))
 	}
 	if staticRoute, ok := d.GetOk("static_routes"); ok {
-		req. = expandRoute(staticRoute.([]interface{}))
+		req.StaticRoutes = expandRoute(staticRoute.([]interface{}))
 	}
 
 	// Get Etag

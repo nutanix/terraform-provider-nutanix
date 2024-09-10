@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/networking/v4/config"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -25,10 +25,6 @@ func DatasourceNutanixRouteTablesV2() *schema.Resource {
 				Optional: true,
 			},
 			"filter": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"order_by": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -104,39 +100,11 @@ func DatasourceNutanixRouteTablesV2() *schema.Resource {
 	}
 }
 
-func DatasourceMetadataSchemaV4() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"owner_reference_id": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"owner_user_name": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"project_reference_id": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"project_name": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"category_ids": {
-			Type:     schema.TypeList,
-			Computed: true,
-			Elem: &schema.Schema{
-				Type: schema.TypeString,
-			},
-		},
-	}
-}
-
 func DatasourceNutanixRouteTablesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).NetworkingAPI
 
 	// initialize query params
-	var filter, orderBy *string
+	var filter *string
 	var page, limit *int
 
 	if pagef, ok := d.GetOk("page"); ok {
@@ -154,13 +122,8 @@ func DatasourceNutanixRouteTablesV2Read(ctx context.Context, d *schema.ResourceD
 	} else {
 		filter = nil
 	}
-	if order_byf, ok := d.GetOk("order_by"); ok {
-		orderBy = utils.StringPtr(order_byf.(string))
-	} else {
-		orderBy = nil
-	}
 
-	resp, err := conn.RoutesTable.ListRouteTables(page, limit, filter, orderBy)
+	resp, err := conn.RoutesTable.ListRouteTables(page, limit, filter)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -196,6 +159,10 @@ func flattenRouteTableEntities(pr []import1.RouteTable) []interface{} {
 			route["metadata"] = flattenMetadata(v.Metadata)
 			route["vpc_reference"] = v.VpcReference
 			route["external_routing_domain_reference"] = v.ExternalRoutingDomainReference
+			route["static_routes"] = flattenRoute(v.StaticRoutes)
+			route["dynamic_routes"] = flattenRoute(v.DynamicRoutes)
+			route["local_routes"] = flattenRoute(v.LocalRoutes)
+
 			routes[k] = route
 		}
 		return routes

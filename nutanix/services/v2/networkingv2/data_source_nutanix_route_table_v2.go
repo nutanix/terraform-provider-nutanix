@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/networking/v4/config"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -105,8 +105,48 @@ func DatasourceNutanixRouteTableV2Read(ctx context.Context, d *schema.ResourceDa
 	if err := d.Set("external_routing_domain_reference", getResp.ExternalRoutingDomainReference); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("static_routes", flattenRoute(getResp.StaticRoutes)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("dynamic_routes", flattenRoute(getResp.DynamicRoutes)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("local_routes", flattenRoute(getResp.LocalRoutes)); err != nil {
+		return diag.FromErr(err)
+	}
 
 	d.SetId(*getResp.ExtId)
+	return nil
+}
+
+func flattenRoute(pr []import1.Route) []interface{} {
+	if len(pr) > 0 {
+		routes := make([]interface{}, len(pr))
+
+		for k, v := range pr {
+			route := make(map[string]interface{})
+
+			route["is_active"] = v.IsActive
+			route["priority"] = v.Priority
+			route["destination"] = flattenIPSubnet(v.Destination)
+			route["next_hop_type"] = flattenNexthopType(v.NexthopType)
+			if v.NexthopReference != nil {
+				route["next_hop_reference"] = v.NexthopReference
+			}
+			if v.NexthopIpAddress != nil {
+				route["next_hop_ip_address"] = flattenNodeIPAddress(v.NexthopIpAddress)
+			}
+			if v.NexthopName != nil {
+				route["next_hop_name"] = v.NexthopName
+			}
+			if v.Source != nil {
+				route["source"] = v.Source
+			}
+
+			routes[k] = route
+		}
+		return routes
+	}
 	return nil
 }
 
@@ -181,4 +221,27 @@ func DatasourceRoutesSchemaV4() map[string]*schema.Schema {
 			Computed: true,
 		},
 	}
+}
+
+func flattenNexthopType(pr *import1.NexthopType) string {
+	if pr != nil {
+		const two, three, four, five, six = 2, 3, 4, 5, 6
+
+		if *pr == import1.NexthopType(two) {
+			return "IP_ADDRESS"
+		}
+		if *pr == import1.NexthopType(three) {
+			return "DIRECT_CONNECT_VIF"
+		}
+		if *pr == import1.NexthopType(four) {
+			return "INTERNAL_SUBNET"
+		}
+		if *pr == import1.NexthopType(five) {
+			return "EXTERNAL_SUBNET"
+		}
+		if *pr == import1.NexthopType(six) {
+			return "VPN_CONNECTION"
+		}
+	}
+	return "UNKNOWN"
 }
