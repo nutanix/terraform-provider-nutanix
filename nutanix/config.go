@@ -13,6 +13,13 @@ import (
 	foundation_central "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/fc"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/foundation"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/karbon"
+
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
+	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
+	foundation_central "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/fc"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/foundation"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 )
 
 // Version represents api version
