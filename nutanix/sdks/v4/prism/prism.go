@@ -30,7 +30,7 @@ func NewPrismClient(credentials client.Credentials) (*Client, error) {
 	}
 
 	f := &Client{
-		TaskRefAPI: api.NewTasksApi(baseClient),
+		TaskRefAPI:            api.NewTasksApi(baseClient),
 		CategoriesAPIInstance: api.NewCategoriesApi(baseClient),
 	}
 

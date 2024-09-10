@@ -19,6 +19,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/networkingv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/iamv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/storagecontainersv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/prismv2"
 )
 
 var requiredProviderFields map[string][]string = map[string][]string{
@@ -255,6 +256,8 @@ func Provider() *schema.Provider {
 			"nutanix_storage_container_v2":                    storagecontainersv2.DatasourceNutanixStorageContainerV2(),
 			"nutanix_storage_containers_v2":                   storagecontainersv2.DatasourceNutanixStorageContainersV2(),
 			"nutanix_storage_container_stats_info_v2":         storagecontainersv2.DatasourceNutanixStorageStatsInfoV2(),
+			"nutanix_category_v2":                             prismv2.DatasourceNutanixCategoryV2(),
+			"nutanix_categories_v2":                           prismv2.DatasourceNutanixCategoriesV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  prism.ResourceNutanixVirtualMachine(),
@@ -321,6 +324,7 @@ func Provider() *schema.Provider {
 			"nutanix_authorization_policy_v2":          iamv2.ResourceNutanixAuthPoliciesV2(),
 			"nutanix_saml_identity_providers_v2":       iamv2.ResourceNutanixSamlIdpV2(),
 			"nutanix_storage_containers_v2":            storagecontainersv2.ResourceNutanixStorageContainersV2(),
+			"nutanix_category_v2":                      prismv2.ResourceNutanixCategoriesV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
