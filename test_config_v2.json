@@ -1,7 +1,7 @@
 {
   "networking": {
     "floating_ip": {
-      "vm_nic_reference": "ef53e6e8-2eaa-44db-b44a-2e934964d792"
+      "vm_nic_reference": ""
     }
   },
   "iam":{
