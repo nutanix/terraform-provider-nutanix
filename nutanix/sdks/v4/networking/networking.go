@@ -13,6 +13,7 @@ type Client struct {
 	SubnetAPIInstance     *api.SubnetsApi
 	VpcAPIInstance        *api.VpcsApi
 	FloatingIPAPIInstance *api.FloatingIpsApi
+	Route                 *api.RoutesApi
 }
 
 func NewNetworkingClient(credentials client.Credentials) (*Client, error) {
