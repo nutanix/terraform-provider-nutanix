@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
@@ -14,6 +15,8 @@ import (
 const datasourceName_StorageContainer = "data.nutanix_storage_container_v2.test"
 
 func TestAccNutanixStorageContainerV2Datasource_Basic(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("terraform-test-storage-container-%d", r)
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 
@@ -22,10 +25,10 @@ func TestAccNutanixStorageContainerV2Datasource_Basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testStorageContainerV4Config(filepath),
+				Config: testStorageContainerV4Config(filepath, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceName_StorageContainer, "container_ext_id"),
-					resource.TestCheckResourceAttr(datasourceName_StorageContainer, "name", testVars.StorageContainer.Name),
+					resource.TestCheckResourceAttr(datasourceName_StorageContainer, "name", name),
 					resource.TestCheckResourceAttr(datasourceName_StorageContainer, "logical_advertised_capacity_bytes", strconv.Itoa(testVars.StorageContainer.LogicalAdvertisedCapacityBytes)),
 					resource.TestCheckResourceAttr(datasourceName_StorageContainer, "logical_explicit_reserved_capacity_bytes", strconv.Itoa(testVars.StorageContainer.LogicalExplicitReservedCapacityBytes)),
 					resource.TestCheckResourceAttr(datasourceName_StorageContainer, "replication_factor", strconv.Itoa(testVars.StorageContainer.ReplicationFactor)),
@@ -37,7 +40,7 @@ func TestAccNutanixStorageContainerV2Datasource_Basic(t *testing.T) {
 	})
 }
 
-func testStorageContainerV4Config(filepath string) string {
+func testStorageContainerV4Config(filepath, name string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -46,12 +49,12 @@ func testStorageContainerV4Config(filepath string) string {
 				for cluster in data.nutanix_clusters.clusters.entities :
 				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 				][0]
-			config = (jsondecode(file("%s")))
+			config = (jsondecode(file("%[1]s")))
 			storage_container = local.config.storage_container			
 		}
 
 		resource "nutanix_storage_containers_v2" "test" {
-			name = local.storage_container.name
+			name = "%[2]s"
 			cluster_ext_id = local.cluster
 			logical_advertised_capacity_bytes = local.storage_container.logical_advertised_capacity_bytes
 			logical_explicit_reserved_capacity_bytes = local.storage_container.logical_explicit_reserved_capacity_bytes
@@ -77,5 +80,5 @@ func testStorageContainerV4Config(filepath string) string {
 		}
 
 		
-	`, filepath)
+	`, filepath, name)
 }

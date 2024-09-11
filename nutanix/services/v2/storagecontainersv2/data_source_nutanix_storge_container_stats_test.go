@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
@@ -15,6 +16,8 @@ import (
 const datasourceNameStorageStatsInfo = "data.nutanix_storage_container_stats_info_v2.test"
 
 func TestAccNutanixStorageStatsInfoV2Datasource_Basic(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("terraform-test-storage-container-%d", r)
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 
@@ -33,7 +36,7 @@ func TestAccNutanixStorageStatsInfoV2Datasource_Basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testStorageContainerConfig(filepath) + testStorageStatsDatasourceV2Config(startTimeFormatted, endTimeFormatted),
+				Config: testStorageContainerConfig(filepath, name) + testStorageStatsDatasourceV2Config(startTimeFormatted, endTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameStorageStatsInfo, "container_ext_id"),
 				),
@@ -43,6 +46,8 @@ func TestAccNutanixStorageStatsInfoV2Datasource_Basic(t *testing.T) {
 }
 
 func TestAccNutanixStorageStatsInfoV2Datasource_SampleInterval(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("terraform-test-storage-container-%d", r)
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 
@@ -61,7 +66,7 @@ func TestAccNutanixStorageStatsInfoV2Datasource_SampleInterval(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testStorageContainerConfig(filepath) + testStorageStatsDatasourceV2SampleInterval(startTimeFormatted, endTimeFormatted, 2),
+				Config: testStorageContainerConfig(filepath, name) + testStorageStatsDatasourceV2SampleInterval(startTimeFormatted, endTimeFormatted, 2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameStorageStatsInfo, "container_ext_id"),
 				),
@@ -71,6 +76,8 @@ func TestAccNutanixStorageStatsInfoV2Datasource_SampleInterval(t *testing.T) {
 }
 
 func TestAccNutanixStorageStatsInfoV2Datasource_StatType(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("terraform-test-storage-container-%d", r)
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 
@@ -89,7 +96,7 @@ func TestAccNutanixStorageStatsInfoV2Datasource_StatType(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testStorageContainerConfig(filepath) + testStorageStatsDatasourceV2StatType(startTimeFormatted, endTimeFormatted, "COUNT"),
+				Config: testStorageContainerConfig(filepath, name) + testStorageStatsDatasourceV2StatType(startTimeFormatted, endTimeFormatted, "COUNT"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameStorageStatsInfo, "container_ext_id"),
 				),
@@ -178,7 +185,7 @@ func TestAccNutanixStorageStatsInfoV2Datasource_MissingRequiredArgs(t *testing.T
 	})
 }
 
-func testStorageContainerConfig(filepath string) string {
+func testStorageContainerConfig(filepath, name string) string {
 	return fmt.Sprintf(`
 
 		data "nutanix_clusters" "clusters" {}
@@ -188,12 +195,12 @@ func testStorageContainerConfig(filepath string) string {
 				for cluster in data.nutanix_clusters.clusters.entities :
 				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 				][0]
-			config = (jsondecode(file("%s")))
+			config = (jsondecode(file("%[1]s")))
 			storage_container = local.config.storage_container			
 		}
 
 		resource "nutanix_storage_containers_v2" "test" {
-			name = local.storage_container.name
+			name = "%[2]s"
 			cluster_ext_id = local.cluster
 			logical_advertised_capacity_bytes = local.storage_container.logical_advertised_capacity_bytes
 			logical_explicit_reserved_capacity_bytes = local.storage_container.logical_explicit_reserved_capacity_bytes
@@ -214,7 +221,7 @@ func testStorageContainerConfig(filepath string) string {
 			is_software_encryption_enabled = false
 		}
 		
-	`, filepath)
+	`, filepath, name)
 }
 
 func testStorageStatsDatasourceV2Config(startTime, endTime string) string {

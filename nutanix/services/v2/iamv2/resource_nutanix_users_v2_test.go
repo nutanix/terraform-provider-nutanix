@@ -272,13 +272,13 @@ func testLocalActiveUserResourceUpdateConfig(filepath, name string) string {
 
 	resource "nutanix_users_v2" "test" {
 		username = "%[2]s"
-		first_name = "${local.users.first_name}_updated"
-		middle_initial = "${local.users.middle_initial}_updated"
-		last_name = "${local.users.last_name}_updated"
+		first_name = "first-name-%[2]s_updated"
+		middle_initial = "middle-initial-%[2]s_updated"
+		last_name = "last-name-%[2]s_updated"
 		email_id = "updated_${local.users.email_id}"
 		locale = local.users.locale
 		region = local.users.region
-		display_name = "${local.users.display_name}_updated"
+		display_name = "display-name-%[2]s_updated"
 		password = "${local.users.password}_updated"
 		user_type = "LOCAL"
 		status = "ACTIVE"  

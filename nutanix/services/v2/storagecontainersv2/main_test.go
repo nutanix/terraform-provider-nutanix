@@ -9,10 +9,9 @@ import (
 
 type TestConfig struct {
 	StorageContainer struct {
-		Name                                 string `json:"name"`
-		LogicalAdvertisedCapacityBytes       int    `json:"logical_advertised_capacity_bytes"`
-		LogicalExplicitReservedCapacityBytes int    `json:"logical_explicit_reserved_capacity_bytes"`
-		ReplicationFactor                    int    `json:"replication_factor"`
+		LogicalAdvertisedCapacityBytes       int `json:"logical_advertised_capacity_bytes"`
+		LogicalExplicitReservedCapacityBytes int `json:"logical_explicit_reserved_capacity_bytes"`
+		ReplicationFactor                    int `json:"replication_factor"`
 		NfsWhitelistAddresses                struct {
 			Ipv4 struct {
 				Value        string `json:"value"`

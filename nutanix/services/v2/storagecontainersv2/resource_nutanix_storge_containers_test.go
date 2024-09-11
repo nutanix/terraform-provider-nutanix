@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
@@ -15,6 +16,8 @@ import (
 const resourceNameStorageContainers = "nutanix_storage_containers_v2.test"
 
 func TestAccNutanixStorageContainersV2Resource_Basic(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("terraform-test-storage-container-%d", r)
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 
@@ -23,10 +26,10 @@ func TestAccNutanixStorageContainersV2Resource_Basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testStorageContainersResourceConfig(filepath),
+				Config: testStorageContainersResourceConfig(filepath, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameStorageContainers, "container_ext_id"),
-					resource.TestCheckResourceAttr(resourceNameStorageContainers, "name", testVars.StorageContainer.Name),
+					resource.TestCheckResourceAttr(resourceNameStorageContainers, "name", name),
 					resource.TestCheckResourceAttr(resourceNameStorageContainers, "logical_advertised_capacity_bytes", strconv.Itoa(testVars.StorageContainer.LogicalAdvertisedCapacityBytes)),
 					resource.TestCheckResourceAttr(resourceNameStorageContainers, "logical_explicit_reserved_capacity_bytes", strconv.Itoa(testVars.StorageContainer.LogicalExplicitReservedCapacityBytes)),
 					resource.TestCheckResourceAttr(resourceNameStorageContainers, "replication_factor", strconv.Itoa(testVars.StorageContainer.ReplicationFactor)),
@@ -36,10 +39,10 @@ func TestAccNutanixStorageContainersV2Resource_Basic(t *testing.T) {
 			},
 			// test update
 			{
-				Config: testStorageContainersResourceUpdateConfig(filepath),
+				Config: testStorageContainersResourceUpdateConfig(filepath, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameStorageContainers, "container_ext_id"),
-					resource.TestCheckResourceAttr(resourceNameStorageContainers, "name", fmt.Sprintf("%s_updated", testVars.StorageContainer.Name)),
+					resource.TestCheckResourceAttr(resourceNameStorageContainers, "name", fmt.Sprintf("%s_updated", name)),
 					resource.TestCheckResourceAttr(resourceNameStorageContainers, "logical_advertised_capacity_bytes", strconv.Itoa(testVars.StorageContainer.LogicalAdvertisedCapacityBytes)),
 					resource.TestCheckResourceAttr(resourceNameStorageContainers, "logical_explicit_reserved_capacity_bytes", strconv.Itoa(testVars.StorageContainer.LogicalExplicitReservedCapacityBytes)),
 					resource.TestCheckResourceAttr(resourceNameStorageContainers, "replication_factor", strconv.Itoa(testVars.StorageContainer.ReplicationFactor)),
@@ -80,7 +83,7 @@ func TestAccNutanixStorageContainersV2Resource_WithNoName(t *testing.T) {
 	})
 }
 
-func testStorageContainersResourceConfig(filepath string) string {
+func testStorageContainersResourceConfig(filepath, name string) string {
 	return fmt.Sprintf(`
 
 		data "nutanix_clusters" "clusters" {}
@@ -90,12 +93,12 @@ func testStorageContainersResourceConfig(filepath string) string {
 				for cluster in data.nutanix_clusters.clusters.entities :
 				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 				][0]
-			config = (jsondecode(file("%s")))
+			config = (jsondecode(file("%[1]s")))
 			storage_container = local.config.storage_container			
 		}
 
 		resource "nutanix_storage_containers_v2" "test" {
-			name = local.storage_container.name
+			name = "%[2]s"
 			cluster_ext_id = local.cluster
 			logical_advertised_capacity_bytes = local.storage_container.logical_advertised_capacity_bytes
 			logical_explicit_reserved_capacity_bytes = local.storage_container.logical_explicit_reserved_capacity_bytes
@@ -114,10 +117,10 @@ func testStorageContainersResourceConfig(filepath string) string {
 			is_compression_enabled = true
 			is_internal = false
 			is_software_encryption_enabled = false
-		}`, filepath)
+		}`, filepath, name)
 }
 
-func testStorageContainersResourceUpdateConfig(filepath string) string {
+func testStorageContainersResourceUpdateConfig(filepath, name string) string {
 	return fmt.Sprintf(`
 
 		data "nutanix_clusters" "clusters" {}
@@ -127,12 +130,12 @@ func testStorageContainersResourceUpdateConfig(filepath string) string {
 				for cluster in data.nutanix_clusters.clusters.entities :
 				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 				][0]
-			config = (jsondecode(file("%s")))
+			config = (jsondecode(file("%[1]s")))
 			storage_container = local.config.storage_container			
 		}
 
 		resource "nutanix_storage_containers_v2" "test" {
-			name = "${local.storage_container.name}_updated"
+			name = "%[2]s_updated"
 			cluster_ext_id = local.cluster
 			logical_advertised_capacity_bytes = local.storage_container.logical_advertised_capacity_bytes
 			logical_explicit_reserved_capacity_bytes = local.storage_container.logical_explicit_reserved_capacity_bytes
@@ -151,7 +154,7 @@ func testStorageContainersResourceUpdateConfig(filepath string) string {
 			is_compression_enabled = true
 			is_internal = false
 			is_software_encryption_enabled = false
-		}`, filepath)
+		}`, filepath, name)
 }
 
 func testStorageContainersResourceWithoutNameConfig(filepath string) string {

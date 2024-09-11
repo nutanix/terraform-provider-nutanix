@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
@@ -29,6 +30,8 @@ func TestAccNutanixStorageContainersV2Datasource_Basic(t *testing.T) {
 }
 
 func TestAccNutanixStorageContainersV2Datasource_WithFilter(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("terraform-test-storage-container-%d", r)
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 	resource.Test(t, resource.TestCase{
@@ -36,12 +39,12 @@ func TestAccNutanixStorageContainersV2Datasource_WithFilter(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testStorageContainersV4DatasourceV4WithFilterConfig(filepath),
+				Config: testStorageContainersV4DatasourceV4WithFilterConfig(filepath, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameStorageContainersV4, "storage_containers.#"),
 					resource.TestCheckResourceAttr(datasourceNameStorageContainersV4, "storage_containers.#", "1"),
 					resource.TestCheckResourceAttrSet(datasourceNameStorageContainersV4, "storage_containers.0.container_ext_id"),
-					resource.TestCheckResourceAttr(datasourceNameStorageContainersV4, "storage_containers.0.name", testVars.StorageContainer.Name),
+					resource.TestCheckResourceAttr(datasourceNameStorageContainersV4, "storage_containers.0.name", name),
 					resource.TestCheckResourceAttr(datasourceNameStorageContainersV4, "storage_containers.0.logical_advertised_capacity_bytes", strconv.Itoa(testVars.StorageContainer.LogicalAdvertisedCapacityBytes)),
 					resource.TestCheckResourceAttr(datasourceNameStorageContainersV4, "storage_containers.0.logical_explicit_reserved_capacity_bytes", strconv.Itoa(testVars.StorageContainer.LogicalExplicitReservedCapacityBytes)),
 					resource.TestCheckResourceAttr(datasourceNameStorageContainersV4, "storage_containers.0.replication_factor", strconv.Itoa(testVars.StorageContainer.ReplicationFactor)),
@@ -54,6 +57,8 @@ func TestAccNutanixStorageContainersV2Datasource_WithFilter(t *testing.T) {
 }
 
 func TestAccNutanixStorageContainersV2Datasource_WithLimit(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("terraform-test-storage-container-%d", r)
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 
@@ -62,7 +67,7 @@ func TestAccNutanixStorageContainersV2Datasource_WithLimit(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testStorageContainersV4DatasourceV4WithLimitConfig(filepath),
+				Config: testStorageContainersV4DatasourceV4WithLimitConfig(filepath, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameStorageContainersV4, "storage_containers.#"),
 					resource.TestCheckResourceAttr(datasourceNameStorageContainersV4, "storage_containers.#", "1"),
@@ -78,7 +83,7 @@ func testStorageContainersV4DatasourceV4Config() string {
 	`
 }
 
-func testStorageContainersV4DatasourceV4WithFilterConfig(filepath string) string {
+func testStorageContainersV4DatasourceV4WithFilterConfig(filepath, name string) string {
 	return fmt.Sprintf(`
 
 		data "nutanix_clusters" "clusters" {}
@@ -88,12 +93,12 @@ func testStorageContainersV4DatasourceV4WithFilterConfig(filepath string) string
 				for cluster in data.nutanix_clusters.clusters.entities :
 				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 				][0]
-			config = (jsondecode(file("%s")))
+			config = (jsondecode(file("%[1]s")))
 			storage_container = local.config.storage_container			
 		}
 		
 		resource "nutanix_storage_containers_v2" "test" {
-			name = local.storage_container.name
+			name = "%[2]s"
 			cluster_ext_id = local.cluster
 			logical_advertised_capacity_bytes = local.storage_container.logical_advertised_capacity_bytes
 			logical_explicit_reserved_capacity_bytes = local.storage_container.logical_explicit_reserved_capacity_bytes
@@ -119,10 +124,10 @@ func testStorageContainersV4DatasourceV4WithFilterConfig(filepath string) string
 			depends_on = [nutanix_storage_containers_v2.test]
 		}
 
-	`, filepath)
+	`, filepath, name)
 }
 
-func testStorageContainersV4DatasourceV4WithLimitConfig(filepath string) string {
+func testStorageContainersV4DatasourceV4WithLimitConfig(filepath, name string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -131,12 +136,12 @@ func testStorageContainersV4DatasourceV4WithLimitConfig(filepath string) string 
 				for cluster in data.nutanix_clusters.clusters.entities :
 				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
 				][0]
-			config = (jsondecode(file("%s")))
+			config = (jsondecode(file("%[1]s")))
 			storage_container = local.config.storage_container			
 		}
 		
 		resource "nutanix_storage_containers_v2" "test" {
-			name = local.storage_container.name
+			name = "%[2]s"
 			cluster_ext_id = local.cluster
 			logical_advertised_capacity_bytes = local.storage_container.logical_advertised_capacity_bytes
 			logical_explicit_reserved_capacity_bytes = local.storage_container.logical_explicit_reserved_capacity_bytes
@@ -161,5 +166,5 @@ func testStorageContainersV4DatasourceV4WithLimitConfig(filepath string) string 
 			limit     = 1
 			depends_on = [nutanix_storage_containers_v2.test]
 		}
-	`, filepath)
+	`, filepath, name)
 }
