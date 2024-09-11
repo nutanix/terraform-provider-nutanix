@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/internal"
 	fc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/fc"
@@ -227,14 +228,14 @@ func Provider() *schema.Provider {
 			"nutanix_floating_ips_v2":                         networkingv2.DatasourceNutanixFloatingIPsV2(),
 			"nutanix_network_security_policy_v2":              networkingv2.DataSourceNutanixNetworkSecurityPolicyV2(),
 			"nutanix_network_security_policies_v2":            networkingv2.DataSourceNutanixNetworkSecurityPoliciesV2(),
-			"nutanix_route_table_v2":                          networkingv2.DatasourceNutanixRouteTableV2(),
-			"nutanix_route_tables_v2":                         networkingv2.DatasourceNutanixRouteTablesV2(),
-			"nutanix_pbr_v2":                                  networkingv2.DatasourceNutanixPbrV2(),
-			"nutanix_pbrs_v2":                                 networkingv2.DatasourceNutanixPbrsV2(),
-			"nutanix_service_group_v2":                        networkingv2.DatasourceNutanixServiceGroupV2(),
-			"nutanix_service_groups_v2":                       networkingv2.DatasourceNutanixServiceGroupsV2(),
-			"nutanix_address_group_v2":                        networkingv2.DatasourceNutanixAddressGroupV2(),
-			"nutanix_address_groups_v2":                       networkingv2.DatasourceNutanixAddressGroupsV2(),
+			// "nutanix_route_table_v2":                          networkingv2.DatasourceNutanixRouteTableV2(),
+			// "nutanix_route_tables_v2":                         networkingv2.DatasourceNutanixRouteTablesV2(),
+			"nutanix_pbr_v2":            networkingv2.DatasourceNutanixPbrV2(),
+			"nutanix_pbrs_v2":           networkingv2.DatasourceNutanixPbrsV2(),
+			"nutanix_service_group_v2":  networkingv2.DatasourceNutanixServiceGroupV2(),
+			"nutanix_service_groups_v2": networkingv2.DatasourceNutanixServiceGroupsV2(),
+			"nutanix_address_group_v2":  networkingv2.DatasourceNutanixAddressGroupV2(),
+			"nutanix_address_groups_v2": networkingv2.DatasourceNutanixAddressGroupsV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  prism.ResourceNutanixVirtualMachine(),
@@ -290,10 +291,10 @@ func Provider() *schema.Provider {
 			"nutanix_floating_ip_v2":                   networkingv2.ResourceNutanixFloatingIPv2(),
 			"nutanix_vpc_v2":                           networkingv2.ResourceNutanixVPCsV2(),
 			"nutanix_network_security_policy_v2":       networkingv2.ResourceNutanixNetworkSecurityPolicyV2(),
-			"nutanix_route_table_v2":                   networkingv2.ResourceNutanixRouteTablesV2(),
-			"nutanix_pbr_v2":                           networkingv2.ResourceNutanixPbrsV2(),
-			"nutanix_service_groups_v2":                networkingv2.ResourceNutanixServiceGroupsV2(),
-			"nutanix_address_groups_v2":                networkingv2.ResourceNutanixAddressGroupsV2(),
+			// "nutanix_route_table_v2":                   networkingv2.ResourceNutanixRouteTablesV2(),
+			"nutanix_pbr_v2":            networkingv2.ResourceNutanixPbrsV2(),
+			"nutanix_service_groups_v2": networkingv2.ResourceNutanixServiceGroupsV2(),
+			"nutanix_address_groups_v2": networkingv2.ResourceNutanixAddressGroupsV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

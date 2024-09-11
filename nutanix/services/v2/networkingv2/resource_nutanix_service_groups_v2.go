@@ -6,9 +6,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
-	import4 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/prism/v4/config"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v16/models/microseg/v4/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v16/models/prism/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16/models/prism/v4/config"
+
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -161,7 +162,7 @@ func ResourceNutanixServiceGroupsV2Create(ctx context.Context, d *schema.Resourc
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFuncMicroseg(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -284,7 +285,7 @@ func ResourceNutanixServiceGroupsV2Update(ctx context.Context, d *schema.Resourc
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFuncMicroseg(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -312,7 +313,7 @@ func ResourceNutanixServiceGroupsV2Delete(ctx context.Context, d *schema.Resourc
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFuncMicroseg(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
