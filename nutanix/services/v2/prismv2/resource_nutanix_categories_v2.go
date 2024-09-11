@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16/models/prism/v4/config"
 
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -205,16 +205,13 @@ func ResourceNutanixCategoriesV2Update(ctx context.Context, d *schema.ResourceDa
 		updatedInput.OwnerUuid = utils.StringPtr(d.Get("owner_uuid").(string))
 	}
 
-	upResp, er := conn.CategoriesAPIInstance.UpdateCategoryById(utils.StringPtr(d.Id()), &updatedInput)
+	_, er := conn.CategoriesAPIInstance.UpdateCategoryById(utils.StringPtr(d.Id()), &updatedInput)
 	if er != nil {
 		return diag.Errorf("error while updating categories : %v", err)
-	}
-
-	updatedRes := upResp.Data.GetValue().(import1.Category)
-
-	if updatedRes.ExtId != nil {
+	} else {
 		fmt.Println("Category updated successfully")
 	}
+
 	return ResourceNutanixCategoriesV2Read(ctx, d, meta)
 }
 
