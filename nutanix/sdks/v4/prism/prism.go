@@ -1,15 +1,13 @@
 package prism
 
 import (
-	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/api"
-	prism "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/client"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16/api"
 	prism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 )
 
 type Client struct {
-	TaskRefAPI            *api.TasksApi
+	TaskRefAPI *api.TasksApi
 	CategoriesAPIInstance *api.CategoriesApi
 }
 
@@ -30,7 +28,7 @@ func NewPrismClient(credentials client.Credentials) (*Client, error) {
 	}
 
 	f := &Client{
-		TaskRefAPI:            api.NewTasksApi(baseClient),
+		TaskRefAPI: api.NewTasksApi(baseClient),
 		CategoriesAPIInstance: api.NewCategoriesApi(baseClient),
 	}
 

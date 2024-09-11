@@ -2,17 +2,14 @@ package networkingv2
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	config "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/common/v1/config"
-	import1 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
-	import4 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/prism/v4/config"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v16/models/common/v1/config"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v16/models/microseg/v4/config"
+	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v16/models/prism/v4/config"
+	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -124,7 +121,7 @@ func ResourceNutanixAddressGroupsV2Create(ctx context.Context, d *schema.Resourc
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFuncMicroseg(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -229,7 +226,7 @@ func ResourceNutanixAddressGroupsV2Update(ctx context.Context, d *schema.Resourc
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFuncMicroseg(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -257,7 +254,7 @@ func ResourceNutanixAddressGroupsV2Delete(ctx context.Context, d *schema.Resourc
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFuncMicroseg(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -310,47 +307,47 @@ func expandIPv4Range(pr []interface{}) []import1.IPv4Range {
 	return nil
 }
 
-func taskStateRefreshPrismTaskGroupFuncMicroseg(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID))
-
-		if err != nil {
-			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
-		}
-
-		// get the group results
-
-		v := vresp.Data.GetValue().(import2.Task)
-
-		if getTaskStatusMicroSeg(v.Status) == "CANCELED" || getTaskStatusMicroSeg(v.Status) == "FAILED" {
-			return v, getTaskStatusMicroSeg(v.Status),
-				fmt.Errorf("error_detail: %s, progress_message: %d", utils.StringValue(v.ErrorMessages[0].Message), utils.IntValue(v.ProgressPercentage))
-		}
-		return v, getTaskStatusMicroSeg(v.Status), nil
-	}
-}
-
-func getTaskStatusMicroSeg(pr *import2.TaskStatus) string {
-	if pr != nil {
-		const two, three, four, five, six, seven = 2, 3, 4, 5, 6, 7
-		if *pr == import2.TaskStatus(two) {
-			return "QUEUED"
-		}
-		if *pr == import2.TaskStatus(three) {
-			return "RUNNING"
-		}
-		if *pr == import2.TaskStatus(four) {
-			return "CANCELING"
-		}
-		if *pr == import2.TaskStatus(five) {
-			return "SUCCEEDED"
-		}
-		if *pr == import2.TaskStatus(six) {
-			return "FAILED"
-		}
-		if *pr == import2.TaskStatus(seven) {
-			return "CANCELED"
-		}
-	}
-	return "UNKNOWN"
-}
+//func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
+//	return func() (interface{}, string, error) {
+//		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID))
+//
+//		if err != nil {
+//			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
+//		}
+//
+//		// get the group results
+//
+//		v := vresp.Data.GetValue().(import2.Task)
+//
+//		if getTaskStatusMicroSeg(v.Status) == "CANCELED" || getTaskStatusMicroSeg(v.Status) == "FAILED" {
+//			return v, getTaskStatusMicroSeg(v.Status),
+//				fmt.Errorf("error_detail: %s, progress_message: %d", utils.StringValue(v.ErrorMessages[0].Message), utils.IntValue(v.ProgressPercentage))
+//		}
+//		return v, getTaskStatusMicroSeg(v.Status), nil
+//	}
+//}
+//
+//func getTaskStatusMicroSeg(pr *import2.TaskStatus) string {
+//	if pr != nil {
+//		const two, three, four, five, six, seven = 2, 3, 4, 5, 6, 7
+//		if *pr == import2.TaskStatus(two) {
+//			return "QUEUED"
+//		}
+//		if *pr == import2.TaskStatus(three) {
+//			return "RUNNING"
+//		}
+//		if *pr == import2.TaskStatus(four) {
+//			return "CANCELING"
+//		}
+//		if *pr == import2.TaskStatus(five) {
+//			return "SUCCEEDED"
+//		}
+//		if *pr == import2.TaskStatus(six) {
+//			return "FAILED"
+//		}
+//		if *pr == import2.TaskStatus(seven) {
+//			return "CANCELED"
+//		}
+//	}
+//	return "UNKNOWN"
+//}

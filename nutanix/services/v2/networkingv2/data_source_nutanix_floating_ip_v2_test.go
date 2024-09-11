@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -35,6 +36,7 @@ func TestAccNutanixFloatingIPDataSourceV2_basic(t *testing.T) {
 }
 
 func testAccFipDataSourceConfig(name, desc string) string {
+	networkId := acctest.RandIntRange(0, 999)
 	return fmt.Sprintf(`
 
 		data "nutanix_clusters" "clusters" {}
@@ -48,7 +50,7 @@ func testAccFipDataSourceConfig(name, desc string) string {
 			description = "test subnet description"
 			cluster_reference = local.cluster0
 			subnet_type = "VLAN"
-			network_id = 112
+			network_id = %[3]d
 			is_external = true
 			ip_config {
 				ipv4 {
@@ -81,5 +83,5 @@ func testAccFipDataSourceConfig(name, desc string) string {
 		data "nutanix_floating_ip_v2" "test" {
 			ext_id = nutanix_floating_ip_v2.test.ext_id
 		}
-	`, name, desc)
+	`, name, desc, networkId)
 }
