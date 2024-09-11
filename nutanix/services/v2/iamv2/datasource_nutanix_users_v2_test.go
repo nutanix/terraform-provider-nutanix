@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
@@ -14,6 +15,8 @@ import (
 const datasourceNameUsers = "data.nutanix_users_v2.test"
 
 func TestAccNutanixUsersV4Datasource_Basic(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("test-user-%d", r)
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 	resource.Test(t, resource.TestCase{
@@ -21,7 +24,7 @@ func TestAccNutanixUsersV4Datasource_Basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testUsersDatasourceV4Config(filepath),
+				Config: testUsersDatasourceV4Config(filepath, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameUsers, "users.#"),
 					resource.TestCheckResourceAttrSet(datasourceNameUsers, "users.0.username"),
@@ -34,6 +37,8 @@ func TestAccNutanixUsersV4Datasource_Basic(t *testing.T) {
 }
 
 func TestAccNutanixUsersV4Datasource_WithFilter(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("test-user-%d", r)
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 	resource.Test(t, resource.TestCase{
@@ -41,17 +46,17 @@ func TestAccNutanixUsersV4Datasource_WithFilter(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testUsersDatasourceV4WithFilterConfig(filepath, "userType eq Schema.Enums.UserType'LOCAL'"),
+				Config: testUsersDatasourceV4WithFilterConfig(filepath, name, "userType eq Schema.Enums.UserType'LOCAL'"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameUsers, "users.0.ext_id"),
 					resource.TestCheckResourceAttr(datasourceNameUsers, "users.0.user_type", "LOCAL"),
 				),
 			},
 			{
-				Config: testUsersDatasourceV4WithFilterConfig(filepath, "username eq '"+testVars.Iam.Users.Username+"'"),
+				Config: testUsersDatasourceV4WithFilterConfig(filepath, name, "username eq '"+name+"'"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameUsers, "users.0.ext_id"),
-					resource.TestCheckResourceAttr(datasourceNameUsers, "users.0.username", testVars.Iam.Users.Username),
+					resource.TestCheckResourceAttr(datasourceNameUsers, "users.0.username", name),
 				),
 			},
 		},
@@ -59,6 +64,9 @@ func TestAccNutanixUsersV4Datasource_WithFilter(t *testing.T) {
 }
 
 func TestAccNutanixUsersV4Datasource_WithLimit(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("test-user-%d", r)
+	limit := 1
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 
@@ -67,31 +75,31 @@ func TestAccNutanixUsersV4Datasource_WithLimit(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testUsersDatasourceV4WithLimitConfig(filepath),
+				Config: testUsersDatasourceV4WithLimitConfig(filepath, name, limit),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceNameUsers, "users.#", strconv.Itoa(testVars.Iam.Users.Limit)),
+					resource.TestCheckResourceAttr(datasourceNameUsers, "users.#", strconv.Itoa(limit)),
 				),
 			},
 		},
 	})
 }
 
-func testUsersDatasourceV4Config(filepath string) string {
+func testUsersDatasourceV4Config(filepath, name string) string {
 	return fmt.Sprintf(`
 		locals{
-			config = (jsondecode(file("%s")))
+			config = (jsondecode(file("%[1]s")))
 			users = local.config.iam.users
 		}
 		
 		resource "nutanix_users_v2" "test" {
-			username = local.users.username
-			first_name = local.users.first_name
-			middle_initial = local.users.middle_initial
-			last_name = local.users.last_name
+			username = "%[2]s"
+			first_name = "first-name-%[2]s"
+			middle_initial = "middle-initial-%[2]s"
+			last_name = "last-name-%[2]s"
 			email_id = local.users.email_id
 			locale = local.users.locale
 			region = local.users.region
-			display_name = local.users.display_name
+			display_name = "display-name-%[2]s"
 			password = local.users.password
 			user_type = "LOCAL"
 			status = "ACTIVE"  
@@ -101,26 +109,26 @@ func testUsersDatasourceV4Config(filepath string) string {
 		data "nutanix_users_v2" "test"{
 			depends_on = [nutanix_users_v2.test]
 		}
-	`, filepath)
+	`, filepath, name)
 }
 
-func testUsersDatasourceV4WithFilterConfig(filepath, userQuery string) string {
+func testUsersDatasourceV4WithFilterConfig(filepath, name, userQuery string) string {
 	return fmt.Sprintf(`
 
 	locals{
-		config = (jsondecode(file("%s")))
+		config = (jsondecode(file("%[1]s")))
 		users = local.config.iam.users
 	}
-	
+
 	resource "nutanix_users_v2" "test" {
-		username = local.users.username
-		first_name = local.users.first_name
-		middle_initial = local.users.middle_initial
-		last_name = local.users.last_name
+		username = "%[2]s"
+		first_name = "first-name-%[2]s"
+		middle_initial = "middle-initial-%[2]s"
+		last_name = "last-name-%[2]s"
 		email_id = local.users.email_id
 		locale = local.users.locale
 		region = local.users.region
-		display_name = local.users.display_name
+		display_name = "display-name-%[2]s"
 		password = local.users.password
 		user_type = "LOCAL"
 		status = "ACTIVE"  
@@ -128,30 +136,30 @@ func testUsersDatasourceV4WithFilterConfig(filepath, userQuery string) string {
 	}
 	
 	data "nutanix_users_v2" "test" {
-		filter = "%s"
+		filter = "%[3]s"
 		depends_on = [nutanix_users_v2.test]
 	}
 
 	
-	`, filepath, userQuery)
+	`, filepath, name, userQuery)
 }
 
-func testUsersDatasourceV4WithLimitConfig(filepath string) string {
+func testUsersDatasourceV4WithLimitConfig(filepath, name string, limit int) string {
 	return fmt.Sprintf(`
 		locals{
-			config = (jsondecode(file("%s")))
+			config = (jsondecode(file("%[1]s")))
 			users = local.config.iam.users
 		}
 		
 		resource "nutanix_users_v2" "test" {
-			username = local.users.username
-			first_name = local.users.first_name
-			middle_initial = local.users.middle_initial
-			last_name = local.users.last_name
+			username = "%[2]s"
+			first_name = "first-name-%[2]s"
+			middle_initial = "middle-initial-%[2]s"
+			last_name = "last-name-%[2]s"
 			email_id = local.users.email_id
 			locale = local.users.locale
 			region = local.users.region
-			display_name = local.users.display_name
+			display_name = "display-name-%[2]s"
 			password = local.users.password
 			user_type = "LOCAL"
 			status = "ACTIVE"  
@@ -159,8 +167,8 @@ func testUsersDatasourceV4WithLimitConfig(filepath string) string {
 		}
 		
 		data "nutanix_users_v2" "test" {
-			limit     = local.users.limit
+			limit     = %[3]d
 			depends_on = [nutanix_users_v2.test]
 		}
-	`, filepath)
+	`, filepath, name, limit)
 }

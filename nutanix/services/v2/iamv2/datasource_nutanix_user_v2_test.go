@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
@@ -13,6 +14,8 @@ import (
 const datasourceNameUser = "data.nutanix_user_v2.test"
 
 func TestAccNutanixUserV4Datasource_Basic(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("test-user-%d", r)
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 
@@ -21,16 +24,16 @@ func TestAccNutanixUserV4Datasource_Basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testUserDatasourceV4Config(filepath),
+				Config: testUserDatasourceV4Config(filepath, name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceNameUser, "username", testVars.Iam.Users.Username),
-					resource.TestCheckResourceAttr(datasourceNameUser, "first_name", testVars.Iam.Users.FirstName),
-					resource.TestCheckResourceAttr(datasourceNameUser, "middle_initial", testVars.Iam.Users.MiddleInitial),
-					resource.TestCheckResourceAttr(datasourceNameUser, "last_name", testVars.Iam.Users.LastName),
+					resource.TestCheckResourceAttr(datasourceNameUser, "username", name),
+					resource.TestCheckResourceAttr(datasourceNameUser, "first_name", "first-name-"+name),
+					resource.TestCheckResourceAttr(datasourceNameUser, "middle_initial", "middle-initial-"+name),
+					resource.TestCheckResourceAttr(datasourceNameUser, "last_name", "last-name-"+name),
 					resource.TestCheckResourceAttr(datasourceNameUser, "email_id", testVars.Iam.Users.EmailId),
 					resource.TestCheckResourceAttr(datasourceNameUser, "locale", testVars.Iam.Users.Locale),
 					resource.TestCheckResourceAttr(datasourceNameUser, "region", testVars.Iam.Users.Region),
-					resource.TestCheckResourceAttr(datasourceNameUser, "display_name", testVars.Iam.Users.DisplayName),
+					resource.TestCheckResourceAttr(datasourceNameUser, "display_name", "display-name-"+name),
 					resource.TestCheckResourceAttr(datasourceNameUser, "user_type", "LOCAL"),
 					resource.TestCheckResourceAttr(datasourceNameUser, "status", "ACTIVE"),
 				),
@@ -39,23 +42,23 @@ func TestAccNutanixUserV4Datasource_Basic(t *testing.T) {
 	})
 }
 
-func testUserDatasourceV4Config(filepath string) string {
+func testUserDatasourceV4Config(filepath, name string) string {
 	return fmt.Sprintf(`
 
 		locals{
-			config = (jsondecode(file("%s")))
+			config = (jsondecode(file("%[1]s")))
 			users = local.config.iam.users
 		}
 		
 		resource "nutanix_users_v2" "test" {
-			username = local.users.username
-			first_name = local.users.first_name
-			middle_initial = local.users.middle_initial
-			last_name = local.users.last_name
+			username = "%[2]s"
+			first_name = "first-name-%[2]s"
+			middle_initial = "middle-initial-%[2]s"
+			last_name = "last-name-%[2]s"
 			email_id = local.users.email_id
 			locale = local.users.locale
 			region = local.users.region
-			display_name = local.users.display_name
+			display_name = "display-name-%[2]s"
 			password = local.users.password
 			user_type = "LOCAL"
 			status = "ACTIVE"  
@@ -68,5 +71,5 @@ func testUserDatasourceV4Config(filepath string) string {
 		}			
 
 		
-	`, filepath)
+	`, filepath, name)
 }

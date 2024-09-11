@@ -11,15 +11,9 @@
       "description":"Test Role Description"
     },
     "users":{
-      "limit":1,
-      "username":"terraform_test_username",
       "idp_id":"",
       "directory_service_id":"",
       "directory_service_username":"",
-      "display_name":"terraform_test_displayname",
-      "first_name":"terraform_test_firstname",
-      "middle_initial":"terraform_test_middle_initial",
-      "last_name":"terraform_test_middleinitial",
       "email_id":"terraform_test_2@email.com",
       "locale":"en-US",
       "region":"en-US",

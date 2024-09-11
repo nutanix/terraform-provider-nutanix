@@ -10,11 +10,11 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNameDirectoryService = "data.nutanix_directory_services_v2.test"
+const datasourceNameDirectoryService = "data.nutanix_directory_service_v2.test"
 
 func TestAccNutanixDirectoryServiceV2Datasource_Basic(t *testing.T) {
 	path, _ := os.Getwd()
-	filepath := path + "/../../../../"
+	filepath := path + "/../../../../test_config_v2.json"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },

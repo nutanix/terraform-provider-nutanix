@@ -51,7 +51,7 @@ func TestAccNutanixRolesV4Resource_DuplicateRole(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testRoleResourceDuplicateRoleConfig(filepath),
-				ExpectError: regexp.MustCompile("Failed to create a role due to already exists"),
+				ExpectError: regexp.MustCompile("Failed to create role as already exists"),
 			},
 		},
 	})

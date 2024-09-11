@@ -15,15 +15,9 @@ type TestConfig struct {
 			Description string `json:"description"`
 		} `json:"roles"`
 		Users struct {
-			Limit                       int    `json:"limit"`
-			Username                    string `json:"username"`
 			IdpId                       string `json:"idp_id"`
 			DirectoryServiceId          string `json:"directory_service_id"`
 			DirectoryServiceUsername    string `json:"directory_service_username"`
-			DisplayName                 string `json:"display_name"`
-			FirstName                   string `json:"first_name"`
-			MiddleInitial               string `json:"middle_initial"`
-			LastName                    string `json:"last_name"`
 			EmailId                     string `json:"email_id"`
 			Locale                      string `json:"locale"`
 			Region                      string `json:"region"`

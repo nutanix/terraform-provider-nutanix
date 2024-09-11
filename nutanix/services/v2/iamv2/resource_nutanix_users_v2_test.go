@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
@@ -15,6 +16,8 @@ const resourceNameUsers = "nutanix_users_v2.test"
 
 // create local Active user, and test update the username and display name
 func TestAccNutanixUsersV4Resource_LocalActiveUser(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("test-user-%d", r)
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 
@@ -23,30 +26,30 @@ func TestAccNutanixUsersV4Resource_LocalActiveUser(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testLocalActiveUserResourceConfig(filepath),
+				Config: testLocalActiveUserResourceConfig(filepath, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameUsers, "ext_id"),
-					resource.TestCheckResourceAttr(resourceNameUsers, "username", testVars.Iam.Users.Username),
-					resource.TestCheckResourceAttr(resourceNameUsers, "display_name", testVars.Iam.Users.DisplayName),
+					resource.TestCheckResourceAttr(resourceNameUsers, "username", name),
+					resource.TestCheckResourceAttr(resourceNameUsers, "display_name", "display-name-"+name),
 					resource.TestCheckResourceAttr(resourceNameUsers, "user_type", "LOCAL"),
-					resource.TestCheckResourceAttr(resourceNameUsers, "first_name", testVars.Iam.Users.FirstName),
-					resource.TestCheckResourceAttr(resourceNameUsers, "middle_initial", testVars.Iam.Users.MiddleInitial),
-					resource.TestCheckResourceAttr(resourceNameUsers, "last_name", testVars.Iam.Users.LastName),
+					resource.TestCheckResourceAttr(resourceNameUsers, "first_name", "first-name-"+name),
+					resource.TestCheckResourceAttr(resourceNameUsers, "middle_initial", "middle-initial-"+name),
+					resource.TestCheckResourceAttr(resourceNameUsers, "last_name", "last-name-"+name),
 					resource.TestCheckResourceAttr(resourceNameUsers, "email_id", testVars.Iam.Users.EmailId),
 					resource.TestCheckResourceAttr(resourceNameUsers, "status", "ACTIVE"),
 				),
 			},
 			// test update
 			{
-				Config: testLocalActiveUserResourceUpdateConfig(filepath),
+				Config: testLocalActiveUserResourceUpdateConfig(filepath, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameUsers, "ext_id"),
-					resource.TestCheckResourceAttr(resourceNameUsers, "username", testVars.Iam.Users.Username),
-					resource.TestCheckResourceAttr(resourceNameUsers, "display_name", fmt.Sprintf("%s_updated", testVars.Iam.Users.DisplayName)),
+					resource.TestCheckResourceAttr(resourceNameUsers, "username", name),
+					resource.TestCheckResourceAttr(resourceNameUsers, "display_name", fmt.Sprintf("%s_updated", "display-name-"+name)),
 					resource.TestCheckResourceAttr(resourceNameUsers, "user_type", "LOCAL"),
-					resource.TestCheckResourceAttr(resourceNameUsers, "first_name", fmt.Sprintf("%s_updated", testVars.Iam.Users.FirstName)),
-					resource.TestCheckResourceAttr(resourceNameUsers, "middle_initial", fmt.Sprintf("%s_updated", testVars.Iam.Users.MiddleInitial)),
-					resource.TestCheckResourceAttr(resourceNameUsers, "last_name", fmt.Sprintf("%s_updated", testVars.Iam.Users.LastName)),
+					resource.TestCheckResourceAttr(resourceNameUsers, "first_name", fmt.Sprintf("%s_updated", "first-name-"+name)),
+					resource.TestCheckResourceAttr(resourceNameUsers, "middle_initial", fmt.Sprintf("%s_updated", "middle-initial-"+name)),
+					resource.TestCheckResourceAttr(resourceNameUsers, "last_name", fmt.Sprintf("%s_updated", "last-name-"+name)),
 					resource.TestCheckResourceAttr(resourceNameUsers, "email_id", fmt.Sprintf("updated_%s", testVars.Iam.Users.EmailId)),
 				),
 			},
@@ -56,6 +59,8 @@ func TestAccNutanixUsersV4Resource_LocalActiveUser(t *testing.T) {
 
 // test duplicate user creation
 func TestAccNutanixUsersV4Resource_AlreadyExistsUser(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("test-user-%d", r)
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 
@@ -64,18 +69,18 @@ func TestAccNutanixUsersV4Resource_AlreadyExistsUser(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testLocalActiveUserResourceConfig(filepath),
+				Config: testLocalActiveUserResourceConfig(filepath, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameUsers, "ext_id"),
-					resource.TestCheckResourceAttr(resourceNameUsers, "username", testVars.Iam.Users.Username),
-					resource.TestCheckResourceAttr(resourceNameUsers, "display_name", testVars.Iam.Users.DisplayName),
+					resource.TestCheckResourceAttr(resourceNameUsers, "username", name),
+					resource.TestCheckResourceAttr(resourceNameUsers, "display_name", "display-name-"+name),
 					resource.TestCheckResourceAttr(resourceNameUsers, "user_type", "LOCAL"),
-					resource.TestCheckResourceAttr(resourceNameUsers, "first_name", testVars.Iam.Users.FirstName),
-					resource.TestCheckResourceAttr(resourceNameUsers, "last_name", testVars.Iam.Users.LastName),
+					resource.TestCheckResourceAttr(resourceNameUsers, "first_name", "first-name-"+name),
+					resource.TestCheckResourceAttr(resourceNameUsers, "last_name", "last-name-"+name),
 				),
 			},
 			{
-				Config:      testLocalUserAlreadyExistsResourceConfig(filepath),
+				Config:      testLocalUserAlreadyExistsResourceConfig(filepath, name),
 				ExpectError: regexp.MustCompile("already existing User with given username"),
 			},
 		},
@@ -84,6 +89,8 @@ func TestAccNutanixUsersV4Resource_AlreadyExistsUser(t *testing.T) {
 
 // create local Inactive user
 func TestAccNutanixUsersV4Resource_LocalInactiveUser(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("test-user-%d", r)
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 
@@ -92,14 +99,14 @@ func TestAccNutanixUsersV4Resource_LocalInactiveUser(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testLocalInactiveUserResourceConfig(filepath),
+				Config: testLocalInactiveUserResourceConfig(filepath, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameUsers, "ext_id"),
-					resource.TestCheckResourceAttr(resourceNameUsers, "username", testVars.Iam.Users.Username),
-					resource.TestCheckResourceAttr(resourceNameUsers, "display_name", testVars.Iam.Users.DisplayName),
+					resource.TestCheckResourceAttr(resourceNameUsers, "username", name),
+					resource.TestCheckResourceAttr(resourceNameUsers, "display_name", "display-name-"+name),
 					resource.TestCheckResourceAttr(resourceNameUsers, "user_type", "LOCAL"),
-					resource.TestCheckResourceAttr(resourceNameUsers, "first_name", testVars.Iam.Users.FirstName),
-					resource.TestCheckResourceAttr(resourceNameUsers, "last_name", testVars.Iam.Users.LastName),
+					resource.TestCheckResourceAttr(resourceNameUsers, "first_name", "first-name-"+name),
+					resource.TestCheckResourceAttr(resourceNameUsers, "last_name", "last-name-"+name),
 					resource.TestCheckResourceAttr(resourceNameUsers, "status", "INACTIVE"),
 				),
 			},
@@ -109,6 +116,8 @@ func TestAccNutanixUsersV4Resource_LocalInactiveUser(t *testing.T) {
 
 // create SAML user
 func TestAccNutanixUsersV4Resource_SAMLUser(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("test-user-%d", r)
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 
@@ -117,10 +126,10 @@ func TestAccNutanixUsersV4Resource_SAMLUser(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testSAMLUserResourceConfig(filepath),
+				Config: testSAMLUserResourceConfig(filepath, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameUsers, "ext_id"),
-					resource.TestCheckResourceAttr(resourceNameUsers, "username", testVars.Iam.Users.Username),
+					resource.TestCheckResourceAttr(resourceNameUsers, "username", name),
 					resource.TestCheckResourceAttr(resourceNameUsers, "user_type", "SAML"),
 					resource.TestCheckResourceAttr(resourceNameUsers, "idp_id", testVars.Iam.Users.IdpId),
 				),
@@ -131,6 +140,8 @@ func TestAccNutanixUsersV4Resource_SAMLUser(t *testing.T) {
 
 // create LDAP user
 func TestAccNutanixUsersV4Resource_LDAPUser(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("test-user-%d", r)
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 
@@ -139,10 +150,10 @@ func TestAccNutanixUsersV4Resource_LDAPUser(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testLDAPUserWithMinimalConfigResourceConfig(filepath),
+				Config: testLDAPUserWithMinimalConfigResourceConfig(filepath, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameUsers, "ext_id"),
-					resource.TestCheckResourceAttr(resourceNameUsers, "username", testVars.Iam.Users.DirectoryServiceUsername),
+					resource.TestCheckResourceAttr(resourceNameUsers, "username", name),
 					resource.TestCheckResourceAttr(resourceNameUsers, "user_type", "LDAP"),
 					resource.TestCheckResourceAttr(resourceNameUsers, "idp_id", testVars.Iam.Users.DirectoryServiceId),
 				),
@@ -154,6 +165,8 @@ func TestAccNutanixUsersV4Resource_LDAPUser(t *testing.T) {
 // create local Active user, and test update the username and display name
 func TestAccNutanixUsersV4Resource_DeactivateLocalUser(t *testing.T) {
 	t.Skip("these test were commented since they are using different APIs")
+	r := acctest.RandInt()
+	name := fmt.Sprintf("test-user-%d", r)
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 
@@ -162,27 +175,27 @@ func TestAccNutanixUsersV4Resource_DeactivateLocalUser(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testLocalActiveUserResourceConfig(filepath),
+				Config: testLocalActiveUserResourceConfig(filepath, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameUsers, "ext_id"),
-					resource.TestCheckResourceAttr(resourceNameUsers, "username", testVars.Iam.Users.Username),
-					resource.TestCheckResourceAttr(resourceNameUsers, "display_name", testVars.Iam.Users.DisplayName),
+					resource.TestCheckResourceAttr(resourceNameUsers, "username", name),
+					resource.TestCheckResourceAttr(resourceNameUsers, "display_name", "display-name-"+name),
 					resource.TestCheckResourceAttr(resourceNameUsers, "user_type", "LOCAL"),
-					resource.TestCheckResourceAttr(resourceNameUsers, "first_name", testVars.Iam.Users.FirstName),
-					resource.TestCheckResourceAttr(resourceNameUsers, "last_name", testVars.Iam.Users.LastName),
+					resource.TestCheckResourceAttr(resourceNameUsers, "first_name", "first-name-"+name),
+					resource.TestCheckResourceAttr(resourceNameUsers, "last_name", "last-name-"+name),
 					resource.TestCheckResourceAttr(resourceNameUsers, "status", "ACTIVE"),
 				),
 			},
 			// test Deactivate User
 			{
-				Config: testDeactivateLocalUserResourceConfig(filepath),
+				Config: testDeactivateLocalUserResourceConfig(filepath, name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameUsers, "ext_id"),
-					resource.TestCheckResourceAttr(resourceNameUsers, "username", testVars.Iam.Users.Username),
-					resource.TestCheckResourceAttr(resourceNameUsers, "display_name", testVars.Iam.Users.DisplayName),
+					resource.TestCheckResourceAttr(resourceNameUsers, "username", name),
+					resource.TestCheckResourceAttr(resourceNameUsers, "display_name", "display-name-"+name),
 					resource.TestCheckResourceAttr(resourceNameUsers, "user_type", "LOCAL"),
-					resource.TestCheckResourceAttr(resourceNameUsers, "first_name", testVars.Iam.Users.FirstName),
-					resource.TestCheckResourceAttr(resourceNameUsers, "last_name", testVars.Iam.Users.LastName),
+					resource.TestCheckResourceAttr(resourceNameUsers, "first_name", "first-name-"+name),
+					resource.TestCheckResourceAttr(resourceNameUsers, "last_name", "last-name-"+name),
 					resource.TestCheckResourceAttr(resourceNameUsers, "status", "INACTIVE"),
 				),
 			},
@@ -192,6 +205,7 @@ func TestAccNutanixUsersV4Resource_DeactivateLocalUser(t *testing.T) {
 
 // Test missing username
 func TestAccNutanixUsersV4Resource_WithNoUserName(t *testing.T) {
+
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 	resource.Test(t, resource.TestCase{
@@ -208,6 +222,8 @@ func TestAccNutanixUsersV4Resource_WithNoUserName(t *testing.T) {
 
 // Test missing user type
 func TestAccNutanixUsersV4Resource_WithNoUserType(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("test-user-%d", r)
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 	resource.Test(t, resource.TestCase{
@@ -215,47 +231,47 @@ func TestAccNutanixUsersV4Resource_WithNoUserType(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testUsersResourceWithoutUserTypeConfig(filepath),
+				Config:      testUsersResourceWithoutUserTypeConfig(filepath, name),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 		},
 	})
 }
 
-func testLocalActiveUserResourceConfig(filepath string) string {
+func testLocalActiveUserResourceConfig(filepath, name string) string {
 	return fmt.Sprintf(`
 
 	locals{
-		config = (jsondecode(file("%s")))
+		config = (jsondecode(file("%[1]s")))
 		users = local.config.iam.users
 	}
 
 	resource "nutanix_users_v2" "test" {
-		username = local.users.username
-		first_name = local.users.first_name
-		middle_initial = local.users.middle_initial
-		last_name = local.users.last_name
+		username = "%[2]s"
+		first_name = "first-name-%[2]s"
+		middle_initial = "middle-initial-%[2]s"
+		last_name = "last-name-%[2]s"
 		email_id = local.users.email_id
 		locale = local.users.locale
 		region = local.users.region
-		display_name = local.users.display_name
+		display_name = "display-name-%[2]s"
 		password = local.users.password
 		user_type = "LOCAL"
 		status = "ACTIVE"  
 		force_reset_password = local.users.force_reset_password  
-	}`, filepath)
+	}`, filepath, name)
 }
 
-func testLocalActiveUserResourceUpdateConfig(filepath string) string {
+func testLocalActiveUserResourceUpdateConfig(filepath, name string) string {
 	return fmt.Sprintf(`
 
 	locals{
-		config = (jsondecode(file("%s")))
+		config = (jsondecode(file("%[1]s")))
 		users = local.config.iam.users
 	}
 
 	resource "nutanix_users_v2" "test" {
-		username = local.users.username
+		username = "%[2]s"
 		first_name = "${local.users.first_name}_updated"
 		middle_initial = "${local.users.middle_initial}_updated"
 		last_name = "${local.users.last_name}_updated"
@@ -268,80 +284,80 @@ func testLocalActiveUserResourceUpdateConfig(filepath string) string {
 		status = "ACTIVE"  
 		force_reset_password = local.users.force_reset_password
 		
-	}`, filepath)
+	}`, filepath, name)
 }
 
-func testLocalUserAlreadyExistsResourceConfig(filepath string) string {
+func testLocalUserAlreadyExistsResourceConfig(filepath, name string) string {
 	return fmt.Sprintf(`
 
 	locals{
-		config = (jsondecode(file("%s")))
+		config = (jsondecode(file("%[1]s")))
 		users = local.config.iam.users
 	}
 
 	resource "nutanix_users_v2" "test2" {
-		username = local.users.username
-		first_name = local.users.first_name
-		middle_initial = local.users.middle_initial
-		last_name = local.users.last_name
+		username = "%[2]s"
+		first_name = "first-name-%[2]s"
+		middle_initial = "middle-initial-%[2]s"
+		last_name = "last-name-%[2]s"
 		email_id = local.users.email_id
 		locale = local.users.locale
 		region = local.users.region
-		display_name = local.users.display_name
+		display_name = "display-name-%[2]s"
 		password = local.users.password
 		user_type = "LOCAL"
 		status = "ACTIVE"  
 		force_reset_password = local.users.force_reset_password
 	}
 		
-	`, filepath)
+	`, filepath, name)
 }
 
-func testLocalInactiveUserResourceConfig(filepath string) string {
+func testLocalInactiveUserResourceConfig(filepath, name string) string {
 	return fmt.Sprintf(`
 
 	locals{
-		config = (jsondecode(file("%s")))
+		config = (jsondecode(file("%[1]s")))
 		users = local.config.iam.users
 	}
 
 	resource "nutanix_users_v2" "test" {
-		username = local.users.username
-		first_name = local.users.first_name
-		middle_initial = local.users.middle_initial
-		last_name = local.users.last_name
+		username = "%[2]s"
+		first_name = "first-name-%[2]s"
+		middle_initial = "middle-initial-%[2]s"
+		last_name = "last-name-%[2]s"
 		email_id = local.users.email_id
 		locale = local.users.locale
 		region = local.users.region
-		display_name = local.users.display_name
+		display_name = "display-name-%[2]s"
 		password = local.users.password
 		user_type = "LOCAL"
 		status = "INACTIVE"  
 		force_reset_password = local.users.force_reset_password
 
-	}`, filepath)
+	}`, filepath, name)
 }
 
-func testSAMLUserResourceConfig(filepath string) string {
+func testSAMLUserResourceConfig(filepath, name string) string {
 	return fmt.Sprintf(`
 
 	locals{
-		config = (jsondecode(file("%s")))
+		config = (jsondecode(file("%[1]s")))
 		users = local.config.iam.users
 	}
 
 	resource "nutanix_users_v2" "test" {
-		username = local.users.username
+		username = "%[2]s"
 		user_type = "SAML"
 		idp_id = local.users.idp_id		
-	}`, filepath)
+	}`, filepath, name)
 }
 
-func testLDAPUserWithMinimalConfigResourceConfig(filepath string) string {
+func testLDAPUserWithMinimalConfigResourceConfig(filepath, name string) string {
 	return fmt.Sprintf(`
 
 	locals{
-		config = (jsondecode(file("%s")))
+		config = (jsondecode(file("%[1]s")))
 		users = local.config.iam.users
 	}
 
@@ -350,46 +366,46 @@ func testLDAPUserWithMinimalConfigResourceConfig(filepath string) string {
 		user_type = "LDAP"
 		idp_id = local.users.directory_service_id
 		
-	}`, filepath)
+	}`, filepath, name)
 }
 
-func testDeactivateLocalUserResourceConfig(filepath string) string {
+func testDeactivateLocalUserResourceConfig(filepath, name string) string {
 	return fmt.Sprintf(`
 
 	locals{
-		config = (jsondecode(file("%s")))
+		config = (jsondecode(file("%[1]s")))
 		users = local.config.iam.users
 	}
 
 	resource "nutanix_users_v2" "test" {
-		username = local.users.username
+		username = "%[2]s"
 		user_type = "LOCAL"
 		idp_id = local.users.idp_id
-		display_name = local.users.display_name
+		display_name = "display-name-%[2]s"
 		locale = local.users.locale
 		region = local.users.region
 		password = local.users.password
 		force_reset_password = local.users.force_reset_password
 		status = INACTIVE  
-	}`, filepath)
+	}`, filepath, name)
 }
 
 func testUsersResourceWithoutUserNameConfig(filepath string) string {
 	return fmt.Sprintf(`
 
 	locals{
-		config = (jsondecode(file("%s")))
+		config = (jsondecode(file("%[1]s")))
 		users = local.config.iam.users
 	}
 
 	resource "nutanix_users_v2" "test" {
-		first_name = local.users.first_name
-		middle_initial = local.users.middle_initial
-		last_name = local.users.last_name
+		first_name = "first-name"
+		middle_initial = "middle-initial"
+		last_name = "last-name"
 		email_id = local.users.email_id
 		locale = local.users.locale
 		region = local.users.region
-		display_name = local.users.display_name
+		display_name = "display-name"
 		password = local.users.password
 		user_type = "LOCAL"
 		status = "ACTIVE"  
@@ -398,26 +414,26 @@ func testUsersResourceWithoutUserNameConfig(filepath string) string {
 	}`, filepath)
 }
 
-func testUsersResourceWithoutUserTypeConfig(filepath string) string {
+func testUsersResourceWithoutUserTypeConfig(filepath, name string) string {
 	return fmt.Sprintf(`
 
 	locals{
-		config = (jsondecode(file("%s")))
+		config = (jsondecode(file("%[1]s")))
 		users = local.config.iam.users
 	}
 
 	resource "nutanix_users_v2" "test" {
-		username = local.users.username
-		first_name = local.users.first_name
-		middle_initial = local.users.middle_initial
-		last_name = local.users.last_name
+		username = "%[2]s"
+		first_name = "first-name-%[2]s"
+		middle_initial = "middle-initial-%[2]s"
+		last_name = "last-name-%[2]s"
 		email_id = local.users.email_id
 		locale = local.users.locale
 		region = local.users.region
-		display_name = local.users.display_name
+		display_name = "display-name-%[2]s"
 		password = local.users.password
 		status = "ACTIVE"  
 		force_reset_password = local.users.force_reset_password  
 
-	}`, filepath)
+	}`, filepath, name)
 }
