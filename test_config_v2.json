@@ -98,5 +98,18 @@
         "prefix_length": 32
       }
     }
+  },
+  "volumes": {
+    "vg_ext_id_with_category": "",
+    "iscsi_client": {
+      "ext_id": "",
+      "initiator_name": ""
+    },
+    "disk": {
+      "disk_data_source_reference": {
+        "ext_id": "2"
+      }
+    },
+    "vm_ext_id": ""
   }
 }

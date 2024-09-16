@@ -3,18 +3,20 @@ package nutanix
 import (
 	"fmt"
 
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/karbon"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/microseg"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
-
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/karbon"
 	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
 	foundation_central "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/fc"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/foundation"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/karbon"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
+
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/microseg"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/clusters"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/iam"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/volumes"
 )
 
 // Version represents api version
@@ -81,15 +83,15 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	networkingClient, err := networking.NewNetworkingClient(configCreds)
-	if err != nil {
-		return nil, err
-	}
 	prismClient, err := prism.NewPrismClient(configCreds)
 	if err != nil {
 		return nil, err
 	}
 	microsegClient, err := microseg.NewMicrosegClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
+	volumeClient, err := volumes.NewVolumeClient(configCreds)
 	if err != nil {
 		return nil, err
 	}
@@ -110,6 +112,7 @@ func (c *Config) Client() (*Client, error) {
 		MicroSegAPI:         microsegClient,
 		IamAPI:              iamClient,
 		ClusterAPI:          clustersClient,
+		VolumeAPI:           volumeClient,
 	}, nil
 }
 
@@ -126,4 +129,5 @@ type Client struct {
 	MicroSegAPI         *microseg.Client
 	IamAPI              *iam.Client
 	ClusterAPI          *clusters.Client
+	VolumeAPI           *volumes.Client
 }

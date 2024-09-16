@@ -12,6 +12,7 @@ require (
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v16 v16.9.0-8831
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16 v16.9.0-8856
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16 v16.9.0-8887
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v16 v16.9.0-8827
 	github.com/spf13/cast v1.3.1
 	github.com/stretchr/testify v1.7.0
 	gopkg.in/yaml.v2 v2.4.0

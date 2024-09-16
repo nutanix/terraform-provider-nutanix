@@ -20,6 +20,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/networkingv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/prismv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/storagecontainersv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/volumesv2"
 )
 
 var requiredProviderFields map[string][]string = map[string][]string{
@@ -258,6 +259,15 @@ func Provider() *schema.Provider {
 			"nutanix_storage_container_stats_info_v2": storagecontainersv2.DatasourceNutanixStorageStatsInfoV2(),
 			"nutanix_category_v2":                     prismv2.DatasourceNutanixCategoryV2(),
 			"nutanix_categories_v2":                   prismv2.DatasourceNutanixCategoriesV2(),
+			"nutanix_volume_groups_v2":                        volumesv2.DatasourceNutanixVolumeGroupsV2(),
+			"nutanix_volume_group_v2":                         volumesv2.DatasourceNutanixVolumeGroupV2(),
+			"nutanix_volume_group_disks_v2":                   volumesv2.DatasourceNutanixVolumeDisksV2(),
+			"nutanix_volume_group_disk_v2":                    volumesv2.DatasourceNutanixVolumeDiskV2(),
+			"nutanix_volume_group_iscsi_clients_v2":           volumesv2.DatasourceNutanixVolumeGroupIscsiClientsV2(),
+			"nutanix_volume_group_category_details_v2":        volumesv2.DatasourceNutanixVolumeCategoryDetailsV2(),
+			"nutanix_volume_group_vms_v2":                     volumesv2.DataSourceNutanixVolumeGroupVmsV2(),
+			"nutanix_volume_iscsi_clients_v2":                 volumesv2.DatasourceNutanixVolumeIscsiClientsV2(),
+			"nutanix_volume_iscsi_client_v2":                  volumesv2.DatasourceNutanixVolumeIscsiClientV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  prism.ResourceNutanixVirtualMachine(),
@@ -325,6 +335,10 @@ func Provider() *schema.Provider {
 			"nutanix_saml_identity_providers_v2": iamv2.ResourceNutanixSamlIdpV2(),
 			"nutanix_storage_containers_v2":      storagecontainersv2.ResourceNutanixStorageContainersV2(),
 			"nutanix_category_v2":                prismv2.ResourceNutanixCategoriesV2(),
+			"nutanix_volume_group_v2":                  volumesv2.ResourceNutanixVolumeGroupV2(),
+			"nutanix_volume_group_disk_v2":             volumesv2.ResourceNutanixVolumeGroupDiskV2(),
+			"nutanix_volume_group_iscsi_client_v2":     volumesv2.ResourceNutanixVolumeGroupIscsiClientV2(),
+			"nutanix_volume_group_vm_v2":               volumesv2.ResourceNutanixVolumeAttachVmToVolumeGroupV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

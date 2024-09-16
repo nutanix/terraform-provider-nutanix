@@ -454,6 +454,10 @@ github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16 v1
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16 v16.9.0-8856/go.mod h1:vHyQVF3IKxmip+xGxXDQznKk1ffrVa4HSiEEueiekaE=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16 v16.9.0-8887 h1:TZKhy9NyH2VTnrRmz0sm8aRSHstL49mKbw63s+0hLB0=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16 v16.9.0-8887/go.mod h1:qmOw/29LhPpII8cDmbTL0OF3btwp97ss7nFcQz72NDM=
+github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16 v16.8.0-5295 h1:8Sv5R9lItsRi4m/+/kwCuFR2jSxc8K4RRxxPXsccphQ=
+github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16 v16.8.0-5295/go.mod h1:qmOw/29LhPpII8cDmbTL0OF3btwp97ss7nFcQz72NDM=
+github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v16 v16.9.0-8827 h1:r/FSW++1SKRir/gMGZ1nuMSs960yknfNEvAEaEhI7Hw=
+github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v16 v16.9.0-8827/go.mod h1:ABLxzNkbsfu/05qZhS9jnO7altxsiWMs80rNcSc94LQ=
 github.com/oklog/run v1.0.0 h1:Ru7dDtJNOyC66gQ5dQmaCa0qIsAUFY3sFpK1Xk8igrw=
 github.com/oklog/run v1.0.0/go.mod h1:dlhp/R75TPv97u0XWUtDeV/lRKWPKSdTuV0TZvrmrQA=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
