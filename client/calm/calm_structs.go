@@ -7,10 +7,10 @@ type BlueprintProvisionInput struct {
 }
 
 type BPspec struct {
-	AppName             string                 `json:"app_name,omitempty"`
-	AppDesc             string                 `json:"app_description,omitempty"`
-	RuntimeEditables    map[string]interface{} `json:"runtime_editables,omitempty"`
-	AppProfileReference AppProfileReference    `json:"app_profile_reference,omitempty"`
+	AppName             string              `json:"app_name,omitempty"`
+	AppDesc             string              `json:"app_description,omitempty"`
+	RuntimeEditables    *RuntimeEditables   `json:"runtime_editables,omitempty"`
+	AppProfileReference AppProfileReference `json:"app_profile_reference,omitempty"`
 }
 
 type AppProfileReference struct {
@@ -107,3 +107,35 @@ type BlueprintListResponse struct {
 // 	TargetUUID string `json:"target_uuid"`
 // 	TargetKind string `json:"target_kind"`
 // }
+
+type RuntimeEditablesResponse struct {
+	Resources []*Resources `json:"resources"`
+}
+
+type Resources struct {
+	AppProfileReference *AppProfileReference `json:"app_profile_reference"`
+	RuntimeEditables    *RuntimeEditables    `json:"runtime_editables"`
+}
+
+type RuntimeEditables struct {
+	ActionList         []*RuntimeSpec `json:"action_list,omitempty"`
+	ServiceList        []*RuntimeSpec `json:"service_list,omitempty"`
+	CredentialList     []*RuntimeSpec `json:"credential_list,omitempty"`
+	SubstrateList      []*RuntimeSpec `json:"substrate_list,omitempty"`
+	PackageList        []*RuntimeSpec `json:"package_list,omitempty"`
+	SnapshotConfifList []*RuntimeSpec `json:"snapshot_config_list,omitempty"`
+	AppProfile         *RuntimeSpec   `json:"app_profile,omitempty"`
+	TaskList           []*RuntimeSpec `json:"task_list,omitempty"`
+	RestoreConfigList  []*RuntimeSpec `json:"restore_config_list,omitempty"`
+	VariableList       []*RuntimeSpec `json:"variable_list,omitempty"`
+	DeploymentList     []*RuntimeSpec `json:"deployment_list,omitempty"`
+}
+
+type RuntimeSpec struct {
+	Description *string          `json:"description,omitempty"`
+	Value       *json.RawMessage `json:"value,omitempty"`
+	Name        *string          `json:"name,omitempty"`
+	Context     *string          `json:"context,omitempty"`
+	Type        *string          `json:"type,omitempty"`
+	UUID        *string          `json:"uuid,omitempty"`
+}

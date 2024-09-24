@@ -213,6 +213,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_dbservers":                           dataSourceNutanixNDBDBServers(),
 			"nutanix_ndb_network_available_ips":               dataSourceNutanixNDBProfileAvailableIPs(),
 			"nutanix_calm_app":                                datsourceNutanixCalmApp(),
+			"nutanix_blueprint_runtime_editables":             datsourceNutanixCalmRuntimeEditables(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                  resourceNutanixVirtualMachine(),

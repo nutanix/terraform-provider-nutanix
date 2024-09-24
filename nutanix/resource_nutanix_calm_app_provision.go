@@ -86,15 +86,15 @@ func resourceNutanixCalmAppProvision() *schema.Resource {
 										Computed: true,
 									},
 									"vcpus": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeFloat,
 										Computed: true,
 									},
 									"cores": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeFloat,
 										Computed: true,
 									},
 									"memory": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeFloat,
 										Computed: true,
 									},
 									"vm_uuid": {
@@ -148,6 +148,92 @@ func resourceNutanixCalmAppProvision() *schema.Resource {
 						// 	Type:    schema.TypeMap,
 						// 	Computed: true,
 						// },
+					},
+				},
+			},
+			"runtime_editables": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"action_list": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: RuntimeSpec(),
+							},
+						},
+						"service_list": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: RuntimeSpec(),
+							},
+						},
+						"credential_list": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: RuntimeSpec(),
+							},
+						},
+						"substrate_list": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: RuntimeSpec(),
+							},
+						},
+						"package_list": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: RuntimeSpec(),
+							},
+						},
+						"snapshot_config_list": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: RuntimeSpec(),
+							},
+						},
+						"app_profile": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: RuntimeSpec(),
+							},
+						},
+						"task_list": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: RuntimeSpec(),
+							},
+						},
+						"restore_config_list": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: RuntimeSpec(),
+							},
+						},
+						"variable_list": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: RuntimeSpec(),
+							},
+						},
+						"deployment_list": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: RuntimeSpec(),
+							},
+						},
 					},
 				},
 			},
@@ -220,6 +306,67 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 		}
 	}
 
+	// check for runtime editables
+	runtimeSpec := &calm.RuntimeEditables{}
+	if runtime, ok := d.GetOk("runtime_editables"); ok {
+		getRuntime, err := conn.Service.GetRuntimeEditables(ctx, bp_uuid)
+		if err != nil {
+			return diag.Errorf("Error getting Runtime Editables: %s", err)
+		}
+
+		runtimeSpec = getRuntime.Resources[0].RuntimeEditables
+
+		fmt.Println("Runtime Editables: ", runtimeSpec)
+		// log.Println("HELLLLLOOOOOO")
+		// aJSON, _ := json.Marshal(runtimeSpec)
+		// fmt.Printf("JSON Print - \n%s\n", string(aJSON))
+
+		runtimeList := runtime.([]interface{})
+
+		for k, item := range runtimeList {
+			itemMap := item.(map[string]interface{})
+
+			if variable_list, ok := itemMap["variable_list"].([]interface{}); ok {
+				for _, variable := range variable_list {
+					variableMap := variable.(map[string]interface{})
+					// fmt.Println("Variable Name: ", variableMap["name"])
+					// fmt.Println("Variable Value: ", variableMap["value"])
+					val := variableMap["value"].(string)
+
+					rawMsg := json.RawMessage(val)
+					runtimeSpec.VariableList[k].Value = &rawMsg
+				}
+			}
+			if substrate_list, ok := itemMap["substrate_list"].([]interface{}); ok {
+				for _, substrate := range substrate_list {
+					substrateMap := substrate.(map[string]interface{})
+					// fmt.Println("Substrate Name: ", substrateMap["name"])
+					// fmt.Println("Substrate Value: ", substrateMap["value"])
+					val := substrateMap["value"].(string)
+
+					rawMsg := json.RawMessage(val)
+					runtimeSpec.SubstrateList[k].Value = &rawMsg
+				}
+			}
+			if deployment_list, ok := itemMap["deployment_list"].([]interface{}); ok {
+				for _, deployment := range deployment_list {
+					deploymentMap := deployment.(map[string]interface{})
+					// fmt.Println("Deployment Name: ", deploymentMap["name"])
+					// fmt.Println("Deployment Value: ", deploymentMap["value"])
+					val := deploymentMap["value"].(string)
+
+					rawMsg := json.RawMessage(val)
+					runtimeSpec.DeploymentList[k].Value = &rawMsg
+				}
+			}
+		}
+		// log.Println("HELLLLLOOOOOO22")
+		// bJSON, _ := json.Marshal(runtimeSpec)
+		// fmt.Printf("JSON Print - \n%s\n", string(bJSON))
+	}
+
+	// return nil
+
 	bpSpec := &calm.BPspec{
 		AppName: d.Get("app_name").(string),
 		AppDesc: d.Get("app_description").(string),
@@ -228,11 +375,17 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 			Name: app_name,
 			UUID: app_uuid,
 		},
+		RuntimeEditables: runtimeSpec,
 	}
 
 	input := &calm.BlueprintProvisionInput{
 		Spec: *bpSpec,
 	}
+
+	log.Println("HELLLLLOOOOOO22333333")
+	bJSON, _ := json.Marshal(input)
+	fmt.Printf("JSON Print - \n%s\n", string(bJSON))
+
 	output, err := conn.Service.ProvisionBlueprint(ctx, bp_uuid, input)
 	if err != nil {
 		return diag.Errorf("Error creating App: %s", err)
@@ -485,15 +638,16 @@ func RunlogStateRefreshFunc(ctx context.Context, client *calm.Client, appUUID, r
 
 func flattenVM(pr map[string]interface{}) []interface{} {
 	var vms []interface{}
-	configsVal := make(map[string]interface{})
-	configMap := map[string]interface{}{}
-	configMapList := make([]map[string]interface{}, 0)
-	nicsList := make([]map[string]interface{}, 0)
-	nicsMap := map[string]interface{}{}
 	if resource, ok := pr["resources"].(map[string]interface{}); ok {
 		// Access the list "app_profile"
 		if deploymentList, ok := resource["deployment_list"].([]interface{}); ok {
 			for _, item := range deploymentList {
+				configsVal := make(map[string]interface{})
+				configMap := map[string]interface{}{}
+				configMapList := make([]map[string]interface{}, 0)
+				nicsList := make([]map[string]interface{}, 0)
+				nicsMap := map[string]interface{}{}
+
 				itemList := item.(map[string]interface{})
 
 				if subs, ok := itemList["substrate_configuration"].(map[string]interface{}); ok {
@@ -545,14 +699,76 @@ func flattenVM(pr map[string]interface{}) []interface{} {
 									configsVal["cluster_info"] = clusterList
 								}
 							}
-							configMapList = append(configMapList, configMap)
-							configsVal["configuration"] = configMapList
 						}
 					}
+
+					if createSpec, ok := subs["create_spec"].(map[string]interface{}); ok {
+						if resource, ok := createSpec["resources"].(map[string]interface{}); ok {
+							if diskList, ok := resource["disk_list"].([]interface{}); ok {
+								for _, disk := range diskList {
+									fmt.Println("Disk: ", disk)
+									fmt.Println("AAAAAAAAAAAAAAAAAAAA")
+									diskMap := disk.(map[string]interface{})
+									fmt.Println("DISK::::::", diskMap["data_source_reference"].(map[string]interface{})["name"])
+									configMap["image"] = diskMap["data_source_reference"].(map[string]interface{})["name"]
+
+									fmt.Println("MEMEORY:", diskMap["disk_size_mib"])
+								}
+							}
+						}
+					}
+
+					if variableList, ok := subs["variable_list"].([]interface{}); ok {
+						for _, elem := range variableList {
+							elemMap := elem.(map[string]interface{})
+
+							if elemMap["name"] == "mac_address" {
+								nicsMap["mac_address"] = elemMap["value"]
+							}
+						}
+					}
+
+					configMapList = append(configMapList, configMap)
+					configsVal["configuration"] = configMapList
 					vms = append(vms, configsVal)
 				}
 			}
 		}
 	}
 	return vms
+}
+
+func RuntimeSpec() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		"description": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"value": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"name": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"type": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"uuid": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+		"context": {
+			Type:     schema.TypeString,
+			Optional: true,
+			Computed: true,
+		},
+	}
 }

@@ -170,6 +170,7 @@ func datsourceNutanixCalmApp() *schema.Resource {
 					},
 				},
 			},
+			// "runtime_editables": {},
 		},
 	}
 }
@@ -192,24 +193,24 @@ func datsourceNutanixCalmAppRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// Convert JSON object to JSON string
-	jsonData, err := json.MarshalIndent(AppResp.Status, " ", "  ")
-	if err != nil {
-		return diag.FromErr(err)
-	}
+	// jsonData, err := json.MarshalIndent(AppResp.Status, " ", "  ")
+	// if err != nil {
+	// 	return diag.FromErr(err)
+	// }
 	// Set the JSON data as a string in the Terraform resource data
-	if err := d.Set("status", string(jsonData)); err != nil {
-		return diag.FromErr(err)
-	}
+	// if err := d.Set("status", string(jsonData)); err != nil {
+	// 	return diag.FromErr(err)
+	// }
 
 	// Convert JSON object to JSON string
-	jsonSpecData, err := json.MarshalIndent(AppResp.Spec, " ", "  ")
-	if err != nil {
-		return diag.FromErr(err)
-	}
-	// Set the JSON data as a string in the Terraform resource data
-	if err := d.Set("spec", string(jsonSpecData)); err != nil {
-		return diag.FromErr(err)
-	}
+	// jsonSpecData, err := json.MarshalIndent(AppResp.Spec, " ", "  ")
+	// if err != nil {
+	// 	return diag.FromErr(err)
+	// }
+	// // Set the JSON data as a string in the Terraform resource data
+	// if err := d.Set("spec", string(jsonSpecData)); err != nil {
+	// 	return diag.FromErr(err)
+	// }
 
 	if err := d.Set("api_version", resp.APIVersion); err != nil {
 		return diag.FromErr(err)
