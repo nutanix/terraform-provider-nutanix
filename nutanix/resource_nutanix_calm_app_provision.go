@@ -601,11 +601,11 @@ func resourceNutanixCalmAppProvisionUpdate(ctx context.Context, d *schema.Resour
 
 	// poll till action is completed
 	appStateConf := &resource.StateChangeConf{
-		Pending:    []string{"RUNNING"},
-		Target:     []string{"SUCCESS"},
-		Refresh:    RunlogStateRefreshFunc(ctx, conn, d.Id(), resp.RunlogUUID),
-		MinTimeout: 5 * time.Second,
-		Timeout:    d.Timeout(schema.TimeoutUpdate),
+		Pending: []string{"PENDING", "RUNNING"},
+		Target:  []string{"SUCCESS"},
+		Refresh: RunlogStateRefreshFunc(ctx, conn, d.Id(), resp.RunlogUUID),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
+		Delay:   5 * time.Second,
 	}
 
 	if _, errWaitTask := appStateConf.WaitForStateContext(ctx); errWaitTask != nil {
