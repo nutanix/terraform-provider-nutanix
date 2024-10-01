@@ -628,7 +628,7 @@ func TestAccNutanixVirtualMachine_WithNicListIpType(t *testing.T) {
 		CheckDestroy: testAccCheckNutanixVirtualMachineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testaccnutanixvmconfigwithniclistIpType(r),
+				Config: testaccnutanixvmconfigwithniclistIPType(r),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNutanixVirtualMachineExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "hardware_clock_timezone", "UTC"),
@@ -642,8 +642,8 @@ func TestAccNutanixVirtualMachine_WithNicListIpType(t *testing.T) {
 				),
 			},
 			{
-				Config:      testaccnutanixvmconfigwithniclistIpTypeWrongType(r),
-				ExpectError: regexp.MustCompile("Error: expected nic_list.0.ip_endpoint_list.0.type to be one of \\[ASSIGNED], got WRONG"),
+				Config:      testaccnutanixvmconfigwithniclistIPTypeWrongType(r),
+				ExpectError: regexp.MustCompile(`Error: expected nic_list.0.ip_endpoint_list.0.type to be one of ` + `[ASSIGNED], got WRONG`),
 			},
 		},
 	})
@@ -1634,7 +1634,7 @@ func testAccNutanixVMConfigWithSecureBootWithNoMachineType(name, desc, mem strin
 	`, name, desc, mem)
 }
 
-func testaccnutanixvmconfigwithniclistIpType(r int) string {
+func testaccnutanixvmconfigwithniclistIPType(r int) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -1709,7 +1709,7 @@ func testaccnutanixvmconfigwithniclistIpType(r int) string {
 		}
 	`, r)
 }
-func testaccnutanixvmconfigwithniclistIpTypeWrongType(r int) string {
+func testaccnutanixvmconfigwithniclistIPTypeWrongType(r int) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
