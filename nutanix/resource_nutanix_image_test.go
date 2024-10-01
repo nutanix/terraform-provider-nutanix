@@ -174,6 +174,31 @@ func TestAccNutanixImage_uploadLocal(t *testing.T) {
 	})
 }
 
+func TestAccNutanixImage_Version(t *testing.T) {
+	rInt := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckNutanixImageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNutanixImageVersionConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNutanixImageExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "version.product_name", fmt.Sprintf("Ubuntu-%d", rInt)),
+					resource.TestCheckResourceAttr(resourceName, "version.product_version", "mini.iso"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func downloadFile(filepath string, url string) error {
 	// Create the file
 	out, err := os.Create(filepath)
@@ -405,4 +430,19 @@ func testAccNutanixImageConfigWithLargeImageURL(r int) string {
 			source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
 		}
 	`, r)
+}
+
+func testAccNutanixImageVersionConfig(r int) string {
+	return fmt.Sprintf(`
+resource "nutanix_image" "acctest-test" {
+  name        = "Ubuntu-%[1]d"
+  description = "Ubuntu"
+  source_uri  = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
+  image_type = "ISO_IMAGE"
+  version = {
+    product_name    = "Ubuntu-%[1]d"
+    product_version = "mini.iso"
+  }
+}
+`, r)
 }
