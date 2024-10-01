@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -119,10 +120,13 @@ func datsourceNutanixCalmApp() *schema.Resource {
 								},
 							},
 						},
-						// "categories":   {
-						// 	Type:    schema.TypeMap,
-						// 	Computed: true,
-						// },
+						"categories": {
+							Type:     schema.TypeMap,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 					},
 				},
 			},
@@ -170,7 +174,26 @@ func datsourceNutanixCalmApp() *schema.Resource {
 					},
 				},
 			},
-			// "runtime_editables": {},
+			"actions": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"uuid": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -251,6 +274,9 @@ func datsourceNutanixCalmAppRead(ctx context.Context, d *schema.ResourceData, me
 	if err := d.Set("app_summary", flattenAppSummary(objStatus, objMetadata)); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("actions", flattenActions(objStatus)); err != nil {
+		return diag.FromErr(err)
+	}
 
 	d.SetId(appID)
 	return nil
@@ -287,4 +313,28 @@ func flattenAppSummary(pr map[string]interface{}, meta map[string]interface{}) [
 
 	appSummaryList = append(appSummaryList, appSummaryMap)
 	return appSummaryList
+}
+
+func flattenActions(pr map[string]interface{}) []interface{} {
+	actionsOutput := make([]interface{}, 0)
+	if resource, ok := pr["resources"].(map[string]interface{}); ok {
+		if actionsList, ok := resource["action_list"].([]interface{}); ok {
+			for _, action := range actionsList {
+				actionMap := make(map[string]interface{})
+				if action, ok := action.(map[string]interface{}); ok {
+					actionMap["name"] = func(parts []string) string {
+						if parts[0] == "action" {
+							return parts[1]
+						}
+						return parts[0] + " " + parts[1]
+					}(strings.Split(action["name"].(string), "_"))
+					actionMap["uuid"] = action["uuid"]
+					actionMap["description"] = action["description"]
+				}
+				actionsOutput = append(actionsOutput, actionMap)
+			}
+			return actionsOutput
+		}
+	}
+	return nil
 }
