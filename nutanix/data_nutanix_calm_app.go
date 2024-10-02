@@ -324,9 +324,9 @@ func flattenActions(pr map[string]interface{}) []interface{} {
 				if action, ok := action.(map[string]interface{}); ok {
 					actionMap["name"] = func(parts []string) string {
 						if parts[0] == "action" {
-							return parts[1]
+							return strings.Join(parts[1:], " ")
 						}
-						return parts[0] + " " + parts[1]
+						return strings.Join(parts, " ")
 					}(strings.Split(action["name"].(string), "_"))
 					actionMap["uuid"] = action["uuid"]
 					actionMap["description"] = action["description"]
