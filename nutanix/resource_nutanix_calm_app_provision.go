@@ -384,36 +384,45 @@ func resourceNutanixCalmAppProvisionCreate(ctx context.Context, d *schema.Resour
 			itemMap := item.(map[string]interface{})
 
 			if variable_list, ok := itemMap["variable_list"].([]interface{}); ok {
-				for k, variable := range variable_list {
+				for _, variable := range variable_list {
 					variableMap := variable.(map[string]interface{})
 
-					if variableMap["name"] == utils.StringValue(runtimeSpec.VariableList[k].Name) {
-						val := variableMap["value"].(string)
+					for vbs := range runtimeSpec.VariableList {
+						if variableMap["name"] == utils.StringValue(runtimeSpec.VariableList[vbs].Name) {
+							val := variableMap["value"].(string)
 
-						rawMsg := json.RawMessage(val)
-						runtimeSpec.VariableList[k].Value = &rawMsg
+							rawMsg := json.RawMessage(val)
+							runtimeSpec.VariableList[vbs].Value = &rawMsg
+						}
 					}
 				}
 			}
 			if substrate_list, ok := itemMap["substrate_list"].([]interface{}); ok {
-				for k, substrate := range substrate_list {
+				fmt.Println("Substrate List::: ", len(substrate_list))
+				fmt.Println("RUNTIME SUBSTRATE LIST::: ", runtimeSpec.SubstrateList)
+				for _, substrate := range substrate_list {
 					substrateMap := substrate.(map[string]interface{})
 
-					if substrateMap["name"] == utils.StringValue(runtimeSpec.SubstrateList[k].Name) {
-						val := substrateMap["value"].(string)
-						rawMsg := json.RawMessage(val)
-						runtimeSpec.SubstrateList[k].Value = &rawMsg
+					for sbs := range runtimeSpec.SubstrateList {
+						if substrateMap["name"] == utils.StringValue(runtimeSpec.SubstrateList[sbs].Name) {
+							val := substrateMap["value"].(string)
+							rawMsg := json.RawMessage(val)
+							runtimeSpec.SubstrateList[sbs].Value = &rawMsg
+						}
 					}
+
 				}
 			}
 			if deployment_list, ok := itemMap["deployment_list"].([]interface{}); ok {
-				for k, deployment := range deployment_list {
+				for _, deployment := range deployment_list {
 					deploymentMap := deployment.(map[string]interface{})
 
-					if deploymentMap["name"] == utils.StringValue(runtimeSpec.DeploymentList[k].Name) {
-						val := deploymentMap["value"].(string)
-						rawMsg := json.RawMessage(val)
-						runtimeSpec.DeploymentList[k].Value = &rawMsg
+					for dps := range runtimeSpec.DeploymentList {
+						if deploymentMap["name"] == utils.StringValue(runtimeSpec.DeploymentList[dps].Name) {
+							val := deploymentMap["value"].(string)
+							rawMsg := json.RawMessage(val)
+							runtimeSpec.DeploymentList[dps].Value = &rawMsg
+						}
 					}
 
 				}
