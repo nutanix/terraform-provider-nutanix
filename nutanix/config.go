@@ -4,18 +4,18 @@ import (
 	"fmt"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/karbon"
 	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
 	foundation_central "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/fc"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/foundation"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/karbon"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/clusters"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/dataprotection"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/microseg"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/clusters"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/volumes"
 )
 
@@ -83,6 +83,10 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	networkingClient, err := networking.NewNetworkingClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 	prismClient, err := prism.NewPrismClient(configCreds)
 	if err != nil {
 		return nil, err
@@ -96,6 +100,10 @@ func (c *Config) Client() (*Client, error) {
 		return nil, err
 	}
 	clustersClient, err := clusters.NewClustersClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
+	dataprotectionClient, err := dataprotection.NewDataProtectionClient(configCreds)
 	if err != nil {
 		return nil, err
 	}
@@ -113,6 +121,7 @@ func (c *Config) Client() (*Client, error) {
 		IamAPI:              iamClient,
 		ClusterAPI:          clustersClient,
 		VolumeAPI:           volumeClient,
+		DataProtectionAPI:   dataprotectionClient,
 	}, nil
 }
 
@@ -130,4 +139,5 @@ type Client struct {
 	IamAPI              *iam.Client
 	ClusterAPI          *clusters.Client
 	VolumeAPI           *volumes.Client
+	DataProtectionAPI   *dataprotection.Client
 }

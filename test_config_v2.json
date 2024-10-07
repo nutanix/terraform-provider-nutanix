@@ -111,5 +111,10 @@
       }
     },
     "vm_ext_id": ""
+  },
+  "data_protection": {
+    "vm_ext_id": ["",""],
+    "pc_ext_id": "",
+    "cluster_ext_id": ""
   }
 }
