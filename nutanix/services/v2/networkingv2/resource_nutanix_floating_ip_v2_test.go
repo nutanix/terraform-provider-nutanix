@@ -2,7 +2,6 @@ package networkingv2_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -47,8 +46,6 @@ func TestAccNutanixFloatingIPv2_Basic(t *testing.T) {
 }
 
 func TestAccNutanixFloatingIPv2_WithVmNICAssociation(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-fip-%d", r)
 	desc := "test fip description"

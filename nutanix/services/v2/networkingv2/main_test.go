@@ -12,10 +12,24 @@ type TestConfig struct {
 		FloatingIP struct {
 			VmNicReference string `json:"vm_nic_reference"`
 		} `json:"floating_ip"`
+		Subnets struct {
+			ProjectID     string `json:"project_id"`
+			VlanID        int    `json:"vlan_id"`
+			NetworkIP     string `json:"network_ip"`
+			NetworkPrefix int    `json:"network_prefix"`
+			GatewayIP     string `json:"gateway_ip"`
+			DHCP          struct {
+				StartIP string `json:"start_ip"`
+				EndIP   string `json:"end_ip"`
+			}
+		}
 	} `json:"networking"`
 }
 
 var testVars TestConfig
+
+var path, _ = os.Getwd()
+var filepath = path + "/../../../../test_config_v2.json"
 
 func loadVars(filepath string, varStuct interface{}) {
 	// Read config.json from home current path

@@ -1,238 +1,160 @@
 package networkingv2
 
-// import (
-// 	"context"
-// 	"encoding/json"
+import (
+	"context"
+	"encoding/json"
+	"log"
 
-// 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/common/v1/config"
-// 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-// 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-// 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-// 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/common/v1/response"
-// 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/networking/v4/config"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/networking/v4/config"
 
-// 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-// 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-// )
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
 
-// func DatasourceNutanixRouteTablesV2() *schema.Resource {
-// 	return &schema.Resource{
-// 		ReadContext: DatasourceNutanixRouteTablesV2Read,
-// 		Schema: map[string]*schema.Schema{
-// 			"page": {
-// 				Type:     schema.TypeInt,
-// 				Optional: true,
-// 			},
-// 			"limit": {
-// 				Type:     schema.TypeInt,
-// 				Optional: true,
-// 			},
-// 			"filter": {
-// 				Type:     schema.TypeString,
-// 				Optional: true,
-// 			},
-// 			"route_tables": {
-// 				Type:     schema.TypeList,
-// 				Computed: true,
-// 				Elem: &schema.Resource{
-// 					Schema: map[string]*schema.Schema{
-// 						"ext_id": {
-// 							Type:     schema.TypeString,
-// 							Computed: true,
-// 						},
-// 						"tenant_id": {
-// 							Type:     schema.TypeString,
-// 							Computed: true,
-// 						},
-// 						"links": {
-// 							Type:     schema.TypeList,
-// 							Computed: true,
-// 							Elem: &schema.Resource{
-// 								Schema: map[string]*schema.Schema{
-// 									"href": {
-// 										Type:     schema.TypeString,
-// 										Computed: true,
-// 									},
-// 									"rel": {
-// 										Type:     schema.TypeString,
-// 										Computed: true,
-// 									},
-// 								},
-// 							},
-// 						},
-// 						"metadata": {
-// 							Type:     schema.TypeList,
-// 							Computed: true,
-// 							Elem: &schema.Resource{
-// 								Schema: DatasourceMetadataSchemaV4(),
-// 							},
-// 						},
-// 						"vpc_reference": {
-// 							Type:     schema.TypeString,
-// 							Computed: true,
-// 						},
-// 						"external_routing_domain_reference": {
-// 							Type:     schema.TypeString,
-// 							Computed: true,
-// 						},
-// 						"static_routes": {
-// 							Type:     schema.TypeList,
-// 							Computed: true,
-// 							Elem: &schema.Resource{
-// 								Schema: DatasourceRoutesSchemaV4(),
-// 							},
-// 						},
-// 						"dynamic_routes": {
-// 							Type:     schema.TypeList,
-// 							Computed: true,
-// 							Elem: &schema.Resource{
-// 								Schema: DatasourceRoutesSchemaV4(),
-// 							},
-// 						},
-// 						"local_routes": {
-// 							Type:     schema.TypeList,
-// 							Computed: true,
-// 							Elem: &schema.Resource{
-// 								Schema: DatasourceRoutesSchemaV4(),
-// 							},
-// 						},
-// 					},
-// 				},
-// 			},
-// 		},
-// 	}
-// }
+func DatasourceNutanixRouteTablesV2() *schema.Resource {
+	return &schema.Resource{
+		ReadContext: DatasourceNutanixRouteTablesV2Read,
+		Schema: map[string]*schema.Schema{
+			"page": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"limit": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"filter": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"order_by": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"route_tables": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"tenant_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"links": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"href": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"rel": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"metadata": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: DatasourceMetadataSchemaV4(),
+							},
+						},
+						"vpc_reference": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"external_routing_domain_reference": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+		},
+	}
+}
 
-// func DatasourceNutanixRouteTablesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-// 	conn := meta.(*conns.Client).NetworkingAPI
+func DatasourceNutanixRouteTablesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).NetworkingAPI
 
-// 	// initialize query params
-// 	var filter *string
-// 	var page, limit *int
+	// initialize query params
+	var filter, orderBy *string
+	var page, limit *int
 
-// 	if pagef, ok := d.GetOk("page"); ok {
-// 		page = utils.IntPtr(pagef.(int))
-// 	} else {
-// 		page = nil
-// 	}
-// 	if limitf, ok := d.GetOk("limit"); ok {
-// 		limit = utils.IntPtr(limitf.(int))
-// 	} else {
-// 		limit = nil
-// 	}
-// 	if filterf, ok := d.GetOk("filter"); ok {
-// 		filter = utils.StringPtr(filterf.(string))
-// 	} else {
-// 		filter = nil
-// 	}
+	if pagef, ok := d.GetOk("page"); ok {
+		page = utils.IntPtr(pagef.(int))
+	} else {
+		page = nil
+	}
+	if limitf, ok := d.GetOk("limit"); ok {
+		limit = utils.IntPtr(limitf.(int))
+	} else {
+		limit = nil
+	}
+	if filterf, ok := d.GetOk("filter"); ok {
+		filter = utils.StringPtr(filterf.(string))
+	} else {
+		filter = nil
+	}
+	if order, ok := d.GetOk("order_by"); ok {
+		orderBy = utils.StringPtr(order.(string))
+	} else {
+		orderBy = nil
+	}
 
-// 	resp, err := conn.RoutesTable.ListRouteTables(page, limit, filter)
-// 	if err != nil {
-// 		var errordata map[string]interface{}
-// 		e := json.Unmarshal([]byte(err.Error()), &errordata)
-// 		if e != nil {
-// 			return diag.FromErr(e)
-// 		}
-// 		data := errordata["data"].(map[string]interface{})
-// 		errorList := data["error"].([]interface{})
-// 		errorMessage := errorList[0].(map[string]interface{})
-// 		return diag.Errorf("error while fetching route tables : %v", errorMessage["message"])
-// 	}
+	resp, err := conn.RoutesTable.ListRouteTables(page, limit, filter, orderBy)
 
-// 	getResp := resp.Data.GetValue().([]import1.RouteTable)
+	if err != nil {
+		return diag.Errorf("error while fetching route tables : %v", err)
+	}
 
-// 	if err := d.Set("route_tables", flattenRouteTableEntities(getResp)); err != nil {
-// 		return diag.FromErr(err)
-// 	}
+	if resp.Data == nil {
+		log.Printf("[DEBUG] DatasourceNutanixRouteTablesV2Read: no data found")
+		if err := d.Set("route_tables", make([]interface{}, 0)); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		getResp := resp.Data.GetValue().([]import1.RouteTable)
+		aJson, _ := json.Marshal(getResp)
+		log.Printf("[DEBUG] DatasourceNutanixRouteTablesV2Read: %v", string(aJson))
 
-// 	d.SetId(resource.UniqueId())
-// 	return nil
-// }
+		if err := d.Set("route_tables", flattenRouteTableEntities(getResp)); err != nil {
+			return diag.FromErr(err)
+		}
+	}
 
-// func DatasourceMetadataSchemaV4() map[string]*schema.Schema {
-// 	return map[string]*schema.Schema{
-// 		"owner_reference_id": {
-// 			Type:     schema.TypeString,
-// 			Computed: true,
-// 		},
-// 		"owner_user_name": {
-// 			Type:     schema.TypeString,
-// 			Computed: true,
-// 		},
-// 		"project_reference_id": {
-// 			Type:     schema.TypeString,
-// 			Computed: true,
-// 		},
-// 		"project_name": {
-// 			Type:     schema.TypeString,
-// 			Computed: true,
-// 		},
-// 		"category_ids": {
-// 			Type:     schema.TypeList,
-// 			Computed: true,
-// 			Elem: &schema.Schema{
-// 				Type: schema.TypeString,
-// 			},
-// 		},
-// 	}
-// }
+	d.SetId(resource.UniqueId())
+	return nil
+}
+func flattenRouteTableEntities(pr []import1.RouteTable) []interface{} {
+	if pr == nil {
+		return make([]interface{}, 0)
+	}
 
-// func flattenRouteTableEntities(pr []import1.RouteTable) []interface{} {
-// 	if len(pr) > 0 {
-// 		routes := make([]interface{}, len(pr))
+	routeTables := make([]interface{}, len(pr))
+	for i, v := range pr {
+		routeTables[i] = map[string]interface{}{
+			"ext_id":                            v.ExtId,
+			"tenant_id":                         v.TenantId,
+			"links":                             flattenLinks(v.Links),
+			"metadata":                          flattenMetadata(v.Metadata),
+			"vpc_reference":                     v.VpcReference,
+			"external_routing_domain_reference": v.ExternalRoutingDomainReference,
+		}
+	}
 
-// 		for k, v := range pr {
-// 			route := make(map[string]interface{})
-
-// 			route["ext_id"] = v.ExtId
-// 			route["tenant_id"] = v.TenantId
-// 			route["links"] = flattenLinksExternalNetworkingApi(v.Links)
-// 			route["metadata"] = flattenMetadataExternalNetworkingApi(v.Metadata)
-// 			route["vpc_reference"] = v.VpcReference
-// 			route["external_routing_domain_reference"] = v.ExternalRoutingDomainReference
-// 			route["static_routes"] = flattenRoute(v.StaticRoutes)
-// 			route["dynamic_routes"] = flattenRoute(v.DynamicRoutes)
-// 			route["local_routes"] = flattenRoute(v.LocalRoutes)
-
-// 			routes[k] = route
-// 		}
-// 		return routes
-// 	}
-// 	return nil
-// }
-// func flattenLinksExternalNetworkingApi(pr []import2.ApiLink) []map[string]interface{} {
-// 	if len(pr) > 0 {
-// 		linkList := make([]map[string]interface{}, len(pr))
-
-// 		for k, v := range pr {
-// 			links := map[string]interface{}{}
-// 			if v.Href != nil {
-// 				links["href"] = v.Href
-// 			}
-// 			if v.Rel != nil {
-// 				links["rel"] = v.Rel
-// 			}
-
-// 			linkList[k] = links
-// 		}
-// 		return linkList
-// 	}
-// 	return nil
-// }
-// func flattenMetadataExternalNetworkingApi(pr *config.Metadata) []map[string]interface{} {
-// 	if pr != nil {
-// 		meta := make([]map[string]interface{}, 0)
-
-// 		m := make(map[string]interface{})
-
-// 		m["owner_reference_id"] = pr.OwnerReferenceId
-// 		m["owner_user_name"] = pr.OwnerUserName
-// 		m["project_reference_id"] = pr.ProjectReferenceId
-// 		m["project_name"] = pr.ProjectName
-// 		m["category_ids"] = pr.CategoryIds
-
-// 		meta = append(meta, m)
-// 		return meta
-// 	}
-// 	return nil
-// }
+	aJson, _ := json.Marshal(routeTables)
+	log.Printf("[DEBUG] flattenRouteTableEntities: %v", string(aJson))
+	return routeTables
+}

@@ -2,6 +2,7 @@ package nutanix
 
 import (
 	"fmt"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/vmm"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
@@ -107,6 +108,10 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	vmmClient, err := vmm.NewVmmClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 
 	return &Client{
 		WaitTimeout:         c.WaitTimeout,
@@ -122,6 +127,7 @@ func (c *Config) Client() (*Client, error) {
 		ClusterAPI:          clustersClient,
 		VolumeAPI:           volumeClient,
 		DataProtectionAPI:   dataprotectionClient,
+		VmmAPI:              vmmClient,
 	}, nil
 }
 
@@ -140,4 +146,5 @@ type Client struct {
 	ClusterAPI          *clusters.Client
 	VolumeAPI           *volumes.Client
 	DataProtectionAPI   *dataprotection.Client
+	VmmAPI              *vmm.Client
 }

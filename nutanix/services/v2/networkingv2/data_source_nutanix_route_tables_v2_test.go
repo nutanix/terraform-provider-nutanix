@@ -1,39 +1,57 @@
 package networkingv2_test
 
 import (
-	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
+	"testing"
 )
 
 const datasourceNameRouteTables = "data.nutanix_route_tables_v2.test"
 
-//func TestAccNutanixRouteTablesDataSourceV2_basic(t *testing.T) {
-//	resource.Test(t, resource.TestCase{
-//		PreCheck:  func() { acc.TestAccPreCheck(t) },
-//		Providers: acc.TestAccProviders,
-//		Steps: []resource.TestStep{
-//			{
-//				Config: testAccRouteTablesDataSourceConfig(),
-//				Check: resource.ComposeTestCheckFunc(
-//					resource.TestCheckResourceAttrSet(datasourceNameRouteTables, "route_tables.#"),
-//				),
-//			},
-//		},
-//	})
-//}
+func TestAccNutanixRouteTablesDataSourceV2_basic(t *testing.T) {
+	r := acctest.RandInt()
 
-func testAccRouteTablesDataSourceConfig() string {
-	return `data "nutanix_route_tables_v2" "test" {}`
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRouteTablesDataSourceConfig(r),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameRouteTables, "route_tables.#"),
+				),
+			},
+		},
+	})
+}
+func TestAccNutanixRouteTablesDataSourceV2_withFilter(t *testing.T) {
+	r := acctest.RandInt()
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRouteTablesDataSourceWithFilterConfig(r),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameRouteTables, "route_tables.#"),
+					resource.TestCheckResourceAttr(datasourceNameRouteTables, "route_tables.#", "1"),
+					resource.TestCheckResourceAttrSet(datasourceNameRouteTables, "route_tables.0.ext_id"),
+				),
+			},
+		},
+	})
 }
 
-func testAccRouteTablesDataSourceConfigWithFilter(name, desc string) string {
-	return fmt.Sprintf(`
+func testAccRouteTablesDataSourceConfig(r int) string {
+	return testRouteTableInfoVpc1Config(r) + `data "nutanix_route_tables_v2" "test" {}`
+}
 
-
-		data "nutanix_route_tables_v2" "test" {
-			filter = "name eq '%[1]s'"
-			depends_on = [
-				resource.nutanix_address_groups_v2.test
-			]
-		}
-	`, name, desc)
+func testAccRouteTablesDataSourceWithFilterConfig(r int) string {
+	return testRouteTableInfoVpc1Config(r) + `
+	data "nutanix_route_tables_v2" "test" {
+		filter     = "vpcReference eq '${nutanix_vpc_v2.test-1.id}'"
+		depends_on = [nutanix_vpc_v2.test-1]
+	}`
 }

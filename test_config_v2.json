@@ -2,6 +2,17 @@
   "networking": {
     "floating_ip": {
       "vm_nic_reference": ""
+    },
+    "subnets": {
+      "project_id": "",
+      "vlan_id": 999,
+      "network_ip": "10.44.3.192",
+      "network_prefix": 27,
+      "gateway_ip": "10.44.3.193",
+      "dhcp": {
+        "start_ip": "10.44.3.198",
+        "end_ip": "10.44.3.207"
+      }
     }
   },
   "iam": {
