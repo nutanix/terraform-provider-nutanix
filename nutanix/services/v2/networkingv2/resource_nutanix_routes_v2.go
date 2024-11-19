@@ -344,7 +344,7 @@ func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, 
 	// Extract E-Tag Header
 	etagValue := conn.APIClientInstance.GetEtag(routResp)
 	args := make(map[string]interface{})
-	args["If-Match"] = etagValue
+	args["If-Match"] = utils.StringPtr(etagValue)
 
 	getResp := routResp.Data.GetValue().(config.Route)
 

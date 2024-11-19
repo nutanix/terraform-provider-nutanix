@@ -690,7 +690,7 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 	etagValue := conn.SubnetAPIInstance.ApiClient.GetEtag(readResp)
 
 	args := make(map[string]interface{})
-	args["If-Match"] = etagValue
+	args["If-Match"] = utils.StringPtr(etagValue)
 
 	if d.HasChange("name") {
 		updateSpec.Name = utils.StringPtr(d.Get("name").(string))

@@ -163,7 +163,7 @@ func ResourceNutanixUserGroupsV4Delete(ctx context.Context, d *schema.ResourceDa
 
 	etagValue := conn.UserGroupsAPIInstance.ApiClient.GetEtag(readResp)
 	headers := make(map[string]interface{})
-	headers["If-Match"] = etagValue
+	headers["If-Match"] = utils.StringPtr(etagValue)
 
 	resp, err := conn.UserGroupsAPIInstance.DeleteUserGroupById(utils.StringPtr(d.Id()), headers)
 	if err != nil {

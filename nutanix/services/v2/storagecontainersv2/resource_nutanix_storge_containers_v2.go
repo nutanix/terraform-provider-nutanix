@@ -431,7 +431,7 @@ func ResourceNutanixStorageContainersV2Update(ctx context.Context, d *schema.Res
 	etagValue := conn.ClusterEntityAPI.ApiClient.GetEtag(resp)
 
 	args := make(map[string]interface{})
-	args["If-Match"] = etagValue
+	args["If-Match"] = utils.StringPtr(etagValue)
 
 	respStorageContainer := resp.Data.GetValue().(clustermgmtConfig.StorageContainer)
 	updateSpec := respStorageContainer

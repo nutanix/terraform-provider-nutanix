@@ -270,7 +270,7 @@ func ResourceNutanixRolesV4Update(ctx context.Context, d *schema.ResourceData, m
 	// get etag value from read response to pass in update request If-Match header, Required for update request
 	etagValue := conn.RolesAPIInstance.ApiClient.GetEtag(readResp)
 	headers := make(map[string]interface{})
-	headers["If-Match"] = etagValue
+	headers["If-Match"] = utils.StringPtr(etagValue)
 
 	updatedSpec = readResp.Data.GetValue().(iamConfig.Role)
 
@@ -317,7 +317,7 @@ func ResourceNutanixRolesV4Delete(ctx context.Context, d *schema.ResourceData, m
 
 	etagValue := conn.RolesAPIInstance.ApiClient.GetEtag(readResp)
 	headers := make(map[string]interface{})
-	headers["If-Match"] = etagValue
+	headers["If-Match"] = utils.StringPtr(etagValue)
 
 	resp, err := conn.RolesAPIInstance.DeleteRoleById(utils.StringPtr(d.Id()), headers)
 

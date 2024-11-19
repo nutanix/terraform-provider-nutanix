@@ -10,14 +10,14 @@ require (
 	github.com/hashicorp/hcl/v2 v2.8.2 // indirect
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1
 	github.com/mitchellh/gox v1.0.1
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v16 v16.9.0-8538
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v16 v16.9.0-8882
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v16 v16.8.0-5280
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v16 v16.9.0-8831
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16 v16.9.0-8856
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16 v16.9.0-8887
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v16 v16.9.0-8858
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v16 v16.9.0-8827
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v16 v16.9.0-9590
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v16 v16.9.0-9600
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v16 v16.9.0-9618
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v16 v16.9.0-9500
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16 v16.9.0-9545
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16 v16.9.0-9591
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v16 v16.9.0-9553
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v16 v16.9.0-9552
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cast v1.3.1
 	github.com/stretchr/testify v1.7.0

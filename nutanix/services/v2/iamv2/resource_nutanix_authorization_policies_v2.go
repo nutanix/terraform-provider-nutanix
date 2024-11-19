@@ -250,7 +250,7 @@ func ResourceNutanixAuthPoliciesV2Update(ctx context.Context, d *schema.Resource
 
 	etagValue := conn.AuthAPIInstance.ApiClient.GetEtag(resp)
 	headers := make(map[string]interface{})
-	headers["If-Match"] = etagValue
+	headers["If-Match"] = utils.StringPtr(etagValue)
 
 	updatedSpec = resp.Data.GetValue().(import1.AuthorizationPolicy)
 
@@ -315,7 +315,7 @@ func ResourceNutanixAuthPoliciesV2Delete(ctx context.Context, d *schema.Resource
 
 	etagValue := conn.AuthAPIInstance.ApiClient.GetEtag(readResp)
 	headers := make(map[string]interface{})
-	headers["If-Match"] = etagValue
+	headers["If-Match"] = utils.StringPtr(etagValue)
 	resp, err := conn.AuthAPIInstance.DeleteAuthorizationPolicyById(utils.StringPtr(d.Id()), headers)
 	if err != nil {
 		return diag.Errorf("error while deleting auth policy : %v", err)

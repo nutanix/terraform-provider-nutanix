@@ -313,7 +313,7 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 	// get etag value from read response to pass in update request If-Match header, Required for update request
 	etagValue := conn.SamlIdentityAPIInstance.ApiClient.GetEtag(readResp)
 	headers := make(map[string]interface{})
-	headers["If-Match"] = etagValue
+	headers["If-Match"] = utils.StringPtr(etagValue)
 
 	updatedSpec = readResp.Data.GetValue().(import1.DirectoryService)
 
@@ -410,7 +410,7 @@ func ResourceNutanixDirectoryServicesV2Delete(ctx context.Context, d *schema.Res
 	// get etag value from read response to pass in update request If-Match header, Required for update request
 	etagValue := conn.SamlIdentityAPIInstance.ApiClient.GetEtag(readResp)
 	headers := make(map[string]interface{})
-	headers["If-Match"] = etagValue
+	headers["If-Match"] = utils.StringPtr(etagValue)
 
 	resp, err := conn.DirectoryServiceAPIInstance.DeleteDirectoryServiceById(utils.StringPtr(d.Id()), headers)
 	if err != nil {

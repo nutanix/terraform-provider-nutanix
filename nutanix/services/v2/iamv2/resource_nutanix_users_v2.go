@@ -432,7 +432,7 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 	etagValue := conn.APIClientInstance.GetEtag(getResp)
 
 	args := make(map[string]interface{})
-	args["If-Match"] = etagValue
+	args["If-Match"] = utils.StringPtr(etagValue)
 
 	updateresp, err := conn.UsersAPIInstance.UpdateUserById(utils.StringPtr(d.Id()), updateSpec, args)
 	if err != nil {
@@ -456,7 +456,7 @@ func resourceNutanixUserV2Delete(ctx context.Context, d *schema.ResourceData, me
 
 	etagValue := conn.UserGroupsAPIInstance.ApiClient.GetEtag(readResp)
 	headers := make(map[string]interface{})
-	headers["If-Match"] = etagValue
+	headers["If-Match"] = utils.StringPtr(etagValue)
 
 	resp, err := conn.UsersAPIInstance.DeleteUserById(utils.StringPtr(d.Id()), headers)
 	if err != nil {

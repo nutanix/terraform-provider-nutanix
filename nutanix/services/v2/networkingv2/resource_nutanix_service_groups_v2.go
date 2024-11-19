@@ -247,7 +247,7 @@ func ResourceNutanixServiceGroupsV2Update(ctx context.Context, d *schema.Resourc
 	etagValue := conn.ServiceGroupAPIInstance.ApiClient.GetEtag(resp)
 
 	args := make(map[string]interface{})
-	args["If-Match"] = etagValue
+	args["If-Match"] = utils.StringPtr(etagValue)
 
 	updatedSpec = resp.Data.GetValue().(import1.ServiceGroup)
 

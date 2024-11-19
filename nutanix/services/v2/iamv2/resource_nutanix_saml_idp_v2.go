@@ -251,7 +251,7 @@ func ResourceNutanixSamlIdpV2Update(ctx context.Context, d *schema.ResourceData,
 	// get etag value from read response to pass in update request If-Match header, Required for update request
 	etagValue := conn.SamlIdentityAPIInstance.ApiClient.GetEtag(resp)
 	headers := make(map[string]interface{})
-	headers["If-Match"] = etagValue
+	headers["If-Match"] = utils.StringPtr(etagValue)
 
 	updatedInput = resp.Data.GetValue().(import1.SamlIdentityProvider)
 
@@ -318,7 +318,7 @@ func ResourceNutanixSamlIdpV2Delete(ctx context.Context, d *schema.ResourceData,
 	// get etag value from read response to pass in update request If-Match header, Required for update request
 	etagValue := conn.SamlIdentityAPIInstance.ApiClient.GetEtag(readResp)
 	headers := make(map[string]interface{})
-	headers["If-Match"] = etagValue
+	headers["If-Match"] = utils.StringPtr(etagValue)
 
 	resp, err := conn.SamlIdentityAPIInstance.DeleteSamlIdentityProviderById(utils.StringPtr(d.Id()), headers)
 	if err != nil {
