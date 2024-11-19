@@ -336,7 +336,6 @@ github.com/hashicorp/hc-install v0.3.1/go.mod h1:3LCdWcCDS1gaHC9mhHCGbkYfoY6vdsK
 github.com/hashicorp/hcl v0.0.0-20170504190234-a4b07c25de5f/go.mod h1:oZtUIOe8dh44I2q6ScRibXws4Ajl+d+nod3AaR9vL5w=
 github.com/hashicorp/hcl v1.0.0 h1:0Anlzjpi4vEasTeNFn2mLJgTSwt0+6sfsiTG8qcWGx4=
 github.com/hashicorp/hcl v1.0.0/go.mod h1:E5yfLk+7swimpb2L/Alb/PJmXilQ/rhwaUYs4T20WEQ=
-github.com/hashicorp/hcl/v2 v2.0.0/go.mod h1:oVVDG71tEinNGYCxinCYadcmKU9bglqW9pV3txagJ90=
 github.com/hashicorp/hcl/v2 v2.3.0/go.mod h1:d+FwDBbOLvpAM3Z6J7gPj/VoAGkNe/gm352ZhjJ/Zv8=
 github.com/hashicorp/hcl/v2 v2.8.2 h1:wmFle3D1vu0okesm8BTLVDyJ6/OL9DCLUwn0b2OptiY=
 github.com/hashicorp/hcl/v2 v2.8.2/go.mod h1:bQTN5mpo+jewjJgh8jr0JUguIi7qPHUF6yIfAEN3jqY=
@@ -499,8 +498,8 @@ github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16 v1
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16 v16.9.0-8856/go.mod h1:vHyQVF3IKxmip+xGxXDQznKk1ffrVa4HSiEEueiekaE=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16 v16.9.0-8887 h1:TZKhy9NyH2VTnrRmz0sm8aRSHstL49mKbw63s+0hLB0=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16 v16.9.0-8887/go.mod h1:qmOw/29LhPpII8cDmbTL0OF3btwp97ss7nFcQz72NDM=
-github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16 v16.8.0-5295 h1:8Sv5R9lItsRi4m/+/kwCuFR2jSxc8K4RRxxPXsccphQ=
-github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16 v16.8.0-5295/go.mod h1:qmOw/29LhPpII8cDmbTL0OF3btwp97ss7nFcQz72NDM=
+github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v16 v16.9.0-8858 h1:9D7qUd8+4bW+vuxDhq8/YSQr7DdTY/YHUNCclmnIO/0=
+github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v16 v16.9.0-8858/go.mod h1:egyWVI9XaSrxszcsd1uKDlj5sZWltw8pmHP5vysXDtA=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v16 v16.9.0-8827 h1:r/FSW++1SKRir/gMGZ1nuMSs960yknfNEvAEaEhI7Hw=
 github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v16 v16.9.0-8827/go.mod h1:ABLxzNkbsfu/05qZhS9jnO7altxsiWMs80rNcSc94LQ=
 github.com/oklog/run v1.0.0 h1:Ru7dDtJNOyC66gQ5dQmaCa0qIsAUFY3sFpK1Xk8igrw=
@@ -633,7 +632,6 @@ github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9de
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
-github.com/zclconf/go-cty v1.0.0/go.mod h1:xnAOWiHeOqg2nWS62VtQ7pbOu17FtxJNW8RLEih+O3s=
 github.com/zclconf/go-cty v1.1.0/go.mod h1:xnAOWiHeOqg2nWS62VtQ7pbOu17FtxJNW8RLEih+O3s=
 github.com/zclconf/go-cty v1.2.0/go.mod h1:hOPWgoHbaTUnI5k4D2ld+GRpFJSCe6bCM7m1q/N4PQ8=
 github.com/zclconf/go-cty v1.2.1/go.mod h1:hOPWgoHbaTUnI5k4D2ld+GRpFJSCe6bCM7m1q/N4PQ8=

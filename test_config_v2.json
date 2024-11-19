@@ -149,5 +149,51 @@
     "vm_ext_id": ["", ""],
     "pc_ext_id": "",
     "cluster_ext_id": ""
+  },
+  "clusters": {
+    "pe_username": "",
+    "pe_password": "",
+    "nodes": [
+      {
+        "cvm_ip": ""
+      }
+    ],
+    "config": {
+      "cluster_functions": ["AOS"],
+      "auth_public_keys": [
+        {
+          "name": "",
+          "key": ""
+        }
+      ],
+      "redundancy_factor": 1,
+      "cluster_arch": "X86_64",
+      "fault_tolerance_state": {
+        "domain_awareness_level": "DISK"
+      }
+    },
+    "network": {
+      "virtual_ip": "",
+      "iscsi_ip": "",
+      "iscsi_ip1": "",
+      "dns_servers": ["", ""],
+      "ntp_servers": ["", "", "", ""],
+      "smtp_server": {
+        "ip": "",
+        "port": 25,
+        "username": "username",
+        "password": "password",
+        "type": "STARTTLS",
+        "email_address": ""
+      }
+    },
+    "pc_ext_id": "",
+    "node_ip": "",
+    "remote_cluster": {
+      "ext_id": "",
+      "ip": "",
+      "username": "",
+      "password": ""
+    }
   }
 }
