@@ -8,9 +8,10 @@ import (
 )
 
 type Client struct {
-	ImagesAPIInstance    *api.ImagesApi
-	TemplatesAPIInstance *api.TemplatesApi
-	VMAPIInstance        *api.VmApi
+	ImagesAPIInstance          *api.ImagesApi
+	TemplatesAPIInstance       *api.TemplatesApi
+	VMAPIInstance              *api.VmApi
+	ImagesPlacementAPIInstance *api.ImagePlacementPoliciesApi
 }
 
 func NewVmmClient(credentials client.Credentials) (*Client, error) {
@@ -30,9 +31,10 @@ func NewVmmClient(credentials client.Credentials) (*Client, error) {
 	}
 
 	f := &Client{
-		ImagesAPIInstance:    api.NewImagesApi(baseClient),
-		TemplatesAPIInstance: api.NewTemplatesApi(baseClient),
-		VMAPIInstance:        api.NewVmApi(baseClient),
+		ImagesAPIInstance:          api.NewImagesApi(baseClient),
+		TemplatesAPIInstance:       api.NewTemplatesApi(baseClient),
+		VMAPIInstance:              api.NewVmApi(baseClient),
+		ImagesPlacementAPIInstance: api.NewImagePlacementPoliciesApi(baseClient),
 	}
 
 	return f, nil

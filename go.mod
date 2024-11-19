@@ -16,7 +16,7 @@ require (
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v16 v16.9.0-9500
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16 v16.9.0-9545
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16 v16.9.0-9591
-	github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v16 v16.9.0-9553
+	github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v16 v16.9.0-9781
 	github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v16 v16.9.0-9552
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cast v1.3.1

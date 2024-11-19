@@ -3,6 +3,7 @@ package prism
 import (
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16/api"
 	prism "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16/client"
+
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 )
 

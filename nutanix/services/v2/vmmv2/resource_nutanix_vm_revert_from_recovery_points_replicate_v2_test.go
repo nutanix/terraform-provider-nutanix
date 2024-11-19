@@ -2,7 +2,6 @@ package vmmv2_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 	"time"
 
@@ -18,7 +17,7 @@ const resourceNameRevertVm = "nutanix_vm_revert_v2.test"
 
 func TestAccNutanixRecoveryPointRestoreV2Resource_basic(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("terraform-test-recovery-point-%d", r)
+	name := fmt.Sprintf("tf-test-recovery-point-%d", r)
 
 	// End time is two week later
 	expirationTime := time.Now().Add(14 * 24 * time.Hour)
@@ -63,8 +62,6 @@ func TestAccNutanixRecoveryPointRestoreV2Resource_basic(t *testing.T) {
 }
 
 func testRecoveryPointsResourceConfigWithVmRecoveryPoints(name, expirationTime string) string {
-	var path, _ = os.Getwd()
-	var filepath = path + "/../../../../test_config_v2.json"
 
 	return fmt.Sprintf(`
 	data "nutanix_clusters" "clusters" {} 
@@ -76,14 +73,38 @@ func testRecoveryPointsResourceConfigWithVmRecoveryPoints(name, expirationTime s
 		config = (jsondecode(file("%[3]s")))
 		data_protection = local.config.data_protection			
 	}
+
+	resource "nutanix_virtual_machine_v2" "test"{
+		name= "tf-vm-%[1]s"
+		description =  "terraform test vm for RP %[2]s"
+		num_cores_per_socket = 1
+		num_sockets = 1
+		cluster {
+			ext_id = local.cluster1
+		}
+		boot_config{
+			legacy_boot{
+			  boot_order = ["CDROM", "DISK","NETWORK"]
+			}
+		}
+		cd_roms{
+			disk_address{
+				bus_type = "IDE"
+				index= 0
+			}
+		}
+		power_state = "OFF"
+	}
+
 	resource "nutanix_recovery_points_v2" "test" {
 		name                = "%[1]s"
 		expiration_time     = "%[2]s"
 		status              = "COMPLETE"
 		recovery_point_type = "APPLICATION_CONSISTENT"
 		vm_recovery_points {
-			vm_ext_id = local.data_protection.vm_ext_id[0]  
+			vm_ext_id = nutanix_virtual_machine_v2.test.id
 		}
+		depends_on = [nutanix_virtual_machine_v2.test]
 	}`, name, expirationTime, filepath)
 }
 
@@ -95,14 +116,14 @@ func testRecoveryPointResourceConfig(name, expirationTime string) string {
 	  vm_recovery_point_restore_overrides {
 		vm_recovery_point_ext_id = nutanix_recovery_points_v2.test.vm_recovery_points[0].ext_id
 	  }
-	  depends_on = [nutanix_recovery_points_v2.test]
+	  depends_on = [nutanix_recovery_points_v2.test, nutanix_virtual_machine_v2.test]
 	}`
 }
 
 func testRevertVmResourceConfig(name, expirationTime string) string {
 	return testRecoveryPointResourceConfig(name, expirationTime) + `
 		resource "nutanix_vm_revert_v2" "test" {
-		  ext_id = nutanix_recovery_point_restore_v2.test.vm_ext_ids[0]
+		  ext_id                   = nutanix_virtual_machine_v2.test.id
 		  vm_recovery_point_ext_id = nutanix_recovery_points_v2.test.vm_recovery_points[0].ext_id
 		  depends_on = [nutanix_recovery_point_restore_v2.test]
 		}

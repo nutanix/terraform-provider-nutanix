@@ -15,6 +15,28 @@
       }
     }
   },
+  "vmm": {
+    "image_name": "Centos7HadoopMaster.qcow2",
+    "image_url": "",
+    "subnet_name": "vlan.800",
+    "assigned_ip": "10.44.76.45",
+    "subnet": {
+      "network_id": 534,
+      "ip": "10.44.76.0",
+      "prefix": 24,
+      "gateway_ip": "10.44.76.10",
+      "dhcp_ip": "10.44.79.254",
+      "start_ip": "10.44.76.20",
+      "end_ip": "10.44.76.50"
+    },
+    "storage_container": "",
+    "ngt": {
+      "credential": {
+        "username": "",
+        "password": ""
+      }
+    }
+  },
   "iam": {
     "roles": {
       "limit": 3,
@@ -124,7 +146,7 @@
     "vm_ext_id": ""
   },
   "data_protection": {
-    "vm_ext_id": ["",""],
+    "vm_ext_id": ["", ""],
     "pc_ext_id": "",
     "cluster_ext_id": ""
   }

@@ -384,7 +384,7 @@ func ResourceNutanixFloatingIPv2Update(ctx context.Context, d *schema.ResourceDa
 	// calling group API to poll for completion of task
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the FileServer to be available
+	// Wait for the Floating IP to be available
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
@@ -411,7 +411,7 @@ func ResourceNutanixFloatingIPv2Delete(ctx context.Context, d *schema.ResourceDa
 	// calling group API to poll for completion of task
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the FileServer to be available
+	// Wait for the Floating IP to be available
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},

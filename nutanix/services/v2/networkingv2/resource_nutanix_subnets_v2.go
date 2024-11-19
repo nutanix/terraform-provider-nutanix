@@ -2,7 +2,6 @@ package networkingv2
 
 import (
 	"context"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -10,6 +9,7 @@ import (
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/common/v1/config"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/networking/v4/config"
 	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/prism/v4/config"
+
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -1012,7 +1012,7 @@ func expandIPv4Subnet(pr interface{}) *import1.IPv4Subnet {
 			ipv4Subs.Ip = expandIPv4Address(ip)
 		}
 		if prefix, ok := val["prefix_length"]; ok {
-			ipv4Subs.PrefixLength = utils.IntPtr(prefix.(int))
+			ipv4Subs.PrefixLength = utils.IntPtr(int(prefix.(int)))
 		}
 
 		return ipv4Subs

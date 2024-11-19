@@ -6,7 +6,7 @@ terraform {
   required_providers {
     nutanix = {
       source  = "nutanix/nutanix"
-      version = "1.3.0"
+      version = "2.0"
     }
   }
 }
@@ -21,7 +21,7 @@ provider "nutanix" {
 }
 
 #update a virtual machine guest customization for next boot
-resource "nutanix_vm_gc_update_v4" "test" {
+resource "nutanix_vm_gc_update_v2" "test" {
   ext_id = var.vm_uuid
   config {
     cloud_init {

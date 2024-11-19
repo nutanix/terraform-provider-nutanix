@@ -13,10 +13,10 @@ Provides a Nutanix Virtual Machine resource to Create a virtual machine guest cu
 ## Example Usage
 
 ```hcl
-data "nutanix_virtual_machines_v4" "vms" {}
+data "nutanix_virtual_machines_v2" "vms" {}
 
-resource "nutanix_vm_gc_update_v4" "vm-gc-update" {
-  ext_id = data.nutanix_virtual_machines_v4.vms.0.data.ext_id
+resource "nutanix_vm_gc_update_v2" "vm-gc-update" {
+  ext_id = data.nutanix_virtual_machines_v2.vms.0.data.ext_id
   config{
     cloud_init{
       cloud_init_script{
@@ -97,5 +97,5 @@ See detailed information in [Nutanix Virtual Machine](https://developers.nutanix
 Nutanix Virtual machines can be imported using the `UUID` eg,
 
 `
-terraform import nutanix_virtual_machine_v4.vm01 0F75E6A7-55FB-44D9-A50D-14AD72E2CF7C
+terraform import nutanix_virtual_machine_v2.vm01 0F75E6A7-55FB-44D9-A50D-14AD72E2CF7C
 `

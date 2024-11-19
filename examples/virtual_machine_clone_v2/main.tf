@@ -6,7 +6,7 @@ terraform {
   required_providers {
     nutanix = {
       source  = "nutanix/nutanix"
-      version = "1.3.0"
+      version = "2.0"
     }
   }
 }
@@ -21,7 +21,7 @@ provider "nutanix" {
 }
 
 #create a virtual machine clone
-resource "nutanix_vm_clone_v4" "clone-vm" {
+resource "nutanix_vm_clone_v2" "clone-vm" {
   vm_ext_id            = var.vm_uuid
   name                 = "clone-vm-123"
   num_sockets          = "2"
