@@ -14,7 +14,7 @@ const dataSourceVolumeCategoryDetails = "data.nutanix_volume_group_category_deta
 
 func TestAccNutanixVolumeCategoryDetailsV2_Basic(t *testing.T) {
 	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v4.json"
+	filepath := path + "/../../../../test_config_v2.json"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

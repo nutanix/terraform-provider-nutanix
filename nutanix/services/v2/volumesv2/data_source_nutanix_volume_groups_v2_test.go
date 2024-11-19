@@ -19,7 +19,7 @@ func TestAccNutanixVolumeGroupsV2DataSource_Basic(t *testing.T) {
 	name := fmt.Sprintf("terraform-test-volume-group-%d", r)
 	desc := "terraform test volume group description"
 	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v4.json"
+	filepath := path + "/../../../../test_config_v2.json"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -41,7 +41,7 @@ func TestAccNutanixVolumeGroupsV4DataSource_WithFilter(t *testing.T) {
 	name := fmt.Sprintf("terraform-test-volume-group-%d", r)
 	desc := "terraform test volume group description"
 	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v4.json"
+	filepath := path + "/../../../../test_config_v2.json"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },

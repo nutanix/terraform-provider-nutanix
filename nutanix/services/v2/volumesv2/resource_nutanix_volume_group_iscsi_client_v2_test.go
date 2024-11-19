@@ -18,7 +18,7 @@ func TestAccNutanixVolumeGroupIscsiClientV2_Basic(t *testing.T) {
 	name := fmt.Sprintf("test-volume-group-%d", r)
 	desc := "test volume group Iscsi Client description"
 	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v4.json"
+	filepath := path + "/../../../../test_config_v2.json"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

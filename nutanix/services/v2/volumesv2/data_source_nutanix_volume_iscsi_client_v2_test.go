@@ -14,7 +14,7 @@ const dataSourceVolumeIscsiClient = "data.nutanix_volume_iscsi_client_v2.v_iscsi
 
 func TestAccNutanixVolumeIscsiClientV2_Basic(t *testing.T) {
 	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v4.json"
+	filepath := path + "/../../../../test_config_v2.json"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
