@@ -15,8 +15,8 @@ const resourceNameRecoveryPointRestore = "nutanix_recovery_point_restore_v2.test
 
 func TestAccNutanixRecoveryPointRestoreV2Resource_basic(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("terraform-test-recovery-point-%d", r)
-
+	name := fmt.Sprintf("tf-test-recovery-point-%d", r)
+	vmName := fmt.Sprintf("tf-test-vm-%d", r)
 	// End time is two week later
 	expirationTime := time.Now().Add(14 * 24 * time.Hour)
 
@@ -27,7 +27,8 @@ func TestAccNutanixRecoveryPointRestoreV2Resource_basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testRecoveryPointRestoreResourceConfig(name, expirationTimeFormatted),
+				Config: testVmConfig(vmName) + testVm2Config(vmName) +
+					testRecoveryPointRestoreResourceConfig(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPointRestore, "volume_group_ext_ids.#"),
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPointRestore, "vm_ext_ids.#"),
@@ -42,7 +43,7 @@ func testRecoveryPointRestoreResourceConfig(name, expirationTime string) string 
 	return testRecoveryPointsResourceConfigWithVolumeGroupRecoveryPointsWithMultipleVmAndVGs(name, expirationTime) + `
 	resource "nutanix_recovery_point_restore_v2" "test" {
 	  ext_id         = nutanix_recovery_points_v2.test.id
-	  cluster_ext_id = local.cluster1
+	  cluster_ext_id = local.cluster_ext_id
 	  vm_recovery_point_restore_overrides {
 		vm_recovery_point_ext_id = nutanix_recovery_points_v2.test.vm_recovery_points[0].ext_id
 	  }

@@ -15,7 +15,8 @@ const datasourceNameRecoveryPoint = "data.nutanix_recovery_point_v2.test"
 
 func TestAccNutanixRecoveryPointV2Datasource_VmRecoveryPoints(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("terraform-test-recovery-point-%d", r)
+	name := fmt.Sprintf("tf-test-recovery-point-%d", r)
+	vmName := fmt.Sprintf("tf-test-rp-vm-%d", r)
 
 	// End time is two week later
 	expirationTime := time.Now().Add(14 * 24 * time.Hour)
@@ -27,7 +28,7 @@ func TestAccNutanixRecoveryPointV2Datasource_VmRecoveryPoints(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testRecoveryPointDatasourceConfigWithVmRecoveryPoints(name, expirationTimeFormatted),
+				Config: testVmConfig(vmName) + testRecoveryPointDatasourceConfigWithVmRecoveryPoints(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameRecoveryPoint, "ext_id"),
 					resource.TestCheckResourceAttr(datasourceNameRecoveryPoint, "name", name),
@@ -43,10 +44,6 @@ func TestAccNutanixRecoveryPointV2Datasource_VmRecoveryPoints(t *testing.T) {
 
 func testRecoveryPointDatasourceConfigWithVmRecoveryPoints(name, expirationTime string) string {
 	return fmt.Sprintf(`
-	locals{
-		config = (jsondecode(file("%[3]s")))
-		data_protection = local.config.data_protection			
-	}
 
 	resource "nutanix_recovery_points_v2" "test" {
 		name                = "%[1]s"
@@ -54,12 +51,56 @@ func testRecoveryPointDatasourceConfigWithVmRecoveryPoints(name, expirationTime 
 		status              = "COMPLETE"
 		recovery_point_type = "APPLICATION_CONSISTENT"
 		vm_recovery_points {
-			vm_ext_id = local.data_protection.vm_ext_id[0]  
+			vm_ext_id = nutanix_virtual_machine_v2.test-1.id 
 		}
+		
+		depends_on = [ nutanix_virtual_machine_v2.test-1 ]
 	}
+
 	data "nutanix_recovery_point_v2" "test"{
 		ext_id = nutanix_recovery_points_v2.test.id
+		depends_on = [ nutanix_recovery_points_v2.test ]
 	}
 
 `, name, expirationTime, filepath)
+}
+
+func testVmConfig(name string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+
+		locals {
+			cluster_ext_id = [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
+			config = (jsondecode(file("%[2]s")))
+			data_protection = local.config.data_protection	
+		}
+	
+		resource "nutanix_virtual_machine_v2" "test-1"{
+			name= "%[1]s"
+			description =  "test recovery point vm 1"
+			num_cores_per_socket = 1
+			num_sockets = 1
+			cluster {
+				ext_id = local.cluster_ext_id
+			}
+		}
+`, name, filepath)
+}
+
+func testVm2Config(name string) string {
+	return fmt.Sprintf(`
+	
+		resource "nutanix_virtual_machine_v2" "test-2"{
+			name= "%[1]s-vm2"
+			description =  "test recovery point vm 2"
+			num_cores_per_socket = 1
+			num_sockets = 1
+			cluster {
+				ext_id = local.cluster_ext_id
+			}
+		}
+`, name)
 }

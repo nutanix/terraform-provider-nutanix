@@ -15,7 +15,8 @@ const datasourceNameVmRecoveryPoint = "data.nutanix_vm_recovery_point_info_v2.te
 
 func TestAccNutanixVmRecoveryPointV2Datasource_VmRecoveryPoint(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("terraform-test-recovery-point-%d", r)
+	name := fmt.Sprintf("tf-test-recovery-point-%d", r)
+	vmName := fmt.Sprintf("tf-test-rp-vm-%d", r)
 
 	// End time is two week later
 	expirationTime := time.Now().Add(14 * 24 * time.Hour)
@@ -27,7 +28,7 @@ func TestAccNutanixVmRecoveryPointV2Datasource_VmRecoveryPoint(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmRecoveryPointDatasourceConfigWithVmRecoveryPoint(name, expirationTimeFormatted),
+				Config: testVmConfig(vmName) + testVmRecoveryPointDatasourceConfigWithVmRecoveryPoint(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameVmRecoveryPoint, "ext_id"),
 					resource.TestCheckResourceAttrSet(datasourceNameVmRecoveryPoint, "location_agnostic_id"),
@@ -42,7 +43,8 @@ func TestAccNutanixVmRecoveryPointV2Datasource_VmRecoveryPoint(t *testing.T) {
 func TestAccNutanixVmRecoveryPointV2Datasource_VmRecoveryPointWithAppConsProps(t *testing.T) {
 	t.Skip("Skipping this test case as it is failing due to missing app consistent properties in get request")
 	r := acctest.RandInt()
-	name := fmt.Sprintf("terraform-test-recovery-point-%d", r)
+	name := fmt.Sprintf("tf-test-recovery-point-%d", r)
+	vmName := fmt.Sprintf("tf-test-rp-vm-%d", r)
 
 	// End time is two week later
 	expirationTime := time.Now().Add(14 * 24 * time.Hour)
@@ -54,7 +56,7 @@ func TestAccNutanixVmRecoveryPointV2Datasource_VmRecoveryPointWithAppConsProps(t
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmRecoveryPointsDatasourceConfigWithAppConsProps(name, expirationTimeFormatted),
+				Config: testVmConfig(vmName) + testVmRecoveryPointsDatasourceConfigWithAppConsProps(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameVmRecoveryPoint, "ext_id"),
 					resource.TestCheckResourceAttrSet(datasourceNameVmRecoveryPoint, "location_agnostic_id"),

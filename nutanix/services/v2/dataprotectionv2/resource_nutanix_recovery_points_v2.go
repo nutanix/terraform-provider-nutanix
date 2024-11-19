@@ -336,7 +336,7 @@ func ResourceNutanixRecoveryPointsV2Create(ctx context.Context, d *schema.Resour
 	}
 
 	aJSON, _ := json.Marshal(body)
-	fmt.Printf("[DEBUG] RecoveryPoint Body: %v", string(aJSON))
+	log.Printf("[DEBUG] RecoveryPoint Body: %v", string(aJSON))
 
 	resp, err := conn.RecoveryPoint.CreateRecoveryPoint(&body)
 
@@ -491,7 +491,7 @@ func ResourceNutanixRecoveryPointsV2Update(ctx context.Context, d *schema.Resour
 	etagValue := conn.RecoveryPoint.ApiClient.GetEtag(readResp)
 
 	args := make(map[string]interface{})
-	args["If-Match"] = etagValue
+	args["If-Match"] = utils.StringPtr(etagValue)
 
 	body := config.ExpirationTimeSpec{}
 
@@ -509,7 +509,7 @@ func ResourceNutanixRecoveryPointsV2Update(ctx context.Context, d *schema.Resour
 	}
 
 	aJSON, _ := json.Marshal(body)
-	fmt.Printf("[DEBUG] RecoveryPoint Body: %v", string(aJSON))
+	log.Printf("[DEBUG] RecoveryPoint Body: %v", string(aJSON))
 
 	resp, err := conn.RecoveryPoint.SetRecoveryPointExpirationTime(utils.StringPtr(d.Id()), &body, args)
 

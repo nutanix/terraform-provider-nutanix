@@ -15,7 +15,8 @@ const datasourceNameRecoveryPoints = "data.nutanix_recovery_points_v2.test"
 
 func TestAccNutanixRecoveryPointsV2Datasource_Basic(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("terraform-test-recovery-point-%d", r)
+	name := fmt.Sprintf("tf-test-recovery-point-%d", r)
+	vmName := fmt.Sprintf("tf-test-rp-vm-%d", r)
 
 	// End time is two week later
 	expirationTime := time.Now().Add(14 * 24 * time.Hour)
@@ -27,7 +28,7 @@ func TestAccNutanixRecoveryPointsV2Datasource_Basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testRecoveryPointsDatasourceConfig(name, expirationTimeFormatted),
+				Config: testVmConfig(vmName) + testRecoveryPointsDatasourceConfig(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameRecoveryPoints, "recovery_points.#"),
 					resource.TestCheckResourceAttrSet(datasourceNameRecoveryPoints, "recovery_points.0.name"),
@@ -39,7 +40,8 @@ func TestAccNutanixRecoveryPointsV2Datasource_Basic(t *testing.T) {
 
 func TestAccNutanixRecoveryPointsV2Datasource_WithFilter(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("terraform-test-recovery-point-%d", r)
+	name := fmt.Sprintf("tf-test-recovery-point-%d", r)
+	vmName := fmt.Sprintf("tf-test-rp-vm-%d", r)
 
 	// End time is two week later
 	expirationTime := time.Now().Add(14 * 24 * time.Hour)
@@ -51,7 +53,7 @@ func TestAccNutanixRecoveryPointsV2Datasource_WithFilter(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testRecoveryPointsDatasourceConfigWithFilter(name, expirationTimeFormatted),
+				Config: testVmConfig(vmName) + testRecoveryPointsDatasourceConfigWithFilter(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceNameRecoveryPoints, "recovery_points.#", "1"),
 					resource.TestCheckResourceAttrSet(datasourceNameRecoveryPoints, "recovery_points.0.ext_id"),
@@ -68,7 +70,8 @@ func TestAccNutanixRecoveryPointsV2Datasource_WithFilter(t *testing.T) {
 
 func TestAccNutanixRecoveryPointsV2Datasource_WithLimit(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("terraform-test-recovery-point-%d", r)
+	name := fmt.Sprintf("tf-test-recovery-point-%d", r)
+	vmName := fmt.Sprintf("tf-test-rp-vm-%d", r)
 
 	// End time is two week later
 	expirationTime := time.Now().Add(14 * 24 * time.Hour)
@@ -80,7 +83,7 @@ func TestAccNutanixRecoveryPointsV2Datasource_WithLimit(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testRecoveryPointsDatasourceConfigWithLimit(name, expirationTimeFormatted),
+				Config: testVmConfig(vmName) + testRecoveryPointsDatasourceConfigWithLimit(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceNameRecoveryPoints, "recovery_points.#", "1"),
 					resource.TestCheckResourceAttrSet(datasourceNameRecoveryPoints, "recovery_points.0.ext_id"),
@@ -92,30 +95,25 @@ func TestAccNutanixRecoveryPointsV2Datasource_WithLimit(t *testing.T) {
 
 func testRecoveryPointsDatasourceConfig(name, expirationTime string) string {
 	return fmt.Sprintf(`
-	locals{
-		config = (jsondecode(file("%[3]s")))
-		data_protection = local.config.data_protection			
-	}
+
 	resource "nutanix_recovery_points_v2" "test" {
 		name                = "%[1]s"
 		expiration_time     = "%[2]s"
 		status              = "COMPLETE"
 		recovery_point_type = "APPLICATION_CONSISTENT"
 		vm_recovery_points {
-			vm_ext_id = local.data_protection.vm_ext_id[0]  
+			vm_ext_id = nutanix_virtual_machine_v2.test-1.id
 		}
 	}
-	data "nutanix_recovery_points_v2" "test"{}
+	data "nutanix_recovery_points_v2" "test"{
+		depends_on = [ nutanix_recovery_points_v2.test ]
+	}
 
-`, name, expirationTime, filepath)
+`, name, expirationTime)
 }
 
 func testRecoveryPointsDatasourceConfigWithFilter(name, expirationTime string) string {
 	return fmt.Sprintf(`
-	locals{
-		config = (jsondecode(file("%[3]s")))
-		data_protection = local.config.data_protection			
-	}
 
 	resource "nutanix_recovery_points_v2" "test" {
 		name                = "%[1]s"
@@ -123,23 +121,20 @@ func testRecoveryPointsDatasourceConfigWithFilter(name, expirationTime string) s
 		status              = "COMPLETE"
 		recovery_point_type = "APPLICATION_CONSISTENT"
 		vm_recovery_points {
-			vm_ext_id = local.data_protection.vm_ext_id[0]  
+			vm_ext_id = nutanix_virtual_machine_v2.test-1.id
 		}
 	}
+
 	data "nutanix_recovery_points_v2" "test"{
-		filter = "name eq '%[1]s'"
+		filter = "name eq '${nutanix_recovery_points_v2.test.name}'"
 		depends_on = [ nutanix_recovery_points_v2.test ]
 	}
 
-`, name, expirationTime, filepath)
+`, name, expirationTime)
 }
 
 func testRecoveryPointsDatasourceConfigWithLimit(name, expirationTime string) string {
 	return fmt.Sprintf(`
-	locals{
-		config = (jsondecode(file("%[3]s")))
-		data_protection = local.config.data_protection			
-	}
 
 	resource "nutanix_recovery_points_v2" "test" {
 		name                = "%[1]s"
@@ -147,7 +142,7 @@ func testRecoveryPointsDatasourceConfigWithLimit(name, expirationTime string) st
 		status              = "COMPLETE"
 		recovery_point_type = "APPLICATION_CONSISTENT"
 		vm_recovery_points {
-			vm_ext_id = local.data_protection.vm_ext_id[0]  
+			vm_ext_id = nutanix_virtual_machine_v2.test-1.id
 		}
 	}
 
@@ -155,5 +150,5 @@ func testRecoveryPointsDatasourceConfigWithLimit(name, expirationTime string) st
 		limit = 1
 	}
 
-`, name, expirationTime, filepath)
+`, name, expirationTime)
 }
