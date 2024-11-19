@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"reflect"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -1641,6 +1642,33 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 
 	if _, errWaitTask := powerStateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for vm (%s) to power ON: %s", utils.StringValue(uuid), errWaitTask)
+	}
+
+	// If power state is ON, then wait for the VM to be available
+	if d.Get("power_state") == "ON" {
+		// Wait for the VM to be available
+		waitIPConf := &resource.StateChangeConf{
+			Pending:    []string{"WAITING"},
+			Target:     []string{"AVAILABLE"},
+			Refresh:    waitForIPRefreshFunc(conn, utils.StringValue(uuid)),
+			Timeout:    1 * time.Minute,
+			Delay:      3 * time.Second,
+			MinTimeout: 3 * time.Second,
+		}
+		vmIntentResponse, err := waitIPConf.WaitForStateContext(ctx)
+		if err != nil {
+			log.Printf("[WARN] could not get the IP for VM(%s): %s", uuid, err)
+		} else {
+			vm := vmIntentResponse.(*config.GetVmApiResponse)
+			vmResp := vm.Data.GetValue().(config.Vm)
+
+			if len(vmResp.Nics) > 0 && len(vmResp.Nics[0].NetworkInfo.Ipv4Info.LearnedIpAddresses) != 0 {
+				d.SetConnInfo(map[string]string{
+					"type": "ssh",
+					"host": *vmResp.Nics[0].NetworkInfo.Ipv4Info.LearnedIpAddresses[0].Value,
+				})
+			}
+		}
 	}
 
 	return ResourceNutanixVirtualMachineV2Read(ctx, d, meta)
@@ -3532,4 +3560,29 @@ func isVMPowerOff(d *schema.ResourceData, conn *vmm.Client) bool {
 	vmResp := readResp.Data.GetValue().(config.Vm)
 
 	return vmResp.PowerState.GetName() == "OFF"
+}
+
+func waitForIPRefreshFunc(client *vmm.Client, vmUUID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := client.VMAPIInstance.GetVmById(utils.StringPtr(vmUUID))
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		getResp := resp.Data.GetValue().(config.Vm)
+
+		if getResp.Nics != nil && len(getResp.Nics) > 0 {
+			for _, nic := range getResp.Nics {
+				if nic.NetworkInfo.Ipv4Info != nil {
+					for _, ip := range nic.NetworkInfo.Ipv4Info.LearnedIpAddresses {
+						if ip.Value != nil {
+							return resp, "AVAILABLE", nil
+						}
+					}
+				}
+			}
+		}
+		return resp, "WAITING", nil
+	}
 }
