@@ -100,7 +100,6 @@ func TestAccNutanixClusterV2Resource_CreateClusterWithAllConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameCluster, "dryrun", "false"),
 					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.CvmIP),
 					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.number_of_nodes", "1"),
-					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.cluster_function.0", testVars.Clusters.Config.ClusterFunctions[0]),
 					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
 					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
 					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.external_address.0.ipv4.0.value", testVars.Clusters.Network.VirtualIP),

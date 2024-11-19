@@ -7,10 +7,8 @@ import (
 	"testing"
 )
 
-const resourceNameClusterPcRegistration = "nutanix_pe_pc_registration_v2.test"
-
 // Logic covered in create cluster resource test
-func TestAccNutanixPePcRegistrationResourceV2_ValidationsDomainManagerRemoteClusterSpec(t *testing.T) {
+func TestAccNutanixPePcRegistrationV2Resource_ValidationsDomainManagerRemoteClusterSpec(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -36,7 +34,7 @@ func TestAccNutanixPePcRegistrationResourceV2_ValidationsDomainManagerRemoteClus
 	})
 }
 
-func TestAccNutanixPePcRegistrationResourceV2_ValidationsAOSRemoteClusterSpec(t *testing.T) {
+func TestAccNutanixPePcRegistrationV2Resource_ValidationsAOSRemoteClusterSpec(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -59,7 +57,7 @@ func TestAccNutanixPePcRegistrationResourceV2_ValidationsAOSRemoteClusterSpec(t 
 	})
 }
 
-func TestAccNutanixPePcRegistrationResourceV2_ValidationsClusterReference(t *testing.T) {
+func TestAccNutanixPePcRegistrationV2Resource_ValidationsClusterReference(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
