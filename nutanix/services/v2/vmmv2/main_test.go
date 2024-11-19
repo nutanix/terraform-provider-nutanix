@@ -33,7 +33,7 @@ type TestConfig struct {
 var testVars TestConfig
 
 func loadVars(filepath string, varStuct interface{}) {
-	// Read test_config_v4.json from home current path
+	// Read test_config_v2.json from home current path
 	configData, err := os.ReadFile(filepath)
 	if err != nil {
 		log.Printf("Got this error while reading config.json: %s", err.Error())
