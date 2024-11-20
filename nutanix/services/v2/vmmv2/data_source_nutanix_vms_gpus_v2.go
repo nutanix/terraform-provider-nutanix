@@ -181,16 +181,16 @@ func flattenGpusEntities(pr []config.Gpu) []interface{} {
 				gpu["links"] = v.Links
 			}
 			if v.Mode != nil {
-				gpu["mode"] = v.Mode
+				gpu["mode"] = flattenGpuMode(v.Mode)
 			}
 			if v.DeviceId != nil {
 				gpu["device_id"] = v.DeviceId
 			}
 			if v.Vendor != nil {
-				gpu["vendor"] = v.Vendor
+				gpu["vendor"] = flattenGpuVendor(v.Vendor)
 			}
 			if v.PciAddress != nil {
-				gpu["pci_address"] = v.PciAddress
+				gpu["pci_address"] = flattenSBDF(v.PciAddress)
 			}
 			if v.GuestDriverVersion != nil {
 				gpu["guest_driver_version"] = v.GuestDriverVersion

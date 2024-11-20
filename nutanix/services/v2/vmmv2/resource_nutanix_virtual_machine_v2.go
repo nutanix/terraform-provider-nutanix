@@ -199,7 +199,20 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 				},
 			},
 			// not present in API reference
-			// "availability_zone":   {},
+			"availability_zone": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ext_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"guest_customization": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -1300,9 +1313,13 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"ext_id": {
 							Type:     schema.TypeString,
-							Optional: true,
 							Computed: true,
 						},
+						"tenant_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"links": schemaForLinks(),
 						"mode": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -1321,7 +1338,55 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{"NVIDIA", "AMD", "INTEL"}, false),
 						},
 						// not present in api reference doc
-						//"pci_address": {},
+						"pci_address": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"segment": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
+									},
+									"bus": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
+									},
+									"device": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
+									},
+									"func": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"guest_driver_version": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"frame_buffer_size_bytes": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"num_virtual_display_heads": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"fraction": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -1459,6 +1524,9 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 	}
 	if cls, ok := d.GetOk("cluster"); ok {
 		body.Cluster = expandClusterReference(cls)
+	}
+	if availabilityZone, ok := d.GetOk("availability_zone"); ok {
+		body.AvailabilityZone = expandAvailabilityZoneReference(availabilityZone)
 	}
 	if guestCstm, ok := d.GetOk("guest_customization"); ok {
 		body.GuestCustomization = expandGuestCustomizationParams(guestCstm)
@@ -1674,6 +1742,13 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 	return ResourceNutanixVirtualMachineV2Read(ctx, d, meta)
 }
 
+func expandAvailabilityZoneReference(zone interface{}) *config.AvailabilityZoneReference {
+	zoneRef := zone.(map[string]interface{})
+	return &config.AvailabilityZoneReference{
+		ExtId: utils.StringPtr(zoneRef["ext_id"].(string)),
+	}
+}
+
 func ResourceNutanixVirtualMachineV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
@@ -1764,6 +1839,9 @@ func ResourceNutanixVirtualMachineV2Read(ctx context.Context, d *schema.Resource
 	if err := d.Set("cluster", flattenClusterReference(getResp.Cluster)); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("availability_zone", flattenAvailabilityZoneReference(getResp.AvailabilityZone)); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("guest_customization", flattenGuestCustomizationParams(getResp.GuestCustomization)); err != nil {
 		return diag.FromErr(err)
 	}
@@ -1829,7 +1907,8 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 	// respImages := resp.Data.GetValue().(config.Vm)
 	// updateSpec := respImages
 
-	if checkforHotPlugChanges(d) && !isVMPowerOff(d, conn) {
+	if checkForHotPlugChanges(d) && !isVMPowerOff(d, conn) {
+		log.Printf("[DEBUG] callingForPowerOffVM func")
 		callForPowerOffVM(conn, d, ctx, meta)
 	}
 
@@ -2590,7 +2669,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 	}
 
 	// call for power on VM after updating
-	if checkforHotPlugChanges(d) {
+	if checkForHotPlugChanges(d) {
 		if power, ok := d.GetOk("power_state"); ok {
 			if power == "ON" {
 				callForPowerOnVM(conn, d, ctx, meta)
@@ -2600,9 +2679,12 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 	if d.HasChange("power_state") {
 		if power, ok := d.GetOk("power_state"); ok {
+			log.Printf("[DEBUG] Power state change detected: %s", power)
 			if power == "ON" {
+				log.Printf("[DEBUG] Powering on the VM")
 				callForPowerOnVM(conn, d, ctx, meta)
 			} else {
+				log.Printf("[DEBUG] Powering off the VM")
 				callForPowerOffVM(conn, d, ctx, meta)
 			}
 		}
@@ -3291,7 +3373,7 @@ func expandGpu(gpu []interface{}) []config.Gpu {
 			if extID, ok := val["ext_id"]; ok && len(extID.(string)) > 0 {
 				gpus.ExtId = utils.StringPtr(extID.(string))
 			}
-			if mode, ok := val[""]; ok {
+			if mode, ok := val["mode"]; ok {
 				subMap := map[string]interface{}{
 					"PASSTHROUGH_GRAPHICS": 2,
 					"PASSTHROUGH_COMPUTE":  3,
@@ -3313,6 +3395,25 @@ func expandGpu(gpu []interface{}) []config.Gpu {
 				pVal := subMap[vendor.(string)]
 				p := config.GpuVendor(pVal.(int))
 				gpus.Vendor = &p
+			}
+			if pciAddress, ok := val["pci_address"]; ok && len(pciAddress.([]interface{})) > 0 {
+				pciObj := config.SBDF{}
+				pciI := pciAddress.([]interface{})
+				pciVal := pciI[0].(map[string]interface{})
+
+				if pciVal["segment"] != nil {
+					pciObj.Segment = utils.IntPtr(pciVal["segment"].(int))
+				}
+				if pciVal["bus"] != nil {
+					pciObj.Bus = utils.IntPtr(pciVal["bus"].(int))
+				}
+				if pciVal["device"] != nil {
+					pciObj.Device = utils.IntPtr(pciVal["device"].(int))
+				}
+				if pciVal["func"] != nil {
+					pciObj.Func = utils.IntPtr(pciVal["func"].(int))
+				}
+				gpus.PciAddress = &pciObj
 			}
 			gpuList[k] = gpus
 		}
@@ -3402,13 +3503,14 @@ func callForPowerOffVM(conn *vmm.Client, d *schema.ResourceData, ctx context.Con
 	// checking current state of VM
 	vmResp := readResp.Data.GetValue().(config.Vm)
 
-	if vmResp.PowerState.GetName() == d.Get("power_state").(string) {
+	if vmResp.PowerState.GetName() == "OFF" {
+		log.Printf("[DEBUG] VM is already in %s state", d.Get("power_state").(string))
 		return nil
 	}
 
 	// Extract E-Tag Header
 	args := make(map[string]interface{})
-	args["If-Match"] = getEtagHeader(vmResp, conn)
+	args["If-Match"] = getEtagHeader(readResp, conn)
 
 	// Power off the VM
 	powerOffResp, err := conn.VMAPIInstance.PowerOffVm(utils.StringPtr(d.Id()), args)
@@ -3440,16 +3542,25 @@ func callForPowerOnVM(conn *vmm.Client, d *schema.ResourceData, ctx context.Cont
 	if errR != nil {
 		return diag.Errorf("error while reading vm : %v", errR)
 	}
-	// Extract E-Tag Header
-	etagValue := conn.VMAPIInstance.ApiClient.GetEtag(readResp)
 
+	vmResp := readResp.Data.GetValue().(config.Vm)
+
+	if vmResp.PowerState.GetName() == "ON" {
+		log.Printf("[DEBUG] VM is already in %s state", d.Get("power_state").(string))
+		return nil
+	}
+
+	// Extract E-Tag Header
 	args := make(map[string]interface{})
-	args["If-Match"] = etagValue
+	args["If-Match"] = getEtagHeader(readResp, conn)
 	// Power on the VM
 	powerOnResp, err := conn.VMAPIInstance.PowerOnVm(utils.StringPtr(d.Id()), args)
 	if err != nil {
 		return diag.Errorf("error while powering on Virtual Machine : %v", err)
 	}
+
+	aJson, _ := json.Marshal(powerOnResp)
+	log.Printf("[DEBUG] PowerOn Response: %s", string(aJson))
 
 	TaskRef := powerOnResp.Data.GetValue().(import1.TaskReference)
 	taskUUID := TaskRef.ExtId
@@ -3541,7 +3652,7 @@ func diffConfig(oldValue []interface{}, newValue []interface{}) ([]interface{}, 
 }
 
 // Check if VM is in power off state to perform update operations
-func checkforHotPlugChanges(d *schema.ResourceData) bool {
+func checkForHotPlugChanges(d *schema.ResourceData) bool {
 	if d.HasChange(("num_sockets")) || d.HasChange(("num_cores_per_socket")) || d.HasChange(("memory_size_bytes")) ||
 		d.HasChange(("num_threads_per_core")) || d.HasChange(("cd_rom")) || d.HasChange(("num_numa_nodes")) ||
 		d.HasChange("cluster") || d.HasChange("is_cpu_passthrough_enabled") || d.HasChange("enabled_cpu_features") ||

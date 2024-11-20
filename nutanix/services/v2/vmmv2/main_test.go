@@ -27,6 +27,11 @@ type TestConfig struct {
 				Password string `json:"password"`
 			} `json:"credential"`
 		} `json:"ngt"`
+		GPUS []struct {
+			DeviceID int    `json:"device_id"`
+			Mode     string `json:"mode"`
+			Vendor   string `json:"vendor"`
+		} `json:"gpus"`
 	} `json:"vmm"`
 }
 

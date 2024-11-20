@@ -3,6 +3,7 @@ package vmmv2_test
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -18,7 +19,7 @@ var filepath = path + "/../../../../test_config_v2.json"
 
 func TestAccNutanixVmsV2Resource_Basic(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-vm-%d", r)
+	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -46,8 +47,8 @@ func TestAccNutanixVmsV2Resource_BasicUpdate(t *testing.T) {
 	r := acctest.RandInt()
 	desc := "test vm description"
 	updatedDesc := "test vm updated description"
-	name := fmt.Sprintf("test-vm-%d", r)
-	updatedName := fmt.Sprintf("test-vm-updated-%d", r)
+	name := fmt.Sprintf("tf-test-vm-%d", r)
+	updatedName := fmt.Sprintf("tf-test-vm-updated-%d", r)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -94,7 +95,7 @@ func TestAccNutanixVmsV2Resource_WithDisk(t *testing.T) {
 			{
 				Config: testVmsV4ConfigWithDisk(r, desc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameVms, "name", fmt.Sprintf("test-vm-%d", r)),
+					resource.TestCheckResourceAttr(resourceNameVms, "name", fmt.Sprintf("tf-test-vm-%d", r)),
 					resource.TestCheckResourceAttr(resourceNameVms, "num_cores_per_socket", "1"),
 					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
 					resource.TestCheckResourceAttr(resourceNameVms, "num_sockets", "1"),
@@ -114,7 +115,7 @@ func TestAccNutanixVmsV2Resource_WithDisk(t *testing.T) {
 
 func TestAccNutanixVmsV2Resource_DiskWithDatasource(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-vm-%d", r)
+	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -153,7 +154,7 @@ func TestAccNutanixVmsV2Resource_WithNic(t *testing.T) {
 			{
 				Config: testVmsV4ConfigWithNic(r, desc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameVms, "name", fmt.Sprintf("test-vm-%d", r)),
+					resource.TestCheckResourceAttr(resourceNameVms, "name", fmt.Sprintf("tf-test-vm-%d", r)),
 					resource.TestCheckResourceAttr(resourceNameVms, "num_cores_per_socket", "1"),
 					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
 					resource.TestCheckResourceAttr(resourceNameVms, "num_sockets", "1"),
@@ -184,7 +185,7 @@ func TestAccNutanixVmsV2Resource_WithNicTrunk(t *testing.T) {
 			{
 				Config: testVmsV4ConfigWithNicWithTrunkVlan(r, desc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameVms, "name", fmt.Sprintf("test-vm-%d", r)),
+					resource.TestCheckResourceAttr(resourceNameVms, "name", fmt.Sprintf("tf-test-vm-%d", r)),
 					resource.TestCheckResourceAttr(resourceNameVms, "num_cores_per_socket", "1"),
 					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
 					resource.TestCheckResourceAttr(resourceNameVms, "num_sockets", "1"),
@@ -208,7 +209,7 @@ func TestAccNutanixVmsV2Resource_WithNicTrunk(t *testing.T) {
 
 func TestAccNutanixVmsV2Resource_WithLegacyBootOrder(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-vm-%d", r)
+	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -258,7 +259,7 @@ func TestAccNutanixVmsV2Resource_WithLegacyBootOrder(t *testing.T) {
 
 func TestAccNutanixVmsV2Resource_WithCdrom(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-vm-%d", r)
+	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -287,7 +288,7 @@ func TestAccNutanixVmsV2Resource_WithCdrom(t *testing.T) {
 
 func TestAccNutanixVmsV2Resource_WithCdromIDE(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-vm-%d", r)
+	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -316,7 +317,7 @@ func TestAccNutanixVmsV2Resource_WithCdromIDE(t *testing.T) {
 
 func TestAccNutanixVmsV2Resource_WithCdromBackingInfo(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-vm-%d", r)
+	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -354,7 +355,7 @@ func TestAccNutanixVmsV2Resource_WithCloudInit(t *testing.T) {
 			{
 				Config: testVmsV4ConfigWithCloudInit(r, desc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameVms, "name", fmt.Sprintf("test-vm-%d", r)),
+					resource.TestCheckResourceAttr(resourceNameVms, "name", fmt.Sprintf("tf-test-vm-%d", r)),
 					resource.TestCheckResourceAttr(resourceNameVms, "num_cores_per_socket", "1"),
 					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
 					resource.TestCheckResourceAttr(resourceNameVms, "num_sockets", "1"),
@@ -379,8 +380,8 @@ func TestAccNutanixVmsV2Resource_UpdateDiskNics(t *testing.T) {
 	r := acctest.RandInt()
 	desc := "test vm description"
 	updatedDesc := "test vm updated description"
-	name := fmt.Sprintf("test-vm-%d", r)
-	updatedName := fmt.Sprintf("test-vm-updated-%d", r)
+	name := fmt.Sprintf("tf-test-vm-%d", r)
+	updatedName := fmt.Sprintf("tf-test-vm-updated-%d", r)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -433,7 +434,7 @@ func TestAccNutanixVmsV2Resource_UpdateDiskNics(t *testing.T) {
 
 func TestAccNutanixVmsV2Resource_WithLegacyBootDevice(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-vm-%d", r)
+	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -464,7 +465,7 @@ func TestAccNutanixVmsV2Resource_WithLegacyBootDevice(t *testing.T) {
 
 func TestAccNutanixVmsV2Resource_WithCategories(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-vm-%d", r)
+	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -500,6 +501,55 @@ func TestAccNutanixVmsV2Resource_WithCategories(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVms, "machine_type", "PC"),
 					resource.TestCheckResourceAttrSet(resourceNameVms, "categories.#"),
 					resource.TestCheckResourceAttr(resourceNameVms, "categories.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNutanixVmsV2Resource_WithGpus(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-vm-%d", r)
+	desc := "test vm description"
+	updatedDesc := "test vm updated description"
+	updatedName := fmt.Sprintf("tf-test-vm-updated-%d", r)
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testVmsV2WithGpus(name, desc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "name", name),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_cores_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_sockets", "2"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "create_time"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "update_time"),
+					resource.TestCheckResourceAttr(resourceNameVms, "protection_type", "UNPROTECTED"),
+					resource.TestCheckResourceAttr(resourceNameVms, "is_agent_vm", "false"),
+					resource.TestCheckResourceAttr(resourceNameVms, "machine_type", "PC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "gpus.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameVms, "gpus.0.device_id", strconv.Itoa(testVars.VMM.GPUS[0].DeviceID)),
+					resource.TestCheckResourceAttr(resourceNameVms, "gpus.0.mode", testVars.VMM.GPUS[0].Mode),
+					resource.TestCheckResourceAttr(resourceNameVms, "gpus.0.vendor", testVars.VMM.GPUS[0].Vendor),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "gpus.0.ext_id"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "gpus.0.name"),
+				),
+			},
+			{
+				Config: testVmsV2RemoveGpus(updatedName, updatedDesc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "name", updatedName),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_cores_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceNameVms, "description", updatedDesc),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_sockets", "2"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "create_time"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "update_time"),
+					resource.TestCheckResourceAttr(resourceNameVms, "protection_type", "UNPROTECTED"),
+					resource.TestCheckResourceAttr(resourceNameVms, "is_agent_vm", "false"),
+					resource.TestCheckResourceAttr(resourceNameVms, "machine_type", "PC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "gpus.#", "0"),
 				),
 			},
 		},
@@ -542,7 +592,7 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 		}
 	
 		resource "nutanix_virtual_machine_v2" "test"{
-			name= "test-vm-%[1]d"
+			name= "tf-test-vm-%[1]d"
 			description =  "%[2]s"
 			num_cores_per_socket = 1
 			num_sockets = 1
@@ -674,7 +724,7 @@ func testVmsV4ConfigWithNic(r int, desc string) string {
 		}
 	
 		resource "nutanix_virtual_machine_v2" "test"{
-			name= "test-vm-%[1]d"
+			name= "tf-test-vm-%[1]d"
 			description =  "%[2]s"
 			num_cores_per_socket = 1
 			num_sockets = 1
@@ -729,7 +779,7 @@ func testVmsV4ConfigWithNicWithTrunkVlan(r int, desc string) string {
 		}
 	
 		resource "nutanix_virtual_machine_v2" "test"{
-			name= "test-vm-%[1]d"
+			name= "tf-test-vm-%[1]d"
 			description =  "%[2]s"
 			num_cores_per_socket = 1
 			num_sockets = 1
@@ -1047,7 +1097,7 @@ func testVmsV4ConfigWithCloudInit(r int, desc string) string {
 		}
 	
 		resource "nutanix_virtual_machine_v2" "test"{
-			name= "test-vm-%[1]d"
+			name= "tf-test-vm-%[1]d"
 			description =  "%[2]s"
 			num_cores_per_socket = 1
 			num_sockets = 1
@@ -1237,10 +1287,12 @@ func testVmsCategoriesV4Config(name, desc string) string {
 
 		locals {
 			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			config = jsondecode(file("%[3]s"))
+			vmm = local.config.vmm
 		}
 
 		data "nutanix_subnets_v2" "subnets" {
-			filter = "name eq 'vlan.800'"
+			filter = "name eq '${local.vmm.subnet_name}'"
 		}
 
 		data "nutanix_categories_v2" "ctg"{}
@@ -1273,7 +1325,7 @@ func testVmsCategoriesV4Config(name, desc string) string {
 			}
 			power_state = "ON"
 		}
-	`, name, desc)
+	`, name, desc, filepath)
 }
 
 func testVmsCategoriesV4ConfigUpdate(name, desc string) string {
@@ -1282,10 +1334,12 @@ func testVmsCategoriesV4ConfigUpdate(name, desc string) string {
 
 		locals {
 			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			config = jsondecode(file("%[3]s"))
+			vmm = local.config.vmm
 		}
 
 		data "nutanix_subnets_v2" "subnets" {
-			filter = "name eq 'vlan.800'"
+			filter = "name eq '${local.vmm.subnet_name}'"
 		}
 
 		data "nutanix_categories_v2" "ctg"{}
@@ -1315,5 +1369,65 @@ func testVmsCategoriesV4ConfigUpdate(name, desc string) string {
 			}
 			power_state = "ON"
 		}
-	`, name, desc)
+	`, name, desc, filepath)
+}
+
+func testVmsV2WithGpus(name, desc string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+		
+		locals {
+		  cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
+		  config = jsondecode(file("%[3]s"))
+		  vmm    = local.config.vmm
+		}
+
+		
+		resource "nutanix_virtual_machine_v2" "test"{
+			name= "%[1]s"
+			description =  "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets = 2
+			cluster {
+				ext_id = local.cluster0
+			}			
+			
+			gpus {
+				device_id = local.vmm.gpus[0].device_id
+				mode      = local.vmm.gpus[0].mode
+				vendor    = local.vmm.gpus[0].vendor
+			}
+			power_state = "ON"
+		}
+	`, name, desc, filepath)
+}
+func testVmsV2RemoveGpus(name, desc string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+		
+		locals {
+		  cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
+		  config = jsondecode(file("%[3]s"))
+		  vmm    = local.config.vmm
+		}
+
+		
+		resource "nutanix_virtual_machine_v2" "test"{
+			name= "%[1]s"
+			description =  "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets = 2
+			cluster {
+				ext_id = local.cluster0
+			}			
+			
+			power_state = "OFF"
+		}
+	`, name, desc, filepath)
 }

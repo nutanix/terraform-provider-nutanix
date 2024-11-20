@@ -1527,6 +1527,17 @@ func flattenClusterReference(ref *config.ClusterReference) []map[string]interfac
 	return nil
 }
 
+func flattenAvailabilityZoneReference(zone *config.AvailabilityZoneReference) []map[string]interface{} {
+	if zone == nil {
+		return nil
+	}
+	return []map[string]interface{}{
+		{
+			"ext_id": utils.StringValue(zone.ExtId),
+		},
+	}
+}
+
 func flattenGuestCustomizationParams(gst *config.GuestCustomizationParams) []map[string]interface{} {
 	if gst != nil {
 		gstList := make([]map[string]interface{}, 0)
