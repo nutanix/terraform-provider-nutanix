@@ -1,24 +1,24 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_vm_shutdown_action_v4"
+page_title: "NUTANIX: nutanix_vm_shutdown_action_v2"
 sidebar_current: "docs-nutanix-resource-vm-shutdown-action-v4"
 description: |-
   Perform shutdown actions on VM. 
 ---
 
-# nutanix_vm_shutdown_action_v4
+# nutanix_vm_shutdown_action_v2
 
 Collaborative reboot or shutdown of a Virtual Machine through the ACPI support in the operating system. Also, Collaborative reboot or shutdown of a Virtual Machine, requesting Nutanix Guest Tools to trigger a reboot or shutdown from within the VM.
 
 ## Example
 
 ```hcl
-    resource "nutanix_vm_shutdown_action_v4" "vmShuts" {
+    resource "nutanix_vm_shutdown_action_v2" "vmShuts" {
         ext_id= {{ vm uuid }}
         action = "shutdown"
     }
 
-    resource "nutanix_vm_shutdown_action_v4" "vmShuts" {
+    resource "nutanix_vm_shutdown_action_v2" "vmShuts" {
         ext_id= {{ vm uuid }}
         action = "reboot"
     }

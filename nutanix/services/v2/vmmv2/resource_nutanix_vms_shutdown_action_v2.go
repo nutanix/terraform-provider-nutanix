@@ -13,12 +13,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func ResourceNutanixVmsShutdownActionV4() *schema.Resource {
+func ResourceNutanixVmsShutdownActionV2() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: ResourceNutanixVmsShutdownActionV4Create,
-		ReadContext:   ResourceNutanixVmsShutdownActionV4Read,
-		UpdateContext: ResourceNutanixVmsShutdownActionV4Update,
-		DeleteContext: ResourceNutanixVmsShutdownActionV4Delete,
+		CreateContext: ResourceNutanixVmsShutdownActionV2Create,
+		ReadContext:   ResourceNutanixVmsShutdownActionV2Read,
+		UpdateContext: ResourceNutanixVmsShutdownActionV2Update,
+		DeleteContext: ResourceNutanixVmsShutdownActionV2Delete,
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -49,7 +49,7 @@ func ResourceNutanixVmsShutdownActionV4() *schema.Resource {
 	}
 }
 
-func ResourceNutanixVmsShutdownActionV4Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVmsShutdownActionV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
 	vmExtID := d.Get("ext_id")
@@ -136,14 +136,14 @@ func ResourceNutanixVmsShutdownActionV4Create(ctx context.Context, d *schema.Res
 	return nil
 }
 
-func ResourceNutanixVmsShutdownActionV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVmsShutdownActionV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func ResourceNutanixVmsShutdownActionV4Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return ResourceNutanixVmsShutdownActionV4Create(ctx, d, meta)
+func ResourceNutanixVmsShutdownActionV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return ResourceNutanixVmsShutdownActionV2Create(ctx, d, meta)
 }
 
-func ResourceNutanixVmsShutdownActionV4Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVmsShutdownActionV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }

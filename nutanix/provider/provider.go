@@ -369,6 +369,7 @@ func Provider() *schema.Provider {
 			"nutanix_recovery_point_restore_v2":               dataprotectionv2.ResourceNutanixRecoveryPointRestoreV2(),
 			"nutanix_vm_revert_v2":                            vmmv2.ResourceNutanixRevertVmRecoveryPointV2(),
 			"nutanix_virtual_machine_v2":                      vmmv2.ResourceNutanixVirtualMachineV2(),
+			"nutanix_vm_shutdown_action_v2":                   vmmv2.ResourceNutanixVmsShutdownActionV2(),
 			"nutanix_vm_cdrom_insert_eject_v2":                vmmv2.ResourceNutanixVmsCdRomsInsertEjectV2(),
 			"nutanix_deploy_templates_v2":                     vmmv2.ResourceNutanixTemplateDeployV2(),
 			"nutanix_template_v2":                             vmmv2.ResourceNutanixTemplatesV2(),
