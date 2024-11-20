@@ -15,13 +15,13 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-// ResourceNutanixNGTInsertIsoV4 TF schema for NGT install/uninstall
-func ResourceNutanixNGTInsertIsoV4() *schema.Resource {
+// ResourceNutanixNGTInsertIsoV2 TF schema for NGT install/uninstall
+func ResourceNutanixNGTInsertIsoV2() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: ResourceNutanixNGTInsertIsoV4Create,
-		ReadContext:   ResourceNutanixNGTInsertIsoV4Read,
-		UpdateContext: ResourceNutanixNGTInsertIsoV4Update,
-		DeleteContext: ResourceNutanixNGTInsertIsoV4Delete,
+		CreateContext: ResourceNutanixNGTInsertIsoV2Create,
+		ReadContext:   ResourceNutanixNGTInsertIsoV2Read,
+		UpdateContext: ResourceNutanixNGTInsertIsoV2Update,
+		DeleteContext: ResourceNutanixNGTInsertIsoV2Delete,
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -82,7 +82,7 @@ func ResourceNutanixNGTInsertIsoV4() *schema.Resource {
 }
 
 // Install NGT on Vm
-func ResourceNutanixNGTInsertIsoV4Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixNGTInsertIsoV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
 	extID := d.Get("ext_id")
@@ -158,11 +158,11 @@ func ResourceNutanixNGTInsertIsoV4Create(ctx context.Context, d *schema.Resource
 
 	d.SetId(*uuid)
 
-	return ResourceNutanixNGTInsertIsoV4Read(ctx, d, meta)
+	return ResourceNutanixNGTInsertIsoV2Read(ctx, d, meta)
 }
 
 // Read NGT Configuration
-func ResourceNutanixNGTInsertIsoV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixNGTInsertIsoV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
 	extId := d.Id()
@@ -205,12 +205,12 @@ func ResourceNutanixNGTInsertIsoV4Read(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-// ResourceNutanixNGTInsertIsoV4Update  Not supported
-func ResourceNutanixNGTInsertIsoV4Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return ResourceNutanixNGTInsertIsoV4Create(ctx, d, meta)
+// ResourceNutanixNGTInsertIsoV2Update  Not supported
+func ResourceNutanixNGTInsertIsoV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return ResourceNutanixNGTInsertIsoV2Create(ctx, d, meta)
 }
 
-// ResourceNutanixNGTInsertIsoV4Delete  Not supported
-func ResourceNutanixNGTInsertIsoV4Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+// ResourceNutanixNGTInsertIsoV2Delete  Not supported
+func ResourceNutanixNGTInsertIsoV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }

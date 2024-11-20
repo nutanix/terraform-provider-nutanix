@@ -20,8 +20,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-// ResourceNutanixNGTInstallationV4 TF schema for NGT install/uninstall
-func ResourceNutanixNGTInstallationV4() *schema.Resource {
+// ResourceNutanixNGTInstallationV2 TF schema for NGT install/uninstall
+func ResourceNutanixNGTInstallationV2() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: ResourceNutanixNGTInstallationV4Create,
 		ReadContext:   ResourceNutanixNGTInstallationV4Read,

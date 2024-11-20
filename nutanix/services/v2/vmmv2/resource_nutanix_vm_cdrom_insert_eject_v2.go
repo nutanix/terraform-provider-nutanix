@@ -13,12 +13,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func ResourceNutanixVmsCdRomsInsertEjectV4() *schema.Resource {
+func ResourceNutanixVmsCdRomsInsertEjectV2() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: ResourceNutanixVmsCdRomsInsertEjectV4Create,
-		ReadContext:   ResourceNutanixVmsCdRomsInsertEjectV4Read,
-		UpdateContext: ResourceNutanixVmsCdRomsInsertEjectV4Update,
-		DeleteContext: ResourceNutanixVmsCdRomsInsertEjectV4Delete,
+		CreateContext: ResourceNutanixVmsCdRomsInsertEjectV2Create,
+		ReadContext:   ResourceNutanixVmsCdRomsInsertEjectV2Read,
+		UpdateContext: ResourceNutanixVmsCdRomsInsertEjectV2Update,
+		DeleteContext: ResourceNutanixVmsCdRomsInsertEjectV2Delete,
 		Schema: map[string]*schema.Schema{
 			"vm_ext_id": {
 				Type:     schema.TypeString,
@@ -139,7 +139,7 @@ func ResourceNutanixVmsCdRomsInsertEjectV4() *schema.Resource {
 	}
 }
 
-func ResourceNutanixVmsCdRomsInsertEjectV4Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVmsCdRomsInsertEjectV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
 	vmExtID := d.Get("vm_ext_id")
@@ -183,15 +183,15 @@ func ResourceNutanixVmsCdRomsInsertEjectV4Create(ctx context.Context, d *schema.
 	return nil
 }
 
-func ResourceNutanixVmsCdRomsInsertEjectV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVmsCdRomsInsertEjectV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func ResourceNutanixVmsCdRomsInsertEjectV4Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVmsCdRomsInsertEjectV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func ResourceNutanixVmsCdRomsInsertEjectV4Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVmsCdRomsInsertEjectV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
 	vmExtID := d.Get("vm_ext_id")

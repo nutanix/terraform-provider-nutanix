@@ -1657,7 +1657,7 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 		}
 		vmIntentResponse, err := waitIPConf.WaitForStateContext(ctx)
 		if err != nil {
-			log.Printf("[WARN] could not get the IP for VM(%s): %s", uuid, err)
+			log.Printf("[WARN] could not get the IP for VM(%s): %s", utils.StringValue(uuid), err)
 		} else {
 			vm := vmIntentResponse.(*config.GetVmApiResponse)
 			vmResp := vm.Data.GetValue().(config.Vm)

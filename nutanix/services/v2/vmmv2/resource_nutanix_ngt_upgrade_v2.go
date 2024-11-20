@@ -16,13 +16,13 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-// ResourceNutanixNGTUpgradeV4 TF schema for NGT install/uninstall
-func ResourceNutanixNGTUpgradeV4() *schema.Resource {
+// ResourceNutanixNGTUpgradeV2 TF schema for NGT install/uninstall
+func ResourceNutanixNGTUpgradeV2() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: ResourceNutanixNGTUpgradeV4Create,
-		ReadContext:   ResourceNutanixNGTUpgradeV4Read,
-		UpdateContext: ResourceNutanixNGTUpgradeV4Update,
-		DeleteContext: ResourceNutanixNGTUpgradeV4Delete,
+		CreateContext: ResourceNutanixNGTUpgradeV2Create,
+		ReadContext:   ResourceNutanixNGTUpgradeV2Read,
+		UpdateContext: ResourceNutanixNGTUpgradeV2Update,
+		DeleteContext: ResourceNutanixNGTUpgradeV2Delete,
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -102,8 +102,8 @@ func ResourceNutanixNGTUpgradeV4() *schema.Resource {
 	}
 }
 
-// ResourceNutanixNGTUpgradeV4Create to Upgrade NGT on Vm
-func ResourceNutanixNGTUpgradeV4Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+// ResourceNutanixNGTUpgradeV2Create to Upgrade NGT on Vm
+func ResourceNutanixNGTUpgradeV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
 	extID := d.Get("ext_id")
@@ -177,11 +177,11 @@ func ResourceNutanixNGTUpgradeV4Create(ctx context.Context, d *schema.ResourceDa
 
 	d.SetId(*uuid)
 
-	return ResourceNutanixNGTUpgradeV4Read(ctx, d, meta)
+	return ResourceNutanixNGTUpgradeV2Read(ctx, d, meta)
 }
 
 // Read NGT Configuration
-func ResourceNutanixNGTUpgradeV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixNGTUpgradeV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
 	extId := d.Id()
@@ -224,12 +224,12 @@ func ResourceNutanixNGTUpgradeV4Read(ctx context.Context, d *schema.ResourceData
 	return nil
 }
 
-// ResourceNutanixNGTUpgradeV4Update  Not supported
-func ResourceNutanixNGTUpgradeV4Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+// ResourceNutanixNGTUpgradeV2Update  Not supported
+func ResourceNutanixNGTUpgradeV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-// ResourceNutanixNGTUpgradeV4Delete  Not supported
-func ResourceNutanixNGTUpgradeV4Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+// ResourceNutanixNGTUpgradeV2Delete  Not supported
+func ResourceNutanixNGTUpgradeV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }

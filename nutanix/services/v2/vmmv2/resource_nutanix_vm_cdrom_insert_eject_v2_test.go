@@ -11,8 +11,7 @@ import (
 
 const resourceNameVmCdromInsertEject = "nutanix_vm_cdrom_insert_eject_v2.test"
 
-func TestAccNutanixVmsCdromInsertEjectV4_Basic(t *testing.T) {
-	t.Skip("Skipping test as it merged in the virtual_machine_v2 resource")
+func TestAccNutanixVmsCdromInsertEjectV2Resource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vm-%d", r)
 	desc := "test vm description"
@@ -21,7 +20,7 @@ func TestAccNutanixVmsCdromInsertEjectV4_Basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmsCdromInsertEjectV4Config(name, desc),
+				Config: testVmsCdromInsertEjectV2Config(name, desc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameVmCdromInsertEject, "backing_info.#"),
 				),
@@ -30,7 +29,7 @@ func TestAccNutanixVmsCdromInsertEjectV4_Basic(t *testing.T) {
 	})
 }
 
-func testVmsCdromInsertEjectV4Config(name, desc string) string {
+func testVmsCdromInsertEjectV2Config(name, desc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
