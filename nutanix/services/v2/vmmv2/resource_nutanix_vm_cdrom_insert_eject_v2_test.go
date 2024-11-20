@@ -34,11 +34,13 @@ func testVmsCdromInsertEjectV2Config(name, desc string) string {
 		data "nutanix_clusters" "clusters" {}
 
 		locals {
-		cluster0 = data.nutanix_clusters.clusters.entities[1].metadata.uuid
+			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			config = (jsondecode(file("%[3]s")))
+		  	vmm    = local.config.vmm
 		}
 
 		data "nutanix_images_v2" "images" {
-			filter = "name eq 'Nutanix-VirtIO-1.1.4.iso'"
+			limit = 1
 		}
 	
 		resource "nutanix_virtual_machine_v2" "test"{
@@ -71,5 +73,5 @@ func testVmsCdromInsertEjectV2Config(name, desc string) string {
 			  }
 			}
 		}
-`, name, desc)
+`, name, desc, filepath)
 }
