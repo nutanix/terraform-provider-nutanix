@@ -13,7 +13,7 @@ const resourceNameTemplateDeploy = "nutanix_deploy_templates_v2.test"
 
 func TestAccNutanixTemplateDeployV2Resource_Basic(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-vm-%d", r)
+	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
 	templateName := fmt.Sprintf("test-temp-%d", r)
 	templateDesc := "test temp description"
@@ -38,14 +38,19 @@ func TestAccNutanixTemplateDeployV2Resource_Basic(t *testing.T) {
 
 func testTemplateDeployV2Config(name, desc, tempName, tempDesc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-		cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 = [
+				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		    ][0]
+			config = jsondecode(file("%[5]s"))
+			vmm    = local.config.vmm
 		}
 	
 		data "nutanix_subnets_v2" "subnets" { 
-   			filter = "name eq 'vlan.800'"
+   			filter = "name eq '${local.vmm.subnet_name}'"
         }
 
 		resource "nutanix_virtual_machine_v2" "test"{
@@ -107,5 +112,5 @@ func testTemplateDeployV2Config(name, desc, tempName, tempDesc string) string {
 			]
 		}	
 
-`, name, desc, tempName, tempDesc)
+`, name, desc, tempName, tempDesc, filepath)
 }

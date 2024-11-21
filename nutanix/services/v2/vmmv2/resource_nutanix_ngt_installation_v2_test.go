@@ -341,15 +341,19 @@ func testNGTInstallationResourceWithoutVmExtIdConfig() string {
 func testPreEnvConfig(vmName string, r int) string {
 
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 		
 		locals {
-		  clusterUUID = [
-			for cluster in data.nutanix_clusters.clusters.entities :
-			cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+		  clusterUUID = = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 		  ][0]
 		  config = (jsondecode(file("%[1]s")))
 		  vmm    = local.config.vmm
+		}
+
+		data "nutanix_images_v2" "ngt-image" {
+		  filter = "name eq '${local.vmm.image_name}'"
 		}
 
 		data "nutanix_image" "ngt-image" {
@@ -386,7 +390,7 @@ func testPreEnvConfig(vmName string, r int) string {
 				data_source {
 				  reference {
 					image_reference {
-					  image_ext_id = data.nutanix_image.ngt-image.id
+					  image_ext_id = data.nutanix_images_v2.ngt-image.images[0].ext_id
 					}
 				  }
 				}
@@ -423,7 +427,7 @@ func testPreEnvConfig(vmName string, r int) string {
 			ignore_changes = [guest_tools]
 		  }
 		
-		  depends_on = [data.nutanix_clusters.clusters, data.nutanix_image.ngt-image, data.nutanix_storage_containers_v2.ngt-sc]
+		  depends_on = [data.nutanix_clusters_v2.clusters, data.nutanix_images_v2.ngt-image, data.nutanix_storage_containers_v2.ngt-sc]
 		}
 			
 `, filepath, r, vmName)
