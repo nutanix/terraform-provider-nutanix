@@ -603,10 +603,13 @@ func TestAccNutanixVmsV2Resource_WithGpus(t *testing.T) {
 
 func testVmsV4Config(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-		cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+		cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
 		}
 	
 		resource "nutanix_virtual_machine_v2" "test"{
@@ -623,10 +626,13 @@ func testVmsV4Config(name, desc string) string {
 
 func testVmsV4ConfigWithDisk(r int, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
 			config = jsondecode(file("%[3]s"))
 			vmm = local.config.vmm
 		}
@@ -664,10 +670,13 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 
 func testVmsV4ConfigWithDiskWithDatasource(name string, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
 			config = jsondecode(file("%[3]s"))
 			vmm = local.config.vmm
 		}
@@ -751,10 +760,13 @@ func testVmsV4ConfigWithDiskWithDatasource(name string, desc string) string {
 
 func testVmsV4ConfigWithNic(r int, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
 			config = jsondecode(file("%[3]s"))
 			vmm = local.config.vmm
 		}
@@ -806,10 +818,13 @@ func testVmsV4ConfigWithNic(r int, desc string) string {
 
 func testVmsV4ConfigWithNicWithTrunkVlan(r int, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
 			config = jsondecode(file("%[3]s"))
 			vmm = local.config.vmm
 		}
@@ -862,10 +877,13 @@ func testVmsV4ConfigWithNicWithTrunkVlan(r int, desc string) string {
 
 func testVmsV4ConfigWithLegacyBoot(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-		cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+		cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
 		}
 	
 		resource "nutanix_virtual_machine_v2" "test"{
@@ -888,10 +906,13 @@ func testVmsV4ConfigWithLegacyBoot(name, desc string) string {
 
 func testVmsV4ConfigWithLegacyBootWithUpdateOrder(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-		cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+		cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
 		}
 	
 		resource "nutanix_virtual_machine_v2" "test"{
@@ -914,10 +935,13 @@ func testVmsV4ConfigWithLegacyBootWithUpdateOrder(name, desc string) string {
 
 func testVmsV4ConfigWithLegacyBootDevice(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
 			config = jsondecode(file("%[3]s"))
 			vmm = local.config.vmm
 		}
@@ -966,17 +990,20 @@ func testVmsV4ConfigWithLegacyBootDevice(name, desc string) string {
 				}
 			}
 			power_state = "ON"
-			depends_on = [data.nutanix_clusters.clusters, data.nutanix_image.ngt-image]
+			depends_on = [data.nutanix_clusters_v2.clusters, data.nutanix_image.ngt-image]
 		}
 `, name, desc, filepath)
 }
 
 func testVmsV4ConfigWithCdrom(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
 		}
 	
 		resource "nutanix_virtual_machine_v2" "test"{
@@ -1004,10 +1031,13 @@ func testVmsV4ConfigWithCdrom(name, desc string) string {
 
 func testVmsV4ConfigWithCdromIde(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
 		}
 	
 		resource "nutanix_virtual_machine_v2" "test"{
@@ -1036,10 +1066,13 @@ func testVmsV4ConfigWithCdromIde(name, desc string) string {
 
 func testVmsV4ConfigWithCdromWithBackingInfo(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
 			config = jsondecode(file("%[3]s"))
 			vmm = local.config.vmm
 		}
@@ -1123,10 +1156,13 @@ func testVmsV4ConfigWithCdromWithBackingInfo(name, desc string) string {
 
 func testVmsV4ConfigWithCloudInit(r int, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
 			gs = base64encode("#cloud-config\nusers:\n  - name: ubuntu\n    ssh-authorized-keys:\n      - ssh-rsa DUMMYSSH mypass\n    sudo: ['ALL=(ALL) NOPASSWD:ALL']")
 			config = jsondecode(file("%[3]s"))
 			vmm = local.config.vmm
@@ -1195,10 +1231,13 @@ func testVmsV4ConfigWithCloudInit(r int, desc string) string {
 
 func testVmsV4ConfigWithDiskNic(name string, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
 			config = jsondecode(file("%[3]s"))
 			vmm = local.config.vmm
 		}
@@ -1250,10 +1289,13 @@ func testVmsV4ConfigWithDiskNic(name string, desc string) string {
 
 func testVmsV4ConfigWitUpdatedDiskNic(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
 			config = jsondecode(file("%[3]s"))
 			vmm = local.config.vmm
 		}
@@ -1328,10 +1370,13 @@ func testVmsV4ConfigWitUpdatedDiskNic(name, desc string) string {
 
 func testVmsCategoriesV4Config(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
 			config = jsondecode(file("%[3]s"))
 			vmm = local.config.vmm
 		}
@@ -1375,10 +1420,13 @@ func testVmsCategoriesV4Config(name, desc string) string {
 
 func testVmsCategoriesV4ConfigUpdate(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
 			config = jsondecode(file("%[3]s"))
 			vmm = local.config.vmm
 		}

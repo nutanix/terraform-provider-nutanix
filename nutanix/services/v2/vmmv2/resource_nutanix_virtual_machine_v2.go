@@ -1650,37 +1650,6 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 	args := make(map[string]interface{})
 	args["If-Match"] = getEtagHeader(readResp, conn)
 
-	aJson, _ = json.MarshalIndent(args, "", " ")
-	log.Printf("[DEBUG] Vm Read Request ETAG: %s", string(aJson))
-	// perform power on operation
-
-	//headerParams := make(map[string]string)
-
-	//// Headers provided explicitly on operation takes precedence
-	//for headerKey, value := range args {
-	//	// Skip platform generated headers
-	//	if value != nil {
-	//		if headerValue, headerValueOk := value.(*string); headerValueOk {
-	//			headerParams[headerKey] = *headerValue
-	//		}
-	//	}
-	//}
-	//aJson, _ = json.MarshalIndent(headerParams, "", " ")
-	//log.Printf("[DEBUG] Vm Read Request Headers Params With *: %s", string(aJson))
-	//
-	//// Headers provided explicitly on operation takes precedence
-	//for headerKey, value := range args {
-	//	// Skip platform generated headers
-	//	if value != nil {
-	//		if headerValue, headerValueOk := value.(string); headerValueOk {
-	//			headerParams[headerKey] = headerValue
-	//		}
-	//	}
-	//}
-	//
-	//aJson, _ = json.MarshalIndent(headerParams, "", " ")
-	//log.Printf("[DEBUG] Vm Read Request Headers Params without *: %s", string(aJson))
-
 	var PowerTaskRef import1.TaskReference
 	if powerState, ok := d.GetOk("power_state"); ok {
 		if powerState == "ON" {
