@@ -12,11 +12,13 @@ import (
 )
 
 const resourceNameRecoveryPointReplicate = "nutanix_recovery_point_replicate_v2.test"
+const resourceNameCluster = "nutanix_cluster_v2.test"
 
 func TestAccNutanixRecoveryPointReplicateV2Resource_basic(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("terraform-test-recovery-point-%d", r)
-
+	name := fmt.Sprintf("tf-test-recovery-point-%d", r)
+	//clsName := fmt.Sprintf("tf-test-cluster-rp-%d", r)
+	vmName := fmt.Sprintf("tf-test-vm-rp-%d", r)
 	// End time is two week later
 	expirationTime := time.Now().Add(14 * 24 * time.Hour)
 
@@ -27,7 +29,8 @@ func TestAccNutanixRecoveryPointReplicateV2Resource_basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testRecoveryPointReplicateResourceConfig(name, expirationTimeFormatted),
+				Config: testVmConfig(vmName) +
+					testRecoveryPointReplicateResourceConfig(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPointReplicate, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameRecoveryPointReplicate, "pc_ext_id", testVars.DataProtection.PcExtID),
@@ -40,15 +43,11 @@ func TestAccNutanixRecoveryPointReplicateV2Resource_basic(t *testing.T) {
 }
 
 func testRecoveryPointReplicateResourceConfig(name, expirationTime string) string {
-	return testRecoveryPointsResourceConfigWithVolumeGroupRecoveryPoints(name, expirationTime) + fmt.Sprintf(`
-	locals{
-		config = (jsondecode(file("%[1]s")))
-		data_protection = local.config.data_protection			
-	}
+	return testRecoveryPointsResourceConfigWithVmRecoveryPoints(name, expirationTime) + `
 	resource "nutanix_recovery_point_replicate_v2" "test" {
 	  ext_id         = nutanix_recovery_points_v2.test.id
-	  cluster_ext_id = "000620a9-8183-2553-1fc3-ac1f6b6029c1"
-	  pc_ext_id      = "63bebabf-744c-48ff-a6d7-cb028707f972"
+	  cluster_ext_id = local.data_protection.cluster_ext_id
+	  pc_ext_id      = local.data_protection.pc_ext_id
 	  depends_on     = [nutanix_recovery_points_v2.test]
-	}`, filepath)
+	}`
 }
