@@ -2,8 +2,6 @@ package iamv2_test
 
 import (
 	"fmt"
-	"os"
-	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -62,8 +60,7 @@ func TestAccNutanixAuthorizationPoliciesV2Datasource_Basic(t *testing.T) {
 }
 
 func TestAccNutanixAuthorizationPoliciesV2Datasource_WithFilter(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -80,8 +77,6 @@ func TestAccNutanixAuthorizationPoliciesV2Datasource_WithFilter(t *testing.T) {
 }
 
 func TestAccNutanixAuthorizationPoliciesV2Datasource_WithLimit(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -91,7 +86,7 @@ func TestAccNutanixAuthorizationPoliciesV2Datasource_WithLimit(t *testing.T) {
 				Config: testAuthorizationPoliciesDatasourceV4WithLimitConfig(filepath),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameAuthorizationPolicies, "auth_policies.#"),
-					resource.TestCheckResourceAttr(datasourceNameAuthorizationPolicies, "auth_policies.#", strconv.Itoa(testVars.Iam.AuthPolicies.Limit)),
+					resource.TestCheckResourceAttr(datasourceNameAuthorizationPolicies, "auth_policies.#", "1"),
 				),
 			},
 		},
@@ -135,7 +130,8 @@ func testAuthorizationPoliciesDatasourceV4WithLimitConfig(filepath string) strin
 		%s
 
 		data "nutanix_authorization_policies_v2" "test" {
-			limit     = local.auth_policies.limit
+			limit     = 1
+			depends_on = [resource.nutanix_authorization_policy_v2.auth_policy_test]
 		}
 	`, filepath, authPolicy)
 }

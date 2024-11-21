@@ -45,6 +45,10 @@ func DatasourceNutanixUsersV2() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"tenant_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"links": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -348,7 +352,8 @@ func flattenBucketsAccessKeys(user iamConfig.User) []map[string]interface{} {
 				bucketsAccessKeys["user_id"] = *v.UserId
 			}
 			if v.CreatedTime != nil {
-				bucketsAccessKeys["created_time"] = *v.CreatedTime
+				createdTime := v.CreatedTime
+				bucketsAccessKeys["created_time"] = createdTime.String()
 			}
 
 			bucketsAccessKeysList[k] = bucketsAccessKeys

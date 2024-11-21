@@ -2,8 +2,6 @@ package iamv2_test
 
 import (
 	"fmt"
-	"os"
-	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -13,7 +11,7 @@ import (
 
 const datasourceNameRoles = "data.nutanix_roles_v2.test"
 
-func TestAccNutanixRolesV4Datasource_Basic(t *testing.T) {
+func TestAccNutanixRolesV2Datasource_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -30,9 +28,8 @@ func TestAccNutanixRolesV4Datasource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixRolesV4Datasource_WithFilter(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+func TestAccNutanixRolesV2Datasource_WithFilter(t *testing.T) {
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -50,9 +47,7 @@ func TestAccNutanixRolesV4Datasource_WithFilter(t *testing.T) {
 	})
 }
 
-func TestAccNutanixRolesV4Datasource_WithLimit(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+func TestAccNutanixRolesV2Datasource_WithLimit(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -62,7 +57,7 @@ func TestAccNutanixRolesV4Datasource_WithLimit(t *testing.T) {
 				Config: testRolesDatasourceV4WithLimitConfig(filepath),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameRoles, "roles.#"),
-					resource.TestCheckResourceAttr(datasourceNameRoles, "roles.#", strconv.Itoa(testVars.Iam.Roles.Limit)),
+					resource.TestCheckResourceAttr(datasourceNameRoles, "roles.#", "1"),
 				),
 			},
 		},
@@ -96,7 +91,7 @@ func testRolesDatasourceV4WithFilterConfig(filepath string) string {
 			data.nutanix_operations_v2.test.permissions[2].ext_id,
 	  	]
 		depends_on = [data.nutanix_operations_v2.test]
-	  }
+  	}
 	  
 	  data "nutanix_roles_v2" "test" {
 		filter     = "displayName eq '${local.roles.display_name}'"
@@ -112,8 +107,20 @@ func testRolesDatasourceV4WithLimitConfig(filepath string) string {
 			roles = local.config.iam.roles
 		}
 
+		resource "nutanix_roles_v2" "test" {
+			display_name = local.roles.display_name
+			description  = local.roles.description
+			operations = [
+				data.nutanix_operations_v2.test.permissions[0].ext_id,
+				data.nutanix_operations_v2.test.permissions[1].ext_id,
+				data.nutanix_operations_v2.test.permissions[2].ext_id,
+			]
+			depends_on = [data.nutanix_operations_v2.test]
+		}
+
 		data "nutanix_roles_v2" "test" {
-			limit     = local.roles.limit
+			limit     = 1
+			depends_on = [resource.nutanix_roles_v2.test]
 		}
 	`, filepath)
 }

@@ -2,8 +2,6 @@ package iamv2_test
 
 import (
 	"fmt"
-	"os"
-	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -14,8 +12,6 @@ import (
 const datasourceNameUserGroups = "data.nutanix_user_groups_v2.test"
 
 func TestAccNutanixUserGroupsV2Datasource_Basic(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -25,8 +21,7 @@ func TestAccNutanixUserGroupsV2Datasource_Basic(t *testing.T) {
 				Config: testUserGroupsDatasourceV4Config(filepath),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameUserGroups, "user_groups.#"),
-					resource.TestCheckResourceAttrSet(datasourceNameUserGroups, "user_groups.0.idp_id"),
-					resource.TestCheckResourceAttrSet(datasourceNameUserGroups, "user_groups.0.distinguished_name"),
+					checkAttributeLength(datasourceNameUserGroups, "user_groups", 1),
 				),
 			},
 		},
@@ -34,8 +29,7 @@ func TestAccNutanixUserGroupsV2Datasource_Basic(t *testing.T) {
 }
 
 func TestAccNutanixUserGroupsV2Datasource_WithFilter(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -47,7 +41,7 @@ func TestAccNutanixUserGroupsV2Datasource_WithFilter(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameUserGroups, "user_groups.#", "1"),
 					resource.TestCheckResourceAttr(datasourceNameUserGroups, "user_groups.0.distinguished_name", testVars.Iam.UserGroups.DistinguishedName),
 					resource.TestCheckResourceAttr(datasourceNameUserGroups, "user_groups.0.name", testVars.Iam.UserGroups.Name),
-					resource.TestCheckResourceAttr(datasourceNameUserGroups, "user_groups.0.idp_id", testVars.Iam.UserGroups.DirectoryServiceId),
+					resource.TestCheckResourceAttr(datasourceNameUserGroups, "user_groups.0.idp_id", testVars.Iam.Users.DirectoryServiceId),
 					resource.TestCheckResourceAttr(datasourceNameUserGroups, "user_groups.0.group_type", "LDAP"),
 				),
 			},
@@ -56,8 +50,6 @@ func TestAccNutanixUserGroupsV2Datasource_WithFilter(t *testing.T) {
 }
 
 func TestAccNutanixUserGroupsV2Datasource_WithLimit(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -67,7 +59,7 @@ func TestAccNutanixUserGroupsV2Datasource_WithLimit(t *testing.T) {
 				Config: testUserGroupsDatasourceV4WithLimitConfig(filepath),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameUserGroups, "user_groups.#"),
-					resource.TestCheckResourceAttr(datasourceNameUserGroups, "user_groups.#", strconv.Itoa(testVars.Iam.UserGroups.Limit)),
+					resource.TestCheckResourceAttr(datasourceNameUserGroups, "user_groups.#", "1"),
 				),
 			},
 		},
@@ -78,17 +70,20 @@ func testUserGroupsDatasourceV4Config(filepath string) string {
 	return fmt.Sprintf(`
 	locals{
 		config = (jsondecode(file("%s")))
+		users = local.config.iam.users
 		user_groups = local.config.iam.user_groups
 	}
 
 	resource "nutanix_user_groups_v2" "test" {
 		group_type = "LDAP"
-		idp_id = local.user_groups.directory_service_id
+		idp_id =  local.users.directory_service_id
 		name = local.user_groups.name
 		distinguished_name = local.user_groups.distinguished_name
 	  }
 
-	data "nutanix_user_groups_v2" "test"{}
+	data "nutanix_user_groups_v2" "test"{
+		depends_on = [resource.nutanix_user_groups_v2.test]
+	}
 	`, filepath)
 }
 
@@ -97,12 +92,13 @@ func testUserGroupsDatasourceV4WithFilterConfig(filepath string) string {
 
 	locals{
 		config = (jsondecode(file("%s")))
+		users = local.config.iam.users
 		user_groups = local.config.iam.user_groups
 	}
 
 	resource "nutanix_user_groups_v2" "test" {
 		group_type = "LDAP"
-		idp_id = local.user_groups.directory_service_id
+		idp_id =  local.users.directory_service_id
 		name = local.user_groups.name
 		distinguished_name = local.user_groups.distinguished_name
 	  }
@@ -118,18 +114,19 @@ func testUserGroupsDatasourceV4WithLimitConfig(filepath string) string {
 	return fmt.Sprintf(`
 		locals{
 			config = (jsondecode(file("%s")))
+			users = local.config.iam.users
 			user_groups = local.config.iam.user_groups
 		}
 
 		resource "nutanix_user_groups_v2" "test" {
 			group_type = "LDAP"
-			idp_id = local.user_groups.directory_service_id
+			idp_id =  local.users.directory_service_id
 			name = local.user_groups.name
 			distinguished_name = local.user_groups.distinguished_name
 		  }
 
 		data "nutanix_user_groups_v2" "test" {
-			limit     = local.user_groups.limit
+			limit      = 1
 			depends_on = [resource.nutanix_user_groups_v2.test]
 		}
 	`, filepath)

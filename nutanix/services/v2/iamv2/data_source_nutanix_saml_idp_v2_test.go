@@ -2,7 +2,6 @@ package iamv2_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -13,15 +12,13 @@ import (
 const datasourceNameIdentityProvider = "data.nutanix_saml_identity_provider_v2.test"
 
 func TestAccNutanixIdentityProvidersV2Datasource_GetSamlIdpById(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testIdentityProviderDatasourceV4Config(filepath),
+				Config: testIdentityProviderDatasourceV2Config(filepath),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameIdentityProvider, "idp_metadata.#"),
 					resource.TestCheckResourceAttr(datasourceNameIdentityProvider, "name", testVars.Iam.IdentityProviders.Name),
@@ -38,7 +35,7 @@ func TestAccNutanixIdentityProvidersV2Datasource_GetSamlIdpById(t *testing.T) {
 	})
 }
 
-func testIdentityProviderDatasourceV4Config(filepath string) string {
+func testIdentityProviderDatasourceV2Config(filepath string) string {
 	return fmt.Sprintf(`
 		locals{
 			config = (jsondecode(file("%s")))

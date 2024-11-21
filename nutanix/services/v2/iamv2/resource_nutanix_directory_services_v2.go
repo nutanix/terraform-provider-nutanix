@@ -9,8 +9,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -212,17 +212,12 @@ func ResourceNutanixDirectoryServicesV2Create(ctx context.Context, d *schema.Res
 		input.WhiteListedGroups = whitelistedGrpListStr
 	}
 
+	aJson, _ := json.MarshalIndent(input, "", " ")
+	log.Println("[DEBUG] Directory Service JSON: ", string(aJson))
+
 	resp, err := conn.DirectoryServiceAPIInstance.CreateDirectoryService(input)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while creating directory services : %v", errorMessage["message"])
+		return diag.Errorf("error while creating directory services : %v", err)
 	}
 
 	getResp := resp.Data.GetValue().(import1.DirectoryService)
@@ -395,7 +390,7 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 	updatedResponse := updatedResp.Data.GetValue().(import1.DirectoryService)
 
 	if updatedResponse.ExtId != nil {
-		fmt.Println("updated the directory services")
+		log.Println("[DEBUG] updated the directory services")
 	}
 	return ResourceNutanixDirectoryServicesV2Read(ctx, d, meta)
 }
@@ -418,7 +413,7 @@ func ResourceNutanixDirectoryServicesV2Delete(ctx context.Context, d *schema.Res
 	}
 
 	if resp == nil {
-		fmt.Println("Directory Services deleted successfully.")
+		log.Println("[DEBUG] Directory Services deleted successfully.")
 	}
 	return nil
 }

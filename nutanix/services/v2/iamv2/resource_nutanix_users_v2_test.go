@@ -2,7 +2,6 @@ package iamv2_test
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
@@ -15,11 +14,9 @@ import (
 const resourceNameUsers = "nutanix_users_v2.test"
 
 // create local Active user, and test update the username and display name
-func TestAccNutanixUsersV4Resource_LocalActiveUser(t *testing.T) {
+func TestAccNutanixUsersV2Resource_LocalActiveUser(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-user-%d", r)
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+	name := fmt.Sprintf("tf-test-user-%d", r)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
@@ -58,11 +55,9 @@ func TestAccNutanixUsersV4Resource_LocalActiveUser(t *testing.T) {
 }
 
 // test duplicate user creation
-func TestAccNutanixUsersV4Resource_AlreadyExistsUser(t *testing.T) {
+func TestAccNutanixUsersV2Resource_AlreadyExistsUser(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-user-%d", r)
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+	name := fmt.Sprintf("tf-test-user-%d", r)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
@@ -81,18 +76,16 @@ func TestAccNutanixUsersV4Resource_AlreadyExistsUser(t *testing.T) {
 			},
 			{
 				Config:      testLocalUserAlreadyExistsResourceConfig(filepath, name),
-				ExpectError: regexp.MustCompile("already existing User with given username"),
+				ExpectError: regexp.MustCompile("user already exists with given username"),
 			},
 		},
 	})
 }
 
 // create local Inactive user
-func TestAccNutanixUsersV4Resource_LocalInactiveUser(t *testing.T) {
+func TestAccNutanixUsersV2Resource_LocalInactiveUser(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-user-%d", r)
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+	name := fmt.Sprintf("tf-test-user-%d", r)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
@@ -115,11 +108,9 @@ func TestAccNutanixUsersV4Resource_LocalInactiveUser(t *testing.T) {
 }
 
 // create SAML user
-func TestAccNutanixUsersV4Resource_SAMLUser(t *testing.T) {
+func TestAccNutanixUsersV2Resource_SAMLUser(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-user-%d", r)
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+	name := fmt.Sprintf("tf-test-user-%d", r)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
@@ -139,21 +130,17 @@ func TestAccNutanixUsersV4Resource_SAMLUser(t *testing.T) {
 }
 
 // create LDAP user
-func TestAccNutanixUsersV4Resource_LDAPUser(t *testing.T) {
-	r := acctest.RandInt()
-	name := fmt.Sprintf("test-user-%d", r)
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+func TestAccNutanixUsersV2Resource_LDAPUser(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testLDAPUserWithMinimalConfigResourceConfig(filepath, name),
+				Config: testLDAPUserWithMinimalConfigResourceConfig(filepath),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameUsers, "ext_id"),
-					resource.TestCheckResourceAttr(resourceNameUsers, "username", name),
+					resource.TestCheckResourceAttr(resourceNameUsers, "username", testVars.Iam.Users.Name),
 					resource.TestCheckResourceAttr(resourceNameUsers, "user_type", "LDAP"),
 					resource.TestCheckResourceAttr(resourceNameUsers, "idp_id", testVars.Iam.Users.DirectoryServiceId),
 				),
@@ -163,12 +150,10 @@ func TestAccNutanixUsersV4Resource_LDAPUser(t *testing.T) {
 }
 
 // create local Active user, and test update the username and display name
-func TestAccNutanixUsersV4Resource_DeactivateLocalUser(t *testing.T) {
+func TestAccNutanixUsersV2Resource_DeactivateLocalUser(t *testing.T) {
 	t.Skip("these test were commented since they are using different APIs")
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-user-%d", r)
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+	name := fmt.Sprintf("tf-test-user-%d", r)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
@@ -204,10 +189,8 @@ func TestAccNutanixUsersV4Resource_DeactivateLocalUser(t *testing.T) {
 }
 
 // Test missing username
-func TestAccNutanixUsersV4Resource_WithNoUserName(t *testing.T) {
+func TestAccNutanixUsersV2Resource_WithNoUserName(t *testing.T) {
 
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -221,11 +204,10 @@ func TestAccNutanixUsersV4Resource_WithNoUserName(t *testing.T) {
 }
 
 // Test missing user type
-func TestAccNutanixUsersV4Resource_WithNoUserType(t *testing.T) {
+func TestAccNutanixUsersV2Resource_WithNoUserType(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-user-%d", r)
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+	name := fmt.Sprintf("tf-test-user-%d", r)
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -353,7 +335,7 @@ func testSAMLUserResourceConfig(filepath, name string) string {
 	}`, filepath, name)
 }
 
-func testLDAPUserWithMinimalConfigResourceConfig(filepath, name string) string {
+func testLDAPUserWithMinimalConfigResourceConfig(filepath string) string {
 	return fmt.Sprintf(`
 
 	locals{
@@ -362,11 +344,11 @@ func testLDAPUserWithMinimalConfigResourceConfig(filepath, name string) string {
 	}
 
 	resource "nutanix_users_v2" "test" {
-		username = local.users.directory_service_username
+		username = local.users.name
 		user_type = "LDAP"
 		idp_id = local.users.directory_service_id
 		
-	}`, filepath, name)
+	}`, filepath)
 }
 
 func testDeactivateLocalUserResourceConfig(filepath, name string) string {

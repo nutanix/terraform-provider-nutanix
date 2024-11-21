@@ -2,7 +2,7 @@ package iamv2_test
 
 import (
 	"fmt"
-	"os"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"regexp"
 	"testing"
 
@@ -14,8 +14,6 @@ import (
 const resourceNameDirectoryServices = "nutanix_directory_services_v2.test"
 
 func TestAccNutanixDirectoryServicesV2Resource_CreateACTIVE_DIRECTORYService(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
@@ -52,18 +50,18 @@ func TestAccNutanixDirectoryServicesV2Resource_CreateACTIVE_DIRECTORYService(t *
 
 func TestAccNutanixDirectoryServicesV2Resource_CreateOpenLDAPService(t *testing.T) {
 	t.Skip("Skipping test as OpenLDAP waiting for LDAP configuration")
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+
+	name := fmt.Sprintf("tf-test-openldap-%d", acctest.RandInt())
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testDirectoryOpenLDAPServicesResourceConfig(filepath),
+				Config: testDirectoryOpenLDAPServicesResourceConfig(name, filepath),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameDirectoryServices, "ext_id"),
-					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "name", testVars.Iam.DirectoryServices.Name),
+					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "name", name),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "domain_name", testVars.Iam.DirectoryServices.DomainName),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "directory_type", "ACTIVE_DIRECTORY"),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "url", testVars.Iam.DirectoryServices.Url),
@@ -75,8 +73,6 @@ func TestAccNutanixDirectoryServicesV2Resource_CreateOpenLDAPService(t *testing.
 }
 
 func TestAccNutanixDirectoryServicesV2Resource_CreateACTIVE_DIRECTORYAlreadyExists(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
@@ -102,8 +98,7 @@ func TestAccNutanixDirectoryServicesV2Resource_CreateACTIVE_DIRECTORYAlreadyExis
 }
 
 func TestAccNutanixDirectoryServicesV2Resource_WithNoName(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -116,8 +111,6 @@ func TestAccNutanixDirectoryServicesV2Resource_WithNoName(t *testing.T) {
 	})
 }
 func TestAccNutanixDirectoryServicesV2Resource_WithNoUrl(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -131,8 +124,7 @@ func TestAccNutanixDirectoryServicesV2Resource_WithNoUrl(t *testing.T) {
 }
 
 func TestAccNutanixDirectoryServicesV2Resource_WithNoDomainName(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -146,8 +138,7 @@ func TestAccNutanixDirectoryServicesV2Resource_WithNoDomainName(t *testing.T) {
 }
 
 func TestAccNutanixDirectoryServicesV2Resource_WithNoDirectoryType(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -161,8 +152,7 @@ func TestAccNutanixDirectoryServicesV2Resource_WithNoDirectoryType(t *testing.T)
 }
 
 func TestAccNutanixDirectoryServicesV2Resource_WithNoServiceAccount(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -227,16 +217,16 @@ func testDirectoryServicesUpdateResourceConfig(filepath string) string {
 	}`, filepath)
 }
 
-func testDirectoryOpenLDAPServicesResourceConfig(filepath string) string {
+func testDirectoryOpenLDAPServicesResourceConfig(name, filepath string) string {
 	return fmt.Sprintf(`
 
 	locals{
-		config = (jsondecode(file("%s")))
+		config = (jsondecode(file("%[2]s")))
 		directory_services = local.config.iam.directory_services
 	}
 
 	resource "nutanix_directory_services_v2" "test" {
-		name = local.directory_services.name
+		name = "%[1]s"
 		url = local.directory_services.url  
 		directory_type = "OPEN_LDAP"
 		domain_name = local.directory_services.domain_name
@@ -262,7 +252,7 @@ func testDirectoryOpenLDAPServicesResourceConfig(filepath string) string {
 			  service_account.0.password,
 			]
 	  	}
-	}`, filepath)
+	}`, name, filepath)
 }
 
 func testDirectoryServicesDuplicatedResourceConfig(filepath string) string {

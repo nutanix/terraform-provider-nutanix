@@ -24,7 +24,6 @@ func TestAccNutanixIdentityProvidersV2Resource_CreateSamlIdp(t *testing.T) {
 			{
 				Config: testIdentityProvidersResourceConfig(filepath),
 				Check: resource.ComposeTestCheckFunc(
-					// resource.TestCheckResourceAttrSet(resourceNameIdentityProviders, "ext_id"),
 					resource.TestCheckResourceAttrSet(resourceNameIdentityProviders, "idp_metadata.#"),
 					resource.TestCheckResourceAttr(resourceNameIdentityProviders, "name", testVars.Iam.IdentityProviders.Name),
 					resource.TestCheckResourceAttr(resourceNameIdentityProviders, "username_attribute", testVars.Iam.IdentityProviders.UsernameAttribute),

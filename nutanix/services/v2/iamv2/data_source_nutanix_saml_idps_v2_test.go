@@ -2,8 +2,6 @@ package iamv2_test
 
 import (
 	"fmt"
-	"os"
-	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -13,9 +11,7 @@ import (
 
 const datasourceNameIdentityProviders = "data.nutanix_saml_identity_providers_v2.test"
 
-func TestAccNutanixIdentityProvidersV2Datasource_ListAllIdps(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+func TestAccNutanixIdentityProvidersV2Datasource_ListAllIDPS(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -34,8 +30,7 @@ func TestAccNutanixIdentityProvidersV2Datasource_ListAllIdps(t *testing.T) {
 }
 
 func TestAccNutanixIdentityProvidersV2Datasource_WithFilter(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -63,8 +58,6 @@ func TestAccNutanixIdentityProvidersV2Datasource_WithFilter(t *testing.T) {
 }
 
 func TestAccNutanixIdentityProvidersV2Datasource_WithLimit(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -74,7 +67,7 @@ func TestAccNutanixIdentityProvidersV2Datasource_WithLimit(t *testing.T) {
 				Config: testIdentityProvidersDatasourceWithLimitConfig(filepath),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameIdentityProviders, "identity_providers.#"),
-					resource.TestCheckResourceAttr(datasourceNameIdentityProviders, "identity_providers.#", strconv.Itoa(testVars.Iam.IdentityProviders.Limit)),
+					resource.TestCheckResourceAttr(datasourceNameIdentityProviders, "identity_providers.#", "1"),
 				),
 			},
 		},
@@ -153,7 +146,7 @@ func testIdentityProvidersDatasourceWithLimitConfig(filepath string) string {
 		}
 
 		data "nutanix_saml_identity_providers_v2" "test" {
-			limit     = local.identity_providers.limit
+			limit      = 1
 			depends_on = [ resource.nutanix_saml_identity_providers_v2.test ]	
 		}
 	`, filepath)

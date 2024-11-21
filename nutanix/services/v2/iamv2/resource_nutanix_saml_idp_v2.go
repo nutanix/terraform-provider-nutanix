@@ -2,7 +2,6 @@ package iamv2
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -303,7 +302,7 @@ func ResourceNutanixSamlIdpV2Update(ctx context.Context, d *schema.ResourceData,
 	updateTaskResp := updateResp.Data.GetValue().(import1.SamlIdentityProvider)
 
 	if updateTaskResp.ExtId != nil {
-		fmt.Println("Saml Identity provider updated successfully")
+		log.Println("[DEBUG] Saml Identity provider updated successfully")
 	}
 	return nil
 }
@@ -326,7 +325,7 @@ func ResourceNutanixSamlIdpV2Delete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if resp == nil {
-		fmt.Println("Saml IDP deleted successfully.")
+		log.Println("[DEBUG] Saml IDP deleted successfully.")
 	}
 	return nil
 }

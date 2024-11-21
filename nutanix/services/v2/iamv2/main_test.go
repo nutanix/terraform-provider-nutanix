@@ -10,11 +10,11 @@ import (
 type TestConfig struct {
 	Iam struct {
 		Roles struct {
-			Limit       int    `json:"limit"`
 			DisplayName string `json:"display_name"`
 			Description string `json:"description"`
 		} `json:"roles"`
 		Users struct {
+			Name                        string `json:"name"`
 			IdpId                       string `json:"idp_id"`
 			DirectoryServiceId          string `json:"directory_service_id"`
 			DirectoryServiceUsername    string `json:"directory_service_username"`
@@ -26,7 +26,6 @@ type TestConfig struct {
 		} `json:"users"`
 		// UserGroups config
 		UserGroups struct {
-			Limit              int    `json:"limit"`
 			IdpId              string `json:"idp_id"`
 			DirectoryServiceId string `json:"directory_service_id"`
 			Name               string `json:"name"`
@@ -34,7 +33,6 @@ type TestConfig struct {
 			DistinguishedName  string `json:"distinguished_name"`
 		} `json:"user_groups"`
 		AuthPolicies struct {
-			Limit          int      `json:"limit"`
 			DisplayName    string   `json:"display_name"`
 			Description    string   `json:"description"`
 			AuthPolicyType string   `json:"authorization_policy_type"`
@@ -43,7 +41,6 @@ type TestConfig struct {
 		} `json:"auth_policies"`
 		// Directory Services config
 		IdentityProviders struct {
-			Limit          int    `json:"limit"`
 			IdpMetadataUrl string `json:"idp_metadata_url"`
 			IdpMetadata    struct {
 				EntityId           string `json:"entity_id"`
@@ -65,7 +62,6 @@ type TestConfig struct {
 		} `json:"identity_providers"`
 		// Directory Services config
 		DirectoryServices struct {
-			Limit          int      `json:"limit"`
 			Name           string   `json:"name"`
 			Url            string   `json:"url"`
 			SecondaryUrls  []string `json:"secondary_urls"`
@@ -95,6 +91,9 @@ type TestConfig struct {
 }
 
 var testVars TestConfig
+
+var path, _ = os.Getwd()
+var filepath = path + "/../../../../test_config_v2.json"
 
 func loadVars(filepath string, varStuct interface{}) {
 	// Read test_config_v2.json from home current path

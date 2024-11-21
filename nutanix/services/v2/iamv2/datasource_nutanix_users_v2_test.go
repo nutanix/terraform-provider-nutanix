@@ -2,8 +2,6 @@ package iamv2_test
 
 import (
 	"fmt"
-	"os"
-	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -14,11 +12,10 @@ import (
 
 const datasourceNameUsers = "data.nutanix_users_v2.test"
 
-func TestAccNutanixUsersV4Datasource_Basic(t *testing.T) {
+func TestAccNutanixUsersV2Datasource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-user-%d", r)
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -36,11 +33,10 @@ func TestAccNutanixUsersV4Datasource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixUsersV4Datasource_WithFilter(t *testing.T) {
+func TestAccNutanixUsersV2Datasource_WithFilter(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-user-%d", r)
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -63,21 +59,18 @@ func TestAccNutanixUsersV4Datasource_WithFilter(t *testing.T) {
 	})
 }
 
-func TestAccNutanixUsersV4Datasource_WithLimit(t *testing.T) {
+func TestAccNutanixUsersV2Datasource_WithLimit(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-user-%d", r)
-	limit := 1
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testUsersDatasourceV4WithLimitConfig(filepath, name, limit),
+				Config: testUsersDatasourceV4WithLimitConfig(filepath, name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceNameUsers, "users.#", strconv.Itoa(limit)),
+					resource.TestCheckResourceAttr(datasourceNameUsers, "users.#", "1"),
 				),
 			},
 		},
@@ -144,7 +137,7 @@ func testUsersDatasourceV4WithFilterConfig(filepath, name, userQuery string) str
 	`, filepath, name, userQuery)
 }
 
-func testUsersDatasourceV4WithLimitConfig(filepath, name string, limit int) string {
+func testUsersDatasourceV4WithLimitConfig(filepath, name string) string {
 	return fmt.Sprintf(`
 		locals{
 			config = (jsondecode(file("%[1]s")))
@@ -167,8 +160,8 @@ func testUsersDatasourceV4WithLimitConfig(filepath, name string, limit int) stri
 		}
 		
 		data "nutanix_users_v2" "test" {
-			limit     = %[3]d
+			limit     = 1
 			depends_on = [nutanix_users_v2.test]
 		}
-	`, filepath, name, limit)
+	`, filepath, name)
 }

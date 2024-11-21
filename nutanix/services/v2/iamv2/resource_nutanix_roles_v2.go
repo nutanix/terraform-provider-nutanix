@@ -2,7 +2,6 @@ package iamv2
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -302,7 +301,7 @@ func ResourceNutanixRolesV4Update(ctx context.Context, d *schema.ResourceData, m
 	updateTaskResp := updateResp.Data.GetValue().(config.Message)
 
 	if updateTaskResp.Message != nil {
-		fmt.Println(*updateTaskResp.Message)
+		log.Printf("[DEBUG] %v", *updateTaskResp.Message)
 	}
 	return ResourceNutanixRolesV4Read(ctx, d, meta)
 }
@@ -326,7 +325,7 @@ func ResourceNutanixRolesV4Delete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if resp == nil {
-		fmt.Println("Role deleted successfully.")
+		log.Println("[DEBUG] Role deleted successfully.")
 	}
 	return nil
 }

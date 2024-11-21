@@ -2,7 +2,6 @@ package iamv2_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,16 +11,14 @@ import (
 
 const datasourceNameRole = "data.nutanix_role_v2.test"
 
-func TestAccNutanixRolesV4Datasource_Basic_Role(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+func TestAccNutanixRolesV2Datasource_Basic_Role(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testRoleDatasourceV4Config(filepath),
+				Config: testRoleDatasourceV2Config(filepath),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameRole, "display_name"),
 					resource.TestCheckResourceAttr(datasourceNameRole, "display_name", testVars.Iam.Roles.DisplayName),
@@ -32,7 +29,7 @@ func TestAccNutanixRolesV4Datasource_Basic_Role(t *testing.T) {
 	})
 }
 
-func testRoleDatasourceV4Config(filepath string) string {
+func testRoleDatasourceV2Config(filepath string) string {
 	return fmt.Sprintf(`
 
 		locals{

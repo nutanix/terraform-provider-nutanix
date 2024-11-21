@@ -2,7 +2,6 @@ package iamv2_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -13,11 +12,9 @@ import (
 
 const datasourceNameUser = "data.nutanix_user_v2.test"
 
-func TestAccNutanixUserV4Datasource_Basic(t *testing.T) {
+func TestAccNutanixUserV2Datasource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-user-%d", r)
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },

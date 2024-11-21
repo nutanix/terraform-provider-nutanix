@@ -2,7 +2,7 @@ package iamv2
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -464,7 +464,7 @@ func resourceNutanixUserV2Delete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if resp == nil {
-		fmt.Println("User deleted successfully.")
+		log.Println("[DEBUG] User deleted successfully.")
 	}
 	return nil
 }

@@ -2,7 +2,6 @@ package iamv2_test
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
@@ -13,9 +12,7 @@ import (
 
 const resourceNameRoles = "nutanix_roles_v2.test"
 
-func TestAccNutanixRolesV4Resource_Basic(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+func TestAccNutanixRolesV2Resource_Basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
@@ -42,9 +39,8 @@ func TestAccNutanixRolesV4Resource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixRolesV4Resource_DuplicateRole(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+func TestAccNutanixRolesV2Resource_DuplicateRole(t *testing.T) {
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -57,9 +53,8 @@ func TestAccNutanixRolesV4Resource_DuplicateRole(t *testing.T) {
 	})
 }
 
-func TestAccNutanixRolesV4Resource_WithNoDisplayName(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+func TestAccNutanixRolesV2Resource_WithNoDisplayName(t *testing.T) {
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -71,9 +66,8 @@ func TestAccNutanixRolesV4Resource_WithNoDisplayName(t *testing.T) {
 		},
 	})
 }
-func TestAccNutanixRolesV4Resource_WithNoOperations(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+func TestAccNutanixRolesV2Resource_WithNoOperations(t *testing.T) {
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

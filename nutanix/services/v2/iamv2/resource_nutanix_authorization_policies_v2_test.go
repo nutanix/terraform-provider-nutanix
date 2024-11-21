@@ -15,8 +15,6 @@ import (
 const resourceNameAuthorizationPolicy = "nutanix_authorization_policy_v2.test"
 
 func TestAccNutanixAuthorizationPolicyV2Resource_CreateACP(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },

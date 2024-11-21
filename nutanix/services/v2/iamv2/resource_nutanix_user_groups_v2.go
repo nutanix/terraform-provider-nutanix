@@ -3,12 +3,11 @@ package iamv2
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v16/models/iam/v4/authn"
+	"log"
 
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -171,7 +170,7 @@ func ResourceNutanixUserGroupsV4Delete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if resp == nil {
-		fmt.Println("User group deleted successfully.")
+		log.Println("[DEBUG] User group deleted successfully.")
 	}
 	return nil
 }

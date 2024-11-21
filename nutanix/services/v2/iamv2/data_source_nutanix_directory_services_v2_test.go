@@ -2,8 +2,6 @@ package iamv2_test
 
 import (
 	"fmt"
-	"os"
-	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -14,8 +12,6 @@ import (
 const datasourceNameDirectoryServices = "data.nutanix_directory_services_v2.test"
 
 func TestAccNutanixDirectoryServicesV2Datasource_Basic(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -35,8 +31,7 @@ func TestAccNutanixDirectoryServicesV2Datasource_Basic(t *testing.T) {
 }
 
 func TestAccNutanixDirectoryServicesV2Datasource_WithFilter(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -60,8 +55,6 @@ func TestAccNutanixDirectoryServicesV2Datasource_WithFilter(t *testing.T) {
 }
 
 func TestAccNutanixDirectoryServicesV2Datasource_WithLimit(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -71,7 +64,7 @@ func TestAccNutanixDirectoryServicesV2Datasource_WithLimit(t *testing.T) {
 				Config: testDirectoryServicesDatasourceV2WithLimitConfig(filepath),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameDirectoryServices, "directory_services.#"),
-					resource.TestCheckResourceAttr(datasourceNameDirectoryServices, "directory_services.#", strconv.Itoa(testVars.Iam.DirectoryServices.Limit)),
+					resource.TestCheckResourceAttr(datasourceNameDirectoryServices, "directory_services.#", "1"),
 				),
 			},
 		},
@@ -164,7 +157,7 @@ func testDirectoryServicesDatasourceV2WithLimitConfig(filepath string) string {
 		}
 
 		data "nutanix_directory_services_v2" "test" {
-			limit     = local.directory_services.limit
+			limit     = 1
 			depends_on = [resource.nutanix_directory_services_v2.test]
 		}
 	`, filepath)

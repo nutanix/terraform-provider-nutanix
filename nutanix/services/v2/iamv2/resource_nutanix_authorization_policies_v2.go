@@ -299,7 +299,7 @@ func ResourceNutanixAuthPoliciesV2Update(ctx context.Context, d *schema.Resource
 	log.Printf("[DEBUG] updatedResponse : %v\n", updatedResponse)
 
 	if updatedResponse.Message != nil {
-		fmt.Println("updated the Authorization Policy")
+		log.Println("[DEBUG] updated the Authorization Policy")
 	}
 	return ResourceNutanixAuthPoliciesV2Read(ctx, d, meta)
 }
@@ -322,7 +322,7 @@ func ResourceNutanixAuthPoliciesV2Delete(ctx context.Context, d *schema.Resource
 	}
 
 	if resp == nil {
-		fmt.Println("auth policy deleted successfully.")
+		log.Println("[DEBUG] auth policy deleted successfully.")
 	}
 	return nil
 }
