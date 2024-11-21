@@ -1398,7 +1398,6 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"ext_id": {
 							Type:     schema.TypeString,
-							Optional: true,
 							Computed: true,
 						},
 						"is_connected": {

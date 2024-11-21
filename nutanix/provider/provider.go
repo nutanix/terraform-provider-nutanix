@@ -283,8 +283,6 @@ func Provider() *schema.Provider {
 			"nutanix_template_v2":                             vmmv2.DatasourceNutanixTemplateV2(),
 			"nutanix_templates_v2":                            vmmv2.DatasourceNutanixTemplatesV2(),
 			"nutanix_ngt_configuration_v2":                    vmmv2.DatasourceNutanixNGTConfigurationV4(),
-			"nutanix_vm_network_device_v2":                    vmmv2.DatasourceNutanixVMNetworkDeviceV2(),
-			"nutanix_vm_network_devices_v2":                   vmmv2.DatasourceNutanixVMNetworkDevicesV2(),
 			"nutanix_image_placement_policy_v2":               vmmv2.DatasourceNutanixImagePlacementV4(),
 			"nutanix_image_placement_policies_v2":             vmmv2.DatasourceNutanixImagePlacementsV4(),
 			"nutanix_cluster_v2":                              clustersv2.DatasourceNutanixClusterEntityV2(),

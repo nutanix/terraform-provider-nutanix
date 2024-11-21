@@ -507,6 +507,51 @@ func TestAccNutanixVmsV2Resource_WithCategories(t *testing.T) {
 	})
 }
 
+func TestAccNutanixVmsV2Resource_WithSerialPorts(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-vm-%d", r)
+	desc := "test vm description"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testVmsConfigWithSerialPorts(name, desc, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "name", name),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_cores_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_sockets", "2"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "create_time"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "update_time"),
+					resource.TestCheckResourceAttr(resourceNameVms, "protection_type", "UNPROTECTED"),
+					resource.TestCheckResourceAttr(resourceNameVms, "is_agent_vm", "false"),
+					resource.TestCheckResourceAttr(resourceNameVms, "machine_type", "PC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "serial_ports.#", "1"),
+					resource.TestCheckResourceAttr(resourceNameVms, "serial_ports.0.index", "2"),
+					resource.TestCheckResourceAttr(resourceNameVms, "serial_ports.0.is_connected", "true"),
+				),
+			},
+			{
+				Config: testVmsConfigWithSerialPorts(name, desc, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "name", name),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_cores_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_sockets", "2"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "create_time"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "update_time"),
+					resource.TestCheckResourceAttr(resourceNameVms, "protection_type", "UNPROTECTED"),
+					resource.TestCheckResourceAttr(resourceNameVms, "is_agent_vm", "false"),
+					resource.TestCheckResourceAttr(resourceNameVms, "machine_type", "PC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "serial_ports.0.index", "2"),
+					resource.TestCheckResourceAttr(resourceNameVms, "serial_ports.0.is_connected", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNutanixVmsV2Resource_WithGpus(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
@@ -1430,4 +1475,46 @@ func testVmsV2RemoveGpus(name, desc string) string {
 			power_state = "OFF"
 		}
 	`, name, desc, filepath)
+}
+
+func testVmsConfigWithSerialPorts(name, desc string, isconn bool) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters" "clusters" {}
+
+		locals {
+			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			config = jsondecode(file("%[4]s"))
+			vmm = local.config.vmm
+		}
+
+		data "nutanix_subnets_v2" "subnets" {
+			filter = "name eq '${local.vmm.subnet_name}'"
+		}
+
+		data "nutanix_categories_v2" "ctg"{}
+	
+		resource "nutanix_virtual_machine_v2" "test"{
+			name= "%[1]s"
+			description =  "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets = 2
+			cluster {
+				ext_id = local.cluster0
+			}			
+			nics{
+				network_info{
+					nic_type = "NORMAL_NIC"
+					subnet{
+						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+					}	
+					vlan_mode = "ACCESS"
+				}
+			}
+			serial_ports{
+				index = 2
+				is_connected = %[3]t
+			}	
+			power_state = "ON"
+		}
+	`, name, desc, isconn, filepath)
 }

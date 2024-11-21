@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v16/models/common/v1/config"
+	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v16/models/common/v1/response"
 	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v16/models/vmm/v4/ahv/config"
 
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
@@ -2765,6 +2766,26 @@ func flattenPolicyReference(ref *config.PolicyReference) []map[string]interface{
 		refList = append(refList, refs)
 
 		return refList
+	}
+	return nil
+}
+
+func flattenApiLink(pr []response.ApiLink) []interface{} {
+	if len(pr) > 0 {
+		links := make([]interface{}, len(pr))
+
+		for k, v := range pr {
+			link := make(map[string]interface{})
+
+			if v.Href != nil {
+				link["href"] = v.Href
+			}
+			if v.Rel != nil {
+				link["rel"] = v.Rel
+			}
+			links[k] = link
+		}
+		return links
 	}
 	return nil
 }
