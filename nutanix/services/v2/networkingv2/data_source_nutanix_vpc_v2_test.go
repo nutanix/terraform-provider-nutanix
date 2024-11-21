@@ -9,9 +9,9 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNamevpc = "data.nutanix_vpc_v2.test"
+const datasourceNameVPC = "data.nutanix_vpc_v2.test"
 
-func TestAccNutanixVpcDataSourceV2_basic(t *testing.T) {
+func TestAccNutanixVpcV2DataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vpc-%d", r)
 	desc := "test vpc description"
@@ -22,12 +22,12 @@ func TestAccNutanixVpcDataSourceV2_basic(t *testing.T) {
 			{
 				Config: testAccVpcDataSourceConfig(name, desc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceNamevpc, "name", name),
-					resource.TestCheckResourceAttr(datasourceNamevpc, "description", desc),
-					resource.TestCheckResourceAttrSet(datasourceNamevpc, "metadata.#"),
-					resource.TestCheckResourceAttrSet(datasourceNamevpc, "links.#"),
-					resource.TestCheckResourceAttrSet(datasourceNamevpc, "snat_ips.#"),
-					resource.TestCheckResourceAttrSet(datasourceNamevpc, "external_subnets.#"),
+					resource.TestCheckResourceAttr(datasourceNameVPC, "name", name),
+					resource.TestCheckResourceAttr(datasourceNameVPC, "description", desc),
+					resource.TestCheckResourceAttrSet(datasourceNameVPC, "metadata.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameVPC, "links.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameVPC, "snat_ips.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameVPC, "external_subnets.#"),
 				),
 			},
 		},
@@ -37,10 +37,13 @@ func TestAccNutanixVpcDataSourceV2_basic(t *testing.T) {
 func testAccVpcDataSourceConfig(name, desc string) string {
 	return fmt.Sprintf(`
 
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 = [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
 		}
 		
 		resource "nutanix_subnet_v2" "test" {
@@ -71,7 +74,7 @@ func testAccVpcDataSourceConfig(name, desc string) string {
 					}
 				}
 			}
-			depends_on = [data.nutanix_clusters.clusters]
+			depends_on = [data.nutanix_clusters_v2.clusters]
 		}
 		resource "nutanix_vpc_v2" "test" {
 			name =  "%[1]s"

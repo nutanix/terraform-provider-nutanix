@@ -11,7 +11,7 @@ import (
 
 const datasourceNameaddgrp = "data.nutanix_address_group_v2.test"
 
-func TestAccNutanixAddressGroupDataSourceV2_basic(t *testing.T) {
+func TestAccNutanixAddressGroupV2DataSource_basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-service-%d", r)
 	desc := "test service description"

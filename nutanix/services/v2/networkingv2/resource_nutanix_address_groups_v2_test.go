@@ -11,7 +11,7 @@ import (
 
 const resourceNameAddressGroup = "nutanix_address_groups_v2.test"
 
-func TestAccNutanixAddressGroupV2_Basic(t *testing.T) {
+func TestAccNutanixAddressGroupV2Resource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-address-group-%d", r)
 	desc := "test address group description"
@@ -34,7 +34,7 @@ func TestAccNutanixAddressGroupV2_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixAddressGroupV2_WithUpdate(t *testing.T) {
+func TestAccNutanixAddressGroupV2Resource_WithUpdate(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-address-group-%d", r)
 	desc := "test address group description"
@@ -56,7 +56,7 @@ func TestAccNutanixAddressGroupV2_WithUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAddressGroupV2ConfigwithUpdate(updatedName, updatedDesc),
+				Config: testAddressGroupV2ConfigWithUpdate(updatedName, updatedDesc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameAddressGroup, "name", updatedName),
 					resource.TestCheckResourceAttr(resourceNameAddressGroup, "description", updatedDesc),
@@ -70,7 +70,7 @@ func TestAccNutanixAddressGroupV2_WithUpdate(t *testing.T) {
 	})
 }
 
-func TestAccNutanixAddressGroupV2_WithIPRanges(t *testing.T) {
+func TestAccNutanixAddressGroupV2Resource_WithIPRanges(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-address-group-%d", r)
 	desc := "test address group description"
@@ -108,7 +108,7 @@ func testAddressGroupV2Config(name, desc string) string {
 `, name, desc)
 }
 
-func testAddressGroupV2ConfigwithUpdate(name, desc string) string {
+func testAddressGroupV2ConfigWithUpdate(name, desc string) string {
 	return fmt.Sprintf(`
 		
 	resource "nutanix_address_groups_v2" "test" {

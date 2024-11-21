@@ -9,9 +9,9 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNamefip = "nutanix_floating_ip_v2.test"
+const resourceNameFIP = "nutanix_floating_ip_v2.test"
 
-func TestAccNutanixFloatingIPv2_Basic(t *testing.T) {
+func TestAccNutanixFloatingIPV2Resource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-fip-%d", r)
 	desc := "test fip description"
@@ -24,28 +24,28 @@ func TestAccNutanixFloatingIPv2_Basic(t *testing.T) {
 			{
 				Config: testFloatingIPv2Config(name, desc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNamefip, "name", name),
-					resource.TestCheckResourceAttr(resourceNamefip, "description", desc),
-					resource.TestCheckResourceAttrSet(resourceNamefip, "metadata.#"),
-					resource.TestCheckResourceAttrSet(resourceNamefip, "links.#"),
-					resource.TestCheckResourceAttrSet(resourceNamefip, "external_subnet_reference"),
+					resource.TestCheckResourceAttr(resourceNameFIP, "name", name),
+					resource.TestCheckResourceAttr(resourceNameFIP, "description", desc),
+					resource.TestCheckResourceAttrSet(resourceNameFIP, "metadata.#"),
+					resource.TestCheckResourceAttrSet(resourceNameFIP, "links.#"),
+					resource.TestCheckResourceAttrSet(resourceNameFIP, "external_subnet_reference"),
 				),
 			},
 			{
 				Config: testFloatingIPv2Config(updatedName, updatedDesc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNamefip, "name", updatedName),
-					resource.TestCheckResourceAttr(resourceNamefip, "description", updatedDesc),
-					resource.TestCheckResourceAttrSet(resourceNamefip, "metadata.#"),
-					resource.TestCheckResourceAttrSet(resourceNamefip, "links.#"),
-					resource.TestCheckResourceAttrSet(resourceNamefip, "external_subnet_reference"),
+					resource.TestCheckResourceAttr(resourceNameFIP, "name", updatedName),
+					resource.TestCheckResourceAttr(resourceNameFIP, "description", updatedDesc),
+					resource.TestCheckResourceAttrSet(resourceNameFIP, "metadata.#"),
+					resource.TestCheckResourceAttrSet(resourceNameFIP, "links.#"),
+					resource.TestCheckResourceAttrSet(resourceNameFIP, "external_subnet_reference"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccNutanixFloatingIPv2_WithVmNICAssociation(t *testing.T) {
+func TestAccNutanixFloatingIPV2Resource_WithVmNICAssociation(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-fip-%d", r)
 	desc := "test fip description"
@@ -54,21 +54,21 @@ func TestAccNutanixFloatingIPv2_WithVmNICAssociation(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testFloatingIPv2ConfigwithVMNic(filepath, name, desc),
+				Config: testFloatingIPv2ConfigWithVMNic(name, desc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNamefip, "name", name),
-					resource.TestCheckResourceAttr(resourceNamefip, "description", desc),
-					resource.TestCheckResourceAttrSet(resourceNamefip, "metadata.#"),
-					resource.TestCheckResourceAttrSet(resourceNamefip, "links.#"),
-					resource.TestCheckResourceAttrSet(resourceNamefip, "association.#"),
-					resource.TestCheckResourceAttrSet(resourceNamefip, "external_subnet_reference"),
+					resource.TestCheckResourceAttr(resourceNameFIP, "name", name),
+					resource.TestCheckResourceAttr(resourceNameFIP, "description", desc),
+					resource.TestCheckResourceAttrSet(resourceNameFIP, "metadata.#"),
+					resource.TestCheckResourceAttrSet(resourceNameFIP, "links.#"),
+					resource.TestCheckResourceAttrSet(resourceNameFIP, "association.#"),
+					resource.TestCheckResourceAttrSet(resourceNameFIP, "external_subnet_reference"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccNutanixFloatingIPv2_WithPrivateipAssociation(t *testing.T) {
+func TestAccNutanixFloatingIPV2Resource_WithPrivateIpAssociation(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-fip-%d", r)
 	desc := "test fip description"
@@ -77,14 +77,14 @@ func TestAccNutanixFloatingIPv2_WithPrivateipAssociation(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testFloatingIPv2ConfigwithPrivateIP(name, desc),
+				Config: testFloatingIPv2ConfigWithPrivateIP(name, desc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNamefip, "name", name),
-					resource.TestCheckResourceAttr(resourceNamefip, "description", desc),
-					resource.TestCheckResourceAttrSet(resourceNamefip, "metadata.#"),
-					resource.TestCheckResourceAttrSet(resourceNamefip, "links.#"),
-					resource.TestCheckResourceAttrSet(resourceNamefip, "association.#"),
-					resource.TestCheckResourceAttrSet(resourceNamefip, "external_subnet_reference"),
+					resource.TestCheckResourceAttr(resourceNameFIP, "name", name),
+					resource.TestCheckResourceAttr(resourceNameFIP, "description", desc),
+					resource.TestCheckResourceAttrSet(resourceNameFIP, "metadata.#"),
+					resource.TestCheckResourceAttrSet(resourceNameFIP, "links.#"),
+					resource.TestCheckResourceAttrSet(resourceNameFIP, "association.#"),
+					resource.TestCheckResourceAttrSet(resourceNameFIP, "external_subnet_reference"),
 				),
 			},
 		},
@@ -136,59 +136,65 @@ func testFloatingIPv2Config(name, desc string) string {
 `, name, desc)
 }
 
-func testFloatingIPv2ConfigwithVMNic(filepath, name, desc string) string {
+func testFloatingIPv2ConfigWithVMNic(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
-			config = (jsondecode(file("%s")))
-			floating_ip = local.config.networking.floating_ip
+			cluster0 = [
+				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			  ][0]
+			config = jsondecode(file("%[3]s"))
+			vmm = local.config.vmm
+					
 		}
 		
-		resource "nutanix_subnet_v2" "test" {
-			name = "terraform-test-subnet-floating-ip-1"
-			description = "test subnet floating ip description"
-			cluster_reference = local.cluster0
-			subnet_type = "VLAN"
-			network_id = 112
-			is_external = true
-			ip_config {
-				ipv4 {
-					ip_subnet {
-						ip {
-							value = "192.168.0.0"
-						}
-						prefix_length = 24
-					}
-					default_gateway_ip {
-						value = "192.168.0.1"
-					}
-					pool_list{
-						start_ip {
-							value = "192.168.0.20"
-						}
-						end_ip {
-							value = "192.168.0.30"
-						}
-					}
+		data "nutanix_subnets_v2" "subnets" {
+			filter = "name eq '${local.vmm.subnet_name}'"
+		}
+
+		data "nutanix_storage_containers_v2" "ngt-sc" {
+		  filter = "clusterExtId eq '${local.cluster0}'"
+		  limit = 1
+		}
+
+		resource "nutanix_virtual_machine_v2" "test"{
+			name= "tf-test-vm-%[1]s"
+			description =  "test vm for floating ip "
+			num_cores_per_socket = 1
+			num_sockets = 1
+
+			cluster {
+				ext_id = local.cluster0
+			}
+
+			nics{
+				network_info{
+					nic_type = "NORMAL_NIC"
+					subnet{
+						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+					}	
+					vlan_mode = "ACCESS"
 				}
 			}
+			power_state = "ON"			
 		}
+
 		resource "nutanix_floating_ip_v2" "test" {
 			name = "%[1]s"
 			description = "%[2]s"
-			external_subnet_reference = nutanix_subnet_v2.test.id
+			external_subnet_reference = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
 			association{
 				vm_nic_association{
-					vm_nic_reference = local.floating_ip.vm_nic_reference
+					vm_nic_reference = nutanix_virtual_machine_v2.test.nics.0.ext_id
 				}
 			  }
 		  }
-`, filepath, name, desc)
+`, name, desc, filepath)
 }
 
-func testFloatingIPv2ConfigwithPrivateIP(name, desc string) string {
+func testFloatingIPv2ConfigWithPrivateIP(name, desc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}
 
@@ -249,6 +255,7 @@ func testFloatingIPv2ConfigwithPrivateIP(name, desc string) string {
 			}	
 			depends_on = [nutanix_subnet_v2.test]
 		}
+
 		resource "nutanix_floating_ip_v2" "test" {
 			name = "%[1]s"
 			description = "%[2]s"

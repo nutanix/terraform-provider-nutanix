@@ -11,7 +11,7 @@ import (
 
 const resourceNameNs = "nutanix_network_security_policy_v2.test"
 
-func TestAccNutanixNetworkSecurityV2_Basic(t *testing.T) {
+func TestAccNutanixNetworkSecurityV2Resource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-nsp-%d", r)
 	desc := "test nsp description"
@@ -34,7 +34,7 @@ func TestAccNutanixNetworkSecurityV2_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixNetworkSecurityV2_WithRules(t *testing.T) {
+func TestAccNutanixNetworkSecurityV2Resource_WithRules(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-nsp-%d", r)
 	desc := "test nsp description"
@@ -61,7 +61,7 @@ func TestAccNutanixNetworkSecurityV2_WithRules(t *testing.T) {
 
 func testNetworkSecurityConfig(name, desc string) string {
 	return fmt.Sprintf(`
-		
+    data "nutanix_categories_v2" "test" {}
 	resource "nutanix_network_security_policy_v2" "test" {
 		name = "%[1]s"
 		description = "%[2]s"
@@ -72,10 +72,10 @@ func testNetworkSecurityConfig(name, desc string) string {
 		  spec{
 			two_env_isolation_rule_spec{
 			  first_isolation_group = [
-				"46f433d5-016d-5b11-a75f-5d0f44da7fd5",
+				nutanix_categories_v2.test.categories.0.ext_id,
 			  ]
 			  second_isolation_group =  [
-				"3da8c2d5-b2dd-5395-ab26-5f2cc87acbe1",
+				nutanix_categories_v2.test.categories.1.ext_id,
 			  ]
 			}
 		  }

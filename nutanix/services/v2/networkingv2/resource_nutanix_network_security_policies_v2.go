@@ -3,7 +3,6 @@ package networkingv2
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -347,6 +346,10 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tenant_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -428,9 +431,8 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 		spec.VpcReferences = expandStringList(vpcRef.([]interface{}))
 	}
 
-	log.Println("HELLLLLOOOOOO")
 	aJSON, _ := json.Marshal(spec)
-	fmt.Printf("JSON Print - \n%s\n", string(aJSON))
+	log.Printf("[DEBUG] Spec: %s", aJSON)
 
 	resp, err := conn.NetworkingSecurityInstance.CreateNetworkSecurityPolicy(&spec)
 	if err != nil {
@@ -563,6 +565,9 @@ func ResourceNutanixNetworkSecurityPolicyV2Read(ctx context.Context, d *schema.R
 		return diag.FromErr(err)
 	}
 	if err := d.Set("created_by", getResp.CreatedBy); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("ext_id", getResp.ExtId); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {

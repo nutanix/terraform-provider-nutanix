@@ -9,11 +9,11 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNameServicegrp = "data.nutanix_service_group_v2.test"
+const datasourceNameServiceGroup = "data.nutanix_service_group_v2.test"
 
-func TestAccNutanixServiceGroupDataSourceV2_basic(t *testing.T) {
+func TestAccNutanixServiceGroupV2DataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-service-%d", r)
+	name := fmt.Sprintf("tf-test-service-%d", r)
 	desc := "test service description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -22,14 +22,14 @@ func TestAccNutanixServiceGroupDataSourceV2_basic(t *testing.T) {
 			{
 				Config: testAccServiceGrpDataSourceConfig(name, desc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceNameServicegrp, "name", name),
-					resource.TestCheckResourceAttr(datasourceNameServicegrp, "description", desc),
-					resource.TestCheckResourceAttrSet(datasourceNameServicegrp, "links.#"),
-					resource.TestCheckResourceAttrSet(datasourceNameServicegrp, "tcp_services.#"),
-					resource.TestCheckResourceAttr(datasourceNameServicegrp, "tcp_services.#", "1"),
-					resource.TestCheckResourceAttrSet(datasourceNameServicegrp, "udp_services.#"),
-					resource.TestCheckResourceAttr(datasourceNameServicegrp, "udp_services.#", "1"),
-					resource.TestCheckResourceAttrSet(datasourceNameServicegrp, "ext_id"),
+					resource.TestCheckResourceAttr(datasourceNameServiceGroup, "name", name),
+					resource.TestCheckResourceAttr(datasourceNameServiceGroup, "description", desc),
+					resource.TestCheckResourceAttrSet(datasourceNameServiceGroup, "links.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameServiceGroup, "tcp_services.#"),
+					resource.TestCheckResourceAttr(datasourceNameServiceGroup, "tcp_services.#", "1"),
+					resource.TestCheckResourceAttrSet(datasourceNameServiceGroup, "udp_services.#"),
+					resource.TestCheckResourceAttr(datasourceNameServiceGroup, "udp_services.#", "1"),
+					resource.TestCheckResourceAttrSet(datasourceNameServiceGroup, "ext_id"),
 				),
 			},
 		},

@@ -11,9 +11,9 @@ import (
 
 const datasourceNamePbr = "data.nutanix_pbr_v2.test"
 
-func TestAccNutanixPbrDataSourceV2_basic(t *testing.T) {
+func TestAccNutanixPbrV2DataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-fip-%d", r)
+	name := fmt.Sprintf("tf-test-fip-%d", r)
 	desc := "test fip description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },

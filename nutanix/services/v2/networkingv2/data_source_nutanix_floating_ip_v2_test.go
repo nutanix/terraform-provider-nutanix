@@ -10,11 +10,11 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNamefip = "data.nutanix_floating_ip_v2.test"
+const datasourceNameFIP = "data.nutanix_floating_ip_v2.test"
 
-func TestAccNutanixFloatingIPDataSourceV2_basic(t *testing.T) {
+func TestAccNutanixFloatingIPV2DataSource_basic(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-fip-%d", r)
+	name := fmt.Sprintf("tf-test-fip-%d", r)
 	desc := "test fip description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -23,12 +23,12 @@ func TestAccNutanixFloatingIPDataSourceV2_basic(t *testing.T) {
 			{
 				Config: testAccFipDataSourceConfig(name, desc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceNamefip, "name", name),
-					resource.TestCheckResourceAttr(datasourceNamefip, "description", desc),
-					resource.TestCheckResourceAttrSet(datasourceNamefip, "metadata.#"),
-					resource.TestCheckResourceAttrSet(datasourceNamefip, "links.#"),
-					resource.TestCheckResourceAttrSet(datasourceNamefip, "association.#"),
-					resource.TestCheckResourceAttrSet(datasourceNamefip, "external_subnet_reference"),
+					resource.TestCheckResourceAttr(datasourceNameFIP, "name", name),
+					resource.TestCheckResourceAttr(datasourceNameFIP, "description", desc),
+					resource.TestCheckResourceAttrSet(datasourceNameFIP, "metadata.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameFIP, "links.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameFIP, "association.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameFIP, "external_subnet_reference"),
 				),
 			},
 		},

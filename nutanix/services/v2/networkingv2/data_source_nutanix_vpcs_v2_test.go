@@ -9,9 +9,9 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNamevpcs = "data.nutanix_vpcs_v2.test"
+const datasourceNameVPCs = "data.nutanix_vpcs_v2.test"
 
-func TestAccNutanixVpcsDataSourceV2_basic(t *testing.T) {
+func TestAccNutanixVpcsV2DataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vpc-%d", r)
 	desc := "test vpc description"
@@ -22,13 +22,51 @@ func TestAccNutanixVpcsDataSourceV2_basic(t *testing.T) {
 			{
 				Config: testAccVpcsDataSourceConfig(name, desc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceNamevpcs, "vpcs.#"),
-					resource.TestCheckResourceAttr(datasourceNamevpcs, "vpcs.0.name", name),
-					resource.TestCheckResourceAttr(datasourceNamevpcs, "vpcs.0.description", desc),
-					resource.TestCheckResourceAttrSet(datasourceNamevpcs, "vpcs.0.metadata.#"),
-					resource.TestCheckResourceAttrSet(datasourceNamevpcs, "vpcs.0.links.#"),
-					resource.TestCheckResourceAttrSet(datasourceNamevpcs, "vpcs.0.snat_ips.#"),
-					resource.TestCheckResourceAttrSet(datasourceNamevpcs, "vpcs.0.external_subnets.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameVPCs, "vpcs.#"),
+					checkAttributeLength(datasourceNameVPCs, "vpcs", 1),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNutanixVpcsV2DataSource_WithLimit(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("test-vpc-%d", r)
+	desc := "test vpc description"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcsDataSourceConfig(name, desc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameVPCs, "vpcs.#"),
+					checkAttributeLengthEqual(datasourceNameVPCs, "vpcs", 1),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNutanixVpcsV2DataSource_WithFilter(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("test-vpc-%d", r)
+	desc := "test vpc description"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVpcsDataSourceConfig(name, desc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameVPCs, "vpcs.#"),
+					resource.TestCheckResourceAttr(datasourceNameVPCs, "vpcs.0.name", name),
+					resource.TestCheckResourceAttr(datasourceNameVPCs, "vpcs.0.description", desc),
+					resource.TestCheckResourceAttrSet(datasourceNameVPCs, "vpcs.0.metadata.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameVPCs, "vpcs.0.links.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameVPCs, "vpcs.0.snat_ips.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameVPCs, "vpcs.0.external_subnets.#"),
 				),
 			},
 		},

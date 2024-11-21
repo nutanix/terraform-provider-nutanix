@@ -10,9 +10,9 @@ import (
 
 const datasourceNameRoutes = "data.nutanix_routes_v2.test"
 
-func TestAccNutanixRoutesDataSourceV2_basic(t *testing.T) {
+func TestAccNutanixRoutesV2DataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("terraform-test-route-%d", r)
+	name := fmt.Sprintf("tf-test-route-%d", r)
 	desc := "test terraform route description"
 
 	resource.Test(t, resource.TestCase{
@@ -23,14 +23,15 @@ func TestAccNutanixRoutesDataSourceV2_basic(t *testing.T) {
 				Config: testAccRoutesDataSourceConfig(name, desc, r),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameRoutes, "routes.#"),
+					checkAttributeLength(datasourceNameRoutes, "routes", 1),
 				),
 			},
 		},
 	})
 }
-func TestAccNutanixRoutesDataSourceV2_withFilter(t *testing.T) {
+func TestAccNutanixRoutesV2DataSource_WithFilter(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("terraform-test-route-%d", r)
+	name := fmt.Sprintf("tf-test-route-%d", r)
 	desc := "test terraform route description"
 
 	resource.Test(t, resource.TestCase{
@@ -62,14 +63,16 @@ func TestAccNutanixRoutesDataSourceV2_withFilter(t *testing.T) {
 func testAccRoutesDataSourceConfig(name, desc string, r int) string {
 	return testRoute1Config(name, desc, r) + `
 		data "nutanix_routes_v2" "test"{
-  			route_table_ext_id = data.nutanix_route_tables_v2.rt_vpc1.route_tables[0].ext_id		   
+  			route_table_ext_id = data.nutanix_route_tables_v2.rt_vpc1.route_tables[0].ext_id
+			depends_on = [nutanix_routes_v2.test-1]
 		}`
 }
 
 func testAccRoutesDataSourceWithFilterConfig(name, desc string, r int) string {
 	return testRoute1Config(name, desc, r) + `
 		data "nutanix_routes_v2" "test"{
-			filter             = "name eq '${nutanix_route_v2.test-1.name}'"
-  			route_table_ext_id = data.nutanix_route_tables_v2.rt_vpc1.route_tables[0].ext_id		   
+			filter             = "name eq '${nutanix_routes_v2.test-1.name}'"
+  			route_table_ext_id = data.nutanix_route_tables_v2.rt_vpc1.route_tables[0].ext_id	
+			depends_on = [nutanix_routes_v2.test-1]
 		}`
 }

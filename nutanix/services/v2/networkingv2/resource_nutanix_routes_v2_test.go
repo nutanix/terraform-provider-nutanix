@@ -20,8 +20,8 @@ func TestAccNutanixRoutesV2Resource_Basic(t *testing.T) {
 	resourceVpc2 := "nutanix_vpc_v2.test-2"
 	resourceRouteTable1 := "data.nutanix_route_tables_v2.rt_vpc1"
 	resourceRouteTable2 := "data.nutanix_route_tables_v2.rt_vpc2"
-	resourceRoute1 := "nutanix_route_v2.test-1"
-	resourceRoute2 := "nutanix_route_v2.test-2"
+	resourceRoute1 := "nutanix_routes_v2.test-1"
+	resourceRoute2 := "nutanix_routes_v2.test-2"
 
 	//goland:noinspection GoDeprecation
 	resource.Test(t, resource.TestCase{
@@ -242,7 +242,8 @@ func testRouteTableInfoVpc2Config(r int) string {
 
 func testRoute1Config(name, desc string, r int) string {
 	return testRouteTableInfoVpc1Config(r) + fmt.Sprintf(`
-	resource "nutanix_route_v2" "test-1" {
+
+	resource "nutanix_routes_v2" "test-1" {
 	  name               = "%[1]s"
 	  description        = "%[2]s"
 	  vpc_reference      = nutanix_vpc_v2.test-1.id
@@ -270,7 +271,7 @@ func testRoute1Config(name, desc string, r int) string {
 
 func testRoute2Config(name, desc string, r int) string {
 	return testRouteTableInfoVpc2Config(r) + fmt.Sprintf(`
-	resource "nutanix_route_v2" "test-2" {
+	resource "nutanix_routes_v2" "test-2" {
 	  name               = "%[1]s"
 	  description        = "%[2]s"
 	  vpc_reference      = nutanix_vpc_v2.test-2.id
@@ -298,7 +299,7 @@ func testRoute2Config(name, desc string, r int) string {
 
 func testRoute1UpdateConfig(name, desc string, r int) string {
 	return testRouteTableInfoVpc1Config(r) + fmt.Sprintf(`
-	resource "nutanix_route_v2" "test-1" {
+	resource "nutanix_routes_v2" "test-1" {
 	  name               = "%[1]s_updated"
 	  description        = "%[2]s_updated"
 	  vpc_reference      = nutanix_vpc_v2.test-1.id
@@ -326,7 +327,7 @@ func testRoute1UpdateConfig(name, desc string, r int) string {
 
 func testRoute2UpdateConfig(name, desc string, r int) string {
 	return testRouteTableInfoVpc2Config(r) + fmt.Sprintf(`
-	resource "nutanix_route_v2" "test-2" {
+	resource "nutanix_routes_v2" "test-2" {
 	  name               = "%[1]s_updated"
 	  description        = "%[2]s_updated"
 	  vpc_reference      = nutanix_vpc_v2.test-2.id

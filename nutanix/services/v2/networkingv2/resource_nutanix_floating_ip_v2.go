@@ -3,6 +3,7 @@ package networkingv2
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -264,7 +265,7 @@ func ResourceNutanixFloatingIPv2Read(ctx context.Context, d *schema.ResourceData
 	}
 
 	getResp := resp.Data.GetValue().(import1.FloatingIp)
-	fmt.Println(getResp)
+	log.Printf("[DEBUG] Read Floating IP: %v", getResp)
 
 	if err := d.Set("ext_id", getResp.ExtId); err != nil {
 		return diag.FromErr(err)

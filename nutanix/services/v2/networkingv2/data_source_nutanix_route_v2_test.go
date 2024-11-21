@@ -10,9 +10,9 @@ import (
 
 const datasourceNameRoute = "data.nutanix_route_v2.test"
 
-func TestAccNutanixRouteDataSourceV2_basic(t *testing.T) {
+func TestAccNutanixRouteV2DataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("terraform-test-route-%d", r)
+	name := fmt.Sprintf("tf-test-route-%d", r)
 	desc := "test terraform route description"
 
 	resource.Test(t, resource.TestCase{
@@ -42,7 +42,7 @@ func TestAccNutanixRouteDataSourceV2_basic(t *testing.T) {
 func testAccRouteDataSourceConfig(name, desc string, r int) string {
 	return testRoute1Config(name, desc, r) + `
 		data "nutanix_route_v2" "test"{
-			ext_id             = nutanix_route_v2.test-1.id
+			ext_id             = nutanix_routes_v2.test-1.id
   			route_table_ext_id = data.nutanix_route_tables_v2.rt_vpc1.route_tables[0].ext_id		   
 		}`
 }

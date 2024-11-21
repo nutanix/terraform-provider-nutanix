@@ -9,9 +9,9 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNameAddGrps = "data.nutanix_address_groups_v2.test"
+const datasourceNameAddGroups = "data.nutanix_address_groups_v2.test"
 
-func TestAccNutanixAddressGroupsDataSourceV2_basic(t *testing.T) {
+func TestAccNutanixAddressGroupsV2DataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-service-%d", r)
 	desc := "test service description"
@@ -20,22 +20,61 @@ func TestAccNutanixAddressGroupsDataSourceV2_basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAddGrpsDataSourceConfig(name, desc),
+				Config: testAccAddGroupsDataSourceConfig(name, desc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceNameAddGrps, "address_groups.#"),
-					resource.TestCheckResourceAttr(datasourceNameAddGrps, "address_groups.#", "1"),
-					resource.TestCheckResourceAttr(datasourceNameAddGrps, "address_groups.0.name", name),
-					resource.TestCheckResourceAttr(datasourceNameAddGrps, "address_groups.0.description", desc),
-					resource.TestCheckResourceAttrSet(datasourceNameAddGrps, "address_groups.0.ipv4_addresses.#"),
-					resource.TestCheckResourceAttrSet(datasourceNameAddGrps, "address_groups.0.links.#"),
-					resource.TestCheckResourceAttrSet(datasourceNameAddGrps, "address_groups.0.created_by"),
+					resource.TestCheckResourceAttrSet(datasourceNameAddGroups, "address_groups.#"),
+					checkAttributeLength(datasourceNameAddGroups, "address_groups", 1),
 				),
 			},
 		},
 	})
 }
 
-func testAccAddGrpsDataSourceConfig(name, desc string) string {
+func TestAccNutanixAddressGroupsV2DataSource_WithFilter(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("test-service-%d", r)
+	desc := "test service description"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAddGroupsDataSourceWithFilterConfig(name, desc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameAddGroups, "address_groups.#"),
+					resource.TestCheckResourceAttr(datasourceNameAddGroups, "address_groups.#", "1"),
+					resource.TestCheckResourceAttr(datasourceNameAddGroups, "address_groups.0.name", name),
+					resource.TestCheckResourceAttr(datasourceNameAddGroups, "address_groups.0.description", desc),
+					resource.TestCheckResourceAttrSet(datasourceNameAddGroups, "address_groups.0.ipv4_addresses.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameAddGroups, "address_groups.0.links.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameAddGroups, "address_groups.0.created_by"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAddGroupsDataSourceConfig(name, desc string) string {
+	return fmt.Sprintf(`
+
+		resource "nutanix_address_groups_v2" "test" {
+			name = "%[1]s"
+			description = "%[2]s"
+			ipv4_addresses{
+			value = "10.0.0.0"
+			prefix_length = 24
+			}
+		}
+
+		data "nutanix_address_groups_v2" "test" {
+			depends_on = [
+				resource.nutanix_address_groups_v2.test
+			]
+		}
+	`, name, desc)
+}
+
+func testAccAddGroupsDataSourceWithFilterConfig(name, desc string) string {
 	return fmt.Sprintf(`
 
 		resource "nutanix_address_groups_v2" "test" {
