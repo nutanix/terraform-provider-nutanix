@@ -1,8 +1,6 @@
 package volumesv2_test
 
 import (
-	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,33 +10,29 @@ import (
 
 const dataSourceVolumeIscsiClient = "data.nutanix_volume_iscsi_client_v2.v_iscsi"
 
-func TestAccNutanixVolumeIscsiClientV2_Basic(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+func TestAccNutanixVolumeIscsiClientV2Datasource_Basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVolumeIscsiClientV2Config(filepath),
+				Config: testAccVolumeIscsiClientV2Config(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceVolumeIscsiClient, "iscsi_initiator_name"),
-					resource.TestCheckResourceAttr(dataSourceVolumeIscsiClient, "ext_id", testVars.Volumes.IscsiClient.ExtId),
+					resource.TestCheckResourceAttrSet(dataSourceVolumeIscsiClient, "ext_id"),
 				),
 			},
 		},
 	})
 }
 
-func testAccVolumeIscsiClientV2Config(filepath string) string {
-	return fmt.Sprintf(`
-	locals {
-		config = (jsondecode(file("%s")))
-		volumes = local.config.volumes
-	}
+func testAccVolumeIscsiClientV2Config() string {
+	return `
+
+	data "nutanix_volume_iscsi_clients_v2" "test" {}
 
 	data "nutanix_volume_iscsi_client_v2" "v_iscsi" {
-		ext_id = local.volumes.iscsi_client.ext_id
-	}`, filepath)
+		ext_id = data.nutanix_volume_iscsi_clients_v2.test.iscsi_clients.0.ext_id
+	}`
 }

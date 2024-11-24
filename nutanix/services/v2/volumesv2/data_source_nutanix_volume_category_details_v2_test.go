@@ -12,7 +12,7 @@ import (
 
 const dataSourceVolumeCategoryDetails = "data.nutanix_volume_group_category_details_v2.test"
 
-func TestAccNutanixVolumeCategoryDetailsV2_Basic(t *testing.T) {
+func TestAccNutanixVolumeCategoryDetailsV2Datasource_Basic(t *testing.T) {
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 	resource.Test(t, resource.TestCase{

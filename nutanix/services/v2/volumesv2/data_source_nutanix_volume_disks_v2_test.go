@@ -3,7 +3,6 @@ package volumesv2_test
 import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"os"
 	"strconv"
 	"testing"
 
@@ -18,8 +17,7 @@ func TestAccNutanixVolumeGroupsDisksV2DataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-volume-group-disk-%d", r)
 	desc := "terraform test volume group disk description"
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+
 	resource.Test(t, resource.TestCase{
 
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -44,8 +42,7 @@ func TestAccNutanixVolumeGroupsDisksV2DataSource_WithLimit(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-volume-group-disk-%d", r)
 	desc := "terraform test volume group disk description"
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+
 	limit := 1
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -68,6 +65,8 @@ func TestAccNutanixVolumeGroupsDisksV2DataSource_WithLimit(t *testing.T) {
 func testAccVolumeGroupsDisksDataSourceConfig(filepath, name, desc string) string {
 	return testAccVolumeGroupResourceConfig(filepath, name, desc) + testAccVolumeGroupDiskResourceConfig(filepath, name, desc) +
 		fmt.Sprintf(`
+
+
 	resource "nutanix_volume_group_disk_v2" "test-2" {
 		volume_group_ext_id = resource.nutanix_volume_group_v2.test.id
 		index               = 2
@@ -75,7 +74,7 @@ func testAccVolumeGroupsDisksDataSourceConfig(filepath, name, desc string) strin
 		disk_size_bytes     = %[2]d
 		disk_data_source_reference {
 		  name        = "terraform-test-disk_data_source_reference-disk-2"
-		  ext_id      = local.vg_disk.disk_data_source_reference.ext_id
+		  ext_id      =  data.nutanix_storage_containers_v2.test.storage_containers[0].ext_id
 		  entity_type = "STORAGE_CONTAINER"
 		  uris        = ["uri3","uri4"]
 		}	  
@@ -101,7 +100,8 @@ func testAccVolumeGroupsDisksDataSourceConfig(filepath, name, desc string) strin
 
 func testAccVolumeGroupsDisksDataSourceWithLimit(filepath, name, desc string, limit int) string {
 	return testAccVolumeGroupResourceConfig(filepath, name, desc) + testAccVolumeGroupDiskResourceConfig(filepath, name, desc) +
-		fmt.Sprintf(`	  
+		fmt.Sprintf(`	
+
 	  	resource "nutanix_volume_group_disk_v2" "test-2" {
 		    volume_group_ext_id = resource.nutanix_volume_group_v2.test.id
 			index               = 2
@@ -109,7 +109,7 @@ func testAccVolumeGroupsDisksDataSourceWithLimit(filepath, name, desc string, li
 			disk_size_bytes     = %[2]d		  
 			disk_data_source_reference {
 			  name        = "terraform-test-disk_data_source_reference-disk-2"
-			  ext_id      = local.vg_disk.disk_data_source_reference.ext_id
+			  ext_id      = data.nutanix_storage_containers_v2.test.storage_containers[0].ext_id
 			  entity_type = "STORAGE_CONTAINER"
 			  uris        = ["uri3","uri4"]
 			}		  

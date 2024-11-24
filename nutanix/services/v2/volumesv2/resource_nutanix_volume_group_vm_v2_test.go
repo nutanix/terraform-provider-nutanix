@@ -13,7 +13,7 @@ import (
 
 const resourceVolumeGroupVm = "nutanix_volume_group_vm_v2.test"
 
-func TestAccNutanixVolumeGroupVmV2_Basic(t *testing.T) {
+func TestAccNutanixVolumeGroupVmV2Resource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-volume-group-%d", r)
 	desc := "test volume group Vm Attachment description"
@@ -26,7 +26,7 @@ func TestAccNutanixVolumeGroupVmV2_Basic(t *testing.T) {
 			{
 				Config: testAccVolumeGroupVmConfig(filepath, name, desc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceVolumeGroupVm, "vm_ext_id", testVars.Volumes.VmExtId),
+					resource.TestCheckResourceAttrSet(resourceVolumeGroupVm, "vm_ext_id"),
 				),
 			},
 		},
@@ -35,12 +35,26 @@ func TestAccNutanixVolumeGroupVmV2_Basic(t *testing.T) {
 
 func testAccVolumeGroupVmConfig(filepath, name, desc string) string {
 
-	return testAccVolumeGroupResourceConfig(filepath, name, desc) + `		  
+	return testAccVolumeGroupResourceConfig(filepath, name, desc) + fmt.Sprintf(`	
+          resource "nutanix_virtual_machine_v2" "test"{
+			name= "tf-test-vg-vm-%[1]s"
+			description =  "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets = 1
+			cluster {
+				ext_id = local.cluster1
+			}
+			lifecycle{
+				ignore_changes = [
+					disks
+				]
+			}
+		}
 		  resource "nutanix_volume_group_vm_v2" "test" {
 			volume_group_ext_id = resource.nutanix_volume_group_v2.test.id
-			vm_ext_id           = local.volumes.vm_ext_id
+			vm_ext_id           =  resource.nutanix_virtual_machine_v2.test.id
 			depends_on          = [resource.nutanix_volume_group_v2.test]
 		  }
 		
-	`
+	`, name, desc)
 }

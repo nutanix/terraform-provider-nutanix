@@ -11,23 +11,15 @@ type TestConfig struct {
 	// Volumes config
 	Volumes struct {
 		VolumeGroupExtIdWithCategory string `json:"vg_ext_id_with_category"`
-		VmExtId                      string `json:"vm_ext_id"`
-		IscsiClient                  struct {
-			ExtId              string `json:"ext_id"`
-			IscsiInitiatorName string `json:"iscsi_initiator_name"`
-		} `json:"iscsi_client"`
-		Disk struct {
-			DiskDataSourceReference struct {
-				ExtId string `json:"ext_id"`
-			} `json:"disk_data_source_reference"`
-		} `json:"disk"`
 	} `json:"volumes"`
 }
 
 var testVars TestConfig
+var path, _ = os.Getwd()
+var filepath = path + "/../../../../test_config_v2.json"
 
 func loadVars(filepath string, varStuct interface{}) {
-	// Read test_config_v2.json from home current path
+	// Read test_config_v2.json from the home current path
 	configData, err := os.ReadFile(filepath)
 	if err != nil {
 		log.Printf("Got this error while reading config.json: %s", err.Error())

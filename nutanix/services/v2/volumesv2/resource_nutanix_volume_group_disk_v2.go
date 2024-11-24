@@ -143,15 +143,7 @@ func ResourceNutanixVolumeGroupDiskV2Create(ctx context.Context, d *schema.Resou
 	resp, err := conn.VolumeAPIInstance.CreateVolumeDisk(utils.StringPtr(volumeGroupExtId.(string)), &body)
 
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while creating Volume Disk : %v", errorMessage["message"])
+		return diag.Errorf("error while creating Volume Disk : %v", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(volumesPrism.TaskReference)
@@ -174,15 +166,7 @@ func ResourceNutanixVolumeGroupDiskV2Create(ctx context.Context, d *schema.Resou
 
 	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching volume Disk: %v", errorMessage["message"])
+		return diag.Errorf("error while fetching volume Disk: %v", err)
 	}
 	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
 
@@ -204,15 +188,7 @@ func ResourceNutanixVolumeGroupDiskV2Read(ctx context.Context, d *schema.Resourc
 	resp, err := conn.VolumeAPIInstance.GetVolumeDiskById(utils.StringPtr(volumeGroupExtId.(string)), utils.StringPtr(volumeDiskExtID))
 
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching volume Disk : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching volume Disk : %v", err)
 	}
 	getResp := resp.Data.GetValue().(volumesClient.VolumeDisk)
 
@@ -329,15 +305,7 @@ func ResourceNutanixVolumeGroupDiskV2Delete(ctx context.Context, d *schema.Resou
 	resp, err := conn.VolumeAPIInstance.DeleteVolumeDiskById(utils.StringPtr(volumeGroupExtId.(string)), utils.StringPtr(volumeDiskExtID.(string)))
 
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching volume Disk : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching volume Disk : %v", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(volumesPrism.TaskReference)

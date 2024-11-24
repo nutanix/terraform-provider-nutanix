@@ -35,10 +35,25 @@ func TestAccNutanixVolumeGroupVmsAttachmentsV2DataSource_Basic(t *testing.T) {
 }
 
 func testAccVolumeGroupVmsAttachmentsDataSourceConfig(filepath, name, desc string) string {
-	return testAccVolumeGroupResourceConfig(filepath, name, desc) + `		
+	return testAccVolumeGroupResourceConfig(filepath, name, desc) + fmt.Sprintf(`
+		resource "nutanix_virtual_machine_v2" "test"{
+			name= "tf-test-vg-vm-%[1]s"
+			description =  "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets = 1
+			cluster {
+				ext_id = local.cluster1
+			}
+			lifecycle{
+				ignore_changes = [
+					disks
+				]
+			}
+		}
+
 		resource "nutanix_volume_group_vm_v2" "test" {
 			volume_group_ext_id = resource.nutanix_volume_group_v2.test.id
-			vm_ext_id           = local.volumes.vm_ext_id
+			vm_ext_id           = resource.nutanix_virtual_machine_v2.test.id
 			depends_on          = [resource.nutanix_volume_group_v2.test]
 		}		
 		
@@ -46,5 +61,5 @@ func testAccVolumeGroupVmsAttachmentsDataSourceConfig(filepath, name, desc strin
 			ext_id = resource.nutanix_volume_group_v2.test.id
 			depends_on = [ resource.nutanix_volume_group_vm_v2.test ]			
 		}
-	`
+	`, name, desc)
 }

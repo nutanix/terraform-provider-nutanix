@@ -3,7 +3,6 @@ package volumesv2_test
 import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"os"
 	"regexp"
 	"testing"
 
@@ -14,12 +13,10 @@ import (
 
 const resourceNameVolumeGroup = "nutanix_volume_group_v2.test"
 
-func TestAccNutanixVolumeGroupV2_Basic(t *testing.T) {
+func TestAccNutanixVolumeGroupV2Resource_Basic(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-volume-group-%d", r)
+	name := fmt.Sprintf("tf-test-volume-group-%d", r)
 	desc := "test volume group description"
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -44,9 +41,9 @@ func TestAccNutanixVolumeGroupV2_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVolumeGroupV2_RequiredAttr(t *testing.T) {
+func TestAccNutanixVolumeGroupV2Resource_RequiredAttr(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-volume-group-%d", r)
+	name := fmt.Sprintf("tf-test-volume-group-%d", r)
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -62,7 +59,7 @@ func TestAccNutanixVolumeGroupV2_RequiredAttr(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVolumeGroupV2_WithNoName(t *testing.T) {
+func TestAccNutanixVolumeGroupV2Resource_WithNoName(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -75,7 +72,7 @@ func TestAccNutanixVolumeGroupV2_WithNoName(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVolumeGroupV2_WithNoClusterReference(t *testing.T) {
+func TestAccNutanixVolumeGroupV2Resource_WithNoClusterReference(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-volume-group-%d", r)
 	resource.Test(t, resource.TestCase{

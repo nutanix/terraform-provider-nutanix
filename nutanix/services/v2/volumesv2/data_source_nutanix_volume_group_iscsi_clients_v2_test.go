@@ -3,7 +3,6 @@ package volumesv2_test
 import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -13,12 +12,11 @@ import (
 
 const dataSourceVolumeGroupIscsiClients = "data.nutanix_volume_group_iscsi_clients_v2.vg_iscsi_test"
 
-func TestAccNutanixVolumeGroupIscsiClientsV2_Basic(t *testing.T) {
+func TestAccNutanixVolumeGroupIscsiClientsV2Datasource_Basic(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("terraform-test-volume-group-disk-%d", r)
+	name := fmt.Sprintf("tf-test-volume-group-disk-%d", r)
 	desc := "terraform test volume group disk description"
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -38,10 +36,12 @@ func TestAccNutanixVolumeGroupIscsiClientsV2_Basic(t *testing.T) {
 
 func testAccVolumeGroupIscsiClientsV2Config(filepath, name, desc string) string {
 	return testAccVolumeGroupResourceConfig(filepath, name, desc) + `	
+      data "nutanix_volume_iscsi_clients_v2" "test" {}
+
 	  resource "nutanix_volume_group_iscsi_client_v2" "vg_iscsi_test" {
 		vg_ext_id = resource.nutanix_volume_group_v2.test.id
-		ext_id     = local.volumes.iscsi_client.ext_id
-		iscsi_initiator_name = local.volumes.iscsi_client.initiator_name
+		ext_id     = data.nutanix_volume_iscsi_clients_v2.test.iscsi_clients.0.ext_id
+		iscsi_initiator_name = data.nutanix_volume_iscsi_clients_v2.test.iscsi_clients.0.iscsi_initiator_name
 		depends_on = [ resource.nutanix_volume_group_v2.test ]
 	  }
 

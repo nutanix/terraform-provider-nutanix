@@ -85,16 +85,13 @@ func testAndCheckComputedValues(resourceName string) resource.TestCheckFunc {
 func testAccVolumeGroupResourceConfig(filepath, name, desc string) string {
 
 	return fmt.Sprintf(`
-	data "nutanix_clusters" "clusters" {}
+	data "nutanix_clusters_v2" "clusters" {}
 
 	locals {
-		cluster1 = [
-			for cluster in data.nutanix_clusters.clusters.entities :
-			cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
-		][0]
-		config = (jsondecode(file("%[1]s")))
-		volumes = local.config.volumes
-		vg_disk = local.config.volumes.disk
+		cluster1 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]		
 	}
 
 	resource "nutanix_volume_group_v2" "test" {
@@ -127,6 +124,11 @@ func testAccVolumeGroupResourceConfig(filepath, name, desc string) string {
 func testAccVolumeGroupDiskResourceConfig(filepath, name, desc string) string {
 
 	return fmt.Sprintf(`	  
+
+      data "nutanix_storage_containers_v2" "test" {
+		  filter = "clusterExtId eq '${local.cluster1}'"
+		  limit  = 1
+	  }
 	  resource "nutanix_volume_group_disk_v2" "test" {
 		volume_group_ext_id = resource.nutanix_volume_group_v2.test.id
 		index               = 1
@@ -134,8 +136,8 @@ func testAccVolumeGroupDiskResourceConfig(filepath, name, desc string) string {
 		disk_size_bytes     = %[4]d
 	  
 		disk_data_source_reference {
-		  name        = "terraform-test-disk_data_source_reference-disk-1"
-		  ext_id      = local.vg_disk.disk_data_source_reference.ext_id
+		  name        = "vg-disk-%[2]s"
+		  ext_id      = data.nutanix_storage_containers_v2.test.storage_containers[0].ext_id
 		  entity_type = "STORAGE_CONTAINER"
 		  uris        = ["uri1","uri2"]
 		}
