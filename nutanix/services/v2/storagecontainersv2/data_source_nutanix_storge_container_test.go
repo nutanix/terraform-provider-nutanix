@@ -42,13 +42,13 @@ func TestAccNutanixStorageContainerV2Datasource_Basic(t *testing.T) {
 
 func testStorageContainerV4Config(filepath, name string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals{
 			cluster = [
-				for cluster in data.nutanix_clusters.clusters.entities :
-				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
-				][0]
+				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
 			config = (jsondecode(file("%[1]s")))
 			storage_container = local.config.storage_container			
 		}

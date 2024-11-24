@@ -86,13 +86,13 @@ func testStorageContainersV4DatasourceV4Config() string {
 func testStorageContainersV4DatasourceV4WithFilterConfig(filepath, name string) string {
 	return fmt.Sprintf(`
 
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals{
 			cluster = [
-				for cluster in data.nutanix_clusters.clusters.entities :
-				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
-				][0]
+				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
 			config = (jsondecode(file("%[1]s")))
 			storage_container = local.config.storage_container			
 		}
@@ -120,7 +120,7 @@ func testStorageContainersV4DatasourceV4WithFilterConfig(filepath, name string) 
 		}
 
 		data "nutanix_storage_containers_v2" "test" {
-			filter = "name eq '${local.storage_container.name}'"
+			filter = "name eq '${nutanix_storage_containers_v2.test.name}'"
 			depends_on = [nutanix_storage_containers_v2.test]
 		}
 
@@ -129,13 +129,13 @@ func testStorageContainersV4DatasourceV4WithFilterConfig(filepath, name string) 
 
 func testStorageContainersV4DatasourceV4WithLimitConfig(filepath, name string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals{
-			cluster = [
-				for cluster in data.nutanix_clusters.clusters.entities :
-				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
-				][0]
+			cluster =[
+				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
 			config = (jsondecode(file("%[1]s")))
 			storage_container = local.config.storage_container			
 		}
