@@ -16,7 +16,7 @@ const datasourceName_StorageContainer = "data.nutanix_storage_container_v2.test"
 
 func TestAccNutanixStorageContainerV2Datasource_Basic(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("terraform-test-storage-container-%d", r)
+	name := fmt.Sprintf("tf-test-storage-container-%d", r)
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 

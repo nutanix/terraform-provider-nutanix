@@ -31,7 +31,7 @@ func TestAccNutanixStorageContainersV2Datasource_Basic(t *testing.T) {
 
 func TestAccNutanixStorageContainersV2Datasource_WithFilter(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("terraform-test-storage-container-%d", r)
+	name := fmt.Sprintf("tf-test-storage-container-%d", r)
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 	resource.Test(t, resource.TestCase{
@@ -58,7 +58,7 @@ func TestAccNutanixStorageContainersV2Datasource_WithFilter(t *testing.T) {
 
 func TestAccNutanixStorageContainersV2Datasource_WithLimit(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("terraform-test-storage-container-%d", r)
+	name := fmt.Sprintf("tf-test-storage-container-%d", r)
 	path, _ := os.Getwd()
 	filepath := path + "/../../../../test_config_v2.json"
 

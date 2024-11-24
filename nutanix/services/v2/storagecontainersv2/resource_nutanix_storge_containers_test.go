@@ -86,13 +86,13 @@ func TestAccNutanixStorageContainersV2Resource_WithNoName(t *testing.T) {
 func testStorageContainersResourceConfig(filepath, name string) string {
 	return fmt.Sprintf(`
 
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals{
 			cluster = [
-				for cluster in data.nutanix_clusters.clusters.entities :
-				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
-				][0]
+				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
 			config = (jsondecode(file("%[1]s")))
 			storage_container = local.config.storage_container			
 		}
@@ -123,13 +123,13 @@ func testStorageContainersResourceConfig(filepath, name string) string {
 func testStorageContainersResourceUpdateConfig(filepath, name string) string {
 	return fmt.Sprintf(`
 
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals{
 			cluster = [
-				for cluster in data.nutanix_clusters.clusters.entities :
-				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
-				][0]
+				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
 			config = (jsondecode(file("%[1]s")))
 			storage_container = local.config.storage_container			
 		}
@@ -160,13 +160,13 @@ func testStorageContainersResourceUpdateConfig(filepath, name string) string {
 func testStorageContainersResourceWithoutNameConfig(filepath string) string {
 	return fmt.Sprintf(`
 
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals{
 			cluster = [
-				for cluster in data.nutanix_clusters.clusters.entities :
-				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
-				][0]
+				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
 			config = (jsondecode(file("%s")))
 			storage_container = local.config.storage_container			
 		}
@@ -196,13 +196,13 @@ func testStorageContainersResourceWithoutNameConfig(filepath string) string {
 func testStorageContainersResourceWithoutClusterExtIdConfig(filepath string) string {
 	return fmt.Sprintf(`
 
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals{
 			cluster = [
-				for cluster in data.nutanix_clusters.clusters.entities :
-				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
-				][0]
+				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
 			config = (jsondecode(file("%s")))
 			storage_container = local.config.storage_container			
 		}
