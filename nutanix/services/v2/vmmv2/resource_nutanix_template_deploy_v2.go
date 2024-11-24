@@ -173,6 +173,7 @@ func ResourceNutanixTemplateDeployV2() *schema.Resource {
 																		"prefix_length": {
 																			Type:     schema.TypeInt,
 																			Optional: true,
+																			Default:  32,
 																		},
 																	},
 																},
@@ -189,6 +190,7 @@ func ResourceNutanixTemplateDeployV2() *schema.Resource {
 																		"prefix_length": {
 																			Type:     schema.TypeInt,
 																			Optional: true,
+																			Default:  32,
 																		},
 																	},
 																},
@@ -543,15 +545,16 @@ func expandIpv4Config(pr interface{}) *config.Ipv4Config {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
 
-		if assignIP, ok := val[""]; ok {
+		if assignIP, ok := val["should_assign_ip"]; ok {
 			ipv4.ShouldAssignIp = utils.BoolPtr(assignIP.(bool))
 		}
-		if ipAdd, ok := val[""]; ok {
+		if ipAdd, ok := val["ip_address"]; ok {
 			ipv4.IpAddress = expandIPv4Address(ipAdd)
 		}
-		if secondaryIP, ok := val[""]; ok {
+		if secondaryIP, ok := val["secondary_ip_address_list"]; ok {
 			ipv4.SecondaryIpAddressList = expandIPv4AddressList(secondaryIP.([]interface{}))
 		}
+		return ipv4
 	}
 	return nil
 }

@@ -1245,7 +1245,7 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 															"prefix_length": {
 																Type:     schema.TypeInt,
 																Optional: true,
-																Computed: true,
+																Default:  32,
 															},
 														},
 													},
@@ -1264,7 +1264,7 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 															"prefix_length": {
 																Type:     schema.TypeInt,
 																Optional: true,
-																Computed: true,
+																Default:  32,
 															},
 														},
 													},
@@ -1722,11 +1722,6 @@ func ResourceNutanixVirtualMachineV2Read(ctx context.Context, d *schema.Resource
 
 	resp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
 		return diag.Errorf("error while fetching vm : %v", err)
 	}
 
