@@ -489,7 +489,7 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 		inputSpec.VirtualSwitchReference = utils.StringPtr(vsRef.(string))
 	}
 	if vpcRef, ok := d.GetOk("vpc_reference"); ok {
-		inputSpec.VirtualSwitchReference = utils.StringPtr(vpcRef.(string))
+		inputSpec.VpcReference = utils.StringPtr(vpcRef.(string))
 	}
 	if isNat, ok := d.GetOk("is_nat_enabled"); ok {
 		inputSpec.IsNatEnabled = utils.BoolPtr(isNat.(bool))
@@ -720,7 +720,7 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 		updateSpec.VirtualSwitchReference = utils.StringPtr(d.Get("virtual_switch_reference").(string))
 	}
 	if d.HasChange("vpc_reference") {
-		updateSpec.VirtualSwitchReference = utils.StringPtr(d.Get("vpc_reference").(string))
+		updateSpec.VpcReference = utils.StringPtr(d.Get("vpc_reference").(string))
 	}
 	if d.HasChange("is_nat_enabled") {
 		updateSpec.IsNatEnabled = utils.BoolPtr(d.Get("is_nat_enabled").(bool))

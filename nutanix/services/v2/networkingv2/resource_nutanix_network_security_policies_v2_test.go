@@ -13,7 +13,7 @@ const resourceNameNs = "nutanix_network_security_policy_v2.test"
 
 func TestAccNutanixNetworkSecurityV2Resource_Basic(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-nsp-%d", r)
+	name := fmt.Sprintf("tf-test-nsp-%d", r)
 	desc := "test nsp description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -36,7 +36,7 @@ func TestAccNutanixNetworkSecurityV2Resource_Basic(t *testing.T) {
 
 func TestAccNutanixNetworkSecurityV2Resource_WithRules(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-nsp-%d", r)
+	name := fmt.Sprintf("tf-test-nsp-%d", r)
 	desc := "test nsp description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -61,7 +61,9 @@ func TestAccNutanixNetworkSecurityV2Resource_WithRules(t *testing.T) {
 
 func testNetworkSecurityConfig(name, desc string) string {
 	return fmt.Sprintf(`
+
     data "nutanix_categories_v2" "test" {}
+
 	resource "nutanix_network_security_policy_v2" "test" {
 		name = "%[1]s"
 		description = "%[2]s"
@@ -72,10 +74,10 @@ func testNetworkSecurityConfig(name, desc string) string {
 		  spec{
 			two_env_isolation_rule_spec{
 			  first_isolation_group = [
-				nutanix_categories_v2.test.categories.0.ext_id,
+				data.nutanix_categories_v2.test.categories.0.ext_id,
 			  ]
 			  second_isolation_group =  [
-				nutanix_categories_v2.test.categories.1.ext_id,
+				data.nutanix_categories_v2.test.categories.1.ext_id,
 			  ]
 			}
 		  }

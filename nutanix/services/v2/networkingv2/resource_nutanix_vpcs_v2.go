@@ -10,6 +10,7 @@ import (
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/networking/v4/config"
 	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/prism/v4/config"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16/models/prism/v4/config"
+
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -354,8 +355,12 @@ func ResourceNutanixVPCsV2Update(ctx context.Context, d *schema.ResourceData, me
 			"TRANSIT": three,
 		}
 		pVal := subMap[d.Get("vpc_type").(string)]
-		p := import1.VpcType(pVal.(int))
-		updateSpec.VpcType = &p
+		if pVal == nil {
+			updateSpec.VpcType = nil
+		} else {
+			p := import1.VpcType(pVal.(int))
+			updateSpec.VpcType = &p
+		}
 	}
 	if d.HasChange("common_dhcp_options") {
 		updateSpec.CommonDhcpOptions = expandVpcDhcpOptions(d.Get("common_dhcp_options").([]interface{}))

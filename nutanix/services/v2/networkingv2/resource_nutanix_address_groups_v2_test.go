@@ -13,7 +13,7 @@ const resourceNameAddressGroup = "nutanix_address_groups_v2.test"
 
 func TestAccNutanixAddressGroupV2Resource_Basic(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-address-group-%d", r)
+	name := fmt.Sprintf("tf-test-address-group-%d", r)
 	desc := "test address group description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -36,9 +36,9 @@ func TestAccNutanixAddressGroupV2Resource_Basic(t *testing.T) {
 
 func TestAccNutanixAddressGroupV2Resource_WithUpdate(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-address-group-%d", r)
+	name := fmt.Sprintf("tf-test-address-group-%d", r)
 	desc := "test address group description"
-	updatedName := fmt.Sprintf("test-address-group-%d", r+1)
+	updatedName := fmt.Sprintf("tf-test-address-group-%d-updated", r)
 	updatedDesc := "test address group description updated"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },

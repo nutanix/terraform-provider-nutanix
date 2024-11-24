@@ -11,9 +11,9 @@ import (
 
 const resourceNameSubnet = "nutanix_subnet_v2.test"
 
-func TestAccNutanixSubnetV2_Basic(t *testing.T) {
+func TestAccNutanixSubnetV2Resource_Basic(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-subnet-%d", r)
+	name := fmt.Sprintf("tf-test-subnet-%d", r)
 	desc := "test subnet description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -47,9 +47,9 @@ func TestAccNutanixSubnetV2_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixSubnetV2_WithIPPool(t *testing.T) {
+func TestAccNutanixSubnetV2Resource_WithIPPool(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-subnet-%d", r)
+	name := fmt.Sprintf("tf-test-subnet-%d", r)
 	desc := "test subnet description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -71,9 +71,9 @@ func TestAccNutanixSubnetV2_WithIPPool(t *testing.T) {
 	})
 }
 
-func TestAccNutanixSubnetV2_WithExternalSubnet(t *testing.T) {
+func TestAccNutanixSubnetV2Resource_WithExternalSubnet(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-subnet-%d", r)
+	name := fmt.Sprintf("tf-test-subnet-%d", r)
 	desc := "test subnet description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -85,7 +85,7 @@ func TestAccNutanixSubnetV2_WithExternalSubnet(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameSubnet, "name", name),
 					resource.TestCheckResourceAttr(resourceNameSubnet, "description", desc),
 					resource.TestCheckResourceAttr(resourceNameSubnet, "subnet_type", "VLAN"),
-					resource.TestCheckResourceAttr(resourceNameSubnet, "network_id", "112"),
+					resource.TestCheckResourceAttr(resourceNameSubnet, "network_id", "122"),
 					resource.TestCheckResourceAttrSet(resourceNameSubnet, "links.#"),
 					resource.TestCheckResourceAttrSet(resourceNameSubnet, "ip_usage.#"),
 					resource.TestCheckResourceAttrSet(resourceNameSubnet, "cluster_reference"),
@@ -179,7 +179,7 @@ func testSubnetV2ConfigWithExternalSubnet(name, desc string) string {
 			description = "%[2]s"
 			cluster_reference = local.cluster0
 			subnet_type = "VLAN"
-			network_id = 112
+			network_id = 122
 			is_external = true
 			ip_config {
 				ipv4 {

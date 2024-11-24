@@ -12,9 +12,9 @@ import (
 
 const resourceNamePbr = "nutanix_pbr_v2.test"
 
-func TestAccNutanixPbrV2_Basic(t *testing.T) {
+func TestAccNutanixPbrV2Resource_Basic(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-pbr-%d", r)
+	name := fmt.Sprintf("tf-test-pbr-%d", r)
 	desc := "test pbr description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -35,9 +35,9 @@ func TestAccNutanixPbrV2_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixPbrV2_WithSourceDest(t *testing.T) {
+func TestAccNutanixPbrV2Resource_WithSourceDest(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-pbr-%d", r)
+	name := fmt.Sprintf("tf-test-pbr-%d", r)
 	desc := "test pbr description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -58,9 +58,9 @@ func TestAccNutanixPbrV2_WithSourceDest(t *testing.T) {
 	})
 }
 
-func TestAccNutanixPbrV2_ErrorWithPrioirty(t *testing.T) {
+func TestAccNutanixPbrV2Resource_ErrorWithPriority(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-pbr-%d", r)
+	name := fmt.Sprintf("tf-test-pbr-%d", r)
 	desc := "test pbr description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
