@@ -215,16 +215,7 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 
 	resp, err := conn.VolumeAPIInstance.CreateVolumeGroup(&body)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		log.Printf("[INFO_VG] Error Data: %v", errordata)
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while creating Volume Group : %v", errorMessage["message"])
+		return diag.Errorf("error while creating Volume Group : %v", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(volumesPrism.TaskReference)
@@ -247,15 +238,7 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 
 	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching Volume Group UUID : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching Volume Group UUID : %v", err)
 	}
 	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
 

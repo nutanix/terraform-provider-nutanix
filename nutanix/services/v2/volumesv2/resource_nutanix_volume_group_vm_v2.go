@@ -15,7 +15,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-// Attach an AHV VM to the given Volume Group.
+// ResourceNutanixVolumeAttachVmToVolumeGroupV2 Attach an AHV VM to the given Volume Group.
 func ResourceNutanixVolumeAttachVmToVolumeGroupV2() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Attaches VM to a Volume Group identified by {extId}.",
