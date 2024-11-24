@@ -7,9 +7,9 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNameCatgs = "data.nutanix_categories_v2.test"
+const datasourceNameCategories = "data.nutanix_categories_v2.test"
 
-func TestAccNutanixCategoriesDataSourceV2_basic(t *testing.T) {
+func TestAccNutanixCategoriesV2DataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -17,18 +17,18 @@ func TestAccNutanixCategoriesDataSourceV2_basic(t *testing.T) {
 			{
 				Config: testAccCategoriesDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceNameCatgs, "categories.#"),
-					resource.TestCheckResourceAttrSet(datasourceNameCatgs, "categories.0.key"),
-					resource.TestCheckResourceAttrSet(datasourceNameCatgs, "categories.0.value"),
-					resource.TestCheckResourceAttrSet(datasourceNameCatgs, "categories.0.type"),
-					resource.TestCheckResourceAttrSet(datasourceNameCatgs, "categories.0.associations.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategories, "categories.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategories, "categories.0.key"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategories, "categories.0.value"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategories, "categories.0.type"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategories, "categories.0.associations.#"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccNutanixCategoriesDataSourceV2_WithFilter(t *testing.T) {
+func TestAccNutanixCategoriesV2DataSource_WithFilter(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -36,19 +36,19 @@ func TestAccNutanixCategoriesDataSourceV2_WithFilter(t *testing.T) {
 			{
 				Config: testAccCategoriesDataSourceConfigWithFilter(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceNameCatgs, "categories.#"),
-					resource.TestCheckResourceAttr(datasourceNameCatgs, "categories.#", "1"),
-					resource.TestCheckResourceAttrSet(datasourceNameCatgs, "categories.0.key"),
-					resource.TestCheckResourceAttrSet(datasourceNameCatgs, "categories.0.value"),
-					resource.TestCheckResourceAttrSet(datasourceNameCatgs, "categories.0.type"),
-					resource.TestCheckResourceAttrSet(datasourceNameCatgs, "categories.0.associations.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategories, "categories.#"),
+					resource.TestCheckResourceAttr(datasourceNameCategories, "categories.#", "1"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategories, "categories.0.key"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategories, "categories.0.value"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategories, "categories.0.type"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategories, "categories.0.associations.#"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccNutanixCategoriesDataSourceV2_WithLimit(t *testing.T) {
+func TestAccNutanixCategoriesV2DataSource_WithLimit(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -56,12 +56,12 @@ func TestAccNutanixCategoriesDataSourceV2_WithLimit(t *testing.T) {
 			{
 				Config: testAccCategoriesDataSourceConfigWithLimit(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceNameCatgs, "categories.#"),
-					resource.TestCheckResourceAttr(datasourceNameCatgs, "categories.#", "2"),
-					resource.TestCheckResourceAttrSet(datasourceNameCatgs, "categories.0.key"),
-					resource.TestCheckResourceAttrSet(datasourceNameCatgs, "categories.0.value"),
-					resource.TestCheckResourceAttrSet(datasourceNameCatgs, "categories.0.type"),
-					resource.TestCheckResourceAttrSet(datasourceNameCatgs, "categories.0.associations.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategories, "categories.#"),
+					resource.TestCheckResourceAttr(datasourceNameCategories, "categories.#", "2"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategories, "categories.0.key"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategories, "categories.0.value"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategories, "categories.0.type"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategories, "categories.0.associations.#"),
 				),
 			},
 		},

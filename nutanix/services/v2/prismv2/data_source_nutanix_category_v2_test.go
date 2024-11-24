@@ -7,9 +7,9 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNameCatg = "data.nutanix_category_v2.test"
+const datasourceNameCategory = "data.nutanix_category_v2.test"
 
-func TestAccNutanixCategoryDataSourceV2_basic(t *testing.T) {
+func TestAccNutanixCategoryV2DataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -17,12 +17,12 @@ func TestAccNutanixCategoryDataSourceV2_basic(t *testing.T) {
 			{
 				Config: testAccCategoryDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceNameCatg, "description"),
-					resource.TestCheckResourceAttrSet(datasourceNameCatg, "key"),
-					resource.TestCheckResourceAttrSet(datasourceNameCatg, "value"),
-					resource.TestCheckResourceAttrSet(datasourceNameCatg, "type"),
-					resource.TestCheckResourceAttrSet(datasourceNameCatg, "associations.#"),
-					resource.TestCheckResourceAttrSet(datasourceNameCatg, "detailed_associations.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategory, "description"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategory, "key"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategory, "value"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategory, "type"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategory, "associations.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameCategory, "detailed_associations.#"),
 				),
 			},
 		},
@@ -30,7 +30,7 @@ func TestAccNutanixCategoryDataSourceV2_basic(t *testing.T) {
 }
 
 func testAccCategoryDataSourceConfig() string {
-	return (`
+	return `
 		data "nutanix_categories_v2" "dtest" { }
 
 		data "nutanix_category_v2" "test" {
@@ -40,5 +40,5 @@ func testAccCategoryDataSourceConfig() string {
 				data.nutanix_categories_v2.dtest
 			]
 		}
-	`)
+	`
 }
