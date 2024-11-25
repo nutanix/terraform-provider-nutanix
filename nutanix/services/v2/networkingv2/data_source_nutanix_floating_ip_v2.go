@@ -2,8 +2,6 @@ package networkingv2
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	config "github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16/models/common/v1/config"
@@ -174,7 +172,6 @@ func DatasourceNutanixFloatingIPV2Read(ctx context.Context, d *schema.ResourceDa
 	}
 
 	getResp := resp.Data.GetValue().(import1.FloatingIp)
-	fmt.Println(getResp)
 
 	if err := d.Set("name", getResp.Name); err != nil {
 		return diag.FromErr(err)

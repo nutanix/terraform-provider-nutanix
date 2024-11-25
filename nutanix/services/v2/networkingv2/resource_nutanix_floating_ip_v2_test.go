@@ -146,113 +146,24 @@ func testFloatingIPv2ConfigWithVMNic(name, desc string) string {
 				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			  ][0]
 			config = jsondecode(file("%[3]s"))
-			vmm = local.config.vmm
-			subnet = local.config.networking.subnets
-					
-		}
-		
-		resource "nutanix_subnet_v2" "external-nat-subnet" {
-		  name                   = "tf-integration_test_Ext-Nat-subnet"
-		  description            = "terraform test integration_test_Ext-Nat1"
-		  cluster_reference      = local.cluster0
-		  subnet_type            = "VLAN"
-		  network_id             = 112
-		  is_external            = true
-		  is_advanced_networking = true
-		  is_nat_enabled         = true
-		  ip_config {
-			ipv4 {
-			  ip_subnet {
-				ip {
-				  value = local.subnet.network_ip
-				}
-				prefix_length = 24
-			  }
-			  default_gateway_ip {
-				value = local.subnet.gateway_ip
-			  }
-			  pool_list {
-				start_ip {
-				  value = local.subnet.start_ip
-				}
-				end_ip {
-				  value = local.subnet.end_ip
-				}
-			  }
-			}
-		  }
-		  depends_on = [data.nutanix_clusters_v2.clusters]
-		}
-		
-		resource "nutanix_vpc_v2" "integration-test-vpc" {
-		  name        = "tf-integration_test_vpc"
-		  description = "terraform test integration_test_vpc"
-		  external_subnets {
-			subnet_reference = nutanix_subnet_v2.external-nat-subnet.id
-		  }
-		  depends_on = [nutanix_subnet_v2.external-nat-subnet]
-		}
-		
-		resource "nutanix_subnet_v2" "overlay-subnet" {
-		  name                   = "tf-integration-test-overlay-subnet"
-		  subnet_type            = "OVERLAY"
-		  is_advanced_networking = false
-		  ip_config {
-			ipv4 {
-			  ip_subnet {
-				ip {
-				  value         = "10.44.76.99"
-				  prefix_length = 32
-				}
-				prefix_length = 24
-			  }
-			  default_gateway_ip {
-				value         = "10.44.76.1"
-				prefix_length = 32
-			  }
-		
-			}
-		
-		
-		  }
-		  vpc_reference = nutanix_vpc_v2.integration-test-vpc.id
-		  depends_on    = [nutanix_vpc_v2.integration-test-vpc]
+			preEnv            = local.config.pre_env
 		}
 
-		data "nutanix_storage_containers_v2" "ngt-sc" {
-		  filter = "clusterExtId eq '${local.cluster0}'"
-		  limit = 1
+		data "nutanix_subnets_v2" "test" {
+			filter = "name eq '${local.preEnv.external_nat_subnet.name}'"
 		}
 
-		resource "nutanix_virtual_machine_v2" "test"{
-			name= "tf-test-vm-%[1]s"
-			description =  "test vm for floating ip "
-			num_cores_per_socket = 1
-			num_sockets = 1
-
-			cluster {
-				ext_id = local.cluster0
-			}
-
-			nics{
-				network_info{
-					nic_type = "NORMAL_NIC"
-					subnet{
-						ext_id = nutanix_subnet_v2.overlay-subnet.ext_id
-					}	
-					vlan_mode = "ACCESS"
-				}
-			}
-			power_state = "ON"			
+		data "nutanix_virtual_machines_v2" "test" {
+			filter = "name eq '${local.preEnv.integration_vm.name}'"
 		}
 
 		resource "nutanix_floating_ip_v2" "test" {
 			name = "%[1]s"
 			description = "%[2]s"
-			external_subnet_reference = nutanix_subnet_v2.external-nat-subnet.ext_id
+			external_subnet_reference = data.nutanix_subnets_v2.test.subnets.0.ext_id
 			association{
 				vm_nic_association{
-					vm_nic_reference = nutanix_virtual_machine_v2.test.nics.0.ext_id
+					vm_nic_reference = data.nutanix_virtual_machines_v2.test.vms.0.nics.0.ext_id
 				}
 			  }
 		  }
