@@ -36,9 +36,10 @@ func TestAccNutanixCategoryV2Resource_Basic(t *testing.T) {
 func TestAccNutanixCategoryV2Resource_Update(t *testing.T) {
 	r := acctest.RandInt()
 	value := fmt.Sprintf("test category value-%d", r)
-	updatedValue := fmt.Sprintf("test category value updated-%d", r)
 	desc := "test category description"
+	updatedValue := fmt.Sprintf("test category value updated-%d", r)
 	updateDesc := "test category description updated"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -53,7 +54,7 @@ func TestAccNutanixCategoryV2Resource_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCategoryV2ConfigUpdated(r, updatedValue, updateDesc),
+				Config: testAccCategoryV2Config(r, updatedValue, updateDesc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameCategory, "key", fmt.Sprintf("test-cat-%d", r)),
 					resource.TestCheckResourceAttr(resourceNameCategory, "value", updatedValue),
@@ -88,16 +89,6 @@ func testAccCategoryV2Config(r int, val, desc string) string {
 		value = "%[2]s"
 		description = "%[3]s"
 	}
-`, r, val, desc)
-}
-
-func testAccCategoryV2ConfigUpdated(r int, val, desc string) string {
-	return fmt.Sprintf(`
-	resource "nutanix_category_v2" "test" {
-		key = "test-cat-%d"
-		value = "%[2]s"
-		description = "%[3]s"
-	  }
 `, r, val, desc)
 }
 

@@ -2,7 +2,7 @@ package prismv2
 
 import (
 	"context"
-	"fmt"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -209,7 +209,7 @@ func ResourceNutanixCategoriesV2Update(ctx context.Context, d *schema.ResourceDa
 	if er != nil {
 		return diag.Errorf("error while updating categories : %v", err)
 	} else {
-		fmt.Println("Category updated successfully")
+		log.Println("[DEBUG] Category updated successfully")
 	}
 
 	return ResourceNutanixCategoriesV2Read(ctx, d, meta)
@@ -224,7 +224,7 @@ func ResourceNutanixCategoriesV2Delete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if resp == nil {
-		fmt.Println("Category deleted successfully.")
+		log.Println("[DEBUG] Category deleted successfully.")
 	}
 
 	return nil
