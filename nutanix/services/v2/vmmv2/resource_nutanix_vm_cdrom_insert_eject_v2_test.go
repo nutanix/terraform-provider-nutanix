@@ -13,7 +13,7 @@ const resourceNameVmCdromInsertEject = "nutanix_vm_cdrom_insert_eject_v2.test"
 
 func TestAccNutanixVmsCdromInsertEjectV2Resource_Basic(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-vm-%d", r)
+	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },

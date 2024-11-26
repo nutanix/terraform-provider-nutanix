@@ -15,7 +15,7 @@ const resourceNameNGTInsertISO = "nutanix_ngt_insert_iso_v2.test"
 
 func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmHaveNGT(t *testing.T) {
 	r := acctest.RandInt()
-	vmName := fmt.Sprintf("test-vm-ngt-%d", r)
+	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
@@ -73,7 +73,7 @@ func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmHaveNGT(t *testing.T
 
 func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmHaveNGTIsConfigFalse(t *testing.T) {
 	r := acctest.RandInt()
-	vmName := fmt.Sprintf("test-vm-ngt-%d", r)
+	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
@@ -131,7 +131,7 @@ func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmHaveNGTIsConfigFalse
 
 func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmDoseNotHaveNGT(t *testing.T) {
 	r := acctest.RandInt()
-	vmName := fmt.Sprintf("test-vm-ngt-%d", r)
+	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
@@ -166,7 +166,7 @@ func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmDoseNotHaveNGT(t *te
 
 func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmDoseNotHaveNGTIsConfigFalse(t *testing.T) {
 	r := acctest.RandInt()
-	vmName := fmt.Sprintf("test-vm-ngt-%d", r)
+	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },

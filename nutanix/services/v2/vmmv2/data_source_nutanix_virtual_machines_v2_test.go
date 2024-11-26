@@ -50,7 +50,7 @@ func TestAccNutanixVmsV2DataSource_ListWithFilterName(t *testing.T) {
 				Config: testAccVMDataSourceConfigV4VmsWithFilterName(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameVm, "vms.#"),
-					resource.TestCheckResourceAttr(datasourceNameVm, "vms.0.name", "test-vm-filter"),
+					resource.TestCheckResourceAttr(datasourceNameVm, "vms.0.name", "tf-test-vm-filter"),
 					resource.TestCheckResourceAttr(datasourceNameVm, "vms.0.num_cores_per_socket", "1"),
 					resource.TestCheckResourceAttr(datasourceNameVm, "vms.0.num_sockets", "1"),
 				),
@@ -88,7 +88,7 @@ func testAccVMDataSourceConfigV4VmsWithFilterName() string {
 	}
 
 	resource "nutanix_virtual_machine_v2" "test"{
-		name= "test-vm-filter"
+		name= "tf-test-vm-filter"
 		num_cores_per_socket = 1
 		num_sockets = 1
 		cluster {
@@ -96,7 +96,7 @@ func testAccVMDataSourceConfigV4VmsWithFilterName() string {
 		}
 	}
 		data "nutanix_virtual_machines_v2" "test" {
-			filter = "name eq 'test-vm-filter'"
+			filter = "name eq 'tf-test-vm-filter'"
 			depends_on = [
 				resource.nutanix_virtual_machine_v2.test
 			]

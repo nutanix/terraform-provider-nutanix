@@ -14,7 +14,7 @@ const resourceNameTemplateActions = "nutanix_template_guest_os_actions_v2.test"
 func TestAccNutanixTemplateActionsV2Resource_Basic(t *testing.T) {
 	//t.Skip("Skipping test as it is not dependent on template")
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-vm-%d", r)
+	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
 	templateName := fmt.Sprintf("tf-test-temp-%d", r)
 	templateDesc := "test temp description"

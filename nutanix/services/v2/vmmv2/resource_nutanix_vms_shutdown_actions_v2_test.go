@@ -2,6 +2,9 @@ package vmmv2_test
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 	"regexp"
 	"testing"
 	"time"
@@ -19,8 +22,9 @@ func TestAccNutanixVmsShutdownV2Resource_Basic(t *testing.T) {
 	desc := "test vm power action "
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixVirtualMachineV2Destroy,
 		Steps: []resource.TestStep{
 			// 1. create a vm with ngt
 			{
@@ -33,9 +37,12 @@ func TestAccNutanixVmsShutdownV2Resource_Basic(t *testing.T) {
 			{
 				PreConfig: func() {
 					//sleep for 1 minute before installing ngt
-					time.Sleep(2 * time.Minute)
+					time.Sleep(1 * time.Minute)
 				},
 				Config: testVmV2Config(name, desc, "ON") + testNGTConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("nutanix_virtual_machine_v2.rtest", "power_state", "ON"),
+				),
 			},
 			// 3. create a vm shutdown action
 			{
@@ -151,6 +158,24 @@ func TestAccNutanixVmsShutdownV2Resource_Basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckNutanixVirtualMachineV2Destroy(s *terraform.State) error {
+	fmt.Println("Destroying VMs")
+	conn := acc.TestAccProvider.Meta().(*conns.Client)
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "nutanix_virtual_machine_v2" {
+			continue
+		}
+		_, err := conn.VmmAPI.VMAPIInstance.GetVmById(utils.StringPtr(rs.Primary.ID))
+		if err == nil {
+			// delete the vm
+			fmt.Printf("Deleting VM with ID: %s\n", rs.Primary.ID)
+			_, err = conn.VmmAPI.VMAPIInstance.DeleteVmById(utils.StringPtr(rs.Primary.ID))
+		}
+	}
+	return nil
+
 }
 
 func TestAccNutanixVmsShutdownV2Resource_WithError(t *testing.T) {

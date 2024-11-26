@@ -213,7 +213,7 @@ func testImagesV2ConfigWithVMDiskSource(name, desc string) string {
 		}
 
 		resource "nutanix_virtual_machine_v2" "test"{
-			name= "test-vm-disk"
+			name= "tf-test-vm-disk"
 			description =  "desc vm"
 			num_cores_per_socket = 1
 			num_sockets = 1

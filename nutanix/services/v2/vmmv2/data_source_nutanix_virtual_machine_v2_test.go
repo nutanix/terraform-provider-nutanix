@@ -13,7 +13,7 @@ const datasourceNameVms = "data.nutanix_virtual_machine_v2.test"
 
 func TestAccNutanixVmsV2DataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-vm-%d", r)
+	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -39,7 +39,7 @@ func TestAccNutanixVmsV2DataSource_Basic(t *testing.T) {
 
 func TestAccNutanixVmsV2DataSource_WithConfig(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-vm-%d", r)
+	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -48,7 +48,7 @@ func TestAccNutanixVmsV2DataSource_WithConfig(t *testing.T) {
 			{
 				Config: testAccVMDataSourceConfigV4WithNic(name, desc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceNameVms, "name", fmt.Sprintf("test-vm-%d", r)),
+					resource.TestCheckResourceAttr(datasourceNameVms, "name", fmt.Sprintf("tf-test-vm-%d", r)),
 					resource.TestCheckResourceAttr(datasourceNameVms, "num_cores_per_socket", "1"),
 					resource.TestCheckResourceAttr(datasourceNameVms, "description", desc),
 					resource.TestCheckResourceAttr(datasourceNameVms, "num_sockets", "1"),
@@ -70,7 +70,7 @@ func TestAccNutanixVmsV2DataSource_WithConfig(t *testing.T) {
 
 func TestAccNutanixVmsV2DataSource_WithCdromConfig(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-vm-%d", r)
+	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -79,7 +79,7 @@ func TestAccNutanixVmsV2DataSource_WithCdromConfig(t *testing.T) {
 			{
 				Config: testAccVMDataSourceConfigV4WithCdrom(name, desc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceNameVms, "name", fmt.Sprintf("test-vm-%d", r)),
+					resource.TestCheckResourceAttr(datasourceNameVms, "name", fmt.Sprintf("tf-test-vm-%d", r)),
 					resource.TestCheckResourceAttr(datasourceNameVms, "num_cores_per_socket", "1"),
 					resource.TestCheckResourceAttr(datasourceNameVms, "description", desc),
 					resource.TestCheckResourceAttr(datasourceNameVms, "num_sockets", "1"),
@@ -104,7 +104,7 @@ func TestAccNutanixVmsV2DataSource_WithCdromConfig(t *testing.T) {
 
 func TestAccNutanixVmsV2DataSource_WithCdromBackingInfo(t *testing.T) {
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-vm-%d", r)
+	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -113,7 +113,7 @@ func TestAccNutanixVmsV2DataSource_WithCdromBackingInfo(t *testing.T) {
 			{
 				Config: testAccVMDataSourceConfigV4WithCdromBackingInfo(name, desc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceNameVms, "name", fmt.Sprintf("test-vm-%d", r)),
+					resource.TestCheckResourceAttr(datasourceNameVms, "name", fmt.Sprintf("tf-test-vm-%d", r)),
 					resource.TestCheckResourceAttr(datasourceNameVms, "num_cores_per_socket", "1"),
 					resource.TestCheckResourceAttr(datasourceNameVms, "description", desc),
 					resource.TestCheckResourceAttr(datasourceNameVms, "num_sockets", "1"),

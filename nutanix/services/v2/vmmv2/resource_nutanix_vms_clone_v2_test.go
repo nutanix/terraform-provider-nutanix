@@ -14,7 +14,7 @@ const resourceNameVmClone = "nutanix_vm_clone_v2.test"
 func TestAccNutanixVmsCloneV2Resource_Basic(t *testing.T) {
 	// t.Skip("Skipping test as it requires Clone")
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-vm-%d", r)
+	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
 	// stateOn := "power_on"
 	resource.Test(t, resource.TestCase{
@@ -37,7 +37,7 @@ func TestAccNutanixVmsCloneV2Resource_Basic(t *testing.T) {
 func TestAccNutanixVmsCloneV2Resource_WithGuestCustomization(t *testing.T) {
 	// t.Skip("Skipping test as it requires Clone")
 	r := acctest.RandInt()
-	name := fmt.Sprintf("test-vm-%d", r)
+	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
 	// stateOn := "power_on"
 	resource.Test(t, resource.TestCase{
