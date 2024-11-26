@@ -11,7 +11,7 @@ import (
 
 const datasourceNameImagePlacements = "data.nutanix_image_placement_policies_v2.test"
 
-func TestAccNutanixImagePlacementsDataSourceV2_Basic(t *testing.T) {
+func TestAccNutanixImagePlacementsV2DataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-ipp-%d", r)
 	desc := "test ipp description"
@@ -29,7 +29,7 @@ func TestAccNutanixImagePlacementsDataSourceV2_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixImagePlacementsDataSourceV2_WithFilters(t *testing.T) {
+func TestAccNutanixImagePlacementsV2DataSource_WithFilters(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-ipp-%d", r)
 	desc := "test ipp description"

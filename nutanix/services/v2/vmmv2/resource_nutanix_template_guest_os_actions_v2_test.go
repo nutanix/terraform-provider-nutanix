@@ -12,11 +12,11 @@ import (
 const resourceNameTemplateActions = "nutanix_template_guest_os_actions_v2.test"
 
 func TestAccNutanixTemplateActionsV2Resource_Basic(t *testing.T) {
-	t.Skip("Skipping test as it is not dependent on template")
+	//t.Skip("Skipping test as it is not dependent on template")
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vm-%d", r)
 	desc := "test vm description"
-	templateName := fmt.Sprintf("test-temp-%d", r)
+	templateName := fmt.Sprintf("tf-test-temp-%d", r)
 	templateDesc := "test temp description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -35,13 +35,20 @@ func TestAccNutanixTemplateActionsV2Resource_Basic(t *testing.T) {
 
 func testTemplateActionsV2Config(name, desc, tempName, tempDesc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-		cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 =  [
+				  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+				  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+				][0]
+			config = jsondecode(file("%[5]s"))
+			vmm = local.config.vmm
 		}
 	
-		data "nutanix_subnets_v2" "subnets" { }
+		data "nutanix_subnets_v2" "subnets" {
+			filter = "name eq '${local.vmm.subnet_name}'"
+		}
 
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "%[1]s"
@@ -51,7 +58,18 @@ func testTemplateActionsV2Config(name, desc, tempName, tempDesc string) string {
 			cluster {
 				ext_id = local.cluster0
 			}
+			nics{
+				network_info{
+					nic_type = "NORMAL_NIC"
+					subnet{
+						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+					}	
+					vlan_mode = "ACCESS"
+				}
+			}
+			power_state = "ON"
 		}
+
 		resource "nutanix_template_v2" "test" {
 			template_name = "%[3]s"
 			template_description = "%[4]s"
@@ -76,12 +94,14 @@ func testTemplateActionsV2Config(name, desc, tempName, tempDesc string) string {
 			ext_id = resource.nutanix_template_v2.test.id
 			action = "initiate"
 			version_id = resource.nutanix_template_v2.test.template_version_spec.0.ext_id
+			depends_on = [nutanix_template_v2.test]
 		}
 
 		resource "nutanix_template_guest_os_actions_v2" "test" {
 			ext_id = resource.nutanix_template_v2.test.id
 			action = "cancel"
+			depends_on = [nutanix_template_guest_os_actions_v2.test1]
 		}
 		
-`, name, desc, tempName, tempDesc)
+`, name, desc, tempName, tempDesc, filepath)
 }

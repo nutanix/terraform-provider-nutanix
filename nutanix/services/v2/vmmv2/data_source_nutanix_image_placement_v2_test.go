@@ -11,7 +11,7 @@ import (
 
 const datasourceNameImagePlacementPolicy = "data.nutanix_image_placement_policy_v2.test"
 
-func TestAccNutanixImagePlacementDataSourceV2_Basic(t *testing.T) {
+func TestAccNutanixImagePlacementV2DataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-ipp-%d", r)
 	desc := "test ipp description"

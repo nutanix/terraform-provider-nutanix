@@ -144,10 +144,6 @@ func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmDoseNotHaveNGT(t *te
 				Config: testPreEnvConfig(vmName, r),
 			},
 			{
-				PreConfig: func() {
-					t.Log("Sleeping for 2 Minute waiting vm to reboot")
-					time.Sleep(2 * time.Minute)
-				},
 				Config: testPreEnvConfig(vmName, r) + testNGTInsertIsoConfig("true"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameNGTInsertISO, "available_version"),
@@ -183,10 +179,6 @@ func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmDoseNotHaveNGTIsConf
 				Config: testPreEnvConfig(vmName, r),
 			},
 			{
-				PreConfig: func() {
-					t.Log("Sleeping for 2 Minute waiting vm to reboot")
-					time.Sleep(2 * time.Minute)
-				},
 				Config: testPreEnvConfig(vmName, r) + testNGTInsertIsoConfig("false"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameNGTInsertISO, "available_version"),

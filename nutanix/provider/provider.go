@@ -371,6 +371,7 @@ func Provider() *schema.Provider {
 			"nutanix_vm_cdrom_insert_eject_v2":                vmmv2.ResourceNutanixVmsCdRomsInsertEjectV2(),
 			"nutanix_deploy_templates_v2":                     vmmv2.ResourceNutanixTemplateDeployV2(),
 			"nutanix_template_v2":                             vmmv2.ResourceNutanixTemplatesV2(),
+			"nutanix_template_guest_os_actions_v2":            vmmv2.ResourceNutanixTemplateActionsV2(),
 			"nutanix_ngt_installation_v2":                     vmmv2.ResourceNutanixNGTInstallationV2(),
 			"nutanix_ngt_upgrade_v2":                          vmmv2.ResourceNutanixNGTUpgradeV2(),
 			"nutanix_ngt_insert_iso_v2":                       vmmv2.ResourceNutanixNGTInsertIsoV2(),

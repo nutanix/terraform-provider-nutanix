@@ -13,12 +13,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func ResourceNutanixTemplateActionsV4() *schema.Resource {
+func ResourceNutanixTemplateActionsV2() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: ResourceNutanixTemplateActionsV4Create,
-		ReadContext:   ResourceNutanixTemplateActionsV4Read,
-		UpdateContext: ResourceNutanixTemplateActionsV4Update,
-		DeleteContext: ResourceNutanixTemplateActionsV4Delete,
+		CreateContext: ResourceNutanixTemplateActionsV2Create,
+		ReadContext:   ResourceNutanixTemplateActionsV2Read,
+		UpdateContext: ResourceNutanixTemplateActionsV2Update,
+		DeleteContext: ResourceNutanixTemplateActionsV2Delete,
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -50,7 +50,7 @@ func ResourceNutanixTemplateActionsV4() *schema.Resource {
 	}
 }
 
-func ResourceNutanixTemplateActionsV4Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixTemplateActionsV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
 	extID := d.Get("ext_id").(string)
@@ -139,14 +139,14 @@ func ResourceNutanixTemplateActionsV4Create(ctx context.Context, d *schema.Resou
 	return nil
 }
 
-func ResourceNutanixTemplateActionsV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixTemplateActionsV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func ResourceNutanixTemplateActionsV4Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixTemplateActionsV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func ResourceNutanixTemplateActionsV4Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixTemplateActionsV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }

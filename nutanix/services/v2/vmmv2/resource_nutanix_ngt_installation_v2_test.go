@@ -29,11 +29,6 @@ func TestAccNutanixNGTInstallationV2Resource_InstallNGTWithRebootPreferenceSetTo
 				Config: testPreEnvConfig(vmName, r),
 			},
 			{
-				PreConfig: func() {
-					t.Log("Sleeping for 2 Minute waiting vm to power on")
-					time.Sleep(2 * time.Minute)
-					t.Log("Installing NGT")
-				},
 				Config: testPreEnvConfig(vmName, r) + testNGTInstallationResourceConfigIMMEDIATEReboot(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameNGTInstallation, "guest_os_version"),
@@ -54,7 +49,7 @@ func TestAccNutanixNGTInstallationV2Resource_InstallNGTWithRebootPreferenceSetTo
 					t.Log("Sleeping for 2 Minute waiting vm to reboot")
 					time.Sleep(2 * time.Minute)
 				},
-				Config: testPreEnvConfig(vmName, r) + testNGTInstallationResourceConfigIMMEDIATEReboot() + testNGTConfigurationDatasource(),
+				Config: testPreEnvConfig(vmName, r) + testNGTInstallationResourceConfigIMMEDIATEReboot() + testNGTConfiguration,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameNGTConfiguration, "guest_os_version"),
 					resource.TestCheckResourceAttrSet(datasourceNameNGTConfiguration, "ext_id"),
@@ -86,11 +81,6 @@ func TestAccNutanixNGTInstallationV2Resource_InstallNGTWithRebootPreferenceSetTo
 				Config: testPreEnvConfig(vmName, r),
 			},
 			{
-				PreConfig: func() {
-					t.Log("Sleeping for 2 Minute waiting vm to power on")
-					time.Sleep(2 * time.Minute)
-					t.Log("Installing NGT")
-				},
 				Config: testPreEnvConfig(vmName, r) + testNGTInstallationResourceConfigLATERReboot(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameNGTInstallation, "guest_os_version"),
@@ -125,11 +115,6 @@ func TestAccNutanixNGTInstallationV2Resource_InstallNGTWithRebootPreferenceSetTo
 				Config: testPreEnvConfig(vmName, r),
 			},
 			{
-				PreConfig: func() {
-					t.Log("Sleeping for 2 Minute waiting vm to power on")
-					time.Sleep(2 * time.Minute)
-					t.Log("Installing NGT")
-				},
 				Config: testPreEnvConfig(vmName, r) + testNGTInstallationResourceConfigSKIPReboot(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameNGTInstallation, "guest_os_version"),
@@ -176,11 +161,6 @@ func TestAccNutanixNGTInstallationV2Resource_UpdateNGT(t *testing.T) {
 				Config: testPreEnvConfig(vmName, r),
 			},
 			{
-				PreConfig: func() {
-					t.Log("Sleeping for 2 Minute waiting vm to power on")
-					time.Sleep(2 * time.Minute)
-					t.Log("Installing NGT")
-				},
 				Config: testPreEnvConfig(vmName, r) + testNGTInstallationResourceUpdateConfig(`["SELF_SERVICE_RESTORE","VSS_SNAPSHOT"]`, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameNGTInstallation, "guest_os_version"),
@@ -197,11 +177,6 @@ func TestAccNutanixNGTInstallationV2Resource_UpdateNGT(t *testing.T) {
 			},
 			// test update, change capablities, remove SELF_SERVICE_RESTORE
 			{
-				PreConfig: func() {
-					// sleep for 2 Minute waiting to reboot the vm
-					time.Sleep(2 * time.Minute)
-					t.Log("test update, change capablities remove SELF_SERVICE_RESTORE")
-				},
 				Config: testPreEnvConfig(vmName, r) + testNGTInstallationResourceUpdateConfig(`["VSS_SNAPSHOT"]`, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameNGTInstallation, "guest_os_version"),
@@ -215,13 +190,9 @@ func TestAccNutanixNGTInstallationV2Resource_UpdateNGT(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameNGTInstallation, "is_enabled", "true"),
 				),
 			},
-			// test update, change capablities, remove VSS_SNAPSHOT
+			// test update, change capabilities, remove VSS_SNAPSHOT
 			{
-				PreConfig: func() {
-					// sleep for 5 seconds before updating the resource
-					time.Sleep(20 * time.Second)
-					t.Log("test update, change capablities remove VSS_SNAPSHOT")
-				},
+
 				Config: testPreEnvConfig(vmName, r) + testNGTInstallationResourceUpdateConfig(`[]`, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameNGTInstallation, "guest_os_version"),
@@ -344,7 +315,7 @@ func testPreEnvConfig(vmName string, r int) string {
 		data "nutanix_clusters_v2" "clusters" {}
 		
 		locals {
-		  clusterUUID = = [
+		  clusterUUID = [
 			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
 			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 		  ][0]
@@ -432,3 +403,8 @@ func testPreEnvConfig(vmName string, r int) string {
 			
 `, filepath, r, vmName)
 }
+
+var testNGTConfiguration = `
+	data "nutanix_ngt_configuration_v2" "test" {
+		ext_id = nutanix_virtual_machine_v2.ngt-vm.id
+	}`

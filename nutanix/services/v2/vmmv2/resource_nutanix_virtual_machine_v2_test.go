@@ -553,6 +553,9 @@ func TestAccNutanixVmsV2Resource_WithSerialPorts(t *testing.T) {
 }
 
 func TestAccNutanixVmsV2Resource_WithGpus(t *testing.T) {
+	if testVars.VMM.GPUS[0].Vendor == "" && testVars.VMM.GPUS[0].Mode == "" && testVars.VMM.GPUS[0].DeviceID == 0 {
+		t.Skip("Skipping test as no GPU devices found")
+	}
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
@@ -1497,6 +1500,7 @@ func testVmsV2WithGpus(name, desc string) string {
 		}
 	`, name, desc, filepath)
 }
+
 func testVmsV2RemoveGpus(name, desc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
@@ -1527,10 +1531,13 @@ func testVmsV2RemoveGpus(name, desc string) string {
 
 func testVmsConfigWithSerialPorts(name, desc string, isconn bool) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 = [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
 			config = jsondecode(file("%[4]s"))
 			vmm = local.config.vmm
 		}

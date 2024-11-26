@@ -1687,7 +1687,7 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 			Pending:    []string{"WAITING"},
 			Target:     []string{"AVAILABLE"},
 			Refresh:    waitForIPRefreshFunc(conn, utils.StringValue(uuid)),
-			Timeout:    1 * time.Minute,
+			Timeout:    3 * time.Minute,
 			Delay:      3 * time.Second,
 			MinTimeout: 3 * time.Second,
 		}

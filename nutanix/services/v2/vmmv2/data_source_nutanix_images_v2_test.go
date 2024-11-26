@@ -1,9 +1,7 @@
 package vmmv2_test
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -13,7 +11,7 @@ import (
 
 const datasourceNameImages = "data.nutanix_images_v2.test"
 
-func TestAccNutanixImagesDataSourceV2_Basic(t *testing.T) {
+func TestAccNutanixImagesV2DataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-image-%d", r)
 	desc := "test image description"
@@ -25,14 +23,6 @@ func TestAccNutanixImagesDataSourceV2_Basic(t *testing.T) {
 			{
 				Config: testImagePreConfigV2(name, desc) + testAccImagesDataSourceConfigV2(),
 				Check: resource.ComposeTestCheckFunc(
-					func(s *terraform.State) error {
-						aJson, _ := json.MarshalIndent(s.RootModule().Resources[datasourceNameImages].Primary.Attributes, "", "  ")
-						fmt.Println("############################################")
-						fmt.Println(fmt.Sprintf("Resource Attributes: \n%v", string(aJson)))
-						fmt.Println("############################################")
-
-						return nil
-					},
 					resource.TestCheckResourceAttrSet(datasourceNameImages, "images.#"),
 				),
 			},
@@ -40,7 +30,7 @@ func TestAccNutanixImagesDataSourceV2_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixImagesDataSourceV2_WithFilters(t *testing.T) {
+func TestAccNutanixImagesV2DataSource_WithFilters(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-image-%d", r)
 	desc := "test image description"

@@ -42,10 +42,13 @@ func TestAccNutanixTemplateV2Datasource_Basic(t *testing.T) {
 
 func testTemplateV2DatasourceConfig(name, desc, tempName, tempDesc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 = [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
 		}
 	
 		resource "nutanix_virtual_machine_v2" "test"{

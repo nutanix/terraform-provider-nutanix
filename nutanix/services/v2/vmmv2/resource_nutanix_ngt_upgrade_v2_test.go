@@ -14,7 +14,7 @@ import (
 
 const resourceNameNGTUpgrade = "nutanix_ngt_upgrade_v2.test"
 
-func TestAccNutanixNGTUpgradeV4Resource_UpgradeNGTWithRebootPreferenceSetToIMMEDIATE(t *testing.T) {
+func TestAccNutanixNGTUpgradeV2Resource_UpgradeNGTWithRebootPreferenceSetToIMMEDIATE(t *testing.T) {
 	t.Skip("This test case is skip since NGT upgrade is failing from v4 api: https://jira.nutanix.com/browse/ENG-665842")
 	r := acctest.RandInt()
 	vmName := fmt.Sprintf("test-vm-ngt-%d", r)
@@ -71,7 +71,7 @@ func TestAccNutanixNGTUpgradeV4Resource_UpgradeNGTWithRebootPreferenceSetToIMMED
 	})
 }
 
-func TestAccNutanixNGTUpgradeV4Resource_UpgradeNGTWithRebootPreferenceSetToLATER(t *testing.T) {
+func TestAccNutanixNGTUpgradeV2Resource_UpgradeNGTWithRebootPreferenceSetToLATER(t *testing.T) {
 	t.Skip("This test case is skip since NGT upgrade is failing from v4 api: https://jira.nutanix.com/browse/ENG-665842")
 	r := acctest.RandInt()
 	vmName := fmt.Sprintf("test-vm-ngt-%d", r)
@@ -128,7 +128,7 @@ func TestAccNutanixNGTUpgradeV4Resource_UpgradeNGTWithRebootPreferenceSetToLATER
 	})
 }
 
-func TestAccNutanixNGTUpgradeV4Resource_UpgradeNGTWithRebootPreferenceSetToSKIP(t *testing.T) {
+func TestAccNutanixNGTUpgradeV2Resource_UpgradeNGTWithRebootPreferenceSetToSKIP(t *testing.T) {
 	t.Skip("This test case is skip since NGT upgrade is failing from v4 api: https://jira.nutanix.com/browse/ENG-665842")
 	r := acctest.RandInt()
 	vmName := fmt.Sprintf("test-vm-ngt-%d", r)

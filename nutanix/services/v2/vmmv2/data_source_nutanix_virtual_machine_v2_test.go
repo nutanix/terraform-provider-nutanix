@@ -11,7 +11,7 @@ import (
 
 const datasourceNameVms = "data.nutanix_virtual_machine_v2.test"
 
-func TestAccNutanixVmsDataSourceV2_Basic(t *testing.T) {
+func TestAccNutanixVmsV2DataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vm-%d", r)
 	desc := "test vm description"
@@ -37,7 +37,7 @@ func TestAccNutanixVmsDataSourceV2_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsDataSourceV2_WithConfig(t *testing.T) {
+func TestAccNutanixVmsV2DataSource_WithConfig(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vm-%d", r)
 	desc := "test vm description"
@@ -68,7 +68,7 @@ func TestAccNutanixVmsDataSourceV2_WithConfig(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsDataSourceV2_WithCdromConfig(t *testing.T) {
+func TestAccNutanixVmsV2DataSource_WithCdromConfig(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vm-%d", r)
 	desc := "test vm description"
@@ -102,7 +102,7 @@ func TestAccNutanixVmsDataSourceV2_WithCdromConfig(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsDataSourceV2_WithCdromBackingInfo(t *testing.T) {
+func TestAccNutanixVmsV2DataSource_WithCdromBackingInfo(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vm-%d", r)
 	desc := "test vm description"
@@ -139,12 +139,12 @@ func TestAccNutanixVmsDataSourceV2_WithCdromBackingInfo(t *testing.T) {
 
 func testAccVMDataSourceConfigV4(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
 			cluster0 = [
-			for cluster in data.nutanix_clusters.clusters.entities :
-			cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 		}
 
@@ -166,12 +166,12 @@ func testAccVMDataSourceConfigV4(name, desc string) string {
 
 func testAccVMDataSourceConfigV4WithNic(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
 			cluster0 = [
-			for cluster in data.nutanix_clusters.clusters.entities :
-			cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 			config = (jsondecode(file("%[3]s")))
 		  	vmm    = local.config.vmm
@@ -208,12 +208,12 @@ func testAccVMDataSourceConfigV4WithNic(name, desc string) string {
 
 func testAccVMDataSourceConfigV4WithCdrom(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
 			cluster0 = [
-			for cluster in data.nutanix_clusters.clusters.entities :
-			cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 			config = (jsondecode(file("%[3]s")))
 		  	vmm    = local.config.vmm
@@ -261,12 +261,12 @@ func testAccVMDataSourceConfigV4WithCdrom(name, desc string) string {
 
 func testAccVMDataSourceConfigV4WithCdromBackingInfo(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
 			cluster0 = [
-			for cluster in data.nutanix_clusters.clusters.entities :
-			cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 			config = (jsondecode(file("%[3]s")))
 		  	vmm    = local.config.vmm

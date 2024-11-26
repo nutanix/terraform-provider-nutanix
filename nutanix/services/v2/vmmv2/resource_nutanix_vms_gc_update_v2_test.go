@@ -67,7 +67,7 @@ func testVmConfig(vmName string) string {
 			ignore_changes = [guest_tools, nics, cd_roms]
 		  }
 		
-		  depends_on = [data.nutanix_clusters.clusters, data.nutanix_storage_containers_v2.sc]
+		  depends_on = [data.nutanix_clusters_v2.clusters, data.nutanix_storage_containers_v2.sc]
 		}
 `, vmName)
 }

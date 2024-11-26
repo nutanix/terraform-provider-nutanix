@@ -10,7 +10,7 @@ import (
 
 const datasourceNameVm = "data.nutanix_virtual_machines_v2.test"
 
-func TestAccNutanixVmsDataSourceV2_List(t *testing.T) {
+func TestAccNutanixVmsV2DataSource_List(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -25,7 +25,7 @@ func TestAccNutanixVmsDataSourceV2_List(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsDataSourceV2_ListWithFilters(t *testing.T) {
+func TestAccNutanixVmsV2DataSource_ListWithFilters(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -41,7 +41,7 @@ func TestAccNutanixVmsDataSourceV2_ListWithFilters(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsDataSourceV2_ListWithFilterName(t *testing.T) {
+func TestAccNutanixVmsV2DataSource_ListWithFilterName(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -60,28 +60,31 @@ func TestAccNutanixVmsDataSourceV2_ListWithFilterName(t *testing.T) {
 }
 
 func testAccVMDataSourceConfigV4Vms() string {
-	return (`
+	return `
 		data "nutanix_virtual_machines_v2" "test" {
 		}
-`)
+`
 }
 
 func testAccVMDataSourceConfigV4VmsWithFilters() string {
-	return (`
+	return `
 		data "nutanix_virtual_machines_v2" "test" {
 			page=0
 			limit=2
 		}
-`)
+`
 }
 
 func testAccVMDataSourceConfigV4VmsWithFilterName() string {
-	return (`
+	return `
 
-	data "nutanix_clusters" "clusters" {}
+	data "nutanix_clusters_v2" "clusters" {}
 
 	locals {
-	cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+	cluster0 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
 	}
 
 	resource "nutanix_virtual_machine_v2" "test"{
@@ -98,5 +101,5 @@ func testAccVMDataSourceConfigV4VmsWithFilterName() string {
 				resource.nutanix_virtual_machine_v2.test
 			]
 		}
-`)
+`
 }

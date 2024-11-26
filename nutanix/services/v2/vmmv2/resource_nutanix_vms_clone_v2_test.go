@@ -60,13 +60,13 @@ func TestAccNutanixVmsCloneV2Resource_WithGuestCustomization(t *testing.T) {
 
 func testVmsCloneV2Config(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
 			cluster0 = [
-				for cluster in data.nutanix_clusters.clusters.entities :
-				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
-				][0]
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
 			config = (jsondecode(file("%[3]s")))
 			vmm    = local.config.vmm
 			gs = base64encode("#cloud-config\nusers:\n  - name: ubuntu\n    ssh-authorized-keys:\n      - ssh-rsa DUMMYSSH mypass\n    sudo: ['ALL=(ALL) NOPASSWD:ALL']")
@@ -177,13 +177,13 @@ func testVmsCloneV2Config(name, desc string) string {
 
 func testVmsCloneV2WithGuestCustomizationConfig(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
 			clusterUUID = [
-				for cluster in data.nutanix_clusters.clusters.entities :
-				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
-				][0]
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
 			config = (jsondecode(file("%[3]s")))
 			vmm    = local.config.vmm
 			gs = base64encode("#cloud-config\nusers:\n  - name: ubuntu\n    ssh-authorized-keys:\n      - ssh-rsa DUMMYSSH mypass\n    sudo: ['ALL=(ALL) NOPASSWD:ALL']")

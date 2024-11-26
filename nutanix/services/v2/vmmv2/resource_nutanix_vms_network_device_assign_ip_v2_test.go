@@ -45,13 +45,13 @@ func testVmsNetworkDeviceAssignIpV4Config() string {
 func testVmPreEnvConfig(r int) string {
 
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 		
 		locals {
 		  clusterUUID = [
-			for cluster in data.nutanix_clusters.clusters.entities :
-			cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
-		  ][0]
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+			][0]
 		  config = (jsondecode(file("%[1]s")))
 		  vmm    = local.config.vmm
  		  gs = base64encode("#cloud-config\nusers:\n  - name: ubuntu\n    ssh-authorized-keys:\n      - ssh-rsa DUMMYSSH mypass\n    sudo: ['ALL=(ALL) NOPASSWD:ALL']")
@@ -92,7 +92,7 @@ func testVmPreEnvConfig(r int) string {
 					}
 				}
 			}
-		depends_on = [data.nutanix_clusters.clusters]
+		depends_on = [data.nutanix_clusters_v2.clusters]
 		}
 
 			
@@ -142,7 +142,7 @@ func testVmWithNicAndDiskConfig(vmName string) string {
 			ignore_changes = [guest_tools, nics]
 		  }
 		
-		  depends_on = [data.nutanix_clusters.clusters, data.nutanix_storage_containers_v2.sc]
+		  depends_on = [data.nutanix_clusters_v2.clusters, data.nutanix_storage_containers_v2.sc]
 		}
 `, vmName)
 }
