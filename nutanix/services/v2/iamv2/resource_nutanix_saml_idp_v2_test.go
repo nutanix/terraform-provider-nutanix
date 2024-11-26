@@ -2,7 +2,6 @@ package iamv2_test
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
@@ -14,8 +13,6 @@ import (
 const resourceNameIdentityProviders = "nutanix_saml_identity_providers_v2.test"
 
 func TestAccNutanixIdentityProvidersV2Resource_CreateSamlIdp(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
@@ -40,8 +37,7 @@ func TestAccNutanixIdentityProvidersV2Resource_CreateSamlIdp(t *testing.T) {
 }
 
 func TestAccNutanixIdentityProvidersV2ResourceWithNoName(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -54,8 +50,7 @@ func TestAccNutanixIdentityProvidersV2ResourceWithNoName(t *testing.T) {
 	})
 }
 func TestAccNutanixIdentityProvidersV2ResourceWithNoEntityId(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../../test_config_v2.json"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

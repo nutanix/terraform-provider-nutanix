@@ -20,9 +20,9 @@ resource "nutanix_roles_v2" "test" {
 	display_name = local.roles.display_name
 	description  = local.roles.description
 	operations = [
-		data.nutanix_operations_v2.test.permissions[0].ext_id,
-		data.nutanix_operations_v2.test.permissions[1].ext_id,
-		data.nutanix_operations_v2.test.permissions[2].ext_id,
+		data.nutanix_operations_v2.test.operations[0].ext_id,
+		data.nutanix_operations_v2.test.operations[1].ext_id,
+		data.nutanix_operations_v2.test.operations[2].ext_id,
 	]
 	depends_on = [data.nutanix_operations_v2.test]
 }

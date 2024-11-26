@@ -272,6 +272,7 @@ func testDirectoryServicesDuplicatedResourceConfig(filepath string) string {
 			username = local.directory_services.service_account.username
 			password = local.directory_services.service_account.password
 		}
+		white_listed_groups = [ local.directory_services.white_listed_groups[0]]
 		lifecycle {
 			ignore_changes = [
 			  service_account.0.password,

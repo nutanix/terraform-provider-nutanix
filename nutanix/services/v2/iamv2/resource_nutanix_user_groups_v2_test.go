@@ -29,7 +29,7 @@ func TestAccNutanixUserGroupsV2Resource_LDAPUserGroup(t *testing.T) {
 			},
 			{
 				Config:      testLDAPUserGroupsResourceAlreadyExistsConfig(filepath),
-				ExpectError: regexp.MustCompile("Failed to create the user group due to an already existing user group."),
+				ExpectError: regexp.MustCompile("Failed to create the user group as an user group already exists with same DN"),
 			},
 		},
 	})
@@ -51,7 +51,7 @@ func TestAccNutanixUserGroupsV2Resource_SAMLUserGroup(t *testing.T) {
 			},
 			{
 				Config:      testSAMLAlreadyExistsUserGroupsResourceConfig(filepath),
-				ExpectError: regexp.MustCompile("Failed to create the user group due to an already existing user group."),
+				ExpectError: regexp.MustCompile("Failed to create the user group as an user group already exists with same DN"),
 			},
 		},
 	})

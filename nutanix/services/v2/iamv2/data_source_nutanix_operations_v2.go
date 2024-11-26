@@ -36,7 +36,7 @@ func DatasourceNutanixOperationsV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"permissions": {
+			"operations": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -142,14 +142,14 @@ func DatasourceNutanixOperationsV4Read(ctx context.Context, d *schema.ResourceDa
 
 	resp, err := conn.OperationsAPIInstance.ListOperations(page, limit, filter, orderBy, selects)
 	if err != nil {
-		return diag.Errorf("error while fetching permissions : %v", err)
+		return diag.Errorf("error while fetching operations : %v", err)
 	}
 
 	getResp := resp.Data
 
 	if getResp != nil {
-		permissions := getResp.GetValue().([]import1.Operation)
-		if err := d.Set("permissions", flattenPermissionEntities(permissions)); err != nil {
+		operations := getResp.GetValue().([]import1.Operation)
+		if err := d.Set("operations", flattenPermissionEntities(operations)); err != nil {
 			return diag.FromErr(err)
 		}
 	}
@@ -160,7 +160,7 @@ func DatasourceNutanixOperationsV4Read(ctx context.Context, d *schema.ResourceDa
 
 func flattenPermissionEntities(pr []import1.Operation) []interface{} {
 	if len(pr) > 0 {
-		permissions := make([]interface{}, len(pr))
+		operations := make([]interface{}, len(pr))
 
 		for k, v := range pr {
 			permission := make(map[string]interface{})
@@ -198,9 +198,9 @@ func flattenPermissionEntities(pr []import1.Operation) []interface{} {
 				t := v.LastUpdatedTime
 				permission["last_updated_time"] = t.String()
 			}
-			permissions[k] = permission
+			operations[k] = permission
 		}
-		return permissions
+		return operations
 	}
 	return nil
 }

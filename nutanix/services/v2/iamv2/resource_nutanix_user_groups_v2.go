@@ -2,12 +2,12 @@ package iamv2
 
 import (
 	"context"
-	"encoding/json"
+	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v16/models/iam/v4/authn"
-	"log"
 
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -84,15 +84,7 @@ func ResourceNutanixUserGroupsV4Create(ctx context.Context, d *schema.ResourceDa
 
 	resp, err := conn.UserGroupsAPIInstance.CreateUserGroup(input)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while creating user groups: %v", errorMessage["message"])
+		return diag.Errorf("error while creating user groups: %v", err)
 	}
 
 	getResp := resp.Data.GetValue().(import1.UserGroup)
@@ -105,15 +97,7 @@ func ResourceNutanixUserGroupsV4Read(ctx context.Context, d *schema.ResourceData
 
 	resp, err := conn.UserGroupsAPIInstance.GetUserGroupById(utils.StringPtr(d.Id()))
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching user groups: %v", errorMessage["message"])
+		return diag.Errorf("error while fetching user groups: %v", err)
 	}
 
 	getResp := resp.Data.GetValue().(import1.UserGroup)
