@@ -213,159 +213,7 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 					},
 				},
 			},
-			"guest_customization": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"sysprep": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"install_type": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-												"sysprep_script": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"unattend_xml": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"value": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																			Computed: true,
-																		},
-																	},
-																},
-															},
-															"custom_key_values": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"key_value_pairs": {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			Computed: true,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					"name": {
-																						Type:     schema.TypeString,
-																						Optional: true,
-																						Computed: true,
-																					},
-																					"value": {
-																						Type:     schema.TypeString,
-																						Optional: true,
-																						Computed: true,
-																					},
-																				},
-																			},
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"cloud_init": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"datasource_type": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Default:  "CONFIG_DRIVE_V2",
-												},
-												"metadata": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-												"cloud_init_script": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"user_data": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"value": {
-																			Type:     schema.TypeString,
-																			Optional: true,
-																			Computed: true,
-																		},
-																	},
-																},
-															},
-															"custom_keys": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"key_value_pairs": {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			Computed: true,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					"name": {
-																						Type:     schema.TypeString,
-																						Optional: true,
-																						Computed: true,
-																					},
-																					"value": {
-																						Type:     schema.TypeString,
-																						Optional: true,
-																						Computed: true,
-																					},
-																				},
-																			},
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+			"guest_customization": schemaForGuestCustomization(),
 			"guest_tools": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -1528,7 +1376,7 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 		body.AvailabilityZone = expandAvailabilityZoneReference(availabilityZone)
 	}
 	if guestCstm, ok := d.GetOk("guest_customization"); ok {
-		body.GuestCustomization = expandGuestCustomizationParams(guestCstm)
+		body.GuestCustomization = expandTemplateGuestCustomizationParams(guestCstm)
 	}
 	if guestTools, ok := d.GetOk("guest_tools"); ok {
 		body.GuestTools = expandGuestTools(guestTools)
@@ -1964,7 +1812,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		checkForUpdateParams = true
 	}
 	if d.HasChange("guest_customization") {
-		updateSpec.GuestCustomization = expandGuestCustomizationParams(d.Get("guest_customization"))
+		updateSpec.GuestCustomization = expandTemplateGuestCustomizationParams(d.Get("guest_customization"))
 		checkForUpdateParams = true
 	}
 	if d.HasChange("hardware_clock_timezone") {
