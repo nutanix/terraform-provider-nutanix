@@ -1505,10 +1505,9 @@ func schemaForGuestCustomization() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"datasource_type": {
-											Type:         schema.TypeString,
-											Optional:     true,
-											Computed:     true,
-											ValidateFunc: validation.StringInSlice([]string{"CONFIG_DRIVE_V2"}, false),
+											Type:     schema.TypeString,
+											Optional: true,
+											Default:  "CONFIG_DRIVE_V2",
 										},
 										"metadata": {
 											Type:     schema.TypeString,
@@ -2512,16 +2511,16 @@ func expandTemplateGuestCustomizationConfig(config interface{}) *vmmConfig.OneOf
 					cloudInitObj.DatasourceType = &p
 				}
 			}
-			if metadata, ok := cloudInitData["metadata"]; ok {
+			if metadata, ok := cloudInitData["metadata"]; ok && len(metadata.(string)) > 0 {
 				cloudInitObj.Metadata = utils.StringPtr(metadata.(string))
 			}
 			if cloudInitScript, ok := cloudInitData["cloud_init_script"]; ok && len(cloudInitScript.([]interface{})) > 0 {
 				cloudInitScriptObj := vmmConfig.NewOneOfCloudInitCloudInitScript()
 				cloudInitScriptData := cloudInitScript.([]interface{})[0].(map[string]interface{})
 
-				if userdata := cloudInitScriptData["userdata"]; userdata != nil && len(userdata.([]interface{})) > 0 {
+				if userdata := cloudInitScriptData["user_data"]; userdata != nil && len(userdata.([]interface{})) > 0 {
 					user := vmmConfig.NewUserdata()
-					userVal := userdata.(map[string]interface{})
+					userVal := userdata.([]interface{})[0].(map[string]interface{})
 
 					if value, ok := userVal["value"]; ok {
 						user.Value = utils.StringPtr(value.(string))

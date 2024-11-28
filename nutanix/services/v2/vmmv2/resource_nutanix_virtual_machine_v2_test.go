@@ -376,6 +376,38 @@ func TestAccNutanixVmsV2Resource_WithCloudInit(t *testing.T) {
 	})
 }
 
+func TestAccNutanixVmsV2Resource_WithCloudInitWithCustomKeys(t *testing.T) {
+	t.Skip("Failing due to issue with cloud_init user_data & custom_keys")
+	r := acctest.RandInt()
+	desc := "test vm description"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testVmsV4ConfigWithCloudInitWithCustomKeys(r, desc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "name", fmt.Sprintf("tf-test-vm-%d", r)),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_cores_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_sockets", "1"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "create_time"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "update_time"),
+					resource.TestCheckResourceAttr(resourceNameVms, "protection_type", "UNPROTECTED"),
+					resource.TestCheckResourceAttr(resourceNameVms, "is_agent_vm", "false"),
+					resource.TestCheckResourceAttr(resourceNameVms, "machine_type", "PC"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "disks.#"),
+					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.bus_type", "SCSI"),
+					resource.TestCheckResourceAttr(resourceNameVms, "disks.0.disk_address.0.index", "0"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "nics.#"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.nic_type", "NORMAL_NIC"),
+					resource.TestCheckResourceAttr(resourceNameVms, "nics.0.network_info.0.vlan_mode", "ACCESS"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNutanixVmsV2Resource_UpdateDiskNics(t *testing.T) {
 	r := acctest.RandInt()
 	desc := "test vm description"
@@ -1227,6 +1259,85 @@ func testVmsV4ConfigWithCloudInit(r int, desc string) string {
 				ignore_changes = [
 					guest_customization, cd_roms
 				]
+			}
+		}
+`, r, desc, filepath)
+}
+
+func testVmsV4ConfigWithCloudInitWithCustomKeys(r int, desc string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+
+		locals {
+			cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
+			gs = base64encode("#cloud-config\nusers:\n  - name: ubuntu\n    ssh-authorized-keys:\n      - ssh-rsa DUMMYSSH mypass\n    sudo: ['ALL=(ALL) NOPASSWD:ALL']")
+			config = jsondecode(file("%[3]s"))
+			vmm = local.config.vmm
+		}
+
+		data "nutanix_storage_containers_v2" "ngt-sc" {
+		  filter = "clusterExtId eq '${local.cluster0}'"
+		  limit = 1
+		}
+
+		data "nutanix_subnets_v2" "subnets" {
+			filter = "name eq '${local.vmm.subnet_name}'"
+		}
+	
+		resource "nutanix_virtual_machine_v2" "test"{
+			name= "tf-test-vm-%[1]d"
+			description =  "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets = 1
+			cluster {
+				ext_id = local.cluster0
+			}
+			disks{
+				disk_address{
+					bus_type = "SCSI"
+					index = 0
+				}
+				backing_info{
+					vm_disk{
+						disk_size_bytes = "1073741824"
+						storage_container{
+							ext_id = data.nutanix_storage_containers_v2.ngt-sc.storage_containers[0].ext_id
+						}
+					}
+				}
+			}
+			nics{
+				network_info{
+					nic_type = "NORMAL_NIC"
+					subnet{
+						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
+					}	
+					vlan_mode = "ACCESS"
+				}
+			}
+			guest_customization {
+				config {
+					cloud_init {
+						cloud_init_script {
+							custom_key_values {
+								key_value_pairs {
+									name = "locale"
+									value {
+										string = "en-US"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			lifecycle{
+			ignore_changes = [
+				guest_customization, cd_roms
+			]
 			}
 		}
 `, r, desc, filepath)
