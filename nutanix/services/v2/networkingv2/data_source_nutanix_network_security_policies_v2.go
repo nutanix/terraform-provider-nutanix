@@ -276,6 +276,45 @@ func DataSourceNutanixNetworkSecurityPoliciesV2() *schema.Resource {
 														},
 													},
 												},
+												"multi_env_isolation_rule_spec": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"spec": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"all_to_all_isolation_group": {
+																			Type:     schema.TypeList,
+																			Computed: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"isolation_group": {
+																						Type:     schema.TypeList,
+																						Computed: true,
+																						Elem: &schema.Resource{
+																							Schema: map[string]*schema.Schema{
+																								"group_category_references": {
+																									Type:     schema.TypeList,
+																									Computed: true,
+																									Elem: &schema.Schema{
+																										Type: schema.TypeString,
+																									},
+																								},
+																							},
+																						},
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
 											},
 										},
 									},

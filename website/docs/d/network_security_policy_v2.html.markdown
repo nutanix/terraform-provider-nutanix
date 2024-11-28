@@ -61,6 +61,7 @@ The following attributes are exported:
 * `two_env_isolation_rule_spec`: Two Environment Isolation Rule Spec.
 * `application_rule_spec`: Application Rule Spec.
 * `intra_entity_group_rule_spec`: Intra entity group Rule Spec
+* `multi_env_isolation_rule_spec`: Multi Environment Isolation Rule Spec.
 
 
 ### two_env_isolation_rule_spec
@@ -90,6 +91,17 @@ The following attributes are exported:
 * `secured_group_action`: List of secured group action.
 * `secured_group_category_references`: A specification to whether traffic between intra secured group entities should be allowed or denied.
 
+### multi_env_isolation_rule_spec
+* `spec`: Multi Environment Isolation Rule Spec.
+
+#### spec
+* `all_to_all_isolation_group`: all to all isolation group
+
+#### all_to_all_isolation_group
+* `isolation_group`: Denotes the list of secured groups that will be used in All to All mutual isolation.
+
+#### isolation_groups
+* `group_category_references`: External identifiers of categories belonging to the isolation group.
 
 ### tcp_services, tcp_services
 * `start_port`: start port 

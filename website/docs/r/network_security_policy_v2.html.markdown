@@ -63,6 +63,7 @@ One of below rules spec.
 * `two_env_isolation_rule_spec`: (Optional) Two Environment Isolation Rule Spec.
 * `application_rule_spec`: (Optional) Application Rule Spec.
 * `intra_entity_group_rule_spec`: (Optional) Intra entity group Rule Spec
+* `multi_env_isolation_rule_spec`: (Optional) Multi Environment Isolation Rule Spec.
 
 
 ### two_env_isolation_rule_spec
@@ -91,6 +92,18 @@ One of below rules spec.
 ### intra_entity_group_rule_spec
 * `secured_group_action`: (Required) List of secured group action.
 * `secured_group_category_references`: (Required) A specification to whether traffic between intra secured group entities should be allowed or denied.
+
+### multi_env_isolation_rule_spec
+* `spec`: (Required) Multi Environment Isolation Rule Spec.
+
+#### spec
+* `all_to_all_isolation_group`: all to all isolation groups
+
+#### all_to_all_isolation_group
+* `isolation_group`: (Required) Denotes the list of secured groups that will be used in All to All mutual isolation.
+
+#### isolation_groups
+* `group_category_references`: (Required) External identifiers of categories belonging to the isolation group.
 
 
 ### tcp_services, tcp_services

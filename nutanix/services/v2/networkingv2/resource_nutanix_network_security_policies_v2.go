@@ -13,6 +13,7 @@ import (
 	import1 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v16/models/microseg/v4/config"
 	import4 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v16/models/prism/v4/config"
 	import2 "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16/models/prism/v4/config"
+
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -59,7 +60,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{"QUARANTINE", "TWO_ENV_ISOLATION", "APPLICATION", "INTRA_GROUP"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"QUARANTINE", "TWO_ENV_ISOLATION", "APPLICATION", "INTRA_GROUP", "MULTI_ENV_ISOLATION"}, false),
 						},
 						"spec": {
 							Type:     schema.TypeList,
@@ -280,6 +281,48 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 											},
 										},
 									},
+									"multi_env_isolation_rule_spec": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"spec": {
+													Type:     schema.TypeList,
+													Required: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"all_to_all_isolation_group": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"isolation_group": {
+																			Type:     schema.TypeList,
+																			Required: true,
+																			MinItems: 2,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"group_category_references": {
+																						Type:     schema.TypeList,
+																						Required: true,
+																						Elem: &schema.Schema{
+																							Type: schema.TypeString,
+																						},
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -431,8 +474,8 @@ func ResourceNutanixNetworkSecurityPolicyV2Create(ctx context.Context, d *schema
 		spec.VpcReferences = expandStringList(vpcRef.([]interface{}))
 	}
 
-	aJSON, _ := json.Marshal(spec)
-	log.Printf("[DEBUG] Spec: %s", aJSON)
+	aJSON, _ := json.MarshalIndent(spec, "", "  ")
+	log.Printf("[DEBUG] Create Network Security Policy Payload: %s", string(aJSON))
 
 	resp, err := conn.NetworkingSecurityInstance.CreateNetworkSecurityPolicy(&spec)
 	if err != nil {
@@ -644,6 +687,9 @@ func ResourceNutanixNetworkSecurityPolicyV2Update(ctx context.Context, d *schema
 		updatedSpec.VpcReferences = expandStringList(d.Get("vpc_reference").([]interface{}))
 	}
 
+	aJSON, _ := json.MarshalIndent(updatedSpec, "", "  ")
+	log.Printf("[DEBUG] Update Network Security Policy Payload: %s", string(aJSON))
+
 	updatedResp, err := conn.NetworkingSecurityInstance.UpdateNetworkSecurityPolicyById(utils.StringPtr(d.Id()), &updatedSpec)
 	if err != nil {
 		return diag.Errorf("error while updating network security: %v", err)
@@ -709,12 +755,13 @@ func expandNetworkSecurityPolicyRule(pr []interface{}) []import1.NetworkSecurity
 				net.Description = utils.StringPtr(desc.(string))
 			}
 			if ty, ok := val["type"]; ok {
-				const two, three, four, five = 2, 3, 4, 5
+				const two, three, four, five, six = 2, 3, 4, 5, 6
 				subMap := map[string]interface{}{
-					"QUARANTINE":        two,
-					"TWO_ENV_ISOLATION": three,
-					"APPLICATION":       four,
-					"INTRA_GROUP":       five,
+					"QUARANTINE":          two,
+					"TWO_ENV_ISOLATION":   three,
+					"APPLICATION":         four,
+					"INTRA_GROUP":         five,
+					"MULTI_ENV_ISOLATION": six,
 				}
 				pInt := subMap[ty.(string)]
 				p := import1.RuleType(pInt.(int))
@@ -841,7 +888,87 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 			}
 			policyRules.SetValue(*intra)
 		}
+
+		if multiEnv, ok := val["multi_env_isolation_rule_spec"]; ok && len(multiEnv.([]interface{})) > 0 {
+			multi := import1.NewMultiEnvIsolationRuleSpec()
+
+			multiI := multiEnv.([]interface{})
+			multiVal := multiI[0].(map[string]interface{})
+
+			if spec, ok := multiVal["spec"]; ok && len(spec.([]interface{})) > 0 {
+				oneOfMultiEnvIsolationRuleSpecSpec := expandOneOfMultiEnvIsolationRuleSpecSpec(spec.([]interface{}))
+
+				aJson, _ := json.Marshal(oneOfMultiEnvIsolationRuleSpecSpec)
+				log.Printf("[DEBUG] OneOfMultiEnvIsolationRuleSpecSpec: %s", aJson)
+
+				multi.Spec = oneOfMultiEnvIsolationRuleSpecSpec
+
+				aJson, _ = json.Marshal(multi)
+				log.Printf("[DEBUG] MultiEnvIsolationRuleSpec: %s", aJson)
+			}
+
+			err := policyRules.SetValue(*multi)
+			if err != nil {
+				log.Printf("[ERROR] Error while setting value for multi env isolation rule: %v", err)
+				return nil
+			}
+		}
+		aJSON, _ := json.Marshal(policyRules)
+		log.Printf("[DEBUG] PolicyRules: %s", aJSON)
 		return policyRules
+	}
+	return nil
+}
+
+func expandOneOfMultiEnvIsolationRuleSpecSpec(spec []interface{}) *import1.OneOfMultiEnvIsolationRuleSpecSpec {
+	if len(spec) > 0 {
+		specVal := spec[0].(map[string]interface{})
+		allToAllIso := import1.NewAllToAllIsolationGroup()
+
+		oneOfMultiEnv := import1.NewOneOfMultiEnvIsolationRuleSpecSpec()
+
+		if allToAll, ok := specVal["all_to_all_isolation_group"]; ok && len(allToAll.([]interface{})) > 0 {
+			allToAllI := allToAll.([]interface{})
+			allToAllVal := allToAllI[0].(map[string]interface{})
+
+			if isoGroup, ok := allToAllVal["isolation_group"]; ok && len(isoGroup.([]interface{})) > 0 {
+				allToAllIso.IsolationGroups = expandIsolationGroup(isoGroup.([]interface{}))
+			}
+
+			aJson, _ := json.Marshal(allToAllIso)
+			log.Printf("[DEBUG] AllToAllIsolationGroup: %s", aJson)
+
+			err := oneOfMultiEnv.SetValue(*allToAllIso)
+			if err != nil {
+				log.Printf("[ERROR] Error while setting value for MultiEnvIsolationRuleSpec.spec.allToAllIsolationGroup: %v", err)
+				return nil
+			}
+			aJSON, _ := json.Marshal(oneOfMultiEnv)
+			log.Printf("[DEBUG] OneOfMultiEnvIsolationRuleSpecSpec: %s", aJSON)
+			return oneOfMultiEnv
+		}
+	}
+	return nil
+}
+
+func expandIsolationGroup(isolationGroup []interface{}) []import1.IsolationGroup {
+	if len(isolationGroup) > 0 {
+		isolations := make([]import1.IsolationGroup, len(isolationGroup))
+
+		for k, v := range isolationGroup {
+			val := v.(map[string]interface{})
+			iso := import1.IsolationGroup{}
+
+			if groupCat, ok := val["group_category_references"]; ok && len(groupCat.([]interface{})) > 0 {
+				iso.GroupCategoryReferences = expandStringList(groupCat.([]interface{}))
+			}
+			isolations[k] = iso
+		}
+
+		aJson, _ := json.Marshal(isolations)
+		log.Printf("[DEBUG] IsolationGroups: %s", aJson)
+
+		return isolations
 	}
 	return nil
 }

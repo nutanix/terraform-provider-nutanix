@@ -2,6 +2,8 @@ package networkingv2
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -249,6 +251,45 @@ func DataSourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 											},
 										},
 									},
+									"multi_env_isolation_rule_spec": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"spec": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"all_to_all_isolation_group": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"isolation_group": {
+																			Type:     schema.TypeList,
+																			Computed: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"group_category_references": {
+																						Type:     schema.TypeList,
+																						Computed: true,
+																						Elem: &schema.Schema{
+																							Type: schema.TypeString,
+																						},
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -450,6 +491,8 @@ func flattenOneOfNetworkSecurityPolicyRuleSpec(pr *import1.OneOfNetworkSecurityP
 		appRuleSpecList := make([]map[string]interface{}, 0)
 		intraRuleSpec := make(map[string]interface{})
 		intraRuleSpecList := make([]map[string]interface{}, 0)
+		multiEnvIsolationRuleSpec := make(map[string]interface{})
+		multiEnvIsolationRuleSpecList := make([]map[string]interface{}, 0)
 
 		if *pr.ObjectType_ == "microseg.v4.config.TwoEnvIsolationRuleSpec" {
 			env := make(map[string]interface{})
@@ -527,25 +570,60 @@ func flattenOneOfNetworkSecurityPolicyRuleSpec(pr *import1.OneOfNetworkSecurityP
 			appRuleSpecList = append(appRuleSpecList, appRuleSpec)
 			return appRuleSpecList
 		}
+		if *pr.ObjectType_ == "microseg.v4.config.IntraEntityGroupRuleSpec" {
+			intra := make(map[string]interface{})
+			intraList := make([]map[string]interface{}, 0)
 
-		intra := make(map[string]interface{})
-		intraList := make([]map[string]interface{}, 0)
+			intraRuleValue := pr.GetValue().(import1.IntraEntityGroupRuleSpec)
 
-		intraRuleValue := pr.GetValue().(import1.IntraEntityGroupRuleSpec)
+			if intraRuleValue.SecuredGroupAction != nil {
+				intra["secured_group_action"] = flattenIntraEntityGroupRuleAction(intraRuleValue.SecuredGroupAction)
+			}
+			if intraRuleValue.SecuredGroupCategoryReferences != nil {
+				intra["secured_group_category_references"] = intraRuleValue.SecuredGroupCategoryReferences
+			}
 
-		if intraRuleValue.SecuredGroupAction != nil {
-			intra["secured_group_action"] = flattenIntraEntityGroupRuleAction(intraRuleValue.SecuredGroupAction)
+			intraList = append(intraList, intra)
+
+			intraRuleSpec["intra_entity_group_rule_spec"] = intraList
+			intraRuleSpecList = append(intraRuleSpecList, intraRuleSpec)
+
+			return intraRuleSpecList
 		}
-		if intraRuleValue.SecuredGroupCategoryReferences != nil {
-			intra["secured_group_category_references"] = intraRuleValue.SecuredGroupCategoryReferences
+		if *pr.ObjectType_ == "microseg.v4.config.MultiEnvIsolationRuleSpec" {
+			multiEenv := make(map[string]interface{})
+			multiEnvList := make([]map[string]interface{}, 0)
+
+			specMap := make([]map[string]interface{}, 0)
+			allToAllIsolationGroup := make([]map[string]interface{}, 0)
+			isolationGroups := make([]map[string]interface{}, 0)
+			groupCategoryRef := make(map[string]interface{})
+
+			multiEnvIsolationValue := pr.GetValue().(import1.MultiEnvIsolationRuleSpec)
+
+			allIsolationGroupValue := multiEnvIsolationValue.Spec.GetValue().(import1.AllToAllIsolationGroup)
+
+			for _, group := range allIsolationGroupValue.IsolationGroups {
+				groupCategoryRef["group_category_reference"] = group.GroupCategoryReferences
+				isolationGroups = append(isolationGroups, groupCategoryRef)
+			}
+
+			allToAllIsolationGroup = append(allToAllIsolationGroup, isolationGroups...)
+
+			specMap = append(specMap, allToAllIsolationGroup...)
+
+			multiEenv["multi_env_isolation_rule_spec"] = specMap
+
+			multiEnvList = append(multiEnvList, multiEenv)
+
+			multiEnvIsolationRuleSpec["multi_env_isolation_rule_spec"] = multiEnvList
+
+			multiEnvIsolationRuleSpecList = append(multiEnvIsolationRuleSpecList, multiEnvIsolationRuleSpec)
+
+			aJson, _ := json.Marshal(multiEnvIsolationRuleSpecList)
+			log.Printf("[DEBUG] multiEnvIsolationRuleSpecList: %s", string(aJson))
+			return multiEnvIsolationRuleSpecList
 		}
-
-		intraList = append(intraList, intra)
-
-		intraRuleSpec["intra_entity_group_rule_spec"] = intraList
-		intraRuleSpecList = append(intraRuleSpecList, intraRuleSpec)
-
-		return intraRuleSpecList
 	}
 	return nil
 }
@@ -596,7 +674,7 @@ func flattenPolicyState(pr *import1.SecurityPolicyState) string {
 }
 
 func flattenRuleType(pr *import1.RuleType) string {
-	const two, three, four, five = 2, 3, 4, 5
+	const two, three, four, five, six = 2, 3, 4, 5, 6
 	if pr != nil {
 		if *pr == import1.RuleType(two) {
 			return "QUARANTINE"
@@ -609,6 +687,9 @@ func flattenRuleType(pr *import1.RuleType) string {
 		}
 		if *pr == import1.RuleType(five) {
 			return "ENFORCE"
+		}
+		if *pr == import1.RuleType(six) {
+			return "MULTI_ENV_ISOLATION"
 		}
 	}
 	return "UNKNOWN"
