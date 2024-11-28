@@ -26,11 +26,9 @@ type TestConfig struct {
 		} `json:"users"`
 		// UserGroups config
 		UserGroups struct {
-			IdpId              string `json:"idp_id"`
-			DirectoryServiceId string `json:"directory_service_id"`
-			Name               string `json:"name"`
-			SAMLName           string `json:"saml_name"`
-			DistinguishedName  string `json:"distinguished_name"`
+			Name              string `json:"name"`
+			SAMLName          string `json:"saml_name"`
+			DistinguishedName string `json:"distinguished_name"`
 		} `json:"user_groups"`
 		AuthPolicies struct {
 			DisplayName    string   `json:"display_name"`

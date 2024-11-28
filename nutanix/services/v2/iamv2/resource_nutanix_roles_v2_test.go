@@ -89,7 +89,7 @@ func testRoleResourceConfig(filepath string) string {
 	}
 	
 	data "nutanix_operations_v2" "test" {
-	  limit = 3
+	  filter = "startswith(displayName, 'Create_')"
 	}
 
 	resource "nutanix_roles_v2" "test" {
@@ -99,6 +99,7 @@ func testRoleResourceConfig(filepath string) string {
 			data.nutanix_operations_v2.test.operations[0].ext_id,
 			data.nutanix_operations_v2.test.operations[1].ext_id,
 			data.nutanix_operations_v2.test.operations[2].ext_id,
+			data.nutanix_operations_v2.test.operations[3].ext_id
 	  	]
 		depends_on = [data.nutanix_operations_v2.test]
 	}`, filepath)
@@ -113,7 +114,8 @@ func testRoleResourceUpdateConfig(filepath string) string {
 	}
 	
 	data "nutanix_operations_v2" "test" {
-	  limit = 3
+	  //filter = "startswith(displayName, 'Create_')"
+	  filter = "startswith(displayName, 'Create_')"
 	}
 
 	resource "nutanix_roles_v2" "test" {
@@ -123,6 +125,7 @@ func testRoleResourceUpdateConfig(filepath string) string {
 			data.nutanix_operations_v2.test.operations[0].ext_id,
 			data.nutanix_operations_v2.test.operations[1].ext_id,
 			data.nutanix_operations_v2.test.operations[2].ext_id,
+			data.nutanix_operations_v2.test.operations[3].ext_id
 	  	]
 		depends_on = [data.nutanix_operations_v2.test]
 	}`, filepath)
@@ -137,7 +140,7 @@ func testRoleResourceDuplicateRoleConfig(filepath string) string {
 	}
 	
 	data "nutanix_operations_v2" "test" {
-	  limit = 3
+	  filter = "startswith(displayName, 'Create_')"
 	}
 
 	resource "nutanix_roles_v2" "test_1" {
@@ -147,6 +150,7 @@ func testRoleResourceDuplicateRoleConfig(filepath string) string {
 			data.nutanix_operations_v2.test.operations[0].ext_id,
 			data.nutanix_operations_v2.test.operations[1].ext_id,
 			data.nutanix_operations_v2.test.operations[2].ext_id,
+			data.nutanix_operations_v2.test.operations[3].ext_id
 	  	]
 		depends_on = [data.nutanix_operations_v2.test]
 	}
@@ -158,6 +162,7 @@ func testRoleResourceDuplicateRoleConfig(filepath string) string {
 			data.nutanix_operations_v2.test.operations[0].ext_id,
 			data.nutanix_operations_v2.test.operations[1].ext_id,
 			data.nutanix_operations_v2.test.operations[2].ext_id,
+			data.nutanix_operations_v2.test.operations[3].ext_id
 	  	]
 		depends_on = [data.nutanix_operations_v2.test, resource.nutanix_roles_v2.test_1]
 	}
@@ -174,7 +179,7 @@ func testRoleResourceWithoutDisplayNameConfig(filepath string) string {
 	}
 	
 	data "nutanix_operations_v2" "test" {
-	  limit = 3
+	  filter = "startswith(displayName, 'Create_')"
 	}
 
 	resource "nutanix_roles_v2" "test" {
@@ -183,6 +188,7 @@ func testRoleResourceWithoutDisplayNameConfig(filepath string) string {
 			data.nutanix_operations_v2.test.operations[0].ext_id,
 			data.nutanix_operations_v2.test.operations[1].ext_id,
 			data.nutanix_operations_v2.test.operations[2].ext_id,
+			data.nutanix_operations_v2.test.operations[3].ext_id
 	  	]
 		depends_on = [data.nutanix_operations_v2.test]
 	}`, filepath)

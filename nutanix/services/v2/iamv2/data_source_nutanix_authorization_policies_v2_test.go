@@ -13,7 +13,7 @@ const datasourceNameAuthorizationPolicies = "data.nutanix_authorization_policies
 
 const authPolicy = ` 
 data "nutanix_operations_v2" "test" {
-	limit = 3
+	filter = "startswith(displayName, 'Create_')"
 }
 
 resource "nutanix_roles_v2" "test" {
@@ -23,6 +23,7 @@ resource "nutanix_roles_v2" "test" {
 		data.nutanix_operations_v2.test.operations[0].ext_id,
 		data.nutanix_operations_v2.test.operations[1].ext_id,
 		data.nutanix_operations_v2.test.operations[2].ext_id,
+		data.nutanix_operations_v2.test.operations[3].ext_id
 	]
 	depends_on = [data.nutanix_operations_v2.test]
 }

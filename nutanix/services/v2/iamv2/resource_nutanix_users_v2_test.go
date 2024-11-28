@@ -75,7 +75,7 @@ func TestAccNutanixUsersV2Resource_AlreadyExistsUser(t *testing.T) {
 				),
 			},
 			{
-				Config:      testLocalUserAlreadyExistsResourceConfig(filepath, name),
+				Config:      testLocalActiveUserResourceConfig(filepath, name) + testLocalUserAlreadyExistsResourceConfig(filepath, name),
 				ExpectError: regexp.MustCompile("user already exists with given username"),
 			},
 		},
@@ -272,10 +272,6 @@ func testLocalActiveUserResourceUpdateConfig(filepath, name string) string {
 func testLocalUserAlreadyExistsResourceConfig(filepath, name string) string {
 	return fmt.Sprintf(`
 
-	locals{
-		config = (jsondecode(file("%[1]s")))
-		users = local.config.iam.users
-	}
 
 	resource "nutanix_users_v2" "test2" {
 		username = "%[2]s"

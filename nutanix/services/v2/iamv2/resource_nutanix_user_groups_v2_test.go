@@ -50,7 +50,7 @@ func TestAccNutanixUserGroupsV2Resource_SAMLUserGroup(t *testing.T) {
 				),
 			},
 			{
-				Config:      testSAMLAlreadyExistsUserGroupsResourceConfig(filepath),
+				Config:      testSAMLUserGroupsResourceConfig(filepath) + testSAMLAlreadyExistsUserGroupsResourceConfig(),
 				ExpectError: regexp.MustCompile("Failed to create the user group as an user group already exists with same DN"),
 			},
 		},
@@ -134,20 +134,13 @@ func testSAMLUserGroupsResourceConfig(filepath string) string {
 	  }`, filepath)
 }
 
-func testSAMLAlreadyExistsUserGroupsResourceConfig(filepath string) string {
-	return fmt.Sprintf(`
-
-	locals{
-		config = (jsondecode(file("%s")))
-		users = local.config.iam.users
-		user_groups = local.config.iam.user_groups
-	}
-
+func testSAMLAlreadyExistsUserGroupsResourceConfig() string {
+	return `
 	resource "nutanix_user_groups_v2" "test_1" {
 		group_type = "SAML"
 		idp_id = local.users.idp_id
 		name = local.user_groups.saml_name
-	  }`, filepath)
+	  }`
 }
 
 func testUserGroupsResourceWithoutGroupTypeConfig(filepath string) string {
