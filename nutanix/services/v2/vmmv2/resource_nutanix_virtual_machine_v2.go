@@ -1302,6 +1302,109 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 	}
 }
 
+func schemaForGuestCustomization() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"sysprep": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"install_type": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.StringInSlice([]string{"PREPARED", "FRESH"}, false),
+										},
+										"sysprep_script": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"unattend_xml": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"value": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	Computed: true,
+																},
+															},
+														},
+													},
+													"custom_key_values": schemaForCustomKeyValuePairs(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"cloud_init": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"datasource_type": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Default:  "CONFIG_DRIVE_V2",
+										},
+										"metadata": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										"cloud_init_script": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"user_data": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"value": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	Computed: true,
+																},
+															},
+														},
+													},
+													"custom_key_values": schemaForCustomKeyValuePairs(),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 	body := &config.Vm{}

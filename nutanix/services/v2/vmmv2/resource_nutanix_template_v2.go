@@ -194,7 +194,7 @@ func ResourceNutanixTemplatesV2Create(ctx context.Context, d *schema.ResourceDat
 		body.CreatedBy = expandTemplateUser(createdBy)
 	}
 
-	aJson, _ := json.Marshal(body)
+	aJson, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Template create request body :\n %s", string(aJson))
 	resp, err := conn.TemplatesAPIInstance.CreateTemplate(body)
 
@@ -392,7 +392,7 @@ func ResourceNutanixTemplatesV2Update(ctx context.Context, d *schema.ResourceDat
 		}
 	}
 
-	aJson, _ := json.Marshal(updateSpec)
+	aJson, _ := json.MarshalIndent(updateSpec, "", "  ")
 	log.Printf("[DEBUG] Template update request body :\n %v", string(aJson))
 
 	respUpdate, err := conn.TemplatesAPIInstance.UpdateTemplateById(utils.StringPtr(d.Id()), updateSpec, args)
@@ -412,7 +412,7 @@ func ResourceNutanixTemplatesV2Update(ctx context.Context, d *schema.ResourceDat
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 	// log task details
-	aJson, _ = json.Marshal(TaskRef)
+	aJson, _ = json.MarshalIndent(TaskRef, "", "  ")
 	log.Printf("[DEBUG] Task details : %v", string(aJson))
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -675,7 +675,7 @@ func schemaForTemplateVmSpec() *schema.Schema {
 						},
 					},
 				},
-				"guest_customization": schemaForGuestCustomization(),
+				"guest_customization": schemaForTemplateGuestCustomization(),
 				"guest_tools": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -1387,7 +1387,7 @@ func schemaForVersionSource() *schema.Schema {
 								Type:     schema.TypeString,
 								Required: true,
 							},
-							"guest_customization": schemaForGuestCustomization(),
+							"guest_customization": schemaForTemplateGuestCustomization(),
 						},
 					},
 				},
@@ -1434,7 +1434,7 @@ func schemaForVersionSource() *schema.Schema {
 											Optional: true,
 										},
 										"nics":                schemaForNics(),
-										"guest_customization": schemaForGuestCustomization(),
+										"guest_customization": schemaForTemplateGuestCustomization(),
 									},
 								},
 							},
@@ -1446,7 +1446,7 @@ func schemaForVersionSource() *schema.Schema {
 	}
 }
 
-func schemaForGuestCustomization() *schema.Schema {
+func schemaForTemplateGuestCustomization() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -1505,9 +1505,10 @@ func schemaForGuestCustomization() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"datasource_type": {
-											Type:     schema.TypeString,
-											Optional: true,
-											Default:  "CONFIG_DRIVE_V2",
+											Type:         schema.TypeString,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.StringInSlice([]string{"CONFIG_DRIVE_V2"}, false),
 										},
 										"metadata": {
 											Type:     schema.TypeString,
