@@ -31,7 +31,7 @@ resource "nutanix_recovery_points_v2" "rp-example" {
 # replicate RP
 resource "nutanix_recovery_point_replicate_v2" "test" {
   ext_id         = nutanix_recovery_points_v2.rp-example.id
-  cluster_ext_id = "<cluster-uuid>"
-  pc_ext_id      = "<pc-uuid>"
+  cluster_ext_id = "<cluster-uuid>" # remote cluster uuid
+  pc_ext_id      = "<pc-uuid>" # remote pc uuid
   depends_on     = [nutanix_recovery_points_v2.test]
 }
