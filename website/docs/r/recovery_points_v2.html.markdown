@@ -44,6 +44,12 @@ The following arguments are supported:
 
 ### vm_recovery_points
 * `vm_ext_id`: (Required) VM external identifier which is captured as a part of this recovery point.
+* `name` : (Optional) The name of the Recovery point.
+* `expiration_time`: (Optional) The UTC date and time in ISO-8601 format when the current Recovery point expires and will be garbage collected.
+* `status`: (Optional) The status of the Recovery point, which indicates whether this Recovery point is fit to be consumed.
+  * supported values:
+    * `COMPLETE`: - The Recovery point is in a complete state and ready to be consumed.
+* `recovery_point_type`: (Optional) Type of the Recovery point.
 * `application_consistent_properties`: (Optional) User-defined application-consistent properties for the recovery point.
 
 ### application_consistent_properties
@@ -99,6 +105,13 @@ The links attribute supports the following:
 * `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 * `consistency_group_ext_id`: External identifier of the Consistency group which the VM was part of at the time of recovery point creation.
 * `location_agnostic_id`: Location agnostic identifier of the Recovery point.
+* `name` : The name of the Recovery point.
+* `creation_time`: The UTC date and time in ISO-8601 format when the Recovery point is created.
+* `expiration_time`: The UTC date and time in ISO-8601 format when the current Recovery point expires and will be garbage collected.
+* `status`: The status of the Recovery point, which indicates whether this Recovery point is fit to be consumed.
+  * supported values:
+    * `COMPLETE`: -  The Recovery point is in a complete state and ready to be consumed.
+* `recovery_point_type`: Type of the Recovery point.
 * `disk_recovery_points`: array of disk recovery points.
 * `vm_ext_id`: VM external identifier which is captured as a part of this recovery point.
 * `vm_categories`: Category key-value pairs associated with the VM at the time of recovery point creation. The category key and value are separated by '/'. For example, a category with key 'dept' and value 'hr' is displayed as 'dept/hr'.

@@ -85,6 +85,26 @@ func DatasourceNutanixRecoveryPointV2() *schema.Resource {
 							Computed: true,
 						},
 						"links": SchemaForLinks(),
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"creation_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"expiration_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"recovery_point_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"consistency_group_ext_id": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -360,12 +380,33 @@ func flattenVMRecoveryPoints(vmRecoveryPoints []config.VmRecoveryPoint) []map[st
 			if v.VmCategories != nil {
 				vmRecoveryPoint["vm_categories"] = v.VmCategories
 			}
+			if v.Name != nil {
+				vmRecoveryPoint["name"] = v.Name
+			}
+			if v.ExpirationTime != nil {
+				vmRecoveryPoint["expiration_time"] = flattenTime(v.ExpirationTime)
+			}
+			if v.Status != nil {
+				vmRecoveryPoint["status"] = flattenStatus(v.Status)
+			}
+			if v.RecoveryPointType != nil {
+				vmRecoveryPoint["recovery_point_type"] = flattenRecoveryPointType(v.RecoveryPointType)
+			}
+			if v.CreationTime != nil {
+				vmRecoveryPoint["creation_time"] = flattenTime(v.CreationTime)
+			}
 			if v.ApplicationConsistentProperties != nil {
 				vmRecoveryPoint["application_consistent_properties"] = flattenApplicationConsistentProperties(v.ApplicationConsistentProperties)
 			}
 
+			aJson, _ := json.MarshalIndent(v, "", "  ")
+			log.Printf("[DEBUG] VM Recovery Point v: %v\n", string(aJson))
+
 			vmRecoveryPointList[k] = vmRecoveryPoint
 		}
+
+		aJson, _ := json.MarshalIndent(vmRecoveryPointList, "", "  ")
+		log.Printf("[DEBUG] VM Recovery Points Flattened: %v\n", string(aJson))
 		return vmRecoveryPointList
 	}
 	return nil

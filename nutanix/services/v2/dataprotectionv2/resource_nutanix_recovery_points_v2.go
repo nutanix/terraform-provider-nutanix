@@ -118,6 +118,32 @@ func ResourceNutanixRecoveryPointsV2() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"creation_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"expiration_time": {
+							Type:     schema.TypeString,
+							Computed: true,
+							Optional: true,
+						},
+						"status": {
+							Type:         schema.TypeString,
+							Computed:     true,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"COMPLETE"}, false),
+						},
+						"recovery_point_type": {
+							Type:         schema.TypeString,
+							Computed:     true,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice([]string{"CRASH_CONSISTENT", "APPLICATION_CONSISTENT"}, false),
+						},
 						"application_consistent_properties": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -158,11 +184,9 @@ func ResourceNutanixRecoveryPointsV2() *schema.Resource {
 					},
 				},
 				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-					log.Printf("[DEBUG] DiffSuppressFunc vm_recovery_points \n")
 
 					// Check if the list has changed
 					if d.HasChange("vm_recovery_points") {
-						log.Printf("[DEBUG] vm_recovery_points has changed \n")
 						oldRaw, newRaw := d.GetChange("vm_recovery_points")
 						// Convert to lists of interfaces
 						oldList := oldRaw.([]interface{})
@@ -174,10 +198,6 @@ func ResourceNutanixRecoveryPointsV2() *schema.Resource {
 						sort.SliceStable(newList, func(i, j int) bool {
 							return newList[i].(map[string]interface{})["vm_ext_id"].(string) < newList[j].(map[string]interface{})["vm_ext_id"].(string)
 						})
-						aJSON, _ := json.Marshal(oldList)
-						log.Printf("[DEBUG] oldList: %v", string(aJSON))
-						aJSON, _ = json.Marshal(newList)
-						log.Printf("[DEBUG] newList: %v", string(aJSON))
 						// Check if lists are equal when vm_ext_id is the same
 						if isListEqual(oldList, newList, "vm_ext_id") {
 							log.Printf("[DEBUG] vm_recovery_points are equal \n")
@@ -228,11 +248,9 @@ func ResourceNutanixRecoveryPointsV2() *schema.Resource {
 					},
 				},
 				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-					log.Printf("[DEBUG] DiffSuppressFunc volume_group_recovery_points \n")
 
 					// Check if the list has changed
 					if d.HasChange("volume_group_recovery_points") {
-						log.Printf("[DEBUG] volume_group_recovery_points has changed \n")
 						oldRaw, newRaw := d.GetChange("volume_group_recovery_points")
 						// Convert to lists of interfaces
 						oldList := oldRaw.([]interface{})
@@ -244,10 +262,6 @@ func ResourceNutanixRecoveryPointsV2() *schema.Resource {
 						sort.SliceStable(newList, func(i, j int) bool {
 							return newList[i].(map[string]interface{})["volume_group_ext_id"].(string) < newList[j].(map[string]interface{})["volume_group_ext_id"].(string)
 						})
-						aJSON, _ := json.Marshal(oldList)
-						log.Printf("[DEBUG] oldList: %v", string(aJSON))
-						aJSON, _ = json.Marshal(newList)
-						log.Printf("[DEBUG] newList: %v", string(aJSON))
 						// Check if lists are equal when volume_group_ext_id is the same
 						if isListEqual(oldList, newList, "volume_group_ext_id") {
 							log.Printf("[DEBUG] volume_group_recovery_points are equal \n")
@@ -335,7 +349,7 @@ func ResourceNutanixRecoveryPointsV2Create(ctx context.Context, d *schema.Resour
 		body.VolumeGroupRecoveryPoints = expandVolumeGroupRecoveryPoints(volumeGroupRecoveryPoints.([]interface{}))
 	}
 
-	aJSON, _ := json.Marshal(body)
+	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] RecoveryPoint Body: %v", string(aJSON))
 
 	resp, err := conn.RecoveryPoint.CreateRecoveryPoint(&body)
@@ -368,7 +382,7 @@ func ResourceNutanixRecoveryPointsV2Create(ctx context.Context, d *schema.Resour
 	}
 	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
 
-	aJSON, _ = json.Marshal(rUUID)
+	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
 	log.Printf("[DEBUG] Create Recovery Point Task Details: %v", string(aJSON))
 
 	uuid := rUUID.CompletionDetails[0].Value
@@ -508,7 +522,7 @@ func ResourceNutanixRecoveryPointsV2Update(ctx context.Context, d *schema.Resour
 		return diag.Errorf("expiration_time is the only field that can be updated")
 	}
 
-	aJSON, _ := json.Marshal(body)
+	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] RecoveryPoint Body: %v", string(aJSON))
 
 	resp, err := conn.RecoveryPoint.SetRecoveryPointExpirationTime(utils.StringPtr(d.Id()), &body, args)
@@ -542,7 +556,7 @@ func ResourceNutanixRecoveryPointsV2Update(ctx context.Context, d *schema.Resour
 
 	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
 
-	aJSON, _ = json.Marshal(rUUID)
+	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
 	log.Printf("[DEBUG] Update Recovery Point Task Details: %v", string(aJSON))
 
 	return ResourceNutanixRecoveryPointsV2Read(ctx, d, meta)
@@ -625,6 +639,38 @@ func expandVMRecoveryPoints(vmRecoveryPoints []interface{}) ([]config.VmRecovery
 						vmRecoveryPointObj.ApplicationConsistentProperties = appConsistentPropObj
 					}
 				}
+			}
+		}
+		if expirationTime, ok := vmRecoveryPointMap["expiration_time"]; ok && expirationTime != "" {
+			expTime, err := time.Parse(time.RFC3339, expirationTime.(string))
+			if err != nil {
+				log.Printf("[ERROR] error while parsing expiration Time : %v", err)
+				return nil, err
+			}
+			vmRecoveryPointObj.ExpirationTime = &expTime
+		}
+		if name, ok := vmRecoveryPointMap["name"]; ok && name != "" {
+			vmRecoveryPointObj.Name = utils.StringPtr(name.(string))
+		}
+		if status, ok := vmRecoveryPointMap["status"]; ok && status != "" {
+			statusMap := map[string]interface{}{
+				"COMPLETE": 2,
+			}
+			pVal := statusMap[status.(string)]
+			if pVal != nil {
+				p := common.RecoveryPointStatus(pVal.(int))
+				vmRecoveryPointObj.Status = &p
+			}
+		}
+		if recoveryPointType, ok := vmRecoveryPointMap["recovery_point_type"]; ok && recoveryPointType != "" {
+			recoveryPointTypeMap := map[string]interface{}{
+				"CRASH_CONSISTENT":       2,
+				"APPLICATION_CONSISTENT": 3,
+			}
+			pVal := recoveryPointTypeMap[recoveryPointType.(string)]
+			if pVal != nil {
+				p := common.RecoveryPointType(pVal.(int))
+				vmRecoveryPointObj.RecoveryPointType = &p
 			}
 		}
 		vmRecoveryPointsList = append(vmRecoveryPointsList, vmRecoveryPointObj)

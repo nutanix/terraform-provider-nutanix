@@ -42,6 +42,10 @@ func TestAccNutanixRecoveryPointsV2Resource_VmRecoveryPoints(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameRecoveryPoints, "expiration_time", expirationTimeFormatted),
 					resource.TestCheckResourceAttr(resourceNameRecoveryPoints, "recovery_point_type", "APPLICATION_CONSISTENT"),
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPoints, "vm_recovery_points.0.vm_ext_id"),
+					//resource.TestCheckResourceAttr(resourceNameRecoveryPoints, "vm_recovery_points.0.status", "COMPLETE"),
+					//resource.TestCheckResourceAttr(resourceNameRecoveryPoints, "vm_recovery_points.0.expiration_time", expirationTimeFormatted),
+					//resource.TestCheckResourceAttr(resourceNameRecoveryPoints, "vm_recovery_points.0.recovery_point_type", "APPLICATION_CONSISTENT"),
+					//resource.TestCheckResourceAttr(resourceNameRecoveryPoints, "vm_recovery_points.0.name", "tf-test-rp-vm-name"),
 				),
 			},
 		},
@@ -253,6 +257,10 @@ func testRecoveryPointsResourceConfigWithVmRecoveryPoints(name, expirationTime s
 		status              = "COMPLETE"
 		recovery_point_type = "APPLICATION_CONSISTENT"
 		vm_recovery_points {
+			name = "tf-test-rp-vm-name"
+			expiration_time = "%[2]s"
+			recovery_point_type = "APPLICATION_CONSISTENT"
+			status = "COMPLETE"
 			vm_ext_id = nutanix_virtual_machine_v2.test-1.id 
 		}
 	}`, name, expirationTime)

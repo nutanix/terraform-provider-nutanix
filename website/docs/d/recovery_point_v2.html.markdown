@@ -63,6 +63,13 @@ The links attribute supports the following:
 * `ext_id`: recovery point UUID
 * `tenant_id`: A globally unique identifier that represents the tenant that owns this entity
 * `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
+* `name` : The name of the Recovery point.
+* `creation_time`: The UTC date and time in ISO-8601 format when the Recovery point is created.
+* `expiration_time`: The UTC date and time in ISO-8601 format when the current Recovery point expires and will be garbage collected.
+* `status`: The status of the Recovery point, which indicates whether this Recovery point is fit to be consumed.
+  * supported values:
+      * `COMPLETE`: -  The Recovery point is in a complete state and ready to be consumed.
+* `recovery_point_type`: Type of the Recovery point.
 * `consistency_group_ext_id`: External identifier of the Consistency group which the VM was part of at the time of recovery point creation.
 * `location_agnostic_id`: Location agnostic identifier of the Recovery point.
 * `disk_recovery_points`: array of disk recovery points.
