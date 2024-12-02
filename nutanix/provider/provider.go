@@ -11,11 +11,15 @@ import (
 
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/internal"
-	fc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/fc"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/foundation"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/ndb"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/nke"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v1/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/categories"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clusters"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/foundation"
+	foundationCentral "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/foundationCentral"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iam"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/ndb"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networking"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/nke"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/clustersv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/dataprotectionv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/iamv2"
@@ -24,6 +28,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/storagecontainersv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/vmmv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/volumesv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/vmm"
 )
 
 var requiredProviderFields map[string][]string = map[string][]string{
@@ -149,28 +154,28 @@ func Provider() *schema.Provider {
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"nutanix_image":                                   prism.DataSourceNutanixImage(),
-			"nutanix_subnet":                                  prism.DataSourceNutanixSubnet(),
-			"nutanix_subnets":                                 prism.DataSourceNutanixSubnets(),
-			"nutanix_cluster":                                 prism.DataSourceNutanixCluster(),
-			"nutanix_clusters":                                prism.DataSourceNutanixClusters(),
-			"nutanix_virtual_machine":                         prism.DataSourceNutanixVirtualMachine(),
-			"nutanix_category_key":                            prism.DataSourceNutanixCategoryKey(),
-			"nutanix_network_security_rule":                   prism.DataSourceNutanixNetworkSecurityRule(),
-			"nutanix_host":                                    prism.DataSourceNutanixHost(),
-			"nutanix_hosts":                                   prism.DataSourceNutanixHosts(),
-			"nutanix_access_control_policy":                   prism.DataSourceNutanixAccessControlPolicy(),
-			"nutanix_access_control_policies":                 prism.DataSourceNutanixAccessControlPolicies(),
+			"nutanix_image":                                   vmm.DataSourceNutanixImage(),
+			"nutanix_subnet":                                  networking.DataSourceNutanixSubnet(),
+			"nutanix_subnets":                                 networking.DataSourceNutanixSubnets(),
+			"nutanix_cluster":                                 clusters.DataSourceNutanixCluster(),
+			"nutanix_clusters":                                clusters.DataSourceNutanixClusters(),
+			"nutanix_virtual_machine":                         vmm.DataSourceNutanixVirtualMachine(),
+			"nutanix_category_key":                            categories.DataSourceNutanixCategoryKey(),
+			"nutanix_network_security_rule":                   networking.DataSourceNutanixNetworkSecurityRule(),
+			"nutanix_host":                                    clusters.DataSourceNutanixHost(),
+			"nutanix_hosts":                                   clusters.DataSourceNutanixHosts(),
+			"nutanix_access_control_policy":                   iam.DataSourceNutanixAccessControlPolicy(),
+			"nutanix_access_control_policies":                 iam.DataSourceNutanixAccessControlPolicies(),
 			"nutanix_project":                                 prism.DataSourceNutanixProject(),
 			"nutanix_projects":                                prism.DataSourceNutanixProjects(),
-			"nutanix_role":                                    prism.DataSourceNutanixRole(),
-			"nutanix_roles":                                   prism.DataSourceNutanixRoles(),
-			"nutanix_user":                                    prism.DataSourceNutanixUser(),
-			"nutanix_user_group":                              prism.DataSourceNutanixUserGroup(),
-			"nutanix_users":                                   prism.DataSourceNutanixUsers(),
-			"nutanix_user_groups":                             prism.DataSourceNutanixUserGroups(),
-			"nutanix_permission":                              prism.DataSourceNutanixPermission(),
-			"nutanix_permissions":                             prism.DataSourceNutanixPermissions(),
+			"nutanix_role":                                    iam.DataSourceNutanixRole(),
+			"nutanix_roles":                                   iam.DataSourceNutanixRoles(),
+			"nutanix_user":                                    iam.DataSourceNutanixUser(),
+			"nutanix_user_group":                              iam.DataSourceNutanixUserGroup(),
+			"nutanix_users":                                   iam.DataSourceNutanixUsers(),
+			"nutanix_user_groups":                             iam.DataSourceNutanixUserGroups(),
+			"nutanix_permission":                              iam.DataSourceNutanixPermission(),
+			"nutanix_permissions":                             iam.DataSourceNutanixPermissions(),
 			"nutanix_karbon_cluster_kubeconfig":               nke.DataSourceNutanixKarbonClusterKubeconfig(),
 			"nutanix_karbon_cluster":                          nke.DataSourceNutanixKarbonCluster(),
 			"nutanix_karbon_clusters":                         nke.DataSourceNutanixKarbonClusters(),
@@ -181,28 +186,28 @@ func Provider() *schema.Provider {
 			"nutanix_protection_rules":                        prism.DataSourceNutanixProtectionRules(),
 			"nutanix_recovery_plan":                           prism.DataSourceNutanixRecoveryPlan(),
 			"nutanix_recovery_plans":                          prism.DataSourceNutanixRecoveryPlans(),
-			"nutanix_address_groups":                          prism.DataSourceNutanixAddressGroups(),
-			"nutanix_address_group":                           prism.DataSourceNutanixAddressGroup(),
-			"nutanix_service_group":                           prism.DataSourceNutanixServiceGroup(),
-			"nutanix_service_groups":                          prism.DataSourceNutanixServiceGroups(),
+			"nutanix_address_groups":                          networking.DataSourceNutanixAddressGroups(),
+			"nutanix_address_group":                           networking.DataSourceNutanixAddressGroup(),
+			"nutanix_service_group":                           networking.DataSourceNutanixServiceGroup(),
+			"nutanix_service_groups":                          networking.DataSourceNutanixServiceGroups(),
 			"nutanix_foundation_hypervisor_isos":              foundation.DataSourceFoundationHypervisorIsos(),
 			"nutanix_foundation_discover_nodes":               foundation.DataSourceFoundationDiscoverNodes(),
 			"nutanix_foundation_nos_packages":                 foundation.DataSourceFoundationNOSPackages(),
 			"nutanix_foundation_node_network_details":         foundation.DataSourceNodeNetworkDetails(),
 			"nutanix_assert_helper":                           internal.DataSourceAssertHelper(),
-			"nutanix_foundation_central_api_keys":             fc.DataSourceNutanixFCAPIKeys(),
-			"nutanix_foundation_central_list_api_keys":        fc.DataSourceNutanixFCListAPIKeys(),
-			"nutanix_foundation_central_imaged_nodes_list":    fc.DataSourceNutanixFCImagedNodesList(),
-			"nutanix_foundation_central_imaged_clusters_list": fc.DataSourceNutanixFCImagedClustersList(),
-			"nutanix_foundation_central_cluster_details":      fc.DataSourceNutanixFCClusterDetails(),
-			"nutanix_foundation_central_imaged_node_details":  fc.DataSourceFCImagedNodeDetails(),
-			"nutanix_vpc":                                     prism.DataSourceNutanixVPC(),
-			"nutanix_vpcs":                                    prism.DataSourceNutanixVPCs(),
-			"nutanix_pbr":                                     prism.DataSourceNutanixPbr(),
-			"nutanix_pbrs":                                    prism.DataSourceNutanixPbrs(),
-			"nutanix_floating_ip":                             prism.DataSourceNutanixFloatingIP(),
-			"nutanix_floating_ips":                            prism.DataSourceNutanixFloatingIPs(),
-			"nutanix_static_routes":                           prism.DataSourceNutanixStaticRoute(),
+			"nutanix_foundation_central_api_keys":             foundationCentral.DataSourceNutanixFCAPIKeys(),
+			"nutanix_foundation_central_list_api_keys":        foundationCentral.DataSourceNutanixFCListAPIKeys(),
+			"nutanix_foundation_central_imaged_nodes_list":    foundationCentral.DataSourceNutanixFCImagedNodesList(),
+			"nutanix_foundation_central_imaged_clusters_list": foundationCentral.DataSourceNutanixFCImagedClustersList(),
+			"nutanix_foundation_central_cluster_details":      foundationCentral.DataSourceNutanixFCClusterDetails(),
+			"nutanix_foundation_central_imaged_node_details":  foundationCentral.DataSourceFCImagedNodeDetails(),
+			"nutanix_vpc":                                     networking.DataSourceNutanixVPC(),
+			"nutanix_vpcs":                                    networking.DataSourceNutanixVPCs(),
+			"nutanix_pbr":                                     networking.DataSourceNutanixPbr(),
+			"nutanix_pbrs":                                    networking.DataSourceNutanixPbrs(),
+			"nutanix_floating_ip":                             networking.DataSourceNutanixFloatingIP(),
+			"nutanix_floating_ips":                            networking.DataSourceNutanixFloatingIPs(),
+			"nutanix_static_routes":                           networking.DataSourceNutanixStaticRoute(),
 			"nutanix_ndb_sla":                                 ndb.DataSourceNutanixEraSLA(),
 			"nutanix_ndb_slas":                                ndb.DataSourceNutanixEraSLAs(),
 			"nutanix_ndb_profile":                             ndb.DataSourceNutanixEraProfile(),
@@ -293,32 +298,32 @@ func Provider() *schema.Provider {
 			"nutanix_hosts_v2":                                clustersv2.DatasourceNutanixHostEntitiesV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"nutanix_virtual_machine":                         prism.ResourceNutanixVirtualMachine(),
-			"nutanix_image":                                   prism.ResourceNutanixImage(),
-			"nutanix_subnet":                                  prism.ResourceNutanixSubnet(),
-			"nutanix_category_key":                            prism.ResourceNutanixCategoryKey(),
-			"nutanix_category_value":                          prism.ResourceNutanixCategoryValue(),
-			"nutanix_network_security_rule":                   prism.ResourceNutanixNetworkSecurityRule(),
+			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
+			"nutanix_image":                                   vmm.ResourceNutanixImage(),
+			"nutanix_subnet":                                  networking.ResourceNutanixSubnet(),
+			"nutanix_category_key":                            categories.ResourceNutanixCategoryKey(),
+			"nutanix_category_value":                          categories.ResourceNutanixCategoryValue(),
+			"nutanix_network_security_rule":                   networking.ResourceNutanixNetworkSecurityRule(),
 			"nutanix_access_control_policy":                   prism.ResourceNutanixAccessControlPolicy(),
 			"nutanix_project":                                 prism.ResourceNutanixProject(),
-			"nutanix_role":                                    prism.ResourceNutanixRole(),
-			"nutanix_user":                                    prism.ResourceNutanixUser(),
+			"nutanix_role":                                    iam.ResourceNutanixRole(),
+			"nutanix_user":                                    iam.ResourceNutanixUser(),
 			"nutanix_karbon_cluster":                          nke.ResourceNutanixKarbonCluster(),
 			"nutanix_karbon_private_registry":                 nke.ResourceNutanixKarbonPrivateRegistry(),
 			"nutanix_protection_rule":                         prism.ResourceNutanixProtectionRule(),
 			"nutanix_recovery_plan":                           prism.ResourceNutanixRecoveryPlan(),
-			"nutanix_service_group":                           prism.ResourceNutanixServiceGroup(),
-			"nutanix_address_group":                           prism.ResourceNutanixAddressGroup(),
+			"nutanix_service_group":                           networking.ResourceNutanixServiceGroup(),
+			"nutanix_address_group":                           networking.ResourceNutanixAddressGroup(),
 			"nutanix_foundation_image_nodes":                  foundation.ResourceFoundationImageNodes(),
 			"nutanix_foundation_ipmi_config":                  foundation.ResourceNutanixFoundationIPMIConfig(),
 			"nutanix_foundation_image":                        foundation.ResourceNutanixFoundationImage(),
-			"nutanix_foundation_central_image_cluster":        fc.ResourceNutanixFCImageCluster(),
-			"nutanix_foundation_central_api_keys":             fc.ResourceNutanixFCAPIKeys(),
-			"nutanix_vpc":                                     prism.ResourceNutanixVPC(),
-			"nutanix_pbr":                                     prism.ResourceNutanixPbr(),
-			"nutanix_floating_ip":                             prism.ResourceNutanixFloatingIP(),
-			"nutanix_static_routes":                           prism.ResourceNutanixStaticRoute(),
-			"nutanix_user_groups":                             prism.ResourceNutanixUserGroups(),
+			"nutanix_foundation_central_image_cluster":        foundationCentral.ResourceNutanixFCImageCluster(),
+			"nutanix_foundation_central_api_keys":             foundationCentral.ResourceNutanixFCAPIKeys(),
+			"nutanix_vpc":                                     networking.ResourceNutanixVPC(),
+			"nutanix_pbr":                                     networking.ResourceNutanixPbr(),
+			"nutanix_floating_ip":                             networking.ResourceNutanixFloatingIP(),
+			"nutanix_static_routes":                           networking.ResourceNutanixStaticRoute(),
+			"nutanix_user_groups":                             iam.ResourceNutanixUserGroups(),
 			"nutanix_ndb_database":                            ndb.ResourceDatabaseInstance(),
 			"nutanix_ndb_sla":                                 ndb.ResourceNutanixNDBSla(),
 			"nutanix_ndb_database_restore":                    ndb.ResourceNutanixNDBDatabaseRestore(),
