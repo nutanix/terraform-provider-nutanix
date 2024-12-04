@@ -14,7 +14,7 @@ import (
 
 const resourceNameCluster = "nutanix_cluster_v2.test"
 const resourceNameDiscoverUnConfigNode = "nutanix_clusters_discover_unconfigured_nodes_v2.test-discover-cluster-node"
-const resourceNameClusterRegistration = "nutanix_pc_registration_v2 .node-registration"
+const resourceNameClusterRegistration = "nutanix_pc_registration_v2.node-registration"
 
 func TestAccNutanixClusterV2Resource_CreateClusterWithMinimumConfig(t *testing.T) {
 	r := acctest.RandInt()

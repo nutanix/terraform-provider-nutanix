@@ -1,7 +1,8 @@
-package clustersv2
+package clusters
 
 import (
 	"context"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clustersv2"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -133,7 +134,7 @@ func ResourceNutanixClusterSNMPTrapV2Create(ctx context.Context, d *schema.Resou
 		body.Username = utils.StringPtr(userName.(string))
 	}
 	if address, ok := d.GetOk("address"); ok {
-		body.Address = expandIPAddress(address)
+		body.Address = clustersv2.expandIPAddress(address)
 	}
 	if port, ok := d.GetOk("port"); ok {
 		body.Port = utils.IntPtr(port.(int))
@@ -184,7 +185,7 @@ func ResourceNutanixClusterSNMPTrapV2Create(ctx context.Context, d *schema.Resou
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: clustersv2.taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -219,13 +220,13 @@ func ResourceNutanixClusterSNMPTrapV2Read(ctx context.Context, d *schema.Resourc
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
+	if err := d.Set("links", clustersv2.flattenLinks(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("username", getResp.Username); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("address", flattenIPAddress(getResp.Address)); err != nil {
+	if err := d.Set("address", clustersv2.flattenIPAddress(getResp.Address)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("port", getResp.Port); err != nil {
@@ -268,7 +269,7 @@ func ResourceNutanixClusterSNMPTrapV2Update(ctx context.Context, d *schema.Resou
 		updateSpec.Username = utils.StringPtr(d.Get("username").(string))
 	}
 	if d.HasChange("address") {
-		updateSpec.Address = expandIPAddress(d.Get("address"))
+		updateSpec.Address = clustersv2.expandIPAddress(d.Get("address"))
 	}
 	if d.HasChange("protocol") {
 		subMap := map[string]interface{}{
@@ -319,7 +320,7 @@ func ResourceNutanixClusterSNMPTrapV2Update(ctx context.Context, d *schema.Resou
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: clustersv2.taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -339,7 +340,7 @@ func ResourceNutanixClusterSNMPTrapV2Delete(ctx context.Context, d *schema.Resou
 		return diag.Errorf("error while reading SNMP Trap : %v", err)
 	}
 	// Extract E-Tag Header
-	args := getEtagHeader(readResp, conn)
+	args := clustersv2.getEtagHeader(readResp, conn)
 
 	const runPrechecksOnly = false
 
@@ -357,7 +358,7 @@ func ResourceNutanixClusterSNMPTrapV2Delete(ctx context.Context, d *schema.Resou
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: clustersv2.taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 

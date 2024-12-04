@@ -1,8 +1,9 @@
-package clustersv2
+package clusters
 
 import (
 	"context"
 	"fmt"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clustersv2"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -92,7 +93,7 @@ func DatasourceNutanixClusterSNMPUserV2Read(ctx context.Context, d *schema.Resou
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
+	if err := d.Set("links", clustersv2.flattenLinks(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("username", getResp.Username); err != nil {

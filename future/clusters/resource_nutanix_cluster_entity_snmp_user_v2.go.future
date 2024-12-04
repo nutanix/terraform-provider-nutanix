@@ -1,7 +1,8 @@
-package clustersv2
+package clusters
 
 import (
 	"context"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clustersv2"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -108,7 +109,7 @@ func ResourceNutanixClusterSNMPUserV2Create(ctx context.Context, d *schema.Resou
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: clustersv2.taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -143,7 +144,7 @@ func ResourceNutanixClusterSNMPUserV2Read(ctx context.Context, d *schema.Resourc
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
+	if err := d.Set("links", clustersv2.flattenLinks(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("username", getResp.Username); err != nil {
@@ -217,7 +218,7 @@ func ResourceNutanixClusterSNMPUserV2Update(ctx context.Context, d *schema.Resou
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: clustersv2.taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -237,7 +238,7 @@ func ResourceNutanixClusterSNMPUserV2Delete(ctx context.Context, d *schema.Resou
 		return diag.Errorf("error while reading SNMP User : %v", err)
 	}
 	// Extract E-Tag Header
-	args := getEtagHeader(readResp, conn)
+	args := clustersv2.getEtagHeader(readResp, conn)
 
 	const runPrechecksOnly = false
 
@@ -255,7 +256,7 @@ func ResourceNutanixClusterSNMPUserV2Delete(ctx context.Context, d *schema.Resou
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: clustersv2.taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 

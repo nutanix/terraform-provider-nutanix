@@ -1,8 +1,9 @@
-package clustersv2
+package clusters
 
 import (
 	"context"
 	"fmt"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clustersv2"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -57,8 +58,8 @@ func DatasourceNutanixClusterSNMPTrapV2() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ipv4": SchemaForValuePrefixLength(),
-						"ipv6": SchemaForValuePrefixLength(),
+						"ipv4": clustersv2.SchemaForValuePrefixLength(),
+						"ipv6": clustersv2.SchemaForValuePrefixLength(),
 					},
 				},
 			},
@@ -115,13 +116,13 @@ func DatasourceNutanixClusterSNMPTrapV2Read(ctx context.Context, d *schema.Resou
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
+	if err := d.Set("links", clustersv2.flattenLinks(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("username", getResp.Username); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("address", flattenIPAddress(getResp.Address)); err != nil {
+	if err := d.Set("address", clustersv2.flattenIPAddress(getResp.Address)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("port", getResp.Port); err != nil {
