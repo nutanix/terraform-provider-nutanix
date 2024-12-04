@@ -1,71 +1,60 @@
 {
-  "networking": {
-    "floating_ip": {
-      "vm_nic_reference": ""
+  "pre_env": {
+    "ngt_image": {
+      "name": "",
+      "url": ""
     },
-    "subnets": {
-      "project_id": "",
-      "vlan_id": 999,
-      "network_ip": "10.44.3.192",
-      "network_prefix": 27,
-      "gateway_ip": "10.44.3.193",
-      "dhcp": {
-        "start_ip": "10.44.3.198",
-        "end_ip": "10.44.3.207"
-      }
-    }
-  },
-  "vmm": {
-    "image_name": "Centos7HadoopMaster.qcow2",
-    "image_url": "",
-    "subnet_name": "vlan.800",
-    "assigned_ip": "10.44.76.45",
-    "subnet": {
-      "network_id": 534,
-      "ip": "10.44.76.0",
-      "prefix": 24,
-      "gateway_ip": "10.44.76.10",
-      "dhcp_ip": "10.44.79.254",
-      "start_ip": "10.44.76.20",
-      "end_ip": "10.44.76.50"
+    "external_nat_subnet": {
+      "name": "",
+      "network_id": 208,
+      "network_ip": "",
+      "prefix_length": 27,
+      "default_gateway_ip": "",
+      "start_ip": "",
+      "end_ip": ""
     },
-    "storage_container": "",
-    "ngt": {
-      "credential": {
-        "username": "",
-        "password": ""
-      }
+    "overlay_subnet": {
+      "name": "",
+      "network_ip": "",
+      "prefix_length": 24,
+      "default_gateway_ip": ""
+    },
+    "integration_vm": {
+      "name": "",
+      "ip_address": ""
+    },
+    "volume_group": {
+      "name": ""
+    },
+    "ngt_vm": {
+      "name": ""
     }
   },
   "iam": {
     "roles": {
-      "limit": 3,
-      "display_name": "test_role",
-      "description": "Test Role Description"
+      "display_name": "",
+      "description": ""
     },
     "users": {
+      "name": "",
       "idp_id": "",
       "directory_service_id": "",
       "directory_service_username": "",
-      "email_id": "terraform_test_2@email.com",
-      "locale": "en-US",
-      "region": "en-US",
-      "password": "test.Password.123",
+      "email_id": "",
+      "locale": "",
+      "region": "",
+      "password": "",
       "force_reset_password": true
     },
     "user_groups": {
-      "limit": 1,
-      "name": "test_custom_{_group_}",
-      "saml_name": "adfs19admingroup",
-      "idp_id": "",
-      "directory_service_id": "",
+      "name": "",
+      "saml_name": "",
       "distinguished_name": ""
     },
     "auth_policies": {
-      "limit": 1,
-      "display_name": "auth_policies_test",
-      "description": "auth policies description ",
-      "authorization_policy_type": "USER_DEFINED",
+      "display_name": "",
+      "description": "",
+      "authorization_policy_type": "",
       "identities": [
         "{\"user\":{\"uuid\":{\"anyof\":[\"00000000-0000-0000-0000-000000000000\"]}}}"
       ],
@@ -75,7 +64,6 @@
       ]
     },
     "identity_providers": {
-      "limit": 1,
       "idp_metadata_url": "",
       "idp_metadata_xml": "",
       "idp_metadata": {
@@ -84,20 +72,19 @@
         "logout_url": "",
         "error_url": "",
         "certificate": "",
-        "name_id_policy_format": "emailAddress"
+        "name_id_policy_format": ""
       },
-      "name": "terraform_test_idp_name",
-      "username_attr": "terrafrorm_test_idp_username",
-      "email_attr": "email",
-      "groups_attr": "groups",
-      "groups_delim": ",",
-      "entity_issuer": "entity_issuer_test",
+      "name": "",
+      "username_attr": "",
+      "email_attr": "",
+      "groups_attr": "",
+      "groups_delim": "",
+      "entity_issuer": "",
       "is_signed_authn_req_enabled": true,
       "custom_attributes": ["custom1", "custom2"]
     },
     "directory_services": {
-      "limit": 1,
-      "name": "terraform_test_active_directory",
+      "name": "",
       "url": "",
       "domain_name": "",
       "service_account": {
@@ -106,60 +93,115 @@
       },
       "open_ldap_configuration": {
         "user_configuration": {
-          "user_object_class": "inetOrgPerson",
+          "user_object_class": "",
           "user_search_base": "",
-          "username_attribute": "uid"
+          "username_attribute": ""
         },
         "user_group_configuration": {
-          "group_object_class": "groupOfNames",
+          "group_object_class": "",
           "group_search_base": "",
-          "group_member_attribute": "member",
-          "group_member_attribute_value": "uid"
+          "group_member_attribute": "",
+          "group_member_attribute_value": ""
         }
       },
-      "group_search_type": "NON_RECURSIVE",
+      "group_search_type": "",
       "white_listed_groups": ["test", "test_updated"]
     }
   },
+  "networking": {
+    "subnets": {
+      "project_id": "",
+      "vlan_id": 999,
+      "network_ip": "",
+      "network_prefix": 27,
+      "gateway_ip": "",
+      "dhcp": {
+        "start_ip": "",
+        "end_ip": ""
+      }
+    }
+  },
+  "vmm": {
+    "image_name": "",
+    "image_url": "",
+    "subnet_name": "",
+    "assigned_ip": "",
+    "subnet": {
+      "network_id": 534,
+      "ip": "",
+      "prefix": 24,
+      "gateway_ip": "",
+      "dhcp_ip": "",
+      "start_ip": "",
+      "end_ip": ""
+    },
+    "ngt": {
+      "credential": {
+        "username": "",
+        "password": ""
+      }
+    },
+    "gpus": [
+      {
+        "device_id": 0,
+        "mode": "",
+        "vendor": ""
+      }
+    ]
+  },
   "storage_container": {
+    "name": "",
     "logical_advertised_capacity_bytes": 1073741824000,
     "logical_explicit_reserved_capacity_bytes": 20,
     "replication_factor": 1,
     "nfs_whitelist_addresses": {
       "ipv4": {
-        "value": "192.168.14.0",
+        "value": "",
         "prefix_length": 32
       }
     }
   },
   "volumes": {
-    "vg_ext_id_with_category": "",
-    "iscsi_client": {
-      "ext_id": "",
-      "initiator_name": ""
-    },
-    "disk": {
-      "disk_data_source_reference": {
-        "ext_id": "2"
-      }
-    },
-    "vm_ext_id": ""
+    "vg_ext_id_with_category": ""
   },
   "data_protection": {
-    "vm_ext_id": ["", ""],
     "pc_ext_id": "",
     "cluster_ext_id": ""
   },
   "clusters": {
+    "name": "",
     "pe_username": "",
     "pe_password": "",
+    "cvm_ip": "",
     "nodes": [
       {
-        "cvm_ip": ""
+        "cvm_ip": "",
+        "username": "",
+        "password": ""
+      },
+      {
+        "cvm_ip": "",
+        "username": "",
+        "password": ""
+      },
+      {
+        "cvm_ip": "",
+        "username": "",
+        "password": ""
+      },
+      {
+        "cvm_ip": "",
+        "username": "",
+        "password": ""
+      },
+      {
+        "cvm_ip": "",
+        "username": "",
+        "password": ""
       }
     ],
     "config": {
-      "cluster_functions": ["AOS"],
+      "cluster_functions": [""],
       "auth_public_keys": [
         {
           "name": "",
@@ -167,9 +209,10 @@
         }
       ],
       "redundancy_factor": 1,
-      "cluster_arch": "X86_64",
+      "cluster_arch": "",
       "fault_tolerance_state": {
-        "domain_awareness_level": "DISK"
+        "domain_awareness_level": "",
+        "desired_cluster_fault_tolerance": ""
       }
     },
     "network": {
@@ -177,18 +220,22 @@
       "iscsi_ip": "",
       "iscsi_ip1": "",
       "dns_servers": ["", ""],
-      "ntp_servers": ["", "", "", ""],
+      "ntp_servers": [
+        "",
+        "",
+        "",
+        ""
+      ],
       "smtp_server": {
         "ip": "",
         "port": 25,
-        "username": "username",
-        "password": "password",
-        "type": "STARTTLS",
+        "username": "",
+        "password": "",
+        "type": "",
         "email_address": ""
       }
     },
     "pc_ext_id": "",
-    "node_ip": "",
     "remote_cluster": {
       "ext_id": "",
       "ip": "",
