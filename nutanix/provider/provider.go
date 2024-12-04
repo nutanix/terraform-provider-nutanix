@@ -11,24 +11,23 @@ import (
 
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/internal"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/categories"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clusters"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clustersv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/dataprotectionv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/foundation"
 	foundationCentral "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/foundationCentral"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iam"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iamv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/ndb"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networking"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networkingv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/nke"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prism"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/clustersv2"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/dataprotectionv2"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/iamv2"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/networkingv2"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/prismv2"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/storagecontainersv2"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/vmmv2"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/v2/volumesv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prismv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/storagecontainersv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/vmm"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/vmmv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/volumesv2"
 )
 
 var requiredProviderFields map[string][]string = map[string][]string{
@@ -160,7 +159,7 @@ func Provider() *schema.Provider {
 			"nutanix_cluster":                                 clusters.DataSourceNutanixCluster(),
 			"nutanix_clusters":                                clusters.DataSourceNutanixClusters(),
 			"nutanix_virtual_machine":                         vmm.DataSourceNutanixVirtualMachine(),
-			"nutanix_category_key":                            categories.DataSourceNutanixCategoryKey(),
+			"nutanix_category_key":                            prism.DataSourceNutanixCategoryKey(),
 			"nutanix_network_security_rule":                   networking.DataSourceNutanixNetworkSecurityRule(),
 			"nutanix_host":                                    clusters.DataSourceNutanixHost(),
 			"nutanix_hosts":                                   clusters.DataSourceNutanixHosts(),
@@ -301,8 +300,8 @@ func Provider() *schema.Provider {
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
 			"nutanix_image":                                   vmm.ResourceNutanixImage(),
 			"nutanix_subnet":                                  networking.ResourceNutanixSubnet(),
-			"nutanix_category_key":                            categories.ResourceNutanixCategoryKey(),
-			"nutanix_category_value":                          categories.ResourceNutanixCategoryValue(),
+			"nutanix_category_key":                            prism.ResourceNutanixCategoryKey(),
+			"nutanix_category_value":                          prism.ResourceNutanixCategoryValue(),
 			"nutanix_network_security_rule":                   networking.ResourceNutanixNetworkSecurityRule(),
 			"nutanix_access_control_policy":                   prism.ResourceNutanixAccessControlPolicy(),
 			"nutanix_project":                                 prism.ResourceNutanixProject(),
@@ -392,7 +391,7 @@ func Provider() *schema.Provider {
 			"nutanix_cluster_snmp_add_port_v2":                clustersv2.ResourceNutanixClusterSNMPAddPortV2(),
 			"nutanix_cluster_snmp_remove_port_v2":             clustersv2.ResourceNutanixClusterSNMPRemovePortV2(),
 			"nutanix_cluster_add_node_v2":                     clustersv2.ResourceNutanixClusterAddNodeV2(),
-			"nutanix_pe_pc_registration_v2":                   clustersv2.ResourceNutanixClusterPCRegistrationV2(),
+			"nutanix_pc_registration_v2":                      clustersv2.ResourceNutanixClusterPCRegistrationV2(),
 			"nutanix_clusters_discover_unconfigured_nodes_v2": clustersv2.ResourceNutanixClusterDiscoverUnconfiguredNodesV2(),
 			"nutanix_clusters_unconfigured_node_networks_v2":  clustersv2.ResourceNutanixClusterUnconfiguredNodeNetworkV2(),
 		},
