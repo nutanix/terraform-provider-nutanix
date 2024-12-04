@@ -13,10 +13,9 @@ Retrieve the image placement policy details for the provided external identifier
 ## Example
 
 ```hcl
-    data "nutanix_image_placement_policy_v2" "ipp"{
-        ext_id = {{ ext_id of image placement policy }}
-    }
-
+data "nutanix_image_placement_policy_v2" "ipp"{
+    ext_id = {{ ext_id of image placement policy }}
+}
 ```
 
 
@@ -44,4 +43,4 @@ The following arguments are supported:
 * `type`: (Required) Filter matching type. Valid values "CATEGORIES_MATCH_ALL", "CATEGORIES_MATCH_ANY"
 * `category_ext_ids`: Array of strings
 
-See detailed information in [Nutanix Image placement policy](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1)
+See detailed information in [Nutanix Image placement policy V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1)

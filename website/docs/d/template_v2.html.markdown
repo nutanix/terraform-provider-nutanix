@@ -13,9 +13,9 @@ Retrieve the Template details for the given Template identifier.
 ## Example
 
 ```hcl
-    data "nutanix_template_v2" "test" {
-		ext_id = "{{ ext_id of template }}"
-    }
+data "nutanix_template_v2" "template"{
+  ext_id = "{{ ext_id of template }}"
+}
 ```
 
 ## Argument Reference
@@ -44,7 +44,7 @@ The following arguments are supported:
 * `vm_spec`: VM configuration.
 * `create_time`: Time when the Template was created.
 * `created_by`: Information of the User.
-* `is_active_version`: Specify whether to mark the Template Version as active or not. The newly created Version during Template Creation, Updation or Guest OS Updation is set to Active by default unless specified otherwise.
+* `is_active_version`: Specify whether to mark the Template Version as active or not. The newly created Version during Template Creation, Updating or Guest OS Updating is set to Active by default unless specified otherwise.
 * `is_gc_override_enabled`: Allow or disallow override of the Guest Customization during Template deployment.
 
 
@@ -197,7 +197,7 @@ The following arguments are supported:
 * `disk_address.index`: Device index on the bus. This field is ignored unless the bus details are specified.
 * `backing_info`: Supporting storage to create virtual disk on.
 * `backing_info.vm_disk`: backing Info for vmDisk
-* `backing_info.adfs_volume_group_reference`: Volume Group Refrence
+* `backing_info.adfs_volume_group_reference`: Volume Group Reference
 * `backing_info.adfs_volume_group_reference.volume_group_ext_id`: The globally unique identifier of an ADSF volume group. It should be of type UUID.
 
 ### backing_info.vm_disk
@@ -304,4 +304,4 @@ Status of a Guest Update.
 * `updated_by`: Last updated by this User ID.
 
 
-See detailed information in [Nutanix Template](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).
+See detailed information in [Nutanix Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).

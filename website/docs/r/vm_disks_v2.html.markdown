@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_vm_disks_v4"
-sidebar_current: "docs-nutanix-resource-vm-disks-v4"
+sidebar_current: "docs-nutanix-resource-vm-disks-v2"
 description: |-
   Creates and attaches a disk device to a Virtual Machine.
 ---

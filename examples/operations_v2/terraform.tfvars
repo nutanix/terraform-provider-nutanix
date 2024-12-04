@@ -5,4 +5,4 @@ nutanix_endpoint = "10.xx.xx.xx"
 nutanix_port     = 9440
 
 #replace this values as per the setup
-permission_ext_id = "<ext-id>"
+operationUUID = "00000000-0000-0000-0000-000000000000"

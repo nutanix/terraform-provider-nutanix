@@ -104,4 +104,4 @@ The `ipv4`, `ipv6` attributes supports the following:
 
 
 
-See detailed information in [Nutanix Discover unconfigured nodes](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0.b2#tag/Clusters/operation/discoverUnconfiguredNodes).
+See detailed information in [Nutanix Discover unconfigured nodes V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0.b2#tag/Clusters/operation/discoverUnconfiguredNodes).

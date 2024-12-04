@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_categories_v2"
-sidebar_current: "docs-nutanix-datasource-categories-v4"
+sidebar_current: "docs-nutanix-datasource-categories-v2"
 description: |-
   Fetch a list of categories with pagination, filtering, sorting, selection and optional expansion of associated entity counts.
 ---
@@ -14,10 +14,10 @@ List categories
 
 ```hcl
 
-    data "nutanix_categories_v2" "test" { }
+    data "nutanix_categories_v2" "categories"{}
 
-     data "nutanix_categories_v2" "test2" {
-        filter = "key eq '{}'"
+     data "nutanix_categories_v2" "categories-filtered"{
+        filter = "key eq '{<key value>}'"
       }
     
 ```
@@ -55,14 +55,14 @@ There are three types of categories: SYSTEM, INTERNAL, and USER.
 * `category_id`: External identifier for the given category, used across all v4 apis/entities/resources where categories are referenced.
 * `resource_type`: An enum denoting the associated resource types. Resource types are further grouped into 2 types - entity or a policy.
 * `resource_group`: An enum denoting the resource group.
-Resources can be organised into either an entity or a policy. 
+Resources can be organized into either an entity or a policy. 
 * `count`: Count of associations of a particular type of entity or policy
 
 ### detailed_associations
 * `category_id`: External identifier for the given category, used across all v4 apis/entities/resources where categories are referenced.
 * `resource_type`: An enum denoting the associated resource types. Resource types are further grouped into 2 types - entity or a policy.
 * `resource_group`: An enum denoting the resource group.
-Resources can be organised into either an entity or a policy. 
+Resources can be organized into either an entity or a policy. 
 * `resource_id`: The UUID of the entity or policy associated with the particular category.
 
 

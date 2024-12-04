@@ -13,9 +13,9 @@ Get a single recovery point  corresponding to the extId.
 ## Example Usage
 
 ```hcl
-    data "nutanix_recovery_point_v2" "test"{
-        ext_id = <recovery_point_uuid>
-    }
+data "nutanix_recovery_point_v2" "rp"{
+    ext_id = <recovery_point_uuid>
+}
 ```
 
 ## Argument Reference

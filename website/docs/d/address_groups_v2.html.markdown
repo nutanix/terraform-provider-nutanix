@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_address_groups_v2"
-sidebar_current: "docs-nutanix-datasource-address-groups-v4"
+sidebar_current: "docs-nutanix-datasource-address-groups-v2"
 description: |-
   This operation retrieves the list of address_groups.
 ---
@@ -14,10 +14,10 @@ List all the Address Groups.
 
 ``` hcl
 
-    data "nutanix_address_groups_v2" "addr_group" { }
+    data "nutanix_address_groups_v2" "addr_group"{ }
 
 
-    data "nutanix_address_groups_v2" "test" {
+    data "nutanix_address_groups_v2" "addr_group_filtered"{
         filter = "name eq '%[1]s'"
     }
 

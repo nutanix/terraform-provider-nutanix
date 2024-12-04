@@ -6,12 +6,12 @@ terraform {
   required_providers {
     nutanix = {
       source  = "nutanix/nutanix"
-      version = "1.3.0"
+      version = "2.0"
     }
   }
 }
 
-#definig nutanix configuration
+#defining nutanix configuration
 provider "nutanix" {
   username = var.nutanix_username
   password = var.nutanix_password
@@ -30,5 +30,5 @@ data "nutanix_operation_v2" "permission" {
 data "nutanix_operations_v2" "permissions" {
   page   = 0
   limit  = 2
-  filter = "display_name eq 'test-Permission-filter'"
+  filter = "displayName eq 'test-Permission-filter'"
 }

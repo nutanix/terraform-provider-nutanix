@@ -360,11 +360,4 @@ The ipv6 attribute supports the following:
 * `prefix_length`: - (Optional) The prefix length of the network to which this host IPv4 address belongs.
 * `value`: - (Required) Ip address.
 
-See detailed information in [Nutanix Cluster Entity](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0.b2).
-
-## Import
-Nutanix Cluster Entitys can be imported using the `UUID` eg,
-
-`
-terraform import nutanix_cluster_entity.cs01 0F75E6A7-55FB-44D9-A50D-14AD72E2CF7C
-`
+See detailed information in [Nutanix Cluster Entity V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0.b2).

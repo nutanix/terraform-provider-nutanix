@@ -13,11 +13,11 @@ Provides a Nutanix Virtual Machine resource to Assign IP.
 ## Example Usage
 
 ```hcl
-data "nutanix_virtual_machines_v2" "vms" {}
+data "nutanix_virtual_machines_v2" "vms"{}
 
-data "nutanix_subnets_v2" "subnets" { }
+data "nutanix_subnets_v2" "subnets"{}
 
-resource "nutanix_vm_network_device_v2" "nic" {
+resource "nutanix_vm_network_device_v2" "nic"{
     vm_ext_id = data.nutanix_virtual_machines_v2.vms.0.data.ext_id
     network_info {
         nic_type = "DIRECT_NIC"
@@ -27,7 +27,7 @@ resource "nutanix_vm_network_device_v2" "nic" {
     }
 }
 
-resource "nutanix_vm_network_device_assign_ip_v2" "nic_assign_ip" {
+resource "nutanix_vm_network_device_assign_ip_v2" "nic_assign_ip"{
     vm_ext_id = resource.nutanix_virtual_machine_v4.vms.0.ext_id
     ext_id    = resource.nutanix_vm_network_device_v2.nic.ext_id
     ip_address {
@@ -53,11 +53,4 @@ The ip_address attribute supports the following:
 * `prefix_length`: - (Optional) The prefix length of the network to which this host IPv4 address belongs.
 * `value`: - Ip address.
 
-See detailed information in [Nutanix Virtual Machine](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).
-
-## Import
-Nutanix Virtual machines can be imported using the `UUID` eg,
-
-`
-terraform import nutanix_vm_network_device_v2.nic01 0F75E6A7-55FB-44D9-A50D-14AD72E2CF7C
-`
+See detailed information in [Nutanix Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).

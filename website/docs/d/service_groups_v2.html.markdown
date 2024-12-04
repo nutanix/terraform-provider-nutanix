@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_service_groups_v2"
-sidebar_current: "docs-nutanix-datasource-service-groups-v4"
+sidebar_current: "docs-nutanix-datasource-service-groups-v2"
 description: |-
   This operation retrieves the list of service_groups.
 ---
@@ -14,10 +14,10 @@ List all the service Groups.
 
 ``` hcl
 
-    data "nutanix_service_groups_v2" "service_group" { }
+    data "nutanix_service_groups_v2" "service_group"{}
 
 
-    data "nutanix_service_groups_v2" "test" {
+    data "nutanix_service_groups_v2" "service_group_filtered"{
         filter = "name eq '%[1]s'"
     }
 

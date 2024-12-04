@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_service_group_v2"
-sidebar_current: "docs-nutanix-datasource-service-group-v4"
+sidebar_current: "docs-nutanix-datasource-service-group-v2"
 description: |-
   This operation retrieves an service_group.
 ---

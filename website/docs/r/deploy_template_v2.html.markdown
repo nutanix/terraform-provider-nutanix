@@ -13,18 +13,18 @@ Deploy one or more VMs from a Template. Number of VMs to be deployed and their c
 ## Example 
 
 ```hcl
-    resource "nutanix_deploy_templates_v2" "test" {
-        ext_id = {{ template uuid }}
-        number_of_vms = 1
-        cluster_reference = local.cluster0
-        override_vm_config_map{
-            name= "test-tf-temp"
-            memory_size_bytes = 4294967296
-            num_sockets=2
-            num_cores_per_socket=1
-            num_threads_per_core=1
-        }
+resource "nutanix_deploy_templates_v2" "deploy-temp" {
+    ext_id = {{ template uuid }}
+    number_of_vms = 1
+    cluster_reference = "<Cluster uuid>"
+    override_vm_config_map{
+        name= "test-tf-temp"
+        memory_size_bytes = 4294967296
+        num_sockets=2
+        num_cores_per_socket=1
+        num_threads_per_core=1
     }
+}
 ```
 
 
@@ -97,4 +97,4 @@ The following arguments are supported:
 
 
 
-See detailed information in [Nutanix Deploy Template](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).
+See detailed information in [Nutanix Deploy Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).

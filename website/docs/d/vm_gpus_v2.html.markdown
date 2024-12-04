@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_vm_gpus_v2"
-sidebar_current: "docs-nutanix-datasource-vm-gpus-v4"
+sidebar_current: "docs-nutanix-datasource-vm-gpus-v2"
 description: |-
    Lists the GPU devices attached to a Virtual Machine.
 ---

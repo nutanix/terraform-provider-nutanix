@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_storage_container_v2"
-sidebar_current: "docs-nutanix-datasource-storage-container-v4"
+sidebar_current: "docs-nutanix-datasource-storage-container-v2"
 description: |-
    This operation retrieves a Storage Container configuration.
 ---

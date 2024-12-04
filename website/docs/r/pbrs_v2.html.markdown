@@ -14,7 +14,7 @@ Create a Routing Policy.
 ## Example 
 
 ```hcl
-    resource "nutanix_pbr_v2" "test" {
+    resource "nutanix_pbr_v2" "pbr-1"{
       name = "{{ name }}"
       description = "{{ desc }}"
       vpc_ext_id = "{{ vpc uuid }}"
@@ -36,7 +36,7 @@ Create a Routing Policy.
 	  }
 
 
-    resource "nutanix_pbr_v2" "test" {
+    resource "nutanix_pbr_v2" "pbr-2" {
       name = "{{ name }}"
       description = "{{ desc }}"
       vpc_ext_id = "{{ vpc uuid }}"
@@ -92,11 +92,11 @@ The following arguments are supported:
 ### policy_match
 * `source`: (Required) Address Type like "EXTERNAL" or "ANY".
 * `destination`: (Required) Address Type like "EXTERNAL" or "ANY".
-* `protocol_type`: (Required) Routing Policy IP protocol type. Acceptables values are "TCP", "UDP", "PROTOCOL_NUMBER", "ANY", "ICMP" .
+* `protocol_type`: (Required) Routing Policy IP protocol type. Acceptable values are "TCP", "UDP", "PROTOCOL_NUMBER", "ANY", "ICMP" .
 * `protocol_parameters`: (Optional) Protocol Params Object.
 
 ### policy_match.source, policy_match.destination
-* `address_type`: (Required) Address Type. Acceptables values are "SUBNET", "EXTERNAL", "ANY" . 
+* `address_type`: (Required) Address Type. Acceptable values are "SUBNET", "EXTERNAL", "ANY" . 
 * `subnet_prefix`: (Optional) Subnet Prefix
 
 ### subnet_prefix
@@ -137,7 +137,7 @@ The following arguments are supported:
 
 ### reroute_params
 * `service_ip`: (Optional) An unique address that identifies a device on the internet or a local network in IPv4 or IPv6 format.
-* `reroute_fallback_action`: (Optional) Type of fallback action in reroute case when service VM is down. Acceptables values are "PASSTHROUGH", "NO_ACTION", "ALLOW", "DENY". 
+* `reroute_fallback_action`: (Optional) Type of fallback action in reroute case when service VM is down. Acceptable values are "PASSTHROUGH", "NO_ACTION", "ALLOW", "DENY". 
 * `ingress_service_ip`: (Optional) An unique address that identifies a device on the internet or a local network in IPv4 or IPv6 format.
 * `egress_service_ip`: (Optional) An unique address that identifies a device on the internet or a local network in IPv4 or IPv6 format.
 

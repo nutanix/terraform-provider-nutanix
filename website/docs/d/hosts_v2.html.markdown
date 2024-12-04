@@ -266,4 +266,4 @@ The ipv6 attribute supports the following:
 
 
 
-See detailed information in [Nutanix Hosts](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0.b2).
+See detailed information in [Nutanix Hosts V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0.b2).

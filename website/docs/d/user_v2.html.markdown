@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_user_v2"
-sidebar_current: "docs-nutanix-datasource-user-v4"
+sidebar_current: "docs-nutanix-datasource-user-v2"
 description: |-
   Provides a datasource to View a User.
 ---
@@ -13,7 +13,7 @@ Provides a datasource to View a User.
 ## Example Usage
 
 ``` hcl
-data "nutanix_user_v2" "users"{
+data "nutanix_user_v2" "user"{
     ext_id = "<user ext Id>"
 }
 ```
@@ -81,4 +81,4 @@ The buckets_access_keys attribute supports the following:
 * `created_time`: - Creation time for the Bucket Access Key.
 
 
-See detailed information in [Nutanix Users](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0.b1).
+See detailed information in [Nutanix Users v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0.b1#tag/Users/operation/getUserById).

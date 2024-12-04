@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_vm_cdrom_v4"
-sidebar_current: "docs-nutanix-datasource-vm-cdrom-v4"
+sidebar_current: "docs-nutanix-datasource-vm-cdrom-v2"
 description: |-
    This operation retrieves configuration details for the provided CD-ROM device attached to a Virtual Machine.
 ---

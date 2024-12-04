@@ -2,12 +2,12 @@ terraform {
   required_providers {
     nutanix = {
       source  = "nutanix/nutanix"
-      version = "1.7.0"
+      version = "2.0"
     }
   }
 }
 
-#definig nutanix configuration
+#defining nutanix configuration
 provider "nutanix" {
   username = var.nutanix_username
   password = var.nutanix_password
@@ -33,6 +33,11 @@ resource "nutanix_directory_services_v2" "example" {
 
 # List all  Directory Services.
 data "nutanix_directory_services_v2" "example" {}
+
+# List all  Directory Services with filter.
+data "nutanix_directory_services_v2" "test" {
+  filter = "name eq '${nutanix_directory_services_v2.example.name}'"
+}
 
 # Get a Directory Service.
 data "nutanix_directory_service_v2" "example" {

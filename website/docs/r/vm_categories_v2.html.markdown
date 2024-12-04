@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_vm_categories_v4"
-sidebar_current: "docs-nutanix-resource-vm-categories-v4"
+sidebar_current: "docs-nutanix-resource-vm-categories-v2"
 description: |-
    Associate/Disassociate categories to a Virtual Machine.
 ---

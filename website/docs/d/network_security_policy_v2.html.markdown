@@ -15,7 +15,7 @@ Get a Network Security Policy by ExtID
 
 ```hcl
 
-    data "nutanix_network_security_policy_v2" "test" {
+    data "nutanix_network_security_policy_v2" "example"{
         ext_id = "{{ network security policy uuid }}"
     }
 

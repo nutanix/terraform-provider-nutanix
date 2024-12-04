@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_vm_cdroms_v4"
-sidebar_current: "docs-nutanix-datasource-vm-cdroms-v4"
+sidebar_current: "docs-nutanix-datasource-vm-cdroms-v2"
 description: |-
    Lists the CD-ROM devices attached to a Virtual Machine.
 ---

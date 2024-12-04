@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_users_v2"
-sidebar_current: "docs-nutanix-resource-users-v4"
+sidebar_current: "docs-nutanix-resource-users-v2"
 description: |-
   Create a User.
 ---
@@ -109,4 +109,4 @@ The buckets_access_keys attribute supports the following:
 * `created_time`: - Creation time for the Bucket Access Key.
 
 
-See detailed information in [Nutanix Users](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0.b1).
+See detailed information in [Nutanix Users v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0.b1#tag/Users/operation/createUser).

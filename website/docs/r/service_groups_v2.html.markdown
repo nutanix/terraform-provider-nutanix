@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_service_groups_v4"
-sidebar_current: "docs-nutanix-resource-service-groups-v4"
+sidebar_current: "docs-nutanix-resource-service-groups-v2"
 description: |-
   This operation submits a request to create a service group based on the input parameters.
 ---
@@ -13,18 +13,18 @@ Create an service Group
 ## Example Usage
 
 ``` hcl
-    resource "nutanix_service_groups_v4" "test" {
-        name = "{{ name }}"
-        description = "{{ desc }}"
-        tcp_services {
-		  start_port = "232"
-		  end_port = "232"
-		}
-		udp_services {
-		  start_port = "232"
-		  end_port = "232"
-		}
+resource "nutanix_service_groups_v4" "service-group"{
+	name = "{{ name }}"
+	description = "{{ desc }}"
+	tcp_services {
+		start_port = "232"
+		end_port = "232"
 	}
+	udp_services {
+		start_port = "232"
+		end_port = "232"
+	}
+}
 ```
 
 

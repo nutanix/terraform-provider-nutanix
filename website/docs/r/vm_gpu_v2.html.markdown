@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_vm_gpus_v2"
-sidebar_current: "docs-nutanix-resource-vm-gpus-v4"
+sidebar_current: "docs-nutanix-resource-vm-gpus-v2"
 description: |-
   Attaches a GPU device to a Virtual Machine.
 ---

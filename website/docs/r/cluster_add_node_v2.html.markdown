@@ -66,7 +66,17 @@ resource "nutanix_cluster_add_node_v2" "cluster_node"{
     target_hypervisor = "<target_hypervisor>"
   }
   should_skip_add_node = false
-  should_skip_pre_expand_checks = true  
+  should_skip_pre_expand_checks = true
+
+  remove_node_params {
+    extra_params {
+      should_skip_upgrade_check = false
+      skip_space_check          = false
+      should_skip_add_check     = false
+    }
+    should_skip_remove    = false
+    should_skip_prechecks = false
+  }
 }
 ```
 
@@ -80,6 +90,7 @@ The following arguments are supported:
 * `config_params`: -(Optional) Config parameters.
 * `should_skip_add_node`: -(Optional) Indicates if node addition can be skipped.
 * `should_skip_pre_expand_checks`: -(Optional) Indicates if pre-expand checks can be skipped for node addition.
+* `remove_node_params`: -(Optional) configuration for node removal. 
 
 ### Node Params 
 The node_params block supports the following:
@@ -212,7 +223,24 @@ The `domain_details`, `failover_cluster_details` attributes supports the followi
 * `password`: -(Optional) Password.
 * `cluster_name`: -(Optional) Cluster name. This is part of payload for both cluster create & update operations.
 
+### Remove Node Params
+The remove_node_params block supports the following:
+
+* `should_skip_prechecks`: -(Optional) Indicates if prechecks can be skipped for node removal.
+* `should_skip_remove`: -(Optional) Indicates if node removal can be skipped.
+* `node_uuids`: -(Required) List of node UUIDs to be removed.
+* `extra_params`: -(Optional) Extra parameters for node addition.
+
+#### Extra Params
+The extra_params block supports the following:
+
+* `should_skip_upgrade_check`: -(Optional) Indicates if upgrade check needs to be skipped or not.
+* `skip_space_check`: -(Optional) Indicates if space check needs to be skipped or not.
+* `should_skip_add_check`: -(Optional) Indicates if add check needs to be skipped or not.
 
 
-See detailed information in [Nutanix Cluster - Add Node on a Cluster](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0.b2#tag/Clusters/operation/expandCluster).
+
+
+See detailed information in [Nutanix Cluster - Add Node on a Cluster V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0.b2#tag/Clusters/operation/expandCluster).
+
 

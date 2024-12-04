@@ -11,7 +11,7 @@ terraform {
   }
 }
 
-#definig nutanix configuration
+#defining nutanix configuration
 provider "nutanix" {
   username = var.nutanix_username
   password = var.nutanix_password
@@ -20,7 +20,7 @@ provider "nutanix" {
   insecure = true
 }
 
-# creat authorization policy
+# create authorization policy
 resource "nutanix_authorization_policy_v2" "auth_policy_example" {
   role         = "<role_uuid>"
   display_name = "<acp name>"

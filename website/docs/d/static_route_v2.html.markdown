@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_route_table_v2"
-sidebar_current: "docs-nutanix-datasource-route-table-v4"
+sidebar_current: "docs-nutanix-datasource-route-table-v2"
 description: |-
    This operation retrieves the route table for the specified extId.
 ---

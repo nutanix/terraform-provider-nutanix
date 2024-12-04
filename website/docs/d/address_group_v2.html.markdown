@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_address_group_v2"
-sidebar_current: "docs-nutanix-datasource-address-group-v4"
+sidebar_current: "docs-nutanix-datasource-address-group-v2"
 description: |-
   This operation retrieves an address_group.
 ---
@@ -14,8 +14,8 @@ Get an Address Group by ExtID
 
 ``` hcl
 
-  data "nutanix_address_group_v2" "addr_group" {
-    ext_id = {{ address_group uuid }}
+  data "nutanix_address_group_v2" "addr_group"{
+    ext_id = "{{ address_group uuid }}"
   }
 ```
 

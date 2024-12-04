@@ -2,12 +2,12 @@ terraform {
   required_providers {
     nutanix = {
       source  = "nutanix/nutanix"
-      version = "1.7.0"
+      version = "2.0"
     }
   }
 }
 
-#definig nutanix configuration
+#defining nutanix configuration
 provider "nutanix" {
   username = var.nutanix_username
   password = var.nutanix_password
@@ -19,15 +19,15 @@ provider "nutanix" {
 # Add a User group to the system.
 
 resource "nutanix_users_v2" "example" {
-  username = "<username>"
-  first_name = "<first name>"
+  username       = "<username>"
+  first_name     = "<first name>"
   middle_initial = "<middle initial>"
-  last_name = "<last name>"
-  email_id = "<email id>"
-  locale = "<locale>"
-  region = "<region>"
-  display_name = "<user display name>"
-  password = "<user password>"
+  last_name      = "<last name>"
+  email_id       = "<email id>"
+  locale         = "<locale>"
+  region         = "<region>"
+  display_name   = "<user display name>"
+  password       = "<user password>"
   # Type of the User LOCAL, LDAP, SAML
   user_type = "LOCAL"
   # Status of the User ACTIVE, INACTIVE
@@ -36,9 +36,14 @@ resource "nutanix_users_v2" "example" {
 
 
 # List all the users in the system.
-data "nutanix_users_v2" "test"{}
+data "nutanix_users_v2" "test" {}
+
+# List all the users with a filter.
+data "nutanix_users_v2" "test" {
+  filter = "username eq '<username>'"
+}
 
 # Get the details of a user.
 data "nutanix_user_v2" "test" {
-	ext_id = nutanix_users_v2.example.id
+  ext_id = nutanix_users_v2.example.id
 }

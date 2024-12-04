@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_vm_serial_ports_v4"
-sidebar_current: "docs-nutanix-datasource-vm-serial-ports-v4"
+sidebar_current: "docs-nutanix-datasource-vm-serial-ports-v2"
 description: |-
    Lists the serial ports attached to a Virtual Machine. 
 ---

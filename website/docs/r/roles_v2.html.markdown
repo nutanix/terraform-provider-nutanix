@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_roles_v2"
-sidebar_current: "docs-nutanix-resource-roles-v4"
+sidebar_current: "docs-nutanix-resource-roles-v2"
 description: |-
   This operation submits a request to add a Role..
 ---
@@ -27,7 +27,7 @@ The following arguments are supported:
 * `display_name`: -(Required) The display name for the Role.
 * `description`: - Description of the Role.
 * `client_name`: - Client that created the entity.
-* `operations`: -(Required) Indicates whether to enable Volume Group load balancing for VM attachments. This cannot be enabled if there are iSCSI client attachments already associated with the Volume Group, and vice-versa. This is an optional field.
+* `operations`: -(Required) List of operations for the role.
 
 
 
@@ -40,7 +40,7 @@ The following attributes are exported:
 * `display_name`: - The display name for the Role.
 * `description`: - Description of the Role.
 * `client_name`: - Client that created the entity.
-* `operations`: - Indicates whether to enable Volume Group load balancing for VM attachments. This cannot be enabled if there are iSCSI client attachments already associated with the Volume Group, and vice-versa. This is an optional field.
+* `operations`: - List of operations for the role.
 * `accessible_clients`: - List of Accessible Clients for the Role.
 * `accessible_entity_types`: - List of Accessible Entity Types for the Role.
 * `assigned_users_count`: - Number of Users assigned to given Role.

@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_pbr_v2"
-sidebar_current: "docs-nutanix-datasource-pbr-v4"
+sidebar_current: "docs-nutanix-datasource-pbr-v2"
 description: |-
    Provides a datasource to get a single Routing Policy corresponding to the extId.
 ---
@@ -13,8 +13,8 @@ Get a single Routing Policy corresponding to the extId.
 ## Example Usage
 
 ```hcl
-    data "nutanix_pbr_v2" "test"{
-        ext_id = <pbr_uuid>
+    data "nutanix_pbr_v2" "pbr"{
+        ext_id = "<pbr_uuid>"
     }
 ```
 

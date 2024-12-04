@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_storage_containers_v2"
-sidebar_current: "docs-nutanix-datasource-storage-containers-v4"
+sidebar_current: "docs-nutanix-datasource-storage-containers-v2"
 description: |-
    This operation retrieves a List of the Storage Containers present in the system.
 ---
@@ -13,7 +13,7 @@ Provides a datasource to Lists the Storage Containers present in the system.
 ## Example Usage
 
 ```hcl
-    data "nutanix_storage_containers_v2" "test"{ }
+    data "nutanix_storage_containers_v2" "storage-containers"{ }
 ```
 
 ## Argument Reference
@@ -45,7 +45,7 @@ The following attributes are exported:
 * `is_marked_for_removal`: - Indicates if the Storage Container is marked for removal. This field is set when the Storage Container is about to be destroyed.
 * `max_capacity_bytes`: - Maximum physical capacity of the Storage Container in bytes.
 * `logical_explicit_reserved_capacity_bytes`: - Total reserved size (in bytes) of the container (set by Admin). This also accounts for the container's replication factor. The actual reserved capacity of the container will be the maximum of explicitReservedCapacity and implicitReservedCapacity.
-* `logical_implicit_reserved_capacity_bytes`: - This is the summation of reservations provisioned on all vdisks in the container. The actual reserved capacity of the container will be the maximum of explicitReservedCapacity and implicitReservedCapacity
+* `logical_implicit_reserved_capacity_bytes`: - This is the summation of reservations provisioned on all VDisks in the container. The actual reserved capacity of the container will be the maximum of explicitReservedCapacity and implicitReservedCapacity
 * `logical_advertised_capacity_bytes`: - Max capacity of the Container as defined by the user.
 * `replication_factor`: - Replication factor of the Storage Container.
 * `nfs_whitelist_addresses`: - List of NFS addresses which need to be whitelisted.

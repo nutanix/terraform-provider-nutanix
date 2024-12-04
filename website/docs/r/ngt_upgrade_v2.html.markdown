@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_ngt_upgrade_v2"
-sidebar_current: "docs-nutanix-resource-ngt-upgrade-v4"
+sidebar_current: "docs-nutanix-resource-ngt-upgrade-v2"
 description: |-
   Installs Nutanix Guest Tools in a Virtual Machine by using the provided credentials.
 
@@ -67,4 +67,4 @@ The following attributes are exported:
 
 
 
-See detailed information in [Nutanix Guest Tools](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).
+See detailed information in [Nutanix Guest Tools V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).

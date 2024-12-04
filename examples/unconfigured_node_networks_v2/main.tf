@@ -7,7 +7,7 @@ terraform {
   }
 }
 
-#definig nutanix configuration
+#defining nutanix configuration
 provider "nutanix" {
   username = var.nutanix_username
   password = var.nutanix_password
@@ -20,7 +20,7 @@ provider "nutanix" {
 
 # ## check if the node to add is un configured or not
 resource "nutanix_clusters_discover_unconfigured_nodes_v2" "cluster-node" {
-  ext_id = "<Cluster UUID>"
+  ext_id       = "<Cluster UUID>"
   address_type = "IPV4"
   ip_filter_list {
     ipv4 {
@@ -38,7 +38,7 @@ resource "nutanix_clusters_discover_unconfigured_nodes_v2" "cluster-node" {
 
 # ## fetch Network info for unconfigured node
 resource "nutanix_clusters_unconfigured_node_networks_v2" "node-network-info" {
-    ext_id = "<Cluster UUID>"
+  ext_id       = "<Cluster UUID>"
   request_type = "expand_cluster"
   node_list {
     cvm_ip {

@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_vm_shutdown_action_v2"
-sidebar_current: "docs-nutanix-resource-vm-shutdown-action-v4"
+sidebar_current: "docs-nutanix-resource-vm-shutdown-action-v2"
 description: |-
   Perform shutdown actions on VM. 
 ---
@@ -13,15 +13,15 @@ Collaborative reboot or shutdown of a Virtual Machine through the ACPI support i
 ## Example
 
 ```hcl
-    resource "nutanix_vm_shutdown_action_v2" "vmShuts" {
-        ext_id= {{ vm uuid }}
-        action = "shutdown"
-    }
+resource "nutanix_vm_shutdown_action_v2" "vmShuts"{
+    ext_id= {{ vm uuid }}
+    action = "shutdown"
+}
 
-    resource "nutanix_vm_shutdown_action_v2" "vmShuts" {
-        ext_id= {{ vm uuid }}
-        action = "reboot"
-    }
+resource "nutanix_vm_shutdown_action_v2" "vmShuts"{
+    ext_id= {{ vm uuid }}
+    action = "reboot"
+}
 ```
 
 ## Argument Reference
@@ -37,4 +37,4 @@ The following arguments are supported:
 * `should_fail_on_script_failure`: (Optional) Indicates whether to abort VM shutdown/restart if the script fails.
 
 
-See detailed information in [Nutanix VMs Power Action](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).
+See detailed information in [Nutanix VMs Power Action V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).

@@ -82,4 +82,4 @@ The links attribute supports the following:
 
 
 
-See detailed information in [Nutanix Routes v2](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0.b1).
+See detailed information in [Nutanix Routes v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0.b1).

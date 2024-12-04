@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_route_tables_v2"
-sidebar_current: "docs-nutanix-datasource-routes-tables-v4"
+sidebar_current: "docs-nutanix-datasource-routes-tables-v2"
 description: |-
    This operation retrieves the list route tables.
 ---

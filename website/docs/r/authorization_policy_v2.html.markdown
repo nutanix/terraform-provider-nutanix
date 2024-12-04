@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: authorization_policy_v4"
-sidebar_current: "docs-nutanix-resource-authorization-policy-v4"
+sidebar_current: "docs-nutanix-resource-authorization-policy-v2"
 description: |-
   Create Virtual Private Cloud .
 ---
@@ -15,14 +15,14 @@ Provides Nutanix resource to create authorization policy.
 
 ```hcl
 
-    resource "authorization_policy_v4" "test"{
+    resource "authorization_policy_v4" "acp"{
         role         = <role uuid>
         display_name = <authorization policy name>
         description  = "auth policies description"
         authorization_policy_type = "USER_DEFINED"
         identities {
             # must be a json string 
-            reserved = ""{\"user\":{\"uuid\":{\"anyof\":[\"<user_uuid>\"]}}}""
+            reserved = "{\"user\":{\"uuid\":{\"anyof\":[\"<user_uuid>\"]}}}"
         }
         
         entities {
@@ -75,4 +75,4 @@ The links attribute supports the following:
 * `rel`: - A name that identifies the relationship of the link to the object that is returned by the URL. The unique value of "self" identifies the URL for the object
 
 
-See detailed information in [Nutanix Authorization Policies](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0.b1).
+See detailed information in [Nutanix Authorization Policies v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0.b1).

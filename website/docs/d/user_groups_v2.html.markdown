@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_user_groups_v2"
-sidebar_current: "docs-nutanix-datasource-user-groups-v4"
+sidebar_current: "docs-nutanix-datasource-user-groups-v2"
 description: |-
   Provides a datasource to retrieve all the user groups.
 ---
@@ -13,7 +13,7 @@ Provides a datasource to retrieve all the user groups.
 ## Example Usage
 
 ``` hcl
-data "nutanix_user_groups_v2" "usergroups"{}
+data "nutanix_user_groups_v2" "user-groups"{}
 ```
 
 ##  Argument Reference
@@ -58,4 +58,4 @@ The links attribute supports the following:
 * `rel`: - A name that identifies the relationship of the link to the object that is returned by the URL. The unique value of "self" identifies the URL for the object.
 
 
-See detailed information in [Nutanix User Groups](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0.b1).
+See detailed information in [Nutanix User Groups v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0.b1).

@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_authorization_policies_v2"
-sidebar_current: "docs-nutanix-datasource-authorization-policies-v4"
+sidebar_current: "docs-nutanix-datasource-authorization-policies-v2"
 description: |-
    This operation retrieves the list of existing Authorization Policies. 
 ---
@@ -13,7 +13,7 @@ Provides a datasource to retrieve the list of existing Authorization Policies.
 ## Example Usage
 
 ```hcl
-    data "nutanix_authorization_policies_v2" "test"{ }
+    data "nutanix_authorization_policies_v2" "acps"{ }
 
 ```
 
@@ -61,4 +61,4 @@ The links attribute supports the following:
 * `rel`: - A name that identifies the relationship of the link to the object that is returned by the URL. The unique value of "self" identifies the URL for the object
 
 
-See detailed information in [Nutanix Authorization Policies](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0.b1).
+See detailed information in [Nutanix Authorization Policies v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0.b1).

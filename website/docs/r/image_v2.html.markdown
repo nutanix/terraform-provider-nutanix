@@ -13,7 +13,7 @@ Create an image using the provided request body. Name, type and source are manda
 
 ```hcl
 
-    resource "nutanix_images_v4" "test" {
+    resource "nutanix_images_v2" "img-1"{
         name = "test-image"
         description = "img desc"
         type = "ISO_IMAGE"
@@ -22,13 +22,13 @@ Create an image using the provided request body. Name, type and source are manda
         }
     }
 
-    data "nutanix_clusters" "clusters" {}
+    data "nutanix_clusters" "clusters"{}
 
     locals {
     cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
     }
 
-    resource "nutanix_images_v4" "test" {
+    resource "nutanix_images_v2" "img-2"{
         name = "test-image"
         description = "img desc"
         type = "DISK_IMAGE"
@@ -91,4 +91,4 @@ The following attributes are exported:
 * `enforced_cluster_ext_ids`: List of cluster external identifiers for the enforced placement policy.
 * `conflicting_policy_ext_ids`: List of image placement policy external identifier that conflict with the current one.
 
-See detailed information in [Nutanix Image](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1)
+See detailed information in [Nutanix Image V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1)

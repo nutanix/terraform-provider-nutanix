@@ -1,19 +1,20 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_permission_v2"
-sidebar_current: "docs-nutanix-datasource-permission-v2"
+page_title: "NUTANIX: nutanix_operation_v2"
+sidebar_current: "docs-nutanix-datasource-operation-v2"
 description: |-
-  This operation retrieves a list of all the permission.
+  Fetches an operation based on the external identifier.
 ---
 
-# nutanix_permission_v2
-Lists the Permission defined on the system. List of permission can be further filtered out using various filtering options.
+# nutanix_operation_v2
+Fetches an operation based on the external identifier.
+
 
 ## Example
 
 ```hcl
 
-     data "nutanix_operation_v2" "test" {
+     data "nutanix_operation_v2" "operation"{
         ext_id = "<ext-id>"
     }
 
@@ -29,7 +30,7 @@ The following arguments are supported:
 
 * `ext_id`: A globally unique identifier of an instance that is suitable for external consumption.
 * `display_name`: Permission name.
-* `dedescription`: Permission description
+* `description`: Permission description
 * `create_time`: Permission creation time
 * `last_updated_time`: Permission last updated time.
 

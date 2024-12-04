@@ -1,18 +1,18 @@
-terraform{
-    required_providers {
-        nutanix = {
-            source = "nutanix/nutanix"
-            version = "2.0.0"
-        }
+terraform {
+  required_providers {
+    nutanix = {
+      source  = "nutanix/nutanix"
+      version = "2.0.0"
     }
+  }
 }
 
-#definig nutanix configuration
-provider "nutanix"{
+#defining nutanix configuration
+provider "nutanix" {
   username = var.nutanix_username
   password = var.nutanix_password
   endpoint = var.nutanix_endpoint
-  port = 9440
+  port     = 9440
   insecure = true
 }
 
@@ -75,7 +75,7 @@ resource "nutanix_template_v2" "example-1" {
       }
       template_version_reference {
         # if version id is not provided, it will use the latest version of the template by default
-        version_id = "<TEMPLATE_VERSION_UUID>" 
+        version_id = "<TEMPLATE_VERSION_UUID>"
         override_vm_config {
           name                 = "tf-test-vm-2.0.0"
           memory_size_bytes    = 3 * 1024 * 1024 * 1024 # 3 GB
@@ -118,7 +118,7 @@ resource "nutanix_template_v2" "example-1" {
     version_description = "updating version from initial to 2.0.0"
     is_active_version   = true
     version_source {
-       template_vm_reference {
+      template_vm_reference {
         ext_id = "<New_VM_UUID>"
       }
     }
@@ -131,47 +131,16 @@ data "nutanix_templates_v2" "templates-1" {}
 
 # List all the Templates in the system with a filter.
 data "nutanix_templates_v2" "templates-2" {
-  filter     = "templateName eq '${nutanix_template_v2.example-1.template_name}'"
+  filter = "templateName eq '${nutanix_template_v2.example-1.template_name}'"
 }
 
 # List all the Templates in the system with a limit.
 data "nutanix_templates_v2" "templates-3" {
-  limit      = 3
+  limit = 3
 }
 
 # Get a specific Template by UUID.
 data "nutanix_template_v2" "template-1" {
   ext_id = nutanix_template_v2.example-1.ext_id
   # or -> ext_id = nutanix_template_v2.example-1.id
-}
-
-# Deploy a template
-resource "nutanix_deploy_templates_v2" "test" {
-  ext_id            = resource.nutanix_template_v2.example-1.id
-  number_of_vms     = 1
-  cluster_reference = <CLUSTER_UUID>
-  override_vm_config_map {
-    name                 = "example-tf-template-deploy"
-    memory_size_bytes    = 4294967296
-    num_sockets          = 2
-    num_cores_per_socket = 1
-    num_threads_per_core = 1
-    nics {
-      backing_info {
-        is_connected = true
-        model        = "VIRTIO"
-      }
-      network_info {
-        nic_type = "NORMAL_NIC"
-        subnet {
-          ext_id = <SUBNET_UUID>
-        }
-        vlan_mode                 = "ACCESS"
-        should_allow_unknown_macs = false
-      }
-    }
-  }
-  depends_on = [
-    resource.nutanix_template_v2.example-1
-  ]
 }

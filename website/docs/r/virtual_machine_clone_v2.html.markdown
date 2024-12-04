@@ -13,9 +13,9 @@ Provides a Nutanix Virtual Machine resource to Create a virtual machine clone.
 ## Example Usage
 
 ```hcl
-data "nutanix_virtual_machines_v2" "vms" {}
+data "nutanix_virtual_machines_v2" "vms"{}
 
-resource "nutanix_vm_clone_v2" "vm1" {
+resource "nutanix_vm_clone_v2" "vm1"{
   vm_ext_id = data.nutanix_virtual_machines_v2.vms.0.data.ext_id
   name = "test-dou"
   num_cores_per_socket = 1
@@ -294,11 +294,4 @@ The key_value_pairs attribute supports the following:
 * `name`: - (Optional) The key of this key-value pair
 * `value`: - (Optional) The value associated with the key for this key-value pair.
 
-See detailed information in [Nutanix Virtual Machine](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).
-
-## Import
-Nutanix Virtual machines can be imported using the `UUID` eg,
-
-`
-terraform import nutanix_virtual_machine_v2.vm01 0F75E6A7-55FB-44D9-A50D-14AD72E2CF7C
-`
+See detailed information in [Nutanix Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).

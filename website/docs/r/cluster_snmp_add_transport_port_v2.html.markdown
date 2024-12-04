@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_cluster_snmp_trap_v2"
-sidebar_current: "docs-nutanix-resource-cluster-snmp-trap-v4"
+sidebar_current: "docs-nutanix-resource-cluster-snmp-trap-v2"
 description: |-
    Adds, Update and Remove SNMP trap configuration to the cluster identified by {extId}.
 ---

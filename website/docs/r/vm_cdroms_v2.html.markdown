@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_vm_cdroms_v4"
-sidebar_current: "docs-nutanix-resource-vm-cdroms-v4"
+sidebar_current: "docs-nutanix-resource-vm-cdroms-v2"
 description: |-
    Creates and attaches a CD-ROM device to a Virtual Machine.
 ---

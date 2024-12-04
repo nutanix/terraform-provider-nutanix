@@ -1,26 +1,26 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_permissions_v2"
-sidebar_current: "docs-nutanix-datasource-permissions-v2"
+page_title: "NUTANIX: nutanix_operations_v2"
+sidebar_current: "docs-nutanix-datasource-operations-v2"
 description: |-
-  This operation retrieves a list of all the permissions.
+  This operation retrieves a list of all the operations.
 ---
 
-# nutanix_permissions_v2
-Lists the Permissions defined on the system. List of permissions can be further filtered out using various filtering options.
+# nutanix_operations_v2
+Lists the operations defined on the system. List of operations can be further filtered out using various filtering options.
 
 ## Example
 
 ```hcl
 
-    data "nutanix_operations_v2" "test" { }
+    data "nutanix_operations_v2" "operations-1"{ }
 
-    data "nutanix_operations_v2" "test" {
+    data "nutanix_operations_v2" "operations-2"{
         page=0
         limit=2
     }
 
-    data "nutanix_operations_v2" "test" {
+    data "nutanix_operations_v2" "operations-2"{
         filter = "display_name eq 'test-Permission-filter'"
     }
 
@@ -35,9 +35,9 @@ The following attributes are exported:
 * `filter`: A URL query parameter that allows clients to filter a collection of resources. The expression specified with $filter is evaluated for each resource in the collection, and only items where the expression evaluates to true are included in the response. Expression specified with the $filter must conform to the OData V4.01 URL conventions
 * `order_by`: A URL query parameter that allows clients to specify the sort criteria for the returned list of objects. Resources can be sorted in ascending order using asc or descending order using desc. If asc or desc are not specified, the resources will be sorted in ascending order by default
 * `select`: A URL query parameter that allows clients to request a specific set of properties for each entity or complex type. Expression specified with the $select must conform to the OData V4.01 URL conventions. 
-* `permissions`: List of all permissions
+* `operations`: List of all operations
 
-### permissions
+### operations
 
 * `ext_id`: A globally unique identifier of an instance that is suitable for external consumption.
 * `display_name`: Permission name.

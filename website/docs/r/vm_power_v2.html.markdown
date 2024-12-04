@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_vm_power_action_v4"
-sidebar_current: "docs-nutanix-resource-vm-power-action-v4"
+sidebar_current: "docs-nutanix-resource-vm-power-action-v2"
 description: |-
   Perform power actions on VM. 
 ---

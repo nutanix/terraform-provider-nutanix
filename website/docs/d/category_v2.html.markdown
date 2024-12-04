@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_category_v2"
-sidebar_current: "docs-nutanix-datasource-category-v4"
+sidebar_current: "docs-nutanix-datasource-category-v2"
 description: |-
   Fetch details of a category with the given external identifier.
 ---
@@ -14,7 +14,7 @@ Fetch a category
 
 ```hcl
 
-    data "nutanix_category_v2" "test" {
+    data "nutanix_category_v2" "cat"{
         ext_id = {{ ext_id of category}}
     }
     
@@ -48,14 +48,14 @@ There are three types of categories: SYSTEM, INTERNAL, and USER.
 * `category_id`: External identifier for the given category, used across all v4 apis/entities/resources where categories are referenced.
 * `resource_type`: An enum denoting the associated resource types. Resource types are further grouped into 2 types - entity or a policy.
 * `resource_group`: An enum denoting the resource group.
-Resources can be organised into either an entity or a policy. 
+Resources can be organized into either an entity or a policy. 
 * `count`: Count of associations of a particular type of entity or policy
 
 ### detailed_associations
 * `category_id`: External identifier for the given category, used across all v4 apis/entities/resources where categories are referenced.
 * `resource_type`: An enum denoting the associated resource types. Resource types are further grouped into 2 types - entity or a policy.
 * `resource_group`: An enum denoting the resource group.
-Resources can be organised into either an entity or a policy. 
+Resources can be organized into either an entity or a policy. 
 * `resource_id`: The UUID of the entity or policy associated with the particular category.
 
 

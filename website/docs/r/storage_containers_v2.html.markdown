@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_storage_containers_v2"
-sidebar_current: "docs-nutanix-resource-storage-containers-v4"
+sidebar_current: "docs-nutanix-resource-storage-containers-v2"
 description: |-
   Create Virtual Private Cloud .
 ---

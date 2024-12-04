@@ -13,9 +13,9 @@ Retrieves configuration details for a Virtual Machine.
 ## Example
 
 ```hcl
-    data "nutanix_virtual_machine_v2" "test" {
-		ext_id = "{{ ext_id of vm }}"
-    }
+data "nutanix_virtual_machine_v2" "vm"{
+  ext_id = "{{ ext_id of vm }}"
+}
 ```
 
 ## Argument Reference
@@ -175,7 +175,7 @@ The following arguments are supported:
 * `disk_address.index`: Device index on the bus. This field is ignored unless the bus details are specified.
 * `backing_info`: Supporting storage to create virtual disk on.
 * `backing_info.vm_disk`: backing Info for vmDisk
-* `backing_info.adfs_volume_group_reference`: Volume Group Refrence
+* `backing_info.adfs_volume_group_reference`: Volume Group Reference
 * `backing_info.adfs_volume_group_reference.volume_group_ext_id`: The globally unique identifier of an ADSF volume group. It should be of type UUID.
 
 ### backing_info.vm_disk
@@ -252,4 +252,4 @@ The following arguments are supported:
 * `policy`: Reference to the policy object in use.
 
 
-See detailed information in [Nutanix Virtual Machine](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).
+See detailed information in [Nutanix Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).

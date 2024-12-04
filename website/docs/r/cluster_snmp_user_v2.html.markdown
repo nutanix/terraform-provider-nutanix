@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_cluster_snmp_user_v2"
-sidebar_current: "docs-nutanix-resource-cluster-snmp-user-v4"
+sidebar_current: "docs-nutanix-resource-cluster-snmp-user-v2"
 description: |-
    Adds, Update and Remove SNMP user configuration to the cluster identified by {extId}.
 ---

@@ -15,9 +15,9 @@ Gets a list of Network Security Policies.
 
 ```hcl
 
-    data "nutanix_network_security_policies_v2" "test" { }
+    data "nutanix_network_security_policies_v2" "example-1"{ }
 
-    data "nutanix_network_security_policies_v2" "test" { 
+    data "nutanix_network_security_policies_v2" "example-2"{ 
         filter = "name eq '{{ NSP name }}'"
     } 
     

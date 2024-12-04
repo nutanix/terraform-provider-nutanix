@@ -13,66 +13,65 @@ Create a Template from the given VM identifier. A Template stores the VM configu
 ## Example 
 
 ```hcl
-    resource "nutanix_template_v2" "test"{
-        template_name = "{{ template name }}"
-        template_description = "{{ template description }}"
-        template_version_spec{
-            version_source{
-                template_vm_reference{
-                    ext_id =  "{{ vm uuid }}"
-                    guest_customization {
-                        config {
-                          sysprep {
-                            sysprep_script {
-                              custom_key_values {
-                                key_value_pairs {
-                                  name = "locale"
-                                  value {
-                                    string = "en-PS"
-                                  }
+  resource "nutanix_template_v2" "temp-1"{
+      template_name = "{{ template name }}"
+      template_description = "{{ template description }}"
+      template_version_spec{
+          version_source{
+              template_vm_reference{
+                  ext_id =  "{{ vm uuid }}"
+                  guest_customization {
+                      config {
+                        sysprep {
+                          sysprep_script {
+                            custom_key_values {
+                              key_value_pairs {
+                                name = "locale"
+                                value {
+                                  string = "en-PS"
                                 }
                               }
                             }
                           }
                         }
-                    }
-                }
-            }
-        }
-    }
-# to update template and override the existing configuration, we will use template_version_reference
-    resource "nutanix_template_v2" "test" {
-      template_name = "{{ template name }}"
-      template_description = "{{ template description }}"
-      template_version_spec {
-        version_name        = "2.0.0"
-        version_description = "updating version from initial to 2.0.0"
-        is_active_version   = true
-        version_source {
-          template_vm_reference {
-            ext_id = "<VM_UUID>"
+                      }
+                  }
+              }
           }
-          template_version_reference {
-            version_id = "<TEMPLATE_VERSION_UUID>"
-          override_vm_config {
-            name                 = "tf-test-vm-2.0.0"
-            memory_size_bytes    = 3 * 1024 * 1024 * 1024 # 3 GB
-            num_cores_per_socket = 2
-            num_sockets          = 2
-            num_threads_per_core = 2
-            guest_customization {
-              config {
-                cloud_init {
-                  cloud_init_script {
-                    user_data {
-                      value = base64encode("#cloud-config\nusers:\n  - name: ubuntu\n    ssh-authorized-keys:\n      - ssh-rsa DUMMYSSH mypass\n    sudo: ['ALL=(ALL) NOPASSWD:ALL']")
-                    }
-                    custom_key_values {
-                      key_value_pairs {
-                        name = "locale"
-                        value {
-                          string = "en-US"
-                        }
+      }
+  }
+# to update template and override the existing configuration, we will use template_version_reference
+  resource "nutanix_template_v2" "temp-1"{
+    template_name = "{{ template name }}"
+    template_description = "{{ template description }}"
+    template_version_spec {
+      version_name        = "2.0.0"
+      version_description = "updating version from initial to 2.0.0"
+      is_active_version   = true
+      version_source {
+        template_vm_reference {
+          ext_id = "<VM_UUID>"
+        }
+        template_version_reference {
+          version_id = "<TEMPLATE_VERSION_UUID>"
+        override_vm_config {
+          name                 = "tf-test-vm-2.0.0"
+          memory_size_bytes    = 3 * 1024 * 1024 * 1024 # 3 GB
+          num_cores_per_socket = 2
+          num_sockets          = 2
+          num_threads_per_core = 2
+          guest_customization {
+            config {
+              cloud_init {
+                cloud_init_script {
+                  user_data {
+                    value = base64encode("#cloud-config\nusers:\n  - name: ubuntu\n    ssh-authorized-keys:\n      - ssh-rsa DUMMYSSH mypass\n    sudo: ['ALL=(ALL) NOPASSWD:ALL']")
+                  }
+                  custom_key_values {
+                    key_value_pairs {
+                      name = "locale"
+                      value {
+                        string = "en-US"
                       }
                     }
                   }
@@ -84,8 +83,7 @@ Create a Template from the given VM identifier. A Template stores the VM configu
       }
     }
   }
-
-
+}
 ```
 
 
@@ -130,9 +128,9 @@ The template_version_spec block supports the following:
 * `name`: (Required) VM name.
 * `description`: (Optional) VM description
 * `source`: (Optional) Reference to an entity that the VM should be cloned or created from. Valid values are "VM", "VM_RECOVERY_POINT".
-* `num_sockets`: (Required) Number of vCPU sockets. Value should be atleast 1.
-* `num_cores_per_socket`: (Optional) Number of cores per socket. Value should be atleast 1.
-* `num_threads_per_core`: (Optional) Number of threads per core. Value should be atleast 1.
+* `num_sockets`: (Required) Number of vCPU sockets. Value should be at least 1.
+* `num_cores_per_socket`: (Optional) Number of cores per socket. Value should be at least 1.
+* `num_threads_per_core`: (Optional) Number of threads per core. Value should be at least 1.
 * `num_numa_nodes`: (Optional) Number of NUMA nodes. 0 means NUMA is disabled.
 * `memory_size_bytes`: (Required) Memory size in bytes.
 * `is_vcpu_hard_pinning_enabled`: (Optional) Indicates whether the vCPUs should be hard pinned to specific pCPUs or not.
@@ -225,7 +223,7 @@ The template_version_spec block supports the following:
 * `disk_address.index`: (Required) Device index on the bus. This field is ignored unless the bus details are specified.
 * `backing_info`: (Required) Supporting storage to create virtual disk on.
 * `backing_info.vm_disk`:(Optional) backing Info for vmDisk
-* `backing_info.adfs_volume_group_reference`: (Required) Volume Group Refrence
+* `backing_info.adfs_volume_group_reference`: (Required) Volume Group Reference
 * `backing_info.adfs_volume_group_reference.volume_group_ext_id`: (Required) The globally unique identifier of an ADSF volume group. It should be of type UUID.
 
 ### backing_info.vm_disk
@@ -344,4 +342,4 @@ The template_version_spec block supports the following:
 
 
 
-See detailed information in [Nutanix Template](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).
+See detailed information in [Nutanix Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).

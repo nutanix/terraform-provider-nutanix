@@ -7,7 +7,7 @@ terraform {
   }
 }
 
-#definig nutanix configuration
+#defining nutanix configuration
 provider "nutanix" {
   username = var.nutanix_username
   password = var.nutanix_password
@@ -28,9 +28,14 @@ resource "nutanix_user_groups_v2" "example" {
 
 
 # List all the user groups in the system.
-data "nutanix_user_groups_v2" "example"{}
+data "nutanix_user_groups_v2" "example" {}
+
+# List user groups with a filter.
+data "nutanix_user_groups_v2" "example" {
+  filter = "name eq '<group name>'"
+}
 
 # Get the details of a user group.
 data "nutanix_user_group_v2" "example" {
-	ext_id = nutanix_user_groups_v2.example.id
+  ext_id = nutanix_user_groups_v2.example.id
 }

@@ -14,79 +14,72 @@ Creates a Virtual Machine with the provided configuration.
 
 ```hcl
 
-    data "nutanix_clusters" "clusters" {}
-
-    locals {
-    cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+resource "nutanix_virtual_machine_v2" "vm-1"{
+    name= "test-vm"
+    description =  "vm desc"
+    num_cores_per_socket = 1
+    num_sockets = 1
+    cluster {
+        ext_id = "<Cluster uuid>"
     }
+}
 
-    resource "nutanix_virtual_machine_v2" "test"{
-        name= "test-vm"
-        description =  "vm desc"
-        num_cores_per_socket = 1
-        num_sockets = 1
-        cluster {
-            ext_id = local.cluster0
-        }
+resource "nutanix_virtual_machine_v2" "vm-2"{
+    name= "test-vm"
+    description =  "vm desc"
+    num_cores_per_socket = 1
+    num_sockets = 1
+    cluster {
+        ext_id = "<Cluster uuid>"
     }
-
-    resource "nutanix_virtual_machine_v2" "test"{
-        name= "test-vm"
-        description =  "vm desc"
-        num_cores_per_socket = 1
-        num_sockets = 1
-        cluster {
-            ext_id = local.cluster0
+    disks{
+        disk_address{
+            bus_type = "SCSI"
+            index = 0
         }
-        disks{
-            disk_address{
-                bus_type = "SCSI"
-                index = 0
-            }
-            backing_info{
-                vm_disk{
-                    disk_size_bytes = "1073741824"
-                    storage_container{
-                        ext_id = "{{ storage ext id}}"
-                    }
+        backing_info{
+            vm_disk{
+                disk_size_bytes = "1073741824"
+                storage_container{
+                    ext_id = "{{ storage ext id}}"
                 }
             }
         }
     }
+}
 
-    resource "nutanix_virtual_machine_v2" "test"{
-        name= "test-vm"
-        description =  "vm desc"
-        num_cores_per_socket = 1
-        num_sockets = 1
-        cluster {
-            ext_id = local.cluster0
+resource "nutanix_virtual_machine_v2" "vm-3"{
+    name= "test-vm"
+    description =  "vm desc"
+    num_cores_per_socket = 1
+    num_sockets = 1
+    cluster {
+        ext_id = "<Cluster uuid>"
+    }
+    disks{
+        disk_address{
+            bus_type = "SCSI"
+            index = 0
         }
-        disks{
-            disk_address{
-                bus_type = "SCSI"
-                index = 0
-            }
-            backing_info{
-                vm_disk{
-                    disk_size_bytes = "1073741824"
-                    storage_container{
-                        ext_id = "{{ storage ext id}}"
-                    }
+        backing_info{
+            vm_disk{
+                disk_size_bytes = "1073741824"
+                storage_container{
+                    ext_id = "{{ storage ext id}}"
                 }
             }
         }
-        nics{
-            network_info{
-                nic_type = "NORMAL_NIC"
-                subnet{
-                    ext_id = "{{ subnet ext id}}"
-                }	
-                vlan_mode = "ACCESS"
-            }
+    }
+    nics{
+        network_info{
+            nic_type = "NORMAL_NIC"
+            subnet{
+                ext_id = "{{ subnet ext id}}"
+            }	
+            vlan_mode = "ACCESS"
         }
     }
-
+}
 ```
 
 ## Argument Reference
@@ -96,9 +89,9 @@ The following arguments are supported:
 * `name`: (Required) VM name.
 * `description`: (Optional) VM description
 * `source`: (Optional) Reference to an entity that the VM should be cloned or created from. Valid values are "VM", "VM_RECOVERY_POINT".
-* `num_sockets`: (Required) Number of vCPU sockets. Value should be atleast 1.
-* `num_cores_per_socket`: (Optional) Number of cores per socket. Value should be atleast 1.
-* `num_threads_per_core`: (Optional) Number of threads per core. Value should be atleast 1.
+* `num_sockets`: (Required) Number of vCPU sockets. Value should be at least 1.
+* `num_cores_per_socket`: (Optional) Number of cores per socket. Value should be at least 1.
+* `num_threads_per_core`: (Optional) Number of threads per core. Value should be at least 1.
 * `num_numa_nodes`: (Optional) Number of NUMA nodes. 0 means NUMA is disabled.
 * `memory_size_bytes`: (Required) Memory size in bytes.
 * `is_vcpu_hard_pinning_enabled`: (Optional) Indicates whether the vCPUs should be hard pinned to specific pCPUs or not.
@@ -212,7 +205,7 @@ The following arguments are supported:
 * `disk_address.index`: (Required) Device index on the bus. This field is ignored unless the bus details are specified.
 * `backing_info`: (Required) Supporting storage to create virtual disk on.
 * `backing_info.vm_disk`:(Optional) backing Info for vmDisk
-* `backing_info.adfs_volume_group_reference`: (Required) Volume Group Refrence
+* `backing_info.adfs_volume_group_reference`: (Required) Volume Group Reference
 * `backing_info.adfs_volume_group_reference.volume_group_ext_id`: (Required) The globally unique identifier of an ADSF volume group. It should be of type UUID.
 
 ### backing_info.vm_disk
@@ -279,7 +272,7 @@ The following arguments are supported:
 The following attributes are exported:
 * `ext_id`: A globally unique identifier of an instance that is suitable for external consumption.
 * `name`: VM name.
-* `dedescription`: VM description
+* `description`: VM description
 * `create_time`: VM creation time
 * `update_time`: VM last updated time.
 * `source`: Reference to an entity that the VM should be cloned or created from
@@ -319,4 +312,4 @@ The following attributes are exported:
 * `protection_type`: The type of protection applied on a VM. PD_PROTECTED indicates a VM is protected using the Prism Element. RULE_PROTECTED indicates a VM protection using the Prism Central.
 * `protection_policy_state`: Status of protection policy applied to this VM.
 
-See detailed information in [Nutanix Virtual Machine](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).
+See detailed information in [Nutanix Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).
