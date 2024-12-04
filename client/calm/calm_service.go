@@ -22,6 +22,7 @@ type Service interface {
 	AppRunlogs(ctx context.Context, appUUID, runlogUUID string) (*AppRunlogsResponse, error)
 	ListBlueprint(ctx context.Context, filter *BlueprintListInput) (*BlueprintListResponse, error)
 	GetRuntimeEditables(ctx context.Context, bpUUID string) (*RuntimeEditablesResponse, error)
+	PatchApp(ctx context.Context, appUUID string, patchUUID string, input *PatchInput) (*AppPatchResponse, error)
 }
 
 func (op Operations) ProvisionBlueprint(ctx context.Context, bpUUID string, input *BlueprintProvisionInput) (*AppProvisionTaskOutput, error) {
@@ -132,6 +133,20 @@ func (op Operations) GetRuntimeEditables(ctx context.Context, bpUUID string) (*R
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
 
 	appResponse := new(RuntimeEditablesResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return appResponse, op.client.Do(ctx, req, appResponse)
+}
+
+func (op Operations) PatchApp(ctx context.Context, appUUID string, patchUUID string, input *PatchInput) (*AppPatchResponse, error) {
+	path := fmt.Sprintf("/apps/%s/patch/%s/run", appUUID, patchUUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
+
+	appResponse := new(AppPatchResponse)
 
 	if err != nil {
 		return nil, err

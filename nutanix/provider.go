@@ -267,6 +267,7 @@ func Provider() *schema.Provider {
 			"nutanix_ndb_cluster":                      resourceNutanixNDBCluster(),
 			"nutanix_karbon_worker_nodepool":           resourceNutanixKarbonWorkerNodePool(),
 			"nutanix_calm_app_provision":               resourceNutanixCalmAppProvision(),
+			"nutanix_calm_app_patch":                   resourceNutanixCalmAppPatch(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
