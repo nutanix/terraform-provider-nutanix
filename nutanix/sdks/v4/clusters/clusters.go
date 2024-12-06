@@ -1,8 +1,8 @@
 package clusters
 
 import (
-	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v16/api"
-	network "github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v16/client"
+	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/api"
+	cluster "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/client"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 )
@@ -13,11 +13,11 @@ type Client struct {
 }
 
 func NewClustersClient(credentials client.Credentials) (*Client, error) {
-	var baseClient *network.ApiClient
+	var baseClient *cluster.ApiClient
 
 	// check if all required fields are present. Else create an empty client
 	if credentials.Username != "" && credentials.Password != "" && credentials.Endpoint != "" {
-		pcClient := network.NewApiClient()
+		pcClient := cluster.NewApiClient()
 
 		pcClient.Host = credentials.Endpoint
 		pcClient.Password = credentials.Password

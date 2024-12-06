@@ -3,9 +3,11 @@ package dataprotectionv2
 import (
 	"context"
 	"encoding/json"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v16/models/dataprotection/v4/config"
+	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/dataprotection/v4/config"
+
 	"log"
 
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"

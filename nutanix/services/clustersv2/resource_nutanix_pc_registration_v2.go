@@ -9,11 +9,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	prismClusterMang "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16/models/clustermgmt/v4/config"
-	prismCommon "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16/models/common/v1/config"
-	prismResponse "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16/models/common/v1/response"
-	prismConfig "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16/models/prism/v4/config"
-	prismManagment "github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16/models/prism/v4/management"
+
+	prismClusterMang "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/clustermgmt/v4/config"
+	prismCommon "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/common/v1/config"
+	prismResponse "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/common/v1/response"
+	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	prismManagment "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/management"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )

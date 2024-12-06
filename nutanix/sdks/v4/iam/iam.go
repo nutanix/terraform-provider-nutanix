@@ -1,8 +1,8 @@
 package iam
 
 import (
-	"github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v16/api"
-	iam "github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v16/client"
+	"github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/api"
+	iam "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/client"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 )
