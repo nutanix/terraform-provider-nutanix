@@ -446,26 +446,6 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceNutanixUserV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// DeleteUserById is not implemented in the GA release
-	// conn := meta.(*conns.Client).IamAPI
-
-	// readResp, err := conn.UsersAPIInstance.GetUserById(utils.StringPtr(d.Id()))
-	// if err != nil {
-	// 	return diag.Errorf("error while fetching user: %v", err)
-	// }
-
-	// etagValue := conn.UserGroupsAPIInstance.ApiClient.GetEtag(readResp)
-	// headers := make(map[string]interface{})
-	// headers["If-Match"] = utils.StringPtr(etagValue)
-
-	// resp, err := conn.UsersAPIInstance.DeleteUserById(utils.StringPtr(d.Id()), headers)
-	// if err != nil {
-	// 	return diag.Errorf("error while deleting user  : %v", err)
-	// }
-
-	// if resp == nil {
-	// 	log.Println("[DEBUG] User deleted successfully.")
-	// }
 	return nil
 }
 
