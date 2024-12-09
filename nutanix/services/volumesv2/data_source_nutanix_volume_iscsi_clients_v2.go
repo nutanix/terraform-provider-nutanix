@@ -274,9 +274,10 @@ func flattenIscsiClientsEntities(pr []volumesClient.IscsiClient) []interface{} {
 			if v.ClusterReference != nil {
 				iscsi_client["cluster_reference"] = v.ClusterReference
 			}
-			if v.TargetParams != nil {
-				iscsi_client["attached_targets"] = flattenAttachedTargets(v.TargetParams)
-			}
+			// Attribute not present in the response of GA SDK
+			// if v.TargetParams != nil {
+			// 	iscsi_client["attached_targets"] = flattenAttachedTargets(v.TargetParams)
+			// }
 
 			iscsi_clients[k] = iscsi_client
 
