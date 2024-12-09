@@ -23,6 +23,9 @@ linters-settings:
     # "rewrap.wrappingColumn": 200 ... requires the rewrap plugin
     # "editor.rulers": [200]
     line-length: 500
+  gocritic:
+    disable:
+      - ifElseChain
 
 linters:
   enable-all: true
@@ -53,7 +56,6 @@ linters:
     - unused
     - staticcheck
     - deadcode
-    - ifElseChain
 
 issues:
   exclude:
