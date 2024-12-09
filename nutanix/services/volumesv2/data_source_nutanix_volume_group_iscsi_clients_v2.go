@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -141,7 +140,6 @@ func DatasourceNutanixVolumeGroupIscsiClientsV2Read(ctx context.Context, d *sche
 
 	// get the volume group iscsi clients
 	resp, err := conn.VolumeAPIInstance.ListExternalIscsiAttachmentsByVolumeGroupId(utils.StringPtr(volumeGroupExtID.(string)), page, limit, filter, orderBy, expand, selects)
-
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -165,7 +163,6 @@ func DatasourceNutanixVolumeGroupIscsiClientsV2Read(ctx context.Context, d *sche
 	}
 	d.SetId(resource.UniqueId())
 	return nil
-
 }
 
 func flattenVolumeIscsiClientsEntities(iscsiClientAttachments []volumesClient.IscsiClientAttachment) []interface{} {

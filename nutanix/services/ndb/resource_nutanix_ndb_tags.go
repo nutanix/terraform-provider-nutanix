@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
 	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -38,8 +37,10 @@ func ResourceNutanixNDBTags() *schema.Resource {
 			"entity_type": {
 				Type:     schema.TypeString,
 				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{"DATABASE", "TIME_MACHINE",
-					"CLONE", "DATABASE_SERVER"}, false),
+				ValidateFunc: validation.StringInSlice([]string{
+					"DATABASE", "TIME_MACHINE",
+					"CLONE", "DATABASE_SERVER",
+				}, false),
 			},
 			"status": {
 				Type:         schema.TypeString,
@@ -124,7 +125,6 @@ func resourceNutanixNDBTagsRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("tag id is required for read operation")
 	}
 	resp, err := conn.Service.ReadTags(ctx, d.Id(), "")
-
 	if err != nil {
 		return diag.FromErr(err)
 	}

@@ -8,14 +8,12 @@ import (
 	"strings"
 	"time"
 
-	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
-	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 const (
@@ -124,7 +122,7 @@ func ResourceNutanixUser() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
-							//ValidateFunc: validation.StringInSlice([]string{"role"}, false),
+							// ValidateFunc: validation.StringInSlice([]string{"role"}, false),
 						},
 						"identity_provider_reference": {
 							Type:     schema.TypeList,
@@ -344,7 +342,6 @@ func resourceNutanixUserUpdate(ctx context.Context, d *schema.ResourceData, meta
 	res := &v3.UserResources{}
 
 	response, err := conn.V3.GetUser(d.Id())
-
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")

@@ -135,7 +135,6 @@ func (op Operations) UpdateCluster(ctx context.Context, clusterUUID string, upda
 	path := fmt.Sprintf("/imaged_clusters/%s", clusterUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, updateData)
-
 	if err != nil {
 		return err
 	}
@@ -153,7 +152,6 @@ func (op Operations) DeleteCluster(ctx context.Context, clusterUUID string) erro
 	path := fmt.Sprintf("/imaged_clusters/%s", clusterUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
-
 	if err != nil {
 		return err
 	}

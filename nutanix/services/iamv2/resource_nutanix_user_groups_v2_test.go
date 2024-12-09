@@ -6,14 +6,12 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
 const resourceNameUserGroups = "nutanix_user_groups_v2.test"
 
 func TestAccNutanixUserGroupsV2Resource_LDAPUserGroup(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -36,7 +34,6 @@ func TestAccNutanixUserGroupsV2Resource_LDAPUserGroup(t *testing.T) {
 }
 
 func TestAccNutanixUserGroupsV2Resource_SAMLUserGroup(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -58,7 +55,6 @@ func TestAccNutanixUserGroupsV2Resource_SAMLUserGroup(t *testing.T) {
 }
 
 func TestAccNutanixUserGroupsV2Resource_WithNoGroupType(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

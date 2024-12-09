@@ -17,7 +17,6 @@ import (
 	import4 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/clusters"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
@@ -848,7 +847,6 @@ func ResourceNutanixClusterV2Read(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] ResourceNutanixClusterV2Read : Cluster found, extID : %s", d.Id())
 	resp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(d.Id()), expand)
-
 	if err != nil {
 		log.Printf("[DEBUG] ResourceNutanixClusterV2Read : Cluster %s not found", d.Id())
 		return diag.Errorf("error while fetching cluster : %v", err)
@@ -960,7 +958,6 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 		}
 		log.Printf("[DEBUG] categories List update Spec: %v", categoriesListStr)
 		updateSpec.Categories = categoriesListStr
-
 	}
 
 	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
@@ -1064,7 +1061,6 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 		// data := base64.StdEncoding.EncodeToString([]byte("ergon"))
 		// encodeUUID := data + ":" + taskUUID
 		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
-
 		if err != nil {
 			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
 		}
@@ -1147,7 +1143,6 @@ func getClusterExtId(d *schema.ResourceData, conn *clusters.Client) error {
 
 func expandNodeReference(pr interface{}) *config.NodeReference {
 	if pr != nil {
-
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
 
@@ -1212,7 +1207,6 @@ func expandNodeListItemReference(pr []interface{}) []config.NodeListItemReferenc
 
 func expandClusterNetworkReference(pr interface{}) *config.ClusterNetworkReference {
 	if pr != nil {
-
 		cls := config.NewClusterNetworkReference()
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -1372,9 +1366,7 @@ func expandHttpProxyList(httpProxyList []interface{}) []config.HttpProxyConfig {
 }
 
 func expandClusterConfigReference(pr interface{}, d *schema.ResourceData) *config.ClusterConfigReference {
-
 	if pr != nil {
-
 		clsConf := config.NewClusterConfigReference()
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -1490,15 +1482,12 @@ func expandPulseStatus(status interface{}) *config.PulseStatus {
 			p := config.PIIScrubbingLevel(pVal.(int))
 			pulse.PiiScrubbingLevel = &p
 		}
-
 	}
 	return pulse
-
 }
 
 func expandIPAddress(pr interface{}) *import4.IPAddress {
 	if pr != nil {
-
 		ipAddress := import4.NewIPAddress()
 		prI := pr.([]interface{})
 		if len(prI) == 0 {
@@ -1520,7 +1509,6 @@ func expandIPAddress(pr interface{}) *import4.IPAddress {
 }
 
 func expandIPAddressOrFQDN(pr []interface{}) []import4.IPAddressOrFQDN {
-
 	if len(pr) > 0 {
 		ips := make([]import4.IPAddressOrFQDN, len(pr))
 
@@ -1593,7 +1581,6 @@ func expandSMTPServerRef(pr interface{}) *config.SmtpServerRef {
 	}
 
 	if pr != nil {
-
 		smtp := config.NewSmtpServerRef()
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -1652,7 +1639,6 @@ func expandBackplaneNetworkParams(pr interface{}) *config.BackplaneNetworkParams
 
 func expandManagementServerRef(pr interface{}) *config.ManagementServerRef {
 	if pr != nil && len(pr.([]interface{})) > 0 {
-
 		mgm := config.NewManagementServerRef()
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -1690,7 +1676,6 @@ func expandManagementServerRef(pr interface{}) *config.ManagementServerRef {
 }
 
 func expandSMTPNetwork(pr []interface{}) *config.SmtpNetwork {
-
 	if len(pr) > 0 {
 		smtp := config.NewSmtpNetwork()
 		val := pr[0].(map[string]interface{})
@@ -1714,7 +1699,6 @@ func expandSMTPNetwork(pr []interface{}) *config.SmtpNetwork {
 }
 
 func expandFQDN(pr []interface{}) *import4.FQDN {
-
 	if len(pr) > 0 {
 		fqdn := import4.FQDN{}
 		val := pr[0].(map[string]interface{})
@@ -1757,7 +1741,6 @@ func expandBuildReference(buildInfo interface{}) *config.BuildReference {
 }
 
 func expandPublicKey(pr []interface{}) []config.PublicKey {
-
 	if len(pr) > 0 {
 		pubKey := make([]config.PublicKey, len(pr))
 		aJSON, _ := json.Marshal(pr)
@@ -1814,7 +1797,6 @@ func expandFaultToleranceState(pr interface{}) *config.FaultToleranceState {
 				p := config.ClusterFaultToleranceRef(pVal.(int))
 				fts.CurrentClusterFaultTolerance = &p
 			}
-
 		}
 		if desiredClusterFaultTolerance, ok := val["desired_cluster_fault_tolerance"]; ok {
 			const two, three, four, five = 2, 3, 4, 5

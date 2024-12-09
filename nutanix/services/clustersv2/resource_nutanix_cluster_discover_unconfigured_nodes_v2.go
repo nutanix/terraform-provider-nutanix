@@ -10,12 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	clustermgmtConfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -230,7 +228,6 @@ func unconfiguredNodeSchemaV2() *schema.Resource {
 }
 
 func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.Client).ClusterAPI
 
 	body := &config.NodeDiscoveryParams{}
@@ -276,7 +273,6 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 			interfaceFilterListStr[i] = v.(string)
 		}
 		body.InterfaceFilterList = interfaceFilterListStr
-
 	}
 	if isManualDiscovery, ok := d.GetOk("is_manual_discovery"); ok {
 		body.IsManualDiscovery = utils.BoolPtr(isManualDiscovery.(bool))
@@ -483,7 +479,6 @@ func flattenAttributes(attributes *config.UnconfiguredNodeAttributeMap) []interf
 
 func expandIpFilterList(pr interface{}) []clustermgmtConfig.IPAddress {
 	if len(pr.([]interface{})) > 0 {
-
 		ipFilterList := make([]clustermgmtConfig.IPAddress, len(pr.([]interface{})))
 
 		for i, v := range pr.([]interface{}) {

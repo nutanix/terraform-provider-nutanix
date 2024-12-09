@@ -10,11 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	common "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-
 	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
 	networkingPrism "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
-
+	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -225,10 +223,11 @@ func ResourceNutanixRoutesV2Create(ctx context.Context, d *schema.ResourceData, 
 		reqBody.ExternalRoutingDomainReference = utils.StringPtr(externalRoutingDomainReference.(string))
 	}
 	if routeType, ok := d.GetOk("route_type"); ok {
+		const two, three, four = 2, 3, 4
 		routeTypeMap := map[string]interface{}{
-			"DYNAMIC": 2,
-			"LOCAL":   3,
-			"STATIC":  4,
+			"DYNAMIC": two,
+			"LOCAL":   three,
+			"STATIC":  four,
 		}
 		pVal := routeTypeMap[routeType.(string)]
 		p := config.RouteType(pVal.(int))
@@ -376,10 +375,11 @@ func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, 
 		updateSpec.ExternalRoutingDomainReference = utils.StringPtr(d.Get("external_routing_domain_reference").(string))
 	}
 	if d.HasChange("route_type") {
+		const two, three, four = 2, 3, 4
 		routeTypeMap := map[string]interface{}{
-			"DYNAMIC": 2,
-			"LOCAL":   3,
-			"STATIC":  4,
+			"DYNAMIC": two,
+			"LOCAL":   three,
+			"STATIC":  four,
 		}
 		pVal := routeTypeMap[d.Get("route_type").(string)]
 		p := config.RouteType(pVal.(int))

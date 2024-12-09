@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	prismClusterMang "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/clustermgmt/v4/config"
 	prismCommon "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/common/v1/config"
 	prismResponse "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/common/v1/response"
@@ -415,7 +414,7 @@ func schemaForFQDNValueResource() *schema.Schema {
 func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] Create PC Registration\n")
 	// validate attributes based on object_type
-	//if err := validateAttributes(d); err != nil {
+	// if err := validateAttributes(d); err != nil {
 	//	return err
 	//}
 
@@ -495,7 +494,7 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 	}
 
 	// set remote cluster body spec based on object_type
-	//switch objectType := remoteCluster["object_type"].(string); objectType {
+	// switch objectType := remoteCluster["object_type"].(string); objectType {
 	//case DomainManagerRemoteClusterSpec:
 	//	log.Printf("[DEBUG] %v is selected\n", DomainManagerRemoteClusterSpec)
 	//	domainManagerRemoteClusterSpec := prismManagment.NewDomainManagerRemoteClusterSpec()
@@ -548,7 +547,6 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 	log.Printf("[DEBUG] PC Registration Request Body: %s", string(aJSON))
 
 	resp, err := conn.DomainManagerAPIInstance.Register(&pcExtID, body, args)
-
 	if err != nil {
 		return diag.Errorf("error while registering remote cluster with id %s : %v", pcExtID, err)
 	}

@@ -43,7 +43,6 @@ func testVmsNetworkDeviceAssignIpV4Config() string {
 }
 
 func testVmPreEnvConfig(r int) string {
-
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
 		

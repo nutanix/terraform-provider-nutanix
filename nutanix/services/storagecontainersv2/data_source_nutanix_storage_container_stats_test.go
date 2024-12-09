@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -106,7 +105,6 @@ func TestAccNutanixStorageStatsInfoV2Datasource_StatType(t *testing.T) {
 }
 
 func TestAccNutanixStorageStatsInfoV2Datasource_InvalidSampleInterval(t *testing.T) {
-
 	// Start time is now
 	startTime := time.Now()
 
@@ -130,7 +128,6 @@ func TestAccNutanixStorageStatsInfoV2Datasource_InvalidSampleInterval(t *testing
 }
 
 func TestAccNutanixStorageStatsInfoV2Datasource_InvalidStatType(t *testing.T) {
-
 	// Start time is now
 	startTime := time.Now()
 
@@ -154,7 +151,6 @@ func TestAccNutanixStorageStatsInfoV2Datasource_InvalidStatType(t *testing.T) {
 }
 
 func TestAccNutanixStorageStatsInfoV2Datasource_MissingRequiredArgs(t *testing.T) {
-
 	// Start time is now
 	startTime := time.Now()
 

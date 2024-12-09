@@ -13,7 +13,6 @@ import (
 	"github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/common/v1/config"
 	volumesPrism "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/prism/v4/config"
 	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -141,7 +140,6 @@ func ResourceNutanixVolumeGroupDiskV2Create(ctx context.Context, d *schema.Resou
 
 	log.Printf("[DEBUG] Volume Disk Body body.DiskDataSourceReference.Uris : %v", body.DiskDataSourceReference.Uris)
 	resp, err := conn.VolumeAPIInstance.CreateVolumeDisk(utils.StringPtr(volumeGroupExtID.(string)), &body)
-
 	if err != nil {
 		return diag.Errorf("error while creating Volume Disk : %v", err)
 	}
@@ -186,7 +184,6 @@ func ResourceNutanixVolumeGroupDiskV2Read(ctx context.Context, d *schema.Resourc
 	volumeDiskExtID := d.Id() // d.Id gives volume_group_ext_id not volume_disk_ext_id
 
 	resp, err := conn.VolumeAPIInstance.GetVolumeDiskById(utils.StringPtr(volumeGroupExtID.(string)), utils.StringPtr(volumeDiskExtID))
-
 	if err != nil {
 		return diag.Errorf("error while fetching volume Disk : %v", err)
 	}
@@ -222,7 +219,6 @@ func ResourceNutanixVolumeGroupDiskV2Update(ctx context.Context, d *schema.Resou
 	volumeDiskExtID := d.Id()
 
 	resp, err := conn.VolumeAPIInstance.GetVolumeDiskById(utils.StringPtr(volumeGroupExtID.(string)), utils.StringPtr(volumeDiskExtID))
-
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -262,7 +258,6 @@ func ResourceNutanixVolumeGroupDiskV2Update(ctx context.Context, d *schema.Resou
 	}
 
 	updateResp, err := conn.VolumeAPIInstance.UpdateVolumeDiskById(utils.StringPtr(volumeGroupExtID.(string)), utils.StringPtr(volumeDiskExtID), &updateSpec)
-
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -303,7 +298,6 @@ func ResourceNutanixVolumeGroupDiskV2Delete(ctx context.Context, d *schema.Resou
 	volumeDiskExtID := d.Get("ext_id")
 
 	resp, err := conn.VolumeAPIInstance.DeleteVolumeDiskById(utils.StringPtr(volumeGroupExtID.(string)), utils.StringPtr(volumeDiskExtID.(string)))
-
 	if err != nil {
 		return diag.Errorf("error while fetching volume Disk : %v", err)
 	}
@@ -325,7 +319,6 @@ func ResourceNutanixVolumeGroupDiskV2Delete(ctx context.Context, d *schema.Resou
 		return diag.Errorf("error waiting for template (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	return nil
-
 }
 
 func expandDiskStorageFeatures(diskStorageFeatures []interface{}) *volumesClient.DiskStorageFeatures {
@@ -344,7 +337,6 @@ func expandDiskStorageFeatures(diskStorageFeatures []interface{}) *volumesClient
 
 func expandDiskDataSourceReference(entityReference interface{}) *config.EntityReference {
 	if entityReference != nil {
-
 		entityReferenceI := entityReference.([]interface{})
 		val := entityReferenceI[0].(map[string]interface{})
 
@@ -378,7 +370,6 @@ func expandDiskDataSourceReference(entityReference interface{}) *config.EntityRe
 			p := config.EntityType(pInt.(int))
 
 			diskDataSourceReference.EntityType = &p
-
 		}
 		log.Printf("[DEBUG] Disk Data Source Reference : %v", diskDataSourceReference)
 		return &diskDataSourceReference

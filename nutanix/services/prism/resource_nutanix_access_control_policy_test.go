@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
@@ -93,7 +92,7 @@ func TestAccNutanixAccessControlPolicy_WithUser(t *testing.T) {
 }
 
 func TestAccNutanixAccessControlPolicy_WithCategory(t *testing.T) {
-	t.Skip() //https://jira.nutanix.com/browse/ENG-483192
+	t.Skip() // https://jira.nutanix.com/browse/ENG-483192
 	name := acctest.RandomWithPrefix("accest-access-policy")
 	roleName := acctest.RandomWithPrefix("test-acc-role-")
 	description := "Description of my access control policy"
@@ -175,7 +174,6 @@ func resourceNutanixAccessControlPolicyExists(conn *v3.Client, name string) (*st
 
 	filter := fmt.Sprintf("name==%s", name)
 	accessList, err := conn.V3.ListAllAccessControlPolicy(filter)
-
 	if err != nil {
 		return nil, err
 	}

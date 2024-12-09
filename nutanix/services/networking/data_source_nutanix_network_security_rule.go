@@ -5,12 +5,10 @@ import (
 	"log"
 	"strconv"
 
-	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func DataSourceNutanixNetworkSecurityRule() *schema.Resource {
@@ -940,7 +938,6 @@ func dataSourceNutanixNetworkSecurityRuleRead(ctx context.Context, d *schema.Res
 
 	// Make request to the API
 	resp, err := conn.V3.GetNetworkSecurityRule(networkSecurityRuleID.(string))
-
 	if err != nil {
 		return diag.FromErr(err)
 	}

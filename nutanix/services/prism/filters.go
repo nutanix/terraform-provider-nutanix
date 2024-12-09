@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -30,6 +29,7 @@ func DataSourceFiltersSchema() *schema.Schema {
 		},
 	}
 }
+
 func BuildFiltersDataSource(set *schema.Set) []*client.AdditionalFilter {
 	filters := []*client.AdditionalFilter{}
 	for _, v := range set.List() {

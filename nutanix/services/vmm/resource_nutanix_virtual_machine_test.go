@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/spf13/cast"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -87,7 +86,8 @@ func TestAccNutanixVirtualMachine_WithDisk(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-		}})
+		},
+	})
 }
 
 func TestAccNutanixVirtualMachine_hotadd(t *testing.T) {
@@ -375,7 +375,8 @@ func TestAccNutanixVirtualMachine_DeviceProperties(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-		}})
+		},
+	})
 }
 
 func TestAccNutanixVirtualMachine_cloningVM(t *testing.T) {
@@ -426,7 +427,8 @@ func TestAccNutanixVirtualMachine_withDiskContainer(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "disk_list.#", "1"),
 				),
 			},
-		}})
+		},
+	})
 }
 
 func TestAccNutanixVirtualMachine_resizeDiskClone(t *testing.T) {
@@ -1445,6 +1447,7 @@ func testAccNutanixVMConfigWithoutNgt(r int) string {
 		}
 	`, r)
 }
+
 func testAccNutanixVMConfigWithNgt(r int) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters" "clusters" {}

@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -377,7 +376,6 @@ func dataSourceNutanixClustersRead(ctx context.Context, d *schema.ResourceData, 
 
 	var filter string
 	resp, err := conn.V3.ListAllCluster(filter)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}

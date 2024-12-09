@@ -8,7 +8,6 @@ import (
 	config "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/response"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -1129,6 +1128,7 @@ func flattenBondMode(pr *import1.BondModeType) string {
 	}
 	return "UNKNOWN"
 }
+
 func flattenMetadata(pr *config.Metadata) []map[string]interface{} {
 	if pr != nil {
 		meta := make([]map[string]interface{}, 0)
@@ -1255,7 +1255,7 @@ func flattenActiveGatewayNode(pr []import1.GatewayNodeReference) []map[string]in
 
 			nodes[k] = node
 		}
-		//n := make(map[string]interface{})
+		// n := make(map[string]interface{})
 		//
 		//n["node_id"] =
 		//n["node_ip_address"] = flattenNodeIPAddress(pr.NodeIpAddress)

@@ -8,13 +8,14 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameCluster = "nutanix_cluster_v2.test"
-const resourceNameDiscoverUnConfigNode = "nutanix_clusters_discover_unconfigured_nodes_v2.test-discover-cluster-node"
-const resourceNameClusterRegistration = "nutanix_pc_registration_v2.node-registration"
+const (
+	resourceNameCluster              = "nutanix_cluster_v2.test"
+	resourceNameDiscoverUnConfigNode = "nutanix_clusters_discover_unconfigured_nodes_v2.test-discover-cluster-node"
+	resourceNameClusterRegistration  = "nutanix_pc_registration_v2.node-registration"
+)
 
 func TestAccNutanixClusterV2Resource_CreateClusterWithMinimumConfig(t *testing.T) {
 	r := acctest.RandInt()

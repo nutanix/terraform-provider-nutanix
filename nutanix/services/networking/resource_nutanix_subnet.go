@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -203,12 +202,14 @@ func ResourceNutanixSubnet() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
-				ConflictsWith: []string{"dhcp_options",
+				ConflictsWith: []string{
+					"dhcp_options",
 					"dhcp_domain_name_server_list",
 					"dhcp_domain_search_list",
 					"dhcp_server_address",
 					"dhcp_server_address_port",
-					"vpc_reference_uuid"},
+					"vpc_reference_uuid",
+				},
 				RequiredWith: []string{"ip_config_pool_list_ranges"},
 			},
 			"enable_nat": {
@@ -444,7 +445,6 @@ func resourceNutanixSubnetUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	id := d.Id()
 	response, err := conn.V3.GetSubnet(id)
-
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
@@ -602,7 +602,6 @@ func resourceNutanixSubnetDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.Client).API
 
 	resp, err := conn.V3.DeleteSubnet(d.Id())
-
 	if err != nil {
 		return diag.Errorf("error deleting subnet id %s): %s", d.Id(), err)
 	}

@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -25,7 +24,8 @@ func setup() (*http.ServeMux, *client.Client, *httptest.Server) {
 		Password: "password",
 		Port:     "",
 		Endpoint: "0.0.0.0",
-		Insecure: true},
+		Insecure: true,
+	},
 		userAgent,
 		absolutePath,
 		false)
@@ -1511,11 +1511,13 @@ func TestOperations_CreateOrUpdateCategoryKey(t *testing.T) {
 			fields{c},
 			args{&CategoryKey{
 				Description: utils.StringPtr("Testing Keys"),
-				Name:        utils.StringPtr("test_category_key")}},
+				Name:        utils.StringPtr("test_category_key"),
+			}},
 			&CategoryKeyStatus{
 				Description:   utils.StringPtr("Testing Keys"),
 				Name:          utils.StringPtr("test_category_key"),
-				SystemDefined: utils.BoolPtr(false)},
+				SystemDefined: utils.BoolPtr(false),
+			},
 			false,
 		},
 	}
@@ -1553,7 +1555,8 @@ func TestOperations_ListCategories(t *testing.T) {
 	list.Entities[0] = &CategoryKeyStatus{
 		Description:   utils.StringPtr("Testing Keys"),
 		Name:          utils.StringPtr("test_category_key"),
-		SystemDefined: utils.BoolPtr(false)}
+		SystemDefined: utils.BoolPtr(false),
+	}
 
 	input := &CategoryListMetadata{
 		Length: utils.Int64Ptr(1.0),
@@ -1729,7 +1732,8 @@ func TestOperations_ListCategoryValues(t *testing.T) {
 	list.Entities[0] = &CategoryValueStatus{
 		Description:   utils.StringPtr("Testing Keys"),
 		Value:         utils.StringPtr("test_category_value"),
-		SystemDefined: utils.BoolPtr(false)}
+		SystemDefined: utils.BoolPtr(false),
+	}
 
 	input := &CategoryListMetadata{
 		Length: utils.Int64Ptr(1.0),
@@ -1830,12 +1834,14 @@ func TestOperations_CreateOrUpdateCategoryValue(t *testing.T) {
 			fields{c},
 			args{"test_category_key", &CategoryValue{
 				Description: utils.StringPtr("Testing Value"),
-				Value:       utils.StringPtr("test_category_value")}},
+				Value:       utils.StringPtr("test_category_value"),
+			}},
 			&CategoryValueStatus{
 				Description:   utils.StringPtr("Testing Value"),
 				Value:         utils.StringPtr("test_category_value"),
 				Name:          utils.StringPtr("test_category_key"),
-				SystemDefined: utils.BoolPtr(false)},
+				SystemDefined: utils.BoolPtr(false),
+			},
 			false,
 		},
 	}

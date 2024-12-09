@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authn"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -59,8 +58,10 @@ func ResourceNutanixSamlIdpV2() *schema.Resource {
 						"name_id_policy_format": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{"emailAddress", "encrypted", "unspecified", "transient",
-								"WindowsDomainQualifiedName", "X509SubjectName", "kerberos", "persistent", "entity"}, false),
+							ValidateFunc: validation.StringInSlice([]string{
+								"emailAddress", "encrypted", "unspecified", "transient",
+								"WindowsDomainQualifiedName", "X509SubjectName", "kerberos", "persistent", "entity",
+							}, false),
 						},
 					},
 				},
@@ -167,7 +168,6 @@ func ResourceNutanixSamlIdpV2Create(ctx context.Context, d *schema.ResourceData,
 	}
 
 	resp, err := conn.SamlIdentityAPIInstance.CreateSamlIdentityProvider(input)
-
 	if err != nil {
 		return diag.Errorf("error while creating saml identity providers: %v", err)
 	}
@@ -194,7 +194,7 @@ func ResourceNutanixSamlIdpV2Read(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("idp_metadata_url", getResp.IdpMetadataUrl); err != nil {
 		return diag.FromErr(err)
 	}
-	//if err := d.Set("idp_metadata_xml", getResp.IdpMetadataXml); err != nil {
+	// if err := d.Set("idp_metadata_xml", getResp.IdpMetadataXml); err != nil {
 	//	return diag.FromErr(err)
 	//}
 	if err := d.Set("idp_metadata", flattenIdpMetadata(getResp.IdpMetadata)); err != nil {
@@ -353,7 +353,6 @@ func expandIdpMetadata(pr interface{}) *import1.IdpMetadata {
 			} else {
 				idp.ErrorUrl = nil
 			}
-
 		}
 		if certi, ok := val["certificate"]; ok {
 			idp.Certificate = utils.StringPtr(certi.(string))

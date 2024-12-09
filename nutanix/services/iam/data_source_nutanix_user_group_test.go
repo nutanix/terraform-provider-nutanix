@@ -38,6 +38,7 @@ data "nutanix_user_group" "test" {
 }
 `, uuid)
 }
+
 func TestAccNutanixUserGroupDataSource_ByName(t *testing.T) {
 	distinguishedName := testVars.UserGroupWithDistinguishedName[0].DistinguishedName
 	displayName := testVars.UserGroupWithDistinguishedName[0].DisplayName

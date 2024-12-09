@@ -101,8 +101,10 @@ func ResourceNutanixVmsCdRomsInsertEjectV2() *schema.Resource {
 																		"bus_type": {
 																			Type:     schema.TypeString,
 																			Optional: true,
-																			ValidateFunc: validation.StringInSlice([]string{"SCSI", "SPAPR",
-																				"PCI", "IDE", "SATA"}, false),
+																			ValidateFunc: validation.StringInSlice([]string{
+																				"SCSI", "SPAPR",
+																				"PCI", "IDE", "SATA",
+																			}, false),
 																		},
 																		"index": {
 																			Type:     schema.TypeInt,

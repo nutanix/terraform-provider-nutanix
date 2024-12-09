@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
 	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -263,9 +262,11 @@ func resourceNutanixNDBRegisterDBServerCreate(ctx context.Context, d *schema.Res
 	log.Printf("NDB database Server VM with %s id is registered successfully", d.Id())
 	return resourceNutanixNDBRegisterDBServerRead(ctx, d, meta)
 }
+
 func resourceNutanixNDBRegisterDBServerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return resourceNutanixNDBServerVMRead(ctx, d, meta)
 }
+
 func resourceNutanixNDBRegisterDBServerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).Era
 
@@ -339,6 +340,7 @@ func resourceNutanixNDBRegisterDBServerUpdate(ctx context.Context, d *schema.Res
 	log.Printf("NDB database Server VM with %s id is updated successfully", d.Id())
 	return resourceNutanixNDBRegisterDBServerRead(ctx, d, meta)
 }
+
 func resourceNutanixNDBRegisterDBServerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).Era
 

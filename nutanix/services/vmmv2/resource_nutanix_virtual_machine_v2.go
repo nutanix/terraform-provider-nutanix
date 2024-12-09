@@ -14,7 +14,6 @@ import (
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/vmm"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -456,8 +455,10 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 																												Type:     schema.TypeString,
 																												Optional: true,
 																												Computed: true,
-																												ValidateFunc: validation.StringInSlice([]string{"SCSI", "SPAPR", "PCI",
-																													"IDE", "SATA"}, false),
+																												ValidateFunc: validation.StringInSlice([]string{
+																													"SCSI", "SPAPR", "PCI",
+																													"IDE", "SATA",
+																												}, false),
 																											},
 																											"index": {
 																												Type:     schema.TypeInt,
@@ -619,8 +620,10 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
-										ValidateFunc: validation.StringInSlice([]string{"SCSI", "SPAPR", "PCI",
-											"IDE", "SATA"}, false),
+										ValidateFunc: validation.StringInSlice([]string{
+											"SCSI", "SPAPR", "PCI",
+											"IDE", "SATA",
+										}, false),
 									},
 									"index": {
 										Type:     schema.TypeInt,
@@ -726,8 +729,10 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 																									Type:     schema.TypeString,
 																									Optional: true,
 																									Computed: true,
-																									ValidateFunc: validation.StringInSlice([]string{"SCSI", "SPAPR", "PCI",
-																										"IDE", "SATA"}, false),
+																									ValidateFunc: validation.StringInSlice([]string{
+																										"SCSI", "SPAPR", "PCI",
+																										"IDE", "SATA",
+																									}, false),
 																								},
 																								"index": {
 																									Type:     schema.TypeInt,
@@ -907,8 +912,10 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 																						Type:     schema.TypeString,
 																						Optional: true,
 																						Computed: true,
-																						ValidateFunc: validation.StringInSlice([]string{"SCSI", "SPAPR", "PCI",
-																							"IDE", "SATA"}, false),
+																						ValidateFunc: validation.StringInSlice([]string{
+																							"SCSI", "SPAPR", "PCI",
+																							"IDE", "SATA",
+																						}, false),
 																					},
 																					"index": {
 																						Type:     schema.TypeInt,
@@ -1011,8 +1018,10 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
-										ValidateFunc: validation.StringInSlice([]string{"SPAN_DESTINATION_NIC",
-											"NORMAL_NIC", "DIRECT_NIC", "NETWORK_FUNCTION_NIC"}, false),
+										ValidateFunc: validation.StringInSlice([]string{
+											"SPAN_DESTINATION_NIC",
+											"NORMAL_NIC", "DIRECT_NIC", "NETWORK_FUNCTION_NIC",
+										}, false),
 									},
 									"network_function_chain": {
 										Type:     schema.TypeList,
@@ -1032,8 +1041,10 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
-										ValidateFunc: validation.StringInSlice([]string{"TAP", "EGRESS",
-											"INGRESS"}, false),
+										ValidateFunc: validation.StringInSlice([]string{
+											"TAP", "EGRESS",
+											"INGRESS",
+										}, false),
 									},
 									"subnet": {
 										Type:     schema.TypeList,
@@ -1497,10 +1508,11 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 		body.IsVgaConsoleEnabled = utils.BoolPtr(vgaConsole.(bool))
 	}
 	if machineType, ok := d.GetOk("machine_type"); ok {
+		const two, three, four = 2, 3, 4
 		subMap := map[string]interface{}{
-			"PC":      2,
-			"PSERIES": 3,
-			"Q35":     4,
+			"PC":      two,
+			"PSERIES": three,
+			"Q35":     four,
 		}
 		pVal := subMap[machineType.(string)]
 		p := config.MachineType(pVal.(int))
@@ -1534,10 +1546,11 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 		body.SerialPorts = expandSerialPort(serialPorts.([]interface{}))
 	}
 	if protectionType, ok := d.GetOk("protection_type"); ok {
+		const two, three, four = 2, 3, 4
 		subMap := map[string]interface{}{
-			"UNPROTECTED":    2,
-			"PD_PROTECTED":   3,
-			"RULE_PROTECTED": 4,
+			"UNPROTECTED":    two,
+			"PD_PROTECTED":   three,
+			"RULE_PROTECTED": four,
 		}
 		pVal := subMap[protectionType.(string)]
 		p := config.ProtectionType(pVal.(int))
@@ -1935,10 +1948,11 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		checkForUpdateParams = true
 	}
 	if d.HasChange("machine_type") {
+		const two, three, four = 2, 3, 4
 		subMap := map[string]interface{}{
-			"PC":      2,
-			"PSERIES": 3,
-			"Q35":     4,
+			"PC":      two,
+			"PSERIES": three,
+			"Q35":     four,
 		}
 		pVal := subMap[d.Get("machine_type").(string)]
 		p := config.MachineType(pVal.(int))
@@ -1962,10 +1976,11 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		checkForUpdateParams = true
 	}
 	if d.HasChange("protection_type") {
+		const two, three, four = 2, 3, 4
 		subMap := map[string]interface{}{
-			"UNPROTECTED":    2,
-			"PD_PROTECTED":   3,
-			"RULE_PROTECTED": 4,
+			"UNPROTECTED":    two,
+			"PD_PROTECTED":   three,
+			"RULE_PROTECTED": four,
 		}
 		pVal := subMap[d.Get("protection_type").(string)]
 		p := config.ProtectionType(pVal.(int))
@@ -2769,9 +2784,10 @@ func expandGuestTools(pr interface{}) *config.GuestTools {
 			feats := make([]config.NgtCapability, len(capabilities.([]interface{})))
 
 			for k, v := range capabilities.([]interface{}) {
+				const two, three = 2, 3
 				subMap := map[string]interface{}{
-					"SELF_SERVICE_RESTORE": 2,
-					"VSS_SNAPSHOT":         3,
+					"SELF_SERVICE_RESTORE": two,
+					"VSS_SNAPSHOT":         three,
 				}
 				if subMap[v.(string)] == nil {
 					return nil
@@ -2808,10 +2824,11 @@ func expandOneOfVMBootConfig(pr interface{}) *config.OneOfVmBootConfig {
 				orders := make([]config.BootDeviceType, bootOrderLen)
 
 				for k, v := range bootOrder.([]interface{}) {
+					const two, three, four = 2, 3, 4
 					subMap := map[string]interface{}{
-						"CDROM":   2,
-						"DISK":    3,
-						"NETWORK": 4,
+						"CDROM":   two,
+						"DISK":    three,
+						"NETWORK": four,
 					}
 					pVal := subMap[v.(string)]
 					p := config.BootDeviceType(pVal.(int))
@@ -3159,12 +3176,13 @@ func expandDiskAddress(disk interface{}) *config.DiskAddress {
 		diskVal := daI[0].(map[string]interface{})
 		diskAddOut := config.DiskAddress{}
 		if busType, ok := diskVal["bus_type"]; ok {
+			const two, three, four, five, six = 2, 3, 4, 5, 6
 			subMap := map[string]interface{}{
-				"SCSI":  2,
-				"IDE":   3,
-				"PCI":   4,
-				"SATA":  5,
-				"SPAPR": 6,
+				"SCSI":  two,
+				"IDE":   three,
+				"PCI":   four,
+				"SATA":  five,
+				"SPAPR": six,
 			}
 			pVal := subMap[busType.(string)]
 			p := config.DiskBusType(pVal.(int))
@@ -3238,10 +3256,11 @@ func expandCdRom(cd []interface{}) []config.CdRom {
 				cds.BackingInfo = expandVMDisk(backingInfo)
 			}
 			if isoType, ok := val["iso_type"]; ok && len(isoType.(string)) > 0 {
+				const two, three, four = 2, 3, 4
 				subMap := map[string]interface{}{
-					"OTHER":               2,
-					"GUEST_TOOLS":         3,
-					"GUEST_CUSTOMIZATION": 4,
+					"OTHER":               two,
+					"GUEST_TOOLS":         three,
+					"GUEST_CUSTOMIZATION": four,
 				}
 				pVal := subMap[isoType.(string)]
 				p := config.IsoType(pVal.(int))
@@ -3262,9 +3281,10 @@ func expandCdRomAddress(disk interface{}) *config.CdRomAddress {
 		adVal := adI[0].(map[string]interface{})
 
 		if busType, ok := adVal["bus_type"]; ok {
+			const two, three = 2, 3
 			subMap := map[string]interface{}{
-				"IDE":  2,
-				"SATA": 3,
+				"IDE":  two,
+				"SATA": three,
 			}
 			pVal := subMap[busType.(string)]
 			p := config.CdRomBusType(pVal.(int))
@@ -3290,10 +3310,11 @@ func expandGpu(gpu []interface{}) []config.Gpu {
 				gpus.ExtId = utils.StringPtr(extID.(string))
 			}
 			if mode, ok := val["mode"]; ok {
+				const two, three, four = 2, 3, 4
 				subMap := map[string]interface{}{
-					"PASSTHROUGH_GRAPHICS": 2,
-					"PASSTHROUGH_COMPUTE":  3,
-					"VIRTUAL":              4,
+					"PASSTHROUGH_GRAPHICS": two,
+					"PASSTHROUGH_COMPUTE":  three,
+					"VIRTUAL":              four,
 				}
 				pVal := subMap[mode.(string)]
 				p := config.GpuMode(pVal.(int))
@@ -3303,10 +3324,11 @@ func expandGpu(gpu []interface{}) []config.Gpu {
 				gpus.DeviceId = utils.IntPtr(deviceID.(int))
 			}
 			if vendor, ok := val["vendor"]; ok {
+				const two, three, four = 2, 3, 4
 				subMap := map[string]interface{}{
-					"NVIDIA": 2,
-					"INTEL":  3,
-					"AMD":    4,
+					"NVIDIA": two,
+					"INTEL":  three,
+					"AMD":    four,
 				}
 				pVal := subMap[vendor.(string)]
 				p := config.GpuVendor(pVal.(int))
@@ -3395,16 +3417,17 @@ func expandPolicyReference(pr interface{}) *config.PolicyReference {
 
 func flattenPowerState(pr *config.PowerState) string {
 	if pr != nil {
-		if *pr == config.PowerState(2) {
+		const two, three, four, five = 2, 3, 4, 5
+		if *pr == config.PowerState(two) {
 			return "ON"
 		}
-		if *pr == config.PowerState(3) {
+		if *pr == config.PowerState(three) {
 			return "OFF"
 		}
-		if *pr == config.PowerState(4) {
+		if *pr == config.PowerState(four) {
 			return "PAUSED"
 		}
-		if *pr == config.PowerState(5) {
+		if *pr == config.PowerState(five) {
 			return "UNDETERMINED"
 		}
 	}
@@ -3592,7 +3615,6 @@ func isVMPowerOff(d *schema.ResourceData, conn *vmm.Client) bool {
 func waitForIPRefreshFunc(client *vmm.Client, vmUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		resp, err := client.VMAPIInstance.GetVmById(utils.StringPtr(vmUUID))
-
 		if err != nil {
 			return nil, "", err
 		}

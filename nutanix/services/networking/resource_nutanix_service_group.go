@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -106,11 +105,7 @@ func ResourceNutanixServiceGroup() *schema.Resource {
 
 func IsValidProtocol(category string) bool {
 	switch category {
-	case
-		"ALL",
-		"ICMP",
-		"TCP",
-		"UDP":
+	case "ALL", "ICMP", "TCP", "UDP":
 		return true
 	}
 	return false
@@ -146,7 +141,6 @@ func resourceNutanixServiceGroupUpdate(ctx context.Context, d *schema.ResourceDa
 
 	if d.HasChange("service_list") {
 		serviceList, err := expandServiceEntry(d)
-
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -223,7 +217,6 @@ func resourceNutanixServiceGroupRead(ctx context.Context, d *schema.ResourceData
 
 	// Make request to the API
 	resp, err := conn.V3.GetServiceGroup(d.Id())
-
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
@@ -300,7 +293,6 @@ func resourceNutanixServiceGroupCreate(ctx context.Context, d *schema.ResourceDa
 	request.Name = utils.StringPtr(name.(string))
 
 	serviceList, err := expandServiceEntry(d)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -308,7 +300,6 @@ func resourceNutanixServiceGroupCreate(ctx context.Context, d *schema.ResourceDa
 	request.ServiceList = serviceList
 
 	requestEnc, err := json.Marshal(request)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -316,7 +307,6 @@ func resourceNutanixServiceGroupCreate(ctx context.Context, d *schema.ResourceDa
 	log.Printf("[DEBUG] %s", requestEnc)
 
 	resp, err := conn.V3.CreateServiceGroup(request)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}

@@ -7,17 +7,18 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameDiscoverUnconfiguredNode = "nutanix_clusters_discover_unconfigured_nodes_v2.cluster-node"
-const resourceNameDiscoverUnconfiguredClusterNodes = "nutanix_clusters_discover_unconfigured_nodes_v2.cluster-nodes"
-const resourceNameFetchUnconfiguredNodeNetwork = "nutanix_clusters_unconfigured_node_networks_v2.node-network-info"
-const resourceNameAddNodeToCluster = "nutanix_cluster_add_node_v2.test"
-const resourceName3NodesCluster = "nutanix_cluster_v2.cluster-3nodes"
+const (
+	resourceNameDiscoverUnconfiguredNode         = "nutanix_clusters_discover_unconfigured_nodes_v2.cluster-node"
+	resourceNameDiscoverUnconfiguredClusterNodes = "nutanix_clusters_discover_unconfigured_nodes_v2.cluster-nodes"
+	resourceNameFetchUnconfiguredNodeNetwork     = "nutanix_clusters_unconfigured_node_networks_v2.node-network-info"
+	resourceNameAddNodeToCluster                 = "nutanix_cluster_add_node_v2.test"
+	resourceName3NodesCluster                    = "nutanix_cluster_v2.cluster-3nodes"
+)
 
 func TestAccNutanixClusterAddNodeV2Resource_basic(t *testing.T) {
 	r := acctest.RandInt()

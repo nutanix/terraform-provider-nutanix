@@ -184,8 +184,10 @@ func ResourceNutanixPbrsV2() *schema.Resource {
 									"protocol_type": {
 										Type:     schema.TypeString,
 										Required: true,
-										ValidateFunc: validation.StringInSlice([]string{"TCP", "UDP", "PROTOCOL_NUMBER",
-											"ANY", "ICMP"}, false),
+										ValidateFunc: validation.StringInSlice([]string{
+											"TCP", "UDP", "PROTOCOL_NUMBER",
+											"ANY", "ICMP",
+										}, false),
 									},
 									"protocol_parameters": {
 										Type:     schema.TypeList,

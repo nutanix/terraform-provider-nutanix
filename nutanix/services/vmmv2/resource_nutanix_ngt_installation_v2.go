@@ -15,7 +15,6 @@ import (
 	taskPoll "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	vmmPrism "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	vmmConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -93,7 +92,6 @@ func ResourceNutanixNGTInstallationV2() *schema.Resource {
 						return false
 					}
 					return false
-
 				},
 			},
 			"reboot_preference": {
@@ -336,7 +334,7 @@ func ResourceNutanixNGTInstallationV4Update(ctx context.Context, d *schema.Resou
 	getResp := readResp.Data.GetValue().(vmmConfig.GuestTools)
 	updateSpec := getResp
 	//
-	//updateSpec.IsReachable = getResp.IsReachable
+	// updateSpec.IsReachable = getResp.IsReachable
 	//updateSpec.Version = getResp.Version
 	//updateSpec.IsInstalled = getResp.IsInstalled
 	//updateSpec.IsIsoInserted = getResp.IsIsoInserted
@@ -376,7 +374,6 @@ func ResourceNutanixNGTInstallationV4Update(ctx context.Context, d *schema.Resou
 	}
 
 	resp, err := conn.VMAPIInstance.UpdateGuestToolsById(utils.StringPtr(extID), &updateSpec, args)
-
 	if err != nil {
 		return diag.Errorf("error while updating gest tools  : %v", err)
 	}
@@ -415,7 +412,6 @@ func ResourceNutanixNGTInstallationV4Delete(ctx context.Context, d *schema.Resou
 	args["If-Match"] = getEtagHeader(readResp, conn)
 
 	resp, err := conn.VMAPIInstance.UninstallVmGuestTools(utils.StringPtr(extID), args)
-
 	if err != nil {
 		return diag.Errorf("error while uninstalling gest tools  : %v", err)
 	}

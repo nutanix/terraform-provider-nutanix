@@ -8,20 +8,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
-
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
-
+	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func ResourceNutanixVmGCUpdateV2() *schema.Resource {
+func ResourceNutanixVMGCUpdateV2() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: ResourceNutanixVmGCUpdateV2Create,
-		ReadContext:   ResourceNutanixVmGCUpdateV2Read,
-		UpdateContext: ResourceNutanixVmGCUpdateV2Update,
-		DeleteContext: ResourceNutanixVmGCUpdateV2Delete,
+		CreateContext: ResourceNutanixVMGCUpdateV2Create,
+		ReadContext:   ResourceNutanixVMGCUpdateV2Read,
+		UpdateContext: ResourceNutanixVMGCUpdateV2Update,
+		DeleteContext: ResourceNutanixVMGCUpdateV2Delete,
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -176,7 +174,7 @@ func ResourceNutanixVmGCUpdateV2() *schema.Resource {
 	}
 }
 
-func ResourceNutanixVmGCUpdateV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVMGCUpdateV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 	vmExtID := d.Get("ext_id")
 
@@ -230,14 +228,14 @@ func ResourceNutanixVmGCUpdateV2Create(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func ResourceNutanixVmGCUpdateV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVMGCUpdateV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func ResourceNutanixVmGCUpdateV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVMGCUpdateV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func ResourceNutanixVmGCUpdateV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVMGCUpdateV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }

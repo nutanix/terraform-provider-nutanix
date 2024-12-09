@@ -358,7 +358,6 @@ func AddNodeListSchema() *schema.Schema {
 			},
 		},
 	}
-
 }
 
 func computedNodeListSchema() *schema.Schema {
@@ -436,7 +435,6 @@ func computedNodeListSchema() *schema.Schema {
 			},
 		},
 	}
-
 }
 
 func uplinkFiledSchema() *schema.Schema {
@@ -634,9 +632,7 @@ func ResourceNutanixClusterAddNodeV2Delete(ctx context.Context, d *schema.Resour
 }
 
 func expandClusterNodeParams(pr interface{}) *config.NodeParam {
-
 	if pr != nil {
-
 		nConf := config.NodeParam{}
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -669,7 +665,6 @@ func expandClusterNodeParams(pr interface{}) *config.NodeParam {
 }
 
 func expandBlockList(pr []interface{}) []config.BlockItem {
-
 	if len(pr) > 0 {
 		blockList := make([]config.BlockItem, len(pr))
 
@@ -691,7 +686,6 @@ func expandBlockList(pr []interface{}) []config.BlockItem {
 }
 
 func expandNodeList(pr []interface{}) []config.NodeItem {
-
 	if len(pr) > 0 {
 		nodeList := make([]config.NodeItem, len(pr))
 
@@ -755,7 +749,6 @@ func expandNodeList(pr []interface{}) []config.NodeItem {
 }
 
 func expandComputeNodeList(pr []interface{}) []config.ComputeNodeItem {
-
 	if len(pr) > 0 {
 		nodeList := make([]config.ComputeNodeItem, len(pr))
 
@@ -795,7 +788,6 @@ func expandComputeNodeList(pr []interface{}) []config.ComputeNodeItem {
 }
 
 func expandKeyValueMap(pr []interface{}) []config.DigitalCertificateMapReference {
-
 	if len(pr) > 0 {
 		dcmList := make([]config.DigitalCertificateMapReference, len(pr))
 
@@ -817,7 +809,6 @@ func expandKeyValueMap(pr []interface{}) []config.DigitalCertificateMapReference
 }
 
 func expandNetworks(pr []interface{}) []config.UplinkNetworkItem {
-
 	if len(pr) > 0 {
 		networkList := make([]config.UplinkNetworkItem, len(pr))
 
@@ -847,9 +838,7 @@ func expandNetworks(pr []interface{}) []config.UplinkNetworkItem {
 }
 
 func expandUplink(pr interface{}) *config.Uplinks {
-
 	if pr != nil {
-
 		nConf := config.Uplinks{}
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -867,7 +856,6 @@ func expandUplink(pr interface{}) *config.Uplinks {
 }
 
 func expandUplinkParams(pr []interface{}) []config.UplinksField {
-
 	if len(pr) > 0 {
 		networkList := make([]config.UplinksField, len(pr))
 
@@ -916,7 +904,6 @@ func expandHypervisorIsos(pr []interface{}) []config.HypervisorIsoMap {
 }
 
 func expandBundleInfo(pr interface{}) *config.BundleInfo {
-
 	if pr != nil {
 		if len(pr.([]interface{})) == 0 {
 			return nil
@@ -935,7 +922,6 @@ func expandBundleInfo(pr interface{}) *config.BundleInfo {
 }
 
 func expandClusterConfigParams(pr interface{}) *config.ConfigParams {
-
 	if pr != nil {
 		if len(pr.([]interface{})) == 0 {
 			return nil
@@ -1042,9 +1028,7 @@ func expandHypervisorType(hypervisorType interface{}) *config.HypervisorType {
 }
 
 func expandExtraParams(pr interface{}) *config.NodeRemovalExtraParam {
-
 	if pr != nil {
-
 		extraParams := config.NodeRemovalExtraParam{}
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})

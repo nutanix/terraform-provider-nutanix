@@ -11,12 +11,13 @@ import (
 	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/common/v1/response"
 	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/dataprotection/v4/common"
 	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/dataprotection/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 )
 
-const ApplicationConsistentPropertiesVss1 = "dataprotection.v4.common.VssProperties"
-const ApplicationConsistentPropertiesVss2 = "dataprotection.v4.r0.b1.common.VssProperties"
+const (
+	ApplicationConsistentPropertiesVss1 = "dataprotection.v4.common.VssProperties"
+	ApplicationConsistentPropertiesVss2 = "dataprotection.v4.r0.b1.common.VssProperties"
+)
 
 func DatasourceNutanixRecoveryPointV2() *schema.Resource {
 	return &schema.Resource{
@@ -247,7 +248,6 @@ func DatasourceNutanixRecoveryPointV2Read(ctx context.Context, d *schema.Resourc
 	recoveryPointExtId := d.Get("ext_id").(string)
 
 	resp, err := conn.RecoveryPoint.GetRecoveryPointById(&recoveryPointExtId)
-
 	if err != nil {
 		return diag.Errorf("error while fetching recovery point: %v", err)
 	}
@@ -302,7 +302,6 @@ func DatasourceNutanixRecoveryPointV2Read(ctx context.Context, d *schema.Resourc
 
 	d.SetId(*getResp.ExtId)
 	return nil
-
 }
 
 func flattenTime(inTime *time.Time) string {

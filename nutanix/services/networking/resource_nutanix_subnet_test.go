@@ -9,10 +9,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 const resourceNameSubnet = "nutanix_subnet.acctest-managed"
@@ -335,7 +334,6 @@ func resourceNutanixSubnetExists(conn *v3.Client, name string) (*string, error) 
 
 	filter := fmt.Sprintf("name==%s", name)
 	subnetList, err := conn.V3.ListAllSubnet(filter, nil)
-
 	if err != nil {
 		return nil, err
 	}

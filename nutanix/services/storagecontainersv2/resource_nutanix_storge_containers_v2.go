@@ -15,7 +15,6 @@ import (
 	clsCommonConfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
 	clsPrismConfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -191,7 +190,6 @@ func ResourceNutanixStorageContainersV2() *schema.Resource {
 }
 
 func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.Client).ClusterAPI
 	body := &clustermgmtConfig.StorageContainer{}
 
@@ -577,7 +575,6 @@ func ResourceNutanixStorageContainersV2Delete(ctx context.Context, d *schema.Res
 }
 
 func expandNfsWhitelistAddresses(nfsWhitelistAddresses interface{}) []clsCommonConfig.IPAddressOrFQDN {
-
 	if nfsWhitelistAddresses != nil {
 		nfsWhitelistAddressesList := nfsWhitelistAddresses.([]interface{})
 		ips := make([]clsCommonConfig.IPAddressOrFQDN, len(nfsWhitelistAddressesList))
@@ -647,7 +644,6 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 		// data := base64.StdEncoding.EncodeToString([]byte("ergon"))
 		// encodeUUID := data + ":" + taskUUID
 		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
-
 		if err != nil {
 			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
 		}
@@ -721,7 +717,6 @@ func expandIPv6Address(pr interface{}) *clsCommonConfig.IPv6Address {
 }
 
 func expandFQDN(pr []interface{}) *clsCommonConfig.FQDN {
-
 	if len(pr) > 0 {
 		fqdn := clsCommonConfig.FQDN{}
 		val := pr[0].(map[string]interface{})

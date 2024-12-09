@@ -12,7 +12,6 @@ import (
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	import5 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -103,8 +102,10 @@ func ResourceNutanixTemplateDeployV2() *schema.Resource {
 												"nic_type": {
 													Type:     schema.TypeString,
 													Optional: true,
-													ValidateFunc: validation.StringInSlice([]string{"SPAN_DESTINATION_NIC",
-														"NORMAL_NIC", "DIRECT_NIC", "NETWORK_FUNCTION_NIC"}, false),
+													ValidateFunc: validation.StringInSlice([]string{
+														"SPAN_DESTINATION_NIC",
+														"NORMAL_NIC", "DIRECT_NIC", "NETWORK_FUNCTION_NIC",
+													}, false),
 												},
 												"network_function_chain": {
 													Type:     schema.TypeList,
@@ -121,8 +122,10 @@ func ResourceNutanixTemplateDeployV2() *schema.Resource {
 												"network_function_nic_type": {
 													Type:     schema.TypeString,
 													Optional: true,
-													ValidateFunc: validation.StringInSlice([]string{"TAP", "EGRESS",
-														"INGRESS"}, false),
+													ValidateFunc: validation.StringInSlice([]string{
+														"TAP", "EGRESS",
+														"INGRESS",
+													}, false),
 												},
 												"subnet": {
 													Type:     schema.TypeList,
@@ -264,7 +267,6 @@ func ResourceNutanixTemplateDeployV2Create(ctx context.Context, d *schema.Resour
 	}
 
 	resp, err := conn.TemplatesAPIInstance.DeployTemplate(utils.StringPtr(extID.(string)), body)
-
 	if err != nil {
 		return diag.Errorf("error while deploying template : %v", err)
 	}
@@ -386,9 +388,10 @@ func expandEmulatedNic(pr interface{}) *config.EmulatedNic {
 		val := prI[0].(map[string]interface{})
 
 		if model, ok := val["model"]; ok && len(model.(string)) > 0 {
+			const two, three = 2, 3
 			subMap := map[string]interface{}{
-				"VIRTIO": 2,
-				"E1000":  3,
+				"VIRTIO": two,
+				"E1000":  three,
 			}
 			pVal := subMap[model.(string)]
 			p := config.EmulatedNicModel(pVal.(int))
@@ -415,11 +418,12 @@ func expandNicNetworkInfo(pr interface{}) *config.NicNetworkInfo {
 		val := prI[0].(map[string]interface{})
 
 		if nicType, ok := val["nic_type"]; ok && len(nicType.(string)) > 0 {
+			const two, three, four, five = 2, 3, 4, 5
 			subMap := map[string]interface{}{
-				"NORMAL_NIC":           2,
-				"DIRECT_NIC":           3,
-				"NETWORK_FUNCTION_NIC": 4,
-				"SPAN_DESTINATION_NIC": 5,
+				"NORMAL_NIC":           two,
+				"DIRECT_NIC":           three,
+				"NETWORK_FUNCTION_NIC": four,
+				"SPAN_DESTINATION_NIC": five,
 			}
 			pVal := subMap[nicType.(string)]
 			p := config.NicType(pVal.(int))
@@ -429,10 +433,11 @@ func expandNicNetworkInfo(pr interface{}) *config.NicNetworkInfo {
 			nic.NetworkFunctionChain = expandNetworkFunctionChainReference(ntwkFunc)
 		}
 		if ntwkFuncNicType, ok := val["network_function_nic_type"]; ok && len(ntwkFuncNicType.(string)) > 0 {
+			const two, three, four = 2, 3, 4
 			subMap := map[string]interface{}{
-				"INGRESS": 2,
-				"EGRESS":  3,
-				"TAP":     4,
+				"INGRESS": two,
+				"EGRESS":  three,
+				"TAP":     four,
 			}
 			pVal := subMap[ntwkFuncNicType.(string)]
 			p := config.NetworkFunctionNicType(pVal.(int))
@@ -442,9 +447,10 @@ func expandNicNetworkInfo(pr interface{}) *config.NicNetworkInfo {
 			nic.Subnet = expandSubnetReference(subnet)
 		}
 		if vlanMode, ok := val["vlan_mode"]; ok && len(vlanMode.(string)) > 0 {
+			const two, three = 2, 3
 			subMap := map[string]interface{}{
-				"ACCESS": 2,
-				"TRUNK":  3,
+				"ACCESS": two,
+				"TRUNK":  three,
 			}
 			pVal := subMap[vlanMode.(string)]
 			p := config.VlanMode(pVal.(int))
@@ -491,7 +497,6 @@ func expandIPv4Info(ipv4Info interface{}) *config.Ipv4Info {
 			}
 			ipv4InfoObj.LearnedIpAddresses = ipAddressesList
 		}
-
 	}
 	return nil
 }

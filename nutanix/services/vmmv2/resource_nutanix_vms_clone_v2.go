@@ -10,20 +10,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
-
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
-
+	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func ResourceNutanixVmCloneV2() *schema.Resource {
+func ResourceNutanixVMCloneV2() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: ResourceNutanixVmCloneV2Create,
-		ReadContext:   ResourceNutanixVmCloneV2Read,
-		UpdateContext: ResourceNutanixVmCloneV2Update,
-		DeleteContext: ResourceNutanixVmCloneV2Delete,
+		CreateContext: ResourceNutanixVMCloneV2Create,
+		ReadContext:   ResourceNutanixVMCloneV2Read,
+		UpdateContext: ResourceNutanixVMCloneV2Update,
+		DeleteContext: ResourceNutanixVMCloneV2Delete,
 		Schema: map[string]*schema.Schema{
 			"vm_ext_id": {
 				Type:     schema.TypeString,
@@ -109,8 +107,10 @@ func ResourceNutanixVmCloneV2() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
-										ValidateFunc: validation.StringInSlice([]string{"SPAN_DESTINATION_NIC",
-											"NORMAL_NIC", "DIRECT_NIC", "NETWORK_FUNCTION_NIC"}, false),
+										ValidateFunc: validation.StringInSlice([]string{
+											"SPAN_DESTINATION_NIC",
+											"NORMAL_NIC", "DIRECT_NIC", "NETWORK_FUNCTION_NIC",
+										}, false),
 									},
 									"network_function_chain": {
 										Type:     schema.TypeList,
@@ -130,8 +130,10 @@ func ResourceNutanixVmCloneV2() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
-										ValidateFunc: validation.StringInSlice([]string{"TAP", "EGRESS",
-											"INGRESS"}, false),
+										ValidateFunc: validation.StringInSlice([]string{
+											"TAP", "EGRESS",
+											"INGRESS",
+										}, false),
 									},
 									"subnet": {
 										Type:     schema.TypeList,
@@ -404,8 +406,10 @@ func ResourceNutanixVmCloneV2() *schema.Resource {
 																												Type:     schema.TypeString,
 																												Optional: true,
 																												Computed: true,
-																												ValidateFunc: validation.StringInSlice([]string{"SCSI", "SPAPR", "PCI",
-																													"IDE", "SATA"}, false),
+																												ValidateFunc: validation.StringInSlice([]string{
+																													"SCSI", "SPAPR", "PCI",
+																													"IDE", "SATA",
+																												}, false),
 																											},
 																											"index": {
 																												Type:     schema.TypeInt,
@@ -1318,7 +1322,7 @@ func ResourceNutanixVmCloneV2() *schema.Resource {
 	}
 }
 
-func ResourceNutanixVmCloneV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVMCloneV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 	vmExtID := d.Get("vm_ext_id")
 
@@ -1351,7 +1355,7 @@ func ResourceNutanixVmCloneV2Create(ctx context.Context, d *schema.ResourceData,
 		body.GuestCustomization = expandGuestCustomizationParams(guestCstm)
 	}
 	if bootConfig, ok := d.GetOk("boot_config"); ok {
-		body.BootConfig = expandOneOfCloneVmBootConfig(bootConfig)
+		body.BootConfig = expandOneOfCloneVMBootConfig(bootConfig)
 	}
 
 	resp, err := conn.VMAPIInstance.CloneVm(utils.StringPtr(vmExtID.(string)), body, args)
@@ -1387,10 +1391,10 @@ func ResourceNutanixVmCloneV2Create(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(*uuid)
 
-	return ResourceNutanixVmCloneV2Read(ctx, d, meta)
+	return ResourceNutanixVMCloneV2Read(ctx, d, meta)
 }
 
-func ResourceNutanixVmCloneV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVMCloneV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
 	resp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
@@ -1559,15 +1563,15 @@ func ResourceNutanixVmCloneV2Read(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-func ResourceNutanixVmCloneV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVMCloneV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func ResourceNutanixVmCloneV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVMCloneV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return ResourceNutanixVirtualMachineV2Delete(ctx, d, meta)
 }
 
-func expandOneOfCloneVmBootConfig(pr interface{}) *config.OneOfCloneOverrideParamsBootConfig {
+func expandOneOfCloneVMBootConfig(pr interface{}) *config.OneOfCloneOverrideParamsBootConfig {
 	if pr != nil {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})

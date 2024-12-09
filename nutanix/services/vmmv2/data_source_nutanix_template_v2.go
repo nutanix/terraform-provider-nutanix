@@ -10,7 +10,6 @@ import (
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/iam/v4/authn"
 	import6 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	import5 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -290,7 +289,6 @@ func flattenCustomKVPair(kvPairs []config.KVPair) []interface{} {
 		return kvps
 	}
 	return nil
-
 }
 
 func flattenKVValue(value interface{}) []interface{} {
@@ -398,7 +396,7 @@ func flattenTemplateVersionSpec(pr *import5.TemplateVersionSpec) []map[string]in
 		if pr.CreatedBy != nil {
 			tmp["created_by"] = flattenTemplateUser(pr.CreatedBy)
 		}
-		//if pr.VersionSource != nil {
+		// if pr.VersionSource != nil {
 		//	tmp["version_source"] = flattenTemplateVersionSource(pr.VersionSource)
 		//}
 		if pr.IsActiveVersion != nil {
@@ -445,7 +443,7 @@ func flattenTemplateVersionSource(versionSource *import5.OneOfTemplateVersionSpe
 	return nil
 }
 
-//func flattenTemplateGuestCustomization(guestCustomization *import6.GuestCustomizationParams) []map[string]interface{} {
+// func flattenTemplateGuestCustomization(guestCustomization *import6.GuestCustomizationParams) []map[string]interface{} {
 //	if guestCustomization != nil {
 //		guestCustomizationMap := make(map[string]interface{})
 //		if guestCustomization.Config != nil {
@@ -456,7 +454,7 @@ func flattenTemplateVersionSource(versionSource *import5.OneOfTemplateVersionSpe
 //	return nil
 //}
 
-//func flattenGuestCustomizationConfig(customizationParamsConfig *import6.OneOfGuestCustomizationParamsConfig) []map[string]interface{} {
+// func flattenGuestCustomizationConfig(customizationParamsConfig *import6.OneOfGuestCustomizationParamsConfig) []map[string]interface{} {
 //	if customizationParamsConfig != nil {
 //		customizationParamsConfigMap := make(map[string]interface{})
 //		if *customizationParamsConfig.ObjectType_ == "vmm.v4.ahv.config.SysprepConfig" {
@@ -482,7 +480,7 @@ func flattenTemplateVersionSource(versionSource *import5.OneOfTemplateVersionSpe
 //
 //}
 
-//func flattenCloudInitConfig(cloudInitConfig *import6.CloudInit) []map[string]interface{} {
+// func flattenCloudInitConfig(cloudInitConfig *import6.CloudInit) []map[string]interface{} {
 //	if cloudInitConfig != nil {
 //		cloudInitConfigMap := make(map[string]interface{})
 //

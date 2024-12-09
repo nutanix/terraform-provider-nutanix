@@ -346,6 +346,7 @@ func (sc ServiceClient) CreateSLA(ctx context.Context, req *SLAIntentInput) (*Li
 
 	return res, sc.c.Do(ctx, httpReq, res)
 }
+
 func (sc ServiceClient) CreateProfiles(ctx context.Context, req *ProfileRequest) (*ListProfileResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, "/profiles", req)
 	res := new(ListProfileResponse)
@@ -376,6 +377,7 @@ func (sc ServiceClient) DeleteSLA(ctx context.Context, uuid string) (*SLADeleteR
 	res := new(SLADeleteResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
+
 func (sc ServiceClient) DeleteProfile(ctx context.Context, uuid string) (*string, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/profiles/%s", uuid), nil)
 	if err != nil {
@@ -395,6 +397,7 @@ func (sc ServiceClient) UpdateSLA(ctx context.Context, req *SLAIntentInput, id s
 	res := new(ListSLAResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
+
 func (sc ServiceClient) UpdateProfile(ctx context.Context, req *UpdateProfileRequest, id string) (*ListProfileResponse, error) {
 	path := fmt.Sprintf("/profiles/%s", id)
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPut, path, req)
@@ -415,6 +418,7 @@ func (sc ServiceClient) DatabaseRestore(ctx context.Context, databaseID string, 
 	res := new(ProvisionDatabaseResponse)
 	return res, sc.c.Do(ctx, httpReq, res)
 }
+
 func (sc ServiceClient) DatabaseSnapshot(ctx context.Context, id string, req *DatabaseSnapshotRequest) (*ProvisionDatabaseResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodPost, fmt.Sprintf("/tms/%s/snapshots", id), req)
 	if err != nil {
@@ -679,7 +683,6 @@ func (sc ServiceClient) CreateLinkedDatabase(ctx context.Context, id string, req
 
 func (sc ServiceClient) DeleteLinkedDatabase(ctx context.Context, id string, linkDBID string, req *DeleteLinkedDatabaseRequest) (*ProvisionDatabaseResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/databases/%s/linked-databases/%s", id, linkDBID), req)
-
 	if err != nil {
 		return nil, err
 	}
@@ -952,7 +955,6 @@ func (sc ServiceClient) UpdateDBServerVM(ctx context.Context, body *UpdateDBServ
 
 func (sc ServiceClient) DeleteDBServerVM(ctx context.Context, req *DeleteDBServerVMRequest, dbServerVMID string) (*DeleteDatabaseResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/dbservers/%s", dbServerVMID), req)
-
 	if err != nil {
 		return nil, err
 	}
@@ -1018,7 +1020,6 @@ func makeDBServerPath(dbserverClsid, id, ip, name, nxClsid, vmclsid, vmclsName *
 
 func (sc ServiceClient) ListDBServerVM(ctx context.Context) (*ListDBServerVMResponse, error) {
 	httpReq, err := sc.c.NewRequest(ctx, http.MethodGet, "/dbservers?load-dbserver-cluster=false&load-databases=false&load-clones=false&detailed=false&load-metrics=false&time-zone=UTC", nil)
-
 	if err != nil {
 		return nil, err
 	}

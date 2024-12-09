@@ -63,7 +63,6 @@ func resourceNutanixFCAPIKeysCreate(ctx context.Context, d *schema.ResourceData,
 func resourceNutanixFCAPIKeysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).FoundationCentral
 	resp, err := conn.Service.GetAPIKey(ctx, d.Id())
-
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")

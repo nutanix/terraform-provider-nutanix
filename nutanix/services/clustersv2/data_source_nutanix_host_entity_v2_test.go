@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -29,7 +28,6 @@ func TestAccNutanixHostEntityV2Datasource_Basic(t *testing.T) {
 }
 
 func TestAccNutanixHostEntityV2Datasource_WithNoClsExtId(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -43,7 +41,6 @@ func TestAccNutanixHostEntityV2Datasource_WithNoClsExtId(t *testing.T) {
 }
 
 func TestAccNutanixHostEntityV2Datasource_WithNoHostExtId(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -55,6 +52,7 @@ func TestAccNutanixHostEntityV2Datasource_WithNoHostExtId(t *testing.T) {
 		},
 	})
 }
+
 func testHostEntityDatasourceV4Config() string {
 	return `
 	data "nutanix_hosts_v2" "test" {  

@@ -8,13 +8,11 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/spf13/cast"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -406,7 +404,6 @@ func resourceNutanixProtectionRuleUpdate(ctx context.Context, d *schema.Resource
 
 	id := d.Id()
 	response, err := conn.V3.GetProtectionRule(id)
-
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
@@ -487,7 +484,6 @@ func resourceNutanixProtectionRuleDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.Client).API
 
 	resp, err := conn.V3.DeleteProtectionRule(d.Id())
-
 	if err != nil {
 		return diag.Errorf("error deleting protection_rule id %s): %s", d.Id(), err)
 	}
@@ -518,7 +514,6 @@ func resourceNutanixProtectionRulesExists(conn *v3.Client, name string) (*string
 
 	filter := fmt.Sprintf("name==%s", name)
 	protectionList, err := conn.V3.ListAllProtectionRules(filter)
-
 	if err != nil {
 		return nil, err
 	}

@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/spf13/cast"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -429,7 +428,6 @@ func resourceNutanixAccessControlPolicyUpdate(ctx context.Context, d *schema.Res
 	spec := &v3.AccessControlPolicySpec{}
 	id := d.Id()
 	response, err := conn.V3.GetAccessControlPolicy(id)
-
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")

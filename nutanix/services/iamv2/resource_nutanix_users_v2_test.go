@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -131,7 +130,6 @@ func TestAccNutanixUsersV2Resource_SAMLUser(t *testing.T) {
 
 // create LDAP user
 func TestAccNutanixUsersV2Resource_LDAPUser(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -190,7 +188,6 @@ func TestAccNutanixUsersV2Resource_DeactivateLocalUser(t *testing.T) {
 
 // Test missing username
 func TestAccNutanixUsersV2Resource_WithNoUserName(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

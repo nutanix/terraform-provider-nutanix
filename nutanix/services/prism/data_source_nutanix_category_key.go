@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -51,7 +50,6 @@ func dataSourceNutanixCategoryKeyRead(ctx context.Context, d *schema.ResourceDat
 
 	// Make request to the API
 	resp, err := conn.V3.GetCategoryKey(d.Get("name").(string))
-
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
@@ -68,7 +66,6 @@ func dataSourceNutanixCategoryKeyRead(ctx context.Context, d *schema.ResourceDat
 	d.SetId(utils.StringValue(resp.Name))
 
 	list, err := conn.V3.ListAllCategoryValues(d.Get("name").(string), "")
-
 	if err != nil {
 		return diag.FromErr(err)
 	}

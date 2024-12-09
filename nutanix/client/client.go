@@ -109,7 +109,7 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string, 
 
 		// override transport config incase of using proxy
 		transCfg := &http.Transport{
-			// nolint:gas
+			//nolint:gas
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: credentials.Insecure}, // ignore expired SSL certificates
 		}
 		transCfg.Proxy = http.ProxyURL(proxy)
@@ -126,7 +126,6 @@ func NewClient(credentials *Credentials, userAgent string, absolutePath string, 
 		}
 
 		resp, err := baseClient.client.Do(req)
-
 		if err != nil {
 			return baseClient, err
 		}
@@ -153,7 +152,7 @@ func NewBaseClient(credentials *Credentials, absolutePath string, isHTTP bool) (
 	httpClient := http.DefaultClient
 
 	transCfg := &http.Transport{
-		//to skip/unskip SSL certificate validation
+
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: credentials.Insecure,
 		},
@@ -193,13 +192,11 @@ func (c *Client) NewRequest(ctx context.Context, method, urlStr string, body int
 
 	if body != nil {
 		err := json.NewEncoder(buf).Encode(body)
-
 		if err != nil {
 			return nil, err
 		}
 	}
 	req, err := http.NewRequest(method, u.String(), buf)
-
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +222,6 @@ func (c *Client) NewUnAuthRequest(ctx context.Context, method, urlStr string, bo
 		return nil, fmt.Errorf(c.ErrorMsg)
 	}
 
-	//create main api url
 	rel, err := url.Parse(c.AbsolutePath + urlStr)
 	if err != nil {
 		return nil, err
@@ -244,7 +240,6 @@ func (c *Client) NewUnAuthRequest(ctx context.Context, method, urlStr string, bo
 		return nil, err
 	}
 
-	//add api headers
 	req.Header.Add("Content-Type", mediaType)
 	req.Header.Add("Accept", mediaType)
 	req.Header.Add("User-Agent", c.UserAgent)
@@ -258,7 +253,7 @@ func (c *Client) NewUnAuthFormEncodedRequest(ctx context.Context, method, urlStr
 	if c.client == nil {
 		return nil, fmt.Errorf(c.ErrorMsg)
 	}
-	//create main api url
+
 	rel, err := url.Parse(c.AbsolutePath + urlStr)
 	if err != nil {
 		return nil, err
@@ -277,7 +272,6 @@ func (c *Client) NewUnAuthFormEncodedRequest(ctx context.Context, method, urlStr
 		return nil, err
 	}
 
-	//add api headers
 	req.Header.Add("Content-Type", formEncodedType)
 	req.Header.Add("Accept", mediaType)
 	req.Header.Add("User-Agent", c.UserAgent)
@@ -299,7 +293,6 @@ func (c *Client) NewUploadRequest(ctx context.Context, method, urlStr string, fi
 	u := c.BaseURL.ResolveReference(rel)
 
 	req, err := http.NewRequest(method, u.String(), fileReader)
-
 	if err != nil {
 		return nil, err
 	}
@@ -339,7 +332,6 @@ func (c *Client) NewUnAuthUploadRequest(ctx context.Context, method, urlStr stri
 	u := c.BaseURL.ResolveReference(rel)
 
 	req, err := http.NewRequest(method, u.String(), fileReader)
-
 	if err != nil {
 		return nil, err
 	}
@@ -558,7 +550,6 @@ func CheckResponse(r *http.Response) error {
 	}
 
 	buf, err := ioutil.ReadAll(r.Body)
-
 	if err != nil {
 		return err
 	}
@@ -626,7 +617,6 @@ type ErrorResponse struct {
 
 // MessageResource ...
 type MessageResource struct {
-
 	// Custom key-value details relevant to the status.
 	Details map[string]interface{} `json:"details,omitempty"`
 

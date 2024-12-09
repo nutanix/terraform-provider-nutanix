@@ -2,19 +2,17 @@ package iamv2_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"regexp"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
 const resourceNameDirectoryServices = "nutanix_directory_services_v2.test"
 
 func TestAccNutanixDirectoryServicesV2Resource_CreateACTIVE_DIRECTORYService(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -44,7 +42,8 @@ func TestAccNutanixDirectoryServicesV2Resource_CreateACTIVE_DIRECTORYService(t *
 					resource.TestCheckResourceAttrSet(resourceNameDirectoryServices, "service_account.0.password"),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "white_listed_groups.0", testVars.Iam.DirectoryServices.WhiteListedGroups[1]),
 				),
-			}},
+			},
+		},
 	})
 }
 
@@ -68,12 +67,12 @@ func TestAccNutanixDirectoryServicesV2Resource_CreateOpenLDAPService(t *testing.
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "service_account.0.username", testVars.Iam.DirectoryServices.ServiceAccount.Username),
 					resource.TestCheckResourceAttrSet(resourceNameDirectoryServices, "service_account.0.password"),
 				),
-			}},
+			},
+		},
 	})
 }
 
 func TestAccNutanixDirectoryServicesV2Resource_CreateACTIVE_DIRECTORYAlreadyExists(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -93,12 +92,12 @@ func TestAccNutanixDirectoryServicesV2Resource_CreateACTIVE_DIRECTORYAlreadyExis
 			{
 				Config:      testDirectoryServicesDuplicatedResourceConfig(filepath),
 				ExpectError: regexp.MustCompile("Failed to create directory service as directory service with name " + testVars.Iam.DirectoryServices.Name + " already exists"),
-			}},
+			},
+		},
 	})
 }
 
 func TestAccNutanixDirectoryServicesV2Resource_WithNoName(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -110,6 +109,7 @@ func TestAccNutanixDirectoryServicesV2Resource_WithNoName(t *testing.T) {
 		},
 	})
 }
+
 func TestAccNutanixDirectoryServicesV2Resource_WithNoUrl(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -124,7 +124,6 @@ func TestAccNutanixDirectoryServicesV2Resource_WithNoUrl(t *testing.T) {
 }
 
 func TestAccNutanixDirectoryServicesV2Resource_WithNoDomainName(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -138,7 +137,6 @@ func TestAccNutanixDirectoryServicesV2Resource_WithNoDomainName(t *testing.T) {
 }
 
 func TestAccNutanixDirectoryServicesV2Resource_WithNoDirectoryType(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -152,7 +150,6 @@ func TestAccNutanixDirectoryServicesV2Resource_WithNoDirectoryType(t *testing.T)
 }
 
 func TestAccNutanixDirectoryServicesV2Resource_WithNoServiceAccount(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

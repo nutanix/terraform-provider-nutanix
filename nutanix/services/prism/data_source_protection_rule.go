@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
-	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 )
 
 func DataSourceNutanixProtectionRule() *schema.Resource {

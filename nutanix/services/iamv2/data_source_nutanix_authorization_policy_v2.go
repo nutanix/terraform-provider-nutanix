@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authz"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -175,7 +174,6 @@ func flattenIdentityFilters(identityFilters []import1.IdentityFilter) []interfac
 			log.Printf("[DEBUG] flattenIdentityFilters val type : %v\n", reflect.TypeOf(v))
 
 			reservedMap, err := json.Marshal(v.Reserved_)
-
 			if err != nil {
 				log.Printf("[DEBUG] flattenIdentityFiltersError [%v]:%v err : %v\n", k, v, err)
 			}
@@ -198,7 +196,6 @@ func flattenEntityFilters(entityFilters []import1.EntityFilter) []interface{} {
 			log.Printf("[DEBUG] flattenIdentityFilters  %v:%v\n", k, v)
 			log.Printf("[DEBUG] flattenIdentityFilters val type : %v\n", reflect.TypeOf(v))
 			reservedMap, err := json.Marshal(v.Reserved_)
-
 			if err != nil {
 				log.Printf("[DEBUG] flattenIdentityFiltersError [%v]:%v err : %v\n", k, v, err)
 			}

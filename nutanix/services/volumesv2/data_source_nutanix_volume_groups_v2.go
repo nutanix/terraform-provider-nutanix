@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	volumesClientResponse "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/common/v1/response"
 	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -216,7 +215,6 @@ func DatasourceNutanixVolumeGroupsV2Read(ctx context.Context, d *schema.Resource
 
 	// get the volume groups response
 	resp, err := conn.VolumeAPIInstance.ListVolumeGroups(page, limit, filter, orderBy, expand, selects)
-
 	if err != nil {
 		return diag.Errorf("error while fetching volumes : %v", err)
 	}
@@ -228,7 +226,6 @@ func DatasourceNutanixVolumeGroupsV2Read(ctx context.Context, d *schema.Resource
 		if err := d.Set("volumes", flattenVolumesEntities(volumesResp.GetValue().([]volumesClient.VolumeGroup))); err != nil {
 			return diag.FromErr(err)
 		}
-
 	} else {
 		// set the volume groups data in the terraform resource
 		d.Set("volumes", make([]volumesClient.VolumeGroup, 0))
@@ -292,7 +289,6 @@ func flattenVolumesEntities(volumeGroups []volumesClient.VolumeGroup) []interfac
 			}
 
 			volumeGroupList[k] = volumeGroup
-
 		}
 		return volumeGroupList
 	}
@@ -366,6 +362,7 @@ func flattenFlashMode(flashMode *volumesClient.FlashMode) []map[string]interface
 	}
 	return nil
 }
+
 func flattenStorageFeatures(storageFeatures *volumesClient.StorageFeatures) []map[string]interface{} {
 	if storageFeatures != nil {
 		storageFeaturesList := make([]map[string]interface{}, 0)

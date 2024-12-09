@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/common/v1/config"
 	iamConfig "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authz"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -292,7 +291,6 @@ func ResourceNutanixRolesV4Update(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	updateResp, err := conn.RolesAPIInstance.UpdateRoleById(extId, &updatedSpec, headers)
-
 	if err != nil {
 		return diag.Errorf("error while updating role: %v", err)
 	}
@@ -319,7 +317,6 @@ func ResourceNutanixRolesV4Delete(ctx context.Context, d *schema.ResourceData, m
 	headers["If-Match"] = utils.StringPtr(etagValue)
 
 	resp, err := conn.RolesAPIInstance.DeleteRoleById(utils.StringPtr(d.Id()), headers)
-
 	if err != nil {
 		return diag.Errorf("error while Deleting role: %v", err)
 	}

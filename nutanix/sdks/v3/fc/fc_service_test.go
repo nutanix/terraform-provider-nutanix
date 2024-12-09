@@ -22,7 +22,8 @@ func setup() (*http.ServeMux, *client.Client, *httptest.Server) {
 		Password: "Nutanix.123",
 		Port:     "9440",
 		Endpoint: "10.2.242.13",
-		Insecure: true},
+		Insecure: true,
+	},
 		userAgent,
 		absolutePath,
 		false)

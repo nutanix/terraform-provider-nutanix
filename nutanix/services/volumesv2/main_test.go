@@ -14,9 +14,11 @@ type TestConfig struct {
 	} `json:"volumes"`
 }
 
-var testVars TestConfig
-var path, _ = os.Getwd()
-var filepath = path + "/../../../test_config_v2.json"
+var (
+	testVars TestConfig
+	path, _  = os.Getwd()
+	filepath = path + "/../../../test_config_v2.json"
+)
 
 func loadVars(filepath string, varStuct interface{}) {
 	// Read test_config_v2.json from the home current path
@@ -32,6 +34,7 @@ func loadVars(filepath string, varStuct interface{}) {
 		os.Exit(1)
 	}
 }
+
 func TestMain(m *testing.M) {
 	log.Println("Do some crazy stuff before tests!")
 	loadVars("../../../test_config_v2.json", &testVars)

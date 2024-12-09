@@ -35,7 +35,6 @@ func setup() (*http.ServeMux, *Client, *httptest.Server) {
 
 func TestNewClient(t *testing.T) {
 	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", ""}, testUserAgent, testAbsolutePath, false)
-
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -70,7 +69,6 @@ func TestNewBaseClient(t *testing.T) {
 
 func TestNewRequest(t *testing.T) {
 	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", ""}, testUserAgent, testAbsolutePath, false)
-
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -94,7 +92,6 @@ func TestNewRequest(t *testing.T) {
 
 func TestNewUploadRequest(t *testing.T) {
 	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", ""}, testUserAgent, testAbsolutePath, true)
-
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -118,7 +115,7 @@ func TestNewUploadRequest(t *testing.T) {
 		t.Errorf("NewUploadRequest(%v) URL = %v, expected %v", inURL, req.URL, outURL)
 	}
 
-	//test body contents
+
 	got, _ := ioutil.ReadAll(req.Body)
 	if !bytes.Equal(got, outBody) {
 		t.Errorf("NewUploadRequest(%v) Body = %v, expected %v", inBody, string(got), string(outBody))
@@ -138,7 +135,6 @@ func TestNewUploadRequest(t *testing.T) {
 
 func TestNewUnAuthRequest(t *testing.T) {
 	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", ""}, testUserAgent, testAbsolutePath, true)
-
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -177,7 +173,6 @@ func TestNewUnAuthRequest(t *testing.T) {
 
 func TestNewUnAuthFormEncodedRequest(t *testing.T) {
 	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", ""}, testUserAgent, testAbsolutePath, true)
-
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -220,7 +215,6 @@ func TestNewUnAuthFormEncodedRequest(t *testing.T) {
 
 func TestNewUnAuthUploadRequest(t *testing.T) {
 	c, err := NewClient(&Credentials{"foo.com", "username", "password", "", "", true, false, "", "", "", nil, "", "", ""}, testUserAgent, testAbsolutePath, true)
-
 	if err != nil {
 		t.Errorf("Unexpected Error: %v", err)
 	}
@@ -244,7 +238,7 @@ func TestNewUnAuthUploadRequest(t *testing.T) {
 		t.Errorf("NewUnAuthUploadRequest(%v) URL = %v, expected %v", inURL, req.URL, outURL)
 	}
 
-	//test body contents
+
 	got, _ := ioutil.ReadAll(req.Body)
 	if !bytes.Equal(got, outBody) {
 		t.Errorf("NewUnAuthUploadRequest(%v) Body = %v, expected %v", inBody, string(got), string(outBody))
@@ -338,7 +332,6 @@ func TestDo(t *testing.T) {
 	body := new(foo)
 
 	err := client.Do(context.Background(), req, body)
-
 	if err != nil {
 		t.Fatalf("Do(): %v", err)
 	}

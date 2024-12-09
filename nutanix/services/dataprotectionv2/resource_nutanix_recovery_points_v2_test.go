@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -16,8 +15,10 @@ const resourceNameRecoveryPoints = "nutanix_recovery_points_v2.test"
 
 // this test cases must be updated after merge it on temp design branch, since it need to create a vm and volume group within the test case
 
-var path, _ = os.Getwd()
-var filepath = path + "/../../../test_config_v2.json"
+var (
+	path, _  = os.Getwd()
+	filepath = path + "/../../../test_config_v2.json"
+)
 
 func TestAccNutanixRecoveryPointsV2Resource_VmRecoveryPoints2(t *testing.T) {
 	r := acctest.RandInt()
@@ -303,6 +304,7 @@ func testRecoveryPointsResourceConfigWithVmRecoveryPointsWithAppConsProps(name, 
 		}
 	}`, name, expirationTime)
 }
+
 func testRecoveryPointsResourceConfigWithVolumeGroupRecoveryPoints(name, expirationTime string) string {
 	vg := testAccVolumeGroup1ResourceConfig("vg-"+name, "test volume group description")
 	return vg + fmt.Sprintf(`
@@ -361,7 +363,6 @@ func testRecoveryPointsResourceConfigWithVolumeGroupRecoveryPointsWithMultipleVm
 }
 
 func testAccVolumeGroup1ResourceConfig(name, desc string) string {
-
 	return fmt.Sprintf(`
 	data "nutanix_clusters_v2" "cluster-list" {}
 
@@ -400,7 +401,6 @@ func testAccVolumeGroup1ResourceConfig(name, desc string) string {
 }
 
 func testAccVolumeGroup2ResourceConfig(name, desc string) string {
-
 	return fmt.Sprintf(`
 
 	resource "nutanix_volume_group_v2" "test-2" {

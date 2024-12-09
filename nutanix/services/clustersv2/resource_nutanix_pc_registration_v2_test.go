@@ -1,15 +1,15 @@
 package clustersv2_test
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"regexp"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
 // Logic covered in create cluster resource test
 func TestAccNutanixPePcRegistrationV2Resource_ValidationsDomainManagerRemoteClusterSpec(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -35,12 +35,10 @@ func TestAccNutanixPePcRegistrationV2Resource_ValidationsDomainManagerRemoteClus
 }
 
 func TestAccNutanixPePcRegistrationV2Resource_ValidationsAOSRemoteClusterSpec(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
-
 			{
 				Config:      testAccClusterResourceAOSRemoteClusterSpecInvalidConfigWithoutRemoteCluster(),
 				ExpectError: regexp.MustCompile("Insufficient remote_cluster blocks"),
@@ -58,7 +56,6 @@ func TestAccNutanixPePcRegistrationV2Resource_ValidationsAOSRemoteClusterSpec(t 
 }
 
 func TestAccNutanixPePcRegistrationV2Resource_ValidationsClusterReference(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

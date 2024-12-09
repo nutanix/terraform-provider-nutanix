@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -133,7 +132,6 @@ func TestAccNutanixNGTInstallationV2Resource_InstallNGTWithRebootPreferenceSetTo
 }
 
 func TestAccNutanixNGTInstallationV2Resource_WithNoVmExtId(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -192,7 +190,6 @@ func TestAccNutanixNGTInstallationV2Resource_UpdateNGT(t *testing.T) {
 			},
 			// test update, change capabilities, remove VSS_SNAPSHOT
 			{
-
 				Config: testPreEnvConfig(vmName, r) + testNGTInstallationResourceUpdateConfig(`[]`, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameNGTInstallation, "guest_os_version"),
@@ -310,7 +307,6 @@ func testNGTInstallationResourceWithoutVmExtIdConfig() string {
 
 // this config import image, create subnet, create vm
 func testPreEnvConfig(vmName string, r int) string {
-
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
 		

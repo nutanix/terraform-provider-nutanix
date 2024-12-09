@@ -15,7 +15,6 @@ import (
 	vmmProsmConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	vmmConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	vmmContent "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -197,7 +196,6 @@ func ResourceNutanixTemplatesV2Create(ctx context.Context, d *schema.ResourceDat
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Template create request body :\n %s", string(aJSON))
 	resp, err := conn.TemplatesAPIInstance.CreateTemplate(body)
-
 	if err != nil {
 		return diag.Errorf("error while creating template : %v", err)
 	}
@@ -2487,7 +2485,6 @@ func expandTemplateGuestCustomizationConfig(config interface{}) *vmmConfig.OneOf
 					p := vmmConfig.InstallType(pVal.(int))
 					sysprepObj.InstallType = &p
 				}
-
 			}
 			if sysprepScript, ok := sysprepData["sysprep_script"]; ok && len(sysprepScript.([]interface{})) > 0 {
 				sysprepObj.SysprepScript = expandSysprepScript(sysprepScript)
@@ -2561,7 +2558,6 @@ func expandTemplateGuestCustomizationConfig(config interface{}) *vmmConfig.OneOf
 				log.Printf("[ERROR] Error setting value for cloud init: %v", err)
 				return nil
 			}
-
 		}
 
 		aJSON, _ := json.Marshal(guestCustomizationConfig)
@@ -2783,7 +2779,7 @@ func expandValue(kvPairValue interface{}) *vmmCommon.OneOfKVPairValue {
 	if kvPairValue != nil {
 		valueData := kvPairValue.([]interface{})[0].(map[string]interface{})
 		log.Printf("[DEBUG] kvPair valueData: %v", valueData)
-
+		//nolint:gocritic // Keeping if-else for clarity in this specific case
 		if valueData["string_list"] != nil && len(valueData["string_list"].([]interface{})) > 0 {
 			log.Printf("[DEBUG] valueData of type string_list")
 			stringList := valueData["string_list"].([]interface{})

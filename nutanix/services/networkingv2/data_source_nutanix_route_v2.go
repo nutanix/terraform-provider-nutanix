@@ -137,7 +137,6 @@ func DatasourceNutanixRouteV2Read(ctx context.Context, d *schema.ResourceData, m
 	extID := d.Get("ext_id").(string)
 
 	resp, err := conn.Routes.GetRouteForRouteTableById(&extID, &routeTableExtID)
-
 	if err != nil {
 		return diag.Errorf("error while fetching route : %v", err)
 	}

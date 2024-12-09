@@ -2,12 +2,13 @@ package vmmv2_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 	"regexp"
 	"testing"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -175,7 +176,6 @@ func testAccCheckNutanixVirtualMachineV2Destroy(s *terraform.State) error {
 		}
 	}
 	return nil
-
 }
 
 func TestAccNutanixVmsShutdownV2Resource_WithError(t *testing.T) {

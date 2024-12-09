@@ -442,7 +442,6 @@ func ResourceNutanixClusterUnconfiguredNodeNetworkV2Delete(ctx context.Context, 
 }
 
 func expandNodeListNetworkingDetails(pr []interface{}) []config.NodeListNetworkingDetails {
-
 	if len(pr) > 0 {
 		nodeList := make([]config.NodeListNetworkingDetails, len(pr))
 

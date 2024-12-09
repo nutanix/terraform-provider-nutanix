@@ -10,7 +10,6 @@ import (
 	import4 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/common/v1/config"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/common/v1/response"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -1436,9 +1435,9 @@ func flattenVMSourceReferenceEntityType(ent *config.VmSourceReferenceEntityType)
 func flattenCPUFeature(cfg []config.CpuFeature) []interface{} {
 	if len(cfg) > 0 {
 		cfgList := make([]interface{}, len(cfg))
-
+		const two = 2
 		for _, v := range cfg {
-			if v == config.CpuFeature(2) {
+			if v == config.CpuFeature(two) {
 				cfgList = append(cfgList, "HARDWARE_VIRTUALIZATION")
 			}
 		}
@@ -1754,14 +1753,14 @@ func flattenGuestTools(pr *config.GuestTools) []map[string]interface{} {
 func flattenNgtCapability(pr []config.NgtCapability) []interface{} {
 	if len(pr) > 0 {
 		ngtList := make([]interface{}, len(pr))
-
+		const two, three = 2, 3
 		for k, v := range pr {
 			ss := new(string)
 
-			if v == config.NgtCapability(2) {
+			if v == config.NgtCapability(two) {
 				ss = utils.StringPtr("SELF_SERVICE_RESTORE")
 			}
-			if v == config.NgtCapability(3) {
+			if v == config.NgtCapability(three) {
 				ss = utils.StringPtr("VSS_SNAPSHOT")
 			}
 			ngtList[k] = ss
@@ -2239,7 +2238,6 @@ func flattenOneOfDiskBackingInfo(pr *config.OneOfDiskBackingInfo) []map[string]i
 			log.Printf("[DEBUG] backingInfoObj: %v", vmDiskInfo)
 			backingInfoList = append(backingInfoList, backingInfoObj)
 			return backingInfoList
-
 		}
 		volumeGroupObj := make(map[string]interface{})
 		volumeGroupObjList := make([]map[string]interface{}, 0)
