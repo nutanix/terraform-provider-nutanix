@@ -2,8 +2,6 @@ package volumesv2
 
 import (
 	"context"
-	"encoding/json"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -14,7 +12,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-// List all the iSCSI clients.
 func DatasourceNutanixVolumeIscsiClientsV2() *schema.Resource {
 	return &schema.Resource{
 		Description: "Fetches the list of iSCSI clients.",
@@ -200,37 +197,15 @@ func DatasourceNutanixVolumeIscsiClientsV2Read(ctx context.Context, d *schema.Re
 	resp, err := conn.IscsiClientAPIInstance.ListIscsiClients(page, limit, filter, orderBy, expand, selects)
 
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching Iscsi Clients : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching Iscsi Clients : %v", err)
 	}
 
 	// // Check if resp is nil before accessing its data
-	// if resp != nil {
-	// 	diskResp := resp.Data
-
-	// 	// extract the volume groups data from the response
-	// 	if diskResp != nil {
-
-	// 		// set the volume groups iscsi clients  data in the terraform resource
-	// 		if err := d.Set("iscsi_clients", flattenIscsiClientsEntities(diskResp.GetValue().([]volumesClient.IscsiClient))); err != nil {
-	// 			return diag.FromErr(err)
-	// 		}
-	// 	}
-	// }
-
 	iscsiClientsResp := resp.Data
 
 	// extract the volume groups data from the response
 	if iscsiClientsResp != nil {
-
-		// set the volume groups iscsi clients  data in the terraform resource
+		// set the volume groups iscsi clients data in the terraform resource
 		if err := d.Set("iscsi_clients", flattenIscsiClientsEntities(iscsiClientsResp.GetValue().([]volumesClient.IscsiClient))); err != nil {
 			return diag.FromErr(err)
 		}
@@ -242,58 +217,54 @@ func DatasourceNutanixVolumeIscsiClientsV2Read(ctx context.Context, d *schema.Re
 
 func flattenIscsiClientsEntities(pr []volumesClient.IscsiClient) []interface{} {
 	if len(pr) > 0 {
-		iscsi_clients := make([]interface{}, len(pr))
+		iscsiClients := make([]interface{}, len(pr))
 
 		for k, v := range pr {
-			iscsi_client := make(map[string]interface{})
+			iscsiClient := make(map[string]interface{})
 
 			if v.TenantId != nil {
-				iscsi_client["tenant_id"] = v.TenantId
+				iscsiClient["tenant_id"] = v.TenantId
 			}
 			if v.ExtId != nil {
-				iscsi_client["ext_id"] = v.ExtId
+				iscsiClient["ext_id"] = v.ExtId
 			}
 			if v.Links != nil {
-				iscsi_client["links"] = flattenLinks(v.Links)
+				iscsiClient["links"] = flattenLinks(v.Links)
 			}
 			if v.IscsiInitiatorName != nil {
-				iscsi_client["iscsi_initiator_name"] = v.IscsiInitiatorName
+				iscsiClient["iscsi_initiator_name"] = v.IscsiInitiatorName
 			}
 			if v.IscsiInitiatorNetworkId != nil {
-				iscsi_client["iscsi_initiator_network_id"] = flattenIscsiInitiatorNetworkId(v.IscsiInitiatorNetworkId)
+				iscsiClient["iscsi_initiator_network_id"] = flattenIscsiInitiatorNetworkId(v.IscsiInitiatorNetworkId)
 			}
 			if v.EnabledAuthentications != nil {
-				iscsi_client["enabled_authentications"] = flattenEnabledAuthentications(v.EnabledAuthentications)
+				iscsiClient["enabled_authentications"] = flattenEnabledAuthentications(v.EnabledAuthentications)
 			}
 			if v.AttachedTargets != nil {
-				iscsi_client["attached_targets"] = flattenAttachedTargets(v.AttachedTargets)
+				iscsiClient["attached_targets"] = flattenAttachedTargets(v.AttachedTargets)
 			}
 			if v.AttachmentSite != nil {
-				iscsi_client["attachment_site"] = flattenAttachmentSite(v.AttachmentSite)
+				iscsiClient["attachment_site"] = flattenAttachmentSite(v.AttachmentSite)
 			}
 			if v.ClusterReference != nil {
-				iscsi_client["cluster_reference"] = v.ClusterReference
+				iscsiClient["cluster_reference"] = v.ClusterReference
 			}
-			// Attribute not present in the response of GA SDK
-			// if v.TargetParams != nil {
-			// 	iscsi_client["attached_targets"] = flattenAttachedTargets(v.TargetParams)
-			// }
 
-			iscsi_clients[k] = iscsi_client
+			iscsiClients[k] = iscsiClient
 
 		}
-		return iscsi_clients
+		return iscsiClients
 	}
 	return nil
 }
 
 func flattenAttachmentSite(iscsiClientAttachmentSite *volumesClient.VolumeGroupAttachmentSite) string {
-	const two, three = 2, 3
+	const PRIMARY, SECONDARY = 2, 3
 	if iscsiClientAttachmentSite != nil {
-		if *iscsiClientAttachmentSite == volumesClient.VolumeGroupAttachmentSite(two) {
+		if *iscsiClientAttachmentSite == volumesClient.VolumeGroupAttachmentSite(PRIMARY) {
 			return "PRIMARY"
 		}
-		if *iscsiClientAttachmentSite == volumesClient.VolumeGroupAttachmentSite(two) {
+		if *iscsiClientAttachmentSite == volumesClient.VolumeGroupAttachmentSite(SECONDARY) {
 			return "SECONDARY"
 		}
 	}
@@ -380,7 +351,3 @@ func flattenFQDN(fQDN *config.FQDN) []interface{} {
 	}
 	return nil
 }
-
-// func flattenValuePrefixLength(iPv4Address *config.IPv4Address) {
-// 	panic("unimplemented")
-// }
