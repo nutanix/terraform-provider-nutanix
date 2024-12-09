@@ -363,7 +363,7 @@ func Provider() *schema.Provider {
 			"nutanix_volume_group_v2":                         volumesv2.ResourceNutanixVolumeGroupV2(),
 			"nutanix_volume_group_disk_v2":                    volumesv2.ResourceNutanixVolumeGroupDiskV2(),
 			"nutanix_volume_group_iscsi_client_v2":            volumesv2.ResourceNutanixVolumeGroupIscsiClientV2(),
-			"nutanix_volume_group_vm_v2":                      volumesv2.ResourceNutanixVolumeAttachVmToVolumeGroupV2(),
+			"nutanix_volume_group_vm_v2":                      volumesv2.ResourceNutanixVolumeAttachVMToVolumeGroupV2(),
 			"nutanix_recovery_points_v2":                      dataprotectionv2.ResourceNutanixRecoveryPointsV2(),
 			"nutanix_recovery_point_replicate_v2":             dataprotectionv2.ResourceNutanixRecoveryPointReplicateV2(),
 			"nutanix_recovery_point_restore_v2":               dataprotectionv2.ResourceNutanixRecoveryPointRestoreV2(),

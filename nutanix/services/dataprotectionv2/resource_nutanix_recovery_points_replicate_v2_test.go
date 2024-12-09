@@ -12,7 +12,6 @@ import (
 )
 
 const resourceNameRecoveryPointReplicate = "nutanix_recovery_point_replicate_v2.test"
-const resourceNameCluster = "nutanix_cluster_v2.test"
 
 func TestAccNutanixRecoveryPointReplicateV2Resource_basic(t *testing.T) {
 	r := acctest.RandInt()

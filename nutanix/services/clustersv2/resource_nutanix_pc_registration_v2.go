@@ -577,7 +577,7 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
 
 	aJson, _ = json.Marshal(rUUID)
-	log.Printf("[DEBUG] PC Regestration Task Details: %s", string(aJson))
+	log.Printf("[DEBUG] PC Registration Task Details: %s", string(aJson))
 
 	d.SetId(pcExtID)
 	return ResourceNutanixClusterPCRegistrationV2Read(ctx, d, meta)

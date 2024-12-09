@@ -2,7 +2,6 @@ package volumesv2
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -31,9 +30,8 @@ func DatasourceNutanixVolumeIscsiClientsV2() *schema.Resource {
 				Optional:    true,
 			},
 			"filter": {
-				Description: "A URL query parameter that allows clients to filter a collection of resources. The expression specified with $filter is evaluated for each resource in the collection, and only items where the expression evaluates to true are included in the response. Expression specified with the $filter must conform to the OData V4.01 URL conventions. For example, filter '$filter=name eq 'karbon-ntnx-1.0' would filter the result on cluster name 'karbon-ntnx1.0', filter '$filter=startswith(name, 'C')' would filter on cluster name starting with 'C'. The filter can be applied to the following fields: clusterReference, extId",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"orderby": {
 				Description: "A URL query parameter that allows clients to specify the sort criteria for the returned list of objects. Resources can be sorted in ascending order using asc or descending order using desc. If asc or desc are not specified, the resources will be sorted in ascending order by default. For example, '$orderby=templateName desc' would get all templates sorted by templateName in descending order. The orderby can be applied to the following fields: clusterReference, extId",
@@ -41,9 +39,8 @@ func DatasourceNutanixVolumeIscsiClientsV2() *schema.Resource {
 				Optional:    true,
 			},
 			"expand": {
-				Description: "A URL query parameter that allows clients to request related resources when a resource that satisfies a particular request is retrieved. Each expanded item is evaluated relative to the entity containing the property being expanded. Other query options can be applied to an expanded property by appending a semicolon-separated list of query options, enclosed in parentheses, to the property name. Permissible system query options are $filter, $select and $orderby. The following expansion keys are supported. The expand can be applied to the following fields: cluster",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"select": {
 				Description: "A URL query parameter that allows clients to request a specific set of properties for each entity or complex type. Expression specified with the $select must conform to the OData V4.01 URL conventions. If a $select expression consists of a single select item that is an asterisk (i.e., *), then all properties on the matching resource will be returned. The select can be applied to the following fields: clusterReference, extId",
@@ -96,7 +93,7 @@ func DatasourceNutanixVolumeIscsiClientsV2() *schema.Resource {
 							Optional:    true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"ipv4": SchemaForIpV4ValuePrefixLength(),
+									"ipv4": SchemaForIPV4ValuePrefixLength(),
 									"ipv6": SchemaForIpV6ValuePrefixLength(),
 									"fqdn": {
 										Description: "A fully qualified domain name that specifies its exact location in the tree hierarchy of the Domain Name System.",
@@ -200,15 +197,7 @@ func DatasourceNutanixVolumeIscsiClientsV2Read(ctx context.Context, d *schema.Re
 	resp, err := conn.IscsiClientAPIInstance.ListIscsiClients(page, limit, filter, orderBy, expand, selects)
 
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching Iscsi Clients : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching Iscsi Clients : %v", err)
 	}
 
 	// // Check if resp is nil before accessing its data
@@ -229,7 +218,6 @@ func DatasourceNutanixVolumeIscsiClientsV2Read(ctx context.Context, d *schema.Re
 
 	// extract the volume groups data from the response
 	if iscsiClientsResp != nil {
-
 		// set the volume groups iscsi clients  data in the terraform resource
 		if err := d.Set("iscsi_clients", flattenIscsiClientsEntities(iscsiClientsResp.GetValue().([]volumesClient.IscsiClient))); err != nil {
 			return diag.FromErr(err)
@@ -242,47 +230,47 @@ func DatasourceNutanixVolumeIscsiClientsV2Read(ctx context.Context, d *schema.Re
 
 func flattenIscsiClientsEntities(pr []volumesClient.IscsiClient) []interface{} {
 	if len(pr) > 0 {
-		iscsi_clients := make([]interface{}, len(pr))
+		iscsiClients := make([]interface{}, len(pr))
 
 		for k, v := range pr {
-			iscsi_client := make(map[string]interface{})
+			iscsiClient := make(map[string]interface{})
 
 			if v.TenantId != nil {
-				iscsi_client["tenant_id"] = v.TenantId
+				iscsiClient["tenant_id"] = v.TenantId
 			}
 			if v.ExtId != nil {
-				iscsi_client["ext_id"] = v.ExtId
+				iscsiClient["ext_id"] = v.ExtId
 			}
 			if v.Links != nil {
-				iscsi_client["links"] = flattenLinks(v.Links)
+				iscsiClient["links"] = flattenLinks(v.Links)
 			}
 			if v.IscsiInitiatorName != nil {
-				iscsi_client["iscsi_initiator_name"] = v.IscsiInitiatorName
+				iscsiClient["iscsi_initiator_name"] = v.IscsiInitiatorName
 			}
 			if v.IscsiInitiatorNetworkId != nil {
-				iscsi_client["iscsi_initiator_network_id"] = flattenIscsiInitiatorNetworkId(v.IscsiInitiatorNetworkId)
+				iscsiClient["iscsi_initiator_network_id"] = flattenIscsiInitiatorNetworkID(v.IscsiInitiatorNetworkId)
 			}
 			if v.EnabledAuthentications != nil {
-				iscsi_client["enabled_authentications"] = flattenEnabledAuthentications(v.EnabledAuthentications)
+				iscsiClient["enabled_authentications"] = flattenEnabledAuthentications(v.EnabledAuthentications)
 			}
 			if v.AttachedTargets != nil {
-				iscsi_client["attached_targets"] = flattenAttachedTargets(v.AttachedTargets)
+				iscsiClient["attached_targets"] = flattenAttachedTargets(v.AttachedTargets)
 			}
 			if v.AttachmentSite != nil {
-				iscsi_client["attachment_site"] = flattenAttachmentSite(v.AttachmentSite)
+				iscsiClient["attachment_site"] = flattenAttachmentSite(v.AttachmentSite)
 			}
 			if v.ClusterReference != nil {
-				iscsi_client["cluster_reference"] = v.ClusterReference
+				iscsiClient["cluster_reference"] = v.ClusterReference
 			}
 			// Attribute not present in the response of GA SDK
 			// if v.TargetParams != nil {
 			// 	iscsi_client["attached_targets"] = flattenAttachedTargets(v.TargetParams)
 			// }
 
-			iscsi_clients[k] = iscsi_client
+			iscsiClients[k] = iscsiClient
 
 		}
-		return iscsi_clients
+		return iscsiClients
 	}
 	return nil
 }
@@ -319,14 +307,14 @@ func flattenAttachedTargets(targetParam []volumesClient.TargetParam) []interface
 	return nil
 }
 
-func flattenIscsiInitiatorNetworkId(iPAddressOrFQDN *config.IPAddressOrFQDN) []interface{} {
+func flattenIscsiInitiatorNetworkID(iPAddressOrFQDN *config.IPAddressOrFQDN) []interface{} {
 	if iPAddressOrFQDN != nil {
 		ipAddressOrFQDN := make(map[string]interface{})
 		if iPAddressOrFQDN.Ipv4 != nil {
-			ipAddressOrFQDN["ipv4"] = flattenIp4Address(iPAddressOrFQDN.Ipv4)
+			ipAddressOrFQDN["ipv4"] = flattenIP4Address(iPAddressOrFQDN.Ipv4)
 		}
 		if iPAddressOrFQDN.Ipv6 != nil {
-			ipAddressOrFQDN["ipv6"] = flattenIp6Address(iPAddressOrFQDN.Ipv6)
+			ipAddressOrFQDN["ipv6"] = flattenIP6Address(iPAddressOrFQDN.Ipv6)
 		}
 		if iPAddressOrFQDN.Fqdn != nil {
 			ipAddressOrFQDN["fqdn"] = flattenFQDN(iPAddressOrFQDN.Fqdn)
@@ -336,7 +324,7 @@ func flattenIscsiInitiatorNetworkId(iPAddressOrFQDN *config.IPAddressOrFQDN) []i
 	return nil
 }
 
-func flattenIp6Address(iPv6Address *config.IPv6Address) []interface{} {
+func flattenIP6Address(iPv6Address *config.IPv6Address) []interface{} {
 	if iPv6Address != nil {
 		ipv6 := make([]interface{}, 0)
 
@@ -352,7 +340,7 @@ func flattenIp6Address(iPv6Address *config.IPv6Address) []interface{} {
 	return nil
 }
 
-func flattenIp4Address(iPv4Address *config.IPv4Address) []interface{} {
+func flattenIP4Address(iPv4Address *config.IPv4Address) []interface{} {
 	if iPv4Address != nil {
 		ipv4 := make([]interface{}, 0)
 

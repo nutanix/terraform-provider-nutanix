@@ -2,7 +2,6 @@ package volumesv2
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -36,9 +35,8 @@ func DataSourceNutanixVolumeGroupVmsV2() *schema.Resource {
 				Optional:    true,
 			},
 			"filter": {
-				Description: "A URL query parameter that allows clients to filter a collection of resources. The expression specified with $filter is evaluated for each resource in the collection, and only items where the expression evaluates to true are included in the response. Expression specified with the $filter must conform to the OData V4.01 URL conventions. For example, filter '$filter=name eq 'karbon-ntnx-1.0' would filter the result on cluster name 'karbon-ntnx1.0', filter '$filter=startswith(name, 'C')' would filter on cluster name starting with 'C'. The filter can be applied to the following fields: extId",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"orderby": {
 				Description: "A URL query parameter that allows clients to specify the sort criteria for the returned list of objects. Resources can be sorted in ascending order using asc or descending order using desc. If asc or desc are not specified, the resources will be sorted in ascending order by default. For example, '$orderby=templateName desc' would get all templates sorted by templateName in descending order. The orderby can be applied to the following fields:  extId",
@@ -120,17 +118,8 @@ func DataSourceNutanixVolumeGroupVmsV4Read(ctx context.Context, d *schema.Resour
 
 	// get the volume groups response
 	resp, err := conn.VolumeAPIInstance.ListVmAttachmentsByVolumeGroupId(utils.StringPtr(volumeGroupExtID.(string)), page, limit, filter, orderBy)
-
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching volumes : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching volumes : %v", err)
 	}
 
 	vmsAttachmentsResp := resp.Data
@@ -153,7 +142,6 @@ func DataSourceNutanixVolumeGroupVmsV4Read(ctx context.Context, d *schema.Resour
 func flattenVolumeGroupVmsEntities(vms []volumesClient.VmAttachment) []interface{} {
 	if len(vms) > 0 {
 		vmAttachmentList := make([]interface{}, len(vms))
-
 		for k, v := range vms {
 			vmAttachment := make(map[string]interface{})
 
@@ -161,7 +149,6 @@ func flattenVolumeGroupVmsEntities(vms []volumesClient.VmAttachment) []interface
 				vmAttachment["ext_id"] = v.ExtId
 			}
 			vmAttachmentList[k] = vmAttachment
-
 		}
 		return vmAttachmentList
 	}

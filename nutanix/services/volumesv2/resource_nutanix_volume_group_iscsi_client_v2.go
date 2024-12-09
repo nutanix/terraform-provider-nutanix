@@ -39,7 +39,7 @@ func ResourceNutanixVolumeGroupIscsiClientV2() *schema.Resource {
 				Computed:    true,
 			},
 			"iscsi_initiator_name": {
-				Description: "iSCSI initiator name. During the attach operation, exactly one of iscsiInitiatorName and iscsiInitiatorNetworkId must be specified. This field is immutable.",
+				Description: "iSCSI initiator name. During the attach operation, exactly one of iscsiInitiatorName and iscsiInitiatorNetworkID must be specified. This field is immutable.",
 				Type:        schema.TypeString,
 				Optional:    true,
 			},
@@ -49,7 +49,7 @@ func ResourceNutanixVolumeGroupIscsiClientV2() *schema.Resource {
 				Optional:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ipv4": SchemaForIpV4ValuePrefixLength(),
+						"ipv4": SchemaForIPV4ValuePrefixLength(),
 						"ipv6": SchemaForIpV6ValuePrefixLength(),
 						"fqdn": {
 							Description: "A fully qualified domain name that specifies its exact location in the tree hierarchy of the Domain Name System.",
@@ -96,7 +96,7 @@ func ResourceNutanixVolumeGroupIscsiClientV2() *schema.Resource {
 	}
 }
 
-func SchemaForIpV4ValuePrefixLength() *schema.Schema {
+func SchemaForIPV4ValuePrefixLength() *schema.Schema {
 	return &schema.Schema{
 		Description: "An unique address that identifies a device on the internet or a local network in IPv4 format.",
 		Type:        schema.TypeList,
@@ -157,8 +157,8 @@ func ResourceNutanixVolumeGroupIscsiClientV2Create(ctx context.Context, d *schem
 	if iscsiInitiatorName, ok := d.GetOk("iscsi_initiator_name"); ok {
 		body.IscsiInitiatorName = utils.StringPtr(iscsiInitiatorName.(string))
 	}
-	if iscsiInitiatorNetworkId, ok := d.GetOk("iscsi_initiator_network_id"); ok {
-		body.IscsiInitiatorNetworkId = expandIscsiInitiatorNetworkId(iscsiInitiatorNetworkId.([]interface{}))
+	if iscsiInitiatorNetworkID, ok := d.GetOk("iscsi_initiator_network_id"); ok {
+		body.IscsiInitiatorNetworkId = expandiscsiInitiatorNetworkID(iscsiInitiatorNetworkID.([]interface{}))
 	}
 	if clientSecret, ok := d.GetOk("client_secret"); ok {
 		body.ClientSecret = utils.StringPtr(clientSecret.(string))
@@ -255,8 +255,8 @@ func ResourceNutanixVVolumeGroupIscsiClientV2Delete(ctx context.Context, d *sche
 
 	body := volumesClient.IscsiClientAttachment{}
 
-	if extId, ok := d.GetOk("ext_id"); ok {
-		body.ExtId = utils.StringPtr(extId.(string))
+	if extID, ok := d.GetOk("ext_id"); ok {
+		body.ExtId = utils.StringPtr(extID.(string))
 	}
 
 	resp, err := conn.VolumeAPIInstance.DetachIscsiClient(utils.StringPtr(volumeGroupExtId.(string)), &body)
@@ -315,17 +315,17 @@ func ResourceNutanixVVolumeGroupIscsiClientV2Delete(ctx context.Context, d *sche
 	return nil
 }
 
-func expandIscsiInitiatorNetworkId(ipAddressOrFQDN interface{}) *config.IPAddressOrFQDN {
+func expandiscsiInitiatorNetworkID(ipAddressOrFQDN interface{}) *config.IPAddressOrFQDN {
 	if ipAddressOrFQDN != nil {
 		fip := &config.IPAddressOrFQDN{}
 		prI := ipAddressOrFQDN.([]interface{})
 		val := prI[0].(map[string]interface{})
 
 		if ipv4, ok := val["ipv4"]; ok {
-			fip.Ipv4 = expandFloatingIPv4Address(ipv4)
+			fip.Ipv4 = expandFloatingIPV4Address(ipv4)
 		}
 		if ipv6, ok := val["ipv6"]; ok {
-			fip.Ipv6 = expandFloatingIPv6Address(ipv6)
+			fip.Ipv6 = expandFloatingIPV6Address(ipv6)
 		}
 		if fqdn, ok := val["fqdn"]; ok {
 			fip.Fqdn = expandFQDN(fqdn)
@@ -336,7 +336,7 @@ func expandIscsiInitiatorNetworkId(ipAddressOrFQDN interface{}) *config.IPAddres
 	return nil
 }
 
-func expandFloatingIPv4Address(IPv4I interface{}) *config.IPv4Address {
+func expandFloatingIPV4Address(IPv4I interface{}) *config.IPv4Address {
 	if IPv4I != nil {
 		ipv4 := &config.IPv4Address{}
 		prI := IPv4I.([]interface{})
@@ -353,7 +353,7 @@ func expandFloatingIPv4Address(IPv4I interface{}) *config.IPv4Address {
 	return nil
 }
 
-func expandFloatingIPv6Address(IPv6I interface{}) *config.IPv6Address {
+func expandFloatingIPV6Address(IPv6I interface{}) *config.IPv6Address {
 	if IPv6I != nil {
 		ipv6 := &config.IPv6Address{}
 		prI := IPv6I.([]interface{})
@@ -370,10 +370,10 @@ func expandFloatingIPv6Address(IPv6I interface{}) *config.IPv6Address {
 	return nil
 }
 
-func expandFQDN(FQDNI interface{}) *config.FQDN {
-	if FQDNI != nil {
+func expandFQDN(fqdnObj interface{}) *config.FQDN {
+	if fqdnObj != nil {
 		fqdn := &config.FQDN{}
-		prI := FQDNI.([]interface{})
+		prI := fqdnObj.([]interface{})
 		val := prI[0].(map[string]interface{})
 
 		if value, ok := val["value"]; ok {

@@ -1696,7 +1696,7 @@ func ResourceNutanixVirtualMachineV2Read(ctx context.Context, d *schema.Resource
 			return diag.FromErr(err)
 		}
 	}
-	if err := d.Set("source", flattenVmSourceReference(getResp.Source)); err != nil {
+	if err := d.Set("source", flattenVMSourceReference(getResp.Source)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("num_sockets", getResp.NumSockets); err != nil {
@@ -1720,7 +1720,7 @@ func ResourceNutanixVirtualMachineV2Read(ctx context.Context, d *schema.Resource
 	if err := d.Set("is_cpu_passthrough_enabled", getResp.IsCpuPassthroughEnabled); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("enabled_cpu_features", flattenCpuFeature(getResp.EnabledCpuFeatures)); err != nil {
+	if err := d.Set("enabled_cpu_features", flattenCPUFeature(getResp.EnabledCpuFeatures)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("is_memory_overcommit_enabled", getResp.IsMemoryOvercommitEnabled); err != nil {
@@ -1768,7 +1768,7 @@ func ResourceNutanixVirtualMachineV2Read(ctx context.Context, d *schema.Resource
 	if err := d.Set("is_branding_enabled", getResp.IsBrandingEnabled); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("boot_config", flattenOneOfVmBootConfig(getResp.BootConfig)); err != nil {
+	if err := d.Set("boot_config", flattenOneOfVMBootConfig(getResp.BootConfig)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("is_vga_console_enabled", getResp.IsVgaConsoleEnabled); err != nil {

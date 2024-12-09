@@ -506,7 +506,7 @@ func expandOneOfImageSource(pr interface{}) *import5.OneOfImageSource {
 				urlSrcInput.ShouldAllowInsecureUrl = utils.BoolPtr(shouldAllow.(bool))
 			}
 			if basicAuth, ok := urlMap["basic_auth"]; ok && len(basicAuth.([]interface{})) > 0 {
-				urlSrcInput.BasicAuth = expandUrlBasicAuth(basicAuth)
+				urlSrcInput.BasicAuth = expandURLBasicAuth(basicAuth)
 			}
 			imgSrc.SetValue(*urlSrcInput)
 		}
@@ -535,7 +535,7 @@ func expandOneOfImageSource(pr interface{}) *import5.OneOfImageSource {
 	return nil
 }
 
-func expandUrlBasicAuth(pr interface{}) *import5.UrlBasicAuth {
+func expandURLBasicAuth(pr interface{}) *import5.UrlBasicAuth {
 	if pr != nil {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})

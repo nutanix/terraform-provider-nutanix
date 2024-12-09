@@ -238,7 +238,7 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 		body.IsInlineEcEnabled = utils.BoolPtr(bool(isInlineEcEnabled.(bool)))
 	}
 	if hasHigherEcFaultDomainPreference, ok := d.GetOk("has_higher_ec_fault_domain_preference"); ok {
-		body.HasHigherEcFaultDomainPreference = utils.BoolPtr(bool(hasHigherEcFaultDomainPreference.(bool)))
+		body.HasHigherEcFaultDomainPreference = utils.BoolPtr(hasHigherEcFaultDomainPreference.(bool))
 	}
 	if erasureCodeDelaySecs, ok := d.GetOk("erasure_code_delay_secs"); ok {
 		body.ErasureCodeDelaySecs = utils.IntPtr(int(erasureCodeDelaySecs.(int)))
@@ -264,7 +264,7 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 		body.OnDiskDedup = &p
 	}
 	if isCompressionEnabled, ok := d.GetOk("is_compression_enabled"); ok {
-		body.IsCompressionEnabled = utils.BoolPtr(bool(isCompressionEnabled.(bool)))
+		body.IsCompressionEnabled = utils.BoolPtr(isCompressionEnabled.(bool))
 	}
 	if compressionDelaySecs, ok := d.GetOk("compression_delay_secs"); ok {
 		body.CompressionDelaySecs = utils.IntPtr(int(compressionDelaySecs.(int)))
@@ -273,7 +273,7 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 		body.IsInternal = utils.BoolPtr(bool(isInternal.(bool)))
 	}
 	if isSoftwareEncryptionEnabled, ok := d.GetOk("is_software_encryption_enabled"); ok {
-		body.IsSoftwareEncryptionEnabled = utils.BoolPtr(bool(isSoftwareEncryptionEnabled.(bool)))
+		body.IsSoftwareEncryptionEnabled = utils.BoolPtr(isSoftwareEncryptionEnabled.(bool))
 	}
 	if affinityHostExtId, ok := d.GetOk("affinity_host_ext_id"); ok {
 		body.AffinityHostExtId = utils.StringPtr(affinityHostExtId.(string))
@@ -665,20 +665,21 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 }
 
 func getTaskStatus(pr *prismConfig.TaskStatus) string {
+	const two, three, five, six, seven = 2, 3, 5, 6, 7
 	if pr != nil {
-		if *pr == prismConfig.TaskStatus(6) {
+		if *pr == prismConfig.TaskStatus(six) {
 			return "FAILED"
 		}
-		if *pr == prismConfig.TaskStatus(7) {
+		if *pr == prismConfig.TaskStatus(seven) {
 			return "CANCELED"
 		}
-		if *pr == prismConfig.TaskStatus(2) {
+		if *pr == prismConfig.TaskStatus(two) {
 			return "QUEUED"
 		}
-		if *pr == prismConfig.TaskStatus(3) {
+		if *pr == prismConfig.TaskStatus(three) {
 			return "RUNNING"
 		}
-		if *pr == prismConfig.TaskStatus(5) {
+		if *pr == prismConfig.TaskStatus(five) {
 			return "SUCCEEDED"
 		}
 	}

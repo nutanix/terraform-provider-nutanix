@@ -24,6 +24,10 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
+const (
+	CANCELED = "CANCELLED"
+)
+
 func ResourceNutanixClusterV2() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: ResourceNutanixClusterV2Create,
@@ -980,6 +984,9 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 	}
 
 	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while updating clusters : %v", err)
+	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for cluster (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
@@ -1166,7 +1173,7 @@ func expandUpgradeStatus(upgradeStatus interface{}) *config.UpgradeStatus {
 		"UPGRADING":   six,
 		"SUCCEEDED":   seven,
 		"FAILED":      eight,
-		"CANCELLED":   nine,
+		CANCELED:      nine,
 		"SCHEDULED":   ten,
 	}
 	if subMap[upgradeStatus.(string)] != nil {
@@ -1406,9 +1413,10 @@ func expandClusterConfigReference(pr interface{}, d *schema.ResourceData) *confi
 			clsConf.RedundancyFactor = utils.Int64Ptr(int64(redundancyFactor.(int)))
 		}
 		if clusterArch, ok := val["cluster_arch"]; ok && d.HasChange("config.0.cluster_arch") {
+			const two, three = 2, 3
 			subMap := map[string]interface{}{
-				"X86_64":  2,
-				"PPC64LE": 3,
+				"X86_64":  two,
+				"PPC64LE": three,
 			}
 			if subMap[clusterArch.(string)] != nil {
 				pVal := subMap[clusterArch.(string)]
@@ -1420,12 +1428,13 @@ func expandClusterConfigReference(pr interface{}, d *schema.ResourceData) *confi
 			clsConf.FaultToleranceState = expandFaultToleranceState(faultToleranceState)
 		}
 		if operationMode, ok := val["operation_mode"]; ok && d.HasChange("config.0.operation_mode") {
+			const two, three, four, five, six = 2, 3, 4, 5, 6
 			subMap := map[string]interface{}{
-				"NORMAL":             2,
-				"READ_ONLY":          3,
-				"STAND_ALONE":        4,
-				"SWITCH_TO_TWO_NODE": 5,
-				"OVERRIDE":           6,
+				"NORMAL":             two,
+				"READ_ONLY":          three,
+				"STAND_ALONE":        four,
+				"SWITCH_TO_TWO_NODE": five,
+				"OVERRIDE":           six,
 			}
 			if subMap[operationMode.(string)] != nil {
 				pVal := subMap[operationMode.(string)]
@@ -1434,9 +1443,10 @@ func expandClusterConfigReference(pr interface{}, d *schema.ResourceData) *confi
 			}
 		}
 		if encryptionInTransitStatus, ok := val["encryption_in_transit_status"]; ok && d.HasChange("config.0.encryption_in_transit_status") {
+			const two, three = 2, 3
 			subMap := map[string]interface{}{
-				"ENABLED":  2,
-				"DISABLED": 3,
+				"ENABLED":  two,
+				"DISABLED": three,
 			}
 
 			if subMap[encryptionInTransitStatus.(string)] != nil {
@@ -1595,10 +1605,11 @@ func expandSMTPServerRef(pr interface{}) *config.SmtpServerRef {
 			smtp.Server = expandSMTPNetwork(server.([]interface{}))
 		}
 		if smtpType, ok := val["type"]; ok {
+			const two, three, four = 2, 3, 4
 			subMap := map[string]interface{}{
-				"PLAIN":    2,
-				"STARTTLS": 3,
-				"SSL":      4,
+				"PLAIN":    two,
+				"STARTTLS": three,
+				"SSL":      four,
 			}
 			if subMap[smtpType.(string)] != nil {
 				pVal := subMap[smtpType.(string)]
@@ -1647,16 +1658,16 @@ func expandManagementServerRef(pr interface{}) *config.ManagementServerRef {
 		val := prI[0].(map[string]interface{})
 
 		if ip, ok := val["ip"]; ok {
-			log.Printf("[DEBUG] managment server ip")
+			log.Printf("[DEBUG] management server ip")
 			mgm.Ip = expandIPAddress(ip.([]interface{}))
 		}
 		if mgmType, ok := val["type"]; ok {
+			const two = 2
 			switch mgmType.(string) {
 			case "VCENTER":
-				p := config.ManagementServerType(2)
+				p := config.ManagementServerType(two)
 				mgm.Type = &p
 				log.Printf("[DEBUG] mgmType : VCENTER case")
-				break
 			default:
 				log.Printf("[DEBUG] mgmType : default case")
 				mgm.Type = nil
@@ -1776,11 +1787,12 @@ func expandFaultToleranceState(pr interface{}) *config.FaultToleranceState {
 		val := prI[0].(map[string]interface{})
 
 		if domainAwarenessLevel, ok := val["domain_awareness_level"]; ok {
+			const two, three, four, five = 2, 3, 4, 5
 			subMap := map[string]interface{}{
-				"NODE":  2,
-				"BLOCK": 3,
-				"RACK":  4,
-				"DISK":  5,
+				"NODE":  two,
+				"BLOCK": three,
+				"RACK":  four,
+				"DISK":  five,
 			}
 			if subMap[domainAwarenessLevel.(string)] != nil {
 				pVal := subMap[domainAwarenessLevel.(string)]
@@ -1790,11 +1802,12 @@ func expandFaultToleranceState(pr interface{}) *config.FaultToleranceState {
 		}
 
 		if currentClusterFaultTolerance, ok := val["current_cluster_fault_tolerance"]; ok {
+			const two, three, four, five = 2, 3, 4, 5
 			subMap := map[string]interface{}{
-				"CFT_0N_AND_0D": 2,
-				"CFT_1N_OR_1D":  3,
-				"CFT_2N_OR_2D":  4,
-				"CFT_1N_AND_1D": 5,
+				"CFT_0N_AND_0D": two,
+				"CFT_1N_OR_1D":  three,
+				"CFT_2N_OR_2D":  four,
+				"CFT_1N_AND_1D": five,
 			}
 			if subMap[currentClusterFaultTolerance.(string)] != nil {
 				pVal := subMap[currentClusterFaultTolerance.(string)]
@@ -1804,12 +1817,12 @@ func expandFaultToleranceState(pr interface{}) *config.FaultToleranceState {
 
 		}
 		if desiredClusterFaultTolerance, ok := val["desired_cluster_fault_tolerance"]; ok {
-
+			const two, three, four, five = 2, 3, 4, 5
 			subMap := map[string]interface{}{
-				"CFT_0N_AND_0D": 2,
-				"CFT_1N_OR_1D":  3,
-				"CFT_2N_OR_2D":  4,
-				"CFT_1N_AND_1D": 5,
+				"CFT_0N_AND_0D": two,
+				"CFT_1N_OR_1D":  three,
+				"CFT_2N_OR_2D":  four,
+				"CFT_1N_AND_1D": five,
 			}
 			if subMap[desiredClusterFaultTolerance.(string)] != nil {
 				pVal := subMap[desiredClusterFaultTolerance.(string)]

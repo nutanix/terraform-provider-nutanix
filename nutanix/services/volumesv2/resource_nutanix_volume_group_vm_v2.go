@@ -15,14 +15,14 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-// ResourceNutanixVolumeAttachVmToVolumeGroupV2 Attach an AHV VM to the given Volume Group.
-func ResourceNutanixVolumeAttachVmToVolumeGroupV2() *schema.Resource {
+// ResourceNutanixVolumeAttachVMToVolumeGroupV2 Attach an AHV VM to the given Volume Group.
+func ResourceNutanixVolumeAttachVMToVolumeGroupV2() *schema.Resource {
 	return &schema.Resource{
 		Description:   "Attaches VM to a Volume Group identified by {extId}.",
-		CreateContext: ResourceNutanixVolumeAttachVmToVolumeGroupV2Create,
-		ReadContext:   ResourceNutanixVolumeAttachVmToVolumeGroupV2Read,
-		UpdateContext: ResourceNutanixVolumeAttachVmToVolumeGroupV2Update,
-		DeleteContext: ResourceNutanixVolumeAttachVmToVolumeGroupV2Delete,
+		CreateContext: ResourceNutanixVolumeAttachVMToVolumeGroupV2Create,
+		ReadContext:   ResourceNutanixVolumeAttachVMToVolumeGroupV2Read,
+		UpdateContext: ResourceNutanixVolumeAttachVMToVolumeGroupV2Update,
+		DeleteContext: ResourceNutanixVolumeAttachVMToVolumeGroupV2Delete,
 
 		Schema: map[string]*schema.Schema{
 			"volume_group_ext_id": {
@@ -49,7 +49,7 @@ func ResourceNutanixVolumeAttachVmToVolumeGroupV2() *schema.Resource {
 	}
 }
 
-func ResourceNutanixVolumeAttachVmToVolumeGroupV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVolumeAttachVMToVolumeGroupV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VolumeAPI
 
 	volumeGroupExtId := d.Get("volume_group_ext_id")
@@ -118,23 +118,23 @@ func ResourceNutanixVolumeAttachVmToVolumeGroupV2Create(ctx context.Context, d *
 	return nil
 }
 
-func ResourceNutanixVolumeAttachVmToVolumeGroupV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVolumeAttachVMToVolumeGroupV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func ResourceNutanixVolumeAttachVmToVolumeGroupV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVolumeAttachVMToVolumeGroupV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func ResourceNutanixVolumeAttachVmToVolumeGroupV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVolumeAttachVMToVolumeGroupV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VolumeAPI
 
 	volumeGroupExtId := d.Get("volume_group_ext_id")
 
 	body := volumesClient.VmAttachment{}
 
-	if vmExtId, ok := d.GetOk("vm_ext_id"); ok {
-		body.ExtId = utils.StringPtr(vmExtId.(string))
+	if vmExtID, ok := d.GetOk("vm_ext_id"); ok {
+		body.ExtId = utils.StringPtr(vmExtID.(string))
 	}
 
 	if index, ok := d.GetOk("index"); ok {

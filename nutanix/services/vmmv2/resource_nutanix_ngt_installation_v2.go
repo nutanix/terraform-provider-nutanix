@@ -168,12 +168,12 @@ func ResourceNutanixNGTInstallationV2() *schema.Resource {
 func ResourceNutanixNGTInstallationV4Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	vmmExtId := utils.StringPtr(d.Get("ext_id").(string))
+	vmmExtID := utils.StringPtr(d.Get("ext_id").(string))
 
-	log.Printf("[DEBUG] vmmExtId : %s", *vmmExtId)
+	log.Printf("[DEBUG] vmmExtId : %s", *vmmExtID)
 	body := &vmmConfig.GuestToolsInstallConfig{}
 
-	readResp, err := conn.VMAPIInstance.GetGuestToolsById(vmmExtId)
+	readResp, err := conn.VMAPIInstance.GetGuestToolsById(vmmExtID)
 	if err != nil {
 		return diag.Errorf("error while fetching Vm NGT Configuration : %v", err)
 	}
@@ -236,7 +236,7 @@ func ResourceNutanixNGTInstallationV4Create(ctx context.Context, d *schema.Resou
 
 	aJSON, _ := json.Marshal(body)
 	log.Printf("[DEBUG] Installing NGT Request Body: %s", aJSON)
-	installResp, err := conn.VMAPIInstance.InstallVmGuestTools(vmmExtId, body, args)
+	installResp, err := conn.VMAPIInstance.InstallVmGuestTools(vmmExtID, body, args)
 	if err != nil {
 		return diag.Errorf("error while installing gest tools  : %v", err)
 	}

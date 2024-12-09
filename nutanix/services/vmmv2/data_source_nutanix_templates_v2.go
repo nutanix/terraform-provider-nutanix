@@ -102,7 +102,7 @@ func flattenTemplatesEntities(pr []import5.Template) []interface{} {
 			temp := make(map[string]interface{})
 
 			temp["tenant_id"] = v.TenantId
-			temp["links"] = flattenApiLink(v.Links)
+			temp["links"] = flattenAPILink(v.Links)
 			temp["ext_id"] = v.ExtId
 			temp["template_name"] = v.TemplateName
 			temp["template_description"] = v.TemplateDescription

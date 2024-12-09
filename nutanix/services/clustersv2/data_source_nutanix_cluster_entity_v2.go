@@ -897,13 +897,10 @@ func flattenProxyTypes(proxyTypes []import1.HttpProxyType) []interface{} {
 			switch v {
 			case HTTP:
 				types[k] = "HTTP"
-				break
 			case HTTPS:
 				types[k] = "HTTPS"
-				break
 			case SOCKS:
 				types[k] = "SOCKS"
-				break
 			default:
 				types[k] = "UNKNOWN"
 			}
@@ -1015,13 +1012,10 @@ func flattenSMTPServerRef(pr *import1.SmtpServerRef) []map[string]interface{} {
 			switch *pr.Type {
 			case PLAIN:
 				s["type"] = "PLAIN"
-				break
 			case STARTTLS:
 				s["type"] = "STARTTLS"
-				break
 			case SSL:
 				s["type"] = "SSL"
-				break
 			default:
 				s["type"] = "UNKNOWN"
 			}

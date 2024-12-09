@@ -118,7 +118,7 @@ func ResourceNutanixVolumeGroupDiskV2() *schema.Resource {
 func ResourceNutanixVolumeGroupDiskV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VolumeAPI
 
-	volumeGroupExtId := d.Get("volume_group_ext_id")
+	volumeGroupExtID := d.Get("volume_group_ext_id")
 
 	body := volumesClient.VolumeDisk{}
 
@@ -140,7 +140,7 @@ func ResourceNutanixVolumeGroupDiskV2Create(ctx context.Context, d *schema.Resou
 	}
 
 	log.Printf("[DEBUG] Volume Disk Body body.DiskDataSourceReference.Uris : %v", body.DiskDataSourceReference.Uris)
-	resp, err := conn.VolumeAPIInstance.CreateVolumeDisk(utils.StringPtr(volumeGroupExtId.(string)), &body)
+	resp, err := conn.VolumeAPIInstance.CreateVolumeDisk(utils.StringPtr(volumeGroupExtID.(string)), &body)
 
 	if err != nil {
 		return diag.Errorf("error while creating Volume Disk : %v", err)
@@ -181,11 +181,11 @@ func ResourceNutanixVolumeGroupDiskV2Create(ctx context.Context, d *schema.Resou
 func ResourceNutanixVolumeGroupDiskV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VolumeAPI
 
-	volumeGroupExtId := d.Get("volume_group_ext_id")
+	volumeGroupExtID := d.Get("volume_group_ext_id")
 
 	volumeDiskExtID := d.Id() // d.Id gives volume_group_ext_id not volume_disk_ext_id
 
-	resp, err := conn.VolumeAPIInstance.GetVolumeDiskById(utils.StringPtr(volumeGroupExtId.(string)), utils.StringPtr(volumeDiskExtID))
+	resp, err := conn.VolumeAPIInstance.GetVolumeDiskById(utils.StringPtr(volumeGroupExtID.(string)), utils.StringPtr(volumeDiskExtID))
 
 	if err != nil {
 		return diag.Errorf("error while fetching volume Disk : %v", err)
@@ -218,10 +218,10 @@ func ResourceNutanixVolumeGroupDiskV2Read(ctx context.Context, d *schema.Resourc
 func ResourceNutanixVolumeGroupDiskV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VolumeAPI
 
-	volumeGroupExtId := d.Get("volume_group_ext_id")
+	volumeGroupExtID := d.Get("volume_group_ext_id")
 	volumeDiskExtID := d.Id()
 
-	resp, err := conn.VolumeAPIInstance.GetVolumeDiskById(utils.StringPtr(volumeGroupExtId.(string)), utils.StringPtr(volumeDiskExtID))
+	resp, err := conn.VolumeAPIInstance.GetVolumeDiskById(utils.StringPtr(volumeGroupExtID.(string)), utils.StringPtr(volumeDiskExtID))
 
 	if err != nil {
 		var errordata map[string]interface{}
@@ -261,7 +261,7 @@ func ResourceNutanixVolumeGroupDiskV2Update(ctx context.Context, d *schema.Resou
 		updateSpec.DiskDataSourceReference = nil
 	}
 
-	updateResp, err := conn.VolumeAPIInstance.UpdateVolumeDiskById(utils.StringPtr(volumeGroupExtId.(string)), utils.StringPtr(volumeDiskExtID), &updateSpec)
+	updateResp, err := conn.VolumeAPIInstance.UpdateVolumeDiskById(utils.StringPtr(volumeGroupExtID.(string)), utils.StringPtr(volumeDiskExtID), &updateSpec)
 
 	if err != nil {
 		var errordata map[string]interface{}
@@ -299,10 +299,10 @@ func ResourceNutanixVolumeGroupDiskV2Update(ctx context.Context, d *schema.Resou
 func ResourceNutanixVolumeGroupDiskV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VolumeAPI
 
-	volumeGroupExtId := d.Get("volume_group_ext_id")
+	volumeGroupExtID := d.Get("volume_group_ext_id")
 	volumeDiskExtID := d.Get("ext_id")
 
-	resp, err := conn.VolumeAPIInstance.DeleteVolumeDiskById(utils.StringPtr(volumeGroupExtId.(string)), utils.StringPtr(volumeDiskExtID.(string)))
+	resp, err := conn.VolumeAPIInstance.DeleteVolumeDiskById(utils.StringPtr(volumeGroupExtID.(string)), utils.StringPtr(volumeDiskExtID.(string)))
 
 	if err != nil {
 		return diag.Errorf("error while fetching volume Disk : %v", err)
@@ -350,8 +350,8 @@ func expandDiskDataSourceReference(entityReference interface{}) *config.EntityRe
 
 		diskDataSourceReference := config.EntityReference{}
 
-		if extId, ok := val["ext_id"]; ok {
-			diskDataSourceReference.ExtId = utils.StringPtr(extId.(string))
+		if extID, ok := val["ext_id"]; ok {
+			diskDataSourceReference.ExtId = utils.StringPtr(extID.(string))
 		}
 		if name, ok := val["name"]; ok {
 			diskDataSourceReference.Name = utils.StringPtr(name.(string))

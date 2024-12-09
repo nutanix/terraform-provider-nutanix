@@ -242,7 +242,7 @@ func ResourceNutanixTemplatesV2Read(ctx context.Context, d *schema.ResourceData,
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("links", flattenApiLink(getResp.Links)); err != nil {
+	if err := d.Set("links", flattenAPILink(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("ext_id", getResp.ExtId); err != nil {
@@ -366,9 +366,8 @@ func ResourceNutanixTemplatesV2Update(ctx context.Context, d *schema.ResourceDat
 
 			if versionId != nil || utils.StringValue(versionId) != "" {
 				log.Printf("[DEBUG] Template version Id provided in tf configuration")
-				break
 			}
-			log.Printf("[DEBUG] Template version Id not provided in tf configuration, will use the latest version as defualt")
+			log.Printf("[DEBUG] Template version Id not provided in tf configuration, will use the latest version as default")
 			templateVersions, errTempVersion := conn.TemplatesAPIInstance.ListTemplateVersions(utils.StringPtr(d.Id()), nil, nil, nil, nil, nil)
 			if errTempVersion != nil {
 				return diag.Errorf("error while fetching template versions : %v", errTempVersion)
@@ -389,6 +388,10 @@ func ResourceNutanixTemplatesV2Update(ctx context.Context, d *schema.ResourceDat
 			if errVs != nil {
 				return diag.Errorf("error while setting version source : %v", err)
 			}
+		case vmmContent.TemplateVmReference:
+			log.Printf("[DEBUG] Template vm reference type, no need to set version id")
+		default:
+			log.Printf("[DEBUG] Template version reference type not found")
 		}
 	}
 

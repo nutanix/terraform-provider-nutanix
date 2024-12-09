@@ -53,6 +53,7 @@ linters:
     - unused
     - staticcheck
     - deadcode
+    - ifElseChain
 
 issues:
   exclude:

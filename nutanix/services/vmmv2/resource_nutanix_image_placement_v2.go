@@ -472,7 +472,7 @@ func expandEntityFilter(pr interface{}) *import7.Filter {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
 
-		entity_filter := &import7.Filter{}
+		entityFilter := &import7.Filter{}
 
 		// entity_filter.ObjectType_ = utils.StringPtr("vmm.v4.r0.b1.images.config.Filter")
 
@@ -483,19 +483,19 @@ func expandEntityFilter(pr interface{}) *import7.Filter {
 			}
 			pVal := subMap[ftype.(string)]
 			p := import7.FilterMatchType(pVal.(int))
-			entity_filter.Type = &p
+			entityFilter.Type = &p
 		}
-		if category_ext_ids, ok := val["category_ext_ids"]; ok {
-			categoriesList := category_ext_ids.([]interface{})
+		if categoryExtIds, ok := val["category_ext_ids"]; ok {
+			categoriesList := categoryExtIds.([]interface{})
 			categories := make([]string, len(categoriesList))
 
 			for k, v := range categoriesList {
 				categories[k] = v.(string)
 			}
-			entity_filter.CategoryExtIds = categories
+			entityFilter.CategoryExtIds = categories
 		}
 
-		return entity_filter
+		return entityFilter
 	}
 	return nil
 }

@@ -155,8 +155,8 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 	if desc, ok := d.GetOk("description"); ok {
 		body.Description = utils.StringPtr(desc.(string))
 	}
-	if shouldLoadBalanceVmAttachments, ok := d.GetOk("should_load_balance_vm_attachments"); ok {
-		body.ShouldLoadBalanceVmAttachments = utils.BoolPtr(shouldLoadBalanceVmAttachments.(bool))
+	if shouldLoadBalanceVMAttachments, ok := d.GetOk("should_load_balance_vm_attachments"); ok {
+		body.ShouldLoadBalanceVmAttachments = utils.BoolPtr(shouldLoadBalanceVMAttachments.(bool))
 	}
 	if sharingStatus, ok := d.GetOk("sharing_status"); ok {
 		sharingStatusMap := map[string]interface{}{
@@ -349,10 +349,10 @@ func ResourceNutanixVolumeGroupV2Delete(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
-func expandIscsiFeatures(IscsiFeaturesList interface{}) *volumesClient.IscsiFeatures {
-	if len(IscsiFeaturesList.([]interface{})) > 0 {
+func expandIscsiFeatures(iscsiFeaturesList interface{}) *volumesClient.IscsiFeatures {
+	if len(iscsiFeaturesList.([]interface{})) > 0 {
 		iscsiFeature := &volumesClient.IscsiFeatures{}
-		iscsiFeaturesI := IscsiFeaturesList.([]interface{})
+		iscsiFeaturesI := iscsiFeaturesList.([]interface{})
 		if iscsiFeaturesI[0] == nil {
 			return nil
 		}

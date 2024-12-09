@@ -1429,10 +1429,10 @@ func ResourceNutanixVmCloneV2Read(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("guest_customization", flattenGuestCustomizationParams(getResp.GuestCustomization)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("boot_config", flattenOneOfVmBootConfig(getResp.BootConfig)); err != nil {
+	if err := d.Set("boot_config", flattenOneOfVMBootConfig(getResp.BootConfig)); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("links", flattenApiLink(getResp.Links)); err != nil {
+	if err := d.Set("links", flattenAPILink(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("description", getResp.Description); err != nil {
@@ -1450,7 +1450,7 @@ func ResourceNutanixVmCloneV2Read(ctx context.Context, d *schema.ResourceData, m
 			return diag.FromErr(err)
 		}
 	}
-	if err := d.Set("source", flattenVmSourceReference(getResp.Source)); err != nil {
+	if err := d.Set("source", flattenVMSourceReference(getResp.Source)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("num_numa_nodes", getResp.NumNumaNodes); err != nil {
@@ -1462,7 +1462,7 @@ func ResourceNutanixVmCloneV2Read(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("is_cpu_passthrough_enabled", getResp.IsCpuPassthroughEnabled); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("enabled_cpu_features", flattenCpuFeature(getResp.EnabledCpuFeatures)); err != nil {
+	if err := d.Set("enabled_cpu_features", flattenCPUFeature(getResp.EnabledCpuFeatures)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("is_memory_overcommit_enabled", getResp.IsMemoryOvercommitEnabled); err != nil {

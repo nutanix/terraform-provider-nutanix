@@ -260,7 +260,7 @@ func ResourceNutanixTemplateDeployV2Create(ctx context.Context, d *schema.Resour
 		body.ClusterReference = utils.StringPtr(clsRef.(string))
 	}
 	if overrideCfg, ok := d.GetOk("override_vm_config_map"); ok {
-		body.OverrideVmConfigMap = expandVmConfigOverride(overrideCfg)
+		body.OverrideVmConfigMap = expandVMConfigOverride(overrideCfg)
 	}
 
 	resp, err := conn.TemplatesAPIInstance.DeployTemplate(utils.StringPtr(extID.(string)), body)
@@ -311,7 +311,7 @@ func ResourceNutanixTemplateDeployV2Delete(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func expandVmConfigOverride(pr interface{}) map[string]import5.VmConfigOverride {
+func expandVMConfigOverride(pr interface{}) map[string]import5.VmConfigOverride {
 	if len(pr.([]interface{})) > 0 {
 		// vmcfg := import5.VmConfigOverride{}
 
@@ -480,9 +480,9 @@ func expandIPv4Info(ipv4Info interface{}) *config.Ipv4Info {
 		ipv4InfoObj := &config.Ipv4Info{}
 		ipv4InfoData := ipv4Info.([]interface{})[0].(map[string]interface{})
 
-		if learnedIpAddresses, ok := ipv4InfoData["learned_ip_addresses"]; ok {
-			ipAddressesList := make([]import4.IPv4Address, len(learnedIpAddresses.([]interface{})))
-			for i, learnedIp := range learnedIpAddresses.([]interface{}) {
+		if learnedIPAddresses, ok := ipv4InfoData["learned_ip_addresses"]; ok {
+			ipAddressesList := make([]import4.IPv4Address, len(learnedIPAddresses.([]interface{})))
+			for i, learnedIp := range learnedIPAddresses.([]interface{}) {
 				learnedIpData := learnedIp.(map[string]interface{})
 				ipAddressesList[i] = import4.IPv4Address{
 					Value:        utils.StringPtr(learnedIpData["value"].(string)),

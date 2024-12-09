@@ -105,10 +105,11 @@ func DatasourceNutanixUserGroupV4Read(ctx context.Context, d *schema.ResourceDat
 
 func flattenGroupType(pr *import1.GroupType) string {
 	if pr != nil {
-		if *pr == import1.GroupType(2) {
+		const two, three = 2, 3
+		if *pr == import1.GroupType(two) {
 			return "SAML"
 		}
-		if *pr == import1.GroupType(3) {
+		if *pr == import1.GroupType(three) {
 			return "LDAP"
 		}
 	}

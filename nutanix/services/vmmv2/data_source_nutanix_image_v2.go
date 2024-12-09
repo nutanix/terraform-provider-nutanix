@@ -298,7 +298,7 @@ func flattenOneOfImageSource(pr *import5.OneOfImageSource) []map[string]interfac
 				urlSrcObj["url"] = urlSrc.Url
 			}
 			if urlSrc.BasicAuth != nil {
-				urlSrcObj["basic_auth"] = flattenUrlBasicAuth(urlSrc.BasicAuth)
+				urlSrcObj["basic_auth"] = flattenURLBasicAuth(urlSrc.BasicAuth)
 			}
 			if urlSrc.ShouldAllowInsecureUrl != nil {
 				urlSrcObj["should_allow_insecure_url"] = urlSrc.ShouldAllowInsecureUrl
@@ -353,7 +353,7 @@ func flattenOneOfImageSource(pr *import5.OneOfImageSource) []map[string]interfac
 	return nil
 }
 
-func flattenUrlBasicAuth(pr *import5.UrlBasicAuth) []map[string]interface{} {
+func flattenURLBasicAuth(pr *import5.UrlBasicAuth) []map[string]interface{} {
 	if pr != nil {
 		auths := make([]map[string]interface{}, 0)
 

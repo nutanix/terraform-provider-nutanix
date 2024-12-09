@@ -130,13 +130,14 @@ func DatasourceNutanixOperationV4Read(ctx context.Context, d *schema.ResourceDat
 
 func flattenOperationType(pr *import1.OperationType) string {
 	if pr != nil {
-		if *pr == import1.OperationType(2) {
+		const two, three, four = 2, 3, 4
+		if *pr == import1.OperationType(two) {
 			return "INTERNAL"
 		}
-		if *pr == import1.OperationType(3) {
+		if *pr == import1.OperationType(three) {
 			return "SYSTEM_DEFINED_ONLY"
 		}
-		if *pr == import1.OperationType(4) {
+		if *pr == import1.OperationType(four) {
 			return "EXTERNAL"
 		}
 	}
