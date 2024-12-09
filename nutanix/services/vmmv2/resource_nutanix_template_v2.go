@@ -369,9 +369,9 @@ func ResourceNutanixTemplatesV2Update(ctx context.Context, d *schema.ResourceDat
 				break
 			}
 			log.Printf("[DEBUG] Template version Id not provided in tf configuration, will use the latest version as defualt")
-			templateVersions, err := conn.TemplatesAPIInstance.ListTemplateVersions(utils.StringPtr(d.Id()), nil, nil, nil, nil, nil)
-			if err != nil {
-				return diag.Errorf("error while fetching template versions : %v", err)
+			templateVersions, errTempVersion := conn.TemplatesAPIInstance.ListTemplateVersions(utils.StringPtr(d.Id()), nil, nil, nil, nil, nil)
+			if errTempVersion != nil {
+				return diag.Errorf("error while fetching template versions : %v", errTempVersion)
 			}
 			templateVersion := templateVersions.Data.GetValue().([]vmmContent.TemplateVersionSpec)
 			tmplVersion := templateVersion[0]

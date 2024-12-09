@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
-	clustermgmtConfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	clsMangPrismConfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
@@ -333,19 +332,19 @@ func ResourceNutanixClusterUnconfiguredNodeNetworkV2Create(ctx context.Context, 
 	uuid := strings.Split(utils.StringValue(rUUID.ExtId), "=:")[1]
 
 	const NETWORKING_DETAILS = 3
-	taskResponseType := clustermgmtConfig.TaskResponseType(NETWORKING_DETAILS)
+	taskResponseType := config.TaskResponseType(NETWORKING_DETAILS)
 	networkDetailsResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
 	if taskErr != nil {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr)
 	}
 
-	taskResp := networkDetailsResp.Data.GetValue().(clustermgmtConfig.TaskResponse)
+	taskResp := networkDetailsResp.Data.GetValue().(config.TaskResponse)
 
-	if *taskResp.TaskResponseType != clustermgmtConfig.TaskResponseType(NETWORKING_DETAILS) {
+	if *taskResp.TaskResponseType != config.TaskResponseType(NETWORKING_DETAILS) {
 		return diag.Errorf("error while fetching Task Response for Network Detail Nodes : %v", "task response type mismatch")
 	}
 
-	nodeNetworkDetails := taskResp.Response.GetValue().(clustermgmtConfig.NodeNetworkingDetails)
+	nodeNetworkDetails := taskResp.Response.GetValue().(config.NodeNetworkingDetails)
 
 	if err := d.Set("nodes_networking_details", flattenNodesNetworkDetails(nodeNetworkDetails)); err != nil {
 		return diag.FromErr(err)
@@ -358,7 +357,7 @@ func ResourceNutanixClusterUnconfiguredNodeNetworkV2Create(ctx context.Context, 
 	return nil
 }
 
-func flattenNodesNetworkDetails(nodeNetworkDetails clustermgmtConfig.NodeNetworkingDetails) []map[string]interface{} {
+func flattenNodesNetworkDetails(nodeNetworkDetails config.NodeNetworkingDetails) []map[string]interface{} {
 	if nodeNetworkDetails.NetworkInfo != nil {
 		result := make(map[string]interface{})
 
@@ -380,7 +379,7 @@ func flattenNodesNetworkDetails(nodeNetworkDetails clustermgmtConfig.NodeNetwork
 			result["network_info"] = networkInfoList
 		}
 
-		if uplinks != nil && len(uplinks) > 0 {
+		if len(uplinks) > 0 {
 			uplinksList := make([]map[string]interface{}, 0)
 			for _, uplink := range uplinks {
 				uplinksMap := make(map[string]interface{})
@@ -391,11 +390,9 @@ func flattenNodesNetworkDetails(nodeNetworkDetails clustermgmtConfig.NodeNetwork
 			result["uplinks"] = uplinksList
 		}
 
-		if warnings != nil && len(warnings) > 0 {
+		if len(warnings) > 0 {
 			warningsList := make([]string, 0)
-			for _, warning := range warnings {
-				warningsList = append(warningsList, warning)
-			}
+			warningsList = append(warningsList, warnings...)
 			result["warnings"] = warningsList
 		}
 		return []map[string]interface{}{result}
@@ -403,8 +400,8 @@ func flattenNodesNetworkDetails(nodeNetworkDetails clustermgmtConfig.NodeNetwork
 	return nil
 }
 
-func flattenUplinkList(uplinkList []clustermgmtConfig.NameMacRef) interface{} {
-	if uplinkList != nil && len(uplinkList) > 0 {
+func flattenUplinkList(uplinkList []config.NameMacRef) interface{} {
+	if len(uplinkList) > 0 {
 		result := make([]map[string]interface{}, 0)
 		for _, uplink := range uplinkList {
 			uplinkMap := make(map[string]interface{})
@@ -417,7 +414,7 @@ func flattenUplinkList(uplinkList []clustermgmtConfig.NameMacRef) interface{} {
 	return nil
 }
 
-func flattenNameNetworkRef(nameNetworkRefs []clustermgmtConfig.NameNetworkRef) []map[string]interface{} {
+func flattenNameNetworkRef(nameNetworkRefs []config.NameNetworkRef) []map[string]interface{} {
 	if nameNetworkRefs != nil {
 		result := make([]map[string]interface{}, 0)
 		for _, nameNetworkRef := range nameNetworkRefs {

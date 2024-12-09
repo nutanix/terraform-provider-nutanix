@@ -221,9 +221,9 @@ func ResourceNutanixNGTInstallationV4Create(ctx context.Context, d *schema.Resou
 			if scheduleType, ok := rp["schedule_type"].(string); ok && scheduleType == "LATER" {
 				if schedule, ok := rp["schedule"]; ok && len(schedule.([]interface{})) > 0 {
 					s := schedule.([]interface{})[0].(map[string]interface{})
-					t, err := time.Parse(time.RFC3339, s["start_time"].(string))
-					if err != nil {
-						return diag.Errorf("error while installing gest tools : parsing start_time err:  %v", err)
+					t, errTime := time.Parse(time.RFC3339, s["start_time"].(string))
+					if errTime != nil {
+						return diag.Errorf("error while installing gest tools : parsing start_time err:  %v", errTime)
 					}
 					rebootPreferenceObj.Schedule = &vmmConfig.RebootPreferenceSchedule{
 						StartTime: utils.Time(t),

@@ -295,7 +295,7 @@ func resourceNutanixUserV2Read(ctx context.Context, d *schema.ResourceData, meta
 	if err = d.Set("ext_id", getResp.ExtId); err != nil {
 		return diag.Errorf("error setting ext_id for user %s: %s", d.Id(), err)
 	}
-	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
+	if err = d.Set("links", flattenLinks(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err = d.Set("username", getResp.Username); err != nil {

@@ -1075,20 +1075,21 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 }
 
 func getTaskStatus(pr *import2.TaskStatus) string {
+	const two, three, five, six, seven = 2, 3, 5, 6, 7
 	if pr != nil {
-		if *pr == import2.TaskStatus(6) {
+		if *pr == import2.TaskStatus(six) {
 			return "FAILED"
 		}
-		if *pr == import2.TaskStatus(7) {
+		if *pr == import2.TaskStatus(seven) {
 			return "CANCELED"
 		}
-		if *pr == import2.TaskStatus(2) {
+		if *pr == import2.TaskStatus(two) {
 			return "QUEUED"
 		}
-		if *pr == import2.TaskStatus(3) {
+		if *pr == import2.TaskStatus(three) {
 			return "RUNNING"
 		}
-		if *pr == import2.TaskStatus(5) {
+		if *pr == import2.TaskStatus(five) {
 			return "SUCCEEDED"
 		}
 	}
@@ -1156,16 +1157,17 @@ func expandNodeReference(pr interface{}) *config.NodeReference {
 }
 
 func expandUpgradeStatus(upgradeStatus interface{}) *config.UpgradeStatus {
+	const two, three, four, five, six, seven, eight, nine, ten = 2, 3, 4, 5, 6, 7, 8, 9, 10
 	subMap := map[string]interface{}{
-		"PENDING":     2,
-		"DOWNLOADING": 3,
-		"QUEUED":      4,
-		"PREUPGRADE":  5,
-		"UPGRADING":   6,
-		"SUCCEEDED":   7,
-		"FAILED":      8,
-		"CANCELLED":   9,
-		"SCHEDULED":   10,
+		"PENDING":     two,
+		"DOWNLOADING": three,
+		"QUEUED":      four,
+		"PREUPGRADE":  five,
+		"UPGRADING":   six,
+		"SUCCEEDED":   seven,
+		"FAILED":      eight,
+		"CANCELLED":   nine,
+		"SCHEDULED":   ten,
 	}
 	if subMap[upgradeStatus.(string)] != nil {
 		pVal := subMap[upgradeStatus.(string)]
@@ -1248,13 +1250,13 @@ func expandClusterNetworkReference(pr interface{}) *config.ClusterNetworkReferen
 		}
 		if keyManagementServerType, ok := val["key_management_server_type"]; ok {
 			log.Printf("[DEBUG] key_management_server_type : %s", keyManagementServerType)
-
+			const zero, one, two, three, four = 0, 1, 2, 3, 4
 			subMap := map[string]interface{}{
-				"UNKNOWN":       0,
-				"$REDACTED":     1,
-				"LOCAL":         2,
-				"PRISM_CENTRAL": 3,
-				"EXTERNAL":      4,
+				"UNKNOWN":       zero,
+				"$REDACTED":     one,
+				"LOCAL":         two,
+				"PRISM_CENTRAL": three,
+				"EXTERNAL":      four,
 			}
 			if subMap[keyManagementServerType.(string)] != nil {
 				pVal := subMap[keyManagementServerType.(string)]
@@ -1290,13 +1292,13 @@ func expandHttpProxyWhiteList(proxyTypesWhiteList []interface{}) []config.HttpPr
 				httpProxy.Target = utils.StringPtr(target.(string))
 			}
 			if targetType, ok := val["target_type"]; ok {
-
+				const two, three, four, five, six = 2, 3, 4, 5, 6
 				subMap := map[string]interface{}{
-					"IPV4_ADDRESS":       2,
-					"IPV6_ADDRESS":       3,
-					"IPV4_NETWORK_MASK":  4,
-					"DOMAIN_NAME_SUFFIX": 5,
-					"HOST_NAME":          6,
+					"IPV4_ADDRESS":       two,
+					"IPV6_ADDRESS":       three,
+					"IPV4_NETWORK_MASK":  four,
+					"DOMAIN_NAME_SUFFIX": five,
+					"HOST_NAME":          six,
 				}
 				if subMap[targetType.(string)] != nil {
 					pVal := subMap[targetType.(string)]
@@ -1339,10 +1341,11 @@ func expandHttpProxyList(httpProxyList []interface{}) []config.HttpProxyConfig {
 					httpProxy.ProxyTypes = nil
 				} else {
 					proxyTypesList := make([]config.HttpProxyType, len(proxyTypes.([]interface{})))
+					const two, three, four = 2, 3, 4
 					subMap := map[string]interface{}{
-						"HTTP":  2,
-						"HTTPS": 3,
-						"SOCKS": 4,
+						"HTTP":  two,
+						"HTTPS": three,
+						"SOCKS": four,
 					}
 					for i, val := range proxyTypes.([]interface{}) {
 						if subMap[val.(string)] != nil {

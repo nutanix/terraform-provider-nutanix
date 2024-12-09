@@ -246,9 +246,10 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 		if addressType == nil || addressType == "" {
 			body.AddressType = nil
 		} else {
+			const two, three = 2, 3
 			subMap := map[string]interface{}{
-				"IPV4": 2,
-				"IPV6": 3,
+				"IPV4": two,
+				"IPV6": three,
 			}
 			pVal := subMap[addressType.(string)]
 			p := config.AddressType(pVal.(int))

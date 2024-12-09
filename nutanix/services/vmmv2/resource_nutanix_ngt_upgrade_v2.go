@@ -131,9 +131,9 @@ func ResourceNutanixNGTUpgradeV2Create(ctx context.Context, d *schema.ResourceDa
 			if scheduleType, ok := rp["schedule_type"].(string); ok && scheduleType == "LATER" {
 				if schedule, ok := rp["schedule"]; ok {
 					s := schedule.([]interface{})[0].(map[string]interface{})
-					t, err := time.Parse(time.RFC3339, s["start_time"].(string))
-					if err != nil {
-						return diag.Errorf("error while Upgrading gest tools : %v", err)
+					t, errTime := time.Parse(time.RFC3339, s["start_time"].(string))
+					if errTime != nil {
+						return diag.Errorf("error while Upgrading gest tools : %v", errTime)
 					}
 					body.RebootPreference.Schedule = &vmmConfig.RebootPreferenceSchedule{
 						StartTime: utils.Time(t),
