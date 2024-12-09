@@ -145,19 +145,20 @@ func DatasourceNutanixAuthorizationPolicyV2Read(ctx context.Context, d *schema.R
 
 func flattenAuthorizationPolicyType(pr *import1.AuthorizationPolicyType) string {
 	if pr != nil {
-		if *pr == import1.AuthorizationPolicyType(2) {
+		const two, three, four, five, six = 2, 3, 4, 5, 6
+		if *pr == import1.AuthorizationPolicyType(two) {
 			return "USER_DEFINED"
 		}
-		if *pr == import1.AuthorizationPolicyType(3) {
+		if *pr == import1.AuthorizationPolicyType(three) {
 			return "SERVICE_DEFINED"
 		}
-		if *pr == import1.AuthorizationPolicyType(4) {
+		if *pr == import1.AuthorizationPolicyType(four) {
 			return "PREDEFINED_READ_ONLY"
 		}
-		if *pr == import1.AuthorizationPolicyType(5) {
+		if *pr == import1.AuthorizationPolicyType(five) {
 			return "PREDEFINED_UPDATE_IDENTITY_ONLY"
 		}
-		if *pr == import1.AuthorizationPolicyType(6) {
+		if *pr == import1.AuthorizationPolicyType(six) {
 			return "SERVICE_DEFINED_READ_ONLY"
 		}
 	}

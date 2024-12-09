@@ -755,19 +755,20 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 
 func getTaskStatus(pr *prismConfig.TaskStatus) string {
 	if pr != nil {
-		if *pr == prismConfig.TaskStatus(6) {
+		const two, three, five, six, seven = 2, 3, 5, 6, 7
+		if *pr == prismConfig.TaskStatus(six) {
 			return "FAILED"
 		}
-		if *pr == prismConfig.TaskStatus(7) {
+		if *pr == prismConfig.TaskStatus(seven) {
 			return "CANCELED"
 		}
-		if *pr == prismConfig.TaskStatus(2) {
+		if *pr == prismConfig.TaskStatus(two) {
 			return "QUEUED"
 		}
-		if *pr == prismConfig.TaskStatus(3) {
+		if *pr == prismConfig.TaskStatus(three) {
 			return "RUNNING"
 		}
-		if *pr == prismConfig.TaskStatus(5) {
+		if *pr == prismConfig.TaskStatus(five) {
 			return "SUCCEEDED"
 		}
 	}

@@ -364,13 +364,14 @@ func expandDiskDataSourceReference(entityReference interface{}) *config.EntityRe
 			diskDataSourceReference.Uris = utils.StringValueSlice(uriSlice)
 		}
 		if entityType, ok := val["entity_type"]; ok {
+			const zero, one, four, twenty, twentyone, twentytwo = 0, 1, 4, 20, 21, 22
 			subMap := map[string]interface{}{
-				"UNKNOWN":             0,
-				"REDACTED":            1,
-				"STORAGE_CONTAINER":   4,
-				"VM_DISK":             20,
-				"VOLUME_DISK":         21,
-				"DISK_RECOVERY_POINT": 22,
+				"UNKNOWN":             zero,
+				"REDACTED":            one,
+				"STORAGE_CONTAINER":   four,
+				"VM_DISK":             twenty,
+				"VOLUME_DISK":         twentyone,
+				"DISK_RECOVERY_POINT": twentytwo,
 			}
 
 			pInt := subMap[entityType.(string)]

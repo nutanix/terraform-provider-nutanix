@@ -1375,15 +1375,15 @@ func expandClusterConfigReference(pr interface{}, d *schema.ResourceData) *confi
 		if clusterFunction, ok := val["cluster_function"]; ok && d.HasChange("config.0.cluster_function") {
 			cfLen := len(clusterFunction.([]interface{}))
 			cfs := make([]config.ClusterFunctionRef, cfLen)
-
+			const two, three, four, five, six, seven, eight = 2, 3, 4, 5, 6, 7, 8
 			subMap := map[string]interface{}{
-				"AOS":                2,
-				"PRISM_CENTRAL":      3,
-				"CLOUD_DATA_GATEWAY": 4,
-				"AFS":                5,
-				"ONE_NODE":           6,
-				"TWO_NODE":           7,
-				"ANALYTICS_PLATFORM": 8,
+				"AOS":                two,
+				"PRISM_CENTRAL":      three,
+				"CLOUD_DATA_GATEWAY": four,
+				"AFS":                five,
+				"ONE_NODE":           six,
+				"TWO_NODE":           seven,
+				"ANALYTICS_PLATFORM": eight,
 			}
 
 			for k, v := range clusterFunction.([]interface{}) {

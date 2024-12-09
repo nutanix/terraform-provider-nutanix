@@ -132,7 +132,8 @@ func DatasourceNutanixStorageStatsInfoV2Read(ctx context.Context, d *schema.Reso
 		return diag.Errorf("sampling_interval should be greater than 0")
 	}
 
-	statType := clsstats.DownSamplingOperator(7) // Default value is LAST, Aggregation containing only the last recorded value.
+	const seven = 7
+	statType := clsstats.DownSamplingOperator(seven) // Default value is LAST, Aggregation containing only the last recorded value.
 
 	subMap := map[string]interface{}{
 		"SUM":   2,

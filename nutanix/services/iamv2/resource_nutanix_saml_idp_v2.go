@@ -359,16 +359,17 @@ func expandIdpMetadata(pr interface{}) *import1.IdpMetadata {
 			idp.Certificate = utils.StringPtr(certi.(string))
 		}
 		if policyFormat, ok := val["name_id_policy_format"]; ok {
+			const two, three, four, five, six, seven, eight, nine, ten = 2, 3, 4, 5, 6, 7, 8, 9, 10
 			subMap := map[string]interface{}{
-				"emailAddress":               2,
-				"unspecified":                3,
-				"X509SubjectName":            4,
-				"WindowsDomainQualifiedName": 5,
-				"encrypted":                  6,
-				"entity":                     7,
-				"kerberos":                   8,
-				"persistent":                 9,
-				"transient":                  10,
+				"emailAddress":               two,
+				"unspecified":                three,
+				"X509SubjectName":            four,
+				"WindowsDomainQualifiedName": five,
+				"encrypted":                  six,
+				"entity":                     seven,
+				"kerberos":                   eight,
+				"persistent":                 nine,
+				"transient":                  ten,
 			}
 			pInt := subMap[policyFormat.(string)]
 			p := import1.NameIdPolicyFormat(pInt.(int))

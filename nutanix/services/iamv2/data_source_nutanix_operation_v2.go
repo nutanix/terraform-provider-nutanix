@@ -162,10 +162,11 @@ func flattenAssociatedEndpointList(pr []import1.AssociatedEndpoint) []map[string
 
 func flattenApiVersion(pr *import1.ApiVersion) string {
 	if pr != nil {
-		if *pr == import1.ApiVersion(2) {
+		const two, three = 2, 3
+		if *pr == import1.ApiVersion(two) {
 			return "V3"
 		}
-		if *pr == import1.ApiVersion(3) {
+		if *pr == import1.ApiVersion(three) {
 			return "V4"
 		}
 	}
@@ -174,19 +175,20 @@ func flattenApiVersion(pr *import1.ApiVersion) string {
 
 func flattenHttpMethod(pr *import1.HttpMethod) string {
 	if pr != nil {
-		if *pr == import1.HttpMethod(2) {
+		const two, three, four, five, six = 2, 3, 4, 5, 6
+		if *pr == import1.HttpMethod(two) {
 			return "HTTPMETHOD_POST"
 		}
-		if *pr == import1.HttpMethod(3) {
+		if *pr == import1.HttpMethod(three) {
 			return "HTTPMETHOD_GET"
 		}
-		if *pr == import1.HttpMethod(4) {
+		if *pr == import1.HttpMethod(four) {
 			return "HTTPMETHOD_PUT"
 		}
-		if *pr == import1.HttpMethod(5) {
+		if *pr == import1.HttpMethod(five) {
 			return "HTTPMETHOD_PATCH"
 		}
-		if *pr == import1.HttpMethod(6) {
+		if *pr == import1.HttpMethod(six) {
 			return "HTTPMETHOD_DELETE"
 		}
 	}

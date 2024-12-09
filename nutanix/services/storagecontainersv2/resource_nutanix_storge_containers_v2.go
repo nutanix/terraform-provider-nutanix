@@ -21,6 +21,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
+const timePeriod = 1 * time.Minute
+
 func ResourceNutanixStorageContainersV2() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: ResourceNutanixStorageContainersV2Create,
@@ -538,7 +540,7 @@ func ResourceNutanixStorageContainersV2Update(ctx context.Context, d *schema.Res
 	}
 
 	// delay/sleep for 1 Minute, replication factor is not updated immediately
-	time.Sleep(60 * time.Second)
+	time.Sleep(timePeriod)
 	return ResourceNutanixStorageContainersV2Read(ctx, d, meta)
 }
 
