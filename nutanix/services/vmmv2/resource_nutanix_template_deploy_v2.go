@@ -482,11 +482,11 @@ func expandIPv4Info(ipv4Info interface{}) *config.Ipv4Info {
 
 		if learnedIPAddresses, ok := ipv4InfoData["learned_ip_addresses"]; ok {
 			ipAddressesList := make([]import4.IPv4Address, len(learnedIPAddresses.([]interface{})))
-			for i, learnedIp := range learnedIPAddresses.([]interface{}) {
-				learnedIpData := learnedIp.(map[string]interface{})
+			for i, learnedIP := range learnedIPAddresses.([]interface{}) {
+				learnedIPData := learnedIP.(map[string]interface{})
 				ipAddressesList[i] = import4.IPv4Address{
-					Value:        utils.StringPtr(learnedIpData["value"].(string)),
-					PrefixLength: utils.IntPtr(learnedIpData["prefix_length"].(int)),
+					Value:        utils.StringPtr(learnedIPData["value"].(string)),
+					PrefixLength: utils.IntPtr(learnedIPData["prefix_length"].(int)),
 				}
 			}
 			ipv4InfoObj.LearnedIpAddresses = ipAddressesList
@@ -610,9 +610,10 @@ func expandOneOfGuestCustomizationParamsConfig(pr interface{}) *config.OneOfGues
 			val := prI[0].(map[string]interface{})
 
 			if installType, ok := val["install_type"]; ok {
+				const two, three = 2, 3
 				subMap := map[string]interface{}{
-					"FRESH":    2,
-					"PREPARED": 3,
+					"FRESH":    two,
+					"PREPARED": three,
 				}
 				pVal := subMap[installType.(string)]
 				p := config.InstallType(pVal.(int))
@@ -630,8 +631,9 @@ func expandOneOfGuestCustomizationParamsConfig(pr interface{}) *config.OneOfGues
 			val := prI[0].(map[string]interface{})
 
 			if ds, ok := val["datasource_type"]; ok && len(ds.(string)) > 0 {
+				const two = 2
 				subMap := map[string]interface{}{
-					"CONFIG_DRIVE_V2": 2,
+					"CONFIG_DRIVE_V2": two,
 				}
 				pVal := subMap[ds.(string)]
 				p := config.CloudInitDataSourceType(pVal.(int))
@@ -645,7 +647,6 @@ func expandOneOfGuestCustomizationParamsConfig(pr interface{}) *config.OneOfGues
 			}
 			guestCfgs.SetValue(*cloud)
 		}
-
 		return guestCfgs
 	}
 	return nil
@@ -657,9 +658,9 @@ func expandOneOfSysprepSysprepScript(pr interface{}) *config.OneOfSysprepSysprep
 		val := prI[0].(map[string]interface{})
 		scripts := &config.OneOfSysprepSysprepScript{}
 
-		if unXml, ok := val["unattend_xml"]; ok && len(unXml.([]interface{})) > 0 {
+		if unXML, ok := val["unattend_xml"]; ok && len(unXML.([]interface{})) > 0 {
 			xml := config.NewUnattendxml()
-			xI := unXml.([]interface{})
+			xI := unXML.([]interface{})
 			xmlVal := xI[0].(map[string]interface{})
 
 			if vall, ok := xmlVal["value"]; ok {

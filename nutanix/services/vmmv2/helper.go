@@ -6,7 +6,6 @@ import (
 )
 
 func getEtagHeader(resp interface{}, conn *vmm.Client) *string {
-
 	// Extract E-Tag Header
 	etagValue := conn.VMAPIInstance.ApiClient.GetEtag(resp)
 	return utils.StringPtr(etagValue)

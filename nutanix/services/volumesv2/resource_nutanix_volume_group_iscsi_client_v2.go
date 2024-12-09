@@ -336,10 +336,10 @@ func expandiscsiInitiatorNetworkID(ipAddressOrFQDN interface{}) *config.IPAddres
 	return nil
 }
 
-func expandFloatingIPV4Address(IPv4I interface{}) *config.IPv4Address {
-	if IPv4I != nil {
+func expandFloatingIPV4Address(IPV4I interface{}) *config.IPv4Address {
+	if IPV4I != nil {
 		ipv4 := &config.IPv4Address{}
-		prI := IPv4I.([]interface{})
+		prI := IPV4I.([]interface{})
 		val := prI[0].(map[string]interface{})
 
 		if value, ok := val["value"]; ok {
@@ -353,10 +353,10 @@ func expandFloatingIPV4Address(IPv4I interface{}) *config.IPv4Address {
 	return nil
 }
 
-func expandFloatingIPV6Address(IPv6I interface{}) *config.IPv6Address {
-	if IPv6I != nil {
+func expandFloatingIPV6Address(IPV6I interface{}) *config.IPv6Address {
+	if IPV6I != nil {
 		ipv6 := &config.IPv6Address{}
-		prI := IPv6I.([]interface{})
+		prI := IPV6I.([]interface{})
 		val := prI[0].(map[string]interface{})
 
 		if value, ok := val["value"]; ok {

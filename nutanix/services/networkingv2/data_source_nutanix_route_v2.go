@@ -242,8 +242,8 @@ func flattenDestination(destination *config.IPSubnet) interface{} {
 func flattenNextHop(nextHops *config.Nexthop) interface{} {
 	if nextHops != nil {
 		nextHop := make(map[string]interface{})
-		aJson, _ := json.Marshal(nextHops)
-		log.Printf("[DEBUG] NextHops: %s", string(aJson))
+		aJSON, _ := json.Marshal(nextHops)
+		log.Printf("[DEBUG] NextHops: %s", string(aJSON))
 		if nextHops.NexthopType != nil {
 			nextHop["next_hop_type"] = flattenNextHopType(nextHops.NexthopType)
 		}

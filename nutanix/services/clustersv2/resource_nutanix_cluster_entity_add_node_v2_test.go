@@ -3,10 +3,11 @@ package clustersv2_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
@@ -31,9 +32,9 @@ func TestAccNutanixClusterAddNodeV2Resource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					// add node to cluster check
 					func(s *terraform.State) error {
-						aJson, _ := json.MarshalIndent(s.RootModule().Resources[resourceName3NodesCluster].Primary.Attributes, "", "  ")
+						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceName3NodesCluster].Primary.Attributes, "", "  ")
 						fmt.Println("############################################")
-						fmt.Println(fmt.Sprintf("Resource Attributes: \n%v", string(aJson)))
+						fmt.Println(fmt.Sprintf("Resource Attributes: \n%v", string(aJSON)))
 						fmt.Println("############################################")
 
 						return nil
@@ -64,9 +65,9 @@ func TestAccNutanixClusterAddNodeV2Resource_basic(t *testing.T) {
 
 					// add node to cluster check
 					func(s *terraform.State) error {
-						aJson, _ := json.MarshalIndent(s.RootModule().Resources[resourceNameAddNodeToCluster].Primary.Attributes, "", "  ")
+						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceNameAddNodeToCluster].Primary.Attributes, "", "  ")
 						fmt.Println("############################################")
-						fmt.Println(fmt.Sprintf("Resource Attributes: \n%v", string(aJson)))
+						fmt.Println(fmt.Sprintf("Resource Attributes: \n%v", string(aJSON)))
 						fmt.Println("############################################")
 
 						return nil

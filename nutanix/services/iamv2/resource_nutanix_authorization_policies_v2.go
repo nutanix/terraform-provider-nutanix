@@ -161,12 +161,13 @@ func ResourceNutanixAuthPoliciesV2Create(ctx context.Context, d *schema.Resource
 		input.Role = utils.StringPtr(role.(string))
 	}
 	if authPolicyType, ok := d.GetOk("authorization_policy_type"); ok {
+		const two, three, four, five, six = 2, 3, 4, 5, 6
 		subMap := map[string]interface{}{
-			"USER_DEFINED":                    2,
-			"SERVICE_DEFINED":                 3,
-			"PREDEFINED_READ_ONLY":            4,
-			"PREDEFINED_UPDATE_IDENTITY_ONLY": 5,
-			"SERVICE_DEFINED_READ_ONLY":       6,
+			"USER_DEFINED":                    two,
+			"SERVICE_DEFINED":                 three,
+			"PREDEFINED_READ_ONLY":            four,
+			"PREDEFINED_UPDATE_IDENTITY_ONLY": five,
+			"SERVICE_DEFINED_READ_ONLY":       six,
 		}
 		pInt := subMap[authPolicyType.(string)]
 		p := import1.AuthorizationPolicyType(pInt.(int))
@@ -262,16 +263,16 @@ func ResourceNutanixAuthPoliciesV2Update(ctx context.Context, d *schema.Resource
 		updatedSpec.Description = utils.StringPtr(d.Get("description").(string))
 	}
 	if d.HasChange("identities") {
-		identities, err := expandIdentityFilter(d.Get("identities").([]interface{}))
-		if err != nil {
-			return diag.Errorf("error while updating  Authorization Policy in identities err: %v", err)
+		identities, errID := expandIdentityFilter(d.Get("identities").([]interface{}))
+		if errID != nil {
+			return diag.Errorf("error while updating  Authorization Policy in identities err: %v", errID)
 		}
 		updatedSpec.Identities = identities
 	}
 	if d.HasChange("entities") {
-		entities, err := expandEntityFilter(d.Get("entities").([]interface{}))
-		if err != nil {
-			return diag.Errorf("error while updating  Authorization Policy in entities err: %v", err)
+		entities, errEn := expandEntityFilter(d.Get("entities").([]interface{}))
+		if errEn != nil {
+			return diag.Errorf("error while updating  Authorization Policy in entities err: %v", errEn)
 		}
 		updatedSpec.Entities = entities
 	}
@@ -279,12 +280,13 @@ func ResourceNutanixAuthPoliciesV2Update(ctx context.Context, d *schema.Resource
 		updatedSpec.Role = utils.StringPtr(d.Get("role").(string))
 	}
 	if d.HasChange("authorization_policy_type") {
+		const two, three, four, five, six = 2, 3, 4, 5, 6
 		subMap := map[string]interface{}{
-			"USER_DEFINED":                    2,
-			"SERVICE_DEFINED":                 3,
-			"PREDEFINED_READ_ONLY":            4,
-			"PREDEFINED_UPDATE_IDENTITY_ONLY": 5,
-			"SERVICE_DEFINED_READ_ONLY":       6,
+			"USER_DEFINED":                    two,
+			"SERVICE_DEFINED":                 three,
+			"PREDEFINED_READ_ONLY":            four,
+			"PREDEFINED_UPDATE_IDENTITY_ONLY": five,
+			"SERVICE_DEFINED_READ_ONLY":       six,
 		}
 		pInt := subMap[d.Get("authorization_policy_type").(string)]
 		p := import1.AuthorizationPolicyType(pInt.(int))

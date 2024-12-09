@@ -509,8 +509,8 @@ func ResourceNutanixClusterAddNodeV2Create(ctx context.Context, d *schema.Resour
 		body.ShouldSkipPreExpandChecks = utils.BoolPtr(skipPreExpandChecks.(bool))
 	}
 
-	aJson, _ := json.MarshalIndent(body, "", " ")
-	log.Printf("[DEBUG] Add Node Request Body: %s", string(aJson))
+	aJSON, _ := json.MarshalIndent(body, "", " ")
+	log.Printf("[DEBUG] Add Node Request Body: %s", string(aJSON))
 
 	resp, err := conn.ClusterEntityAPI.ExpandCluster(utils.StringPtr(clusterExtID.(string)), &body)
 	if err != nil {
@@ -540,8 +540,8 @@ func ResourceNutanixClusterAddNodeV2Create(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error while fetching  node UUID : %v", err)
 	}
 
-	aJson, _ = json.Marshal(resourceUUID)
-	log.Printf("[DEBUG] Add Node Response: %s", string(aJson))
+	aJSON, _ = json.Marshal(resourceUUID)
+	log.Printf("[DEBUG] Add Node Response: %s", string(aJSON))
 
 	rUUID := resourceUUID.Data.GetValue().(import2.Task)
 
@@ -593,8 +593,8 @@ func ResourceNutanixClusterAddNodeV2Delete(ctx context.Context, d *schema.Resour
 		}
 	}
 
-	aJson, _ := json.MarshalIndent(body, "", " ")
-	log.Printf("[DEBUG] Remove Node Request Body: %s", string(aJson))
+	aJSON, _ := json.MarshalIndent(body, "", " ")
+	log.Printf("[DEBUG] Remove Node Request Body: %s", string(aJSON))
 	resp, err := conn.ClusterEntityAPI.RemoveNode(utils.StringPtr(clusterExtID.(string)), body)
 	if err != nil {
 		return diag.Errorf("error while Removing node : %v", err)
@@ -628,8 +628,8 @@ func ResourceNutanixClusterAddNodeV2Delete(ctx context.Context, d *schema.Resour
 	}
 	rUUID := resourceUUID.Data.GetValue().(import2.Task)
 
-	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("Remove Node Task Details : %s", string(aJSON))
+	bJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	log.Printf("Remove Node Task Details : %s", string(bJSON))
 	return nil
 }
 
@@ -892,8 +892,8 @@ func expandUplinkParams(pr []interface{}) []config.UplinksField {
 }
 
 func expandHypervisorIsos(pr []interface{}) []config.HypervisorIsoMap {
-	aJson, _ := json.MarshalIndent(pr, "", " ")
-	log.Printf("[DEBUG] expandHypervisorIsos pr: %s", string(aJson))
+	aJSON, _ := json.MarshalIndent(pr, "", " ")
+	log.Printf("[DEBUG] expandHypervisorIsos pr: %s", string(aJSON))
 	if len(pr) > 0 {
 		itemList := make([]config.HypervisorIsoMap, len(pr))
 

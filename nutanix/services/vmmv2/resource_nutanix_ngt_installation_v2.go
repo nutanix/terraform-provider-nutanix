@@ -280,8 +280,8 @@ func ResourceNutanixNGTInstallationV4Create(ctx context.Context, d *schema.Resou
 func ResourceNutanixNGTInstallationV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	extId := d.Id()
-	resp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extId))
+	extID := d.Id()
+	resp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID))
 	if err != nil {
 		return diag.Errorf("error while fetching Gest Tool : %v", err)
 	}

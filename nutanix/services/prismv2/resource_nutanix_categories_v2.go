@@ -208,10 +208,8 @@ func ResourceNutanixCategoriesV2Update(ctx context.Context, d *schema.ResourceDa
 	_, er := conn.CategoriesAPIInstance.UpdateCategoryById(utils.StringPtr(d.Id()), &updatedInput)
 	if er != nil {
 		return diag.Errorf("error while updating categories : %v", err)
-	} else {
-		log.Println("[DEBUG] Category updated successfully")
 	}
-
+	log.Println("[DEBUG] Category updated successfully")
 	return ResourceNutanixCategoriesV2Read(ctx, d, meta)
 }
 

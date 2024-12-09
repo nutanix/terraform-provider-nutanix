@@ -272,7 +272,6 @@ func flattenOneOfImageChecksum(pr *import5.OneOfImageChecksum) []map[string]inte
 		}
 		resList = append(resList, sha)
 		return resList
-
 	}
 	return nil
 }

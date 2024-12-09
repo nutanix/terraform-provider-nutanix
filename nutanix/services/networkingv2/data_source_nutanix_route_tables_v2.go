@@ -126,8 +126,8 @@ func DatasourceNutanixRouteTablesV2Read(ctx context.Context, d *schema.ResourceD
 		}
 	} else {
 		getResp := resp.Data.GetValue().([]import1.RouteTable)
-		aJson, _ := json.Marshal(getResp)
-		log.Printf("[DEBUG] DatasourceNutanixRouteTablesV2Read: %v", string(aJson))
+		aJSON, _ := json.Marshal(getResp)
+		log.Printf("[DEBUG] DatasourceNutanixRouteTablesV2Read: %v", string(aJSON))
 
 		if err := d.Set("route_tables", flattenRouteTableEntities(getResp)); err != nil {
 			return diag.FromErr(err)
@@ -154,7 +154,7 @@ func flattenRouteTableEntities(pr []import1.RouteTable) []interface{} {
 		}
 	}
 
-	aJson, _ := json.Marshal(routeTables)
-	log.Printf("[DEBUG] flattenRouteTableEntities: %v", string(aJson))
+	aJSON, _ := json.Marshal(routeTables)
+	log.Printf("[DEBUG] flattenRouteTableEntities: %v", string(aJSON))
 	return routeTables
 }

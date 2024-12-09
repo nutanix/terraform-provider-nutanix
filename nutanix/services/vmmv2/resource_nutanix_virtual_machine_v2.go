@@ -1419,7 +1419,7 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 		body.Description = utils.StringPtr(desc.(string))
 	}
 	if source, ok := d.GetOk("source"); ok {
-		body.Source = expandVmSourceReference(source)
+		body.Source = expandVMSourceReference(source)
 	}
 	if numSock, ok := d.GetOk("num_sockets"); ok {
 		body.NumSockets = utils.IntPtr(numSock.(int))
@@ -1443,7 +1443,7 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 		body.IsCpuPassthroughEnabled = utils.BoolPtr(isCPuPassThrough.(bool))
 	}
 	if cpuFeatures, ok := d.GetOk("enabled_cpu_features"); ok {
-		body.EnabledCpuFeatures = expandCpuFeature(cpuFeatures.([]interface{}))
+		body.EnabledCpuFeatures = expandCPUFeature(cpuFeatures.([]interface{}))
 	}
 	if memoryOverCommit, ok := d.GetOk("is_memory_overcommit_enabled"); ok {
 		body.IsMemoryOvercommitEnabled = utils.BoolPtr(memoryOverCommit.(bool))
@@ -1491,7 +1491,7 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 		body.IsBrandingEnabled = utils.BoolPtr(isBranding.(bool))
 	}
 	if bootConfig, ok := d.GetOk("boot_config"); ok {
-		body.BootConfig = expandOneOfVmBootConfig(bootConfig)
+		body.BootConfig = expandOneOfVMBootConfig(bootConfig)
 	}
 	if vgaConsole, ok := d.GetOk("is_vga_console_enabled"); ok {
 		body.IsVgaConsoleEnabled = utils.BoolPtr(vgaConsole.(bool))
@@ -1547,8 +1547,8 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 		body.ProtectionPolicyState = expandProtectionPolicyState(protectionPolicyState)
 	}
 
-	aJson, _ := json.MarshalIndent(body, "", " ")
-	log.Printf("[DEBUG] Vm Create Request Payload: %s", string(aJson))
+	aJSON, _ := json.MarshalIndent(body, "", " ")
+	log.Printf("[DEBUG] Vm Create Request Payload: %s", string(aJSON))
 
 	resp, err := conn.VMAPIInstance.CreateVm(body)
 	if err != nil {
@@ -1823,7 +1823,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 
 	if checkForHotPlugChanges(d) && !isVMPowerOff(d, conn) {
 		log.Printf("[DEBUG] callingForPowerOffVM func")
-		callForPowerOffVM(conn, d, ctx, meta)
+		callForPowerOffVM(ctx, conn, d, meta)
 	}
 
 	updatedVMResp, _ := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
@@ -1843,7 +1843,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		checkForUpdateParams = true
 	}
 	if d.HasChange("source") {
-		updateSpec.Source = expandVmSourceReference(d.Get("source"))
+		updateSpec.Source = expandVMSourceReference(d.Get("source"))
 		checkForUpdateParams = true
 	}
 	if d.HasChange("num_sockets") {
@@ -1875,7 +1875,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		checkForUpdateParams = true
 	}
 	if d.HasChange("enabled_cpu_features") {
-		updateSpec.EnabledCpuFeatures = expandCpuFeature(d.Get("enabled_cpu_features").([]interface{}))
+		updateSpec.EnabledCpuFeatures = expandCPUFeature(d.Get("enabled_cpu_features").([]interface{}))
 		checkForUpdateParams = true
 	}
 	if d.HasChange("is_memory_overcommit_enabled") {
@@ -1927,7 +1927,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 		checkForUpdateParams = true
 	}
 	if d.HasChange("boot_config") {
-		updateSpec.BootConfig = expandOneOfVmBootConfig(d.Get("boot_config"))
+		updateSpec.BootConfig = expandOneOfVMBootConfig(d.Get("boot_config"))
 		checkForUpdateParams = true
 	}
 	if d.HasChange("is_vga_console_enabled") {
@@ -2599,7 +2599,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 				callForPowerOnVM(conn, d, ctx, meta)
 			} else {
 				log.Printf("[DEBUG] Powering off the VM")
-				callForPowerOffVM(conn, d, ctx, meta)
+				callForPowerOffVM(ctx, conn, d, meta)
 			}
 		}
 	}
@@ -2642,16 +2642,17 @@ func ResourceNutanixVirtualMachineV2Delete(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func expandVmSourceReference(pr interface{}) *config.VmSourceReference {
+func expandVMSourceReference(pr interface{}) *config.VmSourceReference {
 	if pr != nil && len(pr.([]interface{})) > 0 {
 		srcRef := &config.VmSourceReference{}
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
 
 		if entity, ok := val["entity_type"]; ok {
+			const two, three = 2, 3
 			subMap := map[string]interface{}{
-				"VM":                2,
-				"VM_RECOVERY_POINT": 3,
+				"VM":                two,
+				"VM_RECOVERY_POINT": three,
 			}
 			pVal := subMap[entity.(string)]
 			p := config.VmSourceReferenceEntityType(pVal.(int))
@@ -2662,14 +2663,13 @@ func expandVmSourceReference(pr interface{}) *config.VmSourceReference {
 	return nil
 }
 
-func expandCpuFeature(pr []interface{}) []config.CpuFeature {
+func expandCPUFeature(pr []interface{}) []config.CpuFeature {
 	if len(pr) > 0 {
 		feats := make([]config.CpuFeature, len(pr))
-
+		const two = 2
 		for k, v := range pr {
-
 			subMap := map[string]interface{}{
-				"HARDWARE_VIRTUALIZATION": 2,
+				"HARDWARE_VIRTUALIZATION": two,
 			}
 			pVal := subMap[v.(string)]
 			p := config.CpuFeature(pVal.(int))
@@ -2787,7 +2787,7 @@ func expandGuestTools(pr interface{}) *config.GuestTools {
 	return nil
 }
 
-func expandOneOfVmBootConfig(pr interface{}) *config.OneOfVmBootConfig {
+func expandOneOfVMBootConfig(pr interface{}) *config.OneOfVmBootConfig {
 	if pr != nil && len(pr.([]interface{})) > 0 {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -2855,12 +2855,13 @@ func expandOneOfLegacyBootBootDevice(pr interface{}) *config.OneOfLegacyBootBoot
 				diskVal := daI[0].(map[string]interface{})
 				diskAddOut := config.NewDiskAddress()
 				if busType, ok := diskVal["bus_type"]; ok {
+					const two, three, four, five, six = 2, 3, 4, 5, 6
 					subMap := map[string]interface{}{
-						"SCSI":  2,
-						"IDE":   3,
-						"PCI":   4,
-						"SATA":  5,
-						"SPAPR": 6,
+						"SCSI":  two,
+						"IDE":   three,
+						"PCI":   four,
+						"SATA":  five,
+						"SPAPR": six,
 					}
 					pVal := subMap[busType.(string)]
 					p := config.DiskBusType(pVal.(int))
@@ -2897,14 +2898,14 @@ func expandNvramDevice(pr interface{}) *config.NvramDevice {
 		nvramOut := &config.NvramDevice{}
 
 		if backingStorageInfo, ok := val["backing_storage_info"]; ok {
-			nvramOut.BackingStorageInfo = expandVmDisk(backingStorageInfo)
+			nvramOut.BackingStorageInfo = expandVMDisk(backingStorageInfo)
 		}
 		return nvramOut
 	}
 	return nil
 }
 
-func expandVmDisk(pr interface{}) *config.VmDisk {
+func expandVMDisk(pr interface{}) *config.VmDisk {
 	if pr != nil && len(pr.([]interface{})) > 0 {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -2915,10 +2916,10 @@ func expandVmDisk(pr interface{}) *config.VmDisk {
 			vmDiskOutput.DiskSizeBytes = utils.Int64Ptr(int64(diskSizeBytes.(int)))
 		}
 		if storageContainer, ok := val["storage_container"]; ok && len(storageContainer.([]interface{})) > 0 {
-			vmDiskOutput.StorageContainer = expandVmDiskContainerReference(storageContainer)
+			vmDiskOutput.StorageContainer = expandVMDiskContainerReference(storageContainer)
 		}
 		if storageConfig, ok := val["storage_config"]; ok && len(storageConfig.([]interface{})) > 0 {
-			vmDiskOutput.StorageConfig = expandVmDiskStorageConfig(storageConfig)
+			vmDiskOutput.StorageConfig = expandVMDiskStorageConfig(storageConfig)
 		}
 		if datasource, ok := val["data_source"]; ok && len(datasource.([]interface{})) > 0 {
 			vmDiskOutput.DataSource = expandDataSource(datasource)
@@ -2928,7 +2929,7 @@ func expandVmDisk(pr interface{}) *config.VmDisk {
 	return nil
 }
 
-func expandVmDiskStorageConfig(pr interface{}) *config.VmDiskStorageConfig {
+func expandVMDiskStorageConfig(pr interface{}) *config.VmDiskStorageConfig {
 	if pr != nil && len(pr.([]interface{})) > 0 {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -2990,12 +2991,13 @@ func expandOneOfDataSourceReference(pr interface{}) *config.OneOfDataSourceRefer
 				diskVal := daI[0].(map[string]interface{})
 				diskAddOut := config.DiskAddress{}
 				if busType, ok := diskVal["bus_type"]; ok {
+					const two, three, four, five, six = 2, 3, 4, 5, 6
 					subMap := map[string]interface{}{
-						"SCSI":  2,
-						"IDE":   3,
-						"PCI":   4,
-						"SATA":  5,
-						"SPAPR": 6,
+						"SCSI":  two,
+						"IDE":   three,
+						"PCI":   four,
+						"SATA":  five,
+						"SPAPR": six,
 					}
 					pVal := subMap[busType.(string)]
 					p := config.DiskBusType(pVal.(int))
@@ -3007,7 +3009,7 @@ func expandOneOfDataSourceReference(pr interface{}) *config.OneOfDataSourceRefer
 				vmDiskOut.DiskAddress = &diskAddOut
 			}
 			if vmRef, ok := vmVal["vm_reference"]; ok && len(vmRef.([]interface{})) > 0 {
-				vmDiskOut.VmReference = expandVmReference(vmRef)
+				vmDiskOut.VmReference = expandVMReference(vmRef)
 			}
 			dataOut.SetValue(*vmDiskOut)
 		}
@@ -3016,7 +3018,7 @@ func expandOneOfDataSourceReference(pr interface{}) *config.OneOfDataSourceRefer
 	return nil
 }
 
-func expandVmDiskContainerReference(pr interface{}) *config.VmDiskContainerReference {
+func expandVMDiskContainerReference(pr interface{}) *config.VmDiskContainerReference {
 	if pr != nil && len(pr.([]interface{})) > 0 {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -3030,7 +3032,7 @@ func expandVmDiskContainerReference(pr interface{}) *config.VmDiskContainerRefer
 	return nil
 }
 
-func expandVmReference(pr interface{}) *config.VmReference {
+func expandVMReference(pr interface{}) *config.VmReference {
 	if pr != nil && len(pr.([]interface{})) > 0 {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -3069,14 +3071,14 @@ func expandApcConfig(pr interface{}) *config.ApcConfig {
 			apcConfig.IsApcEnabled = utils.BoolPtr(isEnabled.(bool))
 		}
 		if cpuModel, ok := val["cpu_model"]; ok {
-			apcConfig.CpuModel = expandCpuModelReference(cpuModel)
+			apcConfig.CpuModel = expandCPUModelReference(cpuModel)
 		}
 		return apcConfig
 	}
 	return nil
 }
 
-func expandCpuModelReference(pr interface{}) *config.CpuModelReference {
+func expandCPUModelReference(pr interface{}) *config.CpuModelReference {
 	if pr != nil && len(pr.([]interface{})) > 0 {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -3191,10 +3193,10 @@ func expandOneOfDiskBackingInfo(pr interface{}) *config.OneOfDiskBackingInfo {
 				vmDiskOut.DiskSizeBytes = utils.Int64Ptr(int64(diskBytes.(int)))
 			}
 			if storageContainer, ok := vmVal["storage_container"]; ok && len(storageContainer.([]interface{})) > 0 {
-				vmDiskOut.StorageContainer = expandVmDiskContainerReference(storageContainer)
+				vmDiskOut.StorageContainer = expandVMDiskContainerReference(storageContainer)
 			}
 			if storageCfg, ok := vmVal["storage_config"]; ok && len(storageCfg.([]interface{})) > 0 {
-				vmDiskOut.StorageConfig = expandVmDiskStorageConfig(storageCfg)
+				vmDiskOut.StorageConfig = expandVMDiskStorageConfig(storageCfg)
 			}
 			if ds, ok := vmVal["data_source"]; ok && len(ds.([]interface{})) > 0 {
 				vmDiskOut.DataSource = expandDataSource(ds)
@@ -3233,7 +3235,7 @@ func expandCdRom(cd []interface{}) []config.CdRom {
 				cds.DiskAddress = expandCdRomAddress(diskAdd)
 			}
 			if backingInfo, ok := val["backing_info"]; ok && len(backingInfo.([]interface{})) > 0 {
-				cds.BackingInfo = expandVmDisk(backingInfo)
+				cds.BackingInfo = expandVMDisk(backingInfo)
 			}
 			if isoType, ok := val["iso_type"]; ok && len(isoType.(string)) > 0 {
 				subMap := map[string]interface{}{
@@ -3409,7 +3411,7 @@ func flattenPowerState(pr *config.PowerState) string {
 	return "UNKNOWN"
 }
 
-func callForPowerOffVM(conn *vmm.Client, d *schema.ResourceData, ctx context.Context, meta interface{}) diag.Diagnostics {
+func callForPowerOffVM(ctx context.Context, conn *vmm.Client, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	readResp, errR := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
 	if errR != nil {
 		return diag.Errorf("error while reading vm : %v", errR)
@@ -3473,8 +3475,8 @@ func callForPowerOnVM(conn *vmm.Client, d *schema.ResourceData, ctx context.Cont
 		return diag.Errorf("error while powering on Virtual Machine : %v", err)
 	}
 
-	aJson, _ := json.Marshal(powerOnResp)
-	log.Printf("[DEBUG] PowerOn Response: %s", string(aJson))
+	aJSON, _ := json.Marshal(powerOnResp)
+	log.Printf("[DEBUG] PowerOn Response: %s", string(aJSON))
 
 	TaskRef := powerOnResp.Data.GetValue().(import1.TaskReference)
 	taskUUID := TaskRef.ExtId

@@ -497,8 +497,8 @@ func expandNextHop(nextHop interface{}) *config.Nexthop {
 	if nextHopReference, ok := nextHopMap["next_hop_reference"]; ok {
 		nextHopObj.NexthopReference = utils.StringPtr(nextHopReference.(string))
 	}
-	if nextHopIpAddress, ok := nextHopMap["next_hop_ip_address"]; ok && len(nextHopIpAddress.([]interface{})) > 0 {
-		nextHopObj.NexthopIpAddress = expandNextHopIPAddress(nextHopIpAddress)
+	if nextHopIPAddress, ok := nextHopMap["next_hop_ip_address"]; ok && len(nextHopIPAddress.([]interface{})) > 0 {
+		nextHopObj.NexthopIpAddress = expandNextHopIPAddress(nextHopIPAddress)
 	}
 	log.Printf("[DEBUG] Next Hop Object: %v", nextHopObj)
 	return nextHopObj
@@ -524,12 +524,13 @@ func expandNextHopIPAddress(address interface{}) *common.IPAddress {
 
 func expandNextHopType(hopType interface{}) *config.NexthopType {
 	if hopType != nil {
+		const two, three, four, five, six = 2, 3, 4, 5, 6
 		nextHopTypeMap := map[string]interface{}{
-			"IP_ADDRESS":         2,
-			"DIRECT_CONNECT_VIF": 3,
-			"LOCAL_SUBNET":       4,
-			"EXTERNAL_SUBNET":    5,
-			"VPN_CONNECTION":     6,
+			"IP_ADDRESS":         two,
+			"DIRECT_CONNECT_VIF": three,
+			"LOCAL_SUBNET":       four,
+			"EXTERNAL_SUBNET":    five,
+			"VPN_CONNECTION":     six,
 		}
 		pVal := nextHopTypeMap[hopType.(string)]
 		p := config.NexthopType(pVal.(int))
@@ -545,22 +546,22 @@ func expandMetadata(metadata []interface{}) *common.Metadata {
 	}
 	metadataMap := metadata[0].(map[string]interface{})
 	metadataObj := &common.Metadata{}
-	if ownerRefId, ok := metadataMap["owner_reference_id"]; ok {
-		metadataObj.OwnerReferenceId = utils.StringPtr(ownerRefId.(string))
+	if ownerRefID, ok := metadataMap["owner_reference_id"]; ok {
+		metadataObj.OwnerReferenceId = utils.StringPtr(ownerRefID.(string))
 	}
 	if ownerUserName, ok := metadataMap["owner_user_name"]; ok {
 		metadataObj.OwnerUserName = utils.StringPtr(ownerUserName.(string))
 	}
-	if projRefId, ok := metadataMap["project_reference_id"]; ok {
-		metadataObj.ProjectReferenceId = utils.StringPtr(projRefId.(string))
+	if projRefID, ok := metadataMap["project_reference_id"]; ok {
+		metadataObj.ProjectReferenceId = utils.StringPtr(projRefID.(string))
 	}
 	if projName, ok := metadataMap["project_name"]; ok {
 		metadataObj.ProjectName = utils.StringPtr(projName.(string))
 	}
-	if categoryIds, ok := metadataMap["category_ids"]; ok {
-		categoryIdList := categoryIds.([]interface{})
-		categoryIdListStr := make([]string, len(categoryIdList))
-		for i, v := range categoryIdList {
+	if categoryIDs, ok := metadataMap["category_ids"]; ok {
+		categoryIDList := categoryIDs.([]interface{})
+		categoryIdListStr := make([]string, len(categoryIDList))
+		for i, v := range categoryIDList {
 			categoryIdListStr[i] = v.(string)
 		}
 		metadataObj.CategoryIds = categoryIdListStr

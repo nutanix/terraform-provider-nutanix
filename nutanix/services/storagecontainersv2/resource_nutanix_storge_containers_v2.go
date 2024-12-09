@@ -219,7 +219,7 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 	}
 	if replicationFactor, ok := d.GetOk("replication_factor"); ok {
 		body.ReplicationFactor = utils.IntPtr(replicationFactor.(int))
-		log.Printf("[DEBUG] replicationFactor: %v", utils.IntPtr(int(replicationFactor.(int))))
+		log.Printf("[DEBUG] replicationFactor: %v", utils.IntPtr(replicationFactor.(int)))
 	}
 	if nfsWhitelistAddresses, ok := d.GetOk("nfs_whitelist_addresses"); ok {
 		body.NfsWhitelistAddress = expandNfsWhitelistAddresses(nfsWhitelistAddresses)
@@ -235,7 +235,7 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 		body.ErasureCode = &p
 	}
 	if isInlineEcEnabled, ok := d.GetOk("is_inline_ec_enabled"); ok {
-		body.IsInlineEcEnabled = utils.BoolPtr(bool(isInlineEcEnabled.(bool)))
+		body.IsInlineEcEnabled = utils.BoolPtr(isInlineEcEnabled.(bool))
 	}
 	if hasHigherEcFaultDomainPreference, ok := d.GetOk("has_higher_ec_fault_domain_preference"); ok {
 		body.HasHigherEcFaultDomainPreference = utils.BoolPtr(hasHigherEcFaultDomainPreference.(bool))

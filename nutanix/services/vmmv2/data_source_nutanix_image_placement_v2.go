@@ -140,10 +140,11 @@ func DatasourceNutanixImagePlacementV4Read(ctx context.Context, d *schema.Resour
 
 func flattenPlacementType(pr *import7.PlacementType) string {
 	if pr != nil {
-		if *pr == import7.PlacementType(2) {
+		const two, three = 2, 3
+		if *pr == import7.PlacementType(two) {
 			return "SOFT"
 		}
-		if *pr == import7.PlacementType(3) {
+		if *pr == import7.PlacementType(three) {
 			return "HARD"
 		}
 	}
@@ -152,10 +153,11 @@ func flattenPlacementType(pr *import7.PlacementType) string {
 
 func flattenEnforcementState(pr *import7.EnforcementState) string {
 	if pr != nil {
-		if *pr == import7.EnforcementState(2) {
+		const two, three = 2, 3
+		if *pr == import7.EnforcementState(two) {
 			return "ACTIVE"
 		}
-		if *pr == import7.EnforcementState(3) {
+		if *pr == import7.EnforcementState(three) {
 			return "SUSPENDED"
 		}
 	}
@@ -178,10 +180,11 @@ func flattenEntityFilter(pr *import7.Filter) []map[string]interface{} {
 
 func flattenType(pr *import7.FilterMatchType) string {
 	if pr != nil {
-		if *pr == import7.FilterMatchType(2) {
+		const two, three = 2, 3
+		if *pr == import7.FilterMatchType(two) {
 			return "ALL"
 		}
-		if *pr == import7.FilterMatchType(3) {
+		if *pr == import7.FilterMatchType(three) {
 			return "ANY"
 		}
 	}

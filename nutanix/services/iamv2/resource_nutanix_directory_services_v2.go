@@ -212,8 +212,8 @@ func ResourceNutanixDirectoryServicesV2Create(ctx context.Context, d *schema.Res
 		input.WhiteListedGroups = whitelistedGrpListStr
 	}
 
-	aJson, _ := json.MarshalIndent(input, "", " ")
-	log.Println("[DEBUG] Directory Service JSON: ", string(aJson))
+	aJSON, _ := json.MarshalIndent(input, "", " ")
+	log.Println("[DEBUG] Directory Service JSON: ", string(aJSON))
 
 	resp, err := conn.DirectoryServiceAPIInstance.CreateDirectoryService(input)
 	if err != nil {

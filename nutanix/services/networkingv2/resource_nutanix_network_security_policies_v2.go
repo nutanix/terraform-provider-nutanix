@@ -898,13 +898,13 @@ func expandOneOfNetworkSecurityPolicyRuleSpec(pr interface{}) *import1.OneOfNetw
 			if spec, ok := multiVal["spec"]; ok && len(spec.([]interface{})) > 0 {
 				oneOfMultiEnvIsolationRuleSpecSpec := expandOneOfMultiEnvIsolationRuleSpecSpec(spec.([]interface{}))
 
-				aJson, _ := json.Marshal(oneOfMultiEnvIsolationRuleSpecSpec)
-				log.Printf("[DEBUG] OneOfMultiEnvIsolationRuleSpecSpec: %s", aJson)
+				aJSON, _ := json.Marshal(oneOfMultiEnvIsolationRuleSpecSpec)
+				log.Printf("[DEBUG] OneOfMultiEnvIsolationRuleSpecSpec: %s", aJSON)
 
 				multi.Spec = oneOfMultiEnvIsolationRuleSpecSpec
 
-				aJson, _ = json.Marshal(multi)
-				log.Printf("[DEBUG] MultiEnvIsolationRuleSpec: %s", aJson)
+				aJSON, _ = json.Marshal(multi)
+				log.Printf("[DEBUG] MultiEnvIsolationRuleSpec: %s", aJSON)
 			}
 
 			err := policyRules.SetValue(*multi)
@@ -935,16 +935,16 @@ func expandOneOfMultiEnvIsolationRuleSpecSpec(spec []interface{}) *import1.OneOf
 				allToAllIso.IsolationGroups = expandIsolationGroup(isoGroup.([]interface{}))
 			}
 
-			aJson, _ := json.Marshal(allToAllIso)
-			log.Printf("[DEBUG] AllToAllIsolationGroup: %s", aJson)
+			aJSON, _ := json.Marshal(allToAllIso)
+			log.Printf("[DEBUG] AllToAllIsolationGroup: %s", aJSON)
 
 			err := oneOfMultiEnv.SetValue(*allToAllIso)
 			if err != nil {
 				log.Printf("[ERROR] Error while setting value for MultiEnvIsolationRuleSpec.spec.allToAllIsolationGroup: %v", err)
 				return nil
 			}
-			aJSON, _ := json.Marshal(oneOfMultiEnv)
-			log.Printf("[DEBUG] OneOfMultiEnvIsolationRuleSpecSpec: %s", aJSON)
+			bJSON, _ := json.Marshal(oneOfMultiEnv)
+			log.Printf("[DEBUG] OneOfMultiEnvIsolationRuleSpecSpec: %s", bJSON)
 			return oneOfMultiEnv
 		}
 	}
@@ -965,8 +965,8 @@ func expandIsolationGroup(isolationGroup []interface{}) []import1.IsolationGroup
 			isolations[k] = iso
 		}
 
-		aJson, _ := json.Marshal(isolations)
-		log.Printf("[DEBUG] IsolationGroups: %s", aJson)
+		aJSON, _ := json.Marshal(isolations)
+		log.Printf("[DEBUG] IsolationGroups: %s", aJSON)
 
 		return isolations
 	}

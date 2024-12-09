@@ -513,9 +513,9 @@ func ResourceNutanixRecoveryPointsV2Update(ctx context.Context, d *schema.Resour
 	if d.HasChange("expiration_time") {
 		expirationTime, ok := d.GetOk("expiration_time")
 		if ok {
-			expTime, err := time.Parse(time.RFC3339, expirationTime.(string))
-			if err != nil {
-				return diag.Errorf("error while parsing expiration Time : %v", err)
+			expTime, errTime := time.Parse(time.RFC3339, expirationTime.(string))
+			if errTime != nil {
+				return diag.Errorf("error while parsing expiration Time : %v", errTime)
 			}
 			body.ExpirationTime = &expTime
 		}

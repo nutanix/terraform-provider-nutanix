@@ -786,8 +786,8 @@ func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData,
 		body.Categories = categoriesListStr
 	}
 
-	aJson, _ := json.MarshalIndent(body, "", "  ")
-	log.Printf("[DEBUG] Create Cluster Request Body: %s", string(aJson))
+	aJSON, _ := json.MarshalIndent(body, "", "  ")
+	log.Printf("[DEBUG] Create Cluster Request Body: %s", string(aJSON))
 
 	resp, err := conn.ClusterEntityAPI.CreateCluster(body, dryRun)
 	if err != nil {
@@ -817,8 +817,8 @@ func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error while fetching cluster UUID : %v", err)
 	}
 	rUUID := resourceUUID.Data.GetValue().(import2.Task)
-	aJson, _ = json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Create Cluster Task Response Details: %s", string(aJson))
+	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
+	log.Printf("[DEBUG] Create Cluster Task Response Details: %s", string(aJSON))
 
 	randomID := utils.GenUUID()
 
@@ -855,8 +855,8 @@ func ResourceNutanixClusterV2Read(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	getResp := resp.Data.GetValue().(config.Cluster)
-	aJson, _ := json.MarshalIndent(getResp, "", "  ")
-	log.Printf("[DEBUG] Read Cluster Response Details: %s", string(aJson))
+	aJSON, _ := json.MarshalIndent(getResp, "", "  ")
+	log.Printf("[DEBUG] Read Cluster Response Details: %s", string(aJSON))
 
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
@@ -963,8 +963,8 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 
 	}
 
-	aJson, _ := json.MarshalIndent(updateSpec, "", "  ")
-	log.Printf("[DEBUG] Update Cluster Request Body: %s", string(aJson))
+	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
+	log.Printf("[DEBUG] Update Cluster Request Body: %s", string(aJSON))
 
 	updateResp, err := conn.ClusterEntityAPI.UpdateClusterById(utils.StringPtr(d.Id()), &updateSpec, args)
 	if err != nil {
@@ -993,8 +993,8 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 	}
 
 	rUUID := resourceUUID.Data.GetValue().(import2.Task)
-	aJson, _ = json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Update Cluster Task Response Details: %s", string(aJson))
+	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
+	log.Printf("[DEBUG] Update Cluster Task Response Details: %s", string(aJSON))
 
 	//delay 1 min to get the updated data
 	time.Sleep(1 * time.Minute)
@@ -1480,10 +1480,10 @@ func expandPulseStatus(status interface{}) *config.PulseStatus {
 		pulse.IsEnabled = utils.BoolPtr(isEnabled.(bool))
 	}
 	if piiScrubbingLevel, ok := val["pii_scrubbing_level"]; ok {
-
+		const two, three = 2, 3
 		subMap := map[string]interface{}{
-			"DEFAULT": 2,
-			"ALL":     3,
+			"DEFAULT": two,
+			"ALL":     three,
 		}
 		if subMap[piiScrubbingLevel.(string)] != nil {
 			pVal := subMap[piiScrubbingLevel.(string)]

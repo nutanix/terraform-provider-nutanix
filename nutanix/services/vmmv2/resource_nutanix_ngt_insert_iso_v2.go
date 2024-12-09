@@ -165,8 +165,8 @@ func ResourceNutanixNGTInsertIsoV2Create(ctx context.Context, d *schema.Resource
 func ResourceNutanixNGTInsertIsoV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	extId := d.Id()
-	resp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extId))
+	extID := d.Id()
+	resp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID))
 	if err != nil {
 		return diag.Errorf("error while fetching Gest Tool : %v", err)
 	}

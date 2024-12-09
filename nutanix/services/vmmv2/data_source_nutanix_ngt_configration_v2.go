@@ -72,8 +72,8 @@ func DatasourceNutanixNGTConfigurationV4() *schema.Resource {
 func DatasourceNutanixNGTConfigurationV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	extId := d.Get("ext_id")
-	resp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extId.(string)))
+	extID := d.Get("ext_id")
+	resp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID.(string)))
 	log.Printf("[DEBUG] GetGuestToolsById : %v", resp)
 	if err != nil {
 		return diag.Errorf("error while fetching Gest Tool : %v", err)
@@ -113,7 +113,6 @@ func DatasourceNutanixNGTConfigurationV4Read(ctx context.Context, d *schema.Reso
 
 	d.SetId(resource.UniqueId())
 	return nil
-
 }
 
 func flattenCapabilities(capabilities []vmmAhvConfig.NgtCapability) []string {

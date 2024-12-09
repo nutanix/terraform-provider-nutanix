@@ -399,14 +399,14 @@ func flattenVMRecoveryPoints(vmRecoveryPoints []config.VmRecoveryPoint) []map[st
 				vmRecoveryPoint["application_consistent_properties"] = flattenApplicationConsistentProperties(v.ApplicationConsistentProperties)
 			}
 
-			aJson, _ := json.MarshalIndent(v, "", "  ")
-			log.Printf("[DEBUG] VM Recovery Point v: %v\n", string(aJson))
+			aJSON, _ := json.MarshalIndent(v, "", "  ")
+			log.Printf("[DEBUG] VM Recovery Point v: %v\n", string(aJSON))
 
 			vmRecoveryPointList[k] = vmRecoveryPoint
 		}
 
-		aJson, _ := json.MarshalIndent(vmRecoveryPointList, "", "  ")
-		log.Printf("[DEBUG] VM Recovery Points Flattened: %v\n", string(aJson))
+		aJSON, _ := json.MarshalIndent(vmRecoveryPointList, "", "  ")
+		log.Printf("[DEBUG] VM Recovery Points Flattened: %v\n", string(aJSON))
 		return vmRecoveryPointList
 	}
 	return nil

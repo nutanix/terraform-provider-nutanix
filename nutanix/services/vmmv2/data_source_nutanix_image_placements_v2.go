@@ -152,7 +152,6 @@ func DatasourceNutanixImagePlacementsV4Read(ctx context.Context, d *schema.Resou
 
 	resp, err := conn.ImagesPlacementAPIInstance.ListPlacementPolicies(page, limit, filter, orderBy, selects)
 	if err != nil {
-
 		return diag.Errorf("error while fetching image placement policies : %v", err)
 	}
 

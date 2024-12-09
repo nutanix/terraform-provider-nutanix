@@ -1408,7 +1408,7 @@ func flattenVMSourceReference(ref *config.VmSourceReference) []map[string]interf
 		refs := make(map[string]interface{})
 
 		if ref.EntityType != nil {
-			refs["entity_type"] = flattenVmSourceReferenceEntityType(ref.EntityType)
+			refs["entity_type"] = flattenVMSourceReferenceEntityType(ref.EntityType)
 		}
 		if ref.ExtId != nil {
 			refs["ext_id"] = ref.ExtId
@@ -1420,7 +1420,7 @@ func flattenVMSourceReference(ref *config.VmSourceReference) []map[string]interf
 	return nil
 }
 
-func flattenVmSourceReferenceEntityType(ent *config.VmSourceReferenceEntityType) string {
+func flattenVMSourceReferenceEntityType(ent *config.VmSourceReferenceEntityType) string {
 	if ent != nil {
 		const two, three = 2, 3
 		if *ent == config.VmSourceReferenceEntityType(two) {
@@ -1654,8 +1654,8 @@ func flattenOneOfSysprepSysprepScript(cfg *config.OneOfSysprepSysprepScript) []m
 			customKeyValCfgList = append(customKeyValCfgList, customKeyValCfg)
 			cfgList = customKeyValCfgList
 		}
-		aJson, _ := json.Marshal(cfgList)
-		log.Printf("[DEBUG] flattenOneOfSysprepSysprepScript: %s", string(aJson))
+		aJSON, _ := json.Marshal(cfgList)
+		log.Printf("[DEBUG] flattenOneOfSysprepSysprepScript: %s", string(aJSON))
 		return cfgList
 	}
 	return nil
@@ -2066,13 +2066,14 @@ func flattenVMReference(ref *config.VmReference) []map[string]interface{} {
 
 func flattenMachineType(pr *config.MachineType) string {
 	if pr != nil {
-		if *pr == config.MachineType(2) {
+		const two, three, four = 2, 3, 4
+		if *pr == config.MachineType(two) {
 			return "PC"
 		}
-		if *pr == config.MachineType(3) {
+		if *pr == config.MachineType(three) {
 			return "PSERIES"
 		}
-		if *pr == config.MachineType(4) {
+		if *pr == config.MachineType(four) {
 			return "Q35"
 		}
 	}
@@ -2293,13 +2294,14 @@ func flattenCdRom(pr []config.CdRom) []interface{} {
 
 func flattenIsoType(pr *config.IsoType) string {
 	if pr != nil {
-		if *pr == config.IsoType(2) {
+		const two, three, four = 2, 3, 4
+		if *pr == config.IsoType(two) {
 			return "OTHER"
 		}
-		if *pr == config.IsoType(3) {
+		if *pr == config.IsoType(three) {
 			return "GUEST_TOOLS"
 		}
-		if *pr == config.IsoType(4) {
+		if *pr == config.IsoType(four) {
 			return "GUEST_CUSTOMIZATION"
 		}
 	}
@@ -2325,10 +2327,11 @@ func flattenCdRomAddress(pr *config.CdRomAddress) []map[string]interface{} {
 
 func flattenCdRomBusType(pr *config.CdRomBusType) string {
 	if pr != nil {
-		if *pr == config.CdRomBusType(2) {
+		const two, three = 2, 3
+		if *pr == config.CdRomBusType(two) {
 			return "IDE"
 		}
-		if *pr == config.CdRomBusType(3) {
+		if *pr == config.CdRomBusType(three) {
 			return "SATA"
 		}
 	}
@@ -2389,10 +2392,11 @@ func flattenEmulatedNic(pr *config.EmulatedNic) []map[string]interface{} {
 
 func flattenEmulatedNicModel(pr *config.EmulatedNicModel) string {
 	if pr != nil {
-		if *pr == config.EmulatedNicModel(2) {
+		const two, three = 2, 3
+		if *pr == config.EmulatedNicModel(two) {
 			return "VIRTIO"
 		}
-		if *pr == config.EmulatedNicModel(3) {
+		if *pr == config.EmulatedNicModel(three) {
 			return "E1000"
 		}
 	}
@@ -2644,13 +2648,14 @@ func flattenGpu(pr []config.Gpu) []interface{} {
 
 func flattenGpuMode(pr *config.GpuMode) string {
 	if pr != nil {
-		if *pr == config.GpuMode(2) {
+		const two, three, four = 2, 3, 4
+		if *pr == config.GpuMode(two) {
 			return "PASSTHROUGH_GRAPHICS"
 		}
-		if *pr == config.GpuMode(3) {
+		if *pr == config.GpuMode(three) {
 			return "PASSTHROUGH_COMPUTE"
 		}
-		if *pr == config.GpuMode(4) {
+		if *pr == config.GpuMode(four) {
 			return "VIRTUAL"
 		}
 	}

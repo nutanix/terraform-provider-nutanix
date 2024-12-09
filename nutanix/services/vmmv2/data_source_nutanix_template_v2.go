@@ -58,7 +58,7 @@ func DatasourceNutanixTemplateV2() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"vm_spec": schemaForTemplateVmSpec(),
+						"vm_spec": schemaForTemplateVMSpec(),
 						"create_time": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -298,22 +298,16 @@ func flattenKVValue(value interface{}) []interface{} {
 	switch v := value.(type) {
 	case string:
 		valueMap["string"] = v
-		break
 	case int:
 		valueMap["integer"] = v
-		break
 	case bool:
 		valueMap["boolean"] = v
-		break
 	case []string:
 		valueMap["string_list"] = v
-		break
 	case []int:
 		valueMap["integer_list"] = v
-		break
 	case map[string]string:
 		valueMap["object"] = v
-		break
 
 	case []config.MapOfStringWrapper:
 		mapOfStrings := make([]interface{}, len(v))

@@ -1254,7 +1254,6 @@ func flattenActiveGatewayNode(pr []import1.GatewayNodeReference) []map[string]in
 			node["node_ip_address"] = flattenNodeIPAddress(v.NodeIpAddress)
 
 			nodes[k] = node
-
 		}
 		//n := make(map[string]interface{})
 		//

@@ -89,7 +89,7 @@ func ResourceNutanixVmsShutdownActionV2Create(ctx context.Context, d *schema.Res
 	args["If-Match"] = getEtagHeader(readResp, conn)
 
 	var TaskRef import1.TaskReference
-
+	//nolint:gocritic // Keeping if-else for clarity in this specific case
 	if action == "shutdown" {
 		resp, err := conn.VMAPIInstance.ShutdownVm(utils.StringPtr(vmExtID.(string)), args)
 		if err != nil {

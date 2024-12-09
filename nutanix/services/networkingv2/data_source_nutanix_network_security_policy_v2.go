@@ -620,8 +620,8 @@ func flattenOneOfNetworkSecurityPolicyRuleSpec(pr *import1.OneOfNetworkSecurityP
 
 			multiEnvIsolationRuleSpecList = append(multiEnvIsolationRuleSpecList, multiEnvIsolationRuleSpec)
 
-			aJson, _ := json.Marshal(multiEnvIsolationRuleSpecList)
-			log.Printf("[DEBUG] multiEnvIsolationRuleSpecList: %s", string(aJson))
+			aJSON, _ := json.Marshal(multiEnvIsolationRuleSpecList)
+			log.Printf("[DEBUG] multiEnvIsolationRuleSpecList: %s", string(aJSON))
 			return multiEnvIsolationRuleSpecList
 		}
 	}

@@ -326,8 +326,8 @@ func ResourceNutanixClusterUnconfiguredNodeNetworkV2Create(ctx context.Context, 
 	}
 	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
 
-	aJson, _ := json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Fetch Network Info Task Details: %s", string(aJson))
+	bJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	log.Printf("[DEBUG] Fetch Network Info Task Details: %s", string(bJSON))
 
 	uuid := strings.Split(utils.StringValue(rUUID.ExtId), "=:")[1]
 
@@ -460,12 +460,13 @@ func expandNodeListNetworkingDetails(pr []interface{}) []config.NodeListNetworki
 				node.NodePosition = utils.StringPtr(nodePosition.(string))
 			}
 			if hypervisorType, ok := val["hypervisor_type"]; ok {
+				const two, three, four, five, six = 2, 3, 4, 5, 6
 				subMap := map[string]interface{}{
-					"AHV":        2,
-					"ESX":        3,
-					"HYPERV":     4,
-					"XEN":        5,
-					"NATIVEHOST": 6,
+					"AHV":        two,
+					"ESX":        three,
+					"HYPERV":     four,
+					"XEN":        five,
+					"NATIVEHOST": six,
 				}
 				if subMap[hypervisorType.(string)] != nil {
 					pVal := subMap[hypervisorType.(string)]
@@ -488,17 +489,17 @@ func expandNodeListNetworkingDetails(pr []interface{}) []config.NodeListNetworki
 			if isComputeOnly, ok := val["is_compute_only"]; ok {
 				node.IsComputeOnly = utils.BoolPtr(isComputeOnly.(bool))
 			}
-			if ipmiIp, ok := val["ipmi_ip"]; ok {
-				node.IpmiIp = expandIPAddress(ipmiIp)
+			if ipmiIP, ok := val["ipmi_ip"]; ok {
+				node.IpmiIp = expandIPAddress(ipmiIP)
 			}
 			if digitalCertificateMapList, ok := val["digital_certificate_map_list"]; ok {
 				node.DigitalCertificateMapList = expandKeyValueMap(digitalCertificateMapList.([]interface{}))
 			}
-			if cvmIp, ok := val["cvm_ip"]; ok {
-				node.CvmIp = expandIPAddress(cvmIp)
+			if cvmIP, ok := val["cvm_ip"]; ok {
+				node.CvmIp = expandIPAddress(cvmIP)
 			}
-			if hypervisorIp, ok := val["hypervisor_ip"]; ok {
-				node.HypervisorIp = expandIPAddress(hypervisorIp)
+			if hypervisorIP, ok := val["hypervisor_ip"]; ok {
+				node.HypervisorIp = expandIPAddress(hypervisorIP)
 			}
 			if model, ok := val["model"]; ok && model != "" {
 				node.Model = utils.StringPtr(model.(string))

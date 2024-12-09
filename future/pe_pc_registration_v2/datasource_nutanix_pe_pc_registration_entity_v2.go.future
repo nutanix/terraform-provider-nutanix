@@ -232,8 +232,8 @@ func DatasourceNutanixClusterPCEntityV2Read(ctx context.Context, d *schema.Resou
 	}
 
 	getResp := readResp.Data.GetValue().(prismConfig.DomainManager)
-	aJson, _ := json.Marshal(getResp)
-	log.Printf("[DEBUG] PC Registration Read Response: %s", string(aJson))
+	aJSON, _ := json.Marshal(getResp)
+	log.Printf("[DEBUG] PC Registration Read Response: %s", string(aJSON))
 
 	// set attributes
 	if err := d.Set("ext_id", getResp.ExtId); err != nil {

@@ -147,7 +147,7 @@ func ResourceNutanixVmsCdRomsInsertEjectV2Create(ctx context.Context, d *schema.
 	body := config.CdRomInsertParams{}
 
 	if backInfo, ok := d.GetOk("backing_info"); ok {
-		body.BackingInfo = expandVmDisk(backInfo)
+		body.BackingInfo = expandVMDisk(backInfo)
 	}
 
 	readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(vmExtID.(string)))

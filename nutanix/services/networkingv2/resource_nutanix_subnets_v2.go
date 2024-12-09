@@ -771,8 +771,8 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 		updateSpec.IpConfig = nil
 	}
 
-	aJson, _ := json.MarshalIndent(updateSpec, "", "  ")
-	log.Printf("[DEBUG] Update Subnet Request: %s", string(aJson))
+	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
+	log.Printf("[DEBUG] Update Subnet Request: %s", string(aJSON))
 
 	updateResp, err := conn.SubnetAPIInstance.UpdateSubnetById(utils.StringPtr(d.Id()), &updateSpec, args)
 	if err != nil {
@@ -1018,7 +1018,7 @@ func expandIPv4Subnet(pr interface{}) *import1.IPv4Subnet {
 			ipv4Subs.Ip = expandIPv4Address(ip)
 		}
 		if prefix, ok := val["prefix_length"]; ok {
-			ipv4Subs.PrefixLength = utils.IntPtr(int(prefix.(int)))
+			ipv4Subs.PrefixLength = utils.IntPtr(prefix.(int))
 		}
 
 		return ipv4Subs

@@ -2,7 +2,6 @@ package volumesv2
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -219,15 +218,7 @@ func DatasourceNutanixVolumeGroupsV2Read(ctx context.Context, d *schema.Resource
 	resp, err := conn.VolumeAPIInstance.ListVolumeGroups(page, limit, filter, orderBy, expand, selects)
 
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching volumes : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching volumes : %v", err)
 	}
 
 	volumesResp := resp.Data
@@ -331,10 +322,11 @@ func flattenLinks(apiLinks []volumesClientResponse.ApiLink) []map[string]interfa
 func flattenSharingStatus(sharingStatus *volumesClient.SharingStatus) string {
 	var sharingStatusStr string
 	if sharingStatus != nil {
-		if *sharingStatus == volumesClient.SharingStatus(2) {
+		const two, three = 2, 3
+		if *sharingStatus == volumesClient.SharingStatus(two) {
 			sharingStatusStr = "SHARED"
 		}
-		if *sharingStatus == volumesClient.SharingStatus(3) {
+		if *sharingStatus == volumesClient.SharingStatus(three) {
 			sharingStatusStr = "NOT_SHARED"
 		}
 	}
@@ -344,10 +336,11 @@ func flattenSharingStatus(sharingStatus *volumesClient.SharingStatus) string {
 func flattenEnabledAuthentications(authenticationType *volumesClient.AuthenticationType) string {
 	var enabledAuthentications string
 	if authenticationType != nil {
-		if *authenticationType == volumesClient.AuthenticationType(2) {
+		const two, three = 2, 3
+		if *authenticationType == volumesClient.AuthenticationType(two) {
 			enabledAuthentications = "CHAP"
 		}
-		if *authenticationType == volumesClient.AuthenticationType(3) {
+		if *authenticationType == volumesClient.AuthenticationType(three) {
 			enabledAuthentications = "NONE"
 		}
 	}
@@ -387,16 +380,17 @@ func flattenStorageFeatures(storageFeatures *volumesClient.StorageFeatures) []ma
 func flattenUsageType(usageType *volumesClient.UsageType) string {
 	var usageTypeStr string
 	if usageType != nil {
-		if *usageType == volumesClient.UsageType(2) {
+		const two, three, four, five = 2, 3, 4, 5
+		if *usageType == volumesClient.UsageType(two) {
 			usageTypeStr = "USER"
 		}
-		if *usageType == volumesClient.UsageType(3) {
+		if *usageType == volumesClient.UsageType(three) {
 			usageTypeStr = "INTERNAL"
 		}
-		if *usageType == volumesClient.UsageType(4) {
+		if *usageType == volumesClient.UsageType(four) {
 			usageTypeStr = "TEMPORARY"
 		}
-		if *usageType == volumesClient.UsageType(5) {
+		if *usageType == volumesClient.UsageType(five) {
 			usageTypeStr = "BACKUP_TARGET"
 		}
 	}
