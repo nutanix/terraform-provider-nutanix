@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -17,7 +18,7 @@ const (
 	resourceNameClusterRegistration  = "nutanix_pc_registration_v2.node-registration"
 )
 
-func TestAccNutanixClusterV2Resource_CreateClusterWithMinimumConfig(t *testing.T) {
+func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-cluster-%d", r)
 
@@ -37,7 +38,7 @@ func TestAccNutanixClusterV2Resource_CreateClusterWithMinimumConfig(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameCluster, "name", name),
 					resource.TestCheckResourceAttr(resourceNameCluster, "dryrun", "false"),
-					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.CvmIP),
+					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
 					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.number_of_nodes", "1"),
 					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
 					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
@@ -47,7 +48,7 @@ func TestAccNutanixClusterV2Resource_CreateClusterWithMinimumConfig(t *testing.T
 	})
 }
 
-func TestAccNutanixClusterV2Resource_CreateClusterWithAllConfig(t *testing.T) {
+func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-cluster-%d", r)
 
@@ -67,16 +68,16 @@ func TestAccNutanixClusterV2Resource_CreateClusterWithAllConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					// check the unconfigured node is discovered or not
 					resource.TestCheckResourceAttr(resourceNameDiscoverUnConfigNode, "address_type", "IPV4"),
-					resource.TestCheckResourceAttr(resourceNameDiscoverUnConfigNode, "ip_filter_list.0.ipv4.0.value", testVars.Clusters.CvmIP),
+					resource.TestCheckResourceAttr(resourceNameDiscoverUnConfigNode, "ip_filter_list.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
 					resource.TestCheckResourceAttr(resourceNameDiscoverUnConfigNode, "unconfigured_nodes.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameDiscoverUnConfigNode, "unconfigured_nodes.0.cvm_ip.0.ipv4.0.value", testVars.Clusters.CvmIP),
+					resource.TestCheckResourceAttr(resourceNameDiscoverUnConfigNode, "unconfigured_nodes.0.cvm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
 					resource.TestCheckResourceAttrSet(resourceNameDiscoverUnConfigNode, "unconfigured_nodes.0.nos_version"),
 					resource.TestCheckResourceAttrSet(resourceNameDiscoverUnConfigNode, "unconfigured_nodes.0.hypervisor_type"),
 
 					// check the cluster is created with minimum config
 					resource.TestCheckResourceAttr(resourceNameCluster, "name", name),
 					resource.TestCheckResourceAttr(resourceNameCluster, "dryrun", "false"),
-					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.CvmIP),
+					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
 					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.number_of_nodes", "1"),
 					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
 					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
@@ -87,7 +88,7 @@ func TestAccNutanixClusterV2Resource_CreateClusterWithAllConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.ntp_server_ip_list.3.fqdn.0.value", testVars.Clusters.Network.NTPServers[3]),
 
 					resource.TestCheckResourceAttrSet(resourceNameClusterRegistration, "pc_ext_id"),
-					resource.TestCheckResourceAttr(resourceNameClusterRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.address.0.ipv4.0.value", testVars.Clusters.CvmIP),
+					resource.TestCheckResourceAttr(resourceNameClusterRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.address.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
 					resource.TestCheckResourceAttr(resourceNameClusterRegistration, "remote_cluster.0.aos_remote_cluster_spec.0.remote_cluster.0.credentials.0.authentication.0.username", testVars.Clusters.Nodes[0].Username),
 				),
 			},
@@ -99,7 +100,7 @@ func TestAccNutanixClusterV2Resource_CreateClusterWithAllConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameCluster, "name", name+"-updated"),
 					resource.TestCheckResourceAttr(resourceNameCluster, "dryrun", "false"),
-					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.CvmIP),
+					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.node_list.0.controller_vm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
 					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.number_of_nodes", "1"),
 					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
 					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
@@ -143,7 +144,7 @@ func testAccClusterResourceMinimumConfig(name string) string {
 		  address_type = "IPV4"
 		  ip_filter_list {
 			ipv4 {
-			  value = local.clusters.cvm_ip
+			  value = local.clusters.nodes[0].cvm_ip
 			}
 		  }
 		  depends_on = [data.nutanix_clusters_v2.clusters]
@@ -152,7 +153,7 @@ func testAccClusterResourceMinimumConfig(name string) string {
 		  lifecycle {
 			postcondition {
 			  condition     = length(self.unconfigured_nodes) == 1
-			  error_message = "The node ${local.clusters.cvm_ip} are not unconfigured"
+			  error_message = "The node ${local.clusters.nodes[0].cvm_ip} are not unconfigured"
 			}
 		  }
 		}
@@ -165,7 +166,7 @@ func testAccClusterResourceMinimumConfig(name string) string {
 			node_list {
 			  controller_vm_ip {
 				ipv4 {
-				  value = local.clusters.cvm_ip
+				  value = local.clusters.nodes[0].cvm_ip
 				}
 			  }
 			}
@@ -179,7 +180,7 @@ func testAccClusterResourceMinimumConfig(name string) string {
 		  }
 		
 		  provisioner "local-exec" {
-			command = " sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[0].username} password=${local.clusters.nodes[0].password}' "
+			command = " sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[0].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[0].username} password=${local.clusters.nodes[0].password}' "
 		
 			on_failure = continue
 		  }
@@ -199,7 +200,7 @@ func testAccClusterResourceMinimumConfig(name string) string {
 			  remote_cluster {
 				address {
 				  ipv4 {
-					value = local.clusters.cvm_ip
+					value = local.clusters.nodes[0].cvm_ip
 				  }
 				}
 				credentials {
@@ -227,7 +228,7 @@ func testAccClusterResourceAllConfig(name string) string {
 		  address_type = "IPV4"
 		  ip_filter_list {
 			ipv4 {
-			  value = local.clusters.cvm_ip
+			  value = local.clusters.nodes[0].cvm_ip
 			}
 		  }
 		  depends_on = [data.nutanix_clusters_v2.clusters]
@@ -236,7 +237,7 @@ func testAccClusterResourceAllConfig(name string) string {
 		  lifecycle {
 			postcondition {
 			  condition     = length(self.unconfigured_nodes) == 1
-			  error_message = "The node ${local.clusters.cvm_ip} are not unconfigured"
+			  error_message = "The node ${local.clusters.nodes[0].cvm_ip} are not unconfigured"
 			}
 		  }
 		}
@@ -249,7 +250,7 @@ func testAccClusterResourceAllConfig(name string) string {
 			node_list {
 			  controller_vm_ip {
 				ipv4 {
-				  value = local.clusters.cvm_ip
+				  value = local.clusters.nodes[0].cvm_ip
 				}
 			  }
 			}
@@ -294,7 +295,7 @@ func testAccClusterResourceAllConfig(name string) string {
 		  }
 		
 		  provisioner "local-exec" {
-			command = " sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[0].username} password=${local.clusters.nodes[0].password}' "
+			command = " sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[0].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[0].username} password=${local.clusters.nodes[0].password}' "
 		
 			on_failure = continue
 		  }
@@ -309,7 +310,7 @@ func testAccClusterResourceAllConfig(name string) string {
 			  remote_cluster {
 				address {
 				  ipv4 {
-					value = local.clusters.cvm_ip
+					value = local.clusters.nodes[0].cvm_ip
 				  }
 				}
 				credentials {
@@ -337,7 +338,7 @@ func testAccClusterResourceUpdateConfig(updatedName string) string {
 		  address_type = "IPV4"
 		  ip_filter_list {
 			ipv4 {
-			  value = local.clusters.cvm_ip
+			  value = local.clusters.nodes[0].cvm_ip
 			}
 		  }
 		  depends_on = [data.nutanix_clusters_v2.clusters]
@@ -346,7 +347,7 @@ func testAccClusterResourceUpdateConfig(updatedName string) string {
 		  lifecycle {
 			postcondition {
 			  condition     = length(self.unconfigured_nodes) == 1
-			  error_message = "The node ${local.clusters.cvm_ip} are not unconfigured"
+			  error_message = "The node ${local.clusters.nodes[0].cvm_ip} are not unconfigured"
 			}
 		  }
 		}
@@ -359,7 +360,7 @@ func testAccClusterResourceUpdateConfig(updatedName string) string {
 			node_list {
 			  controller_vm_ip {
 				ipv4 {
-				  value = local.clusters.cvm_ip
+				  value = local.clusters.nodes[0].cvm_ip
 				}
 			  }
 			}
@@ -424,7 +425,7 @@ func testAccClusterResourceUpdateConfig(updatedName string) string {
 		  }
 		
 		  provisioner "local-exec" {
-			command = " sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[0].username} password=${local.clusters.nodes[0].password}' "
+			command = " sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[0].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[0].username} password=${local.clusters.nodes[0].password}' "
 		
 			on_failure = continue
 		  }
@@ -439,7 +440,7 @@ func testAccClusterResourceUpdateConfig(updatedName string) string {
 			  remote_cluster {
 				address {
 				  ipv4 {
-					value = local.clusters.cvm_ip
+					value = local.clusters.nodes[0].cvm_ip
 				  }
 				}
 				credentials {

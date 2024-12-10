@@ -9,7 +9,7 @@ import (
 
 const datasourceNameCategory = "data.nutanix_category_v2.test"
 
-func TestAccNutanixCategoryV2DataSource_basic(t *testing.T) {
+func TestAccV2NutanixCategoryDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

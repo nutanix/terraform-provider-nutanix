@@ -11,7 +11,7 @@ import (
 
 const datasourceNameOperations = "data.nutanix_operations_v2.test"
 
-func TestAccNutanixOperationsV2Datasource_Basic(t *testing.T) {
+func TestAccV2NutanixOperationsDatasource_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -26,7 +26,7 @@ func TestAccNutanixOperationsV2Datasource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixOperationsV2Datasource_WithLimit(t *testing.T) {
+func TestAccV2NutanixOperationsDatasource_WithLimit(t *testing.T) {
 	limit := 3
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },

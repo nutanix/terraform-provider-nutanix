@@ -199,19 +199,6 @@ func DatasourceNutanixVolumeIscsiClientsV2Read(ctx context.Context, d *schema.Re
 	}
 
 	// // Check if resp is nil before accessing its data
-	// if resp != nil {
-	// 	diskResp := resp.Data
-
-	// 	// extract the volume groups data from the response
-	// 	if diskResp != nil {
-
-	// 		// set the volume groups iscsi clients  data in the terraform resource
-	// 		if err := d.Set("iscsi_clients", flattenIscsiClientsEntities(diskResp.GetValue().([]volumesClient.IscsiClient))); err != nil {
-	// 			return diag.FromErr(err)
-	// 		}
-	// 	}
-	// }
-
 	iscsiClientsResp := resp.Data
 
 	// extract the volume groups data from the response
@@ -259,11 +246,6 @@ func flattenIscsiClientsEntities(pr []volumesClient.IscsiClient) []interface{} {
 			if v.ClusterReference != nil {
 				iscsiClient["cluster_reference"] = v.ClusterReference
 			}
-			// Attribute not present in the response of GA SDK
-			// if v.TargetParams != nil {
-			// 	iscsi_client["attached_targets"] = flattenAttachedTargets(v.TargetParams)
-			// }
-
 			iscsiClients[k] = iscsiClient
 		}
 		return iscsiClients
@@ -277,7 +259,7 @@ func flattenAttachmentSite(iscsiClientAttachmentSite *volumesClient.VolumeGroupA
 		if *iscsiClientAttachmentSite == volumesClient.VolumeGroupAttachmentSite(two) {
 			return "PRIMARY"
 		}
-		if *iscsiClientAttachmentSite == volumesClient.VolumeGroupAttachmentSite(two) {
+		if *iscsiClientAttachmentSite == volumesClient.VolumeGroupAttachmentSite(three) {
 			return "SECONDARY"
 		}
 	}
@@ -364,7 +346,3 @@ func flattenFQDN(fQDN *config.FQDN) []interface{} {
 	}
 	return nil
 }
-
-// func flattenValuePrefixLength(iPv4Address *config.IPv4Address) {
-// 	panic("unimplemented")
-// }

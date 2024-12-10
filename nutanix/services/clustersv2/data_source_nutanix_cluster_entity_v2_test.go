@@ -9,7 +9,7 @@ import (
 
 const dataSourceNameCluster = "data.nutanix_cluster_v2.test"
 
-func TestAccNutanixClusterV2DataSource_basic(t *testing.T) {
+func TestAccV2NutanixClusterDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

@@ -14,7 +14,7 @@ import (
 
 const resourceNameStorageContainers = "nutanix_storage_containers_v2.test"
 
-func TestAccNutanixStorageContainersV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixStorageContainersResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-storage-container-%d", r)
 	path, _ := os.Getwd()
@@ -53,7 +53,7 @@ func TestAccNutanixStorageContainersV2Resource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixStorageContainersV2Resource_WithNoClusterExtId(t *testing.T) {
+func TestAccV2NutanixStorageContainersResource_WithNoClusterExtId(t *testing.T) {
 	path, _ := os.Getwd()
 	filepath := path + "/../../../test_config_v2.json"
 	resource.Test(t, resource.TestCase{
@@ -68,7 +68,7 @@ func TestAccNutanixStorageContainersV2Resource_WithNoClusterExtId(t *testing.T) 
 	})
 }
 
-func TestAccNutanixStorageContainersV2Resource_WithNoName(t *testing.T) {
+func TestAccV2NutanixStorageContainersResource_WithNoName(t *testing.T) {
 	path, _ := os.Getwd()
 	filepath := path + "/../../../test_config_v2.json"
 	resource.Test(t, resource.TestCase{

@@ -12,7 +12,7 @@ import (
 
 const resourceNameRecoveryPointRestore = "nutanix_recovery_point_restore_v2.test"
 
-func TestAccNutanixRecoveryPointRestoreV2Resource_basic(t *testing.T) {
+func TestAccV2NutanixRecoveryPointRestoreResource_basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-recovery-point-%d", r)
 	vmName := fmt.Sprintf("tf-test-vm-%d", r)

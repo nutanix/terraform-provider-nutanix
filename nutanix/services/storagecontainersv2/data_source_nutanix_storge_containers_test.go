@@ -13,7 +13,7 @@ import (
 
 const datasourceNameStorageContainersV4 = "data.nutanix_storage_containers_v2.test"
 
-func TestAccNutanixStorageContainersV2Datasource_Basic(t *testing.T) {
+func TestAccV2NutanixStorageContainersDataSource_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -28,7 +28,7 @@ func TestAccNutanixStorageContainersV2Datasource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixStorageContainersV2Datasource_WithFilter(t *testing.T) {
+func TestAccV2NutanixStorageContainersDataSource_WithFilter(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-storage-container-%d", r)
 	path, _ := os.Getwd()
@@ -55,7 +55,7 @@ func TestAccNutanixStorageContainersV2Datasource_WithFilter(t *testing.T) {
 	})
 }
 
-func TestAccNutanixStorageContainersV2Datasource_WithLimit(t *testing.T) {
+func TestAccV2NutanixStorageContainersDataSource_WithLimit(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-storage-container-%d", r)
 	path, _ := os.Getwd()

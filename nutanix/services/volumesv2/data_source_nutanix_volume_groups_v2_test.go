@@ -13,7 +13,7 @@ import (
 
 const dataSourceVolumeGroups = "data.nutanix_volume_groups_v2.test"
 
-func TestAccNutanixVolumeGroupsV2DataSource_Basic(t *testing.T) {
+func TestAccV2NutanixVolumeGroupsDataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-volume-group-%d", r)
 	desc := "terraform test volume group description"
@@ -33,7 +33,7 @@ func TestAccNutanixVolumeGroupsV2DataSource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVolumeGroupsV4DataSource_WithFilter(t *testing.T) {
+func TestAccV2NutanixVolumeGroupsV4DataSource_WithFilter(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-volume-group-%d", r)
 	desc := "terraform test volume group description"
@@ -59,7 +59,7 @@ func TestAccNutanixVolumeGroupsV4DataSource_WithFilter(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVolumeGroupsV4DataSource_WithLimit(t *testing.T) {
+func TestAccV2NutanixVolumeGroupsV4DataSource_WithLimit(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-volume-group-%d", r)
 	desc := "terraform test volume group description"

@@ -10,7 +10,7 @@ import (
 
 const resourceNameDiscoverUnconfiguredNodes = "nutanix_clusters_discover_unconfigured_nodes_v2.test"
 
-func TestAccNutanixClusterDiscoverUnconfiguredNodesV2Resource_basic(t *testing.T) {
+func TestAccV2NutanixClusterDiscoverUnconfiguredNodesResource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

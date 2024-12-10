@@ -9,7 +9,7 @@ import (
 
 const dataSourceNameClusters = "data.nutanix_clusters_v2.test"
 
-func TestAccNutanixClustersV2DataSource_basic(t *testing.T) {
+func TestAccV2NutanixClustersDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -24,7 +24,7 @@ func TestAccNutanixClustersV2DataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixClustersV2DataSource_filter(t *testing.T) {
+func TestAccV2NutanixClustersDataSource_filter(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -40,7 +40,7 @@ func TestAccNutanixClustersV2DataSource_filter(t *testing.T) {
 	})
 }
 
-func TestAccNutanixClustersV2DataSource_limit(t *testing.T) {
+func TestAccV2NutanixClustersDataSource_limit(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

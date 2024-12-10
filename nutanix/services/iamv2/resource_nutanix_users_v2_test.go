@@ -13,7 +13,7 @@ import (
 const resourceNameUsers = "nutanix_users_v2.test"
 
 // create local Active user, and test update the username and display name
-func TestAccNutanixUsersV2Resource_LocalActiveUser(t *testing.T) {
+func TestAccV2NutanixUsersResource_LocalActiveUser(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-user-%d", r)
 
@@ -54,7 +54,7 @@ func TestAccNutanixUsersV2Resource_LocalActiveUser(t *testing.T) {
 }
 
 // test duplicate user creation
-func TestAccNutanixUsersV2Resource_AlreadyExistsUser(t *testing.T) {
+func TestAccV2NutanixUsersResource_AlreadyExistsUser(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-user-%d", r)
 
@@ -82,7 +82,7 @@ func TestAccNutanixUsersV2Resource_AlreadyExistsUser(t *testing.T) {
 }
 
 // create local Inactive user
-func TestAccNutanixUsersV2Resource_LocalInactiveUser(t *testing.T) {
+func TestAccV2NutanixUsersResource_LocalInactiveUser(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-user-%d", r)
 
@@ -107,7 +107,7 @@ func TestAccNutanixUsersV2Resource_LocalInactiveUser(t *testing.T) {
 }
 
 // create SAML user
-func TestAccNutanixUsersV2Resource_SAMLUser(t *testing.T) {
+func TestAccV2NutanixUsersResource_SAMLUser(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-user-%d", r)
 
@@ -129,7 +129,7 @@ func TestAccNutanixUsersV2Resource_SAMLUser(t *testing.T) {
 }
 
 // create LDAP user
-func TestAccNutanixUsersV2Resource_LDAPUser(t *testing.T) {
+func TestAccV2NutanixUsersResource_LDAPUser(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -148,7 +148,7 @@ func TestAccNutanixUsersV2Resource_LDAPUser(t *testing.T) {
 }
 
 // create local Active user, and test update the username and display name
-func TestAccNutanixUsersV2Resource_DeactivateLocalUser(t *testing.T) {
+func TestAccV2NutanixUsersResource_DeactivateLocalUser(t *testing.T) {
 	t.Skip("these test were commented since they are using different APIs")
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-user-%d", r)
@@ -187,7 +187,7 @@ func TestAccNutanixUsersV2Resource_DeactivateLocalUser(t *testing.T) {
 }
 
 // Test missing username
-func TestAccNutanixUsersV2Resource_WithNoUserName(t *testing.T) {
+func TestAccV2NutanixUsersResource_WithNoUserName(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -201,7 +201,7 @@ func TestAccNutanixUsersV2Resource_WithNoUserName(t *testing.T) {
 }
 
 // Test missing user type
-func TestAccNutanixUsersV2Resource_WithNoUserType(t *testing.T) {
+func TestAccV2NutanixUsersResource_WithNoUserType(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-user-%d", r)
 

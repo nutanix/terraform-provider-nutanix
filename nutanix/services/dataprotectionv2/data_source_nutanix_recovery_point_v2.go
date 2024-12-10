@@ -411,7 +411,7 @@ func flattenVMRecoveryPoints(vmRecoveryPoints []config.VmRecoveryPoint) []map[st
 	return nil
 }
 
-func flattenApplicationConsistentProperties(vmRecoveryProperties *config.OneOfVmRecoveryPointApplicationConsistentProperties) map[string]interface{} {
+func flattenApplicationConsistentProperties(vmRecoveryProperties *config.OneOfVmRecoveryPointApplicationConsistentProperties) []map[string]interface{} {
 	if vmRecoveryProperties != nil {
 		vmRecProps := make(map[string]interface{})
 		if *vmRecoveryProperties.ObjectType_ == ApplicationConsistentPropertiesVss1 ||
@@ -423,7 +423,7 @@ func flattenApplicationConsistentProperties(vmRecoveryProperties *config.OneOfVm
 			vmRecProps["should_store_vss_metadata"] = properties.ShouldStoreVssMetadata
 			vmRecProps["object_type"] = properties.ObjectType_
 		}
-		return vmRecProps
+		return []map[string]interface{}{vmRecProps}
 	}
 	return nil
 }

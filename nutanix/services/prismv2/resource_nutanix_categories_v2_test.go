@@ -12,7 +12,7 @@ import (
 
 const resourceNameCategory = "nutanix_category_v2.test"
 
-func TestAccNutanixCategoryV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixCategoryResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	value := fmt.Sprintf("test category value-%d", r)
 	desc := "test category description"
@@ -33,7 +33,7 @@ func TestAccNutanixCategoryV2Resource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixCategoryV2Resource_Update(t *testing.T) {
+func TestAccV2NutanixCategoryResource_Update(t *testing.T) {
 	r := acctest.RandInt()
 	value := fmt.Sprintf("test category value-%d", r)
 	desc := "test category description"
@@ -66,7 +66,7 @@ func TestAccNutanixCategoryV2Resource_Update(t *testing.T) {
 	})
 }
 
-func TestAccNutanixCategoryV2Resource_WithNoKey(t *testing.T) {
+func TestAccV2NutanixCategoryResource_WithNoKey(t *testing.T) {
 	r := acctest.RandInt()
 	value := fmt.Sprintf("test category value-%d", r)
 	desc := "test category description"

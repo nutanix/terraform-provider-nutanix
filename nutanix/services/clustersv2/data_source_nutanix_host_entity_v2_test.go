@@ -10,7 +10,7 @@ import (
 
 const datasourceNameHostEntity = "data.nutanix_host_v2.test"
 
-func TestAccNutanixHostEntityV2Datasource_Basic(t *testing.T) {
+func TestAccV2NutanixHostEntityDatasource_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -27,7 +27,7 @@ func TestAccNutanixHostEntityV2Datasource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixHostEntityV2Datasource_WithNoClsExtId(t *testing.T) {
+func TestAccV2NutanixHostEntityDatasource_WithNoClsExtId(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -40,7 +40,7 @@ func TestAccNutanixHostEntityV2Datasource_WithNoClsExtId(t *testing.T) {
 	})
 }
 
-func TestAccNutanixHostEntityV2Datasource_WithNoHostExtId(t *testing.T) {
+func TestAccV2NutanixHostEntityDatasource_WithNoHostExtId(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

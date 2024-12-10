@@ -2,7 +2,6 @@ package clustersv2
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -356,7 +355,6 @@ func DatasourceNutanixHostEntityV2Read(ctx context.Context, d *schema.ResourceDa
 	if err != nil {
 		return diag.Errorf("error while fetching host entity : %v", err)
 	}
-	fmt.Println(resp)
 
 	getResp := resp.Data.GetValue().(import1.Host)
 

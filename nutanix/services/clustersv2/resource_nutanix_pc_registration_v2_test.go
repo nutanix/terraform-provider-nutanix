@@ -9,7 +9,7 @@ import (
 )
 
 // Logic covered in create cluster resource test
-func TestAccNutanixPePcRegistrationV2Resource_ValidationsDomainManagerRemoteClusterSpec(t *testing.T) {
+func TestAccV2NutanixPePcRegistrationResource_ValidationsDomainManagerRemoteClusterSpec(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -34,7 +34,7 @@ func TestAccNutanixPePcRegistrationV2Resource_ValidationsDomainManagerRemoteClus
 	})
 }
 
-func TestAccNutanixPePcRegistrationV2Resource_ValidationsAOSRemoteClusterSpec(t *testing.T) {
+func TestAccV2NutanixPePcRegistrationResource_ValidationsAOSRemoteClusterSpec(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -55,7 +55,7 @@ func TestAccNutanixPePcRegistrationV2Resource_ValidationsAOSRemoteClusterSpec(t 
 	})
 }
 
-func TestAccNutanixPePcRegistrationV2Resource_ValidationsClusterReference(t *testing.T) {
+func TestAccV2NutanixPePcRegistrationResource_ValidationsClusterReference(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

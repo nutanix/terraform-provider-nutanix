@@ -143,10 +143,6 @@ func unconfiguredNodeSchemaV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"host_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"host_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -183,23 +179,11 @@ func unconfiguredNodeSchemaV2() *schema.Resource {
 					},
 				},
 			},
-			"is_one_node_cluster_supported": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
 			"is_secure_booted": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"is_two_node_cluster_supported": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
 			"node_position": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"node_serial_number": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -423,25 +407,12 @@ func flattenUnconfiguredNodes(nodeListItems []config.UnconfiguredNodeListItem) [
 			if v.RackableUnitSerial != nil {
 				node["rackable_unit_serial"] = *v.RackableUnitSerial
 			}
-			// These attributes are not present in the response of GA SDK
-			// if v.HostName != nil {
-			// 	node["host_name"] = *v.HostName
-			// }
-			// if v.IsOneNodeClusterSupported != nil {
-			// 	node["is_one_node_cluster_supported"] = *v.IsOneNodeClusterSupported
-			// }
-			// if v.IsSecureBooted != nil {
-			// 	node["is_secure_booted"] = *v.IsSecureBooted
-			// }
-			// if v.IsTwoNodeClusterSupported != nil {
-			// 	node["is_two_node_cluster_supported"] = *v.IsTwoNodeClusterSupported
-			// }
-			// if v.NodePosition != nil {
-			// 	node["node_position"] = *v.NodePosition
-			// }
-			// if v.NodeSerialNumber != nil {
-			// 	node["node_serial_number"] = *v.NodeSerialNumber
-			// }
+			if v.IsSecureBooted != nil {
+				node["is_secure_booted"] = *v.IsSecureBooted
+			}
+			if v.NodePosition != nil {
+				node["node_position"] = *v.NodePosition
+			}
 
 			nodeList[k] = node
 		}

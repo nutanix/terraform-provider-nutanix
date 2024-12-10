@@ -11,7 +11,7 @@ import (
 
 const resourceNameUserGroups = "nutanix_user_groups_v2.test"
 
-func TestAccNutanixUserGroupsV2Resource_LDAPUserGroup(t *testing.T) {
+func TestAccV2NutanixUserGroupsResource_LDAPUserGroup(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -33,7 +33,7 @@ func TestAccNutanixUserGroupsV2Resource_LDAPUserGroup(t *testing.T) {
 	})
 }
 
-func TestAccNutanixUserGroupsV2Resource_SAMLUserGroup(t *testing.T) {
+func TestAccV2NutanixUserGroupsResource_SAMLUserGroup(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -54,7 +54,7 @@ func TestAccNutanixUserGroupsV2Resource_SAMLUserGroup(t *testing.T) {
 	})
 }
 
-func TestAccNutanixUserGroupsV2Resource_WithNoGroupType(t *testing.T) {
+func TestAccV2NutanixUserGroupsResource_WithNoGroupType(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -67,7 +67,7 @@ func TestAccNutanixUserGroupsV2Resource_WithNoGroupType(t *testing.T) {
 	})
 }
 
-func TestAccNutanixUserGroupsV2Resource_WithNoIdpId(t *testing.T) {
+func TestAccV2NutanixUserGroupsResource_WithNoIdpId(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

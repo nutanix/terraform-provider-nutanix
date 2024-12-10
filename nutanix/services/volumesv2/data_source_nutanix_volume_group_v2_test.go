@@ -11,7 +11,7 @@ import (
 
 const dataSourceVolumeGroup = "data.nutanix_volume_group_v2.test"
 
-func TestAccNutanixVolumeGroupV2DataSource_Basic(t *testing.T) {
+func TestAccV2NutanixVolumeGroupDataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-volume-group-disk-%d", r)
 	desc := "terraform test volume group disk description"
