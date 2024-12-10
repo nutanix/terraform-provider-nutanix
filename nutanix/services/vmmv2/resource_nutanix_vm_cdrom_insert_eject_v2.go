@@ -101,8 +101,10 @@ func ResourceNutanixVmsCdRomsInsertEjectV2() *schema.Resource {
 																		"bus_type": {
 																			Type:     schema.TypeString,
 																			Optional: true,
-																			ValidateFunc: validation.StringInSlice([]string{"SCSI", "SPAPR",
-																				"PCI", "IDE", "SATA"}, false),
+																			ValidateFunc: validation.StringInSlice([]string{
+																				"SCSI", "SPAPR",
+																				"PCI", "IDE", "SATA",
+																			}, false),
 																		},
 																		"index": {
 																			Type:     schema.TypeInt,
@@ -147,7 +149,7 @@ func ResourceNutanixVmsCdRomsInsertEjectV2Create(ctx context.Context, d *schema.
 	body := config.CdRomInsertParams{}
 
 	if backInfo, ok := d.GetOk("backing_info"); ok {
-		body.BackingInfo = expandVmDisk(backInfo)
+		body.BackingInfo = expandVMDisk(backInfo)
 	}
 
 	readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(vmExtID.(string)))

@@ -358,7 +358,6 @@ func AddNodeListSchema() *schema.Schema {
 			},
 		},
 	}
-
 }
 
 func computedNodeListSchema() *schema.Schema {
@@ -436,7 +435,6 @@ func computedNodeListSchema() *schema.Schema {
 			},
 		},
 	}
-
 }
 
 func uplinkFiledSchema() *schema.Schema {
@@ -509,8 +507,8 @@ func ResourceNutanixClusterAddNodeV2Create(ctx context.Context, d *schema.Resour
 		body.ShouldSkipPreExpandChecks = utils.BoolPtr(skipPreExpandChecks.(bool))
 	}
 
-	aJson, _ := json.MarshalIndent(body, "", " ")
-	log.Printf("[DEBUG] Add Node Request Body: %s", string(aJson))
+	aJSON, _ := json.MarshalIndent(body, "", " ")
+	log.Printf("[DEBUG] Add Node Request Body: %s", string(aJSON))
 
 	resp, err := conn.ClusterEntityAPI.ExpandCluster(utils.StringPtr(clusterExtID.(string)), &body)
 	if err != nil {
@@ -540,8 +538,8 @@ func ResourceNutanixClusterAddNodeV2Create(ctx context.Context, d *schema.Resour
 		return diag.Errorf("error while fetching  node UUID : %v", err)
 	}
 
-	aJson, _ = json.Marshal(resourceUUID)
-	log.Printf("[DEBUG] Add Node Response: %s", string(aJson))
+	aJSON, _ = json.Marshal(resourceUUID)
+	log.Printf("[DEBUG] Add Node Response: %s", string(aJSON))
 
 	rUUID := resourceUUID.Data.GetValue().(import2.Task)
 
@@ -593,8 +591,8 @@ func ResourceNutanixClusterAddNodeV2Delete(ctx context.Context, d *schema.Resour
 		}
 	}
 
-	aJson, _ := json.MarshalIndent(body, "", " ")
-	log.Printf("[DEBUG] Remove Node Request Body: %s", string(aJson))
+	aJSON, _ := json.MarshalIndent(body, "", " ")
+	log.Printf("[DEBUG] Remove Node Request Body: %s", string(aJSON))
 	resp, err := conn.ClusterEntityAPI.RemoveNode(utils.StringPtr(clusterExtID.(string)), body)
 	if err != nil {
 		return diag.Errorf("error while Removing node : %v", err)
@@ -628,15 +626,13 @@ func ResourceNutanixClusterAddNodeV2Delete(ctx context.Context, d *schema.Resour
 	}
 	rUUID := resourceUUID.Data.GetValue().(import2.Task)
 
-	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("Remove Node Task Details : %s", string(aJSON))
+	bJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	log.Printf("Remove Node Task Details : %s", string(bJSON))
 	return nil
 }
 
 func expandClusterNodeParams(pr interface{}) *config.NodeParam {
-
 	if pr != nil {
-
 		nConf := config.NodeParam{}
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -669,7 +665,6 @@ func expandClusterNodeParams(pr interface{}) *config.NodeParam {
 }
 
 func expandBlockList(pr []interface{}) []config.BlockItem {
-
 	if len(pr) > 0 {
 		blockList := make([]config.BlockItem, len(pr))
 
@@ -677,8 +672,8 @@ func expandBlockList(pr []interface{}) []config.BlockItem {
 			val := v.(map[string]interface{})
 			block := config.BlockItem{}
 
-			if blockId, ok := val["block_id"]; ok && blockId != "" {
-				block.BlockId = utils.StringPtr(blockId.(string))
+			if blockID, ok := val["block_id"]; ok && blockID != "" {
+				block.BlockId = utils.StringPtr(blockID.(string))
 			}
 			if rackName, ok := val["rack_name"]; ok && rackName != "" {
 				block.RackName = utils.StringPtr(rackName.(string))
@@ -691,7 +686,6 @@ func expandBlockList(pr []interface{}) []config.BlockItem {
 }
 
 func expandNodeList(pr []interface{}) []config.NodeItem {
-
 	if len(pr) > 0 {
 		nodeList := make([]config.NodeItem, len(pr))
 
@@ -699,11 +693,11 @@ func expandNodeList(pr []interface{}) []config.NodeItem {
 			val := v.(map[string]interface{})
 			node := config.NodeItem{}
 
-			if nodeUuid, ok := val["node_uuid"]; ok && nodeUuid != "" {
-				node.NodeUuid = utils.StringPtr(nodeUuid.(string))
+			if nodeUUID, ok := val["node_uuid"]; ok && nodeUUID != "" {
+				node.NodeUuid = utils.StringPtr(nodeUUID.(string))
 			}
-			if blockId, ok := val["block_id"]; ok && blockId != "" {
-				node.BlockId = utils.StringPtr(blockId.(string))
+			if blockID, ok := val["block_id"]; ok && blockID != "" {
+				node.BlockId = utils.StringPtr(blockID.(string))
 			}
 			if nodePosition, ok := val["node_position"]; ok && nodePosition != "" {
 				node.NodePosition = utils.StringPtr(nodePosition.(string))
@@ -726,17 +720,17 @@ func expandNodeList(pr []interface{}) []config.NodeItem {
 			if isLightCompute, ok := val["is_light_compute"]; ok {
 				node.IsLightCompute = utils.BoolPtr(isLightCompute.(bool))
 			}
-			if ipmiIp, ok := val["ipmi_ip"]; ok {
-				node.IpmiIp = expandIPAddress(ipmiIp)
+			if ipmiIP, ok := val["ipmi_ip"]; ok {
+				node.IpmiIp = expandIPAddress(ipmiIP)
 			}
 			if digitalCertificateMapList, ok := val["digital_certificate_map_list"]; ok {
 				node.DigitalCertificateMapList = expandKeyValueMap(digitalCertificateMapList.([]interface{}))
 			}
-			if cvmIp, ok := val["cvm_ip"]; ok {
-				node.CvmIp = expandIPAddress(cvmIp)
+			if cvmIP, ok := val["cvm_ip"]; ok {
+				node.CvmIp = expandIPAddress(cvmIP)
 			}
-			if hypervisorIp, ok := val["hypervisor_ip"]; ok {
-				node.HypervisorIp = expandIPAddress(hypervisorIp)
+			if hypervisorIP, ok := val["hypervisor_ip"]; ok {
+				node.HypervisorIp = expandIPAddress(hypervisorIP)
 			}
 			if model, ok := val["model"]; ok {
 				node.Model = utils.StringPtr(model.(string))
@@ -755,7 +749,6 @@ func expandNodeList(pr []interface{}) []config.NodeItem {
 }
 
 func expandComputeNodeList(pr []interface{}) []config.ComputeNodeItem {
-
 	if len(pr) > 0 {
 		nodeList := make([]config.ComputeNodeItem, len(pr))
 
@@ -763,11 +756,11 @@ func expandComputeNodeList(pr []interface{}) []config.ComputeNodeItem {
 			val := v.(map[string]interface{})
 			node := config.NewComputeNodeItem()
 
-			if nodeUuid, ok := val["node_uuid"]; ok && nodeUuid != "" {
-				node.NodeUuid = utils.StringPtr(nodeUuid.(string))
+			if nodeUUID, ok := val["node_uuid"]; ok && nodeUUID != "" {
+				node.NodeUuid = utils.StringPtr(nodeUUID.(string))
 			}
-			if blockId, ok := val["block_id"]; ok && blockId != "" {
-				node.BlockId = utils.StringPtr(blockId.(string))
+			if blockID, ok := val["block_id"]; ok && blockID != "" {
+				node.BlockId = utils.StringPtr(blockID.(string))
 			}
 			if nodePosition, ok := val["node_position"]; ok && nodePosition != "" {
 				node.NodePosition = utils.StringPtr(nodePosition.(string))
@@ -775,14 +768,14 @@ func expandComputeNodeList(pr []interface{}) []config.ComputeNodeItem {
 			if hypervisorHostname, ok := val["hypervisor_hostname"]; ok && hypervisorHostname != "" {
 				node.HypervisorHostname = utils.StringPtr(hypervisorHostname.(string))
 			}
-			if ipmiIp, ok := val["ipmi_ip"]; ok {
-				node.IpmiIp = expandIPAddress(ipmiIp)
+			if ipmiIP, ok := val["ipmi_ip"]; ok {
+				node.IpmiIp = expandIPAddress(ipmiIP)
 			}
 			if digitalCertificateMapList, ok := val["digital_certificate_map_list"]; ok {
 				node.DigitalCertificateMapList = expandKeyValueMap(digitalCertificateMapList.([]interface{}))
 			}
-			if hypervisorIp, ok := val["hypervisor_ip"]; ok {
-				node.HypervisorIp = expandIPAddress(hypervisorIp)
+			if hypervisorIP, ok := val["hypervisor_ip"]; ok {
+				node.HypervisorIp = expandIPAddress(hypervisorIP)
 			}
 			if model, ok := val["model"]; ok && model != "" {
 				node.Model = utils.StringPtr(model.(string))
@@ -795,7 +788,6 @@ func expandComputeNodeList(pr []interface{}) []config.ComputeNodeItem {
 }
 
 func expandKeyValueMap(pr []interface{}) []config.DigitalCertificateMapReference {
-
 	if len(pr) > 0 {
 		dcmList := make([]config.DigitalCertificateMapReference, len(pr))
 
@@ -817,7 +809,6 @@ func expandKeyValueMap(pr []interface{}) []config.DigitalCertificateMapReference
 }
 
 func expandNetworks(pr []interface{}) []config.UplinkNetworkItem {
-
 	if len(pr) > 0 {
 		networkList := make([]config.UplinkNetworkItem, len(pr))
 
@@ -847,9 +838,7 @@ func expandNetworks(pr []interface{}) []config.UplinkNetworkItem {
 }
 
 func expandUplink(pr interface{}) *config.Uplinks {
-
 	if pr != nil {
-
 		nConf := config.Uplinks{}
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -867,7 +856,6 @@ func expandUplink(pr interface{}) *config.Uplinks {
 }
 
 func expandUplinkParams(pr []interface{}) []config.UplinksField {
-
 	if len(pr) > 0 {
 		networkList := make([]config.UplinksField, len(pr))
 
@@ -892,8 +880,8 @@ func expandUplinkParams(pr []interface{}) []config.UplinksField {
 }
 
 func expandHypervisorIsos(pr []interface{}) []config.HypervisorIsoMap {
-	aJson, _ := json.MarshalIndent(pr, "", " ")
-	log.Printf("[DEBUG] expandHypervisorIsos pr: %s", string(aJson))
+	aJSON, _ := json.MarshalIndent(pr, "", " ")
+	log.Printf("[DEBUG] expandHypervisorIsos pr: %s", string(aJSON))
 	if len(pr) > 0 {
 		itemList := make([]config.HypervisorIsoMap, len(pr))
 
@@ -916,7 +904,6 @@ func expandHypervisorIsos(pr []interface{}) []config.HypervisorIsoMap {
 }
 
 func expandBundleInfo(pr interface{}) *config.BundleInfo {
-
 	if pr != nil {
 		if len(pr.([]interface{})) == 0 {
 			return nil
@@ -935,7 +922,6 @@ func expandBundleInfo(pr interface{}) *config.BundleInfo {
 }
 
 func expandClusterConfigParams(pr interface{}) *config.ConfigParams {
-
 	if pr != nil {
 		if len(pr.([]interface{})) == 0 {
 			return nil
@@ -1023,13 +1009,13 @@ func expandDetails(pr interface{}) *config.UserInfo {
 
 func expandHypervisorType(hypervisorType interface{}) *config.HypervisorType {
 	if hypervisorType != nil && hypervisorType != "" {
-
+		const two, three, four, five, six = 2, 3, 4, 5, 6
 		subMap := map[string]interface{}{
-			"AHV":        2,
-			"ESX":        3,
-			"HYPERV":     4,
-			"XEN":        5,
-			"NATIVEHOST": 6,
+			"AHV":        two,
+			"ESX":        three,
+			"HYPERV":     four,
+			"XEN":        five,
+			"NATIVEHOST": six,
 		}
 		pVal := subMap[hypervisorType.(string)]
 		if pVal == nil {
@@ -1042,9 +1028,7 @@ func expandHypervisorType(hypervisorType interface{}) *config.HypervisorType {
 }
 
 func expandExtraParams(pr interface{}) *config.NodeRemovalExtraParam {
-
 	if pr != nil {
-
 		extraParams := config.NodeRemovalExtraParam{}
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})

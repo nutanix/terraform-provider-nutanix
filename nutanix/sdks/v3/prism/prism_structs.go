@@ -15,7 +15,6 @@ type Reference struct {
 
 // VMVnumaConfig Indicates how VM vNUMA should be configured
 type VMVnumaConfig struct {
-
 	// Number of vNUMA nodes. 0 means vNUMA is disabled.
 	NumVnumaNodes *int64 `json:"num_vnuma_nodes,omitempty" mapstructure:"num_vnuma_nodes,omitempty"`
 }
@@ -27,7 +26,6 @@ type VMSerialPort struct {
 
 // IPAddress An IP address.
 type IPAddress struct {
-
 	// Address *string.
 	IP *string `json:"ip,omitempty" mapstructure:"ip,omitempty"`
 
@@ -38,7 +36,6 @@ type IPAddress struct {
 
 // VMNic Virtual Machine NIC.
 type VMNic struct {
-
 	// IP endpoints for the adapter. Currently, IPv4 addresses are supported.
 	IPEndpointList []*IPAddress `json:"ip_endpoint_list,omitempty" mapstructure:"ip_endpoint_list,omitempty"`
 
@@ -76,7 +73,6 @@ type DiskAddress struct {
 
 // VMBootDevice Indicates which device a VM should boot from. One of disk_address or mac_address should be provided.
 type VMBootDevice struct {
-
 	// Address of disk to boot from.
 	DiskAddress *DiskAddress `json:"disk_address,omitempty" mapstructure:"disk_address,omitempty"`
 
@@ -86,7 +82,6 @@ type VMBootDevice struct {
 
 // VMBootConfig Indicates which device a VM should boot from.
 type VMBootConfig struct {
-
 	// Indicates which device a VM should boot from. Boot device takes precdence over boot device order. If both are
 	// given then specified boot device will be primary boot device and remaining devices will be assigned boot order
 	// according to boot device order field.
@@ -110,14 +105,12 @@ type NutanixGuestToolsSpec struct {
 
 // GuestToolsSpec Information regarding guest tools.
 type GuestToolsSpec struct {
-
 	// Nutanix Guest Tools information
 	NutanixGuestTools *NutanixGuestToolsSpec `json:"nutanix_guest_tools,omitempty" mapstructure:"nutanix_guest_tools,omitempty"`
 }
 
 // VMGpu Graphics resource information for the Virtual Machine.
 type VMGpu struct {
-
 	// The device ID of the GPU.
 	DeviceID *int64 `json:"device_id,omitempty" mapstructure:"device_id,omitempty"`
 
@@ -132,7 +125,6 @@ type VMGpu struct {
 // custom_key_values should be provided. If custom_key_ves are provided then the user data will be generated using these
 // key-value pairs.
 type GuestCustomizationCloudInit struct {
-
 	// Generic key value pair used for custom attributes
 	CustomKeyValues map[string]string `json:"custom_key_values,omitempty" mapstructure:"custom_key_values,omitempty"`
 
@@ -149,7 +141,6 @@ type GuestCustomizationCloudInit struct {
 // custom_key_values should be provided. If custom_key_values are provided then the unattended answer file will be
 // generated using these key-value pairs.
 type GuestCustomizationSysprep struct {
-
 	// Generic key value pair used for custom attributes
 	CustomKeyValues map[string]string `json:"custom_key_values,omitempty" mapstructure:"custom_key_values,omitempty"`
 
@@ -178,7 +169,6 @@ type GuestCustomization struct {
 
 // VMGuestPowerStateTransitionConfig Extra configs related to power state transition.
 type VMGuestPowerStateTransitionConfig struct {
-
 	// Indicates whether to execute set script before ngt shutdown/reboot.
 	EnableScriptExec *bool `json:"enable_script_exec,omitempty" mapstructure:"enable_script_exec,omitempty"`
 
@@ -239,7 +229,6 @@ type VMDisk struct {
 
 // VMResources VM Resources Definition.
 type VMResources struct {
-
 	// Indicates which device the VM should boot from.
 	BootConfig *VMBootConfig `json:"boot_config,omitempty" mapstructure:"boot_config,omitempty"`
 
@@ -328,7 +317,6 @@ type VMIntentInput struct {
 
 // MessageResource ...
 type MessageResource struct {
-
 	// Custom key-value details relevant to the status.
 	Details map[string]string `json:"details,omitempty" mapstructure:"details,omitempty"`
 
@@ -356,7 +344,6 @@ type VMStatus struct {
 
 // VMNicOutputStatus Virtual Machine NIC Status.
 type VMNicOutputStatus struct {
-
 	// The Floating IP associated with the vnic.
 	FloatingIP *string `json:"floating_ip,omitempty" mapstructure:"floating_ip,omitempty"`
 
@@ -417,14 +404,12 @@ type NutanixGuestToolsStatus struct {
 
 // GuestToolsStatus Information regarding guest tools.
 type GuestToolsStatus struct {
-
 	// Nutanix Guest Tools information
 	NutanixGuestTools *NutanixGuestToolsStatus `json:"nutanix_guest_tools,omitempty" mapstructure:"nutanix_guest_tools,omitempty"`
 }
 
 // VMGpuOutputStatus Graphics resource status information for the Virtual Machine.
 type VMGpuOutputStatus struct {
-
 	// The device ID of the GPU.
 	DeviceID *int64 `json:"device_id,omitempty" mapstructure:"device_id,omitempty"`
 
@@ -473,7 +458,6 @@ type GuestCustomizationStatus struct {
 
 // VMResourcesDefStatus VM Resources Status Definition.
 type VMResourcesDefStatus struct {
-
 	// Indicates which device the VM should boot from.
 	BootConfig *VMBootConfig `json:"boot_config,omitempty" mapstructure:"boot_config,omitempty"`
 
@@ -579,7 +563,6 @@ type VMIntentResponse struct {
 
 // DSMetadata All api calls that return a list will have this metadata block as input
 type DSMetadata struct {
-
 	// The filter in FIQL syntax used for the results.
 	Filter *string `json:"filter,omitempty" mapstructure:"filter,omitempty"`
 
@@ -624,7 +607,6 @@ type VMListIntentResponse struct {
 
 // SubnetMetadata The subnet kind metadata
 type SubnetMetadata struct {
-
 	// Categories for the subnet
 	Categories map[string]string `json:"categories,omitempty" mapstructure:"categories,omitempty"`
 
@@ -657,7 +639,6 @@ type SubnetMetadata struct {
 
 // Address represents the Host address.
 type Address struct {
-
 	// Fully qualified domain name.
 	FQDN *string `json:"fqdn,omitempty" mapstructure:"fqdn,omitempty"`
 
@@ -673,7 +654,6 @@ type Address struct {
 
 // IPPool represents IP pool.
 type IPPool struct {
-
 	// Range of IPs (example: 10.0.0.9 10.0.0.19).
 	Range *string `json:"range,omitempty" mapstructure:"range,omitempty"`
 }
@@ -693,7 +673,6 @@ type DHCPOptions struct {
 
 // IPConfig represents the configurtion of IP.
 type IPConfig struct {
-
 	// Default gateway IP address.
 	DefaultGatewayIP *string `json:"default_gateway_ip,omitempty" mapstructure:"default_gateway_ip,omitempty"`
 
@@ -839,7 +818,6 @@ type SubnetListIntentResponse struct {
 
 // SubnetListMetadata ...
 type SubnetListMetadata struct {
-
 	// The filter in FIQL syntax used for the results.
 	Filter *string `json:"filter,omitempty" mapstructure:"filter,omitempty"`
 
@@ -867,7 +845,6 @@ type Checksum struct {
 
 // ImageVersionResources The image version, which is composed of a product name and product version.
 type ImageVersionResources struct {
-
 	// Name of the producer/distribution of the image. For example windows or red hat.
 	ProductName *string `json:"product_name" mapstructure:"product_name"`
 
@@ -877,7 +854,6 @@ type ImageVersionResources struct {
 
 // ImageResources describes the image spec resources object.
 type ImageResources struct {
-
 	// The supported CPU architecture for a disk image.
 	Architecture *string `json:"architecture,omitempty" mapstructure:"architecture,omitempty"`
 
@@ -903,7 +879,6 @@ type ImageResources struct {
 
 // Image An intentful representation of a image spec
 type Image struct {
-
 	// A description for image.
 	Description *string `json:"description,omitempty" mapstructure:"description,omitempty"`
 
@@ -915,7 +890,6 @@ type Image struct {
 
 // ImageMetadata Metadata The image kind metadata
 type ImageMetadata struct {
-
 	// Categories for the image
 	Categories map[string]string `json:"categories,omitempty" mapstructure:"categories,omitempty"`
 
@@ -972,7 +946,6 @@ type ImageStatus struct {
 
 // ImageVersionStatus represents the image version, which is composed of a product name and product version.
 type ImageVersionStatus struct {
-
 	// Name of the producer/distribution of the image. For example windows or red hat.
 	ProductName *string `json:"product_name" mapstructure:"product_name"`
 
@@ -982,7 +955,6 @@ type ImageVersionStatus struct {
 
 // ImageResourcesDefStatus describes the image status resources object.
 type ImageResourcesDefStatus struct {
-
 	// The supported CPU architecture for a disk image.
 	Architecture *string `json:"architecture,omitempty" mapstructure:"architecture,omitempty"`
 
@@ -1048,7 +1020,6 @@ type ImageIntentResponse struct {
 
 // ImageListMetadata represents metadata input
 type ImageListMetadata struct {
-
 	// The filter in FIQL syntax used for the results.
 	Filter *string `json:"filter,omitempty" mapstructure:"filter,omitempty"`
 
@@ -1362,7 +1333,6 @@ type ClusterAnalysis struct {
 
 // CategoryListMetadata All api calls that return a list will have this metadata block as input
 type CategoryListMetadata struct {
-
 	// The filter in FIQL syntax used for the results.
 	Filter *string `json:"filter,omitempty" mapstructure:"filter,omitempty"`
 
@@ -1387,7 +1357,6 @@ type CategoryListMetadata struct {
 
 // CategoryKeyStatus represents Category Key Definition.
 type CategoryKeyStatus struct {
-
 	// API version.
 	APIVersion *string `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
 
@@ -1403,7 +1372,6 @@ type CategoryKeyStatus struct {
 
 // CategoryKeyListResponse represents the category key list response.
 type CategoryKeyListResponse struct {
-
 	// API Version.
 	APIVersion *string `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
 
@@ -1414,7 +1382,6 @@ type CategoryKeyListResponse struct {
 
 // CategoryKey represents category key definition.
 type CategoryKey struct {
-
 	// API version.
 	APIVersion *string `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
 
@@ -1451,7 +1418,6 @@ type CategoryValueListResponse struct {
 
 // CategoryValueStatus represents Category value definition.
 type CategoryValueStatus struct {
-
 	// API version.
 	APIVersion *string `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
 
@@ -1470,7 +1436,6 @@ type CategoryValueStatus struct {
 
 // CategoryFilter represents A category filter.
 type CategoryFilter struct {
-
 	// List of kinds associated with this filter.
 	KindList []*string `json:"kind_list,omitempty" mapstructure:"kind_list,omitempty"`
 
@@ -1483,7 +1448,6 @@ type CategoryFilter struct {
 
 // CategoryQueryInput represents Categories query input object.
 type CategoryQueryInput struct {
-
 	// API version.
 	APIVersion *string `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
 
@@ -1502,7 +1466,6 @@ type CategoryQueryInput struct {
 
 // CategoryQueryResponseMetadata represents Response metadata.
 type CategoryQueryResponseMetadata struct {
-
 	// The maximum number of records to return per group.
 	GroupMemberCount *int64 `json:"group_member_count,omitempty" mapstructure:"group_member_count,omitempty"`
 
@@ -1518,7 +1481,6 @@ type CategoryQueryResponseMetadata struct {
 
 // EntityReference Reference to an entity.
 type EntityReference struct {
-
 	// Categories for the entity.
 	Categories map[string]string `json:"categories,omitempty" mapstructure:"categories,omitempty"`
 
@@ -1537,7 +1499,6 @@ type EntityReference struct {
 
 // CategoryQueryResponseResults ...
 type CategoryQueryResponseResults struct {
-
 	// List of entity references.
 	EntityAnyReferenceList []*EntityReference `json:"entity_any_reference_list,omitempty" mapstructure:"entity_any_reference_list,omitempty"`
 
@@ -1553,7 +1514,6 @@ type CategoryQueryResponseResults struct {
 
 // CategoryQueryResponse represents Categories query response object.
 type CategoryQueryResponse struct {
-
 	// API version.
 	APIVersion *string `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
 
@@ -1564,7 +1524,6 @@ type CategoryQueryResponse struct {
 
 // CategoryValue represents Category value definition.
 type CategoryValue struct {
-
 	// API version.
 	APIVersion *string `json:"api_version,omitempty" mapstructure:"api_version,omitempty"`
 
@@ -1584,7 +1543,6 @@ type PortRange struct {
 
 // IPSubnet IP subnet provided as an address and prefix length.
 type IPSubnet struct {
-
 	// IPV4 address.
 	IP *string `json:"ip,omitempty" mapstructure:"ip,omitempty"`
 
@@ -1616,7 +1574,6 @@ type NetworkRule struct {
 
 // TargetGroup ...
 type TargetGroup struct {
-
 	// Default policy for communication within target group.
 	DefaultInternalPolicy *string `json:"default_internal_policy,omitempty" mapstructure:"default_internal_policy,omitempty"`
 
@@ -1677,10 +1634,10 @@ type Metadata struct {
 	// Applied on Prism Central only. Indicate whether force to translate the spec of the fanout request to fit the target cluster API schema.
 	ShouldForceTranslate *bool `json:"should_force_translate,omitempty" mapstructure:"should_force_translate,omitempty"`
 
-	//TODO: add if necessary
-	//CategoriesMapping    map[string][]string `json:"categories_mapping,omitempty" mapstructure:"categories_mapping,omitempty"`
-	//EntityVersion        *string             `json:"entity_version,omitempty" mapstructure:"entity_version,omitempty"`
-	//UseCategoriesMapping *bool               `json:"use_categories_mapping,omitempty" mapstructure:"use_categories_mapping,omitempty"`
+	// TODO: add if necessary
+	// CategoriesMapping    map[string][]string `json:"categories_mapping,omitempty" mapstructure:"categories_mapping,omitempty"`
+	// EntityVersion        *string             `json:"entity_version,omitempty" mapstructure:"entity_version,omitempty"`
+	// UseCategoriesMapping *bool               `json:"use_categories_mapping,omitempty" mapstructure:"use_categories_mapping,omitempty"`
 }
 
 // NetworkSecurityRuleIntentInput An intentful representation of a network_security_rule

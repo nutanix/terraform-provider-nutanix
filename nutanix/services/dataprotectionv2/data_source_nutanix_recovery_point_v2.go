@@ -11,12 +11,13 @@ import (
 	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/common/v1/response"
 	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/dataprotection/v4/common"
 	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/dataprotection/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 )
 
-const ApplicationConsistentPropertiesVss1 = "dataprotection.v4.common.VssProperties"
-const ApplicationConsistentPropertiesVss2 = "dataprotection.v4.r0.b1.common.VssProperties"
+const (
+	ApplicationConsistentPropertiesVss1 = "dataprotection.v4.common.VssProperties"
+	ApplicationConsistentPropertiesVss2 = "dataprotection.v4.r0.b1.common.VssProperties"
+)
 
 func DatasourceNutanixRecoveryPointV2() *schema.Resource {
 	return &schema.Resource{
@@ -244,10 +245,9 @@ func DatasourceNutanixRecoveryPointV2Read(ctx context.Context, d *schema.Resourc
 
 	conn := meta.(*conns.Client).DataProtectionAPI
 
-	recoveryPointExtId := d.Get("ext_id").(string)
+	recoveryPointExtID := d.Get("ext_id").(string)
 
-	resp, err := conn.RecoveryPoint.GetRecoveryPointById(&recoveryPointExtId)
-
+	resp, err := conn.RecoveryPoint.GetRecoveryPointById(&recoveryPointExtID)
 	if err != nil {
 		return diag.Errorf("error while fetching recovery point: %v", err)
 	}
@@ -302,7 +302,6 @@ func DatasourceNutanixRecoveryPointV2Read(ctx context.Context, d *schema.Resourc
 
 	d.SetId(*getResp.ExtId)
 	return nil
-
 }
 
 func flattenTime(inTime *time.Time) string {
@@ -399,14 +398,14 @@ func flattenVMRecoveryPoints(vmRecoveryPoints []config.VmRecoveryPoint) []map[st
 				vmRecoveryPoint["application_consistent_properties"] = flattenApplicationConsistentProperties(v.ApplicationConsistentProperties)
 			}
 
-			aJson, _ := json.MarshalIndent(v, "", "  ")
-			log.Printf("[DEBUG] VM Recovery Point v: %v\n", string(aJson))
+			aJSON, _ := json.MarshalIndent(v, "", "  ")
+			log.Printf("[DEBUG] VM Recovery Point v: %v\n", string(aJSON))
 
 			vmRecoveryPointList[k] = vmRecoveryPoint
 		}
 
-		aJson, _ := json.MarshalIndent(vmRecoveryPointList, "", "  ")
-		log.Printf("[DEBUG] VM Recovery Points Flattened: %v\n", string(aJson))
+		aJSON, _ := json.MarshalIndent(vmRecoveryPointList, "", "  ")
+		log.Printf("[DEBUG] VM Recovery Points Flattened: %v\n", string(aJSON))
 		return vmRecoveryPointList
 	}
 	return nil

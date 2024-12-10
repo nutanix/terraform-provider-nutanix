@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -35,7 +34,6 @@ func DatasourceNutanixVolumeGroupIscsiClientsV2() *schema.Resource {
 				Optional:    true,
 			},
 			"filter": {
-				Description: "A URL query parameter that allows clients to filter a collection of resources. The expression specified with $filter is evaluated for each resource in the collection, and only items where the expression evaluates to true are included in the response. Expression specified with the $filter must conform to the OData V4.01 URL conventions. For example, filter '$filter=name eq 'karbon-ntnx-1.0' would filter the result on cluster name 'karbon-ntnx1.0', filter '$filter=startswith(name, 'C')' would filter on cluster name starting with 'C'. The filter can be applied to the following fields:	clusterReference, extId",
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -45,9 +43,8 @@ func DatasourceNutanixVolumeGroupIscsiClientsV2() *schema.Resource {
 				Optional:    true,
 			},
 			"expand": {
-				Description: "A URL query parameter that allows clients to request related resources when a resource that satisfies a particular request is retrieved. Each expanded item is evaluated relative to the entity containing the property being expanded. Other query options can be applied to an expanded property by appending a semicolon-separated list of query options, enclosed in parentheses, to the property name. Permissible system query options are $filter, $select and $orderby. The following expansion keys are supported. The expand can be applied to the following fields: iscsiClient",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"select": {
 				Description: "A URL query parameter that allows clients to request a specific set of properties for each entity or complex type. Expression specified with the $select must conform to the OData V4.01 URL conventions. If a $select expression consists of a single select item that is an asterisk (i.e., *), then all properties on the matching resource will be returned. The select can be applied to the following fields: clusterReference, extId",
@@ -143,7 +140,6 @@ func DatasourceNutanixVolumeGroupIscsiClientsV2Read(ctx context.Context, d *sche
 
 	// get the volume group iscsi clients
 	resp, err := conn.VolumeAPIInstance.ListExternalIscsiAttachmentsByVolumeGroupId(utils.StringPtr(volumeGroupExtID.(string)), page, limit, filter, orderBy, expand, selects)
-
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -160,7 +156,6 @@ func DatasourceNutanixVolumeGroupIscsiClientsV2Read(ctx context.Context, d *sche
 
 	// extract the volume groups data from the response
 	if diskResp != nil {
-
 		// set the volume groups iscsi clients  data in the terraform resource
 		if err := d.Set("iscsi_clients", flattenVolumeIscsiClientsEntities(diskResp.GetValue().([]volumesClient.IscsiClientAttachment))); err != nil {
 			return diag.FromErr(err)
@@ -168,7 +163,6 @@ func DatasourceNutanixVolumeGroupIscsiClientsV2Read(ctx context.Context, d *sche
 	}
 	d.SetId(resource.UniqueId())
 	return nil
-
 }
 
 func flattenVolumeIscsiClientsEntities(iscsiClientAttachments []volumesClient.IscsiClientAttachment) []interface{} {
@@ -187,7 +181,6 @@ func flattenVolumeIscsiClientsEntities(iscsiClientAttachments []volumesClient.Is
 			}
 
 			iscsiClientList[k] = iscsiClient
-
 		}
 		return iscsiClientList
 	}

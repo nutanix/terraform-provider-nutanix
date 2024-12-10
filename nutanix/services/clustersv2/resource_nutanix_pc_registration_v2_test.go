@@ -1,21 +1,21 @@
 package clustersv2_test
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"regexp"
 	"testing"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
 // Logic covered in create cluster resource test
 func TestAccNutanixPePcRegistrationV2Resource_ValidationsDomainManagerRemoteClusterSpec(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccClusterResourceDomainManagerRemoteClusterSpecInvalidConfigWithoutPcExtId(),
+				Config:      testAccClusterResourceDomainManagerRemoteClusterSpecInvalidConfigWithoutPcExtID(),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 			{
@@ -35,12 +35,10 @@ func TestAccNutanixPePcRegistrationV2Resource_ValidationsDomainManagerRemoteClus
 }
 
 func TestAccNutanixPePcRegistrationV2Resource_ValidationsAOSRemoteClusterSpec(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
-
 			{
 				Config:      testAccClusterResourceAOSRemoteClusterSpecInvalidConfigWithoutRemoteCluster(),
 				ExpectError: regexp.MustCompile("Insufficient remote_cluster blocks"),
@@ -58,13 +56,12 @@ func TestAccNutanixPePcRegistrationV2Resource_ValidationsAOSRemoteClusterSpec(t 
 }
 
 func TestAccNutanixPePcRegistrationV2Resource_ValidationsClusterReference(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccClusterResourceClusterReferenceInvalidConfigWithoutClusterExtId(),
+				Config:      testAccClusterResourceClusterReferenceInvalidConfigWithoutClusterExtID(),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 		},
@@ -72,7 +69,7 @@ func TestAccNutanixPePcRegistrationV2Resource_ValidationsClusterReference(t *tes
 }
 
 // Invalid Configs for DomainManagerRemoteClusterSpec
-func testAccClusterResourceDomainManagerRemoteClusterSpecInvalidConfigWithoutPcExtId() string {
+func testAccClusterResourceDomainManagerRemoteClusterSpecInvalidConfigWithoutPcExtID() string {
 	return `
 	resource "nutanix_pc_registration_v2" "test" {
 	  remote_cluster {
@@ -227,7 +224,7 @@ func testAccClusterResourceAOSRemoteClusterSpecInvalidConfigWithoutAuthenticatio
 
 // Invalid Configs for ClusterReference
 
-func testAccClusterResourceClusterReferenceInvalidConfigWithoutClusterExtId() string {
+func testAccClusterResourceClusterReferenceInvalidConfigWithoutClusterExtID() string {
 	return `
 	resource "nutanix_pc_registration_v2" "test" {
 	  remote_cluster {

@@ -6,14 +6,12 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
 const resourceNameIdentityProviders = "nutanix_saml_identity_providers_v2.test"
 
 func TestAccNutanixIdentityProvidersV2Resource_CreateSamlIdp(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -37,7 +35,6 @@ func TestAccNutanixIdentityProvidersV2Resource_CreateSamlIdp(t *testing.T) {
 }
 
 func TestAccNutanixIdentityProvidersV2ResourceWithNoName(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -49,14 +46,14 @@ func TestAccNutanixIdentityProvidersV2ResourceWithNoName(t *testing.T) {
 		},
 	})
 }
-func TestAccNutanixIdentityProvidersV2ResourceWithNoEntityId(t *testing.T) {
 
+func TestAccNutanixIdentityProvidersV2ResourceWithNoEntityId(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testIdentityProvidersResourceWithoutEntityId(filepath),
+				Config:      testIdentityProvidersResourceWithoutEntityID(filepath),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 		},
@@ -107,7 +104,7 @@ func testIdentityProvidersResourceWithoutName(filepath string) string {
 		}`, filepath)
 }
 
-func testIdentityProvidersResourceWithoutEntityId(filepath string) string {
+func testIdentityProvidersResourceWithoutEntityID(filepath string) string {
 	return fmt.Sprintf(`
 
 	locals{

@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/common/v1/config"
 	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -37,9 +36,8 @@ func DatasourceNutanixVolumeDisksV2() *schema.Resource {
 				Optional:    true,
 			},
 			"filter": {
-				Description: "A URL query parameter that allows clients to filter a collection of resources. The expression specified with $filter is evaluated for each resource in the collection, and only items where the expression evaluates to true are included in the response. Expression specified with the $filter must conform to the OData V4.01 URL conventions. For example, filter '$filter=name eq 'karbon-ntnx-1.0' would filter the result on cluster name 'karbon-ntnx1.0', filter '$filter=startswith(name, 'C')' would filter on cluster name starting with 'C'. The filter can be applied to the following fields: storageContainerId",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"orderby": {
 				Description: "A URL query parameter that allows clients to specify the sort criteria for the returned list of objects. Resources can be sorted in ascending order using asc or descending order using desc. If asc or desc are not specified, the resources will be sorted in ascending order by default. For example, '$orderby=templateName desc' would get all templates sorted by templateName in descending order. The orderby can be applied to the following fields: diskSizeBytes",
@@ -169,7 +167,6 @@ func DatasourceNutanixVolumeDisksV2() *schema.Resource {
 }
 
 func DatasourceNutanixVolumeDisksV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.Client).VolumeAPI
 
 	var filter, orderBy, selects *string
@@ -206,7 +203,6 @@ func DatasourceNutanixVolumeDisksV2Read(ctx context.Context, d *schema.ResourceD
 
 	// get the volume groups response
 	resp, err := conn.VolumeAPIInstance.ListVolumeDisksByVolumeGroupId(utils.StringPtr(volumeGroupExtID.(string)), page, limit, filter, orderBy, selects)
-
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)

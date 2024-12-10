@@ -53,6 +53,7 @@ func TestAccNutanixServiceGroupsV2DataSource_WithFilter(t *testing.T) {
 		},
 	})
 }
+
 func testAccServiceGrpsDataSourceConfig(name, desc string) string {
 	return fmt.Sprintf(`
 
@@ -76,6 +77,7 @@ func testAccServiceGrpsDataSourceConfig(name, desc string) string {
 		}
 	`, name, desc)
 }
+
 func testAccServiceGrpsDataSourceWithFilterConfig(name, desc string) string {
 	return fmt.Sprintf(`
 

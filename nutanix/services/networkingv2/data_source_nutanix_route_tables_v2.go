@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -114,7 +113,6 @@ func DatasourceNutanixRouteTablesV2Read(ctx context.Context, d *schema.ResourceD
 	}
 
 	resp, err := conn.RoutesTable.ListRouteTables(page, limit, filter, orderBy)
-
 	if err != nil {
 		return diag.Errorf("error while fetching route tables : %v", err)
 	}
@@ -126,8 +124,8 @@ func DatasourceNutanixRouteTablesV2Read(ctx context.Context, d *schema.ResourceD
 		}
 	} else {
 		getResp := resp.Data.GetValue().([]import1.RouteTable)
-		aJson, _ := json.Marshal(getResp)
-		log.Printf("[DEBUG] DatasourceNutanixRouteTablesV2Read: %v", string(aJson))
+		aJSON, _ := json.Marshal(getResp)
+		log.Printf("[DEBUG] DatasourceNutanixRouteTablesV2Read: %v", string(aJSON))
 
 		if err := d.Set("route_tables", flattenRouteTableEntities(getResp)); err != nil {
 			return diag.FromErr(err)
@@ -137,6 +135,7 @@ func DatasourceNutanixRouteTablesV2Read(ctx context.Context, d *schema.ResourceD
 	d.SetId(resource.UniqueId())
 	return nil
 }
+
 func flattenRouteTableEntities(pr []import1.RouteTable) []interface{} {
 	if pr == nil {
 		return make([]interface{}, 0)
@@ -154,7 +153,7 @@ func flattenRouteTableEntities(pr []import1.RouteTable) []interface{} {
 		}
 	}
 
-	aJson, _ := json.Marshal(routeTables)
-	log.Printf("[DEBUG] flattenRouteTableEntities: %v", string(aJson))
+	aJSON, _ := json.Marshal(routeTables)
+	log.Printf("[DEBUG] flattenRouteTableEntities: %v", string(aJSON))
 	return routeTables
 }

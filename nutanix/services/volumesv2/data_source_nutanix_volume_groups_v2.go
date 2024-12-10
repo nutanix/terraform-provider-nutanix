@@ -2,14 +2,12 @@ package volumesv2
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	volumesClientResponse "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/common/v1/response"
 	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -31,9 +29,8 @@ func DatasourceNutanixVolumeGroupsV2() *schema.Resource {
 				Optional:    true,
 			},
 			"filter": {
-				Description: "A URL query parameter that allows clients to filter a collection of resources. The expression specified with $filter is evaluated for each resource in the collection, and only items where the expression evaluates to true are included in the response. Expression specified with the $filter must conform to the OData V4.01 URL conventions. For example, filter '$filter=name eq 'karbon-ntnx-1.0' would filter the result on cluster name 'karbon-ntnx1.0', filter '$filter=startswith(name, 'C')' would filter on cluster name starting with 'C'. The filter can be applied to the following fields: clusterReference, extId, name",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"orderby": {
 				Description: "A URL query parameter that allows clients to specify the sort criteria for the returned list of objects. Resources can be sorted in ascending order using asc or descending order using desc. If asc or desc are not specified, the resources will be sorted in ascending order by default. For example, '$orderby=templateName desc' would get all templates sorted by templateName in descending order. The orderby can be applied to the following fields: clusterReference, extId, name",
@@ -41,9 +38,8 @@ func DatasourceNutanixVolumeGroupsV2() *schema.Resource {
 				Optional:    true,
 			},
 			"expand": {
-				Description: "A URL query parameter that allows clients to request related resources when a resource that satisfies a particular request is retrieved. Each expanded item is evaluated relative to the entity containing the property being expanded. Other query options can be applied to an expanded property by appending a semicolon-separated list of query options, enclosed in parentheses, to the property name. Permissible system query options are $filter, $select and $orderby. The following expansion keys are supported. The expand can be applied to the following fields: clusterReference, metadata",
-				Type:        schema.TypeString,
-				Optional:    true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"select": {
 				Description: "A URL query parameter that allows clients to request a specific set of properties for each entity or complex type. Expression specified with the $select must conform to the OData V4.01 URL conventions. If a $select expression consists of a single select item that is an asterisk (i.e., *), then all properties on the matching resource will be returned. The select can be applied to the following fields: clusterReference, extId, name",
@@ -219,17 +215,8 @@ func DatasourceNutanixVolumeGroupsV2Read(ctx context.Context, d *schema.Resource
 
 	// get the volume groups response
 	resp, err := conn.VolumeAPIInstance.ListVolumeGroups(page, limit, filter, orderBy, expand, selects)
-
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching volumes : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching volumes : %v", err)
 	}
 
 	volumesResp := resp.Data
@@ -239,7 +226,6 @@ func DatasourceNutanixVolumeGroupsV2Read(ctx context.Context, d *schema.Resource
 		if err := d.Set("volumes", flattenVolumesEntities(volumesResp.GetValue().([]volumesClient.VolumeGroup))); err != nil {
 			return diag.FromErr(err)
 		}
-
 	} else {
 		// set the volume groups data in the terraform resource
 		d.Set("volumes", make([]volumesClient.VolumeGroup, 0))
@@ -303,7 +289,6 @@ func flattenVolumesEntities(volumeGroups []volumesClient.VolumeGroup) []interfac
 			}
 
 			volumeGroupList[k] = volumeGroup
-
 		}
 		return volumeGroupList
 	}
@@ -333,10 +318,11 @@ func flattenLinks(apiLinks []volumesClientResponse.ApiLink) []map[string]interfa
 func flattenSharingStatus(sharingStatus *volumesClient.SharingStatus) string {
 	var sharingStatusStr string
 	if sharingStatus != nil {
-		if *sharingStatus == volumesClient.SharingStatus(2) {
+		const two, three = 2, 3
+		if *sharingStatus == volumesClient.SharingStatus(two) {
 			sharingStatusStr = "SHARED"
 		}
-		if *sharingStatus == volumesClient.SharingStatus(3) {
+		if *sharingStatus == volumesClient.SharingStatus(three) {
 			sharingStatusStr = "NOT_SHARED"
 		}
 	}
@@ -346,10 +332,11 @@ func flattenSharingStatus(sharingStatus *volumesClient.SharingStatus) string {
 func flattenEnabledAuthentications(authenticationType *volumesClient.AuthenticationType) string {
 	var enabledAuthentications string
 	if authenticationType != nil {
-		if *authenticationType == volumesClient.AuthenticationType(2) {
+		const two, three = 2, 3
+		if *authenticationType == volumesClient.AuthenticationType(two) {
 			enabledAuthentications = "CHAP"
 		}
-		if *authenticationType == volumesClient.AuthenticationType(3) {
+		if *authenticationType == volumesClient.AuthenticationType(three) {
 			enabledAuthentications = "NONE"
 		}
 	}
@@ -375,6 +362,7 @@ func flattenFlashMode(flashMode *volumesClient.FlashMode) []map[string]interface
 	}
 	return nil
 }
+
 func flattenStorageFeatures(storageFeatures *volumesClient.StorageFeatures) []map[string]interface{} {
 	if storageFeatures != nil {
 		storageFeaturesList := make([]map[string]interface{}, 0)
@@ -389,16 +377,17 @@ func flattenStorageFeatures(storageFeatures *volumesClient.StorageFeatures) []ma
 func flattenUsageType(usageType *volumesClient.UsageType) string {
 	var usageTypeStr string
 	if usageType != nil {
-		if *usageType == volumesClient.UsageType(2) {
+		const two, three, four, five = 2, 3, 4, 5
+		if *usageType == volumesClient.UsageType(two) {
 			usageTypeStr = "USER"
 		}
-		if *usageType == volumesClient.UsageType(3) {
+		if *usageType == volumesClient.UsageType(three) {
 			usageTypeStr = "INTERNAL"
 		}
-		if *usageType == volumesClient.UsageType(4) {
+		if *usageType == volumesClient.UsageType(four) {
 			usageTypeStr = "TEMPORARY"
 		}
-		if *usageType == volumesClient.UsageType(5) {
+		if *usageType == volumesClient.UsageType(five) {
 			usageTypeStr = "BACKUP_TARGET"
 		}
 	}

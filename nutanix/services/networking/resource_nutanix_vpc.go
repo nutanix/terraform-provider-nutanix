@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -210,7 +209,6 @@ func resourceNutanixVPCRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.Client).API
 	// Make request to the API
 	resp, err := conn.V3.GetVPC(ctx, d.Id())
-
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
@@ -251,6 +249,7 @@ func resourceNutanixVPCRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	return nil
 }
+
 func resourceNutanixVPCUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).API
 

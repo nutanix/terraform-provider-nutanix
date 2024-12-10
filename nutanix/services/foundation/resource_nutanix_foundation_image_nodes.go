@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/foundation"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -1015,6 +1014,7 @@ func expandEosMetadata(d *schema.ResourceData) (*foundation.EosMetadata, error) 
 	}
 	return nil, nil
 }
+
 func expandFcSetting(d *schema.ResourceData) (*foundation.FcSettings, error) {
 	if fcset, ok := d.GetOk("fc_settings"); ok && len(fcset.([]interface{})) > 0 {
 		fc := &foundation.FcSettings{}
@@ -1400,7 +1400,6 @@ func collectIndividualErrorDiagnostics(progress *foundation.ImageNodesProgressRe
 func foundationImageRefresh(ctx context.Context, client *foundation.Client, sessionUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := client.NodeImaging.ImageNodesProgress(ctx, sessionUUID)
-
 		if err != nil {
 			if strings.Contains(err.Error(), "Failed") {
 				return v, ERROR, nil

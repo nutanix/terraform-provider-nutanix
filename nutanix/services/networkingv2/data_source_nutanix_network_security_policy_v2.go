@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	config "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/common/v1/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4/models/microseg/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -620,8 +619,8 @@ func flattenOneOfNetworkSecurityPolicyRuleSpec(pr *import1.OneOfNetworkSecurityP
 
 			multiEnvIsolationRuleSpecList = append(multiEnvIsolationRuleSpecList, multiEnvIsolationRuleSpec)
 
-			aJson, _ := json.Marshal(multiEnvIsolationRuleSpecList)
-			log.Printf("[DEBUG] multiEnvIsolationRuleSpecList: %s", string(aJson))
+			aJSON, _ := json.Marshal(multiEnvIsolationRuleSpecList)
+			log.Printf("[DEBUG] multiEnvIsolationRuleSpecList: %s", string(aJSON))
 			return multiEnvIsolationRuleSpecList
 		}
 	}

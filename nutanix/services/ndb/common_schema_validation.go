@@ -8,9 +8,12 @@ import (
 
 var requiredResourceFields map[string]map[string][]string = map[string]map[string][]string{
 	"ndb_provision_database": {
-		"createdbserver": {"databasetype", "softwareprofileid", "softwareprofileversionid", "computeprofileid",
-			"networkprofileid", "dbparameterprofileid", "nxclusterid", "sshpublickey", "timemachineinfo", "nodes"},
-		"registerdbserver": {"databasetype", "dbparameterprofileid", "timemachineinfo", "nodes"}},
+		"createdbserver": {
+			"databasetype", "softwareprofileid", "softwareprofileversionid", "computeprofileid",
+			"networkprofileid", "dbparameterprofileid", "nxclusterid", "sshpublickey", "timemachineinfo", "nodes",
+		},
+		"registerdbserver": {"databasetype", "dbparameterprofileid", "timemachineinfo", "nodes"},
+	},
 }
 
 func schemaValidation(resourceName string, d *schema.ResourceData) error {

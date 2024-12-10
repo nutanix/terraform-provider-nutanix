@@ -9,10 +9,11 @@ import (
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
 	import3 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/response"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
+
+const defaultValue = 32
 
 func DatasourceNutanixClusterEntityV2() *schema.Resource {
 	return &schema.Resource{
@@ -738,7 +739,7 @@ func SchemaForValuePrefixLength() *schema.Schema {
 				"prefix_length": {
 					Type:     schema.TypeInt,
 					Optional: true,
-					Default:  32,
+					Default:  defaultValue,
 				},
 			},
 		},
@@ -897,13 +898,10 @@ func flattenProxyTypes(proxyTypes []import1.HttpProxyType) []interface{} {
 			switch v {
 			case HTTP:
 				types[k] = "HTTP"
-				break
 			case HTTPS:
 				types[k] = "HTTPS"
-				break
 			case SOCKS:
 				types[k] = "SOCKS"
-				break
 			default:
 				types[k] = "UNKNOWN"
 			}
@@ -1015,13 +1013,10 @@ func flattenSMTPServerRef(pr *import1.SmtpServerRef) []map[string]interface{} {
 			switch *pr.Type {
 			case PLAIN:
 				s["type"] = "PLAIN"
-				break
 			case STARTTLS:
 				s["type"] = "STARTTLS"
-				break
 			case SSL:
 				s["type"] = "SSL"
-				break
 			default:
 				s["type"] = "UNKNOWN"
 			}
@@ -1222,16 +1217,16 @@ func flattenRedundancyStatus(redundancyStatus *import1.RedundancyStatusDetails) 
 
 func flattenClusterFaultTolerance(faultTolerance *import1.ClusterFaultToleranceRef) string {
 	if faultTolerance != nil {
-		const CFT_0N_AND_0D, CFT_1N_OR_1D, CFT_2N_OR_2D, CFT_1N_AND_1D = 2, 3, 4, 5
+		const two, three, four, five = 2, 3, 4, 5
 
 		switch *faultTolerance {
-		case CFT_0N_AND_0D:
+		case two:
 			return "CFT_0N_AND_0D"
-		case CFT_1N_OR_1D:
+		case three:
 			return "CFT_1N_OR_1D"
-		case CFT_2N_OR_2D:
+		case four:
 			return "CFT_2N_OR_2D"
-		case CFT_1N_AND_1D:
+		case five:
 			return "CFT_1N_AND_1D"
 		default:
 			return "UNKNOWN"

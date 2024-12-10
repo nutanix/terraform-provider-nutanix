@@ -3,7 +3,6 @@ package clusters
 import (
 	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/api"
 	cluster "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/client"
-
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 )
 

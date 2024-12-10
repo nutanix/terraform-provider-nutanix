@@ -15,12 +15,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func ResourceNutanixRevertVmRecoveryPointV2() *schema.Resource {
+func ResourceNutanixRevertVMRecoveryPointV2() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: ResourceNutanixRevertVmRecoveryPointV2Create,
-		ReadContext:   ResourceNutanixRevertVmRecoveryPointV2Read,
-		UpdateContext: ResourceNutanixRevertVmRecoveryPointV2Update,
-		DeleteContext: ResourceNutanixRevertVmRecoveryPointV2Delete,
+		CreateContext: ResourceNutanixRevertVMRecoveryPointV2Create,
+		ReadContext:   ResourceNutanixRevertVMRecoveryPointV2Read,
+		UpdateContext: ResourceNutanixRevertVMRecoveryPointV2Update,
+		DeleteContext: ResourceNutanixRevertVMRecoveryPointV2Delete,
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -38,9 +38,9 @@ func ResourceNutanixRevertVmRecoveryPointV2() *schema.Resource {
 	}
 }
 
-// ResourceNutanixRevertVmRecoveryPointV2Create to Restore Recovery Point
-func ResourceNutanixRevertVmRecoveryPointV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[DEBUG] ResourceNutanixRevertVmRecoveryPointV2Create \n")
+// ResourceNutanixRevertVMRecoveryPointV2Create to Restore Recovery Point
+func ResourceNutanixRevertVMRecoveryPointV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG] ResourceNutanixRevertVMRecoveryPointV2Create \n")
 
 	conn := meta.(*conns.Client).VmmAPI
 
@@ -61,7 +61,6 @@ func ResourceNutanixRevertVmRecoveryPointV2Create(ctx context.Context, d *schema
 	}
 
 	resp, err := conn.VMAPIInstance.RevertVm(utils.StringPtr(rpExtID), &body, args)
-
 	if err != nil {
 		return diag.Errorf("error while reverting vm : %v", err)
 	}
@@ -100,18 +99,18 @@ func ResourceNutanixRevertVmRecoveryPointV2Create(ctx context.Context, d *schema
 	uuid := rUUID.CompletionDetails[0].Value
 	d.SetId(uuid.GetValue().(string))
 
-	return ResourceNutanixRevertVmRecoveryPointV2Read(ctx, d, meta)
+	return ResourceNutanixRevertVMRecoveryPointV2Read(ctx, d, meta)
 }
 
-func ResourceNutanixRevertVmRecoveryPointV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixRevertVMRecoveryPointV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func ResourceNutanixRevertVmRecoveryPointV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return ResourceNutanixRevertVmRecoveryPointV2Read(ctx, d, meta)
+func ResourceNutanixRevertVMRecoveryPointV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return ResourceNutanixRevertVMRecoveryPointV2Read(ctx, d, meta)
 }
 
-func ResourceNutanixRevertVmRecoveryPointV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixRevertVMRecoveryPointV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 

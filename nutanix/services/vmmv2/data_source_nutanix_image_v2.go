@@ -6,7 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import5 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -243,10 +242,11 @@ func DatasourceNutanixImageV4Read(ctx context.Context, d *schema.ResourceData, m
 
 func flattenImageType(pr *import5.ImageType) string {
 	if pr != nil {
-		if *pr == import5.ImageType(2) {
+		const two, three = 2, 3
+		if *pr == import5.ImageType(two) {
 			return "DISK_IMAGE"
 		}
-		if *pr == import5.ImageType(3) {
+		if *pr == import5.ImageType(three) {
 			return "ISO_IMAGE"
 		}
 	}
@@ -272,7 +272,6 @@ func flattenOneOfImageChecksum(pr *import5.OneOfImageChecksum) []map[string]inte
 		}
 		resList = append(resList, sha)
 		return resList
-
 	}
 	return nil
 }
@@ -298,7 +297,7 @@ func flattenOneOfImageSource(pr *import5.OneOfImageSource) []map[string]interfac
 				urlSrcObj["url"] = urlSrc.Url
 			}
 			if urlSrc.BasicAuth != nil {
-				urlSrcObj["basic_auth"] = flattenUrlBasicAuth(urlSrc.BasicAuth)
+				urlSrcObj["basic_auth"] = flattenURLBasicAuth(urlSrc.BasicAuth)
 			}
 			if urlSrc.ShouldAllowInsecureUrl != nil {
 				urlSrcObj["should_allow_insecure_url"] = urlSrc.ShouldAllowInsecureUrl
@@ -353,7 +352,7 @@ func flattenOneOfImageSource(pr *import5.OneOfImageSource) []map[string]interfac
 	return nil
 }
 
-func flattenUrlBasicAuth(pr *import5.UrlBasicAuth) []map[string]interface{} {
+func flattenURLBasicAuth(pr *import5.UrlBasicAuth) []map[string]interface{} {
 	if pr != nil {
 		auths := make([]map[string]interface{}, 0)
 

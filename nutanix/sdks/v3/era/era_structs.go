@@ -693,8 +693,7 @@ type DBInstanceProperties struct {
 	Description interface{} `json:"description"`
 }
 
-type Secureinfo struct {
-}
+type Secureinfo struct{}
 
 type DataDisks struct {
 	Count float64 `json:"count"`

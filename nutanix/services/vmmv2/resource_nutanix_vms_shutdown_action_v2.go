@@ -67,7 +67,6 @@ func ResourceNutanixVmsShutdownActionV2Create(ctx context.Context, d *schema.Res
 	}
 
 	if gst, ok := d.GetOk("guest_power_state_transition_config"); ok && len(gst.([]interface{})) > 0 {
-
 		prI := gst.([]interface{})
 		gstData := prI[0].(map[string]interface{})
 		gstVal := config.GuestPowerStateTransitionConfig{}
@@ -89,7 +88,7 @@ func ResourceNutanixVmsShutdownActionV2Create(ctx context.Context, d *schema.Res
 	args["If-Match"] = getEtagHeader(readResp, conn)
 
 	var TaskRef import1.TaskReference
-
+	//nolint:gocritic // Keeping if-else for clarity in this specific case
 	if action == "shutdown" {
 		resp, err := conn.VMAPIInstance.ShutdownVm(utils.StringPtr(vmExtID.(string)), args)
 		if err != nil {
@@ -102,7 +101,6 @@ func ResourceNutanixVmsShutdownActionV2Create(ctx context.Context, d *schema.Res
 			return diag.Errorf("error while Shutdown Guest VM : %v", err)
 		}
 		TaskRef = resp.Data.GetValue().(import1.TaskReference)
-
 	} else if action == "reboot" {
 		resp, err := conn.VMAPIInstance.RebootVm(utils.StringPtr(vmExtID.(string)), args)
 		if err != nil {

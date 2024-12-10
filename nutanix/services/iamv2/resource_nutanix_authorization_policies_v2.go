@@ -13,10 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/common/v1/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authz"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -121,8 +119,10 @@ func ResourceNutanixAuthPoliciesV2() *schema.Resource {
 			"authorization_policy_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{"PREDEFINED_READ_ONLY", "SERVICE_DEFINED_READ_ONLY",
-					"PREDEFINED_UPDATE_IDENTITY_ONLY", "SERVICE_DEFINED", "USER_DEFINED"}, false),
+				ValidateFunc: validation.StringInSlice([]string{
+					"PREDEFINED_READ_ONLY", "SERVICE_DEFINED_READ_ONLY",
+					"PREDEFINED_UPDATE_IDENTITY_ONLY", "SERVICE_DEFINED", "USER_DEFINED",
+				}, false),
 			},
 		},
 	}
@@ -147,7 +147,6 @@ func ResourceNutanixAuthPoliciesV2Create(ctx context.Context, d *schema.Resource
 		}
 
 		input.Identities = identities
-
 	}
 	if entities, ok := d.GetOk("entities"); ok {
 		entities, err := expandEntityFilter(entities.([]interface{}))
@@ -161,12 +160,13 @@ func ResourceNutanixAuthPoliciesV2Create(ctx context.Context, d *schema.Resource
 		input.Role = utils.StringPtr(role.(string))
 	}
 	if authPolicyType, ok := d.GetOk("authorization_policy_type"); ok {
+		const two, three, four, five, six = 2, 3, 4, 5, 6
 		subMap := map[string]interface{}{
-			"USER_DEFINED":                    2,
-			"SERVICE_DEFINED":                 3,
-			"PREDEFINED_READ_ONLY":            4,
-			"PREDEFINED_UPDATE_IDENTITY_ONLY": 5,
-			"SERVICE_DEFINED_READ_ONLY":       6,
+			"USER_DEFINED":                    two,
+			"SERVICE_DEFINED":                 three,
+			"PREDEFINED_READ_ONLY":            four,
+			"PREDEFINED_UPDATE_IDENTITY_ONLY": five,
+			"SERVICE_DEFINED_READ_ONLY":       six,
 		}
 		pInt := subMap[authPolicyType.(string)]
 		p := import1.AuthorizationPolicyType(pInt.(int))
@@ -262,16 +262,16 @@ func ResourceNutanixAuthPoliciesV2Update(ctx context.Context, d *schema.Resource
 		updatedSpec.Description = utils.StringPtr(d.Get("description").(string))
 	}
 	if d.HasChange("identities") {
-		identities, err := expandIdentityFilter(d.Get("identities").([]interface{}))
-		if err != nil {
-			return diag.Errorf("error while updating  Authorization Policy in identities err: %v", err)
+		identities, errID := expandIdentityFilter(d.Get("identities").([]interface{}))
+		if errID != nil {
+			return diag.Errorf("error while updating  Authorization Policy in identities err: %v", errID)
 		}
 		updatedSpec.Identities = identities
 	}
 	if d.HasChange("entities") {
-		entities, err := expandEntityFilter(d.Get("entities").([]interface{}))
-		if err != nil {
-			return diag.Errorf("error while updating  Authorization Policy in entities err: %v", err)
+		entities, errEn := expandEntityFilter(d.Get("entities").([]interface{}))
+		if errEn != nil {
+			return diag.Errorf("error while updating  Authorization Policy in entities err: %v", errEn)
 		}
 		updatedSpec.Entities = entities
 	}
@@ -279,12 +279,13 @@ func ResourceNutanixAuthPoliciesV2Update(ctx context.Context, d *schema.Resource
 		updatedSpec.Role = utils.StringPtr(d.Get("role").(string))
 	}
 	if d.HasChange("authorization_policy_type") {
+		const two, three, four, five, six = 2, 3, 4, 5, 6
 		subMap := map[string]interface{}{
-			"USER_DEFINED":                    2,
-			"SERVICE_DEFINED":                 3,
-			"PREDEFINED_READ_ONLY":            4,
-			"PREDEFINED_UPDATE_IDENTITY_ONLY": 5,
-			"SERVICE_DEFINED_READ_ONLY":       6,
+			"USER_DEFINED":                    two,
+			"SERVICE_DEFINED":                 three,
+			"PREDEFINED_READ_ONLY":            four,
+			"PREDEFINED_UPDATE_IDENTITY_ONLY": five,
+			"SERVICE_DEFINED_READ_ONLY":       six,
 		}
 		pInt := subMap[d.Get("authorization_policy_type").(string)]
 		p := import1.AuthorizationPolicyType(pInt.(int))
@@ -364,6 +365,7 @@ func expandIdentityFilter(identities []interface{}) ([]import1.IdentityFilter, e
 	}
 	return nil, nil
 }
+
 func expandEntityFilter(entities []interface{}) ([]import1.EntityFilter, error) {
 	if len(entities) > 0 {
 		filters := make([]import1.EntityFilter, len(entities))
@@ -439,7 +441,6 @@ func AuthPolicyStringsEquivalent(s1, s2 string) bool {
 	log.Printf("[DEBUG] AuthPolicyStringsEquivalent s1: %s, s2: %s return false", s1, s2)
 
 	return false
-
 }
 
 // SuppressEquivalentJSONDiffs returns a difference suppression function that compares

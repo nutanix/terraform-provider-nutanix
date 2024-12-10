@@ -6,7 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
 	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
 )
 
@@ -143,6 +142,7 @@ func DataSourceNutanixEraNetwork() *schema.Resource {
 		},
 	}
 }
+
 func dataSourceNutanixEraNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).Era
 

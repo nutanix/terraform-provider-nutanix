@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -15,7 +14,7 @@ import (
 // Get the details of a Volume Disk.
 func DatasourceNutanixVolumeDiskV2() *schema.Resource {
 	return &schema.Resource{
-		Description: "Query the Volume Disk identified by {extId} in the Volume Group identified by {volumeGroupExtId}.",
+		Description: "Query the Volume Disk identified by {extId} in the Volume Group identified by {volumeGroupExtID}.",
 		ReadContext: DatasourceNutanixVolumeDiskV2Read,
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
@@ -134,11 +133,10 @@ func DatasourceNutanixVolumeDiskV2() *schema.Resource {
 func DatasourceNutanixVolumeDiskV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VolumeAPI
 
-	volumeGroupExtId := d.Get("volume_group_ext_id")
+	volumeGroupExtID := d.Get("volume_group_ext_id")
 	volumeDiskExtID := d.Get("ext_id")
 
-	resp, err := conn.VolumeAPIInstance.GetVolumeDiskById(utils.StringPtr(volumeGroupExtId.(string)), utils.StringPtr(volumeDiskExtID.(string)))
-
+	resp, err := conn.VolumeAPIInstance.GetVolumeDiskById(utils.StringPtr(volumeGroupExtID.(string)), utils.StringPtr(volumeDiskExtID.(string)))
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)

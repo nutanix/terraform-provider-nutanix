@@ -5,14 +5,12 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
 const datasourceNameUserGroups = "data.nutanix_user_groups_v2.test"
 
 func TestAccNutanixUserGroupsV2Datasource_Basic(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -29,7 +27,6 @@ func TestAccNutanixUserGroupsV2Datasource_Basic(t *testing.T) {
 }
 
 func TestAccNutanixUserGroupsV2Datasource_WithFilter(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -41,7 +38,7 @@ func TestAccNutanixUserGroupsV2Datasource_WithFilter(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameUserGroups, "user_groups.#", "1"),
 					resource.TestCheckResourceAttr(datasourceNameUserGroups, "user_groups.0.distinguished_name", testVars.Iam.UserGroups.DistinguishedName),
 					resource.TestCheckResourceAttr(datasourceNameUserGroups, "user_groups.0.name", testVars.Iam.UserGroups.Name),
-					resource.TestCheckResourceAttr(datasourceNameUserGroups, "user_groups.0.idp_id", testVars.Iam.Users.DirectoryServiceId),
+					resource.TestCheckResourceAttr(datasourceNameUserGroups, "user_groups.0.idp_id", testVars.Iam.Users.DirectoryServiceID),
 					resource.TestCheckResourceAttr(datasourceNameUserGroups, "user_groups.0.group_type", "LDAP"),
 				),
 			},
@@ -50,7 +47,6 @@ func TestAccNutanixUserGroupsV2Datasource_WithFilter(t *testing.T) {
 }
 
 func TestAccNutanixUserGroupsV2Datasource_WithLimit(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

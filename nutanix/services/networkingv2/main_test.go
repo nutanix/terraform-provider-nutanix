@@ -10,7 +10,7 @@ import (
 type TestConfig struct {
 	Networking struct {
 		FloatingIP struct {
-			VmNicReference string `json:"vm_nic_reference"`
+			VMNicReference string `json:"vm_nic_reference"`
 		} `json:"floating_ip"`
 		Subnets struct {
 			ProjectID     string `json:"project_id"`
@@ -28,8 +28,10 @@ type TestConfig struct {
 
 var testVars TestConfig
 
-var path, _ = os.Getwd()
-var filepath = path + "/../../../test_config_v2.json"
+var (
+	path, _  = os.Getwd()
+	filepath = path + "/../../../test_config_v2.json"
+)
 
 func loadVars(filepath string, varStuct interface{}) {
 	// Read config.json from home current path
@@ -45,6 +47,7 @@ func loadVars(filepath string, varStuct interface{}) {
 		os.Exit(1)
 	}
 }
+
 func TestMain(m *testing.M) {
 	log.Println("Do some crazy stuff before tests!")
 	loadVars("../../../test_config_v2.json", &testVars)

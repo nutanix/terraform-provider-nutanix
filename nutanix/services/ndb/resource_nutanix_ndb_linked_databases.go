@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
 	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -145,7 +144,6 @@ func resourceNutanixNDBLinkedDBCreate(ctx context.Context, d *schema.ResourceDat
 	// call the Linked Databases API
 
 	resp, err := conn.Service.CreateLinkedDatabase(ctx, databaseID, req)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -195,6 +193,7 @@ func resourceNutanixNDBLinkedDBCreate(ctx context.Context, d *schema.ResourceDat
 
 	return resourceNutanixNDBLinkedDBRead(ctx, d, meta)
 }
+
 func resourceNutanixNDBLinkedDBRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).Era
 
@@ -263,9 +262,11 @@ func resourceNutanixNDBLinkedDBRead(ctx context.Context, d *schema.ResourceData,
 
 	return nil
 }
+
 func resourceNutanixNDBLinkedDBUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
+
 func resourceNutanixNDBLinkedDBDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).Era
 

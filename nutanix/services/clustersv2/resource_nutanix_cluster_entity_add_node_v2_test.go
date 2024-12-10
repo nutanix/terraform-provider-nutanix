@@ -3,20 +3,22 @@ package clustersv2_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"testing"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameDiscoverUnconfiguredNode = "nutanix_clusters_discover_unconfigured_nodes_v2.cluster-node"
-const resourceNameDiscoverUnconfiguredClusterNodes = "nutanix_clusters_discover_unconfigured_nodes_v2.cluster-nodes"
-const resourceNameFetchUnconfiguredNodeNetwork = "nutanix_clusters_unconfigured_node_networks_v2.node-network-info"
-const resourceNameAddNodeToCluster = "nutanix_cluster_add_node_v2.test"
-const resourceName3NodesCluster = "nutanix_cluster_v2.cluster-3nodes"
+const (
+	resourceNameDiscoverUnconfiguredNode         = "nutanix_clusters_discover_unconfigured_nodes_v2.cluster-node"
+	resourceNameDiscoverUnconfiguredClusterNodes = "nutanix_clusters_discover_unconfigured_nodes_v2.cluster-nodes"
+	resourceNameFetchUnconfiguredNodeNetwork     = "nutanix_clusters_unconfigured_node_networks_v2.node-network-info"
+	resourceNameAddNodeToCluster                 = "nutanix_cluster_add_node_v2.test"
+	resourceName3NodesCluster                    = "nutanix_cluster_v2.cluster-3nodes"
+)
 
 func TestAccNutanixClusterAddNodeV2Resource_basic(t *testing.T) {
 	r := acctest.RandInt()
@@ -31,9 +33,9 @@ func TestAccNutanixClusterAddNodeV2Resource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					// add node to cluster check
 					func(s *terraform.State) error {
-						aJson, _ := json.MarshalIndent(s.RootModule().Resources[resourceName3NodesCluster].Primary.Attributes, "", "  ")
+						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceName3NodesCluster].Primary.Attributes, "", "  ")
 						fmt.Println("############################################")
-						fmt.Println(fmt.Sprintf("Resource Attributes: \n%v", string(aJson)))
+						fmt.Printf("Resource Attributes: \n%v", string(aJSON))
 						fmt.Println("############################################")
 
 						return nil
@@ -53,7 +55,7 @@ func TestAccNutanixClusterAddNodeV2Resource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					// unconfigured Node to be added check
 					resource.TestCheckResourceAttr(resourceNameDiscoverUnconfiguredNode, "unconfigured_nodes.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameDiscoverUnconfiguredNode, "unconfigured_nodes.0.cvm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[3].CvmIp),
+					resource.TestCheckResourceAttr(resourceNameDiscoverUnconfiguredNode, "unconfigured_nodes.0.cvm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[3].CvmIP),
 					resource.TestCheckResourceAttrSet(resourceNameDiscoverUnconfiguredNode, "unconfigured_nodes.0.nos_version"),
 					resource.TestCheckResourceAttrSet(resourceNameDiscoverUnconfiguredNode, "unconfigured_nodes.0.node_uuid"),
 
@@ -64,9 +66,9 @@ func TestAccNutanixClusterAddNodeV2Resource_basic(t *testing.T) {
 
 					// add node to cluster check
 					func(s *terraform.State) error {
-						aJson, _ := json.MarshalIndent(s.RootModule().Resources[resourceNameAddNodeToCluster].Primary.Attributes, "", "  ")
+						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceNameAddNodeToCluster].Primary.Attributes, "", "  ")
 						fmt.Println("############################################")
-						fmt.Println(fmt.Sprintf("Resource Attributes: \n%v", string(aJson)))
+						fmt.Printf("Resource Attributes: \n%v", string(aJSON))
 						fmt.Println("############################################")
 
 						return nil
@@ -81,7 +83,7 @@ func TestAccNutanixClusterAddNodeV2Resource_basic(t *testing.T) {
 				Config: testAccClustersConfig(clusterName) + testAccAddNodeToClusterConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					// add node to cluster check
-					resource.TestCheckResourceAttr(resourceNameAddNodeToCluster, "node_params.0.node_list.0.cvm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[3].CvmIp),
+					resource.TestCheckResourceAttr(resourceNameAddNodeToCluster, "node_params.0.node_list.0.cvm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[3].CvmIP),
 				),
 			},
 		},

@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	prismClusterMang "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/clustermgmt/v4/config"
 	prismCommon "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/common/v1/config"
 	prismResponse "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/common/v1/response"
@@ -415,7 +414,7 @@ func schemaForFQDNValueResource() *schema.Schema {
 func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	log.Printf("[DEBUG] Create PC Registration\n")
 	// validate attributes based on object_type
-	//if err := validateAttributes(d); err != nil {
+	// if err := validateAttributes(d); err != nil {
 	//	return err
 	//}
 
@@ -458,8 +457,8 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 		if err != nil {
 			return diag.Errorf("error while setting Body Spec for %v: %v", DomainManagerRemoteClusterSpec, err)
 		}
-		aJson, _ := json.Marshal(domainManagerRemoteClusterObj)
-		log.Printf("[DEBUG] DomainManagerRemoteClusterSpec Body: %s\n", string(aJson))
+		aJSON, _ := json.Marshal(domainManagerRemoteClusterObj)
+		log.Printf("[DEBUG] DomainManagerRemoteClusterSpec Body: %s\n", string(aJSON))
 		body.RemoteCluster = remoteClusterBodySpec
 	} else if aosRemoteClusterSpec, ok := remoteCluster["aos_remote_cluster_spec"].([]interface{}); ok && len(aosRemoteClusterSpec) > 0 {
 		aosRemoteClusterData := aosRemoteClusterSpec[0].(map[string]interface{})
@@ -472,8 +471,8 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 		if err != nil {
 			return diag.Errorf("error while setting Body Spec for %v: %v", AOSRemoteClusterSpec, err)
 		}
-		aJson, _ := json.Marshal(aosRemoteClusterObj)
-		log.Printf("[DEBUG] AOSRemoteClusterSpec Body: %s\n", string(aJson))
+		aJSON, _ := json.Marshal(aosRemoteClusterObj)
+		log.Printf("[DEBUG] AOSRemoteClusterSpec Body: %s\n", string(aJSON))
 		body.RemoteCluster = remoteClusterBodySpec
 	} else if clusterReferenceSpec, ok := remoteCluster["cluster_reference"].([]interface{}); ok && len(clusterReferenceSpec) > 0 {
 		clusterReferenceData := clusterReferenceSpec[0].(map[string]interface{})
@@ -486,8 +485,8 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 		if err != nil {
 			return diag.Errorf("error while setting Body Spec for %v: %v", ClusterReference, err)
 		}
-		aJson, _ := json.Marshal(clusterReference)
-		log.Printf("[DEBUG] ClusterReference Body: %s\n", string(aJson))
+		aJSON, _ := json.Marshal(clusterReference)
+		log.Printf("[DEBUG] ClusterReference Body: %s\n", string(aJSON))
 		body.RemoteCluster = remoteClusterBodySpec
 	} else {
 		return diag.Errorf("non of [%v, %v, %v] is provided",
@@ -495,7 +494,7 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 	}
 
 	// set remote cluster body spec based on object_type
-	//switch objectType := remoteCluster["object_type"].(string); objectType {
+	// switch objectType := remoteCluster["object_type"].(string); objectType {
 	//case DomainManagerRemoteClusterSpec:
 	//	log.Printf("[DEBUG] %v is selected\n", DomainManagerRemoteClusterSpec)
 	//	domainManagerRemoteClusterSpec := prismManagment.NewDomainManagerRemoteClusterSpec()
@@ -509,8 +508,8 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 	//	if err != nil {
 	//		return diag.Errorf("error while setting Body Spec for %v: %v", DomainManagerRemoteClusterSpec, err)
 	//	}
-	//	aJson, _ := json.Marshal(domainManagerRemoteClusterSpec)
-	//	log.Printf("[DEBUG] DomainManagerRemoteClusterSpec Body: %s\n", string(aJson))
+	//	aJSON, _ := json.Marshal(domainManagerRemoteClusterSpec)
+	//	log.Printf("[DEBUG] DomainManagerRemoteClusterSpec Body: %s\n", string(aJSON))
 	//	break
 	//case AOSRemoteClusterSpec:
 	//	log.Printf("[DEBUG] %v is selected", AOSRemoteClusterSpec)
@@ -522,8 +521,8 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 	//	if err != nil {
 	//		return diag.Errorf("error while setting Body Spec for %v: %v", DomainManagerRemoteClusterSpec, err)
 	//	}
-	//	aJson, _ := json.Marshal(aosRemoteClusterSpec)
-	//	log.Printf("[DEBUG] AOSRemoteClusterSpec Body: %s\n", string(aJson))
+	//	aJSON, _ := json.Marshal(aosRemoteClusterSpec)
+	//	log.Printf("[DEBUG] AOSRemoteClusterSpec Body: %s\n", string(aJSON))
 	//	break
 	//case ClusterReference:
 	//	log.Printf("[DEBUG] %v is selected", ClusterReference)
@@ -535,8 +534,8 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 	//	if err != nil {
 	//		return diag.Errorf("error while setting Body Spec for %v: %v", DomainManagerRemoteClusterSpec, err)
 	//	}
-	//	aJson, _ := json.Marshal(clusterReference)
-	//	log.Printf("[DEBUG] ClusterReference Body: %s\n", string(aJson))
+	//	aJSON, _ := json.Marshal(clusterReference)
+	//	log.Printf("[DEBUG] ClusterReference Body: %s\n", string(aJSON))
 	//	break
 	//default:
 	//
@@ -544,11 +543,10 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 
 	body.RemoteCluster = remoteClusterBodySpec
 
-	aJson, _ := json.Marshal(body)
-	log.Printf("[DEBUG] PC Registration Request Body: %s", string(aJson))
+	aJSON, _ := json.Marshal(body)
+	log.Printf("[DEBUG] PC Registration Request Body: %s", string(aJSON))
 
 	resp, err := conn.DomainManagerAPIInstance.Register(&pcExtID, body, args)
-
 	if err != nil {
 		return diag.Errorf("error while registering remote cluster with id %s : %v", pcExtID, err)
 	}
@@ -576,8 +574,8 @@ func ResourceNutanixClusterPCRegistrationV2Create(ctx context.Context, d *schema
 
 	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
 
-	aJson, _ = json.Marshal(rUUID)
-	log.Printf("[DEBUG] PC Regestration Task Details: %s", string(aJson))
+	aJSON, _ = json.Marshal(rUUID)
+	log.Printf("[DEBUG] PC Registration Task Details: %s", string(aJSON))
 
 	d.SetId(pcExtID)
 	return ResourceNutanixClusterPCRegistrationV2Read(ctx, d, meta)
@@ -632,8 +630,8 @@ func ResourceNutanixClusterPCRegistrationV2Read(ctx context.Context, d *schema.R
 	}
 
 	getResp := readResp.Data.GetValue().(prismConfig.DomainManager)
-	aJson, _ := json.Marshal(getResp)
-	log.Printf("[DEBUG] PC Registration Read Response: %s", string(aJson))
+	aJSON, _ := json.Marshal(getResp)
+	log.Printf("[DEBUG] PC Registration Read Response: %s", string(aJSON))
 
 	// set attributes
 	if err := d.Set("ext_id", getResp.ExtId); err != nil {
@@ -778,10 +776,10 @@ func expandAuthentication(authentication interface{}) *prismCommon.BasicAuth {
 
 func expandDomainManagerCloudType(cloudType interface{}) *prismManagment.DomainManagerCloudType {
 	if cloudType != nil && cloudType != "" {
-
+		const two, three = 2, 3
 		subMap := map[string]interface{}{
-			"ONPREM_CLOUD":         2,
-			"NUTANIX_HOSTED_CLOUD": 3,
+			"ONPREM_CLOUD":         two,
+			"NUTANIX_HOSTED_CLOUD": three,
 		}
 		pVal := subMap[cloudType.(string)]
 		if pVal == nil {
@@ -1034,12 +1032,12 @@ func flattenEnvironmentInfo(environmentInfo *prismConfig.EnvironmentInfo) []map[
 }
 
 func flattenEnvironmentType(environmentType prismConfig.EnvironmentType) string {
-	const ONPREM, NTNX_CLOUD = 2, 3
+	const onprem, ntnxCloud = 2, 3
 
 	switch environmentType {
-	case ONPREM:
+	case onprem:
 		return "ONPREM"
-	case NTNX_CLOUD:
+	case ntnxCloud:
 		return "NTNX_CLOUD"
 	default:
 		return "UNKNOWN"
@@ -1047,17 +1045,17 @@ func flattenEnvironmentType(environmentType prismConfig.EnvironmentType) string 
 }
 
 func flattenEnvironmentProviderType(providerType prismConfig.ProviderType) string {
-	const NTNX, AZURE, AWS, GCP, VSPHERE = 2, 3, 4, 5, 6
+	const ntnx, azure, aws, gcp, vsphere = 2, 3, 4, 5, 6
 	switch providerType {
-	case NTNX:
+	case ntnx:
 		return "NTNX"
-	case AZURE:
+	case azure:
 		return "AZURE"
-	case AWS:
+	case aws:
 		return "AWS"
-	case GCP:
+	case gcp:
 		return "GCP"
-	case VSPHERE:
+	case vsphere:
 		return "VSPHERE"
 	default:
 		return "UNKNOWN"
@@ -1065,11 +1063,11 @@ func flattenEnvironmentProviderType(providerType prismConfig.ProviderType) strin
 }
 
 func flattenEnvironmentProvisioningType(provisioningType prismConfig.ProvisioningType) string {
-	const NTNX, NATIVE = 2, 3
+	const ntnx, native = 2, 3
 	switch provisioningType {
-	case NTNX:
+	case ntnx:
 		return "NTNX"
-	case NATIVE:
+	case native:
 		return "NATIVE"
 	default:
 		return "UNKNOWN"

@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -22,6 +21,7 @@ func TestAccNutanixAccessControlPoliciesDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
 func testAccAccessControlPoliciesDataSourceConfig() string {
 	return `data "nutanix_access_control_policies" "test" {}`
 }

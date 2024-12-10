@@ -2,15 +2,15 @@ package vmmv2_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 const resourceNameTemplate = "nutanix_template_v2.test"
@@ -72,7 +72,7 @@ func TestAccNutanixTemplateV2Resource_Basic(t *testing.T) {
 			},
 			//update the template name, description and vm config USING template_vm_reference
 			{
-				Config: testTemplateV2UpdateWithTempVmRefConfig(name, desc, templateName+"-updated-2", templateDesc+"-updated-2"),
+				Config: testTemplateV2UpdateWithTempVMRefConfig(name, desc, templateName+"-updated-2", templateDesc+"-updated-2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameTemplate, "template_name", templateName+"-updated-2"),
 					resource.TestCheckResourceAttr(resourceNameTemplate, "template_description", templateDesc+"-updated-2"),
@@ -120,13 +120,11 @@ func TestAccNutanixTemplateV2Resource_RequiredVersionNameOnUpdate(t *testing.T) 
 			},
 			// version name is required for update
 			{
-
 				Config:      testTemplateV2UpdateWithoutVersionNameConfig(name, desc, templateName, templateDesc),
 				ExpectError: regexp.MustCompile("version_name is required for update operation"),
 			},
 		},
 	})
-
 }
 
 func TestAccNutanixTemplateV2Resource_RequiredVersionDescriptionOnUpdate(t *testing.T) {
@@ -155,13 +153,11 @@ func TestAccNutanixTemplateV2Resource_RequiredVersionDescriptionOnUpdate(t *test
 			},
 			// version Description is required for update
 			{
-
 				Config:      testTemplateV2UpdateWithoutVersionDescriptionConfig(name, desc, templateName, templateDesc),
 				ExpectError: regexp.MustCompile("version_description is required for update operation"),
 			},
 		},
 	})
-
 }
 
 func TestAccNutanixTemplateV2Resource_GuestCustomizationSysprep(t *testing.T) {
@@ -242,7 +238,6 @@ func testTemplateV2CheckDestroy(state *terraform.State) error {
 		}
 	}
 	return nil
-
 }
 
 func testTemplateV2Config(name, desc, tempName, tempDesc string) string {
@@ -345,7 +340,7 @@ func testTemplateV2UpdateWithTempVersionRefConfig(name, desc, tempName, tempDesc
 `, name, desc, tempName, tempDesc)
 }
 
-func testTemplateV2UpdateWithTempVmRefConfig(name, desc, tempName, tempDesc string) string {
+func testTemplateV2UpdateWithTempVMRefConfig(name, desc, tempName, tempDesc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
 

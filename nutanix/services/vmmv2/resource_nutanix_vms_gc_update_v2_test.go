@@ -9,7 +9,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameVmGCUpdate = "nutanix_vm_gc_update_v2.test"
+const resourceNameVMGCUpdate = "nutanix_vm_gc_update_v2.test"
 
 func TestAccNutanixVmsGCUpdateV2Resource_Basic(t *testing.T) {
 	// t.Skip("Skipping test as it requires GCUpdate")
@@ -21,16 +21,16 @@ func TestAccNutanixVmsGCUpdateV2Resource_Basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmPreEnvConfig(r) + testVmConfig(vmName) + testVmsGCUpdateV2Config(),
+				Config: testVMPreEnvConfig(r) + testVMConfig(vmName) + testVMsGCUpdateV2Config(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceNameVmGCUpdate, "ext_id"),
+					resource.TestCheckResourceAttrSet(resourceNameVMGCUpdate, "ext_id"),
 				),
 			},
 		},
 	})
 }
 
-func testVmsGCUpdateV2Config() string {
+func testVMsGCUpdateV2Config() string {
 	return `
 		resource "nutanix_vm_gc_update_v2" "test" {
 			ext_id = resource.nutanix_virtual_machine_v2.test-vm.id
@@ -48,7 +48,7 @@ func testVmsGCUpdateV2Config() string {
 `
 }
 
-func testVmConfig(vmName string) string {
+func testVMConfig(vmName string) string {
 	return fmt.Sprintf(`
 		resource "nutanix_virtual_machine_v2" "test-vm" {
 		  name                 = "%[1]s"

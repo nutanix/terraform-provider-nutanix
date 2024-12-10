@@ -15,7 +15,6 @@ import (
 	taskPoll "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	vmmPrism "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	vmmConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -93,7 +92,6 @@ func ResourceNutanixNGTInstallationV2() *schema.Resource {
 						return false
 					}
 					return false
-
 				},
 			},
 			"reboot_preference": {
@@ -168,12 +166,12 @@ func ResourceNutanixNGTInstallationV2() *schema.Resource {
 func ResourceNutanixNGTInstallationV4Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	vmmExtId := utils.StringPtr(d.Get("ext_id").(string))
+	vmmExtID := utils.StringPtr(d.Get("ext_id").(string))
 
-	log.Printf("[DEBUG] vmmExtId : %s", *vmmExtId)
+	log.Printf("[DEBUG] vmmExtId : %s", *vmmExtID)
 	body := &vmmConfig.GuestToolsInstallConfig{}
 
-	readResp, err := conn.VMAPIInstance.GetGuestToolsById(vmmExtId)
+	readResp, err := conn.VMAPIInstance.GetGuestToolsById(vmmExtID)
 	if err != nil {
 		return diag.Errorf("error while fetching Vm NGT Configuration : %v", err)
 	}
@@ -185,9 +183,10 @@ func ResourceNutanixNGTInstallationV4Create(ctx context.Context, d *schema.Resou
 	// prepare the body
 	if capabilities, ok := d.GetOk("capablities"); ok && len(capabilities.([]interface{})) > 0 {
 		capabilitiesList := make([]vmmConfig.NgtCapability, 0)
+		const two, three = 2, 3
 		capabilityMap := map[string]interface{}{
-			"SELF_SERVICE_RESTORE": 2,
-			"VSS_SNAPSHOT":         3,
+			"SELF_SERVICE_RESTORE": two,
+			"VSS_SNAPSHOT":         three,
 		}
 		for _, capabilityValue := range capabilities.([]interface{}) {
 			var capabilityObj vmmConfig.NgtCapability
@@ -210,10 +209,11 @@ func ResourceNutanixNGTInstallationV4Create(ctx context.Context, d *schema.Resou
 	if rebootPreference, ok := d.GetOk("reboot_preference"); ok {
 		if len(rebootPreference.([]interface{})) > 0 {
 			rp := rebootPreference.([]interface{})[0].(map[string]interface{})
+			const two, three, four = 2, 3, 4
 			scheduleTypesMap := map[string]int{
-				"SKIP":      2,
-				"IMMEDIATE": 3,
-				"LATER":     4,
+				"SKIP":      two,
+				"IMMEDIATE": three,
+				"LATER":     four,
 			}
 			rebootPreferenceObj := &vmmConfig.RebootPreference{
 				ScheduleType: (*vmmConfig.ScheduleType)(utils.IntPtr(scheduleTypesMap[(rp["schedule_type"].(string))])),
@@ -221,9 +221,9 @@ func ResourceNutanixNGTInstallationV4Create(ctx context.Context, d *schema.Resou
 			if scheduleType, ok := rp["schedule_type"].(string); ok && scheduleType == "LATER" {
 				if schedule, ok := rp["schedule"]; ok && len(schedule.([]interface{})) > 0 {
 					s := schedule.([]interface{})[0].(map[string]interface{})
-					t, err := time.Parse(time.RFC3339, s["start_time"].(string))
-					if err != nil {
-						return diag.Errorf("error while installing gest tools : parsing start_time err:  %v", err)
+					t, errTime := time.Parse(time.RFC3339, s["start_time"].(string))
+					if errTime != nil {
+						return diag.Errorf("error while installing gest tools : parsing start_time err:  %v", errTime)
 					}
 					rebootPreferenceObj.Schedule = &vmmConfig.RebootPreferenceSchedule{
 						StartTime: utils.Time(t),
@@ -236,7 +236,7 @@ func ResourceNutanixNGTInstallationV4Create(ctx context.Context, d *schema.Resou
 
 	aJSON, _ := json.Marshal(body)
 	log.Printf("[DEBUG] Installing NGT Request Body: %s", aJSON)
-	installResp, err := conn.VMAPIInstance.InstallVmGuestTools(vmmExtId, body, args)
+	installResp, err := conn.VMAPIInstance.InstallVmGuestTools(vmmExtID, body, args)
 	if err != nil {
 		return diag.Errorf("error while installing gest tools  : %v", err)
 	}
@@ -280,8 +280,8 @@ func ResourceNutanixNGTInstallationV4Create(ctx context.Context, d *schema.Resou
 func ResourceNutanixNGTInstallationV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	extId := d.Id()
-	resp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extId))
+	extID := d.Id()
+	resp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID))
 	if err != nil {
 		return diag.Errorf("error while fetching Gest Tool : %v", err)
 	}
@@ -336,7 +336,7 @@ func ResourceNutanixNGTInstallationV4Update(ctx context.Context, d *schema.Resou
 	getResp := readResp.Data.GetValue().(vmmConfig.GuestTools)
 	updateSpec := getResp
 	//
-	//updateSpec.IsReachable = getResp.IsReachable
+	// updateSpec.IsReachable = getResp.IsReachable
 	//updateSpec.Version = getResp.Version
 	//updateSpec.IsInstalled = getResp.IsInstalled
 	//updateSpec.IsIsoInserted = getResp.IsIsoInserted
@@ -348,9 +348,10 @@ func ResourceNutanixNGTInstallationV4Update(ctx context.Context, d *schema.Resou
 	if d.HasChange("capablities") {
 		capabilities := d.Get("capablities")
 		capabilitiesList := make([]vmmConfig.NgtCapability, 0)
+		const two, three = 2, 3
 		capabilityMap := map[string]interface{}{
-			"SELF_SERVICE_RESTORE": 2,
-			"VSS_SNAPSHOT":         3,
+			"SELF_SERVICE_RESTORE": two,
+			"VSS_SNAPSHOT":         three,
 		}
 		for _, capabilityValue := range capabilities.([]interface{}) {
 			var capabilityObj vmmConfig.NgtCapability
@@ -376,7 +377,6 @@ func ResourceNutanixNGTInstallationV4Update(ctx context.Context, d *schema.Resou
 	}
 
 	resp, err := conn.VMAPIInstance.UpdateGuestToolsById(utils.StringPtr(extID), &updateSpec, args)
-
 	if err != nil {
 		return diag.Errorf("error while updating gest tools  : %v", err)
 	}
@@ -415,7 +415,6 @@ func ResourceNutanixNGTInstallationV4Delete(ctx context.Context, d *schema.Resou
 	args["If-Match"] = getEtagHeader(readResp, conn)
 
 	resp, err := conn.VMAPIInstance.UninstallVmGuestTools(utils.StringPtr(extID), args)
-
 	if err != nil {
 		return diag.Errorf("error while uninstalling gest tools  : %v", err)
 	}

@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -1342,7 +1341,7 @@ func flattenVMEntities(vms []config.Vm) []interface{} {
 				vm["update_time"] = t.String()
 			}
 			if v.Source != nil {
-				vm["source"] = flattenVmSourceReference(v.Source)
+				vm["source"] = flattenVMSourceReference(v.Source)
 			}
 			if v.NumSockets != nil {
 				vm["num_sockets"] = v.NumSockets
@@ -1366,7 +1365,7 @@ func flattenVMEntities(vms []config.Vm) []interface{} {
 				vm["is_cpu_passthrough_enabled"] = v.IsCpuPassthroughEnabled
 			}
 			if v.EnabledCpuFeatures != nil {
-				vm["enabled_cpu_features"] = flattenCpuFeature(v.EnabledCpuFeatures)
+				vm["enabled_cpu_features"] = flattenCPUFeature(v.EnabledCpuFeatures)
 			}
 			if v.IsMemoryOvercommitEnabled != nil {
 				vm["is_memory_overcommit_enabled"] = v.IsMemoryOvercommitEnabled
@@ -1411,7 +1410,7 @@ func flattenVMEntities(vms []config.Vm) []interface{} {
 				vm["is_branding_enabled"] = v.IsBrandingEnabled
 			}
 			if v.BootConfig != nil {
-				vm["boot_config"] = flattenOneOfVmBootConfig(v.BootConfig)
+				vm["boot_config"] = flattenOneOfVMBootConfig(v.BootConfig)
 			}
 			if v.IsVgaConsoleEnabled != nil {
 				vm["is_vga_console_enabled"] = v.IsVgaConsoleEnabled

@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
 	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
 )
 
@@ -19,8 +18,10 @@ func DataSourceNutanixNDBTags() *schema.Resource {
 			"entity_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{"DATABASE", "TIME_MACHINE",
-					"CLONE", "DATABASE_SERVER"}, false),
+				ValidateFunc: validation.StringInSlice([]string{
+					"DATABASE", "TIME_MACHINE",
+					"CLONE", "DATABASE_SERVER",
+				}, false),
 			},
 			"tags": {
 				Type:     schema.TypeList,

@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	iamConfig "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authn"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -16,7 +15,6 @@ func DatasourceNutanixUserV2() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: datasourceNutanixUserV2Read,
 		Schema: map[string]*schema.Schema{
-
 			"ext_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -176,7 +174,6 @@ func datasourceNutanixUserV2Read(ctx context.Context, d *schema.ResourceData, me
 	extID := d.Get("ext_id")
 
 	resp, err := conn.UsersAPIInstance.GetUserById(utils.StringPtr(extID.(string)))
-
 	if err != nil {
 		return diag.Errorf("error while fetching user : %v", err)
 	}
@@ -225,22 +222,22 @@ func datasourceNutanixUserV2Read(ctx context.Context, d *schema.ResourceData, me
 	if err := d.Set("is_force_reset_password", getResp.IsForceResetPasswordEnabled); err != nil {
 		return diag.Errorf("error setting is_force_reset_password: %v", err)
 	}
-	if err = d.Set("additional_attributes", flattenAdditionalAttributes(getResp)); err != nil {
+	if err := d.Set("additional_attributes", flattenAdditionalAttributes(getResp)); err != nil {
 		return diag.Errorf("error setting additional_attributes for user %s: %s", d.Id(), err)
 	}
-	if err = d.Set("status", flattenUserStatusType(getResp.Status)); err != nil {
+	if err := d.Set("status", flattenUserStatusType(getResp.Status)); err != nil {
 		return diag.Errorf("error setting status for user %s: %s", d.Id(), err)
 	}
-	if err = d.Set("buckets_access_keys", flattenBucketsAccessKeys(getResp)); err != nil {
+	if err := d.Set("buckets_access_keys", flattenBucketsAccessKeys(getResp)); err != nil {
 		return diag.Errorf("error setting buckets_access_keys for user %s: %s", d.Id(), err)
 	}
-	if err = d.Set("last_login_time", getResp.LastLoginTime.Format("2006-01-02T15:04:05Z07:00")); err != nil {
+	if err := d.Set("last_login_time", getResp.LastLoginTime.Format("2006-01-02T15:04:05Z07:00")); err != nil {
 		return diag.Errorf("error setting last_login_time for user %s: %s", d.Id(), err)
 	}
-	if err = d.Set("created_time", getResp.CreatedTime.Format("2006-01-02T15:04:05Z07:00")); err != nil {
+	if err := d.Set("created_time", getResp.CreatedTime.Format("2006-01-02T15:04:05Z07:00")); err != nil {
 		return diag.Errorf("error setting created_time for user %s: %s", d.Id(), err)
 	}
-	if err = d.Set("last_updated_time", getResp.LastUpdatedTime.Format("2006-01-02T15:04:05Z07:00")); err != nil {
+	if err := d.Set("last_updated_time", getResp.LastUpdatedTime.Format("2006-01-02T15:04:05Z07:00")); err != nil {
 		return diag.Errorf("error setting last_updated_time for user %s: %s", d.Id(), err)
 	}
 	if err := d.Set("created_by", getResp.CreatedBy); err != nil {

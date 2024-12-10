@@ -12,12 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/dataprotection/v4/common"
 	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/dataprotection/v4/config"
 	dataprtotectionPrismConfig "github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -185,7 +183,6 @@ func ResourceNutanixRecoveryPointsV2() *schema.Resource {
 					},
 				},
 				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-
 					// Check if the list has changed
 					if d.HasChange("vm_recovery_points") {
 						oldRaw, newRaw := d.GetChange("vm_recovery_points")
@@ -249,7 +246,6 @@ func ResourceNutanixRecoveryPointsV2() *schema.Resource {
 					},
 				},
 				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-
 					// Check if the list has changed
 					if d.HasChange("volume_group_recovery_points") {
 						oldRaw, newRaw := d.GetChange("volume_group_recovery_points")
@@ -321,17 +317,19 @@ func ResourceNutanixRecoveryPointsV2Create(ctx context.Context, d *schema.Resour
 		body.ExpirationTime = &expTime
 	}
 	if status, ok := d.GetOk("status"); ok {
+		const two = 2
 		statusMap := map[string]interface{}{
-			"COMPLETE": 2,
+			"COMPLETE": two,
 		}
 		pVal := statusMap[status.(string)]
 		p := common.RecoveryPointStatus(pVal.(int))
 		body.Status = &p
 	}
 	if recoveryPointType, ok := d.GetOk("recovery_point_type"); ok {
+		const two, three = 2, 3
 		recoveryPointTypeMap := map[string]interface{}{
-			"CRASH_CONSISTENT":       2,
-			"APPLICATION_CONSISTENT": 3,
+			"CRASH_CONSISTENT":       two,
+			"APPLICATION_CONSISTENT": three,
 		}
 		pVal := recoveryPointTypeMap[recoveryPointType.(string)]
 		p := common.RecoveryPointType(pVal.(int))
@@ -354,7 +352,6 @@ func ResourceNutanixRecoveryPointsV2Create(ctx context.Context, d *schema.Resour
 	log.Printf("[DEBUG] RecoveryPoint Body: %v", string(aJSON))
 
 	resp, err := conn.RecoveryPoint.CreateRecoveryPoint(&body)
-
 	if err != nil {
 		return diag.Errorf("error while creating recovery point: %v", err)
 	}
@@ -399,7 +396,6 @@ func ResourceNutanixRecoveryPointsV2Read(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.Client).DataProtectionAPI
 
 	resp, err := conn.RecoveryPoint.GetRecoveryPointById(utils.StringPtr(d.Id()))
-
 	if err != nil {
 		return diag.Errorf("error while fetching recovery point: %v", err)
 	}
@@ -441,18 +437,18 @@ func ResourceNutanixRecoveryPointsV2Read(ctx context.Context, d *schema.Resource
 	}
 
 	// Get Vm Recovery Points from the resource
-	resourceVmRecoveryPoints := d.Get("vm_recovery_points").([]interface{})
+	resourceVMRecoveryPoints := d.Get("vm_recovery_points").([]interface{})
 	// Get Vm Recovery Points from the response
 	respRecoveryPoints := getResp.VmRecoveryPoints
 
 	// Remove the VM Recovery Points that are present in the resource and in the response
-	for _, vmRecoveryPoint := range resourceVmRecoveryPoints {
+	for _, vmRecoveryPoint := range resourceVMRecoveryPoints {
 		for _, respRecoveryPoint := range getResp.VmRecoveryPoints {
-			resVmRpExtId := vmRecoveryPoint.(map[string]interface{})["ext_id"]
-			respVmRpExtId := utils.StringValue(respRecoveryPoint.ExtId)
-			if resVmRpExtId == respVmRpExtId {
-				log.Printf("[DEBUG] Removing VM Recovery Point with Ext Id: %v", respVmRpExtId)
-				respRecoveryPoints = removeVmRecoveryPointByExtId(respRecoveryPoints, respRecoveryPoint)
+			resVMRpExtID := vmRecoveryPoint.(map[string]interface{})["ext_id"]
+			respVMRpExtID := utils.StringValue(respRecoveryPoint.ExtId)
+			if resVMRpExtID == respVMRpExtID {
+				log.Printf("[DEBUG] Removing VM Recovery Point with Ext Id: %v", respVMRpExtID)
+				respRecoveryPoints = removeVMRecoveryPointByExtID(respRecoveryPoints, respRecoveryPoint)
 			}
 		}
 	}
@@ -472,11 +468,11 @@ func ResourceNutanixRecoveryPointsV2Read(ctx context.Context, d *schema.Resource
 	// Remove the Volume Group Recovery Points that are present in the resource and in the response
 	for _, volumeGroupRecoveryPoint := range resourceVolumeGroupRecoveryPoints {
 		for _, respVolumeGroupRecoveryPoint := range getResp.VolumeGroupRecoveryPoints {
-			resVolumeGroupRpExtId := volumeGroupRecoveryPoint.(map[string]interface{})["ext_id"]
-			respVolumeGroupRpExtId := utils.StringValue(respVolumeGroupRecoveryPoint.ExtId)
-			if resVolumeGroupRpExtId == respVolumeGroupRpExtId {
-				log.Printf("[DEBUG] Removing Volume Group Recovery Point with Ext Id: %v", respVolumeGroupRpExtId)
-				respVolumeGroupRecoveryPoints = removeVolumeGroupRecoveryPointByExtId(respVolumeGroupRecoveryPoints, respVolumeGroupRecoveryPoint)
+			resVolumeGroupRpExtID := volumeGroupRecoveryPoint.(map[string]interface{})["ext_id"]
+			respVolumeGroupRpExtID := utils.StringValue(respVolumeGroupRecoveryPoint.ExtId)
+			if resVolumeGroupRpExtID == respVolumeGroupRpExtID {
+				log.Printf("[DEBUG] Removing Volume Group Recovery Point with Ext Id: %v", respVolumeGroupRpExtID)
+				respVolumeGroupRecoveryPoints = removeVolumeGroupRecoveryPointByExtID(respVolumeGroupRecoveryPoints, respVolumeGroupRecoveryPoint)
 			}
 		}
 	}
@@ -497,7 +493,6 @@ func ResourceNutanixRecoveryPointsV2Update(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.Client).DataProtectionAPI
 
 	readResp, err := conn.RecoveryPoint.GetRecoveryPointById(utils.StringPtr(d.Id()))
-
 	if err != nil {
 		return diag.Errorf("error while fetching recovery point: %v", err)
 	}
@@ -513,9 +508,9 @@ func ResourceNutanixRecoveryPointsV2Update(ctx context.Context, d *schema.Resour
 	if d.HasChange("expiration_time") {
 		expirationTime, ok := d.GetOk("expiration_time")
 		if ok {
-			expTime, err := time.Parse(time.RFC3339, expirationTime.(string))
-			if err != nil {
-				return diag.Errorf("error while parsing expiration Time : %v", err)
+			expTime, errTime := time.Parse(time.RFC3339, expirationTime.(string))
+			if errTime != nil {
+				return diag.Errorf("error while parsing expiration Time : %v", errTime)
 			}
 			body.ExpirationTime = &expTime
 		}
@@ -527,7 +522,6 @@ func ResourceNutanixRecoveryPointsV2Update(ctx context.Context, d *schema.Resour
 	log.Printf("[DEBUG] RecoveryPoint Body: %v", string(aJSON))
 
 	resp, err := conn.RecoveryPoint.SetRecoveryPointExpirationTime(utils.StringPtr(d.Id()), &body, args)
-
 	if err != nil {
 		return diag.Errorf("error while updating recovery point: %v", err)
 	}
@@ -567,7 +561,6 @@ func ResourceNutanixRecoveryPointsV2Delete(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.Client).DataProtectionAPI
 
 	resp, err := conn.RecoveryPoint.DeleteRecoveryPointById(utils.StringPtr(d.Id()))
-
 	if err != nil {
 		return diag.Errorf("error while deleting recovery point: %v", err)
 	}
@@ -598,12 +591,12 @@ func expandVolumeGroupRecoveryPoints(volumeGroupRecoveryPoints []interface{}) []
 		log.Printf("[DEBUG] volume group recovery points is Empty")
 		return nil
 	}
-	var volumeGroupRecoveryPointsList []config.VolumeGroupRecoveryPoint
+	volumeGroupRecoveryPointsList := make([]config.VolumeGroupRecoveryPoint, 0)
 	for _, volumeGroupRecoveryPoint := range volumeGroupRecoveryPoints {
 		volumeGroupRecoveryPointMap := volumeGroupRecoveryPoint.(map[string]interface{})
 		volumeGroupRecoveryPointObj := config.VolumeGroupRecoveryPoint{}
-		if volumeGroupExtId, ok := volumeGroupRecoveryPointMap["volume_group_ext_id"]; ok {
-			volumeGroupRecoveryPointObj.VolumeGroupExtId = utils.StringPtr(volumeGroupExtId.(string))
+		if volumeGroupExtID, ok := volumeGroupRecoveryPointMap["volume_group_ext_id"]; ok {
+			volumeGroupRecoveryPointObj.VolumeGroupExtId = utils.StringPtr(volumeGroupExtID.(string))
 		}
 		volumeGroupRecoveryPointsList = append(volumeGroupRecoveryPointsList, volumeGroupRecoveryPointObj)
 	}
@@ -616,12 +609,12 @@ func expandVMRecoveryPoints(vmRecoveryPoints []interface{}) ([]config.VmRecovery
 		log.Printf("[DEBUG] vm recovery points is Empty")
 		return nil, nil
 	}
-	var vmRecoveryPointsList []config.VmRecoveryPoint
+	vmRecoveryPointsList := make([]config.VmRecoveryPoint, 0)
 	for _, vmRecoveryPoint := range vmRecoveryPoints {
 		vmRecoveryPointMap := vmRecoveryPoint.(map[string]interface{})
 		vmRecoveryPointObj := config.VmRecoveryPoint{}
-		if vmExtId, ok := vmRecoveryPointMap["vm_ext_id"]; ok {
-			vmRecoveryPointObj.VmExtId = utils.StringPtr(vmExtId.(string))
+		if vmExtID, ok := vmRecoveryPointMap["vm_ext_id"]; ok {
+			vmRecoveryPointObj.VmExtId = utils.StringPtr(vmExtID.(string))
 		}
 		if applicationConsistentProperties, ok := vmRecoveryPointMap["application_consistent_properties"]; ok {
 			appConsistentPropList := applicationConsistentProperties.([]interface{})
@@ -654,8 +647,9 @@ func expandVMRecoveryPoints(vmRecoveryPoints []interface{}) ([]config.VmRecovery
 			vmRecoveryPointObj.Name = utils.StringPtr(name.(string))
 		}
 		if status, ok := vmRecoveryPointMap["status"]; ok && status != "" {
+			const two = 2
 			statusMap := map[string]interface{}{
-				"COMPLETE": 2,
+				"COMPLETE": two,
 			}
 			pVal := statusMap[status.(string)]
 			if pVal != nil {
@@ -664,9 +658,10 @@ func expandVMRecoveryPoints(vmRecoveryPoints []interface{}) ([]config.VmRecovery
 			}
 		}
 		if recoveryPointType, ok := vmRecoveryPointMap["recovery_point_type"]; ok && recoveryPointType != "" {
+			const two, three = 2, 3
 			recoveryPointTypeMap := map[string]interface{}{
-				"CRASH_CONSISTENT":       2,
-				"APPLICATION_CONSISTENT": 3,
+				"CRASH_CONSISTENT":       two,
+				"APPLICATION_CONSISTENT": three,
 			}
 			pVal := recoveryPointTypeMap[recoveryPointType.(string)]
 			if pVal != nil {
@@ -688,12 +683,13 @@ func expandApplicationConsistentProperties(appConsistentProp interface{}) (*conf
 	log.Printf("[DEBUG] application consistent properties: %v", appConsistentProp)
 	appConsistentPropList := appConsistentProp.([]interface{})
 	appConsistentPropVal := appConsistentPropList[0].(map[string]interface{})
-	oneOfVmRecoveryPointApplicationConsistentPropertiesObj := config.OneOfVmRecoveryPointApplicationConsistentProperties{}
+	oneOfVMRecoveryPointApplicationConsistentPropertiesObj := config.OneOfVmRecoveryPointApplicationConsistentProperties{}
 	appConsistentPropObj := common.NewVssProperties()
 	if backupType, ok := appConsistentPropVal["backup_type"]; ok {
+		const two, three = 2, 3
 		backupTypeMap := map[string]interface{}{
-			"FULL_BACKUP": 2,
-			"COPY_BACKUP": 3,
+			"FULL_BACKUP": two,
+			"COPY_BACKUP": three,
 		}
 		pVal := backupTypeMap[backupType.(string)]
 		p := common.BackupType(pVal.(int))
@@ -711,12 +707,12 @@ func expandApplicationConsistentProperties(appConsistentProp interface{}) (*conf
 	if objectType, ok := appConsistentPropVal["object_type"]; ok {
 		appConsistentPropObj.ObjectType_ = utils.StringPtr(objectType.(string))
 	}
-	err := oneOfVmRecoveryPointApplicationConsistentPropertiesObj.SetValue(*appConsistentPropObj)
+	err := oneOfVMRecoveryPointApplicationConsistentPropertiesObj.SetValue(*appConsistentPropObj)
 	if err != nil {
 		log.Printf("[ERROR] error while setting value for OneOfVmRecoveryPointApplicationConsistentProperties: %v", err)
 		return nil, err
 	}
-	return &oneOfVmRecoveryPointApplicationConsistentPropertiesObj, nil
+	return &oneOfVMRecoveryPointApplicationConsistentPropertiesObj, nil
 }
 
 func expandWritersList(writers []interface{}) []string {
@@ -736,7 +732,6 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 		// data := base64.StdEncoding.EncodeToString([]byte("ergon"))
 		// encodeUUID := data + ":" + taskUUID
 		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
-
 		if err != nil {
 			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
 		}
@@ -755,19 +750,20 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 
 func getTaskStatus(pr *prismConfig.TaskStatus) string {
 	if pr != nil {
-		if *pr == prismConfig.TaskStatus(6) {
+		const two, three, five, six, seven = 2, 3, 5, 6, 7
+		if *pr == prismConfig.TaskStatus(six) {
 			return "FAILED"
 		}
-		if *pr == prismConfig.TaskStatus(7) {
+		if *pr == prismConfig.TaskStatus(seven) {
 			return "CANCELED"
 		}
-		if *pr == prismConfig.TaskStatus(2) {
+		if *pr == prismConfig.TaskStatus(two) {
 			return "QUEUED"
 		}
-		if *pr == prismConfig.TaskStatus(3) {
+		if *pr == prismConfig.TaskStatus(three) {
 			return "RUNNING"
 		}
-		if *pr == prismConfig.TaskStatus(5) {
+		if *pr == prismConfig.TaskStatus(five) {
 			return "SUCCEEDED"
 		}
 	}
@@ -775,7 +771,7 @@ func getTaskStatus(pr *prismConfig.TaskStatus) string {
 }
 
 // Function to remove a Vm recovery Point with a specific Ext Id from the slice
-func removeVmRecoveryPointByExtId(recoveryPoints []config.VmRecoveryPoint, recoveryPoint config.VmRecoveryPoint) []config.VmRecoveryPoint {
+func removeVMRecoveryPointByExtID(recoveryPoints []config.VmRecoveryPoint, recoveryPoint config.VmRecoveryPoint) []config.VmRecoveryPoint {
 	var result []config.VmRecoveryPoint // Create a new slice to hold the result
 
 	for _, rp := range recoveryPoints {
@@ -787,7 +783,7 @@ func removeVmRecoveryPointByExtId(recoveryPoints []config.VmRecoveryPoint, recov
 }
 
 // Function to remove a Volume Group recovery Point with a specific Ext Id from the slice
-func removeVolumeGroupRecoveryPointByExtId(recoveryPoints []config.VolumeGroupRecoveryPoint, recoveryPoint config.VolumeGroupRecoveryPoint) []config.VolumeGroupRecoveryPoint {
+func removeVolumeGroupRecoveryPointByExtID(recoveryPoints []config.VolumeGroupRecoveryPoint, recoveryPoint config.VolumeGroupRecoveryPoint) []config.VolumeGroupRecoveryPoint {
 	var result []config.VolumeGroupRecoveryPoint // Create a new slice to hold the result
 
 	for _, rp := range recoveryPoints {

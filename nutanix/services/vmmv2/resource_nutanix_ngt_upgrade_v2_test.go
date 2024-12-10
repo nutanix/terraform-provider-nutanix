@@ -6,9 +6,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -32,7 +30,7 @@ func TestAccNutanixNGTUpgradeV2Resource_UpgradeNGTWithRebootPreferenceSetToIMMED
 			{
 				PreConfig: func() {
 					t.Log("Sleeping for 2 Minute waiting vm to power on")
-					time.Sleep(2 * time.Minute)
+					time.Sleep(timeSleep)
 					t.Log("Installing NGT")
 				},
 				Config: testPreEnvConfig(vmName, r) + testNGTInstallationResourceConfigIMMEDIATEReboot(),
@@ -52,7 +50,7 @@ func TestAccNutanixNGTUpgradeV2Resource_UpgradeNGTWithRebootPreferenceSetToIMMED
 			{
 				PreConfig: func() {
 					t.Log("Sleeping for 2 Minute waiting vm to reboot")
-					time.Sleep(2 * time.Minute)
+					time.Sleep(timeSleep)
 				},
 				Config: testPreEnvConfig(vmName, r) + testNGTInstallationResourceConfigIMMEDIATEReboot() + testNGTUpgradeResourceConfigRebootIMMEDIATE(),
 				Check: resource.ComposeTestCheckFunc(
@@ -89,7 +87,7 @@ func TestAccNutanixNGTUpgradeV2Resource_UpgradeNGTWithRebootPreferenceSetToLATER
 			{
 				PreConfig: func() {
 					t.Log("Sleeping for 2 Minute waiting vm to power on")
-					time.Sleep(2 * time.Minute)
+					time.Sleep(timeSleep)
 					t.Log("Installing NGT")
 				},
 				Config: testPreEnvConfig(vmName, r) + testNGTInstallationResourceConfigIMMEDIATEReboot(),
@@ -109,7 +107,7 @@ func TestAccNutanixNGTUpgradeV2Resource_UpgradeNGTWithRebootPreferenceSetToLATER
 			{
 				PreConfig: func() {
 					t.Log("Sleeping for 2 Minute waiting vm to reboot")
-					time.Sleep(2 * time.Minute)
+					time.Sleep(timeSleep)
 				},
 				Config: testPreEnvConfig(vmName, r) + testNGTInstallationResourceConfigIMMEDIATEReboot() + testNGTUpgradeResourceConfigRebootLATER(),
 				Check: resource.ComposeTestCheckFunc(
@@ -146,7 +144,7 @@ func TestAccNutanixNGTUpgradeV2Resource_UpgradeNGTWithRebootPreferenceSetToSKIP(
 			{
 				PreConfig: func() {
 					t.Log("Sleeping for 2 Minute waiting vm to power on")
-					time.Sleep(2 * time.Minute)
+					time.Sleep(timeSleep)
 					t.Log("Installing NGT")
 				},
 				Config: testPreEnvConfig(vmName, r) + testNGTInstallationResourceConfigIMMEDIATEReboot(),
@@ -166,7 +164,7 @@ func TestAccNutanixNGTUpgradeV2Resource_UpgradeNGTWithRebootPreferenceSetToSKIP(
 			{
 				PreConfig: func() {
 					t.Log("Sleeping for 2 Minute waiting vm to reboot")
-					time.Sleep(2 * time.Minute)
+					time.Sleep(timeSleep)
 				},
 				Config: testPreEnvConfig(vmName, r) + testNGTInstallationResourceConfigIMMEDIATEReboot() + testNGTUpgradeResourceConfigRebootSKIP(),
 				Check: resource.ComposeTestCheckFunc(

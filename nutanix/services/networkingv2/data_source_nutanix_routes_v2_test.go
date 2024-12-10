@@ -2,10 +2,11 @@ package networkingv2_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
-	"testing"
 )
 
 const datasourceNameRoutes = "data.nutanix_routes_v2.test"
@@ -29,6 +30,7 @@ func TestAccNutanixRoutesV2DataSource_Basic(t *testing.T) {
 		},
 	})
 }
+
 func TestAccNutanixRoutesV2DataSource_WithFilter(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-route-%d", r)

@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
 	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -140,6 +139,7 @@ func resourceNutanixNDBMaintenanceTaskCreate(ctx context.Context, d *schema.Reso
 	log.Printf("NDB maintenance task with %s id is performed", d.Id())
 	return resourceNutanixNDBMaintenanceTaskRead(ctx, d, meta)
 }
+
 func resourceNutanixNDBMaintenanceTaskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).Era
 	maintenanceID := d.Get("maintenance_window_id")
@@ -162,6 +162,7 @@ func resourceNutanixNDBMaintenanceTaskRead(ctx context.Context, d *schema.Resour
 func resourceNutanixNDBMaintenanceTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return resourceNutanixNDBMaintenanceTaskCreate(ctx, d, meta)
 }
+
 func resourceNutanixNDBMaintenanceTaskDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }

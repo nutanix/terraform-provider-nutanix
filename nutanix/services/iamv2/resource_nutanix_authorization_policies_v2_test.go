@@ -2,26 +2,23 @@ package iamv2_test
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
 const resourceNameAuthorizationPolicy = "nutanix_authorization_policy_v2.test"
 
 func TestAccNutanixAuthorizationPolicyV2Resource_CreateACP(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAuthorizationPolicyResourceConfig(filepath),
+				Config: testAuthorizationPolicyResourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameAuthorizationPolicy, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameAuthorizationPolicy, "display_name", testVars.Iam.AuthPolicies.DisplayName),
@@ -36,7 +33,7 @@ func TestAccNutanixAuthorizationPolicyV2Resource_CreateACP(t *testing.T) {
 			},
 			// test update ac
 			{
-				Config: testAuthorizationPolicyResourceUpdateConfig(filepath),
+				Config: testAuthorizationPolicyResourceUpdateConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameAuthorizationPolicy, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameAuthorizationPolicy, "description", testVars.Iam.AuthPolicies.Description+"_updated"),
@@ -54,14 +51,12 @@ func TestAccNutanixAuthorizationPolicyV2Resource_CreateACP(t *testing.T) {
 }
 
 func TestAccNutanixAuthorizationPolicyV2Resource_WithNoDisplayName(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../test_config_v2.json"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAuthorizationPolicyResourceWithoutDisplayNameConfig(filepath),
+				Config:      testAuthorizationPolicyResourceWithoutDisplayNameConfig(),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 		},
@@ -69,14 +64,12 @@ func TestAccNutanixAuthorizationPolicyV2Resource_WithNoDisplayName(t *testing.T)
 }
 
 func TestAccNutanixAuthorizationPolicyV2Resource_WithNoIdentities(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../test_config_v2.json"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAuthorizationPolicyResourceWithoutIdentitiesConfig(filepath),
+				Config:      testAuthorizationPolicyResourceWithoutIdentitiesConfig(),
 				ExpectError: regexp.MustCompile("Insufficient identities blocks"),
 			},
 		},
@@ -84,14 +77,12 @@ func TestAccNutanixAuthorizationPolicyV2Resource_WithNoIdentities(t *testing.T) 
 }
 
 func TestAccNutanixAuthorizationPolicyV2Resource_WithNoEntities(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../test_config_v2.json"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAuthorizationPolicyResourceWithoutEntitiesConfig(filepath),
+				Config:      testAuthorizationPolicyResourceWithoutEntitiesConfig(),
 				ExpectError: regexp.MustCompile("Insufficient entities blocks"),
 			},
 		},
@@ -99,21 +90,19 @@ func TestAccNutanixAuthorizationPolicyV2Resource_WithNoEntities(t *testing.T) {
 }
 
 func TestAccNutanixAuthorizationPolicyV2Resource_WithNoRole(t *testing.T) {
-	path, _ := os.Getwd()
-	filepath := path + "/../../../test_config_v2.json"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAuthorizationPolicyResourceWithoutRoleConfig(filepath),
+				Config:      testAuthorizationPolicyResourceWithoutRoleConfig(),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 		},
 	})
 }
 
-func testAuthorizationPolicyResourceConfig(filepath string) string {
+func testAuthorizationPolicyResourceConfig() string {
 	return fmt.Sprintf(`
 
 	locals{
@@ -157,7 +146,7 @@ func testAuthorizationPolicyResourceConfig(filepath string) string {
 	}`, filepath)
 }
 
-func testAuthorizationPolicyResourceUpdateConfig(filepath string) string {
+func testAuthorizationPolicyResourceUpdateConfig() string {
 	return fmt.Sprintf(`
 
 	locals{
@@ -201,7 +190,7 @@ func testAuthorizationPolicyResourceUpdateConfig(filepath string) string {
 	}`, filepath)
 }
 
-func testAuthorizationPolicyResourceWithoutDisplayNameConfig(filepath string) string {
+func testAuthorizationPolicyResourceWithoutDisplayNameConfig() string {
 	return fmt.Sprintf(`
 
 	locals{
@@ -226,7 +215,7 @@ func testAuthorizationPolicyResourceWithoutDisplayNameConfig(filepath string) st
 	}`, filepath)
 }
 
-func testAuthorizationPolicyResourceWithoutIdentitiesConfig(filepath string) string {
+func testAuthorizationPolicyResourceWithoutIdentitiesConfig() string {
 	return fmt.Sprintf(`
 
 	locals{
@@ -249,7 +238,7 @@ func testAuthorizationPolicyResourceWithoutIdentitiesConfig(filepath string) str
 	}`, filepath)
 }
 
-func testAuthorizationPolicyResourceWithoutEntitiesConfig(filepath string) string {
+func testAuthorizationPolicyResourceWithoutEntitiesConfig() string {
 	return fmt.Sprintf(`
 
 	locals{
@@ -269,7 +258,7 @@ func testAuthorizationPolicyResourceWithoutEntitiesConfig(filepath string) strin
 	}`, filepath)
 }
 
-func testAuthorizationPolicyResourceWithoutRoleConfig(filepath string) string {
+func testAuthorizationPolicyResourceWithoutRoleConfig() string {
 	return fmt.Sprintf(`
 
 	locals{

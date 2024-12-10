@@ -12,10 +12,11 @@ import (
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	import5 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
+
+const defaultValue = 32
 
 func ResourceNutanixTemplateDeployV2() *schema.Resource {
 	return &schema.Resource{
@@ -103,8 +104,10 @@ func ResourceNutanixTemplateDeployV2() *schema.Resource {
 												"nic_type": {
 													Type:     schema.TypeString,
 													Optional: true,
-													ValidateFunc: validation.StringInSlice([]string{"SPAN_DESTINATION_NIC",
-														"NORMAL_NIC", "DIRECT_NIC", "NETWORK_FUNCTION_NIC"}, false),
+													ValidateFunc: validation.StringInSlice([]string{
+														"SPAN_DESTINATION_NIC",
+														"NORMAL_NIC", "DIRECT_NIC", "NETWORK_FUNCTION_NIC",
+													}, false),
 												},
 												"network_function_chain": {
 													Type:     schema.TypeList,
@@ -121,8 +124,10 @@ func ResourceNutanixTemplateDeployV2() *schema.Resource {
 												"network_function_nic_type": {
 													Type:     schema.TypeString,
 													Optional: true,
-													ValidateFunc: validation.StringInSlice([]string{"TAP", "EGRESS",
-														"INGRESS"}, false),
+													ValidateFunc: validation.StringInSlice([]string{
+														"TAP", "EGRESS",
+														"INGRESS",
+													}, false),
 												},
 												"subnet": {
 													Type:     schema.TypeList,
@@ -173,7 +178,7 @@ func ResourceNutanixTemplateDeployV2() *schema.Resource {
 																		"prefix_length": {
 																			Type:     schema.TypeInt,
 																			Optional: true,
-																			Default:  32,
+																			Default:  defaultValue,
 																		},
 																	},
 																},
@@ -190,7 +195,7 @@ func ResourceNutanixTemplateDeployV2() *schema.Resource {
 																		"prefix_length": {
 																			Type:     schema.TypeInt,
 																			Optional: true,
-																			Default:  32,
+																			Default:  defaultValue,
 																		},
 																	},
 																},
@@ -218,7 +223,7 @@ func ResourceNutanixTemplateDeployV2() *schema.Resource {
 																		"prefix_length": {
 																			Type:     schema.TypeInt,
 																			Optional: true,
-																			Default:  32,
+																			Default:  defaultValue,
 																		},
 																	},
 																},
@@ -260,11 +265,10 @@ func ResourceNutanixTemplateDeployV2Create(ctx context.Context, d *schema.Resour
 		body.ClusterReference = utils.StringPtr(clsRef.(string))
 	}
 	if overrideCfg, ok := d.GetOk("override_vm_config_map"); ok {
-		body.OverrideVmConfigMap = expandVmConfigOverride(overrideCfg)
+		body.OverrideVmConfigMap = expandVMConfigOverride(overrideCfg)
 	}
 
 	resp, err := conn.TemplatesAPIInstance.DeployTemplate(utils.StringPtr(extID.(string)), body)
-
 	if err != nil {
 		return diag.Errorf("error while deploying template : %v", err)
 	}
@@ -311,7 +315,7 @@ func ResourceNutanixTemplateDeployV2Delete(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func expandVmConfigOverride(pr interface{}) map[string]import5.VmConfigOverride {
+func expandVMConfigOverride(pr interface{}) map[string]import5.VmConfigOverride {
 	if len(pr.([]interface{})) > 0 {
 		// vmcfg := import5.VmConfigOverride{}
 
@@ -345,10 +349,7 @@ func expandVmConfigOverride(pr interface{}) map[string]import5.VmConfigOverride 
 		}
 
 		cfg["0"] = vmConfig
-
-		res := make(map[string]import5.VmConfigOverride)
-		res = cfg
-		return res
+		return cfg
 	}
 	return nil
 }
@@ -386,9 +387,10 @@ func expandEmulatedNic(pr interface{}) *config.EmulatedNic {
 		val := prI[0].(map[string]interface{})
 
 		if model, ok := val["model"]; ok && len(model.(string)) > 0 {
+			const two, three = 2, 3
 			subMap := map[string]interface{}{
-				"VIRTIO": 2,
-				"E1000":  3,
+				"VIRTIO": two,
+				"E1000":  three,
 			}
 			pVal := subMap[model.(string)]
 			p := config.EmulatedNicModel(pVal.(int))
@@ -415,11 +417,12 @@ func expandNicNetworkInfo(pr interface{}) *config.NicNetworkInfo {
 		val := prI[0].(map[string]interface{})
 
 		if nicType, ok := val["nic_type"]; ok && len(nicType.(string)) > 0 {
+			const two, three, four, five = 2, 3, 4, 5
 			subMap := map[string]interface{}{
-				"NORMAL_NIC":           2,
-				"DIRECT_NIC":           3,
-				"NETWORK_FUNCTION_NIC": 4,
-				"SPAN_DESTINATION_NIC": 5,
+				"NORMAL_NIC":           two,
+				"DIRECT_NIC":           three,
+				"NETWORK_FUNCTION_NIC": four,
+				"SPAN_DESTINATION_NIC": five,
 			}
 			pVal := subMap[nicType.(string)]
 			p := config.NicType(pVal.(int))
@@ -429,10 +432,11 @@ func expandNicNetworkInfo(pr interface{}) *config.NicNetworkInfo {
 			nic.NetworkFunctionChain = expandNetworkFunctionChainReference(ntwkFunc)
 		}
 		if ntwkFuncNicType, ok := val["network_function_nic_type"]; ok && len(ntwkFuncNicType.(string)) > 0 {
+			const two, three, four = 2, 3, 4
 			subMap := map[string]interface{}{
-				"INGRESS": 2,
-				"EGRESS":  3,
-				"TAP":     4,
+				"INGRESS": two,
+				"EGRESS":  three,
+				"TAP":     four,
 			}
 			pVal := subMap[ntwkFuncNicType.(string)]
 			p := config.NetworkFunctionNicType(pVal.(int))
@@ -442,9 +446,10 @@ func expandNicNetworkInfo(pr interface{}) *config.NicNetworkInfo {
 			nic.Subnet = expandSubnetReference(subnet)
 		}
 		if vlanMode, ok := val["vlan_mode"]; ok && len(vlanMode.(string)) > 0 {
+			const two, three = 2, 3
 			subMap := map[string]interface{}{
-				"ACCESS": 2,
-				"TRUNK":  3,
+				"ACCESS": two,
+				"TRUNK":  three,
 			}
 			pVal := subMap[vlanMode.(string)]
 			p := config.VlanMode(pVal.(int))
@@ -480,18 +485,17 @@ func expandIPv4Info(ipv4Info interface{}) *config.Ipv4Info {
 		ipv4InfoObj := &config.Ipv4Info{}
 		ipv4InfoData := ipv4Info.([]interface{})[0].(map[string]interface{})
 
-		if learnedIpAddresses, ok := ipv4InfoData["learned_ip_addresses"]; ok {
-			ipAddressesList := make([]import4.IPv4Address, len(learnedIpAddresses.([]interface{})))
-			for i, learnedIp := range learnedIpAddresses.([]interface{}) {
-				learnedIpData := learnedIp.(map[string]interface{})
+		if learnedIPAddresses, ok := ipv4InfoData["learned_ip_addresses"]; ok {
+			ipAddressesList := make([]import4.IPv4Address, len(learnedIPAddresses.([]interface{})))
+			for i, learnedIP := range learnedIPAddresses.([]interface{}) {
+				learnedIPData := learnedIP.(map[string]interface{})
 				ipAddressesList[i] = import4.IPv4Address{
-					Value:        utils.StringPtr(learnedIpData["value"].(string)),
-					PrefixLength: utils.IntPtr(learnedIpData["prefix_length"].(int)),
+					Value:        utils.StringPtr(learnedIPData["value"].(string)),
+					PrefixLength: utils.IntPtr(learnedIPData["prefix_length"].(int)),
 				}
 			}
 			ipv4InfoObj.LearnedIpAddresses = ipAddressesList
 		}
-
 	}
 	return nil
 }
@@ -610,9 +614,10 @@ func expandOneOfGuestCustomizationParamsConfig(pr interface{}) *config.OneOfGues
 			val := prI[0].(map[string]interface{})
 
 			if installType, ok := val["install_type"]; ok {
+				const two, three = 2, 3
 				subMap := map[string]interface{}{
-					"FRESH":    2,
-					"PREPARED": 3,
+					"FRESH":    two,
+					"PREPARED": three,
 				}
 				pVal := subMap[installType.(string)]
 				p := config.InstallType(pVal.(int))
@@ -630,8 +635,9 @@ func expandOneOfGuestCustomizationParamsConfig(pr interface{}) *config.OneOfGues
 			val := prI[0].(map[string]interface{})
 
 			if ds, ok := val["datasource_type"]; ok && len(ds.(string)) > 0 {
+				const two = 2
 				subMap := map[string]interface{}{
-					"CONFIG_DRIVE_V2": 2,
+					"CONFIG_DRIVE_V2": two,
 				}
 				pVal := subMap[ds.(string)]
 				p := config.CloudInitDataSourceType(pVal.(int))
@@ -645,7 +651,6 @@ func expandOneOfGuestCustomizationParamsConfig(pr interface{}) *config.OneOfGues
 			}
 			guestCfgs.SetValue(*cloud)
 		}
-
 		return guestCfgs
 	}
 	return nil
@@ -657,9 +662,9 @@ func expandOneOfSysprepSysprepScript(pr interface{}) *config.OneOfSysprepSysprep
 		val := prI[0].(map[string]interface{})
 		scripts := &config.OneOfSysprepSysprepScript{}
 
-		if unXml, ok := val["unattend_xml"]; ok && len(unXml.([]interface{})) > 0 {
+		if unXML, ok := val["unattend_xml"]; ok && len(unXML.([]interface{})) > 0 {
 			xml := config.NewUnattendxml()
-			xI := unXml.([]interface{})
+			xI := unXML.([]interface{})
 			xmlVal := xI[0].(map[string]interface{})
 
 			if vall, ok := xmlVal["value"]; ok {
@@ -673,33 +678,11 @@ func expandOneOfSysprepSysprepScript(pr interface{}) *config.OneOfSysprepSysprep
 			cVal := cI[0].(map[string]interface{})
 
 			if keyval, ok := cVal["key_value_pairs"]; ok {
-				ckey.KeyValuePairs = expandKVPair(keyval.([]interface{}))
+				ckey.KeyValuePairs = expandTemplateKVPairs(keyval.([]interface{}))
 			}
 			scripts.SetValue(*ckey)
 		}
 		return scripts
-	}
-	return nil
-}
-
-func expandKVPair(pr []interface{}) []import4.KVPair {
-	if len(pr) > 0 {
-		pairs := make([]import4.KVPair, len(pr))
-
-		for k, v := range pr {
-			pair := import4.KVPair{}
-			val := v.(map[string]interface{})
-
-			if name, ok := val["name"]; ok {
-				pair.Name = utils.StringPtr(name.(string))
-			}
-			// if value, ok := val["value"]; ok {
-			// 	pair.Value = utils.StringPtr(value.(string))
-			// }
-
-			pairs[k] = pair
-		}
-		return pairs
 	}
 	return nil
 }
@@ -726,7 +709,7 @@ func expandOneOfCloudInitCloudInitScript(pr interface{}) *config.OneOfCloudInitC
 			cVal := cI[0].(map[string]interface{})
 
 			if keyval, ok := cVal["key_value_pairs"]; ok {
-				ckey.KeyValuePairs = expandKVPair(keyval.([]interface{}))
+				ckey.KeyValuePairs = expandTemplateKVPairs(keyval.([]interface{}))
 			}
 			cloudInit.SetValue(*ckey)
 		}

@@ -15,10 +15,14 @@ import (
 	clsCommonConfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
 	clsPrismConfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
+
+const (
+	timePeriod = 1 * time.Minute
+	timeSleep  = 2 * time.Minute
 )
 
 func ResourceNutanixStorageContainersV2() *schema.Resource {
@@ -189,20 +193,19 @@ func ResourceNutanixStorageContainersV2() *schema.Resource {
 }
 
 func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.Client).ClusterAPI
 	body := &clustermgmtConfig.StorageContainer{}
 
-	clusterExtId := d.Get("cluster_ext_id")
+	clusterExtID := d.Get("cluster_ext_id")
 
-	if extId, ok := d.GetOk("ext_id"); ok {
-		body.ExtId = utils.StringPtr(extId.(string))
+	if extID, ok := d.GetOk("ext_id"); ok {
+		body.ExtId = utils.StringPtr(extID.(string))
 	}
-	if containerExtId, ok := d.GetOk("container_ext_id"); ok {
-		body.ContainerExtId = utils.StringPtr(containerExtId.(string))
+	if containerExtID, ok := d.GetOk("container_ext_id"); ok {
+		body.ContainerExtId = utils.StringPtr(containerExtID.(string))
 	}
-	if ownerExtId, ok := d.GetOk("owner_ext_id"); ok {
-		body.OwnerExtId = utils.StringPtr(ownerExtId.(string))
+	if ownerExtID, ok := d.GetOk("owner_ext_id"); ok {
+		body.OwnerExtId = utils.StringPtr(ownerExtID.(string))
 	}
 	if name, ok := d.GetOk("name"); ok {
 		body.Name = utils.StringPtr(name.(string))
@@ -217,69 +220,72 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 	}
 	if replicationFactor, ok := d.GetOk("replication_factor"); ok {
 		body.ReplicationFactor = utils.IntPtr(replicationFactor.(int))
-		log.Printf("[DEBUG] replicationFactor: %v", utils.IntPtr(int(replicationFactor.(int))))
+		log.Printf("[DEBUG] replicationFactor: %v", utils.IntPtr(replicationFactor.(int)))
 	}
 	if nfsWhitelistAddresses, ok := d.GetOk("nfs_whitelist_addresses"); ok {
 		body.NfsWhitelistAddress = expandNfsWhitelistAddresses(nfsWhitelistAddresses)
 	}
 	if erasureCode, ok := d.GetOk("erasure_code"); ok {
+		const two, three, four = 2, 3, 4
 		subMap := map[string]interface{}{
-			"NONE": 2,
-			"OFF":  3,
-			"ON":   4,
+			"NONE": two,
+			"OFF":  three,
+			"ON":   four,
 		}
 		pVal := subMap[erasureCode.(string)]
 		p := clustermgmtConfig.ErasureCodeStatus(pVal.(int))
 		body.ErasureCode = &p
 	}
 	if isInlineEcEnabled, ok := d.GetOk("is_inline_ec_enabled"); ok {
-		body.IsInlineEcEnabled = utils.BoolPtr(bool(isInlineEcEnabled.(bool)))
+		body.IsInlineEcEnabled = utils.BoolPtr(isInlineEcEnabled.(bool))
 	}
 	if hasHigherEcFaultDomainPreference, ok := d.GetOk("has_higher_ec_fault_domain_preference"); ok {
-		body.HasHigherEcFaultDomainPreference = utils.BoolPtr(bool(hasHigherEcFaultDomainPreference.(bool)))
+		body.HasHigherEcFaultDomainPreference = utils.BoolPtr(hasHigherEcFaultDomainPreference.(bool))
 	}
 	if erasureCodeDelaySecs, ok := d.GetOk("erasure_code_delay_secs"); ok {
-		body.ErasureCodeDelaySecs = utils.IntPtr(int(erasureCodeDelaySecs.(int)))
+		body.ErasureCodeDelaySecs = utils.IntPtr(erasureCodeDelaySecs.(int))
 	}
 	if cacheDeduplication, ok := d.GetOk("cache_deduplication"); ok {
+		const two, three, four = 2, 3, 4
 		subMap := map[string]interface{}{
-			"NONE": 2,
-			"OFF":  3,
-			"ON":   4,
+			"NONE": two,
+			"OFF":  three,
+			"ON":   four,
 		}
 		pVal := subMap[cacheDeduplication.(string)]
 		p := clustermgmtConfig.CacheDeduplication(pVal.(int))
 		body.CacheDeduplication = &p
 	}
 	if onDiskDedup, ok := d.GetOk("on_disk_dedup"); ok {
+		const two, three, four = 2, 3, 4
 		subMap := map[string]interface{}{
-			"NONE":         2,
-			"OFF":          3,
-			"POST_PROCESS": 4,
+			"NONE":         two,
+			"OFF":          three,
+			"POST_PROCESS": four,
 		}
 		pVal := subMap[onDiskDedup.(string)]
 		p := clustermgmtConfig.OnDiskDedup(pVal.(int))
 		body.OnDiskDedup = &p
 	}
 	if isCompressionEnabled, ok := d.GetOk("is_compression_enabled"); ok {
-		body.IsCompressionEnabled = utils.BoolPtr(bool(isCompressionEnabled.(bool)))
+		body.IsCompressionEnabled = utils.BoolPtr(isCompressionEnabled.(bool))
 	}
 	if compressionDelaySecs, ok := d.GetOk("compression_delay_secs"); ok {
-		body.CompressionDelaySecs = utils.IntPtr(int(compressionDelaySecs.(int)))
+		body.CompressionDelaySecs = utils.IntPtr(compressionDelaySecs.(int))
 	}
 	if isInternal, ok := d.GetOk("is_internal"); ok {
-		body.IsInternal = utils.BoolPtr(bool(isInternal.(bool)))
+		body.IsInternal = utils.BoolPtr(isInternal.(bool))
 	}
 	if isSoftwareEncryptionEnabled, ok := d.GetOk("is_software_encryption_enabled"); ok {
-		body.IsSoftwareEncryptionEnabled = utils.BoolPtr(bool(isSoftwareEncryptionEnabled.(bool)))
+		body.IsSoftwareEncryptionEnabled = utils.BoolPtr(isSoftwareEncryptionEnabled.(bool))
 	}
-	if affinityHostExtId, ok := d.GetOk("affinity_host_ext_id"); ok {
-		body.AffinityHostExtId = utils.StringPtr(affinityHostExtId.(string))
+	if affinityHostExtID, ok := d.GetOk("affinity_host_ext_id"); ok {
+		body.AffinityHostExtId = utils.StringPtr(affinityHostExtID.(string))
 	}
 
 	jsonBody, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] create storage container body: %s", string(jsonBody))
-	resp, err := conn.StorageContainersAPI.CreateStorageContainer(body, utils.StringPtr(clusterExtId.(string)))
+	resp, err := conn.StorageContainersAPI.CreateStorageContainer(body, utils.StringPtr(clusterExtID.(string)))
 	if err != nil {
 		return diag.Errorf("error while creating storage containers : %v", err)
 	}
@@ -312,7 +318,7 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 	d.SetId(*uuid)
 
 	// Delay/sleep for 2 Minute, replication factor is not updated immediately
-	time.Sleep(2 * time.Minute)
+	time.Sleep(timeSleep)
 
 	return ResourceNutanixStorageContainersV2Read(ctx, d, meta)
 }
@@ -462,10 +468,11 @@ func ResourceNutanixStorageContainersV2Update(ctx context.Context, d *schema.Res
 		updateSpec.NfsWhitelistAddress = expandNfsWhitelistAddresses(d.Get("nfs_whitelist_addresses"))
 	}
 	if d.HasChange("erasure_code") {
+		const two, three, four = 2, 3, 4
 		subMap := map[string]interface{}{
-			"NONE": 2,
-			"OFF":  3,
-			"ON":   4,
+			"NONE": two,
+			"OFF":  three,
+			"ON":   four,
 		}
 		pVal := subMap[d.Get("erasure_code").(string)]
 		p := clustermgmtConfig.ErasureCodeStatus(pVal.(int))
@@ -481,20 +488,22 @@ func ResourceNutanixStorageContainersV2Update(ctx context.Context, d *schema.Res
 		updateSpec.ErasureCodeDelaySecs = utils.IntPtr(d.Get("erasure_code_delay_secs").(int))
 	}
 	if d.HasChange("cache_deduplication") {
+		const two, three, four = 2, 3, 4
 		subMap := map[string]interface{}{
-			"NONE": 2,
-			"OFF":  3,
-			"ON":   4,
+			"NONE": two,
+			"OFF":  three,
+			"ON":   four,
 		}
 		pVal := subMap[d.Get("cache_deduplication").(string)]
 		p := clustermgmtConfig.CacheDeduplication(pVal.(int))
 		updateSpec.CacheDeduplication = &p
 	}
 	if d.HasChange("on_disk_dedup") {
+		const two, three, four = 2, 3, 4
 		subMap := map[string]interface{}{
-			"NONE":         2,
-			"OFF":          3,
-			"POST_PROCESS": 4,
+			"NONE":         two,
+			"OFF":          three,
+			"POST_PROCESS": four,
 		}
 		pVal := subMap[d.Get("on_disk_dedup").(string)]
 		p := clustermgmtConfig.OnDiskDedup(pVal.(int))
@@ -538,7 +547,7 @@ func ResourceNutanixStorageContainersV2Update(ctx context.Context, d *schema.Res
 	}
 
 	// delay/sleep for 1 Minute, replication factor is not updated immediately
-	time.Sleep(60 * time.Second)
+	time.Sleep(timePeriod)
 	return ResourceNutanixStorageContainersV2Read(ctx, d, meta)
 }
 
@@ -575,7 +584,6 @@ func ResourceNutanixStorageContainersV2Delete(ctx context.Context, d *schema.Res
 }
 
 func expandNfsWhitelistAddresses(nfsWhitelistAddresses interface{}) []clsCommonConfig.IPAddressOrFQDN {
-
 	if nfsWhitelistAddresses != nil {
 		nfsWhitelistAddressesList := nfsWhitelistAddresses.([]interface{})
 		ips := make([]clsCommonConfig.IPAddressOrFQDN, len(nfsWhitelistAddressesList))
@@ -645,7 +653,6 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 		// data := base64.StdEncoding.EncodeToString([]byte("ergon"))
 		// encodeUUID := data + ":" + taskUUID
 		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
-
 		if err != nil {
 			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
 		}
@@ -663,20 +670,21 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 }
 
 func getTaskStatus(pr *prismConfig.TaskStatus) string {
+	const two, three, five, six, seven = 2, 3, 5, 6, 7
 	if pr != nil {
-		if *pr == prismConfig.TaskStatus(6) {
+		if *pr == prismConfig.TaskStatus(six) {
 			return "FAILED"
 		}
-		if *pr == prismConfig.TaskStatus(7) {
+		if *pr == prismConfig.TaskStatus(seven) {
 			return "CANCELED"
 		}
-		if *pr == prismConfig.TaskStatus(2) {
+		if *pr == prismConfig.TaskStatus(two) {
 			return "QUEUED"
 		}
-		if *pr == prismConfig.TaskStatus(3) {
+		if *pr == prismConfig.TaskStatus(three) {
 			return "RUNNING"
 		}
-		if *pr == prismConfig.TaskStatus(5) {
+		if *pr == prismConfig.TaskStatus(five) {
 			return "SUCCEEDED"
 		}
 	}
@@ -718,7 +726,6 @@ func expandIPv6Address(pr interface{}) *clsCommonConfig.IPv6Address {
 }
 
 func expandFQDN(pr []interface{}) *clsCommonConfig.FQDN {
-
 	if len(pr) > 0 {
 		fqdn := clsCommonConfig.FQDN{}
 		val := pr[0].(map[string]interface{})

@@ -21,6 +21,7 @@ func TestAccNutanixRolesDataSource_basic(t *testing.T) {
 		},
 	})
 }
+
 func testAccRolesDataSourceConfig() string {
 	return `data "nutanix_roles" "test" {}`
 }

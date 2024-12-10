@@ -2,12 +2,12 @@ package volumesv2_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -36,8 +36,8 @@ func TestAccNutanixVolumeGroupsDiskV2DataSource_Basic(t *testing.T) {
 }
 
 func testAccVolumeGroupsDiskDataSourceConfig(filepath, name, desc string) string {
-	return testAccVolumeGroupResourceConfig(filepath, name, desc) +
-		testAccVolumeGroupDiskResourceConfig(filepath, name, desc) +
+	return testAccVolumeGroupResourceConfig(name, desc) +
+		testAccVolumeGroupDiskResourceConfig(name, desc) +
 		`		  
 		  data "nutanix_volume_group_disk_v2" "test" {
 			volume_group_ext_id = nutanix_volume_group_v2.test.id

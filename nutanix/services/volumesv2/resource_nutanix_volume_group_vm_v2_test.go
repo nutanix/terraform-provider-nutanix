@@ -7,11 +7,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceVolumeGroupVm = "nutanix_volume_group_vm_v2.test"
+const resourceVolumeGroupVM = "nutanix_volume_group_vm_v2.test"
 
 func TestAccNutanixVolumeGroupVmV2Resource_Basic(t *testing.T) {
 	r := acctest.RandInt()
@@ -24,18 +23,17 @@ func TestAccNutanixVolumeGroupVmV2Resource_Basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVolumeGroupVmConfig(filepath, name, desc),
+				Config: resourceVolumeGroupVMBasic(filepath, name, desc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceVolumeGroupVm, "vm_ext_id"),
+					resource.TestCheckResourceAttrSet(resourceVolumeGroupVM, "vm_ext_id"),
 				),
 			},
 		},
 	})
 }
 
-func testAccVolumeGroupVmConfig(filepath, name, desc string) string {
-
-	return testAccVolumeGroupResourceConfig(filepath, name, desc) + fmt.Sprintf(`	
+func resourceVolumeGroupVMBasic(filepath, name, desc string) string {
+	return testAccVolumeGroupResourceConfig(name, desc) + fmt.Sprintf(`	
           resource "nutanix_virtual_machine_v2" "test"{
 			name= "tf-test-vg-vm-%[1]s"
 			description =  "%[2]s"

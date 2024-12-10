@@ -10,7 +10,6 @@ import (
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/iam/v4/authn"
 	import6 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	import5 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -58,7 +57,7 @@ func DatasourceNutanixTemplateV2() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"vm_spec": schemaForTemplateVmSpec(),
+						"vm_spec": schemaForTemplateVMSpec(),
 						"create_time": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -128,7 +127,7 @@ func DatasourceNutanixTemplateV2Read(ctx context.Context, d *schema.ResourceData
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("links", flattenApiLink(getResp.Links)); err != nil {
+	if err := d.Set("links", flattenAPILink(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("ext_id", getResp.ExtId); err != nil {
@@ -290,7 +289,6 @@ func flattenCustomKVPair(kvPairs []config.KVPair) []interface{} {
 		return kvps
 	}
 	return nil
-
 }
 
 func flattenKVValue(value interface{}) []interface{} {
@@ -298,22 +296,16 @@ func flattenKVValue(value interface{}) []interface{} {
 	switch v := value.(type) {
 	case string:
 		valueMap["string"] = v
-		break
 	case int:
 		valueMap["integer"] = v
-		break
 	case bool:
 		valueMap["boolean"] = v
-		break
 	case []string:
 		valueMap["string_list"] = v
-		break
 	case []int:
 		valueMap["integer_list"] = v
-		break
 	case map[string]string:
 		valueMap["object"] = v
-		break
 
 	case []config.MapOfStringWrapper:
 		mapOfStrings := make([]interface{}, len(v))
@@ -386,7 +378,7 @@ func flattenTemplateVersionSpec(pr *import5.TemplateVersionSpec) []map[string]in
 			tmp["ext_id"] = pr.ExtId
 		}
 		if pr.Links != nil {
-			tmp["links"] = flattenApiLink(pr.Links)
+			tmp["links"] = flattenAPILink(pr.Links)
 		}
 		if pr.VersionName != nil {
 			tmp["version_name"] = pr.VersionName
@@ -395,7 +387,7 @@ func flattenTemplateVersionSpec(pr *import5.TemplateVersionSpec) []map[string]in
 			tmp["version_description"] = pr.VersionDescription
 		}
 		if pr.VmSpec != nil {
-			tmp["vm_spec"] = flattenVm(pr.VmSpec)
+			tmp["vm_spec"] = flattenVM(pr.VmSpec)
 		}
 		if pr.CreateTime != nil {
 			t := pr.CreateTime
@@ -404,7 +396,7 @@ func flattenTemplateVersionSpec(pr *import5.TemplateVersionSpec) []map[string]in
 		if pr.CreatedBy != nil {
 			tmp["created_by"] = flattenTemplateUser(pr.CreatedBy)
 		}
-		//if pr.VersionSource != nil {
+		// if pr.VersionSource != nil {
 		//	tmp["version_source"] = flattenTemplateVersionSource(pr.VersionSource)
 		//}
 		if pr.IsActiveVersion != nil {
@@ -440,7 +432,7 @@ func flattenTemplateVersionSource(versionSource *import5.OneOfTemplateVersionSpe
 			versionReference := versionSource.GetValue().(import5.TemplateVersionReference)
 
 			tempVersionReferenceMap["version_id"] = versionReference.VersionId
-			tempVersionReferenceMap["override_vm_config"] = flattenTemplateVmRefOverrideVmConfig(versionReference.OverrideVmConfig)
+			tempVersionReferenceMap["override_vm_config"] = flattenTemplateVMRefOverrideVMConfig(versionReference.OverrideVmConfig)
 
 			tmp["template_version_reference"] = []map[string]interface{}{tempVersionReferenceMap}
 		}
@@ -451,7 +443,7 @@ func flattenTemplateVersionSource(versionSource *import5.OneOfTemplateVersionSpe
 	return nil
 }
 
-//func flattenTemplateGuestCustomization(guestCustomization *import6.GuestCustomizationParams) []map[string]interface{} {
+// func flattenTemplateGuestCustomization(guestCustomization *import6.GuestCustomizationParams) []map[string]interface{} {
 //	if guestCustomization != nil {
 //		guestCustomizationMap := make(map[string]interface{})
 //		if guestCustomization.Config != nil {
@@ -462,7 +454,7 @@ func flattenTemplateVersionSource(versionSource *import5.OneOfTemplateVersionSpe
 //	return nil
 //}
 
-//func flattenGuestCustomizationConfig(customizationParamsConfig *import6.OneOfGuestCustomizationParamsConfig) []map[string]interface{} {
+// func flattenGuestCustomizationConfig(customizationParamsConfig *import6.OneOfGuestCustomizationParamsConfig) []map[string]interface{} {
 //	if customizationParamsConfig != nil {
 //		customizationParamsConfigMap := make(map[string]interface{})
 //		if *customizationParamsConfig.ObjectType_ == "vmm.v4.ahv.config.SysprepConfig" {
@@ -488,7 +480,7 @@ func flattenTemplateVersionSource(versionSource *import5.OneOfTemplateVersionSpe
 //
 //}
 
-//func flattenCloudInitConfig(cloudInitConfig *import6.CloudInit) []map[string]interface{} {
+// func flattenCloudInitConfig(cloudInitConfig *import6.CloudInit) []map[string]interface{} {
 //	if cloudInitConfig != nil {
 //		cloudInitConfigMap := make(map[string]interface{})
 //
@@ -531,7 +523,7 @@ func flattenTemplateVersionSource(versionSource *import5.OneOfTemplateVersionSpe
 //	return nil
 //}
 
-func flattenTemplateVmRefOverrideVmConfig(vmConfig *import5.VmConfigOverride) []map[string]interface{} {
+func flattenTemplateVMRefOverrideVMConfig(vmConfig *import5.VmConfigOverride) []map[string]interface{} {
 	if vmConfig != nil {
 		vmConfigMap := make(map[string]interface{})
 		if vmConfig.Name != nil {
@@ -690,7 +682,7 @@ func SchemaForCreateByAndUpdateByUser() *schema.Schema {
 	}
 }
 
-func flattenVm(v *import6.Vm) []map[string]interface{} {
+func flattenVM(v *import6.Vm) []map[string]interface{} {
 	if v != nil {
 		vmList := make([]map[string]interface{}, 0)
 		vm := make(map[string]interface{})
@@ -699,7 +691,7 @@ func flattenVm(v *import6.Vm) []map[string]interface{} {
 			vm["tenant_id"] = v.TenantId
 		}
 		if v.Links != nil {
-			vm["links"] = flattenApiLink(v.Links)
+			vm["links"] = flattenAPILink(v.Links)
 		}
 		if v.ExtId != nil {
 			vm["ext_id"] = v.ExtId
@@ -719,7 +711,7 @@ func flattenVm(v *import6.Vm) []map[string]interface{} {
 			vm["update_time"] = t.String()
 		}
 		if v.Source != nil {
-			vm["source"] = flattenVmSourceReference(v.Source)
+			vm["source"] = flattenVMSourceReference(v.Source)
 		}
 		if v.NumSockets != nil {
 			vm["num_sockets"] = v.NumSockets
@@ -743,7 +735,7 @@ func flattenVm(v *import6.Vm) []map[string]interface{} {
 			vm["is_cpu_passthrough_enabled"] = v.IsCpuPassthroughEnabled
 		}
 		if v.EnabledCpuFeatures != nil {
-			vm["enabled_cpu_features"] = flattenCpuFeature(v.EnabledCpuFeatures)
+			vm["enabled_cpu_features"] = flattenCPUFeature(v.EnabledCpuFeatures)
 		}
 		if v.IsMemoryOvercommitEnabled != nil {
 			vm["is_memory_overcommit_enabled"] = v.IsMemoryOvercommitEnabled
@@ -782,7 +774,7 @@ func flattenVm(v *import6.Vm) []map[string]interface{} {
 			vm["is_branding_enabled"] = v.IsBrandingEnabled
 		}
 		if v.BootConfig != nil {
-			vm["boot_config"] = flattenOneOfVmBootConfig(v.BootConfig)
+			vm["boot_config"] = flattenOneOfVMBootConfig(v.BootConfig)
 		}
 		if v.IsVgaConsoleEnabled != nil {
 			vm["is_vga_console_enabled"] = v.IsVgaConsoleEnabled

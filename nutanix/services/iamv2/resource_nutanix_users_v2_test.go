@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -32,7 +31,7 @@ func TestAccNutanixUsersV2Resource_LocalActiveUser(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameUsers, "first_name", "first-name-"+name),
 					resource.TestCheckResourceAttr(resourceNameUsers, "middle_initial", "middle-initial-"+name),
 					resource.TestCheckResourceAttr(resourceNameUsers, "last_name", "last-name-"+name),
-					resource.TestCheckResourceAttr(resourceNameUsers, "email_id", testVars.Iam.Users.EmailId),
+					resource.TestCheckResourceAttr(resourceNameUsers, "email_id", testVars.Iam.Users.EmailID),
 					resource.TestCheckResourceAttr(resourceNameUsers, "status", "ACTIVE"),
 				),
 			},
@@ -47,7 +46,7 @@ func TestAccNutanixUsersV2Resource_LocalActiveUser(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameUsers, "first_name", fmt.Sprintf("%s_updated", "first-name-"+name)),
 					resource.TestCheckResourceAttr(resourceNameUsers, "middle_initial", fmt.Sprintf("%s_updated", "middle-initial-"+name)),
 					resource.TestCheckResourceAttr(resourceNameUsers, "last_name", fmt.Sprintf("%s_updated", "last-name-"+name)),
-					resource.TestCheckResourceAttr(resourceNameUsers, "email_id", fmt.Sprintf("updated_%s", testVars.Iam.Users.EmailId)),
+					resource.TestCheckResourceAttr(resourceNameUsers, "email_id", fmt.Sprintf("updated_%s", testVars.Iam.Users.EmailID)),
 				),
 			},
 		},
@@ -122,7 +121,7 @@ func TestAccNutanixUsersV2Resource_SAMLUser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameUsers, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameUsers, "username", name),
 					resource.TestCheckResourceAttr(resourceNameUsers, "user_type", "SAML"),
-					resource.TestCheckResourceAttr(resourceNameUsers, "idp_id", testVars.Iam.Users.IdpId),
+					resource.TestCheckResourceAttr(resourceNameUsers, "idp_id", testVars.Iam.Users.IdpID),
 				),
 			},
 		},
@@ -131,7 +130,6 @@ func TestAccNutanixUsersV2Resource_SAMLUser(t *testing.T) {
 
 // create LDAP user
 func TestAccNutanixUsersV2Resource_LDAPUser(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -142,7 +140,7 @@ func TestAccNutanixUsersV2Resource_LDAPUser(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameUsers, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameUsers, "username", testVars.Iam.Users.Name),
 					resource.TestCheckResourceAttr(resourceNameUsers, "user_type", "LDAP"),
-					resource.TestCheckResourceAttr(resourceNameUsers, "idp_id", testVars.Iam.Users.DirectoryServiceId),
+					resource.TestCheckResourceAttr(resourceNameUsers, "idp_id", testVars.Iam.Users.DirectoryServiceID),
 				),
 			},
 		},
@@ -190,7 +188,6 @@ func TestAccNutanixUsersV2Resource_DeactivateLocalUser(t *testing.T) {
 
 // Test missing username
 func TestAccNutanixUsersV2Resource_WithNoUserName(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

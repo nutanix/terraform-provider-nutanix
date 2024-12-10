@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authz"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -145,19 +144,20 @@ func DatasourceNutanixAuthorizationPolicyV2Read(ctx context.Context, d *schema.R
 
 func flattenAuthorizationPolicyType(pr *import1.AuthorizationPolicyType) string {
 	if pr != nil {
-		if *pr == import1.AuthorizationPolicyType(2) {
+		const two, three, four, five, six = 2, 3, 4, 5, 6
+		if *pr == import1.AuthorizationPolicyType(two) {
 			return "USER_DEFINED"
 		}
-		if *pr == import1.AuthorizationPolicyType(3) {
+		if *pr == import1.AuthorizationPolicyType(three) {
 			return "SERVICE_DEFINED"
 		}
-		if *pr == import1.AuthorizationPolicyType(4) {
+		if *pr == import1.AuthorizationPolicyType(four) {
 			return "PREDEFINED_READ_ONLY"
 		}
-		if *pr == import1.AuthorizationPolicyType(5) {
+		if *pr == import1.AuthorizationPolicyType(five) {
 			return "PREDEFINED_UPDATE_IDENTITY_ONLY"
 		}
-		if *pr == import1.AuthorizationPolicyType(6) {
+		if *pr == import1.AuthorizationPolicyType(six) {
 			return "SERVICE_DEFINED_READ_ONLY"
 		}
 	}
@@ -174,7 +174,6 @@ func flattenIdentityFilters(identityFilters []import1.IdentityFilter) []interfac
 			log.Printf("[DEBUG] flattenIdentityFilters val type : %v\n", reflect.TypeOf(v))
 
 			reservedMap, err := json.Marshal(v.Reserved_)
-
 			if err != nil {
 				log.Printf("[DEBUG] flattenIdentityFiltersError [%v]:%v err : %v\n", k, v, err)
 			}
@@ -197,7 +196,6 @@ func flattenEntityFilters(entityFilters []import1.EntityFilter) []interface{} {
 			log.Printf("[DEBUG] flattenIdentityFilters  %v:%v\n", k, v)
 			log.Printf("[DEBUG] flattenIdentityFilters val type : %v\n", reflect.TypeOf(v))
 			reservedMap, err := json.Marshal(v.Reserved_)
-
 			if err != nil {
 				log.Printf("[DEBUG] flattenIdentityFiltersError [%v]:%v err : %v\n", k, v, err)
 			}

@@ -2,15 +2,15 @@ package vmmv2_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
-	"testing"
 )
 
 const datasourceNameNGTConfiguration = "data.nutanix_ngt_configuration_v2.test"
 
 func TestAccNutanixNGTConfigurationV2Datasource_GetNGTConfigurationForVM(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -35,7 +35,6 @@ func TestAccNutanixNGTConfigurationV2Datasource_GetNGTConfigurationForVM(t *test
 }
 
 func TestAccNutanixNGTConfigurationV4Datasource_GetNGTConfigurationForVM_NGTNotInstalled(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,

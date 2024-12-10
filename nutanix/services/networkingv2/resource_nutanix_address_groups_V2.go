@@ -308,7 +308,7 @@ func expandIPv4Range(pr []interface{}) []import1.IPv4Range {
 	return nil
 }
 
-//func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
+// func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
 //	return func() (interface{}, string, error) {
 //		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID))
 //

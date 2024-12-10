@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -18,7 +17,7 @@ func DatasourceNutanixVolumeCategoryDetailsV2() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: DatasourceNutanixVolumeCategoryDetailsV2Read,
 
-		Description: "Query the category details that are associated with the Volume Group identified by {volumeGroupExtId}.",
+		Description: "Query the category details that are associated with the Volume Group identified by {volumeGroupExtID}.",
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Description: "The external identifier of the Volume Group.",
@@ -77,7 +76,7 @@ func DatasourceNutanixVolumeCategoryDetailsV2Read(ctx context.Context, d *schema
 
 	var page, limit *int
 
-	volumeGroupExtId := d.Get("ext_id")
+	volumeGroupExtID := d.Get("ext_id")
 
 	// initialize the query parameters
 	if pagef, ok := d.GetOk("page"); ok {
@@ -92,8 +91,7 @@ func DatasourceNutanixVolumeCategoryDetailsV2Read(ctx context.Context, d *schema
 	}
 
 	// get the volume groups response
-	resp, err := conn.VolumeAPIInstance.ListCategoryAssociationsByVolumeGroupId(utils.StringPtr(volumeGroupExtId.(string)), page, limit)
-
+	resp, err := conn.VolumeAPIInstance.ListCategoryAssociationsByVolumeGroupId(utils.StringPtr(volumeGroupExtID.(string)), page, limit)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)

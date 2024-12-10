@@ -2,7 +2,6 @@ package karbon
 
 // DSMetadata All api calls that return a list will have this metadata block as input
 type DSMetadata struct {
-
 	// The filter in FIQL syntax used for the results.
 	Filter *string `json:"filter,omitempty" mapstructure:"filter,omitempty"`
 
@@ -106,8 +105,7 @@ type ClusterMasterNodeMasterConfigIntentInput struct {
 	NodePoolName string `json:"node_pool_name" mapstructure:"node_pool_name, omitempty"`
 }
 
-type ClusterSingleMasterConfigIntentInput struct {
-}
+type ClusterSingleMasterConfigIntentInput struct{}
 
 type ClusterWorkerConfigIntentInput struct {
 	NodePools []ClusterNodePool `json:"node_pools" mapstructure:"node_pools, omitempty"`

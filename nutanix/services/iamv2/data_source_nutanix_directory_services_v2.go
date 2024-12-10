@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authn"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -155,7 +154,8 @@ func DatasourceNutanixDirectoryServicesV2() *schema.Resource {
 						},
 						"last_updated_time": {
 							Type:     schema.TypeString,
-							Computed: true},
+							Computed: true,
+						},
 						"created_by": {
 							Type:     schema.TypeString,
 							Computed: true,

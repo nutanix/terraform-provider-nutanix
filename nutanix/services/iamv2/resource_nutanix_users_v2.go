@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/common/v1/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authn"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -201,11 +200,12 @@ func resourceNutanixUserV2Create(ctx context.Context, d *schema.ResourceData, me
 		spec.Username = utils.StringPtr(un.(string))
 	}
 	if ut, ok := d.GetOk("user_type"); ok {
+		const two, three, four, five = 2, 3, 4, 5
 		usertypeMap := map[string]interface{}{
-			"LOCAL":    2,
-			"SAML":     3,
-			"LDAP":     4,
-			"EXTERNAL": 5,
+			"LOCAL":    two,
+			"SAML":     three,
+			"LDAP":     four,
+			"EXTERNAL": five,
 		}
 		pInt := usertypeMap[ut.(string)]
 		p := import1.UserType(pInt.(int))
@@ -244,24 +244,25 @@ func resourceNutanixUserV2Create(ctx context.Context, d *schema.ResourceData, me
 		spec.IsForceResetPasswordEnabled = utils.BoolPtr(frp.(bool))
 	}
 	if status, ok := d.GetOk("status"); ok {
+		const two, three = 2, 3
 		statusMap := map[string]interface{}{
-			"ACTIVE":   2,
-			"INACTIVE": 3,
+			"ACTIVE":   two,
+			"INACTIVE": three,
 		}
 		pInt := statusMap[status.(string)]
 		p := import1.UserStatusType(pInt.(int))
 		spec.Status = &p
 	}
 	if lastLogin, ok := d.GetOk("last_login_time"); ok {
-		t := time.Time(lastLogin.(time.Time))
+		t := lastLogin.(time.Time)
 		spec.LastLoginTime = &t
 	}
 	if cTime, ok := d.GetOk("created_time"); ok {
-		t := time.Time(cTime.(time.Time))
+		t := cTime.(time.Time)
 		spec.CreatedTime = &t
 	}
 	if lastUpdate, ok := d.GetOk("last_updated_time"); ok {
-		t := time.Time(lastUpdate.(time.Time))
+		t := lastUpdate.(time.Time)
 		spec.LastUpdatedTime = &t
 	}
 	if cBy, ok := d.GetOk("created_by"); ok {
@@ -295,7 +296,7 @@ func resourceNutanixUserV2Read(ctx context.Context, d *schema.ResourceData, meta
 	if err = d.Set("ext_id", getResp.ExtId); err != nil {
 		return diag.Errorf("error setting ext_id for user %s: %s", d.Id(), err)
 	}
-	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
+	if err = d.Set("links", flattenLinks(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err = d.Set("username", getResp.Username); err != nil {
@@ -374,11 +375,12 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 	// checking if attribute is updated or not
 
 	if d.HasChange("user_type") {
+		const two, three, four, five = 2, 3, 4, 5
 		usertypeMap := map[string]interface{}{
-			"LOCAL":    2,
-			"SAML":     3,
-			"LDAP":     4,
-			"EXTERNAL": 5,
+			"LOCAL":    two,
+			"SAML":     three,
+			"LDAP":     four,
+			"EXTERNAL": five,
 		}
 		pInt := usertypeMap[d.Get("user_type").(string)]
 		p := import1.UserType(pInt.(int))
@@ -415,9 +417,10 @@ func resourceNutanixUserV2Update(ctx context.Context, d *schema.ResourceData, me
 		updateSpec.IsForceResetPasswordEnabled = utils.BoolPtr(d.Get("force_reset_password").(bool))
 	}
 	if d.HasChange("status") {
+		const two, three = 2, 3
 		statusMap := map[string]interface{}{
-			"ACTIVE":   2,
-			"INACTIVE": 3,
+			"ACTIVE":   two,
+			"INACTIVE": three,
 		}
 		pInt := statusMap[d.Get("status").(string)]
 		p := import1.UserStatusType(pInt.(int))

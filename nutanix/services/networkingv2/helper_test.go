@@ -2,9 +2,10 @@ package networkingv2_test
 
 import (
 	"fmt"
+	"strconv"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"strconv"
 )
 
 func checkAttributeLength(resourceName, attribute string, minLength int) resource.TestCheckFunc {

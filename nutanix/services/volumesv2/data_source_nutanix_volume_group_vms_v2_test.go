@@ -2,12 +2,10 @@ package volumesv2_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"os"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -17,14 +15,12 @@ func TestAccNutanixVolumeGroupVmsAttachmentsV2DataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-volume-group-disk-%d", r)
 	desc := "terraform test volume group disk description"
-	path, _ := os.Getwd()
-	filepath := path + "/../../../test_config_v2.json"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVolumeGroupVmsAttachmentsDataSourceConfig(filepath, name, desc),
+				Config: testAccVolumeGroupVmsAttachmentsDataSourceConfig(name, desc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceVolumeGroupsVmsAttachments, "vms_attachments.#"),
 					resource.TestCheckResourceAttrSet(dataSourceVolumeGroupsVmsAttachments, "vms_attachments.0.ext_id"),
@@ -34,8 +30,8 @@ func TestAccNutanixVolumeGroupVmsAttachmentsV2DataSource_Basic(t *testing.T) {
 	})
 }
 
-func testAccVolumeGroupVmsAttachmentsDataSourceConfig(filepath, name, desc string) string {
-	return testAccVolumeGroupResourceConfig(filepath, name, desc) + fmt.Sprintf(`
+func testAccVolumeGroupVmsAttachmentsDataSourceConfig(name, desc string) string {
+	return testAccVolumeGroupResourceConfig(name, desc) + fmt.Sprintf(`
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "tf-test-vg-vm-%[1]s"
 			description =  "%[2]s"

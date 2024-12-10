@@ -10,16 +10,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/spf13/cast"
-	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
-	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/spf13/cast"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 var (
@@ -738,7 +736,6 @@ func resourceNutanixVirtualMachineRead(ctx context.Context, d *schema.ResourceDa
 	var err error
 	// Make request to the API
 	resp, err := conn.V3.GetVM(d.Id())
-
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
@@ -1391,7 +1388,6 @@ func changePowerState(ctx context.Context, conn *v3.Client, id string, powerStat
 func taskVMStateRefreshFunc(client *v3.Client, vmUUID string, powerState string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := client.V3.GetVM(vmUUID)
-
 		if err != nil {
 			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 				return v, DELETED, nil
@@ -1604,6 +1600,7 @@ func getVMResources(d *schema.ResourceData, vm *v3.VMResources) error {
 
 	return nil
 }
+
 func expandNicList(d *schema.ResourceData) []*v3.VMNic {
 	if v, ok := d.GetOk("nic_list"); ok {
 		n := v.([]interface{})

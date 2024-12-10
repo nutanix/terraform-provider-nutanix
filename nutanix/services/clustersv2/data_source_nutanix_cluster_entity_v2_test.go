@@ -1,9 +1,10 @@
 package clustersv2_test
 
 import (
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
-	"testing"
 )
 
 const dataSourceNameCluster = "data.nutanix_cluster_v2.test"

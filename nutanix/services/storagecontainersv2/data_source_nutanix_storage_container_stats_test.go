@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -106,7 +105,6 @@ func TestAccNutanixStorageStatsInfoV2Datasource_StatType(t *testing.T) {
 }
 
 func TestAccNutanixStorageStatsInfoV2Datasource_InvalidSampleInterval(t *testing.T) {
-
 	// Start time is now
 	startTime := time.Now()
 
@@ -130,7 +128,6 @@ func TestAccNutanixStorageStatsInfoV2Datasource_InvalidSampleInterval(t *testing
 }
 
 func TestAccNutanixStorageStatsInfoV2Datasource_InvalidStatType(t *testing.T) {
-
 	// Start time is now
 	startTime := time.Now()
 
@@ -154,7 +151,6 @@ func TestAccNutanixStorageStatsInfoV2Datasource_InvalidStatType(t *testing.T) {
 }
 
 func TestAccNutanixStorageStatsInfoV2Datasource_MissingRequiredArgs(t *testing.T) {
-
 	// Start time is now
 	startTime := time.Now()
 
@@ -170,7 +166,7 @@ func TestAccNutanixStorageStatsInfoV2Datasource_MissingRequiredArgs(t *testing.T
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testStorageStatsDatasourceV2MissingExtId(startTimeFormatted, endTimeFormatted, "SUM"),
+				Config:      testStorageStatsDatasourceV2MissingExtID(startTimeFormatted, endTimeFormatted, "SUM"),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 			{
@@ -297,7 +293,7 @@ func testStorageStatsDatasourceV2InvalidStatType(startTime, endTime, statType st
 	`, startTime, endTime, statType)
 }
 
-func testStorageStatsDatasourceV2MissingExtId(startTime, endTime, statType string) string {
+func testStorageStatsDatasourceV2MissingExtID(startTime, endTime, statType string) string {
 	return fmt.Sprintf(`
 		
 		data "nutanix_storage_container_stats_info_v2" "test" {

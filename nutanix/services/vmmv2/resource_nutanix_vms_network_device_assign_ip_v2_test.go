@@ -9,7 +9,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameVmNetworkDeviceAssignIp = "nutanix_vm_network_device_assign_ip_v2.test"
+const resourceNameVMNetworkDeviceAssignIP = "nutanix_vm_network_device_assign_ip_v2.test"
 
 func TestAccNutanixVmsNetworkDeviceAssignIpV2Resource_Basic(t *testing.T) {
 	r := acctest.RandInt()
@@ -20,17 +20,17 @@ func TestAccNutanixVmsNetworkDeviceAssignIpV2Resource_Basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmPreEnvConfig(r) + testVmWithNicAndDiskConfig(vmName) + testVmsNetworkDeviceAssignIpV4Config(),
+				Config: testVMPreEnvConfig(r) + testVMWithNicAndDiskConfig(vmName) + testVmsNetworkDeviceAssignIPV4Config(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceNameVmNetworkDeviceAssignIp, "ext_id"),
-					resource.TestCheckResourceAttr(resourceNameVmNetworkDeviceAssignIp, "ip_address.0.value", testVars.VMM.AssignedIP),
+					resource.TestCheckResourceAttrSet(resourceNameVMNetworkDeviceAssignIP, "ext_id"),
+					resource.TestCheckResourceAttr(resourceNameVMNetworkDeviceAssignIP, "ip_address.0.value", testVars.VMM.AssignedIP),
 				),
 			},
 		},
 	})
 }
 
-func testVmsNetworkDeviceAssignIpV4Config() string {
+func testVmsNetworkDeviceAssignIPV4Config() string {
 	return `
 		resource "nutanix_vm_network_device_assign_ip_v2" "test" {
 			vm_ext_id = resource.nutanix_virtual_machine_v2.test-vm.id
@@ -42,8 +42,7 @@ func testVmsNetworkDeviceAssignIpV4Config() string {
 `
 }
 
-func testVmPreEnvConfig(r int) string {
-
+func testVMPreEnvConfig(r int) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
 		
@@ -99,7 +98,7 @@ func testVmPreEnvConfig(r int) string {
 `, filepath, r)
 }
 
-func testVmWithNicAndDiskConfig(vmName string) string {
+func testVMWithNicAndDiskConfig(vmName string) string {
 	return fmt.Sprintf(`
 		resource "nutanix_virtual_machine_v2" "test-vm" {
 		  name                 = "%[1]s"

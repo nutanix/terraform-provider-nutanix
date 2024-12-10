@@ -8,14 +8,12 @@ import (
 	"strings"
 	"time"
 
-	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
-	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 const (
@@ -430,7 +428,6 @@ func resourceNutanixImageUpdate(ctx context.Context, d *schema.ResourceData, met
 	res := &v3.ImageResources{}
 
 	response, err := conn.V3.GetImage(d.Id())
-
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")

@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authn"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -179,9 +178,10 @@ func ResourceNutanixDirectoryServicesV2Create(ctx context.Context, d *schema.Res
 		input.DomainName = utils.StringPtr(domainName.(string))
 	}
 	if dType, ok := d.GetOk("directory_type"); ok {
+		const two, three = 2, 3
 		subMap := map[string]interface{}{
-			"ACTIVE_DIRECTORY": 2,
-			"OPEN_LDAP":        3,
+			"ACTIVE_DIRECTORY": two,
+			"OPEN_LDAP":        three,
 		}
 		pInt := subMap[dType.(string)]
 		p := import1.DirectoryType(pInt.(int))
@@ -195,9 +195,10 @@ func ResourceNutanixDirectoryServicesV2Create(ctx context.Context, d *schema.Res
 		input.OpenLdapConfiguration = expandOpenLdapConfig(ldap)
 	}
 	if grpSearchType, ok := d.GetOk("group_search_type"); ok {
+		const two, three = 2, 3
 		subMap := map[string]interface{}{
-			"NON_RECURSIVE": 2,
-			"RECURSIVE":     3,
+			"NON_RECURSIVE": two,
+			"RECURSIVE":     three,
 		}
 		pInt := subMap[grpSearchType.(string)]
 		p := import1.GroupSearchType(pInt.(int))
@@ -212,8 +213,8 @@ func ResourceNutanixDirectoryServicesV2Create(ctx context.Context, d *schema.Res
 		input.WhiteListedGroups = whitelistedGrpListStr
 	}
 
-	aJson, _ := json.MarshalIndent(input, "", " ")
-	log.Println("[DEBUG] Directory Service JSON: ", string(aJson))
+	aJSON, _ := json.MarshalIndent(input, "", " ")
+	log.Println("[DEBUG] Directory Service JSON: ", string(aJSON))
 
 	resp, err := conn.DirectoryServiceAPIInstance.CreateDirectoryService(input)
 	if err != nil {
@@ -351,9 +352,10 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 		updatedSpec.DomainName = utils.StringPtr(d.Get("domain_name").(string))
 	}
 	if d.HasChange("directory_type") {
+		const two, three = 2, 3
 		subMap := map[string]interface{}{
-			"ACTIVE_DIRECTORY": 2,
-			"OPEN_LDAP":        3,
+			"ACTIVE_DIRECTORY": two,
+			"OPEN_LDAP":        three,
 		}
 		pInt := subMap[d.Get("directory_type").(string)]
 		p := import1.DirectoryType(pInt.(int))
@@ -364,9 +366,10 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 		updatedSpec.OpenLdapConfiguration = expandOpenLdapConfig(d.Get("open_ldap_configuration"))
 	}
 	if d.HasChange("group_search_type") {
+		const two, three = 2, 3
 		subMap := map[string]interface{}{
-			"NON_RECURSIVE": 2,
-			"RECURSIVE":     3,
+			"NON_RECURSIVE": two,
+			"RECURSIVE":     three,
 		}
 		pInt := subMap[d.Get("group_search_type").(string)]
 		p := import1.GroupSearchType(pInt.(int))

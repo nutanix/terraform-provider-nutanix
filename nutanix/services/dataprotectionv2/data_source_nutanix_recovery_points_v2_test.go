@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -28,7 +27,7 @@ func TestAccNutanixRecoveryPointsV2Datasource_Basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmConfig(vmName) + testRecoveryPointsDatasourceConfig(name, expirationTimeFormatted),
+				Config: testVMConfigRecovery(vmName) + testRecoveryPointsDatasourceConfig(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameRecoveryPoints, "recovery_points.#"),
 					resource.TestCheckResourceAttrSet(datasourceNameRecoveryPoints, "recovery_points.0.name"),
@@ -53,7 +52,7 @@ func TestAccNutanixRecoveryPointsV2Datasource_WithFilter(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmConfig(vmName) + testRecoveryPointsDatasourceConfigWithFilter(name, expirationTimeFormatted),
+				Config: testVMConfigRecovery(vmName) + testRecoveryPointsDatasourceConfigWithFilter(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceNameRecoveryPoints, "recovery_points.#", "1"),
 					resource.TestCheckResourceAttrSet(datasourceNameRecoveryPoints, "recovery_points.0.ext_id"),
@@ -83,7 +82,7 @@ func TestAccNutanixRecoveryPointsV2Datasource_WithLimit(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmConfig(vmName) + testRecoveryPointsDatasourceConfigWithLimit(name, expirationTimeFormatted),
+				Config: testVMConfigRecovery(vmName) + testRecoveryPointsDatasourceConfigWithLimit(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceNameRecoveryPoints, "recovery_points.#", "1"),
 					resource.TestCheckResourceAttrSet(datasourceNameRecoveryPoints, "recovery_points.0.ext_id"),

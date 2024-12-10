@@ -31,8 +31,7 @@ type ImagedNodeListFilter struct {
 	NodeState *string `json:"node_state,omitempty"`
 }
 
-type HardwareAttribute struct {
-}
+type HardwareAttribute struct{}
 
 // ImagedNodeDetails ...
 type ImagedNodeDetails struct {

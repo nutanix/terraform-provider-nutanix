@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -20,7 +19,7 @@ func testAccCheckResourceAttrListNotEmpty(resourceName, attrName, subAttr string
 		resourceInstance := s.RootModule().Resources[resourceName]
 
 		if resourceInstance == nil {
-			return fmt.Errorf("Resource %s not found", resourceName)
+			return fmt.Errorf("resource %s not found", resourceName)
 		}
 
 		prefix := attrName + "."
@@ -36,10 +35,8 @@ func testAccCheckResourceAttrListNotEmpty(resourceName, attrName, subAttr string
 			if resourceInstance.Primary.Attributes[attr] == "" {
 				return fmt.Errorf("%s attribute %s is empty", resourceName, attr)
 			}
-
 		}
 		return nil
-
 	}
 }
 
@@ -82,8 +79,7 @@ func testAndCheckComputedValues(resourceName string) resource.TestCheckFunc {
 
 // VolumeGroup Resource
 
-func testAccVolumeGroupResourceConfig(filepath, name, desc string) string {
-
+func testAccVolumeGroupResourceConfig(name, desc string) string {
 	return fmt.Sprintf(`
 	data "nutanix_clusters_v2" "clusters" {}
 
@@ -121,8 +117,7 @@ func testAccVolumeGroupResourceConfig(filepath, name, desc string) string {
 	`, filepath, name, desc)
 }
 
-func testAccVolumeGroupDiskResourceConfig(filepath, name, desc string) string {
-
+func testAccVolumeGroupDiskResourceConfig(name, desc string) string {
 	return fmt.Sprintf(`	  
 
       data "nutanix_storage_containers_v2" "test" {

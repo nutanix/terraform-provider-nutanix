@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
-	clustermgmtConfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	clsMangPrismConfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
@@ -327,25 +326,25 @@ func ResourceNutanixClusterUnconfiguredNodeNetworkV2Create(ctx context.Context, 
 	}
 	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
 
-	aJson, _ := json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Fetch Network Info Task Details: %s", string(aJson))
+	bJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	log.Printf("[DEBUG] Fetch Network Info Task Details: %s", string(bJSON))
 
 	uuid := strings.Split(utils.StringValue(rUUID.ExtId), "=:")[1]
 
-	const NETWORKING_DETAILS = 3
-	taskResponseType := clustermgmtConfig.TaskResponseType(NETWORKING_DETAILS)
+	const networkingDetails = 3
+	taskResponseType := config.TaskResponseType(networkingDetails)
 	networkDetailsResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
 	if taskErr != nil {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr)
 	}
 
-	taskResp := networkDetailsResp.Data.GetValue().(clustermgmtConfig.TaskResponse)
+	taskResp := networkDetailsResp.Data.GetValue().(config.TaskResponse)
 
-	if *taskResp.TaskResponseType != clustermgmtConfig.TaskResponseType(NETWORKING_DETAILS) {
+	if *taskResp.TaskResponseType != config.TaskResponseType(networkingDetails) {
 		return diag.Errorf("error while fetching Task Response for Network Detail Nodes : %v", "task response type mismatch")
 	}
 
-	nodeNetworkDetails := taskResp.Response.GetValue().(clustermgmtConfig.NodeNetworkingDetails)
+	nodeNetworkDetails := taskResp.Response.GetValue().(config.NodeNetworkingDetails)
 
 	if err := d.Set("nodes_networking_details", flattenNodesNetworkDetails(nodeNetworkDetails)); err != nil {
 		return diag.FromErr(err)
@@ -358,7 +357,7 @@ func ResourceNutanixClusterUnconfiguredNodeNetworkV2Create(ctx context.Context, 
 	return nil
 }
 
-func flattenNodesNetworkDetails(nodeNetworkDetails clustermgmtConfig.NodeNetworkingDetails) []map[string]interface{} {
+func flattenNodesNetworkDetails(nodeNetworkDetails config.NodeNetworkingDetails) []map[string]interface{} {
 	if nodeNetworkDetails.NetworkInfo != nil {
 		result := make(map[string]interface{})
 
@@ -380,7 +379,7 @@ func flattenNodesNetworkDetails(nodeNetworkDetails clustermgmtConfig.NodeNetwork
 			result["network_info"] = networkInfoList
 		}
 
-		if uplinks != nil && len(uplinks) > 0 {
+		if len(uplinks) > 0 {
 			uplinksList := make([]map[string]interface{}, 0)
 			for _, uplink := range uplinks {
 				uplinksMap := make(map[string]interface{})
@@ -391,11 +390,9 @@ func flattenNodesNetworkDetails(nodeNetworkDetails clustermgmtConfig.NodeNetwork
 			result["uplinks"] = uplinksList
 		}
 
-		if warnings != nil && len(warnings) > 0 {
+		if len(warnings) > 0 {
 			warningsList := make([]string, 0)
-			for _, warning := range warnings {
-				warningsList = append(warningsList, warning)
-			}
+			warningsList = append(warningsList, warnings...)
 			result["warnings"] = warningsList
 		}
 		return []map[string]interface{}{result}
@@ -403,8 +400,8 @@ func flattenNodesNetworkDetails(nodeNetworkDetails clustermgmtConfig.NodeNetwork
 	return nil
 }
 
-func flattenUplinkList(uplinkList []clustermgmtConfig.NameMacRef) interface{} {
-	if uplinkList != nil && len(uplinkList) > 0 {
+func flattenUplinkList(uplinkList []config.NameMacRef) interface{} {
+	if len(uplinkList) > 0 {
 		result := make([]map[string]interface{}, 0)
 		for _, uplink := range uplinkList {
 			uplinkMap := make(map[string]interface{})
@@ -417,7 +414,7 @@ func flattenUplinkList(uplinkList []clustermgmtConfig.NameMacRef) interface{} {
 	return nil
 }
 
-func flattenNameNetworkRef(nameNetworkRefs []clustermgmtConfig.NameNetworkRef) []map[string]interface{} {
+func flattenNameNetworkRef(nameNetworkRefs []config.NameNetworkRef) []map[string]interface{} {
 	if nameNetworkRefs != nil {
 		result := make([]map[string]interface{}, 0)
 		for _, nameNetworkRef := range nameNetworkRefs {
@@ -445,7 +442,6 @@ func ResourceNutanixClusterUnconfiguredNodeNetworkV2Delete(ctx context.Context, 
 }
 
 func expandNodeListNetworkingDetails(pr []interface{}) []config.NodeListNetworkingDetails {
-
 	if len(pr) > 0 {
 		nodeList := make([]config.NodeListNetworkingDetails, len(pr))
 
@@ -453,22 +449,23 @@ func expandNodeListNetworkingDetails(pr []interface{}) []config.NodeListNetworki
 			val := v.(map[string]interface{})
 			node := config.NodeListNetworkingDetails{}
 
-			if nodeUuid, ok := val["node_uuid"]; ok && nodeUuid != "" {
-				node.NodeUuid = utils.StringPtr(nodeUuid.(string))
+			if nodeUUID, ok := val["node_uuid"]; ok && nodeUUID != "" {
+				node.NodeUuid = utils.StringPtr(nodeUUID.(string))
 			}
-			if blockId, ok := val["block_id"]; ok && blockId != "" {
-				node.BlockId = utils.StringPtr(blockId.(string))
+			if blockID, ok := val["block_id"]; ok && blockID != "" {
+				node.BlockId = utils.StringPtr(blockID.(string))
 			}
 			if nodePosition, ok := val["node_position"]; ok && nodePosition != "" {
 				node.NodePosition = utils.StringPtr(nodePosition.(string))
 			}
 			if hypervisorType, ok := val["hypervisor_type"]; ok {
+				const two, three, four, five, six = 2, 3, 4, 5, 6
 				subMap := map[string]interface{}{
-					"AHV":        2,
-					"ESX":        3,
-					"HYPERV":     4,
-					"XEN":        5,
-					"NATIVEHOST": 6,
+					"AHV":        two,
+					"ESX":        three,
+					"HYPERV":     four,
+					"XEN":        five,
+					"NATIVEHOST": six,
 				}
 				if subMap[hypervisorType.(string)] != nil {
 					pVal := subMap[hypervisorType.(string)]
@@ -491,17 +488,17 @@ func expandNodeListNetworkingDetails(pr []interface{}) []config.NodeListNetworki
 			if isComputeOnly, ok := val["is_compute_only"]; ok {
 				node.IsComputeOnly = utils.BoolPtr(isComputeOnly.(bool))
 			}
-			if ipmiIp, ok := val["ipmi_ip"]; ok {
-				node.IpmiIp = expandIPAddress(ipmiIp)
+			if ipmiIP, ok := val["ipmi_ip"]; ok {
+				node.IpmiIp = expandIPAddress(ipmiIP)
 			}
 			if digitalCertificateMapList, ok := val["digital_certificate_map_list"]; ok {
 				node.DigitalCertificateMapList = expandKeyValueMap(digitalCertificateMapList.([]interface{}))
 			}
-			if cvmIp, ok := val["cvm_ip"]; ok {
-				node.CvmIp = expandIPAddress(cvmIp)
+			if cvmIP, ok := val["cvm_ip"]; ok {
+				node.CvmIp = expandIPAddress(cvmIP)
 			}
-			if hypervisorIp, ok := val["hypervisor_ip"]; ok {
-				node.HypervisorIp = expandIPAddress(hypervisorIp)
+			if hypervisorIP, ok := val["hypervisor_ip"]; ok {
+				node.HypervisorIp = expandIPAddress(hypervisorIP)
 			}
 			if model, ok := val["model"]; ok && model != "" {
 				node.Model = utils.StringPtr(model.(string))

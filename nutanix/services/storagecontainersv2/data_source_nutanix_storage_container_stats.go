@@ -7,10 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	clustermgmtStats "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/stats"
 	clsstats "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/stats"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -132,15 +130,16 @@ func DatasourceNutanixStorageStatsInfoV2Read(ctx context.Context, d *schema.Reso
 		return diag.Errorf("sampling_interval should be greater than 0")
 	}
 
-	statType := clsstats.DownSamplingOperator(7) // Default value is LAST, Aggregation containing only the last recorded value.
+	const two, three, four, five, six, seven = 2, 3, 4, 5, 6, 7
+	statType := clsstats.DownSamplingOperator(seven) // Default value is LAST, Aggregation containing only the last recorded value.
 
 	subMap := map[string]interface{}{
-		"SUM":   2,
-		"MIN":   3,
-		"MAX":   4,
-		"AVG":   5,
-		"COUNT": 6,
-		"LAST":  7,
+		"SUM":   two,
+		"MIN":   three,
+		"MAX":   four,
+		"AVG":   five,
+		"COUNT": six,
+		"LAST":  seven,
 	}
 	pVal := subMap[d.Get("stat_type").(string)]
 	if pVal != nil {

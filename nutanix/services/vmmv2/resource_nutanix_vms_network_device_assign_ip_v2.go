@@ -3,23 +3,22 @@ package vmmv2
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func ResourceNutanixVmsNetworkDeviceAssignIpV2() *schema.Resource {
+func ResourceNutanixVmsNetworkDeviceAssignIPV2() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: ResourceNutanixVmsNetworkDeviceAssignIpV2Create,
-		ReadContext:   ResourceNutanixVmsNetworkDeviceAssignIpV2Read,
-		UpdateContext: ResourceNutanixVmsNetworkDeviceAssignIpV2Update,
-		DeleteContext: ResourceNutanixVmsNetworkDeviceAssignIpV2Delete,
+		CreateContext: ResourceNutanixVmsNetworkDeviceAssignIPV2Create,
+		ReadContext:   ResourceNutanixVmsNetworkDeviceAssignIPV2Read,
+		UpdateContext: ResourceNutanixVmsNetworkDeviceAssignIPV2Update,
+		DeleteContext: ResourceNutanixVmsNetworkDeviceAssignIPV2Delete,
 		Schema: map[string]*schema.Schema{
 			"vm_ext_id": {
 				Type:     schema.TypeString,
@@ -43,7 +42,7 @@ func ResourceNutanixVmsNetworkDeviceAssignIpV2() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 32),
-							Default:      32,
+							Default:      defaultValue,
 						},
 					},
 				},
@@ -52,15 +51,15 @@ func ResourceNutanixVmsNetworkDeviceAssignIpV2() *schema.Resource {
 	}
 }
 
-func ResourceNutanixVmsNetworkDeviceAssignIpV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVmsNetworkDeviceAssignIPV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
 	vmExtID := d.Get("vm_ext_id")
 	extID := d.Get("ext_id")
 	body := config.AssignIpParams{}
 
-	if ip_address, ok := d.GetOk("ip_address"); ok {
-		body.IpAddress = expandIPv4Address(ip_address)
+	if ipAddress, ok := d.GetOk("ip_address"); ok {
+		body.IpAddress = expandIPv4Address(ipAddress)
 	}
 
 	readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(vmExtID.(string)))
@@ -96,15 +95,15 @@ func ResourceNutanixVmsNetworkDeviceAssignIpV2Create(ctx context.Context, d *sch
 	return nil
 }
 
-func ResourceNutanixVmsNetworkDeviceAssignIpV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVmsNetworkDeviceAssignIPV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func ResourceNutanixVmsNetworkDeviceAssignIpV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVmsNetworkDeviceAssignIPV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func ResourceNutanixVmsNetworkDeviceAssignIpV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixVmsNetworkDeviceAssignIPV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
 	vmExtID := d.Get("vm_ext_id")

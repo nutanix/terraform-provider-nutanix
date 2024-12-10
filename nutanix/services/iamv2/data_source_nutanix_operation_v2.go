@@ -6,13 +6,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authz"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func DatasourceNutanixOperationV2() *schema.Resource {
-
 	return &schema.Resource{
 		ReadContext: DatasourceNutanixOperationV4Read,
 		Schema: map[string]*schema.Schema{
@@ -130,13 +128,14 @@ func DatasourceNutanixOperationV4Read(ctx context.Context, d *schema.ResourceDat
 
 func flattenOperationType(pr *import1.OperationType) string {
 	if pr != nil {
-		if *pr == import1.OperationType(2) {
+		const two, three, four = 2, 3, 4
+		if *pr == import1.OperationType(two) {
 			return "INTERNAL"
 		}
-		if *pr == import1.OperationType(3) {
+		if *pr == import1.OperationType(three) {
 			return "SYSTEM_DEFINED_ONLY"
 		}
-		if *pr == import1.OperationType(4) {
+		if *pr == import1.OperationType(four) {
 			return "EXTERNAL"
 		}
 	}
@@ -149,9 +148,9 @@ func flattenAssociatedEndpointList(pr []import1.AssociatedEndpoint) []map[string
 		for _, v := range pr {
 			endpoint := make(map[string]interface{})
 
-			endpoint["api_version"] = flattenApiVersion(v.ApiVersion)
+			endpoint["api_version"] = flattenAPIVersion(v.ApiVersion)
 			endpoint["endpoint_url"] = v.EndpointUrl
-			endpoint["http_method"] = flattenHttpMethod(v.HttpMethod)
+			endpoint["http_method"] = flattenHTTPMethod(v.HttpMethod)
 
 			endpoints = append(endpoints, endpoint)
 		}
@@ -160,33 +159,35 @@ func flattenAssociatedEndpointList(pr []import1.AssociatedEndpoint) []map[string
 	return nil
 }
 
-func flattenApiVersion(pr *import1.ApiVersion) string {
+func flattenAPIVersion(pr *import1.ApiVersion) string {
 	if pr != nil {
-		if *pr == import1.ApiVersion(2) {
+		const two, three = 2, 3
+		if *pr == import1.ApiVersion(two) {
 			return "V3"
 		}
-		if *pr == import1.ApiVersion(3) {
+		if *pr == import1.ApiVersion(three) {
 			return "V4"
 		}
 	}
 	return "UNKNOWN"
 }
 
-func flattenHttpMethod(pr *import1.HttpMethod) string {
+func flattenHTTPMethod(pr *import1.HttpMethod) string {
 	if pr != nil {
-		if *pr == import1.HttpMethod(2) {
+		const two, three, four, five, six = 2, 3, 4, 5, 6
+		if *pr == import1.HttpMethod(two) {
 			return "HTTPMETHOD_POST"
 		}
-		if *pr == import1.HttpMethod(3) {
+		if *pr == import1.HttpMethod(three) {
 			return "HTTPMETHOD_GET"
 		}
-		if *pr == import1.HttpMethod(4) {
+		if *pr == import1.HttpMethod(four) {
 			return "HTTPMETHOD_PUT"
 		}
-		if *pr == import1.HttpMethod(5) {
+		if *pr == import1.HttpMethod(five) {
 			return "HTTPMETHOD_PATCH"
 		}
-		if *pr == import1.HttpMethod(6) {
+		if *pr == import1.HttpMethod(six) {
 			return "HTTPMETHOD_DELETE"
 		}
 	}

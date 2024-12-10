@@ -393,7 +393,6 @@ func (op Operations) UploadImage(uuid, filepath string, checksum *Checksum) erro
 	defer file.Close()
 
 	req, err := op.client.NewUploadRequest(ctx, http.MethodPut, path, file)
-
 	if err != nil {
 		return fmt.Errorf("error: Creating request %s", err)
 	}
@@ -737,7 +736,6 @@ func (op Operations) CreateNetworkSecurityRule(request *NetworkSecurityRuleInten
 
 	networkSecurityRuleIntentResponse := new(NetworkSecurityRuleIntentResponse)
 	req, err := op.client.NewRequest(ctx, http.MethodPost, "/network_security_rules", request)
-
 	if err != nil {
 		return nil, err
 	}
@@ -942,7 +940,6 @@ func (op Operations) ListAllVM(filter string) (*VMListIntentResponse, error) {
 		Kind:   utils.StringPtr("vm"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -985,7 +982,6 @@ func (op Operations) ListAllSubnet(filter string, clientSideFilters []*client.Ad
 		Length:            utils.Int64Ptr(itemsPerPage),
 		ClientSideFilters: clientSideFilters,
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -1028,7 +1024,6 @@ func (op Operations) ListAllNetworkSecurityRule(filter string) (*NetworkSecurity
 		Kind:   utils.StringPtr("network_security_rule"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -1071,7 +1066,6 @@ func (op Operations) ListAllImage(filter string) (*ImageListIntentResponse, erro
 		Kind:   utils.StringPtr("image"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -1114,7 +1108,6 @@ func (op Operations) ListAllCluster(filter string) (*ClusterListIntentResponse, 
 		Kind:   utils.StringPtr("cluster"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -1157,7 +1150,6 @@ func (op Operations) ListAllCategoryValues(categoryKeyName, filter string) (*Cat
 		Kind:   utils.StringPtr("category"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -1489,7 +1481,6 @@ func (op Operations) ListAllAccessControlPolicy(filter string) (*AccessControlPo
 		Kind:   utils.StringPtr("access_control_policy"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -1634,7 +1625,6 @@ func (op Operations) ListAllRole(filter string) (*RoleListResponse, error) {
 		Kind:   utils.StringPtr("role"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -1816,7 +1806,6 @@ func (op Operations) ListAllUser(filter string) (*UserListResponse, error) {
 		Kind:   utils.StringPtr("user"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -1932,7 +1921,6 @@ func (op Operations) ListAllUserGroup(filter string) (*UserGroupListResponse, er
 		Kind:   utils.StringPtr("user_group"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -2012,7 +2000,6 @@ func (op Operations) ListAllPermission(filter string) (*PermissionListResponse, 
 		Kind:   utils.StringPtr("permission"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -2312,7 +2299,6 @@ func (op Operations) DeleteServiceGroup(uuid string) error {
 	path := fmt.Sprintf("/service_groups/%s", uuid)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
-
 	if err != nil {
 		return err
 	}
@@ -2380,7 +2366,6 @@ func (op Operations) UpdateServiceGroup(uuid string, body *ServiceGroupInput) er
 
 	path := fmt.Sprintf("/service_groups/%s", uuid)
 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
-
 	if err != nil {
 		return err
 	}
@@ -2463,7 +2448,6 @@ func (op Operations) DeleteAddressGroup(uuid string) error {
 	path := fmt.Sprintf("/address_groups/%s", uuid)
 
 	req, err := op.client.NewRequest(ctx, http.MethodDelete, path, nil)
-
 	if err != nil {
 		return err
 	}
@@ -2483,12 +2467,12 @@ func (op Operations) CreateAddressGroup(request *AddressGroupInput) (*Reference,
 
 	return AddressGroup, op.client.Do(ctx, req, AddressGroup)
 }
+
 func (op Operations) UpdateAddressGroup(uuid string, body *AddressGroupInput) error {
 	ctx := context.TODO()
 
 	path := fmt.Sprintf("/address_groups/%s", uuid)
 	req, err := op.client.NewRequest(ctx, http.MethodPut, path, body)
-
 	if err != nil {
 		return err
 	}
@@ -2566,7 +2550,6 @@ func (op Operations) ListAllVPC(ctx context.Context, filter string) (*VPCListInt
 		Kind:   utils.StringPtr("vpc"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -2614,7 +2597,6 @@ func (op Operations) CreatePBR(ctx context.Context, body *PbrIntentInput) (*PbrI
 func (op Operations) GetPBR(ctx context.Context, uuid string) (*PbrIntentResponse, error) {
 	path := fmt.Sprintf("/routing_policies/%s", uuid)
 	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
-
 	if err != nil {
 		return nil, err
 	}
@@ -2793,7 +2775,6 @@ func (op Operations) ListAllFloatingIPs(ctx context.Context, filter string) (*Fl
 		Kind:   utils.StringPtr("floating_ip"),
 		Length: utils.Int64Ptr(itemsPerPage),
 	})
-
 	if err != nil {
 		return nil, err
 	}

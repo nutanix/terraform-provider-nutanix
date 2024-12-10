@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/common/v1/config"
 	iamConfig "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authz"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -127,8 +126,8 @@ func ResourceNutanixRolesV4Create(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.Client).IamAPI
 	body := &iamConfig.Role{}
 
-	if extId, ok := d.GetOk("ext_id"); ok {
-		body.ExtId = utils.StringPtr(extId.(string))
+	if extID, ok := d.GetOk("ext_id"); ok {
+		body.ExtId = utils.StringPtr(extID.(string))
 	}
 	if displayName, ok := d.GetOk("display_name"); ok {
 		body.DisplayName = utils.StringPtr(displayName.(string))
@@ -257,11 +256,11 @@ func ResourceNutanixRolesV4Read(ctx context.Context, d *schema.ResourceData, met
 func ResourceNutanixRolesV4Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	extId := utils.StringPtr(d.Id())
+	extID := utils.StringPtr(d.Id())
 
 	updatedSpec := iamConfig.Role{}
 
-	readResp, err := conn.RolesAPIInstance.GetRoleById(extId)
+	readResp, err := conn.RolesAPIInstance.GetRoleById(extID)
 	if err != nil {
 		return diag.Errorf("error while fetching role: %v", err)
 	}
@@ -291,8 +290,7 @@ func ResourceNutanixRolesV4Update(ctx context.Context, d *schema.ResourceData, m
 		updatedSpec.Operations = operationsListStr
 	}
 
-	updateResp, err := conn.RolesAPIInstance.UpdateRoleById(extId, &updatedSpec, headers)
-
+	updateResp, err := conn.RolesAPIInstance.UpdateRoleById(extID, &updatedSpec, headers)
 	if err != nil {
 		return diag.Errorf("error while updating role: %v", err)
 	}
@@ -319,7 +317,6 @@ func ResourceNutanixRolesV4Delete(ctx context.Context, d *schema.ResourceData, m
 	headers["If-Match"] = utils.StringPtr(etagValue)
 
 	resp, err := conn.RolesAPIInstance.DeleteRoleById(utils.StringPtr(d.Id()), headers)
-
 	if err != nil {
 		return diag.Errorf("error while Deleting role: %v", err)
 	}

@@ -15,7 +15,6 @@ import (
 	vmmProsmConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	vmmConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	vmmContent "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -65,7 +64,7 @@ func ResourceNutanixTemplatesV2() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
-						"vm_spec": schemaForTemplateVmSpec(),
+						"vm_spec": schemaForTemplateVMSpec(),
 						"created_by": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -153,22 +152,22 @@ func ResourceNutanixTemplatesV2Create(ctx context.Context, d *schema.ResourceDat
 		versionSpecData := tempVersionSpec.([]interface{})[0].(map[string]interface{})
 		versionSourceData := versionSpecData["version_source"].([]interface{})[0].(map[string]interface{})
 		log.Printf("[DEBUG] versionSource : %v", versionSourceData)
-		if templateVmReference, ok := versionSourceData["template_vm_reference"]; ok {
-			log.Printf("[DEBUG] templateVmReference : %v", templateVmReference)
-			if len(templateVmReference.([]interface{})) == 0 {
+		if templateVMReference, ok := versionSourceData["template_vm_reference"]; ok {
+			log.Printf("[DEBUG] templateVmReference : %v", templateVMReference)
+			if len(templateVMReference.([]interface{})) == 0 {
 				return diag.Errorf("template_vm_reference is required for template creation")
 			}
-			templateVmReferenceData := templateVmReference.([]interface{})[0].(map[string]interface{})
-			log.Printf("[DEBUG] templateVmReferenceData : %v", templateVmReferenceData)
-			vmExtId := templateVmReferenceData["ext_id"].(string)
-			if vmExtId == "" {
+			templateVMReferenceData := templateVMReference.([]interface{})[0].(map[string]interface{})
+			log.Printf("[DEBUG] templateVmReferenceData : %v", templateVMReferenceData)
+			vmExtID := templateVMReferenceData["ext_id"].(string)
+			if vmExtID == "" {
 				return diag.Errorf("ext_id is required for template_vm_reference")
 			}
 			templateVersionSourceObj := &vmmContent.OneOfTemplateVersionSpecVersionSource{}
 			vmRefInput := vmmContent.NewTemplateVmReference()
 
-			vmRefInput.ExtId = utils.StringPtr(vmExtId)
-			if guest, ok := templateVmReferenceData["guest_customization"]; ok && len(guest.([]interface{})) > 0 {
+			vmRefInput.ExtId = utils.StringPtr(vmExtID)
+			if guest, ok := templateVMReferenceData["guest_customization"]; ok && len(guest.([]interface{})) > 0 {
 				vmRefInput.GuestCustomization = expandTemplateGuestCustomizationParams(guest)
 			}
 
@@ -180,8 +179,8 @@ func ResourceNutanixTemplatesV2Create(ctx context.Context, d *schema.ResourceDat
 			templateVersionSpecObj := &vmmContent.TemplateVersionSpec{}
 			templateVersionSpecObj.VersionSource = templateVersionSourceObj
 
-			aJson, _ := json.Marshal(templateVersionSpecObj)
-			log.Printf("[DEBUG] templateVersionSpecObj : %v", string(aJson))
+			aJSON, _ := json.Marshal(templateVersionSpecObj)
+			log.Printf("[DEBUG] templateVersionSpecObj : %v", string(aJSON))
 			body.TemplateVersionSpec = templateVersionSpecObj
 		} else {
 			return diag.Errorf("template_version_spec is required for template creation")
@@ -194,10 +193,9 @@ func ResourceNutanixTemplatesV2Create(ctx context.Context, d *schema.ResourceDat
 		body.CreatedBy = expandTemplateUser(createdBy)
 	}
 
-	aJson, _ := json.MarshalIndent(body, "", "  ")
-	log.Printf("[DEBUG] Template create request body :\n %s", string(aJson))
+	aJSON, _ := json.MarshalIndent(body, "", "  ")
+	log.Printf("[DEBUG] Template create request body :\n %s", string(aJSON))
 	resp, err := conn.TemplatesAPIInstance.CreateTemplate(body)
-
 	if err != nil {
 		return diag.Errorf("error while creating template : %v", err)
 	}
@@ -242,7 +240,7 @@ func ResourceNutanixTemplatesV2Read(ctx context.Context, d *schema.ResourceData,
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("links", flattenApiLink(getResp.Links)); err != nil {
+	if err := d.Set("links", flattenAPILink(getResp.Links)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("ext_id", getResp.ExtId); err != nil {
@@ -358,20 +356,20 @@ func ResourceNutanixTemplatesV2Update(ctx context.Context, d *schema.ResourceDat
 		updateSpec.TemplateVersionSpec.VersionSource != nil {
 		log.Printf("[DEBUG] Check version id in tf configuration")
 		templateVersionReference := updateSpec.TemplateVersionSpec.VersionSource.GetValue()
+		//nolint:gocritic // Type switch not used intentionally for demonstration
 		switch templateVersionReference.(type) {
 		// we need only to set version id for TemplateVersionReference type
 		case vmmContent.TemplateVersionReference:
 			log.Printf("[DEBUG] Template version reference type")
-			versionId := templateVersionReference.(vmmContent.TemplateVersionReference).VersionId
+			versionID := templateVersionReference.(vmmContent.TemplateVersionReference).VersionId
 
-			if versionId != nil || utils.StringValue(versionId) != "" {
+			if versionID != nil || utils.StringValue(versionID) != "" {
 				log.Printf("[DEBUG] Template version Id provided in tf configuration")
-				break
 			}
-			log.Printf("[DEBUG] Template version Id not provided in tf configuration, will use the latest version as defualt")
-			templateVersions, err := conn.TemplatesAPIInstance.ListTemplateVersions(utils.StringPtr(d.Id()), nil, nil, nil, nil, nil)
-			if err != nil {
-				return diag.Errorf("error while fetching template versions : %v", err)
+			log.Printf("[DEBUG] Template version Id not provided in tf configuration, will use the latest version as default")
+			templateVersions, errTempVersion := conn.TemplatesAPIInstance.ListTemplateVersions(utils.StringPtr(d.Id()), nil, nil, nil, nil, nil)
+			if errTempVersion != nil {
+				return diag.Errorf("error while fetching template versions : %v", errTempVersion)
 			}
 			templateVersion := templateVersions.Data.GetValue().([]vmmContent.TemplateVersionSpec)
 			tmplVersion := templateVersion[0]
@@ -389,11 +387,15 @@ func ResourceNutanixTemplatesV2Update(ctx context.Context, d *schema.ResourceDat
 			if errVs != nil {
 				return diag.Errorf("error while setting version source : %v", err)
 			}
+		case vmmContent.TemplateVmReference:
+			log.Printf("[DEBUG] Template vm reference type, no need to set version id")
+		default:
+			log.Printf("[DEBUG] Template version reference type not found")
 		}
 	}
 
-	aJson, _ := json.MarshalIndent(updateSpec, "", "  ")
-	log.Printf("[DEBUG] Template update request body :\n %v", string(aJson))
+	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
+	log.Printf("[DEBUG] Template update request body :\n %v", string(aJSON))
 
 	respUpdate, err := conn.TemplatesAPIInstance.UpdateTemplateById(utils.StringPtr(d.Id()), updateSpec, args)
 	if err != nil {
@@ -412,8 +414,8 @@ func ResourceNutanixTemplatesV2Update(ctx context.Context, d *schema.ResourceDat
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 	// log task details
-	aJson, _ = json.MarshalIndent(TaskRef, "", "  ")
-	log.Printf("[DEBUG] Task details : %v", string(aJson))
+	aJSON, _ = json.MarshalIndent(TaskRef, "", "  ")
+	log.Printf("[DEBUG] Task details : %v", string(aJSON))
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for template(%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
@@ -468,7 +470,7 @@ func schemaForLinks() *schema.Schema {
 	}
 }
 
-func schemaForTemplateVmSpec() *schema.Schema {
+func schemaForTemplateVMSpec() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -1948,7 +1950,7 @@ func schemaForNics() *schema.Schema {
 													"prefix_length": {
 														Type:     schema.TypeInt,
 														Optional: true,
-														Default:  32,
+														Default:  defaultValue,
 													},
 												},
 											},
@@ -1965,7 +1967,7 @@ func schemaForNics() *schema.Schema {
 													"prefix_length": {
 														Type:     schema.TypeInt,
 														Optional: true,
-														Default:  32,
+														Default:  defaultValue,
 													},
 												},
 											},
@@ -1993,7 +1995,7 @@ func schemaForNics() *schema.Schema {
 													"prefix_length": {
 														Type:     schema.TypeInt,
 														Optional: true,
-														Default:  32,
+														Default:  defaultValue,
 													},
 												},
 											},
@@ -2125,7 +2127,7 @@ func expandTemplateVersionSpec(pr interface{}) *vmmContent.TemplateVersionSpec {
 			cfg.VersionDescription = utils.StringPtr(versionDescription.(string))
 		}
 		if vmSpec, ok := val["vm_spec"]; ok {
-			cfg.VmSpec = expandTemplateVmSpec(vmSpec)
+			cfg.VmSpec = expandTemplateVMSpec(vmSpec)
 		}
 		if createdBy, ok := val["created_by"]; ok && len(createdBy.([]interface{})) > 0 {
 			cfg.CreatedBy = expandTemplateUser(createdBy)
@@ -2143,14 +2145,14 @@ func expandTemplateVersionSpec(pr interface{}) *vmmContent.TemplateVersionSpec {
 			cfg.IsGcOverrideEnabled = utils.BoolPtr(isGcOverride.(bool))
 		}
 
-		aJson, _ := json.Marshal(cfg)
-		log.Printf("[DEBUG] expandTemplateVersionSpec: %s", string(aJson))
+		aJSON, _ := json.Marshal(cfg)
+		log.Printf("[DEBUG] expandTemplateVersionSpec: %s", string(aJSON))
 		return cfg
 	}
 	return nil
 }
 
-func expandTemplateVmSpec(vmSpec interface{}) *vmmConfig.Vm {
+func expandTemplateVMSpec(vmSpec interface{}) *vmmConfig.Vm {
 	if len(vmSpec.([]interface{})) > 0 {
 		vm := &vmmConfig.Vm{}
 		vmI := vmSpec.([]interface{})
@@ -2163,7 +2165,7 @@ func expandTemplateVmSpec(vmSpec interface{}) *vmmConfig.Vm {
 			vm.Description = utils.StringPtr(description.(string))
 		}
 		if source, ok := vmVal["source"]; ok {
-			vm.Source = expandVmSourceReference(source)
+			vm.Source = expandVMSourceReference(source)
 		}
 		if numSockets, ok := vmVal["num_sockets"]; ok {
 			vm.NumSockets = utils.IntPtr(numSockets.(int))
@@ -2177,19 +2179,20 @@ func expandTemplateVmSpec(vmSpec interface{}) *vmmConfig.Vm {
 		if memorySizeBytes, ok := vmVal["memory_size_bytes"]; ok {
 			vm.MemorySizeBytes = utils.Int64Ptr(int64(memorySizeBytes.(int)))
 		}
-		if isVcpuHardPinningEnabled, ok := vmVal["is_vcpu_hard_pinning_enabled"]; ok {
-			vm.IsVcpuHardPinningEnabled = utils.BoolPtr(isVcpuHardPinningEnabled.(bool))
+		if isCPUPassThroughEnabled, ok := vmVal["is_vcpu_hard_pinning_enabled"]; ok {
+			vm.IsVcpuHardPinningEnabled = utils.BoolPtr(isCPUPassThroughEnabled.(bool))
 		}
-		if isCpuPassThroughEnabled, ok := vmVal["is_cpu_passthrough_enabled"]; ok {
-			vm.IsCpuPassthroughEnabled = utils.BoolPtr(isCpuPassThroughEnabled.(bool))
+		if isCPUPassThroughEnabled, ok := vmVal["is_cpu_passthrough_enabled"]; ok {
+			vm.IsCpuPassthroughEnabled = utils.BoolPtr(isCPUPassThroughEnabled.(bool))
 		}
-		if enableCpuFeatures, ok := vmVal["enabled_cpu_features"]; ok && len(enableCpuFeatures.([]interface{})) > 0 {
-			enCpuFeaturesList := enableCpuFeatures.([]interface{})
+		if enableCPUFeatures, ok := vmVal["enabled_cpu_features"]; ok && len(enableCPUFeatures.([]interface{})) > 0 {
+			enCPUFeaturesList := enableCPUFeatures.([]interface{})
+			const hardwareVirt = 2
 			subMap := map[string]interface{}{
-				"HARDWARE_VIRTUALIZATION": 2,
+				"HARDWARE_VIRTUALIZATION": hardwareVirt,
 			}
 			var cpuFeatures []vmmConfig.CpuFeature
-			for _, feature := range enCpuFeaturesList {
+			for _, feature := range enCPUFeaturesList {
 				pVal := subMap[feature.(string)]
 				if pVal != nil {
 					cpuFeatures = append(cpuFeatures, vmmConfig.CpuFeature(pVal.(int)))
@@ -2203,17 +2206,17 @@ func expandTemplateVmSpec(vmSpec interface{}) *vmmConfig.Vm {
 		if isGpuConsoleEnabled, ok := vmVal["is_gpu_console_enabled"]; ok {
 			vm.IsGpuConsoleEnabled = utils.BoolPtr(isGpuConsoleEnabled.(bool))
 		}
-		if isCpuHotplugEnabled, ok := vmVal["is_cpu_hotplug_enabled"]; ok {
-			vm.IsCpuHotplugEnabled = utils.BoolPtr(isCpuHotplugEnabled.(bool))
+		if isCPUHotplugEnabled, ok := vmVal["is_cpu_hotplug_enabled"]; ok {
+			vm.IsCpuHotplugEnabled = utils.BoolPtr(isCPUHotplugEnabled.(bool))
 		}
 		if isScsiControllerEnabled, ok := vmVal["is_scsi_controller_enabled"]; ok {
 			vm.IsScsiControllerEnabled = utils.BoolPtr(isScsiControllerEnabled.(bool))
 		}
-		if generationUuid, ok := vmVal["generation_uuid"]; ok && generationUuid != "" {
-			vm.GenerationUuid = utils.StringPtr(generationUuid.(string))
+		if generationUUID, ok := vmVal["generation_uuid"]; ok && generationUUID != "" {
+			vm.GenerationUuid = utils.StringPtr(generationUUID.(string))
 		}
-		if biosUuid, ok := vmVal["bios_uuid"]; ok && biosUuid != "" {
-			vm.BiosUuid = utils.StringPtr(biosUuid.(string))
+		if biosUUID, ok := vmVal["bios_uuid"]; ok && biosUUID != "" {
+			vm.BiosUuid = utils.StringPtr(biosUUID.(string))
 		}
 		if categories, ok := vmVal["categories"]; ok {
 			vm.Categories = expandCategoryReference(categories.([]interface{}))
@@ -2243,27 +2246,29 @@ func expandTemplateVmSpec(vmSpec interface{}) *vmmConfig.Vm {
 			vm.IsBrandingEnabled = utils.BoolPtr(isBrandingEnabled.(bool))
 		}
 		if bootConfig, ok := vmVal["boot_config"]; ok {
-			vm.BootConfig = expandOneOfVmBootConfig(bootConfig)
+			vm.BootConfig = expandOneOfVMBootConfig(bootConfig)
 		}
 		if isVgaConsoleEnabled, ok := vmVal["is_vga_console_enabled"]; ok {
 			vm.IsVgaConsoleEnabled = utils.BoolPtr(isVgaConsoleEnabled.(bool))
 		}
 		if machineType, ok := vmVal["machine_type"]; ok && machineType != "" {
+			const two, three, four = 2, 3, 4
 			subMap := map[string]interface{}{
-				"PC":      2,
-				"PSERIES": 3,
-				"Q35":     4,
+				"PC":      two,
+				"PSERIES": three,
+				"Q35":     four,
 			}
 			pVal := subMap[machineType.(string)]
 			p := vmmConfig.MachineType(pVal.(int))
 			vm.MachineType = &p
 		}
 		if powerState, ok := vmVal["power_state"]; ok && powerState != "" {
+			const two, three, four, five = 2, 3, 4, 5
 			subMap := map[string]interface{}{
-				"ON":           2,
-				"OFF":          3,
-				"PAUSED":       4,
-				"UNDETERMINED": 5,
+				"ON":           two,
+				"OFF":          three,
+				"PAUSED":       four,
+				"UNDETERMINED": five,
 			}
 			pVal := subMap[powerState.(string)]
 			p := vmmConfig.PowerState(pVal.(int))
@@ -2272,8 +2277,8 @@ func expandTemplateVmSpec(vmSpec interface{}) *vmmConfig.Vm {
 		if vtpmConfig, ok := vmVal["vtpm_config"]; ok {
 			vm.VtpmConfig = expandVtpmConfig(vtpmConfig)
 		}
-		if isAgentVm, ok := vmVal["is_agent_vm"]; ok {
-			vm.IsAgentVm = utils.BoolPtr(isAgentVm.(bool))
+		if isAgentVM, ok := vmVal["is_agent_vm"]; ok {
+			vm.IsAgentVm = utils.BoolPtr(isAgentVM.(bool))
 		}
 		if apcConfig, ok := vmVal["apc_config"]; ok {
 			vm.ApcConfig = expandApcConfig(apcConfig)
@@ -2297,10 +2302,11 @@ func expandTemplateVmSpec(vmSpec interface{}) *vmmConfig.Vm {
 			vm.SerialPorts = expandSerialPort(serialPorts.([]interface{}))
 		}
 		if protectionType, ok := vmVal["protection_type"]; ok && protectionType != "" {
+			const two, three, four = 2, 3, 4
 			subMap := map[string]interface{}{
-				"UNPROTECTED":    2,
-				"PD_PROTECTED":   3,
-				"RULE_PROTECTED": 4,
+				"UNPROTECTED":    two,
+				"PD_PROTECTED":   three,
+				"RULE_PROTECTED": four,
 			}
 			pVal := subMap[protectionType.(string)]
 			p := vmmConfig.ProtectionType(pVal.(int))
@@ -2322,8 +2328,8 @@ func expandAvailabilityZone(availabilityZone interface{}) *vmmConfig.Availabilit
 		availabilityZoneObj := &vmmConfig.AvailabilityZoneReference{}
 		availabilityZoneData := availabilityZone.([]interface{})
 
-		if extId := availabilityZoneData[0].(map[string]interface{})["ext_id"]; extId != nil {
-			availabilityZoneObj.ExtId = utils.StringPtr(extId.(string))
+		if extID := availabilityZoneData[0].(map[string]interface{})["ext_id"]; extID != nil {
+			availabilityZoneObj.ExtId = utils.StringPtr(extID.(string))
 		}
 		return availabilityZoneObj
 	}
@@ -2360,8 +2366,8 @@ func expandTemplateAssignedDeviceInfo(assignedDeviceInfo interface{}) *vmmConfig
 			deviceObj := &vmmConfig.PcieDeviceReference{}
 			deviceData := device.(map[string]interface{})
 
-			if deviceExtId := deviceData["device_ext_id"]; deviceExtId != nil {
-				deviceObj.DeviceExtId = utils.StringPtr(deviceExtId.(string))
+			if deviceExtID := deviceData["device_ext_id"]; deviceExtID != nil {
+				deviceObj.DeviceExtId = utils.StringPtr(deviceExtID.(string))
 			}
 			assignedDeviceInfoObj.Device = deviceObj
 		}
@@ -2379,8 +2385,8 @@ func expandTemplatePcieDeviceBackingInfo(backingInfo interface{}) *vmmConfig.One
 			pcieDeviceReferenceObj := &vmmConfig.PcieDeviceReference{}
 			pcieDeviceReferenceData := pcieDeviceReference.(map[string]interface{})
 
-			if deviceExtId := pcieDeviceReferenceData["device_ext_id"]; deviceExtId != nil {
-				pcieDeviceReferenceObj.DeviceExtId = utils.StringPtr(deviceExtId.(string))
+			if deviceExtID := pcieDeviceReferenceData["device_ext_id"]; deviceExtID != nil {
+				pcieDeviceReferenceObj.DeviceExtId = utils.StringPtr(deviceExtID.(string))
 			}
 			err := backingInfoObj.SetValue(pcieDeviceReferenceObj)
 			if err != nil {
@@ -2409,8 +2415,8 @@ func expandTemplateVersionSpecVersionSource(versionSource interface{}) *vmmConte
 			if guest, ok := val["guest_customization"]; ok && len(guest.([]interface{})) > 0 {
 				vmRefInput.GuestCustomization = expandTemplateGuestCustomizationParams(guest)
 			}
-			aJson, _ := json.Marshal(vmRefInput)
-			log.Printf("[DEBUG] templateVMReference: %v", string(aJson))
+			aJSON, _ := json.Marshal(vmRefInput)
+			log.Printf("[DEBUG] templateVMReference: %v", string(aJSON))
 			err := templateVersionSpecVersionSource.SetValue(*vmRefInput)
 			if err != nil {
 				log.Printf("[ERROR] templateVMReference: Error setting value for templateVMReference: %v", err)
@@ -2426,10 +2432,10 @@ func expandTemplateVersionSpecVersionSource(versionSource interface{}) *vmmConte
 				versionReference.VersionId = utils.StringPtr(versionID.(string))
 			}
 			if overrideVMConfig, ok := val["override_vm_config"]; ok && len(overrideVMConfig.([]interface{})) > 0 {
-				versionReference.OverrideVmConfig = expandVmConfigOverrideTemplate(overrideVMConfig)
+				versionReference.OverrideVmConfig = expandVMConfigOverrideTemplate(overrideVMConfig)
 			}
-			aJson, _ := json.Marshal(versionReference)
-			log.Printf("[DEBUG] templateVersionReference: %v", string(aJson))
+			aJSON, _ := json.Marshal(versionReference)
+			log.Printf("[DEBUG] templateVersionReference: %v", string(aJSON))
 			err := templateVersionSpecVersionSource.SetValue(*versionReference)
 			if err != nil {
 				log.Printf("[ERROR] templateVersionReference: Error setting value for templateVersionReference: %v", err)
@@ -2451,8 +2457,8 @@ func expandTemplateGuestCustomizationParams(guestCustomization interface{}) *vmm
 			log.Printf("[DEBUG] guestCustomizationParams.Config: %v", config)
 			guestCustomizationParams.Config = expandTemplateGuestCustomizationConfig(config)
 		}
-		aJson, _ := json.Marshal(guestCustomizationParams)
-		log.Printf("[DEBUG] guestCustomizationParams: %v", string(aJson))
+		aJSON, _ := json.Marshal(guestCustomizationParams)
+		log.Printf("[DEBUG] guestCustomizationParams: %v", string(aJSON))
 
 		return guestCustomizationParams
 	}
@@ -2470,9 +2476,10 @@ func expandTemplateGuestCustomizationConfig(config interface{}) *vmmConfig.OneOf
 
 			if installType, ok := sysprepData["install_type"]; ok {
 				if installType != nil && installType != "" {
+					const two, three = 2, 3
 					subMap := map[string]interface{}{
-						"FRESH":    2,
-						"PREPARED": 3,
+						"FRESH":    two,
+						"PREPARED": three,
 					}
 					pVal := subMap[installType.(string)]
 					if pVal == nil {
@@ -2481,13 +2488,12 @@ func expandTemplateGuestCustomizationConfig(config interface{}) *vmmConfig.OneOf
 					p := vmmConfig.InstallType(pVal.(int))
 					sysprepObj.InstallType = &p
 				}
-
 			}
 			if sysprepScript, ok := sysprepData["sysprep_script"]; ok && len(sysprepScript.([]interface{})) > 0 {
 				sysprepObj.SysprepScript = expandSysprepScript(sysprepScript)
 			}
-			aJson, _ := json.Marshal(sysprepObj)
-			log.Printf("[DEBUG] sysprep.sysprep_script expanded: %v", string(aJson))
+			aJSON, _ := json.Marshal(sysprepObj)
+			log.Printf("[DEBUG] sysprep.sysprep_script expanded: %v", string(aJSON))
 			err := guestCustomizationConfig.SetValue(*sysprepObj)
 			if err != nil {
 				log.Printf("[ERROR] Error setting value for sysprep: %v", err)
@@ -2501,8 +2507,9 @@ func expandTemplateGuestCustomizationConfig(config interface{}) *vmmConfig.OneOf
 
 			if datasourceType, ok := cloudInitData["datasource_type"]; ok && len(datasourceType.(string)) > 0 {
 				if datasourceType != nil && datasourceType != "" {
+					const two = 2
 					subMap := map[string]interface{}{
-						"CONFIG_DRIVE_V2": 2,
+						"CONFIG_DRIVE_V2": two,
 					}
 					pVal := subMap[datasourceType.(string)]
 					if pVal == nil {
@@ -2536,8 +2543,8 @@ func expandTemplateGuestCustomizationConfig(config interface{}) *vmmConfig.OneOf
 				if customKeyValues, ok := cloudInitScriptData["custom_key_values"]; ok && len(customKeyValues.([]interface{})) > 0 {
 					log.Printf("[DEBUG] cloud_init.cloud_init_script.customKeyValues: %v", customKeyValues)
 					customKeyValuesObj := expandTemplateCustomKeyValuesPairs(customKeyValues)
-					aJson, _ := json.Marshal(customKeyValuesObj)
-					log.Printf("[DEBUG] cloud_init.cloud_init_script.customKeyValues expanded: %v", string(aJson))
+					aJSON, _ := json.Marshal(customKeyValuesObj)
+					log.Printf("[DEBUG] cloud_init.cloud_init_script.customKeyValues expanded: %v", string(aJSON))
 					err := cloudInitScriptObj.SetValue(*customKeyValuesObj)
 					if err != nil {
 						log.Printf("[ERROR] cloudInitScript: Error setting value for custom key values: %v", err)
@@ -2547,19 +2554,18 @@ func expandTemplateGuestCustomizationConfig(config interface{}) *vmmConfig.OneOf
 				cloudInitObj.CloudInitScript = cloudInitScriptObj
 			}
 
-			aJson, _ := json.Marshal(cloudInitObj)
-			log.Printf("[DEBUG] cloudInitObj expanded: %v", string(aJson))
+			aJSON, _ := json.Marshal(cloudInitObj)
+			log.Printf("[DEBUG] cloudInitObj expanded: %v", string(aJSON))
 
 			err := guestCustomizationConfig.SetValue(*cloudInitObj)
 			if err != nil {
 				log.Printf("[ERROR] Error setting value for cloud init: %v", err)
 				return nil
 			}
-
 		}
 
-		aJson, _ := json.Marshal(guestCustomizationConfig)
-		log.Printf("[DEBUG] guestCustomizationConfig expanded: %v", string(aJson))
+		aJSON, _ := json.Marshal(guestCustomizationConfig)
+		log.Printf("[DEBUG] guestCustomizationConfig expanded: %v", string(aJSON))
 		return guestCustomizationConfig
 	}
 	return nil
@@ -2569,23 +2575,23 @@ func expandSysprepScript(sysprepScript interface{}) *vmmConfig.OneOfSysprepSyspr
 	if len(sysprepScript.([]interface{})) > 0 {
 		sysprepScriptObj := vmmConfig.NewOneOfSysprepSysprepScript()
 		sysprepScriptData := sysprepScript.([]interface{})[0].(map[string]interface{})
-		aJson, _ := json.Marshal(sysprepScriptData)
-		log.Printf("[DEBUG] sysprep.sysprep_script.sysprepScriptData: %s", string(aJson))
-		if unattendXml, ok := sysprepScriptData["unattend_xml"]; ok && len(unattendXml.([]interface{})) > 0 {
-			unattendXmlObj := expandTemplateUnattendXml(unattendXml)
-			aJson, _ = json.Marshal(unattendXmlObj)
-			log.Printf("[DEBUG] sysprep.sysprep_script.unattend_xml expanded: %v", string(aJson))
-			err := sysprepScriptObj.SetValue(*unattendXmlObj)
+		aJSON, _ := json.Marshal(sysprepScriptData)
+		log.Printf("[DEBUG] sysprep.sysprep_script.sysprepScriptData: %s", string(aJSON))
+		if unattendXML, ok := sysprepScriptData["unattend_xml"]; ok && len(unattendXML.([]interface{})) > 0 {
+			unattendXMLObj := expandTemplateUnattendXML(unattendXML)
+			aJSON, _ = json.Marshal(unattendXMLObj)
+			log.Printf("[DEBUG] sysprep.sysprep_script.unattend_xml expanded: %v", string(aJSON))
+			err := sysprepScriptObj.SetValue(*unattendXMLObj)
 			if err != nil {
 				log.Printf("[ERROR] SysprepScript: Error setting value for unattend Xml: %v", err)
 				return nil
 			}
 		}
 		if customKeyValues, ok := sysprepScriptData["custom_key_values"]; ok && len(customKeyValues.([]interface{})) > 0 {
-			customKeyValuesObj := vmmConfig.NewCustomKeyValues()
-			customKeyValuesObj = expandTemplateCustomKeyValuesPairs(customKeyValues)
-			aJson, _ = json.Marshal(customKeyValuesObj)
-			log.Printf("[DEBUG] sysprep.sysprep_script.customKeyValues expanded: %v", string(aJson))
+			// customKeyValuesObj := vmmConfig.NewCustomKeyValues()
+			customKeyValuesObj := expandTemplateCustomKeyValuesPairs(customKeyValues)
+			aJSON, _ = json.Marshal(customKeyValuesObj)
+			log.Printf("[DEBUG] sysprep.sysprep_script.customKeyValues expanded: %v", string(aJSON))
 			err := sysprepScriptObj.SetValue(*customKeyValuesObj)
 			if err != nil {
 				log.Printf("[ERROR] SysprepScript: Error setting value for custom key values: %v", err)
@@ -2613,22 +2619,22 @@ func expandTemplateCustomKeyValuesPairs(customKeyValues interface{}) *vmmConfig.
 	return nil
 }
 
-func expandTemplateUnattendXml(unattendXml interface{}) *vmmConfig.Unattendxml {
-	if unattendXml != nil {
-		unattendXmlObj := vmmConfig.NewUnattendxml()
-		unattendXmlData := unattendXml.([]interface{})
+func expandTemplateUnattendXML(unattendXML interface{}) *vmmConfig.Unattendxml {
+	if unattendXML != nil {
+		unattendXMLObj := vmmConfig.NewUnattendxml()
+		unattendXMLData := unattendXML.([]interface{})
 
-		if len(unattendXmlData) > 0 {
-			if value, ok := unattendXmlData[0].(map[string]interface{})["unattend_xml"]; ok {
-				unattendXmlObj.Value = utils.StringPtr(value.(string))
+		if len(unattendXMLData) > 0 {
+			if value, ok := unattendXMLData[0].(map[string]interface{})["unattend_xml"]; ok {
+				unattendXMLObj.Value = utils.StringPtr(value.(string))
 			}
 		}
-		return unattendXmlObj
+		return unattendXMLObj
 	}
 	return nil
 }
 
-func expandVmConfigOverrideTemplate(pr interface{}) *vmmContent.VmConfigOverride {
+func expandVMConfigOverrideTemplate(pr interface{}) *vmmContent.VmConfigOverride {
 	if len(pr.([]interface{})) > 0 {
 		cfg := &vmmContent.VmConfigOverride{}
 		prI := pr.([]interface{})
@@ -2679,8 +2685,8 @@ func expandTemplateUser(user interface{}) *vmmContent.TemplateUser {
 	if userType, ok := userData["user_type"]; ok && userType != "" {
 		userObj.UserType = expandUserType(userType)
 	}
-	if idpId, ok := userData["idp_id"]; ok && idpId != "" {
-		userObj.IdpId = utils.StringPtr(idpId.(string))
+	if idpID, ok := userData["idp_id"]; ok && idpID != "" {
+		userObj.IdpId = utils.StringPtr(idpID.(string))
 	}
 	if displayName, ok := userData["display_name"]; ok && displayName != "" {
 		userObj.DisplayName = utils.StringPtr(displayName.(string))
@@ -2694,8 +2700,8 @@ func expandTemplateUser(user interface{}) *vmmContent.TemplateUser {
 	if lastName, ok := userData["last_name"]; ok && lastName != "" {
 		userObj.LastName = utils.StringPtr(lastName.(string))
 	}
-	if emailId, ok := userData["email_id"]; ok && emailId != "" {
-		userObj.EmailId = utils.StringPtr(emailId.(string))
+	if emailID, ok := userData["email_id"]; ok && emailID != "" {
+		userObj.EmailId = utils.StringPtr(emailID.(string))
 	}
 	if locale, ok := userData["locale"]; ok && locale != "" {
 		userObj.Locale = utils.StringPtr(locale.(string))
@@ -2711,17 +2717,18 @@ func expandTemplateUser(user interface{}) *vmmContent.TemplateUser {
 	}
 	if additionalAttributes, ok := userData["additional_attributes"]; ok {
 		userObj.AdditionalAttributes = expandTemplateKVPairs(additionalAttributes)
-		aJson, _ := json.Marshal(userObj.AdditionalAttributes)
-		log.Printf("[DEBUG] expanede additionalAttributes: %v", string(aJson))
+		aJSON, _ := json.Marshal(userObj.AdditionalAttributes)
+		log.Printf("[DEBUG] expanede additionalAttributes: %v", string(aJSON))
 		ad := flattenCustomKVPair(userObj.AdditionalAttributes)
-		aJson, _ = json.Marshal(ad)
-		log.Printf("[DEBUG] Flattened additionalAttributes: %v", string(aJson))
+		aJSON, _ = json.Marshal(ad)
+		log.Printf("[DEBUG] Flattened additionalAttributes: %v", string(aJSON))
 	}
 	if status, ok := userData["status"]; ok {
 		if status != nil && status != "" {
+			const two, three = 2, 3
 			subMap := map[string]interface{}{
-				"ACTIVE":   2,
-				"INACTIVE": 3,
+				"ACTIVE":   two,
+				"INACTIVE": three,
 			}
 			pVal := subMap[status.(string)]
 			if pVal == nil {
@@ -2736,10 +2743,11 @@ func expandTemplateUser(user interface{}) *vmmContent.TemplateUser {
 	}
 	if creationType, ok := userData["creation_type"]; ok {
 		if creationType != nil && creationType != "" {
+			const two, three, four = 2, 3, 4
 			subMap := map[string]interface{}{
-				"PREDEFINED":     2,
-				"USERDEFINED":    3,
-				"SERVICEDEFINED": 4,
+				"PREDEFINED":     two,
+				"USERDEFINED":    three,
+				"SERVICEDEFINED": four,
 			}
 			pVal := subMap[creationType.(string)]
 			if pVal == nil {
@@ -2765,8 +2773,8 @@ func expandTemplateKVPairs(attributes interface{}) []vmmCommon.KVPair {
 			attributesList = append(attributesList, kvPair)
 		}
 	}
-	aJson, _ := json.Marshal(attributesList)
-	log.Printf("[DEBUG] attributesList: %v", string(aJson))
+	aJSON, _ := json.Marshal(attributesList)
+	log.Printf("[DEBUG] attributesList: %v", string(aJSON))
 	return attributesList
 }
 
@@ -2775,7 +2783,7 @@ func expandValue(kvPairValue interface{}) *vmmCommon.OneOfKVPairValue {
 	if kvPairValue != nil {
 		valueData := kvPairValue.([]interface{})[0].(map[string]interface{})
 		log.Printf("[DEBUG] kvPair valueData: %v", valueData)
-
+		//nolint:gocritic // Keeping if-else for clarity in this specific case
 		if valueData["string_list"] != nil && len(valueData["string_list"].([]interface{})) > 0 {
 			log.Printf("[DEBUG] valueData of type string_list")
 			stringList := valueData["string_list"].([]interface{})
@@ -2816,8 +2824,8 @@ func expandValue(kvPairValue interface{}) *vmmCommon.OneOfKVPairValue {
 				}
 				mapOfStrings[index] = mapOfStringsObj
 			}
-			aJson, _ := json.Marshal(mapOfStrings)
-			log.Printf("[DEBUG] mapOfStrings: %v", string(aJson))
+			aJSON, _ := json.Marshal(mapOfStrings)
+			log.Printf("[DEBUG] mapOfStrings: %v", string(aJSON))
 			err := valueObj.SetValue(mapOfStrings)
 			if err != nil {
 				log.Printf("[ERROR] Error setting value for map: %s", err)
@@ -2864,24 +2872,23 @@ func expandValue(kvPairValue interface{}) *vmmCommon.OneOfKVPairValue {
 			log.Printf("[ERROR] invalid value type")
 			return nil
 		}
-
 	}
 	return valueObj
 }
 
 func expandUserType(userType interface{}) *vmmAuthn.UserType {
 	if userType != nil && userType != "" {
-
+		const zero, two, three, four, five, six = 0, 2, 3, 4, 5, 6
 		subMap := map[string]interface{}{
-			"LOCAL":           2,
-			"SAML":            3,
-			"LDAP":            4,
-			"EXTERNAL":        5,
-			"SERVICE_ACCOUNT": 6,
+			"LOCAL":           two,
+			"SAML":            three,
+			"LDAP":            four,
+			"EXTERNAL":        five,
+			"SERVICE_ACCOUNT": six,
 		}
 		pVal := subMap[userType.(string)]
 		if pVal == nil {
-			p := vmmAuthn.UserType(0)
+			p := vmmAuthn.UserType(zero)
 			return &p
 		}
 		p := vmmAuthn.UserType(pVal.(int))

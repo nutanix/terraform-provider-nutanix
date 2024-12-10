@@ -17,11 +17,15 @@ import (
 	import4 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/clusters"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
+
+//nolint:misspell // British English spelling is intentional
+const (
+	CANCELED = "CANCELLED"
 )
 
 func ResourceNutanixClusterV2() *schema.Resource {
@@ -734,7 +738,7 @@ func SchemaForValuePrefixLengthResource() *schema.Schema {
 				"prefix_length": {
 					Type:     schema.TypeInt,
 					Optional: true,
-					Default:  32,
+					Default:  defaultValue,
 				},
 			},
 		},
@@ -782,8 +786,8 @@ func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData,
 		body.Categories = categoriesListStr
 	}
 
-	aJson, _ := json.MarshalIndent(body, "", "  ")
-	log.Printf("[DEBUG] Create Cluster Request Body: %s", string(aJson))
+	aJSON, _ := json.MarshalIndent(body, "", "  ")
+	log.Printf("[DEBUG] Create Cluster Request Body: %s", string(aJSON))
 
 	resp, err := conn.ClusterEntityAPI.CreateCluster(body, dryRun)
 	if err != nil {
@@ -813,8 +817,8 @@ func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error while fetching cluster UUID : %v", err)
 	}
 	rUUID := resourceUUID.Data.GetValue().(import2.Task)
-	aJson, _ = json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Create Cluster Task Response Details: %s", string(aJson))
+	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
+	log.Printf("[DEBUG] Create Cluster Task Response Details: %s", string(aJSON))
 
 	randomID := utils.GenUUID()
 
@@ -835,7 +839,7 @@ func ResourceNutanixClusterV2Read(ctx context.Context, d *schema.ResourceData, m
 
 	if d.Get("ext_id").(string) == "" {
 		log.Printf("[DEBUG] ResourceNutanixClusterV2Read : extID is empty")
-		err := getClusterExtId(d, conn)
+		err := getClusterExtID(d, conn)
 		if err != nil {
 			log.Printf("[DEBUG] ResourceNutanixClusterV2Read : Cluster not found, err -> %v", err)
 			return diag.Errorf("error while fetching cluster : %v", err)
@@ -844,15 +848,14 @@ func ResourceNutanixClusterV2Read(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] ResourceNutanixClusterV2Read : Cluster found, extID : %s", d.Id())
 	resp, err := conn.ClusterEntityAPI.GetClusterById(utils.StringPtr(d.Id()), expand)
-
 	if err != nil {
 		log.Printf("[DEBUG] ResourceNutanixClusterV2Read : Cluster %s not found", d.Id())
 		return diag.Errorf("error while fetching cluster : %v", err)
 	}
 
 	getResp := resp.Data.GetValue().(config.Cluster)
-	aJson, _ := json.MarshalIndent(getResp, "", "  ")
-	log.Printf("[DEBUG] Read Cluster Response Details: %s", string(aJson))
+	aJSON, _ := json.MarshalIndent(getResp, "", "  ")
+	log.Printf("[DEBUG] Read Cluster Response Details: %s", string(aJSON))
 
 	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
 		return diag.FromErr(err)
@@ -909,7 +912,7 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 
 	if d.Get("ext_id").(string) == "" {
 		log.Printf("[DEBUG] ResourceNutanixClusterV2Update : Cluster not found, extID is empty")
-		err := getClusterExtId(d, conn)
+		err := getClusterExtID(d, conn)
 		if err != nil {
 			log.Printf("[DEBUG] ResourceNutanixClusterV2Update : Cluster not found, err -> %v", err)
 			return diag.Errorf("error while fetching cluster : %v", err)
@@ -956,11 +959,10 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 		}
 		log.Printf("[DEBUG] categories List update Spec: %v", categoriesListStr)
 		updateSpec.Categories = categoriesListStr
-
 	}
 
-	aJson, _ := json.MarshalIndent(updateSpec, "", "  ")
-	log.Printf("[DEBUG] Update Cluster Request Body: %s", string(aJson))
+	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
+	log.Printf("[DEBUG] Update Cluster Request Body: %s", string(aJSON))
 
 	updateResp, err := conn.ClusterEntityAPI.UpdateClusterById(utils.StringPtr(d.Id()), &updateSpec, args)
 	if err != nil {
@@ -980,14 +982,17 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 	}
 
 	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while updating clusters : %v", err)
+	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for cluster (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	rUUID := resourceUUID.Data.GetValue().(import2.Task)
-	aJson, _ = json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Update Cluster Task Response Details: %s", string(aJson))
+	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
+	log.Printf("[DEBUG] Update Cluster Task Response Details: %s", string(aJSON))
 
 	//delay 1 min to get the updated data
 	time.Sleep(1 * time.Minute)
@@ -1006,7 +1011,7 @@ func ResourceNutanixClusterV2Delete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if d.Get("ext_id").(string) == "" {
-		err := getClusterExtId(d, conn)
+		err := getClusterExtID(d, conn)
 		if err != nil {
 			log.Printf("[DEBUG] ResourceNutanixClusterV2Delete : error while fetching cluster : %v", err)
 			return diag.Errorf("error while fetching cluster : %v", err)
@@ -1057,7 +1062,6 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 		// data := base64.StdEncoding.EncodeToString([]byte("ergon"))
 		// encodeUUID := data + ":" + taskUUID
 		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
-
 		if err != nil {
 			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
 		}
@@ -1075,27 +1079,28 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 }
 
 func getTaskStatus(pr *import2.TaskStatus) string {
+	const two, three, five, six, seven = 2, 3, 5, 6, 7
 	if pr != nil {
-		if *pr == import2.TaskStatus(6) {
+		if *pr == import2.TaskStatus(six) {
 			return "FAILED"
 		}
-		if *pr == import2.TaskStatus(7) {
+		if *pr == import2.TaskStatus(seven) {
 			return "CANCELED"
 		}
-		if *pr == import2.TaskStatus(2) {
+		if *pr == import2.TaskStatus(two) {
 			return "QUEUED"
 		}
-		if *pr == import2.TaskStatus(3) {
+		if *pr == import2.TaskStatus(three) {
 			return "RUNNING"
 		}
-		if *pr == import2.TaskStatus(5) {
+		if *pr == import2.TaskStatus(five) {
 			return "SUCCEEDED"
 		}
 	}
 	return "UNKNOWN"
 }
 
-func getClusterExtId(d *schema.ResourceData, conn *clusters.Client) error {
+func getClusterExtID(d *schema.ResourceData, conn *clusters.Client) error {
 	var filter string
 	if d.HasChange("name") {
 		// if name changed, get the old name to fetch the cluster, since the name will be updated after update request
@@ -1105,7 +1110,7 @@ func getClusterExtId(d *schema.ResourceData, conn *clusters.Client) error {
 		filter = fmt.Sprintf(`name eq '%s'`, d.Get("name").(string))
 	}
 
-	log.Printf("[DEBUG] getClusterExtId filter : %s", filter)
+	log.Printf("[DEBUG] getClusterExtID filter : %s", filter)
 
 	// get Cluster Ext Id
 	listResp, err := conn.ClusterEntityAPI.ListClusters(nil, nil, utils.StringPtr(filter), nil, nil, nil, nil)
@@ -1114,23 +1119,23 @@ func getClusterExtId(d *schema.ResourceData, conn *clusters.Client) error {
 	}
 
 	if listResp.Data == nil {
-		log.Printf("[DEBUG] getClusterExtId Cluster not found, clustersResponse.Data is nil")
+		log.Printf("[DEBUG] getClusterExtID Cluster not found, clustersResponse.Data is nil")
 		return fmt.Errorf("cluster not found : %v", err)
 	}
 	cls := listResp.Data.GetValue().([]config.Cluster)
 
 	if len(cls) == 0 {
-		log.Printf("[DEBUG] getClusterExtId Cluster not found, len(clusters) is 0")
+		log.Printf("[DEBUG] getClusterExtID Cluster not found, len(clusters) is 0")
 		return fmt.Errorf("cluster not found : %v", err)
 	}
-	extId := utils.StringValue(cls[0].ExtId)
-	if extId == "" {
-		log.Printf("[DEBUG] getClusterExtId Cluster not found, extID is empty")
+	extID := utils.StringValue(cls[0].ExtId)
+	if extID == "" {
+		log.Printf("[DEBUG] getClusterExtID Cluster not found, extID is empty")
 		return fmt.Errorf("cluster not found : %v", err)
 	}
-	log.Printf("[DEBUG] getClusterExtId Cluster found, extId : %s", extId)
-	d.SetId(extId)
-	err = d.Set("ext_id", extId)
+	log.Printf("[DEBUG] getClusterExtID Cluster found, extId : %s", extID)
+	d.SetId(extID)
+	err = d.Set("ext_id", extID)
 	if err != nil {
 		return err
 	}
@@ -1139,7 +1144,6 @@ func getClusterExtId(d *schema.ResourceData, conn *clusters.Client) error {
 
 func expandNodeReference(pr interface{}) *config.NodeReference {
 	if pr != nil {
-
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
 
@@ -1156,25 +1160,25 @@ func expandNodeReference(pr interface{}) *config.NodeReference {
 }
 
 func expandUpgradeStatus(upgradeStatus interface{}) *config.UpgradeStatus {
+	const two, three, four, five, six, seven, eight, nine, ten = 2, 3, 4, 5, 6, 7, 8, 9, 10
 	subMap := map[string]interface{}{
-		"PENDING":     2,
-		"DOWNLOADING": 3,
-		"QUEUED":      4,
-		"PREUPGRADE":  5,
-		"UPGRADING":   6,
-		"SUCCEEDED":   7,
-		"FAILED":      8,
-		"CANCELLED":   9,
-		"SCHEDULED":   10,
+		"PENDING":     two,
+		"DOWNLOADING": three,
+		"QUEUED":      four,
+		"PREUPGRADE":  five,
+		"UPGRADING":   six,
+		"SUCCEEDED":   seven,
+		"FAILED":      eight,
+		CANCELED:      nine,
+		"SCHEDULED":   ten,
 	}
 	if subMap[upgradeStatus.(string)] != nil {
 		pVal := subMap[upgradeStatus.(string)]
 		p := config.UpgradeStatus(pVal.(int))
 		return &p
-	} else {
-		log.Printf("[INFO] upgrade_status is not provided")
-		return nil
 	}
+	log.Printf("[INFO] upgrade_status is not provided")
+	return nil
 }
 
 func expandNodeListItemReference(pr []interface{}) []config.NodeListItemReference {
@@ -1185,13 +1189,13 @@ func expandNodeListItemReference(pr []interface{}) []config.NodeListItemReferenc
 			val := v.(map[string]interface{})
 			node := config.NewNodeListItemReference()
 
-			if controllerVmIp, ok := val["controller_vm_ip"]; ok {
+			if controllerVMIP, ok := val["controller_vm_ip"]; ok {
 				log.Printf("[DEBUG] controller_vm_ip")
-				node.ControllerVmIp = expandIPAddress(controllerVmIp)
+				node.ControllerVmIp = expandIPAddress(controllerVMIP)
 			}
-			if hostIp, ok := val["host_ip"]; ok {
+			if hostIP, ok := val["host_ip"]; ok {
 				log.Printf("[DEBUG] host_ip")
-				node.HostIp = expandIPAddress(hostIp)
+				node.HostIp = expandIPAddress(hostIP)
 			}
 
 			nodeList[k] = *node
@@ -1203,7 +1207,6 @@ func expandNodeListItemReference(pr []interface{}) []config.NodeListItemReferenc
 
 func expandClusterNetworkReference(pr interface{}) *config.ClusterNetworkReference {
 	if pr != nil {
-
 		cls := config.NewClusterNetworkReference()
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -1212,9 +1215,9 @@ func expandClusterNetworkReference(pr interface{}) *config.ClusterNetworkReferen
 			log.Printf("[DEBUG] external_address")
 			cls.ExternalAddress = expandIPAddress(externalAddress)
 		}
-		if externalDataServiceIp, ok := val["external_data_services_ip"]; ok {
+		if externalDataServiceIP, ok := val["external_data_services_ip"]; ok {
 			log.Printf("[DEBUG] external_data_services_ip")
-			cls.ExternalDataServiceIp = expandIPAddress(externalDataServiceIp)
+			cls.ExternalDataServiceIp = expandIPAddress(externalDataServiceIP)
 		}
 		if nfsSubnetWhite, ok := val["nfs_subnet_white_list"]; ok {
 			nfsSubnetWhitelist := nfsSubnetWhite.([]interface{})
@@ -1225,19 +1228,19 @@ func expandClusterNetworkReference(pr interface{}) *config.ClusterNetworkReferen
 			log.Printf("[DEBUG] nfs_subnet_white_list: %v", nfsSubnetWhitelistStr)
 			cls.NfsSubnetWhitelist = nfsSubnetWhitelistStr
 		}
-		if nameServerIpList, ok := val["name_server_ip_list"]; ok {
-			cls.NameServerIpList = expandIPAddressOrFQDN(nameServerIpList.([]interface{}))
+		if nameServerIPList, ok := val["name_server_ip_list"]; ok {
+			cls.NameServerIpList = expandIPAddressOrFQDN(nameServerIPList.([]interface{}))
 		}
-		if ntpServerIpList, ok := val["ntp_server_ip_list"]; ok {
+		if ntpServerIPList, ok := val["ntp_server_ip_list"]; ok {
 			log.Printf("[DEBUG] ntp_server_ip_list ")
-			cls.NtpServerIpList = expandIPAddressOrFQDN(ntpServerIpList.([]interface{}))
+			cls.NtpServerIpList = expandIPAddressOrFQDN(ntpServerIPList.([]interface{}))
 		}
 		if smtpServer, ok := val["smtp_server"]; ok {
 			cls.SmtpServer = expandSMTPServerRef(smtpServer)
 		}
-		if masqueradingIp, ok := val["masquerading_ip"]; ok {
+		if masqueradingIP, ok := val["masquerading_ip"]; ok {
 			log.Printf("[DEBUG] masquerading_ip ")
-			cls.MasqueradingIp = expandIPAddress(masqueradingIp)
+			cls.MasqueradingIp = expandIPAddress(masqueradingIP)
 		}
 		if managementServer, ok := val["management_server"]; ok {
 			cls.ManagementServer = expandManagementServerRef(managementServer)
@@ -1248,13 +1251,13 @@ func expandClusterNetworkReference(pr interface{}) *config.ClusterNetworkReferen
 		}
 		if keyManagementServerType, ok := val["key_management_server_type"]; ok {
 			log.Printf("[DEBUG] key_management_server_type : %s", keyManagementServerType)
-
+			const zero, one, two, three, four = 0, 1, 2, 3, 4
 			subMap := map[string]interface{}{
-				"UNKNOWN":       0,
-				"$REDACTED":     1,
-				"LOCAL":         2,
-				"PRISM_CENTRAL": 3,
-				"EXTERNAL":      4,
+				"UNKNOWN":       zero,
+				"$REDACTED":     one,
+				"LOCAL":         two,
+				"PRISM_CENTRAL": three,
+				"EXTERNAL":      four,
 			}
 			if subMap[keyManagementServerType.(string)] != nil {
 				pVal := subMap[keyManagementServerType.(string)]
@@ -1267,10 +1270,10 @@ func expandClusterNetworkReference(pr interface{}) *config.ClusterNetworkReferen
 		}
 
 		if httpProxyList, ok := val["http_proxy_list"]; ok {
-			cls.HttpProxyList = expandHttpProxyList(httpProxyList.([]interface{}))
+			cls.HttpProxyList = expandHTTPProxyList(httpProxyList.([]interface{}))
 		}
 		if httpProxyWhiteList, ok := val["http_proxy_white_list"]; ok {
-			cls.HttpProxyWhiteList = expandHttpProxyWhiteList(httpProxyWhiteList.([]interface{}))
+			cls.HttpProxyWhiteList = expandHTTPProxyWhiteList(httpProxyWhiteList.([]interface{}))
 		}
 
 		return cls
@@ -1278,7 +1281,7 @@ func expandClusterNetworkReference(pr interface{}) *config.ClusterNetworkReferen
 	return nil
 }
 
-func expandHttpProxyWhiteList(proxyTypesWhiteList []interface{}) []config.HttpProxyWhiteListConfig {
+func expandHTTPProxyWhiteList(proxyTypesWhiteList []interface{}) []config.HttpProxyWhiteListConfig {
 	if len(proxyTypesWhiteList) > 0 {
 		httpProxyWhiteList := make([]config.HttpProxyWhiteListConfig, len(proxyTypesWhiteList))
 
@@ -1290,13 +1293,13 @@ func expandHttpProxyWhiteList(proxyTypesWhiteList []interface{}) []config.HttpPr
 				httpProxy.Target = utils.StringPtr(target.(string))
 			}
 			if targetType, ok := val["target_type"]; ok {
-
+				const two, three, four, five, six = 2, 3, 4, 5, 6
 				subMap := map[string]interface{}{
-					"IPV4_ADDRESS":       2,
-					"IPV6_ADDRESS":       3,
-					"IPV4_NETWORK_MASK":  4,
-					"DOMAIN_NAME_SUFFIX": 5,
-					"HOST_NAME":          6,
+					"IPV4_ADDRESS":       two,
+					"IPV6_ADDRESS":       three,
+					"IPV4_NETWORK_MASK":  four,
+					"DOMAIN_NAME_SUFFIX": five,
+					"HOST_NAME":          six,
 				}
 				if subMap[targetType.(string)] != nil {
 					pVal := subMap[targetType.(string)]
@@ -1311,7 +1314,7 @@ func expandHttpProxyWhiteList(proxyTypesWhiteList []interface{}) []config.HttpPr
 	return nil
 }
 
-func expandHttpProxyList(httpProxyList []interface{}) []config.HttpProxyConfig {
+func expandHTTPProxyList(httpProxyList []interface{}) []config.HttpProxyConfig {
 	if len(httpProxyList) > 0 {
 		httpProxyConfig := make([]config.HttpProxyConfig, len(httpProxyList))
 
@@ -1339,10 +1342,11 @@ func expandHttpProxyList(httpProxyList []interface{}) []config.HttpProxyConfig {
 					httpProxy.ProxyTypes = nil
 				} else {
 					proxyTypesList := make([]config.HttpProxyType, len(proxyTypes.([]interface{})))
+					const two, three, four = 2, 3, 4
 					subMap := map[string]interface{}{
-						"HTTP":  2,
-						"HTTPS": 3,
-						"SOCKS": 4,
+						"HTTP":  two,
+						"HTTPS": three,
+						"SOCKS": four,
 					}
 					for i, val := range proxyTypes.([]interface{}) {
 						if subMap[val.(string)] != nil {
@@ -1362,9 +1366,7 @@ func expandHttpProxyList(httpProxyList []interface{}) []config.HttpProxyConfig {
 }
 
 func expandClusterConfigReference(pr interface{}, d *schema.ResourceData) *config.ClusterConfigReference {
-
 	if pr != nil {
-
 		clsConf := config.NewClusterConfigReference()
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -1375,15 +1377,15 @@ func expandClusterConfigReference(pr interface{}, d *schema.ResourceData) *confi
 		if clusterFunction, ok := val["cluster_function"]; ok && d.HasChange("config.0.cluster_function") {
 			cfLen := len(clusterFunction.([]interface{}))
 			cfs := make([]config.ClusterFunctionRef, cfLen)
-
+			const two, three, four, five, six, seven, eight = 2, 3, 4, 5, 6, 7, 8
 			subMap := map[string]interface{}{
-				"AOS":                2,
-				"PRISM_CENTRAL":      3,
-				"CLOUD_DATA_GATEWAY": 4,
-				"AFS":                5,
-				"ONE_NODE":           6,
-				"TWO_NODE":           7,
-				"ANALYTICS_PLATFORM": 8,
+				"AOS":                two,
+				"PRISM_CENTRAL":      three,
+				"CLOUD_DATA_GATEWAY": four,
+				"AFS":                five,
+				"ONE_NODE":           six,
+				"TWO_NODE":           seven,
+				"ANALYTICS_PLATFORM": eight,
 			}
 
 			for k, v := range clusterFunction.([]interface{}) {
@@ -1403,9 +1405,10 @@ func expandClusterConfigReference(pr interface{}, d *schema.ResourceData) *confi
 			clsConf.RedundancyFactor = utils.Int64Ptr(int64(redundancyFactor.(int)))
 		}
 		if clusterArch, ok := val["cluster_arch"]; ok && d.HasChange("config.0.cluster_arch") {
+			const two, three = 2, 3
 			subMap := map[string]interface{}{
-				"X86_64":  2,
-				"PPC64LE": 3,
+				"X86_64":  two,
+				"PPC64LE": three,
 			}
 			if subMap[clusterArch.(string)] != nil {
 				pVal := subMap[clusterArch.(string)]
@@ -1417,12 +1420,13 @@ func expandClusterConfigReference(pr interface{}, d *schema.ResourceData) *confi
 			clsConf.FaultToleranceState = expandFaultToleranceState(faultToleranceState)
 		}
 		if operationMode, ok := val["operation_mode"]; ok && d.HasChange("config.0.operation_mode") {
+			const two, three, four, five, six = 2, 3, 4, 5, 6
 			subMap := map[string]interface{}{
-				"NORMAL":             2,
-				"READ_ONLY":          3,
-				"STAND_ALONE":        4,
-				"SWITCH_TO_TWO_NODE": 5,
-				"OVERRIDE":           6,
+				"NORMAL":             two,
+				"READ_ONLY":          three,
+				"STAND_ALONE":        four,
+				"SWITCH_TO_TWO_NODE": five,
+				"OVERRIDE":           six,
 			}
 			if subMap[operationMode.(string)] != nil {
 				pVal := subMap[operationMode.(string)]
@@ -1431,9 +1435,10 @@ func expandClusterConfigReference(pr interface{}, d *schema.ResourceData) *confi
 			}
 		}
 		if encryptionInTransitStatus, ok := val["encryption_in_transit_status"]; ok && d.HasChange("config.0.encryption_in_transit_status") {
+			const two, three = 2, 3
 			subMap := map[string]interface{}{
-				"ENABLED":  2,
-				"DISABLED": 3,
+				"ENABLED":  two,
+				"DISABLED": three,
 			}
 
 			if subMap[encryptionInTransitStatus.(string)] != nil {
@@ -1449,7 +1454,6 @@ func expandClusterConfigReference(pr interface{}, d *schema.ResourceData) *confi
 
 		return clsConf
 	}
-
 	return nil
 }
 
@@ -1467,25 +1471,22 @@ func expandPulseStatus(status interface{}) *config.PulseStatus {
 		pulse.IsEnabled = utils.BoolPtr(isEnabled.(bool))
 	}
 	if piiScrubbingLevel, ok := val["pii_scrubbing_level"]; ok {
-
+		const two, three = 2, 3
 		subMap := map[string]interface{}{
-			"DEFAULT": 2,
-			"ALL":     3,
+			"DEFAULT": two,
+			"ALL":     three,
 		}
 		if subMap[piiScrubbingLevel.(string)] != nil {
 			pVal := subMap[piiScrubbingLevel.(string)]
 			p := config.PIIScrubbingLevel(pVal.(int))
 			pulse.PiiScrubbingLevel = &p
 		}
-
 	}
 	return pulse
-
 }
 
 func expandIPAddress(pr interface{}) *import4.IPAddress {
 	if pr != nil {
-
 		ipAddress := import4.NewIPAddress()
 		prI := pr.([]interface{})
 		if len(prI) == 0 {
@@ -1507,7 +1508,6 @@ func expandIPAddress(pr interface{}) *import4.IPAddress {
 }
 
 func expandIPAddressOrFQDN(pr []interface{}) []import4.IPAddressOrFQDN {
-
 	if len(pr) > 0 {
 		ips := make([]import4.IPAddressOrFQDN, len(pr))
 
@@ -1580,7 +1580,6 @@ func expandSMTPServerRef(pr interface{}) *config.SmtpServerRef {
 	}
 
 	if pr != nil {
-
 		smtp := config.NewSmtpServerRef()
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
@@ -1592,10 +1591,11 @@ func expandSMTPServerRef(pr interface{}) *config.SmtpServerRef {
 			smtp.Server = expandSMTPNetwork(server.([]interface{}))
 		}
 		if smtpType, ok := val["type"]; ok {
+			const two, three, four = 2, 3, 4
 			subMap := map[string]interface{}{
-				"PLAIN":    2,
-				"STARTTLS": 3,
-				"SSL":      4,
+				"PLAIN":    two,
+				"STARTTLS": three,
+				"SSL":      four,
 			}
 			if subMap[smtpType.(string)] != nil {
 				pVal := subMap[smtpType.(string)]
@@ -1638,22 +1638,21 @@ func expandBackplaneNetworkParams(pr interface{}) *config.BackplaneNetworkParams
 
 func expandManagementServerRef(pr interface{}) *config.ManagementServerRef {
 	if pr != nil && len(pr.([]interface{})) > 0 {
-
 		mgm := config.NewManagementServerRef()
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
 
 		if ip, ok := val["ip"]; ok {
-			log.Printf("[DEBUG] managment server ip")
+			log.Printf("[DEBUG] management server ip")
 			mgm.Ip = expandIPAddress(ip.([]interface{}))
 		}
 		if mgmType, ok := val["type"]; ok {
+			const two = 2
 			switch mgmType.(string) {
 			case "VCENTER":
-				p := config.ManagementServerType(2)
+				p := config.ManagementServerType(two)
 				mgm.Type = &p
 				log.Printf("[DEBUG] mgmType : VCENTER case")
-				break
 			default:
 				log.Printf("[DEBUG] mgmType : default case")
 				mgm.Type = nil
@@ -1676,7 +1675,6 @@ func expandManagementServerRef(pr interface{}) *config.ManagementServerRef {
 }
 
 func expandSMTPNetwork(pr []interface{}) *config.SmtpNetwork {
-
 	if len(pr) > 0 {
 		smtp := config.NewSmtpNetwork()
 		val := pr[0].(map[string]interface{})
@@ -1700,7 +1698,6 @@ func expandSMTPNetwork(pr []interface{}) *config.SmtpNetwork {
 }
 
 func expandFQDN(pr []interface{}) *import4.FQDN {
-
 	if len(pr) > 0 {
 		fqdn := import4.FQDN{}
 		val := pr[0].(map[string]interface{})
@@ -1732,18 +1729,17 @@ func expandBuildReference(buildInfo interface{}) *config.BuildReference {
 	if fullVersion, ok := buildInfoVal["full_version"]; ok {
 		buildReference.FullVersion = utils.StringPtr(fullVersion.(string))
 	}
-	if commitId, ok := buildInfoVal["commit_id"]; ok {
-		buildReference.CommitId = utils.StringPtr(commitId.(string))
+	if commitID, ok := buildInfoVal["commit_id"]; ok {
+		buildReference.CommitId = utils.StringPtr(commitID.(string))
 	}
-	if shortCommitId, ok := buildInfoVal["short_commit_id"]; ok {
-		buildReference.ShortCommitId = utils.StringPtr(shortCommitId.(string))
+	if shortCommitID, ok := buildInfoVal["short_commit_id"]; ok {
+		buildReference.ShortCommitId = utils.StringPtr(shortCommitID.(string))
 	}
 
 	return buildReference
 }
 
 func expandPublicKey(pr []interface{}) []config.PublicKey {
-
 	if len(pr) > 0 {
 		pubKey := make([]config.PublicKey, len(pr))
 		aJSON, _ := json.Marshal(pr)
@@ -1773,11 +1769,12 @@ func expandFaultToleranceState(pr interface{}) *config.FaultToleranceState {
 		val := prI[0].(map[string]interface{})
 
 		if domainAwarenessLevel, ok := val["domain_awareness_level"]; ok {
+			const two, three, four, five = 2, 3, 4, 5
 			subMap := map[string]interface{}{
-				"NODE":  2,
-				"BLOCK": 3,
-				"RACK":  4,
-				"DISK":  5,
+				"NODE":  two,
+				"BLOCK": three,
+				"RACK":  four,
+				"DISK":  five,
 			}
 			if subMap[domainAwarenessLevel.(string)] != nil {
 				pVal := subMap[domainAwarenessLevel.(string)]
@@ -1787,26 +1784,26 @@ func expandFaultToleranceState(pr interface{}) *config.FaultToleranceState {
 		}
 
 		if currentClusterFaultTolerance, ok := val["current_cluster_fault_tolerance"]; ok {
+			const two, three, four, five = 2, 3, 4, 5
 			subMap := map[string]interface{}{
-				"CFT_0N_AND_0D": 2,
-				"CFT_1N_OR_1D":  3,
-				"CFT_2N_OR_2D":  4,
-				"CFT_1N_AND_1D": 5,
+				"CFT_0N_AND_0D": two,
+				"CFT_1N_OR_1D":  three,
+				"CFT_2N_OR_2D":  four,
+				"CFT_1N_AND_1D": five,
 			}
 			if subMap[currentClusterFaultTolerance.(string)] != nil {
 				pVal := subMap[currentClusterFaultTolerance.(string)]
 				p := config.ClusterFaultToleranceRef(pVal.(int))
 				fts.CurrentClusterFaultTolerance = &p
 			}
-
 		}
 		if desiredClusterFaultTolerance, ok := val["desired_cluster_fault_tolerance"]; ok {
-
+			const two, three, four, five = 2, 3, 4, 5
 			subMap := map[string]interface{}{
-				"CFT_0N_AND_0D": 2,
-				"CFT_1N_OR_1D":  3,
-				"CFT_2N_OR_2D":  4,
-				"CFT_1N_AND_1D": 5,
+				"CFT_0N_AND_0D": two,
+				"CFT_1N_OR_1D":  three,
+				"CFT_2N_OR_2D":  four,
+				"CFT_1N_AND_1D": five,
 			}
 			if subMap[desiredClusterFaultTolerance.(string)] != nil {
 				pVal := subMap[desiredClusterFaultTolerance.(string)]

@@ -15,8 +15,7 @@ const (
 
 // Foundation client with its services
 type Client struct {
-
-	//base client
+	// base client
 	client *client.Client
 
 	//Service for Imaging Nodes and Cluster Creation

@@ -3,14 +3,12 @@ package dataprotectionv2
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/dataprotection/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func DatasourceNutanixRecoveryPointsV2() *schema.Resource {
@@ -88,9 +86,9 @@ func DatasourceNutanixRecoveryPointsV2Read(ctx context.Context, d *schema.Resour
 		selectQ = nil
 	}
 
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 
-	resp, err := conn.RecoveryPoint.ListRecoveryPoints(&clusterId, page, limit, filter, orderBy, selectQ)
+	resp, err := conn.RecoveryPoint.ListRecoveryPoints(&clusterID, page, limit, filter, orderBy, selectQ)
 	if err != nil {
 		return diag.Errorf("error while fetching Recovery Points : %v", err)
 	}

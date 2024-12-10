@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
 	Era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -21,15 +20,19 @@ func DataSourceNutanixEraProfiles() *schema.Resource {
 			"engine": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{"oracle_database",
+				ValidateFunc: validation.StringInSlice([]string{
+					"oracle_database",
 					"postgres_database", "sqlserver_database", "mariadb_database",
-					"mysql_database"}, false),
+					"mysql_database",
+				}, false),
 			},
 			"profile_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{"Software", "Compute",
-					"Network", "Database_Parameter"}, false),
+				ValidateFunc: validation.StringInSlice([]string{
+					"Software", "Compute",
+					"Network", "Database_Parameter",
+				}, false),
 			},
 			"profiles": {
 				Type:     schema.TypeList,

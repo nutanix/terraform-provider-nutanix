@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -160,7 +159,6 @@ func expandReference(ref map[string]interface{}) *v3.Reference {
 func taskStateRefreshFunc(client *v3.Client, taskUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := client.V3.GetTask(taskUUID)
-
 		if err != nil {
 			if strings.Contains(fmt.Sprint(err), "INVALID_UUID") {
 				return v, ERROR, nil

@@ -42,7 +42,7 @@ resource "nutanix_volume_group_v2" "example"{
 }
 
 
-# Attach a volume group disk to the pervious volume group
+# Attach a volume group disk to the previous volume group
 resource "nutanix_volume_group_disk_v2" "example"{
   volume_group_ext_id = resource.nutanix_volume_group_v2.example.id
   index               = 1

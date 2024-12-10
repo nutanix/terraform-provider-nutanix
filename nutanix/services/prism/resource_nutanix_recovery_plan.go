@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/spf13/cast"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -747,7 +746,6 @@ func resourceNutanixRecoveryPlanUpdate(ctx context.Context, d *schema.ResourceDa
 
 	id := d.Id()
 	response, err := conn.V3.GetRecoveryPlan(id)
-
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "RECOVERY_PLAN_NOT_FOUND") {
 			d.SetId("")
@@ -823,7 +821,6 @@ func resourceNutanixRecoveryPlanDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.Client).API
 
 	resp, err := conn.V3.DeleteRecoveryPlan(d.Id())
-
 	if err != nil {
 		return diag.Errorf("error deleting protection_rule id %s): %s", d.Id(), err)
 	}
@@ -854,7 +851,6 @@ func resourceNutanixRecoveryPlanExists(conn *v3.Client, name string) (*string, e
 
 	filter := fmt.Sprintf("name==%s", name)
 	protectionList, err := conn.V3.ListAllRecoveryPlans(filter)
-
 	if err != nil {
 		return nil, err
 	}

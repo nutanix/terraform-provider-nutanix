@@ -137,7 +137,6 @@ func DatasourceNutanixRouteV2Read(ctx context.Context, d *schema.ResourceData, m
 	extID := d.Get("ext_id").(string)
 
 	resp, err := conn.Routes.GetRouteForRouteTableById(&extID, &routeTableExtID)
-
 	if err != nil {
 		return diag.Errorf("error while fetching route : %v", err)
 	}
@@ -242,8 +241,8 @@ func flattenDestination(destination *config.IPSubnet) interface{} {
 func flattenNextHop(nextHops *config.Nexthop) interface{} {
 	if nextHops != nil {
 		nextHop := make(map[string]interface{})
-		aJson, _ := json.Marshal(nextHops)
-		log.Printf("[DEBUG] NextHops: %s", string(aJson))
+		aJSON, _ := json.Marshal(nextHops)
+		log.Printf("[DEBUG] NextHops: %s", string(aJSON))
 		if nextHops.NexthopType != nil {
 			nextHop["next_hop_type"] = flattenNextHopType(nextHops.NexthopType)
 		}

@@ -10,7 +10,6 @@ import (
 	import4 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/common/v1/config"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/common/v1/response"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -1274,7 +1273,7 @@ func DatasourceNutanixVirtualMachineV4Read(ctx context.Context, d *schema.Resour
 			return diag.FromErr(err)
 		}
 	}
-	if err := d.Set("source", flattenVmSourceReference(getResp.Source)); err != nil {
+	if err := d.Set("source", flattenVMSourceReference(getResp.Source)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("num_sockets", getResp.NumSockets); err != nil {
@@ -1298,7 +1297,7 @@ func DatasourceNutanixVirtualMachineV4Read(ctx context.Context, d *schema.Resour
 	if err := d.Set("is_cpu_passthrough_enabled", getResp.IsCpuPassthroughEnabled); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("enabled_cpu_features", flattenCpuFeature(getResp.EnabledCpuFeatures)); err != nil {
+	if err := d.Set("enabled_cpu_features", flattenCPUFeature(getResp.EnabledCpuFeatures)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("is_memory_overcommit_enabled", getResp.IsMemoryOvercommitEnabled); err != nil {
@@ -1343,7 +1342,7 @@ func DatasourceNutanixVirtualMachineV4Read(ctx context.Context, d *schema.Resour
 	if err := d.Set("is_branding_enabled", getResp.IsBrandingEnabled); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("boot_config", flattenOneOfVmBootConfig(getResp.BootConfig)); err != nil {
+	if err := d.Set("boot_config", flattenOneOfVMBootConfig(getResp.BootConfig)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("is_vga_console_enabled", getResp.IsVgaConsoleEnabled); err != nil {
@@ -1401,14 +1400,14 @@ func DatasourceNutanixVirtualMachineV4Read(ctx context.Context, d *schema.Resour
 	return nil
 }
 
-func flattenVmSourceReference(ref *config.VmSourceReference) []map[string]interface{} {
+func flattenVMSourceReference(ref *config.VmSourceReference) []map[string]interface{} {
 	if ref != nil {
 		refList := make([]map[string]interface{}, 0)
 
 		refs := make(map[string]interface{})
 
 		if ref.EntityType != nil {
-			refs["entity_type"] = flattenVmSourceReferenceEntityType(ref.EntityType)
+			refs["entity_type"] = flattenVMSourceReferenceEntityType(ref.EntityType)
 		}
 		if ref.ExtId != nil {
 			refs["ext_id"] = ref.ExtId
@@ -1420,7 +1419,7 @@ func flattenVmSourceReference(ref *config.VmSourceReference) []map[string]interf
 	return nil
 }
 
-func flattenVmSourceReferenceEntityType(ent *config.VmSourceReferenceEntityType) string {
+func flattenVMSourceReferenceEntityType(ent *config.VmSourceReferenceEntityType) string {
 	if ent != nil {
 		const two, three = 2, 3
 		if *ent == config.VmSourceReferenceEntityType(two) {
@@ -1433,12 +1432,12 @@ func flattenVmSourceReferenceEntityType(ent *config.VmSourceReferenceEntityType)
 	return "UNKNOWN"
 }
 
-func flattenCpuFeature(cfg []config.CpuFeature) []interface{} {
+func flattenCPUFeature(cfg []config.CpuFeature) []interface{} {
 	if len(cfg) > 0 {
 		cfgList := make([]interface{}, len(cfg))
-
+		const two = 2
 		for _, v := range cfg {
-			if v == config.CpuFeature(2) {
+			if v == config.CpuFeature(two) {
 				cfgList = append(cfgList, "HARDWARE_VIRTUALIZATION")
 			}
 		}
@@ -1550,8 +1549,8 @@ func flattenGuestCustomizationParams(gst *config.GuestCustomizationParams) []map
 		}
 
 		gstList = append(gstList, gsts)
-		aJson, _ := json.Marshal(gstList)
-		log.Printf("[DEBUG] flattenGuestCustomizationParams[config]: %s", string(aJson))
+		aJSON, _ := json.Marshal(gstList)
+		log.Printf("[DEBUG] flattenGuestCustomizationParams[config]: %s", string(aJSON))
 		return gstList
 	}
 	return nil
@@ -1559,7 +1558,6 @@ func flattenGuestCustomizationParams(gst *config.GuestCustomizationParams) []map
 
 func flattenOneOfGuestCustomizationParamsConfig(cfg *config.OneOfGuestCustomizationParamsConfig) []map[string]interface{} {
 	if cfg != nil {
-		cfgList := make([]map[string]interface{}, 0)
 		sysCfg := make(map[string]interface{})
 		sysCfgList := make([]map[string]interface{}, 0)
 		cloudCfg := make(map[string]interface{})
@@ -1574,34 +1572,30 @@ func flattenOneOfGuestCustomizationParamsConfig(cfg *config.OneOfGuestCustomizat
 
 			sysprepObj["sysprep_script"] = flattenOneOfSysprepSysprepScript(sysObj.SysprepScript)
 
-			aJson, _ := json.Marshal(sysprepObj)
-			log.Printf("[DEBUG] flattenOneOfGuestCustomizationParamsConfig sysprep: %s", string(aJson))
+			aJSON, _ := json.Marshal(sysprepObj)
+			log.Printf("[DEBUG] flattenOneOfGuestCustomizationParamsConfig sysprep: %s", string(aJSON))
 
 			sysprepObjList = append(sysprepObjList, sysprepObj)
 			sysCfg["sysprep"] = sysprepObjList
 
 			sysCfgList = append(sysCfgList, sysCfg)
 
-			cfgList = sysCfgList
-		} else {
-			cloudInitObj := make(map[string]interface{})
-			cloudInitObjList := make([]map[string]interface{}, 0)
-			cloudObj := cfg.GetValue().(config.CloudInit)
-
-			cloudInitObj["datasource_type"] = flattenCloudInitDataSourceType(cloudObj.DatasourceType)
-			cloudInitObj["metadata"] = cloudObj.Metadata
-			cloudInitObj["cloud_init_script"] = flattenOneOfCloudInitCloudInitScript(cloudObj.CloudInitScript)
-
-			cloudInitObjList = append(cloudInitObjList, cloudInitObj)
-			cloudCfg["cloud_init"] = cloudInitObjList
-
-			cloudCfgList = append(cloudCfgList, cloudCfg)
-
-			cfgList = cloudCfgList
+			return sysCfgList
 		}
-		aJson, _ := json.Marshal(cfgList)
-		log.Printf("[DEBUG] flattenOneOfGuestCustomizationParamsConfig: %s", string(aJson))
-		return cfgList
+		cloudInitObj := make(map[string]interface{})
+		cloudInitObjList := make([]map[string]interface{}, 0)
+		cloudObj := cfg.GetValue().(config.CloudInit)
+
+		cloudInitObj["datasource_type"] = flattenCloudInitDataSourceType(cloudObj.DatasourceType)
+		cloudInitObj["metadata"] = cloudObj.Metadata
+		cloudInitObj["cloud_init_script"] = flattenOneOfCloudInitCloudInitScript(cloudObj.CloudInitScript)
+
+		cloudInitObjList = append(cloudInitObjList, cloudInitObj)
+		cloudCfg["cloud_init"] = cloudInitObjList
+
+		cloudCfgList = append(cloudCfgList, cloudCfg)
+
+		return cloudCfgList
 	}
 	return nil
 }
@@ -1621,42 +1615,37 @@ func flattenInstallType(pr *config.InstallType) string {
 
 func flattenOneOfSysprepSysprepScript(cfg *config.OneOfSysprepSysprepScript) []map[string]interface{} {
 	if cfg != nil {
-		cfgList := make([]map[string]interface{}, 0)
 		unattendCfg := make(map[string]interface{})
 		unattendCfgList := make([]map[string]interface{}, 0)
 		customKeyValCfg := make(map[string]interface{})
 		customKeyValCfgList := make([]map[string]interface{}, 0)
 
 		if *cfg.ObjectType_ == "vmm.v4.ahv.config.Unattendxml" {
-			unattendXMl := make(map[string]interface{})
-			unattendXMlList := make([]map[string]interface{}, 0)
+			unattendXML := make(map[string]interface{})
+			unattendXMLList := make([]map[string]interface{}, 0)
 			xmlCfg := cfg.GetValue().(config.Unattendxml)
 
-			unattendXMl["value"] = xmlCfg.Value
+			unattendXML["value"] = xmlCfg.Value
 
-			unattendXMlList = append(unattendXMlList, unattendXMl)
+			unattendXMLList = append(unattendXMLList, unattendXML)
 
-			unattendCfg["unattend_xml"] = unattendXMlList
+			unattendCfg["unattend_xml"] = unattendXMLList
 
 			unattendCfgList = append(unattendCfgList, unattendCfg)
 
-			cfgList = unattendCfgList
-		} else {
-			customObj := make(map[string]interface{})
-			customObjList := make([]map[string]interface{}, 0)
-			customCfg := cfg.GetValue().(config.CustomKeyValues)
-
-			customObj["key_value_pairs"] = flattenCustomKVPair(customCfg.KeyValuePairs)
-
-			customObjList = append(customObjList, customObj)
-			customKeyValCfg["custom_key_values"] = customObjList
-
-			customKeyValCfgList = append(customKeyValCfgList, customKeyValCfg)
-			cfgList = customKeyValCfgList
+			return unattendCfgList
 		}
-		aJson, _ := json.Marshal(cfgList)
-		log.Printf("[DEBUG] flattenOneOfSysprepSysprepScript: %s", string(aJson))
-		return cfgList
+		customObj := make(map[string]interface{})
+		customObjList := make([]map[string]interface{}, 0)
+		customCfg := cfg.GetValue().(config.CustomKeyValues)
+
+		customObj["key_value_pairs"] = flattenCustomKVPair(customCfg.KeyValuePairs)
+
+		customObjList = append(customObjList, customObj)
+		customKeyValCfg["custom_key_values"] = customObjList
+
+		customKeyValCfgList = append(customKeyValCfgList, customKeyValCfg)
+		return customKeyValCfgList
 	}
 	return nil
 }
@@ -1754,14 +1743,14 @@ func flattenGuestTools(pr *config.GuestTools) []map[string]interface{} {
 func flattenNgtCapability(pr []config.NgtCapability) []interface{} {
 	if len(pr) > 0 {
 		ngtList := make([]interface{}, len(pr))
-
+		const two, three = 2, 3
 		for k, v := range pr {
 			ss := new(string)
 
-			if v == config.NgtCapability(2) {
+			if v == config.NgtCapability(two) {
 				ss = utils.StringPtr("SELF_SERVICE_RESTORE")
 			}
-			if v == config.NgtCapability(3) {
+			if v == config.NgtCapability(three) {
 				ss = utils.StringPtr("VSS_SNAPSHOT")
 			}
 			ngtList[k] = ss
@@ -1771,9 +1760,8 @@ func flattenNgtCapability(pr []config.NgtCapability) []interface{} {
 	return nil
 }
 
-func flattenOneOfVmBootConfig(pr *config.OneOfVmBootConfig) []map[string]interface{} {
+func flattenOneOfVMBootConfig(pr *config.OneOfVmBootConfig) []map[string]interface{} {
 	if pr != nil {
-		bootCfg := make([]map[string]interface{}, 0)
 		legacyBootCfg := make(map[string]interface{})
 		legacyBootCfgList := make([]map[string]interface{}, 0)
 		uefiBootCfg := make(map[string]interface{})
@@ -1792,21 +1780,19 @@ func flattenOneOfVmBootConfig(pr *config.OneOfVmBootConfig) []map[string]interfa
 
 			legacyObjList = append(legacyObjList, legacyBootCfg)
 			return legacyObjList
-		} else {
-			uefiObj := make(map[string]interface{})
-			uefiObjList := make([]map[string]interface{}, 0)
-			uefiVals := pr.GetValue().(config.UefiBoot)
-
-			uefiObj["is_secure_boot_enabled"] = uefiVals.IsSecureBootEnabled
-			uefiObj["nvram_device"] = flattenNvramDevice(uefiVals.NvramDevice)
-
-			uefiObjList = append(uefiObjList, uefiObj)
-			uefiBootCfg["uefi_boot"] = uefiObjList
-			uefiBootCfgList = append(uefiBootCfgList, uefiBootCfg)
-
-			bootCfg = uefiBootCfgList
 		}
-		return bootCfg
+		uefiObj := make(map[string]interface{})
+		uefiObjList := make([]map[string]interface{}, 0)
+		uefiVals := pr.GetValue().(config.UefiBoot)
+
+		uefiObj["is_secure_boot_enabled"] = uefiVals.IsSecureBootEnabled
+		uefiObj["nvram_device"] = flattenNvramDevice(uefiVals.NvramDevice)
+
+		uefiObjList = append(uefiObjList, uefiObj)
+		uefiBootCfg["uefi_boot"] = uefiObjList
+		uefiBootCfgList = append(uefiBootCfgList, uefiBootCfg)
+
+		return uefiBootCfgList
 	}
 	return nil
 }
@@ -1833,20 +1819,19 @@ func flattenOneOfLegacyBootBootDevice(cfg *config.OneOfLegacyBootBootDevice) []m
 			deviceDisk["boot_device_disk"] = deviceDiskObjList
 			deviceDiskList = append(deviceDiskList, deviceDisk)
 			return deviceDiskList
-		} else {
-			deviceNicObj := make(map[string]interface{})
-			deviceNicObjList := make([]map[string]interface{}, 0)
-			deviceNicVal := cfg.GetValue().(config.BootDeviceNic)
-
-			deviceNicObj["mac_address"] = deviceNicVal.MacAddress
-			deviceNicObjList = append(deviceNicObjList, deviceNicObj)
-
-			deviceNic["boot_device_nic"] = deviceNicObjList
-
-			deviceNicList = append(deviceNicList, deviceNic)
-
-			return deviceNicList
 		}
+		deviceNicObj := make(map[string]interface{})
+		deviceNicObjList := make([]map[string]interface{}, 0)
+		deviceNicVal := cfg.GetValue().(config.BootDeviceNic)
+
+		deviceNicObj["mac_address"] = deviceNicVal.MacAddress
+		deviceNicObjList = append(deviceNicObjList, deviceNicObj)
+
+		deviceNic["boot_device_nic"] = deviceNicObjList
+
+		deviceNicList = append(deviceNicList, deviceNic)
+
+		return deviceNicList
 		// return bootDeviceList
 	}
 	return nil
@@ -1872,20 +1857,21 @@ func flattenDiskAddress(pr *config.DiskAddress) []map[string]interface{} {
 }
 
 func flattenDiskBusType(pr *config.DiskBusType) string {
+	const two, three, four, five, six = 2, 3, 4, 5, 6
 	if pr != nil {
-		if *pr == config.DiskBusType(2) {
+		if *pr == config.DiskBusType(two) {
 			return "SCSI"
 		}
-		if *pr == config.DiskBusType(3) {
+		if *pr == config.DiskBusType(three) {
 			return "IDE"
 		}
-		if *pr == config.DiskBusType(4) {
+		if *pr == config.DiskBusType(four) {
 			return "PCI"
 		}
-		if *pr == config.DiskBusType(5) {
+		if *pr == config.DiskBusType(five) {
 			return "SATA"
 		}
-		if *pr == config.DiskBusType(6) {
+		if *pr == config.DiskBusType(six) {
 			return "SPAPR"
 		}
 	}
@@ -1895,17 +1881,17 @@ func flattenDiskBusType(pr *config.DiskBusType) string {
 func flattenBootDeviceType(pr []config.BootDeviceType) []interface{} {
 	if len(pr) > 0 {
 		bootDeviceList := make([]interface{}, len(pr))
-
+		const two, three, four = 2, 3, 4
 		for k, v := range pr {
 			ss := new(string)
 
-			if v == config.BootDeviceType(2) {
+			if v == config.BootDeviceType(two) {
 				ss = utils.StringPtr("CDROM")
 			}
-			if v == config.BootDeviceType(3) {
+			if v == config.BootDeviceType(three) {
 				ss = utils.StringPtr("DISK")
 			}
-			if v == config.BootDeviceType(4) {
+			if v == config.BootDeviceType(four) {
 				ss = utils.StringPtr("NETWORK")
 			}
 			bootDeviceList[k] = ss
@@ -1922,7 +1908,7 @@ func flattenNvramDevice(pr *config.NvramDevice) []map[string]interface{} {
 		rams := make(map[string]interface{})
 
 		if pr.BackingStorageInfo != nil {
-			rams["backing_storage_info"] = flattenVmDisk(pr.BackingStorageInfo)
+			rams["backing_storage_info"] = flattenVMDisk(pr.BackingStorageInfo)
 		}
 		ramList = append(ramList, rams)
 		return ramList
@@ -1930,7 +1916,7 @@ func flattenNvramDevice(pr *config.NvramDevice) []map[string]interface{} {
 	return nil
 }
 
-func flattenVmDisk(pr *config.VmDisk) []map[string]interface{} {
+func flattenVMDisk(pr *config.VmDisk) []map[string]interface{} {
 	if pr != nil {
 		vmDiskList := make([]map[string]interface{}, 0)
 
@@ -1940,10 +1926,10 @@ func flattenVmDisk(pr *config.VmDisk) []map[string]interface{} {
 			disks["disk_size_bytes"] = pr.DiskSizeBytes
 		}
 		if pr.StorageContainer != nil {
-			disks["storage_container"] = flattenVmDiskContainerReference(pr.StorageContainer)
+			disks["storage_container"] = flattenVMDiskContainerReference(pr.StorageContainer)
 		}
 		if pr.StorageConfig != nil {
-			disks["storage_config"] = flattenVmDiskStorageConfig(pr.StorageConfig)
+			disks["storage_config"] = flattenVMDiskStorageConfig(pr.StorageConfig)
 		}
 		if pr.DataSource != nil {
 			disks["data_source"] = flattenDataSource(pr.DataSource)
@@ -1961,7 +1947,7 @@ func flattenVmDisk(pr *config.VmDisk) []map[string]interface{} {
 	return nil
 }
 
-func flattenVmDiskContainerReference(ref *config.VmDiskContainerReference) []map[string]interface{} {
+func flattenVMDiskContainerReference(ref *config.VmDiskContainerReference) []map[string]interface{} {
 	if ref != nil {
 		refList := make([]map[string]interface{}, 0)
 
@@ -1977,7 +1963,7 @@ func flattenVmDiskContainerReference(ref *config.VmDiskContainerReference) []map
 	return nil
 }
 
-func flattenVmDiskStorageConfig(ref *config.VmDiskStorageConfig) []map[string]interface{} {
+func flattenVMDiskStorageConfig(ref *config.VmDiskStorageConfig) []map[string]interface{} {
 	if ref != nil {
 		refList := make([]map[string]interface{}, 0)
 
@@ -2011,7 +1997,6 @@ func flattenDataSource(ref *config.DataSource) []map[string]interface{} {
 
 func flattenOneOfDataSourceReference(pr *config.OneOfDataSourceReference) []map[string]interface{} {
 	if pr != nil {
-		refList := make([]map[string]interface{}, 0)
 		vmDiskRef := make(map[string]interface{})
 		vmDiskRefList := make([]map[string]interface{}, 0)
 		imageRef := make(map[string]interface{})
@@ -2024,32 +2009,30 @@ func flattenOneOfDataSourceReference(pr *config.OneOfDataSourceReference) []map[
 
 			vmDiskObj["disk_address"] = flattenDiskAddress(vmDiskVal.DiskAddress)
 			vmDiskObj["disk_ext_id"] = vmDiskVal.DiskExtId
-			vmDiskObj["vm_reference"] = flattenVmReference(vmDiskVal.VmReference)
+			vmDiskObj["vm_reference"] = flattenVMReference(vmDiskVal.VmReference)
 
 			vmDiskObjList = append(vmDiskObjList, vmDiskObj)
 			vmDiskRef["vm_disk_reference"] = vmDiskObjList
 			vmDiskRefList = append(vmDiskRefList, vmDiskRef)
 
-			refList = vmDiskRefList
-		} else {
-			imageObj := make(map[string]interface{})
-			imageObjList := make([]map[string]interface{}, 0)
-			imageVal := pr.GetValue().(config.ImageReference)
-
-			imageObj["image_ext_id"] = imageVal.ImageExtId
-
-			imageObjList = append(imageObjList, imageObj)
-			imageRef["image_reference"] = imageObjList
-			imageRefList = append(imageRefList, imageRef)
-
-			refList = imageRefList
+			return vmDiskRefList
 		}
-		return refList
+		imageObj := make(map[string]interface{})
+		imageObjList := make([]map[string]interface{}, 0)
+		imageVal := pr.GetValue().(config.ImageReference)
+
+		imageObj["image_ext_id"] = imageVal.ImageExtId
+
+		imageObjList = append(imageObjList, imageObj)
+		imageRef["image_reference"] = imageObjList
+		imageRefList = append(imageRefList, imageRef)
+
+		return imageRefList
 	}
 	return nil
 }
 
-func flattenVmReference(ref *config.VmReference) []map[string]interface{} {
+func flattenVMReference(ref *config.VmReference) []map[string]interface{} {
 	if ref != nil {
 		refList := make([]map[string]interface{}, 0)
 
@@ -2067,13 +2050,14 @@ func flattenVmReference(ref *config.VmReference) []map[string]interface{} {
 
 func flattenMachineType(pr *config.MachineType) string {
 	if pr != nil {
-		if *pr == config.MachineType(2) {
+		const two, three, four = 2, 3, 4
+		if *pr == config.MachineType(two) {
 			return "PC"
 		}
-		if *pr == config.MachineType(3) {
+		if *pr == config.MachineType(three) {
 			return "PSERIES"
 		}
-		if *pr == config.MachineType(4) {
+		if *pr == config.MachineType(four) {
 			return "Q35"
 		}
 	}
@@ -2092,6 +2076,7 @@ func flattenVtpmConfig(pr *config.VtpmConfig) []map[string]interface{} {
 			vtpm["version"] = pr.Version
 		}
 		vtpmList = append(vtpmList, vtpm)
+		return vtpmList
 	}
 	return nil
 }
@@ -2105,7 +2090,7 @@ func flattenApcConfig(pr *config.ApcConfig) []map[string]interface{} {
 			cfg["is_apc_enabled"] = pr.IsApcEnabled
 		}
 		if pr.CpuModel != nil {
-			cfg["cpu_model"] = flattenCpuModelReference(pr.CpuModel)
+			cfg["cpu_model"] = flattenCPUModelReference(pr.CpuModel)
 		}
 
 		cfgList = append(cfgList, cfg)
@@ -2114,7 +2099,7 @@ func flattenApcConfig(pr *config.ApcConfig) []map[string]interface{} {
 	return nil
 }
 
-func flattenCpuModelReference(ref *config.CpuModelReference) []map[string]interface{} {
+func flattenCPUModelReference(ref *config.CpuModelReference) []map[string]interface{} {
 	if ref != nil {
 		refList := make([]map[string]interface{}, 0)
 
@@ -2178,7 +2163,7 @@ func flattenDisk(pr []config.Disk) []interface{} {
 				disk["tenant_id"] = v.TenantId
 			}
 			if v.Links != nil {
-				disk["links"] = flattenApiLink(v.Links)
+				disk["links"] = flattenAPILink(v.Links)
 			}
 			if v.ExtId != nil {
 				disk["ext_id"] = v.ExtId
@@ -2218,10 +2203,10 @@ func flattenOneOfDiskBackingInfo(pr *config.OneOfDiskBackingInfo) []map[string]i
 				vmDiskObj["disk_size_bytes"] = vmDiskVal.DiskSizeBytes
 			}
 			if vmDiskVal.StorageContainer != nil {
-				vmDiskObj["storage_container"] = flattenVmDiskContainerReference(vmDiskVal.StorageContainer)
+				vmDiskObj["storage_container"] = flattenVMDiskContainerReference(vmDiskVal.StorageContainer)
 			}
 			if vmDiskVal.StorageConfig != nil {
-				vmDiskObj["storage_config"] = flattenVmDiskStorageConfig(vmDiskVal.StorageConfig)
+				vmDiskObj["storage_config"] = flattenVMDiskStorageConfig(vmDiskVal.StorageConfig)
 			}
 			if vmDiskVal.DataSource != nil {
 				vmDiskObj["data_source"] = flattenDataSource(vmDiskVal.DataSource)
@@ -2239,23 +2224,21 @@ func flattenOneOfDiskBackingInfo(pr *config.OneOfDiskBackingInfo) []map[string]i
 			log.Printf("[DEBUG] backingInfoObj: %v", vmDiskInfo)
 			backingInfoList = append(backingInfoList, backingInfoObj)
 			return backingInfoList
-
-		} else {
-			volumeGroupObj := make(map[string]interface{})
-			volumeGroupObjList := make([]map[string]interface{}, 0)
-			volumeGroupVal := pr.GetValue().(config.ADSFVolumeGroupReference)
-
-			if volumeGroupVal.VolumeGroupExtId != nil {
-				volumeGroupObj["volume_group_ext_id"] = volumeGroupVal.VolumeGroupExtId
-			}
-
-			volumeGroupObjList = append(volumeGroupObjList, volumeGroupObj)
-
-			volumeGroupInfo["adfs_volume_group_reference"] = volumeGroupObjList
-			volumeGroupInfoList = append(volumeGroupInfoList, volumeGroupInfo)
-
-			backingInfoList = volumeGroupInfoList
 		}
+		volumeGroupObj := make(map[string]interface{})
+		volumeGroupObjList := make([]map[string]interface{}, 0)
+		volumeGroupVal := pr.GetValue().(config.ADSFVolumeGroupReference)
+
+		if volumeGroupVal.VolumeGroupExtId != nil {
+			volumeGroupObj["volume_group_ext_id"] = volumeGroupVal.VolumeGroupExtId
+		}
+
+		volumeGroupObjList = append(volumeGroupObjList, volumeGroupObj)
+
+		volumeGroupInfo["adfs_volume_group_reference"] = volumeGroupObjList
+		volumeGroupInfoList = append(volumeGroupInfoList, volumeGroupInfo)
+
+		backingInfoList = volumeGroupInfoList
 		return backingInfoList
 	}
 	return nil
@@ -2272,7 +2255,7 @@ func flattenCdRom(pr []config.CdRom) []interface{} {
 				cd["tenant_id"] = v.TenantId
 			}
 			if v.Links != nil {
-				cd["links"] = flattenApiLink(v.Links)
+				cd["links"] = flattenAPILink(v.Links)
 			}
 			if v.ExtId != nil {
 				cd["ext_id"] = v.ExtId
@@ -2281,7 +2264,7 @@ func flattenCdRom(pr []config.CdRom) []interface{} {
 				cd["disk_address"] = flattenCdRomAddress(v.DiskAddress)
 			}
 			if v.BackingInfo != nil {
-				cd["backing_info"] = flattenVmDisk(v.BackingInfo)
+				cd["backing_info"] = flattenVMDisk(v.BackingInfo)
 			}
 			if v.IsoType != nil {
 				cd["iso_type"] = flattenIsoType(v.IsoType)
@@ -2295,13 +2278,14 @@ func flattenCdRom(pr []config.CdRom) []interface{} {
 
 func flattenIsoType(pr *config.IsoType) string {
 	if pr != nil {
-		if *pr == config.IsoType(2) {
+		const two, three, four = 2, 3, 4
+		if *pr == config.IsoType(two) {
 			return "OTHER"
 		}
-		if *pr == config.IsoType(3) {
+		if *pr == config.IsoType(three) {
 			return "GUEST_TOOLS"
 		}
-		if *pr == config.IsoType(4) {
+		if *pr == config.IsoType(four) {
 			return "GUEST_CUSTOMIZATION"
 		}
 	}
@@ -2327,10 +2311,11 @@ func flattenCdRomAddress(pr *config.CdRomAddress) []map[string]interface{} {
 
 func flattenCdRomBusType(pr *config.CdRomBusType) string {
 	if pr != nil {
-		if *pr == config.CdRomBusType(2) {
+		const two, three = 2, 3
+		if *pr == config.CdRomBusType(two) {
 			return "IDE"
 		}
-		if *pr == config.CdRomBusType(3) {
+		if *pr == config.CdRomBusType(three) {
 			return "SATA"
 		}
 	}
@@ -2347,7 +2332,7 @@ func flattenNic(nic []config.Nic) []interface{} {
 				nics["tenant_id"] = v.TenantId
 			}
 			if v.Links != nil {
-				nics["links"] = flattenApiLink(v.Links)
+				nics["links"] = flattenAPILink(v.Links)
 			}
 			if v.ExtId != nil {
 				nics["ext_id"] = v.ExtId
@@ -2391,10 +2376,11 @@ func flattenEmulatedNic(pr *config.EmulatedNic) []map[string]interface{} {
 
 func flattenEmulatedNicModel(pr *config.EmulatedNicModel) string {
 	if pr != nil {
-		if *pr == config.EmulatedNicModel(2) {
+		const two, three = 2, 3
+		if *pr == config.EmulatedNicModel(two) {
 			return "VIRTIO"
 		}
-		if *pr == config.EmulatedNicModel(3) {
+		if *pr == config.EmulatedNicModel(three) {
 			return "E1000"
 		}
 	}
@@ -2442,16 +2428,17 @@ func flattenNicNetworkInfo(pr *config.NicNetworkInfo) []map[string]interface{} {
 
 func flattenNicType(pr *config.NicType) string {
 	if pr != nil {
-		if *pr == config.NicType(2) {
+		const two, three, four, five = 2, 3, 4, 5
+		if *pr == config.NicType(two) {
 			return "NORMAL_NIC"
 		}
-		if *pr == config.NicType(3) {
+		if *pr == config.NicType(three) {
 			return "DIRECT_NIC"
 		}
-		if *pr == config.NicType(4) {
+		if *pr == config.NicType(four) {
 			return "NETWORK_FUNCTION_NIC"
 		}
-		if *pr == config.NicType(5) {
+		if *pr == config.NicType(five) {
 			return "SPAN_DESTINATION_NIC"
 		}
 	}
@@ -2476,13 +2463,14 @@ func flattenNetworkFunctionChainReference(ref *config.NetworkFunctionChainRefere
 
 func flattenNetworkFunctionNicType(pr *config.NetworkFunctionNicType) string {
 	if pr != nil {
-		if *pr == config.NetworkFunctionNicType(2) {
+		const two, three, four = 2, 3, 4
+		if *pr == config.NetworkFunctionNicType(two) {
 			return "INGRESS"
 		}
-		if *pr == config.NetworkFunctionNicType(3) {
+		if *pr == config.NetworkFunctionNicType(three) {
 			return "EGRESS"
 		}
-		if *pr == config.NetworkFunctionNicType(4) {
+		if *pr == config.NetworkFunctionNicType(four) {
 			return "TAP"
 		}
 	}
@@ -2507,10 +2495,11 @@ func flattenSubnetReference(ref *config.SubnetReference) []map[string]interface{
 
 func flattenVlanMode(pr *config.VlanMode) string {
 	if pr != nil {
-		if *pr == config.VlanMode(2) {
+		const two, three = 2, 3
+		if *pr == config.VlanMode(two) {
 			return "ACCESS"
 		}
-		if *pr == config.VlanMode(3) {
+		if *pr == config.VlanMode(three) {
 			return "TRUNK"
 		}
 	}
@@ -2602,7 +2591,7 @@ func flattenGpu(pr []config.Gpu) []interface{} {
 				gpu["tenant_id"] = v.TenantId
 			}
 			if v.Links != nil {
-				gpu["links"] = flattenApiLink(v.Links)
+				gpu["links"] = flattenAPILink(v.Links)
 			}
 			if v.ExtId != nil {
 				gpu["ext_id"] = v.ExtId
@@ -2643,13 +2632,14 @@ func flattenGpu(pr []config.Gpu) []interface{} {
 
 func flattenGpuMode(pr *config.GpuMode) string {
 	if pr != nil {
-		if *pr == config.GpuMode(2) {
+		const two, three, four = 2, 3, 4
+		if *pr == config.GpuMode(two) {
 			return "PASSTHROUGH_GRAPHICS"
 		}
-		if *pr == config.GpuMode(3) {
+		if *pr == config.GpuMode(three) {
 			return "PASSTHROUGH_COMPUTE"
 		}
-		if *pr == config.GpuMode(4) {
+		if *pr == config.GpuMode(four) {
 			return "VIRTUAL"
 		}
 	}
@@ -2658,13 +2648,14 @@ func flattenGpuMode(pr *config.GpuMode) string {
 
 func flattenGpuVendor(pr *config.GpuVendor) string {
 	if pr != nil {
-		if *pr == config.GpuVendor(2) {
+		const two, three, four = 2, 3, 4
+		if *pr == config.GpuVendor(two) {
 			return "NVIDIA"
 		}
-		if *pr == config.GpuVendor(3) {
+		if *pr == config.GpuVendor(three) {
 			return "INTEL"
 		}
-		if *pr == config.GpuVendor(4) {
+		if *pr == config.GpuVendor(four) {
 			return "AMD"
 		}
 	}
@@ -2706,7 +2697,7 @@ func flattenSerialPort(pr []config.SerialPort) []interface{} {
 				port["tenant_id"] = v.TenantId
 			}
 			if v.Links != nil {
-				port["links"] = flattenApiLink(v.Links)
+				port["links"] = flattenAPILink(v.Links)
 			}
 			if v.ExtId != nil {
 				port["ext_id"] = v.ExtId
@@ -2726,13 +2717,14 @@ func flattenSerialPort(pr []config.SerialPort) []interface{} {
 
 func flattenProtectionType(pr *config.ProtectionType) string {
 	if pr != nil {
-		if *pr == config.ProtectionType(2) {
+		const two, three, four = 2, 3, 4
+		if *pr == config.ProtectionType(two) {
 			return "UNPROTECTED"
 		}
-		if *pr == config.ProtectionType(3) {
+		if *pr == config.ProtectionType(three) {
 			return "PD_PROTECTED"
 		}
-		if *pr == config.ProtectionType(4) {
+		if *pr == config.ProtectionType(four) {
 			return "RULE_PROTECTED"
 		}
 	}
@@ -2770,7 +2762,7 @@ func flattenPolicyReference(ref *config.PolicyReference) []map[string]interface{
 	return nil
 }
 
-func flattenApiLink(pr []response.ApiLink) []interface{} {
+func flattenAPILink(pr []response.ApiLink) []interface{} {
 	if len(pr) > 0 {
 		links := make([]interface{}, len(pr))
 

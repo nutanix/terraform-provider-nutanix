@@ -7,13 +7,14 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameRecoveryPointRestore = "nutanix_recovery_point_restore_v2.test"
-const resourceNameRecoveryPoint = "nutanix_recovery_points_v2.test"
-const resourceNameRevertVm = "nutanix_vm_revert_v2.test"
+const (
+	resourceNameRecoveryPointRestore = "nutanix_recovery_point_restore_v2.test"
+	resourceNameRecoveryPoint        = "nutanix_recovery_points_v2.test"
+	resourceNameRevertVM             = "nutanix_vm_revert_v2.test"
+)
 
 func TestAccNutanixRecoveryPointRestoreV2Resource_basic(t *testing.T) {
 	r := acctest.RandInt()
@@ -30,7 +31,7 @@ func TestAccNutanixRecoveryPointRestoreV2Resource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Create Recovery Point
 			{
-				Config: testRecoveryPointsResourceConfigWithVmRecoveryPoints(name, expirationTimeFormatted),
+				Config: testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPoint, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameRecoveryPoint, "name", name),
@@ -50,19 +51,18 @@ func TestAccNutanixRecoveryPointRestoreV2Resource_basic(t *testing.T) {
 			},
 			// VM Revert
 			{
-				Config: testRevertVmResourceConfig(name, expirationTimeFormatted),
+				Config: testRevertVMResourceConfig(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceNameRevertVm, "ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameRevertVm, "vm_recovery_point_ext_id"),
-					resource.TestCheckResourceAttr(resourceNameRevertVm, "status", "SUCCEEDED"),
+					resource.TestCheckResourceAttrSet(resourceNameRevertVM, "ext_id"),
+					resource.TestCheckResourceAttrSet(resourceNameRevertVM, "vm_recovery_point_ext_id"),
+					resource.TestCheckResourceAttr(resourceNameRevertVM, "status", "SUCCEEDED"),
 				),
 			},
 		},
 	})
 }
 
-func testRecoveryPointsResourceConfigWithVmRecoveryPoints(name, expirationTime string) string {
-
+func testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTime string) string {
 	return fmt.Sprintf(`
 	data "nutanix_clusters_v2" "clusters" {} 
 	locals{
@@ -109,7 +109,7 @@ func testRecoveryPointsResourceConfigWithVmRecoveryPoints(name, expirationTime s
 }
 
 func testRecoveryPointResourceConfig(name, expirationTime string) string {
-	return testRecoveryPointsResourceConfigWithVmRecoveryPoints(name, expirationTime) + `
+	return testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTime) + `
 	resource "nutanix_recovery_point_restore_v2" "test" {
 	  ext_id         = nutanix_recovery_points_v2.test.id
 	  cluster_ext_id = local.cluster1
@@ -120,7 +120,7 @@ func testRecoveryPointResourceConfig(name, expirationTime string) string {
 	}`
 }
 
-func testRevertVmResourceConfig(name, expirationTime string) string {
+func testRevertVMResourceConfig(name, expirationTime string) string {
 	return testRecoveryPointResourceConfig(name, expirationTime) + `
 		resource "nutanix_vm_revert_v2" "test" {
 		  ext_id                   = nutanix_virtual_machine_v2.test.id

@@ -2,12 +2,12 @@ package volumesv2_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -19,7 +19,6 @@ func TestAccNutanixVolumeGroupsDisksV2DataSource_Basic(t *testing.T) {
 	desc := "terraform test volume group disk description"
 
 	resource.Test(t, resource.TestCase{
-
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
@@ -63,7 +62,7 @@ func TestAccNutanixVolumeGroupsDisksV2DataSource_WithLimit(t *testing.T) {
 }
 
 func testAccVolumeGroupsDisksDataSourceConfig(filepath, name, desc string) string {
-	return testAccVolumeGroupResourceConfig(filepath, name, desc) + testAccVolumeGroupDiskResourceConfig(filepath, name, desc) +
+	return testAccVolumeGroupResourceConfig(name, desc) + testAccVolumeGroupDiskResourceConfig(name, desc) +
 		fmt.Sprintf(`
 
 
@@ -99,7 +98,7 @@ func testAccVolumeGroupsDisksDataSourceConfig(filepath, name, desc string) strin
 }
 
 func testAccVolumeGroupsDisksDataSourceWithLimit(filepath, name, desc string, limit int) string {
-	return testAccVolumeGroupResourceConfig(filepath, name, desc) + testAccVolumeGroupDiskResourceConfig(filepath, name, desc) +
+	return testAccVolumeGroupResourceConfig(name, desc) + testAccVolumeGroupDiskResourceConfig(name, desc) +
 		fmt.Sprintf(`	
 
 	  	resource "nutanix_volume_group_disk_v2" "test-2" {

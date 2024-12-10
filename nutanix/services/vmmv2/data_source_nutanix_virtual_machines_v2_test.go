@@ -4,11 +4,10 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNameVm = "data.nutanix_virtual_machines_v2.test"
+const datasourceNameVM = "data.nutanix_virtual_machines_v2.test"
 
 func TestAccNutanixVmsV2DataSource_List(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -18,7 +17,7 @@ func TestAccNutanixVmsV2DataSource_List(t *testing.T) {
 			{
 				Config: testAccVMDataSourceConfigV4Vms(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceNameVm, "vms.#"),
+					resource.TestCheckResourceAttrSet(datasourceNameVM, "vms.#"),
 				),
 			},
 		},
@@ -33,8 +32,8 @@ func TestAccNutanixVmsV2DataSource_ListWithFilters(t *testing.T) {
 			{
 				Config: testAccVMDataSourceConfigV4VmsWithFilters(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceNameVm, "vms.#"),
-					resource.TestCheckResourceAttr(datasourceNameVm, "limit", "2"),
+					resource.TestCheckResourceAttrSet(datasourceNameVM, "vms.#"),
+					resource.TestCheckResourceAttr(datasourceNameVM, "limit", "2"),
 				),
 			},
 		},
@@ -49,10 +48,10 @@ func TestAccNutanixVmsV2DataSource_ListWithFilterName(t *testing.T) {
 			{
 				Config: testAccVMDataSourceConfigV4VmsWithFilterName(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceNameVm, "vms.#"),
-					resource.TestCheckResourceAttr(datasourceNameVm, "vms.0.name", "tf-test-vm-filter"),
-					resource.TestCheckResourceAttr(datasourceNameVm, "vms.0.num_cores_per_socket", "1"),
-					resource.TestCheckResourceAttr(datasourceNameVm, "vms.0.num_sockets", "1"),
+					resource.TestCheckResourceAttrSet(datasourceNameVM, "vms.#"),
+					resource.TestCheckResourceAttr(datasourceNameVM, "vms.0.name", "tf-test-vm-filter"),
+					resource.TestCheckResourceAttr(datasourceNameVM, "vms.0.num_cores_per_socket", "1"),
+					resource.TestCheckResourceAttr(datasourceNameVM, "vms.0.num_sockets", "1"),
 				),
 			},
 		},

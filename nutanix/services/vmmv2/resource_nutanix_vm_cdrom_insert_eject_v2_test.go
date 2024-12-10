@@ -9,7 +9,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameVmCdromInsertEject = "nutanix_vm_cdrom_insert_eject_v2.test"
+const resourceNameVMCdromInsertEject = "nutanix_vm_cdrom_insert_eject_v2.test"
 
 func TestAccNutanixVmsCdromInsertEjectV2Resource_Basic(t *testing.T) {
 	r := acctest.RandInt()
@@ -22,7 +22,7 @@ func TestAccNutanixVmsCdromInsertEjectV2Resource_Basic(t *testing.T) {
 			{
 				Config: testVmsCdromInsertEjectV2Config(name, desc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceNameVmCdromInsertEject, "backing_info.#"),
+					resource.TestCheckResourceAttrSet(resourceNameVMCdromInsertEject, "backing_info.#"),
 				),
 			},
 		},

@@ -6,7 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
 	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
 )
 
@@ -183,7 +182,6 @@ func dataSourceNutanixEraClusterRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	resp, err := conn.Service.GetCluster(ctx, clusterID.(string), clusterName.(string))
-
 	if err != nil {
 		return diag.FromErr(err)
 	}

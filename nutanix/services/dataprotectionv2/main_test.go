@@ -9,7 +9,7 @@ import (
 
 type TestConfig struct {
 	DataProtection struct {
-		VmExtID      []string `json:"vm_ext_id"`
+		VMExtID      []string `json:"vm_ext_id"`
 		PcExtID      string   `json:"pc_ext_id"`
 		ClusterExtID string   `json:"cluster_ext_id"`
 	} `json:"data_protection"`
@@ -31,6 +31,7 @@ func loadVars(filepath string, varStuct interface{}) {
 		os.Exit(1)
 	}
 }
+
 func TestMain(m *testing.M) {
 	log.Println("Do some crazy stuff before tests!")
 	loadVars("../../../test_config_v2.json", &testVars)

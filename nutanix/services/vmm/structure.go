@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/spf13/cast"
-
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -122,7 +121,8 @@ func usesGuestCustomization(d *schema.ResourceData) bool {
 		"guest_customization_cloud_init_custom_key_values",
 		"guest_customization_is_overridable",
 		"guest_customization_sysprep",
-		"guest_customization_sysprep_custom_key_values"}
+		"guest_customization_sysprep_custom_key_values",
+	}
 	for _, k := range keys {
 		if _, ok := d.GetOk(k); ok {
 			return true
@@ -138,7 +138,8 @@ func usesGuestCustomizationDiff(d *schema.ResourceDiff) bool {
 		"guest_customization_cloud_init_custom_key_values",
 		"guest_customization_is_overridable",
 		"guest_customization_sysprep",
-		"guest_customization_sysprep_custom_key_values"}
+		"guest_customization_sysprep_custom_key_values",
+	}
 	for _, k := range keys {
 		if _, ok := d.GetOk(k); ok {
 			return true
@@ -191,8 +192,9 @@ func flattenDiskListFilterCloudInitHelper(
 	cloudInitCdromUUID string,
 	usesGuestCustomization bool,
 	expandedDisks, disks []*v3.VMDisk,
-	removeCloudInit bool) (*CloudInitHelper, []map[string]interface{}, error) {
-	//todo check if guestcust is passed -> if it is not passed, just continue without searching for cloud-init uuid
+	removeCloudInit bool,
+) (*CloudInitHelper, []map[string]interface{}, error) {
+	// todo check if guestcust is passed -> if it is not passed, just continue without searching for cloud-init uuid
 	// reason: no device_index or disk id will result in crash
 	cloudInitHelper := &CloudInitHelper{}
 	filteredDiskList := disks
@@ -258,6 +260,7 @@ func flattenDiskListFilterCloudInitHelper(
 func flattenDiskList(disks []*v3.VMDisk) []map[string]interface{} {
 	return flattenDiskListHelper(disks, "", true)
 }
+
 func flattenDiskListHelper(disks []*v3.VMDisk, cloudInitCdromUUID string, removeCloudInit bool) []map[string]interface{} {
 	diskList := make([]map[string]interface{}, 0)
 	for _, v := range disks {

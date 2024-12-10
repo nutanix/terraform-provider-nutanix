@@ -27,7 +27,6 @@ func TestResourceNutanixCategoriesteUpgradeV0(t *testing.T) {
 				},
 			},
 			Expected: map[string]interface{}{
-
 				"categories": []interface{}{
 					map[string]interface{}{"name": "os_type", "value": "ubuntu"},
 					map[string]interface{}{"name": "os_version", "value": "18.04"},
@@ -53,36 +52,56 @@ func TestResourceNutanixCategoriesteUpgradeV0(t *testing.T) {
 			},
 			Expected: map[string]interface{}{
 				"categories": []interface{}{
-					map[string]interface{}{"name": "os_type",
-						"value": "ubuntu"},
-					map[string]interface{}{"name": "os_version",
-						"value": "18.04"},
-					map[string]interface{}{"name": "test",
-						"value": "test-value"},
-					map[string]interface{}{"name": "tier",
-						"value": "application"},
+					map[string]interface{}{
+						"name":  "os_type",
+						"value": "ubuntu",
+					},
+					map[string]interface{}{
+						"name":  "os_version",
+						"value": "18.04",
+					},
+					map[string]interface{}{
+						"name":  "test",
+						"value": "test-value",
+					},
+					map[string]interface{}{
+						"name":  "tier",
+						"value": "application",
+					},
 				},
 			},
 		},
 		"v0_already_migrated": {
 			Attributes: map[string]interface{}{
 				"categories": []interface{}{
-					map[string]interface{}{"name": "os_type",
-						"value": "ubuntu"},
-					map[string]interface{}{"name": "os_version",
-						"value": "18.04"},
-					map[string]interface{}{"name": "tier",
-						"value": "application"},
+					map[string]interface{}{
+						"name":  "os_type",
+						"value": "ubuntu",
+					},
+					map[string]interface{}{
+						"name":  "os_version",
+						"value": "18.04",
+					},
+					map[string]interface{}{
+						"name":  "tier",
+						"value": "application",
+					},
 				},
 			},
 			Expected: map[string]interface{}{
 				"categories": []interface{}{
-					map[string]interface{}{"name": "os_type",
-						"value": "ubuntu"},
-					map[string]interface{}{"name": "os_version",
-						"value": "18.04"},
-					map[string]interface{}{"name": "tier",
-						"value": "application"},
+					map[string]interface{}{
+						"name":  "os_type",
+						"value": "ubuntu",
+					},
+					map[string]interface{}{
+						"name":  "os_version",
+						"value": "18.04",
+					},
+					map[string]interface{}{
+						"name":  "tier",
+						"value": "application",
+					},
 				},
 			},
 		},
@@ -97,14 +116,22 @@ func TestResourceNutanixCategoriesteUpgradeV0(t *testing.T) {
 			},
 			Expected: map[string]interface{}{
 				"categories": []interface{}{
-					map[string]interface{}{"name": "os_type",
-						"value": ""},
-					map[string]interface{}{"name": "os_version",
-						"value": ""},
-					map[string]interface{}{"name": "test",
-						"value": ""},
-					map[string]interface{}{"name": "tier",
-						"value": ""},
+					map[string]interface{}{
+						"name":  "os_type",
+						"value": "",
+					},
+					map[string]interface{}{
+						"name":  "os_version",
+						"value": "",
+					},
+					map[string]interface{}{
+						"name":  "test",
+						"value": "",
+					},
+					map[string]interface{}{
+						"name":  "tier",
+						"value": "",
+					},
 				},
 			},
 		},
@@ -112,7 +139,6 @@ func TestResourceNutanixCategoriesteUpgradeV0(t *testing.T) {
 
 	for tn, tc := range cases {
 		is, err := resourceNutanixCategoriesMigrateState(tc.Attributes, tc.Meta)
-
 		if err != nil {
 			t.Fatalf("bad: %s, err: %#v", tn, err)
 		}

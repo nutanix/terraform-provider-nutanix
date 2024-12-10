@@ -13,7 +13,7 @@ type TestConfig struct {
 		PEPassword string `json:"pe_password"`
 		CvmIP      string `json:"cvm_ip"`
 		Nodes      []struct {
-			CvmIp    string `json:"cvm_ip"`
+			CvmIP    string `json:"cvm_ip"`
 			Username string `json:"username"`
 			Password string `json:"password"`
 		} `json:"nodes"`
@@ -55,9 +55,11 @@ type TestConfig struct {
 	} `json:"clusters"`
 }
 
-var testVars TestConfig
-var path, _ = os.Getwd()
-var filepath = path + "/../../../test_config_v2.json"
+var (
+	testVars TestConfig
+	path, _  = os.Getwd()
+	filepath = path + "/../../../test_config_v2.json"
+)
 
 func loadVars(filepath string, varStuct interface{}) {
 	// Read config.json from home current path
@@ -73,6 +75,7 @@ func loadVars(filepath string, varStuct interface{}) {
 		os.Exit(1)
 	}
 }
+
 func TestMain(m *testing.M) {
 	log.Println("Do some crazy stuff before tests!")
 	loadVars(filepath, &testVars)

@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	vmmAhvConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -72,8 +71,8 @@ func DatasourceNutanixNGTConfigurationV4() *schema.Resource {
 func DatasourceNutanixNGTConfigurationV4Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	extId := d.Get("ext_id")
-	resp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extId.(string)))
+	extID := d.Get("ext_id")
+	resp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID.(string)))
 	log.Printf("[DEBUG] GetGuestToolsById : %v", resp)
 	if err != nil {
 		return diag.Errorf("error while fetching Gest Tool : %v", err)
@@ -113,7 +112,6 @@ func DatasourceNutanixNGTConfigurationV4Read(ctx context.Context, d *schema.Reso
 
 	d.SetId(resource.UniqueId())
 	return nil
-
 }
 
 func flattenCapabilities(capabilities []vmmAhvConfig.NgtCapability) []string {

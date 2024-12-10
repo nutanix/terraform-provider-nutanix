@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4/models/iam/v4/authn"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -59,8 +58,10 @@ func ResourceNutanixSamlIdpV2() *schema.Resource {
 						"name_id_policy_format": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{"emailAddress", "encrypted", "unspecified", "transient",
-								"WindowsDomainQualifiedName", "X509SubjectName", "kerberos", "persistent", "entity"}, false),
+							ValidateFunc: validation.StringInSlice([]string{
+								"emailAddress", "encrypted", "unspecified", "transient",
+								"WindowsDomainQualifiedName", "X509SubjectName", "kerberos", "persistent", "entity",
+							}, false),
 						},
 					},
 				},
@@ -133,8 +134,8 @@ func ResourceNutanixSamlIdpV2Create(ctx context.Context, d *schema.ResourceData,
 		log.Printf("idp metadata: %v", idpMetadata)
 		input.IdpMetadata = expandIdpMetadata(idpMetadata)
 	}
-	if idpMetaXml, ok := d.GetOk("idp_metadata_xml"); ok {
-		input.IdpMetadataXml = utils.StringPtr(idpMetaXml.(string))
+	if idpMetaXML, ok := d.GetOk("idp_metadata_xml"); ok {
+		input.IdpMetadataXml = utils.StringPtr(idpMetaXML.(string))
 	}
 	if name, ok := d.GetOk("name"); ok {
 		input.Name = utils.StringPtr(name.(string))
@@ -167,7 +168,6 @@ func ResourceNutanixSamlIdpV2Create(ctx context.Context, d *schema.ResourceData,
 	}
 
 	resp, err := conn.SamlIdentityAPIInstance.CreateSamlIdentityProvider(input)
-
 	if err != nil {
 		return diag.Errorf("error while creating saml identity providers: %v", err)
 	}
@@ -194,7 +194,7 @@ func ResourceNutanixSamlIdpV2Read(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("idp_metadata_url", getResp.IdpMetadataUrl); err != nil {
 		return diag.FromErr(err)
 	}
-	//if err := d.Set("idp_metadata_xml", getResp.IdpMetadataXml); err != nil {
+	// if err := d.Set("idp_metadata_xml", getResp.IdpMetadataXml); err != nil {
 	//	return diag.FromErr(err)
 	//}
 	if err := d.Set("idp_metadata", flattenIdpMetadata(getResp.IdpMetadata)); err != nil {
@@ -339,36 +339,36 @@ func expandIdpMetadata(pr interface{}) *import1.IdpMetadata {
 		if entityID, ok := val["entity_id"]; ok {
 			idp.EntityId = utils.StringPtr(entityID.(string))
 		}
-		if loginUrl, ok := val["login_url"]; ok {
-			idp.LoginUrl = utils.StringPtr(loginUrl.(string))
+		if loginURL, ok := val["login_url"]; ok {
+			idp.LoginUrl = utils.StringPtr(loginURL.(string))
 		}
-		if logoutUrl, ok := val["logout_url"]; ok {
-			idp.LogoutUrl = utils.StringPtr(logoutUrl.(string))
+		if logoutURL, ok := val["logout_url"]; ok {
+			idp.LogoutUrl = utils.StringPtr(logoutURL.(string))
 		}
-		if errorUrl, ok := val["error_url"]; ok {
-			log.Printf("error url: %v", errorUrl)
-			if errorUrl != "" {
+		if errorURL, ok := val["error_url"]; ok {
+			log.Printf("error url: %v", errorURL)
+			if errorURL != "" {
 				log.Printf("idp error url: %v", idp.ErrorUrl)
-				idp.ErrorUrl = utils.StringPtr(errorUrl.(string))
+				idp.ErrorUrl = utils.StringPtr(errorURL.(string))
 			} else {
 				idp.ErrorUrl = nil
 			}
-
 		}
 		if certi, ok := val["certificate"]; ok {
 			idp.Certificate = utils.StringPtr(certi.(string))
 		}
 		if policyFormat, ok := val["name_id_policy_format"]; ok {
+			const two, three, four, five, six, seven, eight, nine, ten = 2, 3, 4, 5, 6, 7, 8, 9, 10
 			subMap := map[string]interface{}{
-				"emailAddress":               2,
-				"unspecified":                3,
-				"X509SubjectName":            4,
-				"WindowsDomainQualifiedName": 5,
-				"encrypted":                  6,
-				"entity":                     7,
-				"kerberos":                   8,
-				"persistent":                 9,
-				"transient":                  10,
+				"emailAddress":               two,
+				"unspecified":                three,
+				"X509SubjectName":            four,
+				"WindowsDomainQualifiedName": five,
+				"encrypted":                  six,
+				"entity":                     seven,
+				"kerberos":                   eight,
+				"persistent":                 nine,
+				"transient":                  ten,
 			}
 			pInt := subMap[policyFormat.(string)]
 			p := import1.NameIdPolicyFormat(pInt.(int))

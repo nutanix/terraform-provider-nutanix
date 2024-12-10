@@ -12,7 +12,6 @@ import (
 	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/dataprotection/v4/config"
 	dataprtotectionPrismConfig "github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -99,14 +98,13 @@ func ResourceNutanixRecoveryPointRestoreV2Create(ctx context.Context, d *schema.
 		body.ClusterExtId = utils.StringPtr(clusterExtID.(string))
 	}
 	if vmRecoveryPointRestoreOverrides, ok := d.GetOk("vm_recovery_point_restore_overrides"); ok {
-		body.VmRecoveryPointRestoreOverrides = expandVmRecoveryPointRestoreOverrides(vmRecoveryPointRestoreOverrides)
+		body.VmRecoveryPointRestoreOverrides = expandVMRecoveryPointRestoreOverrides(vmRecoveryPointRestoreOverrides)
 	}
 	if volumeGroupRecoveryPointRestoreOverrides, ok := d.GetOk("volume_group_recovery_point_restore_overrides"); ok {
 		body.VolumeGroupRecoveryPointRestoreOverrides = expandVolumeGroupRecoveryPointRestoreOverrides(volumeGroupRecoveryPointRestoreOverrides)
 	}
 
 	resp, err := conn.RecoveryPoint.RestoreRecoveryPoint(utils.StringPtr(rpExtID), &body)
-
 	if err != nil {
 		return diag.Errorf("error while replicating recovery point: %v", err)
 	}
@@ -165,7 +163,7 @@ func ResourceNutanixRecoveryPointRestoreV2Create(ctx context.Context, d *schema.
 }
 
 func expandVolumeGroupRecoveryPointRestoreOverrides(vgRecoveryPoints interface{}) []config.VolumeGroupRecoveryPointRestoreOverride {
-	var volumeGroupRecoveryPointRestoreOverrides []config.VolumeGroupRecoveryPointRestoreOverride
+	volumeGroupRecoveryPointRestoreOverrides := make([]config.VolumeGroupRecoveryPointRestoreOverride, 0)
 	for _, vgRecoveryPoint := range vgRecoveryPoints.([]interface{}) {
 		vgRecoveryPoint := vgRecoveryPoint.(map[string]interface{})
 		volumeGroupRecoveryPointRestoreOverride := config.VolumeGroupRecoveryPointRestoreOverride{
@@ -187,8 +185,8 @@ func expandVolumeGroupOverrideSpec(volumeGroupSpec []interface{}) *config.Volume
 	return &volumeGroupOverrideSpec
 }
 
-func expandVmRecoveryPointRestoreOverrides(vmRecoveryPoints interface{}) []config.VmRecoveryPointRestoreOverride {
-	var vmRecoveryPointRestoreOverrides []config.VmRecoveryPointRestoreOverride
+func expandVMRecoveryPointRestoreOverrides(vmRecoveryPoints interface{}) []config.VmRecoveryPointRestoreOverride {
+	vmRecoveryPointRestoreOverrides := make([]config.VmRecoveryPointRestoreOverride, 0)
 	for _, vmRecoveryPoint := range vmRecoveryPoints.([]interface{}) {
 		vmRecoveryPoint := vmRecoveryPoint.(map[string]interface{})
 		vmRecoveryPointRestoreOverride := config.VmRecoveryPointRestoreOverride{

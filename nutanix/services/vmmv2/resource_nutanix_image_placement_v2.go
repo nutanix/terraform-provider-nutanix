@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/vmm"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -13,8 +11,8 @@ import (
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	import7 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/images/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/vmm"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -130,9 +128,10 @@ func ResourceNutanixImagePlacementV2Create(ctx context.Context, d *schema.Resour
 		body.Description = utils.StringPtr(desc.(string))
 	}
 	if placementType, ok := d.GetOk("placement_type"); ok {
+		const two, three = 2, 3
 		subMap := map[string]interface{}{
-			"SOFT": 2,
-			"HARD": 3,
+			"SOFT": two,
+			"HARD": three,
 		}
 		pVal := subMap[placementType.(string)]
 		p := import7.PlacementType(pVal.(int))
@@ -145,9 +144,10 @@ func ResourceNutanixImagePlacementV2Create(ctx context.Context, d *schema.Resour
 		body.ClusterEntityFilter = expandEntityFilter(clusterEntityFilter)
 	}
 	if enforcementState, ok := d.GetOk("enforcement_state"); ok {
+		const two, three = 2, 3
 		subMap := map[string]interface{}{
-			"ACTIVE":    2,
-			"SUSPENDED": 3,
+			"ACTIVE":    two,
+			"SUSPENDED": three,
 		}
 		pVal := subMap[enforcementState.(string)]
 		p := import7.EnforcementState(pVal.(int))
@@ -202,15 +202,7 @@ func ResourceNutanixImagePlacementV2Read(ctx context.Context, d *schema.Resource
 
 	resp, err := conn.ImagesPlacementAPIInstance.GetPlacementPolicyById(utils.StringPtr(d.Id()))
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching image placement policy : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching image placement policy : %v", err)
 	}
 
 	getResp := resp.Data.GetValue().(import7.PlacementPolicy)
@@ -276,9 +268,10 @@ func ResourceNutanixImagePlacementV2Update(ctx context.Context, d *schema.Resour
 		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
 	}
 	if d.HasChange("placement_type") {
+		const two, three = 2, 3
 		subMap := map[string]interface{}{
-			"SOFT": 2,
-			"HARD": 3,
+			"SOFT": two,
+			"HARD": three,
 		}
 		pVal := subMap[d.Get("placement_type").(string)]
 		p := import7.PlacementType(pVal.(int))
@@ -294,9 +287,10 @@ func ResourceNutanixImagePlacementV2Update(ctx context.Context, d *schema.Resour
 		changed = true
 	}
 	if d.HasChange("enforcement_state") {
+		const two, three = 2, 3
 		subMap := map[string]interface{}{
-			"ACTIVE":    2,
-			"SUSPENDED": 3,
+			"ACTIVE":    two,
+			"SUSPENDED": three,
 		}
 		pVal := subMap[d.Get("enforcement_state").(string)]
 		p := import7.EnforcementState(pVal.(int))
@@ -472,30 +466,31 @@ func expandEntityFilter(pr interface{}) *import7.Filter {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})
 
-		entity_filter := &import7.Filter{}
+		entityFilter := &import7.Filter{}
 
 		// entity_filter.ObjectType_ = utils.StringPtr("vmm.v4.r0.b1.images.config.Filter")
 
 		if ftype, ok := val["type"]; ok {
+			const two, three = 2, 3
 			subMap := map[string]interface{}{
-				"CATEGORIES_MATCH_ALL": 2,
-				"CATEGORIES_MATCH_ANY": 3,
+				"CATEGORIES_MATCH_ALL": two,
+				"CATEGORIES_MATCH_ANY": three,
 			}
 			pVal := subMap[ftype.(string)]
 			p := import7.FilterMatchType(pVal.(int))
-			entity_filter.Type = &p
+			entityFilter.Type = &p
 		}
-		if category_ext_ids, ok := val["category_ext_ids"]; ok {
-			categoriesList := category_ext_ids.([]interface{})
+		if categoryExtIds, ok := val["category_ext_ids"]; ok {
+			categoriesList := categoryExtIds.([]interface{})
 			categories := make([]string, len(categoriesList))
 
 			for k, v := range categoriesList {
 				categories[k] = v.(string)
 			}
-			entity_filter.CategoryExtIds = categories
+			entityFilter.CategoryExtIds = categories
 		}
 
-		return entity_filter
+		return entityFilter
 	}
 	return nil
 }

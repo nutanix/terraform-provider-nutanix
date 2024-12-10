@@ -2,12 +2,12 @@ package volumesv2_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -24,7 +24,7 @@ func TestAccNutanixVolumeGroupV2Resource_Basic(t *testing.T) {
 		// CheckDestroy: testAccCheckNutanixVolumeGroupV4Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVolumeGroupResourceConfig(filepath, name, desc),
+				Config: testAccVolumeGroupResourceConfig(name, desc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVolumeGroup, "name", name),
 					resource.TestCheckResourceAttr(resourceNameVolumeGroup, "description", desc),

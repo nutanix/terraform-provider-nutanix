@@ -10,13 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-
 	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
-	clsMan "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	clustermgmtConfig "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -215,24 +212,24 @@ func unconfiguredNodeSchemaV2() *schema.Resource {
 }
 
 func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.Client).ClusterAPI
 
 	body := &config.NodeDiscoveryParams{}
 
 	// initialize query params
-	var extId *string
+	var extID *string
 
-	if extIdf, ok := d.GetOk("ext_id"); ok {
-		extId = utils.StringPtr(extIdf.(string))
+	if extIDf, ok := d.GetOk("ext_id"); ok {
+		extID = utils.StringPtr(extIDf.(string))
 	}
 	if addressType, ok := d.GetOk("address_type"); ok {
 		if addressType == nil || addressType == "" {
 			body.AddressType = nil
 		} else {
+			const two, three = 2, 3
 			subMap := map[string]interface{}{
-				"IPV4": 2,
-				"IPV6": 3,
+				"IPV4": two,
+				"IPV6": three,
 			}
 			pVal := subMap[addressType.(string)]
 			p := config.AddressType(pVal.(int))
@@ -240,7 +237,7 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 		}
 	}
 	if ipFilterList, ok := d.GetOk("ip_filter_list"); ok {
-		body.IpFilterList = expandIpFilterList(ipFilterList)
+		body.IpFilterList = expandIPFilterList(ipFilterList)
 	}
 	if uuidFilterList, ok := d.GetOk("uuid_filter_list"); ok {
 		filteredUUIDList := uuidFilterList.([]interface{})
@@ -260,7 +257,6 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 			interfaceFilterListStr[i] = v.(string)
 		}
 		body.InterfaceFilterList = interfaceFilterListStr
-
 	}
 	if isManualDiscovery, ok := d.GetOk("is_manual_discovery"); ok {
 		body.IsManualDiscovery = utils.BoolPtr(isManualDiscovery.(bool))
@@ -269,7 +265,7 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 	aJSON, _ := json.MarshalIndent(body, "", " ")
 	log.Printf("[DEBUG] Discover Unconfigured Nodes body : %s", string(aJSON))
 
-	resp, err := conn.ClusterEntityAPI.DiscoverUnconfiguredNodes(extId, body)
+	resp, err := conn.ClusterEntityAPI.DiscoverUnconfiguredNodes(extID, body)
 	if err != nil {
 		return diag.Errorf("error while Discover Unconfigured Nodes : %v", err)
 	}
@@ -303,20 +299,20 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 
 	uuid := strings.Split(utils.StringValue(rUUID.ExtId), "=:")[1]
 
-	const UNCONFIGURED_NODES = 2
-	taskResponseType := clsMan.TaskResponseType(UNCONFIGURED_NODES)
+	const unconfiguredNodes = 2
+	taskResponseType := config.TaskResponseType(unconfiguredNodes)
 	unconfiguredNodesResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
 	if taskErr != nil {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr)
 	}
 
-	taskResp := unconfiguredNodesResp.Data.GetValue().(clsMan.TaskResponse)
+	taskResp := unconfiguredNodesResp.Data.GetValue().(config.TaskResponse)
 
-	if *taskResp.TaskResponseType != clsMan.TaskResponseType(UNCONFIGURED_NODES) {
+	if *taskResp.TaskResponseType != config.TaskResponseType(unconfiguredNodes) {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", "task response type mismatch")
 	}
 
-	unconfiguredNodeDetails := taskResp.Response.GetValue().(clsMan.UnconfigureNodeDetails)
+	unconfiguredNodeDetails := taskResp.Response.GetValue().(config.UnconfigureNodeDetails)
 
 	if err := d.Set("unconfigured_nodes", flattenUnconfiguredNodes(unconfiguredNodeDetails.NodeList)); err != nil {
 		return diag.FromErr(err)
@@ -343,7 +339,7 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Delete(ctx context.Conte
 	return nil
 }
 
-func flattenUnconfiguredNodes(nodeListItems []clsMan.UnconfiguredNodeListItem) []interface{} {
+func flattenUnconfiguredNodes(nodeListItems []config.UnconfiguredNodeListItem) []interface{} {
 	if len(nodeListItems) > 0 {
 		nodeList := make([]interface{}, len(nodeListItems))
 
@@ -380,12 +376,12 @@ func flattenUnconfiguredNodes(nodeListItems []clsMan.UnconfiguredNodeListItem) [
 				node["hypervisor_ip"] = flattenIPAddress(v.HypervisorIp)
 			}
 			if v.HypervisorType != nil {
-				hypervisorTypeList := []clsMan.HypervisorType{*v.HypervisorType}
+				hypervisorTypeList := []config.HypervisorType{*v.HypervisorType}
 				aJSON, _ := json.MarshalIndent(hypervisorTypeList, "", " ")
 				log.Printf("[DEBUG] Hypervisor Type : %v", string(aJSON))
 				aJSON, _ = json.MarshalIndent(v.HypervisorType, "", " ")
 				log.Printf("[DEBUG] Hypervisor Type : %v", string(aJSON))
-				node["hypervisor_type"] = flattenHypervisorType([]clsMan.HypervisorType{*v.HypervisorType})[0]
+				node["hypervisor_type"] = flattenHypervisorType([]config.HypervisorType{*v.HypervisorType})[0]
 			}
 			if v.HypervisorVersion != nil {
 				node["hypervisor_version"] = *v.HypervisorVersion
@@ -425,7 +421,7 @@ func flattenUnconfiguredNodes(nodeListItems []clsMan.UnconfiguredNodeListItem) [
 	return nil
 }
 
-func flattenAttributes(attributes *clsMan.UnconfiguredNodeAttributeMap) []interface{} {
+func flattenAttributes(attributes *config.UnconfiguredNodeAttributeMap) []interface{} {
 	if attributes != nil {
 		attributeMap := make([]interface{}, 1)
 		attribute := make(map[string]interface{})
@@ -452,9 +448,8 @@ func flattenAttributes(attributes *clsMan.UnconfiguredNodeAttributeMap) []interf
 	return nil
 }
 
-func expandIpFilterList(pr interface{}) []clustermgmtConfig.IPAddress {
+func expandIPFilterList(pr interface{}) []clustermgmtConfig.IPAddress {
 	if len(pr.([]interface{})) > 0 {
-
 		ipFilterList := make([]clustermgmtConfig.IPAddress, len(pr.([]interface{})))
 
 		for i, v := range pr.([]interface{}) {

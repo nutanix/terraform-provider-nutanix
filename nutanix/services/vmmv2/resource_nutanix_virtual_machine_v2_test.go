@@ -8,14 +8,15 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
 const resourceNameVms = "nutanix_virtual_machine_v2.test"
 
-var path, _ = os.Getwd()
-var filepath = path + "/../../../test_config_v2.json"
+var (
+	path, _  = os.Getwd()
+	filepath = path + "/../../../test_config_v2.json"
+)
 
 func TestAccNutanixVmsV2Resource_Basic(t *testing.T) {
 	r := acctest.RandInt()

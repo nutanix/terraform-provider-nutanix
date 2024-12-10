@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -62,12 +61,13 @@ func TestAccNutanixStorageContainersV2Resource_WithNoClusterExtId(t *testing.T) 
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testStorageContainersResourceWithoutClusterExtIdConfig(filepath),
+				Config:      testStorageContainersResourceWithoutClusterExtIDConfig(filepath),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 		},
 	})
 }
+
 func TestAccNutanixStorageContainersV2Resource_WithNoName(t *testing.T) {
 	path, _ := os.Getwd()
 	filepath := path + "/../../../test_config_v2.json"
@@ -193,7 +193,7 @@ func testStorageContainersResourceWithoutNameConfig(filepath string) string {
 		}`, filepath)
 }
 
-func testStorageContainersResourceWithoutClusterExtIdConfig(filepath string) string {
+func testStorageContainersResourceWithoutClusterExtIDConfig(filepath string) string {
 	return fmt.Sprintf(`
 
 		data "nutanix_clusters_v2" "clusters" {}

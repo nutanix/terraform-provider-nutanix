@@ -637,7 +637,6 @@ func resourceNutanixFCImageClusterRead(ctx context.Context, d *schema.ResourceDa
 func foundationCentralClusterRefresh(ctx context.Context, conn *fc.Client, imageUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		v, err := conn.Service.GetImagedCluster(ctx, imageUUID)
-
 		if err != nil {
 			return nil, "FAILED", err
 		}

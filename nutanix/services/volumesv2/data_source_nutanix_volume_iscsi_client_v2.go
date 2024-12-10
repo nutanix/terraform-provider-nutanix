@@ -2,13 +2,11 @@ package volumesv2
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -59,8 +57,8 @@ func DatasourceNutanixVolumeIscsiClientV2() *schema.Resource {
 				Optional:    true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ipv4": SchemaForIpV4ValuePrefixLength(),
-						"ipv6": SchemaForIpV6ValuePrefixLength(),
+						"ipv4": SchemaForIPV4ValuePrefixLength(),
+						"ipv6": SchemaForIPV6ValuePrefixLength(),
 						"fqdn": {
 							Description: "A fully qualified domain name that specifies its exact location in the tree hierarchy of the Domain Name System.",
 							Type:        schema.TypeList,
@@ -120,21 +118,12 @@ func DatasourceNutanixVolumeIscsiClientV2() *schema.Resource {
 func DatasourceNutanixVolumeIscsiClientV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VolumeAPI
 
-	extId := d.Get("ext_id")
+	extID := d.Get("ext_id")
 
 	// get the volume group iscsi clients
-	resp, err := conn.IscsiClientAPIInstance.GetIscsiClientById(utils.StringPtr(extId.(string)))
-
+	resp, err := conn.IscsiClientAPIInstance.GetIscsiClientById(utils.StringPtr(extID.(string)))
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching Iscsi Client : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching Iscsi Client : %v", err)
 	}
 
 	getResp := resp.Data.GetValue().(volumesClient.IscsiClient)
@@ -148,7 +137,7 @@ func DatasourceNutanixVolumeIscsiClientV2Read(ctx context.Context, d *schema.Res
 	if err := d.Set("iscsi_initiator_name", getResp.IscsiInitiatorName); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("iscsi_initiator_network_id", flattenIscsiInitiatorNetworkId(getResp.IscsiInitiatorNetworkId)); err != nil {
+	if err := d.Set("iscsi_initiator_network_id", flattenIscsiInitiatorNetworkID(getResp.IscsiInitiatorNetworkId)); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("enabled_authentications", getResp.EnabledAuthentications); err != nil {
@@ -166,5 +155,4 @@ func DatasourceNutanixVolumeIscsiClientV2Read(ctx context.Context, d *schema.Res
 
 	d.SetId(resource.UniqueId())
 	return nil
-
 }

@@ -9,14 +9,12 @@ import (
 	"strings"
 	"time"
 
-	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 var (
@@ -683,7 +681,6 @@ func resourceNutanixNetworkSecurityRuleCreate(ctx context.Context, d *schema.Res
 
 	// Make request to API
 	resp, err := conn.V3.CreateNetworkSecurityRule(request)
-
 	if err != nil {
 		return diag.Errorf("error creating Nutanix Network Security Rule %s: %+v", utils.StringValue(spec.Name), err)
 	}
@@ -882,7 +879,6 @@ func resourceNutanixNetworkSecurityRuleUpdate(ctx context.Context, d *schema.Res
 	networkSecurityRule := &v3.NetworkSecurityRuleResources{}
 
 	response, err := conn.V3.GetNetworkSecurityRule(d.Id())
-
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")

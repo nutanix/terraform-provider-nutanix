@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -27,7 +26,7 @@ func TestAccNutanixRecoveryPointRestoreV2Resource_basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmConfig(vmName) + testVm2Config(vmName) +
+				Config: testVMConfigRecovery(vmName) + testVMConfig(vmName) +
 					testRecoveryPointRestoreResourceConfig(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPointRestore, "volume_group_ext_ids.#"),
@@ -40,7 +39,7 @@ func TestAccNutanixRecoveryPointRestoreV2Resource_basic(t *testing.T) {
 }
 
 func testRecoveryPointRestoreResourceConfig(name, expirationTime string) string {
-	return testRecoveryPointsResourceConfigWithVolumeGroupRecoveryPointsWithMultipleVmAndVGs(name, expirationTime) + `
+	return testRecoveryPointsResourceConfigWithVolumeGroupRecoveryPointsWithMultipleVMAndVGs(name, expirationTime) + `
 	resource "nutanix_recovery_point_restore_v2" "test" {
 	  ext_id         = nutanix_recovery_points_v2.test.id
 	  cluster_ext_id = local.cluster_ext_id

@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
 	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -54,8 +53,10 @@ func ResourceNutanixNDBMaintenanceWindow() *schema.Resource {
 			"day_of_week": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY",
-					"FRIDAY", "SATURDAY", "SUNDAY"}, false),
+				ValidateFunc: validation.StringInSlice([]string{
+					"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY",
+					"FRIDAY", "SATURDAY", "SUNDAY",
+				}, false),
 			},
 			"week_of_month": {
 				Type:         schema.TypeInt,

@@ -6,14 +6,12 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
 const resourceNameUserGroups = "nutanix_user_groups_v2.test"
 
 func TestAccNutanixUserGroupsV2Resource_LDAPUserGroup(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -22,7 +20,7 @@ func TestAccNutanixUserGroupsV2Resource_LDAPUserGroup(t *testing.T) {
 				Config: testLDAPUserGroupsResourceConfig(filepath),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "name", testVars.Iam.UserGroups.Name),
-					resource.TestCheckResourceAttr(resourceNameUserGroups, "idp_id", testVars.Iam.Users.DirectoryServiceId),
+					resource.TestCheckResourceAttr(resourceNameUserGroups, "idp_id", testVars.Iam.Users.DirectoryServiceID),
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "group_type", "LDAP"),
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "distinguished_name", testVars.Iam.UserGroups.DistinguishedName),
 				),
@@ -36,7 +34,6 @@ func TestAccNutanixUserGroupsV2Resource_LDAPUserGroup(t *testing.T) {
 }
 
 func TestAccNutanixUserGroupsV2Resource_SAMLUserGroup(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -45,7 +42,7 @@ func TestAccNutanixUserGroupsV2Resource_SAMLUserGroup(t *testing.T) {
 				Config: testSAMLUserGroupsResourceConfig(filepath),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "name", testVars.Iam.UserGroups.SAMLName),
-					resource.TestCheckResourceAttr(resourceNameUserGroups, "idp_id", testVars.Iam.Users.IdpId),
+					resource.TestCheckResourceAttr(resourceNameUserGroups, "idp_id", testVars.Iam.Users.IdpID),
 					resource.TestCheckResourceAttr(resourceNameUserGroups, "group_type", "SAML"),
 				),
 			},
@@ -58,7 +55,6 @@ func TestAccNutanixUserGroupsV2Resource_SAMLUserGroup(t *testing.T) {
 }
 
 func TestAccNutanixUserGroupsV2Resource_WithNoGroupType(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -77,7 +73,7 @@ func TestAccNutanixUserGroupsV2Resource_WithNoIdpId(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testUserGroupsResourceWithoutIdpIdConfig(filepath),
+				Config:      testUserGroupsResourceWithoutIdpIDConfig(filepath),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 		},
@@ -159,7 +155,7 @@ func testUserGroupsResourceWithoutGroupTypeConfig(filepath string) string {
 	  }`, filepath)
 }
 
-func testUserGroupsResourceWithoutIdpIdConfig(filepath string) string {
+func testUserGroupsResourceWithoutIdpIDConfig(filepath string) string {
 	return fmt.Sprintf(`
 
 	locals{

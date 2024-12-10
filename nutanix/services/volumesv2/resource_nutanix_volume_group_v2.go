@@ -13,7 +13,6 @@ import (
 	taskPoll "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	volumesPrism "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/prism/v4/config"
 	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -155,13 +154,14 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 	if desc, ok := d.GetOk("description"); ok {
 		body.Description = utils.StringPtr(desc.(string))
 	}
-	if shouldLoadBalanceVmAttachments, ok := d.GetOk("should_load_balance_vm_attachments"); ok {
-		body.ShouldLoadBalanceVmAttachments = utils.BoolPtr(shouldLoadBalanceVmAttachments.(bool))
+	if shouldLoadBalanceVMAttachments, ok := d.GetOk("should_load_balance_vm_attachments"); ok {
+		body.ShouldLoadBalanceVmAttachments = utils.BoolPtr(shouldLoadBalanceVMAttachments.(bool))
 	}
 	if sharingStatus, ok := d.GetOk("sharing_status"); ok {
+		const two, three = 2, 3
 		sharingStatusMap := map[string]interface{}{
-			"SHARED":     2,
-			"NOT_SHARED": 3,
+			"SHARED":     two,
+			"NOT_SHARED": three,
 		}
 		pVal := sharingStatusMap[sharingStatus.(string)]
 		p := volumesClient.SharingStatus(pVal.(int))
@@ -199,11 +199,12 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 		body.StorageFeatures = expandStorageFeatures(storageFeatures.([]interface{}))
 	}
 	if usageType, ok := d.GetOk("usage_type"); ok {
+		const two, three, four, five = 2, 3, 4, 5
 		usageTypeMap := map[string]interface{}{
-			"USER":          2,
-			"INTERNAL":      3,
-			"TEMPORARY":     4,
-			"BACKUP_TARGET": 5,
+			"USER":          two,
+			"INTERNAL":      three,
+			"TEMPORARY":     four,
+			"BACKUP_TARGET": five,
 		}
 		pInt := usageTypeMap[usageType.(string)]
 		p := volumesClient.UsageType(pInt.(int))
@@ -349,10 +350,10 @@ func ResourceNutanixVolumeGroupV2Delete(ctx context.Context, d *schema.ResourceD
 	return nil
 }
 
-func expandIscsiFeatures(IscsiFeaturesList interface{}) *volumesClient.IscsiFeatures {
-	if len(IscsiFeaturesList.([]interface{})) > 0 {
+func expandIscsiFeatures(iscsiFeaturesList interface{}) *volumesClient.IscsiFeatures {
+	if len(iscsiFeaturesList.([]interface{})) > 0 {
 		iscsiFeature := &volumesClient.IscsiFeatures{}
-		iscsiFeaturesI := IscsiFeaturesList.([]interface{})
+		iscsiFeaturesI := iscsiFeaturesList.([]interface{})
 		if iscsiFeaturesI[0] == nil {
 			return nil
 		}
@@ -363,9 +364,10 @@ func expandIscsiFeatures(IscsiFeaturesList interface{}) *volumesClient.IscsiFeat
 		}
 
 		if enabledAuthentications, ok := val["enabled_authentications"]; ok {
+			const two, three = 2, 3
 			enabledAuthenticationsMap := map[string]interface{}{
-				"CHAP": 2,
-				"NONE": 3,
+				"CHAP": two,
+				"NONE": three,
 			}
 			pVal := enabledAuthenticationsMap[enabledAuthentications.(string)]
 			p := volumesClient.AuthenticationType(pVal.(int))
@@ -408,9 +410,7 @@ func expandFlashMode(flashModeList []interface{}) *volumesClient.FlashMode {
 
 func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-
 		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
-
 		if err != nil {
 			var errordata map[string]interface{}
 			e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -437,19 +437,20 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 
 func getTaskStatus(taskStatus *taskPoll.TaskStatus) string {
 	if taskStatus != nil {
-		if *taskStatus == taskPoll.TaskStatus(6) {
+		const two, three, five, six, seven = 2, 3, 5, 6, 7
+		if *taskStatus == taskPoll.TaskStatus(six) {
 			return "FAILED"
 		}
-		if *taskStatus == taskPoll.TaskStatus(7) {
+		if *taskStatus == taskPoll.TaskStatus(seven) {
 			return "CANCELED"
 		}
-		if *taskStatus == taskPoll.TaskStatus(2) {
+		if *taskStatus == taskPoll.TaskStatus(two) {
 			return "QUEUED"
 		}
-		if *taskStatus == taskPoll.TaskStatus(3) {
+		if *taskStatus == taskPoll.TaskStatus(three) {
 			return "RUNNING"
 		}
-		if *taskStatus == taskPoll.TaskStatus(5) {
+		if *taskStatus == taskPoll.TaskStatus(five) {
 			return "SUCCEEDED"
 		}
 	}

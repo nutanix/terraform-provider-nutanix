@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -83,7 +82,6 @@ func resourceNutanixAddressGroupUpdate(ctx context.Context, d *schema.ResourceDa
 
 	if d.HasChange("ip_address_block_list") {
 		blockList, err := expandAddressEntry(d)
-
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -124,7 +122,6 @@ func resourceNutanixAddressGroupRead(ctx context.Context, d *schema.ResourceData
 
 	// Make request to the API
 	resp, err := conn.V3.GetAddressGroup(d.Id())
-
 	if err != nil {
 		if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 			d.SetId("")
@@ -170,7 +167,6 @@ func resourceNutanixAddressGroupCreate(ctx context.Context, d *schema.ResourceDa
 		request.Description = utils.StringPtr(desc.(string))
 	}
 	addressList, err := expandAddressEntry(d)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -178,7 +174,6 @@ func resourceNutanixAddressGroupCreate(ctx context.Context, d *schema.ResourceDa
 	request.BlockList = addressList
 
 	resp, err := conn.V3.CreateAddressGroup(request)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}

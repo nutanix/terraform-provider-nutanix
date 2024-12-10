@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -176,7 +175,6 @@ func ResourceNutanixCategoriesV2Update(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.Client).PrismAPI
 	updatedInput := import1.Category{}
 	resp, err := conn.CategoriesAPIInstance.GetCategoryById(utils.StringPtr(d.Id()), nil)
-
 	if err != nil {
 		return diag.Errorf("error while fetching categories : %v", err)
 	}
@@ -208,10 +206,8 @@ func ResourceNutanixCategoriesV2Update(ctx context.Context, d *schema.ResourceDa
 	_, er := conn.CategoriesAPIInstance.UpdateCategoryById(utils.StringPtr(d.Id()), &updatedInput)
 	if er != nil {
 		return diag.Errorf("error while updating categories : %v", err)
-	} else {
-		log.Println("[DEBUG] Category updated successfully")
 	}
-
+	log.Println("[DEBUG] Category updated successfully")
 	return ResourceNutanixCategoriesV2Read(ctx, d, meta)
 }
 

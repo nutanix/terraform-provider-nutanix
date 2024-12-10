@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -16,8 +15,10 @@ const resourceNameRecoveryPoints = "nutanix_recovery_points_v2.test"
 
 // this test cases must be updated after merge it on temp design branch, since it need to create a vm and volume group within the test case
 
-var path, _ = os.Getwd()
-var filepath = path + "/../../../test_config_v2.json"
+var (
+	path, _  = os.Getwd()
+	filepath = path + "/../../../test_config_v2.json"
+)
 
 func TestAccNutanixRecoveryPointsV2Resource_VmRecoveryPoints2(t *testing.T) {
 	r := acctest.RandInt()
@@ -34,7 +35,7 @@ func TestAccNutanixRecoveryPointsV2Resource_VmRecoveryPoints2(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmConfig(vmName) + testRecoveryPointsResourceConfigWithVmRecoveryPoints(name, expirationTimeFormatted),
+				Config: testVMConfigRecovery(vmName) + testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPoints, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameRecoveryPoints, "name", name),
@@ -67,7 +68,7 @@ func TestAccNutanixRecoveryPointsV2Resource_VmRecoveryPointsWithAppConsProps(t *
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmConfig(vmName) + testRecoveryPointsResourceConfigWithVmRecoveryPointsWithAppConsProps(name, expirationTimeFormatted),
+				Config: testVMConfigRecovery(vmName) + testRecoveryPointsResourceConfigWithVMRecoveryPointsWithAppConsProps(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPoints, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameRecoveryPoints, "name", name),
@@ -99,8 +100,8 @@ func TestAccNutanixRecoveryPointsV2Resource_VmRecoveryPointsWithMultipleVms(t *t
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmConfig(vmName) + testVm2Config(vmName) +
-					testRecoveryPointsResourceConfigWithVmRecoveryPointsWithMultipleVms(name, expirationTimeFormatted),
+				Config: testVMConfigRecovery(vmName) + testVMConfig(vmName) +
+					testRecoveryPointsResourceConfigWithVMRecoveryPointsWithMultipleVms(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPoints, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameRecoveryPoints, "name", name),
@@ -187,8 +188,8 @@ func TestAccNutanixRecoveryPointsV2Resource_RecoveryPointWithMultipleVmAndVGs(t 
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmConfig(vmName) + testVm2Config(vmName) +
-					testRecoveryPointsResourceConfigWithVolumeGroupRecoveryPointsWithMultipleVmAndVGs(name, expirationTimeFormatted),
+				Config: testVMConfigRecovery(vmName) + testVMConfig(vmName) +
+					testRecoveryPointsResourceConfigWithVolumeGroupRecoveryPointsWithMultipleVMAndVGs(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPoints, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameRecoveryPoints, "name", name),
@@ -223,7 +224,7 @@ func TestAccNutanixRecoveryPointsV2Resource_UpdateExpirationTime(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmConfig(vmName) + testRecoveryPointsResourceConfigWithVmRecoveryPoints(name, expirationTimeFormatted),
+				Config: testVMConfigRecovery(vmName) + testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPoints, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameRecoveryPoints, "name", name),
@@ -234,7 +235,7 @@ func TestAccNutanixRecoveryPointsV2Resource_UpdateExpirationTime(t *testing.T) {
 				),
 			},
 			{
-				Config: testVmConfig(vmName) + testRecoveryPointsResourceConfigWithVmRecoveryPoints(name, expirationTimeUpdateFormatted),
+				Config: testVMConfigRecovery(vmName) + testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTimeUpdateFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPoints, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameRecoveryPoints, "name", name),
@@ -248,7 +249,7 @@ func TestAccNutanixRecoveryPointsV2Resource_UpdateExpirationTime(t *testing.T) {
 	})
 }
 
-func testRecoveryPointsResourceConfigWithVmRecoveryPoints(name, expirationTime string) string {
+func testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTime string) string {
 	return fmt.Sprintf(`
 
 	resource "nutanix_recovery_points_v2" "test" {
@@ -266,7 +267,7 @@ func testRecoveryPointsResourceConfigWithVmRecoveryPoints(name, expirationTime s
 	}`, name, expirationTime)
 }
 
-func testRecoveryPointsResourceConfigWithVmRecoveryPointsWithMultipleVms(name, expirationTime string) string {
+func testRecoveryPointsResourceConfigWithVMRecoveryPointsWithMultipleVms(name, expirationTime string) string {
 	return fmt.Sprintf(`
 
 	resource "nutanix_recovery_points_v2" "test" {
@@ -283,7 +284,7 @@ func testRecoveryPointsResourceConfigWithVmRecoveryPointsWithMultipleVms(name, e
 	}`, name, expirationTime)
 }
 
-func testRecoveryPointsResourceConfigWithVmRecoveryPointsWithAppConsProps(name, expirationTime string) string {
+func testRecoveryPointsResourceConfigWithVMRecoveryPointsWithAppConsProps(name, expirationTime string) string {
 	return fmt.Sprintf(`
 
 	resource "nutanix_recovery_points_v2" "test" {
@@ -303,6 +304,7 @@ func testRecoveryPointsResourceConfigWithVmRecoveryPointsWithAppConsProps(name, 
 		}
 	}`, name, expirationTime)
 }
+
 func testRecoveryPointsResourceConfigWithVolumeGroupRecoveryPoints(name, expirationTime string) string {
 	vg := testAccVolumeGroup1ResourceConfig("vg-"+name, "test volume group description")
 	return vg + fmt.Sprintf(`
@@ -335,7 +337,7 @@ func testRecoveryPointsResourceConfigWithVolumeGroupRecoveryPointsWithMultipleVG
 	}`, name, expirationTime)
 }
 
-func testRecoveryPointsResourceConfigWithVolumeGroupRecoveryPointsWithMultipleVmAndVGs(name, expirationTime string) string {
+func testRecoveryPointsResourceConfigWithVolumeGroupRecoveryPointsWithMultipleVMAndVGs(name, expirationTime string) string {
 	vg1 := testAccVolumeGroup1ResourceConfig("vg-1-"+name, "test volume group description")
 	vg2 := testAccVolumeGroup2ResourceConfig("vg-2-"+name, "test volume group description")
 	return vg1 + vg2 + fmt.Sprintf(`
@@ -361,7 +363,6 @@ func testRecoveryPointsResourceConfigWithVolumeGroupRecoveryPointsWithMultipleVm
 }
 
 func testAccVolumeGroup1ResourceConfig(name, desc string) string {
-
 	return fmt.Sprintf(`
 	data "nutanix_clusters_v2" "cluster-list" {}
 
@@ -400,7 +401,6 @@ func testAccVolumeGroup1ResourceConfig(name, desc string) string {
 }
 
 func testAccVolumeGroup2ResourceConfig(name, desc string) string {
-
 	return fmt.Sprintf(`
 
 	resource "nutanix_volume_group_v2" "test-2" {

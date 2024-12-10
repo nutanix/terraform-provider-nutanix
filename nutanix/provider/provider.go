@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/internal"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clusters"
@@ -363,11 +362,11 @@ func Provider() *schema.Provider {
 			"nutanix_volume_group_v2":                         volumesv2.ResourceNutanixVolumeGroupV2(),
 			"nutanix_volume_group_disk_v2":                    volumesv2.ResourceNutanixVolumeGroupDiskV2(),
 			"nutanix_volume_group_iscsi_client_v2":            volumesv2.ResourceNutanixVolumeGroupIscsiClientV2(),
-			"nutanix_volume_group_vm_v2":                      volumesv2.ResourceNutanixVolumeAttachVmToVolumeGroupV2(),
+			"nutanix_volume_group_vm_v2":                      volumesv2.ResourceNutanixVolumeAttachVMToVolumeGroupV2(),
 			"nutanix_recovery_points_v2":                      dataprotectionv2.ResourceNutanixRecoveryPointsV2(),
 			"nutanix_recovery_point_replicate_v2":             dataprotectionv2.ResourceNutanixRecoveryPointReplicateV2(),
 			"nutanix_recovery_point_restore_v2":               dataprotectionv2.ResourceNutanixRecoveryPointRestoreV2(),
-			"nutanix_vm_revert_v2":                            vmmv2.ResourceNutanixRevertVmRecoveryPointV2(),
+			"nutanix_vm_revert_v2":                            vmmv2.ResourceNutanixRevertVMRecoveryPointV2(),
 			"nutanix_virtual_machine_v2":                      vmmv2.ResourceNutanixVirtualMachineV2(),
 			"nutanix_vm_shutdown_action_v2":                   vmmv2.ResourceNutanixVmsShutdownActionV2(),
 			"nutanix_vm_cdrom_insert_eject_v2":                vmmv2.ResourceNutanixVmsCdRomsInsertEjectV2(),
@@ -377,10 +376,10 @@ func Provider() *schema.Provider {
 			"nutanix_ngt_installation_v2":                     vmmv2.ResourceNutanixNGTInstallationV2(),
 			"nutanix_ngt_upgrade_v2":                          vmmv2.ResourceNutanixNGTUpgradeV2(),
 			"nutanix_ngt_insert_iso_v2":                       vmmv2.ResourceNutanixNGTInsertIsoV2(),
-			"nutanix_vm_clone_v2":                             vmmv2.ResourceNutanixVmCloneV2(),
-			"nutanix_vm_gc_update_v2":                         vmmv2.ResourceNutanixVmGCUpdateV2(),
+			"nutanix_vm_clone_v2":                             vmmv2.ResourceNutanixVMCloneV2(),
+			"nutanix_vm_gc_update_v2":                         vmmv2.ResourceNutanixVMGCUpdateV2(),
 			"nutanix_images_v2":                               vmmv2.ResourceNutanixImageV4(),
-			"nutanix_vm_network_device_assign_ip_v2":          vmmv2.ResourceNutanixVmsNetworkDeviceAssignIpV2(),
+			"nutanix_vm_network_device_assign_ip_v2":          vmmv2.ResourceNutanixVmsNetworkDeviceAssignIPV2(),
 			"nutanix_vm_network_device_migrate_v2":            vmmv2.ResourceNutanixVmsNetworkDeviceMigrateV2(),
 			"nutanix_image_placement_policy_v2":               vmmv2.ResourceNutanixImagePlacementV2(),
 			"nutanix_cluster_v2":                              clustersv2.ResourceNutanixClusterV2(),

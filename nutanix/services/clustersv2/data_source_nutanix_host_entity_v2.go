@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/common/v1/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -476,24 +475,24 @@ func DatasourceNutanixHostEntityV2Read(ctx context.Context, d *schema.ResourceDa
 
 func flattenNodeStatus(pr *import1.NodeStatus) string {
 	if pr != nil {
-		const NORMAL, TO_BE_REMOVED, OK_TO_BE_REMOVED, NEW_NODE, TO_BE_PREPROTECTED, PREPROTECTED = 2, 3, 4, 5, 6, 7
+		const two, three, four, five, six, seven = 2, 3, 4, 5, 6, 7
 
-		if *pr == import1.NodeStatus(NORMAL) {
+		if *pr == import1.NodeStatus(two) {
 			return "NORMAL"
 		}
-		if *pr == import1.NodeStatus(TO_BE_REMOVED) {
+		if *pr == import1.NodeStatus(three) {
 			return "TO_BE_REMOVED"
 		}
-		if *pr == import1.NodeStatus(OK_TO_BE_REMOVED) {
+		if *pr == import1.NodeStatus(four) {
 			return "OK_TO_BE_REMOVED"
 		}
-		if *pr == import1.NodeStatus(NEW_NODE) {
+		if *pr == import1.NodeStatus(five) {
 			return "NEW_NODE"
 		}
-		if *pr == import1.NodeStatus(TO_BE_PREPROTECTED) {
+		if *pr == import1.NodeStatus(six) {
 			return "TO_BE_PREPROTECTED"
 		}
-		if *pr == import1.NodeStatus(PREPROTECTED) {
+		if *pr == import1.NodeStatus(seven) {
 			return "PREPROTECTED"
 		}
 	}
@@ -502,15 +501,15 @@ func flattenNodeStatus(pr *import1.NodeStatus) string {
 
 func flattenHostTypeEnum(pr *import1.HostTypeEnum) string {
 	if pr != nil {
-		const HYPER_CONVERGED, COMPUTE_ONLY, STORAGE_ONLY = 2, 3, 4
+		const two, three, four = 2, 3, 4
 
-		if *pr == import1.HostTypeEnum(HYPER_CONVERGED) {
+		if *pr == import1.HostTypeEnum(two) {
 			return "HYPER_CONVERGED"
 		}
-		if *pr == import1.HostTypeEnum(COMPUTE_ONLY) {
+		if *pr == import1.HostTypeEnum(three) {
 			return "COMPUTE_ONLY"
 		}
-		if *pr == import1.HostTypeEnum(STORAGE_ONLY) {
+		if *pr == import1.HostTypeEnum(four) {
 			return "STORAGE_ONLY"
 		}
 	}
@@ -539,39 +538,39 @@ func flattenHypervisorReference(pr *import1.HypervisorReference) []map[string]in
 
 func flattenHypervisorState(pr *import1.HypervisorState) string {
 	if pr != nil {
-		const ACROPOLIS_NORMAL, ENTERING_MAINTENANCE_MODE, ENTERED_MAINTENANCE_MODE,
-			RESERVED_FOR_HA_FAILOVER, ENTERING_MAINTENANCE_MODE_FROM_HA_FAILOVER,
-			RESERVING_FOR_HA_FAILOVER, HA_FAILOVER_SOURCE, HA_FAILOVER_TARGET,
-			HA_HEALING_SOURCE, HA_HEALING_TARGET = 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+		const two, three, four,
+			five, six,
+			seven, eight, nine,
+			ten, eleven = 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
 
-		if *pr == import1.HypervisorState(ACROPOLIS_NORMAL) {
+		if *pr == import1.HypervisorState(two) {
 			return "ACROPOLIS_NORMAL"
 		}
-		if *pr == import1.HypervisorState(ENTERING_MAINTENANCE_MODE) {
+		if *pr == import1.HypervisorState(three) {
 			return "ENTERING_MAINTENANCE_MODE"
 		}
-		if *pr == import1.HypervisorState(ENTERED_MAINTENANCE_MODE) {
+		if *pr == import1.HypervisorState(four) {
 			return "ENTERED_MAINTENANCE_MODE"
 		}
-		if *pr == import1.HypervisorState(RESERVED_FOR_HA_FAILOVER) {
+		if *pr == import1.HypervisorState(five) {
 			return "RESERVED_FOR_HA_FAILOVER"
 		}
-		if *pr == import1.HypervisorState(ENTERING_MAINTENANCE_MODE_FROM_HA_FAILOVER) {
+		if *pr == import1.HypervisorState(six) {
 			return "ENTERING_MAINTENANCE_MODE_FROM_HA_FAILOVER"
 		}
-		if *pr == import1.HypervisorState(RESERVING_FOR_HA_FAILOVER) {
+		if *pr == import1.HypervisorState(seven) {
 			return "RESERVING_FOR_HA_FAILOVER"
 		}
-		if *pr == import1.HypervisorState(HA_FAILOVER_SOURCE) {
+		if *pr == import1.HypervisorState(eight) {
 			return "HA_FAILOVER_SOURCE"
 		}
-		if *pr == import1.HypervisorState(HA_FAILOVER_TARGET) {
+		if *pr == import1.HypervisorState(nine) {
 			return "HA_FAILOVER_TARGET"
 		}
-		if *pr == import1.HypervisorState(HA_HEALING_SOURCE) {
+		if *pr == import1.HypervisorState(ten) {
 			return "HA_HEALING_SOURCE"
 		}
-		if *pr == import1.HypervisorState(HA_HEALING_TARGET) {
+		if *pr == import1.HypervisorState(eleven) {
 			return "HA_HEALING_TARGET"
 		}
 	}
@@ -580,21 +579,21 @@ func flattenHypervisorState(pr *import1.HypervisorState) string {
 
 func flattenHostHypervisorType(pr *import1.HypervisorType) string {
 	if pr != nil {
-		const AHV, ESX, HYPERV, XEN, NATIVEHOST = 2, 3, 4, 5, 6
+		const ahv, esx, hyperv, xen, native = 2, 3, 4, 5, 6
 
-		if *pr == import1.HypervisorType(AHV) {
+		if *pr == import1.HypervisorType(ahv) {
 			return "AHV"
 		}
-		if *pr == import1.HypervisorType(ESX) {
+		if *pr == import1.HypervisorType(esx) {
 			return "ESX"
 		}
-		if *pr == import1.HypervisorType(HYPERV) {
+		if *pr == import1.HypervisorType(hyperv) {
 			return "HYPERV"
 		}
-		if *pr == import1.HypervisorType(XEN) {
+		if *pr == import1.HypervisorType(xen) {
 			return "XEN"
 		}
-		if *pr == import1.HypervisorType(NATIVEHOST) {
+		if *pr == import1.HypervisorType(native) {
 			return "NATIVEHOST"
 		}
 	}
@@ -603,12 +602,12 @@ func flattenHostHypervisorType(pr *import1.HypervisorType) string {
 
 func flattenAcropolisConnectionState(pr *import1.AcropolisConnectionState) string {
 	if pr != nil {
-		const CONNECTED, DISCONNECTED = 2, 3
+		const connected, disconnected = 2, 3
 
-		if *pr == import1.AcropolisConnectionState(CONNECTED) {
+		if *pr == import1.AcropolisConnectionState(connected) {
 			return "CONNECTED"
 		}
-		if *pr == import1.AcropolisConnectionState(DISCONNECTED) {
+		if *pr == import1.AcropolisConnectionState(disconnected) {
 			return "DISCONNECTED"
 		}
 	}
@@ -719,14 +718,14 @@ func flattenKeyManagementDeviceToCertStatusInfo(pr []import1.KeyManagementDevice
 
 func flattenStorageTierReference(pr *import1.StorageTierReference) string {
 	if pr != nil {
-		const PCIE_SSD, SATA_SSD, HDD = 2, 3, 4
-		if *pr == import1.StorageTierReference(PCIE_SSD) {
+		const pci, sata, hdd = 2, 3, 4
+		if *pr == import1.StorageTierReference(pci) {
 			return "PCIE_SSD"
 		}
-		if *pr == import1.StorageTierReference(SATA_SSD) {
+		if *pr == import1.StorageTierReference(sata) {
 			return "SATA_SSD"
 		}
-		if *pr == import1.StorageTierReference(HDD) {
+		if *pr == import1.StorageTierReference(hdd) {
 			return "HDD"
 		}
 	}

@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
@@ -134,7 +133,6 @@ func resourceNutanixRoleExists(conn *v3.Client, name string) (*string, error) {
 
 	filter := fmt.Sprintf("name==%s", name)
 	accessList, err := conn.V3.ListAllRole(filter)
-
 	if err != nil {
 		return nil, err
 	}

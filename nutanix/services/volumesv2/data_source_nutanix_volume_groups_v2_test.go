@@ -2,12 +2,12 @@ package volumesv2_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -80,7 +80,7 @@ func TestAccNutanixVolumeGroupsV4DataSource_WithLimit(t *testing.T) {
 }
 
 func testAccVolumeGroupsDataSourceConfig(filepath, name, desc string) string {
-	return testAccVolumeGroupResourceConfig(filepath, name, desc) + `
+	return testAccVolumeGroupResourceConfig(name, desc) + `
 		data "nutanix_volume_groups_v2" "test" {
 			depends_on = [resource.nutanix_volume_group_v2.test]
 		}
@@ -88,7 +88,7 @@ func testAccVolumeGroupsDataSourceConfig(filepath, name, desc string) string {
 }
 
 func testAccVolumeGroupsDataSourceWithFilter(filepath, name, desc string) string {
-	return testAccVolumeGroupResourceConfig(filepath, name, desc) + fmt.Sprintf(`		
+	return testAccVolumeGroupResourceConfig(name, desc) + fmt.Sprintf(`		
 	data "nutanix_volume_groups_v2" "test" {
 		filter = "name eq '%s'"
 		depends_on = [resource.nutanix_volume_group_v2.test]

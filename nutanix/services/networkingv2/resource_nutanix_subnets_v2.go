@@ -12,7 +12,6 @@ import (
 	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
 	import4 "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -771,8 +770,8 @@ func ResourceNutanixSubnetV2Update(ctx context.Context, d *schema.ResourceData, 
 		updateSpec.IpConfig = nil
 	}
 
-	aJson, _ := json.MarshalIndent(updateSpec, "", "  ")
-	log.Printf("[DEBUG] Update Subnet Request: %s", string(aJson))
+	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
+	log.Printf("[DEBUG] Update Subnet Request: %s", string(aJSON))
 
 	updateResp, err := conn.SubnetAPIInstance.UpdateSubnetById(utils.StringPtr(d.Id()), &updateSpec, args)
 	if err != nil {
@@ -1018,7 +1017,7 @@ func expandIPv4Subnet(pr interface{}) *import1.IPv4Subnet {
 			ipv4Subs.Ip = expandIPv4Address(ip)
 		}
 		if prefix, ok := val["prefix_length"]; ok {
-			ipv4Subs.PrefixLength = utils.IntPtr(int(prefix.(int)))
+			ipv4Subs.PrefixLength = utils.IntPtr(prefix.(int))
 		}
 
 		return ipv4Subs

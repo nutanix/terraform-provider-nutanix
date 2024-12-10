@@ -8,11 +8,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceName_StorageContainer = "data.nutanix_storage_container_v2.test"
+const datasourceNameStorageContainer = "data.nutanix_storage_container_v2.test"
 
 func TestAccNutanixStorageContainerV2Datasource_Basic(t *testing.T) {
 	r := acctest.RandInt()
@@ -27,13 +26,13 @@ func TestAccNutanixStorageContainerV2Datasource_Basic(t *testing.T) {
 			{
 				Config: testStorageContainerV4Config(filepath, name),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceName_StorageContainer, "container_ext_id"),
-					resource.TestCheckResourceAttr(datasourceName_StorageContainer, "name", name),
-					resource.TestCheckResourceAttr(datasourceName_StorageContainer, "logical_advertised_capacity_bytes", strconv.Itoa(testVars.StorageContainer.LogicalAdvertisedCapacityBytes)),
-					resource.TestCheckResourceAttr(datasourceName_StorageContainer, "logical_explicit_reserved_capacity_bytes", strconv.Itoa(testVars.StorageContainer.LogicalExplicitReservedCapacityBytes)),
-					resource.TestCheckResourceAttr(datasourceName_StorageContainer, "replication_factor", strconv.Itoa(testVars.StorageContainer.ReplicationFactor)),
-					resource.TestCheckResourceAttr(datasourceName_StorageContainer, "nfs_whitelist_addresses.0.ipv4.0.value", testVars.StorageContainer.NfsWhitelistAddresses.Ipv4.Value),
-					resource.TestCheckResourceAttr(datasourceName_StorageContainer, "nfs_whitelist_addresses.0.ipv4.0.prefix_length", strconv.Itoa(testVars.StorageContainer.NfsWhitelistAddresses.Ipv4.PrefixLength)),
+					resource.TestCheckResourceAttrSet(datasourceNameStorageContainer, "container_ext_id"),
+					resource.TestCheckResourceAttr(datasourceNameStorageContainer, "name", name),
+					resource.TestCheckResourceAttr(datasourceNameStorageContainer, "logical_advertised_capacity_bytes", strconv.Itoa(testVars.StorageContainer.LogicalAdvertisedCapacityBytes)),
+					resource.TestCheckResourceAttr(datasourceNameStorageContainer, "logical_explicit_reserved_capacity_bytes", strconv.Itoa(testVars.StorageContainer.LogicalExplicitReservedCapacityBytes)),
+					resource.TestCheckResourceAttr(datasourceNameStorageContainer, "replication_factor", strconv.Itoa(testVars.StorageContainer.ReplicationFactor)),
+					resource.TestCheckResourceAttr(datasourceNameStorageContainer, "nfs_whitelist_addresses.0.ipv4.0.value", testVars.StorageContainer.NfsWhitelistAddresses.Ipv4.Value),
+					resource.TestCheckResourceAttr(datasourceNameStorageContainer, "nfs_whitelist_addresses.0.ipv4.0.prefix_length", strconv.Itoa(testVars.StorageContainer.NfsWhitelistAddresses.Ipv4.PrefixLength)),
 				),
 			},
 		},

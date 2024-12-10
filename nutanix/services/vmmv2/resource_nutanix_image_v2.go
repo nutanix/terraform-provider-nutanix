@@ -2,7 +2,6 @@ package vmmv2
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -12,7 +11,6 @@ import (
 	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
 	import5 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/content"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -209,9 +207,10 @@ func ResourceNutanixImageV4Create(ctx context.Context, d *schema.ResourceData, m
 		body.Description = utils.StringPtr(desc.(string))
 	}
 	if types, ok := d.GetOk("type"); ok {
+		const two, three = 2, 3
 		subMap := map[string]interface{}{
-			"DISK_IMAGE": 2,
-			"ISO_IMAGE":  3,
+			"DISK_IMAGE": two,
+			"ISO_IMAGE":  three,
 		}
 		pVal := subMap[types.(string)]
 		p := import5.ImageType(pVal.(int))
@@ -340,9 +339,10 @@ func ResourceNutanixImageV4Update(ctx context.Context, d *schema.ResourceData, m
 		updateSpec.Description = utils.StringPtr(d.Get("description").(string))
 	}
 	if d.HasChange("type") {
+		const two, three = 2, 3
 		subMap := map[string]interface{}{
-			"DISK_IMAGE": 2,
-			"ISO_IMAGE":  3,
+			"DISK_IMAGE": two,
+			"ISO_IMAGE":  three,
 		}
 		pVal := subMap[d.Get("type").(string)]
 		p := import5.ImageType(pVal.(int))
@@ -418,17 +418,8 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 		// data := base64.StdEncoding.EncodeToString([]byte("ergon"))
 		// encodeUUID := data + ":" + taskUUID
 		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
-
 		if err != nil {
-			var errordata map[string]interface{}
-			e := json.Unmarshal([]byte(err.Error()), &errordata)
-			if e != nil {
-				return nil, "", e
-			}
-			data := errordata["data"].(map[string]interface{})
-			errorList := data["error"].([]interface{})
-			errorMessage := errorList[0].(map[string]interface{})
-			return "", "", (fmt.Errorf("error while polling prism task: %v", errorMessage["message"]))
+			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
 		}
 
 		// get the group results
@@ -445,19 +436,20 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 
 func getTaskStatus(pr *import2.TaskStatus) string {
 	if pr != nil {
-		if *pr == import2.TaskStatus(6) {
+		const two, three, five, six, seven = 2, 3, 5, 6, 7
+		if *pr == import2.TaskStatus(six) {
 			return "FAILED"
 		}
-		if *pr == import2.TaskStatus(7) {
+		if *pr == import2.TaskStatus(seven) {
 			return "CANCELED"
 		}
-		if *pr == import2.TaskStatus(2) {
+		if *pr == import2.TaskStatus(two) {
 			return "QUEUED"
 		}
-		if *pr == import2.TaskStatus(3) {
+		if *pr == import2.TaskStatus(three) {
 			return "RUNNING"
 		}
-		if *pr == import2.TaskStatus(5) {
+		if *pr == import2.TaskStatus(five) {
 			return "SUCCEEDED"
 		}
 	}
@@ -506,7 +498,7 @@ func expandOneOfImageSource(pr interface{}) *import5.OneOfImageSource {
 				urlSrcInput.ShouldAllowInsecureUrl = utils.BoolPtr(shouldAllow.(bool))
 			}
 			if basicAuth, ok := urlMap["basic_auth"]; ok && len(basicAuth.([]interface{})) > 0 {
-				urlSrcInput.BasicAuth = expandUrlBasicAuth(basicAuth)
+				urlSrcInput.BasicAuth = expandURLBasicAuth(basicAuth)
 			}
 			imgSrc.SetValue(*urlSrcInput)
 		}
@@ -535,7 +527,7 @@ func expandOneOfImageSource(pr interface{}) *import5.OneOfImageSource {
 	return nil
 }
 
-func expandUrlBasicAuth(pr interface{}) *import5.UrlBasicAuth {
+func expandURLBasicAuth(pr interface{}) *import5.UrlBasicAuth {
 	if pr != nil {
 		prI := pr.([]interface{})
 		val := prI[0].(map[string]interface{})

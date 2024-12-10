@@ -13,7 +13,7 @@ const resourceNameVpc = "nutanix_vpc_v2.test"
 
 func TestAccNutanixVpcV2Resource_Basic(t *testing.T) {
 	r := acctest.RandInt()
-	vlanId := acctest.RandIntRange(1, 999)
+	vlanID := acctest.RandIntRange(1, 999)
 	name := fmt.Sprintf("tf-test-vpc-%d", r)
 	desc := "test vpc description"
 	updatedName := fmt.Sprintf("updated-vpc-%d", r)
@@ -23,7 +23,7 @@ func TestAccNutanixVpcV2Resource_Basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVpcConfig(name, desc, vlanId),
+				Config: testVpcConfig(name, desc, vlanID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVpc, "name", name),
 					resource.TestCheckResourceAttr(resourceNameVpc, "description", desc),
@@ -33,7 +33,7 @@ func TestAccNutanixVpcV2Resource_Basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testVpcConfig(updatedName, updatedDesc, vlanId),
+				Config: testVpcConfig(updatedName, updatedDesc, vlanID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVpc, "name", updatedName),
 					resource.TestCheckResourceAttr(resourceNameVpc, "description", updatedDesc),
@@ -49,14 +49,14 @@ func TestAccNutanixVpcV2Resource_Basic(t *testing.T) {
 func TestAccNutanixVpcV2Resource_WithExternallyRoutablePrefixes(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vpc-%d", r)
-	vlanId := acctest.RandIntRange(1, 999)
+	vlanID := acctest.RandIntRange(1, 999)
 	desc := "test vpc description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVpcConfigWithExtRoutablePrefix(name, desc, vlanId),
+				Config: testVpcConfigWithExtRoutablePrefix(name, desc, vlanID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVpc, "name", name),
 					resource.TestCheckResourceAttr(resourceNameVpc, "description", desc),
@@ -72,14 +72,14 @@ func TestAccNutanixVpcV2Resource_WithExternallyRoutablePrefixes(t *testing.T) {
 func TestAccNutanixVpcV2Resource_WithDHCP(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vpc-%d", r)
-	vlanId := acctest.RandIntRange(1, 999)
+	vlanID := acctest.RandIntRange(1, 999)
 	desc := "test vpc description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVpcConfigWithDHCP(name, desc, vlanId),
+				Config: testVpcConfigWithDHCP(name, desc, vlanID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVpc, "name", name),
 					resource.TestCheckResourceAttr(resourceNameVpc, "description", desc),
@@ -96,14 +96,14 @@ func TestAccNutanixVpcV2Resource_WithDHCP(t *testing.T) {
 func TestAccNutanixVpcV2Resource_WithTransitType(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vpc-%d", r)
-	vlanId := acctest.RandIntRange(1, 999)
+	vlanID := acctest.RandIntRange(1, 999)
 	desc := "test vpc description"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVpcConfigWithTransitType(name, desc, vlanId),
+				Config: testVpcConfigWithTransitType(name, desc, vlanID),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVpc, "name", name),
 					resource.TestCheckResourceAttr(resourceNameVpc, "description", desc),
@@ -118,7 +118,7 @@ func TestAccNutanixVpcV2Resource_WithTransitType(t *testing.T) {
 	})
 }
 
-func testVpcConfig(name, desc string, vlanId int) string {
+func testVpcConfig(name, desc string, vlanID int) string {
 	return fmt.Sprintf(`
 	
 	data "nutanix_clusters" "clusters" {}
@@ -165,10 +165,10 @@ func testVpcConfig(name, desc string, vlanId int) string {
 		}
 		depends_on = [nutanix_subnet_v2.test]
 	}
-`, name, desc, vlanId)
+`, name, desc, vlanID)
 }
 
-func testVpcConfigWithExtRoutablePrefix(name, desc string, vlanId int) string {
+func testVpcConfigWithExtRoutablePrefix(name, desc string, vlanID int) string {
 	return fmt.Sprintf(`
 	
 	data "nutanix_clusters" "clusters" {}
@@ -236,10 +236,10 @@ func testVpcConfigWithExtRoutablePrefix(name, desc string, vlanId int) string {
 		}
 		depends_on = [nutanix_subnet_v2.test]
 	}
-`, name, desc, vlanId)
+`, name, desc, vlanID)
 }
 
-func testVpcConfigWithDHCP(name, desc string, vlanId int) string {
+func testVpcConfigWithDHCP(name, desc string, vlanID int) string {
 	return fmt.Sprintf(`
 	
 	data "nutanix_clusters" "clusters" {}
@@ -309,10 +309,10 @@ func testVpcConfigWithDHCP(name, desc string, vlanId int) string {
 		  depends_on = [nutanix_subnet_v2.test]
 		}
 
-`, name, desc, vlanId)
+`, name, desc, vlanID)
 }
 
-func testVpcConfigWithTransitType(name, desc string, vlanId int) string {
+func testVpcConfigWithTransitType(name, desc string, vlanID int) string {
 	return fmt.Sprintf(`
 	
 	data "nutanix_clusters" "clusters" {}
@@ -360,5 +360,5 @@ func testVpcConfigWithTransitType(name, desc string, vlanId int) string {
 		vpc_type = "TRANSIT"
 		depends_on = [nutanix_subnet_v2.test]
 	}
-`, name, desc, vlanId)
+`, name, desc, vlanID)
 }

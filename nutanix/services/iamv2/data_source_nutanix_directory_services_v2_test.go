@@ -5,14 +5,12 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
 const datasourceNameDirectoryServices = "data.nutanix_directory_services_v2.test"
 
 func TestAccNutanixDirectoryServicesV2Datasource_Basic(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -31,7 +29,6 @@ func TestAccNutanixDirectoryServicesV2Datasource_Basic(t *testing.T) {
 }
 
 func TestAccNutanixDirectoryServicesV2Datasource_WithFilter(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -44,7 +41,7 @@ func TestAccNutanixDirectoryServicesV2Datasource_WithFilter(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameDirectoryServices, "directory_services.0.name", testVars.Iam.DirectoryServices.Name),
 					resource.TestCheckResourceAttr(datasourceNameDirectoryServices, "directory_services.0.domain_name", testVars.Iam.DirectoryServices.DomainName),
 					resource.TestCheckResourceAttr(datasourceNameDirectoryServices, "directory_services.0.directory_type", "ACTIVE_DIRECTORY"),
-					resource.TestCheckResourceAttr(datasourceNameDirectoryServices, "directory_services.0.url", testVars.Iam.DirectoryServices.Url),
+					resource.TestCheckResourceAttr(datasourceNameDirectoryServices, "directory_services.0.url", testVars.Iam.DirectoryServices.URL),
 					resource.TestCheckResourceAttr(datasourceNameDirectoryServices, "directory_services.0.service_account.0.username", testVars.Iam.DirectoryServices.ServiceAccount.Username),
 					resource.TestCheckResourceAttrSet(datasourceNameDirectoryServices, "directory_services.0.service_account.0.password"),
 					resource.TestCheckResourceAttr(datasourceNameDirectoryServices, "directory_services.0.white_listed_groups.0", testVars.Iam.DirectoryServices.WhiteListedGroups[0]),
@@ -55,7 +52,6 @@ func TestAccNutanixDirectoryServicesV2Datasource_WithFilter(t *testing.T) {
 }
 
 func TestAccNutanixDirectoryServicesV2Datasource_WithLimit(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

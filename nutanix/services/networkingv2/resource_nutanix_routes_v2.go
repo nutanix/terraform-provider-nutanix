@@ -10,11 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	common "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/common/v1/config"
-	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-
 	"github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/networking/v4/config"
 	networkingPrism "github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4/models/prism/v4/config"
-
+	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -225,10 +223,11 @@ func ResourceNutanixRoutesV2Create(ctx context.Context, d *schema.ResourceData, 
 		reqBody.ExternalRoutingDomainReference = utils.StringPtr(externalRoutingDomainReference.(string))
 	}
 	if routeType, ok := d.GetOk("route_type"); ok {
+		const two, three, four = 2, 3, 4
 		routeTypeMap := map[string]interface{}{
-			"DYNAMIC": 2,
-			"LOCAL":   3,
-			"STATIC":  4,
+			"DYNAMIC": two,
+			"LOCAL":   three,
+			"STATIC":  four,
 		}
 		pVal := routeTypeMap[routeType.(string)]
 		p := config.RouteType(pVal.(int))
@@ -376,10 +375,11 @@ func ResourceNutanixRoutesV2Update(ctx context.Context, d *schema.ResourceData, 
 		updateSpec.ExternalRoutingDomainReference = utils.StringPtr(d.Get("external_routing_domain_reference").(string))
 	}
 	if d.HasChange("route_type") {
+		const two, three, four = 2, 3, 4
 		routeTypeMap := map[string]interface{}{
-			"DYNAMIC": 2,
-			"LOCAL":   3,
-			"STATIC":  4,
+			"DYNAMIC": two,
+			"LOCAL":   three,
+			"STATIC":  four,
 		}
 		pVal := routeTypeMap[d.Get("route_type").(string)]
 		p := config.RouteType(pVal.(int))
@@ -497,8 +497,8 @@ func expandNextHop(nextHop interface{}) *config.Nexthop {
 	if nextHopReference, ok := nextHopMap["next_hop_reference"]; ok {
 		nextHopObj.NexthopReference = utils.StringPtr(nextHopReference.(string))
 	}
-	if nextHopIpAddress, ok := nextHopMap["next_hop_ip_address"]; ok && len(nextHopIpAddress.([]interface{})) > 0 {
-		nextHopObj.NexthopIpAddress = expandNextHopIPAddress(nextHopIpAddress)
+	if nextHopIPAddress, ok := nextHopMap["next_hop_ip_address"]; ok && len(nextHopIPAddress.([]interface{})) > 0 {
+		nextHopObj.NexthopIpAddress = expandNextHopIPAddress(nextHopIPAddress)
 	}
 	log.Printf("[DEBUG] Next Hop Object: %v", nextHopObj)
 	return nextHopObj
@@ -524,12 +524,13 @@ func expandNextHopIPAddress(address interface{}) *common.IPAddress {
 
 func expandNextHopType(hopType interface{}) *config.NexthopType {
 	if hopType != nil {
+		const two, three, four, five, six = 2, 3, 4, 5, 6
 		nextHopTypeMap := map[string]interface{}{
-			"IP_ADDRESS":         2,
-			"DIRECT_CONNECT_VIF": 3,
-			"LOCAL_SUBNET":       4,
-			"EXTERNAL_SUBNET":    5,
-			"VPN_CONNECTION":     6,
+			"IP_ADDRESS":         two,
+			"DIRECT_CONNECT_VIF": three,
+			"LOCAL_SUBNET":       four,
+			"EXTERNAL_SUBNET":    five,
+			"VPN_CONNECTION":     six,
 		}
 		pVal := nextHopTypeMap[hopType.(string)]
 		p := config.NexthopType(pVal.(int))
@@ -545,25 +546,25 @@ func expandMetadata(metadata []interface{}) *common.Metadata {
 	}
 	metadataMap := metadata[0].(map[string]interface{})
 	metadataObj := &common.Metadata{}
-	if ownerRefId, ok := metadataMap["owner_reference_id"]; ok {
-		metadataObj.OwnerReferenceId = utils.StringPtr(ownerRefId.(string))
+	if ownerRefID, ok := metadataMap["owner_reference_id"]; ok {
+		metadataObj.OwnerReferenceId = utils.StringPtr(ownerRefID.(string))
 	}
 	if ownerUserName, ok := metadataMap["owner_user_name"]; ok {
 		metadataObj.OwnerUserName = utils.StringPtr(ownerUserName.(string))
 	}
-	if projRefId, ok := metadataMap["project_reference_id"]; ok {
-		metadataObj.ProjectReferenceId = utils.StringPtr(projRefId.(string))
+	if projRefID, ok := metadataMap["project_reference_id"]; ok {
+		metadataObj.ProjectReferenceId = utils.StringPtr(projRefID.(string))
 	}
 	if projName, ok := metadataMap["project_name"]; ok {
 		metadataObj.ProjectName = utils.StringPtr(projName.(string))
 	}
-	if categoryIds, ok := metadataMap["category_ids"]; ok {
-		categoryIdList := categoryIds.([]interface{})
-		categoryIdListStr := make([]string, len(categoryIdList))
-		for i, v := range categoryIdList {
-			categoryIdListStr[i] = v.(string)
+	if categoryIDs, ok := metadataMap["category_ids"]; ok {
+		categoryIDList := categoryIDs.([]interface{})
+		categoryIDListStr := make([]string, len(categoryIDList))
+		for i, v := range categoryIDList {
+			categoryIDListStr[i] = v.(string)
 		}
-		metadataObj.CategoryIds = categoryIdListStr
+		metadataObj.CategoryIds = categoryIDListStr
 	}
 	aJSON, _ := json.Marshal(metadataObj)
 	log.Printf("[DEBUG] Metadata Object: %v", string(aJSON))
