@@ -19,6 +19,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
+const (
+	ipV4PrefixLengthDefault = 32
+	ipV6PrefixLengthDefault = 128
+)
+
 func ResourceNutanixDeployPcV2() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: ResourceNutanixDeployPcV2Create,
@@ -77,8 +82,8 @@ func ResourceNutanixDeployPcV2Create(ctx context.Context, d *schema.ResourceData
 		deployPcBody.ShouldEnableHighAvailability = utils.BoolPtr(shouldEnableHighAvailability.(bool))
 	}
 
-	aJson, _ := json.MarshalIndent(deployPcBody, "", "  ")
-	log.Printf("[DEBUG] Create Domain Manager Request Payload: %s", string(aJson))
+	aJSON, _ := json.MarshalIndent(deployPcBody, "", "  ")
+	log.Printf("[DEBUG] Create Domain Manager Request Payload: %s", string(aJSON))
 
 	resp, err := conn.DomainManagerAPIInstance.CreateDomainManager(deployPcBody)
 	if err != nil {
@@ -107,8 +112,8 @@ func ResourceNutanixDeployPcV2Create(ctx context.Context, d *schema.ResourceData
 	}
 
 	rUUID := resourceUUID.Data.GetValue().(config.Task)
-	aJson, _ = json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Create Domain Manager Task Details: %s", string(aJson))
+	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
+	log.Printf("[DEBUG] Create Domain Manager Task Details: %s", string(aJSON))
 
 	uuid := rUUID.EntitiesAffected[0].ExtId
 	d.SetId(*uuid)
@@ -446,19 +451,19 @@ func schemaForPcNetwork() *schema.Schema {
 					Type:     schema.TypeList,
 					Required: true,
 					MaxItems: 1,
-					Elem:     schemaForIpAddress(),
+					Elem:     schemaForIPAddress(),
 				},
 				"name_servers": {
 					Type:     schema.TypeList,
 					Required: true,
 					MaxItems: 1024,
-					Elem:     schemaForIpAddressOrFqdn(),
+					Elem:     schemaForIPAddressOrFqdn(),
 				},
 				"ntp_servers": {
 					Type:     schema.TypeList,
 					Required: true,
 					MaxItems: 1024,
-					Elem:     schemaForIpAddressOrFqdn(),
+					Elem:     schemaForIPAddressOrFqdn(),
 				},
 				"fqdn": {
 					Type:     schema.TypeString,
@@ -475,13 +480,13 @@ func schemaForPcNetwork() *schema.Schema {
 								Type:     schema.TypeList,
 								Required: true,
 								MaxItems: 1,
-								Elem:     schemaForIpAddressOrFqdn(),
+								Elem:     schemaForIPAddressOrFqdn(),
 							},
 							"subnet_mask": {
 								Type:     schema.TypeList,
 								Required: true,
 								MaxItems: 1,
-								Elem:     schemaForIpAddressOrFqdn(),
+								Elem:     schemaForIPAddressOrFqdn(),
 							},
 							"ip_ranges": {
 								Type:     schema.TypeList,
@@ -495,14 +500,14 @@ func schemaForPcNetwork() *schema.Schema {
 											Optional: true,
 											Computed: true,
 											MaxItems: 1,
-											Elem:     schemaForIpAddress(),
+											Elem:     schemaForIPAddress(),
 										},
 										"end": {
 											Type:     schema.TypeList,
 											Optional: true,
 											Computed: true,
 											MaxItems: 1,
-											Elem:     schemaForIpAddress(),
+											Elem:     schemaForIPAddress(),
 										},
 									},
 								},
@@ -520,13 +525,13 @@ func schemaForPcNetwork() *schema.Schema {
 								Type:     schema.TypeList,
 								Required: true,
 								MaxItems: 1,
-								Elem:     schemaForIpAddressOrFqdn(),
+								Elem:     schemaForIPAddressOrFqdn(),
 							},
 							"subnet_mask": {
 								Type:     schema.TypeList,
 								Required: true,
 								MaxItems: 1,
-								Elem:     schemaForIpAddressOrFqdn(),
+								Elem:     schemaForIPAddressOrFqdn(),
 							},
 							"ip_ranges": {
 								Type:     schema.TypeList,
@@ -540,14 +545,14 @@ func schemaForPcNetwork() *schema.Schema {
 											Optional: true,
 											Computed: true,
 											MaxItems: 1,
-											Elem:     schemaForIpAddress(),
+											Elem:     schemaForIPAddress(),
 										},
 										"end": {
 											Type:     schema.TypeList,
 											Optional: true,
 											Computed: true,
 											MaxItems: 1,
-											Elem:     schemaForIpAddress(),
+											Elem:     schemaForIPAddress(),
 										},
 									},
 								},
@@ -564,20 +569,20 @@ func schemaForPcNetwork() *schema.Schema {
 	}
 }
 
-func schemaForIpAddress() *schema.Resource {
+func schemaForIPAddress() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"ipv4": SchemaForValuePrefixLengthResource(32),
-			"ipv6": SchemaForValuePrefixLengthResource(128),
+			"ipv4": SchemaForValuePrefixLengthResource(ipV4PrefixLengthDefault),
+			"ipv6": SchemaForValuePrefixLengthResource(ipV6PrefixLengthDefault),
 		},
 	}
 }
 
-func schemaForIpAddressOrFqdn() *schema.Resource {
+func schemaForIPAddressOrFqdn() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"ipv4": SchemaForValuePrefixLengthResource(32),
-			"ipv6": SchemaForValuePrefixLengthResource(128),
+			"ipv4": SchemaForValuePrefixLengthResource(ipV4PrefixLengthDefault),
+			"ipv6": SchemaForValuePrefixLengthResource(ipV6PrefixLengthDefault),
 			"fqdn": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -672,19 +677,19 @@ func expandPCConfig(configData map[string]interface{}) *config.DomainManagerClus
 }
 
 func expandClusterSize(size string) *config.Size {
-	const STARTER, SMALL, LARGE, EXTRALARGE = "STARTER", "SMALL", "LARGE", "EXTRALARGE"
+	const STARTER, SMALL, LARGE, EXTRALARGE = 2, 3, 4, 5
 	switch size {
-	case STARTER:
-		sizeVal := config.Size(2)
+	case "STARTER":
+		sizeVal := config.Size(STARTER)
 		return &sizeVal
-	case SMALL:
-		sizeVal := config.Size(3)
+	case "SMALL":
+		sizeVal := config.Size(SMALL)
 		return &sizeVal
-	case LARGE:
-		sizeVal := config.Size(3)
+	case "LARGE":
+		sizeVal := config.Size(LARGE)
 		return &sizeVal
-	case EXTRALARGE:
-		sizeVal := config.Size(3)
+	case "EXTRALARGE":
+		sizeVal := config.Size(EXTRALARGE)
 		return &sizeVal
 	default:
 		return nil
@@ -703,8 +708,9 @@ func expandBootstrapConfig(bootStrapConfigData map[string]interface{}) *config.B
 			cloudInitObj := vmmConfig.NewCloudInit()
 			if datasourceType, ok := cloudInitDataMap["datasource_type"]; ok {
 				if datasourceType != nil && datasourceType != "" {
+					const ConfigDriveV2 = 2
 					subMap := map[string]interface{}{
-						"CONFIG_DRIVE_V2": 2,
+						"CONFIG_DRIVE_V2": ConfigDriveV2,
 					}
 					pVal := subMap[datasourceType.(string)]
 					if pVal == nil {
@@ -745,7 +751,6 @@ func expandBootstrapConfig(bootStrapConfigData map[string]interface{}) *config.B
 					}
 					cloudInitObj.CloudInitScript = cloudInitScriptObj
 				}
-
 			}
 			cloudInitConfigList = append(cloudInitConfigList, *cloudInitObj)
 		}
@@ -758,12 +763,13 @@ func expandBootstrapConfig(bootStrapConfigData map[string]interface{}) *config.B
 
 		if providerType, ok := environmentInfoData["provider_type"]; ok {
 			if providerType != nil && providerType != "" {
+				const NTNX, AZURE, AWS, GCP, VSPHERE = 2, 3, 4, 5, 6
 				subMap := map[string]interface{}{
-					"NTNX":    2,
-					"AZURE":   3,
-					"AWS":     4,
-					"GCP":     5,
-					"VSPHERE": 6,
+					"NTNX":    NTNX,
+					"AZURE":   AZURE,
+					"AWS":     AWS,
+					"GCP":     GCP,
+					"VSPHERE": VSPHERE,
 				}
 				pVal := subMap[providerType.(string)]
 				if pVal == nil {
@@ -837,8 +843,8 @@ func expandKVPair(attribute map[string]interface{}) commonConfig.KVPair {
 		kv.Name = utils.StringPtr(attribute["name"].(string))
 		kv.Value = expandValue(attribute["value"])
 	}
-	aJson, _ := json.MarshalIndent(kv, "", "  ")
-	log.Printf("[DEBUG] KVPair: %v", string(aJson))
+	aJSON, _ := json.MarshalIndent(kv, "", "  ")
+	log.Printf("[DEBUG] KVPair: %v", string(aJSON))
 	return kv
 }
 
@@ -888,8 +894,8 @@ func expandValue(kvPairValue interface{}) *commonConfig.OneOfKVPairValue {
 				}
 				mapOfStrings = append(mapOfStrings, *mapOfStringsObj)
 			}
-			aJson, _ := json.Marshal(mapOfStrings)
-			log.Printf("[DEBUG] mapOfStrings: %v", string(aJson))
+			aJSON, _ := json.Marshal(mapOfStrings)
+			log.Printf("[DEBUG] mapOfStrings: %v", string(aJSON))
 			log.Printf("[DEBUG] mapOfStrings type: %T", mapOfStrings)
 			err := valueObj.SetValue(mapOfStrings)
 			if err != nil {
@@ -937,7 +943,6 @@ func expandValue(kvPairValue interface{}) *commonConfig.OneOfKVPairValue {
 			log.Printf("[ERROR] invalid value type")
 			return nil
 		}
-
 	}
 	return valueObj
 }
@@ -964,8 +969,8 @@ func expandResourceConfig(resourceConfig map[string]interface{}) *config.DomainM
 	if containerExtIds, ok := resourceConfig["container_ext_ids"]; ok {
 		containerExtIdsList := containerExtIds.([]interface{})
 		containerExtIdsListObj := make([]string, 0)
-		for _, containerExtId := range containerExtIdsList {
-			containerExtIdsListObj = append(containerExtIdsListObj, containerExtId.(string))
+		for _, containerExtID := range containerExtIdsList {
+			containerExtIdsListObj = append(containerExtIdsListObj, containerExtID.(string))
 		}
 		resourceConfigObj.ContainerExtIds = containerExtIdsListObj
 	}
@@ -980,13 +985,13 @@ func expandPCNetwork(pcNetwork map[string]interface{}) *config.DomainManagerNetw
 
 	if externalAddress, ok := pcNetwork["external_address"]; ok {
 		externalAddressData := externalAddress.([]interface{})[0].(map[string]interface{})
-		pcNetworkObj.ExternalAddress = expandIpAddress(externalAddressData)
+		pcNetworkObj.ExternalAddress = expandIPAddress(externalAddressData)
 	}
 	if nameServers, ok := pcNetwork["name_servers"]; ok {
 		nameServersData := nameServers.([]interface{})
 		nameServersObj := make([]commonConfig.IPAddressOrFQDN, 0)
 		for _, nameServerData := range nameServersData {
-			nameServerObj := expandIpAddressOrFqdn(nameServerData.(map[string]interface{}))
+			nameServerObj := expandIPAddressOrFqdn(nameServerData.(map[string]interface{}))
 			nameServersObj = append(nameServersObj, nameServerObj)
 		}
 		pcNetworkObj.NameServers = nameServersObj
@@ -995,7 +1000,7 @@ func expandPCNetwork(pcNetwork map[string]interface{}) *config.DomainManagerNetw
 		ntpServersData := ntpServers.([]interface{})
 		ntpServersObj := make([]commonConfig.IPAddressOrFQDN, 0)
 		for _, ntpServerData := range ntpServersData {
-			ntpServerObj := expandIpAddressOrFqdn(ntpServerData.(map[string]interface{}))
+			ntpServerObj := expandIPAddressOrFqdn(ntpServerData.(map[string]interface{}))
 			ntpServersObj = append(ntpServersObj, ntpServerObj)
 		}
 		pcNetworkObj.NtpServers = ntpServersObj
@@ -1027,12 +1032,12 @@ func expandExternalNetwork(externalNetwork map[string]interface{}) config.Extern
 
 	if defaultGateway, ok := externalNetwork["default_gateway"]; ok {
 		defaultGatewayData := defaultGateway.([]interface{})[0].(map[string]interface{})
-		defaultGatewayObj := expandIpAddressOrFqdn(defaultGatewayData)
+		defaultGatewayObj := expandIPAddressOrFqdn(defaultGatewayData)
 		externalNetworkObj.DefaultGateway = &defaultGatewayObj
 	}
 	if subnetMask, ok := externalNetwork["subnet_mask"]; ok {
 		subnetMaskData := subnetMask.([]interface{})[0].(map[string]interface{})
-		subnetMaskObj := expandIpAddressOrFqdn(subnetMaskData)
+		subnetMaskObj := expandIPAddressOrFqdn(subnetMaskData)
 		externalNetworkObj.SubnetMask = &subnetMaskObj
 	}
 	if ipRanges, ok := externalNetwork["ip_ranges"]; ok {
@@ -1044,8 +1049,8 @@ func expandExternalNetwork(externalNetwork map[string]interface{}) config.Extern
 		}
 		externalNetworkObj.IpRanges = ipRangesList
 	}
-	if networkExtId, ok := externalNetwork["network_ext_id"]; ok {
-		externalNetworkObj.NetworkExtId = utils.StringPtr(networkExtId.(string))
+	if networkExtID, ok := externalNetwork["network_ext_id"]; ok {
+		externalNetworkObj.NetworkExtId = utils.StringPtr(networkExtID.(string))
 	}
 
 	return *externalNetworkObj
@@ -1056,12 +1061,12 @@ func expandInternalNetwork(internalNetwork map[string]interface{}) config.BaseNe
 
 	if defaultGateway, ok := internalNetwork["default_gateway"]; ok {
 		defaultGatewayData := defaultGateway.([]interface{})[0].(map[string]interface{})
-		defaultGatewayObj := expandIpAddressOrFqdn(defaultGatewayData)
+		defaultGatewayObj := expandIPAddressOrFqdn(defaultGatewayData)
 		internalNetworkObj.DefaultGateway = &defaultGatewayObj
 	}
 	if subnetMask, ok := internalNetwork["subnet_mask"]; ok {
 		subnetMaskData := subnetMask.([]interface{})[0].(map[string]interface{})
-		subnetMaskObj := expandIpAddressOrFqdn(subnetMaskData)
+		subnetMaskObj := expandIPAddressOrFqdn(subnetMaskData)
 		internalNetworkObj.SubnetMask = &subnetMaskObj
 	}
 	if ipRanges, ok := internalNetwork["ip_ranges"]; ok {
@@ -1082,12 +1087,12 @@ func expandIPRange(ipRange map[string]interface{}) commonConfig.IpRange {
 
 	if begin, ok := ipRange["begin"]; ok {
 		beginData := begin.([]interface{})[0].(map[string]interface{})
-		beginObj := expandIpAddress(beginData)
+		beginObj := expandIPAddress(beginData)
 		ipRangeObj.Begin = beginObj
 	}
 	if end, ok := ipRange["end"]; ok {
 		endData := end.([]interface{})[0].(map[string]interface{})
-		endObj := expandIpAddress(endData)
+		endObj := expandIPAddress(endData)
 		ipRangeObj.End = endObj
 	}
 
@@ -1096,7 +1101,7 @@ func expandIPRange(ipRange map[string]interface{}) commonConfig.IpRange {
 
 // ip address expanders
 
-func expandIpAddress(ipAddress map[string]interface{}) *commonConfig.IPAddress {
+func expandIPAddress(ipAddress map[string]interface{}) *commonConfig.IPAddress {
 	ipAddressObj := commonConfig.NewIPAddress()
 
 	if ipv4, ok := ipAddress["ipv4"]; ok && len(ipv4.([]interface{})) > 0 {
@@ -1109,7 +1114,7 @@ func expandIpAddress(ipAddress map[string]interface{}) *commonConfig.IPAddress {
 	return ipAddressObj
 }
 
-func expandIpAddressOrFqdn(ipAddressOrFQDN map[string]interface{}) commonConfig.IPAddressOrFQDN {
+func expandIPAddressOrFqdn(ipAddressOrFQDN map[string]interface{}) commonConfig.IPAddressOrFQDN {
 	ipAddressOrFQDNObj := *commonConfig.NewIPAddressOrFQDN()
 
 	if ipv4, ok := ipAddressOrFQDN["ipv4"]; ok && len(ipv4.([]interface{})) > 0 {
@@ -1123,7 +1128,6 @@ func expandIpAddressOrFqdn(ipAddressOrFQDN map[string]interface{}) commonConfig.
 	}
 
 	return ipAddressOrFQDNObj
-
 }
 
 func expandIPv4Address(ipv4 interface{}) *commonConfig.IPv4Address {
@@ -1276,12 +1280,12 @@ func flattenEnvironmentInfo(environmentInfo *config.EnvironmentInfo) []map[strin
 }
 
 func flattenEnvironmentType(environmentType config.EnvironmentType) string {
-	const ONPREM, NTNX_CLOUD = 2, 3
+	const ONPREM, NtnxCloud = 2, 3
 
 	switch environmentType {
 	case ONPREM:
 		return "ONPREM"
-	case NTNX_CLOUD:
+	case NtnxCloud:
 		return "NTNX_CLOUD"
 	default:
 		return "UNKNOWN"
@@ -1342,19 +1346,20 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 
 func getTaskStatus(pr *config.TaskStatus) string {
 	if pr != nil {
-		if *pr == config.TaskStatus(6) {
+		const QUEUED, RUNNING, SUCCEEDED, FAILED, CANCELED = 2, 3, 5, 6, 7
+		if *pr == config.TaskStatus(FAILED) {
 			return "FAILED"
 		}
-		if *pr == config.TaskStatus(7) {
+		if *pr == config.TaskStatus(CANCELED) {
 			return "CANCELED"
 		}
-		if *pr == config.TaskStatus(2) {
+		if *pr == config.TaskStatus(QUEUED) {
 			return "QUEUED"
 		}
-		if *pr == config.TaskStatus(3) {
+		if *pr == config.TaskStatus(RUNNING) {
 			return "RUNNING"
 		}
-		if *pr == config.TaskStatus(5) {
+		if *pr == config.TaskStatus(SUCCEEDED) {
 			return "SUCCEEDED"
 		}
 	}
@@ -1369,7 +1374,7 @@ func flattenPCNetwork(network *config.DomainManagerNetwork) []map[string]interfa
 	}
 	networkMap := make(map[string]interface{})
 	if network.ExternalAddress != nil {
-		networkMap["external_address"] = flattenIpAddress(network.ExternalAddress)
+		networkMap["external_address"] = flattenIPAddress(network.ExternalAddress)
 	}
 	if network.NameServers != nil {
 		networkMap["name_servers"] = flattenIPAddressOrFQDN(network.NameServers)
@@ -1389,7 +1394,7 @@ func flattenPCNetwork(network *config.DomainManagerNetwork) []map[string]interfa
 	return []map[string]interface{}{networkMap}
 }
 
-func flattenIpAddress(ipAddress *commonConfig.IPAddress) []map[string]interface{} {
+func flattenIPAddress(ipAddress *commonConfig.IPAddress) []map[string]interface{} {
 	if ipAddress == nil {
 		return nil
 	}
@@ -1494,8 +1499,8 @@ func flattenIPRanges(ipRanges []commonConfig.IpRange) []map[string]interface{} {
 		for k, v := range ipRanges {
 			ipRangeMap := make(map[string]interface{})
 
-			ipRangeMap["begin"] = flattenIpAddress(v.Begin)
-			ipRangeMap["end"] = flattenIpAddress(v.End)
+			ipRangeMap["begin"] = flattenIPAddress(v.Begin)
+			ipRangeMap["end"] = flattenIPAddress(v.End)
 
 			ipRangesMap[k] = ipRangeMap
 		}
