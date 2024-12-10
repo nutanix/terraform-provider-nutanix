@@ -43,6 +43,9 @@ jobs:
                   elif [ "$provider" = "v4" ]
                       then
                           runFlag+="TestAccV2Nutanix*"
+                  elif [ "$provider" = "prism" ]
+                      then
+                          runFlag+="TestAccV2NutanixCategories*"
                   elif [ "$provider" = "era" ]
                       then
                           runFlag+="TestAccEra*"
