@@ -10,7 +10,7 @@ import (
 
 const datasourceNameRoles = "data.nutanix_roles_v2.test"
 
-func TestAccNutanixRolesV2Datasource_Basic(t *testing.T) {
+func TestAccV2NutanixRolesDatasource_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -27,7 +27,7 @@ func TestAccNutanixRolesV2Datasource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixRolesV2Datasource_WithFilter(t *testing.T) {
+func TestAccV2NutanixRolesDatasource_WithFilter(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -45,7 +45,7 @@ func TestAccNutanixRolesV2Datasource_WithFilter(t *testing.T) {
 	})
 }
 
-func TestAccNutanixRolesV2Datasource_WithLimit(t *testing.T) {
+func TestAccV2NutanixRolesDatasource_WithLimit(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

@@ -10,7 +10,7 @@ import (
 
 const datasourceNameIdentityProvider = "data.nutanix_saml_identity_provider_v2.test"
 
-func TestAccNutanixIdentityProvidersV2Datasource_GetSamlIdpById(t *testing.T) {
+func TestAccV2NutanixIdentityProvidersDatasource_GetSamlIdpById(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

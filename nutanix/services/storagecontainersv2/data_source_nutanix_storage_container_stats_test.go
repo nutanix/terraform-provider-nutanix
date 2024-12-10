@@ -14,7 +14,7 @@ import (
 
 const datasourceNameStorageStatsInfo = "data.nutanix_storage_container_stats_info_v2.test"
 
-func TestAccNutanixStorageStatsInfoV2Datasource_Basic(t *testing.T) {
+func TestAccV2NutanixStorageStatsInfoDataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-storage-container-%d", r)
 	path, _ := os.Getwd()
@@ -44,7 +44,7 @@ func TestAccNutanixStorageStatsInfoV2Datasource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixStorageStatsInfoV2Datasource_SampleInterval(t *testing.T) {
+func TestAccV2NutanixStorageStatsInfoDataSource_SampleInterval(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-storage-container-%d", r)
 	path, _ := os.Getwd()
@@ -74,7 +74,7 @@ func TestAccNutanixStorageStatsInfoV2Datasource_SampleInterval(t *testing.T) {
 	})
 }
 
-func TestAccNutanixStorageStatsInfoV2Datasource_StatType(t *testing.T) {
+func TestAccV2NutanixStorageStatsInfoDataSource_StatType(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-storage-container-%d", r)
 	path, _ := os.Getwd()
@@ -104,7 +104,7 @@ func TestAccNutanixStorageStatsInfoV2Datasource_StatType(t *testing.T) {
 	})
 }
 
-func TestAccNutanixStorageStatsInfoV2Datasource_InvalidSampleInterval(t *testing.T) {
+func TestAccV2NutanixStorageStatsInfoDataSource_InvalidSampleInterval(t *testing.T) {
 	// Start time is now
 	startTime := time.Now()
 
@@ -127,7 +127,7 @@ func TestAccNutanixStorageStatsInfoV2Datasource_InvalidSampleInterval(t *testing
 	})
 }
 
-func TestAccNutanixStorageStatsInfoV2Datasource_InvalidStatType(t *testing.T) {
+func TestAccV2NutanixStorageStatsInfoDataSource_InvalidStatType(t *testing.T) {
 	// Start time is now
 	startTime := time.Now()
 
@@ -150,7 +150,7 @@ func TestAccNutanixStorageStatsInfoV2Datasource_InvalidStatType(t *testing.T) {
 	})
 }
 
-func TestAccNutanixStorageStatsInfoV2Datasource_MissingRequiredArgs(t *testing.T) {
+func TestAccV2NutanixStorageStatsInfoDataSource_MissingRequiredArgs(t *testing.T) {
 	// Start time is now
 	startTime := time.Now()
 

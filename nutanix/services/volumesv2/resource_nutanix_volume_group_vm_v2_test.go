@@ -12,7 +12,7 @@ import (
 
 const resourceVolumeGroupVM = "nutanix_volume_group_vm_v2.test"
 
-func TestAccNutanixVolumeGroupVmV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixVolumeGroupVmResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-volume-group-%d", r)
 	desc := "test volume group Vm Attachment description"

@@ -12,7 +12,7 @@ import (
 
 const resourceNameAuthorizationPolicy = "nutanix_authorization_policy_v2.test"
 
-func TestAccNutanixAuthorizationPolicyV2Resource_CreateACP(t *testing.T) {
+func TestAccV2NutanixAuthorizationPolicyResource_CreateACP(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -50,7 +50,7 @@ func TestAccNutanixAuthorizationPolicyV2Resource_CreateACP(t *testing.T) {
 	})
 }
 
-func TestAccNutanixAuthorizationPolicyV2Resource_WithNoDisplayName(t *testing.T) {
+func TestAccV2NutanixAuthorizationPolicyResource_WithNoDisplayName(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -63,7 +63,7 @@ func TestAccNutanixAuthorizationPolicyV2Resource_WithNoDisplayName(t *testing.T)
 	})
 }
 
-func TestAccNutanixAuthorizationPolicyV2Resource_WithNoIdentities(t *testing.T) {
+func TestAccV2NutanixAuthorizationPolicyResource_WithNoIdentities(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -76,7 +76,7 @@ func TestAccNutanixAuthorizationPolicyV2Resource_WithNoIdentities(t *testing.T) 
 	})
 }
 
-func TestAccNutanixAuthorizationPolicyV2Resource_WithNoEntities(t *testing.T) {
+func TestAccV2NutanixAuthorizationPolicyResource_WithNoEntities(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -89,7 +89,7 @@ func TestAccNutanixAuthorizationPolicyV2Resource_WithNoEntities(t *testing.T) {
 	})
 }
 
-func TestAccNutanixAuthorizationPolicyV2Resource_WithNoRole(t *testing.T) {
+func TestAccV2NutanixAuthorizationPolicyResource_WithNoRole(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

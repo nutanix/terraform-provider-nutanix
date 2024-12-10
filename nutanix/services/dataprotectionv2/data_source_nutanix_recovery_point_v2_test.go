@@ -12,7 +12,7 @@ import (
 
 const datasourceNameRecoveryPoint = "data.nutanix_recovery_point_v2.test"
 
-func TestAccNutanixRecoveryPointV2Datasource_VmRecoveryPoints(t *testing.T) {
+func TestAccV2NutanixRecoveryPointDatasource_VmRecoveryPoints(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-recovery-point-%d", r)
 	vmName := fmt.Sprintf("tf-test-rp-vm-%d", r)

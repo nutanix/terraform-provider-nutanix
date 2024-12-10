@@ -11,7 +11,7 @@ import (
 
 const datasourceNameUser = "data.nutanix_user_v2.test"
 
-func TestAccNutanixUserV2Datasource_Basic(t *testing.T) {
+func TestAccV2NutanixUserDatasource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-user-%d", r)
 

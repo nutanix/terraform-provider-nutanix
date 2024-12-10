@@ -10,7 +10,7 @@ import (
 
 const datasourceNameDirectoryServices = "data.nutanix_directory_services_v2.test"
 
-func TestAccNutanixDirectoryServicesV2Datasource_Basic(t *testing.T) {
+func TestAccV2NutanixDirectoryServicesDatasource_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -28,7 +28,7 @@ func TestAccNutanixDirectoryServicesV2Datasource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixDirectoryServicesV2Datasource_WithFilter(t *testing.T) {
+func TestAccV2NutanixDirectoryServicesDatasource_WithFilter(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -51,7 +51,7 @@ func TestAccNutanixDirectoryServicesV2Datasource_WithFilter(t *testing.T) {
 	})
 }
 
-func TestAccNutanixDirectoryServicesV2Datasource_WithLimit(t *testing.T) {
+func TestAccV2NutanixDirectoryServicesDatasource_WithLimit(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

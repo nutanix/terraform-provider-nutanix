@@ -11,7 +11,7 @@ import (
 
 const resourceNameIdentityProviders = "nutanix_saml_identity_providers_v2.test"
 
-func TestAccNutanixIdentityProvidersV2Resource_CreateSamlIdp(t *testing.T) {
+func TestAccV2NutanixIdentityProvidersResource_CreateSamlIdp(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -34,7 +34,7 @@ func TestAccNutanixIdentityProvidersV2Resource_CreateSamlIdp(t *testing.T) {
 	})
 }
 
-func TestAccNutanixIdentityProvidersV2ResourceWithNoName(t *testing.T) {
+func TestAccV2NutanixIdentityProvidersResourceWithNoName(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -47,7 +47,7 @@ func TestAccNutanixIdentityProvidersV2ResourceWithNoName(t *testing.T) {
 	})
 }
 
-func TestAccNutanixIdentityProvidersV2ResourceWithNoEntityId(t *testing.T) {
+func TestAccV2NutanixIdentityProvidersResourceWithNoEntityId(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

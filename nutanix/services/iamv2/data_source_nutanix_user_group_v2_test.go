@@ -10,7 +10,7 @@ import (
 
 const datasourceNameUserGroup = "data.nutanix_user_group_v2.test"
 
-func TestAccNutanixUserGroupsV2Datasource_GetUserGroupByExrId(t *testing.T) {
+func TestAccV2NutanixUserGroupsDatasource_GetUserGroupByExrId(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

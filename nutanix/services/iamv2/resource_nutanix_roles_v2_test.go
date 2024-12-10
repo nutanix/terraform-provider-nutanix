@@ -11,7 +11,7 @@ import (
 
 const resourceNameRoles = "nutanix_roles_v2.test"
 
-func TestAccNutanixRolesV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixRolesResource_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -37,7 +37,7 @@ func TestAccNutanixRolesV2Resource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixRolesV2Resource_DuplicateRole(t *testing.T) {
+func TestAccV2NutanixRolesResource_DuplicateRole(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -50,7 +50,7 @@ func TestAccNutanixRolesV2Resource_DuplicateRole(t *testing.T) {
 	})
 }
 
-func TestAccNutanixRolesV2Resource_WithNoDisplayName(t *testing.T) {
+func TestAccV2NutanixRolesResource_WithNoDisplayName(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -63,7 +63,7 @@ func TestAccNutanixRolesV2Resource_WithNoDisplayName(t *testing.T) {
 	})
 }
 
-func TestAccNutanixRolesV2Resource_WithNoOperations(t *testing.T) {
+func TestAccV2NutanixRolesResource_WithNoOperations(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

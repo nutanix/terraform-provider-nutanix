@@ -10,7 +10,7 @@ import (
 
 const datasourceNameRole = "data.nutanix_role_v2.test"
 
-func TestAccNutanixRolesV2Datasource_Basic_Role(t *testing.T) {
+func TestAccV2NutanixRolesDatasource_Basic_Role(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

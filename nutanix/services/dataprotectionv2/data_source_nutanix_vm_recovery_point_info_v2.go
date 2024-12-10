@@ -125,6 +125,9 @@ func DatasourceNutanixVMRecoveryPointInfoV2Read(ctx context.Context, d *schema.R
 	if err := d.Set("vm_categories", getResp.VmCategories); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("application_consistent_properties", flattenApplicationConsistentProperties(getResp.ApplicationConsistentProperties)); err != nil {
+		return diag.FromErr(err)
+	}
 
 	d.SetId(*getResp.ExtId)
 	return nil

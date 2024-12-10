@@ -9,7 +9,7 @@ import (
 
 const datasourceNameHostEntities = "data.nutanix_hosts_v2.test"
 
-func TestAccNutanixHostEntitiesV2Datasource_Basic(t *testing.T) {
+func TestAccV2NutanixHostEntitiesDatasource_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -25,7 +25,7 @@ func TestAccNutanixHostEntitiesV2Datasource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixHostEntitiesV2Datasource_WithLimit(t *testing.T) {
+func TestAccV2NutanixHostEntitiesDatasource_WithLimit(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

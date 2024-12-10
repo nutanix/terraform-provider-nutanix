@@ -11,7 +11,7 @@ import (
 
 const datasourceNameUsers = "data.nutanix_users_v2.test"
 
-func TestAccNutanixUsersV2Datasource_Basic(t *testing.T) {
+func TestAccV2NutanixUsersDatasource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-user-%d", r)
 
@@ -32,7 +32,7 @@ func TestAccNutanixUsersV2Datasource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixUsersV2Datasource_WithFilter(t *testing.T) {
+func TestAccV2NutanixUsersDatasource_WithFilter(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-user-%d", r)
 
@@ -58,7 +58,7 @@ func TestAccNutanixUsersV2Datasource_WithFilter(t *testing.T) {
 	})
 }
 
-func TestAccNutanixUsersV2Datasource_WithLimit(t *testing.T) {
+func TestAccV2NutanixUsersDatasource_WithLimit(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-user-%d", r)
 

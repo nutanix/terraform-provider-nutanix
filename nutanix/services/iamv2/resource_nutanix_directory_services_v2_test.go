@@ -12,7 +12,7 @@ import (
 
 const resourceNameDirectoryServices = "nutanix_directory_services_v2.test"
 
-func TestAccNutanixDirectoryServicesV2Resource_CreateACTIVE_DIRECTORYService(t *testing.T) {
+func TestAccV2NutanixDirectoryServicesResource_CreateACTIVE_DIRECTORYService(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -47,7 +47,7 @@ func TestAccNutanixDirectoryServicesV2Resource_CreateACTIVE_DIRECTORYService(t *
 	})
 }
 
-func TestAccNutanixDirectoryServicesV2Resource_CreateOpenLDAPService(t *testing.T) {
+func TestAccV2NutanixDirectoryServicesResource_CreateOpenLDAPService(t *testing.T) {
 	t.Skip("Skipping test as OpenLDAP waiting for LDAP configuration")
 
 	name := fmt.Sprintf("tf-test-openldap-%d", acctest.RandInt())
@@ -72,7 +72,7 @@ func TestAccNutanixDirectoryServicesV2Resource_CreateOpenLDAPService(t *testing.
 	})
 }
 
-func TestAccNutanixDirectoryServicesV2Resource_CreateACTIVE_DIRECTORYAlreadyExists(t *testing.T) {
+func TestAccV2NutanixDirectoryServicesResource_CreateACTIVE_DIRECTORYAlreadyExists(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -97,7 +97,7 @@ func TestAccNutanixDirectoryServicesV2Resource_CreateACTIVE_DIRECTORYAlreadyExis
 	})
 }
 
-func TestAccNutanixDirectoryServicesV2Resource_WithNoName(t *testing.T) {
+func TestAccV2NutanixDirectoryServicesResource_WithNoName(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -110,7 +110,7 @@ func TestAccNutanixDirectoryServicesV2Resource_WithNoName(t *testing.T) {
 	})
 }
 
-func TestAccNutanixDirectoryServicesV2Resource_WithNoUrl(t *testing.T) {
+func TestAccV2NutanixDirectoryServicesResource_WithNoUrl(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -123,7 +123,7 @@ func TestAccNutanixDirectoryServicesV2Resource_WithNoUrl(t *testing.T) {
 	})
 }
 
-func TestAccNutanixDirectoryServicesV2Resource_WithNoDomainName(t *testing.T) {
+func TestAccV2NutanixDirectoryServicesResource_WithNoDomainName(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -136,7 +136,7 @@ func TestAccNutanixDirectoryServicesV2Resource_WithNoDomainName(t *testing.T) {
 	})
 }
 
-func TestAccNutanixDirectoryServicesV2Resource_WithNoDirectoryType(t *testing.T) {
+func TestAccV2NutanixDirectoryServicesResource_WithNoDirectoryType(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -149,7 +149,7 @@ func TestAccNutanixDirectoryServicesV2Resource_WithNoDirectoryType(t *testing.T)
 	})
 }
 
-func TestAccNutanixDirectoryServicesV2Resource_WithNoServiceAccount(t *testing.T) {
+func TestAccV2NutanixDirectoryServicesResource_WithNoServiceAccount(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

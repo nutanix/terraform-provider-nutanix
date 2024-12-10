@@ -10,7 +10,7 @@ import (
 
 const datasourceNameIdentityProviders = "data.nutanix_saml_identity_providers_v2.test"
 
-func TestAccNutanixIdentityProvidersV2Datasource_ListAllIDPS(t *testing.T) {
+func TestAccV2NutanixIdentityProvidersDatasource_ListAllIDPS(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -27,7 +27,7 @@ func TestAccNutanixIdentityProvidersV2Datasource_ListAllIDPS(t *testing.T) {
 	})
 }
 
-func TestAccNutanixIdentityProvidersV2Datasource_WithFilter(t *testing.T) {
+func TestAccV2NutanixIdentityProvidersDatasource_WithFilter(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -54,7 +54,7 @@ func TestAccNutanixIdentityProvidersV2Datasource_WithFilter(t *testing.T) {
 	})
 }
 
-func TestAccNutanixIdentityProvidersV2Datasource_WithLimit(t *testing.T) {
+func TestAccV2NutanixIdentityProvidersDatasource_WithLimit(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

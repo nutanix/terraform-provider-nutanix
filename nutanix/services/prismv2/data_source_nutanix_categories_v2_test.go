@@ -9,7 +9,7 @@ import (
 
 const datasourceNameCategories = "data.nutanix_categories_v2.test"
 
-func TestAccNutanixCategoriesV2DataSource_basic(t *testing.T) {
+func TestAccV2NutanixCategoriesDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -28,7 +28,7 @@ func TestAccNutanixCategoriesV2DataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixCategoriesV2DataSource_WithFilter(t *testing.T) {
+func TestAccV2NutanixCategoriesDataSource_WithFilter(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -48,7 +48,7 @@ func TestAccNutanixCategoriesV2DataSource_WithFilter(t *testing.T) {
 	})
 }
 
-func TestAccNutanixCategoriesV2DataSource_WithLimit(t *testing.T) {
+func TestAccV2NutanixCategoriesDataSource_WithLimit(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

@@ -11,7 +11,7 @@ import (
 
 const dataSourceVolumeGroupIscsiClients = "data.nutanix_volume_group_iscsi_clients_v2.vg_iscsi_test"
 
-func TestAccNutanixVolumeGroupIscsiClientsV2Datasource_Basic(t *testing.T) {
+func TestAccV2NutanixVolumeGroupIscsiClientsDataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-volume-group-disk-%d", r)
 	desc := "terraform test volume group disk description"

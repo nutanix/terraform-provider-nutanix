@@ -12,7 +12,7 @@ import (
 
 const datasourceNameRecoveryPoints = "data.nutanix_recovery_points_v2.test"
 
-func TestAccNutanixRecoveryPointsV2Datasource_Basic(t *testing.T) {
+func TestAccV2NutanixRecoveryPointsDatasource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-recovery-point-%d", r)
 	vmName := fmt.Sprintf("tf-test-rp-vm-%d", r)
@@ -37,7 +37,7 @@ func TestAccNutanixRecoveryPointsV2Datasource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixRecoveryPointsV2Datasource_WithFilter(t *testing.T) {
+func TestAccV2NutanixRecoveryPointsDatasource_WithFilter(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-recovery-point-%d", r)
 	vmName := fmt.Sprintf("tf-test-rp-vm-%d", r)
@@ -67,7 +67,7 @@ func TestAccNutanixRecoveryPointsV2Datasource_WithFilter(t *testing.T) {
 	})
 }
 
-func TestAccNutanixRecoveryPointsV2Datasource_WithLimit(t *testing.T) {
+func TestAccV2NutanixRecoveryPointsDatasource_WithLimit(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-recovery-point-%d", r)
 	vmName := fmt.Sprintf("tf-test-rp-vm-%d", r)

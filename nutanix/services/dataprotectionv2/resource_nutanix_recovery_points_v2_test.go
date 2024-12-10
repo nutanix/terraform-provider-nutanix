@@ -20,7 +20,7 @@ var (
 	filepath = path + "/../../../test_config_v2.json"
 )
 
-func TestAccNutanixRecoveryPointsV2Resource_VmRecoveryPoints2(t *testing.T) {
+func TestAccV2NutanixRecoveryPointsResource_VmRecoveryPoints2(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-recovery-point-%d", r)
 	vmName := fmt.Sprintf("tf-test-rp-vm-%d", r)
@@ -53,7 +53,7 @@ func TestAccNutanixRecoveryPointsV2Resource_VmRecoveryPoints2(t *testing.T) {
 	})
 }
 
-func TestAccNutanixRecoveryPointsV2Resource_VmRecoveryPointsWithAppConsProps(t *testing.T) {
+func TestAccV2NutanixRecoveryPointsResource_VmRecoveryPointsWithAppConsProps(t *testing.T) {
 	t.Skip("Skipping this test case as it is failing due to missing app consistent properties in get request")
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-recovery-point-%d", r)
@@ -85,7 +85,7 @@ func TestAccNutanixRecoveryPointsV2Resource_VmRecoveryPointsWithAppConsProps(t *
 	})
 }
 
-func TestAccNutanixRecoveryPointsV2Resource_VmRecoveryPointsWithMultipleVms(t *testing.T) {
+func TestAccV2NutanixRecoveryPointsResource_VmRecoveryPointsWithMultipleVms(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-recovery-point-%d", r)
 	vmName := fmt.Sprintf("tf-test-rp-vm-%d", r)
@@ -116,7 +116,7 @@ func TestAccNutanixRecoveryPointsV2Resource_VmRecoveryPointsWithMultipleVms(t *t
 	})
 }
 
-func TestAccNutanixRecoveryPointsV2Resource_VolumeGroupRecoveryPoints(t *testing.T) {
+func TestAccV2NutanixRecoveryPointsResource_VolumeGroupRecoveryPoints(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-recovery-point-%d", r)
 
@@ -144,7 +144,7 @@ func TestAccNutanixRecoveryPointsV2Resource_VolumeGroupRecoveryPoints(t *testing
 	})
 }
 
-func TestAccNutanixRecoveryPointsV2Resource_VolumeGroupRecoveryPointsWithMultipleVGs(t *testing.T) {
+func TestAccV2NutanixRecoveryPointsResource_VolumeGroupRecoveryPointsWithMultipleVGs(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-recovery-point-%d", r)
 
@@ -173,7 +173,7 @@ func TestAccNutanixRecoveryPointsV2Resource_VolumeGroupRecoveryPointsWithMultipl
 	})
 }
 
-func TestAccNutanixRecoveryPointsV2Resource_RecoveryPointWithMultipleVmAndVGs(t *testing.T) {
+func TestAccV2NutanixRecoveryPointsResource_RecoveryPointWithMultipleVmAndVGs(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-recovery-point-%d", r)
 	vmName := fmt.Sprintf("tf-test-rp-vm-%d", r)
@@ -206,7 +206,7 @@ func TestAccNutanixRecoveryPointsV2Resource_RecoveryPointWithMultipleVmAndVGs(t 
 	})
 }
 
-func TestAccNutanixRecoveryPointsV2Resource_UpdateExpirationTime(t *testing.T) {
+func TestAccV2NutanixRecoveryPointsResource_UpdateExpirationTime(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-recovery-point-%d", r)
 	vmName := fmt.Sprintf("tf-test-rp-vm-%d", r)
@@ -293,7 +293,7 @@ func testRecoveryPointsResourceConfigWithVMRecoveryPointsWithAppConsProps(name, 
 		status              = "COMPLETE"
 		recovery_point_type = "APPLICATION_CONSISTENT"
 		vm_recovery_points {
-			vm_ext_id = vm_ext_id = nutanix_virtual_machine_v2.test-1.id 
+			vm_ext_id = nutanix_virtual_machine_v2.test-1.id 
 			application_consistent_properties {
 				  backup_type               = "FULL_BACKUP"
 				  should_include_writers    = true
