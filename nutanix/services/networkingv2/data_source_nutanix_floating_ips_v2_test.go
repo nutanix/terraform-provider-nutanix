@@ -11,7 +11,7 @@ import (
 
 const datasourceNameFIPps = "data.nutanix_floating_ips_v2.test"
 
-func TestAccNutanixFloatingIPsV2DataSource_Basic(t *testing.T) {
+func TestAccV2NutanixFloatingIPsDataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-fip-%d", r)
 	desc := "test fip description"
@@ -30,7 +30,7 @@ func TestAccNutanixFloatingIPsV2DataSource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixFloatingIPsV2DataSource_WithFilter(t *testing.T) {
+func TestAccV2NutanixFloatingIPsDataSource_WithFilter(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-fip-%d", r)
 	desc := "test fip description"

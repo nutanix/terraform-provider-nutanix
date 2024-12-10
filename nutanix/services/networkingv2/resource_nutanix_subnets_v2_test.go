@@ -11,7 +11,7 @@ import (
 
 const resourceNameSubnet = "nutanix_subnet_v2.test"
 
-func TestAccNutanixSubnetV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixSubnetResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-subnet-%d", r)
 	desc := "test subnet description"
@@ -47,7 +47,7 @@ func TestAccNutanixSubnetV2Resource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixSubnetV2Resource_WithIPPool(t *testing.T) {
+func TestAccV2NutanixSubnetResource_WithIPPool(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-subnet-%d", r)
 	desc := "test subnet description"
@@ -71,7 +71,7 @@ func TestAccNutanixSubnetV2Resource_WithIPPool(t *testing.T) {
 	})
 }
 
-func TestAccNutanixSubnetV2Resource_WithExternalSubnet(t *testing.T) {
+func TestAccV2NutanixSubnetResource_WithExternalSubnet(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-subnet-%d", r)
 	desc := "test subnet description"

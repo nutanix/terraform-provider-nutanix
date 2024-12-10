@@ -11,7 +11,7 @@ import (
 
 const datasourceNameRoutes = "data.nutanix_routes_v2.test"
 
-func TestAccNutanixRoutesV2DataSource_Basic(t *testing.T) {
+func TestAccV2NutanixRoutesDataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-route-%d", r)
 	desc := "test terraform route description"
@@ -31,7 +31,7 @@ func TestAccNutanixRoutesV2DataSource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixRoutesV2DataSource_WithFilter(t *testing.T) {
+func TestAccV2NutanixRoutesDataSource_WithFilter(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-route-%d", r)
 	desc := "test terraform route description"

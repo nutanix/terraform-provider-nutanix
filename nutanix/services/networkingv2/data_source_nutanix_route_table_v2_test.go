@@ -10,7 +10,7 @@ import (
 
 const datasourceNameRouteTable = "data.nutanix_route_table_v2.test"
 
-func TestAccNutanixRouteTableV2DataSource_Basic(t *testing.T) {
+func TestAccV2NutanixRouteTableDataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 
 	//goland:noinspection ALL

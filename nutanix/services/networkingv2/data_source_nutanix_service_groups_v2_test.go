@@ -11,7 +11,7 @@ import (
 
 const datasourceNameServiceGroups = "data.nutanix_service_groups_v2.test"
 
-func TestAccNutanixServiceGroupsV2DataSource_Basic(t *testing.T) {
+func TestAccV2NutanixServiceGroupsDataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-service-%d", r)
 	desc := "test service description"
@@ -30,7 +30,7 @@ func TestAccNutanixServiceGroupsV2DataSource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixServiceGroupsV2DataSource_WithFilter(t *testing.T) {
+func TestAccV2NutanixServiceGroupsDataSource_WithFilter(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-service-%d", r)
 	desc := "test service description"

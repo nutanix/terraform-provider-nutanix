@@ -11,7 +11,7 @@ import (
 
 const datasourceNameServiceGroup = "data.nutanix_service_group_v2.test"
 
-func TestAccNutanixServiceGroupV2DataSource_Basic(t *testing.T) {
+func TestAccV2NutanixServiceGroupDataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-service-%d", r)
 	desc := "test service description"

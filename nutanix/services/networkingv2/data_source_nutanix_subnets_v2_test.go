@@ -9,7 +9,7 @@ import (
 
 const datasourceNameSubnets = "data.nutanix_subnets_v2.test"
 
-func TestAccNutanixSubnetsV2DataSource_Basic(t *testing.T) {
+func TestAccV2NutanixSubnetsDataSource_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -25,7 +25,7 @@ func TestAccNutanixSubnetsV2DataSource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixSubnetsV2DataSource_WithFilter(t *testing.T) {
+func TestAccV2NutanixSubnetsDataSource_WithFilter(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

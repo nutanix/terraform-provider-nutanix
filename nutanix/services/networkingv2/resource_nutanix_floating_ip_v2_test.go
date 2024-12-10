@@ -11,7 +11,7 @@ import (
 
 const resourceNameFIP = "nutanix_floating_ip_v2.test"
 
-func TestAccNutanixFloatingIPV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixFloatingIPResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-fip-%d", r)
 	desc := "test fip description"
@@ -45,7 +45,7 @@ func TestAccNutanixFloatingIPV2Resource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixFloatingIPV2Resource_WithVmNICAssociation(t *testing.T) {
+func TestAccV2NutanixFloatingIPResource_WithVmNICAssociation(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-fip-%d", r)
 	desc := "test fip description"
@@ -68,7 +68,7 @@ func TestAccNutanixFloatingIPV2Resource_WithVmNICAssociation(t *testing.T) {
 	})
 }
 
-func TestAccNutanixFloatingIPV2Resource_WithPrivateIpAssociation(t *testing.T) {
+func TestAccV2NutanixFloatingIPResource_WithPrivateIpAssociation(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-fip-%d", r)
 	desc := "test fip description"

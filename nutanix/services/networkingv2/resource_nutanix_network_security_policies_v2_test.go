@@ -11,7 +11,7 @@ import (
 
 const resourceNameNs = "nutanix_network_security_policy_v2.test"
 
-func TestAccNutanixNetworkSecurityV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixNetworkSecurityResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-nsp-%d", r)
 	desc := "test nsp description"
@@ -34,7 +34,7 @@ func TestAccNutanixNetworkSecurityV2Resource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixNetworkSecurityV2Resource_WithRules(t *testing.T) {
+func TestAccV2NutanixNetworkSecurityResource_WithRules(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-nsp-%d", r)
 	desc := "test nsp description"
@@ -59,7 +59,7 @@ func TestAccNutanixNetworkSecurityV2Resource_WithRules(t *testing.T) {
 	})
 }
 
-func TestAccNutanixNetworkSecurityV2Resource_WithMultiEnvIsolationRuleSpecRule(t *testing.T) {
+func TestAccV2NutanixNetworkSecurityResource_WithMultiEnvIsolationRuleSpecRule(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-nsp-%d", r)
 	desc := "test nsp description"

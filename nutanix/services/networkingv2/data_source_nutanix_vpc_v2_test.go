@@ -11,7 +11,7 @@ import (
 
 const datasourceNameVPC = "data.nutanix_vpc_v2.test"
 
-func TestAccNutanixVpcV2DataSource_Basic(t *testing.T) {
+func TestAccV2NutanixVpcDataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vpc-%d", r)
 	desc := "test vpc description"

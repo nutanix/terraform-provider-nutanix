@@ -10,7 +10,7 @@ import (
 
 const datasourceNameRouteTables = "data.nutanix_route_tables_v2.test"
 
-func TestAccNutanixRouteTablesV2DataSource_Basic(t *testing.T) {
+func TestAccV2NutanixRouteTablesDataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
@@ -28,7 +28,7 @@ func TestAccNutanixRouteTablesV2DataSource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixRouteTablesV2DataSource_WithFilter(t *testing.T) {
+func TestAccV2NutanixRouteTablesDataSource_WithFilter(t *testing.T) {
 	r := acctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
