@@ -856,6 +856,7 @@ func expandValue(kvPairValue interface{}) *commonConfig.OneOfKVPairValue {
 		valueData := kvPairValue.([]interface{})[0].(map[string]interface{})
 		log.Printf("[DEBUG] kvPair valueData: %v", valueData)
 
+		//nolint:gocritic // Keeping if-else for clarity in this specific case
 		if valueData["string_list"] != nil && len(valueData["string_list"].([]interface{})) > 0 {
 			log.Printf("[DEBUG] valueData of type string_list")
 			stringList := valueData["string_list"].([]interface{})
