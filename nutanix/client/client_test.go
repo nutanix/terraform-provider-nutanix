@@ -115,7 +115,6 @@ func TestNewUploadRequest(t *testing.T) {
 		t.Errorf("NewUploadRequest(%v) URL = %v, expected %v", inURL, req.URL, outURL)
 	}
 
-
 	got, _ := ioutil.ReadAll(req.Body)
 	if !bytes.Equal(got, outBody) {
 		t.Errorf("NewUploadRequest(%v) Body = %v, expected %v", inBody, string(got), string(outBody))
@@ -237,7 +236,6 @@ func TestNewUnAuthUploadRequest(t *testing.T) {
 	if req.URL.String() != outURL {
 		t.Errorf("NewUnAuthUploadRequest(%v) URL = %v, expected %v", inURL, req.URL, outURL)
 	}
-
 
 	got, _ := ioutil.ReadAll(req.Body)
 	if !bytes.Equal(got, outBody) {
