@@ -10,9 +10,6 @@ import (
 
 // Logic covered in create cluster resource test
 func TestAccV2NutanixPePcRegistrationResource_ValidationsDomainManagerRemoteClusterSpec(t *testing.T) {
-	if testVars.Clusters.Nodes[0].CvmIP == "" {
-		t.Skip("Skipping test as No available node to be used for testing")
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -38,9 +35,6 @@ func TestAccV2NutanixPePcRegistrationResource_ValidationsDomainManagerRemoteClus
 }
 
 func TestAccV2NutanixPePcRegistrationResource_ValidationsAOSRemoteClusterSpec(t *testing.T) {
-	if testVars.Clusters.Nodes[0].CvmIP == "" {
-		t.Skip("Skipping test as No available node to be used for testing")
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -62,9 +56,6 @@ func TestAccV2NutanixPePcRegistrationResource_ValidationsAOSRemoteClusterSpec(t 
 }
 
 func TestAccV2NutanixPePcRegistrationResource_ValidationsClusterReference(t *testing.T) {
-	if testVars.Clusters.Nodes[0].CvmIP == "" {
-		t.Skip("Skipping test as No available node to be used for testing")
-	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
