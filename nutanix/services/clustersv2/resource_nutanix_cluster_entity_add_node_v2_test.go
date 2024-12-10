@@ -1,14 +1,12 @@
 package clustersv2_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -32,14 +30,6 @@ func TestAccV2NutanixClusterAddNodeResource_Basic(t *testing.T) {
 				Config: testAccClustersConfig(clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					// add node to cluster check
-					func(s *terraform.State) error {
-						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceName3NodesCluster].Primary.Attributes, "", "  ")
-						fmt.Println("############################################")
-						fmt.Printf("Resource Attributes: \n%v", string(aJSON))
-						fmt.Println("############################################")
-
-						return nil
-					},
 					// unconfigured Nodes check
 					resource.TestCheckResourceAttr(resourceNameDiscoverUnconfiguredClusterNodes, "unconfigured_nodes.#", "3"),
 
@@ -63,16 +53,6 @@ func TestAccV2NutanixClusterAddNodeResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameFetchUnconfiguredNodeNetwork, "nodes_networking_details.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceNameFetchUnconfiguredNodeNetwork, "nodes_networking_details.0.network_info.#"),
 					resource.TestCheckResourceAttrSet(resourceNameFetchUnconfiguredNodeNetwork, "nodes_networking_details.0.uplinks.#"),
-
-					// add node to cluster check
-					func(s *terraform.State) error {
-						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceNameAddNodeToCluster].Primary.Attributes, "", "  ")
-						fmt.Println("############################################")
-						fmt.Printf("Resource Attributes: \n%v", string(aJSON))
-						fmt.Println("############################################")
-
-						return nil
-					},
 				),
 			},
 			{
