@@ -449,11 +449,11 @@ func expandNodeListNetworkingDetails(pr []interface{}) []config.NodeListNetworki
 			val := v.(map[string]interface{})
 			node := config.NodeListNetworkingDetails{}
 
-			if nodeUuid, ok := val["node_uuid"]; ok && nodeUuid != "" {
-				node.NodeUuid = utils.StringPtr(nodeUuid.(string))
+			if nodeUUID, ok := val["node_uuid"]; ok && nodeUUID != "" {
+				node.NodeUuid = utils.StringPtr(nodeUUID.(string))
 			}
-			if blockId, ok := val["block_id"]; ok && blockId != "" {
-				node.BlockId = utils.StringPtr(blockId.(string))
+			if blockID, ok := val["block_id"]; ok && blockID != "" {
+				node.BlockId = utils.StringPtr(blockID.(string))
 			}
 			if nodePosition, ok := val["node_position"]; ok && nodePosition != "" {
 				node.NodePosition = utils.StringPtr(nodePosition.(string))

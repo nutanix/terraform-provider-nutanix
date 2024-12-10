@@ -119,10 +119,11 @@ func ResourceNutanixNGTUpgradeV2Create(ctx context.Context, d *schema.ResourceDa
 	if rebootPreference, ok := d.GetOk("reboot_preference"); ok {
 		if len(rebootPreference.([]interface{})) > 0 {
 			rp := rebootPreference.([]interface{})[0].(map[string]interface{})
+			const two, three, four = 2, 3, 4
 			scheduleTypesMap := map[string]int{
-				"SKIP":      2,
-				"IMMEDIATE": 3,
-				"LATER":     4,
+				"SKIP":      two,
+				"IMMEDIATE": three,
+				"LATER":     four,
 			}
 			body.RebootPreference = &vmmConfig.RebootPreference{
 				ScheduleType: (*vmmConfig.ScheduleType)(utils.IntPtr(scheduleTypesMap[(rp["schedule_type"].(string))])),
@@ -182,8 +183,8 @@ func ResourceNutanixNGTUpgradeV2Create(ctx context.Context, d *schema.ResourceDa
 func ResourceNutanixNGTUpgradeV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VmmAPI
 
-	extId := d.Id()
-	resp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extId))
+	extID := d.Id()
+	resp, err := conn.VMAPIInstance.GetGuestToolsById(utils.StringPtr(extID))
 	if err != nil {
 		return diag.Errorf("error while fetching Gest Tool : %v", err)
 	}

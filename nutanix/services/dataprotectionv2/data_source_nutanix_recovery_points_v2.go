@@ -86,9 +86,9 @@ func DatasourceNutanixRecoveryPointsV2Read(ctx context.Context, d *schema.Resour
 		selectQ = nil
 	}
 
-	clusterId := d.Get("cluster_id").(string)
+	clusterID := d.Get("cluster_id").(string)
 
-	resp, err := conn.RecoveryPoint.ListRecoveryPoints(&clusterId, page, limit, filter, orderBy, selectQ)
+	resp, err := conn.RecoveryPoint.ListRecoveryPoints(&clusterID, page, limit, filter, orderBy, selectQ)
 	if err != nil {
 		return diag.Errorf("error while fetching Recovery Points : %v", err)
 	}

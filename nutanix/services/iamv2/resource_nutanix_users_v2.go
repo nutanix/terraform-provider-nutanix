@@ -254,15 +254,15 @@ func resourceNutanixUserV2Create(ctx context.Context, d *schema.ResourceData, me
 		spec.Status = &p
 	}
 	if lastLogin, ok := d.GetOk("last_login_time"); ok {
-		t := time.Time(lastLogin.(time.Time))
+		t := lastLogin.(time.Time)
 		spec.LastLoginTime = &t
 	}
 	if cTime, ok := d.GetOk("created_time"); ok {
-		t := time.Time(cTime.(time.Time))
+		t := cTime.(time.Time)
 		spec.CreatedTime = &t
 	}
 	if lastUpdate, ok := d.GetOk("last_updated_time"); ok {
-		t := time.Time(lastUpdate.(time.Time))
+		t := lastUpdate.(time.Time)
 		spec.LastUpdatedTime = &t
 	}
 	if cBy, ok := d.GetOk("created_by"); ok {

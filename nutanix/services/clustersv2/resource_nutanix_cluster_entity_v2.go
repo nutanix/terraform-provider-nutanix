@@ -1127,14 +1127,14 @@ func getClusterExtId(d *schema.ResourceData, conn *clusters.Client) error {
 		log.Printf("[DEBUG] getClusterExtId Cluster not found, len(clusters) is 0")
 		return fmt.Errorf("cluster not found : %v", err)
 	}
-	extId := utils.StringValue(cls[0].ExtId)
-	if extId == "" {
+	extID := utils.StringValue(cls[0].ExtId)
+	if extID == "" {
 		log.Printf("[DEBUG] getClusterExtId Cluster not found, extID is empty")
 		return fmt.Errorf("cluster not found : %v", err)
 	}
-	log.Printf("[DEBUG] getClusterExtId Cluster found, extId : %s", extId)
-	d.SetId(extId)
-	err = d.Set("ext_id", extId)
+	log.Printf("[DEBUG] getClusterExtId Cluster found, extId : %s", extID)
+	d.SetId(extID)
+	err = d.Set("ext_id", extID)
 	if err != nil {
 		return err
 	}
@@ -1175,10 +1175,9 @@ func expandUpgradeStatus(upgradeStatus interface{}) *config.UpgradeStatus {
 		pVal := subMap[upgradeStatus.(string)]
 		p := config.UpgradeStatus(pVal.(int))
 		return &p
-	} else {
-		log.Printf("[INFO] upgrade_status is not provided")
-		return nil
 	}
+	log.Printf("[INFO] upgrade_status is not provided")
+	return nil
 }
 
 func expandNodeListItemReference(pr []interface{}) []config.NodeListItemReference {
@@ -1189,13 +1188,13 @@ func expandNodeListItemReference(pr []interface{}) []config.NodeListItemReferenc
 			val := v.(map[string]interface{})
 			node := config.NewNodeListItemReference()
 
-			if controllerVmIp, ok := val["controller_vm_ip"]; ok {
+			if controllerVMIP, ok := val["controller_vm_ip"]; ok {
 				log.Printf("[DEBUG] controller_vm_ip")
-				node.ControllerVmIp = expandIPAddress(controllerVmIp)
+				node.ControllerVmIp = expandIPAddress(controllerVMIP)
 			}
-			if hostIp, ok := val["host_ip"]; ok {
+			if hostIP, ok := val["host_ip"]; ok {
 				log.Printf("[DEBUG] host_ip")
-				node.HostIp = expandIPAddress(hostIp)
+				node.HostIp = expandIPAddress(hostIP)
 			}
 
 			nodeList[k] = *node
@@ -1215,9 +1214,9 @@ func expandClusterNetworkReference(pr interface{}) *config.ClusterNetworkReferen
 			log.Printf("[DEBUG] external_address")
 			cls.ExternalAddress = expandIPAddress(externalAddress)
 		}
-		if externalDataServiceIp, ok := val["external_data_services_ip"]; ok {
+		if externalDataServiceIP, ok := val["external_data_services_ip"]; ok {
 			log.Printf("[DEBUG] external_data_services_ip")
-			cls.ExternalDataServiceIp = expandIPAddress(externalDataServiceIp)
+			cls.ExternalDataServiceIp = expandIPAddress(externalDataServiceIP)
 		}
 		if nfsSubnetWhite, ok := val["nfs_subnet_white_list"]; ok {
 			nfsSubnetWhitelist := nfsSubnetWhite.([]interface{})
@@ -1228,19 +1227,19 @@ func expandClusterNetworkReference(pr interface{}) *config.ClusterNetworkReferen
 			log.Printf("[DEBUG] nfs_subnet_white_list: %v", nfsSubnetWhitelistStr)
 			cls.NfsSubnetWhitelist = nfsSubnetWhitelistStr
 		}
-		if nameServerIpList, ok := val["name_server_ip_list"]; ok {
-			cls.NameServerIpList = expandIPAddressOrFQDN(nameServerIpList.([]interface{}))
+		if nameServerIPList, ok := val["name_server_ip_list"]; ok {
+			cls.NameServerIpList = expandIPAddressOrFQDN(nameServerIPList.([]interface{}))
 		}
-		if ntpServerIpList, ok := val["ntp_server_ip_list"]; ok {
+		if ntpServerIPList, ok := val["ntp_server_ip_list"]; ok {
 			log.Printf("[DEBUG] ntp_server_ip_list ")
-			cls.NtpServerIpList = expandIPAddressOrFQDN(ntpServerIpList.([]interface{}))
+			cls.NtpServerIpList = expandIPAddressOrFQDN(ntpServerIPList.([]interface{}))
 		}
 		if smtpServer, ok := val["smtp_server"]; ok {
 			cls.SmtpServer = expandSMTPServerRef(smtpServer)
 		}
-		if masqueradingIp, ok := val["masquerading_ip"]; ok {
+		if masqueradingIP, ok := val["masquerading_ip"]; ok {
 			log.Printf("[DEBUG] masquerading_ip ")
-			cls.MasqueradingIp = expandIPAddress(masqueradingIp)
+			cls.MasqueradingIp = expandIPAddress(masqueradingIP)
 		}
 		if managementServer, ok := val["management_server"]; ok {
 			cls.ManagementServer = expandManagementServerRef(managementServer)
@@ -1270,10 +1269,10 @@ func expandClusterNetworkReference(pr interface{}) *config.ClusterNetworkReferen
 		}
 
 		if httpProxyList, ok := val["http_proxy_list"]; ok {
-			cls.HttpProxyList = expandHttpProxyList(httpProxyList.([]interface{}))
+			cls.HttpProxyList = expandHTTPProxyList(httpProxyList.([]interface{}))
 		}
 		if httpProxyWhiteList, ok := val["http_proxy_white_list"]; ok {
-			cls.HttpProxyWhiteList = expandHttpProxyWhiteList(httpProxyWhiteList.([]interface{}))
+			cls.HttpProxyWhiteList = expandHTTPProxyWhiteList(httpProxyWhiteList.([]interface{}))
 		}
 
 		return cls
@@ -1281,7 +1280,7 @@ func expandClusterNetworkReference(pr interface{}) *config.ClusterNetworkReferen
 	return nil
 }
 
-func expandHttpProxyWhiteList(proxyTypesWhiteList []interface{}) []config.HttpProxyWhiteListConfig {
+func expandHTTPProxyWhiteList(proxyTypesWhiteList []interface{}) []config.HttpProxyWhiteListConfig {
 	if len(proxyTypesWhiteList) > 0 {
 		httpProxyWhiteList := make([]config.HttpProxyWhiteListConfig, len(proxyTypesWhiteList))
 
@@ -1314,7 +1313,7 @@ func expandHttpProxyWhiteList(proxyTypesWhiteList []interface{}) []config.HttpPr
 	return nil
 }
 
-func expandHttpProxyList(httpProxyList []interface{}) []config.HttpProxyConfig {
+func expandHTTPProxyList(httpProxyList []interface{}) []config.HttpProxyConfig {
 	if len(httpProxyList) > 0 {
 		httpProxyConfig := make([]config.HttpProxyConfig, len(httpProxyList))
 
@@ -1454,7 +1453,6 @@ func expandClusterConfigReference(pr interface{}, d *schema.ResourceData) *confi
 
 		return clsConf
 	}
-
 	return nil
 }
 
@@ -1730,11 +1728,11 @@ func expandBuildReference(buildInfo interface{}) *config.BuildReference {
 	if fullVersion, ok := buildInfoVal["full_version"]; ok {
 		buildReference.FullVersion = utils.StringPtr(fullVersion.(string))
 	}
-	if commitId, ok := buildInfoVal["commit_id"]; ok {
-		buildReference.CommitId = utils.StringPtr(commitId.(string))
+	if commitID, ok := buildInfoVal["commit_id"]; ok {
+		buildReference.CommitId = utils.StringPtr(commitID.(string))
 	}
-	if shortCommitId, ok := buildInfoVal["short_commit_id"]; ok {
-		buildReference.ShortCommitId = utils.StringPtr(shortCommitId.(string))
+	if shortCommitID, ok := buildInfoVal["short_commit_id"]; ok {
+		buildReference.ShortCommitId = utils.StringPtr(shortCommitID.(string))
 	}
 
 	return buildReference

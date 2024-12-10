@@ -475,24 +475,24 @@ func DatasourceNutanixHostEntityV2Read(ctx context.Context, d *schema.ResourceDa
 
 func flattenNodeStatus(pr *import1.NodeStatus) string {
 	if pr != nil {
-		const NORMAL, TO_BE_REMOVED, OK_TO_BE_REMOVED, NEW_NODE, TO_BE_PREPROTECTED, PREPROTECTED = 2, 3, 4, 5, 6, 7
+		const two, three, four, five, six, seven = 2, 3, 4, 5, 6, 7
 
-		if *pr == import1.NodeStatus(NORMAL) {
+		if *pr == import1.NodeStatus(two) {
 			return "NORMAL"
 		}
-		if *pr == import1.NodeStatus(TO_BE_REMOVED) {
+		if *pr == import1.NodeStatus(three) {
 			return "TO_BE_REMOVED"
 		}
-		if *pr == import1.NodeStatus(OK_TO_BE_REMOVED) {
+		if *pr == import1.NodeStatus(four) {
 			return "OK_TO_BE_REMOVED"
 		}
-		if *pr == import1.NodeStatus(NEW_NODE) {
+		if *pr == import1.NodeStatus(five) {
 			return "NEW_NODE"
 		}
-		if *pr == import1.NodeStatus(TO_BE_PREPROTECTED) {
+		if *pr == import1.NodeStatus(six) {
 			return "TO_BE_PREPROTECTED"
 		}
-		if *pr == import1.NodeStatus(PREPROTECTED) {
+		if *pr == import1.NodeStatus(seven) {
 			return "PREPROTECTED"
 		}
 	}
@@ -501,15 +501,15 @@ func flattenNodeStatus(pr *import1.NodeStatus) string {
 
 func flattenHostTypeEnum(pr *import1.HostTypeEnum) string {
 	if pr != nil {
-		const HYPER_CONVERGED, COMPUTE_ONLY, STORAGE_ONLY = 2, 3, 4
+		const two, three, four = 2, 3, 4
 
-		if *pr == import1.HostTypeEnum(HYPER_CONVERGED) {
+		if *pr == import1.HostTypeEnum(two) {
 			return "HYPER_CONVERGED"
 		}
-		if *pr == import1.HostTypeEnum(COMPUTE_ONLY) {
+		if *pr == import1.HostTypeEnum(three) {
 			return "COMPUTE_ONLY"
 		}
-		if *pr == import1.HostTypeEnum(STORAGE_ONLY) {
+		if *pr == import1.HostTypeEnum(four) {
 			return "STORAGE_ONLY"
 		}
 	}

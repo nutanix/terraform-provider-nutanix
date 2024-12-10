@@ -223,10 +223,11 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 		body.NfsWhitelistAddress = expandNfsWhitelistAddresses(nfsWhitelistAddresses)
 	}
 	if erasureCode, ok := d.GetOk("erasure_code"); ok {
+		const two, three, four = 2, 3, 4
 		subMap := map[string]interface{}{
-			"NONE": 2,
-			"OFF":  3,
-			"ON":   4,
+			"NONE": two,
+			"OFF":  three,
+			"ON":   four,
 		}
 		pVal := subMap[erasureCode.(string)]
 		p := clustermgmtConfig.ErasureCodeStatus(pVal.(int))
@@ -242,20 +243,22 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 		body.ErasureCodeDelaySecs = utils.IntPtr(int(erasureCodeDelaySecs.(int)))
 	}
 	if cacheDeduplication, ok := d.GetOk("cache_deduplication"); ok {
+		const two, three, four = 2, 3, 4
 		subMap := map[string]interface{}{
-			"NONE": 2,
-			"OFF":  3,
-			"ON":   4,
+			"NONE": two,
+			"OFF":  three,
+			"ON":   four,
 		}
 		pVal := subMap[cacheDeduplication.(string)]
 		p := clustermgmtConfig.CacheDeduplication(pVal.(int))
 		body.CacheDeduplication = &p
 	}
 	if onDiskDedup, ok := d.GetOk("on_disk_dedup"); ok {
+		const two, three, four = 2, 3, 4
 		subMap := map[string]interface{}{
-			"NONE":         2,
-			"OFF":          3,
-			"POST_PROCESS": 4,
+			"NONE":         two,
+			"OFF":          three,
+			"POST_PROCESS": four,
 		}
 		pVal := subMap[onDiskDedup.(string)]
 		p := clustermgmtConfig.OnDiskDedup(pVal.(int))
@@ -462,10 +465,11 @@ func ResourceNutanixStorageContainersV2Update(ctx context.Context, d *schema.Res
 		updateSpec.NfsWhitelistAddress = expandNfsWhitelistAddresses(d.Get("nfs_whitelist_addresses"))
 	}
 	if d.HasChange("erasure_code") {
+		const two, three, four = 2, 3, 4
 		subMap := map[string]interface{}{
-			"NONE": 2,
-			"OFF":  3,
-			"ON":   4,
+			"NONE": two,
+			"OFF":  three,
+			"ON":   four,
 		}
 		pVal := subMap[d.Get("erasure_code").(string)]
 		p := clustermgmtConfig.ErasureCodeStatus(pVal.(int))
@@ -481,20 +485,22 @@ func ResourceNutanixStorageContainersV2Update(ctx context.Context, d *schema.Res
 		updateSpec.ErasureCodeDelaySecs = utils.IntPtr(d.Get("erasure_code_delay_secs").(int))
 	}
 	if d.HasChange("cache_deduplication") {
+		const two, three, four = 2, 3, 4
 		subMap := map[string]interface{}{
-			"NONE": 2,
-			"OFF":  3,
-			"ON":   4,
+			"NONE": two,
+			"OFF":  three,
+			"ON":   four,
 		}
 		pVal := subMap[d.Get("cache_deduplication").(string)]
 		p := clustermgmtConfig.CacheDeduplication(pVal.(int))
 		updateSpec.CacheDeduplication = &p
 	}
 	if d.HasChange("on_disk_dedup") {
+		const two, three, four = 2, 3, 4
 		subMap := map[string]interface{}{
-			"NONE":         2,
-			"OFF":          3,
-			"POST_PROCESS": 4,
+			"NONE":         two,
+			"OFF":          three,
+			"POST_PROCESS": four,
 		}
 		pVal := subMap[d.Get("on_disk_dedup").(string)]
 		p := clustermgmtConfig.OnDiskDedup(pVal.(int))

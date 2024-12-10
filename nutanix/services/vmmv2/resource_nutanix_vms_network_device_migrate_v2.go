@@ -78,16 +78,17 @@ func ResourceNutanixVmsNetworkDeviceMigrateV2Create(ctx context.Context, d *sche
 		body.Subnet = expandSubnetReference(subnet)
 	}
 	if migrateType, ok := d.GetOk("migrate_type"); ok && len(migrateType.(string)) > 0 {
+		const two, three = 2, 3
 		subMap := map[string]interface{}{
-			"ASSIGN_IP":  2,
-			"RELEASE_IP": 3,
+			"ASSIGN_IP":  two,
+			"RELEASE_IP": three,
 		}
 		pVal := subMap[migrateType.(string)]
 		p := config.MigrateNicType(pVal.(int))
 		body.MigrateType = &p
 	}
-	if ip_address, ok := d.GetOk("ip_address"); ok {
-		body.IpAddress = expandIPv4Address(ip_address)
+	if ipAddress, ok := d.GetOk("ip_address"); ok {
+		body.IpAddress = expandIPv4Address(ipAddress)
 	}
 
 	readResp, err := conn.VMAPIInstance.GetVmById(utils.StringPtr(vmExtID.(string)))

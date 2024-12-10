@@ -356,6 +356,7 @@ func ResourceNutanixTemplatesV2Update(ctx context.Context, d *schema.ResourceDat
 		updateSpec.TemplateVersionSpec.VersionSource != nil {
 		log.Printf("[DEBUG] Check version id in tf configuration")
 		templateVersionReference := updateSpec.TemplateVersionSpec.VersionSource.GetValue()
+		//nolint:gocritic // Type switch not used intentionally for demonstration
 		switch templateVersionReference.(type) {
 		// we need only to set version id for TemplateVersionReference type
 		case vmmContent.TemplateVersionReference:
@@ -2574,7 +2575,7 @@ func expandSysprepScript(sysprepScript interface{}) *vmmConfig.OneOfSysprepSyspr
 		aJSON, _ := json.Marshal(sysprepScriptData)
 		log.Printf("[DEBUG] sysprep.sysprep_script.sysprepScriptData: %s", string(aJSON))
 		if unattendXML, ok := sysprepScriptData["unattend_xml"]; ok && len(unattendXML.([]interface{})) > 0 {
-			unattendXMLObj := expandTemplateUnattendXml(unattendXML)
+			unattendXMLObj := expandTemplateUnattendXML(unattendXML)
 			aJSON, _ = json.Marshal(unattendXMLObj)
 			log.Printf("[DEBUG] sysprep.sysprep_script.unattend_xml expanded: %v", string(aJSON))
 			err := sysprepScriptObj.SetValue(*unattendXMLObj)
@@ -2615,17 +2616,17 @@ func expandTemplateCustomKeyValuesPairs(customKeyValues interface{}) *vmmConfig.
 	return nil
 }
 
-func expandTemplateUnattendXml(unattendXml interface{}) *vmmConfig.Unattendxml {
+func expandTemplateUnattendXML(unattendXml interface{}) *vmmConfig.Unattendxml {
 	if unattendXml != nil {
-		unattendXmlObj := vmmConfig.NewUnattendxml()
-		unattendXmlData := unattendXml.([]interface{})
+		unattendXMLObj := vmmConfig.NewUnattendxml()
+		unattendXMLData := unattendXml.([]interface{})
 
-		if len(unattendXmlData) > 0 {
-			if value, ok := unattendXmlData[0].(map[string]interface{})["unattend_xml"]; ok {
-				unattendXmlObj.Value = utils.StringPtr(value.(string))
+		if len(unattendXMLData) > 0 {
+			if value, ok := unattendXMLData[0].(map[string]interface{})["unattend_xml"]; ok {
+				unattendXMLObj.Value = utils.StringPtr(value.(string))
 			}
 		}
-		return unattendXmlObj
+		return unattendXMLObj
 	}
 	return nil
 }

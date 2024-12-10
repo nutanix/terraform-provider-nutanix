@@ -1450,8 +1450,8 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 	if isVcpuEnabled, ok := d.GetOk("is_vcpu_hard_pinning_enabled"); ok {
 		body.IsVcpuHardPinningEnabled = utils.BoolPtr(isVcpuEnabled.(bool))
 	}
-	if isCPuPassThrough, ok := d.GetOk("is_cpu_passthrough_enabled"); ok {
-		body.IsCpuPassthroughEnabled = utils.BoolPtr(isCPuPassThrough.(bool))
+	if isCPUPassThrough, ok := d.GetOk("is_cpu_passthrough_enabled"); ok {
+		body.IsCpuPassthroughEnabled = utils.BoolPtr(isCPUPassThrough.(bool))
 	}
 	if cpuFeatures, ok := d.GetOk("enabled_cpu_features"); ok {
 		body.EnabledCpuFeatures = expandCPUFeature(cpuFeatures.([]interface{}))
@@ -1462,8 +1462,8 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 	if isGpuConsole, ok := d.GetOk("is_gpu_console_enabled"); ok {
 		body.IsGpuConsoleEnabled = utils.BoolPtr(isGpuConsole.(bool))
 	}
-	if isCpuHotplugEnabled, ok := d.GetOk("is_cpu_hotplug_enabled"); ok {
-		body.IsCpuHotplugEnabled = utils.BoolPtr(isCpuHotplugEnabled.(bool))
+	if isCPUHotplugEnabled, ok := d.GetOk("is_cpu_hotplug_enabled"); ok {
+		body.IsCpuHotplugEnabled = utils.BoolPtr(isCPUHotplugEnabled.(bool))
 	}
 	if isScsiControllerEnabled, ok := d.GetOk("is_scsi_controller_enabled"); ok {
 		body.IsScsiControllerEnabled = utils.BoolPtr(isScsiControllerEnabled.(bool))
@@ -2601,7 +2601,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 	if checkForHotPlugChanges(d) {
 		if power, ok := d.GetOk("power_state"); ok {
 			if power == "ON" {
-				callForPowerOnVM(conn, d, ctx, meta)
+				callForPowerOnVM(ctx, conn, d, meta)
 			}
 		}
 	}
@@ -2611,7 +2611,7 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 			log.Printf("[DEBUG] Power state change detected: %s", power)
 			if power == "ON" {
 				log.Printf("[DEBUG] Powering on the VM")
-				callForPowerOnVM(conn, d, ctx, meta)
+				callForPowerOnVM(ctx, conn, d, meta)
 			} else {
 				log.Printf("[DEBUG] Powering off the VM")
 				callForPowerOffVM(ctx, conn, d, meta)
@@ -3476,7 +3476,7 @@ func callForPowerOffVM(ctx context.Context, conn *vmm.Client, d *schema.Resource
 	return nil
 }
 
-func callForPowerOnVM(conn *vmm.Client, d *schema.ResourceData, ctx context.Context, meta interface{}) diag.Diagnostics {
+func callForPowerOnVM(ctx context.Context, conn *vmm.Client, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	readResp, errR := conn.VMAPIInstance.GetVmById(utils.StringPtr(d.Id()))
 	if errR != nil {
 		return diag.Errorf("error while reading vm : %v", errR)

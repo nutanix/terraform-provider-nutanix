@@ -317,8 +317,9 @@ func ResourceNutanixRecoveryPointsV2Create(ctx context.Context, d *schema.Resour
 		body.ExpirationTime = &expTime
 	}
 	if status, ok := d.GetOk("status"); ok {
+		const two = 2
 		statusMap := map[string]interface{}{
-			"COMPLETE": 2,
+			"COMPLETE": two,
 		}
 		pVal := statusMap[status.(string)]
 		p := common.RecoveryPointStatus(pVal.(int))
@@ -436,17 +437,17 @@ func ResourceNutanixRecoveryPointsV2Read(ctx context.Context, d *schema.Resource
 	}
 
 	// Get Vm Recovery Points from the resource
-	resourceVmRecoveryPoints := d.Get("vm_recovery_points").([]interface{})
+	resourceVMRecoveryPoints := d.Get("vm_recovery_points").([]interface{})
 	// Get Vm Recovery Points from the response
 	respRecoveryPoints := getResp.VmRecoveryPoints
 
 	// Remove the VM Recovery Points that are present in the resource and in the response
-	for _, vmRecoveryPoint := range resourceVmRecoveryPoints {
+	for _, vmRecoveryPoint := range resourceVMRecoveryPoints {
 		for _, respRecoveryPoint := range getResp.VmRecoveryPoints {
-			resVmRpExtId := vmRecoveryPoint.(map[string]interface{})["ext_id"]
-			respVmRpExtId := utils.StringValue(respRecoveryPoint.ExtId)
-			if resVmRpExtId == respVmRpExtId {
-				log.Printf("[DEBUG] Removing VM Recovery Point with Ext Id: %v", respVmRpExtId)
+			resVMRpExtID := vmRecoveryPoint.(map[string]interface{})["ext_id"]
+			respVMRpExtID := utils.StringValue(respRecoveryPoint.ExtId)
+			if resVMRpExtID == respVMRpExtID {
+				log.Printf("[DEBUG] Removing VM Recovery Point with Ext Id: %v", respVMRpExtID)
 				respRecoveryPoints = removeVmRecoveryPointByExtId(respRecoveryPoints, respRecoveryPoint)
 			}
 		}

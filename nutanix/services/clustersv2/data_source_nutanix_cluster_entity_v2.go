@@ -1215,16 +1215,16 @@ func flattenRedundancyStatus(redundancyStatus *import1.RedundancyStatusDetails) 
 
 func flattenClusterFaultTolerance(faultTolerance *import1.ClusterFaultToleranceRef) string {
 	if faultTolerance != nil {
-		const CFT_0N_AND_0D, CFT_1N_OR_1D, CFT_2N_OR_2D, CFT_1N_AND_1D = 2, 3, 4, 5
+		const two, three, four, five = 2, 3, 4, 5
 
 		switch *faultTolerance {
-		case CFT_0N_AND_0D:
+		case two:
 			return "CFT_0N_AND_0D"
-		case CFT_1N_OR_1D:
+		case three:
 			return "CFT_1N_OR_1D"
-		case CFT_2N_OR_2D:
+		case four:
 			return "CFT_2N_OR_2D"
-		case CFT_1N_AND_1D:
+		case five:
 			return "CFT_1N_AND_1D"
 		default:
 			return "UNKNOWN"

@@ -233,10 +233,10 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 	body := &config.NodeDiscoveryParams{}
 
 	// initialize query params
-	var extId *string
+	var extID *string
 
-	if extIdf, ok := d.GetOk("ext_id"); ok {
-		extId = utils.StringPtr(extIdf.(string))
+	if extIDf, ok := d.GetOk("ext_id"); ok {
+		extID = utils.StringPtr(extIDf.(string))
 	}
 	if addressType, ok := d.GetOk("address_type"); ok {
 		if addressType == nil || addressType == "" {
@@ -253,7 +253,7 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 		}
 	}
 	if ipFilterList, ok := d.GetOk("ip_filter_list"); ok {
-		body.IpFilterList = expandIpFilterList(ipFilterList)
+		body.IpFilterList = expandIPFilterList(ipFilterList)
 	}
 	if uuidFilterList, ok := d.GetOk("uuid_filter_list"); ok {
 		filteredUUIDList := uuidFilterList.([]interface{})
@@ -281,7 +281,7 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 	aJSON, _ := json.MarshalIndent(body, "", " ")
 	log.Printf("[DEBUG] Discover Unconfigured Nodes body : %s", string(aJSON))
 
-	resp, err := conn.ClusterEntityAPI.DiscoverUnconfiguredNodes(extId, body)
+	resp, err := conn.ClusterEntityAPI.DiscoverUnconfiguredNodes(extID, body)
 	if err != nil {
 		return diag.Errorf("error while Discover Unconfigured Nodes : %v", err)
 	}
@@ -477,7 +477,7 @@ func flattenAttributes(attributes *config.UnconfiguredNodeAttributeMap) []interf
 	return nil
 }
 
-func expandIpFilterList(pr interface{}) []clustermgmtConfig.IPAddress {
+func expandIPFilterList(pr interface{}) []clustermgmtConfig.IPAddress {
 	if len(pr.([]interface{})) > 0 {
 		ipFilterList := make([]clustermgmtConfig.IPAddress, len(pr.([]interface{})))
 

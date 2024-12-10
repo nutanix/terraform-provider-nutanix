@@ -35,7 +35,7 @@ func TestAccNutanixClusterAddNodeV2Resource_basic(t *testing.T) {
 					func(s *terraform.State) error {
 						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceName3NodesCluster].Primary.Attributes, "", "  ")
 						fmt.Println("############################################")
-						fmt.Println(fmt.Sprintf("Resource Attributes: \n%v", string(aJSON)))
+						fmt.Printf("Resource Attributes: \n%v", string(aJSON))
 						fmt.Println("############################################")
 
 						return nil
@@ -68,7 +68,7 @@ func TestAccNutanixClusterAddNodeV2Resource_basic(t *testing.T) {
 					func(s *terraform.State) error {
 						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceNameAddNodeToCluster].Primary.Attributes, "", "  ")
 						fmt.Println("############################################")
-						fmt.Println(fmt.Sprintf("Resource Attributes: \n%v", string(aJSON)))
+						fmt.Printf("Resource Attributes: \n%v", string(aJSON))
 						fmt.Println("############################################")
 
 						return nil

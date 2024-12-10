@@ -98,7 +98,7 @@ func ResourceNutanixRecoveryPointRestoreV2Create(ctx context.Context, d *schema.
 		body.ClusterExtId = utils.StringPtr(clusterExtID.(string))
 	}
 	if vmRecoveryPointRestoreOverrides, ok := d.GetOk("vm_recovery_point_restore_overrides"); ok {
-		body.VmRecoveryPointRestoreOverrides = expandVmRecoveryPointRestoreOverrides(vmRecoveryPointRestoreOverrides)
+		body.VmRecoveryPointRestoreOverrides = expandVMRecoveryPointRestoreOverrides(vmRecoveryPointRestoreOverrides)
 	}
 	if volumeGroupRecoveryPointRestoreOverrides, ok := d.GetOk("volume_group_recovery_point_restore_overrides"); ok {
 		body.VolumeGroupRecoveryPointRestoreOverrides = expandVolumeGroupRecoveryPointRestoreOverrides(volumeGroupRecoveryPointRestoreOverrides)
@@ -185,7 +185,7 @@ func expandVolumeGroupOverrideSpec(volumeGroupSpec []interface{}) *config.Volume
 	return &volumeGroupOverrideSpec
 }
 
-func expandVmRecoveryPointRestoreOverrides(vmRecoveryPoints interface{}) []config.VmRecoveryPointRestoreOverride {
+func expandVMRecoveryPointRestoreOverrides(vmRecoveryPoints interface{}) []config.VmRecoveryPointRestoreOverride {
 	var vmRecoveryPointRestoreOverrides []config.VmRecoveryPointRestoreOverride
 	for _, vmRecoveryPoint := range vmRecoveryPoints.([]interface{}) {
 		vmRecoveryPoint := vmRecoveryPoint.(map[string]interface{})

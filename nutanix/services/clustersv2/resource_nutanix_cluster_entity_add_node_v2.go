@@ -672,8 +672,8 @@ func expandBlockList(pr []interface{}) []config.BlockItem {
 			val := v.(map[string]interface{})
 			block := config.BlockItem{}
 
-			if blockId, ok := val["block_id"]; ok && blockId != "" {
-				block.BlockId = utils.StringPtr(blockId.(string))
+			if blockID, ok := val["block_id"]; ok && blockID != "" {
+				block.BlockId = utils.StringPtr(blockID.(string))
 			}
 			if rackName, ok := val["rack_name"]; ok && rackName != "" {
 				block.RackName = utils.StringPtr(rackName.(string))
@@ -693,11 +693,11 @@ func expandNodeList(pr []interface{}) []config.NodeItem {
 			val := v.(map[string]interface{})
 			node := config.NodeItem{}
 
-			if nodeUuid, ok := val["node_uuid"]; ok && nodeUuid != "" {
-				node.NodeUuid = utils.StringPtr(nodeUuid.(string))
+			if nodeUUID, ok := val["node_uuid"]; ok && nodeUUID != "" {
+				node.NodeUuid = utils.StringPtr(nodeUUID.(string))
 			}
-			if blockId, ok := val["block_id"]; ok && blockId != "" {
-				node.BlockId = utils.StringPtr(blockId.(string))
+			if blockID, ok := val["block_id"]; ok && blockID != "" {
+				node.BlockId = utils.StringPtr(blockID.(string))
 			}
 			if nodePosition, ok := val["node_position"]; ok && nodePosition != "" {
 				node.NodePosition = utils.StringPtr(nodePosition.(string))
@@ -720,17 +720,17 @@ func expandNodeList(pr []interface{}) []config.NodeItem {
 			if isLightCompute, ok := val["is_light_compute"]; ok {
 				node.IsLightCompute = utils.BoolPtr(isLightCompute.(bool))
 			}
-			if ipmiIp, ok := val["ipmi_ip"]; ok {
-				node.IpmiIp = expandIPAddress(ipmiIp)
+			if ipmiIP, ok := val["ipmi_ip"]; ok {
+				node.IpmiIp = expandIPAddress(ipmiIP)
 			}
 			if digitalCertificateMapList, ok := val["digital_certificate_map_list"]; ok {
 				node.DigitalCertificateMapList = expandKeyValueMap(digitalCertificateMapList.([]interface{}))
 			}
-			if cvmIp, ok := val["cvm_ip"]; ok {
-				node.CvmIp = expandIPAddress(cvmIp)
+			if cvmIP, ok := val["cvm_ip"]; ok {
+				node.CvmIp = expandIPAddress(cvmIP)
 			}
-			if hypervisorIp, ok := val["hypervisor_ip"]; ok {
-				node.HypervisorIp = expandIPAddress(hypervisorIp)
+			if hypervisorIP, ok := val["hypervisor_ip"]; ok {
+				node.HypervisorIp = expandIPAddress(hypervisorIP)
 			}
 			if model, ok := val["model"]; ok {
 				node.Model = utils.StringPtr(model.(string))
@@ -756,11 +756,11 @@ func expandComputeNodeList(pr []interface{}) []config.ComputeNodeItem {
 			val := v.(map[string]interface{})
 			node := config.NewComputeNodeItem()
 
-			if nodeUuid, ok := val["node_uuid"]; ok && nodeUuid != "" {
-				node.NodeUuid = utils.StringPtr(nodeUuid.(string))
+			if nodeUUID, ok := val["node_uuid"]; ok && nodeUUID != "" {
+				node.NodeUuid = utils.StringPtr(nodeUUID.(string))
 			}
-			if blockId, ok := val["block_id"]; ok && blockId != "" {
-				node.BlockId = utils.StringPtr(blockId.(string))
+			if blockID, ok := val["block_id"]; ok && blockID != "" {
+				node.BlockId = utils.StringPtr(blockID.(string))
 			}
 			if nodePosition, ok := val["node_position"]; ok && nodePosition != "" {
 				node.NodePosition = utils.StringPtr(nodePosition.(string))
@@ -768,14 +768,14 @@ func expandComputeNodeList(pr []interface{}) []config.ComputeNodeItem {
 			if hypervisorHostname, ok := val["hypervisor_hostname"]; ok && hypervisorHostname != "" {
 				node.HypervisorHostname = utils.StringPtr(hypervisorHostname.(string))
 			}
-			if ipmiIp, ok := val["ipmi_ip"]; ok {
-				node.IpmiIp = expandIPAddress(ipmiIp)
+			if ipmiIP, ok := val["ipmi_ip"]; ok {
+				node.IpmiIp = expandIPAddress(ipmiIP)
 			}
 			if digitalCertificateMapList, ok := val["digital_certificate_map_list"]; ok {
 				node.DigitalCertificateMapList = expandKeyValueMap(digitalCertificateMapList.([]interface{}))
 			}
-			if hypervisorIp, ok := val["hypervisor_ip"]; ok {
-				node.HypervisorIp = expandIPAddress(hypervisorIp)
+			if hypervisorIP, ok := val["hypervisor_ip"]; ok {
+				node.HypervisorIp = expandIPAddress(hypervisorIP)
 			}
 			if model, ok := val["model"]; ok && model != "" {
 				node.Model = utils.StringPtr(model.(string))

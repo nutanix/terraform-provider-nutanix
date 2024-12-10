@@ -245,9 +245,9 @@ func DatasourceNutanixRecoveryPointV2Read(ctx context.Context, d *schema.Resourc
 
 	conn := meta.(*conns.Client).DataProtectionAPI
 
-	recoveryPointExtId := d.Get("ext_id").(string)
+	recoveryPointExtID := d.Get("ext_id").(string)
 
-	resp, err := conn.RecoveryPoint.GetRecoveryPointById(&recoveryPointExtId)
+	resp, err := conn.RecoveryPoint.GetRecoveryPointById(&recoveryPointExtID)
 	if err != nil {
 		return diag.Errorf("error while fetching recovery point: %v", err)
 	}
