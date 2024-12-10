@@ -11,7 +11,7 @@ import (
 
 const resourceNameVpc = "nutanix_vpc_v2.test"
 
-func TestAccNutanixVpcV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixVpcResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	vlanID := acctest.RandIntRange(1, 999)
 	name := fmt.Sprintf("tf-test-vpc-%d", r)
@@ -46,7 +46,7 @@ func TestAccNutanixVpcV2Resource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVpcV2Resource_WithExternallyRoutablePrefixes(t *testing.T) {
+func TestAccV2NutanixVpcResource_WithExternallyRoutablePrefixes(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vpc-%d", r)
 	vlanID := acctest.RandIntRange(1, 999)
@@ -69,7 +69,7 @@ func TestAccNutanixVpcV2Resource_WithExternallyRoutablePrefixes(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVpcV2Resource_WithDHCP(t *testing.T) {
+func TestAccV2NutanixVpcResource_WithDHCP(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vpc-%d", r)
 	vlanID := acctest.RandIntRange(1, 999)
@@ -93,7 +93,7 @@ func TestAccNutanixVpcV2Resource_WithDHCP(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVpcV2Resource_WithTransitType(t *testing.T) {
+func TestAccV2NutanixVpcResource_WithTransitType(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vpc-%d", r)
 	vlanID := acctest.RandIntRange(1, 999)

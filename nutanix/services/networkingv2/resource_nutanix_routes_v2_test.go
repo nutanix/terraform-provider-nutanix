@@ -10,7 +10,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-func TestAccNutanixRoutesV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixRoutesResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("terraform-test-route-%d", r)
 	desc := "test terraform route description"

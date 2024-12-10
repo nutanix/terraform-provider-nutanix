@@ -11,7 +11,7 @@ import (
 
 const datasourceNameNSPS = "data.nutanix_network_security_policies_v2.test"
 
-func TestAccNutanixNSPsV2DataSource_Basic(t *testing.T) {
+func TestAccV2NutanixNSPsDataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-nsp-%d", r)
 
@@ -30,7 +30,7 @@ func TestAccNutanixNSPsV2DataSource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixNSPsV2DataSource_WithFilter(t *testing.T) {
+func TestAccV2NutanixNSPsDataSource_WithFilter(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-nsp-%d", r)
 

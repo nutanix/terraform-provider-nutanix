@@ -11,7 +11,7 @@ import (
 
 const datasourceNameAddGroups = "data.nutanix_address_groups_v2.test"
 
-func TestAccNutanixAddressGroupsV2DataSource_Basic(t *testing.T) {
+func TestAccV2NutanixAddressGroupsDataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-service-%d", r)
 	desc := "test service description"
@@ -30,7 +30,7 @@ func TestAccNutanixAddressGroupsV2DataSource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixAddressGroupsV2DataSource_WithFilter(t *testing.T) {
+func TestAccV2NutanixAddressGroupsDataSource_WithFilter(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-service-%d", r)
 	desc := "test service description"

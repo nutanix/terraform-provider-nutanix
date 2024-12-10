@@ -11,7 +11,7 @@ import (
 
 const datasourceNameFIP = "data.nutanix_floating_ip_v2.test"
 
-func TestAccNutanixFloatingIPV2DataSource_basic(t *testing.T) {
+func TestAccV2NutanixFloatingIPDataSource_basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-fip-%d", r)
 	desc := "test fip description"

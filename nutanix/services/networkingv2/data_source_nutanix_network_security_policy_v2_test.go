@@ -11,7 +11,7 @@ import (
 
 const datasourceNameNsp = "data.nutanix_network_security_policy_v2.test"
 
-func TestAccNutanixNSPV2DataSource_Basic(t *testing.T) {
+func TestAccV2NutanixNSPDataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-nsp-%d", r)
 

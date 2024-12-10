@@ -11,7 +11,7 @@ import (
 
 const resourceNameServiceGroup = "nutanix_service_groups_v2.test"
 
-func TestAccNutanixServiceGroupV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixServiceGroupResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-Service-group-%d", r)
 	desc := "test Service group description"
@@ -36,7 +36,7 @@ func TestAccNutanixServiceGroupV2Resource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixServiceGroupV2Resource_WithUpdate(t *testing.T) {
+func TestAccV2NutanixServiceGroupResource_WithUpdate(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-Service-group-%d", r)
 	updatedName := fmt.Sprintf("test-Service-group-%d", r+1)
@@ -76,7 +76,7 @@ func TestAccNutanixServiceGroupV2Resource_WithUpdate(t *testing.T) {
 	})
 }
 
-func TestAccNutanixServiceGroupV2Resource_WithICMP(t *testing.T) {
+func TestAccV2NutanixServiceGroupResource_WithICMP(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-Service-group-%d", r)
 	desc := "test Service group description"
@@ -100,7 +100,7 @@ func TestAccNutanixServiceGroupV2Resource_WithICMP(t *testing.T) {
 	})
 }
 
-func TestAccNutanixServiceGroupV2Resource_WithAll(t *testing.T) {
+func TestAccV2NutanixServiceGroupResource_WithAll(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-Service-group-%d", r)
 	desc := "test Service group description"
@@ -128,7 +128,7 @@ func TestAccNutanixServiceGroupV2Resource_WithAll(t *testing.T) {
 	})
 }
 
-func TestAccNutanixServiceGroupV2Resource_WithUpdateTCP(t *testing.T) {
+func TestAccV2NutanixServiceGroupResource_WithUpdateTCP(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-Service-group-%d", r)
 	updatedName := fmt.Sprintf("test-Service-group-%d", r+1)
