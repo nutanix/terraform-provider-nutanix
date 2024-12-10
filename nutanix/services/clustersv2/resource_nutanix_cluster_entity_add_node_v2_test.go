@@ -19,8 +19,11 @@ const (
 )
 
 func TestAccV2NutanixClusterAddNodeResource_Basic(t *testing.T) {
-	if testVars.Clusters.Nodes[0].CvmIP == "" {
-		t.Skip("Skipping test as No available node to be used for testing")
+	if testVars.Clusters.Nodes[0].CvmIP == "" &&
+		testVars.Clusters.Nodes[1].CvmIP == "" &&
+		testVars.Clusters.Nodes[2].CvmIP == "" &&
+		testVars.Clusters.Nodes[3].CvmIP == "" {
+		t.Skip("Skipping test as No available nodes to be used for testing")
 	}
 	r := acctest.RandInt()
 	clusterName := fmt.Sprintf("tf-3node-cluster-%d", r)
