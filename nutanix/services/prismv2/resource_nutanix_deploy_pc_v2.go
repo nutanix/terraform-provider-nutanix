@@ -1,0 +1,1524 @@
+package prismv2
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	clustermgmtConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/clustermgmt/v4/config"
+	commonConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/common/v1/config"
+	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	vmmConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/vmm/v4/ahv/config"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
+
+func ResourceNutanixDeployPcV2() *schema.Resource {
+	return &schema.Resource{
+		CreateContext: ResourceNutanixDeployPcV2Create,
+		ReadContext:   ResourceNutanixDeployPcV2Read,
+		UpdateContext: ResourceNutanixDeployPcV2Update,
+		DeleteContext: ResourceNutanixDeployPcV2Delete,
+		Schema: map[string]*schema.Schema{
+			"config":  schemaForPcConfig(),
+			"network": schemaForPcNetwork(),
+			"should_enable_high_availability": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			// read schema
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"links": schemaForLinks(),
+			"is_registered_with_hosting_cluster": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"hosting_cluster_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"node_ext_ids": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
+		},
+	}
+}
+
+func ResourceNutanixDeployPcV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).PrismAPI
+
+	deployPcBody := config.NewDomainManager()
+
+	if configData, ok := d.GetOk("config"); ok {
+		deployPcBody.Config = expandPCConfig(configData.([]interface{})[0].(map[string]interface{}))
+	}
+	if networkData, ok := d.GetOk("network"); ok {
+		deployPcBody.Network = expandPCNetwork(networkData.([]interface{})[0].(map[string]interface{}))
+	}
+	if shouldEnableHighAvailability, ok := d.GetOk("should_enable_high_availability"); ok {
+		deployPcBody.ShouldEnableHighAvailability = utils.BoolPtr(shouldEnableHighAvailability.(bool))
+	}
+
+	aJson, _ := json.MarshalIndent(deployPcBody, "", "  ")
+	log.Printf("[DEBUG] Create Domain Manager Request Payload: %s", string(aJson))
+
+	resp, err := conn.DomainManagerAPIInstance.CreateDomainManager(deployPcBody)
+	if err != nil {
+		return diag.Errorf("error while Creating Domain Manager: %s", err)
+	}
+
+	TaskRef := resp.Data.GetValue().(config.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the cluster to be available
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
+		return diag.Errorf("error waiting for Domain Manager to be created: %s", err)
+	}
+
+	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching Domain Manager Task: %s", err)
+	}
+
+	rUUID := resourceUUID.Data.GetValue().(config.Task)
+	aJson, _ = json.MarshalIndent(rUUID, "", "  ")
+	log.Printf("[DEBUG] Create Domain Manager Task Details: %s", string(aJson))
+
+	uuid := rUUID.EntitiesAffected[0].ExtId
+	d.SetId(*uuid)
+
+	return ResourceNutanixDeployPcV2Read(ctx, d, meta)
+}
+
+func ResourceNutanixDeployPcV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).PrismAPI
+
+	resp, err := conn.DomainManagerAPIInstance.GetDomainManagerById(utils.StringPtr(d.Id()))
+
+	if err != nil {
+		return diag.Errorf("error while fetching Domain Manager: %s", err)
+	}
+
+	deployPcBody := resp.Data.GetValue().(config.DomainManager)
+
+	if err := d.Set("tenant_id", utils.StringValue(deployPcBody.TenantId)); err != nil {
+		return diag.Errorf("error setting tenant_id: %s", err)
+	}
+	if err := d.Set("ext_id", utils.StringValue(deployPcBody.ExtId)); err != nil {
+		return diag.Errorf("error setting ext_id: %s", err)
+	}
+	if err := d.Set("links", flattenLinks(deployPcBody.Links)); err != nil {
+		return diag.Errorf("error setting links: %s", err)
+	}
+	if err := d.Set("config", flattenPCConfig(deployPcBody.Config)); err != nil {
+		return diag.Errorf("error setting config: %s", err)
+	}
+	if err := d.Set("is_registered_with_hosting_cluster", utils.BoolValue(deployPcBody.IsRegisteredWithHostingCluster)); err != nil {
+		return diag.Errorf("error setting is_registered_with_hosting_cluster: %s", err)
+	}
+	if err := d.Set("network", flattenPCNetwork(deployPcBody.Network)); err != nil {
+		return diag.Errorf("error setting network: %s", err)
+	}
+	if err := d.Set("hosting_cluster_ext_id", utils.StringValue(deployPcBody.HostingClusterExtId)); err != nil {
+		return diag.Errorf("error setting hosting_cluster_ext_id: %s", err)
+	}
+	if err := d.Set("should_enable_high_availability", utils.BoolValue(deployPcBody.ShouldEnableHighAvailability)); err != nil {
+		return diag.Errorf("error setting should_enable_high_availability: %s", err)
+	}
+	if err := d.Set("node_ext_ids", deployPcBody.NodeExtIds); err != nil {
+		return diag.Errorf("error setting node_ext_ids: %s", err)
+	}
+	return nil
+}
+
+func ResourceNutanixDeployPcV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return nil
+}
+
+func ResourceNutanixDeployPcV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return nil
+}
+
+// schema Functions
+
+func schemaForPcConfig() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"should_enable_lockdown_mode": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"build_info": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"version": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"size": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice([]string{"SMALL", "LARGE", "EXTRALARGE", "STARTER"}, false),
+				},
+				"bootstrap_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cloud_init_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"datasource_type": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Default:      "CONFIG_DRIVE_V2",
+											ValidateFunc: validation.StringInSlice([]string{"CONFIG_DRIVE_V2"}, false),
+										},
+										"metadata": {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										"cloud_init_script": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"user_data": {
+														Type:     schema.TypeList,
+														Optional: true,
+														Computed: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"value": {
+																	Type:     schema.TypeString,
+																	Optional: true,
+																	Computed: true,
+																},
+															},
+														},
+													},
+													"custom_key_values": schemaForCustomKeyValuePairs(),
+												},
+											},
+										},
+									},
+								},
+							},
+							"environment_info": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"type": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.StringInSlice([]string{"NTNX_CLOUD", "ONPREM"}, false),
+										},
+										"provider_type": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.StringInSlice([]string{"VSPHERE", "AZURE", "NTNX", "GCP", "AWS"}, false),
+										},
+										"provisioning_type": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.StringInSlice([]string{"NATIVE", "NTNX"}, false),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"credentials": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 5,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"username": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"password": {
+								Type:      schema.TypeString,
+								Required:  true,
+								Sensitive: true,
+							},
+						},
+					},
+				},
+				"resource_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"container_ext_ids": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MinItems: 1,
+								MaxItems: 3,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"num_vcpus": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"memory_size_bytes": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"data_disk_size_bytes": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schemaForCustomKeyValuePairs() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"key_value_pairs": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MinItems: 0,
+					MaxItems: 32,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+							},
+							"value": schemaForValue(),
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schemaForValue() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"string": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"integer": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"boolean": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"string_list": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"object": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				},
+				"map_of_strings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"map": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+						},
+					},
+				},
+				"integer_list": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeInt,
+					},
+				},
+			},
+		},
+	}
+}
+
+func schemaForPcNetwork() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"external_address": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem:     schemaForIpAddress(),
+				},
+				"name_servers": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1024,
+					Elem:     schemaForIpAddressOrFqdn(),
+				},
+				"ntp_servers": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1024,
+					Elem:     schemaForIpAddressOrFqdn(),
+				},
+				"fqdn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"internal_networks": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_gateway": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem:     schemaForIpAddressOrFqdn(),
+							},
+							"subnet_mask": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem:     schemaForIpAddressOrFqdn(),
+							},
+							"ip_ranges": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 15,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"begin": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MaxItems: 1,
+											Elem:     schemaForIpAddress(),
+										},
+										"end": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MaxItems: 1,
+											Elem:     schemaForIpAddress(),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"external_networks": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_gateway": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem:     schemaForIpAddressOrFqdn(),
+							},
+							"subnet_mask": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem:     schemaForIpAddressOrFqdn(),
+							},
+							"ip_ranges": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 15,
+								MinItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"begin": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MaxItems: 1,
+											Elem:     schemaForIpAddress(),
+										},
+										"end": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MaxItems: 1,
+											Elem:     schemaForIpAddress(),
+										},
+									},
+								},
+							},
+							"network_ext_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schemaForIpAddress() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"ipv4": SchemaForValuePrefixLengthResource(32),
+			"ipv6": SchemaForValuePrefixLengthResource(128),
+		},
+	}
+}
+
+func schemaForIpAddressOrFqdn() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"ipv4": SchemaForValuePrefixLengthResource(32),
+			"ipv6": SchemaForValuePrefixLengthResource(128),
+			"fqdn": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"value": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func SchemaForValuePrefixLengthResource(defaultPrefixLength int) *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"value": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"prefix_length": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, defaultPrefixLength),
+					Default:      defaultPrefixLength,
+				},
+			},
+		},
+	}
+}
+
+func schemaForLinks() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"rel": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"href": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
+	}
+}
+
+// Expanders
+// Pc Config Expanders
+func expandPCConfig(configData map[string]interface{}) *config.DomainManagerClusterConfig {
+	domainManagerClusterConfig := config.NewDomainManagerClusterConfig()
+
+	if shouldEnableLockdownMode, ok := configData["should_enable_lockdown_mode"]; ok {
+		domainManagerClusterConfig.ShouldEnableLockdownMode = utils.BoolPtr(shouldEnableLockdownMode.(bool))
+	}
+	if buildInfo, ok := configData["build_info"]; ok {
+		buildInfoData := buildInfo.([]interface{})[0].(map[string]interface{})
+		buildInfoObj := clustermgmtConfig.NewBuildInfo()
+		if version, ok := buildInfoData["version"]; ok {
+			buildInfoObj.Version = utils.StringPtr(version.(string))
+		}
+		domainManagerClusterConfig.BuildInfo = buildInfoObj
+	}
+	if name, ok := configData["name"]; ok {
+		domainManagerClusterConfig.Name = utils.StringPtr(name.(string))
+	}
+	if size, ok := configData["size"]; ok {
+		domainManagerClusterConfig.Size = expandClusterSize(size.(string))
+	}
+	if bootstrapConfig, ok := configData["bootstrap_config"]; ok {
+		domainManagerClusterConfig.BootstrapConfig = expandBootstrapConfig(bootstrapConfig.([]interface{})[0].(map[string]interface{}))
+	}
+	if credentials, ok := configData["credentials"]; ok {
+		domainManagerClusterConfig.Credentials = expandCredentials(credentials.([]interface{}))
+	}
+	if resourceConfig, ok := configData["resource_config"]; ok {
+		domainManagerClusterConfig.ResourceConfig = expandResourceConfig(resourceConfig.([]interface{})[0].(map[string]interface{}))
+	}
+
+	return domainManagerClusterConfig
+}
+
+func expandClusterSize(size string) *config.Size {
+	const STARTER, SMALL, LARGE, EXTRALARGE = "STARTER", "SMALL", "LARGE", "EXTRALARGE"
+	switch size {
+	case STARTER:
+		sizeVal := config.Size(2)
+		return &sizeVal
+	case SMALL:
+		sizeVal := config.Size(3)
+		return &sizeVal
+	case LARGE:
+		sizeVal := config.Size(3)
+		return &sizeVal
+	case EXTRALARGE:
+		sizeVal := config.Size(3)
+		return &sizeVal
+	default:
+		return nil
+	}
+}
+
+func expandBootstrapConfig(bootStrapConfigData map[string]interface{}) *config.BootstrapConfig {
+	bootstrapConfig := config.NewBootstrapConfig()
+
+	if cloudInitConfig, ok := bootStrapConfigData["cloud_init_config"]; ok {
+		cloudInitConfigData := cloudInitConfig.([]interface{})
+		cloudInitConfigList := make([]vmmConfig.CloudInit, 0)
+		for _, cloudInitData := range cloudInitConfigData {
+			cloudInitDataMap := cloudInitData.(map[string]interface{})
+
+			cloudInitObj := vmmConfig.NewCloudInit()
+			if datasourceType, ok := cloudInitDataMap["datasource_type"]; ok {
+				if datasourceType != nil && datasourceType != "" {
+					subMap := map[string]interface{}{
+						"CONFIG_DRIVE_V2": 2,
+					}
+					pVal := subMap[datasourceType.(string)]
+					if pVal == nil {
+						cloudInitObj.DatasourceType = nil
+					} else {
+						p := vmmConfig.CloudInitDataSourceType(pVal.(int))
+						cloudInitObj.DatasourceType = &p
+					}
+				}
+			}
+			if metadata, ok := cloudInitDataMap["metadata"]; ok {
+				cloudInitObj.Metadata = utils.StringPtr(metadata.(string))
+			}
+			if cloudInitScript, ok := cloudInitDataMap["cloud_init_script"]; ok {
+				cloudInitScriptData := cloudInitScript.([]interface{})[0].(map[string]interface{})
+				cloudInitScriptObj := vmmConfig.NewOneOfCloudInitCloudInitScript()
+
+				if userdata := cloudInitScriptData["user_data"]; userdata != nil && len(userdata.([]interface{})) > 0 {
+					user := vmmConfig.NewUserdata()
+					userVal := userdata.([]interface{})[0].(map[string]interface{})
+
+					if value, ok := userVal["value"]; ok {
+						user.Value = utils.StringPtr(value.(string))
+					}
+
+					err := cloudInitScriptObj.SetValue(*user)
+					if err != nil {
+						log.Printf("[ERROR] cloudInitScript : Error setting value for userdata: %v", err)
+						return nil
+					}
+					cloudInitObj.CloudInitScript = cloudInitScriptObj
+				} else if customKeyValues, ok := cloudInitScriptData["custom_key_values"]; ok && len(customKeyValues.([]interface{})) > 0 {
+					customKeyValuesObj := expandCustomKeyValuesPairs(customKeyValues)
+					err := cloudInitScriptObj.SetValue(*customKeyValuesObj)
+					if err != nil {
+						log.Printf("[ERROR] cloudInitScript: Error setting value for custom key values: %v", err)
+						return nil
+					}
+					cloudInitObj.CloudInitScript = cloudInitScriptObj
+				}
+
+			}
+			cloudInitConfigList = append(cloudInitConfigList, *cloudInitObj)
+		}
+		bootstrapConfig.CloudInitConfig = cloudInitConfigList
+	}
+
+	if environmentInfo, ok := bootStrapConfigData["environment_info"]; ok {
+		environmentInfoData := environmentInfo.([]interface{})[0].(map[string]interface{})
+		environmentInfoObj := config.NewEnvironmentInfo()
+
+		if providerType, ok := environmentInfoData["provider_type"]; ok {
+			if providerType != nil && providerType != "" {
+				subMap := map[string]interface{}{
+					"NTNX":    2,
+					"AZURE":   3,
+					"AWS":     4,
+					"GCP":     5,
+					"VSPHERE": 6,
+				}
+				pVal := subMap[providerType.(string)]
+				if pVal == nil {
+					environmentInfoObj.ProviderType = nil
+				} else {
+					p := config.ProviderType(pVal.(int))
+					environmentInfoObj.ProviderType = &p
+				}
+			}
+		}
+		if provisioningType, ok := environmentInfoData["provisioning_type"]; ok {
+			if provisioningType != nil && provisioningType != "" {
+				subMap := map[string]interface{}{
+					"NTNX":   2,
+					"NATIVE": 3,
+				}
+				pVal := subMap[provisioningType.(string)]
+				if pVal == nil {
+					environmentInfoObj.ProvisioningType = nil
+				} else {
+					p := config.ProvisioningType(pVal.(int))
+					environmentInfoObj.ProvisioningType = &p
+				}
+			}
+		}
+		if environmentType, ok := environmentInfoData["type"]; ok {
+			if environmentType != nil && environmentType != "" {
+				subMap := map[string]interface{}{
+					"ONPREM":     2,
+					"NTNX_CLOUD": 3,
+				}
+				pVal := subMap[environmentType.(string)]
+				if pVal == nil {
+					environmentInfoObj.Type = nil
+				} else {
+					p := config.EnvironmentType(pVal.(int))
+					environmentInfoObj.Type = &p
+				}
+			}
+		}
+		bootstrapConfig.EnvironmentInfo = environmentInfoObj
+	}
+
+	return bootstrapConfig
+}
+
+func expandCustomKeyValuesPairs(customKeyValues interface{}) *vmmConfig.CustomKeyValues {
+	if customKeyValues != nil {
+		customKeyValuesObj := vmmConfig.NewCustomKeyValues()
+		customKeyValuesListInterface := customKeyValues.([]interface{})
+		customKeyValuesListValue := customKeyValuesListInterface[0].(map[string]interface{})
+		customKeyValuesList := customKeyValuesListValue["key_value_pairs"].([]interface{})
+		if len(customKeyValuesList) > 0 {
+			kvpList := make([]commonConfig.KVPair, 0)
+			for _, customKeyValuesData := range customKeyValuesList {
+				if keyValue := customKeyValuesData.(map[string]interface{}); keyValue != nil {
+					kvpList = append(kvpList, expandKVPair(keyValue))
+				}
+			}
+			customKeyValuesObj.KeyValuePairs = kvpList
+		}
+		return customKeyValuesObj
+	}
+	return nil
+}
+
+func expandKVPair(attribute map[string]interface{}) commonConfig.KVPair {
+	var kv commonConfig.KVPair
+	if attribute["name"] != nil && attribute["value"] != nil &&
+		attribute["name"] != "" && attribute["value"] != "" {
+		kv.Name = utils.StringPtr(attribute["name"].(string))
+		kv.Value = expandValue(attribute["value"])
+	}
+	aJson, _ := json.MarshalIndent(kv, "", "  ")
+	log.Printf("[DEBUG] KVPair: %v", string(aJson))
+	return kv
+}
+
+func expandValue(kvPairValue interface{}) *commonConfig.OneOfKVPairValue {
+	valueObj := commonConfig.NewOneOfKVPairValue()
+	if kvPairValue != nil {
+		valueData := kvPairValue.([]interface{})[0].(map[string]interface{})
+		log.Printf("[DEBUG] kvPair valueData: %v", valueData)
+
+		if valueData["string_list"] != nil && len(valueData["string_list"].([]interface{})) > 0 {
+			log.Printf("[DEBUG] valueData of type string_list")
+			stringList := valueData["string_list"].([]interface{})
+			stringsListStr := make([]string, len(stringList))
+			for i, v := range stringList {
+				stringsListStr[i] = v.(string)
+			}
+			log.Printf("[DEBUG] stringsListStr: %v", stringsListStr)
+			err := valueObj.SetValue(stringsListStr)
+			if err != nil {
+				log.Printf("[ERROR] Error setting value for string_list: %s", err)
+				diag.Errorf("Error setting value for string_list: %s", err)
+				return nil
+			}
+		} else if valueData["integer_list"] != nil && len(valueData["integer_list"].([]interface{})) > 0 {
+			log.Printf("[DEBUG] valueData of type integer_list")
+			integerList := valueData["integer_list"].([]interface{})
+			integersListInt := make([]int, len(integerList))
+			for i, v := range integerList {
+				integersListInt[i] = v.(int)
+			}
+			err := valueObj.SetValue(integersListInt)
+			if err != nil {
+				log.Printf("[ERROR] Error setting value for integer_list: %s", err)
+				diag.Errorf("Error setting value for integer_list: %s", err)
+				return nil
+			}
+		} else if valueData["map_of_strings"] != nil && len(valueData["map_of_strings"].([]interface{})) > 0 {
+			log.Printf("[DEBUG] valueData of type map_of_strings")
+			mapOfStrings := make([]commonConfig.MapOfStringWrapper, 0)
+
+			for _, mapOfStringsData := range valueData["map_of_strings"].([]interface{}) {
+				mapOfStringsDataMap := mapOfStringsData.(map[string]interface{})
+				mapOfStringsObj := commonConfig.NewMapOfStringWrapper()
+				mapOfStringsObj.Map = make(map[string]string)
+				for k, v := range mapOfStringsDataMap["map"].(map[string]interface{}) {
+					mapOfStringsObj.Map[k] = v.(string)
+				}
+				mapOfStrings = append(mapOfStrings, *mapOfStringsObj)
+			}
+			aJson, _ := json.Marshal(mapOfStrings)
+			log.Printf("[DEBUG] mapOfStrings: %v", string(aJson))
+			log.Printf("[DEBUG] mapOfStrings type: %T", mapOfStrings)
+			err := valueObj.SetValue(mapOfStrings)
+			if err != nil {
+				log.Printf("[ERROR] Error setting value for map: %s", err)
+				diag.Errorf("Error setting value for map: %s", err)
+				return nil
+			}
+		} else if valueData["string"] != nil && valueData["string"] != "" {
+			log.Printf("[DEBUG] valueData of type string")
+			err := valueObj.SetValue(valueData["string"].(string))
+			if err != nil {
+				log.Printf("[ERROR] Error setting value for string: %s", err)
+				diag.Errorf("Error setting value for string: %s", err)
+				return nil
+			}
+		} else if valueData["object"] != nil && len(valueData["object"].(map[string]interface{})) > 0 {
+			log.Printf("[DEBUG] valueData of type object")
+			object := make(map[string]string)
+			for k, v := range valueData["object"].(map[string]interface{}) {
+				object[k] = v.(string)
+			}
+			err := valueObj.SetValue(object)
+			if err != nil {
+				log.Printf("[ERROR] Error setting value for object: %s", err)
+				diag.Errorf("Error setting value for object: %s", err)
+				return nil
+			}
+		} else if valueData["integer"] != nil && valueData["integer"] != 0 {
+			log.Printf("[DEBUG] valueData of type integer")
+			err := valueObj.SetValue(valueData["integer"].(int))
+			if err != nil {
+				log.Printf("[ERROR] Error setting value for integer: %s", err)
+				diag.Errorf("Error setting value for integer: %s", err)
+				return nil
+			}
+		} else if valueData["boolean"] != nil {
+			log.Printf("[DEBUG] valueData of type boolean")
+			err := valueObj.SetValue(valueData["boolean"].(bool))
+			if err != nil {
+				log.Printf("[ERROR] Error setting value for boolean: %s", err)
+				diag.Errorf("Error setting value for boolean: %s", err)
+				return nil
+			}
+		} else {
+			log.Printf("[ERROR] invalid value type")
+			return nil
+		}
+
+	}
+	return valueObj
+}
+
+func expandCredentials(credentials []interface{}) []commonConfig.BasicAuth {
+	credentialsList := make([]commonConfig.BasicAuth, 0)
+	for _, credential := range credentials {
+		credentialData := credential.(map[string]interface{})
+		credentialObj := commonConfig.NewBasicAuth()
+		if username, ok := credentialData["username"]; ok {
+			credentialObj.Username = utils.StringPtr(username.(string))
+		}
+		if password, ok := credentialData["password"]; ok {
+			credentialObj.Password = utils.StringPtr(password.(string))
+		}
+		credentialsList = append(credentialsList, *credentialObj)
+	}
+	return credentialsList
+}
+
+func expandResourceConfig(resourceConfig map[string]interface{}) *config.DomainManagerResourceConfig {
+	resourceConfigObj := config.NewDomainManagerResourceConfig()
+
+	if containerExtIds, ok := resourceConfig["container_ext_ids"]; ok {
+		containerExtIdsList := containerExtIds.([]interface{})
+		containerExtIdsListObj := make([]string, 0)
+		for _, containerExtId := range containerExtIdsList {
+			containerExtIdsListObj = append(containerExtIdsListObj, containerExtId.(string))
+		}
+		resourceConfigObj.ContainerExtIds = containerExtIdsListObj
+	}
+
+	return resourceConfigObj
+}
+
+// network expanders
+
+func expandPCNetwork(pcNetwork map[string]interface{}) *config.DomainManagerNetwork {
+	pcNetworkObj := config.NewDomainManagerNetwork()
+
+	if externalAddress, ok := pcNetwork["external_address"]; ok {
+		externalAddressData := externalAddress.([]interface{})[0].(map[string]interface{})
+		pcNetworkObj.ExternalAddress = expandIpAddress(externalAddressData)
+	}
+	if nameServers, ok := pcNetwork["name_servers"]; ok {
+		nameServersData := nameServers.([]interface{})
+		nameServersObj := make([]commonConfig.IPAddressOrFQDN, 0)
+		for _, nameServerData := range nameServersData {
+			nameServerObj := expandIpAddressOrFqdn(nameServerData.(map[string]interface{}))
+			nameServersObj = append(nameServersObj, nameServerObj)
+		}
+		pcNetworkObj.NameServers = nameServersObj
+	}
+	if ntpServers, ok := pcNetwork["ntp_servers"]; ok {
+		ntpServersData := ntpServers.([]interface{})
+		ntpServersObj := make([]commonConfig.IPAddressOrFQDN, 0)
+		for _, ntpServerData := range ntpServersData {
+			ntpServerObj := expandIpAddressOrFqdn(ntpServerData.(map[string]interface{}))
+			ntpServersObj = append(ntpServersObj, ntpServerObj)
+		}
+		pcNetworkObj.NtpServers = ntpServersObj
+	}
+	if internalNetworks, ok := pcNetwork["internal_networks"]; ok {
+		internalNetworksData := internalNetworks.([]interface{})
+		internalNetworksList := make([]config.BaseNetwork, 0)
+		for _, internalNetworkData := range internalNetworksData {
+			internalNetworkObj := expandInternalNetwork(internalNetworkData.(map[string]interface{}))
+			internalNetworksList = append(internalNetworksList, internalNetworkObj)
+		}
+		pcNetworkObj.InternalNetworks = internalNetworksList
+	}
+	if externalNetworks, ok := pcNetwork["external_networks"]; ok {
+		externalNetworksData := externalNetworks.([]interface{})
+		externalNetworksList := make([]config.ExternalNetwork, 0)
+		for _, externalNetworkData := range externalNetworksData {
+			externalNetworkObj := expandExternalNetwork(externalNetworkData.(map[string]interface{}))
+			externalNetworksList = append(externalNetworksList, externalNetworkObj)
+		}
+		pcNetworkObj.ExternalNetworks = externalNetworksList
+	}
+
+	return pcNetworkObj
+}
+
+func expandExternalNetwork(externalNetwork map[string]interface{}) config.ExternalNetwork {
+	externalNetworkObj := config.NewExternalNetwork()
+
+	if defaultGateway, ok := externalNetwork["default_gateway"]; ok {
+		defaultGatewayData := defaultGateway.([]interface{})[0].(map[string]interface{})
+		defaultGatewayObj := expandIpAddressOrFqdn(defaultGatewayData)
+		externalNetworkObj.DefaultGateway = &defaultGatewayObj
+	}
+	if subnetMask, ok := externalNetwork["subnet_mask"]; ok {
+		subnetMaskData := subnetMask.([]interface{})[0].(map[string]interface{})
+		subnetMaskObj := expandIpAddressOrFqdn(subnetMaskData)
+		externalNetworkObj.SubnetMask = &subnetMaskObj
+	}
+	if ipRanges, ok := externalNetwork["ip_ranges"]; ok {
+		ipRangesData := ipRanges.([]interface{})
+		ipRangesList := make([]commonConfig.IpRange, 0)
+		for _, ipRangeData := range ipRangesData {
+			ipRangeObj := expandIPRange(ipRangeData.(map[string]interface{}))
+			ipRangesList = append(ipRangesList, ipRangeObj)
+		}
+		externalNetworkObj.IpRanges = ipRangesList
+	}
+	if networkExtId, ok := externalNetwork["network_ext_id"]; ok {
+		externalNetworkObj.NetworkExtId = utils.StringPtr(networkExtId.(string))
+	}
+
+	return *externalNetworkObj
+}
+
+func expandInternalNetwork(internalNetwork map[string]interface{}) config.BaseNetwork {
+	internalNetworkObj := config.NewBaseNetwork()
+
+	if defaultGateway, ok := internalNetwork["default_gateway"]; ok {
+		defaultGatewayData := defaultGateway.([]interface{})[0].(map[string]interface{})
+		defaultGatewayObj := expandIpAddressOrFqdn(defaultGatewayData)
+		internalNetworkObj.DefaultGateway = &defaultGatewayObj
+	}
+	if subnetMask, ok := internalNetwork["subnet_mask"]; ok {
+		subnetMaskData := subnetMask.([]interface{})[0].(map[string]interface{})
+		subnetMaskObj := expandIpAddressOrFqdn(subnetMaskData)
+		internalNetworkObj.SubnetMask = &subnetMaskObj
+	}
+	if ipRanges, ok := internalNetwork["ip_ranges"]; ok {
+		ipRangesData := ipRanges.([]interface{})
+		ipRangesObj := make([]commonConfig.IpRange, 0)
+		for _, ipRangeData := range ipRangesData {
+			ipRangeObj := expandIPRange(ipRangeData.(map[string]interface{}))
+			ipRangesObj = append(ipRangesObj, ipRangeObj)
+		}
+		internalNetworkObj.IpRanges = ipRangesObj
+	}
+
+	return *internalNetworkObj
+}
+
+func expandIPRange(ipRange map[string]interface{}) commonConfig.IpRange {
+	ipRangeObj := commonConfig.NewIpRange()
+
+	if begin, ok := ipRange["begin"]; ok {
+		beginData := begin.([]interface{})[0].(map[string]interface{})
+		beginObj := expandIpAddress(beginData)
+		ipRangeObj.Begin = beginObj
+	}
+	if end, ok := ipRange["end"]; ok {
+		endData := end.([]interface{})[0].(map[string]interface{})
+		endObj := expandIpAddress(endData)
+		ipRangeObj.End = endObj
+	}
+
+	return *ipRangeObj
+}
+
+// ip address expanders
+
+func expandIpAddress(ipAddress map[string]interface{}) *commonConfig.IPAddress {
+	ipAddressObj := commonConfig.NewIPAddress()
+
+	if ipv4, ok := ipAddress["ipv4"]; ok && len(ipv4.([]interface{})) > 0 {
+		ipAddressObj.Ipv4 = expandIPv4Address(ipv4)
+	}
+	if ipv6, ok := ipAddress["ipv6"]; ok && len(ipv6.([]interface{})) > 0 {
+		ipAddressObj.Ipv6 = expandIPv6Address(ipv6)
+	}
+
+	return ipAddressObj
+}
+
+func expandIpAddressOrFqdn(ipAddressOrFQDN map[string]interface{}) commonConfig.IPAddressOrFQDN {
+	ipAddressOrFQDNObj := *commonConfig.NewIPAddressOrFQDN()
+
+	if ipv4, ok := ipAddressOrFQDN["ipv4"]; ok && len(ipv4.([]interface{})) > 0 {
+		ipAddressOrFQDNObj.Ipv4 = expandIPv4Address(ipv4)
+	}
+	if ipv6, ok := ipAddressOrFQDN["ipv6"]; ok && len(ipv6.([]interface{})) > 0 {
+		ipAddressOrFQDNObj.Ipv6 = expandIPv6Address(ipv6)
+	}
+	if fqdn, ok := ipAddressOrFQDN["fqdn"]; ok && len(fqdn.([]interface{})) > 0 {
+		ipAddressOrFQDNObj.Fqdn = expandFQDN(fqdn)
+	}
+
+	return ipAddressOrFQDNObj
+
+}
+
+func expandIPv4Address(ipv4 interface{}) *commonConfig.IPv4Address {
+	if ipv4 != nil {
+		ipAddress := ipv4.([]interface{})[0].(map[string]interface{})
+		ip := &commonConfig.IPv4Address{}
+		if value, ok := ipAddress["value"].(string); ok {
+			ip.Value = utils.StringPtr(value)
+		}
+		if prefixLength, ok := ipAddress["prefix_length"].(int); ok {
+			ip.PrefixLength = utils.IntPtr(prefixLength)
+		}
+		return ip
+	}
+	return nil
+}
+
+func expandIPv6Address(ipv6 interface{}) *commonConfig.IPv6Address {
+	if ipv6 != nil {
+		ipAddress := ipv6.([]interface{})[0].(map[string]interface{})
+		ip := &commonConfig.IPv6Address{}
+		if value, ok := ipAddress["value"].(string); ok {
+			ip.Value = utils.StringPtr(value)
+		}
+		if prefixLength, ok := ipAddress["prefix_length"].(int); ok {
+			ip.PrefixLength = utils.IntPtr(prefixLength)
+		}
+		return ip
+	}
+	return nil
+}
+
+func expandFQDN(fqdn interface{}) *commonConfig.FQDN {
+	if fqdn != nil {
+		fqdnMap := fqdn.([]interface{})[0].(map[string]interface{})
+		f := &commonConfig.FQDN{}
+		if value, ok := fqdnMap["value"].(string); ok {
+			f.Value = utils.StringPtr(value)
+		}
+		return f
+	}
+	return nil
+}
+
+// Flattens
+// Pc Config flattens
+func flattenPCConfig(pcConfig *config.DomainManagerClusterConfig) []map[string]interface{} {
+	if pcConfig != nil {
+		pcConfigMap := make(map[string]interface{})
+		if pcConfig.ShouldEnableLockdownMode != nil {
+			pcConfigMap["should_enable_lockdown_mode"] = *pcConfig.ShouldEnableLockdownMode
+		}
+		if pcConfig.BuildInfo != nil {
+			buildInfo := make(map[string]interface{})
+			if pcConfig.BuildInfo.Version != nil {
+				buildInfo["version"] = utils.StringValue(pcConfig.BuildInfo.Version)
+			}
+			pcConfigMap["build_info"] = []map[string]interface{}{buildInfo}
+		}
+		if pcConfig.Name != nil {
+			pcConfigMap["name"] = *pcConfig.Name
+		}
+		if pcConfig.Size != nil {
+			pcConfigMap["size"] = flattenClusterSize(*pcConfig.Size)
+		}
+		if pcConfig.BootstrapConfig != nil {
+			pcConfigMap["bootstrap_config"] = flattenBootstrapConfig(pcConfig.BootstrapConfig)
+		}
+		if pcConfig.Credentials != nil {
+			credentials := make([]map[string]interface{}, len(pcConfig.Credentials))
+			for i, credential := range pcConfig.Credentials {
+				credentials[i] = map[string]interface{}{
+					"username": utils.StringValue(credential.Username),
+					"password": utils.StringValue(credential.Password),
+				}
+			}
+			pcConfigMap["credentials"] = credentials
+		}
+		if pcConfig.ResourceConfig != nil {
+			pcConfigMap["resource_config"] = flattenResourceConfig(pcConfig.ResourceConfig)
+		}
+		return []map[string]interface{}{pcConfigMap}
+	}
+	return nil
+}
+
+func flattenClusterSize(size config.Size) string {
+	const STARTER, SMALL, LARGE, EXTRALARGE = 2, 3, 4, 5
+
+	switch size {
+	case STARTER:
+		return "STARTER"
+	case SMALL:
+		return "SMALL"
+	case LARGE:
+		return "LARGE"
+	case EXTRALARGE:
+		return "EXTRALARGE"
+	default:
+		return "UNKNOWN"
+	}
+}
+
+func flattenBootstrapConfig(bootstrapConfig *config.BootstrapConfig) []map[string]interface{} {
+	if bootstrapConfig != nil {
+		bootstrapConfigMap := make(map[string]interface{})
+		if bootstrapConfig.EnvironmentInfo != nil {
+			bootstrapConfigMap["environment_info"] = flattenEnvironmentInfo(bootstrapConfig.EnvironmentInfo)
+		}
+		return []map[string]interface{}{bootstrapConfigMap}
+	}
+	return nil
+}
+
+func flattenResourceConfig(resourceConfig *config.DomainManagerResourceConfig) []map[string]interface{} {
+	if resourceConfig != nil {
+		resourceConfigMap := make(map[string]interface{})
+		if resourceConfig.NumVcpus != nil {
+			resourceConfigMap["num_vcpus"] = utils.IntValue(resourceConfig.NumVcpus)
+		}
+		if resourceConfig.MemorySizeBytes != nil {
+			resourceConfigMap["memory_size_bytes"] = utils.Int64Value(resourceConfig.MemorySizeBytes)
+		}
+		if resourceConfig.DataDiskSizeBytes != nil {
+			resourceConfigMap["data_disk_size_bytes"] = utils.Int64Value(resourceConfig.DataDiskSizeBytes)
+		}
+		if resourceConfig.ContainerExtIds != nil {
+			resourceConfigMap["container_ext_ids"] = resourceConfig.ContainerExtIds
+		}
+		return []map[string]interface{}{resourceConfigMap}
+	}
+	return nil
+}
+
+func flattenEnvironmentInfo(environmentInfo *config.EnvironmentInfo) []map[string]interface{} {
+	if environmentInfo != nil {
+		info := make(map[string]interface{})
+		if environmentInfo.Type != nil {
+			info["type"] = flattenEnvironmentType(*environmentInfo.Type)
+		}
+		if environmentInfo.ProviderType != nil {
+			info["provider_type"] = flattenEnvironmentProviderType(*environmentInfo.ProviderType)
+		}
+		if environmentInfo.ProvisioningType != nil {
+			info["provisioning_type"] = flattenEnvironmentProvisioningType(*environmentInfo.ProvisioningType)
+		}
+		return []map[string]interface{}{info}
+	}
+	return nil
+}
+
+func flattenEnvironmentType(environmentType config.EnvironmentType) string {
+	const ONPREM, NTNX_CLOUD = 2, 3
+
+	switch environmentType {
+	case ONPREM:
+		return "ONPREM"
+	case NTNX_CLOUD:
+		return "NTNX_CLOUD"
+	default:
+		return "UNKNOWN"
+	}
+}
+
+func flattenEnvironmentProvisioningType(provisioningType config.ProvisioningType) string {
+	const NTNX, NATIVE = 2, 3
+	switch provisioningType {
+	case NTNX:
+		return "NTNX"
+	case NATIVE:
+		return "NATIVE"
+	default:
+		return "UNKNOWN"
+	}
+}
+
+func flattenEnvironmentProviderType(providerType config.ProviderType) string {
+	const NTNX, AZURE, AWS, GCP, VSPHERE = 2, 3, 4, 5, 6
+	switch providerType {
+	case NTNX:
+		return "NTNX"
+	case AZURE:
+		return "AZURE"
+	case AWS:
+		return "AWS"
+	case GCP:
+		return "GCP"
+	case VSPHERE:
+		return "VSPHERE"
+	default:
+		return "UNKNOWN"
+	}
+}
+
+func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		// data := base64.StdEncoding.EncodeToString([]byte("ergon"))
+		// encodeUUID := data + ":" + taskUUID
+		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
+
+		if err != nil {
+			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
+		}
+
+		// get the group results
+
+		v := vresp.Data.GetValue().(config.Task)
+
+		if getTaskStatus(v.Status) == "CANCELED" || getTaskStatus(v.Status) == "FAILED" {
+			return v, getTaskStatus(v.Status),
+				fmt.Errorf("error_detail: %s, progress_message: %d", utils.StringValue(v.ErrorMessages[0].Message), utils.IntValue(v.ProgressPercentage))
+		}
+		return v, getTaskStatus(v.Status), nil
+	}
+}
+
+func getTaskStatus(pr *config.TaskStatus) string {
+	if pr != nil {
+		if *pr == config.TaskStatus(6) {
+			return "FAILED"
+		}
+		if *pr == config.TaskStatus(7) {
+			return "CANCELED"
+		}
+		if *pr == config.TaskStatus(2) {
+			return "QUEUED"
+		}
+		if *pr == config.TaskStatus(3) {
+			return "RUNNING"
+		}
+		if *pr == config.TaskStatus(5) {
+			return "SUCCEEDED"
+		}
+	}
+	return "UNKNOWN"
+}
+
+// network flattens
+
+func flattenPCNetwork(network *config.DomainManagerNetwork) []map[string]interface{} {
+	if network == nil {
+		return nil
+	}
+	networkMap := make(map[string]interface{})
+	if network.ExternalAddress != nil {
+		networkMap["external_address"] = flattenIpAddress(network.ExternalAddress)
+	}
+	if network.NameServers != nil {
+		networkMap["name_servers"] = flattenIPAddressOrFQDN(network.NameServers)
+	}
+	if network.NtpServers != nil {
+		networkMap["ntp_servers"] = flattenIPAddressOrFQDN(network.NtpServers)
+	}
+	if network.Fqdn != nil {
+		networkMap["fqdn"] = utils.StringValue(network.Fqdn)
+	}
+	if network.InternalNetworks != nil {
+		networkMap["internal_networks"] = flattenInternalNetworks(network.InternalNetworks)
+	}
+	if network.ExternalNetworks != nil {
+		networkMap["external_networks"] = flattenExternalNetworks(network.ExternalNetworks)
+	}
+	return []map[string]interface{}{networkMap}
+}
+
+func flattenIpAddress(ipAddress *commonConfig.IPAddress) []map[string]interface{} {
+	if ipAddress == nil {
+		return nil
+	}
+	ipAddressMap := make(map[string]interface{})
+	if ipAddress.Ipv4 != nil {
+		ipAddressMap["ipv4"] = flattenIPv4Address(ipAddress.Ipv4)
+	}
+	if ipAddress.Ipv6 != nil {
+		ipAddressMap["ipv6"] = flattenIPv6Address(ipAddress.Ipv6)
+	}
+	return []map[string]interface{}{ipAddressMap}
+}
+
+func flattenIPv4Address(pr *commonConfig.IPv4Address) []interface{} {
+	if pr != nil {
+		ipv4 := make([]interface{}, 0)
+
+		ip := make(map[string]interface{})
+
+		ip["value"] = pr.Value
+		ip["prefix_length"] = pr.PrefixLength
+
+		ipv4 = append(ipv4, ip)
+
+		return ipv4
+	}
+	return nil
+}
+
+func flattenIPv6Address(pr *commonConfig.IPv6Address) []interface{} {
+	if pr != nil {
+		ipv6 := make([]interface{}, 0)
+
+		ip := make(map[string]interface{})
+
+		ip["value"] = pr.Value
+		ip["prefix_length"] = pr.PrefixLength
+
+		ipv6 = append(ipv6, ip)
+
+		return ipv6
+	}
+	return nil
+}
+
+func flattenIPAddressOrFQDN(pr []commonConfig.IPAddressOrFQDN) interface{} {
+	if len(pr) > 0 {
+		ips := make([]map[string]interface{}, len(pr))
+
+		for k, v := range pr {
+			ip := make(map[string]interface{})
+
+			ip["ipv4"] = flattenIPv4Address(v.Ipv4)
+			ip["ipv6"] = flattenIPv6Address(v.Ipv6)
+			ip["fqdn"] = flattenFQDN(v.Fqdn)
+
+			ips[k] = ip
+		}
+		return ips
+	}
+	return nil
+}
+
+func flattenFQDN(pr *commonConfig.FQDN) []interface{} {
+	if pr != nil {
+		fqdn := make([]interface{}, 0)
+
+		f := make(map[string]interface{})
+
+		f["value"] = pr.Value
+
+		fqdn = append(fqdn, f)
+
+		return fqdn
+	}
+	return nil
+}
+
+func flattenInternalNetworks(internalNetworks []config.BaseNetwork) []map[string]interface{} {
+	if len(internalNetworks) > 0 {
+		internalNetworksMap := make([]map[string]interface{}, len(internalNetworks))
+
+		for k, v := range internalNetworks {
+			internalNetworkMap := make(map[string]interface{})
+
+			internalNetworkMap["default_gateway"] = flattenIPAddressOrFQDN([]commonConfig.IPAddressOrFQDN{*v.DefaultGateway})
+			internalNetworkMap["subnet_mask"] = flattenIPAddressOrFQDN([]commonConfig.IPAddressOrFQDN{*v.SubnetMask})
+			internalNetworkMap["ip_ranges"] = flattenIPRanges(v.IpRanges)
+
+			internalNetworksMap[k] = internalNetworkMap
+		}
+		return internalNetworksMap
+	}
+	return nil
+
+}
+
+func flattenIPRanges(ipRanges []commonConfig.IpRange) []map[string]interface{} {
+	if len(ipRanges) > 0 {
+		ipRangesMap := make([]map[string]interface{}, len(ipRanges))
+
+		for k, v := range ipRanges {
+			ipRangeMap := make(map[string]interface{})
+
+			ipRangeMap["begin"] = flattenIpAddress(v.Begin)
+			ipRangeMap["end"] = flattenIpAddress(v.End)
+
+			ipRangesMap[k] = ipRangeMap
+		}
+		return ipRangesMap
+	}
+	return nil
+}
+
+func flattenExternalNetworks(externalNetworks []config.ExternalNetwork) []map[string]interface{} {
+	if len(externalNetworks) > 0 {
+		externalNetworksMap := make([]map[string]interface{}, len(externalNetworks))
+
+		for k, v := range externalNetworks {
+			externalNetworkMap := make(map[string]interface{})
+
+			externalNetworkMap["default_gateway"] = flattenIPAddressOrFQDN([]commonConfig.IPAddressOrFQDN{*v.DefaultGateway})
+			externalNetworkMap["subnet_mask"] = flattenIPAddressOrFQDN([]commonConfig.IPAddressOrFQDN{*v.SubnetMask})
+			externalNetworkMap["ip_ranges"] = flattenIPRanges(v.IpRanges)
+			externalNetworkMap["network_ext_id"] = v.NetworkExtId
+
+			externalNetworksMap[k] = externalNetworkMap
+		}
+		return externalNetworksMap
+	}
+	return nil
+}
