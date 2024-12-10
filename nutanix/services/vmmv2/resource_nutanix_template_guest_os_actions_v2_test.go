@@ -11,7 +11,7 @@ import (
 
 const resourceNameTemplateActions = "nutanix_template_guest_os_actions_v2.test"
 
-func TestAccNutanixTemplateActionsV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixTemplateActionsResource_Basic(t *testing.T) {
 	//t.Skip("Skipping test as it is not dependent on template")
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)

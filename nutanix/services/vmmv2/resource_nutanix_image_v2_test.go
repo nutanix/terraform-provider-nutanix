@@ -11,7 +11,7 @@ import (
 
 const resourceNameImage = "nutanix_images_v2.test"
 
-func TestAccNutanixImagesV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixImagesResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-image-%d", r)
 	desc := "test image description"
@@ -36,7 +36,7 @@ func TestAccNutanixImagesV2Resource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixImagesV2Resource_WithUpdate(t *testing.T) {
+func TestAccV2NutanixImagesResource_WithUpdate(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-image-%d", r)
 	updatedName := fmt.Sprintf("test-image-updated-%d", r)
@@ -76,7 +76,7 @@ func TestAccNutanixImagesV2Resource_WithUpdate(t *testing.T) {
 	})
 }
 
-func TestAccNutanixImagesV2Resource_WithDisk(t *testing.T) {
+func TestAccV2NutanixImagesResource_WithDisk(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-image-%d", r)
 	desc := "test image description"
@@ -101,7 +101,7 @@ func TestAccNutanixImagesV2Resource_WithDisk(t *testing.T) {
 	})
 }
 
-func TestAccNutanixImagesV2Resource_WithVMDiskSource(t *testing.T) {
+func TestAccV2NutanixImagesResource_WithVMDiskSource(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-image-%d", r)
 	desc := "test image description"
@@ -126,7 +126,7 @@ func TestAccNutanixImagesV2Resource_WithVMDiskSource(t *testing.T) {
 	})
 }
 
-func TestAccNutanixImagesV2Resource_WithClusterExts(t *testing.T) {
+func TestAccV2NutanixImagesResource_WithClusterExts(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-image-%d", r)
 	desc := "test image description"

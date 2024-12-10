@@ -15,7 +15,7 @@ import (
 
 const resourceNameTemplate = "nutanix_template_v2.test"
 
-func TestAccNutanixTemplateV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixTemplateResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
@@ -94,7 +94,7 @@ func TestAccNutanixTemplateV2Resource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixTemplateV2Resource_RequiredVersionNameOnUpdate(t *testing.T) {
+func TestAccV2NutanixTemplateResource_RequiredVersionNameOnUpdate(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
@@ -127,7 +127,7 @@ func TestAccNutanixTemplateV2Resource_RequiredVersionNameOnUpdate(t *testing.T) 
 	})
 }
 
-func TestAccNutanixTemplateV2Resource_RequiredVersionDescriptionOnUpdate(t *testing.T) {
+func TestAccV2NutanixTemplateResource_RequiredVersionDescriptionOnUpdate(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
@@ -160,7 +160,7 @@ func TestAccNutanixTemplateV2Resource_RequiredVersionDescriptionOnUpdate(t *test
 	})
 }
 
-func TestAccNutanixTemplateV2Resource_GuestCustomizationSysprep(t *testing.T) {
+func TestAccV2NutanixTemplateResource_GuestCustomizationSysprep(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
@@ -193,7 +193,7 @@ func TestAccNutanixTemplateV2Resource_GuestCustomizationSysprep(t *testing.T) {
 	})
 }
 
-func TestAccNutanixTemplateV2Resource_GuestCustomizationCloudInit(t *testing.T) {
+func TestAccV2NutanixTemplateResource_GuestCustomizationCloudInit(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
