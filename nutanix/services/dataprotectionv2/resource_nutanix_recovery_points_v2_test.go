@@ -35,7 +35,7 @@ func TestAccNutanixRecoveryPointsV2Resource_VmRecoveryPoints2(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmConfig(vmName) + testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTimeFormatted),
+				Config: testVMConfigRecovery(vmName) + testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPoints, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameRecoveryPoints, "name", name),
@@ -68,7 +68,7 @@ func TestAccNutanixRecoveryPointsV2Resource_VmRecoveryPointsWithAppConsProps(t *
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmConfig(vmName) + testRecoveryPointsResourceConfigWithVMRecoveryPointsWithAppConsProps(name, expirationTimeFormatted),
+				Config: testVMConfigRecovery(vmName) + testRecoveryPointsResourceConfigWithVMRecoveryPointsWithAppConsProps(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPoints, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameRecoveryPoints, "name", name),
@@ -100,7 +100,7 @@ func TestAccNutanixRecoveryPointsV2Resource_VmRecoveryPointsWithMultipleVms(t *t
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmConfig(vmName) + testVMConfig(vmName) +
+				Config: testVMConfigRecovery(vmName) + testVMConfig(vmName) +
 					testRecoveryPointsResourceConfigWithVMRecoveryPointsWithMultipleVms(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPoints, "ext_id"),
@@ -188,7 +188,7 @@ func TestAccNutanixRecoveryPointsV2Resource_RecoveryPointWithMultipleVmAndVGs(t 
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmConfig(vmName) + testVMConfig(vmName) +
+				Config: testVMConfigRecovery(vmName) + testVMConfig(vmName) +
 					testRecoveryPointsResourceConfigWithVolumeGroupRecoveryPointsWithMultipleVMAndVGs(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPoints, "ext_id"),
@@ -224,7 +224,7 @@ func TestAccNutanixRecoveryPointsV2Resource_UpdateExpirationTime(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmConfig(vmName) + testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTimeFormatted),
+				Config: testVMConfigRecovery(vmName) + testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPoints, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameRecoveryPoints, "name", name),
@@ -235,7 +235,7 @@ func TestAccNutanixRecoveryPointsV2Resource_UpdateExpirationTime(t *testing.T) {
 				),
 			},
 			{
-				Config: testVmConfig(vmName) + testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTimeUpdateFormatted),
+				Config: testVMConfigRecovery(vmName) + testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTimeUpdateFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPoints, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameRecoveryPoints, "name", name),

@@ -26,7 +26,7 @@ func TestAccNutanixRecoveryPointRestoreV2Resource_basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmConfig(vmName) + testVMConfig(vmName) +
+				Config: testVMConfigRecovery(vmName) + testVMConfig(vmName) +
 					testRecoveryPointRestoreResourceConfig(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRecoveryPointRestore, "volume_group_ext_ids.#"),

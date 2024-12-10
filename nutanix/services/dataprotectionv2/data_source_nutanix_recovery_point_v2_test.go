@@ -27,7 +27,7 @@ func TestAccNutanixRecoveryPointV2Datasource_VmRecoveryPoints(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmConfig(vmName) + testRecoveryPointDatasourceConfigWithVMRecoveryPoints(name, expirationTimeFormatted),
+				Config: testVMConfigRecovery(vmName) + testRecoveryPointDatasourceConfigWithVmRecoveryPoints(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameRecoveryPoint, "ext_id"),
 					resource.TestCheckResourceAttr(datasourceNameRecoveryPoint, "name", name),
@@ -41,7 +41,7 @@ func TestAccNutanixRecoveryPointV2Datasource_VmRecoveryPoints(t *testing.T) {
 	})
 }
 
-func testRecoveryPointDatasourceConfigWithVMRecoveryPoints(name, expirationTime string) string {
+func testRecoveryPointDatasourceConfigWithVmRecoveryPoints(name, expirationTime string) string {
 	return fmt.Sprintf(`
 
 	resource "nutanix_recovery_points_v2" "test" {
@@ -64,7 +64,7 @@ func testRecoveryPointDatasourceConfigWithVMRecoveryPoints(name, expirationTime 
 `, name, expirationTime, filepath)
 }
 
-func testVmConfig(name string) string {
+func testVMConfigRecovery(name string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
 

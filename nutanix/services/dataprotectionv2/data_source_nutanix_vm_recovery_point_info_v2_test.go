@@ -27,7 +27,7 @@ func TestAccNutanixVmRecoveryPointV2Datasource_VmRecoveryPoint(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmConfig(vmName) + testVMRecoveryPointDatasourceConfigWithVMRecoveryPoint(name, expirationTimeFormatted),
+				Config: testVMConfigRecovery(vmName) + testVMRecoveryPointDatasourceConfigWithVMRecoveryPoint(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameVMRecoveryPoint, "ext_id"),
 					resource.TestCheckResourceAttrSet(datasourceNameVMRecoveryPoint, "location_agnostic_id"),
@@ -55,7 +55,7 @@ func TestAccNutanixVmRecoveryPointV2Datasource_VmRecoveryPointWithAppConsProps(t
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmConfig(vmName) + testVMRecoveryPointsDatasourceConfigWithAppConsProps(name, expirationTimeFormatted),
+				Config: testVMConfigRecovery(vmName) + testVMRecoveryPointsDatasourceConfigWithAppConsProps(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameVMRecoveryPoint, "ext_id"),
 					resource.TestCheckResourceAttrSet(datasourceNameVMRecoveryPoint, "location_agnostic_id"),

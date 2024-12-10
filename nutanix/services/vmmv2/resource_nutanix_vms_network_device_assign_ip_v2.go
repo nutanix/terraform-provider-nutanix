@@ -42,7 +42,7 @@ func ResourceNutanixVmsNetworkDeviceAssignIPV2() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 32),
-							Default:      32,
+							Default:      defaultValue,
 						},
 					},
 				},
