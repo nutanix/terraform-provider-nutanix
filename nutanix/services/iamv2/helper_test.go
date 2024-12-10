@@ -2,12 +2,13 @@ package iamv2_test
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
-	"strconv"
-	"strings"
 )
 
 func checkAttributeLength(resourceName, attribute string, minLength int) resource.TestCheckFunc {
