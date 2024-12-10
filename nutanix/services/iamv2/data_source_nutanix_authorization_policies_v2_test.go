@@ -76,7 +76,6 @@ func TestAccV2NutanixAuthorizationPoliciesDatasource_WithFilter(t *testing.T) {
 }
 
 func TestAccV2NutanixAuthorizationPoliciesDatasource_WithLimit(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

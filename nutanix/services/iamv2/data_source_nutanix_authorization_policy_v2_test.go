@@ -12,7 +12,6 @@ import (
 const datasourceNameAuthorizationPolicy = "data.nutanix_authorization_policy_v2.test"
 
 func TestAccV2NutanixAuthorizationPolicyDatasource_Basic(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
