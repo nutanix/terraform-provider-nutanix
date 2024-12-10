@@ -21,7 +21,7 @@ func TestAccNutanixVolumeGroupIscsiClientV2Resource_Basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVolumeGroupResourceConfig(filepath, name, desc) + testAccVolumeGroupIscsiClientResourceConfig(),
+				Config: testAccVolumeGroupResourceConfig(name, desc) + testAccVolumeGroupIscsiClientResourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceVolumeGroupIscsiClient, "ext_id"),
 				),

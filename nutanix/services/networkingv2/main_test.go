@@ -10,7 +10,7 @@ import (
 type TestConfig struct {
 	Networking struct {
 		FloatingIP struct {
-			VmNicReference string `json:"vm_nic_reference"`
+			VMNicReference string `json:"vm_nic_reference"`
 		} `json:"floating_ip"`
 		Subnets struct {
 			ProjectID     string `json:"project_id"`

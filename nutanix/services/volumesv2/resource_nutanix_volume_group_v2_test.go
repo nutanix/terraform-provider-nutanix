@@ -24,7 +24,7 @@ func TestAccNutanixVolumeGroupV2Resource_Basic(t *testing.T) {
 		// CheckDestroy: testAccCheckNutanixVolumeGroupV4Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVolumeGroupResourceConfig(filepath, name, desc),
+				Config: testAccVolumeGroupResourceConfig(name, desc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameVolumeGroup, "name", name),
 					resource.TestCheckResourceAttr(resourceNameVolumeGroup, "description", desc),

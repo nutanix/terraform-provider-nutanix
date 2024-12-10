@@ -41,7 +41,7 @@ func TestAccNutanixDirectoryServicesV2Datasource_WithFilter(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameDirectoryServices, "directory_services.0.name", testVars.Iam.DirectoryServices.Name),
 					resource.TestCheckResourceAttr(datasourceNameDirectoryServices, "directory_services.0.domain_name", testVars.Iam.DirectoryServices.DomainName),
 					resource.TestCheckResourceAttr(datasourceNameDirectoryServices, "directory_services.0.directory_type", "ACTIVE_DIRECTORY"),
-					resource.TestCheckResourceAttr(datasourceNameDirectoryServices, "directory_services.0.url", testVars.Iam.DirectoryServices.Url),
+					resource.TestCheckResourceAttr(datasourceNameDirectoryServices, "directory_services.0.url", testVars.Iam.DirectoryServices.URL),
 					resource.TestCheckResourceAttr(datasourceNameDirectoryServices, "directory_services.0.service_account.0.username", testVars.Iam.DirectoryServices.ServiceAccount.Username),
 					resource.TestCheckResourceAttrSet(datasourceNameDirectoryServices, "directory_services.0.service_account.0.password"),
 					resource.TestCheckResourceAttr(datasourceNameDirectoryServices, "directory_services.0.white_listed_groups.0", testVars.Iam.DirectoryServices.WhiteListedGroups[0]),

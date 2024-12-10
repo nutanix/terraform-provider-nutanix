@@ -24,7 +24,7 @@ func TestAccNutanixDirectoryServicesV2Resource_CreateACTIVE_DIRECTORYService(t *
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "name", testVars.Iam.DirectoryServices.Name),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "domain_name", testVars.Iam.DirectoryServices.DomainName),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "directory_type", "ACTIVE_DIRECTORY"),
-					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "url", testVars.Iam.DirectoryServices.Url),
+					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "url", testVars.Iam.DirectoryServices.URL),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "service_account.0.username", testVars.Iam.DirectoryServices.ServiceAccount.Username),
 					resource.TestCheckResourceAttrSet(resourceNameDirectoryServices, "service_account.0.password"),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "white_listed_groups.0", testVars.Iam.DirectoryServices.WhiteListedGroups[0]),
@@ -37,7 +37,7 @@ func TestAccNutanixDirectoryServicesV2Resource_CreateACTIVE_DIRECTORYService(t *
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "name", testVars.Iam.DirectoryServices.Name),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "domain_name", testVars.Iam.DirectoryServices.DomainName),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "directory_type", "ACTIVE_DIRECTORY"),
-					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "url", testVars.Iam.DirectoryServices.Url),
+					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "url", testVars.Iam.DirectoryServices.URL),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "service_account.0.username", testVars.Iam.DirectoryServices.ServiceAccount.Username),
 					resource.TestCheckResourceAttrSet(resourceNameDirectoryServices, "service_account.0.password"),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "white_listed_groups.0", testVars.Iam.DirectoryServices.WhiteListedGroups[1]),
@@ -63,7 +63,7 @@ func TestAccNutanixDirectoryServicesV2Resource_CreateOpenLDAPService(t *testing.
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "name", name),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "domain_name", testVars.Iam.DirectoryServices.DomainName),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "directory_type", "ACTIVE_DIRECTORY"),
-					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "url", testVars.Iam.DirectoryServices.Url),
+					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "url", testVars.Iam.DirectoryServices.URL),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "service_account.0.username", testVars.Iam.DirectoryServices.ServiceAccount.Username),
 					resource.TestCheckResourceAttrSet(resourceNameDirectoryServices, "service_account.0.password"),
 				),
@@ -84,7 +84,7 @@ func TestAccNutanixDirectoryServicesV2Resource_CreateACTIVE_DIRECTORYAlreadyExis
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "name", testVars.Iam.DirectoryServices.Name),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "domain_name", testVars.Iam.DirectoryServices.DomainName),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "directory_type", "ACTIVE_DIRECTORY"),
-					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "url", testVars.Iam.DirectoryServices.Url),
+					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "url", testVars.Iam.DirectoryServices.URL),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "service_account.0.username", testVars.Iam.DirectoryServices.ServiceAccount.Username),
 					resource.TestCheckResourceAttrSet(resourceNameDirectoryServices, "service_account.0.password"),
 				),
@@ -116,7 +116,7 @@ func TestAccNutanixDirectoryServicesV2Resource_WithNoUrl(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testDirectoryServicesResourceWithoutUrlConfig(filepath),
+				Config:      testDirectoryServicesResourceWithoutURLConfig(filepath),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 		},
@@ -302,7 +302,7 @@ func testDirectoryServicesResourceWithoutNameConfig(filepath string) string {
 	}`, filepath)
 }
 
-func testDirectoryServicesResourceWithoutUrlConfig(filepath string) string {
+func testDirectoryServicesResourceWithoutURLConfig(filepath string) string {
 	return fmt.Sprintf(`
 
 	locals{

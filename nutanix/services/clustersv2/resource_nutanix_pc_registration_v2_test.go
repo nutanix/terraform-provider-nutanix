@@ -15,7 +15,7 @@ func TestAccNutanixPePcRegistrationV2Resource_ValidationsDomainManagerRemoteClus
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccClusterResourceDomainManagerRemoteClusterSpecInvalidConfigWithoutPcExtId(),
+				Config:      testAccClusterResourceDomainManagerRemoteClusterSpecInvalidConfigWithoutPcExtID(),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 			{
@@ -61,7 +61,7 @@ func TestAccNutanixPePcRegistrationV2Resource_ValidationsClusterReference(t *tes
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccClusterResourceClusterReferenceInvalidConfigWithoutClusterExtId(),
+				Config:      testAccClusterResourceClusterReferenceInvalidConfigWithoutClusterExtID(),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 		},
@@ -69,7 +69,7 @@ func TestAccNutanixPePcRegistrationV2Resource_ValidationsClusterReference(t *tes
 }
 
 // Invalid Configs for DomainManagerRemoteClusterSpec
-func testAccClusterResourceDomainManagerRemoteClusterSpecInvalidConfigWithoutPcExtId() string {
+func testAccClusterResourceDomainManagerRemoteClusterSpecInvalidConfigWithoutPcExtID() string {
 	return `
 	resource "nutanix_pc_registration_v2" "test" {
 	  remote_cluster {
@@ -224,7 +224,7 @@ func testAccClusterResourceAOSRemoteClusterSpecInvalidConfigWithoutAuthenticatio
 
 // Invalid Configs for ClusterReference
 
-func testAccClusterResourceClusterReferenceInvalidConfigWithoutClusterExtId() string {
+func testAccClusterResourceClusterReferenceInvalidConfigWithoutClusterExtID() string {
 	return `
 	resource "nutanix_pc_registration_v2" "test" {
 	  remote_cluster {

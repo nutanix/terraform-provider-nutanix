@@ -347,10 +347,7 @@ func expandVMConfigOverride(pr interface{}) map[string]import5.VmConfigOverride 
 		}
 
 		cfg["0"] = vmConfig
-
-		res := make(map[string]import5.VmConfigOverride)
-		res = cfg
-		return res
+		return cfg
 	}
 	return nil
 }
@@ -679,33 +676,11 @@ func expandOneOfSysprepSysprepScript(pr interface{}) *config.OneOfSysprepSysprep
 			cVal := cI[0].(map[string]interface{})
 
 			if keyval, ok := cVal["key_value_pairs"]; ok {
-				ckey.KeyValuePairs = expandKVPair(keyval.([]interface{}))
+				ckey.KeyValuePairs = expandTemplateKVPairs(keyval.([]interface{}))
 			}
 			scripts.SetValue(*ckey)
 		}
 		return scripts
-	}
-	return nil
-}
-
-func expandKVPair(pr []interface{}) []import4.KVPair {
-	if len(pr) > 0 {
-		pairs := make([]import4.KVPair, len(pr))
-
-		for k, v := range pr {
-			pair := import4.KVPair{}
-			val := v.(map[string]interface{})
-
-			if name, ok := val["name"]; ok {
-				pair.Name = utils.StringPtr(name.(string))
-			}
-			// if value, ok := val["value"]; ok {
-			// 	pair.Value = utils.StringPtr(value.(string))
-			// }
-
-			pairs[k] = pair
-		}
-		return pairs
 	}
 	return nil
 }
@@ -732,7 +707,7 @@ func expandOneOfCloudInitCloudInitScript(pr interface{}) *config.OneOfCloudInitC
 			cVal := cI[0].(map[string]interface{})
 
 			if keyval, ok := cVal["key_value_pairs"]; ok {
-				ckey.KeyValuePairs = expandKVPair(keyval.([]interface{}))
+				ckey.KeyValuePairs = expandTemplateKVPairs(keyval.([]interface{}))
 			}
 			cloudInit.SetValue(*ckey)
 		}

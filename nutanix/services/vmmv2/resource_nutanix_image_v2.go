@@ -207,9 +207,10 @@ func ResourceNutanixImageV4Create(ctx context.Context, d *schema.ResourceData, m
 		body.Description = utils.StringPtr(desc.(string))
 	}
 	if types, ok := d.GetOk("type"); ok {
+		const two, three = 2, 3
 		subMap := map[string]interface{}{
-			"DISK_IMAGE": 2,
-			"ISO_IMAGE":  3,
+			"DISK_IMAGE": two,
+			"ISO_IMAGE":  three,
 		}
 		pVal := subMap[types.(string)]
 		p := import5.ImageType(pVal.(int))

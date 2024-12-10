@@ -55,7 +55,7 @@ func TestAccNutanixClusterAddNodeV2Resource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					// unconfigured Node to be added check
 					resource.TestCheckResourceAttr(resourceNameDiscoverUnconfiguredNode, "unconfigured_nodes.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameDiscoverUnconfiguredNode, "unconfigured_nodes.0.cvm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[3].CvmIp),
+					resource.TestCheckResourceAttr(resourceNameDiscoverUnconfiguredNode, "unconfigured_nodes.0.cvm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[3].CvmIP),
 					resource.TestCheckResourceAttrSet(resourceNameDiscoverUnconfiguredNode, "unconfigured_nodes.0.nos_version"),
 					resource.TestCheckResourceAttrSet(resourceNameDiscoverUnconfiguredNode, "unconfigured_nodes.0.node_uuid"),
 
@@ -83,7 +83,7 @@ func TestAccNutanixClusterAddNodeV2Resource_basic(t *testing.T) {
 				Config: testAccClustersConfig(clusterName) + testAccAddNodeToClusterConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					// add node to cluster check
-					resource.TestCheckResourceAttr(resourceNameAddNodeToCluster, "node_params.0.node_list.0.cvm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[3].CvmIp),
+					resource.TestCheckResourceAttr(resourceNameAddNodeToCluster, "node_params.0.node_list.0.cvm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[3].CvmIP),
 				),
 			},
 		},

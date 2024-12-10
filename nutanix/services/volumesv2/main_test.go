@@ -10,7 +10,7 @@ import (
 type TestConfig struct {
 	// Volumes config
 	Volumes struct {
-		VolumeGroupExtIdWithCategory string `json:"vg_ext_id_with_category"`
+		VolumeGroupExtIDWithCategory string `json:"vg_ext_id_with_category"`
 	} `json:"volumes"`
 }
 

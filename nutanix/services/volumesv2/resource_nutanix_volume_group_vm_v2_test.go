@@ -23,7 +23,7 @@ func TestAccNutanixVolumeGroupVmV2Resource_Basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVolumeGroupVmConfig(filepath, name, desc),
+				Config: resourceVolumeGroupVM(filepath, name, desc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceVolumeGroupVm, "vm_ext_id"),
 				),
@@ -32,8 +32,8 @@ func TestAccNutanixVolumeGroupVmV2Resource_Basic(t *testing.T) {
 	})
 }
 
-func testAccVolumeGroupVmConfig(filepath, name, desc string) string {
-	return testAccVolumeGroupResourceConfig(filepath, name, desc) + fmt.Sprintf(`	
+func resourceVolumeGroupVM(filepath, name, desc string) string {
+	return testAccVolumeGroupResourceConfig(name, desc) + fmt.Sprintf(`	
           resource "nutanix_virtual_machine_v2" "test"{
 			name= "tf-test-vg-vm-%[1]s"
 			description =  "%[2]s"

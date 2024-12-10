@@ -10,7 +10,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNameVmRecoveryPoint = "data.nutanix_vm_recovery_point_info_v2.test"
+const datasourceNameVMRecoveryPoint = "data.nutanix_vm_recovery_point_info_v2.test"
 
 func TestAccNutanixVmRecoveryPointV2Datasource_VmRecoveryPoint(t *testing.T) {
 	r := acctest.RandInt()
@@ -27,12 +27,12 @@ func TestAccNutanixVmRecoveryPointV2Datasource_VmRecoveryPoint(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmConfig(vmName) + testVmRecoveryPointDatasourceConfigWithVmRecoveryPoint(name, expirationTimeFormatted),
+				Config: testVmConfig(vmName) + testVMRecoveryPointDatasourceConfigWithVMRecoveryPoint(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceNameVmRecoveryPoint, "ext_id"),
-					resource.TestCheckResourceAttrSet(datasourceNameVmRecoveryPoint, "location_agnostic_id"),
-					resource.TestCheckResourceAttrSet(datasourceNameVmRecoveryPoint, "recovery_point_ext_id"),
-					resource.TestCheckResourceAttrSet(datasourceNameVmRecoveryPoint, "vm_ext_id"),
+					resource.TestCheckResourceAttrSet(datasourceNameVMRecoveryPoint, "ext_id"),
+					resource.TestCheckResourceAttrSet(datasourceNameVMRecoveryPoint, "location_agnostic_id"),
+					resource.TestCheckResourceAttrSet(datasourceNameVMRecoveryPoint, "recovery_point_ext_id"),
+					resource.TestCheckResourceAttrSet(datasourceNameVMRecoveryPoint, "vm_ext_id"),
 				),
 			},
 		},
@@ -55,12 +55,12 @@ func TestAccNutanixVmRecoveryPointV2Datasource_VmRecoveryPointWithAppConsProps(t
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmConfig(vmName) + testVmRecoveryPointsDatasourceConfigWithAppConsProps(name, expirationTimeFormatted),
+				Config: testVmConfig(vmName) + testVMRecoveryPointsDatasourceConfigWithAppConsProps(name, expirationTimeFormatted),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceNameVmRecoveryPoint, "ext_id"),
-					resource.TestCheckResourceAttrSet(datasourceNameVmRecoveryPoint, "location_agnostic_id"),
-					resource.TestCheckResourceAttrSet(datasourceNameVmRecoveryPoint, "recovery_point_ext_id"),
-					resource.TestCheckResourceAttrSet(datasourceNameVmRecoveryPoint, "vm_ext_id"),
+					resource.TestCheckResourceAttrSet(datasourceNameVMRecoveryPoint, "ext_id"),
+					resource.TestCheckResourceAttrSet(datasourceNameVMRecoveryPoint, "location_agnostic_id"),
+					resource.TestCheckResourceAttrSet(datasourceNameVMRecoveryPoint, "recovery_point_ext_id"),
+					resource.TestCheckResourceAttrSet(datasourceNameVMRecoveryPoint, "vm_ext_id"),
 					resource.TestCheckResourceAttr(resourceNameRecoveryPoints, "application_consistent_properties.0.backup_type", "FULL_BACKUP"),
 					resource.TestCheckResourceAttr(resourceNameRecoveryPoints, "application_consistent_properties.0.should_include_writers", "true"),
 					resource.TestCheckResourceAttr(resourceNameRecoveryPoints, "application_consistent_properties.0.should_store_vss_metadata", "true"),
@@ -71,8 +71,8 @@ func TestAccNutanixVmRecoveryPointV2Datasource_VmRecoveryPointWithAppConsProps(t
 	})
 }
 
-func testVmRecoveryPointDatasourceConfigWithVmRecoveryPoint(name, expirationTime string) string {
-	return testRecoveryPointsResourceConfigWithVmRecoveryPoints(name, expirationTime) + `	
+func testVMRecoveryPointDatasourceConfigWithVMRecoveryPoint(name, expirationTime string) string {
+	return testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTime) + `	
 	data "nutanix_vm_recovery_point_info_v2" "test" {
 	  recovery_point_ext_id = nutanix_recovery_points_v2.test.ext_id
 	  ext_id                = nutanix_recovery_points_v2.test.vm_recovery_points[0].ext_id
@@ -81,8 +81,8 @@ func testVmRecoveryPointDatasourceConfigWithVmRecoveryPoint(name, expirationTime
 `
 }
 
-func testVmRecoveryPointsDatasourceConfigWithAppConsProps(name, expirationTime string) string {
-	return testRecoveryPointsResourceConfigWithVmRecoveryPointsWithAppConsProps(name, expirationTime) + `
+func testVMRecoveryPointsDatasourceConfigWithAppConsProps(name, expirationTime string) string {
+	return testRecoveryPointsResourceConfigWithVMRecoveryPointsWithAppConsProps(name, expirationTime) + `
 		data "nutanix_vm_recovery_point_info_v2" "test" {
 		  recovery_point_ext_id = nutanix_recovery_points_v2.test.ext_id
 		  ext_id                = nutanix_recovery_points_v2.test.vm_recovery_points[0].ext_id

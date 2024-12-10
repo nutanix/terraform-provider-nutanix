@@ -62,7 +62,7 @@ func TestAccNutanixVolumeGroupsDisksV2DataSource_WithLimit(t *testing.T) {
 }
 
 func testAccVolumeGroupsDisksDataSourceConfig(filepath, name, desc string) string {
-	return testAccVolumeGroupResourceConfig(filepath, name, desc) + testAccVolumeGroupDiskResourceConfig(filepath, name, desc) +
+	return testAccVolumeGroupResourceConfig(name, desc) + testAccVolumeGroupDiskResourceConfig(name, desc) +
 		fmt.Sprintf(`
 
 
@@ -98,7 +98,7 @@ func testAccVolumeGroupsDisksDataSourceConfig(filepath, name, desc string) strin
 }
 
 func testAccVolumeGroupsDisksDataSourceWithLimit(filepath, name, desc string, limit int) string {
-	return testAccVolumeGroupResourceConfig(filepath, name, desc) + testAccVolumeGroupDiskResourceConfig(filepath, name, desc) +
+	return testAccVolumeGroupResourceConfig(name, desc) + testAccVolumeGroupDiskResourceConfig(name, desc) +
 		fmt.Sprintf(`	
 
 	  	resource "nutanix_volume_group_disk_v2" "test-2" {

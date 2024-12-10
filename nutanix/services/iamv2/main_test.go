@@ -15,10 +15,10 @@ type TestConfig struct {
 		} `json:"roles"`
 		Users struct {
 			Name                        string `json:"name"`
-			IdpId                       string `json:"idp_id"`
-			DirectoryServiceId          string `json:"directory_service_id"`
+			IdpID                       string `json:"idp_id"`
+			DirectoryServiceID          string `json:"directory_service_id"`
 			DirectoryServiceUsername    string `json:"directory_service_username"`
-			EmailId                     string `json:"email_id"`
+			EmailID                     string `json:"email_id"`
 			Locale                      string `json:"locale"`
 			Region                      string `json:"region"`
 			Password                    string `json:"password"`
@@ -39,16 +39,16 @@ type TestConfig struct {
 		} `json:"auth_policies"`
 		// Directory Services config
 		IdentityProviders struct {
-			IdpMetadataUrl string `json:"idp_metadata_url"`
+			IdpMetadataURL string `json:"idp_metadata_url"`
 			IdpMetadata    struct {
-				EntityId           string `json:"entity_id"`
-				LoginUrl           string `json:"login_url"`
-				LogoutUrl          string `json:"logout_url"`
-				ErrorUrl           string `json:"error_url"`
+				EntityID           string `json:"entity_id"`
+				LoginURL           string `json:"login_url"`
+				LogoutURL          string `json:"logout_url"`
+				ErrorURL           string `json:"error_url"`
 				Certificate        string `json:"certificate"`
-				NameIdPolicyFormat string `json:"name_id_policy_format"`
+				NameIDPolicyFormat string `json:"name_id_policy_format"`
 			} `json:"idp_metadata"`
-			IdpMetadataXml          string   `json:"idp_metadata_xml"`
+			IdpMetadataXML          string   `json:"idp_metadata_xml"`
 			Name                    string   `json:"name"`
 			UsernameAttribute       string   `json:"username_attr"`
 			EmailAttribute          string   `json:"email_attr"`
@@ -61,7 +61,7 @@ type TestConfig struct {
 		// Directory Services config
 		DirectoryServices struct {
 			Name           string   `json:"name"`
-			Url            string   `json:"url"`
+			URL            string   `json:"url"`
 			SecondaryUrls  []string `json:"secondary_urls"`
 			DomainName     string   `json:"domain_name"`
 			ServiceAccount struct {

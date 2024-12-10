@@ -35,6 +35,6 @@ func TestAccNutanixVolumeGroupDiskV2Resource_Basic(t *testing.T) {
 }
 
 func testAccVolumeGroupsDiskResourceConfig(filepath, name, desc string) string {
-	return testAccVolumeGroupResourceConfig(filepath, name, desc) +
-		testAccVolumeGroupDiskResourceConfig(filepath, name, desc)
+	return testAccVolumeGroupResourceConfig(name, desc) +
+		testAccVolumeGroupDiskResourceConfig(name, desc)
 }

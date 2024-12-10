@@ -61,7 +61,7 @@ func TestAccNutanixStorageContainersV2Resource_WithNoClusterExtId(t *testing.T) 
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testStorageContainersResourceWithoutClusterExtIdConfig(filepath),
+				Config:      testStorageContainersResourceWithoutClusterExtIDConfig(filepath),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 		},
@@ -193,7 +193,7 @@ func testStorageContainersResourceWithoutNameConfig(filepath string) string {
 		}`, filepath)
 }
 
-func testStorageContainersResourceWithoutClusterExtIdConfig(filepath string) string {
+func testStorageContainersResourceWithoutClusterExtIDConfig(filepath string) string {
 	return fmt.Sprintf(`
 
 		data "nutanix_clusters_v2" "clusters" {}

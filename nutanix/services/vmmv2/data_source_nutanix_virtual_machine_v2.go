@@ -1558,7 +1558,6 @@ func flattenGuestCustomizationParams(gst *config.GuestCustomizationParams) []map
 
 func flattenOneOfGuestCustomizationParamsConfig(cfg *config.OneOfGuestCustomizationParamsConfig) []map[string]interface{} {
 	if cfg != nil {
-		cfgList := make([]map[string]interface{}, 0)
 		sysCfg := make(map[string]interface{})
 		sysCfgList := make([]map[string]interface{}, 0)
 		cloudCfg := make(map[string]interface{})
@@ -1581,26 +1580,22 @@ func flattenOneOfGuestCustomizationParamsConfig(cfg *config.OneOfGuestCustomizat
 
 			sysCfgList = append(sysCfgList, sysCfg)
 
-			cfgList = sysCfgList
-		} else {
-			cloudInitObj := make(map[string]interface{})
-			cloudInitObjList := make([]map[string]interface{}, 0)
-			cloudObj := cfg.GetValue().(config.CloudInit)
-
-			cloudInitObj["datasource_type"] = flattenCloudInitDataSourceType(cloudObj.DatasourceType)
-			cloudInitObj["metadata"] = cloudObj.Metadata
-			cloudInitObj["cloud_init_script"] = flattenOneOfCloudInitCloudInitScript(cloudObj.CloudInitScript)
-
-			cloudInitObjList = append(cloudInitObjList, cloudInitObj)
-			cloudCfg["cloud_init"] = cloudInitObjList
-
-			cloudCfgList = append(cloudCfgList, cloudCfg)
-
-			cfgList = cloudCfgList
+			return sysCfgList
 		}
-		aJSON, _ := json.Marshal(cfgList)
-		log.Printf("[DEBUG] flattenOneOfGuestCustomizationParamsConfig: %s", string(aJSON))
-		return cfgList
+		cloudInitObj := make(map[string]interface{})
+		cloudInitObjList := make([]map[string]interface{}, 0)
+		cloudObj := cfg.GetValue().(config.CloudInit)
+
+		cloudInitObj["datasource_type"] = flattenCloudInitDataSourceType(cloudObj.DatasourceType)
+		cloudInitObj["metadata"] = cloudObj.Metadata
+		cloudInitObj["cloud_init_script"] = flattenOneOfCloudInitCloudInitScript(cloudObj.CloudInitScript)
+
+		cloudInitObjList = append(cloudInitObjList, cloudInitObj)
+		cloudCfg["cloud_init"] = cloudInitObjList
+
+		cloudCfgList = append(cloudCfgList, cloudCfg)
+
+		return cloudCfgList
 	}
 	return nil
 }
@@ -1620,7 +1615,6 @@ func flattenInstallType(pr *config.InstallType) string {
 
 func flattenOneOfSysprepSysprepScript(cfg *config.OneOfSysprepSysprepScript) []map[string]interface{} {
 	if cfg != nil {
-		cfgList := make([]map[string]interface{}, 0)
 		unattendCfg := make(map[string]interface{})
 		unattendCfgList := make([]map[string]interface{}, 0)
 		customKeyValCfg := make(map[string]interface{})
@@ -1639,23 +1633,19 @@ func flattenOneOfSysprepSysprepScript(cfg *config.OneOfSysprepSysprepScript) []m
 
 			unattendCfgList = append(unattendCfgList, unattendCfg)
 
-			cfgList = unattendCfgList
-		} else {
-			customObj := make(map[string]interface{})
-			customObjList := make([]map[string]interface{}, 0)
-			customCfg := cfg.GetValue().(config.CustomKeyValues)
-
-			customObj["key_value_pairs"] = flattenCustomKVPair(customCfg.KeyValuePairs)
-
-			customObjList = append(customObjList, customObj)
-			customKeyValCfg["custom_key_values"] = customObjList
-
-			customKeyValCfgList = append(customKeyValCfgList, customKeyValCfg)
-			cfgList = customKeyValCfgList
+			return unattendCfgList
 		}
-		aJSON, _ := json.Marshal(cfgList)
-		log.Printf("[DEBUG] flattenOneOfSysprepSysprepScript: %s", string(aJSON))
-		return cfgList
+		customObj := make(map[string]interface{})
+		customObjList := make([]map[string]interface{}, 0)
+		customCfg := cfg.GetValue().(config.CustomKeyValues)
+
+		customObj["key_value_pairs"] = flattenCustomKVPair(customCfg.KeyValuePairs)
+
+		customObjList = append(customObjList, customObj)
+		customKeyValCfg["custom_key_values"] = customObjList
+
+		customKeyValCfgList = append(customKeyValCfgList, customKeyValCfg)
+		return customKeyValCfgList
 	}
 	return nil
 }
@@ -1772,7 +1762,6 @@ func flattenNgtCapability(pr []config.NgtCapability) []interface{} {
 
 func flattenOneOfVMBootConfig(pr *config.OneOfVmBootConfig) []map[string]interface{} {
 	if pr != nil {
-		bootCfg := make([]map[string]interface{}, 0)
 		legacyBootCfg := make(map[string]interface{})
 		legacyBootCfgList := make([]map[string]interface{}, 0)
 		uefiBootCfg := make(map[string]interface{})
@@ -1803,8 +1792,7 @@ func flattenOneOfVMBootConfig(pr *config.OneOfVmBootConfig) []map[string]interfa
 		uefiBootCfg["uefi_boot"] = uefiObjList
 		uefiBootCfgList = append(uefiBootCfgList, uefiBootCfg)
 
-		bootCfg = uefiBootCfgList
-		return bootCfg
+		return uefiBootCfgList
 	}
 	return nil
 }
@@ -2009,7 +1997,6 @@ func flattenDataSource(ref *config.DataSource) []map[string]interface{} {
 
 func flattenOneOfDataSourceReference(pr *config.OneOfDataSourceReference) []map[string]interface{} {
 	if pr != nil {
-		refList := make([]map[string]interface{}, 0)
 		vmDiskRef := make(map[string]interface{})
 		vmDiskRefList := make([]map[string]interface{}, 0)
 		imageRef := make(map[string]interface{})
@@ -2028,21 +2015,19 @@ func flattenOneOfDataSourceReference(pr *config.OneOfDataSourceReference) []map[
 			vmDiskRef["vm_disk_reference"] = vmDiskObjList
 			vmDiskRefList = append(vmDiskRefList, vmDiskRef)
 
-			refList = vmDiskRefList
-		} else {
-			imageObj := make(map[string]interface{})
-			imageObjList := make([]map[string]interface{}, 0)
-			imageVal := pr.GetValue().(config.ImageReference)
-
-			imageObj["image_ext_id"] = imageVal.ImageExtId
-
-			imageObjList = append(imageObjList, imageObj)
-			imageRef["image_reference"] = imageObjList
-			imageRefList = append(imageRefList, imageRef)
-
-			refList = imageRefList
+			return vmDiskRefList
 		}
-		return refList
+		imageObj := make(map[string]interface{})
+		imageObjList := make([]map[string]interface{}, 0)
+		imageVal := pr.GetValue().(config.ImageReference)
+
+		imageObj["image_ext_id"] = imageVal.ImageExtId
+
+		imageObjList = append(imageObjList, imageObj)
+		imageRef["image_reference"] = imageObjList
+		imageRefList = append(imageRefList, imageRef)
+
+		return imageRefList
 	}
 	return nil
 }
@@ -2091,6 +2076,7 @@ func flattenVtpmConfig(pr *config.VtpmConfig) []map[string]interface{} {
 			vtpm["version"] = pr.Version
 		}
 		vtpmList = append(vtpmList, vtpm)
+		return vtpmList
 	}
 	return nil
 }

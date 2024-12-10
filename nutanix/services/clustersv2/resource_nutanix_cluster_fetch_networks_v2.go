@@ -331,8 +331,8 @@ func ResourceNutanixClusterUnconfiguredNodeNetworkV2Create(ctx context.Context, 
 
 	uuid := strings.Split(utils.StringValue(rUUID.ExtId), "=:")[1]
 
-	const NETWORKING_DETAILS = 3
-	taskResponseType := config.TaskResponseType(NETWORKING_DETAILS)
+	const networkingDetails = 3
+	taskResponseType := config.TaskResponseType(networkingDetails)
 	networkDetailsResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
 	if taskErr != nil {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr)
@@ -340,7 +340,7 @@ func ResourceNutanixClusterUnconfiguredNodeNetworkV2Create(ctx context.Context, 
 
 	taskResp := networkDetailsResp.Data.GetValue().(config.TaskResponse)
 
-	if *taskResp.TaskResponseType != config.TaskResponseType(NETWORKING_DETAILS) {
+	if *taskResp.TaskResponseType != config.TaskResponseType(networkingDetails) {
 		return diag.Errorf("error while fetching Task Response for Network Detail Nodes : %v", "task response type mismatch")
 	}
 

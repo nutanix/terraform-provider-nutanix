@@ -41,7 +41,7 @@ func TestAccNutanixRecoveryPointReplicateV2Resource_basic(t *testing.T) {
 }
 
 func testRecoveryPointReplicateResourceConfig(name, expirationTime string) string {
-	return testRecoveryPointsResourceConfigWithVmRecoveryPoints(name, expirationTime) + `
+	return testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTime) + `
 	resource "nutanix_recovery_point_replicate_v2" "test" {
 	  ext_id         = nutanix_recovery_points_v2.test.id
 	  cluster_ext_id = local.data_protection.cluster_ext_id

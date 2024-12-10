@@ -53,7 +53,7 @@ func TestAccNutanixIdentityProvidersV2ResourceWithNoEntityId(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testIdentityProvidersResourceWithoutEntityId(filepath),
+				Config:      testIdentityProvidersResourceWithoutEntityID(filepath),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 		},
@@ -104,7 +104,7 @@ func testIdentityProvidersResourceWithoutName(filepath string) string {
 		}`, filepath)
 }
 
-func testIdentityProvidersResourceWithoutEntityId(filepath string) string {
+func testIdentityProvidersResourceWithoutEntityID(filepath string) string {
 	return fmt.Sprintf(`
 
 	locals{

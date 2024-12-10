@@ -34,7 +34,7 @@ func TestAccNutanixVolumeGroupIscsiClientsV2Datasource_Basic(t *testing.T) {
 }
 
 func testAccVolumeGroupIscsiClientsV2Config(filepath, name, desc string) string {
-	return testAccVolumeGroupResourceConfig(filepath, name, desc) + `	
+	return testAccVolumeGroupResourceConfig(name, desc) + `	
       data "nutanix_volume_iscsi_clients_v2" "test" {}
 
 	  resource "nutanix_volume_group_iscsi_client_v2" "vg_iscsi_test" {

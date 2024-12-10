@@ -39,7 +39,7 @@ func TestAccNutanixVolumeGroupV2DataSource_Basic(t *testing.T) {
 }
 
 func testAccVolumeGroupDataSourceConfig(filepath, name, desc string) string {
-	return testAccVolumeGroupResourceConfig(filepath, name, desc) + `
+	return testAccVolumeGroupResourceConfig(name, desc) + `
 		data "nutanix_volume_group_v2" "test" {
 			ext_id = resource.nutanix_volume_group_v2.test.id
 			depends_on = [resource.nutanix_volume_group_v2.test]

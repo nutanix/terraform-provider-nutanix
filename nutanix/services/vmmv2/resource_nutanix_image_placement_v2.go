@@ -471,9 +471,10 @@ func expandEntityFilter(pr interface{}) *import7.Filter {
 		// entity_filter.ObjectType_ = utils.StringPtr("vmm.v4.r0.b1.images.config.Filter")
 
 		if ftype, ok := val["type"]; ok {
+			const two, three = 2, 3
 			subMap := map[string]interface{}{
-				"CATEGORIES_MATCH_ALL": 2,
-				"CATEGORIES_MATCH_ANY": 3,
+				"CATEGORIES_MATCH_ALL": two,
+				"CATEGORIES_MATCH_ANY": three,
 			}
 			pVal := subMap[ftype.(string)]
 			p := import7.FilterMatchType(pVal.(int))

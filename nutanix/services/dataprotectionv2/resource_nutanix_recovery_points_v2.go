@@ -591,7 +591,7 @@ func expandVolumeGroupRecoveryPoints(volumeGroupRecoveryPoints []interface{}) []
 		log.Printf("[DEBUG] volume group recovery points is Empty")
 		return nil
 	}
-	var volumeGroupRecoveryPointsList []config.VolumeGroupRecoveryPoint
+	volumeGroupRecoveryPointsList := make([]config.VolumeGroupRecoveryPoint, 0)
 	for _, volumeGroupRecoveryPoint := range volumeGroupRecoveryPoints {
 		volumeGroupRecoveryPointMap := volumeGroupRecoveryPoint.(map[string]interface{})
 		volumeGroupRecoveryPointObj := config.VolumeGroupRecoveryPoint{}
@@ -609,7 +609,7 @@ func expandVMRecoveryPoints(vmRecoveryPoints []interface{}) ([]config.VmRecovery
 		log.Printf("[DEBUG] vm recovery points is Empty")
 		return nil, nil
 	}
-	var vmRecoveryPointsList []config.VmRecoveryPoint
+	vmRecoveryPointsList := make([]config.VmRecoveryPoint, 0)
 	for _, vmRecoveryPoint := range vmRecoveryPoints {
 		vmRecoveryPointMap := vmRecoveryPoint.(map[string]interface{})
 		vmRecoveryPointObj := config.VmRecoveryPoint{}

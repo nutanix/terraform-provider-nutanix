@@ -20,7 +20,7 @@ func TestAccNutanixClusterDiscoverUnconfiguredNodesV2Resource_basic(t *testing.T
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameDiscoverUnconfiguredNodes, "ext_id"),
 					resource.TestCheckResourceAttrSet(resourceNameDiscoverUnconfiguredNodes, "unconfigured_nodes.#"),
-					resource.TestCheckResourceAttr(resourceNameDiscoverUnconfiguredNodes, "unconfigured_nodes.0.cvm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIp),
+					resource.TestCheckResourceAttr(resourceNameDiscoverUnconfiguredNodes, "unconfigured_nodes.0.cvm_ip.0.ipv4.0.value", testVars.Clusters.Nodes[0].CvmIP),
 				),
 			},
 		},

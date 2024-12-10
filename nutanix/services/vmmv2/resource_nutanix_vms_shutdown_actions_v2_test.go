@@ -172,7 +172,10 @@ func testAccCheckNutanixVirtualMachineV2Destroy(s *terraform.State) error {
 		if err == nil {
 			// delete the vm
 			fmt.Printf("Deleting VM with ID: %s\n", rs.Primary.ID)
-			_, err = conn.VmmAPI.VMAPIInstance.DeleteVmById(utils.StringPtr(rs.Primary.ID))
+			_, errVM := conn.VmmAPI.VMAPIInstance.DeleteVmById(utils.StringPtr(rs.Primary.ID))
+			if errVM != nil {
+				return errVM
+			}
 		}
 	}
 	return nil

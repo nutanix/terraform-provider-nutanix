@@ -13,7 +13,7 @@ type TestConfig struct {
 		PEPassword string `json:"pe_password"`
 		CvmIP      string `json:"cvm_ip"`
 		Nodes      []struct {
-			CvmIp    string `json:"cvm_ip"`
+			CvmIP    string `json:"cvm_ip"`
 			Username string `json:"username"`
 			Password string `json:"password"`
 		} `json:"nodes"`

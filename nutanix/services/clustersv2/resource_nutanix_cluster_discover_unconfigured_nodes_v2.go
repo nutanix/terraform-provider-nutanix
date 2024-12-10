@@ -315,8 +315,8 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 
 	uuid := strings.Split(utils.StringValue(rUUID.ExtId), "=:")[1]
 
-	const UNCONFIGURED_NODES = 2
-	taskResponseType := config.TaskResponseType(UNCONFIGURED_NODES)
+	const unconfiguredNodes = 2
+	taskResponseType := config.TaskResponseType(unconfiguredNodes)
 	unconfiguredNodesResp, taskErr := conn.ClusterEntityAPI.FetchTaskResponse(utils.StringPtr(uuid), &taskResponseType)
 	if taskErr != nil {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", taskErr)
@@ -324,7 +324,7 @@ func DatasourceNutanixClusterDiscoverUnconfiguredNodesV2Create(ctx context.Conte
 
 	taskResp := unconfiguredNodesResp.Data.GetValue().(config.TaskResponse)
 
-	if *taskResp.TaskResponseType != config.TaskResponseType(UNCONFIGURED_NODES) {
+	if *taskResp.TaskResponseType != config.TaskResponseType(unconfiguredNodes) {
 		return diag.Errorf("error while fetching Task Response for Unconfigured Nodes : %v", "task response type mismatch")
 	}
 

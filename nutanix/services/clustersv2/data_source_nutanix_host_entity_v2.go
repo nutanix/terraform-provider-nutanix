@@ -579,21 +579,21 @@ func flattenHypervisorState(pr *import1.HypervisorState) string {
 
 func flattenHostHypervisorType(pr *import1.HypervisorType) string {
 	if pr != nil {
-		const AHV, ESX, HYPERV, XEN, NATIVEHOST = 2, 3, 4, 5, 6
+		const ahv, esx, hyperv, xen, native = 2, 3, 4, 5, 6
 
-		if *pr == import1.HypervisorType(AHV) {
+		if *pr == import1.HypervisorType(ahv) {
 			return "AHV"
 		}
-		if *pr == import1.HypervisorType(ESX) {
+		if *pr == import1.HypervisorType(esx) {
 			return "ESX"
 		}
-		if *pr == import1.HypervisorType(HYPERV) {
+		if *pr == import1.HypervisorType(hyperv) {
 			return "HYPERV"
 		}
-		if *pr == import1.HypervisorType(XEN) {
+		if *pr == import1.HypervisorType(xen) {
 			return "XEN"
 		}
-		if *pr == import1.HypervisorType(NATIVEHOST) {
+		if *pr == import1.HypervisorType(native) {
 			return "NATIVEHOST"
 		}
 	}
@@ -602,12 +602,12 @@ func flattenHostHypervisorType(pr *import1.HypervisorType) string {
 
 func flattenAcropolisConnectionState(pr *import1.AcropolisConnectionState) string {
 	if pr != nil {
-		const CONNECTED, DISCONNECTED = 2, 3
+		const connected, disconnected = 2, 3
 
-		if *pr == import1.AcropolisConnectionState(CONNECTED) {
+		if *pr == import1.AcropolisConnectionState(connected) {
 			return "CONNECTED"
 		}
-		if *pr == import1.AcropolisConnectionState(DISCONNECTED) {
+		if *pr == import1.AcropolisConnectionState(disconnected) {
 			return "DISCONNECTED"
 		}
 	}
@@ -718,14 +718,14 @@ func flattenKeyManagementDeviceToCertStatusInfo(pr []import1.KeyManagementDevice
 
 func flattenStorageTierReference(pr *import1.StorageTierReference) string {
 	if pr != nil {
-		const PCIE_SSD, SATA_SSD, HDD = 2, 3, 4
-		if *pr == import1.StorageTierReference(PCIE_SSD) {
+		const pci, sata, hdd = 2, 3, 4
+		if *pr == import1.StorageTierReference(pci) {
 			return "PCIE_SSD"
 		}
-		if *pr == import1.StorageTierReference(SATA_SSD) {
+		if *pr == import1.StorageTierReference(sata) {
 			return "SATA_SSD"
 		}
-		if *pr == import1.StorageTierReference(HDD) {
+		if *pr == import1.StorageTierReference(hdd) {
 			return "HDD"
 		}
 	}

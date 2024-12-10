@@ -72,7 +72,7 @@ func TestAccNutanixTemplateV2Resource_Basic(t *testing.T) {
 			},
 			//update the template name, description and vm config USING template_vm_reference
 			{
-				Config: testTemplateV2UpdateWithTempVmRefConfig(name, desc, templateName+"-updated-2", templateDesc+"-updated-2"),
+				Config: testTemplateV2UpdateWithTempVMRefConfig(name, desc, templateName+"-updated-2", templateDesc+"-updated-2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNameTemplate, "template_name", templateName+"-updated-2"),
 					resource.TestCheckResourceAttr(resourceNameTemplate, "template_description", templateDesc+"-updated-2"),
@@ -340,7 +340,7 @@ func testTemplateV2UpdateWithTempVersionRefConfig(name, desc, tempName, tempDesc
 `, name, desc, tempName, tempDesc)
 }
 
-func testTemplateV2UpdateWithTempVmRefConfig(name, desc, tempName, tempDesc string) string {
+func testTemplateV2UpdateWithTempVMRefConfig(name, desc, tempName, tempDesc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
 
