@@ -20,7 +20,7 @@ const (
 	resourceName3NodesCluster                    = "nutanix_cluster_v2.cluster-3nodes"
 )
 
-func TestAccNutanixClusterAddNodeV2Resource_basic(t *testing.T) {
+func TestAccV2NutanixClusterAddNodeResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	clusterName := fmt.Sprintf("tf-3node-cluster-%d", r)
 
