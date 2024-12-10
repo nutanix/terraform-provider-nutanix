@@ -11,7 +11,10 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameNGTInsertISO = "nutanix_ngt_insert_iso_v2.test"
+const (
+	resourceNameNGTInsertISO = "nutanix_ngt_insert_iso_v2.test"
+	timeSleep                = 2 * time.Minute
+)
 
 func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmHaveNGT(t *testing.T) {
 	r := acctest.RandInt()
@@ -30,7 +33,7 @@ func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmHaveNGT(t *testing.T
 			{
 				PreConfig: func() {
 					t.Log("Sleeping for 2 Minute waiting vm to power on")
-					time.Sleep(2 * time.Minute)
+					time.Sleep(timeSleep)
 					t.Log("Installing NGT")
 				},
 				Config: testPreEnvConfig(vmName, r) + testNGTInstallationResourceConfigIMMEDIATEReboot(),
@@ -50,7 +53,7 @@ func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmHaveNGT(t *testing.T
 			{
 				PreConfig: func() {
 					t.Log("Sleeping for 2 Minute waiting vm to reboot")
-					time.Sleep(2 * time.Minute)
+					time.Sleep(timeSleep)
 					t.Log("Inserting NGT Iso")
 				},
 				Config: testPreEnvConfig(vmName, r) + testNGTInstallationResourceConfigIMMEDIATEReboot() + testNGTInsertIsoConfig("true"),
@@ -88,7 +91,7 @@ func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmHaveNGTIsConfigFalse
 			{
 				PreConfig: func() {
 					t.Log("Sleeping for 2 Minute waiting vm to power on")
-					time.Sleep(2 * time.Minute)
+					time.Sleep(timeSleep)
 					t.Log("Installing NGT")
 				},
 				Config: testPreEnvConfig(vmName, r) + testNGTInstallationResourceConfigIMMEDIATEReboot(),
@@ -108,7 +111,7 @@ func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmHaveNGTIsConfigFalse
 			{
 				PreConfig: func() {
 					t.Log("Sleeping for 2 Minute waiting vm to reboot")
-					time.Sleep(2 * time.Minute)
+					time.Sleep(timeSleep)
 					t.Log("Inserting NGT Iso")
 				},
 				Config: testPreEnvConfig(vmName, r) + testNGTInstallationResourceConfigIMMEDIATEReboot() + testNGTInsertIsoConfig("false"),

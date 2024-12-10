@@ -17,6 +17,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
+const minItems = 2
+
 func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: ResourceNutanixNetworkSecurityPolicyV2Create,
@@ -300,7 +302,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 																		"isolation_group": {
 																			Type:     schema.TypeList,
 																			Required: true,
-																			MinItems: 2,
+																			MinItems: minItems,
 																			Elem: &schema.Resource{
 																				Schema: map[string]*schema.Schema{
 																					"group_category_references": {

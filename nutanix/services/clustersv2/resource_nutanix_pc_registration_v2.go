@@ -1032,12 +1032,12 @@ func flattenEnvironmentInfo(environmentInfo *prismConfig.EnvironmentInfo) []map[
 }
 
 func flattenEnvironmentType(environmentType prismConfig.EnvironmentType) string {
-	const ONPREM, NTNX_CLOUD = 2, 3
+	const onprem, ntnxCloud = 2, 3
 
 	switch environmentType {
-	case ONPREM:
+	case onprem:
 		return "ONPREM"
-	case NTNX_CLOUD:
+	case ntnxCloud:
 		return "NTNX_CLOUD"
 	default:
 		return "UNKNOWN"
@@ -1045,17 +1045,17 @@ func flattenEnvironmentType(environmentType prismConfig.EnvironmentType) string 
 }
 
 func flattenEnvironmentProviderType(providerType prismConfig.ProviderType) string {
-	const NTNX, AZURE, AWS, GCP, VSPHERE = 2, 3, 4, 5, 6
+	const ntnx, azure, aws, gcp, vsphere = 2, 3, 4, 5, 6
 	switch providerType {
-	case NTNX:
+	case ntnx:
 		return "NTNX"
-	case AZURE:
+	case azure:
 		return "AZURE"
-	case AWS:
+	case aws:
 		return "AWS"
-	case GCP:
+	case gcp:
 		return "GCP"
-	case VSPHERE:
+	case vsphere:
 		return "VSPHERE"
 	default:
 		return "UNKNOWN"
@@ -1063,11 +1063,11 @@ func flattenEnvironmentProviderType(providerType prismConfig.ProviderType) strin
 }
 
 func flattenEnvironmentProvisioningType(provisioningType prismConfig.ProvisioningType) string {
-	const NTNX, NATIVE = 2, 3
+	const ntnx, native = 2, 3
 	switch provisioningType {
-	case NTNX:
+	case ntnx:
 		return "NTNX"
-	case NATIVE:
+	case native:
 		return "NATIVE"
 	default:
 		return "UNKNOWN"

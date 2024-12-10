@@ -13,6 +13,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
+const defaultValue = 32
+
 func DatasourceNutanixClusterEntityV2() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: DatasourceNutanixClusterEntityV2Read,
@@ -737,7 +739,7 @@ func SchemaForValuePrefixLength() *schema.Schema {
 				"prefix_length": {
 					Type:     schema.TypeInt,
 					Optional: true,
-					Default:  32,
+					Default:  defaultValue,
 				},
 			},
 		},

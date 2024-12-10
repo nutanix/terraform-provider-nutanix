@@ -11,7 +11,9 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameNGTInstallation = "nutanix_ngt_installation_v2.test"
+const (
+	resourceNameNGTInstallation = "nutanix_ngt_installation_v2.test"
+)
 
 func TestAccNutanixNGTInstallationV2Resource_InstallNGTWithRebootPreferenceSetToIMMEDIATE(t *testing.T) {
 	r := acctest.RandInt()
@@ -46,7 +48,7 @@ func TestAccNutanixNGTInstallationV2Resource_InstallNGTWithRebootPreferenceSetTo
 			{
 				PreConfig: func() {
 					t.Log("Sleeping for 2 Minute waiting vm to reboot")
-					time.Sleep(2 * time.Minute)
+					time.Sleep(timeSleep)
 				},
 				Config: testPreEnvConfig(vmName, r) + testNGTInstallationResourceConfigIMMEDIATEReboot() + testNGTConfiguration,
 				Check: resource.ComposeTestCheckFunc(

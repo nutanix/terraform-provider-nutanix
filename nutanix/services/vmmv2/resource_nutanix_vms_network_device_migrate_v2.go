@@ -58,7 +58,7 @@ func ResourceNutanixVmsNetworkDeviceMigrateV2() *schema.Resource {
 						"prefix_length": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  32,
+							Default:  defaultValue,
 						},
 					},
 				},
@@ -139,9 +139,10 @@ func ResourceNutanixVmsNetworkDeviceMigrateV2Update(ctx context.Context, d *sche
 		body.Subnet = expandSubnetReference(subnet)
 	}
 	if migrateType, ok := d.GetOk("migrate_type"); ok && len(migrateType.(string)) > 0 {
+		const two, three = 2, 3
 		subMap := map[string]interface{}{
-			"ASSIGN_IP":  2,
-			"RELEASE_IP": 3,
+			"ASSIGN_IP":  two,
+			"RELEASE_IP": three,
 		}
 		pVal := subMap[migrateType.(string)]
 		p := config.MigrateNicType(pVal.(int))

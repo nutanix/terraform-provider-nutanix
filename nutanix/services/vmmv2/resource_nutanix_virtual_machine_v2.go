@@ -19,6 +19,11 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
+const (
+	timeout = 3 * time.Minute
+	delay   = 3 * time.Second
+)
+
 func ResourceNutanixVirtualMachineV2() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: ResourceNutanixVirtualMachineV2Create,
@@ -1104,7 +1109,7 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 															"prefix_length": {
 																Type:     schema.TypeInt,
 																Optional: true,
-																Default:  32,
+																Default:  defaultValue,
 															},
 														},
 													},
@@ -1123,7 +1128,7 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 															"prefix_length": {
 																Type:     schema.TypeInt,
 																Optional: true,
-																Default:  32,
+																Default:  defaultValue,
 															},
 														},
 													},
@@ -1151,7 +1156,7 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 															"prefix_length": {
 																Type:     schema.TypeInt,
 																Optional: true,
-																Default:  32,
+																Default:  defaultValue,
 															},
 														},
 													},
@@ -1651,9 +1656,9 @@ func ResourceNutanixVirtualMachineV2Create(ctx context.Context, d *schema.Resour
 			Pending:    []string{"WAITING"},
 			Target:     []string{"AVAILABLE"},
 			Refresh:    waitForIPRefreshFunc(conn, utils.StringValue(uuid)),
-			Timeout:    3 * time.Minute,
-			Delay:      3 * time.Second,
-			MinTimeout: 3 * time.Second,
+			Timeout:    timeout,
+			Delay:      delay,
+			MinTimeout: delay,
 		}
 		vmIntentResponse, err := waitIPConf.WaitForStateContext(ctx)
 		if err != nil {

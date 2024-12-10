@@ -16,6 +16,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
+const defaultValue = 32
+
 func ResourceNutanixTemplateDeployV2() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: ResourceNutanixTemplateDeployV2Create,
@@ -176,7 +178,7 @@ func ResourceNutanixTemplateDeployV2() *schema.Resource {
 																		"prefix_length": {
 																			Type:     schema.TypeInt,
 																			Optional: true,
-																			Default:  32,
+																			Default:  defaultValue,
 																		},
 																	},
 																},
@@ -193,7 +195,7 @@ func ResourceNutanixTemplateDeployV2() *schema.Resource {
 																		"prefix_length": {
 																			Type:     schema.TypeInt,
 																			Optional: true,
-																			Default:  32,
+																			Default:  defaultValue,
 																		},
 																	},
 																},
@@ -221,7 +223,7 @@ func ResourceNutanixTemplateDeployV2() *schema.Resource {
 																		"prefix_length": {
 																			Type:     schema.TypeInt,
 																			Optional: true,
-																			Default:  32,
+																			Default:  defaultValue,
 																		},
 																	},
 																},

@@ -23,6 +23,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
+//nolint:misspell // British English spelling is intentional
 const (
 	CANCELED = "CANCELLED"
 )
@@ -737,7 +738,7 @@ func SchemaForValuePrefixLengthResource() *schema.Schema {
 				"prefix_length": {
 					Type:     schema.TypeInt,
 					Optional: true,
-					Default:  32,
+					Default:  defaultValue,
 				},
 			},
 		},

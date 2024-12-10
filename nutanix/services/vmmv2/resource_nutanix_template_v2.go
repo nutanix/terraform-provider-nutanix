@@ -1950,7 +1950,7 @@ func schemaForNics() *schema.Schema {
 													"prefix_length": {
 														Type:     schema.TypeInt,
 														Optional: true,
-														Default:  32,
+														Default:  defaultValue,
 													},
 												},
 											},
@@ -1967,7 +1967,7 @@ func schemaForNics() *schema.Schema {
 													"prefix_length": {
 														Type:     schema.TypeInt,
 														Optional: true,
-														Default:  32,
+														Default:  defaultValue,
 													},
 												},
 											},
@@ -1995,7 +1995,7 @@ func schemaForNics() *schema.Schema {
 													"prefix_length": {
 														Type:     schema.TypeInt,
 														Optional: true,
-														Default:  32,
+														Default:  defaultValue,
 													},
 												},
 											},
@@ -2187,8 +2187,9 @@ func expandTemplateVMSpec(vmSpec interface{}) *vmmConfig.Vm {
 		}
 		if enableCPUFeatures, ok := vmVal["enabled_cpu_features"]; ok && len(enableCPUFeatures.([]interface{})) > 0 {
 			enCPUFeaturesList := enableCPUFeatures.([]interface{})
+			const hardwareVirt = 2
 			subMap := map[string]interface{}{
-				"HARDWARE_VIRTUALIZATION": 2,
+				"HARDWARE_VIRTUALIZATION": hardwareVirt,
 			}
 			var cpuFeatures []vmmConfig.CpuFeature
 			for _, feature := range enCPUFeaturesList {

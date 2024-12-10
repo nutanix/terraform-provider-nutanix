@@ -114,7 +114,7 @@ func TestAccNutanixVmsShutdownV2Resource_Basic(t *testing.T) {
 			{
 				PreConfig: func() {
 					//sleep for 2 Minute to allow the vm to reboot
-					time.Sleep(2 * time.Minute)
+					time.Sleep(timeSleep)
 				},
 				Config: testVMV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("guest_reboot") + vmDataSource,
 				Check: resource.ComposeTestCheckFunc(
@@ -132,7 +132,7 @@ func TestAccNutanixVmsShutdownV2Resource_Basic(t *testing.T) {
 			{
 				PreConfig: func() {
 					//sleep for 2 Minute to allow the vm to shut down
-					time.Sleep(2 * time.Minute)
+					time.Sleep(timeSleep)
 				},
 				Config: testVMV2Config(name, desc, "OFF") + testNGTConfig() + testVmsShutdownV2Config("guest_shutdown") + vmDataSource,
 				Check: resource.ComposeTestCheckFunc(
