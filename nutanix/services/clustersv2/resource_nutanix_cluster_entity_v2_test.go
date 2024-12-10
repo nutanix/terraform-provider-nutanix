@@ -19,6 +19,9 @@ const (
 )
 
 func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T) {
+	if testVars.Clusters.Nodes[0].CvmIP == "" {
+		t.Skip("Skipping test as No available node to be used for testing")
+	}
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-cluster-%d", r)
 
@@ -49,6 +52,9 @@ func TestAccV2NutanixClusterResource_CreateClusterWithMinimumConfig(t *testing.T
 }
 
 func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
+	if testVars.Clusters.Nodes[0].CvmIP == "" {
+		t.Skip("Skipping test as No available node to be used for testing")
+	}
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-cluster-%d", r)
 
