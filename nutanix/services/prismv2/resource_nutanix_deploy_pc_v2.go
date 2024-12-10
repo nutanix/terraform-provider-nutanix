@@ -292,7 +292,7 @@ func schemaForPcConfig() *schema.Schema {
 					Type:     schema.TypeList,
 					Optional: true,
 					MinItems: 1,
-					MaxItems: 5,
+					MaxItems: 5, //nolint:gomnd
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"username": {
@@ -318,7 +318,7 @@ func schemaForPcConfig() *schema.Schema {
 								Optional: true,
 								Computed: true,
 								MinItems: 1,
-								MaxItems: 3,
+								MaxItems: 3, //nolint:gomnd
 								Elem: &schema.Schema{
 									Type: schema.TypeString,
 								},
@@ -355,7 +355,7 @@ func schemaForCustomKeyValuePairs() *schema.Schema {
 					Optional: true,
 					Computed: true,
 					MinItems: 0,
-					MaxItems: 32,
+					MaxItems: 32, //nolint:gomnd
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"name": {
@@ -456,13 +456,13 @@ func schemaForPcNetwork() *schema.Schema {
 				"name_servers": {
 					Type:     schema.TypeList,
 					Required: true,
-					MaxItems: 1024,
+					MaxItems: 1024, //nolint:gomnd
 					Elem:     schemaForIPAddressOrFqdn(),
 				},
 				"ntp_servers": {
 					Type:     schema.TypeList,
 					Required: true,
-					MaxItems: 1024,
+					MaxItems: 1024, //nolint:gomnd
 					Elem:     schemaForIPAddressOrFqdn(),
 				},
 				"fqdn": {
@@ -491,7 +491,7 @@ func schemaForPcNetwork() *schema.Schema {
 							"ip_ranges": {
 								Type:     schema.TypeList,
 								Required: true,
-								MaxItems: 15,
+								MaxItems: 15, //nolint:gomnd
 								MinItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
@@ -536,7 +536,7 @@ func schemaForPcNetwork() *schema.Schema {
 							"ip_ranges": {
 								Type:     schema.TypeList,
 								Required: true,
-								MaxItems: 15,
+								MaxItems: 15, //nolint:gomnd
 								MinItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
@@ -782,9 +782,10 @@ func expandBootstrapConfig(bootStrapConfigData map[string]interface{}) *config.B
 		}
 		if provisioningType, ok := environmentInfoData["provisioning_type"]; ok {
 			if provisioningType != nil && provisioningType != "" {
+				const NTNX, NATIVE = 2, 3
 				subMap := map[string]interface{}{
-					"NTNX":   2,
-					"NATIVE": 3,
+					"NTNX":   NTNX,
+					"NATIVE": NATIVE,
 				}
 				pVal := subMap[provisioningType.(string)]
 				if pVal == nil {
@@ -797,9 +798,10 @@ func expandBootstrapConfig(bootStrapConfigData map[string]interface{}) *config.B
 		}
 		if environmentType, ok := environmentInfoData["type"]; ok {
 			if environmentType != nil && environmentType != "" {
+				const ONPREM, NtnxCloud = 2, 3
 				subMap := map[string]interface{}{
-					"ONPREM":     2,
-					"NTNX_CLOUD": 3,
+					"ONPREM":     ONPREM,
+					"NTNX_CLOUD": NtnxCloud,
 				}
 				pVal := subMap[environmentType.(string)]
 				if pVal == nil {
