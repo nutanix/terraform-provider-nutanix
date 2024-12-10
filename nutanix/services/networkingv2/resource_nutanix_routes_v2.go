@@ -560,11 +560,11 @@ func expandMetadata(metadata []interface{}) *common.Metadata {
 	}
 	if categoryIDs, ok := metadataMap["category_ids"]; ok {
 		categoryIDList := categoryIDs.([]interface{})
-		categoryIdListStr := make([]string, len(categoryIDList))
+		categoryIDListStr := make([]string, len(categoryIDList))
 		for i, v := range categoryIDList {
-			categoryIdListStr[i] = v.(string)
+			categoryIDListStr[i] = v.(string)
 		}
-		metadataObj.CategoryIds = categoryIdListStr
+		metadataObj.CategoryIds = categoryIDListStr
 	}
 	aJSON, _ := json.Marshal(metadataObj)
 	log.Printf("[DEBUG] Metadata Object: %v", string(aJSON))

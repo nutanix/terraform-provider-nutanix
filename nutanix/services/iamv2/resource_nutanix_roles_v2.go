@@ -126,8 +126,8 @@ func ResourceNutanixRolesV4Create(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.Client).IamAPI
 	body := &iamConfig.Role{}
 
-	if extId, ok := d.GetOk("ext_id"); ok {
-		body.ExtId = utils.StringPtr(extId.(string))
+	if extID, ok := d.GetOk("ext_id"); ok {
+		body.ExtId = utils.StringPtr(extID.(string))
 	}
 	if displayName, ok := d.GetOk("display_name"); ok {
 		body.DisplayName = utils.StringPtr(displayName.(string))
@@ -256,11 +256,11 @@ func ResourceNutanixRolesV4Read(ctx context.Context, d *schema.ResourceData, met
 func ResourceNutanixRolesV4Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).IamAPI
 
-	extId := utils.StringPtr(d.Id())
+	extID := utils.StringPtr(d.Id())
 
 	updatedSpec := iamConfig.Role{}
 
-	readResp, err := conn.RolesAPIInstance.GetRoleById(extId)
+	readResp, err := conn.RolesAPIInstance.GetRoleById(extID)
 	if err != nil {
 		return diag.Errorf("error while fetching role: %v", err)
 	}
@@ -290,7 +290,7 @@ func ResourceNutanixRolesV4Update(ctx context.Context, d *schema.ResourceData, m
 		updatedSpec.Operations = operationsListStr
 	}
 
-	updateResp, err := conn.RolesAPIInstance.UpdateRoleById(extId, &updatedSpec, headers)
+	updateResp, err := conn.RolesAPIInstance.UpdateRoleById(extID, &updatedSpec, headers)
 	if err != nil {
 		return diag.Errorf("error while updating role: %v", err)
 	}

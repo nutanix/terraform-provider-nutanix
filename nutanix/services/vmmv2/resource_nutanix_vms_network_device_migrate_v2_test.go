@@ -9,7 +9,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameVmNetworkDeviceMigrate = "nutanix_vm_network_device_migrate_v2.test"
+const resourceNameVMNetworkDeviceMigrate = "nutanix_vm_network_device_migrate_v2.test"
 
 func TestAccNutanixVmsNetworkDeviceMigrateV2Resource_Basic(t *testing.T) {
 	r := acctest.RandInt()
@@ -19,17 +19,17 @@ func TestAccNutanixVmsNetworkDeviceMigrateV2Resource_Basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testVmPreEnvConfig(r) + testVmWithNicAndDiskConfig(vmName) + testVmsNetworkDeviceMigrateV4AssignConfig(),
+				Config: testVMPreEnvConfig(r) + testVMWithNicAndDiskConfig(vmName) + testVmsNetworkDeviceMigrateV4AssignConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceNameVmNetworkDeviceMigrate, "ext_id"),
-					resource.TestCheckResourceAttr(resourceNameVmNetworkDeviceMigrate, "ip_address.0.value", testVars.VMM.AssignedIP),
+					resource.TestCheckResourceAttrSet(resourceNameVMNetworkDeviceMigrate, "ext_id"),
+					resource.TestCheckResourceAttr(resourceNameVMNetworkDeviceMigrate, "ip_address.0.value", testVars.VMM.AssignedIP),
 				),
 			},
 			{
-				Config: testVmPreEnvConfig(r) +
-					testVmWithNicAndDiskConfig(vmName) + testVmsNetworkDeviceMigrateV4ReleaseConfig(),
+				Config: testVMPreEnvConfig(r) +
+					testVMWithNicAndDiskConfig(vmName) + testVmsNetworkDeviceMigrateV4ReleaseConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceNameVmNetworkDeviceMigrate, "ext_id"),
+					resource.TestCheckResourceAttrSet(resourceNameVMNetworkDeviceMigrate, "ext_id"),
 				),
 			},
 		},

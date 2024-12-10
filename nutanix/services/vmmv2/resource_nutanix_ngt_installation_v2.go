@@ -183,9 +183,10 @@ func ResourceNutanixNGTInstallationV4Create(ctx context.Context, d *schema.Resou
 	// prepare the body
 	if capabilities, ok := d.GetOk("capablities"); ok && len(capabilities.([]interface{})) > 0 {
 		capabilitiesList := make([]vmmConfig.NgtCapability, 0)
+		const two, three = 2, 3
 		capabilityMap := map[string]interface{}{
-			"SELF_SERVICE_RESTORE": 2,
-			"VSS_SNAPSHOT":         3,
+			"SELF_SERVICE_RESTORE": two,
+			"VSS_SNAPSHOT":         three,
 		}
 		for _, capabilityValue := range capabilities.([]interface{}) {
 			var capabilityObj vmmConfig.NgtCapability
@@ -208,10 +209,11 @@ func ResourceNutanixNGTInstallationV4Create(ctx context.Context, d *schema.Resou
 	if rebootPreference, ok := d.GetOk("reboot_preference"); ok {
 		if len(rebootPreference.([]interface{})) > 0 {
 			rp := rebootPreference.([]interface{})[0].(map[string]interface{})
+			const two, three, four = 2, 3, 4
 			scheduleTypesMap := map[string]int{
-				"SKIP":      2,
-				"IMMEDIATE": 3,
-				"LATER":     4,
+				"SKIP":      two,
+				"IMMEDIATE": three,
+				"LATER":     four,
 			}
 			rebootPreferenceObj := &vmmConfig.RebootPreference{
 				ScheduleType: (*vmmConfig.ScheduleType)(utils.IntPtr(scheduleTypesMap[(rp["schedule_type"].(string))])),
@@ -346,9 +348,10 @@ func ResourceNutanixNGTInstallationV4Update(ctx context.Context, d *schema.Resou
 	if d.HasChange("capablities") {
 		capabilities := d.Get("capablities")
 		capabilitiesList := make([]vmmConfig.NgtCapability, 0)
+		const two, three = 2, 3
 		capabilityMap := map[string]interface{}{
-			"SELF_SERVICE_RESTORE": 2,
-			"VSS_SNAPSHOT":         3,
+			"SELF_SERVICE_RESTORE": two,
+			"VSS_SNAPSHOT":         three,
 		}
 		for _, capabilityValue := range capabilities.([]interface{}) {
 			var capabilityObj vmmConfig.NgtCapability

@@ -49,7 +49,7 @@ func ResourceNutanixVolumeGroupIscsiClientV2() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"ipv4": SchemaForIPV4ValuePrefixLength(),
-						"ipv6": SchemaForIpV6ValuePrefixLength(),
+						"ipv6": SchemaForIPV6ValuePrefixLength(),
 						"fqdn": {
 							Description: "A fully qualified domain name that specifies its exact location in the tree hierarchy of the Domain Name System.",
 							Type:        schema.TypeList,
@@ -120,7 +120,7 @@ func SchemaForIPV4ValuePrefixLength() *schema.Schema {
 	}
 }
 
-func SchemaForIpV6ValuePrefixLength() *schema.Schema {
+func SchemaForIPV6ValuePrefixLength() *schema.Schema {
 	return &schema.Schema{
 		Description: "An unique address that identifies a device on the internet or a local network in IPv6 format.",
 		Type:        schema.TypeList,
@@ -149,7 +149,7 @@ func SchemaForIpV6ValuePrefixLength() *schema.Schema {
 func ResourceNutanixVolumeGroupIscsiClientV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VolumeAPI
 
-	volumeGroupExtId := d.Get("vg_ext_id")
+	volumeGroupExtID := d.Get("vg_ext_id")
 
 	body := volumesClient.IscsiClient{}
 
@@ -163,9 +163,10 @@ func ResourceNutanixVolumeGroupIscsiClientV2Create(ctx context.Context, d *schem
 		body.ClientSecret = utils.StringPtr(clientSecret.(string))
 	}
 	if enabledAuthentications, ok := d.GetOk("enabled_authentications"); ok {
+		const two, three = 2, 3
 		enabledAuthenticationsMap := map[string]interface{}{
-			"CHAP": "2",
-			"NONE": "3",
+			"CHAP": two,
+			"NONE": three,
 		}
 		pInt := enabledAuthenticationsMap[enabledAuthentications.(string)]
 		p := volumesClient.AuthenticationType(pInt.(int))
@@ -175,16 +176,17 @@ func ResourceNutanixVolumeGroupIscsiClientV2Create(ctx context.Context, d *schem
 		body.NumVirtualTargets = utils.IntPtr(numVirtualTargets.(int))
 	}
 	if attachmentSite, ok := d.GetOk("attachment_site"); ok {
+		const two, three = 2, 3
 		attachmentSiteMap := map[string]interface{}{
-			"SECONDARY": "2",
-			"PRIMARY":   "3",
+			"SECONDARY": two,
+			"PRIMARY":   three,
 		}
 		pInt := attachmentSiteMap[attachmentSite.(string)]
 		p := volumesClient.VolumeGroupAttachmentSite(pInt.(int))
 		body.AttachmentSite = &p
 	}
 
-	resp, err := conn.VolumeAPIInstance.AttachIscsiClient(utils.StringPtr(volumeGroupExtId.(string)), &body)
+	resp, err := conn.VolumeAPIInstance.AttachIscsiClient(utils.StringPtr(volumeGroupExtID.(string)), &body)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -249,7 +251,7 @@ func ResourceNutanixVolumeGroupIscsiClientV2Update(ctx context.Context, d *schem
 func ResourceNutanixVVolumeGroupIscsiClientV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VolumeAPI
 
-	volumeGroupExtId := d.Get("vg_ext_id")
+	volumeGroupExtID := d.Get("vg_ext_id")
 
 	body := volumesClient.IscsiClientAttachment{}
 
@@ -257,7 +259,7 @@ func ResourceNutanixVVolumeGroupIscsiClientV2Delete(ctx context.Context, d *sche
 		body.ExtId = utils.StringPtr(extID.(string))
 	}
 
-	resp, err := conn.VolumeAPIInstance.DetachIscsiClient(utils.StringPtr(volumeGroupExtId.(string)), &body)
+	resp, err := conn.VolumeAPIInstance.DetachIscsiClient(utils.StringPtr(volumeGroupExtID.(string)), &body)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -333,10 +335,10 @@ func expandiscsiInitiatorNetworkID(ipAddressOrFQDN interface{}) *config.IPAddres
 	return nil
 }
 
-func expandFloatingIPV4Address(IPv4I interface{}) *config.IPv4Address {
-	if IPv4I != nil {
+func expandFloatingIPV4Address(ipv4I interface{}) *config.IPv4Address {
+	if ipv4I != nil {
 		ipv4 := &config.IPv4Address{}
-		prI := IPv4I.([]interface{})
+		prI := ipv4I.([]interface{})
 		val := prI[0].(map[string]interface{})
 
 		if value, ok := val["value"]; ok {
@@ -350,10 +352,10 @@ func expandFloatingIPV4Address(IPv4I interface{}) *config.IPv4Address {
 	return nil
 }
 
-func expandFloatingIPV6Address(IPv6I interface{}) *config.IPv6Address {
-	if IPv6I != nil {
+func expandFloatingIPV6Address(ipv6I interface{}) *config.IPv6Address {
+	if ipv6I != nil {
 		ipv6 := &config.IPv6Address{}
-		prI := IPv6I.([]interface{})
+		prI := ipv6I.([]interface{})
 		val := prI[0].(map[string]interface{})
 
 		if value, ok := val["value"]; ok {

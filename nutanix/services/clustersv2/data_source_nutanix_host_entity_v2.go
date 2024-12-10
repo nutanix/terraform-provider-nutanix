@@ -538,39 +538,39 @@ func flattenHypervisorReference(pr *import1.HypervisorReference) []map[string]in
 
 func flattenHypervisorState(pr *import1.HypervisorState) string {
 	if pr != nil {
-		const ACROPOLIS_NORMAL, ENTERING_MAINTENANCE_MODE, ENTERED_MAINTENANCE_MODE,
-			RESERVED_FOR_HA_FAILOVER, ENTERING_MAINTENANCE_MODE_FROM_HA_FAILOVER,
-			RESERVING_FOR_HA_FAILOVER, HA_FAILOVER_SOURCE, HA_FAILOVER_TARGET,
-			HA_HEALING_SOURCE, HA_HEALING_TARGET = 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+		const two, three, four,
+			five, six,
+			seven, eight, nine,
+			ten, eleven = 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
 
-		if *pr == import1.HypervisorState(ACROPOLIS_NORMAL) {
+		if *pr == import1.HypervisorState(two) {
 			return "ACROPOLIS_NORMAL"
 		}
-		if *pr == import1.HypervisorState(ENTERING_MAINTENANCE_MODE) {
+		if *pr == import1.HypervisorState(three) {
 			return "ENTERING_MAINTENANCE_MODE"
 		}
-		if *pr == import1.HypervisorState(ENTERED_MAINTENANCE_MODE) {
+		if *pr == import1.HypervisorState(four) {
 			return "ENTERED_MAINTENANCE_MODE"
 		}
-		if *pr == import1.HypervisorState(RESERVED_FOR_HA_FAILOVER) {
+		if *pr == import1.HypervisorState(five) {
 			return "RESERVED_FOR_HA_FAILOVER"
 		}
-		if *pr == import1.HypervisorState(ENTERING_MAINTENANCE_MODE_FROM_HA_FAILOVER) {
+		if *pr == import1.HypervisorState(six) {
 			return "ENTERING_MAINTENANCE_MODE_FROM_HA_FAILOVER"
 		}
-		if *pr == import1.HypervisorState(RESERVING_FOR_HA_FAILOVER) {
+		if *pr == import1.HypervisorState(seven) {
 			return "RESERVING_FOR_HA_FAILOVER"
 		}
-		if *pr == import1.HypervisorState(HA_FAILOVER_SOURCE) {
+		if *pr == import1.HypervisorState(eight) {
 			return "HA_FAILOVER_SOURCE"
 		}
-		if *pr == import1.HypervisorState(HA_FAILOVER_TARGET) {
+		if *pr == import1.HypervisorState(nine) {
 			return "HA_FAILOVER_TARGET"
 		}
-		if *pr == import1.HypervisorState(HA_HEALING_SOURCE) {
+		if *pr == import1.HypervisorState(ten) {
 			return "HA_HEALING_SOURCE"
 		}
-		if *pr == import1.HypervisorState(HA_HEALING_TARGET) {
+		if *pr == import1.HypervisorState(eleven) {
 			return "HA_HEALING_TARGET"
 		}
 	}

@@ -9,7 +9,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameVmClone = "nutanix_vm_clone_v2.test"
+const resourceNameVMClone = "nutanix_vm_clone_v2.test"
 
 func TestAccNutanixVmsCloneV2Resource_Basic(t *testing.T) {
 	// t.Skip("Skipping test as it requires Clone")
@@ -24,10 +24,10 @@ func TestAccNutanixVmsCloneV2Resource_Basic(t *testing.T) {
 			{
 				Config: testVmsCloneV2Config(name, desc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameVmClone, "name", fmt.Sprintf(`%[1]s-clone`, name)),
-					resource.TestCheckResourceAttr(resourceNameVmClone, "num_sockets", "2"),
-					resource.TestCheckResourceAttr(resourceNameVmClone, "num_cores_per_socket", "2"),
-					resource.TestCheckResourceAttr(resourceNameVmClone, "num_threads_per_core", "2"),
+					resource.TestCheckResourceAttr(resourceNameVMClone, "name", fmt.Sprintf(`%[1]s-clone`, name)),
+					resource.TestCheckResourceAttr(resourceNameVMClone, "num_sockets", "2"),
+					resource.TestCheckResourceAttr(resourceNameVMClone, "num_cores_per_socket", "2"),
+					resource.TestCheckResourceAttr(resourceNameVMClone, "num_threads_per_core", "2"),
 				),
 			},
 		},
@@ -47,11 +47,11 @@ func TestAccNutanixVmsCloneV2Resource_WithGuestCustomization(t *testing.T) {
 			{
 				Config: testVmsCloneV2WithGuestCustomizationConfig(name, desc),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameVmClone, "name", fmt.Sprintf(`%[1]s-clone`, name)),
-					resource.TestCheckResourceAttr(resourceNameVmClone, "num_sockets", "2"),
-					resource.TestCheckResourceAttr(resourceNameVmClone, "num_cores_per_socket", "2"),
-					resource.TestCheckResourceAttr(resourceNameVmClone, "num_threads_per_core", "2"),
-					resource.TestCheckResourceAttr(resourceNameVmClone, "memory_size_bytes", "8589934592"),
+					resource.TestCheckResourceAttr(resourceNameVMClone, "name", fmt.Sprintf(`%[1]s-clone`, name)),
+					resource.TestCheckResourceAttr(resourceNameVMClone, "num_sockets", "2"),
+					resource.TestCheckResourceAttr(resourceNameVMClone, "num_cores_per_socket", "2"),
+					resource.TestCheckResourceAttr(resourceNameVMClone, "num_threads_per_core", "2"),
+					resource.TestCheckResourceAttr(resourceNameVMClone, "memory_size_bytes", "8589934592"),
 				),
 			},
 		},

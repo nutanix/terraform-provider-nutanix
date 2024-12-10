@@ -15,7 +15,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameVmShutdown = "data.nutanix_virtual_machine_v2.test"
+const resourceNameVMShutdown = "data.nutanix_virtual_machine_v2.test"
 
 func TestAccNutanixVmsShutdownV2Resource_Basic(t *testing.T) {
 	r := acctest.RandInt()
@@ -29,7 +29,7 @@ func TestAccNutanixVmsShutdownV2Resource_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			// 1. create a vm with ngt
 			{
-				Config: testVmV2Config(name, desc, "ON"),
+				Config: testVMV2Config(name, desc, "ON"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("nutanix_virtual_machine_v2.rtest", "id"),
 				),
@@ -40,14 +40,14 @@ func TestAccNutanixVmsShutdownV2Resource_Basic(t *testing.T) {
 					//sleep for 1 minute before installing ngt
 					time.Sleep(1 * time.Minute)
 				},
-				Config: testVmV2Config(name, desc, "ON") + testNGTConfig(),
+				Config: testVMV2Config(name, desc, "ON") + testNGTConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("nutanix_virtual_machine_v2.rtest", "power_state", "ON"),
 				),
 			},
 			// 3. create a vm shutdown action
 			{
-				Config: testVmV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("shutdown"),
+				Config: testVMV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("shutdown"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("nutanix_virtual_machine_v2.rtest", "id"),
 				),
@@ -58,14 +58,14 @@ func TestAccNutanixVmsShutdownV2Resource_Basic(t *testing.T) {
 					//sleep for 1 minute to allow the vm to shut down
 					time.Sleep(1 * time.Minute)
 				},
-				Config: testVmV2Config(name, desc, "OFF") + testNGTConfig() + testVmsShutdownV2Config("shutdown") + vmDataSource,
+				Config: testVMV2Config(name, desc, "OFF") + testNGTConfig() + testVmsShutdownV2Config("shutdown") + vmDataSource,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameVmShutdown, "power_state", "OFF"),
+					resource.TestCheckResourceAttr(resourceNameVMShutdown, "power_state", "OFF"),
 				),
 			},
 			// 5. power on the vm
 			{
-				Config: testVmV2Config(name, desc, "ON") + testNGTConfig(),
+				Config: testVMV2Config(name, desc, "ON") + testNGTConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("nutanix_virtual_machine_v2.rtest", "id"),
 				),
@@ -76,7 +76,7 @@ func TestAccNutanixVmsShutdownV2Resource_Basic(t *testing.T) {
 					//sleep for 1 Minute to allow the vm to power on
 					time.Sleep(1 * time.Minute)
 				},
-				Config: testVmV2Config(name, desc, "ON") + testNGTConfig(),
+				Config: testVMV2Config(name, desc, "ON") + testNGTConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("nutanix_virtual_machine_v2.rtest", "power_state", "ON"),
 				),
@@ -87,7 +87,7 @@ func TestAccNutanixVmsShutdownV2Resource_Basic(t *testing.T) {
 					//sleep for 1 Minute to allow the vm to power on
 					time.Sleep(1 * time.Minute)
 				},
-				Config: testVmV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("reboot"),
+				Config: testVMV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("reboot"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("nutanix_virtual_machine_v2.rtest", "id"),
 				),
@@ -98,14 +98,14 @@ func TestAccNutanixVmsShutdownV2Resource_Basic(t *testing.T) {
 					//sleep for 1 Minute to allow the vm to reboot
 					time.Sleep(1 * time.Minute)
 				},
-				Config: testVmV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("reboot") + vmDataSource,
+				Config: testVMV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("reboot") + vmDataSource,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameVmShutdown, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceNameVMShutdown, "power_state", "ON"),
 				),
 			},
 			// 9. guest_reboot the vm
 			{
-				Config: testVmV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("guest_reboot"),
+				Config: testVMV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("guest_reboot"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("nutanix_virtual_machine_v2.rtest", "id"),
 				),
@@ -116,14 +116,14 @@ func TestAccNutanixVmsShutdownV2Resource_Basic(t *testing.T) {
 					//sleep for 2 Minute to allow the vm to reboot
 					time.Sleep(2 * time.Minute)
 				},
-				Config: testVmV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("guest_reboot") + vmDataSource,
+				Config: testVMV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("guest_reboot") + vmDataSource,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameVmShutdown, "power_state", "ON"),
+					resource.TestCheckResourceAttr(resourceNameVMShutdown, "power_state", "ON"),
 				),
 			},
 			// 11. guest_shutdown the vm
 			{
-				Config: testVmV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("guest_shutdown"),
+				Config: testVMV2Config(name, desc, "ON") + testNGTConfig() + testVmsShutdownV2Config("guest_shutdown"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("nutanix_virtual_machine_v2.rtest", "id"),
 				),
@@ -134,14 +134,14 @@ func TestAccNutanixVmsShutdownV2Resource_Basic(t *testing.T) {
 					//sleep for 2 Minute to allow the vm to shut down
 					time.Sleep(2 * time.Minute)
 				},
-				Config: testVmV2Config(name, desc, "OFF") + testNGTConfig() + testVmsShutdownV2Config("guest_shutdown") + vmDataSource,
+				Config: testVMV2Config(name, desc, "OFF") + testNGTConfig() + testVmsShutdownV2Config("guest_shutdown") + vmDataSource,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceNameVmShutdown, "power_state", "OFF"),
+					resource.TestCheckResourceAttr(resourceNameVMShutdown, "power_state", "OFF"),
 				),
 			},
 			// 13. power on the vm to uninstall ngt and delete the vm
 			{
-				Config: testVmV2Config(name, desc, "ON") + testNGTConfig(),
+				Config: testVMV2Config(name, desc, "ON") + testNGTConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("nutanix_virtual_machine_v2.rtest", "id"),
 				),
@@ -152,7 +152,7 @@ func TestAccNutanixVmsShutdownV2Resource_Basic(t *testing.T) {
 					//sleep for 1 Minute to allow the vm to power on
 					time.Sleep(1 * time.Minute)
 				},
-				Config: testVmV2Config(name, desc, "ON") + testNGTConfig(),
+				Config: testVMV2Config(name, desc, "ON") + testNGTConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("nutanix_virtual_machine_v2.rtest", "id"),
 				),
@@ -195,7 +195,7 @@ func TestAccNutanixVmsShutdownV2Resource_WithError(t *testing.T) {
 	})
 }
 
-func testVmV2Config(name, desc, powerState string) string {
+func testVMV2Config(name, desc, powerState string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
 

@@ -134,8 +134,8 @@ func ResourceNutanixSamlIdpV2Create(ctx context.Context, d *schema.ResourceData,
 		log.Printf("idp metadata: %v", idpMetadata)
 		input.IdpMetadata = expandIdpMetadata(idpMetadata)
 	}
-	if idpMetaXml, ok := d.GetOk("idp_metadata_xml"); ok {
-		input.IdpMetadataXml = utils.StringPtr(idpMetaXml.(string))
+	if idpMetaXML, ok := d.GetOk("idp_metadata_xml"); ok {
+		input.IdpMetadataXml = utils.StringPtr(idpMetaXML.(string))
 	}
 	if name, ok := d.GetOk("name"); ok {
 		input.Name = utils.StringPtr(name.(string))
@@ -339,17 +339,17 @@ func expandIdpMetadata(pr interface{}) *import1.IdpMetadata {
 		if entityID, ok := val["entity_id"]; ok {
 			idp.EntityId = utils.StringPtr(entityID.(string))
 		}
-		if loginUrl, ok := val["login_url"]; ok {
-			idp.LoginUrl = utils.StringPtr(loginUrl.(string))
+		if loginURL, ok := val["login_url"]; ok {
+			idp.LoginUrl = utils.StringPtr(loginURL.(string))
 		}
-		if logoutUrl, ok := val["logout_url"]; ok {
-			idp.LogoutUrl = utils.StringPtr(logoutUrl.(string))
+		if logoutURL, ok := val["logout_url"]; ok {
+			idp.LogoutUrl = utils.StringPtr(logoutURL.(string))
 		}
-		if errorUrl, ok := val["error_url"]; ok {
-			log.Printf("error url: %v", errorUrl)
-			if errorUrl != "" {
+		if errorURL, ok := val["error_url"]; ok {
+			log.Printf("error url: %v", errorURL)
+			if errorURL != "" {
 				log.Printf("idp error url: %v", idp.ErrorUrl)
-				idp.ErrorUrl = utils.StringPtr(errorUrl.(string))
+				idp.ErrorUrl = utils.StringPtr(errorURL.(string))
 			} else {
 				idp.ErrorUrl = nil
 			}

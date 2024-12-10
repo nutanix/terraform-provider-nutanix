@@ -838,7 +838,7 @@ func ResourceNutanixClusterV2Read(ctx context.Context, d *schema.ResourceData, m
 
 	if d.Get("ext_id").(string) == "" {
 		log.Printf("[DEBUG] ResourceNutanixClusterV2Read : extID is empty")
-		err := getClusterExtId(d, conn)
+		err := getClusterExtID(d, conn)
 		if err != nil {
 			log.Printf("[DEBUG] ResourceNutanixClusterV2Read : Cluster not found, err -> %v", err)
 			return diag.Errorf("error while fetching cluster : %v", err)
@@ -911,7 +911,7 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 
 	if d.Get("ext_id").(string) == "" {
 		log.Printf("[DEBUG] ResourceNutanixClusterV2Update : Cluster not found, extID is empty")
-		err := getClusterExtId(d, conn)
+		err := getClusterExtID(d, conn)
 		if err != nil {
 			log.Printf("[DEBUG] ResourceNutanixClusterV2Update : Cluster not found, err -> %v", err)
 			return diag.Errorf("error while fetching cluster : %v", err)
@@ -1010,7 +1010,7 @@ func ResourceNutanixClusterV2Delete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if d.Get("ext_id").(string) == "" {
-		err := getClusterExtId(d, conn)
+		err := getClusterExtID(d, conn)
 		if err != nil {
 			log.Printf("[DEBUG] ResourceNutanixClusterV2Delete : error while fetching cluster : %v", err)
 			return diag.Errorf("error while fetching cluster : %v", err)
@@ -1099,7 +1099,7 @@ func getTaskStatus(pr *import2.TaskStatus) string {
 	return "UNKNOWN"
 }
 
-func getClusterExtId(d *schema.ResourceData, conn *clusters.Client) error {
+func getClusterExtID(d *schema.ResourceData, conn *clusters.Client) error {
 	var filter string
 	if d.HasChange("name") {
 		// if name changed, get the old name to fetch the cluster, since the name will be updated after update request
@@ -1109,7 +1109,7 @@ func getClusterExtId(d *schema.ResourceData, conn *clusters.Client) error {
 		filter = fmt.Sprintf(`name eq '%s'`, d.Get("name").(string))
 	}
 
-	log.Printf("[DEBUG] getClusterExtId filter : %s", filter)
+	log.Printf("[DEBUG] getClusterExtID filter : %s", filter)
 
 	// get Cluster Ext Id
 	listResp, err := conn.ClusterEntityAPI.ListClusters(nil, nil, utils.StringPtr(filter), nil, nil, nil, nil)
@@ -1118,21 +1118,21 @@ func getClusterExtId(d *schema.ResourceData, conn *clusters.Client) error {
 	}
 
 	if listResp.Data == nil {
-		log.Printf("[DEBUG] getClusterExtId Cluster not found, clustersResponse.Data is nil")
+		log.Printf("[DEBUG] getClusterExtID Cluster not found, clustersResponse.Data is nil")
 		return fmt.Errorf("cluster not found : %v", err)
 	}
 	cls := listResp.Data.GetValue().([]config.Cluster)
 
 	if len(cls) == 0 {
-		log.Printf("[DEBUG] getClusterExtId Cluster not found, len(clusters) is 0")
+		log.Printf("[DEBUG] getClusterExtID Cluster not found, len(clusters) is 0")
 		return fmt.Errorf("cluster not found : %v", err)
 	}
 	extID := utils.StringValue(cls[0].ExtId)
 	if extID == "" {
-		log.Printf("[DEBUG] getClusterExtId Cluster not found, extID is empty")
+		log.Printf("[DEBUG] getClusterExtID Cluster not found, extID is empty")
 		return fmt.Errorf("cluster not found : %v", err)
 	}
-	log.Printf("[DEBUG] getClusterExtId Cluster found, extId : %s", extID)
+	log.Printf("[DEBUG] getClusterExtID Cluster found, extId : %s", extID)
 	d.SetId(extID)
 	err = d.Set("ext_id", extID)
 	if err != nil {

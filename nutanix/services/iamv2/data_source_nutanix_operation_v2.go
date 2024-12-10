@@ -148,9 +148,9 @@ func flattenAssociatedEndpointList(pr []import1.AssociatedEndpoint) []map[string
 		for _, v := range pr {
 			endpoint := make(map[string]interface{})
 
-			endpoint["api_version"] = flattenApiVersion(v.ApiVersion)
+			endpoint["api_version"] = flattenAPIVersion(v.ApiVersion)
 			endpoint["endpoint_url"] = v.EndpointUrl
-			endpoint["http_method"] = flattenHttpMethod(v.HttpMethod)
+			endpoint["http_method"] = flattenHTTPMethod(v.HttpMethod)
 
 			endpoints = append(endpoints, endpoint)
 		}
@@ -159,7 +159,7 @@ func flattenAssociatedEndpointList(pr []import1.AssociatedEndpoint) []map[string
 	return nil
 }
 
-func flattenApiVersion(pr *import1.ApiVersion) string {
+func flattenAPIVersion(pr *import1.ApiVersion) string {
 	if pr != nil {
 		const two, three = 2, 3
 		if *pr == import1.ApiVersion(two) {
@@ -172,7 +172,7 @@ func flattenApiVersion(pr *import1.ApiVersion) string {
 	return "UNKNOWN"
 }
 
-func flattenHttpMethod(pr *import1.HttpMethod) string {
+func flattenHTTPMethod(pr *import1.HttpMethod) string {
 	if pr != nil {
 		const two, three, four, five, six = 2, 3, 4, 5, 6
 		if *pr == import1.HttpMethod(two) {

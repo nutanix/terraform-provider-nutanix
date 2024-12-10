@@ -193,16 +193,16 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 	conn := meta.(*conns.Client).ClusterAPI
 	body := &clustermgmtConfig.StorageContainer{}
 
-	clusterExtId := d.Get("cluster_ext_id")
+	clusterExtID := d.Get("cluster_ext_id")
 
-	if extId, ok := d.GetOk("ext_id"); ok {
-		body.ExtId = utils.StringPtr(extId.(string))
+	if extID, ok := d.GetOk("ext_id"); ok {
+		body.ExtId = utils.StringPtr(extID.(string))
 	}
-	if containerExtId, ok := d.GetOk("container_ext_id"); ok {
-		body.ContainerExtId = utils.StringPtr(containerExtId.(string))
+	if containerExtID, ok := d.GetOk("container_ext_id"); ok {
+		body.ContainerExtId = utils.StringPtr(containerExtID.(string))
 	}
-	if ownerExtId, ok := d.GetOk("owner_ext_id"); ok {
-		body.OwnerExtId = utils.StringPtr(ownerExtId.(string))
+	if ownerExtID, ok := d.GetOk("owner_ext_id"); ok {
+		body.OwnerExtId = utils.StringPtr(ownerExtID.(string))
 	}
 	if name, ok := d.GetOk("name"); ok {
 		body.Name = utils.StringPtr(name.(string))
@@ -240,7 +240,7 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 		body.HasHigherEcFaultDomainPreference = utils.BoolPtr(hasHigherEcFaultDomainPreference.(bool))
 	}
 	if erasureCodeDelaySecs, ok := d.GetOk("erasure_code_delay_secs"); ok {
-		body.ErasureCodeDelaySecs = utils.IntPtr(int(erasureCodeDelaySecs.(int)))
+		body.ErasureCodeDelaySecs = utils.IntPtr(erasureCodeDelaySecs.(int))
 	}
 	if cacheDeduplication, ok := d.GetOk("cache_deduplication"); ok {
 		const two, three, four = 2, 3, 4
@@ -268,21 +268,21 @@ func ResourceNutanixStorageContainersV2Create(ctx context.Context, d *schema.Res
 		body.IsCompressionEnabled = utils.BoolPtr(isCompressionEnabled.(bool))
 	}
 	if compressionDelaySecs, ok := d.GetOk("compression_delay_secs"); ok {
-		body.CompressionDelaySecs = utils.IntPtr(int(compressionDelaySecs.(int)))
+		body.CompressionDelaySecs = utils.IntPtr(compressionDelaySecs.(int))
 	}
 	if isInternal, ok := d.GetOk("is_internal"); ok {
-		body.IsInternal = utils.BoolPtr(bool(isInternal.(bool)))
+		body.IsInternal = utils.BoolPtr(isInternal.(bool))
 	}
 	if isSoftwareEncryptionEnabled, ok := d.GetOk("is_software_encryption_enabled"); ok {
 		body.IsSoftwareEncryptionEnabled = utils.BoolPtr(isSoftwareEncryptionEnabled.(bool))
 	}
-	if affinityHostExtId, ok := d.GetOk("affinity_host_ext_id"); ok {
-		body.AffinityHostExtId = utils.StringPtr(affinityHostExtId.(string))
+	if affinityHostExtID, ok := d.GetOk("affinity_host_ext_id"); ok {
+		body.AffinityHostExtId = utils.StringPtr(affinityHostExtID.(string))
 	}
 
 	jsonBody, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] create storage container body: %s", string(jsonBody))
-	resp, err := conn.StorageContainersAPI.CreateStorageContainer(body, utils.StringPtr(clusterExtId.(string)))
+	resp, err := conn.StorageContainersAPI.CreateStorageContainer(body, utils.StringPtr(clusterExtID.(string)))
 	if err != nil {
 		return diag.Errorf("error while creating storage containers : %v", err)
 	}

@@ -448,7 +448,7 @@ func ResourceNutanixRecoveryPointsV2Read(ctx context.Context, d *schema.Resource
 			respVMRpExtID := utils.StringValue(respRecoveryPoint.ExtId)
 			if resVMRpExtID == respVMRpExtID {
 				log.Printf("[DEBUG] Removing VM Recovery Point with Ext Id: %v", respVMRpExtID)
-				respRecoveryPoints = removeVmRecoveryPointByExtId(respRecoveryPoints, respRecoveryPoint)
+				respRecoveryPoints = removeVMRecoveryPointByExtID(respRecoveryPoints, respRecoveryPoint)
 			}
 		}
 	}
@@ -468,11 +468,11 @@ func ResourceNutanixRecoveryPointsV2Read(ctx context.Context, d *schema.Resource
 	// Remove the Volume Group Recovery Points that are present in the resource and in the response
 	for _, volumeGroupRecoveryPoint := range resourceVolumeGroupRecoveryPoints {
 		for _, respVolumeGroupRecoveryPoint := range getResp.VolumeGroupRecoveryPoints {
-			resVolumeGroupRpExtId := volumeGroupRecoveryPoint.(map[string]interface{})["ext_id"]
-			respVolumeGroupRpExtId := utils.StringValue(respVolumeGroupRecoveryPoint.ExtId)
-			if resVolumeGroupRpExtId == respVolumeGroupRpExtId {
-				log.Printf("[DEBUG] Removing Volume Group Recovery Point with Ext Id: %v", respVolumeGroupRpExtId)
-				respVolumeGroupRecoveryPoints = removeVolumeGroupRecoveryPointByExtId(respVolumeGroupRecoveryPoints, respVolumeGroupRecoveryPoint)
+			resVolumeGroupRpExtID := volumeGroupRecoveryPoint.(map[string]interface{})["ext_id"]
+			respVolumeGroupRpExtID := utils.StringValue(respVolumeGroupRecoveryPoint.ExtId)
+			if resVolumeGroupRpExtID == respVolumeGroupRpExtID {
+				log.Printf("[DEBUG] Removing Volume Group Recovery Point with Ext Id: %v", respVolumeGroupRpExtID)
+				respVolumeGroupRecoveryPoints = removeVolumeGroupRecoveryPointByExtID(respVolumeGroupRecoveryPoints, respVolumeGroupRecoveryPoint)
 			}
 		}
 	}
@@ -595,8 +595,8 @@ func expandVolumeGroupRecoveryPoints(volumeGroupRecoveryPoints []interface{}) []
 	for _, volumeGroupRecoveryPoint := range volumeGroupRecoveryPoints {
 		volumeGroupRecoveryPointMap := volumeGroupRecoveryPoint.(map[string]interface{})
 		volumeGroupRecoveryPointObj := config.VolumeGroupRecoveryPoint{}
-		if volumeGroupExtId, ok := volumeGroupRecoveryPointMap["volume_group_ext_id"]; ok {
-			volumeGroupRecoveryPointObj.VolumeGroupExtId = utils.StringPtr(volumeGroupExtId.(string))
+		if volumeGroupExtID, ok := volumeGroupRecoveryPointMap["volume_group_ext_id"]; ok {
+			volumeGroupRecoveryPointObj.VolumeGroupExtId = utils.StringPtr(volumeGroupExtID.(string))
 		}
 		volumeGroupRecoveryPointsList = append(volumeGroupRecoveryPointsList, volumeGroupRecoveryPointObj)
 	}
@@ -613,8 +613,8 @@ func expandVMRecoveryPoints(vmRecoveryPoints []interface{}) ([]config.VmRecovery
 	for _, vmRecoveryPoint := range vmRecoveryPoints {
 		vmRecoveryPointMap := vmRecoveryPoint.(map[string]interface{})
 		vmRecoveryPointObj := config.VmRecoveryPoint{}
-		if vmExtId, ok := vmRecoveryPointMap["vm_ext_id"]; ok {
-			vmRecoveryPointObj.VmExtId = utils.StringPtr(vmExtId.(string))
+		if vmExtID, ok := vmRecoveryPointMap["vm_ext_id"]; ok {
+			vmRecoveryPointObj.VmExtId = utils.StringPtr(vmExtID.(string))
 		}
 		if applicationConsistentProperties, ok := vmRecoveryPointMap["application_consistent_properties"]; ok {
 			appConsistentPropList := applicationConsistentProperties.([]interface{})
@@ -683,7 +683,7 @@ func expandApplicationConsistentProperties(appConsistentProp interface{}) (*conf
 	log.Printf("[DEBUG] application consistent properties: %v", appConsistentProp)
 	appConsistentPropList := appConsistentProp.([]interface{})
 	appConsistentPropVal := appConsistentPropList[0].(map[string]interface{})
-	oneOfVmRecoveryPointApplicationConsistentPropertiesObj := config.OneOfVmRecoveryPointApplicationConsistentProperties{}
+	oneOfVMRecoveryPointApplicationConsistentPropertiesObj := config.OneOfVmRecoveryPointApplicationConsistentProperties{}
 	appConsistentPropObj := common.NewVssProperties()
 	if backupType, ok := appConsistentPropVal["backup_type"]; ok {
 		const two, three = 2, 3
@@ -707,12 +707,12 @@ func expandApplicationConsistentProperties(appConsistentProp interface{}) (*conf
 	if objectType, ok := appConsistentPropVal["object_type"]; ok {
 		appConsistentPropObj.ObjectType_ = utils.StringPtr(objectType.(string))
 	}
-	err := oneOfVmRecoveryPointApplicationConsistentPropertiesObj.SetValue(*appConsistentPropObj)
+	err := oneOfVMRecoveryPointApplicationConsistentPropertiesObj.SetValue(*appConsistentPropObj)
 	if err != nil {
 		log.Printf("[ERROR] error while setting value for OneOfVmRecoveryPointApplicationConsistentProperties: %v", err)
 		return nil, err
 	}
-	return &oneOfVmRecoveryPointApplicationConsistentPropertiesObj, nil
+	return &oneOfVMRecoveryPointApplicationConsistentPropertiesObj, nil
 }
 
 func expandWritersList(writers []interface{}) []string {
@@ -771,7 +771,7 @@ func getTaskStatus(pr *prismConfig.TaskStatus) string {
 }
 
 // Function to remove a Vm recovery Point with a specific Ext Id from the slice
-func removeVmRecoveryPointByExtId(recoveryPoints []config.VmRecoveryPoint, recoveryPoint config.VmRecoveryPoint) []config.VmRecoveryPoint {
+func removeVMRecoveryPointByExtID(recoveryPoints []config.VmRecoveryPoint, recoveryPoint config.VmRecoveryPoint) []config.VmRecoveryPoint {
 	var result []config.VmRecoveryPoint // Create a new slice to hold the result
 
 	for _, rp := range recoveryPoints {
@@ -783,7 +783,7 @@ func removeVmRecoveryPointByExtId(recoveryPoints []config.VmRecoveryPoint, recov
 }
 
 // Function to remove a Volume Group recovery Point with a specific Ext Id from the slice
-func removeVolumeGroupRecoveryPointByExtId(recoveryPoints []config.VolumeGroupRecoveryPoint, recoveryPoint config.VolumeGroupRecoveryPoint) []config.VolumeGroupRecoveryPoint {
+func removeVolumeGroupRecoveryPointByExtID(recoveryPoints []config.VolumeGroupRecoveryPoint, recoveryPoint config.VolumeGroupRecoveryPoint) []config.VolumeGroupRecoveryPoint {
 	var result []config.VolumeGroupRecoveryPoint // Create a new slice to hold the result
 
 	for _, rp := range recoveryPoints {

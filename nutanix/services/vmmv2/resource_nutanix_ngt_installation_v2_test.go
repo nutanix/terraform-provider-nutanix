@@ -137,7 +137,7 @@ func TestAccNutanixNGTInstallationV2Resource_WithNoVmExtId(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testNGTInstallationResourceWithoutVmExtIdConfig(),
+				Config:      testNGTInstallationResourceWithoutVMExtIDConfig(),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 		},
@@ -291,7 +291,7 @@ func testNGTInstallationResourceConfigLATERReboot() string {
 	}`
 }
 
-func testNGTInstallationResourceWithoutVmExtIdConfig() string {
+func testNGTInstallationResourceWithoutVMExtIDConfig() string {
 	return `
 		resource "nutanix_ngt_installation_v2" "test" {
 			credential {

@@ -1592,10 +1592,11 @@ func expandOneOfCloneVMBootConfig(pr interface{}) *config.OneOfCloneOverridePara
 				orders := make([]config.BootDeviceType, bootOrderLen)
 
 				for k, v := range bootOrder.([]interface{}) {
+					const two, three, four = 2, 3, 4
 					subMap := map[string]interface{}{
-						"CDROM":   2,
-						"DISK":    3,
-						"NETWORK": 4,
+						"CDROM":   two,
+						"DISK":    three,
+						"NETWORK": four,
 					}
 					pVal := subMap[v.(string)]
 					p := config.BootDeviceType(pVal.(int))

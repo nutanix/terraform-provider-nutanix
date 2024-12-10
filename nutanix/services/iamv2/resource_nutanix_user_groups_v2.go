@@ -62,9 +62,10 @@ func ResourceNutanixUserGroupsV4Create(ctx context.Context, d *schema.ResourceDa
 	input := &import1.UserGroup{}
 
 	if gType, ok := d.GetOk("group_type"); ok {
+		const two, three = 2, 3
 		subMap := map[string]interface{}{
-			"SAML": 2,
-			"LDAP": 3,
+			"SAML": two,
+			"LDAP": three,
 		}
 		pInt := subMap[gType.(string)]
 		p := import1.GroupType(pInt.(int))

@@ -93,7 +93,7 @@ func DatasourceNutanixVolumeIscsiClientsV2() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ipv4": SchemaForIPV4ValuePrefixLength(),
-									"ipv6": SchemaForIpV6ValuePrefixLength(),
+									"ipv6": SchemaForIPV6ValuePrefixLength(),
 									"fqdn": {
 										Description: "A fully qualified domain name that specifies its exact location in the tree hierarchy of the Domain Name System.",
 										Type:        schema.TypeList,

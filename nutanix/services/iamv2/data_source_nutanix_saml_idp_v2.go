@@ -180,7 +180,7 @@ func flattenIdpMetadata(pr *import1.IdpMetadata) []map[string]interface{} {
 		idp["error_url"] = pr.ErrorUrl
 		idp["certificate"] = pr.Certificate
 		if pr.NameIdPolicyFormat != nil {
-			idp["name_id_policy_format"] = flattenNameIdPolicyFormat(pr.NameIdPolicyFormat)
+			idp["name_id_policy_format"] = flattenNameIDPolicyFormat(pr.NameIdPolicyFormat)
 		}
 
 		idps = append(idps, idp)
@@ -189,7 +189,7 @@ func flattenIdpMetadata(pr *import1.IdpMetadata) []map[string]interface{} {
 	return nil
 }
 
-func flattenNameIdPolicyFormat(pr *import1.NameIdPolicyFormat) string {
+func flattenNameIDPolicyFormat(pr *import1.NameIdPolicyFormat) string {
 	if pr != nil {
 		const two, three, four, five, six, seven, eight, nine, ten = 2, 3, 4, 5, 6, 7, 8, 9, 10
 

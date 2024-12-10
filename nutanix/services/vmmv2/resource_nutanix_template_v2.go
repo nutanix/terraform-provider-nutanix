@@ -2301,10 +2301,11 @@ func expandTemplateVMSpec(vmSpec interface{}) *vmmConfig.Vm {
 			vm.SerialPorts = expandSerialPort(serialPorts.([]interface{}))
 		}
 		if protectionType, ok := vmVal["protection_type"]; ok && protectionType != "" {
+			const two, three, four = 2, 3, 4
 			subMap := map[string]interface{}{
-				"UNPROTECTED":    2,
-				"PD_PROTECTED":   3,
-				"RULE_PROTECTED": 4,
+				"UNPROTECTED":    two,
+				"PD_PROTECTED":   three,
+				"RULE_PROTECTED": four,
 			}
 			pVal := subMap[protectionType.(string)]
 			p := vmmConfig.ProtectionType(pVal.(int))
@@ -2505,8 +2506,9 @@ func expandTemplateGuestCustomizationConfig(config interface{}) *vmmConfig.OneOf
 
 			if datasourceType, ok := cloudInitData["datasource_type"]; ok && len(datasourceType.(string)) > 0 {
 				if datasourceType != nil && datasourceType != "" {
+					const two = 2
 					subMap := map[string]interface{}{
-						"CONFIG_DRIVE_V2": 2,
+						"CONFIG_DRIVE_V2": two,
 					}
 					pVal := subMap[datasourceType.(string)]
 					if pVal == nil {
@@ -2616,10 +2618,10 @@ func expandTemplateCustomKeyValuesPairs(customKeyValues interface{}) *vmmConfig.
 	return nil
 }
 
-func expandTemplateUnattendXML(unattendXml interface{}) *vmmConfig.Unattendxml {
-	if unattendXml != nil {
+func expandTemplateUnattendXML(unattendXML interface{}) *vmmConfig.Unattendxml {
+	if unattendXML != nil {
 		unattendXMLObj := vmmConfig.NewUnattendxml()
-		unattendXMLData := unattendXml.([]interface{})
+		unattendXMLData := unattendXML.([]interface{})
 
 		if len(unattendXMLData) > 0 {
 			if value, ok := unattendXMLData[0].(map[string]interface{})["unattend_xml"]; ok {

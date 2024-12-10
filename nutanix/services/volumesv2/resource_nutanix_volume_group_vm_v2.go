@@ -51,19 +51,19 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2() *schema.Resource {
 func ResourceNutanixVolumeAttachVMToVolumeGroupV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VolumeAPI
 
-	volumeGroupExtId := d.Get("volume_group_ext_id")
+	volumeGroupExtID := d.Get("volume_group_ext_id")
 
 	body := volumesClient.VmAttachment{}
 
-	if vmExtId, ok := d.GetOk("vm_ext_id"); ok {
-		body.ExtId = utils.StringPtr(vmExtId.(string))
+	if vmExtID, ok := d.GetOk("vm_ext_id"); ok {
+		body.ExtId = utils.StringPtr(vmExtID.(string))
 	}
 
 	if index, ok := d.GetOk("index"); ok {
 		body.Index = utils.IntPtr(index.(int))
 	}
 
-	resp, err := conn.VolumeAPIInstance.AttachVm(utils.StringPtr(volumeGroupExtId.(string)), &body)
+	resp, err := conn.VolumeAPIInstance.AttachVm(utils.StringPtr(volumeGroupExtID.(string)), &body)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
@@ -127,7 +127,7 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Update(ctx context.Context, d *
 func ResourceNutanixVolumeAttachVMToVolumeGroupV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).VolumeAPI
 
-	volumeGroupExtId := d.Get("volume_group_ext_id")
+	volumeGroupExtID := d.Get("volume_group_ext_id")
 
 	body := volumesClient.VmAttachment{}
 
@@ -139,7 +139,7 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Delete(ctx context.Context, d *
 		body.Index = utils.IntPtr(index.(int))
 	}
 
-	resp, err := conn.VolumeAPIInstance.DetachVm(utils.StringPtr(volumeGroupExtId.(string)), &body)
+	resp, err := conn.VolumeAPIInstance.DetachVm(utils.StringPtr(volumeGroupExtID.(string)), &body)
 	if err != nil {
 		var errordata map[string]interface{}
 		e := json.Unmarshal([]byte(err.Error()), &errordata)
