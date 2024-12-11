@@ -16,7 +16,7 @@ const (
 	timeSleep                = 2 * time.Minute
 )
 
-func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmHaveNGT(t *testing.T) {
+func TestAccV2NutanixNGTInsertIsoResource_InsertNGTIsoIntoVmHaveNGT(t *testing.T) {
 	r := acctest.RandInt()
 	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
@@ -74,7 +74,7 @@ func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmHaveNGT(t *testing.T
 	})
 }
 
-func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmHaveNGTIsConfigFalse(t *testing.T) {
+func TestAccV2NutanixNGTInsertIsoResource_InsertNGTIsoIntoVmHaveNGTIsConfigFalse(t *testing.T) {
 	r := acctest.RandInt()
 	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
@@ -132,7 +132,7 @@ func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmHaveNGTIsConfigFalse
 	})
 }
 
-func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmDoseNotHaveNGT(t *testing.T) {
+func TestAccV2NutanixNGTInsertIsoResource_InsertNGTIsoIntoVmDoseNotHaveNGT(t *testing.T) {
 	r := acctest.RandInt()
 	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
@@ -167,7 +167,7 @@ func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmDoseNotHaveNGT(t *te
 	})
 }
 
-func TestAccNutanixNGTInsertIsoV2Resource_InsertNGTIsoIntoVmDoseNotHaveNGTIsConfigFalse(t *testing.T) {
+func TestAccV2NutanixNGTInsertIsoResource_InsertNGTIsoIntoVmDoseNotHaveNGTIsConfigFalse(t *testing.T) {
 	r := acctest.RandInt()
 	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 

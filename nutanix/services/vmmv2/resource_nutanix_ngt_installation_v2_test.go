@@ -15,7 +15,7 @@ const (
 	resourceNameNGTInstallation = "nutanix_ngt_installation_v2.test"
 )
 
-func TestAccNutanixNGTInstallationV2Resource_InstallNGTWithRebootPreferenceSetToIMMEDIATE(t *testing.T) {
+func TestAccV2NutanixNGTInstallationResource_InstallNGTWithRebootPreferenceSetToIMMEDIATE(t *testing.T) {
 	r := acctest.RandInt()
 	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
@@ -67,7 +67,7 @@ func TestAccNutanixNGTInstallationV2Resource_InstallNGTWithRebootPreferenceSetTo
 	})
 }
 
-func TestAccNutanixNGTInstallationV2Resource_InstallNGTWithRebootPreferenceSetToLATER(t *testing.T) {
+func TestAccV2NutanixNGTInstallationResource_InstallNGTWithRebootPreferenceSetToLATER(t *testing.T) {
 	r := acctest.RandInt()
 	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
@@ -101,7 +101,7 @@ func TestAccNutanixNGTInstallationV2Resource_InstallNGTWithRebootPreferenceSetTo
 	})
 }
 
-func TestAccNutanixNGTInstallationV2Resource_InstallNGTWithRebootPreferenceSetToSKIP(t *testing.T) {
+func TestAccV2NutanixNGTInstallationResource_InstallNGTWithRebootPreferenceSetToSKIP(t *testing.T) {
 	r := acctest.RandInt()
 	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
@@ -133,7 +133,7 @@ func TestAccNutanixNGTInstallationV2Resource_InstallNGTWithRebootPreferenceSetTo
 	})
 }
 
-func TestAccNutanixNGTInstallationV2Resource_WithNoVmExtId(t *testing.T) {
+func TestAccV2NutanixNGTInstallationResource_WithNoVmExtId(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -146,7 +146,7 @@ func TestAccNutanixNGTInstallationV2Resource_WithNoVmExtId(t *testing.T) {
 	})
 }
 
-func TestAccNutanixNGTInstallationV2Resource_UpdateNGT(t *testing.T) {
+func TestAccV2NutanixNGTInstallationResource_UpdateNGT(t *testing.T) {
 	r := acctest.RandInt()
 	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 

@@ -11,7 +11,7 @@ import (
 
 const datasourceNameImages = "data.nutanix_images_v2.test"
 
-func TestAccNutanixImagesV2DataSource_Basic(t *testing.T) {
+func TestAccV2NutanixImagesDatasource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-image-%d", r)
 	desc := "test image description"
@@ -30,7 +30,7 @@ func TestAccNutanixImagesV2DataSource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixImagesV2DataSource_WithFilters(t *testing.T) {
+func TestAccV2NutanixImagesDatasource_WithFilters(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-image-%d", r)
 	desc := "test image description"

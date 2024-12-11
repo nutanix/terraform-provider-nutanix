@@ -11,7 +11,7 @@ import (
 
 const resourceNameVMGCUpdate = "nutanix_vm_gc_update_v2.test"
 
-func TestAccNutanixVmsGCUpdateV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixVmsGCUpdateResource_Basic(t *testing.T) {
 	// t.Skip("Skipping test as it requires GCUpdate")
 	r := acctest.RandInt()
 	vmName := fmt.Sprintf("tf-test-vm-%d", r)

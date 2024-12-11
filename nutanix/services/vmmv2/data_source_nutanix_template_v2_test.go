@@ -11,7 +11,7 @@ import (
 
 const datasourceNameTemplate = "data.nutanix_template_v2.test"
 
-func TestAccNutanixTemplateV2Datasource_Basic(t *testing.T) {
+func TestAccV2NutanixTemplateDatasource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
@@ -22,7 +22,7 @@ func TestAccNutanixTemplateV2Datasource_Basic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testTemplateV2DatasourceConfig(name, desc, templateName, templateDesc),
+				Config: testTemplateDatasourceConfig(name, desc, templateName, templateDesc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameTemplate, "ext_id"),
 					resource.TestCheckResourceAttr(datasourceNameTemplate, "template_name", templateName),
@@ -40,7 +40,7 @@ func TestAccNutanixTemplateV2Datasource_Basic(t *testing.T) {
 	})
 }
 
-func testTemplateV2DatasourceConfig(name, desc, tempName, tempDesc string) string {
+func testTemplateDatasourceConfig(name, desc, tempName, tempDesc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
 
