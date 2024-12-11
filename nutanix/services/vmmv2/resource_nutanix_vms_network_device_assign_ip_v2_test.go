@@ -11,7 +11,7 @@ import (
 
 const resourceNameVMNetworkDeviceAssignIP = "nutanix_vm_network_device_assign_ip_v2.test"
 
-func TestAccNutanixVmsNetworkDeviceAssignIpV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixVmsNetworkDeviceAssignIpResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	vmName := fmt.Sprintf("test-vm-%d", r)
 

@@ -19,6 +19,11 @@ const (
 )
 
 func TestAccV2NutanixClusterAddNodeResource_Basic(t *testing.T) {
+	if testVars.Clusters.Nodes[1].CvmIP == "" &&
+		testVars.Clusters.Nodes[2].CvmIP == "" &&
+		testVars.Clusters.Nodes[3].CvmIP == "" {
+		t.Skip("Skipping test as No available nodes to be used for testing")
+	}
 	r := acctest.RandInt()
 	clusterName := fmt.Sprintf("tf-3node-cluster-%d", r)
 
@@ -153,7 +158,7 @@ resource "nutanix_cluster_v2" "cluster-3nodes" {
   }
 
   provisioner "local-exec" {
-    command = " sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[1].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[1].username} password=${local.clusters.nodes[1].password}' "
+    command = "ssh-keygen -f "~/.ssh/known_hosts" -R "${local.clusters.nodes[0].cvm_ip}";  sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[1].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[1].username} password=${local.clusters.nodes[1].password}' "
 
     on_failure = continue
   }

@@ -11,7 +11,7 @@ import (
 
 const resourceNameVMNetworkDeviceMigrate = "nutanix_vm_network_device_migrate_v2.test"
 
-func TestAccNutanixVmsNetworkDeviceMigrateV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixVmsNetworkDeviceMigrateResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	vmName := fmt.Sprintf("nic-vm-%d", r)
 	resource.Test(t, resource.TestCase{

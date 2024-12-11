@@ -11,7 +11,7 @@ import (
 
 const resourceNameVMCdromInsertEject = "nutanix_vm_cdrom_insert_eject_v2.test"
 
-func TestAccNutanixVmsCdromInsertEjectV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixVmsCdromInsertEjectResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"

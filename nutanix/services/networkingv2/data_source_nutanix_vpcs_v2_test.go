@@ -11,7 +11,7 @@ import (
 
 const datasourceNameVPCs = "data.nutanix_vpcs_v2.test"
 
-func TestAccNutanixVpcsV2DataSource_Basic(t *testing.T) {
+func TestAccV2NutanixVpcsDataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vpc-%d", r)
 	desc := "test vpc description"
@@ -30,7 +30,7 @@ func TestAccNutanixVpcsV2DataSource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVpcsV2DataSource_WithLimit(t *testing.T) {
+func TestAccV2NutanixVpcsDataSource_WithLimit(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vpc-%d", r)
 	desc := "test vpc description"
@@ -49,7 +49,7 @@ func TestAccNutanixVpcsV2DataSource_WithLimit(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVpcsV2DataSource_WithFilter(t *testing.T) {
+func TestAccV2NutanixVpcsDataSource_WithFilter(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-vpc-%d", r)
 	desc := "test vpc description"

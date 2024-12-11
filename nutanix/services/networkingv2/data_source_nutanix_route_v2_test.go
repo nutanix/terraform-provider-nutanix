@@ -11,7 +11,7 @@ import (
 
 const datasourceNameRoute = "data.nutanix_route_v2.test"
 
-func TestAccNutanixRouteV2DataSource_Basic(t *testing.T) {
+func TestAccV2NutanixRouteDataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-route-%d", r)
 	desc := "test terraform route description"

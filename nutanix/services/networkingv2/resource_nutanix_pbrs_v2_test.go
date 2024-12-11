@@ -12,7 +12,7 @@ import (
 
 const resourceNamePbr = "nutanix_pbr_v2.test"
 
-func TestAccNutanixPbrV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixPbrResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-pbr-%d", r)
 	desc := "test pbr description"
@@ -35,7 +35,7 @@ func TestAccNutanixPbrV2Resource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixPbrV2Resource_WithSourceDest(t *testing.T) {
+func TestAccV2NutanixPbrResource_WithSourceDest(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-pbr-%d", r)
 	desc := "test pbr description"
@@ -58,7 +58,7 @@ func TestAccNutanixPbrV2Resource_WithSourceDest(t *testing.T) {
 	})
 }
 
-func TestAccNutanixPbrV2Resource_ErrorWithPriority(t *testing.T) {
+func TestAccV2NutanixPbrResource_ErrorWithPriority(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-pbr-%d", r)
 	desc := "test pbr description"

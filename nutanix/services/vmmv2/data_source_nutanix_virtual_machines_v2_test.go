@@ -9,7 +9,7 @@ import (
 
 const datasourceNameVM = "data.nutanix_virtual_machines_v2.test"
 
-func TestAccNutanixVmsV2DataSource_List(t *testing.T) {
+func TestAccV2NutanixVmsDatasource_List(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -24,7 +24,7 @@ func TestAccNutanixVmsV2DataSource_List(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2DataSource_ListWithFilters(t *testing.T) {
+func TestAccV2NutanixVmsDatasource_ListWithFilters(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -40,7 +40,7 @@ func TestAccNutanixVmsV2DataSource_ListWithFilters(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2DataSource_ListWithFilterName(t *testing.T) {
+func TestAccV2NutanixVmsDatasource_ListWithFilterName(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

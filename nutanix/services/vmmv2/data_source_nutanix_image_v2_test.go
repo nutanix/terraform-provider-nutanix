@@ -11,7 +11,7 @@ import (
 
 const datasourceNameImage = "data.nutanix_image_v2.test"
 
-func TestAccNutanixImageV2DataSource_Basic(t *testing.T) {
+func TestAccV2NutanixImageDatasource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-image-%d", r)
 	desc := "test image description"

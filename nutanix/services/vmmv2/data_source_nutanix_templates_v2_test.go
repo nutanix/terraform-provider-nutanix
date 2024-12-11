@@ -11,7 +11,7 @@ import (
 
 const datasourceNameTemplates = "data.nutanix_templates_v2.test"
 
-func TestAccNutanixTemplateV2Datasource_ListAllTemplates(t *testing.T) {
+func TestAccV2NutanixTemplateDatasource_ListAllTemplates(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
@@ -22,7 +22,7 @@ func TestAccNutanixTemplateV2Datasource_ListAllTemplates(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testTemplatesV2DatasourceConfig(name, desc, templateName, templateDesc),
+				Config: testTemplatesDatasourceConfig(name, desc, templateName, templateDesc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameTemplates, "templates.#"),
 				),
@@ -31,7 +31,7 @@ func TestAccNutanixTemplateV2Datasource_ListAllTemplates(t *testing.T) {
 	})
 }
 
-func TestAccNutanixTemplateV2Datasource_ListAllTemplatesWithFilter(t *testing.T) {
+func TestAccV2NutanixTemplateDatasource_ListAllTemplatesWithFilter(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
@@ -42,7 +42,7 @@ func TestAccNutanixTemplateV2Datasource_ListAllTemplatesWithFilter(t *testing.T)
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testTemplatesV2DatasourceFilterConfig(name, desc, templateName, templateDesc),
+				Config: testTemplatesDatasourceFilterConfig(name, desc, templateName, templateDesc),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameTemplates, "templates.#"),
 					resource.TestCheckResourceAttrSet(datasourceNameTemplates, "templates.0.ext_id"),
@@ -61,7 +61,7 @@ func TestAccNutanixTemplateV2Datasource_ListAllTemplatesWithFilter(t *testing.T)
 	})
 }
 
-func testTemplatesV2DatasourceConfig(name, desc, tempName, tempDesc string) string {
+func testTemplatesDatasourceConfig(name, desc, tempName, tempDesc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
 
@@ -101,7 +101,7 @@ func testTemplatesV2DatasourceConfig(name, desc, tempName, tempDesc string) stri
 `, name, desc, tempName, tempDesc)
 }
 
-func testTemplatesV2DatasourceFilterConfig(name, desc, tempName, tempDesc string) string {
+func testTemplatesDatasourceFilterConfig(name, desc, tempName, tempDesc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
 

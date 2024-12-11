@@ -11,7 +11,7 @@ import (
 
 const datasourceNameVMs = "data.nutanix_virtual_machine_v2.test"
 
-func TestAccNutanixVmsV2DataSource_Basic(t *testing.T) {
+func TestAccV2NutanixVmsDatasource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
@@ -37,7 +37,7 @@ func TestAccNutanixVmsV2DataSource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2DataSource_WithConfig(t *testing.T) {
+func TestAccV2NutanixVmsDatasource_WithConfig(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
@@ -68,7 +68,7 @@ func TestAccNutanixVmsV2DataSource_WithConfig(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2DataSource_WithCdromConfig(t *testing.T) {
+func TestAccV2NutanixVmsDatasource_WithCdromConfig(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
@@ -102,7 +102,7 @@ func TestAccNutanixVmsV2DataSource_WithCdromConfig(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2DataSource_WithCdromBackingInfo(t *testing.T) {
+func TestAccV2NutanixVmsDatasource_WithCdromBackingInfo(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"

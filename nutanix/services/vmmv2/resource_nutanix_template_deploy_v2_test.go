@@ -11,7 +11,7 @@ import (
 
 const resourceNameTemplateDeploy = "nutanix_deploy_templates_v2.test"
 
-func TestAccNutanixTemplateDeployV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixTemplateDeployResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"

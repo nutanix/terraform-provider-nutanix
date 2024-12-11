@@ -18,7 +18,7 @@ var (
 	filepath = path + "/../../../test_config_v2.json"
 )
 
-func TestAccNutanixVmsV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixVmsResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
@@ -44,7 +44,7 @@ func TestAccNutanixVmsV2Resource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2Resource_BasicUpdate(t *testing.T) {
+func TestAccV2NutanixVmsResource_BasicUpdate(t *testing.T) {
 	r := acctest.RandInt()
 	desc := "test vm description"
 	updatedDesc := "test vm updated description"
@@ -86,7 +86,7 @@ func TestAccNutanixVmsV2Resource_BasicUpdate(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2Resource_WithDisk(t *testing.T) {
+func TestAccV2NutanixVmsResource_WithDisk(t *testing.T) {
 	r := acctest.RandInt()
 	desc := "test vm description"
 	resource.Test(t, resource.TestCase{
@@ -114,7 +114,7 @@ func TestAccNutanixVmsV2Resource_WithDisk(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2Resource_DiskWithDatasource(t *testing.T) {
+func TestAccV2NutanixVmsResource_DiskWithDatasource(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
@@ -145,7 +145,7 @@ func TestAccNutanixVmsV2Resource_DiskWithDatasource(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2Resource_WithNic(t *testing.T) {
+func TestAccV2NutanixVmsResource_WithNic(t *testing.T) {
 	r := acctest.RandInt()
 	desc := "test vm description"
 	resource.Test(t, resource.TestCase{
@@ -176,7 +176,7 @@ func TestAccNutanixVmsV2Resource_WithNic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2Resource_WithNicTrunk(t *testing.T) {
+func TestAccV2NutanixVmsResource_WithNicTrunk(t *testing.T) {
 	r := acctest.RandInt()
 	desc := "test vm description"
 	resource.Test(t, resource.TestCase{
@@ -208,7 +208,7 @@ func TestAccNutanixVmsV2Resource_WithNicTrunk(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2Resource_WithLegacyBootOrder(t *testing.T) {
+func TestAccV2NutanixVmsResource_WithLegacyBootOrder(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
@@ -258,7 +258,7 @@ func TestAccNutanixVmsV2Resource_WithLegacyBootOrder(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2Resource_WithCdrom(t *testing.T) {
+func TestAccV2NutanixVmsResource_WithCdrom(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
@@ -287,7 +287,7 @@ func TestAccNutanixVmsV2Resource_WithCdrom(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2Resource_WithCdromIDE(t *testing.T) {
+func TestAccV2NutanixVmsResource_WithCdromIDE(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
@@ -316,7 +316,7 @@ func TestAccNutanixVmsV2Resource_WithCdromIDE(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2Resource_WithCdromBackingInfo(t *testing.T) {
+func TestAccV2NutanixVmsResource_WithCdromBackingInfo(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
@@ -346,7 +346,7 @@ func TestAccNutanixVmsV2Resource_WithCdromBackingInfo(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2Resource_WithCloudInit(t *testing.T) {
+func TestAccV2NutanixVmsResource_WithCloudInit(t *testing.T) {
 	r := acctest.RandInt()
 	desc := "test vm description"
 	resource.Test(t, resource.TestCase{
@@ -377,7 +377,7 @@ func TestAccNutanixVmsV2Resource_WithCloudInit(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2Resource_WithCloudInitWithCustomKeys(t *testing.T) {
+func TestAccV2NutanixVmsResource_WithCloudInitWithCustomKeys(t *testing.T) {
 	t.Skip("Failing due to issue with cloud_init user_data & custom_keys")
 	r := acctest.RandInt()
 	desc := "test vm description"
@@ -409,7 +409,7 @@ func TestAccNutanixVmsV2Resource_WithCloudInitWithCustomKeys(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2Resource_UpdateDiskNics(t *testing.T) {
+func TestAccV2NutanixVmsResource_UpdateDiskNics(t *testing.T) {
 	r := acctest.RandInt()
 	desc := "test vm description"
 	updatedDesc := "test vm updated description"
@@ -465,7 +465,7 @@ func TestAccNutanixVmsV2Resource_UpdateDiskNics(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2Resource_WithLegacyBootDevice(t *testing.T) {
+func TestAccV2NutanixVmsResource_WithLegacyBootDevice(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
@@ -496,7 +496,7 @@ func TestAccNutanixVmsV2Resource_WithLegacyBootDevice(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2Resource_WithCategories(t *testing.T) {
+func TestAccV2NutanixVmsResource_WithCategories(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
@@ -540,7 +540,7 @@ func TestAccNutanixVmsV2Resource_WithCategories(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2Resource_WithSerialPorts(t *testing.T) {
+func TestAccV2NutanixVmsResource_WithSerialPorts(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
@@ -585,7 +585,7 @@ func TestAccNutanixVmsV2Resource_WithSerialPorts(t *testing.T) {
 	})
 }
 
-func TestAccNutanixVmsV2Resource_WithGpus(t *testing.T) {
+func TestAccV2NutanixVmsResource_WithGpus(t *testing.T) {
 	if testVars.VMM.GPUS[0].Vendor == "" && testVars.VMM.GPUS[0].Mode == "" && testVars.VMM.GPUS[0].DeviceID == 0 {
 		t.Skip("Skipping test as no GPU devices found")
 	}

@@ -17,7 +17,7 @@ import (
 
 const resourceNameVMShutdown = "data.nutanix_virtual_machine_v2.test"
 
-func TestAccNutanixVmsShutdownV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixVmsShutdownResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm power action "
@@ -181,7 +181,7 @@ func testAccCheckNutanixVirtualMachineV2Destroy(s *terraform.State) error {
 	return nil
 }
 
-func TestAccNutanixVmsShutdownV2Resource_WithError(t *testing.T) {
+func TestAccV2NutanixVmsShutdownResource_WithError(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"

@@ -11,7 +11,7 @@ import (
 
 const datasourceNamePbrs = "data.nutanix_pbrs_v2.test"
 
-func TestAccNutanixPbrsV2DataSource_Basic(t *testing.T) {
+func TestAccV2NutanixPbrsDataSource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-fip-%d", r)
 	desc := "test fip description"
@@ -30,7 +30,7 @@ func TestAccNutanixPbrsV2DataSource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixPbrsV2DataSource_WithFilter(t *testing.T) {
+func TestAccV2NutanixPbrsDataSource_WithFilter(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-fip-%d", r)
 	desc := "test fip description"

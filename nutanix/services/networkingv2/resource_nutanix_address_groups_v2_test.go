@@ -11,7 +11,7 @@ import (
 
 const resourceNameAddressGroup = "nutanix_address_groups_v2.test"
 
-func TestAccNutanixAddressGroupV2Resource_Basic(t *testing.T) {
+func TestAccV2NutanixAddressGroupResource_Basic(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-address-group-%d", r)
 	desc := "test address group description"
@@ -34,7 +34,7 @@ func TestAccNutanixAddressGroupV2Resource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixAddressGroupV2Resource_WithUpdate(t *testing.T) {
+func TestAccV2NutanixAddressGroupResource_WithUpdate(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-address-group-%d", r)
 	desc := "test address group description"
@@ -70,7 +70,7 @@ func TestAccNutanixAddressGroupV2Resource_WithUpdate(t *testing.T) {
 	})
 }
 
-func TestAccNutanixAddressGroupV2Resource_WithIPRanges(t *testing.T) {
+func TestAccV2NutanixAddressGroupResource_WithIPRanges(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("test-address-group-%d", r)
 	desc := "test address group description"

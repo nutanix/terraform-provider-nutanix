@@ -11,6 +11,9 @@ import (
 const resourceNameDiscoverUnconfiguredNodes = "nutanix_clusters_discover_unconfigured_nodes_v2.test"
 
 func TestAccV2NutanixClusterDiscoverUnconfiguredNodesResource_basic(t *testing.T) {
+	if testVars.Clusters.Nodes[0].CvmIP == "" {
+		t.Skip("Skipping test as No available node to be used for testing")
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

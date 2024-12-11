@@ -133,6 +133,8 @@ func TestAccV2NutanixUsersResource_LDAPUser(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
+		// using V3 API to delete user
+		CheckDestroy: testAccCheckNutanixUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testLDAPUserWithMinimalConfigResourceConfig(filepath),
