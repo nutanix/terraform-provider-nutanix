@@ -360,6 +360,7 @@ func Provider() *schema.Provider {
 			"nutanix_storage_containers_v2":                   storagecontainersv2.ResourceNutanixStorageContainersV2(),
 			"nutanix_category_v2":                             prismv2.ResourceNutanixCategoriesV2(),
 			"nutanix_deploy_pc_v2":                            prismv2.ResourceNutanixDeployPcV2(),
+			"nutanix_unregister_cluster_v2":                   prismv2.ResourceNutanixUnregisterClusterV2(),
 			"nutanix_volume_group_v2":                         volumesv2.ResourceNutanixVolumeGroupV2(),
 			"nutanix_volume_group_disk_v2":                    volumesv2.ResourceNutanixVolumeGroupDiskV2(),
 			"nutanix_volume_group_iscsi_client_v2":            volumesv2.ResourceNutanixVolumeGroupIscsiClientV2(),
