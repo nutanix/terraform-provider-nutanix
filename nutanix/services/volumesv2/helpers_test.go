@@ -2,7 +2,9 @@ package volumesv2_test
 
 import (
 	"fmt"
+	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -38,6 +40,23 @@ func testAccCheckResourceAttrListNotEmpty(resourceName, attrName, subAttr string
 		}
 		return nil
 	}
+}
+
+func testAccCheckNutanixVolumeGroupV2Destroy(s *terraform.State) error {
+	conn := acc.TestAccProvider.Meta().(*conns.Client)
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "nutanix_volume_group_v2" {
+			continue
+		}
+		if _, err := conn.VolumeAPI.VolumeAPIInstance.DeleteVolumeGroupById(utils.StringPtr(rs.Primary.ID)); err != nil {
+			if strings.Contains(fmt.Sprint(err), "VOLUME_UNKNOWN_ENTITY_ERROR") {
+				return nil
+			}
+			return err
+		}
+	}
+	return nil
 }
 
 func resourceNutanixVolumeGroupV2Exists(conn *conns.Client, name string) (*string, error) {
