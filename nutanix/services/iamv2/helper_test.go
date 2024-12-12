@@ -2,14 +2,15 @@ package iamv2_test
 
 import (
 	"fmt"
-	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func checkAttributeLength(resourceName, attribute string, minLength int) resource.TestCheckFunc {
@@ -62,7 +63,6 @@ func testAccCheckNutanixUserDestroy(s *terraform.State) error {
 }
 
 func testAccCheckNutanixDirectoryServicesV2Destroy(s *terraform.State) error {
-
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
 
 	for _, rs := range s.RootModule().Resources {
