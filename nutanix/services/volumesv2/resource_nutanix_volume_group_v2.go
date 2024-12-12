@@ -504,7 +504,6 @@ func expandFlashMode(flashModeList []interface{}) *volumesClient.FlashMode {
 }
 
 func expandDisks(disks []interface{}) []volumesClient.VolumeDisk {
-
 	if len(disks) == 0 {
 		return nil
 	}
