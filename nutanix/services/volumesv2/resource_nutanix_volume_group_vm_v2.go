@@ -2,8 +2,6 @@ package volumesv2
 
 import (
 	"context"
-	"encoding/json"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -65,15 +63,7 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Create(ctx context.Context, d *
 
 	resp, err := conn.VolumeAPIInstance.AttachVm(utils.StringPtr(volumeGroupExtID.(string)), &body)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while Attaching Vm to Volume Group : %v", errorMessage["message"])
+		return diag.Errorf("error while Attaching Vm to Volume Group : %v", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(volumesPrism.TaskReference)
@@ -82,7 +72,7 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Create(ctx context.Context, d *
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the VM to be available
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
@@ -96,15 +86,7 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Create(ctx context.Context, d *
 
 	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while Attaching Vm to Volume Group: %v", errorMessage["message"])
+		return diag.Errorf("error while Attaching Vm to Volume Group: %v", err)
 	}
 	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
 
@@ -141,15 +123,7 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Delete(ctx context.Context, d *
 
 	resp, err := conn.VolumeAPIInstance.DetachVm(utils.StringPtr(volumeGroupExtID.(string)), &body)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while Detaching Vm to Volume Group : %v", errorMessage["message"])
+		return diag.Errorf("error while Detaching Vm to Volume Group : %v", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(volumesPrism.TaskReference)
@@ -158,7 +132,7 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Delete(ctx context.Context, d *
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the VM to be available
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
@@ -172,15 +146,7 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Delete(ctx context.Context, d *
 
 	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while Detaching Vm to Volume Group: %v", errorMessage["message"])
+		return diag.Errorf("error while Detaching Vm to Volume Group: %v", err)
 	}
 	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
 

@@ -2,7 +2,6 @@ package volumesv2
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -220,15 +219,7 @@ func ResourceNutanixVolumeGroupDiskV2Update(ctx context.Context, d *schema.Resou
 
 	resp, err := conn.VolumeAPIInstance.GetVolumeDiskById(utils.StringPtr(volumeGroupExtID.(string)), utils.StringPtr(volumeDiskExtID))
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while updating Volume Disk : %v", errorMessage)
+		return diag.Errorf("error while updating Volume Disk : %v", err)
 	}
 	updateSpec := resp.Data.GetValue().(volumesClient.VolumeDisk)
 
@@ -259,15 +250,7 @@ func ResourceNutanixVolumeGroupDiskV2Update(ctx context.Context, d *schema.Resou
 
 	updateResp, err := conn.VolumeAPIInstance.UpdateVolumeDiskById(utils.StringPtr(volumeGroupExtID.(string)), utils.StringPtr(volumeDiskExtID), &updateSpec)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while updating Volume Disk : %v", errorMessage)
+		return diag.Errorf("error while updating Volume Disk : %v", err)
 	}
 
 	TaskRef := updateResp.Data.GetValue().(volumesPrism.TaskReference)

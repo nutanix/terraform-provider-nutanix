@@ -2,8 +2,6 @@ package volumesv2
 
 import (
 	"context"
-	"encoding/json"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -141,15 +139,7 @@ func DatasourceNutanixVolumeGroupIscsiClientsV2Read(ctx context.Context, d *sche
 	// get the volume group iscsi clients
 	resp, err := conn.VolumeAPIInstance.ListExternalIscsiAttachmentsByVolumeGroupId(utils.StringPtr(volumeGroupExtID.(string)), page, limit, filter, orderBy, expand, selects)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching External Iscsi Attachments : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching External Iscsi Attachments : %v", err)
 	}
 
 	diskResp := resp.Data

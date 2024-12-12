@@ -2,8 +2,6 @@ package volumesv2
 
 import (
 	"context"
-	"encoding/json"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	volumesClient "github.com/nutanix/ntnx-api-golang-clients/volumes-go-client/v4/models/volumes/v4/config"
@@ -138,15 +136,7 @@ func DatasourceNutanixVolumeDiskV2Read(ctx context.Context, d *schema.ResourceDa
 
 	resp, err := conn.VolumeAPIInstance.GetVolumeDiskById(utils.StringPtr(volumeGroupExtID.(string)), utils.StringPtr(volumeDiskExtID.(string)))
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching volume Disk : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching volume Disk : %v", err)
 	}
 	getResp := resp.Data.GetValue().(volumesClient.VolumeDisk)
 

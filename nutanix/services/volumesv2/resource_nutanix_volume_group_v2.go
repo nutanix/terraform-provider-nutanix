@@ -2,7 +2,6 @@ package volumesv2
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 
@@ -366,15 +365,7 @@ func ResourceNutanixVolumeGroupV2Read(ctx context.Context, d *schema.ResourceDat
 
 	resp, err := conn.VolumeAPIInstance.GetVolumeGroupById(utils.StringPtr(d.Id()))
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching Volume Group : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching Volume Group : %v", err)
 	}
 
 	getResp := resp.Data.GetValue().(volumesClient.VolumeGroup)
@@ -431,15 +422,7 @@ func ResourceNutanixVolumeGroupV2Delete(ctx context.Context, d *schema.ResourceD
 
 	resp, err := conn.VolumeAPIInstance.DeleteVolumeGroupById(utils.StringPtr(d.Id()))
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while Deleting Volume group : %v", errorMessage["message"])
+		return diag.Errorf("error while Deleting Volume group : %v", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(volumesPrism.TaskReference)
@@ -557,15 +540,7 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 	return func() (interface{}, string, error) {
 		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
 		if err != nil {
-			var errordata map[string]interface{}
-			e := json.Unmarshal([]byte(err.Error()), &errordata)
-			if e != nil {
-				return nil, "", e
-			}
-			data := errordata["data"].(map[string]interface{})
-			errorList := data["error"].([]interface{})
-			errorMessage := errorList[0].(map[string]interface{})
-			return "", "", (fmt.Errorf("error while polling prism task: %v", errorMessage["message"]))
+			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
 		}
 
 		// get the group results

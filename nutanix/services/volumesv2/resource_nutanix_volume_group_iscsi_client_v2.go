@@ -2,7 +2,6 @@ package volumesv2
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -188,15 +187,7 @@ func ResourceNutanixVolumeGroupIscsiClientV2Create(ctx context.Context, d *schem
 
 	resp, err := conn.VolumeAPIInstance.AttachIscsiClient(utils.StringPtr(volumeGroupExtID.(string)), &body)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while Attaching Iscsi Client to Volume Group: %v", errorMessage["message"])
+		return diag.Errorf("error while Attaching Iscsi Client to Volume Group: %v", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(volumesPrism.TaskReference)
@@ -219,15 +210,7 @@ func ResourceNutanixVolumeGroupIscsiClientV2Create(ctx context.Context, d *schem
 
 	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while Attaching Iscsi Client to Volume Group: %v", errorMessage["message"])
+		return diag.Errorf("error while Attaching Iscsi Client to Volume Group: %v", err)
 	}
 	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
 	log.Printf("[DEBUG] rUUID 0: %v", *rUUID.EntitiesAffected[0].ExtId)
@@ -261,16 +244,7 @@ func ResourceNutanixVVolumeGroupIscsiClientV2Delete(ctx context.Context, d *sche
 
 	resp, err := conn.VolumeAPIInstance.DetachIscsiClient(utils.StringPtr(volumeGroupExtID.(string)), &body)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		log.Printf("[ERROR] data: %v", data)
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while Detaching Iscsi Client to Volume Group: %v", errorMessage["message"])
+		return diag.Errorf("error while Detaching Iscsi Client to Volume Group: %v", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(volumesPrism.TaskReference)
@@ -293,15 +267,7 @@ func ResourceNutanixVVolumeGroupIscsiClientV2Delete(ctx context.Context, d *sche
 
 	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while Detaching Iscsi Client to Volume Group: %v", errorMessage["message"])
+		return diag.Errorf("error while Detaching Iscsi Client to Volume Group: %v", err)
 	}
 	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
 	log.Printf("[DEBUG] rUUID 0: %v", *rUUID.EntitiesAffected[0].ExtId)
