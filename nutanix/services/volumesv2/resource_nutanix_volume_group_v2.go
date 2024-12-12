@@ -251,9 +251,10 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 		body.TargetName = utils.StringPtr(targetName.(string))
 	}
 	if enabledAuthentications, ok := d.GetOk("enabled_authentications"); ok {
+		const CHAP, NONE = 2, 3
 		enabledAuthenticationsMap := map[string]interface{}{
-			"CHAP": 2,
-			"NONE": 3,
+			"CHAP": CHAP,
+			"NONE": NONE,
 		}
 		pVal := enabledAuthenticationsMap[enabledAuthentications.(string)]
 		if pVal == nil {
