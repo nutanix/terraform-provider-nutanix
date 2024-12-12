@@ -2,6 +2,7 @@ package iamv2_test
 
 import (
 	"fmt"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 	"strconv"
 	"strings"
 
@@ -56,6 +57,34 @@ func testAccCheckNutanixUserDestroy(s *terraform.State) error {
 			return err
 		}
 		fmt.Println("Deleted user")
+	}
+	return nil
+}
+
+func testAccCheckNutanixDirectoryServicesV2Destroy(s *terraform.State) error {
+
+	conn := acc.TestAccProvider.Meta().(*conns.Client)
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "nutanix_volume_group_v2" {
+			continue
+		}
+
+		readResp, errRead := conn.IamAPI.DirectoryServiceAPIInstance.GetDirectoryServiceById(utils.StringPtr(rs.Primary.ID))
+		if errRead != nil {
+			return errRead
+		}
+		// get etag value from read response to pass in update request If-Match header, Required for update request
+		etagValue := conn.IamAPI.DirectoryServiceAPIInstance.ApiClient.GetEtag(readResp)
+		headers := make(map[string]interface{})
+		headers["If-Match"] = utils.StringPtr(etagValue)
+
+		if _, err := conn.IamAPI.DirectoryServiceAPIInstance.DeleteDirectoryServiceById(utils.StringPtr(rs.Primary.ID), headers); err != nil {
+			if strings.Contains(fmt.Sprint(err), "Directory service not found") {
+				return nil
+			}
+			return err
+		}
 	}
 	return nil
 }

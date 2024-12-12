@@ -14,11 +14,12 @@ const resourceNameDirectoryServices = "nutanix_directory_services_v2.test"
 
 func TestAccV2NutanixDirectoryServicesResource_CreateACTIVE_DIRECTORYService(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixDirectoryServicesV2Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testDirectoryServicesResourceConfig(filepath),
+				Config: testDirectoryServicesResourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameDirectoryServices, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "name", testVars.Iam.DirectoryServices.Name),
@@ -31,7 +32,7 @@ func TestAccV2NutanixDirectoryServicesResource_CreateACTIVE_DIRECTORYService(t *
 				),
 			},
 			{
-				Config: testDirectoryServicesUpdateResourceConfig(filepath),
+				Config: testDirectoryServicesUpdateResourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameDirectoryServices, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "name", testVars.Iam.DirectoryServices.Name),
@@ -53,11 +54,12 @@ func TestAccV2NutanixDirectoryServicesResource_CreateOpenLDAPService(t *testing.
 	name := fmt.Sprintf("tf-test-openldap-%d", acctest.RandInt())
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixDirectoryServicesV2Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testDirectoryOpenLDAPServicesResourceConfig(name, filepath),
+				Config: testDirectoryOpenLDAPServicesResourceConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameDirectoryServices, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "name", name),
@@ -74,11 +76,12 @@ func TestAccV2NutanixDirectoryServicesResource_CreateOpenLDAPService(t *testing.
 
 func TestAccV2NutanixDirectoryServicesResource_CreateACTIVE_DIRECTORYAlreadyExists(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixDirectoryServicesV2Destroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testDirectoryServicesResourceConfig(filepath),
+				Config: testDirectoryServicesResourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameDirectoryServices, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "name", testVars.Iam.DirectoryServices.Name),
@@ -90,7 +93,7 @@ func TestAccV2NutanixDirectoryServicesResource_CreateACTIVE_DIRECTORYAlreadyExis
 				),
 			},
 			{
-				Config:      testDirectoryServicesDuplicatedResourceConfig(filepath),
+				Config:      testDirectoryServicesResourceConfig() + testDirectoryServicesDuplicatedResourceConfig(),
 				ExpectError: regexp.MustCompile("Failed to create directory service as directory service with name " + testVars.Iam.DirectoryServices.Name + " already exists"),
 			},
 		},
@@ -103,7 +106,7 @@ func TestAccV2NutanixDirectoryServicesResource_WithNoName(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testDirectoryServicesResourceWithoutNameConfig(filepath),
+				Config:      testDirectoryServicesResourceWithoutNameConfig(),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 		},
@@ -116,7 +119,7 @@ func TestAccV2NutanixDirectoryServicesResource_WithNoUrl(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testDirectoryServicesResourceWithoutURLConfig(filepath),
+				Config:      testDirectoryServicesResourceWithoutURLConfig(),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 		},
@@ -129,7 +132,7 @@ func TestAccV2NutanixDirectoryServicesResource_WithNoDomainName(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testDirectoryServicesResourceWithoutDomainNameConfig(filepath),
+				Config:      testDirectoryServicesResourceWithoutDomainNameConfig(),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 		},
@@ -142,7 +145,7 @@ func TestAccV2NutanixDirectoryServicesResource_WithNoDirectoryType(t *testing.T)
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testDirectoryServicesResourceWithoutDirectoryTypeConfig(filepath),
+				Config:      testDirectoryServicesResourceWithoutDirectoryTypeConfig(),
 				ExpectError: regexp.MustCompile("Missing required argument"),
 			},
 		},
@@ -155,14 +158,14 @@ func TestAccV2NutanixDirectoryServicesResource_WithNoServiceAccount(t *testing.T
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config:      testDirectoryServicesResourceWithoutServiceAccountConfig(filepath),
+				Config:      testDirectoryServicesResourceWithoutServiceAccountConfig(),
 				ExpectError: regexp.MustCompile("Insufficient service_account blocks"),
 			},
 		},
 	})
 }
 
-func testDirectoryServicesResourceConfig(filepath string) string {
+func testDirectoryServicesResourceConfig() string {
 	return fmt.Sprintf(`
 
 	locals{
@@ -188,7 +191,7 @@ func testDirectoryServicesResourceConfig(filepath string) string {
 	}`, filepath)
 }
 
-func testDirectoryServicesUpdateResourceConfig(filepath string) string {
+func testDirectoryServicesUpdateResourceConfig() string {
 	return fmt.Sprintf(`
 
 	locals{
@@ -214,7 +217,7 @@ func testDirectoryServicesUpdateResourceConfig(filepath string) string {
 	}`, filepath)
 }
 
-func testDirectoryOpenLDAPServicesResourceConfig(name, filepath string) string {
+func testDirectoryOpenLDAPServicesResourceConfig(name string) string {
 	return fmt.Sprintf(`
 
 	locals{
@@ -252,14 +255,8 @@ func testDirectoryOpenLDAPServicesResourceConfig(name, filepath string) string {
 	}`, name, filepath)
 }
 
-func testDirectoryServicesDuplicatedResourceConfig(filepath string) string {
-	return fmt.Sprintf(`
-
-	locals{
-		config = (jsondecode(file("%s")))
-		directory_services = local.config.iam.directory_services
-	}
-
+func testDirectoryServicesDuplicatedResourceConfig() string {
+	return `
 	resource "nutanix_directory_services_v2" "test_1" {
 		name = local.directory_services.name
 		url = local.directory_services.url  
@@ -275,10 +272,10 @@ func testDirectoryServicesDuplicatedResourceConfig(filepath string) string {
 			  service_account.0.password,
 			]
 	  	}
-	}`, filepath)
+	}`
 }
 
-func testDirectoryServicesResourceWithoutNameConfig(filepath string) string {
+func testDirectoryServicesResourceWithoutNameConfig() string {
 	return fmt.Sprintf(`
 
 	locals{
@@ -302,7 +299,7 @@ func testDirectoryServicesResourceWithoutNameConfig(filepath string) string {
 	}`, filepath)
 }
 
-func testDirectoryServicesResourceWithoutURLConfig(filepath string) string {
+func testDirectoryServicesResourceWithoutURLConfig() string {
 	return fmt.Sprintf(`
 
 	locals{
@@ -326,7 +323,7 @@ func testDirectoryServicesResourceWithoutURLConfig(filepath string) string {
 	}`, filepath)
 }
 
-func testDirectoryServicesResourceWithoutDomainNameConfig(filepath string) string {
+func testDirectoryServicesResourceWithoutDomainNameConfig() string {
 	return fmt.Sprintf(`
 
 	locals{
@@ -350,7 +347,7 @@ func testDirectoryServicesResourceWithoutDomainNameConfig(filepath string) strin
 	}`, filepath)
 }
 
-func testDirectoryServicesResourceWithoutDirectoryTypeConfig(filepath string) string {
+func testDirectoryServicesResourceWithoutDirectoryTypeConfig() string {
 	return fmt.Sprintf(`
 
 	locals{
@@ -374,7 +371,7 @@ func testDirectoryServicesResourceWithoutDirectoryTypeConfig(filepath string) st
 	}`, filepath)
 }
 
-func testDirectoryServicesResourceWithoutServiceAccountConfig(filepath string) string {
+func testDirectoryServicesResourceWithoutServiceAccountConfig() string {
 	return fmt.Sprintf(`
 
 	locals{
