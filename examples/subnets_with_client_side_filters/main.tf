@@ -7,7 +7,7 @@ terraform {
   }
 }
 
-#definig nutanix configuration
+#defining nutanix configuration
 provider "nutanix"{
   username = var.nutanix_username
   password = var.nutanix_password

@@ -101,3 +101,16 @@ func HashcodeStrings(strings []string) string {
 
 	return fmt.Sprintf("%d", HashcodeString(buf.String()))
 }
+
+// Extract error from v4 API response
+func ExtractErrorFromV4APIResponse(err error) string {
+	var errordata map[string]interface{}
+	e := json.Unmarshal([]byte(err.Error()), &errordata)
+	if e != nil {
+		return e.Error()
+	}
+	data := errordata["data"].(map[string]interface{})
+	errorList := data["error"].([]interface{})
+	errorMessage := errorList[0].(map[string]interface{})["message"]
+	return errorMessage.(string)
+}
