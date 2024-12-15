@@ -10,7 +10,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func DatasourceNutanixFetchPcInfoV2() *schema.Resource {
+func DatasourceNutanixFetchPcV2() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: DatasourceNutanixPcV2Read,
 		Schema: map[string]*schema.Schema{

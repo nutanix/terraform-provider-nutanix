@@ -9,7 +9,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func DatasourceNutanixListPcsInfoV2() *schema.Resource {
+func DatasourceNutanixListPcsV2() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: DatasourceNutanixListPcsV2Read,
 		Schema: map[string]*schema.Schema{
@@ -20,7 +20,7 @@ func DatasourceNutanixListPcsInfoV2() *schema.Resource {
 			"pcs": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem:     DatasourceNutanixFetchPcInfoV2(),
+				Elem:     DatasourceNutanixFetchPcV2(),
 			},
 		},
 	}
