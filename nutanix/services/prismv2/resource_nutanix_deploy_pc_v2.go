@@ -982,7 +982,6 @@ func expandResourceConfig(resourceConfig map[string]interface{}) *config.DomainM
 }
 
 // network expanders
-
 func expandPCNetwork(pcNetwork map[string]interface{}) *config.DomainManagerNetwork {
 	pcNetworkObj := config.NewDomainManagerNetwork()
 
@@ -1103,7 +1102,6 @@ func expandIPRange(ipRange map[string]interface{}) commonConfig.IpRange {
 }
 
 // ip address expanders
-
 func expandIPAddress(ipAddress map[string]interface{}) *commonConfig.IPAddress {
 	ipAddressObj := commonConfig.NewIPAddress()
 
@@ -1175,169 +1173,16 @@ func expandFQDN(fqdn interface{}) *commonConfig.FQDN {
 	return nil
 }
 
-// Flattens
-// Pc Config flattens
-func flattenPCConfig(pcConfig *config.DomainManagerClusterConfig) []map[string]interface{} {
-	if pcConfig != nil {
-		pcConfigMap := make(map[string]interface{})
-		if pcConfig.ShouldEnableLockdownMode != nil {
-			pcConfigMap["should_enable_lockdown_mode"] = *pcConfig.ShouldEnableLockdownMode
-		}
-		if pcConfig.BuildInfo != nil {
-			buildInfo := make(map[string]interface{})
-			if pcConfig.BuildInfo.Version != nil {
-				buildInfo["version"] = utils.StringValue(pcConfig.BuildInfo.Version)
-			}
-			pcConfigMap["build_info"] = []map[string]interface{}{buildInfo}
-		}
-		if pcConfig.Name != nil {
-			pcConfigMap["name"] = *pcConfig.Name
-		}
-		if pcConfig.Size != nil {
-			pcConfigMap["size"] = flattenClusterSize(*pcConfig.Size)
-		}
-		if pcConfig.BootstrapConfig != nil {
-			pcConfigMap["bootstrap_config"] = flattenBootstrapConfig(pcConfig.BootstrapConfig)
-		}
-		if pcConfig.Credentials != nil {
-			credentials := make([]map[string]interface{}, len(pcConfig.Credentials))
-			for i, credential := range pcConfig.Credentials {
-				credentials[i] = map[string]interface{}{
-					"username": utils.StringValue(credential.Username),
-					"password": utils.StringValue(credential.Password),
-				}
-			}
-			pcConfigMap["credentials"] = credentials
-		}
-		if pcConfig.ResourceConfig != nil {
-			pcConfigMap["resource_config"] = flattenResourceConfig(pcConfig.ResourceConfig)
-		}
-		return []map[string]interface{}{pcConfigMap}
-	}
-	return nil
-}
-
-func flattenClusterSize(size config.Size) string {
-	const STARTER, SMALL, LARGE, EXTRALARGE = 2, 3, 4, 5
-
-	switch size {
-	case STARTER:
-		return "STARTER"
-	case SMALL:
-		return "SMALL"
-	case LARGE:
-		return "LARGE"
-	case EXTRALARGE:
-		return "EXTRALARGE"
-	default:
-		return "UNKNOWN"
-	}
-}
-
-func flattenBootstrapConfig(bootstrapConfig *config.BootstrapConfig) []map[string]interface{} {
-	if bootstrapConfig != nil {
-		bootstrapConfigMap := make(map[string]interface{})
-		if bootstrapConfig.EnvironmentInfo != nil {
-			bootstrapConfigMap["environment_info"] = flattenEnvironmentInfo(bootstrapConfig.EnvironmentInfo)
-		}
-		return []map[string]interface{}{bootstrapConfigMap}
-	}
-	return nil
-}
-
-func flattenResourceConfig(resourceConfig *config.DomainManagerResourceConfig) []map[string]interface{} {
-	if resourceConfig != nil {
-		resourceConfigMap := make(map[string]interface{})
-		if resourceConfig.NumVcpus != nil {
-			resourceConfigMap["num_vcpus"] = utils.IntValue(resourceConfig.NumVcpus)
-		}
-		if resourceConfig.MemorySizeBytes != nil {
-			resourceConfigMap["memory_size_bytes"] = utils.Int64Value(resourceConfig.MemorySizeBytes)
-		}
-		if resourceConfig.DataDiskSizeBytes != nil {
-			resourceConfigMap["data_disk_size_bytes"] = utils.Int64Value(resourceConfig.DataDiskSizeBytes)
-		}
-		if resourceConfig.ContainerExtIds != nil {
-			resourceConfigMap["container_ext_ids"] = resourceConfig.ContainerExtIds
-		}
-		return []map[string]interface{}{resourceConfigMap}
-	}
-	return nil
-}
-
-func flattenEnvironmentInfo(environmentInfo *config.EnvironmentInfo) []map[string]interface{} {
-	if environmentInfo != nil {
-		info := make(map[string]interface{})
-		if environmentInfo.Type != nil {
-			info["type"] = flattenEnvironmentType(*environmentInfo.Type)
-		}
-		if environmentInfo.ProviderType != nil {
-			info["provider_type"] = flattenEnvironmentProviderType(*environmentInfo.ProviderType)
-		}
-		if environmentInfo.ProvisioningType != nil {
-			info["provisioning_type"] = flattenEnvironmentProvisioningType(*environmentInfo.ProvisioningType)
-		}
-		return []map[string]interface{}{info}
-	}
-	return nil
-}
-
-func flattenEnvironmentType(environmentType config.EnvironmentType) string {
-	const ONPREM, NtnxCloud = 2, 3
-
-	switch environmentType {
-	case ONPREM:
-		return "ONPREM"
-	case NtnxCloud:
-		return "NTNX_CLOUD"
-	default:
-		return "UNKNOWN"
-	}
-}
-
-func flattenEnvironmentProvisioningType(provisioningType config.ProvisioningType) string {
-	const NTNX, NATIVE = 2, 3
-	switch provisioningType {
-	case NTNX:
-		return "NTNX"
-	case NATIVE:
-		return "NATIVE"
-	default:
-		return "UNKNOWN"
-	}
-}
-
-func flattenEnvironmentProviderType(providerType config.ProviderType) string {
-	const NTNX, AZURE, AWS, GCP, VSPHERE = 2, 3, 4, 5, 6
-	switch providerType {
-	case NTNX:
-		return "NTNX"
-	case AZURE:
-		return "AZURE"
-	case AWS:
-		return "AWS"
-	case GCP:
-		return "GCP"
-	case VSPHERE:
-		return "VSPHERE"
-	default:
-		return "UNKNOWN"
-	}
-}
-
 func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		// data := base64.StdEncoding.EncodeToString([]byte("ergon"))
-		// encodeUUID := data + ":" + taskUUID
-		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
+		resp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
 
 		if err != nil {
-			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
+			return "", "", fmt.Errorf("error while polling prism task: %v", err)
 		}
 
 		// get the group results
-
-		v := vresp.Data.GetValue().(config.Task)
+		v := resp.Data.GetValue().(config.Task)
 
 		if getTaskStatus(v.Status) == "CANCELED" || getTaskStatus(v.Status) == "FAILED" {
 			return v, getTaskStatus(v.Status),
@@ -1367,166 +1212,4 @@ func getTaskStatus(pr *config.TaskStatus) string {
 		}
 	}
 	return "UNKNOWN"
-}
-
-// network flattens
-
-func flattenPCNetwork(network *config.DomainManagerNetwork) []map[string]interface{} {
-	if network == nil {
-		return nil
-	}
-	networkMap := make(map[string]interface{})
-	if network.ExternalAddress != nil {
-		networkMap["external_address"] = flattenIPAddress(network.ExternalAddress)
-	}
-	if network.NameServers != nil {
-		networkMap["name_servers"] = flattenIPAddressOrFQDN(network.NameServers)
-	}
-	if network.NtpServers != nil {
-		networkMap["ntp_servers"] = flattenIPAddressOrFQDN(network.NtpServers)
-	}
-	if network.Fqdn != nil {
-		networkMap["fqdn"] = utils.StringValue(network.Fqdn)
-	}
-	if network.InternalNetworks != nil {
-		networkMap["internal_networks"] = flattenInternalNetworks(network.InternalNetworks)
-	}
-	if network.ExternalNetworks != nil {
-		networkMap["external_networks"] = flattenExternalNetworks(network.ExternalNetworks)
-	}
-	return []map[string]interface{}{networkMap}
-}
-
-func flattenIPAddress(ipAddress *commonConfig.IPAddress) []map[string]interface{} {
-	if ipAddress == nil {
-		return nil
-	}
-	ipAddressMap := make(map[string]interface{})
-	if ipAddress.Ipv4 != nil {
-		ipAddressMap["ipv4"] = flattenIPv4Address(ipAddress.Ipv4)
-	}
-	if ipAddress.Ipv6 != nil {
-		ipAddressMap["ipv6"] = flattenIPv6Address(ipAddress.Ipv6)
-	}
-	return []map[string]interface{}{ipAddressMap}
-}
-
-func flattenIPv4Address(pr *commonConfig.IPv4Address) []interface{} {
-	if pr != nil {
-		ipv4 := make([]interface{}, 0)
-
-		ip := make(map[string]interface{})
-
-		ip["value"] = pr.Value
-		ip["prefix_length"] = pr.PrefixLength
-
-		ipv4 = append(ipv4, ip)
-
-		return ipv4
-	}
-	return nil
-}
-
-func flattenIPv6Address(pr *commonConfig.IPv6Address) []interface{} {
-	if pr != nil {
-		ipv6 := make([]interface{}, 0)
-
-		ip := make(map[string]interface{})
-
-		ip["value"] = pr.Value
-		ip["prefix_length"] = pr.PrefixLength
-
-		ipv6 = append(ipv6, ip)
-
-		return ipv6
-	}
-	return nil
-}
-
-func flattenIPAddressOrFQDN(pr []commonConfig.IPAddressOrFQDN) interface{} {
-	if len(pr) > 0 {
-		ips := make([]map[string]interface{}, len(pr))
-
-		for k, v := range pr {
-			ip := make(map[string]interface{})
-
-			ip["ipv4"] = flattenIPv4Address(v.Ipv4)
-			ip["ipv6"] = flattenIPv6Address(v.Ipv6)
-			ip["fqdn"] = flattenFQDN(v.Fqdn)
-
-			ips[k] = ip
-		}
-		return ips
-	}
-	return nil
-}
-
-func flattenFQDN(pr *commonConfig.FQDN) []interface{} {
-	if pr != nil {
-		fqdn := make([]interface{}, 0)
-
-		f := make(map[string]interface{})
-
-		f["value"] = pr.Value
-
-		fqdn = append(fqdn, f)
-
-		return fqdn
-	}
-	return nil
-}
-
-func flattenInternalNetworks(internalNetworks []config.BaseNetwork) []map[string]interface{} {
-	if len(internalNetworks) > 0 {
-		internalNetworksMap := make([]map[string]interface{}, len(internalNetworks))
-
-		for k, v := range internalNetworks {
-			internalNetworkMap := make(map[string]interface{})
-
-			internalNetworkMap["default_gateway"] = flattenIPAddressOrFQDN([]commonConfig.IPAddressOrFQDN{*v.DefaultGateway})
-			internalNetworkMap["subnet_mask"] = flattenIPAddressOrFQDN([]commonConfig.IPAddressOrFQDN{*v.SubnetMask})
-			internalNetworkMap["ip_ranges"] = flattenIPRanges(v.IpRanges)
-
-			internalNetworksMap[k] = internalNetworkMap
-		}
-		return internalNetworksMap
-	}
-	return nil
-
-}
-
-func flattenIPRanges(ipRanges []commonConfig.IpRange) []map[string]interface{} {
-	if len(ipRanges) > 0 {
-		ipRangesMap := make([]map[string]interface{}, len(ipRanges))
-
-		for k, v := range ipRanges {
-			ipRangeMap := make(map[string]interface{})
-
-			ipRangeMap["begin"] = flattenIPAddress(v.Begin)
-			ipRangeMap["end"] = flattenIPAddress(v.End)
-
-			ipRangesMap[k] = ipRangeMap
-		}
-		return ipRangesMap
-	}
-	return nil
-}
-
-func flattenExternalNetworks(externalNetworks []config.ExternalNetwork) []map[string]interface{} {
-	if len(externalNetworks) > 0 {
-		externalNetworksMap := make([]map[string]interface{}, len(externalNetworks))
-
-		for k, v := range externalNetworks {
-			externalNetworkMap := make(map[string]interface{})
-
-			externalNetworkMap["default_gateway"] = flattenIPAddressOrFQDN([]commonConfig.IPAddressOrFQDN{*v.DefaultGateway})
-			externalNetworkMap["subnet_mask"] = flattenIPAddressOrFQDN([]commonConfig.IPAddressOrFQDN{*v.SubnetMask})
-			externalNetworkMap["ip_ranges"] = flattenIPRanges(v.IpRanges)
-			externalNetworkMap["network_ext_id"] = v.NetworkExtId
-
-			externalNetworksMap[k] = externalNetworkMap
-		}
-		return externalNetworksMap
-	}
-	return nil
 }
