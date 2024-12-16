@@ -115,7 +115,7 @@ func ResourceNutanixBackupTargetV2() *schema.Resource {
 												"rpo_in_minutes": {
 													Type:         schema.TypeInt,
 													Required:     true,
-													ValidateFunc: validation.IntBetween(60, 1440),
+													ValidateFunc: validation.IntBetween(60, 1440), //nolint:gomnd
 												},
 											},
 										},
@@ -305,7 +305,7 @@ func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.Resource
 
 			clusterConfigBody.Config = clusterRef
 
-			err := oneOfBackupTargetLocation.SetValue(*clusterConfigBody)
+			err = oneOfBackupTargetLocation.SetValue(*clusterConfigBody)
 			if err != nil {
 				return diag.Errorf("error while setting cluster location : %v", err)
 			}
@@ -319,7 +319,7 @@ func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.Resource
 			objectStoreLocationBody.ProviderConfig = expandProviderConfig(providerConfig)
 			objectStoreLocationBody.BackupPolicy = expandBackupPolicy(backupPolicy)
 
-			err := oneOfBackupTargetLocation.SetValue(*objectStoreLocationBody)
+			err = oneOfBackupTargetLocation.SetValue(*objectStoreLocationBody)
 			if err != nil {
 				return diag.Errorf("error while setting object store location : %v", err)
 			}
@@ -417,12 +417,12 @@ func ResourceNutanixBackupTargetV2Delete(ctx context.Context, d *schema.Resource
 }
 
 func expandProviderConfig(providerConfig interface{}) *management.AWSS3Config {
-	if providerConfig == nil || len(providerConfig.([]interface{})) == 0 {
+	if len(providerConfig.([]interface{})) == 0 {
 		return nil
 	}
 	providerConfigI := providerConfig.([]interface{})
 
-	if providerConfigI == nil || len(providerConfigI) == 0 {
+	if len(providerConfigI) == 0 {
 		return nil
 	}
 
@@ -451,7 +451,7 @@ func expandAccessKeyCredentials(credentials interface{}) *management.AccessKeyCr
 }
 
 func expandBackupPolicy(policy interface{}) *management.BackupPolicy {
-	if policy == nil || len(policy.([]interface{})) == 0 {
+	if len(policy.([]interface{})) == 0 {
 		return nil
 	}
 
