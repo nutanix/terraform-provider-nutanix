@@ -101,7 +101,7 @@ func ResourceNutanixRestoreSourceV2() *schema.Resource {
 												"rpo_in_minutes": {
 													Type:         schema.TypeInt,
 													Required:     true,
-													ValidateFunc: validation.IntBetween(60, 1440),//nolint:gomnd
+													ValidateFunc: validation.IntBetween(60, 1440), //nolint:gomnd
 												},
 											},
 										},
