@@ -208,7 +208,7 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the cluster to be available
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"RUNNING", "QUEUED"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
@@ -346,7 +346,7 @@ func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.Resource
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the backup target to be updated
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"RUNNING", "QUEUED"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 	}
@@ -394,7 +394,7 @@ func ResourceNutanixBackupTargetV2Delete(ctx context.Context, d *schema.Resource
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the backup target to be deleted
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"RUNNING", "QUEUED"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 	}
