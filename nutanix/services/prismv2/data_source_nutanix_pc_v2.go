@@ -2,6 +2,7 @@ package prismv2
 
 import (
 	"context"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	commonConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/common/v1/config"
@@ -52,8 +53,8 @@ func DatasourceNutanixFetchPcV2() *schema.Resource {
 func DatasourceNutanixPcV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).PrismAPI
 
-	pcExtId := d.Get("ext_id").(string)
-	resp, err := conn.DomainManagerAPIInstance.GetDomainManagerById(utils.StringPtr(pcExtId))
+	pcExtID := d.Get("ext_id").(string)
+	resp, err := conn.DomainManagerAPIInstance.GetDomainManagerById(utils.StringPtr(pcExtID))
 
 	if err != nil {
 		return diag.Errorf("error while fetching Domain Manager Configuration Detail: %s", err)
