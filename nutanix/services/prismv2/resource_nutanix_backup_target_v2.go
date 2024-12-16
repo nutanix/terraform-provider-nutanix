@@ -113,7 +113,7 @@ func ResourceNutanixBackupTargetV2() *schema.Resource {
 												"rpo_in_minutes": {
 													Type:         schema.TypeInt,
 													Required:     true,
-													ValidateFunc: validation.IntBetween(60, 1440),
+													ValidateFunc: validation.IntBetween(60, 1440), //nolint:gomnd
 												},
 											},
 										},
@@ -422,7 +422,7 @@ func expandProviderConfig(providerConfig interface{}) *management.AWSS3Config {
 	}
 	providerConfigI := providerConfig.([]interface{})
 
-	if providerConfigI == nil || len(providerConfigI) == 0 {
+	if len(providerConfigI) == 0 {
 		return nil
 	}
 
