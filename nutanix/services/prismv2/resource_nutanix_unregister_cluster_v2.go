@@ -20,6 +20,10 @@ func ResourceNutanixUnregisterClusterV2() *schema.Resource {
 		UpdateContext: ResourceNutanixUnregisterClusterV2Update,
 		DeleteContext: ResourceNutanixUnregisterClusterV2Delete,
 		Schema: map[string]*schema.Schema{
+			"pc_ext_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"ext_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -31,22 +35,23 @@ func ResourceNutanixUnregisterClusterV2() *schema.Resource {
 func ResourceNutanixUnregisterClusterV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	clsConn := meta.(*conns.Client).ClusterAPI
 	conn := meta.(*conns.Client).PrismAPI
-	extID := d.Get("ext_id")
+	pcExtID := d.Get("pc_ext_id")
 
-	readClsResp, err := clsConn.ClusterEntityAPI.GetClusterById(utils.StringPtr(extID.(string)), nil)
-	if err != nil {
-		return diag.Errorf("error while fetching cluster entity : %v", err)
+	readClsResp, readErr := conn.DomainManagerAPIInstance.GetDomainManagerById(utils.StringPtr(pcExtID.(string)))
+	if readErr != nil {
+		return diag.Errorf("error while fetching Domain Manager: %v", readErr)
 	}
 
 	args := make(map[string]interface{})
 	eTag := clsConn.ClusterEntityAPI.ApiClient.GetEtag(readClsResp)
 	args["If-Match"] = utils.StringPtr(eTag)
 
+	extID := d.Get("ext_id")
 	body := management.ClusterReference{
 		ExtId: utils.StringPtr(extID.(string)),
 	}
 
-	resp, err := conn.DomainManagerAPIInstance.Unregister(utils.StringPtr(extID.(string)), &body, args)
+	resp, err := conn.DomainManagerAPIInstance.Unregister(utils.StringPtr(pcExtID.(string)), &body, args)
 
 	if err != nil {
 		return diag.Errorf("error while unregistering cluster : %v", err)
@@ -80,47 +85,10 @@ func ResourceNutanixUnregisterClusterV2Create(ctx context.Context, d *schema.Res
 	uuid := rUUID.EntitiesAffected[0].ExtId
 	d.SetId(*uuid)
 
-	return ResourceNutanixUnregisterClusterV2Read(ctx, d, meta)
+	return nil
 }
 
 func ResourceNutanixUnregisterClusterV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).PrismAPI
-
-	resp, err := conn.DomainManagerAPIInstance.GetDomainManagerById(utils.StringPtr(d.Id()))
-
-	if err != nil {
-		return diag.Errorf("error while fetching Domain Manager: %s", err)
-	}
-
-	deployPcBody := resp.Data.GetValue().(config.DomainManager)
-
-	if err := d.Set("tenant_id", utils.StringValue(deployPcBody.TenantId)); err != nil {
-		return diag.Errorf("error setting tenant_id: %s", err)
-	}
-	if err := d.Set("ext_id", utils.StringValue(deployPcBody.ExtId)); err != nil {
-		return diag.Errorf("error setting ext_id: %s", err)
-	}
-	if err := d.Set("links", flattenLinks(deployPcBody.Links)); err != nil {
-		return diag.Errorf("error setting links: %s", err)
-	}
-	if err := d.Set("config", flattenPCConfig(deployPcBody.Config)); err != nil {
-		return diag.Errorf("error setting config: %s", err)
-	}
-	if err := d.Set("is_registered_with_hosting_cluster", utils.BoolValue(deployPcBody.IsRegisteredWithHostingCluster)); err != nil {
-		return diag.Errorf("error setting is_registered_with_hosting_cluster: %s", err)
-	}
-	if err := d.Set("network", flattenPCNetwork(deployPcBody.Network)); err != nil {
-		return diag.Errorf("error setting network: %s", err)
-	}
-	if err := d.Set("hosting_cluster_ext_id", utils.StringValue(deployPcBody.HostingClusterExtId)); err != nil {
-		return diag.Errorf("error setting hosting_cluster_ext_id: %s", err)
-	}
-	if err := d.Set("should_enable_high_availability", utils.BoolValue(deployPcBody.ShouldEnableHighAvailability)); err != nil {
-		return diag.Errorf("error setting should_enable_high_availability: %s", err)
-	}
-	if err := d.Set("node_ext_ids", deployPcBody.NodeExtIds); err != nil {
-		return diag.Errorf("error setting node_ext_ids: %s", err)
-	}
 	return nil
 }
 
