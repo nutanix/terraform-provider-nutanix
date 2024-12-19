@@ -39,37 +39,47 @@ func ResourceNutanixRestorePcV2() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"config":  schemaForPcConfig(),
+						"tenant_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"config": schemaForPcConfig(),
+						"is_registered_with_hosting_cluster": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 						"network": schemaForPcNetwork(),
+						"hosting_cluster_ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"should_enable_high_availability": {
 							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
+							Computed: true,
+						},
+						"node_ext_ids": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
 						},
 					},
 				},
 			},
-
 			// read schema
 			"tenant_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"links": schemaForLinks(),
-			"is_registered_with_hosting_cluster": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"hosting_cluster_ext_id": {
+			"creation_time": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"node_ext_ids": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
 			},
 		},
 	}
@@ -79,7 +89,7 @@ func ResourceNutanixRestorePcCreate(ctx context.Context, d *schema.ResourceData,
 	conn := meta.(*conns.Client).PrismAPI
 
 	restoreSourceExtID := d.Get("restore_source_ext_id").(string)
-	restoreableDomainManagerExtID := d.Get("restorable_domain_manager_ext_id").(string)
+	restorableDomainManagerExtID := d.Get("restorable_domain_manager_ext_id").(string)
 	restorePointExtID := d.Get("ext_id").(string)
 
 	restorePcBody := config.NewDomainManager()
@@ -98,7 +108,7 @@ func ResourceNutanixRestorePcCreate(ctx context.Context, d *schema.ResourceData,
 	aJSON, _ := json.MarshalIndent(restoreSpec, "", "  ")
 	log.Printf("[DEBUG] Restore PC Body: %s", string(aJSON))
 
-	resp, err := conn.DomainManagerBackupsAPIInstance.Restore(utils.StringPtr(restoreSourceExtID), utils.StringPtr(restoreableDomainManagerExtID), utils.StringPtr(restorePointExtID), restoreSpec)
+	resp, err := conn.DomainManagerBackupsAPIInstance.Restore(utils.StringPtr(restoreSourceExtID), utils.StringPtr(restorableDomainManagerExtID), utils.StringPtr(restorePointExtID), restoreSpec)
 	if err != nil {
 		return diag.Errorf("error while restoring Domain Manager: %s", err)
 	}
@@ -137,40 +147,31 @@ func ResourceNutanixRestorePcCreate(ctx context.Context, d *schema.ResourceData,
 func ResourceNutanixRestorePcRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).PrismAPI
 
-	resp, err := conn.DomainManagerAPIInstance.GetDomainManagerById(utils.StringPtr(d.Id()))
+	restoreSourceExtID := utils.StringPtr(d.Get("restore_source_ext_id").(string))
+	restorableDomainManagerExtID := utils.StringPtr(d.Get("restorable_domain_manager_ext_id").(string))
+
+	resp, err := conn.DomainManagerBackupsAPIInstance.GetRestorePointById(restoreSourceExtID, restorableDomainManagerExtID, utils.StringPtr(d.Id()))
 
 	if err != nil {
-		return diag.Errorf("error while fetching Domain Manager: %s", err)
+		return diag.Errorf("error while fetching Domain Manager Restore Point Detail: %s", err)
 	}
 
-	deployPcBody := resp.Data.GetValue().(config.DomainManager)
+	restorePoint := resp.Data.GetValue().(management.RestorePoint)
 
-	if err := d.Set("tenant_id", utils.StringValue(deployPcBody.TenantId)); err != nil {
+	if err := d.Set("tenant_id", utils.StringValue(restorePoint.TenantId)); err != nil {
 		return diag.Errorf("error setting tenant_id: %s", err)
 	}
-	if err := d.Set("ext_id", utils.StringValue(deployPcBody.ExtId)); err != nil {
+	if err := d.Set("ext_id", utils.StringValue(restorePoint.ExtId)); err != nil {
 		return diag.Errorf("error setting ext_id: %s", err)
 	}
-	if err := d.Set("links", flattenLinks(deployPcBody.Links)); err != nil {
+	if err := d.Set("links", flattenLinks(restorePoint.Links)); err != nil {
 		return diag.Errorf("error setting links: %s", err)
 	}
-	if err := d.Set("config", flattenPCConfig(deployPcBody.Config)); err != nil {
-		return diag.Errorf("error setting config: %s", err)
+	if err := d.Set("creation_time", flattenTime(restorePoint.CreationTime)); err != nil {
+		return diag.Errorf("error setting creation_time: %s", err)
 	}
-	if err := d.Set("is_registered_with_hosting_cluster", utils.BoolValue(deployPcBody.IsRegisteredWithHostingCluster)); err != nil {
-		return diag.Errorf("error setting is_registered_with_hosting_cluster: %s", err)
-	}
-	if err := d.Set("network", flattenPCNetwork(deployPcBody.Network)); err != nil {
-		return diag.Errorf("error setting network: %s", err)
-	}
-	if err := d.Set("hosting_cluster_ext_id", utils.StringValue(deployPcBody.HostingClusterExtId)); err != nil {
-		return diag.Errorf("error setting hosting_cluster_ext_id: %s", err)
-	}
-	if err := d.Set("should_enable_high_availability", utils.BoolValue(deployPcBody.ShouldEnableHighAvailability)); err != nil {
-		return diag.Errorf("error setting should_enable_high_availability: %s", err)
-	}
-	if err := d.Set("node_ext_ids", deployPcBody.NodeExtIds); err != nil {
-		return diag.Errorf("error setting node_ext_ids: %s", err)
+	if err := d.Set("domain_manager", flattenDomainManager(restorePoint.DomainManager)); err != nil {
+		return diag.Errorf("error setting domain_manager: %s", err)
 	}
 	return nil
 }
