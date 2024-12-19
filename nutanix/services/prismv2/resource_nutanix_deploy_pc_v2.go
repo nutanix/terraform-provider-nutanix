@@ -14,6 +14,7 @@ import (
 	commonConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/common/v1/config"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	vmmConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/vmm/v4/ahv/config"
+
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -325,17 +326,14 @@ func schemaForPcConfig() *schema.Schema {
 							},
 							"num_vcpus": {
 								Type:     schema.TypeInt,
-								Optional: true,
 								Computed: true,
 							},
 							"memory_size_bytes": {
 								Type:     schema.TypeInt,
-								Optional: true,
 								Computed: true,
 							},
 							"data_disk_size_bytes": {
 								Type:     schema.TypeInt,
-								Optional: true,
 								Computed: true,
 							},
 						},
@@ -672,7 +670,7 @@ func expandPCConfig(configData map[string]interface{}) *config.DomainManagerClus
 	if credentials, ok := configData["credentials"]; ok {
 		domainManagerClusterConfig.Credentials = expandCredentials(credentials.([]interface{}))
 	}
-	if resourceConfig, ok := configData[" "]; ok {
+	if resourceConfig, ok := configData["resource_config"]; ok {
 		domainManagerClusterConfig.ResourceConfig = expandResourceConfig(resourceConfig.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -979,15 +977,6 @@ func expandResourceConfig(resourceConfig map[string]interface{}) *config.DomainM
 			containerExtIdsListObj = append(containerExtIdsListObj, containerExtID.(string))
 		}
 		resourceConfigObj.ContainerExtIds = containerExtIdsListObj
-	}
-	if numVcpus, ok := resourceConfig["num_vcpus"]; ok {
-		resourceConfigObj.NumVcpus = utils.IntPtr(numVcpus.(int))
-	}
-	if memorySizeBytes, ok := resourceConfig["memory_size_bytes"]; ok {
-		resourceConfigObj.MemorySizeBytes = utils.Int64Ptr(int64(memorySizeBytes.(int)))
-	}
-	if dataDiskSizeBytes, ok := resourceConfig["data_disk_size_bytes"]; ok {
-		resourceConfigObj.DataDiskSizeBytes = utils.Int64Ptr(int64(dataDiskSizeBytes.(int)))
 	}
 
 	return resourceConfigObj

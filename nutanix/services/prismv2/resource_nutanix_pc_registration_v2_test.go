@@ -1,4 +1,4 @@
-package clustersv2_test
+package prismv2_test
 
 import (
 	"regexp"
