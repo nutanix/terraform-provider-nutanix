@@ -1492,7 +1492,6 @@ func flattenInternalNetworks(internalNetworks []config.BaseNetwork) []map[string
 		return internalNetworksMap
 	}
 	return nil
-
 }
 
 func flattenIPRanges(ipRanges []commonConfig.IpRange) []map[string]interface{} {
