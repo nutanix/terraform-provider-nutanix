@@ -2,9 +2,11 @@ package prismv2
 
 import (
 	"context"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/management"
+
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -50,7 +52,7 @@ func DatasourceNutanixBackupTargetsV2Read(ctx context.Context, d *schema.Resourc
 }
 
 func flattenBackupTargets(backupTargets []management.BackupTarget) []map[string]interface{} {
-	if backupTargets == nil || len(backupTargets) == 0 {
+	if len(backupTargets) == 0 {
 		return []map[string]interface{}{}
 	}
 
