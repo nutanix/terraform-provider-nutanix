@@ -60,6 +60,7 @@ func ResourceNutanixRestorePcV2() *schema.Resource {
 						},
 						"should_enable_high_availability": {
 							Type:     schema.TypeBool,
+							Optional: true,
 							Computed: true,
 						},
 						"node_ext_ids": {
