@@ -96,14 +96,3 @@ resource "nutanix_volume_group_vm_v2" "vg_vm_example" {
   volume_group_ext_id = resource.nutanix_volume_group_v2.volume_group_example.id
   vm_ext_id           = var.vg_vm_ext_id
 }
-
-
-
-##########################
-### Data Sources
-##########################
-
-# List all the VM attachments for a Volume Group.
-data "nutanix_volume_group_vms_v2" "vg_vm_example" {
-  ext_id = var.volume_group_ext_id
-}
