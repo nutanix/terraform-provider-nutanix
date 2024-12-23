@@ -72,4 +72,4 @@ The idp_metadata attribute supports the following:
     * `persistent`: -  Uses persistent name identifier as NameID format.
     * `entity`: -  Uses identifier of an entity as NameID format.
 
-See detailed information in [Nutanix SAML Identity Providers v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0.b1).
+See detailed information in [Nutanix SAML Identity Providers v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0).

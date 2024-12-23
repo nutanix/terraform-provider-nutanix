@@ -241,6 +241,6 @@ The extra_params block supports the following:
 
 
 
-See detailed information in [Nutanix Cluster - Add Node on a Cluster V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0.b2#tag/Clusters/operation/expandCluster).
+See detailed information in [Nutanix Cluster - Add Node on a Cluster V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0#tag/Clusters/operation/expandCluster).
 
 

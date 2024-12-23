@@ -171,4 +171,4 @@ The fqdn attribute supports the following:
 * `value`: - The fully qualified domain name of the host.
 
 
-See detailed information in [Nutanix PC Details](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0.b1#tag/DomainManager/operation/getDomainManagerById).
+See detailed information in [Nutanix PC Details](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/getDomainManagerById).

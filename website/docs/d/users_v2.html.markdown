@@ -131,4 +131,4 @@ The buckets_access_keys attribute supports the following:
 * `created_time`: - Creation time for the Bucket Access Key.
 
 
-See detailed information in [Nutanix Users v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0.b1#tag/Users/operation/listUsers).
+See detailed information in [Nutanix Users v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Users/operation/listUsers).

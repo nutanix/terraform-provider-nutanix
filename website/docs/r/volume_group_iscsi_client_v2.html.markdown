@@ -67,4 +67,4 @@ The fqdn attribute supports the following:
 * `value`: - The fully qualified domain name.
 
 
-See detailed information in [Nutanix Volumes V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.0.b1).
+See detailed information in [Nutanix Volumes V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.0).

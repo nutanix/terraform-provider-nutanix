@@ -81,4 +81,4 @@ The following attributes are exported:
 - `vpc`: Networking common base object
 - `vm_nic`: Virtual NIC for projections
 
-See detailed information in [Nutanix Floating IP v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0.b1).
+See detailed information in [Nutanix Floating IP v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0).

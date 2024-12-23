@@ -133,4 +133,4 @@ The following attributes are exported:
 - `last_update_time`: last updated time
 - `creation_time`: creation time of NSP
 
-See detailed information in [Nutanix Security Policy v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0.b1).
+See detailed information in [Nutanix Security Policy v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0).

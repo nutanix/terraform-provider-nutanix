@@ -37,4 +37,4 @@ The following arguments are supported:
 * `should_fail_on_script_failure`: (Optional) Indicates whether to abort VM shutdown/restart if the script fails.
 
 
-See detailed information in [Nutanix VMs Power Action V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).
+See detailed information in [Nutanix VMs Power Action V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).
