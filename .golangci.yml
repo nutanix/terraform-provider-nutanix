@@ -22,7 +22,10 @@ linters-settings:
     # also, for anyone using vscode, use the following configs:
     # "rewrap.wrappingColumn": 200 ... requires the rewrap plugin
     # "editor.rulers": [200]
-    line-length: 200
+    line-length: 500
+  gocritic:
+    disable:
+      - ifElseChain
 
 linters:
   enable-all: true

@@ -172,133 +172,198 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 * ndb_username, ndb_password and ndb_endpoint are required fields for using NDB based resources and data sources
 ## Resources
 
-* nutanix_access_control_policy
-* nutanix_category_key
-* nutanix_category_value
-* nutanix_image
-* nutanix_karbon_cluster
-* nutanix_karbon_private_registry
-* nutanix_network_security_rule
-* nutanix_project
-* nutanix_protection_rule
-* nutanix_recovery_plan
-* nutanix_role
-* nutanix_subnet
-* nutanix_user
-* nutanix_virtual_machine
-* nutanix_service_group
-* nutanix_address_group
-* nutanix_foundation_image_nodes
-* nutanix_foundation_ipmi_config
-* nutanix_foundation_image
-* nutanix_foundation_central_api_keys
-* nutanix_foundation_central_image_cluster
-* nutanix_vpc
-* nutanix_pbr
-* nutanix_static_routes
-* nutanix_floating_ip
-* nutanix_user_groups
-* nutanix_ndb_database
-* nutanix_ndb_authorize_dbserver
-* nutanix_ndb_clone
-* nutanix_ndb_database_restore
-* nutanix_ndb_database_scale
-* nutanix_ndb_database_snapshot
-* nutanix_ndb_linked_databases
-* nutanix_ndb_log_catchups
-* nutanix_ndb_profile
-* nutanix_ndb_register_database
-* nutanix_ndb_sla
-* nutanix_ndb_software_version_profile
-* nutanix_ndb_tms_cluster
-* nutanix_ndb_tag
-* nutanix_ndb_dbserver_vm
-* nutanix_ndb_register_dbserver
-* nutanix_ndb_clone_refresh
-* nutanix_ndb_network
-* nutanix_ndb_stretched_vlan
-* nutanix_ndb_cluster
-* nutanix_ndb_maintenance_task
-* nutanix_ndb_maintenance_window
-* nutanix_karbon_worker_nodepool
+
+| v1 Resources| v2 Resources |
+|  :--- |  :--- |
+| nutanix_subnet | nutanix_subnet_v2 |
+| nutanix_vpc | nutanix_vpc_v2 |
+| nutanix_floating_ip | nutanix_floating_ip_v2 |
+| nutanix_pbr | nutanix_pbr_v2 |
+| nutanix_static_routes | nutanix_routes_v2 |
+| nutanix_address_group | nutanix_address_groups_v2 |
+| nutanix_service_group | nutanix_service_groups_v2 |
+| nutanix_network_security_rule | nutanix_network_security_policy_v2 |
+| nutanix_role | nutanix_roles_v2 |
+| nutanix_user | nutanix_users_v2 |
+| nutanix_user_groups | nutanix_user_groups_v2 |
+| nutanix_access_control_policy | nutanix_authorization_policy_v2 |
+| - | nutanix_saml_identity_providers_v2 |
+| - | nutanix_directory_services_v2 |
+| nutanix_category_key | nutanix_category_v2 |
+| nutanix_category_value | - |
+| nutanix_image |nutanix_images_v2 |
+| - | nutanix_image_placement_policy_v2 |
+| nutanix_virtual_machine | nutanix_virtual_machine_v2 |
+| - | nutanix_vm_clone_v2 |
+| - | nutanix_vm_cdrom_insert_eject_v2 |
+| - | nutanix_vm_shutdown_action_v2 |
+| - | nutanix_vm_gc_update_v2 |
+| - | nutanix_vm_network_device_assign_ip_v2 |
+| - | nutanix_vm_network_device_migrate_v2 |
+| - | nutanix_template_v2 |
+| - | nutanix_deploy_templates_v2 |
+| - | nutanix_template_guest_os_actions_v2 |
+| - | nutanix_ngt_installation_v2 |
+| - | nutanix_ngt_upgrade_v2 |
+| - | nutanix_ngt_insert_iso_v2 |
+| - | nutanix_vm_revert_v2 |
+| - | nutanix_recovery_points_v2 |
+| - | nutanix_recovery_point_replicate_v2 |
+| - | nutanix_recovery_point_restore_v2 |
+| - | nutanix_volume_group_v2 |
+| - | nutanix_volume_group_disk_v2 |
+| - | nutanix_volume_group_iscsi_client_v2 |
+| - | nutanix_volume_group_vm_v2 |
+| - | nutanix_storage_containers_v2 |
+| - | nutanix_cluster_v2 |
+| - | nutanix_cluster_add_node_v2 |
+| - | nutanix_pc_registration_v2 |
+| - | nutanix_clusters_discover_unconfigured_nodes_v2 |
+| - | nutanix_clusters_unconfigured_node_networks_v2 |
+| nutanix_project | - |
+| nutanix_protection_rule | - |
+| nutanix_recovery_plan | - |
+| nutanix_karbon_cluster | - |
+| nutanix_karbon_private_registry | - |
+| nutanix_foundation_image_nodes | - |
+| nutanix_foundation_ipmi_config | - |
+| nutanix_foundation_image | - |
+| nutanix_foundation_central_image_cluster | - |
+| nutanix_foundation_central_api_keys | - |
+| nutanix_ndb_database | - |
+| nutanix_ndb_sla | - |
+| nutanix_ndb_database_restore | - |
+| nutanix_ndb_log_catchups | - |
+| nutanix_ndb_profile | - |
+| nutanix_ndb_software_version_profile | - |
+| nutanix_ndb_scale_database | - |
+| nutanix_ndb_database_scale | - |
+| nutanix_ndb_register_database | - |
+| nutanix_ndb_database_snapshot | - |
+| nutanix_ndb_clone | - |
+| nutanix_ndb_authorize_dbserver | - |
+| nutanix_ndb_linked_databases | - |
+| nutanix_ndb_maintenance_window | - |
+| nutanix_ndb_maintenance_task | - |
+| nutanix_ndb_tms_cluster | - |
+| nutanix_ndb_tag | - |
+| nutanix_ndb_network | - |
+| nutanix_ndb_dbserver_vm | - |
+| nutanix_ndb_register_dbserver | - |
+| nutanix_ndb_stretched_vlan | - |
+| nutanix_ndb_clone_refresh | - |
+| nutanix_ndb_cluster | - |
+
 
 ## Data Sources
 
-* nutanix_access_control_policies
-* nutanix_access_control_policy
-* nutanix_category_key
-* nutanix_cluster
-* nutanix_clusters
-* nutanix_host
-* nutanix_hosts
-* nutanix_image
-* nutanix_karbon_cluster_kubeconfig
-* nutanix_karbon_cluster_ssh
-* nutanix_karbon_cluster
-* nutanix_karbon_clusters
-* nutanix_karbon_private_registries
-* nutanix_karbon_private_registry
-* nutanix_network_security_rule
-* nutanix_permission
-* nutanix_permissions
-* nutanix_project
-* nutanix_projects
-* nutanix_role
-* nutanix_roles
-* nutanix_subnet
-* nutanix_subnets
-* nutanix_user_group
-* nutanix_user_groups
-* nutanix_user
-* nutanix_users
-* nutanix_virtual_machine
-* nutanix_protection_rule
-* nutanix_protection_rules
-* nutanix_recovery_plan
-* nutanix_recovery_plans
-* nutanix_address_groups
-* nutanix_address_group
-* nutanix_foundation_discover_nodes
-* nutanix_foundation_node_network_details
-* nutanix_foundation_nos_packages
-* nutanix_foundation_hypervisor_isos
-* nutanix_foundation_central_api_keys
-* nutanix_foundation_central_list_api_keys
-* nutanix_foundation_central_imaged_nodes_list
-* nutanix_foundation_central_imaged_clusters_list
-* nutanix_foundation_central_cluster_details
-* nutanix_foundation_central_imaged_node_details
-* nutanix_vpc
-* nutanix_vpcs
-* nutanix_pbr
-* nutanix_pbrs
-* nutanix_floating_ip
-* nutanix_floating_ips
-* nutanix_static_routes
-* nutanix_ndb_cluster
-* nutanix_ndb_clusters
-* nutanix_ndb_database
-* nutanix_ndb_databases
-* nutanix_ndb_profile
-* nutanix_ndb_profiles
-* nutanix_ndb_sla
-* nutanix_ndb_slas
-* nutanix_ndb_clone
-* nutanix_ndb_clones
-* nutanix_ndb_snapshot
-* nutanix_ndb_snapshots
-* nutanix_ndb_tms_capability
-* nutanix_ndb_time_machine
-* nutanix_ndb_time_machines
-* nutanix_ndb_dbserver
-* nutanix_ndb_dbservers
-* nutanix_ndb_tag
-* nutanix_ndb_tags
-* nutanix_ndb_network
-* nutanix_ndb_networks
-* nutanix_ndb_maintenance_window
-* nutanix_ndb_maintenance_windows
-* nutanix_ndb_network_available_ips
+| v1 datasources | v2 datasources |
+|  :--- |  :--- |
+| nutanix_cluster | nutanix_cluster_v2 |
+| nutanix_clusters | nutanix_clusters_v2 |
+| nutanix_host | nutanix_host_v2 |
+| nutanix_hosts | nutanix_hosts_v2 |
+| nutanix_subnet | nutanix_subnet_v2 |
+| nutanix_subnets | nutanix_subnets_v2 |
+| nutanix_vpc | nutanix_vpc_v2 |
+| nutanix_vpcs | nutanix_vpcs_v2 |
+| nutanix_pbr | nutanix_pbr_v2 |
+| nutanix_pbrs | nutanix_pbrs_v2 |
+| nutanix_floating_ip | nutanix_floating_ip_v2 |
+| nutanix_floating_ips | nutanix_floating_ips_v2 |
+| nutanix_address_group | nutanix_address_group_v2 |
+| nutanix_address_groups | nutanix_address_groups_v2 |
+| nutanix_service_group | nutanix_service_group_v2 |
+| nutanix_service_groups | nutanix_service_groups_v2 |
+| nutanix_network_security_rule | nutanix_network_security_policy_v2 |
+| - | nutanix_network_security_policies_v2 |
+| nutanix_role | nutanix_role_v2 |
+| nutanix_roles | nutanix_roles_v2 |
+| nutanix_permission | nutanix_operation_v2 |
+| nutanix_permissions | nutanix_operations_v2 |
+| nutanix_user | nutanix_user_v2 |
+| nutanix_users | nutanix_users_v2 |
+| nutanix_user_group | nutanix_user_group_v2 |
+| nutanix_user_groups | nutanix_user_groups_v2 |
+| nutanix_access_control_policy | nutanix_authorization_policy_v2 |
+| nutanix_access_control_policies | nutanix_authorization_policies_v2 |
+| - | nutanix_saml_identity_provider_v2 |
+| - | nutanix_saml_identity_providers_v2 |
+| - | nutanix_directory_service_v2 |
+| - | nutanix_directory_services_v2 |
+| nutanix_category_key | nutanix_category_v2 |
+| - | nutanix_categories_v2 |
+| nutanix_image | nutanix_image_v2 |
+| - | nutanix_images_v2 |
+| nutanix_virtual_machine | nutanix_virtual_machine_v2 |
+| - | nutanix_virtual_machines_v2 |
+| - | nutanix_template_v2 |
+| - | nutanix_templates_v2 |
+| - | nutanix_ngt_configuration_v2 |
+| - | nutanix_image_placement_policy_v2 |
+| - | nutanix_image_placement_policies_v2 |
+| - | nutanix_volume_group_v2 |
+| - | nutanix_volume_groups_v2 |
+| - | nutanix_volume_group_disk_v2 |
+| - | nutanix_volume_group_disks_v2 |
+| - | nutanix_volume_group_iscsi_clients_v2 |
+| - | nutanix_volume_group_category_details_v2 |
+| - | nutanix_volume_group_vms_v2 |
+| - | nutanix_volume_iscsi_client_v2 |
+| - | nutanix_volume_iscsi_clients_v2 |
+| - | nutanix_recovery_point_v2 |
+| - | nutanix_recovery_points_v2 |
+| - | nutanix_vm_recovery_point_info_v2 |
+| - | nutanix_storage_container_v2 |
+| - | nutanix_storage_containers_v2 |
+| - | nutanix_storage_container_stats_info_v2 |
+| nutanix_project | - |
+| nutanix_projects | - |
+| nutanix_karbon_cluster_kubeconfig | - |
+| nutanix_karbon_cluster | - |
+| nutanix_karbon_clusters | - |
+| nutanix_karbon_cluster_ssh | - |
+| nutanix_karbon_private_registry | - |
+| nutanix_karbon_private_registries | - |
+| nutanix_protection_rule | - |
+| nutanix_protection_rules | - |
+| nutanix_recovery_plan | - |
+| nutanix_recovery_plans | - |
+| nutanix_foundation_hypervisor_isos | - |
+| nutanix_foundation_discover_nodes | - |
+|nutanix_foundation_nos_packages | - |
+| nutanix_foundation_node_network_details | - |
+| nutanix_foundation_central_api_keys | - |
+| nutanix_foundation_central_list_api_keys | - |
+| nutanix_foundation_central_imaged_nodes_list | - |
+| nutanix_foundation_central_imaged_clusters_list | - |
+| nutanix_foundation_central_cluster_details | - |
+| nutanix_foundation_central_imaged_node_details | - |
+| nutanix_ndb_sla | - |
+| nutanix_ndb_slas | - |
+| nutanix_ndb_profile | - |
+| nutanix_ndb_profiles | - |
+| nutanix_ndb_cluster | - |
+| nutanix_ndb_clusters | - |
+| nutanix_ndb_database | - |
+| nutanix_ndb_databases | - |
+| nutanix_ndb_time_machine | - |
+| nutanix_ndb_time_machines | - |
+| nutanix_ndb_clone | - |
+| nutanix_ndb_clones | - |
+| nutanix_ndb_snapshot | - |
+| nutanix_ndb_snapshots | - |
+| nutanix_ndb_tms_capability | - |
+| nutanix_ndb_maintenance_window | - |
+| nutanix_ndb_maintenance_windows | - |
+| nutanix_ndb_tag | - |
+| nutanix_ndb_tags | - |
+| nutanix_ndb_network | - |
+| nutanix_ndb_networks | - |
+| nutanix_ndb_dbserver | - |
+| nutanix_ndb_dbservers | - |
+| nutanix_ndb_network_available_ips | - |
+
 
 
 ## Developing the provider 

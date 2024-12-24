@@ -37,9 +37,12 @@ jobs:
                   elif [ "$provider" = "karbon" ]
                       then
                           runFlag+="TestAccKarbon*"
-                  elif [ "$provider" = "pc" ]
+                  elif [ "$provider" = "v3" ]
                       then
                           runFlag+="TestAccNutanix*"
+                  elif [ "$provider" = "v4" ]
+                      then
+                          runFlag+="TestAccV2Nutanix*"
                   elif [ "$provider" = "era" ]
                       then
                           runFlag+="TestAccEra*"
@@ -57,6 +60,7 @@ jobs:
               echo "TESTARGS = $TESTARGS"
               echo '${{ secrets.FOUNDATION_CONFIG }}' > test_foundation_config.json
               echo '${{ secrets.PC_CONFIG }}' > test_config.json
+              echo '${{ secrets.V4_CONFIG }}' > test_config_v2.json
               ${{ secrets.ACCEPTANCE_TEST_ARGS }} make testacc
       - name: Code Coverage Check
         if: ${{ always() }}
