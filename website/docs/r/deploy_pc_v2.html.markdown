@@ -16,7 +16,7 @@ Deploys a Prism Central using the provided details. Prism Central Size, Network 
 
 ```hcl
 
-resource "nutanix_deploy_pc_v2" "example" {
+resource "nutanix_deploy_pc_v2" "example"{
   config {
     build_info {
       version = "5.17.0"
