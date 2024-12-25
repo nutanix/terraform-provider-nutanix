@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_ngt_configuration_v2"
-sidebar_current: "docs-nutanix-resource-ngt-configuration-v2"
+sidebar_current: "docs-nutanix-datasource-ngt-configuration-v2"
 description: |-
   Retrieves the Nutanix Guest Tools configuration for a Virtual Machine.
 

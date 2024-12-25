@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_network_security_policy_v2"
-sidebar_current: "docs-nutanix-datasource-network_security_policy_v4"
+sidebar_current: "docs-nutanix-datasource-network_security_policy_v2"
 description: |-
  Get a Network Security Policy
 ---
