@@ -16,14 +16,25 @@ Create a restore source pointing to a cluster or object store to restore the dom
 ## Example Usage
 
 ```hcl
-
-resource "nutanix_restore_source_v2" "example"{
+// using cluster location
+resource "nutanix_restore_source_v2" "example-1"{
   location {
     cluster_location {
       config {
         ext_id = "cluster uuid"
       }
-    }
+    }    
+  }
+}
+
+```
+
+## Example Usage
+
+```hcl
+// using object store location
+resource "nutanix_restore_source_v2" "example-2"{
+  location {
     object_store_location {
       provider_config {
         bucket_name = "bucket name"
@@ -34,7 +45,7 @@ resource "nutanix_restore_source_v2" "example"{
         }
       }
       backup_policy {
-        rpo_in_minutes = 0
+        rpo_in_minutes = 70
       }
     }
   }
