@@ -47,3 +47,7 @@ resource "nutanix_restore_source_v2" "example-2" {
   }
 }
 
+// get the restore source
+data "nutanix_restore_source_v2" "restore-source" {
+  ext_id = nutanix_restore_source_v2.example-1.id
+}
