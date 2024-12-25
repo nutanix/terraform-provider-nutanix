@@ -15,7 +15,7 @@ Create a cluster or object store as the backup target. For a given Prism Central
 ## Example Usage
 
 ```hcl
-
+// using cluster location
 resource "nutanix_backup_target_v2" "example"{
   domain_manager_ext_id = "<domain_manager_uuid>"
   location {
@@ -24,6 +24,19 @@ resource "nutanix_backup_target_v2" "example"{
         ext_id = "cluster uuid"
       }
     }
+  }
+}
+
+```
+
+
+## Example Usage
+
+```hcl
+// using object store location 
+resource "nutanix_backup_target_v2" "example"{
+  domain_manager_ext_id = "<domain_manager_uuid>"
+  location {
     object_store_location {
       provider_config {
         bucket_name = "bucket name"
