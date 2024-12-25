@@ -46,53 +46,73 @@ func TestAccV2NutanixDeployPcResource_Basic(t *testing.T) {
 			// List pcs
 			{
 				Config: testAccDeployPCConfig(name) + testAccListPCConfig(),
-				Check:  resource.ComposeTestCheckFunc(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameListPCs, "pcs.#"),
+				),
 			},
 			// Fetch pc
 			{
 				Config: testAccDeployPCConfig(name) + testAccFetchPCConfig(),
-				Check:  resource.ComposeTestCheckFunc(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameFetchPC, "ext_id"),
+				),
 			},
 			// Create backup target
 			{
 				Config: backupTargetConfig,
-				Check:  resource.ComposeTestCheckFunc(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNameBackupTarget, "ext_id"),
+				),
 			},
 			// List backup targets
 			{
 				Config: backupTargetConfig + testAccListBackupTargetsDatasourceConfig(),
-				Check:  resource.ComposeTestCheckFunc(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameListBackupTargets, "backup_targets.#"),
+				),
 			},
 			// Fetch backup target
 			{
 				Config: backupTargetConfig + testAccFetchBackupTargetDatasourceConfig(),
-				Check:  resource.ComposeTestCheckFunc(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameFetchBackupTarget, "ext_id"),
+				),
 			},
 			// Create restore source
 			{
 				Config: restoreSourceConfig,
-				Check:  resource.ComposeTestCheckFunc(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNameRestoreSource, "ext_id"),
+				),
 			},
 			// Fetch restore source
 			{
 				Config: restoreSourceConfig + testAccFetchRestoreSourceDatasourceConfig(),
-				Check:  resource.ComposeTestCheckFunc(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceNameFetchRestoreSource, "ext_id"),
+				),
 			},
 			// restore pc
 			{
 				Config: restorePCConfig,
-				Check:  resource.ComposeTestCheckFunc(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNameRestorePC, "ext_id"),
+				),
 			},
 
 			// update backup target
 			{
 				Config: backupTargetUpdateConfig,
-				Check:  resource.ComposeTestCheckFunc(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNameBackupTarget, "ext_id"),
+				),
 			},
 			// unregister pc
 			{
 				Config: testAccDeployPCConfig(name) + testAccUnregisterPCResourceConfig(),
-				Check:  resource.ComposeTestCheckFunc(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNameUnregisterPC, "ext_id"),
+				),
 			},
 		},
 	})

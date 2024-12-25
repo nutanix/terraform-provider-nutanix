@@ -33,7 +33,7 @@ func DatasourceNutanixFetchRestorePointsV2() *schema.Resource {
 			"limit": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      50,
+				Default:      50, //nolint:gomnd
 				ValidateFunc: validation.IntBetween(1, 100),
 			},
 			"filter": {
