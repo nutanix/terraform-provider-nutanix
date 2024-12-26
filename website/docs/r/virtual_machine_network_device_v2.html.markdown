@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_vm_network_device"
-sidebar_current: "docs-nutanix-resource-vm-network-device"
+page_title: "NUTANIX: nutanix_vm_network_device_v2"
+sidebar_current: "docs-nutanix-resource-vm-network-device-v2"
 description: |-
   Provides a Nutanix Virtual Machine resource to Create a virtual machine nic.
 ---

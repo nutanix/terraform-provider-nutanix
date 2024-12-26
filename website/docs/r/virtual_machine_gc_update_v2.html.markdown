@@ -1,12 +1,12 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_vm_gc_update"
-sidebar_current: "docs-nutanix-resource-vm-gc-update"
+page_title: "NUTANIX: nutanix_vm_gc_update_v2"
+sidebar_current: "docs-nutanix-resource-vm-gc-update-v2"
 description: |-
   Provides a Nutanix Virtual Machine resource to Create a virtual machine guest customization update.
 ---
 
-# nutanix_vm_gc_update
+# nutanix_vm_gc_update_v2
 
 Provides a Nutanix Virtual Machine resource to Create a virtual machine guest customization update.
 

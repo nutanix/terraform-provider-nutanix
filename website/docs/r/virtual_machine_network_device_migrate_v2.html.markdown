@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_vm_network_device_migrate"
-sidebar_current: "docs-nutanix-resource-vm-network-device-migrate"
+page_title: "NUTANIX: nutanix_vm_network_device_migrate_v2"
+sidebar_current: "docs-nutanix-resource-vm-network-device-migrate-v2"
 description: |-
   Provides a Nutanix Virtual Machine resource to Migrate a nic.
 ---

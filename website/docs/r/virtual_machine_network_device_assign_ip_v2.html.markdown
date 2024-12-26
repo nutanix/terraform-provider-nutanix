@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_vm_network_device_assign_ip"
-sidebar_current: "docs-nutanix-resource-vm-network-device-assign-ip"
+page_title: "NUTANIX: nutanix_vm_network_device_assign_ip_v2"
+sidebar_current: "docs-nutanix-resource-vm-network-device-assign-ip-v2"
 description: |-
   Provides a Nutanix Virtual Machine resource to Assign IP.
 ---

@@ -1,19 +1,19 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_address_groups_v4"
+page_title: "NUTANIX: nutanix_address_groups_v2"
 sidebar_current: "docs-nutanix-resource-address-groups-v2"
 description: |-
   This operation submits a request to create a address group based on the input parameters.
 ---
 
-# nutanix_address_group
+# nutanix_address_groups_v2
 
 Create an Address Group
 
 ## Example Usage
 
 ``` hcl
-resource "nutanix_address_groups_v4" "addr_group"{
+resource "nutanix_address_groups_v2" "addr_group"{
     name = "{{ name }}"
     description = "{{ desc }}"
     ipv4_addresses{

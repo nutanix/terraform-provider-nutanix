@@ -6,8 +6,10 @@ description: |-
   This operation Revert VM identified by {extId}. 
 ---
 
-# nutanix_recovery_point_replicate_v2
+# nutanix_vm_revert_v2
+
 This operation Revert VM identified by {extId}. This does an in-place VM restore from a specified VM Recovery Point.
+
 ## Example Usage
 
 ``` hcl

@@ -1,6 +1,6 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: ngt_installation_v4"
+page_title: "NUTANIX: ngt_installation_v2"
 sidebar_current: "docs-nutanix-resource-ngt-installation-v2"
 description: |-
   Installs Nutanix Guest Tools in a Virtual Machine by using the provided credentials.

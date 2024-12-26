@@ -7,7 +7,7 @@ description: |-
 
 ---
 
-# nutanix_ngt_upgrade_v2
+# nutanix_ngt_insert_iso_v2
 
 Provides Nutanix resource toInserts the Nutanix Guest Tools installation and configuration ISO into a virtual machine.
 

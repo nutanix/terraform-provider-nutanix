@@ -1,12 +1,12 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_vm_clone"
-sidebar_current: "docs-nutanix-resource-vm-clone"
+page_title: "NUTANIX: nutanix_vm_clone_v2"
+sidebar_current: "docs-nutanix-resource-vm-clone-v2"
 description: |-
   Provides a Nutanix Virtual Machine resource to Create a virtual machine clone.
 ---
 
-# nutanix_vm_clone
+# nutanix_vm_clone_v2
 
 Provides a Nutanix Virtual Machine resource to Create a virtual machine clone.
 

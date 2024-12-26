@@ -1,12 +1,12 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: authorization_policy_v4"
+page_title: "NUTANIX: authorization_policy_v2"
 sidebar_current: "docs-nutanix-resource-authorization-policy-v2"
 description: |-
   Create Virtual Private Cloud .
 ---
 
-# nutanix_vpc_v4
+# authorization_policy_v2
 
 Provides Nutanix resource to create authorization policy.
 
@@ -15,7 +15,7 @@ Provides Nutanix resource to create authorization policy.
 
 ```hcl
 
-    resource "authorization_policy_v4" "acp"{
+    resource "authorization_policy_v2" "acp"{
         role         = <role uuid>
         display_name = <authorization policy name>
         description  = "auth policies description"
