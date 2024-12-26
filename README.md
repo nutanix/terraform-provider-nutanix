@@ -2,9 +2,10 @@
 
 Terraform provider plugin to integrate with Nutanix Enterprise Cloud
 
-NOTE: The latest version of the Nutanix provider is [v1.9.5](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v1.9.5)
+NOTE: The latest version of the Nutanix provider is [v2.0](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.0)
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
+
 ## Build, Quality Status
 
  [![Go Report Card](https://goreportcard.com/badge/github.com/nutanix/terraform-provider-nutanix)](https://goreportcard.com/report/github.com/nutanix/terraform-provider-nutanix)
@@ -15,25 +16,14 @@ Modules based on Terraform Nutanix Provider can be found here : [Modules](https:
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [![Build Status](https://travis-ci.org/nutanix/terraform-provider-nutanix.svg?branch=master)](https://travis-ci.org/nutanix/terraform-provider-nutanix) | [![Build Status](https://travis-ci.org/nutanix/terraform-provider-nutanix.svg?branch=develop)](https://travis-ci.org/nutanix/terraform-provider-nutanix) |
 
-## Support
 
-Terraform Nutanix Provider leverages the community-supported model. See [Open Source Support](https://portal.nutanix.com/page/documents/kbs/details?targetId=kA07V000000LdWPSA0) for more information about its support policy.
-
-## Community
-
-Nutanix is taking an inclusive approach to developing this new feature and welcomes customer feedback. Please see our development project on GitHub (you're here!), comment on requirements, design, code, and/or feel free to join us on Slack. Instructions on commenting, contributing, and joining our community Slack channel are all located within our GitHub Readme.
-
-For a slack invite, please contact terraform@nutanix.com from your business email address, and we'll add you.
-
-### Provider Development
+### Requirements
 * [Terraform](https://www.terraform.io/downloads.html) 0.12+
 * [Go](https://golang.org/doc/install) 1.17+ (to build the provider plugin)
 * This provider uses [SDKv2](https://www.terraform.io/plugin/sdkv2/sdkv2-intro) from release 1.3.0
 
-### Provider Use
 
-The Terraform Nutanix provider is designed to work with Nutanix Prism Central and Standalone Foundation, such that you can manage one or more Prism Element clusters at scale. AOS/PC 5.6.0 or higher is required, as this Provider makes exclusive use of the v3 APIs. It also consists components to work with Foundation to performing node imaging and related activities.
-
+### Qualification Matrix
 
 | Terraform Versions | Prism Central version |  AOS Version | Additional Software Requirements |
 |  :--- |  :--- | :- | :- |
@@ -42,13 +32,10 @@ The Terraform Nutanix provider is designed to work with Nutanix Prism Central an
 | 1.9.4 | pc2023, pc2023.1.0.2, pc2023.1.0.1 |  | |
 
 
-### note
-With v1.6.1 release of flow networking feature in provider, IAMv2 setups would be mandate. 
-Also, there is known issue for access_control_policies resource where update would be failing. We are continuously tracking the issue internally.
+### Using the Provider
 
-with v1.7.0 release of user groups feature in provider, pc version should be minimum 2022.1 to support organisational and saml user group. 
+The Terraform Nutanix provider is designed to work with Nutanix Prism Central and Standalone Foundation, such that you can manage one or more Prism Element clusters at scale. AOS/PC 5.6.0 or higher is required, as this Provider makes exclusive use of the v3 APIs. It also consists components to work with Foundation to performing node imaging and related activities.
 
-With v1.7.1 release of project internal  in provider is supported. Note to use this, set "use_project_internal" to true. It also enables the ACP mapping with projects. 
 
 ## Foundation
 > For the 1.5.0-beta release of the provider it will have N-1 compatibility with the Foundation. This release was tested against Foundation versions v5.2 and v5.1.1
@@ -360,3 +347,18 @@ The Nutanix Provider for Terraform is the work of many contributors. We apprecia
 
 * [Contribution Guidelines](./CONTRIBUTING.md)
 * [Code of Conduct](./CODE_OF_CONDUCT.md)
+
+
+## Support
+
+Terraform Nutanix Provider leverages the community-supported model. See [Open Source Support](https://portal.nutanix.com/page/documents/kbs/details?targetId=kA07V000000LdWPSA0) for more information about its support policy.
+
+-> **Note:** Update!! 
+We now have a brand new developer-centric Support Program designed for organizations that require a deeper level of developer support to manage their Nutanix environment and build applications quickly and efficiently. As part of this new Advanced API/SDK Support Program, you will get access to trusted technical advisors who specialize in developer tools including Nutanix Terraform Provider and receive support for your unique development needs and custom integration queries. Visit our Support Portal - Premium Add-On Support Programs  to learn more about this program. **Contributions to open-source Nutanix Terraform Provider repository will continue to leverage a community-supported model. Visit https://portal.nutanix.com/kb/13424  for more details. 
+
+
+## Community
+
+Nutanix is taking an inclusive approach to developing this new feature and welcomes customer feedback. Please see our development project on GitHub (you're here!), comment on requirements, design, code, and/or feel free to join us on Slack. Instructions on commenting, contributing, and joining our community Slack channel are all located within our GitHub Readme.
+
+For a slack invite, please contact terraform@nutanix.com from your business email address, and we'll add you.
