@@ -34,25 +34,13 @@ For a slack invite, please contact terraform@nutanix.com from your business emai
 
 The Terraform Nutanix provider is designed to work with Nutanix Prism Central and Standalone Foundation, such that you can manage one or more Prism Element clusters at scale. AOS/PC 5.6.0 or higher is required, as this Provider makes exclusive use of the v3 APIs. It also consists components to work with Foundation to performing node imaging and related activities.
 
-> For the 1.2.0 release of the provider it will have an N-1 compatibility with the Prism Central APIs. This provider was tested against Prism Central versions 2020.9 and 2020.11, as well as AOS version 5.18 and 5.19
 
+| Terraform Versions | Prism Central version |  AOS Version | Additional Software Requirements |
+|  :--- |  :--- | :- | :- |
+| 2.0 | pc2024.3 or later |  7.0 | |
+| 1.9.5 | pc2023.1.0.2 |   | ndb v2.5.1.1, v2.5.1,  v2.5 |  
+| 1.9.4 | pc2023, pc2023.1.0.2, pc2023.1.0.1 |  | |
 
-> For the 1.3.0 release of the provider it will have N-2 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc.2021.9.0.4, pc.2021.8.0.1 and pc.2021.7.
-
-
-> For the 1.4.0 & 1.4.1 release of the provider it will have N-2 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc2022.1 pc.2021.9.0.4 and pc.2021.8.0.1.  
-
-> For the 1.5.0 release of the provider it will have N-2 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc2022.1.0.2 pc.2021.9.0.4 and pc.2021.8.0.1.
-
-> For the 1.6.1 release of the provider it will have N-2 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc2022.4 pc2022.1.0.2 and pc2021.9.0.4.
-
-> For the 1.7.0 release of the provider it will have N-2 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc2022.6, pc2022.4 and pc2022.1.0.2.
-
-> For the 1.7.1 release of the provider it will have N-2 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc2022.6, pc2022.4.0.1 and pc2022.1.0.2.
-
-> For the 1.9.0 release of the provider it will have N-1 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc2022.9 and pc2023.1.0.1. 
-
-> For the 1.9.4 release of the provider it will have N-2 compatibility with the Prism Central APIs. This release was tested against Prism Central versions pc2023.3, pc2023.1.0.2 and pc2023.1.0.1. 
 
 ### note
 With v1.6.1 release of flow networking feature in provider, IAMv2 setups would be mandate. 
