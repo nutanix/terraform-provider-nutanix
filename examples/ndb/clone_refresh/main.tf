@@ -7,7 +7,7 @@ terraform{
     }
 }
 
-#definig nutanix configuration
+#defining nutanix configuration
 provider "nutanix"{
   ndb_username = var.ndb_username
   ndb_password = var.ndb_password
@@ -27,6 +27,6 @@ resource "nutanix_ndb_clone_refresh" "acctest-managed"{
 
 resource "nutanix_ndb_clone_refresh" "acctest-managed"{
     clone_id = "{{ clone_id }}"
-    user_pitr_stamp = "{{ timestamp }}"
+    user_pitr_timestamp = "{{ timestamp }}"
     timezone = "Asia/Calcutta"
 }
