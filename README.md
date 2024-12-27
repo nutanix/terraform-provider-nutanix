@@ -1,8 +1,8 @@
 # Terraform Nutanix Provider
 
-Terraform provider plugin to integrate with Nutanix Enterprise Cloud
+Terraform provider plugin to integrate with Nutanix Cloud Platform.
 
-NOTE: The latest version of the Nutanix provider is [v2.0](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.0)
+NOTE: The latest version of the Nutanix provider is [v2.0](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.0).
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 
@@ -23,52 +23,40 @@ Modules based on Terraform Nutanix Provider can be found here : [Modules](https:
 * This provider uses [SDKv2](https://www.terraform.io/plugin/sdkv2/sdkv2-intro) from release 1.3.0
 
 
-### Qualification Matrix
-
-| Terraform Versions | Prism Central version |  AOS Version | Additional Software Requirements |
-|  :--- |  :--- | :- | :- |
-| 2.0 | pc2024.3 or later |  7.0 | |
-| 1.9.5 | pc2023.1.0.2 |   | ndb v2.5.1.1, v2.5.1,  v2.5 |  
-| 1.9.4 | pc2023, pc2023.1.0.2, pc2023.1.0.1 |  | |
-
-
-### Using the Provider
-
-The Terraform Nutanix provider is designed to work with Nutanix Prism Central and Standalone Foundation, such that you can manage one or more Prism Element clusters at scale. AOS/PC 5.6.0 or higher is required, as this Provider makes exclusive use of the v3 APIs. It also consists components to work with Foundation to performing node imaging and related activities.
+### Introducing Nutanix Terraform Provider Version 2.0
+We're excited to announce the release of Nutanix Terraform Provider Version 2.0! This major update brings significant improvements to your infrastructure management experience:
+ 
+- Built on the latest v4 APIs/SDKs: Leveraging the power of Nutanix v4 APIs/SDKs, this version offers enhanced functionality and better integration with the latest Nutanix features.
+- Expanded Resource Coverage:  Discover new resources and data sources, enabling you to model and manage a broader spectrum of Nutanix infrastructure components within your Terraform configurations.
+- Version Suffix: To easily distinguish resources and data sources specific to version 2.0, they are marked with the *_v2 suffix.
 
 
-## Foundation
-> For the 1.5.0-beta release of the provider it will have N-1 compatibility with the Foundation. This release was tested against Foundation versions v5.2 and v5.1.1
+### Software Requirements
+The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.0, ensure your Nutanix environment meets the following software requirements:
+- AOS Version: AOS 7.0 or later
+- Prism Central Version: pc 2024.3 or later
 
-> For the 1.5.0 release of the provider it will have N-1 compatibility with the Foundation. This release was tested against Foundation versions v5.2 and v5.1.1
 
-Foundation based examples : https://github.com/nutanix/terraform-provider-nutanix/blob/master/examples/foundation/
+## Compatibility Matrix
+| Terraform Version |  AOS Version | PC version  | Other software versions |
+|  :--- |  :--- | :--- | :--- |
+| 2.0   |  7.0  | pc2024.3 or later  | ndb v2.5.1.1, nke v2.8 |
+| 1.9.5 | | pc2023.1.0.2 | ndb v2.5.1.1, v2.5.1,  v2.5 | 
+| 1.9.4 | | pc2023, pc2023.1.0.2, pc2023.1.0.1 |  |
+| 1.9.3 | | pc2023.1.0.1 | |
+| 1.9.2 | | pc2023.1.0.1 | |
+| 1.9.1 | | pc2023.1.0.1 | ndb v2.5.1,  v2.5 |
+| 1.9.0 | | pc2023.1.0.1, pc2022.9 | ndb v2.5.1, v2.5 |
+| 1.8.0 | | pc2022.6 | ndb v2.5.1.1, v2.5.1 and v2.5 |
+| 1.8.1 | | pc2022.6 | ndb v2.5.1.1, v2.5.1 and v2.5 |
+| 1.7.0 | | pc2022.6, pc2022.4 and pc2022.1.0.2 | |
+| 1.7.1 | | pc2022.6, pc2022.4.0.1 and pc2022.1.0.2 | |
+| 1.6.1 | | pc2022.4 pc2022.1.0.2 and pc2021.9.0.4| |
+| 1.5.0 | | pc2022.1.0.2 pc.2021.9.0.4 and pc.2021.8.0.1 | foundation v5.2, v5.1.1 , foundation central v1.3, v1.2 |
+| 1.4.0 | | pc2022.1 pc.2021.9.0.4 and pc.2021.8.0.1 | |
+| 1.3.0 | | pc.2021.9.0.4, pc.2021.8.0.1 and pc.2021.7 | |
+| 1.2.0 | 5.18, 5.19 | pc2020.9 and pc2020.11| |
 
-Foundation based modules & examples : https://github.com/nutanix/terraform-provider-nutanix/blob/master/modules/foundation/
-
-## Foundation Central
-> For the 1.5.0-beta.2 release of the provider it will have N-1 compatibility with the Foundation Central. This release was tested with v1.2 and v1.3 Foundation Central versions.
-
-> For the 1.5.0 release of the provider it will have N-1 compatibility with the Foundation Central. This release was tested with v1.2 and v1.3 Foundation Central versions.
-
-Foundation Central based examples : https://github.com/nutanix/terraform-provider-nutanix/blob/master/examples/foundationCentral/
-
-Foundation Central based modules and examples : Foundation based modules & examples : https://github.com/nutanix/terraform-provider-nutanix/blob/master/modules/foundationCentral/
-
-## Nutanix Database Service
-> For the 1.8.0-beta.1 release of the provider, it will have N-1 compatibility with the Nutanix database service. This release was tested with v2.4 and v2.4.1 versions.
-
-> For the 1.8.0-beta.2 release of the provider, it will have N-2 compatibilty with the Nutanix Database Service. This release was tested with v2.5.1.1 , v2.5.0.2 and v2.4.1
-
-> For the 1.8.0 release of the provider, it will have N-2 compatibility with the Nutanix database service. This release was tested with v2.5.1.1, v2.5.1 and v2.5 versions.
-
-> For the 1.8.1 release of the provider, it will have N-2 compatibility with the Nutanix database service. This release was tested with v2.5.1.1, v2.5.1 and v2.5 versions.
-
-> For the 1.9.5 release of the provider, it will have N-2 compatibility with the Nutanix database service. This release was tested with v2.5.1.1, v2.5.1 and v2.5 versions.
-
-Note: For NDB related modules, only postgress database type is qualified and officially supported. Older versions of NDB may not support some resources. 
-
-Checkout example : https://github.com/nutanix/terraform-provider-nutanix/blob/master/examples/ndb/
 
 ## Example Usage
 
@@ -145,8 +133,9 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 * endpoint, username and password are required fields for using Prism Central & Karbon based resources and data sources
 * foundation_endpoint is required field for using Foundation based resources and data sources
 * ndb_username, ndb_password and ndb_endpoint are required fields for using NDB based resources and data sources
-## Resources
 
+
+## Resources
 
 | v1 Resources| v2 Resources |
 |  :--- |  :--- |
