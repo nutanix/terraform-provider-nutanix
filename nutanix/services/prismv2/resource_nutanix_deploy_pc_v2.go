@@ -84,10 +84,10 @@ func ResourceNutanixDeployPcV2Create(ctx context.Context, d *schema.ResourceData
 	deployPcBody := config.NewDomainManager()
 
 	if configData, ok := d.GetOk("config"); ok {
-		deployPcBody.Config = expandPCConfig(configData.([]interface{})[0].(map[string]interface{}))
+		deployPcBody.Config = expandPCConfig(configData)
 	}
 	if networkData, ok := d.GetOk("network"); ok {
-		deployPcBody.Network = expandPCNetwork(networkData.([]interface{})[0].(map[string]interface{}))
+		deployPcBody.Network = expandPCNetwork(networkData)
 	}
 	if shouldEnableHighAvailability, ok := d.GetOk("should_enable_high_availability"); ok {
 		deployPcBody.ShouldEnableHighAvailability = utils.BoolPtr(shouldEnableHighAvailability.(bool))
@@ -644,13 +644,19 @@ func schemaForLinks() *schema.Schema {
 
 // Expanders
 // Pc Config Expanders
-func expandPCConfig(configData map[string]interface{}) *config.DomainManagerClusterConfig {
+func expandPCConfig(configData interface{}) *config.DomainManagerClusterConfig {
+	if len(configData.([]interface{})) == 0 {
+		return nil
+	}
+	configDataInterface := configData.([]interface{})
+	configDataMap := configDataInterface[0].(map[string]interface{})
+
 	domainManagerClusterConfig := config.NewDomainManagerClusterConfig()
 
-	if shouldEnableLockdownMode, ok := configData["should_enable_lockdown_mode"]; ok {
+	if shouldEnableLockdownMode, ok := configDataMap["should_enable_lockdown_mode"]; ok {
 		domainManagerClusterConfig.ShouldEnableLockdownMode = utils.BoolPtr(shouldEnableLockdownMode.(bool))
 	}
-	if buildInfo, ok := configData["build_info"]; ok {
+	if buildInfo, ok := configDataMap["build_info"]; ok {
 		buildInfoData := buildInfo.([]interface{})[0].(map[string]interface{})
 		buildInfoObj := clustermgmtConfig.NewBuildInfo()
 		if version, ok := buildInfoData["version"]; ok {
@@ -658,20 +664,20 @@ func expandPCConfig(configData map[string]interface{}) *config.DomainManagerClus
 		}
 		domainManagerClusterConfig.BuildInfo = buildInfoObj
 	}
-	if name, ok := configData["name"]; ok {
+	if name, ok := configDataMap["name"]; ok {
 		domainManagerClusterConfig.Name = utils.StringPtr(name.(string))
 	}
-	if size, ok := configData["size"]; ok {
+	if size, ok := configDataMap["size"]; ok {
 		domainManagerClusterConfig.Size = expandClusterSize(size.(string))
 	}
-	if bootstrapConfig, ok := configData["bootstrap_config"]; ok {
-		domainManagerClusterConfig.BootstrapConfig = expandBootstrapConfig(bootstrapConfig.([]interface{})[0].(map[string]interface{}))
+	if bootstrapConfig, ok := configDataMap["bootstrap_config"]; ok {
+		domainManagerClusterConfig.BootstrapConfig = expandBootstrapConfig(bootstrapConfig)
 	}
-	if credentials, ok := configData["credentials"]; ok {
+	if credentials, ok := configDataMap["credentials"]; ok {
 		domainManagerClusterConfig.Credentials = expandCredentials(credentials.([]interface{}))
 	}
-	if resourceConfig, ok := configData["resource_config"]; ok {
-		domainManagerClusterConfig.ResourceConfig = expandResourceConfig(resourceConfig.([]interface{})[0].(map[string]interface{}))
+	if resourceConfig, ok := configDataMap["resource_config"]; ok {
+		domainManagerClusterConfig.ResourceConfig = expandResourceConfig(resourceConfig)
 	}
 
 	return domainManagerClusterConfig
@@ -697,10 +703,16 @@ func expandClusterSize(size string) *config.Size {
 	}
 }
 
-func expandBootstrapConfig(bootStrapConfigData map[string]interface{}) *config.BootstrapConfig {
+func expandBootstrapConfig(bootStrapConfigData interface{}) *config.BootstrapConfig {
+	if len(bootStrapConfigData.([]interface{})) == 0 {
+		return nil
+	}
+	bootStrapConfigDataInterface := bootStrapConfigData.([]interface{})
+	bootStrapConfigDataMap := bootStrapConfigDataInterface[0].(map[string]interface{})
+
 	bootstrapConfig := config.NewBootstrapConfig()
 
-	if cloudInitConfig, ok := bootStrapConfigData["cloud_init_config"]; ok {
+	if cloudInitConfig, ok := bootStrapConfigDataMap["cloud_init_config"]; ok {
 		cloudInitConfigData := cloudInitConfig.([]interface{})
 		cloudInitConfigList := make([]vmmConfig.CloudInit, 0)
 		for _, cloudInitData := range cloudInitConfigData {
@@ -758,7 +770,7 @@ func expandBootstrapConfig(bootStrapConfigData map[string]interface{}) *config.B
 		bootstrapConfig.CloudInitConfig = cloudInitConfigList
 	}
 
-	if environmentInfo, ok := bootStrapConfigData["environment_info"]; ok {
+	if environmentInfo, ok := bootStrapConfigDataMap["environment_info"]; ok {
 		environmentInfoData := environmentInfo.([]interface{})[0].(map[string]interface{})
 		environmentInfoObj := config.NewEnvironmentInfo()
 
@@ -952,6 +964,10 @@ func expandValue(kvPairValue interface{}) *commonConfig.OneOfKVPairValue {
 }
 
 func expandCredentials(credentials []interface{}) []commonConfig.BasicAuth {
+	if len(credentials) == 0 {
+		return nil
+	}
+
 	credentialsList := make([]commonConfig.BasicAuth, 0)
 	for _, credential := range credentials {
 		credentialData := credential.(map[string]interface{})
@@ -967,10 +983,16 @@ func expandCredentials(credentials []interface{}) []commonConfig.BasicAuth {
 	return credentialsList
 }
 
-func expandResourceConfig(resourceConfig map[string]interface{}) *config.DomainManagerResourceConfig {
+func expandResourceConfig(resourceConfig interface{}) *config.DomainManagerResourceConfig {
+	if len(resourceConfig.([]interface{})) == 0 {
+		return nil
+	}
+	resourceConfigI := resourceConfig.([]interface{})
+	resourceConfigData := resourceConfigI[0].(map[string]interface{})
+
 	resourceConfigObj := config.NewDomainManagerResourceConfig()
 
-	if containerExtIds, ok := resourceConfig["container_ext_ids"]; ok {
+	if containerExtIds, ok := resourceConfigData["container_ext_ids"]; ok {
 		containerExtIdsList := containerExtIds.([]interface{})
 		containerExtIdsListObj := make([]string, 0)
 		for _, containerExtID := range containerExtIdsList {
@@ -983,14 +1005,21 @@ func expandResourceConfig(resourceConfig map[string]interface{}) *config.DomainM
 }
 
 // network expanders
-func expandPCNetwork(pcNetwork map[string]interface{}) *config.DomainManagerNetwork {
+func expandPCNetwork(pcNetwork interface{}) *config.DomainManagerNetwork {
+	if len(pcNetwork.([]interface{})) == 0 {
+		return nil
+	}
+
+	pcNetworkInterface := pcNetwork.([]interface{})
+	pcNetworkData := pcNetworkInterface[0].(map[string]interface{})
+
 	pcNetworkObj := config.NewDomainManagerNetwork()
 
-	if externalAddress, ok := pcNetwork["external_address"]; ok {
+	if externalAddress, ok := pcNetworkData["external_address"]; ok {
 		externalAddressData := externalAddress.([]interface{})[0].(map[string]interface{})
 		pcNetworkObj.ExternalAddress = expandIPAddress(externalAddressData)
 	}
-	if nameServers, ok := pcNetwork["name_servers"]; ok {
+	if nameServers, ok := pcNetworkData["name_servers"]; ok {
 		nameServersData := nameServers.([]interface{})
 		nameServersObj := make([]commonConfig.IPAddressOrFQDN, 0)
 		for _, nameServerData := range nameServersData {
@@ -999,7 +1028,7 @@ func expandPCNetwork(pcNetwork map[string]interface{}) *config.DomainManagerNetw
 		}
 		pcNetworkObj.NameServers = nameServersObj
 	}
-	if ntpServers, ok := pcNetwork["ntp_servers"]; ok {
+	if ntpServers, ok := pcNetworkData["ntp_servers"]; ok {
 		ntpServersData := ntpServers.([]interface{})
 		ntpServersObj := make([]commonConfig.IPAddressOrFQDN, 0)
 		for _, ntpServerData := range ntpServersData {
@@ -1008,7 +1037,7 @@ func expandPCNetwork(pcNetwork map[string]interface{}) *config.DomainManagerNetw
 		}
 		pcNetworkObj.NtpServers = ntpServersObj
 	}
-	if internalNetworks, ok := pcNetwork["internal_networks"]; ok {
+	if internalNetworks, ok := pcNetworkData["internal_networks"]; ok {
 		internalNetworksData := internalNetworks.([]interface{})
 		internalNetworksList := make([]config.BaseNetwork, 0)
 		for _, internalNetworkData := range internalNetworksData {
@@ -1017,7 +1046,7 @@ func expandPCNetwork(pcNetwork map[string]interface{}) *config.DomainManagerNetw
 		}
 		pcNetworkObj.InternalNetworks = internalNetworksList
 	}
-	if externalNetworks, ok := pcNetwork["external_networks"]; ok {
+	if externalNetworks, ok := pcNetworkData["external_networks"]; ok {
 		externalNetworksData := externalNetworks.([]interface{})
 		externalNetworksList := make([]config.ExternalNetwork, 0)
 		for _, externalNetworkData := range externalNetworksData {
