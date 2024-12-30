@@ -19,6 +19,7 @@ require (
 	// github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v16 v16.9.0-9781
 	// github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v16 v16.9.0-9552
 	github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.0.1
+	github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4 v4.0.1
 	github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4 v4.0.1
 	github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4 v4.0.1
 	github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4 v4.0.1

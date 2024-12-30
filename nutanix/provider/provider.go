@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/datapoliciesv2"
 	"log"
 	"strings"
 
@@ -379,6 +380,7 @@ func Provider() *schema.Provider {
 			"nutanix_recovery_points_v2":                      dataprotectionv2.ResourceNutanixRecoveryPointsV2(),
 			"nutanix_recovery_point_replicate_v2":             dataprotectionv2.ResourceNutanixRecoveryPointReplicateV2(),
 			"nutanix_recovery_point_restore_v2":               dataprotectionv2.ResourceNutanixRecoveryPointRestoreV2(),
+			"nutanix_protection_policy_v2":                    datapoliciesv2.ResourceNutanixProtectionPoliciesV2(),
 			"nutanix_vm_revert_v2":                            vmmv2.ResourceNutanixRevertVMRecoveryPointV2(),
 			"nutanix_virtual_machine_v2":                      vmmv2.ResourceNutanixVirtualMachineV2(),
 			"nutanix_vm_shutdown_action_v2":                   vmmv2.ResourceNutanixVmsShutdownActionV2(),
