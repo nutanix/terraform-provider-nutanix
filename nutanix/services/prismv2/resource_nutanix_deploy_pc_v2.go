@@ -32,8 +32,18 @@ func ResourceNutanixDeployPcV2() *schema.Resource {
 		UpdateContext: ResourceNutanixDeployPcV2Update,
 		DeleteContext: ResourceNutanixDeployPcV2Delete,
 		Schema: map[string]*schema.Schema{
-			"config":  schemaForPcConfig(),
-			"network": schemaForPcNetwork(),
+			"config": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
+				Elem:     schemaForPcConfig(),
+			},
+			"network": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
+				Elem:     schemaForPcNetwork(),
+			},
 			"should_enable_high_availability": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -173,169 +183,164 @@ func ResourceNutanixDeployPcV2Delete(ctx context.Context, d *schema.ResourceData
 
 // schema Functions
 
-func schemaForPcConfig() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Required: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"should_enable_lockdown_mode": {
-					Type:     schema.TypeBool,
-					Optional: true,
-					Computed: true,
-				},
-				"build_info": {
-					Type:     schema.TypeList,
-					Required: true,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"version": {
-								Type:     schema.TypeString,
-								Optional: true,
-								Computed: true,
-							},
+func schemaForPcConfig() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"should_enable_lockdown_mode": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
+			"build_info": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"version": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
 						},
 					},
 				},
-				"name": {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-				"size": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice([]string{"SMALL", "LARGE", "EXTRALARGE", "STARTER"}, false),
-				},
-				"bootstrap_config": {
-					Type:     schema.TypeList,
-					Optional: true,
-					Computed: true,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"cloud_init_config": {
-								Type:     schema.TypeList,
-								Optional: true,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"datasource_type": {
-											Type:         schema.TypeString,
-											Optional:     true,
-											Default:      "CONFIG_DRIVE_V2",
-											ValidateFunc: validation.StringInSlice([]string{"CONFIG_DRIVE_V2"}, false),
-										},
-										"metadata": {
-											Type:     schema.TypeString,
-											Optional: true,
-											Computed: true,
-										},
-										"cloud_init_script": {
-											Type:     schema.TypeList,
-											Optional: true,
-											Computed: true,
-											Elem: &schema.Resource{
-												Schema: map[string]*schema.Schema{
-													"user_data": {
-														Type:     schema.TypeList,
-														Optional: true,
-														Computed: true,
-														Elem: &schema.Resource{
-															Schema: map[string]*schema.Schema{
-																"value": {
-																	Type:     schema.TypeString,
-																	Optional: true,
-																	Computed: true,
-																},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"size": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice([]string{"SMALL", "LARGE", "EXTRALARGE", "STARTER"}, false),
+			},
+			"bootstrap_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cloud_init_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"datasource_type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "CONFIG_DRIVE_V2",
+										ValidateFunc: validation.StringInSlice([]string{"CONFIG_DRIVE_V2"}, false),
+									},
+									"metadata": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"cloud_init_script": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"user_data": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"value": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
 															},
 														},
 													},
-													"custom_key_values": schemaForCustomKeyValuePairs(),
 												},
+												"custom_key_values": schemaForCustomKeyValuePairs(),
 											},
 										},
 									},
 								},
 							},
-							"environment_info": {
-								Type:     schema.TypeList,
-								Optional: true,
-								Computed: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"type": {
-											Type:         schema.TypeString,
-											Optional:     true,
-											Computed:     true,
-											ValidateFunc: validation.StringInSlice([]string{"NTNX_CLOUD", "ONPREM"}, false),
-										},
-										"provider_type": {
-											Type:         schema.TypeString,
-											Optional:     true,
-											Computed:     true,
-											ValidateFunc: validation.StringInSlice([]string{"VSPHERE", "AZURE", "NTNX", "GCP", "AWS"}, false),
-										},
-										"provisioning_type": {
-											Type:         schema.TypeString,
-											Optional:     true,
-											Computed:     true,
-											ValidateFunc: validation.StringInSlice([]string{"NATIVE", "NTNX"}, false),
-										},
+						},
+						"environment_info": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.StringInSlice([]string{"NTNX_CLOUD", "ONPREM"}, false),
+									},
+									"provider_type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.StringInSlice([]string{"VSPHERE", "AZURE", "NTNX", "GCP", "AWS"}, false),
+									},
+									"provisioning_type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ValidateFunc: validation.StringInSlice([]string{"NATIVE", "NTNX"}, false),
 									},
 								},
 							},
 						},
 					},
 				},
-				"credentials": {
-					Type:     schema.TypeList,
-					Optional: true,
-					MinItems: 1,
-					MaxItems: 5, //nolint:gomnd
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"username": {
-								Type:     schema.TypeString,
-								Required: true,
-							},
-							"password": {
-								Type:      schema.TypeString,
-								Required:  true,
-								Sensitive: true,
-							},
+			},
+			"credentials": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 1,
+				MaxItems: 5, //nolint:gomnd
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"username": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"password": {
+							Type:      schema.TypeString,
+							Required:  true,
+							Sensitive: true,
 						},
 					},
 				},
-				"resource_config": {
-					Type:     schema.TypeList,
-					Optional: true,
-					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"container_ext_ids": {
-								Type:     schema.TypeList,
-								Optional: true,
-								Computed: true,
-								MinItems: 1,
-								MaxItems: 3, //nolint:gomnd
-								Elem: &schema.Schema{
-									Type: schema.TypeString,
-								},
+			},
+			"resource_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"container_ext_ids": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MinItems: 1,
+							MaxItems: 3, //nolint:gomnd
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
 							},
-							"num_vcpus": {
-								Type:     schema.TypeInt,
-								Computed: true,
-							},
-							"memory_size_bytes": {
-								Type:     schema.TypeInt,
-								Computed: true,
-							},
-							"data_disk_size_bytes": {
-								Type:     schema.TypeInt,
-								Computed: true,
-							},
+						},
+						"num_vcpus": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"memory_size_bytes": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"data_disk_size_bytes": {
+							Type:     schema.TypeInt,
+							Computed: true,
 						},
 					},
 				},
@@ -441,127 +446,122 @@ func schemaForValue() *schema.Schema {
 	}
 }
 
-func schemaForPcNetwork() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeList,
-		Required: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"external_address": {
-					Type:     schema.TypeList,
-					Required: true,
-					MaxItems: 1,
-					Elem:     schemaForIPAddress(),
-				},
-				"name_servers": {
-					Type:     schema.TypeList,
-					Required: true,
-					MaxItems: 1024, //nolint:gomnd
-					Elem:     schemaForIPAddressOrFqdn(),
-				},
-				"ntp_servers": {
-					Type:     schema.TypeList,
-					Required: true,
-					MaxItems: 1024, //nolint:gomnd
-					Elem:     schemaForIPAddressOrFqdn(),
-				},
-				"fqdn": {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				"internal_networks": {
-					Type:     schema.TypeList,
-					Optional: true,
-					Computed: true,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"default_gateway": {
-								Type:     schema.TypeList,
-								Required: true,
-								MaxItems: 1,
-								Elem:     schemaForIPAddressOrFqdn(),
-							},
-							"subnet_mask": {
-								Type:     schema.TypeList,
-								Required: true,
-								MaxItems: 1,
-								Elem:     schemaForIPAddressOrFqdn(),
-							},
-							"ip_ranges": {
-								Type:     schema.TypeList,
-								Required: true,
-								MaxItems: 15, //nolint:gomnd
-								MinItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"begin": {
-											Type:     schema.TypeList,
-											Optional: true,
-											Computed: true,
-											MaxItems: 1,
-											Elem:     schemaForIPAddress(),
-										},
-										"end": {
-											Type:     schema.TypeList,
-											Optional: true,
-											Computed: true,
-											MaxItems: 1,
-											Elem:     schemaForIPAddress(),
-										},
+func schemaForPcNetwork() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"external_address": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
+				Elem:     schemaForIPAddress(),
+			},
+			"name_servers": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1024, //nolint:gomnd
+				Elem:     schemaForIPAddressOrFqdn(),
+			},
+			"ntp_servers": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1024, //nolint:gomnd
+				Elem:     schemaForIPAddressOrFqdn(),
+			},
+			"fqdn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"internal_networks": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"default_gateway": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem:     schemaForIPAddressOrFqdn(),
+						},
+						"subnet_mask": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem:     schemaForIPAddressOrFqdn(),
+						},
+						"ip_ranges": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 15, //nolint:gomnd
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"begin": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem:     schemaForIPAddress(),
+									},
+									"end": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem:     schemaForIPAddress(),
 									},
 								},
 							},
 						},
 					},
 				},
-				"external_networks": {
-					Type:     schema.TypeList,
-					Optional: true,
-					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"default_gateway": {
-								Type:     schema.TypeList,
-								Required: true,
-								MaxItems: 1,
-								Elem:     schemaForIPAddressOrFqdn(),
-							},
-							"subnet_mask": {
-								Type:     schema.TypeList,
-								Required: true,
-								MaxItems: 1,
-								Elem:     schemaForIPAddressOrFqdn(),
-							},
-							"ip_ranges": {
-								Type:     schema.TypeList,
-								Required: true,
-								MaxItems: 15, //nolint:gomnd
-								MinItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"begin": {
-											Type:     schema.TypeList,
-											Optional: true,
-											Computed: true,
-											MaxItems: 1,
-											Elem:     schemaForIPAddress(),
-										},
-										"end": {
-											Type:     schema.TypeList,
-											Optional: true,
-											Computed: true,
-											MaxItems: 1,
-											Elem:     schemaForIPAddress(),
-										},
+			},
+			"external_networks": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"default_gateway": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem:     schemaForIPAddressOrFqdn(),
+						},
+						"subnet_mask": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem:     schemaForIPAddressOrFqdn(),
+						},
+						"ip_ranges": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 15, //nolint:gomnd
+							MinItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"begin": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem:     schemaForIPAddress(),
+									},
+									"end": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem:     schemaForIPAddress(),
 									},
 								},
 							},
-							"network_ext_id": {
-								Type:     schema.TypeString,
-								Required: true,
-							},
+						},
+						"network_ext_id": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
