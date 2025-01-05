@@ -2,11 +2,13 @@ package datapoliciesv2
 
 import (
 	"context"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/common/v1/response"
 	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/datapolicies/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/dataprotection/v4/common"
+
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -150,7 +152,7 @@ func flattenReplicationLocations(replicationLocations []config.ReplicationLocati
 	if len(replicationLocations) > 0 {
 		replicationLocationList := make([]map[string]interface{}, 0)
 
-		for k, location := range replicationLocations {
+		for _, location := range replicationLocations {
 			replicationLocation := make(map[string]interface{})
 			if location.Label != nil {
 				replicationLocation["label"] = location.Label
@@ -165,7 +167,7 @@ func flattenReplicationLocations(replicationLocations []config.ReplicationLocati
 				replicationLocation["is_primary"] = location.IsPrimary
 			}
 
-			replicationLocationList[k] = replicationLocation
+			replicationLocationList = append(replicationLocationList, replicationLocation)
 		}
 		return replicationLocationList
 	}
@@ -266,33 +268,41 @@ func flattenRetention(retention *config.OneOfScheduleRetention) []map[string]int
 	if retention != nil {
 		retentionList := make([]map[string]interface{}, 0)
 
-		retentionMap := make(map[string]interface{})
-
 		if *retention.ObjectType_ == "datapolicies.v4.config.LinearRetention" {
 			linearRetention := retention.GetValue().(config.LinearRetention)
 
+			linearRetentionList := make([]map[string]interface{}, 0)
+			linearRetentionMap := make(map[string]interface{})
+
 			if linearRetention.Local != nil {
-				retentionMap["local"] = utils.IntValue(linearRetention.Local)
+				linearRetentionMap["local"] = utils.IntValue(linearRetention.Local)
 			}
 			if linearRetention.Remote != nil {
-				retentionMap["remote"] = utils.IntValue(linearRetention.Remote)
+				linearRetentionMap["remote"] = utils.IntValue(linearRetention.Remote)
 			}
 
+			linearRetentionList = append(linearRetentionList, linearRetentionMap)
+
 			retentionList = append(retentionList, map[string]interface{}{
-				"linear_retention": retentionMap},
+				"linear_retention": linearRetentionList},
 			)
 		} else if *retention.ObjectType_ == "datapolicies.v4.config.AutoRollupRetention" {
 			autoRollupRetention := retention.GetValue().(config.AutoRollupRetention)
 
+			autoRollupRetentionList := make([]map[string]interface{}, 0)
+			autoRollupRetentionMap := make(map[string]interface{})
+
 			if autoRollupRetention.Local != nil {
-				retentionMap["local"] = flattenAutoRollupRetentionDetails(autoRollupRetention.Local)
+				autoRollupRetentionMap["local"] = flattenAutoRollupRetentionDetails(autoRollupRetention.Local)
 			}
 			if autoRollupRetention.Remote != nil {
-				retentionMap["remote"] = flattenAutoRollupRetentionDetails(autoRollupRetention.Remote)
+				autoRollupRetentionMap["remote"] = flattenAutoRollupRetentionDetails(autoRollupRetention.Remote)
 			}
 
+			autoRollupRetentionList = append(autoRollupRetentionList, autoRollupRetentionMap)
+
 			retentionList = append(retentionList, map[string]interface{}{
-				"auto_rollup_retention": retentionMap},
+				"auto_rollup_retention": autoRollupRetentionList},
 			)
 		}
 
@@ -310,21 +320,21 @@ func flattenAutoRollupRetentionDetails(retentionDetails *config.AutoRollupRetent
 		if retentionDetails.SnapshotIntervalType != nil {
 			switch *retentionDetails.SnapshotIntervalType {
 			case config.SNAPSHOTINTERVALTYPE_HOURLY:
-				retentionDetailsMap["retention_type"] = "HOURLY"
+				retentionDetailsMap["snapshot_interval_type"] = "HOURLY"
 			case config.SNAPSHOTINTERVALTYPE_DAILY:
-				retentionDetailsMap["retention_type"] = "DAILY"
+				retentionDetailsMap["snapshot_interval_type"] = "DAILY"
 			case config.SNAPSHOTINTERVALTYPE_WEEKLY:
-				retentionDetailsMap["retention_type"] = "WEEKLY"
+				retentionDetailsMap["snapshot_interval_type"] = "WEEKLY"
 			case config.SNAPSHOTINTERVALTYPE_MONTHLY:
-				retentionDetailsMap["retention_type"] = "MONTHLY"
+				retentionDetailsMap["snapshot_interval_type"] = "MONTHLY"
 			case config.SNAPSHOTINTERVALTYPE_YEARLY:
-				retentionDetailsMap["retention_type"] = "YEARLY"
+				retentionDetailsMap["snapshot_interval_type"] = "YEARLY"
 			default:
 				retentionDetailsMap["retention_type"] = "UNKNOWN"
 			}
 		}
 		if retentionDetails.Frequency != nil {
-			retentionDetailsMap["retention_count"] = utils.IntValue(retentionDetails.Frequency)
+			retentionDetailsMap["frequency"] = utils.IntValue(retentionDetails.Frequency)
 		}
 
 		retentionDetailsList = append(retentionDetailsList, retentionDetailsMap)
