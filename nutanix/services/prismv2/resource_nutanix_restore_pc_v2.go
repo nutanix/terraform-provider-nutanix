@@ -48,12 +48,20 @@ func ResourceNutanixRestorePcV2() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"config": schemaForPcConfig(),
+						"config": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     schemaForPcConfig(),
+						},
 						"is_registered_with_hosting_cluster": {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
-						"network": schemaForPcNetwork(),
+						"network": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem:     schemaForPcNetwork(),
+						},
 						"hosting_cluster_ext_id": {
 							Type:     schema.TypeString,
 							Computed: true,
