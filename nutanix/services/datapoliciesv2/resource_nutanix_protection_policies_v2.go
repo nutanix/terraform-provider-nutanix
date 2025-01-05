@@ -14,7 +14,7 @@ import (
 	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/datapolicies/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/dataprotection/v4/common"
 	prism "github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/prism/v4/config"
-	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 
 	prismSdk "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -56,6 +56,14 @@ func ResourceNutanixProtectionPoliciesV2() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"is_approval_policy_needed": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"owner_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -83,7 +91,26 @@ func ResourceNutanixProtectionPoliciesV2Create(ctx context.Context, d *schema.Re
 
 	aJSON, _ := json.MarshalIndent(bodySpec, "", "  ")
 	log.Printf("[DEBUG] Create Protection Policy Body Spec: %s", string(aJSON))
-	//return nil
+
+	if err := d.Set("name", bodySpec.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("description", bodySpec.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("replication_locations", flattenReplicationLocations(bodySpec.ReplicationLocations)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("replication_configurations", flattenReplicationConfigurations(bodySpec.ReplicationConfigurations)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("category_ids", bodySpec.CategoryIds); err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(utils.GenUUID())
+
+	return nil
 
 	resp, err := conn.ProtectionPolicies.CreateProtectionPolicy(bodySpec)
 	if err != nil {
@@ -110,15 +137,18 @@ func ResourceNutanixProtectionPoliciesV2Create(ctx context.Context, d *schema.Re
 
 	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching cluster UUID : %v", err)
+		return diag.Errorf("error while fetching Protection Policy Task : %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(import2.Task)
-	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
+	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
 	log.Printf("[DEBUG] Create Protection Policy Task Response Details: %s", string(aJSON))
 
 	uuid := rUUID.EntitiesAffected[0].ExtId
 	d.SetId(*uuid)
-	d.Set("ext_id", *uuid)
+	err = d.Set("ext_id", *uuid)
+	if err != nil {
+		return diag.Errorf("error while setting Protection Policy Ext ID: %v", err)
+	}
 
 	return ResourceNutanixProtectionPoliciesV2Read(ctx, d, meta)
 }
@@ -128,6 +158,65 @@ func ResourceNutanixProtectionPoliciesV2Read(ctx context.Context, d *schema.Reso
 }
 
 func ResourceNutanixProtectionPoliciesV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).DataPoliciesAPI
+
+	readResp, err := conn.ProtectionPolicies.GetProtectionPolicyById(utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.Errorf("error while fetching Protection Policy: %v", err)
+	}
+	// extract e-tag
+	args := make(map[string]interface{})
+	etag := conn.ProtectionPolicies.ApiClient.GetEtag(readResp)
+	args["If-Match"] = utils.StringPtr(etag)
+
+	updateSpec := config.NewProtectionPolicy()
+
+	if name, ok := d.GetOk("name"); ok {
+		updateSpec.Name = utils.StringPtr(name.(string))
+	}
+	if description, ok := d.GetOk("description"); ok {
+		updateSpec.Description = utils.StringPtr(description.(string))
+	}
+	if replicationLocations, ok := d.GetOk("replication_locations"); ok {
+		updateSpec.ReplicationLocations = expandReplicationLocations(replicationLocations.([]interface{}))
+	}
+	if replicationConfigurations, ok := d.GetOk("replication_configurations"); ok {
+		updateSpec.ReplicationConfigurations = expandReplicationConfigurations(replicationConfigurations.([]interface{}))
+	}
+	if categoryIds, ok := d.GetOk("category_ids"); ok {
+		updateSpec.CategoryIds = expandListOfString(categoryIds.([]interface{}))
+	}
+
+	resp, err := conn.ProtectionPolicies.UpdateProtectionPolicyById(utils.StringPtr(d.Id()), updateSpec, args)
+	if err != nil {
+		return diag.Errorf("error while updating Protection Policy: %v", err)
+	}
+
+	TaskRef := resp.Data.GetValue().(prism.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the cluster to be available
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for Protection Policy (%s) to update: %s", utils.StringValue(taskUUID), errWaitTask)
+	}
+
+	// Get UUID from TASK API
+	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching Protection Policy Task : %v", err)
+	}
+
+	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
+	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	log.Printf("[DEBUG] Update Protection Policy Task Response Details: %s", string(aJSON))
+
 	return ResourceNutanixProtectionPoliciesV2Read(ctx, d, meta)
 }
 
@@ -156,10 +245,19 @@ func schemaReplicationLocations() *schema.Resource {
 						"cluster_ext_ids": {
 							Type:     schema.TypeList,
 							Required: true,
-							MinItems: 1,   //nolint:gomnd
-							MaxItems: 200, //nolint:gomnd
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
+							MaxItems: 1, //nolint:gomnd
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cluster_ext_ids": {
+										Type:     schema.TypeList,
+										Required: true,
+										MinItems: 1,   //nolint:gomnd
+										MaxItems: 200, //nolint:gomnd
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
 							},
 						},
 					},
@@ -329,16 +427,20 @@ func expandOneOfReplicationLocationReplicationSubLocation(oneOfReplicationLocati
 
 	oneOfReplicationLocationReplicationSubLocationSpec := config.NewOneOfReplicationLocationReplicationSubLocation()
 
-	nutanixCluster := config.NewNutanixCluster()
+	if clusterExtIdsMap, ok := oneOfReplicationLocationReplicationSubLocationVal["cluster_ext_ids"]; ok && len(clusterExtIdsMap.([]interface{})) > 0 {
+		nutanixCluster := config.NewNutanixCluster()
+		clusterExtIdsI := clusterExtIdsMap.([]interface{})[0]
+		clusterExtIdsVal := clusterExtIdsI.(map[string]interface{})
 
-	if clusterExtIds, ok := oneOfReplicationLocationReplicationSubLocationVal["cluster_ext_ids"]; ok {
-		nutanixCluster.ClusterExtIds = expandListOfString(clusterExtIds.([]interface{}))
-	}
+		if clusterExtIds, ok := clusterExtIdsVal["cluster_ext_ids"]; ok {
+			nutanixCluster.ClusterExtIds = expandListOfString(clusterExtIds.([]interface{}))
+		}
 
-	err := oneOfReplicationLocationReplicationSubLocationSpec.SetValue(*nutanixCluster)
-	if err != nil {
-		log.Printf("[ERROR] Error while setting value for OneOfReplicationLocationReplicationSubLocation: %v", err)
-		return nil
+		err := oneOfReplicationLocationReplicationSubLocationSpec.SetValue(*nutanixCluster)
+		if err != nil {
+			log.Printf("[ERROR] Error while setting value for OneOfReplicationLocationReplicationSubLocation: %v", err)
+			return nil
+		}
 	}
 
 	return oneOfReplicationLocationReplicationSubLocationSpec
@@ -533,7 +635,7 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prismSdk.Cl
 
 		// get the group results
 
-		v := vresp.Data.GetValue().(import2.Task)
+		v := vresp.Data.GetValue().(prismConfig.Task)
 
 		if getTaskStatus(v.Status) == "CANCELED" || getTaskStatus(v.Status) == "FAILED" {
 			return v, getTaskStatus(v.Status),
@@ -543,22 +645,22 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prismSdk.Cl
 	}
 }
 
-func getTaskStatus(pr *import2.TaskStatus) string {
+func getTaskStatus(pr *prismConfig.TaskStatus) string {
 	const two, three, five, six, seven = 2, 3, 5, 6, 7
 	if pr != nil {
-		if *pr == import2.TaskStatus(six) {
+		if *pr == prismConfig.TaskStatus(six) {
 			return "FAILED"
 		}
-		if *pr == import2.TaskStatus(seven) {
+		if *pr == prismConfig.TaskStatus(seven) {
 			return "CANCELED"
 		}
-		if *pr == import2.TaskStatus(two) {
+		if *pr == prismConfig.TaskStatus(two) {
 			return "QUEUED"
 		}
-		if *pr == import2.TaskStatus(three) {
+		if *pr == prismConfig.TaskStatus(three) {
 			return "RUNNING"
 		}
-		if *pr == import2.TaskStatus(five) {
+		if *pr == prismConfig.TaskStatus(five) {
 			return "SUCCEEDED"
 		}
 	}
