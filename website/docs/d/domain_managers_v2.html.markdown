@@ -1,29 +1,30 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_pc_v2 "
-sidebar_current: "docs-nutanix-pc-v2"
+page_title: "NUTANIX: nutanix_pcs_v2 "
+sidebar_current: "docs-nutanix-pcs-v2"
 description: |-
-  Get the requested domain manager (Prism Central) entity
+  Returns a list of elements representing the domain manager (Prism Central) instance.
 
 
 ---
 
-# nutanix_pc_v2 
+# nutanix_pcs_v2 
 
-Fetches the attributes associated with the domain manager (Prism Central) resource based on the provided external identifier. It includes attributes like config, network, node and other information such as size, environment and resource specifications.
+Returns a list of elements representing the domain manager (Prism Central) instance.
 
 ## Example Usage
 
 ```hcl
-data "nutanix_pc_v2" "pc"{
-  ext_id = "<pc_external_id>"
-}
+data "nutanix_domain_managers_v2" "pcs"{}
 ```
 
 ## Argument Reference
 The following arguments are supported:
 
-* `ext_id`: - The external identifier of the domain manager (Prism Central) entity.
+* `select`: - URL query parameter that allows clients to request a specific set of properties for each entity or complex type. Expression specified with the \$select must conform to the OData V4.01 URL conventions. If a \$select expression consists of a single select item that is an asterisk (i.e., *), then all properties on the matching resource will be returned. supported values are:
+  * `config`
+  * `extId`
+
 
 ## Attributes Reference
 The following attributes are exported:
@@ -39,7 +40,7 @@ The following attributes are exported:
 * `node_ext_ids`: - Domain manager (Prism Central) nodes external identifier.
 
 ### Config
-The config argument supports the following :
+The config argument supports the following:
 
 * `should_enable_lockdown_mode`: - A boolean value indicating whether to enable lockdown mode for a cluster.
 * `build_info`: -Currently representing the build information to be used for the cluster creation.

@@ -46,9 +46,9 @@ resource "nutanix_deploy_pc_v2" "pc"{
 }
 
 // list pcs
-data "nutanix_pcs_v2" "pcs"{}
+data "nutanix_domain_managers_v2" "pcs"{}
 
 // get pc details
-data "nutanix_pc_v2" "pc"{
+data "nutanix_domain_manager_v2" "pc"{
   ext_id = nutanix_deploy_pc_v2.pc.id
 }
