@@ -156,7 +156,7 @@ func testAccEraProfileConfigBySoftware(name, desc string) string {
 					base_profile_version_name = "test1"
 					base_profile_version_description= "test1 desc"
 				}
-				available_cluster_ids= [local.clusters.EraCluster.id]
+				available_cluster_ids= [local.clusters.NDBCluster.id]
 			}
 			published = true
 		}
@@ -184,7 +184,7 @@ func testAccEraProfileConfigByNetwork(name, desc, subnet string) string {
 					}
 				}
 				version_cluster_association{
-					nx_cluster_id = local.clusters.EraCluster.id
+					nx_cluster_id = local.clusters.NDBCluster.id
 				}
 			}
 			published = true
@@ -235,7 +235,7 @@ func testAccEraProfileConfigByNetworkHA(name, desc, subnet string) string {
 				ha_instance{
 				 num_of_clusters= "1"
 				 vlan_name = ["%[3]s"]
-				 cluster_name = [local.clusters.EraCluster.name]
+				 cluster_name = [local.clusters.NDBCluster.name]
 				}
 			  }
 			}

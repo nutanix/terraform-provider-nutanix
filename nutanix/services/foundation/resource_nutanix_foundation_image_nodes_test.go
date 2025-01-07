@@ -16,7 +16,7 @@ func TestAccFoundationImageNodesResource(t *testing.T) {
 
 	// get file file path to config having nodes info
 	path, _ := os.Getwd()
-	filepath := path + "/../test_foundation_config.json"
+	filepath := path + "/../../../test_foundation_config.json"
 
 	// using block 0 in the test_foundation_config.json for this testcase
 	blockNum := 0
@@ -42,7 +42,7 @@ func TestAccFoundationImageNodesResource_InvalidNosError(t *testing.T) {
 
 	// get file file path to config having nodes info
 	path, _ := os.Getwd()
-	filepath := path + "/../test_foundation_config.json"
+	filepath := path + "/../../../test_foundation_config.json"
 
 	// using block 0 in the test_foundation_config.json for this testcase
 	blockNum := 0
@@ -63,6 +63,8 @@ func testImageNodesResource(filepath string, blockNum int, name string) string {
 	return fmt.Sprintf(`
 	data "nutanix_foundation_nos_packages" "nos"{}
 
+	data "nutanix_foundation_hypervisor_isos" "hypervisor" {}
+
 	locals{
 		config = (jsondecode(file("%s"))).blocks[%v]
 	}
@@ -76,7 +78,13 @@ func testImageNodesResource(filepath string, blockNum int, name string) string {
 	  cvm_netmask = local.config.cvm_netmask
 	  hypervisor_netmask = local.config.cvm_netmask
 	  ipmi_user = local.config.ipmi_user
-	  nos_package = data.nutanix_foundation_nos_packages.nos.entities[0]
+	  nos_package = data.nutanix_foundation_nos_packages.nos.entities[2]
+	  hypervisor_iso{
+	  kvm{
+	  	filename = data.nutanix_foundation_hypervisor_isos.hypervisor.kvm.3.filename
+		checksum = "Needs_sha256_checksum"
+	  	}
+	  }
 	  blocks {
 		// manual mode using ipmi (Bare Metal, AOS or DOS nodes)
 		nodes{
@@ -101,7 +109,9 @@ func testImageNodesResource(filepath string, blockNum int, name string) string {
 			ipv6_address = local.config.nodes[1].ipv6_address
 			current_network_interface = local.config.nodes[1].current_network_interface
 			node_position = local.config.nodes[1].node_position
-			device_hint = "vm_installer"
+			ipmi_netmask = local.config.nodes[1].ipmi_netmask
+			ipmi_gateway = local.config.nodes[1].ipmi_gateway
+			ipmi_password = local.config.nodes[1].ipmi_password
 		}
 		// using cvm (AOS or DOS nodes)
 		nodes{
@@ -137,6 +147,8 @@ func testImageNodesResourceInvalidNosError(filepath string, blockNum int, name s
 	locals{
 		config = (jsondecode(file("%s"))).blocks[%v]
 	}
+	
+	data "nutanix_foundation_hypervisor_isos" "hypervisor" {}
 
 	resource "nutanix_foundation_image_nodes" "%s" {
 	  timeouts {
@@ -148,6 +160,12 @@ func testImageNodesResourceInvalidNosError(filepath string, blockNum int, name s
 	  hypervisor_netmask = local.config.cvm_netmask
 	  ipmi_user = local.config.ipmi_user
 	  nos_package = "ironman"
+	  hypervisor{
+	  	kvm {
+			filename = data.nutanix_foundation_hypervisor_isos.hypervisor.kvm.0.filename
+			checksum = "Needs_sha256_checksum"
+		}
+	  }
 	  blocks {
 		// manual mode using ipmi (Bare Metal, AOS or DOS nodes)
 		nodes{
@@ -169,7 +187,7 @@ func testImageNodesResourceInvalidNosError(filepath string, blockNum int, name s
 			hypervisor = local.config.nodes[1].hypervisor
 			hypervisor_hostname = local.config.nodes[1].hypervisor_hostname
 			ipmi_ip = local.config.nodes[1].ipmi_ip
-			ipv6_address = local.config.nodes[1].ipv6_address
+			// ipv6_address = local.config.nodes[1].ipv6_address
 			current_network_interface = local.config.nodes[1].current_network_interface
 			node_position = local.config.nodes[1].node_position
 			device_hint = "vm_installer"
@@ -181,7 +199,7 @@ func testImageNodesResourceInvalidNosError(filepath string, blockNum int, name s
 			hypervisor = local.config.nodes[2].hypervisor
 			hypervisor_hostname = local.config.nodes[2].hypervisor_hostname
 			ipmi_ip = local.config.nodes[2].ipmi_ip
-			ipv6_address = local.config.nodes[2].ipv6_address
+			// ipv6_address = local.config.nodes[2].ipv6_address
 			current_network_interface = local.config.nodes[2].current_network_interface
 			node_position = local.config.nodes[2].node_position
 			device_hint = "vm_installer"

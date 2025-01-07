@@ -30,7 +30,7 @@ func TestAccEra_Clusterbasic(t *testing.T) {
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEraClusterConfig(name, desc, clusterIP, username, password, staticIP, subnetMask, gateway, dns, ntp, storageContainer),
+				Config: testAccNDBClusterConfig(name, desc, clusterIP, username, password, staticIP, subnetMask, gateway, dns, ntp, storageContainer),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNDBCluster, "name", name),
 					resource.TestCheckResourceAttr(resourceNDBCluster, "description", desc),
@@ -44,7 +44,7 @@ func TestAccEra_Clusterbasic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEraClusterConfig(updatedName, updatedDesc, clusterIP, username, password, staticIP, subnetMask, gateway, dns, ntp, storageContainer),
+				Config: testAccNDBClusterConfig(updatedName, updatedDesc, clusterIP, username, password, staticIP, subnetMask, gateway, dns, ntp, storageContainer),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceNDBCluster, "name", updatedName),
 					resource.TestCheckResourceAttr(resourceNDBCluster, "description", updatedDesc),
@@ -61,7 +61,7 @@ func TestAccEra_Clusterbasic(t *testing.T) {
 	})
 }
 
-func testAccEraClusterConfig(name, desc, cluster, user, pass, static, mask, gateway, dns, ntp, container string) string {
+func testAccNDBClusterConfig(name, desc, cluster, user, pass, static, mask, gateway, dns, ntp, container string) string {
 	return fmt.Sprintf(
 		`
 		resource "nutanix_ndb_cluster" "acctest-managed" {
