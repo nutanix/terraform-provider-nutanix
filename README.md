@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Cloud Platform.
 
-NOTE: The latest version of the Nutanix provider is [v2.0](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.0).
+NOTE: The latest version of the Nutanix provider is [v2.0.0](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.0.0).
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 
@@ -23,16 +23,16 @@ Modules based on Terraform Nutanix Provider can be found here : [Modules](https:
 * This provider uses [SDKv2](https://www.terraform.io/plugin/sdkv2/sdkv2-intro) from release 1.3.0
 
 
-### Introducing Nutanix Terraform Provider Version 2.0
-We're excited to announce the release of Nutanix Terraform Provider Version 2.0! This major update brings significant improvements to your infrastructure management experience:
+### Introducing Nutanix Terraform Provider Version 2.0.0
+We're excited to announce the release of Nutanix Terraform Provider Version 2.0.0! This major update brings significant improvements to your infrastructure management experience:
  
 - Built on the latest v4 APIs/SDKs: Leveraging the power of Nutanix v4 APIs/SDKs, this version offers enhanced functionality and better integration with the latest Nutanix features.
 - Expanded Resource Coverage:  Discover new resources and data sources, enabling you to model and manage a broader spectrum of Nutanix infrastructure components within your Terraform configurations.
-- Version Suffix: To easily distinguish resources and data sources specific to version 2.0, they are marked with the *_v2 suffix.
+- Version Suffix: To easily distinguish resources and data sources specific to version 2.0.0, they are marked with the *_v2 suffix.
 
 
 ### Software Requirements
-The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.0, ensure your Nutanix environment meets the following software requirements:
+The provider is used to interact with the many resources and data sources supported by Nutanix, using Prism Central as the provider endpoint. To fully utilize the capabilities of version 2.0.0, ensure your Nutanix environment meets the following software requirements:
 - AOS Version: AOS 7.0 or later
 - Prism Central Version: pc 2024.3 or later
 
@@ -40,7 +40,7 @@ The provider is used to interact with the many resources and data sources suppor
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
-| 2.0   |  7.0  | pc2024.3 or later  | ndb v2.7, nke v2.8, foundation v5.7 | Yes |
+| 2.0.0   |  7.0  | pc2024.3 or later  | ndb v2.7, nke v2.8, foundation v5.7 | Yes |
 | 1.9.5 | | pc2023.1.0.2 | ndb v2.5.1.1, v2.5.1,  v2.5 |  Yes |
 | 1.9.4 | | pc2023, pc2023.1.0.2, pc2023.1.0.1 |  | Yes |
 | 1.9.3 | | pc2023.1.0.1 | | No |
