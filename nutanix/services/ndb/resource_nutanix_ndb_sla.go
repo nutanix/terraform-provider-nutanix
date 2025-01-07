@@ -263,6 +263,9 @@ func resourceNutanixNDBSlaUpdate(ctx context.Context, d *schema.ResourceData, me
 		req.QuarterlyRetention = utils.IntPtr(d.Get("quarterly_retention").(int))
 	}
 
+	// Adding id in payload for update going to be implemented in future
+	req.Id = utils.StringPtr(d.Id())
+
 	_, err := conn.Service.UpdateSLA(ctx, req, d.Id())
 	if err != nil {
 		return diag.FromErr(err)
