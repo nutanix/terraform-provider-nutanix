@@ -44,7 +44,9 @@ terraform {
 }
 
 // initialize vault. This internally uses VAULT_ADDR & VAULT_TOKEN environment variables for authentication
-provider "vault" {}
+provider "vault" {
+    address = "{{ address }}"
+}
 
 // initialize nutanix provider
 provider "nutanix" {

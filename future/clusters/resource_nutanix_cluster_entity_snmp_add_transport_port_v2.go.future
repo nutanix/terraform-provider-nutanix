@@ -1,0 +1,107 @@
+package clusters
+
+import (
+	"context"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clustersv2"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/clustermgmt/v4/config"
+	import2 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+	import1 "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/prism/v4/config"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+)
+
+func ResourceNutanixClusterSNMPAddPortV2() *schema.Resource {
+	return &schema.Resource{
+		CreateContext: ResourceNutanixClusterSNMPAddPortV2Create,
+		ReadContext:   ResourceNutanixClusterSNMPAddPortV2Read,
+		UpdateContext: ResourceNutanixClusterSNMPAddPortV2Update,
+		DeleteContext: ResourceNutanixClusterSNMPAddPortV2Delete,
+		Schema: map[string]*schema.Schema{
+			"cluster_ext_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"port": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
+			"protocol": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+		},
+	}
+}
+
+func ResourceNutanixClusterSNMPAddPortV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).ClusterAPI
+	body := &config.SnmpTransport{}
+	clusterExtID := d.Get("cluster_ext_id")
+
+	if port, ok := d.GetOk("port"); ok {
+		body.Port = utils.IntPtr(port.(int))
+	}
+	if protocol, ok := d.GetOk("protocol"); ok {
+		subMap := map[string]interface{}{
+			"UDP":  2,
+			"UDP6": 3,
+			"TCP":  4,
+			"TCP6": 5,
+		}
+		pVal := subMap[protocol.(string)]
+		p := config.SnmpProtocol(pVal.(int))
+		body.Protocol = &p
+	}
+
+	resp, err := conn.ClusterEntityAPI.AddSnmpTransport(utils.StringPtr(clusterExtID.(string)), body)
+	if err != nil {
+		return diag.Errorf("error while adding SNMP Transport port : %v", err)
+	}
+
+	TaskRef := resp.Data.GetValue().(import1.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the SNMP Transport port to be available
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"QUEUED", "RUNNING"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: clustersv2.taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for SNMP Transport port (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+	}
+
+	// Get UUID from TASK API
+
+	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching SNMP Transport port UUID : %v", err)
+	}
+	rUUID := resourceUUID.Data.GetValue().(import2.Task)
+
+	uuid := rUUID.EntitiesAffected[0].ExtId
+	d.SetId(*uuid)
+	return nil
+}
+
+func ResourceNutanixClusterSNMPAddPortV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return nil
+}
+
+func ResourceNutanixClusterSNMPAddPortV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return nil
+}
+
+func ResourceNutanixClusterSNMPAddPortV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return nil
+}
