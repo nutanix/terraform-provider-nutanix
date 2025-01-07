@@ -264,7 +264,7 @@ func resourceNutanixNDBSlaUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	// Adding id in payload for update going to be implemented in future
-	req.Id = utils.StringPtr(d.Id())
+	req.ID = utils.StringPtr(d.Id())
 
 	_, err := conn.Service.UpdateSLA(ctx, req, d.Id())
 	if err != nil {
