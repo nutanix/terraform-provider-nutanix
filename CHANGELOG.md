@@ -1,4 +1,4 @@
-## 2.0 (December 27, 2024)
+## 2.0 (January 07, 2025)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.9.5...feat/2.0)
 
 All new features are v4 SDKs based. 

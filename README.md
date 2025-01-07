@@ -38,24 +38,24 @@ The provider is used to interact with the many resources and data sources suppor
 
 
 ## Compatibility Matrix
-| Terraform Version |  AOS Version | PC version  | Other software versions |
-|  :--- |  :--- | :--- | :--- |
-| 2.0   |  7.0  | pc2024.3 or later  | ndb v2.5.1.1, nke v2.8 |
-| 1.9.5 | | pc2023.1.0.2 | ndb v2.5.1.1, v2.5.1,  v2.5 | 
-| 1.9.4 | | pc2023, pc2023.1.0.2, pc2023.1.0.1 |  |
-| 1.9.3 | | pc2023.1.0.1 | |
-| 1.9.2 | | pc2023.1.0.1 | |
-| 1.9.1 | | pc2023.1.0.1 | ndb v2.5.1,  v2.5 |
-| 1.9.0 | | pc2023.1.0.1, pc2022.9 | ndb v2.5.1, v2.5 |
-| 1.8.0 | | pc2022.6 | ndb v2.5.1.1, v2.5.1 and v2.5 |
-| 1.8.1 | | pc2022.6 | ndb v2.5.1.1, v2.5.1 and v2.5 |
-| 1.7.0 | | pc2022.6, pc2022.4 and pc2022.1.0.2 | |
-| 1.7.1 | | pc2022.6, pc2022.4.0.1 and pc2022.1.0.2 | |
-| 1.6.1 | | pc2022.4 pc2022.1.0.2 and pc2021.9.0.4| |
-| 1.5.0 | | pc2022.1.0.2 pc.2021.9.0.4 and pc.2021.8.0.1 | foundation v5.2, v5.1.1 , foundation central v1.3, v1.2 |
-| 1.4.0 | | pc2022.1 pc.2021.9.0.4 and pc.2021.8.0.1 | |
-| 1.3.0 | | pc.2021.9.0.4, pc.2021.8.0.1 and pc.2021.7 | |
-| 1.2.0 | 5.18, 5.19 | pc2020.9 and pc2020.11| |
+| Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
+|  :--- |  :--- | :--- | :--- | :--- |
+| 2.0   |  7.0  | pc2024.3 or later  | ndb v2.5.1.1, nke v2.8 | Yes |
+| 1.9.5 | | pc2023.1.0.2 | ndb v2.5.1.1, v2.5.1,  v2.5 |  Yes |
+| 1.9.4 | | pc2023, pc2023.1.0.2, pc2023.1.0.1 |  | Yes |
+| 1.9.3 | | pc2023.1.0.1 | | No |
+| 1.9.2 | | pc2023.1.0.1 | | No |
+| 1.9.1 | | pc2023.1.0.1 | ndb v2.5.1,  v2.5 | No |
+| 1.9.0 | | pc2023.1.0.1, pc2022.9 | ndb v2.5.1, v2.5 | No |
+| 1.8.0 | | pc2022.6 | ndb v2.5.1.1, v2.5.1 and v2.5 | No |
+| 1.8.1 | | pc2022.6 | ndb v2.5.1.1, v2.5.1 and v2.5 | No |
+| 1.7.0 | | pc2022.6, pc2022.4 and pc2022.1.0.2 | | No |
+| 1.7.1 | | pc2022.6, pc2022.4.0.1 and pc2022.1.0.2 | | No |
+| 1.6.1 | | pc2022.4 pc2022.1.0.2 and pc2021.9.0.4| | No |
+| 1.5.0 | | pc2022.1.0.2 pc.2021.9.0.4 and pc.2021.8.0.1 | foundation v5.2, v5.1.1 , foundation central v1.3, v1.2 | No |
+| 1.4.0 | | pc2022.1 pc.2021.9.0.4 and pc.2021.8.0.1 | | No |
+| 1.3.0 | | pc.2021.9.0.4, pc.2021.8.0.1 and pc.2021.7 | | No |
+| 1.2.0 | 5.18, 5.19 | pc2020.9 and pc2020.11| | No |
 
 
 ## Example Usage
@@ -340,10 +340,9 @@ The Nutanix Provider for Terraform is the work of many contributors. We apprecia
 
 ## Support
 
-Terraform Nutanix Provider leverages the community-supported model. See [Open Source Support](https://portal.nutanix.com/page/documents/kbs/details?targetId=kA07V000000LdWPSA0) for more information about its support policy.
+-> **Note:** We now have a brand new developer-centric Support Program designed for organizations that require a deeper level of developer support to manage their Nutanix environment and build applications quickly and efficiently. As part of this new Advanced API/SDK Support Program, you will get access to trusted technical advisors who specialize in developer tools including Nutanix Terraform Provider and receive support for your unique development needs and custom integration queries. Visit our Support Portal - [Premium Add-On Support Programs](https://www.nutanix.com/support-services/product-support/premium-support-programs) to learn more about this program.
 
--> **Note:** Update!! 
-We now have a brand new developer-centric Support Program designed for organizations that require a deeper level of developer support to manage their Nutanix environment and build applications quickly and efficiently. As part of this new Advanced API/SDK Support Program, you will get access to trusted technical advisors who specialize in developer tools including Nutanix Terraform Provider and receive support for your unique development needs and custom integration queries. Visit our Support Portal - Premium Add-On Support Programs  to learn more about this program. **Contributions to open-source Nutanix Terraform Provider repository will continue to leverage a community-supported model. Visit https://portal.nutanix.com/kb/13424  for more details. 
+Contributions to open-source Nutanix Terraform Provider repository will continue to leverage a community-supported model. Visit https://portal.nutanix.com/kb/13424  for more details. 
 
 
 ## Community
