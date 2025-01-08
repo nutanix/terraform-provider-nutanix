@@ -242,5 +242,8 @@
       "username": "",
       "password": ""
     }
+  },
+  "data_policies": {
+    "domain_manager_ext_id": ""
   }
 }
