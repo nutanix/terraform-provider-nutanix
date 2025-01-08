@@ -2,9 +2,6 @@ package datapoliciesv2
 
 import (
 	"context"
-	"encoding/json"
-	"log"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/common/v1/response"
@@ -131,11 +128,8 @@ func schemaForLinks() *schema.Schema {
 
 // flatten funcs
 func flattenLinks(links []response.ApiLink) []map[string]interface{} {
-	aJSON, _ := json.MarshalIndent(links, "", "  ")
-	log.Println("[DEBUG] Links: ", string(aJSON))
 	if len(links) > 0 {
 		linkList := make([]map[string]interface{}, 0)
-
 		for _, link := range links {
 			linkMap := make(map[string]interface{})
 			if link.Rel != nil {
@@ -147,8 +141,6 @@ func flattenLinks(links []response.ApiLink) []map[string]interface{} {
 
 			linkList = append(linkList, linkMap)
 		}
-		aJSON, _ = json.MarshalIndent(linkList, "", "  ")
-		log.Println("[DEBUG] Flattened Links: ", string(aJSON))
 		return linkList
 	}
 	return nil

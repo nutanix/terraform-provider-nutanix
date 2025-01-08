@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 	"strconv"
 )
 
@@ -57,4 +60,19 @@ func checkAttributeLengthEqual(resourceName, attribute string, expectedLength in
 
 		return nil
 	}
+}
+
+func testProtectionPolicyV2CheckDestroy(state *terraform.State) error {
+	conn := acc.TestAccProvider.Meta().(*conns.Client)
+	client := conn.DataPoliciesAPI.ProtectionPolicies
+	for _, rs := range state.RootModule().Resources {
+		if rs.Type != resourceNameProtectionPolicy {
+			continue
+		}
+		_, err := client.GetProtectionPolicyById(utils.StringPtr(rs.Primary.ID))
+		if err == nil {
+			return fmt.Errorf("protection policy still exists")
+		}
+	}
+	return nil
 }
