@@ -12,7 +12,7 @@ Provides a resource to create a new API key for nodes registration with Foundati
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_foundation_central_api_keys" "new_api_key" {
 	alias = "<NAME-FOR-API-KEY>"
 }
