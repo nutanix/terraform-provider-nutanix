@@ -13,7 +13,7 @@ List images owned by Prism Central along with the image details like name, descr
 ## Example
 
 ```hcl
-data "nutanix_images_v4" "images"{}
+data "nutanix_images_v2" "images"{}
 ```
 
 ## Attribute Reference

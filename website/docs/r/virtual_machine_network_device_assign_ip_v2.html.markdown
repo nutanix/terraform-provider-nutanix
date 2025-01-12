@@ -28,7 +28,7 @@ resource "nutanix_vm_network_device_v2" "nic"{
 }
 
 resource "nutanix_vm_network_device_assign_ip_v2" "nic_assign_ip"{
-    vm_ext_id = resource.nutanix_virtual_machine_v4.vms.0.ext_id
+    vm_ext_id = resource.nutanix_virtual_machine_v2.vms.0.ext_id
     ext_id    = resource.nutanix_vm_network_device_v2.nic.ext_id
     ip_address {
         value = "10.10.10.10"
