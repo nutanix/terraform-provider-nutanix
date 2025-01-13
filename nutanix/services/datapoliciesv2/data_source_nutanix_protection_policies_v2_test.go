@@ -16,8 +16,9 @@ func TestAccV2NutanixProtectionPoliciesDatasource_Basic(t *testing.T) {
 	description := "terraform test protection policy CRUD"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testProtectionPolicyV2CheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testProtectionPolicyResourceConfig(name, description) + testProtectionPoliciesDatasourceConfig(),
@@ -36,9 +37,11 @@ func TestAccV2NutanixProtectionPoliciesDatasource_WithFilter(t *testing.T) {
 	description := "terraform test protection policy CRUD"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testProtectionPolicyV2CheckDestroy,
 		Steps: []resource.TestStep{
+
 			{
 				Config: testProtectionPolicyResourceConfig(name, description) + testProtectionPoliciesDatasourceConfigWithFilter(name),
 				Check: resource.ComposeTestCheckFunc(
@@ -79,8 +82,9 @@ func TestAccV2NutanixProtectionPoliciesDatasource_WithLimit(t *testing.T) {
 	page := 0
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testProtectionPolicyV2CheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testProtectionPolicyResourceConfig(name, description) + testProtectionPoliciesDatasourceConfigWithLimit(limit, page),

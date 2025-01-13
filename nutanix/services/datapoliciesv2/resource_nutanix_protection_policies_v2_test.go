@@ -233,7 +233,7 @@ resource "nutanix_protection_policy_v2" "test" {
     is_primary            = false
   }
 
-  category_ids = [data.nutanix_categories_v2.categories.categories.0.ext_id]
+  category_ids = [data.nutanix_categories_v2.categories.categories.3.ext_id]
 }
 `, name, description, filepath)
 }
@@ -318,7 +318,7 @@ resource "nutanix_protection_policy_v2" "test" {
     is_primary            = false
   }
 
-  category_ids = [data.nutanix_categories_v2.categories.categories.0.ext_id, data.nutanix_categories_v2.categories.categories.1.ext_id]
+  category_ids = [data.nutanix_categories_v2.categories.categories.3.ext_id, data.nutanix_categories_v2.categories.categories.4.ext_id]
 }
 `, name, description, filepath)
 }
@@ -393,7 +393,7 @@ resource "nutanix_protection_policy_v2" "test" {
   }
 
   category_ids = [
-    data.nutanix_categories_v2.categories.categories.0.ext_id, data.nutanix_categories_v2.categories.categories.1.ext_id
+    data.nutanix_categories_v2.categories.categories.3.ext_id, data.nutanix_categories_v2.categories.categories.4.ext_id
   ]
 }`, name, description, filepath)
 }
@@ -478,7 +478,9 @@ replication_configurations {
     is_primary            = false
   }
 
-  category_ids = [data.nutanix_categories_v2.categories.categories.0.ext_id, data.nutanix_categories_v2.categories.categories.1.ext_id]
+  category_ids = [data.nutanix_categories_v2.categories.categories.3.ext_id, data.nutanix_categories_v2.categories.categories.4.ext_id]
 }
 `, name, description, filepath)
 }
+
+// create sync protection policy, do not provide retention

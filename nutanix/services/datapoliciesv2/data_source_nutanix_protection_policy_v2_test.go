@@ -16,8 +16,9 @@ func TestAccV2NutanixProtectionPolicyDatasource_Basic(t *testing.T) {
 	description := "terraform test protection policy CRUD"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testProtectionPolicyV2CheckDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testProtectionPolicyResourceConfig(name, description) + testProtectionPolicyDatasourceConfig(),

@@ -700,7 +700,7 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prismSdk.Cl
 		// get the group results
 
 		v := vresp.Data.GetValue().(prismConfig.Task)
-
+		
 		if getTaskStatus(v.Status) == "CANCELED" || getTaskStatus(v.Status) == "FAILED" {
 			return v, getTaskStatus(v.Status),
 				fmt.Errorf("error_detail: %s, progress_message: %d", utils.StringValue(v.ErrorMessages[0].Message), utils.IntValue(v.ProgressPercentage))
