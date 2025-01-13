@@ -19,7 +19,7 @@ func DatasourceNutanixListPcsV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"pcs": {
+			"domain_managers": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     DatasourceNutanixFetchPcV2(),
@@ -44,14 +44,16 @@ func DatasourceNutanixListPcsV2Read(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if resp.Data == nil {
-		if err := d.Set("pcs", []map[string]interface{}{}); err != nil {
+		if err := d.Set("domain_managers", []map[string]interface{}{}); err != nil {
 			return diag.Errorf("Error setting pcs: %v", err)
 		}
 	}
 	pcs := resp.Data.GetValue().([]config.DomainManager)
-	if err := d.Set("pcs", flattenPcs(pcs)); err != nil {
+	if err := d.Set("domain_managers", flattenPcs(pcs)); err != nil {
 		return diag.Errorf("Error setting pcs: %v", err)
 	}
+
+	d.SetId(utils.GenUUID())
 
 	return nil
 }

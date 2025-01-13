@@ -56,6 +56,15 @@ func ResourceNutanixProtectionPoliciesV2() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"links": schemaForLinks(),
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"is_approval_policy_needed": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -92,29 +101,9 @@ func ResourceNutanixProtectionPoliciesV2Create(ctx context.Context, d *schema.Re
 	aJSON, _ := json.MarshalIndent(bodySpec, "", "  ")
 	log.Printf("[DEBUG] Create Protection Policy Body Spec: %s", string(aJSON))
 
-	if err := d.Set("name", bodySpec.Name); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("description", bodySpec.Description); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("replication_locations", flattenReplicationLocations(bodySpec.ReplicationLocations)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("replication_configurations", flattenReplicationConfigurations(bodySpec.ReplicationConfigurations)); err != nil {
-		return diag.FromErr(err)
-	}
-	if err := d.Set("category_ids", bodySpec.CategoryIds); err != nil {
-		return diag.FromErr(err)
-	}
-
-	d.SetId(utils.GenUUID())
-
-	return nil
-
 	resp, err := conn.ProtectionPolicies.CreateProtectionPolicy(bodySpec)
 	if err != nil {
-		return nil
+		return diag.Errorf("error while creating Protection Policy: %v", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(prism.TaskReference)
@@ -143,17 +132,59 @@ func ResourceNutanixProtectionPoliciesV2Create(ctx context.Context, d *schema.Re
 	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
 	log.Printf("[DEBUG] Create Protection Policy Task Response Details: %s", string(aJSON))
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
-	d.SetId(*uuid)
-	err = d.Set("ext_id", *uuid)
-	if err != nil {
-		return diag.Errorf("error while setting Protection Policy Ext ID: %v", err)
-	}
+	uuid := rUUID.CompletionDetails[0].Value.GetValue().(string)
+
+	d.SetId(uuid)
 
 	return ResourceNutanixProtectionPoliciesV2Read(ctx, d, meta)
 }
 
 func ResourceNutanixProtectionPoliciesV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).DataPoliciesAPI
+
+	extID := d.Id()
+
+	resp, err := conn.ProtectionPolicies.GetProtectionPolicyById(utils.StringPtr(extID))
+	if err != nil {
+		return diag.Errorf("error while fetching Protection Policy: %s", err)
+	}
+
+	getResp := resp.Data.GetValue().(config.ProtectionPolicy)
+
+	aJSON, _ := json.MarshalIndent(getResp, "", "  ")
+	log.Printf("[DEBUG] Read Protection Policy Response Details: %s", string(aJSON))
+
+	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("tenant_id", getResp.TenantId); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("links", flattenLinks(getResp.Links)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("name", getResp.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("description", getResp.Description); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("replication_locations", flattenReplicationLocations(getResp.ReplicationLocations)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("replication_configurations", flattenReplicationConfigurations(getResp.ReplicationConfigurations)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("category_ids", getResp.CategoryIds); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("is_approval_policy_needed", getResp.IsApprovalPolicyNeeded); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("owner_ext_id", getResp.OwnerExtId); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 
@@ -201,6 +232,7 @@ func ResourceNutanixProtectionPoliciesV2Update(ctx context.Context, d *schema.Re
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
@@ -221,6 +253,38 @@ func ResourceNutanixProtectionPoliciesV2Update(ctx context.Context, d *schema.Re
 }
 
 func ResourceNutanixProtectionPoliciesV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).DataPoliciesAPI
+
+	resp, err := conn.ProtectionPolicies.DeleteProtectionPolicyById(utils.StringPtr(d.Id()))
+	if err != nil {
+		return diag.Errorf("error while deleting Protection Policy: %v", err)
+	}
+	TaskRef := resp.Data.GetValue().(prism.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	taskconn := meta.(*conns.Client).PrismAPI
+	// Wait for the cluster to be available
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("error waiting for Protection Policy (%s) to delete: %s", utils.StringValue(taskUUID), errWaitTask)
+	}
+
+	// Get UUID from TASK API
+
+	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while deleting Protection Policy Task : %v", err)
+	}
+	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
+	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	log.Printf("[DEBUG] Delete Protection Policy Task Response Details: %s", string(aJSON))
+
 	return nil
 }
 
@@ -238,7 +302,7 @@ func schemaReplicationLocations() *schema.Resource {
 			},
 			"replication_sub_location": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				MaxItems: 1, //nolint:gomnd
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -348,7 +412,7 @@ func schemaReplicationConfigurations() *schema.Resource {
 												},
 												"remote": {
 													Type:     schema.TypeList,
-													Required: true,
+													Optional: true,
 													MaxItems: 1, //nolint:gomnd
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
@@ -480,7 +544,7 @@ func expandSchedule(scheduleData []interface{}) *config.Schedule {
 	scheduleDataMap := scheduleData[0].(map[string]interface{})
 
 	schedule := config.NewSchedule()
-	if recoveryPointType, ok := scheduleDataMap["recovery_point_type"]; ok {
+	if recoveryPointType, ok := scheduleDataMap["recovery_point_type"]; ok && recoveryPointType != "" {
 		schedule.RecoveryPointType = expandRecoveryPointType(recoveryPointType.(string))
 	}
 	if recoveryPointObjectiveTimeSeconds, ok := scheduleDataMap["recovery_point_objective_time_seconds"]; ok {
@@ -489,7 +553,7 @@ func expandSchedule(scheduleData []interface{}) *config.Schedule {
 	if retention, ok := scheduleDataMap["retention"]; ok {
 		schedule.Retention = expandRetention(retention.([]interface{}))
 	}
-	if startTime, ok := scheduleDataMap["start_time"]; ok {
+	if startTime, ok := scheduleDataMap["start_time"]; ok && startTime != "" {
 		schedule.StartTime = utils.StringPtr(startTime.(string))
 	}
 	if syncReplicationAutoSuspendTimeoutSeconds, ok := scheduleDataMap["sync_replication_auto_suspend_timeout_seconds"]; ok {

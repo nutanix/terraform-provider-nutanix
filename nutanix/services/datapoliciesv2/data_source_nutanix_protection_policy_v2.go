@@ -2,7 +2,6 @@ package datapoliciesv2
 
 import (
 	"context"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/common/v1/response"
@@ -128,20 +127,19 @@ func schemaForLinks() *schema.Schema {
 }
 
 // flatten funcs
-func flattenLinks(pr []response.ApiLink) []map[string]interface{} {
-	if len(pr) > 0 {
-		linkList := make([]map[string]interface{}, len(pr))
-
-		for k, v := range pr {
-			links := map[string]interface{}{}
-			if v.Href != nil {
-				links["href"] = v.Href
+func flattenLinks(links []response.ApiLink) []map[string]interface{} {
+	if len(links) > 0 {
+		linkList := make([]map[string]interface{}, 0)
+		for _, link := range links {
+			linkMap := make(map[string]interface{})
+			if link.Rel != nil {
+				linkMap["rel"] = utils.StringValue(link.Rel)
 			}
-			if v.Rel != nil {
-				links["rel"] = v.Rel
+			if link.Href != nil {
+				linkMap["href"] = utils.StringValue(link.Href)
 			}
 
-			linkList[k] = links
+			linkList = append(linkList, linkMap)
 		}
 		return linkList
 	}
