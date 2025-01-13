@@ -89,7 +89,7 @@ The schedule attribute supports the following:
 > One of `linear_retention` or `auto_rollup_retention` :
 
 * `linear_retention`: - Linear retention policy.
-* `linear_retention`: - Auto rollup retention policy.
+* `auto_rollup_retention`: - Auto rollup retention policy.
 
 ##### Linear Retention
 The linear_retention attribute supports the following:
