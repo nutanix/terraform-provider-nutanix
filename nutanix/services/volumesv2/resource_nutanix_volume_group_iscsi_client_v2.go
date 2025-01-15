@@ -157,7 +157,7 @@ func ResourceNutanixVolumeGroupIscsiClientV2Create(ctx context.Context, d *schem
 		body.IscsiInitiatorName = utils.StringPtr(iscsiInitiatorName.(string))
 	}
 	if iscsiInitiatorNetworkID, ok := d.GetOk("iscsi_initiator_network_id"); ok {
-		body.IscsiInitiatorNetworkId = expandiscsiInitiatorNetworkID(iscsiInitiatorNetworkID.([]interface{}))
+		body.IscsiInitiatorNetworkId = expandIscsiInitiatorNetworkID(iscsiInitiatorNetworkID.([]interface{}))
 	}
 	if clientSecret, ok := d.GetOk("client_secret"); ok {
 		body.ClientSecret = utils.StringPtr(clientSecret.(string))
@@ -188,15 +188,7 @@ func ResourceNutanixVolumeGroupIscsiClientV2Create(ctx context.Context, d *schem
 
 	resp, err := conn.VolumeAPIInstance.AttachIscsiClient(utils.StringPtr(volumeGroupExtID.(string)), &body)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while Attaching Iscsi Client to Volume Group: %v", errorMessage["message"])
+		return diag.Errorf("error while Attaching Iscsi Client to Volume Group: %v", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(volumesPrism.TaskReference)
@@ -219,15 +211,7 @@ func ResourceNutanixVolumeGroupIscsiClientV2Create(ctx context.Context, d *schem
 
 	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while Attaching Iscsi Client to Volume Group: %v", errorMessage["message"])
+		return diag.Errorf("error while Attaching Iscsi Client to Volume Group: %v", err)
 	}
 	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
 	log.Printf("[DEBUG] rUUID 0: %v", *rUUID.EntitiesAffected[0].ExtId)
@@ -261,16 +245,7 @@ func ResourceNutanixVVolumeGroupIscsiClientV2Delete(ctx context.Context, d *sche
 
 	resp, err := conn.VolumeAPIInstance.DetachIscsiClient(utils.StringPtr(volumeGroupExtID.(string)), &body)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		log.Printf("[ERROR] data: %v", data)
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while Detaching Iscsi Client to Volume Group: %v", errorMessage["message"])
+		return diag.Errorf("error while Detaching Iscsi Client to Volume Group: %v", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(volumesPrism.TaskReference)
@@ -286,35 +261,24 @@ func ResourceNutanixVVolumeGroupIscsiClientV2Delete(ctx context.Context, d *sche
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for template (%s) to Detach Iscsi Client to Volume Group: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for Iscsi Client (%s) to Detach From Volume Group: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
 
 	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while Detaching Iscsi Client to Volume Group: %v", errorMessage["message"])
+		return diag.Errorf("error while Detaching Iscsi Client to Volume Group: %v", err)
 	}
 	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
-	log.Printf("[DEBUG] rUUID 0: %v", *rUUID.EntitiesAffected[0].ExtId)
-	log.Printf("[DEBUG] rUUID 1: %v", *rUUID.EntitiesAffected[1].ExtId)
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
-
-	d.SetId(*uuid)
+	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	log.Printf("[DEBUG] Detach Iscsi Client from Volume Group Task Details: %s", string(aJSON))
 
 	return nil
 }
 
-func expandiscsiInitiatorNetworkID(ipAddressOrFQDN interface{}) *config.IPAddressOrFQDN {
+func expandIscsiInitiatorNetworkID(ipAddressOrFQDN interface{}) *config.IPAddressOrFQDN {
 	if ipAddressOrFQDN != nil {
 		fip := &config.IPAddressOrFQDN{}
 		prI := ipAddressOrFQDN.([]interface{})
