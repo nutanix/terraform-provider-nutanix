@@ -9,9 +9,9 @@ import (
 
 type TestConfig struct {
 	DataProtection struct {
-		VMExtID      []string `json:"vm_ext_id"`
-		PcExtID      string   `json:"pc_ext_id"`
-		ClusterExtID string   `json:"cluster_ext_id"`
+		PcExtID      string `json:"pc_ext_id"`
+		ClusterExtID string `json:"cluster_ext_id"`
+		RemotePcIP   string `json:"remote_pc_ip"`
 	} `json:"data_protection"`
 }
 

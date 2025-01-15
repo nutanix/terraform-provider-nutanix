@@ -53,17 +53,17 @@ func testCheckDestroyPromoteProtectedResource(state *terraform.State) error {
 
 	for _, rs := range state.RootModule().Resources {
 		if rs.Type == "nutanix_virtual_machine_v2" {
-			//aJSON, _ := json.MarshalIndent(rs, "", " ")
-			//fmt.Printf("resource: %s", aJSON)
-			fmt.Printf("resource name: %s", rs.Primary.ID)
-			_, err := vmClient.GetVmById(utils.StringPtr(rs.Primary.ID))
+			readResp, err := vmClient.GetVmById(utils.StringPtr(rs.Primary.ID))
 			if err == nil {
-				fmt.Printf("VM still exists")
-				_, err = vmClient.DeleteVmById(utils.StringPtr(rs.Primary.ID))
+				args := make(map[string]interface{})
+				etag := vmClient.ApiClient.GetEtag(readResp)
+				args["If-Match"] = utils.StringPtr(etag)
+				_, err = vmClient.DeleteVmById(utils.StringPtr(rs.Primary.ID), args)
 				if err != nil {
 					return fmt.Errorf("error: VM still exists: %v", err)
 				}
 				return nil
+
 			}
 		}
 
@@ -82,4 +82,29 @@ func testCheckDestroyPromoteProtectedResource(state *terraform.State) error {
 	}
 
 	return nil
+}
+
+func deletePromotedVm() resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acc.TestAccProvider2.Meta().(*conns.Client)
+		client := conn.VmmAPI.VMAPIInstance
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type == "nutanix_promote_protected_resource_v2" {
+				extID := rs.Primary.ID
+				readResp, err := client.GetVmById(utils.StringPtr(extID))
+				if err == nil {
+					args := make(map[string]interface{})
+					etag := client.ApiClient.GetEtag(readResp)
+					args["If-Match"] = utils.StringPtr(etag)
+					_, err = client.DeleteVmById(utils.StringPtr(rs.Primary.ID), args)
+					if err != nil {
+						return fmt.Errorf("error: VM still exists: %v", err)
+					}
+					return nil
+				}
+			}
+		}
+		return nil
+	}
 }
