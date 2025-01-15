@@ -166,7 +166,8 @@
   },
   "data_protection": {
     "pc_ext_id": "",
-    "cluster_ext_id": ""
+    "cluster_ext_id": "",
+    "remote_pc_ip": ""
   },
   "clusters": {
     "name": "",

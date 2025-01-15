@@ -22,11 +22,7 @@ func DatasourceNutanixGetProtectedResourceV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"links": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     SchemaForLinks(),
-			},
+			"links": SchemaForLinks(),
 			"entity_ext_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -155,7 +151,7 @@ func SchemaForSiteProtectionInfo() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"restorableTimeRanges": {
+						"restorable_time_ranges": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
