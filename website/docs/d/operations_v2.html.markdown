@@ -56,4 +56,4 @@ The following attributes are exported:
 * `endpoint_url`: Endpoint URL.
 * `http_method`: HTTP method for the provided associated endpoint.
 
-See detailed information in [Nutanix Operations](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0.b1).
+See detailed information in [Nutanix Operations](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0).

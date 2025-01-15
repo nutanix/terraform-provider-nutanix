@@ -342,4 +342,4 @@ The template_version_spec block supports the following:
 
 
 
-See detailed information in [Nutanix Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).
+See detailed information in [Nutanix Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).

@@ -59,4 +59,4 @@ Resources can be organized into either an entity or a policy.
 * `resource_id`: The UUID of the entity or policy associated with the particular category.
 
 
-See detailed information in [Nutanix Category v4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0.b1).
+See detailed information in [Nutanix Category v4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0).

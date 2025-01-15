@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/datapoliciesv2"
 	"log"
 	"strings"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/internal"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clusters"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clustersv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/datapoliciesv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/dataprotectionv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/foundation"
 	foundationCentral "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/foundationCentral"
@@ -279,9 +279,6 @@ func Provider() *schema.Provider {
 			"nutanix_volume_group_v2":                         volumesv2.DatasourceNutanixVolumeGroupV2(),
 			"nutanix_volume_group_disks_v2":                   volumesv2.DatasourceNutanixVolumeDisksV2(),
 			"nutanix_volume_group_disk_v2":                    volumesv2.DatasourceNutanixVolumeDiskV2(),
-			"nutanix_volume_group_iscsi_clients_v2":           volumesv2.DatasourceNutanixVolumeGroupIscsiClientsV2(),
-			"nutanix_volume_group_category_details_v2":        volumesv2.DatasourceNutanixVolumeCategoryDetailsV2(),
-			"nutanix_volume_group_vms_v2":                     volumesv2.DataSourceNutanixVolumeGroupVmsV2(),
 			"nutanix_volume_iscsi_clients_v2":                 volumesv2.DatasourceNutanixVolumeIscsiClientsV2(),
 			"nutanix_volume_iscsi_client_v2":                  volumesv2.DatasourceNutanixVolumeIscsiClientV2(),
 			"nutanix_recovery_point_v2":                       dataprotectionv2.DatasourceNutanixRecoveryPointV2(),
@@ -317,6 +314,7 @@ func Provider() *schema.Provider {
 			"nutanix_user":                                    iam.ResourceNutanixUser(),
 			"nutanix_karbon_cluster":                          nke.ResourceNutanixKarbonCluster(),
 			"nutanix_karbon_private_registry":                 nke.ResourceNutanixKarbonPrivateRegistry(),
+			"nutanix_karbon_worker_nodepool":                  nke.ResourceNutanixKarbonWorkerNodePool(),
 			"nutanix_protection_rule":                         prism.ResourceNutanixProtectionRule(),
 			"nutanix_recovery_plan":                           prism.ResourceNutanixRecoveryPlan(),
 			"nutanix_service_group":                           networking.ResourceNutanixServiceGroup(),

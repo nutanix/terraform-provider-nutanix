@@ -306,4 +306,4 @@ Status of a Guest Update.
 
 
 
-See detailed information in [Nutanix Templates V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).
+See detailed information in [Nutanix Templates V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).

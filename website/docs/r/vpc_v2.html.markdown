@@ -84,4 +84,4 @@ The following attributes are exported:
 - `tenant_id`: A globally unique identifier that represents the tenant that owns this entity.
 - `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 
-See detailed information in [Nutanix VPC v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0.b1).
+See detailed information in [Nutanix VPC v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0).

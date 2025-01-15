@@ -7,13 +7,13 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-func TestAccEraClustersDataSource_basic(t *testing.T) {
+func TestAccNDBClustersDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccEraPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEraClustersDataSourceConfig(),
+				Config: testAccNDBClustersDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_clusters.test", "clusters.#"),
 					resource.TestCheckResourceAttrSet("data.nutanix_ndb_clusters.test", "clusters.0.id"),
@@ -23,7 +23,7 @@ func TestAccEraClustersDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccEraClustersDataSourceConfig() string {
+func testAccNDBClustersDataSourceConfig() string {
 	return `
 		data "nutanix_ndb_clusters" "test" { }
 	`

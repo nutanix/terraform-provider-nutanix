@@ -10,14 +10,6 @@ require (
 	github.com/hashicorp/hcl/v2 v2.8.2 // indirect
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.10.1
 	github.com/mitchellh/gox v1.0.1
-	// github.com/nutanix-core/ntnx-api-golang-sdk-internal/clustermgmt-go-client/v16 v16.9.0-9590
-	// github.com/nutanix-core/ntnx-api-golang-sdk-internal/dataprotection-go-client/v16 v16.9.0-9600
-	// github.com/nutanix-core/ntnx-api-golang-sdk-internal/iam-go-client/v16 v16.9.0-9618
-	// github.com/nutanix-core/ntnx-api-golang-sdk-internal/microseg-go-client/v16 v16.9.0-9500
-	// github.com/nutanix-core/ntnx-api-golang-sdk-internal/networking-go-client/v16 v16.9.0-9545
-	// github.com/nutanix-core/ntnx-api-golang-sdk-internal/prism-go-client/v16 v16.9.0-9591
-	// github.com/nutanix-core/ntnx-api-golang-sdk-internal/vmm-go-client/v16 v16.9.0-9781
-	// github.com/nutanix-core/ntnx-api-golang-sdk-internal/volumes-go-client/v16 v16.9.0-9552
 	github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4 v4.0.1
 	github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4 v4.0.1
 	github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4 v4.0.1

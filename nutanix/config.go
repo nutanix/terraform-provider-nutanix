@@ -2,7 +2,6 @@ package nutanix
 
 import (
 	"fmt"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/datapolicies"
 
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
@@ -11,6 +10,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/karbon"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/clusters"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/datapolicies"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/dataprotection"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/microseg"
@@ -21,7 +21,7 @@ import (
 )
 
 // Version represents api version
-// const Version = "3.1"
+const Version = "3.1"
 
 // Config ...
 type Config struct {

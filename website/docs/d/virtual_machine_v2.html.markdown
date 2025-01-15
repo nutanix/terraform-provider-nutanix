@@ -252,4 +252,4 @@ The following arguments are supported:
 * `policy`: Reference to the policy object in use.
 
 
-See detailed information in [Nutanix Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).
+See detailed information in [Nutanix Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).

@@ -1,3 +1,75 @@
+## 2.0.0 (January 07, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.9.5...feat/2.0)
+
+All new features are v4 SDKs based. 
+
+**New Feature:**
+- Cluster Management [\#704](https://github.com/nutanix/terraform-provider-nutanix/issues/704)
+    - CRUD for clusters
+    - Resource to discover unconfigured nodes
+    - Resource to fetch network configuration of unconfigured nodes
+    - Resource to add/remove node from cluster
+    - Resource for PC registration
+    - Datasource for Hosts Info
+
+- Storage Containers [\#705](https://github.com/nutanix/terraform-provider-nutanix/issues/705)
+    - CRUD for storage containers
+    - datasource for storage stats info
+
+- Networks [\#706](https://github.com/nutanix/terraform-provider-nutanix/issues/706)
+    - CRUD for Subnets
+    - CRUD for VPCs
+    - CRUD for PBRs
+    - CRUD for Floating IPs
+    - CRUD for Static Routes
+    - CRUD for Services Groups
+    - CRUD for Address Groups
+    - CRUD for Network Security Rules
+
+- IAM [\#707](https://github.com/nutanix/terraform-provider-nutanix/issues/707)
+    - CRUD for Roles
+    - Datasource for Operations( permissions )
+    - CRUD for Users
+    - CRUD for User Groups
+    - CRUD for Authorization Policy ( ACPs )
+    - CRUD for SALM Identity Providers
+    - CRUD for Directory Services
+
+- Prism [\#711](https://github.com/nutanix/terraform-provider-nutanix/issues/711)
+    - CRUD for categories
+
+- VMM [\#708](https://github.com/nutanix/terraform-provider-nutanix/issues/708)
+    - CRUD for Virtual Machine
+    - CRUD for Images
+    - CRUD for Image Placement Policy
+    - Resource to Clone a VM
+    - Resource for NGT Installation / Uninstallation
+    - Resource for NGT upgrade
+    - Resource for Template deploy
+    - Resource for Template Guest OS Actions
+    - CRUD for Template
+    - Resource for CDROM inject/eject
+    - Resource for VM revert from recovery point
+    - Resource for VM guest customisation update
+    - Resource for VM Network Device Assign/Remove IP
+    - Resource for VM Network Device Migrate
+    - Resource for VM Shutdown Actions
+
+- Volumes [\#709](https://github.com/nutanix/terraform-provider-nutanix/issues/709)
+    - CRUD for Volume Groups
+    - Resource to Attach/Deattach VG to VM
+    - Resource to Attach/Deattach VG to ISCSI Client
+    - CRUD for Volume Group vDisks
+    - Resource to attach/deattach categories from VG
+
+- Data Protection [\#710](https://github.com/nutanix/terraform-provider-nutanix/issues/710)
+    - CRUD for Recovery Point
+    - CRUD for Replicate Recovery Point
+    - Resource to Restore VM from Recovery Point
+    - Datasource for VM Recovery Point Info
+
+
+
 ## 1.9.5 (January 16, 2024)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/feat/1.9.4...feat/1.9.5)
 

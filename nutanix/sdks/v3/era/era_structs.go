@@ -1030,6 +1030,7 @@ type SLAIntentInput struct {
 	WeeklyRetention     *int    `json:"weeklyRetention,omitempty"`
 	MonthlyRetention    *int    `json:"monthlyRetention,omitempty"`
 	QuarterlyRetention  *int    `json:"quarterlyRetention,omitempty"`
+	ID                  *string `json:"id,omitempty"`
 }
 
 type SLADeleteResponse struct {

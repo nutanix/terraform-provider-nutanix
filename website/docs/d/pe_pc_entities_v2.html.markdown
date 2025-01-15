@@ -167,4 +167,4 @@ The fqdn attribute supports the following:
 
 
 
-See detailed information in [Nutanix PC Details](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0.b1#tag/DomainManager/operation/listDomainManagers).
+See detailed information in [Nutanix PC Details](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/listDomainManagers).

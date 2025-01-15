@@ -1,6 +1,6 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_service_groups_v4"
+page_title: "NUTANIX: nutanix_service_groups_v2"
 sidebar_current: "docs-nutanix-resource-service-groups-v2"
 description: |-
   This operation submits a request to create a service group based on the input parameters.
@@ -13,7 +13,7 @@ Create an service Group
 ## Example Usage
 
 ``` hcl
-resource "nutanix_service_groups_v4" "service-group"{
+resource "nutanix_service_groups_v2" "service-group"{
 	name = "{{ name }}"
 	description = "{{ desc }}"
 	tcp_services {
@@ -61,4 +61,4 @@ The following attributes are exported:
 * `is_system_defined`: Service Group is system defined or not.
 
 
-See detailed information in [Nutanix Address Groups V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0.b1).
+See detailed information in [Nutanix Address Groups V4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0).

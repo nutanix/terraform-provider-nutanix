@@ -77,4 +77,4 @@ The following attributes are exported:
 * `value`: value of fqdn address
 
 
-See detailed information in [Nutanix Storage Containers v4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0.b2).
+See detailed information in [Nutanix Storage Containers v4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0).

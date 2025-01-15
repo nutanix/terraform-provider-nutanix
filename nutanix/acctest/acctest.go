@@ -17,11 +17,9 @@ var TestAccProvider2 *schema.Provider
 
 func init() {
 	TestAccProvider = provider.Provider()
-	TestAccProvider2 = provider.Provider()
 
 	TestAccProviders = map[string]*schema.Provider{
-		"nutanix":   TestAccProvider,
-		"nutanix-2": TestAccProvider2,
+		"nutanix": TestAccProvider,
 	}
 }
 
@@ -53,7 +51,7 @@ func TestAccFoundationPreCheck(t *testing.T) {
 	}
 }
 
-func TestAccEraPreCheck(t *testing.T) {
+func testAccEraPreCheck(t *testing.T) {
 	if os.Getenv("NDB_ENDPOINT") == "" ||
 		os.Getenv("NDB_USERNAME") == "" ||
 		os.Getenv("NDB_PASSWORD") == "" {

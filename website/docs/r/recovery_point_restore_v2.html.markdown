@@ -66,4 +66,4 @@ The following attributes are exported:
 * `vm_ext_ids`: - List of external identifiers of the created(restored) VMs.
 * `volume_group_ext_ids`: - List of external identifiers of the created(restored) volume groups.
 
-See detailed information in [Nutanix Recovery Point V4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.0.b1).
+See detailed information in [Nutanix Recovery Point V4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.0).

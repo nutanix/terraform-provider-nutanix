@@ -1,13 +1,13 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_vm_cdrom_insert_eject_v4"
+page_title: "NUTANIX: nutanix_vm_cdrom_insert_eject_v2"
 sidebar_current: "docs-nutanix-resource-vm-cdroms-insert-eject-v2"
 description: |-
    Inserts the defined ISO into a CD-ROM device attached to a Virtual Machine.
    Ejects the ISO currently inserted into a CD-ROM device on a Virtual Machine.
 ---
 
-# nutanix_vm_cdrom_insert_eject_v4
+# nutanix_vm_cdrom_insert_eject_v2
 
 Inserts the defined ISO into a CD-ROM device attached to a Virtual Machine.
 Ejects the ISO currently inserted into a CD-ROM device on a Virtual Machine.
@@ -58,4 +58,4 @@ The following arguments are supported:
 * `vm_disk_reference.vm_reference`: (Required) This is a reference to a VM.
 
 
-See detailed information in [Nutanix VMs CDROM Insert Eject V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).
+See detailed information in [Nutanix VMs CDROM Insert Eject V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).

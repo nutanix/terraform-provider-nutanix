@@ -57,4 +57,4 @@ The following arguments are supported:
 * `category_ext_ids`: Array of strings
 
 
-See detailed information in [Nutanix Image Placement Policies V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1)
+See detailed information in [Nutanix Image Placement Policies V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0)

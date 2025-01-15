@@ -159,4 +159,4 @@ The following attributes are exported:
 * `vpc`: VPC name for projections
 
 
-See detailed information in [Nutanix Routing Policy v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0.b1).
+See detailed information in [Nutanix Routing Policy v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0).

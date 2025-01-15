@@ -29,7 +29,7 @@ terraform {
   required_providers {
     nutanix = {
       source  = "nutanix/nutanix"
-      version = "2.0"
+      version = "2.0.0"
     }
   }
 }
@@ -95,20 +95,4 @@ resource "nutanix_volume_group_iscsi_client_v2" "vg_iscsi_example" {
   vg_ext_id            = resource.nutanix_volume_group_v2.volume_group_example.id
   ext_id               = var.vg_iscsi_ext_id
   iscsi_initiator_name = var.vg_iscsi_initiator_name
-}
-
-
-##########################
-### Data Sources
-##########################
-
-# pull all iscsi clients in a volume group
-data "nutanix_volume_group_iscsi_clients_v2" "vg_iscsi_example" {
-  ext_id = var.volume_group_ext_id
-}
-
-# List of all category details that are associated with the Volume Group.
-data "nutanix_volume_category_details_v4" "vg_cat_example" {
-  ext_id = resource.nutanix_volume_group_v2.volume_group_example.id
-  limit  = 2
 }

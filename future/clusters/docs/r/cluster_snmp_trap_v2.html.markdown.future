@@ -71,7 +71,7 @@ The ipv6 attribute supports the following:
 * `value`: - Ip address.
 
 
-See detailed information in [Nutanix Cluster Entity](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0.b2).
+See detailed information in [Nutanix Cluster Entity](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0).
 
 ## Import
 Nutanix Cluster Entitys can be imported using the `UUID` eg,

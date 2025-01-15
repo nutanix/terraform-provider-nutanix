@@ -131,11 +131,89 @@ func ResourceNutanixVolumeGroupV2() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice([]string{"USER", "INTERNAL", "TEMPORARY", "BACKUP_TARGET"}, false),
 			},
+			"attachment_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"EXTERNAL", "NONE", "DIRECT"}, false),
+			},
+			"protocol": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"NOT_ASSIGNED", "ISCSI", "NVMF"}, false),
+			},
 			"is_hidden": {
-				Description: "Indicates whether the Volume Group is meant to be hidden or not. This is an optional field. If omitted, the VG will not be hidden.",
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Default:     false,
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"disks": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"index": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"disk_size_bytes": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"disk_data_source_reference": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"ext_id": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"uris": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"entity_type": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice([]string{"STORAGE_CONTAINER", "VM_DISK", "VOLUME_DISK", "DISK_RECOVERY_POINT"}, false),
+									},
+								},
+							},
+						},
+						"disk_storage_features": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"flash_mode": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"is_enabled": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -173,18 +251,20 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 	if targetName, ok := d.GetOk("target_name"); ok {
 		body.TargetName = utils.StringPtr(targetName.(string))
 	}
-	// if enabledAuthentications, ok := d.GetOk("enabled_authentications"); ok {
-	// 	enabledAuthenticationsMap := map[string]interface{}{
-	// 		"CHAP": 2,
-	// 		"NONE": 3,
-	// 	}
-	// 	pVal := enabledAuthenticationsMap[enabledAuthentications.(string)]
-	// 	p := volumesClient.AuthenticationType(pVal.(int))
-	// 	body.EnabledAuthentications = &p
-	// } else {
-	// 	p := volumesClient.AuthenticationType(0) // Replace 0 with the appropriate default value
-	// 	body.EnabledAuthentications = &p
-	// }
+	if enabledAuthentications, ok := d.GetOk("enabled_authentications"); ok {
+		const CHAP, NONE = 2, 3
+		enabledAuthenticationsMap := map[string]interface{}{
+			"CHAP": CHAP,
+			"NONE": NONE,
+		}
+		pVal := enabledAuthenticationsMap[enabledAuthentications.(string)]
+		if pVal == nil {
+			body.EnabledAuthentications = nil
+		} else {
+			p := volumesClient.AuthenticationType(pVal.(int))
+			body.EnabledAuthentications = &p
+		}
+	}
 	if iscsiFeatures, ok := d.GetOk("iscsi_features"); ok {
 		body.IscsiFeatures = expandIscsiFeatures(iscsiFeatures.([]interface{}))
 	}
@@ -210,10 +290,42 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 		p := volumesClient.UsageType(pInt.(int))
 		body.UsageType = &p
 	}
+	if attachmentType, ok := d.GetOk("attachment_type"); ok {
+		const NONE, DIRECT, EXTERNAL = 2, 3, 4
+		attachmentTypeMap := map[string]interface{}{
+			"NONE":     NONE,
+			"DIRECT":   DIRECT,
+			"EXTERNAL": EXTERNAL,
+		}
+		pInt := attachmentTypeMap[attachmentType.(string)]
+		if pInt == nil {
+			body.AttachmentType = nil
+		} else {
+			p := volumesClient.AttachmentType(pInt.(int))
+			body.AttachmentType = &p
+		}
+	}
+	if protocol, ok := d.GetOk("protocol"); ok {
+		const NotAssigned, ISCSI, NVMF = 2, 3, 4
+		protocolMap := map[string]interface{}{
+			"NotAssigned": NotAssigned,
+			"ISCSI":       ISCSI,
+			"NVMF":        NVMF,
+		}
+		pInt := protocolMap[protocol.(string)]
+		if pInt == nil {
+			body.Protocol = nil
+		} else {
+			p := volumesClient.Protocol(pInt.(int))
+			body.Protocol = &p
+		}
+	}
 	if isHidden, ok := d.GetOk("is_hidden"); ok {
 		body.IsHidden = utils.BoolPtr(isHidden.(bool))
 	}
-
+	if disks, ok := d.GetOk("disks"); ok {
+		body.Disks = expandDisks(disks.([]interface{}))
+	}
 	resp, err := conn.VolumeAPIInstance.CreateVolumeGroup(&body)
 	if err != nil {
 		return diag.Errorf("error while creating Volume Group : %v", err)
@@ -243,9 +355,11 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 	}
 	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
 
+	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	log.Printf("[DEBUG] Volume Group Task Details: %s", aJSON)
+
 	uuid := rUUID.EntitiesAffected[0].ExtId
 	d.SetId(*uuid)
-	d.Set("ext_id", *uuid)
 
 	return ResourceNutanixVolumeGroupV2Read(ctx, d, meta)
 }
@@ -260,6 +374,9 @@ func ResourceNutanixVolumeGroupV2Read(ctx context.Context, d *schema.ResourceDat
 
 	getResp := resp.Data.GetValue().(volumesClient.VolumeGroup)
 
+	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("name", getResp.Name); err != nil {
 		return diag.FromErr(err)
 	}
@@ -392,19 +509,44 @@ func expandFlashMode(flashModeList []interface{}) *volumesClient.FlashMode {
 	return nil
 }
 
+func expandDisks(disks []interface{}) []volumesClient.VolumeDisk {
+	if len(disks) == 0 {
+		return nil
+	}
+
+	disksList := make([]volumesClient.VolumeDisk, len(disks))
+
+	for k, v := range disks {
+		disk := volumesClient.VolumeDisk{}
+
+		diskI := v.(map[string]interface{})
+
+		if index, ok := diskI["index"]; ok {
+			disk.Index = utils.IntPtr(index.(int))
+		}
+		if diskSizeBytes, ok := diskI["disk_size_bytes"]; ok {
+			diskSize := int64(diskSizeBytes.(int))
+			disk.DiskSizeBytes = utils.Int64Ptr(diskSize)
+		}
+		if description, ok := diskI["description"]; ok {
+			disk.Description = utils.StringPtr(description.(string))
+		}
+		if diskDataSourceReference, ok := diskI["disk_data_source_reference"]; ok {
+			disk.DiskDataSourceReference = expandDiskDataSourceReference(diskDataSourceReference.([]interface{}))
+		}
+		if diskStorageFeatures, ok := diskI["disk_storage_features"]; ok {
+			disk.DiskStorageFeatures = expandDiskStorageFeatures(diskStorageFeatures.([]interface{}))
+		}
+		disksList[k] = disk
+	}
+	return disksList
+}
+
 func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		vresp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
 		if err != nil {
-			var errordata map[string]interface{}
-			e := json.Unmarshal([]byte(err.Error()), &errordata)
-			if e != nil {
-				return nil, "", e
-			}
-			data := errordata["data"].(map[string]interface{})
-			errorList := data["error"].([]interface{})
-			errorMessage := errorList[0].(map[string]interface{})
-			return "", "", (fmt.Errorf("error while polling prism task: %v", errorMessage["message"]))
+			return "", "", (fmt.Errorf("error while polling prism task: %v", err))
 		}
 
 		// get the group results

@@ -64,4 +64,4 @@ The following attributes are exported:
 
 
 
-See detailed information in [Nutanix Address Group v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0.b1).
+See detailed information in [Nutanix Address Group v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0).

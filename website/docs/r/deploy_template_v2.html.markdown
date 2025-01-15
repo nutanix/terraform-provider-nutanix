@@ -97,4 +97,4 @@ The following arguments are supported:
 
 
 
-See detailed information in [Nutanix Deploy Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).
+See detailed information in [Nutanix Deploy Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).

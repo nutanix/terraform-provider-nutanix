@@ -2,7 +2,6 @@ package volumesv2
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -144,15 +143,7 @@ func DatasourceNutanixVolumeGroupV2Read(ctx context.Context, d *schema.ResourceD
 
 	resp, err := conn.VolumeAPIInstance.GetVolumeGroupById(utils.StringPtr(extID.(string)))
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching volume : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching Volume Group : %v", err)
 	}
 
 	getResp := resp.Data.GetValue().(volumesClient.VolumeGroup)

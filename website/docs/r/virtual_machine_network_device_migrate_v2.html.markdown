@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_vm_network_device_migrate"
-sidebar_current: "docs-nutanix-resource-vm-network-device-migrate"
+page_title: "NUTANIX: nutanix_vm_network_device_migrate_v2"
+sidebar_current: "docs-nutanix-resource-vm-network-device-migrate-v2"
 description: |-
   Provides a Nutanix Virtual Machine resource to Migrate a nic.
 ---
@@ -75,4 +75,4 @@ The ip_address attribute supports the following:
 * `prefix_length`: - (Optional) The prefix length of the network to which this host IPv4 address belongs.
 * `value`: - Ip address.
 
-See detailed information in [Nutanix Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).
+See detailed information in [Nutanix Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).

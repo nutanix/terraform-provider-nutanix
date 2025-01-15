@@ -150,4 +150,4 @@ The authentication argument supports the following:
 * `username`: -(Required)  Username required for the basic auth scheme. As per RFC 2617 usernames might be case sensitive.
 * `password`: -(Required)  Password required for the basic auth scheme.
 
-See detailed information in [Nutanix Register a PC Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0.b1#tag/DomainManager/operation/register).
+See detailed information in [Nutanix Register a PC Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/register).

@@ -147,8 +147,8 @@ func testAccEraDatabaseConfig(name, desc, vmName, sshKey string, r int) string {
 		databasetype = "postgres_database"
 		name = "%[1]s"
 		description = "%[2]s"
-		softwareprofileid = local.software_profiles["POSTGRES_10.4_OOB"].id
-		softwareprofileversionid =  local.software_profiles["POSTGRES_10.4_OOB"].latest_version_id
+		softwareprofileid = local.software_profiles["POSTGRES_15.6_ROCKY_LINUX_8_OOB"].id
+		softwareprofileversionid =  local.software_profiles["POSTGRES_15.6_ROCKY_LINUX_8_OOB"].latest_version_id
 		computeprofileid =  local.compute_profiles["DEFAULT_OOB_SMALL_COMPUTE"].id
 		networkprofileid = local.network_profiles.DEFAULT_OOB_POSTGRESQL_NETWORK.id
 		dbparameterprofileid = local.database_parameter_profiles.DEFAULT_POSTGRES_PARAMS.id
@@ -159,7 +159,7 @@ func testAccEraDatabaseConfig(name, desc, vmName, sshKey string, r int) string {
 			db_password =  "password"
 			database_names= "testdb1"
 		}
-		nxclusterid= local.clusters.EraCluster.id
+		nxclusterid= local.clusters.NDBCluster.id
 		sshpublickey= "%[4]s"
 		nodes{
 				vmname= "%[3]s"
@@ -242,8 +242,8 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string, r int) string {
 		databasetype = "postgres_database"
 		name = "%[1]s"
 		description = "%[2]s"
-		softwareprofileid = local.software_profiles["POSTGRES_10.4_OOB"].id
-		softwareprofileversionid =  local.software_profiles["POSTGRES_10.4_OOB"].latest_version_id
+		softwareprofileid = local.software_profiles["POSTGRES_15.6_ROCKY_LINUX_8_OOB"].id
+		softwareprofileversionid =  local.software_profiles["POSTGRES_15.6_ROCKY_LINUX_8_OOB"].latest_version_id
 		computeprofileid =  local.compute_profiles["DEFAULT_OOB_SMALL_COMPUTE"].id
 		networkprofileid = local.network_profiles.DEFAULT_OOB_POSTGRESQL_NETWORK.id
 		dbparameterprofileid = local.database_parameter_profiles.DEFAULT_POSTGRES_PARAMS.id
@@ -267,7 +267,7 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string, r int) string {
 				patroni_cluster_name = "ha-patroni-cluster"
 			}
 		}
-		nxclusterid= local.clusters.EraCluster.id
+		nxclusterid= local.clusters.NDBCluster.id
 		sshpublickey= "%[3]s"
 		nodes{
 			properties{
@@ -275,7 +275,7 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string, r int) string {
 				value = "haproxy"
 			}
 			vmname =  "ha-cls_haproxy-%[4]d"
-			nx_cluster_id =  local.clusters.EraCluster.id
+			nx_cluster_id =  local.clusters.NDBCluster.id
 		}
 		nodes{
 			properties{
@@ -293,7 +293,7 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string, r int) string {
 			vmname = "ha-cls-1%[4]d"
 			networkprofileid=local.network_profiles.DEFAULT_OOB_POSTGRESQL_NETWORK.id
 			computeprofileid= local.compute_profiles["DEFAULT_OOB_SMALL_COMPUTE"].id
-			nx_cluster_id=  local.clusters.EraCluster.id
+			nx_cluster_id=  local.clusters.NDBCluster.id
 		}
 		nodes{
 			properties{
@@ -311,7 +311,7 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string, r int) string {
 			vmname = "ha-cls-2%[4]d"
 			networkprofileid=local.network_profiles.DEFAULT_OOB_POSTGRESQL_NETWORK.id
 			computeprofileid= local.compute_profiles["DEFAULT_OOB_SMALL_COMPUTE"].id
-			nx_cluster_id=  local.clusters.EraCluster.id
+			nx_cluster_id=  local.clusters.NDBCluster.id
 		}
 
 		nodes{
@@ -330,7 +330,7 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string, r int) string {
 			vmname = "ha-cls-3%[4]d"
 			networkprofileid=local.network_profiles.DEFAULT_OOB_POSTGRESQL_NETWORK.id
 			computeprofileid= local.compute_profiles["DEFAULT_OOB_SMALL_COMPUTE"].id
-			nx_cluster_id= local.clusters.EraCluster.id
+			nx_cluster_id= local.clusters.NDBCluster.id
 		}
 		timemachineinfo {
 			name= "test-pg-inst-%[4]d"
@@ -340,7 +340,7 @@ func testAccEraDatabaseHAConfig(name, desc, sshKey string, r int) string {
 				primary_sla{
 				  sla_id= local.slas["DEFAULT_OOB_BRONZE_SLA"].id
 				  nx_cluster_ids=  [
-					local.clusters.EraCluster.id
+					local.clusters.NDBCluster.id
 				  ]
 				}
 			  }
@@ -424,7 +424,7 @@ func testAccEraDatabaseSchemaValidationConfig(name, desc, vmName, sshKey string,
 			db_password =  "password"
 			database_names= "testdb1"
 		}
-		nxclusterid= local.clusters.EraCluster.id
+		nxclusterid= local.clusters.NDBCluster.id
 		sshpublickey= "%[4]s"
 		nodes{
 				vmname= "%[3]s"
@@ -514,7 +514,7 @@ func testAccEraDatabaseSchemaValidationConfigWithoutCreateDBserver(name, desc, v
 				db_password =  "password"
 				database_names= "testdb1"
 			}
-			nxclusterid= local.clusters.EraCluster.id
+			nxclusterid= local.clusters.NDBCluster.id
 			sshpublickey= "%[4]s"
 			nodes{
 				vmname= "%[3]s"

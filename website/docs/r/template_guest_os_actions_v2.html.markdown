@@ -47,4 +47,4 @@ The following arguments are supported:
 * `is_active_version`: (Optional) Specify whether to mark the Template Version as active or not. The newly created Version during Template Creation, Updating or Guest OS Updating is set to Active by default unless specified otherwise. Default is true. Only applicable with `complete` action.
 
 
-See detailed information in [Nutanix Template Guest OS Action V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).
+See detailed information in [Nutanix Template Guest OS Action V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).

@@ -122,4 +122,4 @@ The `uplink_list` attribute supports the following:
 * `name`: - Interface name.
 * `mac`: - MAC address.
 
-See detailed information in [Nutanix Cluster V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0.b2).
+See detailed information in [Nutanix Cluster V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0).

@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_vm_network_device_assign_ip"
-sidebar_current: "docs-nutanix-resource-vm-network-device-assign-ip"
+page_title: "NUTANIX: nutanix_vm_network_device_assign_ip_v2"
+sidebar_current: "docs-nutanix-resource-vm-network-device-assign-ip-v2"
 description: |-
   Provides a Nutanix Virtual Machine resource to Assign IP.
 ---
@@ -53,4 +53,4 @@ The ip_address attribute supports the following:
 * `prefix_length`: - (Optional) The prefix length of the network to which this host IPv4 address belongs.
 * `value`: - Ip address.
 
-See detailed information in [Nutanix Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0.b1).
+See detailed information in [Nutanix Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).

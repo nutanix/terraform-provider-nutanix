@@ -114,4 +114,4 @@ The following attributes are exported:
 - `value`: value of address
 - `prefix_length`: The prefix length of the network to which this host IPv4/IPv6 address belongs.
 
-See detailed information in [Nutanix Subnet v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0.b1).
+See detailed information in [Nutanix Subnet v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0).

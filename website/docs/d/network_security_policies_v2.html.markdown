@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_network_security_policies_v2"
-sidebar_current: "docs-nutanix-datasource-network_security_policies_v4"
+sidebar_current: "docs-nutanix-datasource-network_security_policies_v2"
 description: |-
  List all the Network Security Policies
 ---
@@ -128,4 +128,4 @@ The following attributes are exported:
 * `code`: Icmp service Code. Ignore this field if Code has to be ANY.
 
 
-See detailed information in [Nutanix Security Policies v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0.b1).
+See detailed information in [Nutanix Security Policies v4](https://developers.nutanix.com/api-reference?namespace=microseg&version=v4.0).

@@ -30,7 +30,7 @@ terraform {
   required_providers {
     nutanix = {
       source  = "nutanix/nutanix"
-      version = "2.0"
+      version = "2.0.0"
     }
   }
 }
@@ -84,6 +84,55 @@ resource "nutanix_volume_group_v2" "volume_group_example" {
   is_hidden  = false
 
   # ignore changes to target_secret, target secret will not be returned in terraform plan output 
+  lifecycle {
+    ignore_changes = [
+      iscsi_features[0].target_secret
+    ]
+  }
+}
+
+
+
+# create a volume group with attachement_type , protocol and disks
+resource "nutanix_volume_group_v2" "volume_group_example" {
+  name                               = var.volume_group_name
+  description                        = "Test Create Volume group with spec"
+  should_load_balance_vm_attachments = false
+  sharing_status                     = var.volume_group_sharing_status
+  target_name                        = "volumegroup-test-001234"
+  created_by                         = "example"
+  cluster_reference                  = local.cluster1
+  iscsi_features {
+    enabled_authentications = "CHAP"
+    target_secret           = var.volume_group_target_secret
+  }
+
+  storage_features {
+    flash_mode {
+      is_enabled = true
+    }
+  }
+  usage_type = "USER"
+  attachment_type = "DIRECT"
+  protocol = "ISCSI"
+  disks {
+    disk_size_bytes = 10 * 1024 * 1024 * 1024
+    index = 1
+    disk_data_source_reference {
+      name        = "vg-disk-%[1]s"
+      ext_id      = "<storage_container_uuid>"
+      entity_type = "STORAGE_CONTAINER"
+      uris        = ["uri1","uri2"]
+    }
+    disk_storage_features {
+      flash_mode {
+        is_enabled = false
+      }
+    }
+  }
+  is_hidden  = false
+
+  # ignore changes to target_secret, target secret will not be returned in terraform plan output
   lifecycle {
     ignore_changes = [
       iscsi_features[0].target_secret

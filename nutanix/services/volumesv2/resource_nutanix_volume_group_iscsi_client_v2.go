@@ -157,7 +157,7 @@ func ResourceNutanixVolumeGroupIscsiClientV2Create(ctx context.Context, d *schem
 		body.IscsiInitiatorName = utils.StringPtr(iscsiInitiatorName.(string))
 	}
 	if iscsiInitiatorNetworkID, ok := d.GetOk("iscsi_initiator_network_id"); ok {
-		body.IscsiInitiatorNetworkId = expandIscsiInitiatorNetworkID(iscsiInitiatorNetworkID.([]interface{}))
+		body.IscsiInitiatorNetworkId = expandiscsiInitiatorNetworkID(iscsiInitiatorNetworkID.([]interface{}))
 	}
 	if clientSecret, ok := d.GetOk("client_secret"); ok {
 		body.ClientSecret = utils.StringPtr(clientSecret.(string))
@@ -278,7 +278,7 @@ func ResourceNutanixVVolumeGroupIscsiClientV2Delete(ctx context.Context, d *sche
 	return nil
 }
 
-func expandIscsiInitiatorNetworkID(ipAddressOrFQDN interface{}) *config.IPAddressOrFQDN {
+func expandiscsiInitiatorNetworkID(ipAddressOrFQDN interface{}) *config.IPAddressOrFQDN {
 	if ipAddressOrFQDN != nil {
 		fip := &config.IPAddressOrFQDN{}
 		prI := ipAddressOrFQDN.([]interface{})
