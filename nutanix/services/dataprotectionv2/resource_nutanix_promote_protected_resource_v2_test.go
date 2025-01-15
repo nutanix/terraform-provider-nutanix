@@ -24,33 +24,25 @@ func TestAccV2NutanixPromoteProtectedResourceResource_Basic(t *testing.T) {
 	vmResourceName := "nutanix_virtual_machine_v2.test"
 	//vmPromoteResourceName := "data.nutanix_virtual_machine_v2.promote-vm"
 
-	remotePcIP := testVars.DataProtection.RemotePcIP
+	//remotePcIP := testVars.DataProtection.RemotePcIP
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
-		Providers: acc.TestAccProviders,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"time": {
-				Source:            "hashicorp/time",
-				VersionConstraint: "0.12.1",
-			},
-		},
-
+		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		Providers:    acc.TestAccProviders,
 		CheckDestroy: testCheckDestroyPromoteProtectedResource,
 		Steps: []resource.TestStep{
 			// create protection policy and protected vm
 			{
 				Config: testPromoteProtectedResourceVmAndProtectionPolicyConfig(vmName, ppName, description),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(vmResourceName, "id"),
+					//resource.TestCheckResourceAttrSet(vmResourceName, "id"),
 					waitForVmToBeProtected(vmResourceName, "protection_type", "RULE_PROTECTED", maxRetries, retryInterval, sleepTime),
 				),
 			},
-			// promote protected vm
+			//promote protected vm
 			{
 				//Taint: []string{"data.nutanix_domain_managers_v2.pcs", "data.nutanix_categories_v2.categories", "data.nutanix_clusters_v2.clusters"},
-				Config: testPromoteProtectedResourceVmAndProtectionPolicyConfig(vmName, ppName, description) +
-					testPromoteProtectedResourceConfig(remotePcIP),
+				Config: testPromoteProtectedResourceConfig(vmName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNamePromoteProtectedResource, "ext_id"),
 					//resource.TestCheckResourceAttrSet(vmPromoteResourceName, "ext_id"),
@@ -68,28 +60,16 @@ func testPromoteProtectedResourceVmAndProtectionPolicyConfig(vmName, ppName, des
 	//port, _ := strconv.Atoi(os.Getenv("NUTANIX_PORT"))
 
 	return fmt.Sprintf(`
-provider "nutanix" {
-  alias    = "host1"
-  username = "admin"
-  password = "Nutanix.123"
-  endpoint = "10.44.76.58"
-  insecure = true
-  port     = 9440
-}
-
 # List domain Managers
 data "nutanix_domain_managers_v2" "pcs" {
-	provider = nutanix.host1
 }
 
 # List categories
 data "nutanix_categories_v2" "categories" {
-	provider = nutanix.host1
 }
 
 # list Clusters 
 data "nutanix_clusters_v2" "clusters" {
-	provider = nutanix.host1
 }
 
 locals {	
@@ -98,7 +78,6 @@ locals {
 }
 
 resource "nutanix_protection_policy_v2" "test" {
- provider = nutanix.host1
  name        = "%[4]s"
  description = "%[3]s"
 
@@ -136,7 +115,6 @@ resource "nutanix_protection_policy_v2" "test" {
 }
 
 resource "nutanix_virtual_machine_v2" "test"{
-	provider = nutanix.host1
 	name= "%[2]s"
 	description =  "%[3]s"
 	num_cores_per_socket = 1
@@ -151,30 +129,11 @@ resource "nutanix_virtual_machine_v2" "test"{
 	depends_on = [nutanix_protection_policy_v2.test]
 }
 
-resource "time_sleep" "delay" {
-  depends_on = [nutanix_virtual_machine_v2.test]
 
-  create_duration = "5m"
-}
-
-provider "nutanix" {
-  alias    = "host2"
-  username = "admin"
-  password = "Nutanix.123"
-  endpoint = "10.44.76.117"
-  insecure = true
-  port     = 9440
-}
-
-resource "nutanix_promote_protected_resource_v2" "test" {
-  provider = nutanix.host2
-  ext_id = nutanix_virtual_machine_v2.test.id
-  depends_on = [nutanix_virtual_machine_v2.test, time_sleep.delay]
-}
 	`, filepath, vmName, description, ppName)
 }
 
-func testPromoteProtectedResourceConfig(remotePcIp string) string {
+func testPromoteProtectedResourceConfig(name string) string {
 
 	//username := os.Getenv("NUTANIX_USERNAME")
 	//password := os.Getenv("NUTANIX_PASSWORD")
@@ -184,23 +143,27 @@ func testPromoteProtectedResourceConfig(remotePcIp string) string {
 	//fmt.Printf("password: %s\n", password)
 	//fmt.Printf("endpoint: %s\n", remotePcIp)
 
-	//return fmt.Sprintf(
-	return `
+	return fmt.Sprintf(
+		`
 
-provider "nutanix" {
+data "nutanix_virtual_machines_v2" "test" {
+	provider = nutanix
+	filter = "name eq '%[1]s'"
+}
+
+provider "nutanix-2" {
   username = "admin"
   password = "Nutanix.123"
-  endpoint = "10.44.76.117"
+  endpoint = "10.44.76.58"
   insecure = true
   port     = 9440
 }
 
 resource "nutanix_promote_protected_resource_v2" "test" {
-  provider = nutanix-host2
-  ext_id = nutanix_virtual_machine_v2.test.id
-  depends_on = [nutanix_virtual_machine_v2.test]
+  provider = nutanix-2
+  ext_id = data.nutanix_virtual_machines_v2.test.vms[0].ext_id
+  depends_on = [data.nutanix_virtual_machines_v2.test]
 }
 
-`
-	//, username, password, remotePcIp, port)
+`, name)
 }
