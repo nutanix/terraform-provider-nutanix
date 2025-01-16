@@ -3,15 +3,13 @@ package prismv2
 import (
 	"context"
 	"encoding/json"
-	"log"
-	"time"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/management"
+	"log"
 
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -462,130 +460,4 @@ func expandBackupPolicy(policy interface{}) *management.BackupPolicy {
 	}
 
 	return &backupPolicy
-}
-
-// f
-
-func flattenTime(time *time.Time) *string {
-	if time == nil {
-		return nil
-	}
-	return utils.StringPtr(time.String())
-}
-
-func flattenClusterLocation(location management.ClusterLocation) []map[string]interface{} {
-	if &location == nil {
-		return nil
-	}
-
-	clusterLocation := make([]map[string]interface{}, 0)
-	clusterLocationMap := make(map[string]interface{})
-	clusterLocationMap["config"] = flattenClusterReference(location.Config)
-
-	clusterLocation = append(clusterLocation, clusterLocationMap)
-
-	return clusterLocation
-}
-
-func flattenClusterReference(clusterReference *management.ClusterReference) []map[string]interface{} {
-	if clusterReference == nil {
-		return nil
-	}
-
-	clusterRef := make([]map[string]interface{}, 0)
-	clusterRefMap := make(map[string]interface{})
-	clusterRefMap["ext_id"] = clusterReference.ExtId
-	clusterRefMap["name"] = clusterReference.Name
-
-	clusterRef = append(clusterRef, clusterRefMap)
-
-	return clusterRef
-}
-
-func flattenBackupTargetLocation(location *management.OneOfBackupTargetLocation) []map[string]interface{} {
-	if location == nil {
-		return nil
-	}
-
-	backupTargetLocation := make([]map[string]interface{}, 0)
-
-	if utils.StringValue(location.ObjectType_) == clustersLocationObjectType {
-		clusterLocation := location.GetValue().(management.ClusterLocation)
-
-		clusterLocationMap := make(map[string]interface{})
-		clusterLocationMap["cluster_location"] = flattenClusterLocation(clusterLocation)
-		backupTargetLocation = append(backupTargetLocation, clusterLocationMap)
-		return backupTargetLocation
-	}
-
-	if utils.StringValue(location.ObjectType_) == objectStoreLocationObjectType {
-		objectStoreLocation := location.GetValue().(management.ObjectStoreLocation)
-
-		objectStoreLocationMap := make(map[string]interface{})
-		objectStoreLocationMap["object_store_location"] = flattenObjectStoreLocation(objectStoreLocation)
-		backupTargetLocation = append(backupTargetLocation, objectStoreLocationMap)
-		return backupTargetLocation
-	}
-
-	return backupTargetLocation
-}
-
-func flattenObjectStoreLocation(objectStoreLocation management.ObjectStoreLocation) []map[string]interface{} {
-	if &objectStoreLocation == nil {
-		return nil
-	}
-
-	objectStoreLocationMap := make(map[string]interface{})
-	objectStoreLocationMap["provider_config"] = flattenProviderConfig(objectStoreLocation.ProviderConfig)
-	objectStoreLocationMap["backup_policy"] = flattenBackupPolicy(objectStoreLocation.BackupPolicy)
-
-	objectStoreLocationList := make([]map[string]interface{}, 0)
-	objectStoreLocationList = append(objectStoreLocationList, objectStoreLocationMap)
-
-	return objectStoreLocationList
-}
-
-func flattenProviderConfig(providerConfig *management.AWSS3Config) []map[string]interface{} {
-	if providerConfig == nil {
-		return nil
-	}
-
-	providerConfigMap := make(map[string]interface{})
-	providerConfigMap["bucket_name"] = providerConfig.BucketName
-	providerConfigMap["region"] = providerConfig.Region
-	providerConfigMap["credentials"] = flattenAccessKeyCredentials(providerConfig.Credentials)
-
-	providerConfigList := make([]map[string]interface{}, 0)
-	providerConfigList = append(providerConfigList, providerConfigMap)
-
-	return providerConfigList
-}
-
-func flattenAccessKeyCredentials(credentials *management.AccessKeyCredentials) []map[string]interface{} {
-	if credentials == nil {
-		return nil
-	}
-
-	credentialsMap := make(map[string]interface{})
-	credentialsMap["access_key_id"] = credentials.AccessKeyId
-	credentialsMap["secret_access_key"] = credentials.SecretAccessKey
-
-	credentialsList := make([]map[string]interface{}, 0)
-	credentialsList = append(credentialsList, credentialsMap)
-
-	return credentialsList
-}
-
-func flattenBackupPolicy(policy *management.BackupPolicy) []map[string]interface{} {
-	if policy == nil {
-		return nil
-	}
-
-	backupPolicyMap := make(map[string]interface{})
-	backupPolicyMap["rpo_in_minutes"] = policy.RpoInMinutes
-
-	backupPolicyList := make([]map[string]interface{}, 0)
-	backupPolicyList = append(backupPolicyList, backupPolicyMap)
-
-	return backupPolicyList
 }
