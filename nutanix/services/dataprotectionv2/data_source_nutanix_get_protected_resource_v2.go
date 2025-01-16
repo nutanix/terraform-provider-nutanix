@@ -61,7 +61,7 @@ func DatasourceNutanixGetProtectedResourceV2() *schema.Resource {
 	}
 }
 
-// DatasourceNutanixGetProtectedResourceV2Create to Promote Protected Resource
+// DatasourceNutanixGetProtectedResourceV2Create to Get Protected Resource
 func DatasourceNutanixGetProtectedResourceV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).DataProtectionAPI
 

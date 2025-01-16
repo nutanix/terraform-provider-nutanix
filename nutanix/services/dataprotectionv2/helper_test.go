@@ -42,11 +42,11 @@ func waitForVmToBeProtected(resourceName, attributeName, desiredValue string, ma
 			time.Sleep(retryInterval)
 		}
 
-		return fmt.Errorf("failed to reach desired value for attribute %q: expected %q, got %q after %d retries", attributeName, desiredValue, lastValue, maxRetries)
+		return fmt.Errorf("VM: failed to reach desired value for attribute %q: expected %q, got %q after %d retries", attributeName, desiredValue, lastValue, maxRetries)
 	}
 }
 
-func testCheckDestroyPromoteProtectedResource(state *terraform.State) error {
+func testCheckDestroyProtectedResource(state *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
 	vmClient := conn.VmmAPI.VMAPIInstance
 	ppClient := conn.DataPoliciesAPI.ProtectionPolicies
@@ -106,5 +106,40 @@ func deletePromotedVm() resource.TestCheckFunc {
 			}
 		}
 		return nil
+	}
+}
+
+func waitForVgToBeProtected(resourceName, attributeName, desiredValue string, maxRetries int, retryInterval, sleepTime time.Duration) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		var lastValue string
+		conn := acc.TestAccProvider.Meta().(*conns.Client)
+		client := conn.VmmAPI.VMAPIInstance
+
+		for i := 0; i < maxRetries; i++ {
+			rs, ok := s.RootModule().Resources[resourceName]
+			if !ok {
+				return fmt.Errorf("resource not found: %s", resourceName)
+			}
+
+			vmResp, err := client.GetVmById(utils.StringPtr(rs.Primary.ID))
+			if err != nil {
+				return fmt.Errorf("error getting VOLUME GROUP by id: %v", err)
+			}
+
+			// read the attribute value from the response
+			vm := vmResp.Data.GetValue().(config.Vm)
+			lastValue = config.ProtectionType.GetName(*vm.ProtectionType)
+			if lastValue == desiredValue {
+				time.Sleep(sleepTime)
+				fmt.Printf("[DEBUG] VOLUME GROUP is %s\n", lastValue)
+				return nil // Desired value reached
+			}
+
+			fmt.Printf("[DEBUG] Waiting for VOLUME GROUP to be protected:  attribute %q to be %q. Current value: %q\n", attributeName, desiredValue, lastValue)
+			// Wait before retrying
+			time.Sleep(retryInterval)
+		}
+
+		return fmt.Errorf("VOLUME GROUP: failed to reach desired value for attribute %q: expected %q, got %q after %d retries", attributeName, desiredValue, lastValue, maxRetries)
 	}
 }
