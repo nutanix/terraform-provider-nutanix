@@ -43,11 +43,16 @@ func DatasourceNutanixBackupTargetsV2Read(ctx context.Context, d *schema.Resourc
 		if err := d.Set("backup_targets", []interface{}{}); err != nil {
 			return diag.Errorf("error setting backup_targets: %s", err)
 		}
+		d.SetId(domainManagerExtID)
+		return nil
 	}
 
 	if err := d.Set("backup_targets", flattenBackupTargets(resp.Data.GetValue().([]management.BackupTarget))); err != nil {
 		return diag.Errorf("error setting backup_targets: %s", err)
 	}
+
+	d.SetId(domainManagerExtID)
+
 	return nil
 }
 

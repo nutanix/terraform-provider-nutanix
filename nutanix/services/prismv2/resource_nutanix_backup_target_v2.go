@@ -3,13 +3,14 @@ package prismv2
 import (
 	"context"
 	"encoding/json"
+	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/management"
-	"log"
 
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -56,6 +57,10 @@ func ResourceNutanixBackupTargetV2() *schema.Resource {
 												"ext_id": {
 													Type:     schema.TypeString,
 													Required: true,
+												},
+												"name": {
+													Type:     schema.TypeString,
+													Computed: true,
 												},
 											},
 										},
@@ -158,6 +163,7 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 	locationI := d.Get("location").([]interface{})
 	location := locationI[0].(map[string]interface{})
 
+	backupTargetExtID := ""
 	if location["cluster_location"] != nil && len(location["cluster_location"].([]interface{})) > 0 {
 		clusterLocation := location["cluster_location"].([]interface{})[0].(map[string]interface{})
 		clusterConfig := clusterLocation["config"].([]interface{})[0].(map[string]interface{})
@@ -194,6 +200,18 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Backup Target Body: %s", string(aJSON))
 
+	// Get all the backup targets for the domain manager
+	// This is to get the backup target ext id
+	//by comparing the backup targets before and after creating a new backup target
+	listBackupTargets, err := conn.DomainManagerBackupsAPIInstance.ListBackupTargets(utils.StringPtr(domainManagerExtID))
+	if err != nil {
+		return diag.Errorf("error while Listing Backup Targets for : %s err: %s", domainManagerExtID, err)
+	}
+	oldBackupTargets := []management.BackupTarget{}
+	if listBackupTargets.Data != nil {
+		oldBackupTargets = listBackupTargets.Data.GetValue().([]management.BackupTarget)
+	}
+
 	resp, err := conn.DomainManagerBackupsAPIInstance.CreateBackupTarget(utils.StringPtr(domainManagerExtID), &body)
 
 	if err != nil {
@@ -225,8 +243,40 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
 	log.Printf("[DEBUG] Create Backup Target Task Details: %s", string(aJSON))
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
-	d.SetId(*uuid)
+	//filter := "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'PRISM_CENTRAL')"
+	listBackupTargets, err = conn.DomainManagerBackupsAPIInstance.ListBackupTargets(utils.StringPtr(domainManagerExtID))
+	if err != nil {
+		return diag.Errorf("error while Listing Backup Targets for : %s err: %s", domainManagerExtID, err)
+	}
+	newBackupTargets := listBackupTargets.Data.GetValue().([]management.BackupTarget)
+
+	aJSON, _ = json.MarshalIndent(oldBackupTargets, "", "  ")
+	log.Printf("[DEBUG] Old Backup Targets: %s", string(aJSON))
+
+	log.Printf("[DEBUG] ###############################")
+
+	aJSON, _ = json.MarshalIndent(newBackupTargets, "", "  ")
+	log.Printf("[DEBUG] New Backup Targets: %s", string(aJSON))
+
+	if len(oldBackupTargets) == 0 {
+		backupTargetExtID = utils.StringValue(newBackupTargets[0].ExtId)
+	} else {
+		// Find the new backup target ext id
+		for _, newBackupTarget := range newBackupTargets {
+			for _, oldBackupTarget := range oldBackupTargets {
+				if utils.StringValue(newBackupTarget.ExtId) != utils.StringValue(oldBackupTarget.ExtId) {
+					backupTargetExtID = utils.StringValue(newBackupTarget.ExtId)
+					break
+				}
+			}
+		}
+	}
+
+	if backupTargetExtID == "" {
+		return diag.Errorf("error while fetching Created Backup Target Ext ID")
+	}
+
+	d.SetId(backupTargetExtID)
 
 	return ResourceNutanixBackupTargetV2Read(ctx, d, meta)
 }
@@ -244,6 +294,9 @@ func ResourceNutanixBackupTargetV2Read(ctx context.Context, d *schema.ResourceDa
 	}
 
 	backupTarget := resp.Data.GetValue().(management.BackupTarget)
+
+	aJSON, _ := json.MarshalIndent(backupTarget, "", "  ")
+	log.Printf("[DEBUG] Read Backup Target Details: %s", string(aJSON))
 
 	if err := d.Set("tenant_id", backupTarget.TenantId); err != nil {
 		return diag.Errorf("error setting tenant_id: %s", err)
@@ -395,6 +448,7 @@ func ResourceNutanixBackupTargetV2Delete(ctx context.Context, d *schema.Resource
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutDelete),
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
@@ -403,7 +457,7 @@ func ResourceNutanixBackupTargetV2Delete(ctx context.Context, d *schema.Resource
 
 	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Backup Target Task Details: %s", err)
+		return diag.Errorf("error while fetching Delete Backup Target Task Details: %s", err)
 	}
 
 	rUUID := resourceUUID.Data.GetValue().(config.Task)

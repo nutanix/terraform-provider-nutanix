@@ -267,6 +267,8 @@ func Provider() *schema.Provider {
 			"nutanix_storage_container_stats_info_v2":         storagecontainersv2.DatasourceNutanixStorageStatsInfoV2(),
 			"nutanix_category_v2":                             prismv2.DatasourceNutanixCategoryV2(),
 			"nutanix_categories_v2":                           prismv2.DatasourceNutanixCategoriesV2(),
+			"nutanix_backup_target_v2":                        prismv2.DatasourceNutanixBackupTargetV2(),
+			"nutanix_backup_targets_v2":                       prismv2.DatasourceNutanixBackupTargetsV2(),
 			"nutanix_volume_groups_v2":                        volumesv2.DatasourceNutanixVolumeGroupsV2(),
 			"nutanix_volume_group_v2":                         volumesv2.DatasourceNutanixVolumeGroupV2(),
 			"nutanix_volume_group_disks_v2":                   volumesv2.DatasourceNutanixVolumeDisksV2(),
