@@ -361,8 +361,6 @@ func Provider() *schema.Provider {
 			"nutanix_saml_identity_providers_v2":              iamv2.ResourceNutanixSamlIdpV2(),
 			"nutanix_storage_containers_v2":                   storagecontainersv2.ResourceNutanixStorageContainersV2(),
 			"nutanix_category_v2":                             prismv2.ResourceNutanixCategoriesV2(),
-			"nutanix_deploy_pc_v2":                            prismv2.ResourceNutanixDeployPcV2(),
-			"nutanix_unregister_cluster_v2":                   prismv2.ResourceNutanixUnregisterClusterV2(),
 			"nutanix_backup_target_v2":                        prismv2.ResourceNutanixBackupTargetV2(),
 			"nutanix_volume_group_v2":                         volumesv2.ResourceNutanixVolumeGroupV2(),
 			"nutanix_volume_group_disk_v2":                    volumesv2.ResourceNutanixVolumeGroupDiskV2(),
