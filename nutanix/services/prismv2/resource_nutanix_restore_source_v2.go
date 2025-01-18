@@ -3,14 +3,11 @@ package prismv2
 import (
 	"context"
 	"encoding/json"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/management"
 	"log"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/management"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -93,19 +90,19 @@ func ResourceNutanixRestoreSourceV2() *schema.Resource {
 											},
 										},
 									},
-									"backup_policy": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"rpo_in_minutes": {
-													Type:         schema.TypeInt,
-													Required:     true,
-													ValidateFunc: validation.IntBetween(60, 1440), //nolint:gomnd
-												},
-											},
-										},
-									},
+									//"backup_policy": {
+									//	Type:     schema.TypeList,
+									//	Optional: true,
+									//	Elem: &schema.Resource{
+									//		Schema: map[string]*schema.Schema{
+									//			"rpo_in_minutes": {
+									//				Type:         schema.TypeInt,
+									//				Required:     true,
+									//				ValidateFunc: validation.IntBetween(60, 1440), //nolint:gomnd
+									//			},
+									//		},
+									//	},
+									//},
 								},
 							},
 						},
@@ -165,12 +162,12 @@ func ResourceNutanixRestoreSourceV2Create(ctx context.Context, d *schema.Resourc
 	} else if location["object_store_location"] != nil && len(location["object_store_location"].([]interface{})) > 0 {
 		objectStoreLocation := location["object_store_location"].([]interface{})[0].(map[string]interface{})
 		providerConfig := objectStoreLocation["provider_config"]
-		backupPolicy := objectStoreLocation["backup_policy"]
+		//backupPolicy := objectStoreLocation["backup_policy"]
 
 		objectStoreLocationBody := management.NewObjectStoreLocation()
 
 		objectStoreLocationBody.ProviderConfig = expandProviderConfig(providerConfig)
-		objectStoreLocationBody.BackupPolicy = expandBackupPolicy(backupPolicy)
+		//objectStoreLocationBody.BackupPolicy = expandBackupPolicy(backupPolicy)
 
 		err := oneOfRestoreSourceLocation.SetValue(*objectStoreLocationBody)
 		if err != nil {
@@ -189,33 +186,12 @@ func ResourceNutanixRestoreSourceV2Create(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("error while Creating Restore Source: %s", err)
 	}
 
-	TaskRef := resp.Data.GetValue().(config.TaskReference)
-	taskUUID := TaskRef.ExtId
+	restoreSource := resp.Data.GetValue().(management.RestoreSource)
 
-	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the cluster to be available
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
-	}
+	d.SetId(utils.StringValue(restoreSource.ExtId))
 
-	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for Restore Source to be created: %s", err)
-	}
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-	if err != nil {
-		return diag.Errorf("error while fetching Restore Source Task Details: %s", err)
-	}
-
-	rUUID := resourceUUID.Data.GetValue().(config.Task)
-	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Create Restore Source Task Details: %s", string(aJSON))
-
-	uuid := rUUID.EntitiesAffected[0].ExtId
-	d.SetId(*uuid)
+	aJSON, _ = json.MarshalIndent(resp, "", "  ")
+	log.Printf("[DEBUG] Restore Source Create Response: %s", string(aJSON))
 
 	return ResourceNutanixRestoreSourceV2Read(ctx, d, meta)
 }
@@ -230,6 +206,9 @@ func ResourceNutanixRestoreSourceV2Read(ctx context.Context, d *schema.ResourceD
 	}
 
 	restoreSource := resp.Data.GetValue().(management.RestoreSource)
+
+	aJSON, _ := json.MarshalIndent(restoreSource, "", "  ")
+	log.Printf("[DEBUG] Restore Source Read Response: %s", string(aJSON))
 
 	if err := d.Set("tenant_id", restoreSource.TenantId); err != nil {
 		return diag.Errorf("error setting tenant_id: %s", err)
@@ -270,58 +249,8 @@ func ResourceNutanixRestoreSourceV2Delete(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("error while deleting Restore Source: %s", err)
 	}
 
-	TaskRef := resp.Data.GetValue().(config.TaskReference)
-	taskUUID := TaskRef.ExtId
-
-	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the backup target to be deleted
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
-		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
-	}
-
-	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for Backup Target to be deleted: %s", err)
-	}
-
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-	if err != nil {
-		return diag.Errorf("error while fetching Backup Target Task Details: %s", err)
-	}
-
-	rUUID := resourceUUID.Data.GetValue().(config.Task)
-
-	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Delete Backup Target Task Details: %s", string(aJSON))
+	aJSON, _ := json.MarshalIndent(resp, "", "  ")
+	log.Printf("[DEBUG] Restore Source Delete Response: %s", string(aJSON))
 
 	return nil
-}
-
-func flattenRestoreSourceLocation(location *management.OneOfRestoreSourceLocation) []map[string]interface{} {
-	if location == nil {
-		return nil
-	}
-
-	restoreSourceLocation := make([]map[string]interface{}, 0)
-
-	if utils.StringValue(location.ObjectType_) == clustersLocationObjectType {
-		clusterLocation := location.GetValue().(management.ClusterLocation)
-
-		clusterLocationMap := make(map[string]interface{})
-		clusterLocationMap["cluster_location"] = flattenClusterLocation(clusterLocation)
-		restoreSourceLocation = append(restoreSourceLocation, clusterLocationMap)
-		return restoreSourceLocation
-	}
-
-	if utils.StringValue(location.ObjectType_) == objectStoreLocationObjectType {
-		objectStoreLocation := location.GetValue().(management.ObjectStoreLocation)
-
-		objectStoreLocationMap := make(map[string]interface{})
-		objectStoreLocationMap["object_store_location"] = flattenObjectStoreLocation(objectStoreLocation)
-		restoreSourceLocation = append(restoreSourceLocation, objectStoreLocationMap)
-		return restoreSourceLocation
-	}
-
-	return restoreSourceLocation
 }

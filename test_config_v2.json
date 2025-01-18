@@ -252,6 +252,9 @@
       "region": "",
       "access_key": "",
       "secret_key": ""
+    },
+    "restore_source":{
+      "pe_ip": ""
     }
   }
 }
