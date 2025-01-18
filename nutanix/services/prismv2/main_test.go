@@ -15,6 +15,9 @@ type TestConfig struct {
 			AccessKey string `json:"access_key"`
 			SecretKey string `json:"secret_key"`
 		} `json:"bucket"`
+		RestoreSource struct {
+			PeIP string `json:"pe_ip"`
+		} `json:"restore_source"`
 	} `json:"prism"`
 }
 
