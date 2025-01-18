@@ -7,7 +7,8 @@ import (
 	"testing"
 )
 
-const resourceNameBackupTarget = "nutanix_backup_target_v2.test"
+const resourceNameBackupTargetClusterLocation = "nutanix_backup_target_v2.cluster-location"
+const resourceNameBackupTargetObjectStoreLocation = "nutanix_backup_target_v2.object-store-location"
 
 func TestAccV2NutanixBackupTargetResource_ClusterLocation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -25,10 +26,10 @@ func TestAccV2NutanixBackupTargetResource_ClusterLocation(t *testing.T) {
 			{
 				Config: testAccBackupTargetResourceClusterLocationConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceNameBackupTarget, "ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTarget, "domain_manager_ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTarget, "location.0.cluster_location.0.config.0.ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTarget, "location.0.cluster_location.0.config.0.name"),
+					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "ext_id"),
+					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "domain_manager_ext_id"),
+					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.ext_id"),
+					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.name"),
 				),
 			},
 		},
@@ -36,6 +37,11 @@ func TestAccV2NutanixBackupTargetResource_ClusterLocation(t *testing.T) {
 }
 
 func TestAccV2NutanixBackupTargetResource_ObjectStoreLocation(t *testing.T) {
+	bucket := testVars.Prism.Bucket
+
+	if bucket.Name == "" || bucket.AccessKey == "" || bucket.SecretKey == "" {
+		t.Skip("Skipping test due to missing bucket configuration")
+	}
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -51,17 +57,58 @@ func TestAccV2NutanixBackupTargetResource_ObjectStoreLocation(t *testing.T) {
 			{
 				Config: testAccBackupTargetResourceObjectStoreLocationConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceNameBackupTarget, "ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTarget, "domain_manager_ext_id"),
-					resource.TestCheckResourceAttr(resourceNameBackupTarget, "location.0.object_store_location.0.backup_policy.0.rpo_in_minutes", "60"),
-					resource.TestCheckResourceAttr(resourceNameBackupTarget, "location.0.object_store_location.0.provider_config.0.bucket_name", testVars.Prism.Bucket.Name),
-					resource.TestCheckResourceAttr(resourceNameBackupTarget, "location.0.object_store_location.0.provider_config.0.region", testVars.Prism.Bucket.Region),
+					resource.TestCheckResourceAttrSet(resourceNameBackupTargetObjectStoreLocation, "ext_id"),
+					resource.TestCheckResourceAttrSet(resourceNameBackupTargetObjectStoreLocation, "domain_manager_ext_id"),
+					resource.TestCheckResourceAttr(resourceNameBackupTargetObjectStoreLocation, "location.0.object_store_location.0.backup_policy.0.rpo_in_minutes", "60"),
+					resource.TestCheckResourceAttr(resourceNameBackupTargetObjectStoreLocation, "location.0.object_store_location.0.provider_config.0.bucket_name", testVars.Prism.Bucket.Name),
+					resource.TestCheckResourceAttr(resourceNameBackupTargetObjectStoreLocation, "location.0.object_store_location.0.provider_config.0.region", testVars.Prism.Bucket.Region),
 				),
 			},
 		},
 	})
 }
 
+func TestAccV2NutanixBackupTargetResource_ClusterLocationAndObjectStoreLocation(t *testing.T) {
+	bucket := testVars.Prism.Bucket
+
+	if bucket.Name == "" || bucket.AccessKey == "" || bucket.SecretKey == "" {
+		t.Skip("Skipping test due to missing bucket configuration")
+	}
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			// List backup targets and delete if backup target exists
+			{
+				Config: testAccListBackupTargetsDatasourceConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					checkBackupTargetExist(),
+				),
+			},
+			// Create backup target, Object store location
+			{
+				Config: testAccBackupTargetResourceObjectStoreLocationConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNameBackupTargetObjectStoreLocation, "ext_id"),
+					resource.TestCheckResourceAttrSet(resourceNameBackupTargetObjectStoreLocation, "domain_manager_ext_id"),
+					resource.TestCheckResourceAttr(resourceNameBackupTargetObjectStoreLocation, "location.0.object_store_location.0.backup_policy.0.rpo_in_minutes", "60"),
+					resource.TestCheckResourceAttr(resourceNameBackupTargetObjectStoreLocation, "location.0.object_store_location.0.provider_config.0.bucket_name", testVars.Prism.Bucket.Name),
+					resource.TestCheckResourceAttr(resourceNameBackupTargetObjectStoreLocation, "location.0.object_store_location.0.provider_config.0.region", testVars.Prism.Bucket.Region),
+				),
+			},
+			// Create backup target, cluster location
+			{
+				Config: testAccBackupTargetResourceClusterLocationConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "ext_id"),
+					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "domain_manager_ext_id"),
+					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.ext_id"),
+					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.name"),
+				),
+			},
+		},
+	})
+}
 func testAccListBackupTargetsDatasourceConfig() string {
 	return `
 
@@ -96,7 +143,7 @@ locals {
   ][0]
 }
 
-resource "nutanix_backup_target_v2" "test" {
+resource "nutanix_backup_target_v2" "cluster-location" {
   domain_manager_ext_id = local.domainManagerExtId
   location {
     cluster_location {
@@ -123,7 +170,7 @@ locals {
   bucket = local.config.prism.bucket 
 }
 
-resource "nutanix_backup_target_v2" "test" {
+resource "nutanix_backup_target_v2" "object-store-location" {
   domain_manager_ext_id = local.domainManagerExtId
   location {
     object_store_location {

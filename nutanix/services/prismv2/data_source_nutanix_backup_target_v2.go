@@ -165,6 +165,8 @@ func DatasourceNutanixBackupTargetV2Read(ctx context.Context, d *schema.Resource
 		return diag.Errorf("error setting location: %s", err)
 	}
 
+	d.SetId(backupTargetExtID)
+
 	return nil
 }
 
