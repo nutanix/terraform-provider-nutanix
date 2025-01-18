@@ -281,7 +281,6 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 }
 
 func ResourceNutanixBackupTargetV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.Client).PrismAPI
 
 	domainManagerExtID := d.Get("domain_manager_ext_id").(string)
