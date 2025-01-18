@@ -77,91 +77,93 @@ func flattenBackupTargets(backupTargets []management.BackupTarget) []map[string]
 }
 
 // schema for backup target
-func schemaForBackupTarget() map[string]*schema.Schema {
-	return map[string]*schema.Schema{
-		"ext_id": {
-			Type:     schema.TypeString,
-			Required: true,
-		},
-		"tenant_id": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"links": schemaForLinks(),
-		"location": {
-			Type:     schema.TypeList,
-			Computed: true,
-			Elem: &schema.Resource{
-				Schema: map[string]*schema.Schema{
-					"cluster_location": {
-						Type:     schema.TypeList,
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"config": {
-									Type:     schema.TypeList,
-									Computed: true,
-									Elem: &schema.Resource{
-										Schema: map[string]*schema.Schema{
-											"ext_id": {
-												Type:     schema.TypeString,
-												Computed: true,
-											},
-											"name": {
-												Type:     schema.TypeString,
-												Computed: true,
+func schemaForBackupTarget() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"ext_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"tenant_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"links": schemaForLinks(),
+			"location": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"cluster_location": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"config": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"ext_id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"name": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
 											},
 										},
 									},
 								},
 							},
 						},
-					},
-					"object_store_location": {
-						Type:     schema.TypeList,
-						Computed: true,
-						Elem: &schema.Resource{
-							Schema: map[string]*schema.Schema{
-								"provider_config": {
-									Type:     schema.TypeList,
-									Computed: true,
-									Elem: &schema.Resource{
-										Schema: map[string]*schema.Schema{
-											"bucket_name": {
-												Type:     schema.TypeString,
-												Computed: true,
-											},
-											"region": {
-												Type:     schema.TypeString,
-												Computed: true,
-											},
-											"credentials": {
-												Type:     schema.TypeList,
-												Computed: true,
-												Elem: &schema.Resource{
-													Schema: map[string]*schema.Schema{
-														"access_key_id": {
-															Type:     schema.TypeString,
-															Computed: true,
-														},
-														"secret_access_key": {
-															Type:     schema.TypeString,
-															Computed: true,
+						"object_store_location": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"provider_config": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"bucket_name": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"region": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+												"credentials": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"access_key_id": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+															"secret_access_key": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
 														},
 													},
 												},
 											},
 										},
 									},
-								},
-								"backup_policy": {
-									Type:     schema.TypeList,
-									Computed: true,
-									Elem: &schema.Resource{
-										Schema: map[string]*schema.Schema{
-											"rpo_in_minutes": {
-												Type:     schema.TypeInt,
-												Computed: true,
+									"backup_policy": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"rpo_in_minutes": {
+													Type:     schema.TypeInt,
+													Computed: true,
+												},
 											},
 										},
 									},
@@ -171,18 +173,18 @@ func schemaForBackupTarget() map[string]*schema.Schema {
 					},
 				},
 			},
-		},
-		"last_sync_time": {
-			Type:     schema.TypeString,
-			Computed: true,
-		},
-		"is_backup_paused": {
-			Type:     schema.TypeBool,
-			Computed: true,
-		},
-		"backup_pause_reason": {
-			Type:     schema.TypeString,
-			Computed: true,
+			"last_sync_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"is_backup_paused": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"backup_pause_reason": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
