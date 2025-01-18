@@ -1,9 +1,10 @@
 package prismv2_test
 
 import (
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
-	"testing"
 )
 
 const datasourceNameBackupTarget = "data.nutanix_backup_target_v2.test"

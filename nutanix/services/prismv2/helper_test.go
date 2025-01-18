@@ -3,6 +3,10 @@ package prismv2_test
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"strconv"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
@@ -10,9 +14,6 @@ import (
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-	"log"
-	"strconv"
-	"time"
 )
 
 const timeout = 3 * time.Minute

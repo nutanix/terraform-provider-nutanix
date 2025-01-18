@@ -2,9 +2,10 @@ package prismv2_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
-	"testing"
 )
 
 const resourceNameBackupTargetClusterLocation = "nutanix_backup_target_v2.cluster-location"
