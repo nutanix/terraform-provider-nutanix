@@ -2,13 +2,14 @@ package dataprotectionv2_test
 
 import (
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"os"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
 const resourceNamePromoteProtectedResource = "nutanix_promote_protected_resource_v2.test"
@@ -34,7 +35,7 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVm(t *testing.T) {
 		Steps: []resource.TestStep{
 			//// create protection policy and protected vm
 			{
-				Config: testPromoteProtectedResourceVmAndProtectionPolicyConfig(vmName, ppName, description),
+				Config: testPromoteProtectedResourceVMAndProtectionPolicyConfig(vmName, ppName, description),
 				Check: resource.ComposeTestCheckFunc(
 					//resource.TestCheckResourceAttrSet(vmResourceName, "id"),
 					waitForVmToBeProtected(vmResourceName, "protection_type", "RULE_PROTECTED", maxRetries, retryInterval, sleepTime),
@@ -117,7 +118,7 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVG(t *testing.T) {
 	})
 }
 
-func testPromoteProtectedResourceVmAndProtectionPolicyConfig(vmName, ppName, description string) string {
+func testPromoteProtectedResourceVMAndProtectionPolicyConfig(vmName, ppName, description string) string {
 	return fmt.Sprintf(`
 # List domain Managers
 data "nutanix_domain_managers_v2" "pcs" {
