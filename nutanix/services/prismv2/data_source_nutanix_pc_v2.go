@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	commonConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/common/v1/config"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -87,6 +86,9 @@ func DatasourceNutanixPcV2Read(ctx context.Context, d *schema.ResourceData, meta
 	if err := d.Set("node_ext_ids", deployPcBody.NodeExtIds); err != nil {
 		return diag.Errorf("error setting node_ext_ids: %s", err)
 	}
+
+	d.SetId(utils.StringValue(deployPcBody.ExtId))
+
 	return nil
 }
 

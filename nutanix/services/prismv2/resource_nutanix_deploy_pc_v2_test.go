@@ -6,13 +6,12 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
 const resourceNameDeployPC = "nutanix_deploy_pc_v2.test"
 const datasourceNameFetchPC = "data.nutanix_pc_v2.test"
-const datasourceNameListPCs = "data.nutanix_pcs_v2.test"
+
 const resourceNameBackupTarget = "nutanix_backup_target_v2.test"
 const datasourceNameListBackupTargets = "data.nutanix_backup_targets_v2.test"
 const datasourceNameFetchBackupTarget = "data.nutanix_backup_target_v2.test"
@@ -148,20 +147,6 @@ func testAccDeployPCConfig(name string) string {
 }
  
  `, name, filepath)
-}
-
-func testAccFetchPCConfig() string {
-	return `
-data "nutanix_pc_v2" "test" {
-  ext_id = nutanix_deploy_pc_v2.test.id
-}
-`
-}
-
-func testAccListPCConfig() string {
-	return `
-data "nutanix_pcs_v2" "test" {}
-`
 }
 
 // Backup Target
