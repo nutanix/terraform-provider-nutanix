@@ -79,7 +79,7 @@ func ResourceNutanixAssociateCategoryToVolumeGroupV2Create(ctx context.Context, 
 
 	resp, err := conn.VolumeAPIInstance.AssociateCategory(utils.StringPtr(extID.(string)), body)
 	if err != nil {
-		return diag.Errorf("error while Assosiating Category to Volume Group : %v", err)
+		return diag.Errorf("error while Associating Category to Volume Group : %v", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(volumesPrism.TaskReference)
@@ -102,7 +102,7 @@ func ResourceNutanixAssociateCategoryToVolumeGroupV2Create(ctx context.Context, 
 
 	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Assoicate Category to Volume Group Task : %v", err)
+		return diag.Errorf("error while fetching Associate Category to Volume Group Task : %v", err)
 	}
 	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
 
@@ -200,8 +200,7 @@ func expandCategoryEntityType(entityType string) *config.EntityType {
 		return nil
 	}
 
-	switch entityType {
-	case "CATEGORY":
+	if entityType == "CATEGORY" {
 		p := config.ENTITYTYPE_CATEGORY
 		return &p
 	}
