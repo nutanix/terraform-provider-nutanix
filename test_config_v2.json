@@ -239,7 +239,15 @@
       "password": ""
     }
   },
-  "data_policies": {
-    "domain_manager_ext_id": ""
+  "prism": {
+    "bucket": {
+      "name": "",
+      "region": "",
+      "access_key": "",
+      "secret_key": ""
+    },
+    "restore_source":{
+      "pe_ip": ""
+    }
   }
 }

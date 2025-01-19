@@ -8,22 +8,17 @@ import (
 )
 
 type TestConfig struct {
-	Networking struct {
-		FloatingIP struct {
-			VMNicReference string `json:"vm_nic_reference"`
-		} `json:"floating_ip"`
-		Subnets struct {
-			ProjectID     string `json:"project_id"`
-			VlanID        int    `json:"vlan_id"`
-			NetworkIP     string `json:"network_ip"`
-			NetworkPrefix int    `json:"network_prefix"`
-			GatewayIP     string `json:"gateway_ip"`
-			DHCP          struct {
-				StartIP string `json:"start_ip"`
-				EndIP   string `json:"end_ip"`
-			}
-		}
-	} `json:"networking"`
+	Prism struct {
+		Bucket struct {
+			Name      string `json:"name"`
+			Region    string `json:"region"`
+			AccessKey string `json:"access_key"`
+			SecretKey string `json:"secret_key"`
+		} `json:"bucket"`
+		RestoreSource struct {
+			PeIP string `json:"pe_ip"`
+		} `json:"restore_source"`
+	} `json:"prism"`
 }
 
 var testVars TestConfig
