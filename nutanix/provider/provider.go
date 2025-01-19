@@ -12,7 +12,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/internal"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clusters"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/clustersv2"
-	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/datapoliciesv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/dataprotectionv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/foundation"
 	foundationCentral "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/foundationCentral"
@@ -281,9 +280,6 @@ func Provider() *schema.Provider {
 			"nutanix_recovery_point_v2":                       dataprotectionv2.DatasourceNutanixRecoveryPointV2(),
 			"nutanix_recovery_points_v2":                      dataprotectionv2.DatasourceNutanixRecoveryPointsV2(),
 			"nutanix_vm_recovery_point_info_v2":               dataprotectionv2.DatasourceNutanixVMRecoveryPointInfoV2(),
-			"nutanix_protected_resource_v2":                   dataprotectionv2.DatasourceNutanixGetProtectedResourceV2(),
-			"nutanix_protection_policy_v2":                    datapoliciesv2.DatasourceNutanixProtectionPolicyV2(),
-			"nutanix_protection_policies_v2":                  datapoliciesv2.DatasourceNutanixProtectionPoliciesV2(),
 			"nutanix_image_v2":                                vmmv2.DatasourceNutanixImageV4(),
 			"nutanix_images_v2":                               vmmv2.DatasourceNutanixImagesV4(),
 			"nutanix_virtual_machine_v2":                      vmmv2.DatasourceNutanixVirtualMachineV4(),
@@ -375,9 +371,6 @@ func Provider() *schema.Provider {
 			"nutanix_recovery_points_v2":                      dataprotectionv2.ResourceNutanixRecoveryPointsV2(),
 			"nutanix_recovery_point_replicate_v2":             dataprotectionv2.ResourceNutanixRecoveryPointReplicateV2(),
 			"nutanix_recovery_point_restore_v2":               dataprotectionv2.ResourceNutanixRecoveryPointRestoreV2(),
-			"nutanix_promote_protected_resource_v2":           dataprotectionv2.ResourceNutanixPromoteProtectedResourceV2(),
-			"nutanix_restore_protected_resource_v2":           dataprotectionv2.ResourceNutanixRestoreProtectedResourceV2(),
-			"nutanix_protection_policy_v2":                    datapoliciesv2.ResourceNutanixProtectionPoliciesV2(),
 			"nutanix_vm_revert_v2":                            vmmv2.ResourceNutanixRevertVMRecoveryPointV2(),
 			"nutanix_virtual_machine_v2":                      vmmv2.ResourceNutanixVirtualMachineV2(),
 			"nutanix_vm_shutdown_action_v2":                   vmmv2.ResourceNutanixVmsShutdownActionV2(),
