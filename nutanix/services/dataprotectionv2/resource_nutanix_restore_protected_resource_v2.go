@@ -32,7 +32,7 @@ func ResourceNutanixRestoreProtectedResourceV2() *schema.Resource {
 			},
 			"restore_time": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 		},
 	}

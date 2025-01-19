@@ -2,12 +2,11 @@ package vmmv2
 
 import (
 	"context"
-	"encoding/json"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
+
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -1296,16 +1295,13 @@ func DatasourceNutanixVirtualMachinesV4Read(ctx context.Context, d *schema.Resou
 	}
 	resp, err := conn.VMAPIInstance.ListVms(page, limit, filter, orderBy, selects)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching vms : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching vms : %v", err)
 	}
+
+	if resp.Data == nil {
+		return diag.Errorf("error while fetching vms : %v", "no data found")
+	}
+
 	getResp := resp.Data.GetValue().([]config.Vm)
 
 	if err := d.Set("vms", flattenVMEntities(getResp)); err != nil {

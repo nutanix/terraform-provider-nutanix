@@ -3,6 +3,8 @@ package dataprotectionv2
 import (
 	"context"
 	"encoding/json"
+	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -10,7 +12,6 @@ import (
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-	"log"
 )
 
 func ResourceNutanixPromoteProtectedResourceV2() *schema.Resource {
@@ -23,6 +24,10 @@ func ResourceNutanixPromoteProtectedResourceV2() *schema.Resource {
 			"ext_id": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"promoted_vm_ext_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -68,7 +73,18 @@ func ResourceNutanixPromoteProtectedResourceV2Create(ctx context.Context, d *sch
 	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
 	log.Printf("[DEBUG] Promote Protected Resource Task Details: %s", aJSON)
 
-	d.SetId(utils.GenUUID())
+	// extract promoted item UUID
+	promotedItemName := rUUID.CompletionDetails[0].Name
+	promotedItemUUID := rUUID.CompletionDetails[0].Value.GetValue().(string)
+
+	if utils.StringValue(promotedItemName) == "promotedVmExtId" {
+		err = d.Set("promoted_vm_ext_id", promotedItemUUID)
+		if err != nil {
+			return diag.Errorf("Error while setting promoted Vm Ext ID: %s", err)
+		}
+	}
+
+	d.SetId(promotedItemUUID)
 
 	return ResourceNutanixPromoteProtectedResourceV2Read(ctx, d, meta)
 }
