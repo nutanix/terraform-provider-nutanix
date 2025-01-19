@@ -210,23 +210,6 @@ resource "nutanix_backup_target_v2" "test" {
 `
 }
 
-func testAccListBackupTargetsDatasourceConfig() string {
-	return `
-data "nutanix_backup_targets_v2" "test" {
-  domain_manager_ext_id = nutanix_deploy_pc_v2.test.id
-}
-`
-}
-
-func testAccFetchBackupTargetDatasourceConfig() string {
-	return `
-data "nutanix_backup_target_v2" "test" {
-  domain_manager_ext_id = nutanix_deploy_pc_v2.test.id
-  ext_id                = nutanix_backup_target_v2.test.id
-}
-`
-}
-
 // restore source
 func testAccRestoreSourceResourceConfig() string {
 	return `
