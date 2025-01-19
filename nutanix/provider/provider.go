@@ -268,6 +268,7 @@ func Provider() *schema.Provider {
 			"nutanix_category_v2":                             prismv2.DatasourceNutanixCategoryV2(),
 			"nutanix_categories_v2":                           prismv2.DatasourceNutanixCategoriesV2(),
 			"nutanix_pcs_v2":                                  prismv2.DatasourceNutanixListPcsV2(),
+			"nutanix_restorable_pcs_v2":                       prismv2.DatasourceNutanixListRestorablePcsV2(),
 			"nutanix_pc_v2":                                   prismv2.DatasourceNutanixFetchPcV2(),
 			"nutanix_restore_points_v2":                       prismv2.DatasourceNutanixFetchRestorePointsV2(),
 			"nutanix_restore_point_v2":                        prismv2.DatasourceNutanixFetchRestorePointV2(),
