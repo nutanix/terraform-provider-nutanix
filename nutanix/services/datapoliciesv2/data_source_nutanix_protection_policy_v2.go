@@ -2,12 +2,12 @@ package datapoliciesv2
 
 import (
 	"context"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/common/v1/response"
 	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/datapolicies/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/dataprotection/v4/common"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -185,8 +185,8 @@ func flattenReplicationSubLocation(replicationSubLocation *config.OneOfReplicati
 
 			clusterExtIds := make([]string, 0)
 
-			for _, clusterExtId := range nutanixClusterObj.ClusterExtIds {
-				clusterExtIds = append(clusterExtIds, clusterExtId)
+			for _, clusterExtID := range nutanixClusterObj.ClusterExtIds {
+				clusterExtIds = append(clusterExtIds, clusterExtID)
 			}
 
 			nutanixCluster = append(nutanixCluster, map[string]interface{}{

@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -13,8 +15,6 @@ import (
 	prism "github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
-	"log"
-
 	prismSdk "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -442,7 +442,7 @@ func schemaReplicationConfigurations() *schema.Resource {
 						"sync_replication_auto_suspend_timeout_seconds": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntAtMost(300),
+							ValidateFunc: validation.IntAtMost(300), //nolint:gomnd
 						},
 					},
 				},
@@ -466,8 +466,8 @@ func expandReplicationLocations(replicationLocations []interface{}) []config.Rep
 		if sourceLocationLabel, ok := replicationLocationVal["label"]; ok {
 			replicationLocationSpec.Label = utils.StringPtr(sourceLocationLabel.(string))
 		}
-		if domainManagerExtId, ok := replicationLocationVal["domain_manager_ext_id"]; ok {
-			replicationLocationSpec.DomainManagerExtId = utils.StringPtr(domainManagerExtId.(string))
+		if domainManagerExtID, ok := replicationLocationVal["domain_manager_ext_id"]; ok {
+			replicationLocationSpec.DomainManagerExtId = utils.StringPtr(domainManagerExtID.(string))
 		}
 		if replicationSubLocation, ok := replicationLocationVal["replication_sub_location"]; ok {
 			replicationLocationSpec.ReplicationSubLocation = expandOneOfReplicationLocationReplicationSubLocation(replicationSubLocation.([]interface{}))
