@@ -2,10 +2,11 @@ package datapoliciesv2
 
 import (
 	"encoding/json"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"log"
 	"reflect"
 	"sort"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 func expandListOfString(list []interface{}) []string {
