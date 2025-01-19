@@ -364,7 +364,6 @@ func Provider() *schema.Provider {
 			"nutanix_deploy_pc_v2":                            prismv2.ResourceNutanixDeployPcV2(),
 			"nutanix_restore_pc_v2":                           prismv2.ResourceNutanixRestorePcV2(),
 			"nutanix_volume_group_v2":                         volumesv2.ResourceNutanixVolumeGroupV2(),
-			"nutanix_associate_category_to_volume_group_v2":   volumesv2.ResourceNutanixAssociateCategoryToVolumeGroupV2(),
 			"nutanix_volume_group_disk_v2":                    volumesv2.ResourceNutanixVolumeGroupDiskV2(),
 			"nutanix_volume_group_iscsi_client_v2":            volumesv2.ResourceNutanixVolumeGroupIscsiClientV2(),
 			"nutanix_volume_group_vm_v2":                      volumesv2.ResourceNutanixVolumeAttachVMToVolumeGroupV2(),
