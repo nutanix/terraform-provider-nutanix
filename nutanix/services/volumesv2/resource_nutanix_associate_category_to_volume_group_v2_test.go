@@ -59,7 +59,13 @@ resource "nutanix_associate_category_to_volume_group_v2" "test" {
   ext_id = nutanix_volume_group_v2.test.id
   categories{
     ext_id = data.nutanix_categories_v2.categories.categories.0.ext_id
-   }
+  }
+  categories{
+    ext_id = data.nutanix_categories_v2.categories.categories.1.ext_id
+  }
+  categories{
+    ext_id = data.nutanix_categories_v2.categories.categories.2.ext_id
+  }
 }
 
 `
