@@ -163,7 +163,7 @@
   },
   "data_protection": {
     "pc_ext_id": "",
-    "cluster_ext_id": ""
+    "cluster_ext_id": "",
     "remote_pc_ip": ""
   },
   "clusters": {
@@ -241,5 +241,17 @@
   },
   "data_policies": {
     "domain_manager_ext_id": ""
+  },
+  "prism": {
+    "cluster_ext_id": "",
+    "bucket": {
+      "name": "",
+      "region": "",
+      "access_key": "",
+      "secret_key": ""
+    },
+    "restore_source": {
+      "pe_ip": ""
+    }
   }
 }
