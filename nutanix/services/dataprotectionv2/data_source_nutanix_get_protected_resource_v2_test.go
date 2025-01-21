@@ -37,7 +37,7 @@ func TestAccV2NutanixPromoteProtectedResourceDatasource_GetProtectedVm(t *testin
 			//Get protected vm
 			{
 
-				Config: testGetProtectedResourceVmConfig(),
+				Config: testGetProtectedResourceVMConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceNameGetProtectedResource, "ext_id"),
 					resource.TestCheckResourceAttrSet(dataSourceNameGetProtectedResource, "entity_ext_id"),
@@ -175,7 +175,7 @@ resource "nutanix_virtual_machine_v2" "test"{
 	`, filepath, vmName, description, ppName)
 }
 
-func testGetProtectedResourceVmConfig() string {
+func testGetProtectedResourceVMConfig() string {
 	return `
 
 data "nutanix_protected_resource_v2" "test" {

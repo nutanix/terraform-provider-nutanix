@@ -63,8 +63,8 @@ func testCheckDestroyProtectedResource(state *terraform.State) error {
 				if err != nil {
 					return fmt.Errorf("error: VM still exists: %v", err)
 				}
+				
 				return nil
-
 			}
 		}
 
