@@ -53,7 +53,7 @@ func TestAccFoundationPreCheck(t *testing.T) {
 	}
 }
 
-func testAccEraPreCheck(t *testing.T) {
+func TestAccEraPreCheck(t *testing.T) {
 	if os.Getenv("NDB_ENDPOINT") == "" ||
 		os.Getenv("NDB_USERNAME") == "" ||
 		os.Getenv("NDB_PASSWORD") == "" {
