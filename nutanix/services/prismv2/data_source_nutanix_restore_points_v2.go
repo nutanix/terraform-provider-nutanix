@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/management"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -103,13 +102,16 @@ func DatasourceNutanixRestorePointsV2Read(ctx context.Context, d *schema.Resourc
 			return diag.Errorf("Error setting restore_points: %v", err)
 		}
 		return nil
+	} else {
+		restorePoints := resp.Data.GetValue().([]management.RestorePoint)
+
+		if err := d.Set("restore_points", flattenRestorePoints(restorePoints)); err != nil {
+			return diag.Errorf("Error setting restore_points: %v", err)
+		}
 	}
 
-	restorePoints := resp.Data.GetValue().([]management.RestorePoint)
+	d.SetId(utils.GenUUID())
 
-	if err := d.Set("restore_points", flattenRestorePoints(restorePoints)); err != nil {
-		return diag.Errorf("Error setting restore_points: %v", err)
-	}
 	return nil
 }
 

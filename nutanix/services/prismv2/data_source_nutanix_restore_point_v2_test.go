@@ -1,18 +1,18 @@
 package prismv2_test
 
 import (
+	"encoding/json"
 	"fmt"
-	"os"
-	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNameListRestorablePCs = "data.nutanix_restorable_pcs_v2.test"
+const datasourceNameListRestorePoint = "data.nutanix_restore_point_v2.test"
 
-func TestAccV2NutanixRestorablePcsDatasource_Basic(t *testing.T) {
+func TestAccV2NutanixRestorePointDatasource_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -52,63 +52,49 @@ func TestAccV2NutanixRestorablePcsDatasource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameRestoreSourceClusterLocation, "location.0.cluster_location.0.config.0.ext_id"),
 				),
 			},
-			// List Restorable pcs
+			// List Points
 			{
 				PreConfig: func() {
-					fmt.Printf("Step 4: List Restorable pcs\n")
+					fmt.Printf("Step 4: List Restore Points\n")
 				},
 				Config: testAccBackupTargetResourceClusterLocationConfig() +
 					testRestoreSourceConfig() +
-					testAccListRestorablePCConfig(),
+					testAccListRestorePointConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceNameListRestorablePCs, "restorable_source_ext_id"),
-					resource.TestCheckResourceAttrSet(datasourceNameListRestorablePCs, "restorable_pcs.#"),
-					checkAttributeLength(datasourceNameListRestorablePCs, "restorable_pcs", 1),
-					resource.TestCheckResourceAttrSet(datasourceNameListRestorablePCs, "restorable_pcs.0.ext_id"),
-					resource.TestCheckResourceAttrSet(datasourceNameListRestorablePCs, "restorable_pcs.0.config.0.name"),
-					resource.TestCheckResourceAttrSet(datasourceNameListRestorablePCs, "restorable_pcs.0.network.0.external_address.0.ipv4.0.value"),
+					func(s *terraform.State) error {
+						aJson, _ := json.MarshalIndent(s.RootModule().Resources[datasourceNameListRestorePoint].Primary.Attributes, "", "  ")
+						fmt.Println("############################################")
+						fmt.Println(fmt.Sprintf("Resource Attributes: \n%v", string(aJson)))
+						fmt.Println("############################################")
+
+						return nil
+					},
+					resource.TestCheckResourceAttrSet(datasourceNameListRestorePoint, "ext_id"),
 				),
 			},
 		},
 	})
 }
 
-func testRestoreSourceConfig() string {
-	username := os.Getenv("NUTANIX_USERNAME")
-	password := os.Getenv("NUTANIX_PASSWORD")
-	port, _ := strconv.Atoi(os.Getenv("NUTANIX_PORT"))
-	insecure, _ := strconv.ParseBool(os.Getenv("NUTANIX_INSECURE"))
-	endpoint := testVars.Prism.RestoreSource.PeIP
-
-	return fmt.Sprintf(`
-provider "nutanix-2" {
-  username = "%[1]s"
-  password = "%[2]s"
-  endpoint = "%[3]s"
-  insecure = %[4]t
-  port     = %[5]d
-}
-
-resource "nutanix_restore_source_v2" "cluster-location" {
-  provider = nutanix-2
-  location {
-    cluster_location {
-      config {
-        ext_id = local.clusterExtId
-      }
-    }
-  }
-} 
-
-`, username, password, endpoint, insecure, port)
-}
-
-func testAccListRestorablePCConfig() string {
+func testAccListRestorePointConfig() string {
 	return `
 
 data "nutanix_restorable_pcs_v2" "test" {
   provider = nutanix-2
-  restorable_source_ext_id = nutanix_restore_source_v2.cluster-location.ext_id
+  restorable_source_ext_id = nutanix_restore_source_v2.cluster-location.id
+}
+
+data "nutanix_restore_points_v2" "test" {
+  provider = nutanix-2
+  restorable_domain_manager_ext_id = data.nutanix_restorable_pcs_v2.test.restorable_pcs.0.ext_id
+  restore_source_ext_id = nutanix_restore_source_v2.cluster-location.id
+}
+
+data "nutanix_restore_point_v2" "test" {
+  provider = nutanix-2
+  restorable_domain_manager_ext_id = data.nutanix_restorable_pcs_v2.test.restorable_pcs.0.ext_id
+  restore_source_ext_id = nutanix_restore_source_v2.cluster-location.id
+  ext_id = data.nutanix_restore_points_v2.test.restore_points.0.ext_id
 }
 
 `
