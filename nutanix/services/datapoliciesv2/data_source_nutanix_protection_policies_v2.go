@@ -91,7 +91,6 @@ func DatasourceNutanixProtectionPoliciesV2Read(ctx context.Context, d *schema.Re
 		if err := d.Set("protection_policies", flattenProtectionPolicies(getResp)); err != nil {
 			return diag.Errorf("error setting Protection Policies: %s", err)
 		}
-
 	}
 
 	d.SetId(utils.GenUUID())
