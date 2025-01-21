@@ -195,7 +195,6 @@ func expandCategoryEntityReference(categoryEntityReference interface{}) []config
 }
 
 func expandCategoryEntityType(entityType string) *config.EntityType {
-
 	if entityType == "" {
 		return nil
 	}
