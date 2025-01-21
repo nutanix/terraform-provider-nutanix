@@ -42,28 +42,28 @@ func waitForVmToBeProtected(resourceName, attributeName, desiredValue string, ma
 			time.Sleep(retryInterval)
 		}
 
-		return fmt.Errorf("failed to reach desired value for attribute %q: expected %q, got %q after %d retries", attributeName, desiredValue, lastValue, maxRetries)
+		return fmt.Errorf("VM: failed to reach desired value for attribute %q: expected %q, got %q after %d retries", attributeName, desiredValue, lastValue, maxRetries)
 	}
 }
 
-func testCheckDestroyPromoteProtectedResource(state *terraform.State) error {
+func testCheckDestroyProtectedResource(state *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
 	vmClient := conn.VmmAPI.VMAPIInstance
 	ppClient := conn.DataPoliciesAPI.ProtectionPolicies
 
 	for _, rs := range state.RootModule().Resources {
 		if rs.Type == "nutanix_virtual_machine_v2" {
-			//aJSON, _ := json.MarshalIndent(rs, "", " ")
-			//fmt.Printf("resource: %s", aJSON)
-			fmt.Printf("resource name: %s", rs.Primary.ID)
-			_, err := vmClient.GetVmById(utils.StringPtr(rs.Primary.ID))
+			readResp, err := vmClient.GetVmById(utils.StringPtr(rs.Primary.ID))
 			if err == nil {
-				fmt.Printf("VM still exists")
-				_, err = vmClient.DeleteVmById(utils.StringPtr(rs.Primary.ID))
+				args := make(map[string]interface{})
+				etag := vmClient.ApiClient.GetEtag(readResp)
+				args["If-Match"] = utils.StringPtr(etag)
+				_, err = vmClient.DeleteVmById(utils.StringPtr(rs.Primary.ID), args)
 				if err != nil {
 					return fmt.Errorf("error: VM still exists: %v", err)
 				}
 				return nil
+
 			}
 		}
 
@@ -82,4 +82,64 @@ func testCheckDestroyPromoteProtectedResource(state *terraform.State) error {
 	}
 
 	return nil
+}
+
+func deletePromotedVm() resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acc.TestAccProvider2.Meta().(*conns.Client)
+		client := conn.VmmAPI.VMAPIInstance
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type == "nutanix_promote_protected_resource_v2" {
+				extID := rs.Primary.ID
+				readResp, err := client.GetVmById(utils.StringPtr(extID))
+				if err == nil {
+					args := make(map[string]interface{})
+					etag := client.ApiClient.GetEtag(readResp)
+					args["If-Match"] = utils.StringPtr(etag)
+					_, err = client.DeleteVmById(utils.StringPtr(rs.Primary.ID), args)
+					if err != nil {
+						return fmt.Errorf("error: VM still exists: %v", err)
+					}
+					return nil
+				}
+			}
+		}
+		return nil
+	}
+}
+
+func waitForVgToBeProtected(resourceName, attributeName, desiredValue string, maxRetries int, retryInterval, sleepTime time.Duration) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		var lastValue string
+		conn := acc.TestAccProvider.Meta().(*conns.Client)
+		client := conn.VmmAPI.VMAPIInstance
+
+		for i := 0; i < maxRetries; i++ {
+			rs, ok := s.RootModule().Resources[resourceName]
+			if !ok {
+				return fmt.Errorf("resource not found: %s", resourceName)
+			}
+
+			vmResp, err := client.GetVmById(utils.StringPtr(rs.Primary.ID))
+			if err != nil {
+				return fmt.Errorf("error getting VOLUME GROUP by id: %v", err)
+			}
+
+			// read the attribute value from the response
+			vm := vmResp.Data.GetValue().(config.Vm)
+			lastValue = config.ProtectionType.GetName(*vm.ProtectionType)
+			if lastValue == desiredValue {
+				time.Sleep(sleepTime)
+				fmt.Printf("[DEBUG] VOLUME GROUP is %s\n", lastValue)
+				return nil // Desired value reached
+			}
+
+			fmt.Printf("[DEBUG] Waiting for VOLUME GROUP to be protected:  attribute %q to be %q. Current value: %q\n", attributeName, desiredValue, lastValue)
+			// Wait before retrying
+			time.Sleep(retryInterval)
+		}
+
+		return fmt.Errorf("VOLUME GROUP: failed to reach desired value for attribute %q: expected %q, got %q after %d retries", attributeName, desiredValue, lastValue, maxRetries)
+	}
 }

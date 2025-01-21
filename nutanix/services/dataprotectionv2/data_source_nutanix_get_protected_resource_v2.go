@@ -2,6 +2,7 @@ package dataprotectionv2
 
 import (
 	"context"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/dataprotection/v4/config"
@@ -61,7 +62,7 @@ func DatasourceNutanixGetProtectedResourceV2() *schema.Resource {
 	}
 }
 
-// DatasourceNutanixGetProtectedResourceV2Create to Promote Protected Resource
+// DatasourceNutanixGetProtectedResourceV2Create to Get Protected Resource
 func DatasourceNutanixGetProtectedResourceV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).DataProtectionAPI
 
