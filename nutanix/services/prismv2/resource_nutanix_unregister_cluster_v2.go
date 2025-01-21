@@ -52,6 +52,9 @@ func ResourceNutanixUnregisterClusterV2Create(ctx context.Context, d *schema.Res
 		ExtId: utils.StringPtr(extID.(string)),
 	}
 
+	aJSON, _ := json.MarshalIndent(body, "", "  ")
+	log.Printf("[DEBUG] Unregister Cluster Request Body: %s", string(aJSON))
+
 	resp, err := conn.DomainManagerAPIInstance.Unregister(utils.StringPtr(pcExtID.(string)), &body, args)
 
 	if err != nil {
@@ -80,7 +83,7 @@ func ResourceNutanixUnregisterClusterV2Create(ctx context.Context, d *schema.Res
 	}
 
 	rUUID := resourceUUID.Data.GetValue().(config.Task)
-	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
 	log.Printf("[DEBUG] Unregister Cluster Task Details: %s", string(aJSON))
 
 	uuid := rUUID.EntitiesAffected[0].ExtId

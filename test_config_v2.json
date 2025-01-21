@@ -243,6 +243,7 @@
     "domain_manager_ext_id": ""
   },
   "prism": {
+    "cluster_ext_id": "",
     "bucket": {
       "name": "",
       "region": "",
