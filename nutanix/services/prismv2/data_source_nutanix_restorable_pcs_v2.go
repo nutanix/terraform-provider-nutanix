@@ -70,7 +70,6 @@ func DatasourceNutanixListRestorablePcsV2Read(ctx context.Context, d *schema.Res
 		if err := d.Set("restorable_pcs", []map[string]interface{}{}); err != nil {
 			return diag.Errorf("Error setting Restorable pcs: %v", err)
 		}
-
 	} else {
 		restorablePcs := resp.Data.GetValue().([]management.RestorableDomainManager)
 		if err := d.Set("restorable_pcs", flattenRestorablePcs(restorablePcs)); err != nil {

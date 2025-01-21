@@ -21,11 +21,10 @@ func TestAccV2NutanixUnregisterClusterResource_Basic(t *testing.T) {
 				Config: testAccUnregisterClusterResourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					func(s *terraform.State) error {
-						aJson, _ := json.MarshalIndent(s.RootModule().Resources[resourceNameUnregisterCluster].Primary.Attributes, "", "  ")
-						fmt.Println("############################################")
-						fmt.Println(fmt.Sprintf("Resource Attributes: \n%v", string(aJson)))
-						fmt.Println("############################################")
-
+						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[datasourceNameListRestorePoint].Primary.Attributes, "", "  ")
+						fmt.Printf("############################################\n")
+						fmt.Printf(fmt.Sprintf("Resource Attributes: \n%v", string(aJSON)))
+						fmt.Printf("############################################\n")
 						return nil
 					},
 					resource.TestCheckResourceAttrSet(resourceNameUnregisterCluster, "pc_ext_id"),

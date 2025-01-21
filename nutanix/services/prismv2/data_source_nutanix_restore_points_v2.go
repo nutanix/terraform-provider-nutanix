@@ -101,7 +101,6 @@ func DatasourceNutanixRestorePointsV2Read(ctx context.Context, d *schema.Resourc
 		if err := d.Set("restore_points", []map[string]interface{}{}); err != nil {
 			return diag.Errorf("Error setting restore_points: %v", err)
 		}
-		return nil
 	} else {
 		restorePoints := resp.Data.GetValue().([]management.RestorePoint)
 

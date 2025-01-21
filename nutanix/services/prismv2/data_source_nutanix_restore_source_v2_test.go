@@ -37,10 +37,10 @@ func TestAccV2NutanixRestoreSourceDatasource_ClusterLocation(t *testing.T) {
 			},
 			// Create the restore source, cluster location
 			{
-				Config: testAccRestoreSourceResourceClusterLocationConfig(),
+				Config: testAccRestoreSourceDatasourceClusterLocationConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceNameRestoreSourceClusterLocation, "ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameRestoreSourceClusterLocation, "location.0.cluster_location.0.config.0.ext_id"),
+					resource.TestCheckResourceAttrSet(datasourceNameRestoreSourceClusterLocation, "ext_id"),
+					resource.TestCheckResourceAttrSet(datasourceNameRestoreSourceClusterLocation, "location.0.cluster_location.0.config.0.ext_id"),
 				),
 			},
 		},
