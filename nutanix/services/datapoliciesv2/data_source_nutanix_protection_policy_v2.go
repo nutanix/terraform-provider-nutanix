@@ -185,9 +185,7 @@ func flattenReplicationSubLocation(replicationSubLocation *config.OneOfReplicati
 
 			clusterExtIds := make([]string, 0)
 
-			for _, clusterExtID := range nutanixClusterObj.ClusterExtIds {
-				clusterExtIds = append(clusterExtIds, clusterExtID)
-			}
+			clusterExtIds = append(clusterExtIds, nutanixClusterObj.ClusterExtIds...)
 
 			nutanixCluster = append(nutanixCluster, map[string]interface{}{
 				"cluster_ext_ids": clusterExtIds,

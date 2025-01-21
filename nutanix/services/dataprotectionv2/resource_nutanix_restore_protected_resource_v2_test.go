@@ -2,10 +2,11 @@ package dataprotectionv2_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
-	"testing"
 )
 
 const resourceNameRestoreProtectedResource = "nutanix_restore_protected_resource_v2.test"
@@ -25,9 +26,9 @@ func TestAccV2NutanixRestoreProtectedResourceResource_RestoreVm(t *testing.T) {
 		Steps: []resource.TestStep{
 			// create protection policy and protected vm
 			{
-				Config: testRestoreProtectedResourceVmAndProtectionPolicyConfig(vmName, ppName, description),
+				Config: testRestoreProtectedResourceVMAndProtectionPolicyConfig(vmName, ppName, description),
 				Check: resource.ComposeTestCheckFunc(
-					waitForVmToBeProtected(vmResourceName, "protection_type", "RULE_PROTECTED", maxRetries, retryInterval, sleepTime),
+					waitForVMToBeProtected(vmResourceName, "protection_type", "RULE_PROTECTED", maxRetries, retryInterval, sleepTime),
 				),
 			},
 			//promote protected vm
@@ -36,8 +37,8 @@ func TestAccV2NutanixRestoreProtectedResourceResource_RestoreVm(t *testing.T) {
 					fmt.Println("Step 2: Restore Protected Resource")
 				},
 
-				Config: testRestoreProtectedResourceVmAndProtectionPolicyConfig(vmName, ppName, description) +
-					testRestoreProtectedResourceVmConfig(),
+				Config: testRestoreProtectedResourceVMAndProtectionPolicyConfig(vmName, ppName, description) +
+					testRestoreProtectedResourceVMConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRestoreProtectedResource, "cluster_ext_id"),
 					resource.TestCheckResourceAttrSet(resourceNameRestoreProtectedResource, "ext_id"),
@@ -47,7 +48,7 @@ func TestAccV2NutanixRestoreProtectedResourceResource_RestoreVm(t *testing.T) {
 	})
 }
 
-func testRestoreProtectedResourceVmAndProtectionPolicyConfig(vmName, ppName, description string) string {
+func testRestoreProtectedResourceVMAndProtectionPolicyConfig(vmName, ppName, description string) string {
 	return fmt.Sprintf(`
 # List domain Managers
 data "nutanix_domain_managers_v2" "pcs" {
@@ -129,7 +130,7 @@ resource "nutanix_virtual_machine_v2" "test"{
 	`, filepath, vmName, description, ppName)
 }
 
-func testRestoreProtectedResourceVmConfig() string {
+func testRestoreProtectedResourceVMConfig() string {
 	return `
 
 resource "nutanix_restore_protected_resource_v2" "test" {

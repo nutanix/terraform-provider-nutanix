@@ -38,7 +38,7 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVm(t *testing.T) {
 				Config: testPromoteProtectedResourceVMAndProtectionPolicyConfig(vmName, ppName, description),
 				Check: resource.ComposeTestCheckFunc(
 					//resource.TestCheckResourceAttrSet(vmResourceName, "id"),
-					waitForVmToBeProtected(vmResourceName, "protection_type", "RULE_PROTECTED", maxRetries, retryInterval, sleepTime),
+					waitForVMToBeProtected(vmResourceName, "protection_type", "RULE_PROTECTED", maxRetries, retryInterval, sleepTime),
 				),
 			},
 			//promote protected vm
@@ -47,7 +47,7 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVm(t *testing.T) {
 					fmt.Println("Step 2: Promote Protected Resource")
 				},
 
-				Config: testPromoteProtectedResourceVmConfig(vmName, remotePcIP),
+				Config: testPromoteProtectedResourceVMConfig(vmName, remotePcIP),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNamePromoteProtectedResource, "promoted_vm_ext_id"),
 				),
@@ -59,9 +59,9 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVm(t *testing.T) {
 					time.Sleep(5 * time.Second)
 				},
 
-				Config: testPromoteProtectedResourceVmConfig(vmName, remotePcIP),
+				Config: testPromoteProtectedResourceVMConfig(vmName, remotePcIP),
 				Check: resource.ComposeTestCheckFunc(
-					deletePromotedVm(),
+					deletePromotedVM(),
 				),
 			},
 		},
@@ -88,7 +88,7 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVG(t *testing.T) {
 				Config: testPromoteProtectedResourceVGAndProtectionPolicyConfig(vgName, ppName, description),
 				Check:  resource.ComposeTestCheckFunc(
 				//resource.TestCheckResourceAttrSet(vgResourceName, "id"),
-				//waitForVmToBeProtected(vgResourceName, "protection_type", "RULE_PROTECTED", maxRetries, retryInterval, sleepTime),
+				//waitForVMToBeProtected(vgResourceName, "protection_type", "RULE_PROTECTED", maxRetries, retryInterval, sleepTime),
 				),
 			},
 			//promote protected vm
@@ -111,7 +111,7 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVG(t *testing.T) {
 
 				Config: testPromoteProtectedResourceVGConfig(vgName, remotePcIP),
 				Check:  resource.ComposeTestCheckFunc(
-				//deletePromotedVm(),
+				//deletePromotedVM(),
 				),
 			},
 		},
@@ -196,7 +196,7 @@ resource "nutanix_virtual_machine_v2" "test"{
 	`, filepath, vmName, description, ppName)
 }
 
-func testPromoteProtectedResourceVmConfig(name, remotePcIP string) string {
+func testPromoteProtectedResourceVMConfig(name, remotePcIP string) string {
 	username := os.Getenv("NUTANIX_USERNAME")
 	password := os.Getenv("NUTANIX_PASSWORD")
 	port, _ := strconv.Atoi(os.Getenv("NUTANIX_PORT"))

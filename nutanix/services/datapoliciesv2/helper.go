@@ -18,9 +18,6 @@ func expandListOfString(list []interface{}) []string {
 }
 
 func categoryIdsDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
-
-	log.Printf("[DEBUG] DiffSuppressFunc for category_ids")
-
 	if d.HasChange("category_ids") {
 		oldCap, newCap := d.GetChange("category_ids")
 		log.Printf("[DEBUG] oldCap : %v", oldCap)

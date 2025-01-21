@@ -216,16 +216,6 @@ func flattenEntityType(entityType *config.ProtectedEntityType) string {
 	}
 
 	return config.ProtectedEntityType.GetName(*entityType)
-
-	//switch *entityType {
-	//case config.PROTECTEDENTITYTYPE_VM:
-	//	return "VM"
-	//case config.PROTECTEDENTITYTYPE_VOLUME_GROUP:
-	//	return "VOLUME_GROUP"
-	//default:
-	//	return "UNKNOWN"
-	//}
-
 }
 
 func flattenSourceSiteReference(sourceSiteReference *config.DataProtectionSiteReference) []map[string]interface{} {
@@ -265,19 +255,6 @@ func flattenSynchronousReplicationRole(synchronousReplicationRole *config.Synchr
 	}
 
 	return config.SynchronousReplicationRole.GetName(*synchronousReplicationRole)
-
-	//switch *synchronousReplicationRole {
-	//case config.SYNCHRONOUSREPLICATIONROLE_PRIMARY:
-	//	return "PRIMARY"
-	//case config.SYNCHRONOUSREPLICATIONROLE_SECONDARY:
-	//	return "SECONDARY"
-	//case config.SYNCHRONOUSREPLICATIONROLE_INDEPENDENT:
-	//	return "INDEPENDENT"
-	//case config.SYNCHRONOUSREPLICATIONROLE_DECOUPLED:
-	//	return "DECOUPLED"
-	//default:
-	//	return "UNKNOWN"
-	//}
 }
 
 func flattenRecoveryInfo(recoveryInfo *config.RecoveryInfo) []map[string]interface{} {

@@ -2,16 +2,17 @@ package dataprotectionv2_test
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-	"time"
 )
 
-func waitForVmToBeProtected(resourceName, attributeName, desiredValue string, maxRetries int, retryInterval, sleepTime time.Duration) resource.TestCheckFunc {
+func waitForVMToBeProtected(resourceName, attributeName, desiredValue string, maxRetries int, retryInterval, sleepTime time.Duration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		var lastValue string
 		conn := acc.TestAccProvider.Meta().(*conns.Client)
@@ -78,13 +79,12 @@ func testCheckDestroyProtectedResource(state *terraform.State) error {
 				return nil
 			}
 		}
-
 	}
 
 	return nil
 }
 
-func deletePromotedVm() resource.TestCheckFunc {
+func deletePromotedVM() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acc.TestAccProvider2.Meta().(*conns.Client)
 		client := conn.VmmAPI.VMAPIInstance

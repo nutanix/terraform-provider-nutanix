@@ -3,11 +3,12 @@ package dataprotectionv2_test
 import (
 	"encoding/json"
 	"fmt"
+	"testing"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
-	"testing"
 )
 
 const dataSourceNameGetProtectedResource = "nutanix_protected_resource_v2.test"
@@ -27,10 +28,10 @@ func TestAccV2NutanixPromoteProtectedResourceDatasource_GetProtectedVm(t *testin
 		Steps: []resource.TestStep{
 			// create protection policy and protected vm
 			{
-				Config: testCreateProtectedResourceVmConfig(vmName, ppName, description),
+				Config: testCreateProtectedResourceVMConfig(vmName, ppName, description),
 				Check: resource.ComposeTestCheckFunc(
 					//resource.TestCheckResourceAttrSet(vmResourceName, "id"),
-					waitForVmToBeProtected(vmResourceName, "protection_type", "RULE_PROTECTED", maxRetries, retryInterval, sleepTime),
+					waitForVMToBeProtected(vmResourceName, "protection_type", "RULE_PROTECTED", maxRetries, retryInterval, sleepTime),
 				),
 			},
 			//Get protected vm
@@ -42,11 +43,10 @@ func TestAccV2NutanixPromoteProtectedResourceDatasource_GetProtectedVm(t *testin
 					resource.TestCheckResourceAttrSet(dataSourceNameGetProtectedResource, "entity_ext_id"),
 					resource.TestCheckResourceAttr(dataSourceNameGetProtectedResource, "entity_type", "VM"),
 					func(s *terraform.State) error {
-						aJson, _ := json.MarshalIndent(s.RootModule().Resources[dataSourceNameGetProtectedResource].Primary.Attributes, "", "  ")
-						fmt.Println("############################################")
-						fmt.Println(fmt.Sprintf("Resource Attributes: \n%v", string(aJson)))
-						fmt.Println("############################################")
-
+						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[dataSourceNameGetProtectedResource].Primary.Attributes, "", "  ")
+						fmt.Printf("############################################\n")
+						fmt.Printf(fmt.Sprintf("Resource Attributes: \n%v", string(aJSON)))
+						fmt.Printf("############################################\n")
 						return nil
 					},
 				),
@@ -85,11 +85,10 @@ func TestAccV2NutanixPromoteProtectedResourceDatasource_GetProtectedVG(t *testin
 					resource.TestCheckResourceAttrSet(dataSourceNameGetProtectedResource, "entity_ext_id"),
 					resource.TestCheckResourceAttr(dataSourceNameGetProtectedResource, "entity_type", "VOLUME_GROUP"),
 					func(s *terraform.State) error {
-						aJson, _ := json.MarshalIndent(s.RootModule().Resources[dataSourceNameGetProtectedResource].Primary.Attributes, "", "  ")
-						fmt.Println("############################################")
-						fmt.Println(fmt.Sprintf("Resource Attributes: \n%v", string(aJson)))
-						fmt.Println("############################################")
-
+						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[dataSourceNameGetProtectedResource].Primary.Attributes, "", "  ")
+						fmt.Printf("############################################\n")
+						fmt.Printf(fmt.Sprintf("Resource Attributes: \n%v", string(aJSON)))
+						fmt.Printf("############################################\n")
 						return nil
 					},
 				),
@@ -98,7 +97,7 @@ func TestAccV2NutanixPromoteProtectedResourceDatasource_GetProtectedVG(t *testin
 	})
 }
 
-func testCreateProtectedResourceVmConfig(vmName, ppName, description string) string {
+func testCreateProtectedResourceVMConfig(vmName, ppName, description string) string {
 	return fmt.Sprintf(`
 # List domain Managers
 data "nutanix_domain_managers_v2" "pcs" {
@@ -177,7 +176,6 @@ resource "nutanix_virtual_machine_v2" "test"{
 }
 
 func testGetProtectedResourceVmConfig() string {
-
 	return `
 
 data "nutanix_protected_resource_v2" "test" {
@@ -282,7 +280,6 @@ resource "nutanix_associate_category_to_volume_group_v2" "test" {
 }
 
 func testGetProtectedResourceVgConfig() string {
-
 	return `
 
 data "nutanix_protected_resource_v2" "test" {
