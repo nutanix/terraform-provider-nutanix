@@ -121,7 +121,7 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVG(t *testing.T) {
 func testPromoteProtectedResourceVMAndProtectionPolicyConfig(vmName, ppName, description string) string {
 	return fmt.Sprintf(`
 # List domain Managers
-data "nutanix_domain_managers_v2" "pcs" {
+data "nutanix_pcs_v2" "pcs" {
 }
 
 # List categories
@@ -240,7 +240,7 @@ data "nutanix_virtual_machines_v2" "p-vm" {
 func testPromoteProtectedResourceVGAndProtectionPolicyConfig(vgName, ppName, description string) string {
 	return fmt.Sprintf(`
 # List domain Managers
-data "nutanix_domain_managers_v2" "pcs" {
+data "nutanix_pcs_v2" "pcs" {
 }
 
 # List categories
