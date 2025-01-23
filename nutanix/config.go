@@ -20,7 +20,7 @@ import (
 )
 
 // Version represents api version
-//const Version = "3.1"
+// const Version = "3.1"
 
 // Config ...
 type Config struct {
