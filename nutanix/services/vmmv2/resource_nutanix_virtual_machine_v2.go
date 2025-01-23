@@ -30,6 +30,10 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 		ReadContext:   ResourceNutanixVirtualMachineV2Read,
 		UpdateContext: ResourceNutanixVirtualMachineV2Update,
 		DeleteContext: ResourceNutanixVirtualMachineV2Delete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -56,6 +60,10 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice([]string{"VM", "VM_RECOVERY_POINT"}, false),
+						},
+						"ext_id": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
