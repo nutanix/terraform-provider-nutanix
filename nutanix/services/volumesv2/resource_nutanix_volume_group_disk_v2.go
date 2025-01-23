@@ -2,7 +2,6 @@ package volumesv2
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -157,7 +156,7 @@ func ResourceNutanixVolumeGroupDiskV2Create(ctx context.Context, d *schema.Resou
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Volume Disk (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for template (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
@@ -171,6 +170,7 @@ func ResourceNutanixVolumeGroupDiskV2Create(ctx context.Context, d *schema.Resou
 	uuid := rUUID.EntitiesAffected[1].ExtId
 
 	d.SetId(*uuid)
+	d.Set("ext_id", *uuid)
 
 	return nil
 }
@@ -207,7 +207,7 @@ func ResourceNutanixVolumeGroupDiskV2Read(ctx context.Context, d *schema.Resourc
 	if err := d.Set("disk_storage_features", flattenDiskStorageFeatures(getResp.DiskStorageFeatures)); err != nil {
 		return diag.FromErr(err)
 	}
-
+	d.SetId(*getResp.ExtId)
 	return nil
 }
 
@@ -299,18 +299,8 @@ func ResourceNutanixVolumeGroupDiskV2Delete(ctx context.Context, d *schema.Resou
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Volume Disk (%s) to Delete: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for template (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
-	if err != nil {
-		return diag.Errorf("error while fetching Volume Disk Delete Task : %v", err)
-	}
-
-	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
-
-	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Volume Disk Delete Task Details: %s", string(aJSON))
-
 	return nil
 }
 

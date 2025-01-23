@@ -2,7 +2,6 @@ package volumesv2
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -204,7 +203,7 @@ func ResourceNutanixVolumeGroupIscsiClientV2Create(ctx context.Context, d *schem
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Iscsi Client  (%s) to Attach to Volume Group: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for template (%s) to Attach Iscsi Client to Volume Group: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
@@ -261,7 +260,7 @@ func ResourceNutanixVVolumeGroupIscsiClientV2Delete(ctx context.Context, d *sche
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Iscsi Client (%s) to Detach From Volume Group: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for template (%s) to Detach Iscsi Client to Volume Group: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
@@ -271,9 +270,12 @@ func ResourceNutanixVVolumeGroupIscsiClientV2Delete(ctx context.Context, d *sche
 		return diag.Errorf("error while Detaching Iscsi Client to Volume Group: %v", err)
 	}
 	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
+	log.Printf("[DEBUG] rUUID 0: %v", *rUUID.EntitiesAffected[0].ExtId)
+	log.Printf("[DEBUG] rUUID 1: %v", *rUUID.EntitiesAffected[1].ExtId)
 
-	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Detach Iscsi Client from Volume Group Task Details: %s", string(aJSON))
+	uuid := rUUID.EntitiesAffected[0].ExtId
+
+	d.SetId(*uuid)
 
 	return nil
 }
