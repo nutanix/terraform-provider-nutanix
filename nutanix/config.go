@@ -129,7 +129,6 @@ func (c *Config) Client() (*Client, error) {
 		VmmAPI:              vmmClient,
 	}, nil
 }
-
 // Client represents the nutanix API client
 type Client struct {
 	API                 *v3.Client
