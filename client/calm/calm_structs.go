@@ -205,4 +205,10 @@ type RbRunlogsResponse struct {
 
 type RbRunlogStatus struct {
 	State     *string `json:"state"`
+	OutputVariableList  []*RbOutputVariable   `json:"output_variable_list,omitempty"`
+}
+
+type RbOutputVariable struct{
+    Name    string `json:"name,omitempty"`
+    Value   string `json:"value,omitempty"`
 }

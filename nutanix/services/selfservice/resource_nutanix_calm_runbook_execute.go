@@ -56,6 +56,22 @@ func ResourceNutanixCalmRunbookExecute() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"output_variable_list": {
+			    Type:     schema.TypeList,
+			    Computed: true,
+			    Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -121,6 +137,23 @@ func resourceNutanixCalmRunbookExecuteCreate(ctx context.Context, d *schema.Reso
 		return diag.Errorf("error waiting for runbook to finish execute(%s): %s", errWaitTask)
 	}
 
+	// Fetch the final state after execution
+    finalRunlog, err := conn.Service.RbRunlogs(ctx, runlogUUID)
+    if err != nil {
+        return diag.Errorf("Error fetching final runlog state: %s", err)
+    }
+
+    // Set the runlog state in the resource data
+    if err := d.Set("state", finalRunlog.Status.State); err != nil {
+        return diag.Errorf("Error setting state in resource data: %s", err)
+    }
+
+    outputVariable, _, err := RbOutputFunc(ctx, conn, runlogUUID)
+    if err != nil {
+        return diag.Errorf("Error fetching output variables: %s", err)
+    }
+    d.Set("output_variable_list", outputVariable)
+
     return nil
 
 }
@@ -154,5 +187,26 @@ func RbRunlogStateRefreshFunc(ctx context.Context, client *calm.Client, runlogUU
 
 		return v, runlogstate, nil
 	}
+}
+
+func RbOutputFunc(ctx context.Context, client *calm.Client, runlogUUID string) (interface{}, string, error) {
+	v, err := client.Service.RbRunlogs(ctx, runlogUUID)
+	if err != nil {
+		if strings.Contains(err.Error(), "INVALID_UUID") {
+			return nil, ERROR, nil
+		}
+		return nil, "", err
+	}
+
+    var outputVariables []map[string]interface{}
+    for _, outputVar := range v.Status.OutputVariableList {
+        // Append the output variable details as a map
+        outputVariables = append(outputVariables, map[string]interface{}{
+            "name":  outputVar.Name,
+            "value": outputVar.Value,
+        })
+    }
+
+	return outputVariables, "", nil
 }
 
