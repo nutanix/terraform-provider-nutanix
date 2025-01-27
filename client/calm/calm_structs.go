@@ -172,3 +172,15 @@ type AppPatchResponse struct {
 type ActionRunStatus struct {
 	RunlogUUID string `json:"runlog_uuid"`
 }
+
+type RestoreInput struct {
+	Spec       RestoreSpec            `json:"spec"`
+	APIVersion string                 `json:"api_version"`
+	Metadata   map[string]interface{} `json:"metadata"`
+}
+
+type RestoreSpec struct {
+	Args       ArgsSpec `json:"args"`
+	TargetUUID string   `json:"target_uuid"`
+	TargetKind string   `json:"target_kind"`
+}
