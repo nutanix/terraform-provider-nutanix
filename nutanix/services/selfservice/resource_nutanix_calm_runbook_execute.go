@@ -64,33 +64,39 @@ func resourceNutanixCalmRunbookExecuteCreate(ctx context.Context, d *schema.Reso
 	conn := meta.(*conns.Client).Calm
 
 	var rb_uuid string
-	// fetch rb_uuid from rb_name
-	rb_name := d.Get("rb_name").(string)
 
-	rbFilter := &calm.RunbookListInput{}
-
-	rbFilter.Filter = fmt.Sprintf("name==%s;state!=DELETED", rb_name)
-
-	rbNameResp, err := conn.Service.ListRunbook(ctx, rbFilter)
-	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	var RbNameStatus []interface{}
-	if err := json.Unmarshal([]byte(rbNameResp.Entities), &RbNameStatus); err != nil {
-		fmt.Println("Error unmarshalling RBName:", err)
-	}
-
-	entities := RbNameStatus[0].(map[string]interface{})
-
-	if entity, ok := entities["metadata"].(map[string]interface{}); ok {
-		rb_uuid = entity["uuid"].(string)
-	}
-
+	// Check if rb_uuid is provided
 	if rbUUID, ok := d.GetOk("rb_uuid"); ok {
 		rb_uuid = rbUUID.(string)
+	} else {
+		// Fetch rb_uuid from rb_name if rb_uuid is not provided
+		rb_name := d.Get("rb_name").(string)
+
+		rbFilter := &calm.RunbookListInput{}
+		rbFilter.Filter = fmt.Sprintf("name==%s;state!=DELETED", rb_name)
+
+		rbNameResp, err := conn.Service.ListRunbook(ctx, rbFilter)
+		if err != nil {
+			return diag.FromErr(err)
+		}
+
+		var RbNameStatus []interface{}
+		if err := json.Unmarshal([]byte(rbNameResp.Entities), &RbNameStatus); err != nil {
+			fmt.Println("Error unmarshalling RBName:", err)
+			return diag.FromErr(err)
+		}
+
+		if len(RbNameStatus) == 0 {
+			return diag.Errorf("No runbooks found with name %s", rb_name)
+		}
+
+		entities := RbNameStatus[0].(map[string]interface{})
+		if entity, ok := entities["metadata"].(map[string]interface{}); ok {
+			rb_uuid = entity["uuid"].(string)
+		}
 	}
 
+    // execute runbook using the uuid
     input := &calm.RunbookProvisionInput{}
 
 	output, err := conn.Service.ExecuteRunbook(ctx, rb_uuid, input)
@@ -102,7 +108,7 @@ func resourceNutanixCalmRunbookExecuteCreate(ctx context.Context, d *schema.Reso
 	fmt.Println("Response:", runlogUUID)
     d.SetId(runlogUUID)
 
-    	// poll till action is completed
+    // poll till action is completed
 	rbStateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING"},
 		Target:  []string{"SUCCESS","FAILURE","WARNING"},
