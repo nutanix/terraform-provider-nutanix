@@ -172,3 +172,37 @@ type AppPatchResponse struct {
 type ActionRunStatus struct {
 	RunlogUUID string `json:"runlog_uuid"`
 }
+
+type RunbookProvisionInput struct {
+	Spec RBspec `json:"spec,omitempty"`
+}
+
+type RBspec struct {
+	RbName             string              `json:"rb_name,omitempty"`
+}
+
+type RunbookResponse struct {
+	Spec    json.RawMessage `json:"spec"`
+	Status  RbRespStatus    `json:"status"`
+}
+
+type RunbookListInput struct {
+	Filter string `json:"filter"`
+}
+
+type RunbookListResponse struct {
+	Entities json.RawMessage `json:"entities"`
+}
+
+type RbRespStatus struct {
+	RunlogUUID string `json:"runlog_uuid,omitempty"`
+}
+
+type RbRunlogsResponse struct {
+	APIVersion *string          `json:"api_version"`
+	Status     *RbRunlogStatus `json:"status"`
+}
+
+type RbRunlogStatus struct {
+	State     *string `json:"state"`
+}
