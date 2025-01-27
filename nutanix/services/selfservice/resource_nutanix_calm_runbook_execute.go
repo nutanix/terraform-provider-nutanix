@@ -98,7 +98,6 @@ func resourceNutanixCalmRunbookExecuteCreate(ctx context.Context, d *schema.Reso
 
 		var RbNameStatus []interface{}
 		if err := json.Unmarshal([]byte(rbNameResp.Entities), &RbNameStatus); err != nil {
-			fmt.Println("Error unmarshalling RBName:", err)
 			return diag.FromErr(err)
 		}
 
@@ -121,7 +120,6 @@ func resourceNutanixCalmRunbookExecuteCreate(ctx context.Context, d *schema.Reso
 	}
 
 	runlogUUID := output.Status.RunlogUUID
-	fmt.Println("Response:", runlogUUID)
     d.SetId(runlogUUID)
 
     // poll till action is completed
@@ -177,8 +175,6 @@ func RbRunlogStateRefreshFunc(ctx context.Context, client *calm.Client, runlogUU
 			}
 			return nil, "", err
 		}
-		fmt.Println("V State: ", v.Status.State)
-		fmt.Println("V: ", *v)
 
 		runlogstate := utils.StringValue(v.Status.State)
 
