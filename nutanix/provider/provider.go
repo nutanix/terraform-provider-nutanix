@@ -23,6 +23,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/nke"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prismv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/selfservice"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/storagecontainersv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/vmm"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/vmmv2"
@@ -289,6 +290,8 @@ func Provider() *schema.Provider {
 			"nutanix_clusters_v2":                             clustersv2.DatasourceNutanixClusterEntitiesV2(),
 			"nutanix_host_v2":                                 clustersv2.DatasourceNutanixHostEntityV2(),
 			"nutanix_hosts_v2":                                clustersv2.DatasourceNutanixHostEntitiesV2(),
+			"nutanix_calm_app":                                selfservice.DatsourceNutanixCalmApp(),
+			"nutanix_blueprint_runtime_editables":             selfservice.DatsourceNutanixCalmRuntimeEditables(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
@@ -385,6 +388,8 @@ func Provider() *schema.Provider {
 			"nutanix_pc_registration_v2":                      clustersv2.ResourceNutanixClusterPCRegistrationV2(),
 			"nutanix_clusters_discover_unconfigured_nodes_v2": clustersv2.ResourceNutanixClusterDiscoverUnconfiguredNodesV2(),
 			"nutanix_clusters_unconfigured_node_networks_v2":  clustersv2.ResourceNutanixClusterUnconfiguredNodeNetworkV2(),
+			"nutanix_calm_app_provision":                      selfservice.ResourceNutanixCalmAppProvision(),
+			"nutanix_calm_app_patch":                          selfservice.ResourceNutanixCalmAppPatch(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
