@@ -23,7 +23,7 @@ type Service interface {
 	ListBlueprint(ctx context.Context, filter *BlueprintListInput) (*BlueprintListResponse, error)
 	GetRuntimeEditables(ctx context.Context, bpUUID string) (*RuntimeEditablesResponse, error)
 	PatchApp(ctx context.Context, appUUID string, patchUUID string, input *PatchInput) (*AppPatchResponse, error)
-	PerformActionUuid(ctx context.Context, appUUID string, actionUUID string, input *ActionInput) (*AppActionResponse, error)
+	PerformActionUuid(ctx context.Context, appUUID string, actionUUID string, input *ActionInput) (*ActionResponse, error)
 }
 
 func (op Operations) ProvisionBlueprint(ctx context.Context, bpUUID string, input *BlueprintProvisionInput) (*AppProvisionTaskOutput, error) {

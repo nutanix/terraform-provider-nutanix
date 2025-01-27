@@ -67,10 +67,10 @@ func resourceNutanixCalmAppRestoreCreate(ctx context.Context, d *schema.Resource
 	delete(appMetadata, "owner_reference")
 
 	// create spec
-	fetchSpec := &calm.TaskSpec{}
-	fetchSpec.TargetUUID = appUUID
-	fetchSpec.TargetKind = "Application"
-	fetchSpec.Args.Variables = []*calm.VariableList{}
+	restoreSpec := &calm.TaskSpec{}
+	restoreSpec.TargetUUID = appUUID
+	restoreSpec.TargetKind = "Application"
+	restoreSpec.Args.Variables = []*calm.VariableList{}
 
 	restoreConfig := &calm.VariableList{}
 
@@ -85,10 +85,19 @@ func resourceNutanixCalmAppRestoreCreate(ctx context.Context, d *schema.Resource
 	}
 	restoreConfig.TaskUUID = restoreActionUUID
 
-	fetchInput := &calm.ActionInput{}
-	fetchInput.APIVersion = appResp.APIVersion
-	fetchInput.Metadata = appMetadata
-	fetchInput.Spec = *fetchSpec
+	restoreInput := &calm.ActionInput{}
+	restoreInput.APIVersion = appResp.APIVersion
+	restoreInput.Metadata = appMetadata
+	restoreInput.Spec = *restoreSpec
+
+	restoreResp, err := conn.Service.PerformActionUuid(ctx, appUUID, restoreActionUUID, restoreInput)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	runlogUUID := restoreResp.Status.RunlogUUID
+
+	fmt.Println("Runlog UUID:", runlogUUID)
 
 	return nil
 }
