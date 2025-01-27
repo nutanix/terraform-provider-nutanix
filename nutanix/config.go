@@ -3,6 +3,7 @@ package nutanix
 import (
 	"fmt"
 
+	"github.com/terraform-providers/terraform-provider-nutanix/client/calm"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 	era "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/era"
 	foundation_central "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/fc"
@@ -121,6 +122,10 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	calmClient, err := calm.NewCalmClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 	return &Client{
 		WaitTimeout:         c.WaitTimeout,
 		API:                 v3Client,
@@ -138,6 +143,7 @@ func (c *Config) Client() (*Client, error) {
 		VmmAPI:              vmmClient,
 		DataPoliciesAPI:     dataPoliciesClient,
 		LcmAPI:              LcmClient,
+		Calm:                calmClient,
 	}, nil
 }
 
@@ -159,4 +165,5 @@ type Client struct {
 	VmmAPI              *vmm.Client
 	DataPoliciesAPI     *datapolicies.Client
 	LcmAPI              *lcm.Client
+	Calm                *calm.Client
 }

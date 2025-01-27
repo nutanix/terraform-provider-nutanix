@@ -25,6 +25,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/nke"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/prismv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/selfservice"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/storagecontainersv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/vmm"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/vmmv2"
@@ -306,6 +307,8 @@ func Provider() *schema.Provider {
 			"nutanix_lcm_entities_v2":                         lcmv2.DatasourceNutanixLcmEntitiesV2(),
 			"nutanix_lcm_entity_v2":                           lcmv2.DatasourceNutanixLcmEntityV2(),
 			"nutanix_lcm_config_v2":                           lcmv2.DatasourceNutanixLcmConfigV2(),
+			"nutanix_calm_app":                                selfservice.DatsourceNutanixCalmApp(),
+			"nutanix_blueprint_runtime_editables":             selfservice.DatsourceNutanixCalmRuntimeEditables(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
@@ -415,6 +418,8 @@ func Provider() *schema.Provider {
 			"nutanix_lcm_prechecks_v2":                        lcmv2.ResourceNutanixPreChecksV2(),
 			"nutanix_lcm_upgrade_v2":                          lcmv2.ResourceLcmUpgradeV2(),
 			"nutanix_lcm_config_v2":                           lcmv2.ResourceNutanixLcmConfigV2(),
+			"nutanix_calm_app_provision":                      selfservice.ResourceNutanixCalmAppProvision(),
+			"nutanix_calm_app_patch":                          selfservice.ResourceNutanixCalmAppPatch(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
