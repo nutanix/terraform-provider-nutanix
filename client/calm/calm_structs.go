@@ -173,14 +173,18 @@ type ActionRunStatus struct {
 	RunlogUUID string `json:"runlog_uuid"`
 }
 
-type RestoreInput struct {
-	Spec       RestoreSpec            `json:"spec"`
+type ActionInput struct {
+	Spec       TaskSpec               `json:"spec"`
 	APIVersion string                 `json:"api_version"`
 	Metadata   map[string]interface{} `json:"metadata"`
 }
 
-type RestoreSpec struct {
+type TaskSpec struct {
 	Args       ArgsSpec `json:"args"`
 	TargetUUID string   `json:"target_uuid"`
 	TargetKind string   `json:"target_kind"`
+}
+
+type ActionResponse struct {
+	Status ActionRunStatus `json:"status,omitempty"`
 }
