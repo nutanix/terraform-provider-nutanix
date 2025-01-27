@@ -177,10 +177,6 @@ func RbRunlogStateRefreshFunc(ctx context.Context, client *calm.Client, runlogUU
 		}
 
 		runlogstate := utils.StringValue(v.Status.State)
-
-		fmt.Printf("Runlog State: %s\n", runlogstate)
-		log.Printf("Runlog State: %s\n", runlogstate)
-
 		return v, runlogstate, nil
 	}
 }
