@@ -390,7 +390,7 @@ func Provider() *schema.Provider {
 			"nutanix_clusters_unconfigured_node_networks_v2":  clustersv2.ResourceNutanixClusterUnconfiguredNodeNetworkV2(),
 			"nutanix_calm_app_provision":                      selfservice.ResourceNutanixCalmAppProvision(),
 			"nutanix_calm_app_patch":                          selfservice.ResourceNutanixCalmAppPatch(),
-			"nutanix_calm_app_restore":                        selfservice.ResourceNutanixCalmAppRestore(),
+			"nutanix_calm_restore_action":                     selfservice.ResourceNutanixCalmAppRestore(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

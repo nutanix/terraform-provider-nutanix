@@ -180,9 +180,9 @@ type ActionInput struct {
 }
 
 type TaskSpec struct {
-	Args       ArgsSpec `json:"args"`
-	TargetUUID string   `json:"target_uuid"`
-	TargetKind string   `json:"target_kind"`
+	Args       []*VariableList `json:"args"`
+	TargetUUID string          `json:"target_uuid"`
+	TargetKind string          `json:"target_kind"`
 }
 
 type ActionResponse struct {

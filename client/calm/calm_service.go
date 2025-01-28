@@ -156,7 +156,7 @@ func (op Operations) PatchApp(ctx context.Context, appUUID string, patchUUID str
 	return appResponse, op.client.Do(ctx, req, appResponse)
 }
 
-func (op Operations) PerformActionUuid(ctx context.Context, appUUID string, actionUUID string, input *ActionSpec) (*ActionResponse, error) {
+func (op Operations) PerformActionUuid(ctx context.Context, appUUID string, actionUUID string, input *ActionInput) (*ActionResponse, error) {
 	path := fmt.Sprintf("/apps/%s/actions/%s/run", appUUID, actionUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)

@@ -4,12 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/calm"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func ResourceNutanixCalmAppRestore() *schema.Resource {
@@ -70,27 +74,29 @@ func resourceNutanixCalmAppRestoreCreate(ctx context.Context, d *schema.Resource
 	restoreSpec := &calm.TaskSpec{}
 	restoreSpec.TargetUUID = appUUID
 	restoreSpec.TargetKind = "Application"
-	restoreSpec.Args.Variables = []*calm.VariableList{}
+	restoreSpec.Args = []*calm.VariableList{}
 
 	restoreConfig := &calm.VariableList{}
 
 	restoreConfig.Name = "recovery_point_group_uuid"
 	restoreConfig.Value = recoveryPointUUID
-	restoreActionUUID, restoreActionTaskUuid := fetchRestoreActionUUID(appStatus, restoreActionName)
-	if restoreActionUUID == "" {
+	restoreActionUuid, restoreActionTaskUuid := fetchRestoreActionUUID(appStatus, restoreActionName)
+	if restoreActionUuid == "" {
 		return diag.Errorf("UUID for restore action with name %s not found.", restoreActionName)
 	}
 	if restoreActionTaskUuid == "" {
 		return diag.Errorf("UUID for restore action task with name %s not found.", restoreActionName)
 	}
-	restoreConfig.TaskUUID = restoreActionUUID
+	restoreConfig.TaskUUID = restoreActionTaskUuid
+
+	restoreSpec.Args = append(restoreSpec.Args, restoreConfig)
 
 	restoreInput := &calm.ActionInput{}
 	restoreInput.APIVersion = appResp.APIVersion
 	restoreInput.Metadata = appMetadata
 	restoreInput.Spec = *restoreSpec
 
-	restoreResp, err := conn.Service.PerformActionUuid(ctx, appUUID, restoreActionUUID, restoreInput)
+	restoreResp, err := conn.Service.PerformActionUuid(ctx, appUUID, restoreActionUuid, restoreInput)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -98,6 +104,21 @@ func resourceNutanixCalmAppRestoreCreate(ctx context.Context, d *schema.Resource
 	runlogUUID := restoreResp.Status.RunlogUUID
 
 	fmt.Println("Runlog UUID:", runlogUUID)
+
+	d.SetId(runlogUUID)
+
+	// poll till action is completed
+	appStateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "POLICY_EXEC", "ABORTING", "APPROVAL"},
+		Target:  []string{"SUCCESS", "FAILURE", "WARNING", "ERROR", "SYS_FAILURE", "SYS_ERROR", "SYS_ABORTED", "TIMEOUT", "APPROVAL_FAILED"},
+		Refresh: RestoreStateRefreshFunc(ctx, conn, appUUID, runlogUUID),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
+		Delay:   5 * time.Second,
+	}
+
+	if _, errWaitTask := appStateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("Error waiting for app to perform Restore Action: %s", errWaitTask)
+	}
 
 	return nil
 }
@@ -121,7 +142,8 @@ func fetchRestoreActionUUID(appStatus map[string]interface{}, restoreActionName 
 		if actionList, ok := resources["action_list"].([]interface{}); ok {
 			for _, action := range actionList {
 				if act, ok := action.(map[string]interface{}); ok {
-					if act["name"] == restoreActionName {
+					if act["name"].(string) == restoreActionName {
+						restoreActionUuid = act["uuid"].(string)
 						if runbook, ok := act["runbook"].(map[string]interface{}); ok {
 							if taskDefinitionList, ok := runbook["task_definition_list"].([]interface{}); ok {
 								for _, taskDef := range taskDefinitionList {
@@ -139,4 +161,24 @@ func fetchRestoreActionUUID(appStatus map[string]interface{}, restoreActionName 
 		}
 	}
 	return restoreActionUuid, restoreActionTaskUuid
+}
+
+func RestoreStateRefreshFunc(ctx context.Context, client *calm.Client, appUUID, runlogUUID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		v, err := client.Service.AppRunlogs(ctx, appUUID, runlogUUID)
+		if err != nil {
+			if strings.Contains(fmt.Sprint(err), "INVALID_UUID") {
+				return v, ERROR, nil
+			}
+			return nil, "", err
+		}
+		fmt.Println("V State: ", v.Status.RunlogState)
+		fmt.Println("V: ", *v)
+
+		runlogstate := utils.StringValue(v.Status.RunlogState)
+
+		fmt.Printf("Runlog State: %s\n", runlogstate)
+
+		return v, runlogstate, nil
+	}
 }
