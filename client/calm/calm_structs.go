@@ -162,7 +162,7 @@ type VariableList struct {
 	Value    string `json:"value,omitempty"`
 }
 
-type AppPatchResponse struct {
+type AppTaskResponse struct {
 	Status     ActionRunStatus `json:"status"`
 	Spec       json.RawMessage `json:"spec"`
 	APIVersion string          `json:"api_version"`
@@ -172,3 +172,22 @@ type AppPatchResponse struct {
 type ActionRunStatus struct {
 	RunlogUUID string `json:"runlog_uuid"`
 }
+
+type ActionInput struct {
+	Spec       TaskSpec               `json:"spec"`
+	APIVersion string                 `json:"api_version"`
+	Metadata   map[string]interface{} `json:"metadata"`
+}
+
+type TaskSpec struct {
+	Args       []*VariableList `json:"args"`
+	TargetUUID string          `json:"target_uuid"`
+	TargetKind string          `json:"target_kind"`
+}
+
+// type AppCustomActionResponse struct {
+// 	Status     ActionRunStatus `json:"status"`
+// 	Spec       json.RawMessage `json:"spec"`
+// 	APIVersion string          `json:"api_version"`
+// 	Metadata   json.RawMessage `json:"metadata"`
+// }

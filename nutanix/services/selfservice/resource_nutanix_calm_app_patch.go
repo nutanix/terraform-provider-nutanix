@@ -65,7 +65,7 @@ func ResourceNutanixCalmAppPatch() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"index": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
 						},
 						"operation": {
 							Type:     schema.TypeString,
