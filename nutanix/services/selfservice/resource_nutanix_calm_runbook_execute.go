@@ -36,23 +36,11 @@ func ResourceNutanixCalmRunbookExecute() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 			},
-			"spec": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"api_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"metadata": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -68,6 +56,25 @@ func ResourceNutanixCalmRunbookExecute() *schema.Resource {
 						"value": {
 							Type:     schema.TypeString,
 							Computed: true,
+						},
+					},
+				},
+			},
+			"variable_list": {
+			    Type:     schema.TypeList,
+			    Computed: true,
+			    Optional: true,
+			    Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+							Optional: true,
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Computed: true,
+							Optional: true,
 						},
 					},
 				},
@@ -111,8 +118,25 @@ func resourceNutanixCalmRunbookExecuteCreate(ctx context.Context, d *schema.Reso
 		}
 	}
 
-    // execute runbook using the uuid
+	d.Set("rb_uuid", rb_uuid)
+
+    var args []calm.RunbookArgs
+    if variableList, ok := d.Get("variable_list").([]interface{}); ok {
+            for _, v := range variableList {
+                variable := v.(map[string]interface{})
+                log.Printf("%v", variable)
+                args = append(args, calm.RunbookArgs{
+                    Name:         variable["name"].(string),
+                    Value:        variable["value"].(string),
+                })
+            }
+        }
+
     input := &calm.RunbookProvisionInput{}
+    inputSpec := &calm.RunbookProvisionSpec{}
+
+    inputSpec.Args = args
+    input.Spec = *inputSpec
 
 	output, err := conn.Service.ExecuteRunbook(ctx, rb_uuid, input)
 	if err != nil {
@@ -124,8 +148,8 @@ func resourceNutanixCalmRunbookExecuteCreate(ctx context.Context, d *schema.Reso
 
     // poll till action is completed
 	rbStateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING"},
-		Target:  []string{"SUCCESS","FAILURE","WARNING"},
+		Pending: []string{"PENDING", "RUNNING","ABORTING"},
+		Target:  []string{"SUCCESS","FAILURE","WARNING","ABORTED"},
 		Refresh: RbRunlogStateRefreshFunc(ctx, conn, runlogUUID),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
 		Delay:   5 * time.Second,

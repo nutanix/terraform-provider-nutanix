@@ -174,8 +174,20 @@ type ActionRunStatus struct {
 }
 
 type RunbookProvisionInput struct {
-	Spec RBspec `json:"spec,omitempty"`
+	Spec RunbookProvisionSpec  `json:"spec,omitempty"`
+	VariableList    json.RawMessage `json:"variable_list,omitempty"`
 }
+
+type RunbookProvisionSpec struct {
+    Args []RunbookArgs `json:"args,omitempty"`
+}
+
+type RunbookArgs struct {
+    Name string `json:"name,omitempty"`
+    Value string `json:"value,omitempty"`
+}
+
+
 
 type RBspec struct {
 	RbName             string              `json:"rb_name,omitempty"`
@@ -199,7 +211,6 @@ type RbRespStatus struct {
 }
 
 type RbRunlogsResponse struct {
-	APIVersion *string          `json:"api_version"`
 	Status     *RbRunlogStatus `json:"status"`
 }
 
