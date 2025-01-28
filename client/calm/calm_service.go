@@ -23,6 +23,10 @@ type Service interface {
 	ListBlueprint(ctx context.Context, filter *BlueprintListInput) (*BlueprintListResponse, error)
 	GetRuntimeEditables(ctx context.Context, bpUUID string) (*RuntimeEditablesResponse, error)
 	PatchApp(ctx context.Context, appUUID string, patchUUID string, input *PatchInput) (*AppPatchResponse, error)
+	ExecuteRunbook(ctx context.Context, rbUUID string, input *RunbookProvisionInput) (*RunbookResponse, error)
+	ListRunbook(ctx context.Context, filter *RunbookListInput) (*RunbookListResponse, error)
+	GetRunbook(ctx context.Context, rbUUID string) (*RunbookResponse, error)
+	RbRunlogs(ctx context.Context, runlogUUID string) (*RbRunlogsResponse, error)
 	PerformActionUuid(ctx context.Context, appUUID string, actionUUID string, input *ActionInput) (*ActionResponse, error)
 	RecoveryPointsList(ctx context.Context, appUUID string, input *RecoveryPointsListInput) (*RecoveryPointsListResponse, error)
 }
@@ -155,6 +159,61 @@ func (op Operations) PatchApp(ctx context.Context, appUUID string, patchUUID str
 	}
 
 	return appResponse, op.client.Do(ctx, req, appResponse)
+}
+
+func (op Operations) ExecuteRunbook(ctx context.Context, rbUUID string, input *RunbookProvisionInput) (*RunbookResponse, error) {
+	path := fmt.Sprintf("/runbooks/%s/execute", rbUUID)
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
+
+	rbResponse := new(RunbookResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return rbResponse, op.client.Do(ctx, req, rbResponse)
+}
+
+func (op Operations) ListRunbook(ctx context.Context, filter *RunbookListInput) (*RunbookListResponse, error) {
+	path := "/runbooks/list"
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, filter)
+
+	rbResponse := new(RunbookListResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return rbResponse, op.client.Do(ctx, req, rbResponse)
+}
+
+func (op Operations) GetRunbook(ctx context.Context, rbUUID string) (*RunbookResponse, error) {
+	path := fmt.Sprintf("/runbooks/%s", rbUUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+
+	appResponse := new(RunbookResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return appResponse, op.client.Do(ctx, req, appResponse)
+}
+
+func (op Operations) RbRunlogs(ctx context.Context, runlogUUID string) (*RbRunlogsResponse, error) {
+	path := fmt.Sprintf("/runbooks/runlogs/%s", runlogUUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodGet, path, nil)
+
+	rbResponse := new(RbRunlogsResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return rbResponse, op.client.Do(ctx, req, rbResponse)
 }
 
 func (op Operations) PerformActionUuid(ctx context.Context, appUUID string, actionUUID string, input *ActionInput) (*ActionResponse, error) {

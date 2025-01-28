@@ -173,6 +173,55 @@ type ActionRunStatus struct {
 	RunlogUUID string `json:"runlog_uuid"`
 }
 
+type RunbookProvisionInput struct {
+	Spec         RunbookProvisionSpec `json:"spec,omitempty"`
+	VariableList json.RawMessage      `json:"variable_list,omitempty"`
+}
+
+type RunbookProvisionSpec struct {
+	Args []RunbookArgs `json:"args,omitempty"`
+}
+
+type RunbookArgs struct {
+	Name  string `json:"name,omitempty"`
+	Value string `json:"value,omitempty"`
+}
+
+type RBspec struct {
+	RbName string `json:"rb_name,omitempty"`
+}
+
+type RunbookResponse struct {
+	Spec   json.RawMessage `json:"spec"`
+	Status RbRespStatus    `json:"status"`
+}
+
+type RunbookListInput struct {
+	Filter string `json:"filter"`
+}
+
+type RunbookListResponse struct {
+	Entities json.RawMessage `json:"entities"`
+}
+
+type RbRespStatus struct {
+	RunlogUUID string `json:"runlog_uuid,omitempty"`
+}
+
+type RbRunlogsResponse struct {
+	Status *RbRunlogStatus `json:"status"`
+}
+
+type RbRunlogStatus struct {
+	State              *string             `json:"state"`
+	OutputVariableList []*RbOutputVariable `json:"output_variable_list,omitempty"`
+}
+
+type RbOutputVariable struct {
+	Name  string `json:"name,omitempty"`
+	Value string `json:"value,omitempty"`
+}
+
 type ActionInput struct {
 	Spec       TaskSpec               `json:"spec"`
 	APIVersion string                 `json:"api_version"`
