@@ -35,6 +35,10 @@ func ResourceNutanixCalmAppRestore() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -66,6 +70,9 @@ func resourceNutanixCalmAppRestoreCreate(ctx context.Context, d *schema.Resource
 	}
 
 	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		return diag.Errorf("Could not generate uuid with error: %s", err.Error())
+	}
 
 	appMetadata["uuid"] = uuid
 	delete(appMetadata, "owner_reference")
@@ -118,6 +125,17 @@ func resourceNutanixCalmAppRestoreCreate(ctx context.Context, d *schema.Resource
 
 	if _, errWaitTask := appStateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("Error waiting for app to perform Restore Action: %s", errWaitTask)
+	}
+
+	v, err := conn.Service.AppRunlogs(ctx, appUUID, runlogUUID)
+	if err != nil {
+		diag.Errorf("Error in getting runlog output: %s", err.Error())
+	}
+
+	runlogState := utils.StringValue(v.Status.RunlogState)
+
+	if err := d.Set("state", runlogState); err != nil {
+		return diag.FromErr(err)
 	}
 
 	return nil

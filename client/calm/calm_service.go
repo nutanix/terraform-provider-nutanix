@@ -24,6 +24,7 @@ type Service interface {
 	GetRuntimeEditables(ctx context.Context, bpUUID string) (*RuntimeEditablesResponse, error)
 	PatchApp(ctx context.Context, appUUID string, patchUUID string, input *PatchInput) (*AppPatchResponse, error)
 	PerformActionUuid(ctx context.Context, appUUID string, actionUUID string, input *ActionInput) (*ActionResponse, error)
+	RecoveryPointsList(ctx context.Context, appUUID string, input *RecoveryPointsListInput) (*RecoveryPointsListResponse, error)
 }
 
 func (op Operations) ProvisionBlueprint(ctx context.Context, bpUUID string, input *BlueprintProvisionInput) (*AppProvisionTaskOutput, error) {
@@ -168,4 +169,18 @@ func (op Operations) PerformActionUuid(ctx context.Context, appUUID string, acti
 	}
 
 	return appResponse, op.client.Do(ctx, req, appResponse)
+}
+
+func (op Operations) RecoveryPointsList(ctx context.Context, appUUID string, input *RecoveryPointsListInput) (*RecoveryPointsListResponse, error) {
+	path := fmt.Sprintf("/apps/%s/recovery_groups/list", appUUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
+
+	listResponse := new(RecoveryPointsListResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return listResponse, op.client.Do(ctx, req, listResponse)
 }
