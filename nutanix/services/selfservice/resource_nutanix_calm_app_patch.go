@@ -71,6 +71,10 @@ func ResourceNutanixCalmAppPatch() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"subnet_uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -177,6 +181,40 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 				}
 			}
 			fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_categories"] = categoryList
+		}
+	}
+
+	if nicsRuntimeEditable, ok := d.GetOk("nics"); ok {
+		nicsRuntimeEditable := nicsRuntimeEditable.([]interface{})
+		for _, nic := range nicsRuntimeEditable {
+			nicMap := nic.(map[string]interface{})
+			log.Println("NIC MAP::::", nicMap)
+			nicList := fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_nic_list"].([]interface{})
+			if operation, ok := nicMap["operation"].(string); ok {
+				if operation == "add" {
+					nicList = append(nicList, map[string]interface{}{
+						"identifier": nicMap["index"],
+						"operation":  "add",
+						"subnet_reference": map[string]interface{}{
+							"kind": "subnet",
+							"type": "",
+							"name": "",
+							"uuid": nicMap["subnet_uuid"],
+						},
+					})
+				} else {
+					nicList = append(nicList, map[string]interface{}{
+						"identifier": nicMap["index"],
+						"operation":  "delete",
+						"subnet_reference": map[string]interface{}{
+							"kind": "subnet",
+							"name": "",
+							"uuid": nicMap["subnet_uuid"],
+						},
+					})
+				}
+			}
+			fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_nic_list"] = nicList
 		}
 	}
 
