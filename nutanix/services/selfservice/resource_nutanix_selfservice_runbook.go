@@ -2,6 +2,7 @@ package selfservice
 
 import (
 	"context"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -60,6 +61,11 @@ func ResourceNutanixCalmRunbook() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"delete_response": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -111,9 +117,12 @@ func resourceNutanixCalmRunbookDelete(ctx context.Context, d *schema.ResourceDat
 
 	log.Printf("[Debug] Destroying the runbook with UUID %s", d.Id())
 
-	if _, err := conn.Service.DeleteRunbook(ctx, d.Id()); err != nil {
+	deleteResp, err := conn.Service.DeleteRunbook(ctx, d.Id())
+	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	log.Printf("[Debug] Deleted the runbook with response %s", deleteResp.Description)
 
 	return nil
 }

@@ -307,3 +307,7 @@ type RunbookImportResponse struct {
 	Metadata   map[string]interface{} `json:"metadata"`
 	APIVersion string                 `json:"api_version"`
 }
+
+type DeleteRbResp struct {
+	Description string `json:"description,omitempty"`
+}
