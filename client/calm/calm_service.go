@@ -279,6 +279,9 @@ func (op Operations) RunbookImport(ctx context.Context, input *RunbookImportInpu
 func (op Operations) DeleteRunbook(ctx context.Context, RbUUID string) (*DeleteRbResp, error) {
 	httpReq, err := op.client.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/runbooks/%s", RbUUID), nil)
 	if err != nil {
+		return nil, err
+	}
+	res := new(DeleteRbResp)
 	return res, op.client.Do(ctx, httpReq, res)
 }
 
