@@ -292,6 +292,7 @@ func Provider() *schema.Provider {
 			"nutanix_hosts_v2":                                clustersv2.DatasourceNutanixHostEntitiesV2(),
 			"nutanix_calm_app":                                selfservice.DatsourceNutanixCalmApp(),
 			"nutanix_blueprint_runtime_editables":             selfservice.DatsourceNutanixCalmRuntimeEditables(),
+			"nutanix_calm_app_snapshots":                      selfservice.DataSourceNutanixCalmSnapshots(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
@@ -392,6 +393,7 @@ func Provider() *schema.Provider {
 			"nutanix_calm_app_patch":                          selfservice.ResourceNutanixCalmAppPatch(),
 			"nutanix_calm_app_custom_action":                  selfservice.ResourceNutanixCalmAppCustomAction(),
 			"nutanix_calm_runbook_execute":                    selfservice.ResourceNutanixCalmRunbookExecute(),
+			"nutanix_calm_app_restore":                        selfservice.ResourceNutanixCalmAppRestore(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

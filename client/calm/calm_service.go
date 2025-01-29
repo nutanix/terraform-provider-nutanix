@@ -28,6 +28,7 @@ type Service interface {
 	ListRunbook(ctx context.Context, filter *RunbookListInput) (*RunbookListResponse, error)
 	GetRunbook(ctx context.Context, rbUUID string) (*RunbookResponse, error)
 	RbRunlogs(ctx context.Context, runlogUUID string) (*RbRunlogsResponse, error)
+	RecoveryPointsList(ctx context.Context, appUUID string, input *RecoveryPointsListInput) (*RecoveryPointsListResponse, error)
 }
 
 func (op Operations) ProvisionBlueprint(ctx context.Context, bpUUID string, input *BlueprintProvisionInput) (*AppProvisionTaskOutput, error) {
@@ -227,4 +228,18 @@ func (op Operations) RbRunlogs(ctx context.Context, runlogUUID string) (*RbRunlo
 	}
 
 	return rbResponse, op.client.Do(ctx, req, rbResponse)
+}
+
+func (op Operations) RecoveryPointsList(ctx context.Context, appUUID string, input *RecoveryPointsListInput) (*RecoveryPointsListResponse, error) {
+	path := fmt.Sprintf("/apps/%s/recovery_groups/list", appUUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
+
+	listResponse := new(RecoveryPointsListResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return listResponse, op.client.Do(ctx, req, listResponse)
 }
