@@ -30,6 +30,7 @@ type Service interface {
 	RbRunlogs(ctx context.Context, runlogUUID string) (*RbRunlogsResponse, error)
 	GetAppProtectionPolicyList(ctx context.Context, bpUUID string, appUUID string, configUUID string, policyListInput *PolicyListInput) (*PolicyListResponse, error)
 	RecoveryPointsList(ctx context.Context, appUUID string, input *RecoveryPointsListInput) (*RecoveryPointsListResponse, error)
+	RecoveryPointsDelete(ctx context.Context, appUUID string, input *ActionInput) (*AppTaskResponse, error)
 }
 
 func (op Operations) ProvisionBlueprint(ctx context.Context, bpUUID string, input *BlueprintProvisionInput) (*AppProvisionTaskOutput, error) {
@@ -257,4 +258,18 @@ func (op Operations) RecoveryPointsList(ctx context.Context, appUUID string, inp
 	}
 
 	return listResponse, op.client.Do(ctx, req, listResponse)
+}
+
+func (op Operations) RecoveryPointsDelete(ctx context.Context, appUUID string, input *ActionInput) (*AppTaskResponse, error) {
+	path := fmt.Sprintf("/apps/%s/recovery_point_delete", appUUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
+
+	appResponse := new(AppTaskResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return appResponse, op.client.Do(ctx, req, appResponse)
 }

@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
+	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -130,9 +133,93 @@ func resourceNutanixCalmAppSnapshotUpdate(ctx context.Context, d *schema.Resourc
 
 func resourceNutanixCalmAppSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
-	// conn := meta.(*conns.Client).Calm
-	// appUUID := d.Get("app_uuid").(string)
-	// snapshotName := d.Get("snapshot_name").(string)
+	conn := meta.(*conns.Client).Calm
+	appUUID := d.Get("app_uuid").(string)
+	snapshotName := d.Get("snapshot_name").(string)
+	log.Printf("DELETE CALLED FOR %s %s", appUUID, snapshotName)
+	length := 250
+	offset := 0
+	appResp, err := conn.Service.GetApp(ctx, appUUID)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+	var appStatus map[string]interface{}
+	if err := json.Unmarshal(appResp.Status, &appStatus); err != nil {
+		fmt.Println("Error unmarshalling Spec to get status:", err)
+	}
+
+	var appMetadata map[string]interface{}
+	if err := json.Unmarshal(appResp.Metadata, &appMetadata); err != nil {
+		fmt.Println("Error unmarshalling Spec to get metadata:", err)
+	}
+
+	fmt.Println("KUSH1:", appMetadata)
+
+	substrateReference := fetchSubstrateReference(appStatus)
+
+	currTime := strconv.FormatInt(time.Now().Unix(), 10)
+
+	listInput := &calm.RecoveryPointsListInput{}
+
+	listInput.Filter = fmt.Sprintf("substrate_reference==%s;expiration_time=ge=%s", substrateReference, currTime)
+	listInput.Length = length
+	listInput.Offset = offset
+
+	fmt.Println("KUSH2:", listInput)
+
+	listResp, err := conn.Service.RecoveryPointsList(ctx, appUUID, listInput)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	fmt.Println("KUSH3:", listResp)
+
+	var snapshotGroupId string
+
+	for _, entity := range listResp.Entities {
+		if status, ok := entity["status"].(map[string]interface{}); ok {
+			if snapshotName == status["name"].(string) {
+				snapshotGroupId = status["uuid"].(string)
+				break
+			}
+		}
+	}
+
+	fmt.Println("KUSH4:", snapshotGroupId)
+
+	snapshotSpec := &calm.TaskSpec{}
+	snapshotSpec.TargetUUID = appUUID
+	snapshotSpec.TargetKind = "Application"
+	snapshotSpec.Args = []*calm.VariableList{}
+
+	snapshotConfig := &calm.VariableList{}
+	snapshotConfig.Name = "snapshot_group_id"
+	snapshotConfig.Value = snapshotGroupId
+
+	snapshotInput := &calm.ActionInput{}
+	snapshotInput.APIVersion = appResp.APIVersion
+	snapshotInput.Metadata = appMetadata
+	snapshotInput.Spec = *snapshotSpec
+
+	snapshotResp, err := conn.Service.RecoveryPointsDelete(ctx, appUUID, snapshotInput)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	runlogUUID := snapshotResp.Status.RunlogUUID
+
+	fmt.Println("Runlog UUID:", runlogUUID)
+	// poll till action is completed
+	appStateConf := &resource.StateChangeConf{
+		Pending: []string{"PENDING", "RUNNING", "POLICY_EXEC", "ABORTING", "APPROVAL"},
+		Target:  []string{"SUCCESS", "FAILURE", "WARNING", "ERROR", "SYS_FAILURE", "SYS_ERROR", "SYS_ABORTED", "TIMEOUT", "APPROVAL_FAILED"},
+		Refresh: SnapshotStateRefreshFunc(ctx, conn, appUUID, runlogUUID),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
+		Delay:   5 * time.Second,
+	}
+	if _, errWaitTask := appStateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("Error waiting for app to perform Restore Action: %s", errWaitTask)
+	}
 
 	return nil
 }
