@@ -24,14 +24,14 @@ resource "nutanix_calm_runbook" "TestRunbookCreate" {
     task_name = "task1"
     task_type = "exec"
     task_script_type = "escript"
-    task_script = "print(\"hi\")"
+    task_script = "print(\"test script\")"
   }
 
   task_list {
     task_name = "task2"
     task_type = "exec"
     task_script_type = "escript"
-    task_script = "print(\"Ba bye\")"
+    task_script = "print(\"test script\")"
   }
 }
 
