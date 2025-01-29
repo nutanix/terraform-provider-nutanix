@@ -22,7 +22,8 @@ type Service interface {
 	AppRunlogs(ctx context.Context, appUUID, runlogUUID string) (*AppRunlogsResponse, error)
 	ListBlueprint(ctx context.Context, filter *BlueprintListInput) (*BlueprintListResponse, error)
 	GetRuntimeEditables(ctx context.Context, bpUUID string) (*RuntimeEditablesResponse, error)
-	PatchApp(ctx context.Context, appUUID string, patchUUID string, input *PatchInput) (*AppPatchResponse, error)
+	PatchApp(ctx context.Context, appUUID string, patchUUID string, input *PatchInput) (*AppTaskResponse, error)
+	PerformActionUuid(ctx context.Context, appUUID string, actionUUID string, input *ActionInput) (*AppTaskResponse, error)
 	ExecuteRunbook(ctx context.Context, rbUUID string, input *RunbookProvisionInput) (*RunbookResponse, error)
 	ListRunbook(ctx context.Context, filter *RunbookListInput) (*RunbookListResponse, error)
 	GetRunbook(ctx context.Context, rbUUID string) (*RunbookResponse, error)
@@ -147,12 +148,26 @@ func (op Operations) GetRuntimeEditables(ctx context.Context, bpUUID string) (*R
 	return appResponse, op.client.Do(ctx, req, appResponse)
 }
 
-func (op Operations) PatchApp(ctx context.Context, appUUID string, patchUUID string, input *PatchInput) (*AppPatchResponse, error) {
+func (op Operations) PatchApp(ctx context.Context, appUUID string, patchUUID string, input *PatchInput) (*AppTaskResponse, error) {
 	path := fmt.Sprintf("/apps/%s/patch/%s/run", appUUID, patchUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
 
-	appResponse := new(AppPatchResponse)
+	appResponse := new(AppTaskResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return appResponse, op.client.Do(ctx, req, appResponse)
+}
+
+func (op Operations) PerformActionUuid(ctx context.Context, appUUID string, actionUUID string, input *ActionInput) (*AppTaskResponse, error) {
+	path := fmt.Sprintf("/apps/%s/actions/%s/run", appUUID, actionUUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
+
+	appResponse := new(AppTaskResponse)
 
 	if err != nil {
 		return nil, err
