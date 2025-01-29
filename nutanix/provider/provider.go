@@ -290,6 +290,7 @@ func Provider() *schema.Provider {
 			"nutanix_clusters_v2":                             clustersv2.DatasourceNutanixClusterEntitiesV2(),
 			"nutanix_host_v2":                                 clustersv2.DatasourceNutanixHostEntityV2(),
 			"nutanix_hosts_v2":                                clustersv2.DatasourceNutanixHostEntitiesV2(),
+			"nutanix_calm_snapshot_policy_list":               selfservice.DataSourceNutanixSnapshotPolicy(),
 			"nutanix_calm_app":                                selfservice.DatsourceNutanixCalmApp(),
 			"nutanix_blueprint_runtime_editables":             selfservice.DatsourceNutanixCalmRuntimeEditables(),
 		},
