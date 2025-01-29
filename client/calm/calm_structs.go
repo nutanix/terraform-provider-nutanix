@@ -32,6 +32,8 @@ type BlueprintResponse struct {
 	Spec json.RawMessage `json:"spec,omitempty" mapstructure:"spec,omitempty"`
 
 	Status BpRespStatus `json:"status,omitempty" mapstructure:"status,omitempty"`
+
+	Metadata json.RawMessage `json:"metadata,omitempty" mapstructure:"metadata,omitempty"`
 }
 
 type BpRespStatus struct {
@@ -185,6 +187,20 @@ type TaskSpec struct {
 	TargetKind string          `json:"target_kind,omitempty"`
 }
 
+type ActionResponse struct {
+	Status ActionRunStatus `json:"status,omitempty"`
+}
+
+type PolicyListInput struct {
+	Length int    `json:"length,omitempty"`
+	Offset int    `json:"offset,omitempty"`
+	Filter string `json:"filter,omitempty"`
+}
+
+type PolicyListResponse struct {
+	Entities []map[string]interface{} `json:"entities,omitempty"`
+}
+
 //	type AppCustomActionResponse struct {
 //		Status     ActionRunStatus `json:"status"`
 //		Spec       json.RawMessage `json:"spec"`
@@ -238,10 +254,6 @@ type RbRunlogStatus struct {
 type RbOutputVariable struct {
 	Name  string `json:"name,omitempty"`
 	Value string `json:"value,omitempty"`
-}
-
-type ActionResponse struct {
-	Status ActionRunStatus `json:"status,omitempty"`
 }
 
 type RecoveryPointsListInput struct {

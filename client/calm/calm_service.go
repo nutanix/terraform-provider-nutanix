@@ -28,7 +28,9 @@ type Service interface {
 	ListRunbook(ctx context.Context, filter *RunbookListInput) (*RunbookListResponse, error)
 	GetRunbook(ctx context.Context, rbUUID string) (*RunbookResponse, error)
 	RbRunlogs(ctx context.Context, runlogUUID string) (*RbRunlogsResponse, error)
+	GetAppProtectionPolicyList(ctx context.Context, bpUUID string, appUUID string, configUUID string, policyListInput *PolicyListInput) (*PolicyListResponse, error)
 	RecoveryPointsList(ctx context.Context, appUUID string, input *RecoveryPointsListInput) (*RecoveryPointsListResponse, error)
+	RecoveryPointsDelete(ctx context.Context, appUUID string, input *ActionInput) (*AppTaskResponse, error)
 	RunbookImport(ctx context.Context, input *RunbookImportInput) (*RunbookImportResponse, error)
 	DeleteRunbook(ctx context.Context, RbUUID string) (*DeleteRbResp, error)
 }
@@ -232,6 +234,20 @@ func (op Operations) RbRunlogs(ctx context.Context, runlogUUID string) (*RbRunlo
 	return rbResponse, op.client.Do(ctx, req, rbResponse)
 }
 
+func (op Operations) GetAppProtectionPolicyList(ctx context.Context, bpUUID string, appUUID string, configUUID string, policyListInput *PolicyListInput) (*PolicyListResponse, error) {
+	path := fmt.Sprintf("/blueprints/%s/app_profile/%s/config_spec/%s/app_protection_policies/list", bpUUID, appUUID, configUUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, policyListInput)
+
+	plResponse := new(PolicyListResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return plResponse, op.client.Do(ctx, req, plResponse)
+}
+
 func (op Operations) RecoveryPointsList(ctx context.Context, appUUID string, input *RecoveryPointsListInput) (*RecoveryPointsListResponse, error) {
 	path := fmt.Sprintf("/apps/%s/recovery_groups/list", appUUID)
 
@@ -267,4 +283,18 @@ func (op Operations) DeleteRunbook(ctx context.Context, RbUUID string) (*DeleteR
 	}
 	res := new(DeleteRbResp)
 	return res, op.client.Do(ctx, httpReq, res)
+}
+
+func (op Operations) RecoveryPointsDelete(ctx context.Context, appUUID string, input *ActionInput) (*AppTaskResponse, error) {
+	path := fmt.Sprintf("/apps/%s/recovery_group_delete", appUUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
+
+	appResponse := new(AppTaskResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return appResponse, op.client.Do(ctx, req, appResponse)
 }
