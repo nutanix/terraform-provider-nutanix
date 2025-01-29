@@ -94,6 +94,22 @@ func ResourceNutanixCalmAppPatch() *schema.Resource {
 					},
 				},
 			},
+			"disks": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"disk_size_mib": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"operation": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -217,7 +233,35 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 			fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_nic_list"] = nicList
 		}
 	}
-
+	if disksRuntimeEditable, ok := d.GetOk("disks"); ok {
+		disksRuntimeEditable := disksRuntimeEditable.([]interface{})
+		start_index := 0
+		for _, disk := range disksRuntimeEditable {
+			diskMap := disk.(map[string]interface{})
+			log.Println("DISK MAP::::", diskMap)
+			diskList := fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_disk_list"].([]interface{})
+			log.Println("DISK LIST::::", diskList)
+			if operation, ok := diskMap["operation"].(string); ok {
+				if operation == "add" {
+					// config_details = fetchSpec.Args.Patch["resources"]
+					for indx := start_index; indx < len(diskList); indx++ {
+						if diskList[indx].(map[string]interface{})["operation"].(string) == operation {
+							diskSizeMib := diskList[indx].(map[string]interface{})["disk_size_mib"].(map[string]interface{})
+							diskSizeMib["value"] = diskMap["disk_size_mib"]
+							start_index = indx + 1
+							break
+						}
+					}
+				} else {
+					diskList = append(diskList, map[string]interface{}{
+						"disk_size_mib": diskMap["disk_size_mib"],
+						"operation":     "delete",
+					})
+				}
+			}
+			fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_disk_list"] = diskList
+		}
+	}
 	// if runtimeEditables, ok := d.GetOk("run_action"); ok {
 	// 	// get the path list from  objSpec
 
