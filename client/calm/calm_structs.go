@@ -255,3 +255,10 @@ type RecoveryPointsListResponse struct {
 	Metadata   map[string]interface{}   `json:"metadata,omitempty"`
 	Entities   []map[string]interface{} `json:"entities,omitempty"`
 }
+
+type UploadBlueprintInput struct {
+	FileName    string `json:"filename,omitempty"`
+	BpName      string `json:"bpname,omitempty"`
+	ProjectUUID string `json:"projectuuid,omitempty"`
+	PassPhrase  string `json:"passphrase,omitempty"`
+}
