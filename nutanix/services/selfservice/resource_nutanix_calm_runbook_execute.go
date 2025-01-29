@@ -16,11 +16,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-const (
-// ERROR              = "ERROR"
-// DEFAULTWAITTIMEOUT = 60
-)
-
 func ResourceNutanixCalmRunbookExecute() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceNutanixCalmRunbookExecuteCreate,
