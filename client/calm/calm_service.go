@@ -30,7 +30,7 @@ type Service interface {
 	GetRunbook(ctx context.Context, rbUUID string) (*RunbookResponse, error)
 	RbRunlogs(ctx context.Context, runlogUUID string) (*RbRunlogsResponse, error)
 	RecoveryPointsList(ctx context.Context, appUUID string, input *RecoveryPointsListInput) (*RecoveryPointsListResponse, error)
-	UploadBlueprint(ctx context.Context, appUUID string, input *RecoveryPointsListInput) (*RecoveryPointsListResponse, error)
+	UploadBlueprint(ctx context.Context, bpName string, projectUUID string, passphrase string, bpFilePath string) (*BlueprintResponse, error)
 }
 
 func (op Operations) ProvisionBlueprint(ctx context.Context, bpUUID string, input *BlueprintProvisionInput) (*AppProvisionTaskOutput, error) {
