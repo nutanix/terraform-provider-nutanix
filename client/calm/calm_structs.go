@@ -164,7 +164,7 @@ type VariableList struct {
 	Value    string `json:"value,omitempty"`
 }
 
-type AppPatchResponse struct {
+type AppTaskResponse struct {
 	Status     ActionRunStatus `json:"status"`
 	Spec       json.RawMessage `json:"spec"`
 	APIVersion string          `json:"api_version"`
@@ -201,6 +201,12 @@ type PolicyListResponse struct {
 	Entities []map[string]interface{} `json:"entities,omitempty"`
 }
 
+//	type AppCustomActionResponse struct {
+//		Status     ActionRunStatus `json:"status"`
+//		Spec       json.RawMessage `json:"spec"`
+//		APIVersion string          `json:"api_version"`
+//		Metadata   json.RawMessage `json:"metadata"`
+//	}
 type RunbookProvisionInput struct {
 	Spec         RunbookProvisionSpec `json:"spec,omitempty"`
 	VariableList json.RawMessage      `json:"variable_list,omitempty"`
@@ -248,4 +254,16 @@ type RbRunlogStatus struct {
 type RbOutputVariable struct {
 	Name  string `json:"name,omitempty"`
 	Value string `json:"value,omitempty"`
+}
+
+type RecoveryPointsListInput struct {
+	Filter string `json:"filter,omitempty"`
+	Length int    `json:"length,omitempty"`
+	Offset int    `json:"offset,omitempty"`
+}
+
+type RecoveryPointsListResponse struct {
+	APIVersion string                   `json:"api_version,omitempty"`
+	Metadata   map[string]interface{}   `json:"metadata,omitempty"`
+	Entities   []map[string]interface{} `json:"entities,omitempty"`
 }
