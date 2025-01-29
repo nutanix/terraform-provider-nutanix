@@ -29,6 +29,7 @@ type Service interface {
 	GetRunbook(ctx context.Context, rbUUID string) (*RunbookResponse, error)
 	RbRunlogs(ctx context.Context, runlogUUID string) (*RbRunlogsResponse, error)
 	RecoveryPointsList(ctx context.Context, appUUID string, input *RecoveryPointsListInput) (*RecoveryPointsListResponse, error)
+	RunbookImport(ctx context.Context, input *RunbookImportInput) (*RunbookImportResponse, error)
 }
 
 func (op Operations) ProvisionBlueprint(ctx context.Context, bpUUID string, input *BlueprintProvisionInput) (*AppProvisionTaskOutput, error) {
@@ -242,4 +243,18 @@ func (op Operations) RecoveryPointsList(ctx context.Context, appUUID string, inp
 	}
 
 	return listResponse, op.client.Do(ctx, req, listResponse)
+}
+
+func (op Operations) RunbookImport(ctx context.Context, input *RunbookImportInput) (*RunbookImportResponse, error) {
+	path := "/runbooks/import_json"
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
+
+	RbImportResponse := new(RunbookImportResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return RbImportResponse, op.client.Do(ctx, req, RbImportResponse)
 }

@@ -625,7 +625,7 @@ func resourceNutanixCalmAppProvisionUpdate(ctx context.Context, d *schema.Resour
 	}
 
 	if _, errWaitTask := appStateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for app (%s): %s", errWaitTask)
+		return diag.Errorf("error waiting for app: %s", errWaitTask)
 	}
 	return resourceNutanixCalmAppProvisionRead(ctx, d, meta)
 }

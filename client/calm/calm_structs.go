@@ -174,15 +174,15 @@ type ActionRunStatus struct {
 }
 
 type ActionInput struct {
-	Spec       TaskSpec               `json:"spec"`
-	APIVersion string                 `json:"api_version"`
-	Metadata   map[string]interface{} `json:"metadata"`
+	Spec       TaskSpec               `json:"spec,omitempty"`
+	APIVersion string                 `json:"api_version,omitempty"`
+	Metadata   map[string]interface{} `json:"metadata,omitempty"`
 }
 
 type TaskSpec struct {
-	Args       []*VariableList `json:"args"`
-	TargetUUID string          `json:"target_uuid"`
-	TargetKind string          `json:"target_kind"`
+	Args       []*VariableList `json:"args,omitempty"`
+	TargetUUID string          `json:"target_uuid,omitempty"`
+	TargetKind string          `json:"target_kind,omitempty"`
 }
 
 //	type AppCustomActionResponse struct {
@@ -254,4 +254,56 @@ type RecoveryPointsListResponse struct {
 	APIVersion string                   `json:"api_version,omitempty"`
 	Metadata   map[string]interface{}   `json:"metadata,omitempty"`
 	Entities   []map[string]interface{} `json:"entities,omitempty"`
+}
+
+type RefObject struct {
+	Kind string `json:"kind,omitempty"`
+	Name string `json:"name,omitempty"`
+}
+
+type TaskDef struct {
+	Name             string                 `json:"name"`
+	Type             string                 `json:"type"`
+	Attrs            map[string]interface{} `json:"attrs"`
+	ChildTaskRefList []RefObject            `json:"child_tasks_local_reference_list"`
+	StatusMapList    []interface{}          `json:"status_map_list"`
+	VariableList     []interface{}          `json:"variable_list"`
+	Retries          string                 `json:"retries"`
+	Timeout          string                 `json:"timeout_secs"`
+}
+
+type RunbookDefinition struct {
+	Name               string        `json:"name"`
+	Description        string        `json:"description"`
+	MainTaskLocalRef   RefObject     `json:"main_task_local_reference"`
+	TaskDefList        []TaskDef     `json:"task_definition_list"`
+	VariableList       []interface{} `json:"variable_list"`
+	OutputVariableList []interface{} `json:"output_variable_list"`
+}
+
+type RunbookResources struct {
+	Runbook           RunbookDefinition      `json:"runbook"`
+	EndpointDefList   []interface{}          `json:"endpoint_definition_list"`
+	CredentialDefList []interface{}          `json:"credential_definition_list"`
+	DefaultTargetRef  RefObject              `json:"default_target_reference"`
+	ClientAttrs       map[string]interface{} `json:"client_attrs"`
+}
+
+type RunbookSpec struct {
+	Name        string           `json:"name"`
+	Description string           `json:"description"`
+	Resources   RunbookResources `json:"resources"`
+}
+
+type RunbookImportInput struct {
+	Spec       RunbookSpec            `json:"spec"`
+	APIVersion string                 `json:"api_version"`
+	Metadata   map[string]interface{} `json:"metadata"`
+}
+
+type RunbookImportResponse struct {
+	Status     map[string]interface{} `json:"status"`
+	Spec       map[string]interface{} `json:"spec"`
+	Metadata   map[string]interface{} `json:"metadata"`
+	APIVersion string                 `json:"api_version"`
 }
