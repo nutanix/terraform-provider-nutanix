@@ -31,6 +31,8 @@ type Service interface {
 	GetAppProtectionPolicyList(ctx context.Context, bpUUID string, appUUID string, configUUID string, policyListInput *PolicyListInput) (*PolicyListResponse, error)
 	RecoveryPointsList(ctx context.Context, appUUID string, input *RecoveryPointsListInput) (*RecoveryPointsListResponse, error)
 	RecoveryPointsDelete(ctx context.Context, appUUID string, input *ActionInput) (*AppTaskResponse, error)
+	RunbookImport(ctx context.Context, input *RunbookImportInput) (*RunbookImportResponse, error)
+	DeleteRunbook(ctx context.Context, RbUUID string) (*DeleteRbResp, error)
 }
 
 func (op Operations) ProvisionBlueprint(ctx context.Context, bpUUID string, input *BlueprintProvisionInput) (*AppProvisionTaskOutput, error) {
@@ -258,6 +260,26 @@ func (op Operations) RecoveryPointsList(ctx context.Context, appUUID string, inp
 	}
 
 	return listResponse, op.client.Do(ctx, req, listResponse)
+}
+
+func (op Operations) RunbookImport(ctx context.Context, input *RunbookImportInput) (*RunbookImportResponse, error) {
+	path := "/runbooks/import_json"
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
+
+	RbImportResponse := new(RunbookImportResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return RbImportResponse, op.client.Do(ctx, req, RbImportResponse)
+}
+
+func (op Operations) DeleteRunbook(ctx context.Context, RbUUID string) (*DeleteRbResp, error) {
+	httpReq, err := op.client.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/runbooks/%s", RbUUID), nil)
+	if err != nil {
+	return res, op.client.Do(ctx, httpReq, res)
 }
 
 func (op Operations) RecoveryPointsDelete(ctx context.Context, appUUID string, input *ActionInput) (*AppTaskResponse, error) {
