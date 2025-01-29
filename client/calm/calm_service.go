@@ -30,6 +30,7 @@ type Service interface {
 	RbRunlogs(ctx context.Context, runlogUUID string) (*RbRunlogsResponse, error)
 	RecoveryPointsList(ctx context.Context, appUUID string, input *RecoveryPointsListInput) (*RecoveryPointsListResponse, error)
 	RunbookImport(ctx context.Context, input *RunbookImportInput) (*RunbookImportResponse, error)
+	DeleteRunbook(ctx context.Context, appUUID string) (*DeleteAppResp, error)
 }
 
 func (op Operations) ProvisionBlueprint(ctx context.Context, bpUUID string, input *BlueprintProvisionInput) (*AppProvisionTaskOutput, error) {
@@ -257,4 +258,13 @@ func (op Operations) RunbookImport(ctx context.Context, input *RunbookImportInpu
 	}
 
 	return RbImportResponse, op.client.Do(ctx, req, RbImportResponse)
+}
+
+func (op Operations) DeleteRunbook(ctx context.Context, id string) (*DeleteRbResp, error) {
+	httpReq, err := op.client.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/runbooks/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(DeleteRbResp)
+	return res, op.client.Do(ctx, httpReq, res)
 }

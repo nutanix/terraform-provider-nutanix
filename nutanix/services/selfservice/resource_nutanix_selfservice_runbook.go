@@ -107,6 +107,14 @@ func resourceNutanixCalmRunbookUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceNutanixCalmRunbookDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).Calm
+
+	log.Printf("[Debug] Destroying the runbook with UUID %s", d.Id())
+
+	if _, err := conn.Service.DeleteRunbook(ctx, d.Id()); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 
