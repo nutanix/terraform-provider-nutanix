@@ -19,22 +19,22 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func ResourceNutanixCalmAppSnapshot() *schema.Resource {
+func ResourceNutanixCalmAppRecoveryPoint() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceNutanixCalmAppSnapshotCreate,
-		ReadContext:   resourceNutanixCalmAppSnapshotRead,
-		UpdateContext: resourceNutanixCalmAppSnapshotUpdate,
-		DeleteContext: resourceNutanixCalmAppSnapshotDelete,
+		CreateContext: resourceNutanixCalmAppRecoveryPointCreate,
+		ReadContext:   resourceNutanixCalmAppRecoveryPointRead,
+		UpdateContext: resourceNutanixCalmAppRecoveryPointUpdate,
+		DeleteContext: resourceNutanixCalmAppRecoveryPointDelete,
 		Schema: map[string]*schema.Schema{
 			"app_uuid": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"snapshot_action_name": {
+			"action_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"snapshot_name": {
+			"recovery_point_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -42,11 +42,11 @@ func ResourceNutanixCalmAppSnapshot() *schema.Resource {
 	}
 }
 
-func resourceNutanixCalmAppSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNutanixCalmAppRecoveryPointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).Calm
 	appUUID := d.Get("app_uuid").(string)
-	snapshotActionName := d.Get("snapshot_action_name").(string)
-	snapshotName := d.Get("snapshot_name").(string)
+	snapshotActionName := d.Get("action_name").(string)
+	snapshotName := d.Get("recovery_point_name").(string)
 
 	appResp, err := conn.Service.GetApp(ctx, appUUID)
 	if err != nil {
@@ -123,19 +123,19 @@ func resourceNutanixCalmAppSnapshotCreate(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func resourceNutanixCalmAppSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNutanixCalmAppRecoveryPointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func resourceNutanixCalmAppSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNutanixCalmAppRecoveryPointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 
-func resourceNutanixCalmAppSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceNutanixCalmAppRecoveryPointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
 	conn := meta.(*conns.Client).Calm
 	appUUID := d.Get("app_uuid").(string)
-	snapshotName := d.Get("snapshot_name").(string)
+	snapshotName := d.Get("recovery_point_name").(string)
 	log.Printf("DELETE CALLED FOR %s %s", appUUID, snapshotName)
 	length := 250
 	offset := 0
@@ -153,8 +153,6 @@ func resourceNutanixCalmAppSnapshotDelete(ctx context.Context, d *schema.Resourc
 		fmt.Println("Error unmarshalling Spec to get metadata:", err)
 	}
 
-	fmt.Println("KUSH1:", appMetadata)
-
 	substrateReference := fetchSubstrateReference(appStatus)
 
 	currTime := strconv.FormatInt(time.Now().Unix(), 10)
@@ -165,14 +163,10 @@ func resourceNutanixCalmAppSnapshotDelete(ctx context.Context, d *schema.Resourc
 	listInput.Length = length
 	listInput.Offset = offset
 
-	fmt.Println("KUSH2:", listInput)
-
 	listResp, err := conn.Service.RecoveryPointsList(ctx, appUUID, listInput)
 	if err != nil {
 		return diag.FromErr(err)
 	}
-
-	fmt.Println("KUSH3:", listResp)
 
 	var snapshotGroupId string
 
@@ -194,8 +188,6 @@ func resourceNutanixCalmAppSnapshotDelete(ctx context.Context, d *schema.Resourc
 			}
 		}
 	}
-
-	fmt.Println("KUSH4:", snapshotGroupId)
 
 	snapshotSpec := &calm.TaskSpec{}
 	snapshotSpec.TargetUUID = appUUID
