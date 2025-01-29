@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/terraform-providers/terraform-provider-nutanix/client/calm"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/client"
 )
 
@@ -30,7 +29,8 @@ type Service interface {
 	GetRunbook(ctx context.Context, rbUUID string) (*RunbookResponse, error)
 	RbRunlogs(ctx context.Context, runlogUUID string) (*RbRunlogsResponse, error)
 	RecoveryPointsList(ctx context.Context, appUUID string, input *RecoveryPointsListInput) (*RecoveryPointsListResponse, error)
-	UploadBlueprint(ctx context.Context, bpName string, projectUUID string, passphrase string, bpFilePath string) (*BlueprintResponse, error)
+	CreateBlueprint(ctx context.Context, input CreateBlueprintResponse) (*CreateBlueprintResponse, error)
+	UpdateBlueprint(ctx context.Context, bpUUID string, input CreateBlueprintResponse) (*CreateBlueprintResponse, error)
 }
 
 func (op Operations) ProvisionBlueprint(ctx context.Context, bpUUID string, input *BlueprintProvisionInput) (*AppProvisionTaskOutput, error) {
@@ -246,19 +246,26 @@ func (op Operations) RecoveryPointsList(ctx context.Context, appUUID string, inp
 	return listResponse, op.client.Do(ctx, req, listResponse)
 }
 
-func (op Operations) UploadBlueprint(ctx context.Context, bpName string, projectUUID string, passphrase string, bpFilePath string) (*BlueprintResponse, error) {
-	path := "/blueprints/import_file"
-
-	input := &calm.UploadBlueprintInput{}
-
-	input.bpFilePath = bpFilePath
-	input.bpName = bpName
-	input.projectUUID = projectUUID
-	input.PassPhrase = passphrase
+func (op Operations) CreateBlueprint(ctx context.Context, input CreateBlueprintResponse) (*CreateBlueprintResponse, error) {
+	path := "/blueprints/import_json"
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
 
-	bpResponse := new(BlueprintResponse)
+	bpResponse := new(CreateBlueprintResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return bpResponse, op.client.Do(ctx, req, bpResponse)
+}
+
+func (op Operations) UpdateBlueprint(ctx context.Context, bpUUID string, input CreateBlueprintResponse) (*CreateBlueprintResponse, error) {
+	path := fmt.Sprintf("/blueprints/%s", bpUUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, input)
+
+	bpResponse := new(CreateBlueprintResponse)
 
 	if err != nil {
 		return nil, err
