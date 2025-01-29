@@ -184,3 +184,18 @@ type TaskSpec struct {
 	TargetUUID string          `json:"target_uuid"`
 	TargetKind string          `json:"target_kind"`
 }
+type ActionResponse struct {
+	Status ActionRunStatus `json:"status,omitempty"`
+}
+
+type RecoveryPointsListInput struct {
+	Filter string `json:"filter,omitempty"`
+	Length int    `json:"length,omitempty"`
+	Offset int    `json:"offset,omitempty"`
+}
+
+type RecoveryPointsListResponse struct {
+	APIVersion string                   `json:"api_version,omitempty"`
+	Metadata   map[string]interface{}   `json:"metadata,omitempty"`
+	Entities   []map[string]interface{} `json:"entities,omitempty"`
+}
