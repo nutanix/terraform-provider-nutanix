@@ -32,6 +32,8 @@ type BlueprintResponse struct {
 	Spec json.RawMessage `json:"spec,omitempty" mapstructure:"spec,omitempty"`
 
 	Status BpRespStatus `json:"status,omitempty" mapstructure:"status,omitempty"`
+
+	Metadata json.RawMessage `json:"metadata,omitempty" mapstructure:"metadata,omitempty"`
 }
 
 type BpRespStatus struct {
@@ -171,4 +173,30 @@ type AppPatchResponse struct {
 
 type ActionRunStatus struct {
 	RunlogUUID string `json:"runlog_uuid"`
+}
+
+type ActionInput struct {
+	Spec       TaskSpec               `json:"spec"`
+	APIVersion string                 `json:"api_version"`
+	Metadata   map[string]interface{} `json:"metadata"`
+}
+
+type TaskSpec struct {
+	Args       []*VariableList `json:"args"`
+	TargetUUID string          `json:"target_uuid"`
+	TargetKind string          `json:"target_kind"`
+}
+
+type ActionResponse struct {
+	Status ActionRunStatus `json:"status,omitempty"`
+}
+
+type PolicyListInput struct {
+	Length int    `json:"length,omitempty"`
+	Offset int    `json:"offset,omitempty"`
+	Filter string `json:"filter,omitempty"`
+}
+
+type PolicyListResponse struct {
+	Entities []map[string]interface{} `json:"entities,omitempty"`
 }
