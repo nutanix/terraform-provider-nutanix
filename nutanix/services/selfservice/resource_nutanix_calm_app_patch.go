@@ -29,66 +29,83 @@ func ResourceNutanixCalmAppPatch() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"run_action": {
+			"config_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"runlog_uuid": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"vm_config": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"config_name": {
+						"memory_size_mib": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"num_sockets": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"num_vcpus_per_socket": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"nics": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"index": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"operation": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"subnet_uuid": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"categories": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"value": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"operation": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"vm_config": {
-							Type:     schema.TypeList,
+					},
+				},
+			},
+			"disks": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"disk_size_mib": {
+							Type:     schema.TypeInt,
 							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"memory_size_mib": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"num_sockets": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"num_vcpus_per_socket": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-								},
-							},
 						},
-						"nics": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"index": {
-										Type:     schema.TypeInt,
-										Required: true,
-									},
-									"operation": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"categories": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"value": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"operation": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
+						"operation": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
@@ -140,129 +157,194 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 	fetchSpec.Args.Patch, patchUUID = expandPatchSpec(objSpec, patchName)
 	// fetchSpec.Args.Variables = []
 
-	if runtimeEditables, ok := d.GetOk("run_action"); ok {
-		// get the path list from  objSpec
+	if vmConfigRuntimeEditable, ok := d.GetOk("vm_config"); ok {
+		vmConfigRuntimeEditable := vmConfigRuntimeEditable.([]interface{})
+		for _, vmConfig := range vmConfigRuntimeEditable {
+			vmConfigMap := vmConfig.(map[string]interface{})
+			// log.Println("VM CONFIG MAP::::", vmConfigMap)
+			if numSockets, ok := vmConfigMap["num_sockets"].(int); ok {
+				log.Println("NUM SOCKETS::::", numSockets)
+				fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["num_sockets_ruleset"].(map[string]interface{})["value"] = numSockets
+			}
+			if memorySizeMib, ok := vmConfigMap["memory_size_mib"].(int); ok {
+				log.Println("MEMORY SIZE::::", memorySizeMib)
+				fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["memory_size_mib_ruleset"].(map[string]interface{})["value"] = memorySizeMib
+			}
+			if numVcpusPerSocket, ok := vmConfigMap["num_vcpus_per_socket"].(int); ok {
+				log.Println("NUM VCPUS PER SOCKET::::", numVcpusPerSocket)
+				fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["num_vcpus_per_socket_ruleset"].(map[string]interface{})["value"] = numVcpusPerSocket
+			}
+		}
+	}
 
-		// runtimeVMConfigMap := runtime.([]interface{})[0].(map[string]interface{})["vm_config"].(map[string]interface{})
-		// num_sockets := runtimeVMConfigMap["num_sockets"].(int)
-
-		// print("NUM SOCKETS::::", num_sockets)
-
-		// func to return attrs_list from patch_list
-
-		attsDataMap := getAttrsListFromPatchList(objSpec, patchName)
-		log.Println("ATTRS LIST::::", attsDataMap)
-
-		runtimeEditablesList := runtimeEditables.([]interface{})
-
-		for _, runtimeEditable := range runtimeEditablesList {
-			runtimeEditableMap := runtimeEditable.(map[string]interface{})
-
-			if vmconfig, ok := runtimeEditableMap["vm_config"].([]interface{}); ok {
-				for _, vmConfig := range vmconfig {
-					vmConfigMap := vmConfig.(map[string]interface{})
-					// log.Println("VM CONFIG MAP::::", vmConfigMap)
-					if numSockets, ok := vmConfigMap["num_sockets"].(int); ok {
-						log.Println("NUM SOCKETS::::", numSockets)
-						fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["num_sockets_ruleset"].(map[string]interface{})["value"] = numSockets
-					}
-					if memorySizeMib, ok := vmConfigMap["memory_size_mib"].(int); ok {
-						log.Println("MEMORY SIZE::::", memorySizeMib)
-						fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["memory_size_mib_ruleset"].(map[string]interface{})["value"] = memorySizeMib
-					}
-					if numVcpusPerSocket, ok := vmConfigMap["num_vcpus_per_socket"].(int); ok {
-						log.Println("NUM VCPUS PER SOCKET::::", numVcpusPerSocket)
-						fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["num_vcpus_per_socket_ruleset"].(map[string]interface{})["value"] = numVcpusPerSocket
-					}
+	if categoriesRuntimeEditable, ok := d.GetOk("categories"); ok {
+		categoriesRuntimeEditable := categoriesRuntimeEditable.([]interface{})
+		for _, category := range categoriesRuntimeEditable {
+			categoryMap := category.(map[string]interface{})
+			log.Println("CATEGORY MAP::::", categoryMap)
+			categoryList := fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_categories"].([]interface{})
+			if operation, ok := categoryMap["operation"].(string); ok {
+				if operation == "add" {
+					categoryList = append(categoryList, map[string]interface{}{
+						"value":     categoryMap["value"],
+						"operation": "add",
+					})
+				} else {
+					categoryList = append(categoryList, map[string]interface{}{
+						"value":     categoryMap["value"],
+						"operation": "delete",
+					})
 				}
 			}
-			if categories, ok := runtimeEditableMap["categories"].([]interface{}); ok {
-				for _, category := range categories {
-					categoryMap := category.(map[string]interface{})
-					log.Println("CATEGORY MAP::::", categoryMap)
-					categoryList := fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_categories"].([]interface{})
-					if operation, ok := categoryMap["operation"].(string); ok {
-						if operation == "add" {
-							categoryList = append(categoryList, map[string]interface{}{
-								"value":     categoryMap["value"],
-								"operation": "add",
-							})
-						} else {
-							categoryList = append(categoryList, map[string]interface{}{
-								"value":     categoryMap["value"],
-								"operation": "delete",
-							})
+			fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_categories"] = categoryList
+		}
+	}
+
+	if nicsRuntimeEditable, ok := d.GetOk("nics"); ok {
+		nicsRuntimeEditable := nicsRuntimeEditable.([]interface{})
+		for _, nic := range nicsRuntimeEditable {
+			nicMap := nic.(map[string]interface{})
+			log.Println("NIC MAP::::", nicMap)
+			nicList := fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_nic_list"].([]interface{})
+			if operation, ok := nicMap["operation"].(string); ok {
+				if operation == "add" {
+					nicList = append(nicList, map[string]interface{}{
+						"identifier": nicMap["index"],
+						"operation":  "add",
+						"subnet_reference": map[string]interface{}{
+							"kind": "subnet",
+							"type": "",
+							"name": "",
+							"uuid": nicMap["subnet_uuid"],
+						},
+					})
+				} else {
+					nicList = append(nicList, map[string]interface{}{
+						"identifier": nicMap["index"],
+						"operation":  "delete",
+						"subnet_reference": map[string]interface{}{
+							"kind": "subnet",
+							"name": "",
+							"uuid": nicMap["subnet_uuid"],
+						},
+					})
+				}
+			}
+			fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_nic_list"] = nicList
+		}
+	}
+	if disksRuntimeEditable, ok := d.GetOk("disks"); ok {
+		disksRuntimeEditable := disksRuntimeEditable.([]interface{})
+		start_index := 0
+		for _, disk := range disksRuntimeEditable {
+			diskMap := disk.(map[string]interface{})
+			log.Println("DISK MAP::::", diskMap)
+			diskList := fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_disk_list"].([]interface{})
+			log.Println("DISK LIST::::", diskList)
+			if operation, ok := diskMap["operation"].(string); ok {
+				if operation == "add" {
+					// config_details = fetchSpec.Args.Patch["resources"]
+					for indx := start_index; indx < len(diskList); indx++ {
+						if diskList[indx].(map[string]interface{})["operation"].(string) == operation {
+							diskSizeMib := diskList[indx].(map[string]interface{})["disk_size_mib"].(map[string]interface{})
+							diskSizeMib["value"] = diskMap["disk_size_mib"]
+							start_index = indx + 1
+							break
 						}
 					}
-					fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_categories"] = categoryList
+				} else {
+					diskList = append(diskList, map[string]interface{}{
+						"disk_size_mib": diskMap["disk_size_mib"],
+						"operation":     "delete",
+					})
 				}
 			}
-
-			// // fetch the current nic present in app
-			// getNicList := fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_nic_list"].([]interface{})
-			// for _, getNicMap := range getNicList {
-			// 	// now get the nic in config spec
-			// 	fmt.Println("Length of NIC LIST::::", len(getNicList))
-			// 	if nics, ok := runtimeEditableMap["nics"].([]interface{}); ok {
-			// 		for _, nic := range nics {
-			// 			nicMap := nic.(map[string]interface{})
-			// 			idx := nicMap["index"].(int)
-			// 			ops := nicMap["operation"].(string)
-			// 			fmt.Println("IDX::::", idx)
-			// 			fmt.Println("OPS::::", ops)
-
-			// 			getNicList = append(getNicList, map[string]interface{}{
-			// 				"identifier": idx,
-			// 				"operation":  ops,
-			// 			})
-			// 			// if getNicMap.(map[string]interface{})["identifier"].(string) == string(idx) {
-			// 			// 	getNicMap.(map[string]interface{})["operation"] = ops
-			// 			// 	fmt.Println("INSIDE NIC MAP")
-			// 			// }
-			// 		}
-			// 	}
-			// }
-
-			// if resource, ok := objStatus["resources"].(map[string]interface{}); ok {
-			// 	fmt.Println("INSIDE RESOURCE")
-			// 	// Access the list "app_profile"
-			// 	if deployList, ok := resource["deployment_list"].([]interface{}); ok {
-			// 		fmt.Println("INSIDE DEPLOYMENT")
-			// 		for _, deploy := range deployList {
-			// 			deployMap := deploy.(map[string]interface{})
-			// 			log.Println("DEPLOYYYYY MAPPPPPPPP")
-			// 			if subs, ok := deployMap["substrate_configuration"].(map[string]interface{}); ok {
-			// 				fmt.Println("INSIDE SUBSTRATE")
-			// 				if element, ok := subs["element_list"].([]interface{}); ok {
-			// 					for _, elem := range element {
-			// 						fmt.Println("INSIDE ELEMENT")
-			// 						if nics, ok := elem.(map[string]interface{})["create_spec"].(map[string]interface{}); ok {
-			// 							fmt.Println("create_spec")
-			// 							if resources, ok := nics["resources"].(map[string]interface{}); ok {
-			// 								if nicList, ok := resources["nic_list"].([]interface{}); ok {
-			// 									fmt.Println("INSIDE NICS LIST")
-			// 									for _, nic := range nicList {
-			// 										nicMap := nic.(map[string]interface{})
-			// 										identifier := nicMap["nic_type"].(string)
-			// 										fmt.Println("NIC TYPE::::", identifier)
-			// 										// if nics, ok := runtimeEditableMap["nics"].([]interface{}); ok {
-			// 										// 	for _, nic := range nics {
-			// 										// 		fmt.Println("NIC IDENTIFIER::::", nic.(map[string]interface{}))
-			// 										// 	}
-			// 										// }
-			// 									}
-			// 								}
-			// 							}
-			// 						}
-			// 					}
-			// 				}
-			// 			}
-			// 		}
-			// 	}
-			// }
+			fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_disk_list"] = diskList
 		}
-
 	}
+	// if runtimeEditables, ok := d.GetOk("run_action"); ok {
+	// 	// get the path list from  objSpec
+
+	// 	// runtimeVMConfigMap := runtime.([]interface{})[0].(map[string]interface{})["vm_config"].(map[string]interface{})
+	// 	// num_sockets := runtimeVMConfigMap["num_sockets"].(int)
+
+	// 	// print("NUM SOCKETS::::", num_sockets)
+
+	// 	// func to return attrs_list from patch_list
+
+	// 	attsDataMap := getAttrsListFromPatchList(objSpec, patchName)
+	// 	log.Println("ATTRS LIST::::", attsDataMap)
+
+	// 	runtimeEditablesList := runtimeEditables.([]interface{})
+
+	// 	for _, runtimeEditable := range runtimeEditablesList {
+	// 		runtimeEditableMap := runtimeEditable.(map[string]interface{})
+
+	// 		// // fetch the current nic present in app
+	// 		// getNicList := fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_nic_list"].([]interface{})
+	// 		// for _, getNicMap := range getNicList {
+	// 		// 	// now get the nic in config spec
+	// 		// 	fmt.Println("Length of NIC LIST::::", len(getNicList))
+	// 		// 	if nics, ok := runtimeEditableMap["nics"].([]interface{}); ok {
+	// 		// 		for _, nic := range nics {
+	// 		// 			nicMap := nic.(map[string]interface{})
+	// 		// 			idx := nicMap["index"].(int)
+	// 		// 			ops := nicMap["operation"].(string)
+	// 		// 			fmt.Println("IDX::::", idx)
+	// 		// 			fmt.Println("OPS::::", ops)
+
+	// 		// 			getNicList = append(getNicList, map[string]interface{}{
+	// 		// 				"identifier": idx,
+	// 		// 				"operation":  ops,
+	// 		// 			})
+	// 		// 			// if getNicMap.(map[string]interface{})["identifier"].(string) == string(idx) {
+	// 		// 			// 	getNicMap.(map[string]interface{})["operation"] = ops
+	// 		// 			// 	fmt.Println("INSIDE NIC MAP")
+	// 		// 			// }
+	// 		// 		}
+	// 		// 	}
+	// 		// }
+
+	// 		// if resource, ok := objStatus["resources"].(map[string]interface{}); ok {
+	// 		// 	fmt.Println("INSIDE RESOURCE")
+	// 		// 	// Access the list "app_profile"
+	// 		// 	if deployList, ok := resource["deployment_list"].([]interface{}); ok {
+	// 		// 		fmt.Println("INSIDE DEPLOYMENT")
+	// 		// 		for _, deploy := range deployList {
+	// 		// 			deployMap := deploy.(map[string]interface{})
+	// 		// 			log.Println("DEPLOYYYYY MAPPPPPPPP")
+	// 		// 			if subs, ok := deployMap["substrate_configuration"].(map[string]interface{}); ok {
+	// 		// 				fmt.Println("INSIDE SUBSTRATE")
+	// 		// 				if element, ok := subs["element_list"].([]interface{}); ok {
+	// 		// 					for _, elem := range element {
+	// 		// 						fmt.Println("INSIDE ELEMENT")
+	// 		// 						if nics, ok := elem.(map[string]interface{})["create_spec"].(map[string]interface{}); ok {
+	// 		// 							fmt.Println("create_spec")
+	// 		// 							if resources, ok := nics["resources"].(map[string]interface{}); ok {
+	// 		// 								if nicList, ok := resources["nic_list"].([]interface{}); ok {
+	// 		// 									fmt.Println("INSIDE NICS LIST")
+	// 		// 									for _, nic := range nicList {
+	// 		// 										nicMap := nic.(map[string]interface{})
+	// 		// 										identifier := nicMap["nic_type"].(string)
+	// 		// 										fmt.Println("NIC TYPE::::", identifier)
+	// 		// 										// if nics, ok := runtimeEditableMap["nics"].([]interface{}); ok {
+	// 		// 										// 	for _, nic := range nics {
+	// 		// 										// 		fmt.Println("NIC IDENTIFIER::::", nic.(map[string]interface{}))
+	// 		// 										// 	}
+	// 		// 										// }
+	// 		// 									}
+	// 		// 								}
+	// 		// 							}
+	// 		// 						}
+	// 		// 					}
+	// 		// 				}
+	// 		// 			}
+	// 		// 		}
+	// 		// 	}
+	// 		// }
+	// 	}
+
+	// }
 	fetchInput.Spec = *fetchSpec
 
 	// log.Println("HELLLLLOOOOOO2222")
@@ -293,7 +375,11 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 		return diag.Errorf("error waiting for app to perform Patch(%s): %s", errWaitTask)
 	}
 
-	d.SetId(resource.UniqueId())
+	if err := d.Set("runlog_uuid", runlogUUID); err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.SetId(runlogUUID)
 	return nil
 }
 

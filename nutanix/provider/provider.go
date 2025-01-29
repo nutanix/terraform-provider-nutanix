@@ -420,6 +420,7 @@ func Provider() *schema.Provider {
 			"nutanix_lcm_config_v2":                           lcmv2.ResourceNutanixLcmConfigV2(),
 			"nutanix_calm_app_provision":                      selfservice.ResourceNutanixCalmAppProvision(),
 			"nutanix_calm_app_patch":                          selfservice.ResourceNutanixCalmAppPatch(),
+			"nutanix_calm_app_custom_action":                  selfservice.ResourceNutanixCalmAppCustomAction(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
