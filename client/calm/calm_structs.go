@@ -255,3 +255,9 @@ type RecoveryPointsListResponse struct {
 	Metadata   map[string]interface{}   `json:"metadata,omitempty"`
 	Entities   []map[string]interface{} `json:"entities,omitempty"`
 }
+
+type RunbookImportInput struct {
+}
+
+type RunbookImportResponse struct {
+}
