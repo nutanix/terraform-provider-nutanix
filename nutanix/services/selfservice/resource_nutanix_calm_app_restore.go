@@ -87,14 +87,14 @@ func resourceNutanixCalmAppRestoreCreate(ctx context.Context, d *schema.Resource
 
 	restoreConfig.Name = "recovery_point_group_uuid"
 	restoreConfig.Value = recoveryPointUUID
-	restoreActionUuid, restoreActionTaskUuid := fetchRestoreActionUUID(appStatus, restoreActionName)
-	if restoreActionUuid == "" {
+	restoreActionUUID, restoreActionTaskUUID := fetchRestoreActionUUID(appStatus, restoreActionName)
+	if restoreActionUUID == "" {
 		return diag.Errorf("UUID for restore action with name %s not found.", restoreActionName)
 	}
-	if restoreActionTaskUuid == "" {
+	if restoreActionTaskUUID == "" {
 		return diag.Errorf("UUID for restore action task with name %s not found.", restoreActionName)
 	}
-	restoreConfig.TaskUUID = restoreActionTaskUuid
+	restoreConfig.TaskUUID = restoreActionTaskUUID
 
 	restoreSpec.Args = append(restoreSpec.Args, restoreConfig)
 
@@ -103,7 +103,7 @@ func resourceNutanixCalmAppRestoreCreate(ctx context.Context, d *schema.Resource
 	restoreInput.Metadata = appMetadata
 	restoreInput.Spec = *restoreSpec
 
-	restoreResp, err := conn.Service.PerformActionUuid(ctx, appUUID, restoreActionUuid, restoreInput)
+	restoreResp, err := conn.Service.PerformActionUuid(ctx, appUUID, restoreActionUUID, restoreInput)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -154,20 +154,20 @@ func resourceNutanixCalmAppRestoreDelete(ctx context.Context, d *schema.Resource
 }
 
 func fetchRestoreActionUUID(appStatus map[string]interface{}, restoreActionName string) (string, string) {
-	var restoreActionTaskUuid string
-	var restoreActionUuid string
+	var restoreActionTaskUUID string
+	var restoreActionUUID string
 	if resources, ok := appStatus["resources"].(map[string]interface{}); ok {
 		if actionList, ok := resources["action_list"].([]interface{}); ok {
 			for _, action := range actionList {
 				if act, ok := action.(map[string]interface{}); ok {
 					if act["name"].(string) == restoreActionName {
-						restoreActionUuid = act["uuid"].(string)
+						restoreActionUUID = act["uuid"].(string)
 						if runbook, ok := act["runbook"].(map[string]interface{}); ok {
 							if taskDefinitionList, ok := runbook["task_definition_list"].([]interface{}); ok {
 								for _, taskDef := range taskDefinitionList {
 									if task, ok := taskDef.(map[string]interface{}); ok {
 										if task["type"].(string) == "CALL_CONFIG" {
-											restoreActionTaskUuid = task["uuid"].(string)
+											restoreActionTaskUUID = task["uuid"].(string)
 										}
 									}
 								}
@@ -178,7 +178,7 @@ func fetchRestoreActionUUID(appStatus map[string]interface{}, restoreActionName 
 			}
 		}
 	}
-	return restoreActionUuid, restoreActionTaskUuid
+	return restoreActionUUID, restoreActionTaskUUID
 }
 
 func RestoreStateRefreshFunc(ctx context.Context, client *calm.Client, appUUID, runlogUUID string) resource.StateRefreshFunc {
