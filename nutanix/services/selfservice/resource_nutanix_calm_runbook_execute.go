@@ -4,21 +4,21 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"time"
-	"strings"
 	"log"
+	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-nutanix/client/calm"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 const (
-// 	ERROR              = "ERROR"
-// 	DEFAULTWAITTIMEOUT = 60
+// ERROR              = "ERROR"
+// DEFAULTWAITTIMEOUT = 60
 )
 
 func ResourceNutanixCalmRunbookExecute() *schema.Resource {
@@ -29,12 +29,12 @@ func ResourceNutanixCalmRunbookExecute() *schema.Resource {
 		DeleteContext: resourceNutanixCalmRunbookExecuteDelete,
 		Schema: map[string]*schema.Schema{
 			"rb_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"rb_uuid": {
-				Type:          schema.TypeString,
-				Optional:      true,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -45,9 +45,9 @@ func ResourceNutanixCalmRunbookExecute() *schema.Resource {
 				Computed: true,
 			},
 			"output_variable_list": {
-			    Type:     schema.TypeList,
-			    Computed: true,
-			    Elem: &schema.Resource{
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:     schema.TypeString,
@@ -61,10 +61,10 @@ func ResourceNutanixCalmRunbookExecute() *schema.Resource {
 				},
 			},
 			"variable_list": {
-			    Type:     schema.TypeList,
-			    Computed: true,
-			    Optional: true,
-			    Elem: &schema.Resource{
+				Type:     schema.TypeList,
+				Computed: true,
+				Optional: true,
+				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:     schema.TypeString,
@@ -120,23 +120,23 @@ func resourceNutanixCalmRunbookExecuteCreate(ctx context.Context, d *schema.Reso
 
 	d.Set("rb_uuid", rb_uuid)
 
-    var args []calm.RunbookArgs
-    if variableList, ok := d.Get("variable_list").([]interface{}); ok {
-            for _, v := range variableList {
-                variable := v.(map[string]interface{})
-                log.Printf("%v", variable)
-                args = append(args, calm.RunbookArgs{
-                    Name:         variable["name"].(string),
-                    Value:        variable["value"].(string),
-                })
-            }
-        }
+	var args []calm.RunbookArgs
+	if variableList, ok := d.Get("variable_list").([]interface{}); ok {
+		for _, v := range variableList {
+			variable := v.(map[string]interface{})
+			log.Printf("%v", variable)
+			args = append(args, calm.RunbookArgs{
+				Name:  variable["name"].(string),
+				Value: variable["value"].(string),
+			})
+		}
+	}
 
-    input := &calm.RunbookProvisionInput{}
-    inputSpec := &calm.RunbookProvisionSpec{}
+	input := &calm.RunbookProvisionInput{}
+	inputSpec := &calm.RunbookProvisionSpec{}
 
-    inputSpec.Args = args
-    input.Spec = *inputSpec
+	inputSpec.Args = args
+	input.Spec = *inputSpec
 
 	output, err := conn.Service.ExecuteRunbook(ctx, rb_uuid, input)
 	if err != nil {
@@ -144,39 +144,39 @@ func resourceNutanixCalmRunbookExecuteCreate(ctx context.Context, d *schema.Reso
 	}
 
 	runlogUUID := output.Status.RunlogUUID
-    d.SetId(runlogUUID)
+	d.SetId(runlogUUID)
 
-    // poll till action is completed
+	// poll till action is completed
 	rbStateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING","ABORTING"},
-		Target:  []string{"SUCCESS","FAILURE","WARNING","ABORTED"},
+		Pending: []string{"PENDING", "RUNNING", "ABORTING"},
+		Target:  []string{"SUCCESS", "FAILURE", "WARNING", "ABORTED"},
 		Refresh: RbRunlogStateRefreshFunc(ctx, conn, runlogUUID),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
 		Delay:   5 * time.Second,
 	}
 
 	if _, errWaitTask := rbStateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for runbook to finish execute(%s): %s", errWaitTask)
+		return diag.Errorf("error waiting for runbook to finish execute: %s", errWaitTask)
 	}
 
 	// Fetch the final state after execution
-    finalRunlog, err := conn.Service.RbRunlogs(ctx, runlogUUID)
-    if err != nil {
-        return diag.Errorf("Error fetching final runlog state: %s", err)
-    }
+	finalRunlog, err := conn.Service.RbRunlogs(ctx, runlogUUID)
+	if err != nil {
+		return diag.Errorf("Error fetching final runlog state: %s", err)
+	}
 
-    // Set the runlog state in the resource data
-    if err := d.Set("state", finalRunlog.Status.State); err != nil {
-        return diag.Errorf("Error setting state in resource data: %s", err)
-    }
+	// Set the runlog state in the resource data
+	if err := d.Set("state", finalRunlog.Status.State); err != nil {
+		return diag.Errorf("Error setting state in resource data: %s", err)
+	}
 
-    outputVariable, _, err := RbOutputFunc(ctx, conn, runlogUUID)
-    if err != nil {
-        return diag.Errorf("Error fetching output variables: %s", err)
-    }
-    d.Set("output_variable_list", outputVariable)
+	outputVariable, _, err := RbOutputFunc(ctx, conn, runlogUUID)
+	if err != nil {
+		return diag.Errorf("Error fetching output variables: %s", err)
+	}
+	d.Set("output_variable_list", outputVariable)
 
-    return nil
+	return nil
 
 }
 
@@ -214,15 +214,14 @@ func RbOutputFunc(ctx context.Context, client *calm.Client, runlogUUID string) (
 		return nil, "", err
 	}
 
-    var outputVariables []map[string]interface{}
-    for _, outputVar := range v.Status.OutputVariableList {
-        // Append the output variable details as a map
-        outputVariables = append(outputVariables, map[string]interface{}{
-            "name":  outputVar.Name,
-            "value": outputVar.Value,
-        })
-    }
+	var outputVariables []map[string]interface{}
+	for _, outputVar := range v.Status.OutputVariableList {
+		// Append the output variable details as a map
+		outputVariables = append(outputVariables, map[string]interface{}{
+			"name":  outputVar.Name,
+			"value": outputVar.Value,
+		})
+	}
 
 	return outputVariables, "", nil
 }
-
