@@ -12,7 +12,7 @@ This operation Revert VM identified by {extId}. This does an in-place VM restore
 
 ## Example Usage
 
-``` hcl
+```hcl
 # revert Vm  
 resource "nutanix_vm_revert_v2" "example"{
   ext_id = "<VM_UUID>"

@@ -11,7 +11,7 @@ Attaches iSCSI initiator to a Volume Group identified by {extId}.
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_volume_group_v2" "vg"{
   name                               = "test_volume_group"
   cluster_reference                  = "<Cluster uuid>"

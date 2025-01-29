@@ -12,7 +12,7 @@ Create an Address Group
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_address_groups_v2" "addr_group"{
     name = "{{ name }}"
     description = "{{ desc }}"

@@ -12,7 +12,7 @@ Provides a resource to create an access control policy based on the input parame
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_access_control_policy" "test" {
 	name        = "NAME OF ACCESS CONTROL POLICY"
 	description = "DESCRIPTION OF THE ACCESS CONTROL POLICY"

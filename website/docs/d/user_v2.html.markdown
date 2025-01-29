@@ -12,7 +12,7 @@ Provides a datasource to View a User.
 
 ## Example Usage
 
-``` hcl
+```hcl
 data "nutanix_user_v2" "user"{
     ext_id = "<user ext Id>"
 }

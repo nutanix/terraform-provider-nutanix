@@ -12,7 +12,7 @@ Provides a resource to Create a Directory Service.
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_directory_services_v2" "example"{
   name = "directory services name"
   service_account {

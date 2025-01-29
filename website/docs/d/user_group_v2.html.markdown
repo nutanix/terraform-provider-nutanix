@@ -12,7 +12,7 @@ Provides a datasource to retrieve a user group based on the External Identifier 
 
 ## Example Usage
 
-``` hcl
+```hcl
 
 //Retrieve by ext_id
 data "nutanix_user_group_v2" "usergroup"{

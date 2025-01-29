@@ -12,7 +12,7 @@ External identifier of the replicated recovery point can be found in the task co
 
 ## Example Usage
 
-``` hcl
+```hcl
   # replicate RP 
   resource "nutanix_recovery_point_replicate_v2" "rp-example"{
     ext_id         = <recovery-point-uuid>

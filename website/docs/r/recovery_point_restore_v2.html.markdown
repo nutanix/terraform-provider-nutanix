@@ -12,7 +12,7 @@ A comma separated list of the created VM and volume group external identifiers c
 
 ## Example Usage
 
-``` hcl
+```hcl
   # restore RP 
 resource "nutanix_recovery_point_restore_v2" "example"{
   ext_id         = "<recovery_point_external_id>"

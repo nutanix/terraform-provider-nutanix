@@ -12,7 +12,7 @@ List all the Address Groups.
 
 ## Example Usage
 
-``` hcl
+```hcl
 
     data "nutanix_address_groups_v2" "addr_group"{ }
 

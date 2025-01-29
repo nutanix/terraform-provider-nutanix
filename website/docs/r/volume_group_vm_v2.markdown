@@ -12,7 +12,7 @@ Provides a resource to Create a new Volume Group.
 
 ## Example Usage
 
-``` hcl
+```hcl
 
 resource "nutanix_volume_group_vm_v2" "vg_vm_example"{
   volume_group_ext_id = "<vg uuid>"

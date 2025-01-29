@@ -12,7 +12,7 @@ Create an service Group
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_service_groups_v2" "service-group"{
 	name = "{{ name }}"
 	description = "{{ desc }}"

@@ -12,7 +12,7 @@ Get an Address Group by ExtID
 
 ## Example Usage
 
-``` hcl
+```hcl
 
   data "nutanix_address_group_v2" "addr_group"{
     ext_id = "{{ address_group uuid }}"

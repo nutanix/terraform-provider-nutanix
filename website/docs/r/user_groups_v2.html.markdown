@@ -12,7 +12,7 @@ Provides a resource to add a User group to the system..
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_user_groups_v2" "usr_group"{
   group_type         = "<group Type>"
   idp_id             = "<idp uuid of user group>"

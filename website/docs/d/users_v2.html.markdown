@@ -12,7 +12,7 @@ Provides a datasource to retrieve all User(s).
 
 ## Example Usage
 
-``` hcl
+```hcl
 data "nutanix_users_v2" "users"{}
 ```
 
