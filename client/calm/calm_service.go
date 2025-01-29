@@ -261,7 +261,7 @@ func (op Operations) RecoveryPointsList(ctx context.Context, appUUID string, inp
 }
 
 func (op Operations) RecoveryPointsDelete(ctx context.Context, appUUID string, input *ActionInput) (*AppTaskResponse, error) {
-	path := fmt.Sprintf("/apps/%s/recovery_point_delete", appUUID)
+	path := fmt.Sprintf("/apps/%s/recovery_group_delete", appUUID)
 
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
 

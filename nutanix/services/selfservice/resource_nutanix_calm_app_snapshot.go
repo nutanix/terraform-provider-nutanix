@@ -176,10 +176,20 @@ func resourceNutanixCalmAppSnapshotDelete(ctx context.Context, d *schema.Resourc
 
 	var snapshotGroupId string
 
+	foundRecoveryPoint := false
+
 	for _, entity := range listResp.Entities {
 		if status, ok := entity["status"].(map[string]interface{}); ok {
-			if snapshotName == status["name"].(string) {
-				snapshotGroupId = status["uuid"].(string)
+			if recovery_point_info_list, ok := status["recovery_point_info_list"].([]interface{}); ok {
+				for _, recovery_point := range recovery_point_info_list {
+					if snapshotName == recovery_point.(map[string]interface{})["name"].(string) {
+						snapshotGroupId = status["uuid"].(string)
+						foundRecoveryPoint = true
+						break
+					}
+				}
+			}
+			if foundRecoveryPoint {
 				break
 			}
 		}
@@ -195,6 +205,7 @@ func resourceNutanixCalmAppSnapshotDelete(ctx context.Context, d *schema.Resourc
 	snapshotConfig := &calm.VariableList{}
 	snapshotConfig.Name = "snapshot_group_id"
 	snapshotConfig.Value = snapshotGroupId
+	snapshotSpec.Args = append(snapshotSpec.Args, snapshotConfig)
 
 	snapshotInput := &calm.ActionInput{}
 	snapshotInput.APIVersion = appResp.APIVersion
