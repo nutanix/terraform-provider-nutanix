@@ -27,6 +27,8 @@ type Service interface {
 	ListRunbook(ctx context.Context, filter *RunbookListInput) (*RunbookListResponse, error)
 	GetRunbook(ctx context.Context, rbUUID string) (*RunbookResponse, error)
 	RbRunlogs(ctx context.Context, runlogUUID string) (*RbRunlogsResponse, error)
+	PerformActionUuid(ctx context.Context, appUUID string, actionUUID string, input *ActionInput) (*ActionResponse, error)
+	GetAppProtectionPolicyList(ctx context.Context, bpUUID string, appUUID string, configUUID string, policyListInput *PolicyListInput) (*PolicyListResponse, error)
 }
 
 func (op Operations) ProvisionBlueprint(ctx context.Context, bpUUID string, input *BlueprintProvisionInput) (*AppProvisionTaskOutput, error) {
@@ -200,6 +202,20 @@ func (op Operations) GetRunbook(ctx context.Context, rbUUID string) (*RunbookRes
 	return appResponse, op.client.Do(ctx, req, appResponse)
 }
 
+func (op Operations) PerformActionUuid(ctx context.Context, appUUID string, actionUUID string, input *ActionInput) (*ActionResponse, error) {
+	path := fmt.Sprintf("/apps/%s/actions/%s/run", appUUID, actionUUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
+
+	appResponse := new(ActionResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return appResponse, op.client.Do(ctx, req, appResponse)
+}
+
 func (op Operations) RbRunlogs(ctx context.Context, runlogUUID string) (*RbRunlogsResponse, error) {
 	path := fmt.Sprintf("/runbooks/runlogs/%s", runlogUUID)
 
@@ -214,3 +230,16 @@ func (op Operations) RbRunlogs(ctx context.Context, runlogUUID string) (*RbRunlo
 	return rbResponse, op.client.Do(ctx, req, rbResponse)
 }
 
+func (op Operations) GetAppProtectionPolicyList(ctx context.Context, bpUUID string, appUUID string, configUUID string, policyListInput *PolicyListInput) (*PolicyListResponse, error) {
+	path := fmt.Sprintf("/blueprints/%s/app_profile/%s/config_spec/%s/app_protection_policies/list", bpUUID, appUUID, configUUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, policyListInput)
+
+	plResponse := new(PolicyListResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return plResponse, op.client.Do(ctx, req, plResponse)
+}
