@@ -323,3 +323,16 @@ type RunbookImportResponse struct {
 type DeleteRbResp struct {
 	Description string `json:"description,omitempty"`
 }
+
+type EndpointCreateInput struct {
+	Spec       map[string]interface{} `json:"spec"`
+	Metadata   map[string]interface{} `json:"metadata"`
+	APIVersion string                 `json:"api_version"`
+}
+
+type EndpointCreateResponse struct {
+	Status     map[string]interface{} `json:"status"`
+	Spec       map[string]interface{} `json:"spec"`
+	Metadata   map[string]interface{} `json:"metadata"`
+	APIVersion string                 `json:"api_version"`
+}

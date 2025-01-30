@@ -33,6 +33,7 @@ type Service interface {
 	RecoveryPointsDelete(ctx context.Context, appUUID string, input *ActionInput) (*AppTaskResponse, error)
 	RunbookImport(ctx context.Context, input *RunbookImportInput) (*RunbookImportResponse, error)
 	DeleteRunbook(ctx context.Context, RbUUID string) (*DeleteRbResp, error)
+	CreateEndpoint(ctx context.Context, input *EndpointCreateInput) (*EndpointCreateResponse, error)
 }
 
 func (op Operations) ProvisionBlueprint(ctx context.Context, bpUUID string, input *BlueprintProvisionInput) (*AppProvisionTaskOutput, error) {
@@ -297,4 +298,18 @@ func (op Operations) RecoveryPointsDelete(ctx context.Context, appUUID string, i
 	}
 
 	return appResponse, op.client.Do(ctx, req, appResponse)
+}
+
+func (op Operations) CreateEndpoint(ctx context.Context, input *EndpointCreateInput) (*EndpointCreateResponse, error) {
+	path := "/endpoints"
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
+
+	endpointResponse := new(EndpointCreateResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return endpointResponse, op.client.Do(ctx, req, endpointResponse)
 }

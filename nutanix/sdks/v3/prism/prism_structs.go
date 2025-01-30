@@ -1977,6 +1977,7 @@ type ProjectStatus struct {
 	State            string             `json:"state,omitempty"`
 	MessageList      []*MessageResource `json:"message_list,omitempty"`
 	Name             string             `json:"name,omitempty"`
+	UUID             string             `json:"uuid,omitempty"`
 	Resources        *ProjectResources  `json:"resources,omitempty"`
 	Descripion       string             `json:"description,omitempty"`
 	ExecutionContext *ExecutionContext  `json:"execution_context,omitempty"`

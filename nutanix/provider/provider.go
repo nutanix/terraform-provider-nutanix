@@ -397,6 +397,7 @@ func Provider() *schema.Provider {
 			"nutanix_calm_runbook_execute":                    selfservice.ResourceNutanixCalmRunbookExecute(),
 			"nutanix_calm_app_restore":                        selfservice.ResourceNutanixCalmAppRestore(),
 			"nutanix_calm_runbook":                            selfservice.ResourceNutanixCalmRunbook(),
+			"nutanix_calm_endpoint":                           selfservice.ResourceNutanixCalmEndpoint(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
