@@ -106,9 +106,9 @@ func createMetadata(meta interface{}) map[string]interface{} {
 	for _, entity := range resp.Entities {
 
 		if entity.Status.Name == projName {
-			projRef["name"] = resp.Entities[0].Status.Name
+			projRef["name"] = entity.Status.Name
 			projRef["kind"] = "project"
-			projRef["uuid"] = resp.Entities[0].Status.UUID
+			projRef["uuid"] = entity.Status.UUID
 		}
 	}
 
