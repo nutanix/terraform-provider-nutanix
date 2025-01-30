@@ -268,6 +268,12 @@ type RecoveryPointsListResponse struct {
 	Entities   []map[string]interface{} `json:"entities,omitempty"`
 }
 
+type CreateBlueprintResponse struct {
+	APIVersion string                 `json:"api_version"`
+	Metadata   map[string]interface{} `json:"metadata"`
+	Spec       map[string]interface{} `json:"spec"`
+}
+
 type RefObject struct {
 	Kind string `json:"kind,omitempty"`
 	Name string `json:"name,omitempty"`

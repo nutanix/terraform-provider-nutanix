@@ -30,6 +30,8 @@ type Service interface {
 	RbRunlogs(ctx context.Context, runlogUUID string) (*RbRunlogsResponse, error)
 	GetAppProtectionPolicyList(ctx context.Context, bpUUID string, appUUID string, configUUID string, policyListInput *PolicyListInput) (*PolicyListResponse, error)
 	RecoveryPointsList(ctx context.Context, appUUID string, input *RecoveryPointsListInput) (*RecoveryPointsListResponse, error)
+	CreateBlueprint(ctx context.Context, input CreateBlueprintResponse) (*CreateBlueprintResponse, error)
+	UpdateBlueprint(ctx context.Context, bpUUID string, input CreateBlueprintResponse) (*CreateBlueprintResponse, error)
 	RecoveryPointsDelete(ctx context.Context, appUUID string, input *ActionInput) (*AppTaskResponse, error)
 	RunbookImport(ctx context.Context, input *RunbookImportInput) (*RunbookImportResponse, error)
 	DeleteRunbook(ctx context.Context, RbUUID string) (*DeleteRbResp, error)
@@ -262,6 +264,20 @@ func (op Operations) RecoveryPointsList(ctx context.Context, appUUID string, inp
 	return listResponse, op.client.Do(ctx, req, listResponse)
 }
 
+func (op Operations) CreateBlueprint(ctx context.Context, input CreateBlueprintResponse) (*CreateBlueprintResponse, error) {
+	path := "/blueprints/import_json"
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, input)
+
+	bpResponse := new(CreateBlueprintResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return bpResponse, op.client.Do(ctx, req, bpResponse)
+}
+
 func (op Operations) RunbookImport(ctx context.Context, input *RunbookImportInput) (*RunbookImportResponse, error) {
 	path := "/runbooks/import_json"
 
@@ -274,6 +290,20 @@ func (op Operations) RunbookImport(ctx context.Context, input *RunbookImportInpu
 	}
 
 	return RbImportResponse, op.client.Do(ctx, req, RbImportResponse)
+}
+
+func (op Operations) UpdateBlueprint(ctx context.Context, bpUUID string, input CreateBlueprintResponse) (*CreateBlueprintResponse, error) {
+	path := fmt.Sprintf("/blueprints/%s", bpUUID)
+
+	req, err := op.client.NewRequest(ctx, http.MethodPut, path, input)
+
+	bpResponse := new(CreateBlueprintResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return bpResponse, op.client.Do(ctx, req, bpResponse)
 }
 
 func (op Operations) DeleteRunbook(ctx context.Context, RbUUID string) (*DeleteRbResp, error) {
