@@ -372,7 +372,7 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if _, errWaitTask := appStateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for app to perform Patch(%s): %s", errWaitTask)
+		return diag.Errorf("error waiting for app to perform Patch: %s", errWaitTask)
 	}
 
 	if err := d.Set("runlog_uuid", runlogUUID); err != nil {
