@@ -100,10 +100,17 @@ func createMetadata(meta interface{}) map[string]interface{} {
 		fmt.Println("Error while fetching projects.", err)
 	}
 
+	projName := "default"
 	projRef := map[string]interface{}{}
-	projRef["name"] = resp.Entities[0].Status.Name
-	projRef["kind"] = "project"
-	projRef["uuid"] = resp.Entities[0].Status.UUID
+
+	for _, entity := range resp.Entities {
+
+		if entity.Status.Name == projName {
+			projRef["name"] = resp.Entities[0].Status.Name
+			projRef["kind"] = "project"
+			projRef["uuid"] = resp.Entities[0].Status.UUID
+		}
+	}
 
 	metadata["project_reference"] = projRef
 
