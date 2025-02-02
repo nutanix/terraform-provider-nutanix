@@ -162,15 +162,18 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 	locationI := d.Get("location").([]interface{})
 	location := locationI[0].(map[string]interface{})
 
-	backupTargetExtID := ""
+	clusterExtId := ""
+	isClusterLocation := false
+	bucketName := ""
+	isObjectStoreLocation := false
 	if location["cluster_location"] != nil && len(location["cluster_location"].([]interface{})) > 0 {
 		clusterLocation := location["cluster_location"].([]interface{})[0].(map[string]interface{})
 		clusterConfig := clusterLocation["config"].([]interface{})[0].(map[string]interface{})
 
 		clusterConfigBody := management.NewClusterLocation()
 		clusterRef := management.NewClusterReference()
-
-		clusterRef.ExtId = utils.StringPtr(clusterConfig["ext_id"].(string))
+		clusterExtId = clusterConfig["ext_id"].(string)
+		clusterRef.ExtId = utils.StringPtr(clusterExtId)
 
 		clusterConfigBody.Config = clusterRef
 
@@ -178,6 +181,7 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 		if err != nil {
 			return diag.Errorf("error while setting cluster location : %v", err)
 		}
+		isClusterLocation = true
 	} else if location["object_store_location"] != nil && len(location["object_store_location"].([]interface{})) > 0 {
 		objectStoreLocation := location["object_store_location"].([]interface{})[0].(map[string]interface{})
 		providerConfig := objectStoreLocation["provider_config"]
@@ -192,24 +196,14 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 		if err != nil {
 			return diag.Errorf("error while setting object store location : %v", err)
 		}
+		bucketName = utils.StringValue(objectStoreLocationBody.ProviderConfig.BucketName)
+		isObjectStoreLocation = true
 	}
 
 	body.Location = OneOfBackupTargetLocation
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
 	log.Printf("[DEBUG] Backup Target Body: %s", string(aJSON))
-
-	// Get all the backup targets for the domain manager
-	// This is to get the backup target ext id
-	//by comparing the backup targets before and after creating a new backup target
-	listBackupTargets, err := conn.DomainManagerBackupsAPIInstance.ListBackupTargets(utils.StringPtr(domainManagerExtID))
-	if err != nil {
-		return diag.Errorf("error while Listing Backup Targets for : %s err: %s", domainManagerExtID, err)
-	}
-	oldBackupTargets := []management.BackupTarget{}
-	if listBackupTargets.Data != nil {
-		oldBackupTargets = listBackupTargets.Data.GetValue().([]management.BackupTarget)
-	}
 
 	resp, err := conn.DomainManagerBackupsAPIInstance.CreateBackupTarget(utils.StringPtr(domainManagerExtID), &body)
 
@@ -242,40 +236,34 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
 	log.Printf("[DEBUG] Create Backup Target Task Details: %s", string(aJSON))
 
-	//filter := "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'PRISM_CENTRAL')"
-	listBackupTargets, err = conn.DomainManagerBackupsAPIInstance.ListBackupTargets(utils.StringPtr(domainManagerExtID))
+	listBackupTargets, err := conn.DomainManagerBackupsAPIInstance.ListBackupTargets(utils.StringPtr(domainManagerExtID))
 	if err != nil {
 		return diag.Errorf("error while Listing Backup Targets for : %s err: %s", domainManagerExtID, err)
 	}
-	newBackupTargets := listBackupTargets.Data.GetValue().([]management.BackupTarget)
+	backupTargets := listBackupTargets.Data.GetValue().([]management.BackupTarget)
 
-	aJSON, _ = json.MarshalIndent(oldBackupTargets, "", "  ")
-	log.Printf("[DEBUG] Old Backup Targets: %s", string(aJSON))
+	// Find the new backup target ext id
+	for _, backupTarget := range backupTargets {
+		backupTargetLocation := backupTarget.Location
+		if isClusterLocation && utils.StringValue(backupTargetLocation.ObjectType_) == clustersLocationObjectType {
+			clusterLocation := backupTarget.Location.GetValue().(management.ClusterLocation)
+			if utils.StringValue(clusterLocation.Config.ExtId) == clusterExtId {
+				d.SetId(utils.StringValue(backupTarget.ExtId))
+				break
+			}
+		} else if isObjectStoreLocation && utils.StringValue(backupTargetLocation.ObjectType_) == objectStoreLocationObjectType {
+			objectStoreLocation := backupTarget.Location.GetValue().(management.ObjectStoreLocation)
 
-	log.Printf("[DEBUG] ###############################")
-
-	aJSON, _ = json.MarshalIndent(newBackupTargets, "", "  ")
-	log.Printf("[DEBUG] New Backup Targets: %s", string(aJSON))
-
-	if len(oldBackupTargets) == 0 {
-		backupTargetExtID = utils.StringValue(newBackupTargets[0].ExtId)
-	} else {
-		// Find the new backup target ext id
-		for _, newBackupTarget := range newBackupTargets {
-			for _, oldBackupTarget := range oldBackupTargets {
-				if utils.StringValue(newBackupTarget.ExtId) != utils.StringValue(oldBackupTarget.ExtId) {
-					backupTargetExtID = utils.StringValue(newBackupTarget.ExtId)
-					break
-				}
+			if utils.StringValue(objectStoreLocation.ProviderConfig.BucketName) == bucketName {
+				d.SetId(utils.StringValue(backupTarget.ExtId))
+				break
 			}
 		}
 	}
 
-	if backupTargetExtID == "" {
-		return diag.Errorf("error while fetching Created Backup Target Ext ID")
+	if d.Id() == "" {
+		return diag.Errorf("error while setting Backup Target ID")
 	}
-
-	d.SetId(backupTargetExtID)
 
 	return ResourceNutanixBackupTargetV2Read(ctx, d, meta)
 }
