@@ -162,7 +162,7 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 	locationI := d.Get("location").([]interface{})
 	location := locationI[0].(map[string]interface{})
 
-	clusterExtId := ""
+	clusterExtID := ""
 	isClusterLocation := false
 	bucketName := ""
 	isObjectStoreLocation := false
@@ -172,8 +172,8 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 
 		clusterConfigBody := management.NewClusterLocation()
 		clusterRef := management.NewClusterReference()
-		clusterExtId = clusterConfig["ext_id"].(string)
-		clusterRef.ExtId = utils.StringPtr(clusterExtId)
+		clusterExtID = clusterConfig["ext_id"].(string)
+		clusterRef.ExtId = utils.StringPtr(clusterExtID)
 
 		clusterConfigBody.Config = clusterRef
 
@@ -247,7 +247,7 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 		backupTargetLocation := backupTarget.Location
 		if isClusterLocation && utils.StringValue(backupTargetLocation.ObjectType_) == clustersLocationObjectType {
 			clusterLocation := backupTarget.Location.GetValue().(management.ClusterLocation)
-			if utils.StringValue(clusterLocation.Config.ExtId) == clusterExtId {
+			if utils.StringValue(clusterLocation.Config.ExtId) == clusterExtID {
 				d.SetId(utils.StringValue(backupTarget.ExtId))
 				break
 			}
