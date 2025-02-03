@@ -70,7 +70,7 @@ func DatasourceNutanixVirtualMachineV4() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"memory_size_bytes": {
+			"memorysizebytes": {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -1288,7 +1288,7 @@ func DatasourceNutanixVirtualMachineV4Read(ctx context.Context, d *schema.Resour
 	if err := d.Set("num_numa_nodes", getResp.NumNumaNodes); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("memory_size_bytes", getResp.MemorySizeBytes); err != nil {
+	if err := d.Set("memorysizebytes", getResp.MemorySizeBytes); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("is_vcpu_hard_pinning_enabled", getResp.IsVcpuHardPinningEnabled); err != nil {
