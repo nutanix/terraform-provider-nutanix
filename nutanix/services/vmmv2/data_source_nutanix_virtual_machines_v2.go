@@ -93,7 +93,7 @@ func DatasourceNutanixVirtualMachinesV4() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"memory_size_bytes": {
+						"memorysizebytes": {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
@@ -1356,7 +1356,7 @@ func flattenVMEntities(vms []config.Vm) []interface{} {
 				vm["num_numa_nodes"] = v.NumNumaNodes
 			}
 			if v.MemorySizeBytes != nil {
-				vm["memory_size_bytes"] = v.MemorySizeBytes
+				vm["memorysizebytes"] = v.MemorySizeBytes
 			}
 			if v.IsVcpuHardPinningEnabled != nil {
 				vm["is_vcpu_hard_pinning_enabled"] = v.IsVcpuHardPinningEnabled

@@ -48,7 +48,7 @@ The following attributes are exported:
 - `num_cores_per_socket`: Number of cores per socket.
 - `num_threads_per_core`: Number of threads per core
 - `num_numa_nodes`: Number of NUMA nodes. 0 means NUMA is disabled.
-- `memory_size_bytes`: Memory size in bytes.
+- `memorysizebytes`: Memory size in bytes.
 - `is_vcpu_hard_pinning_enabled`: Indicates whether the vCPUs should be hard pinned to specific pCPUs or not.
 - `is_cpu_passthrough_enabled`: Indicates whether to passthrough the host CPU features to the guest or not. Enabling this will make VM incapable of live migration.
 - `enabled_cpu_features`: The list of additional CPU features to be enabled. HardwareVirtualization: Indicates whether hardware assisted virtualization should be enabled for the Guest OS or not. Once enabled, the Guest OS can deploy a nested hypervisor
