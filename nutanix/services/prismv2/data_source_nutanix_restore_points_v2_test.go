@@ -15,7 +15,7 @@ const (
 	delay                           = 30 * time.Second
 )
 
-func TestAccV2NutanixRestorePointsDatasource_Basic(t *testing.T) {
+func TestAccV2NutanixRestorePointsDatasource_ListRestorePoints(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
