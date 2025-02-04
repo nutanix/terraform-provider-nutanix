@@ -84,6 +84,40 @@ func checkBackupTargetExist() resource.TestCheckFunc {
 	}
 }
 
+func checkLastSyncTimeBackupTarget(retries int, delay time.Duration) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acc.TestAccProvider.Meta().(*conns.Client)
+		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type == "nutanix_backup_target_v2" {
+				attributes := rs.Primary.Attributes
+
+				domainManagerExtID := attributes["domain_manager_ext_id"]
+				backupTargetExtID := attributes["ext_id"]
+
+				for i := 0; i < retries; i++ {
+					readResp, err := client.GetBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(backupTargetExtID), nil)
+					if err != nil {
+						return fmt.Errorf("error while fetching Backup Target: %s", err)
+					}
+
+					backupTarget := readResp.Data.GetValue().(management.BackupTarget)
+
+					fmt.Printf("LastSyncTime: %v\n", backupTarget.LastSyncTime)
+					if backupTarget.LastSyncTime != nil {
+						fmt.Printf(" Restore Point Created after %d minutes\n", i*30/60)
+						return nil
+					}
+					fmt.Printf("Waiting for 30 seconds to Fetch backup target\n")
+					time.Sleep(delay)
+				}
+			}
+		}
+		return fmt.Errorf("backup Target restore point not created")
+	}
+}
+
 func waitDeleteTask(resp *management.DeleteBackupTargetApiResponse) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
 

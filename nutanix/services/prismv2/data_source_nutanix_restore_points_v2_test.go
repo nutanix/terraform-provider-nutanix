@@ -1,16 +1,19 @@
 package prismv2_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNameListRestorePoints = "data.nutanix_restore_points_v2.test"
+const (
+	datasourceNameListRestorePoints = "data.nutanix_restore_points_v2.test"
+	retries                         = 120
+	delay                           = 30 * time.Second
+)
 
 func TestAccV2NutanixRestorePointsDatasource_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -38,6 +41,7 @@ func TestAccV2NutanixRestorePointsDatasource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "domain_manager_ext_id"),
 					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.ext_id"),
 					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.name"),
+					checkLastSyncTimeBackupTarget(retries, delay),
 				),
 			},
 			// Create the restore source, cluster location
@@ -58,18 +62,14 @@ func TestAccV2NutanixRestorePointsDatasource_Basic(t *testing.T) {
 					fmt.Printf("Step 4: List Restore Points\n")
 				},
 				Config: testAccBackupTargetResourceClusterLocationConfig() +
-					testRestoreSourceConfig() +
-					testAccListRestorePointsConfig(),
+					testRestoreSourceConfig() + testAccListRestorePointsConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					func(s *terraform.State) error {
-						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[datasourceNameListRestorePoints].Primary.Attributes, "", "  ")
-						fmt.Printf("############################################\n")
-						fmt.Printf(fmt.Sprintf("Resource Attributes: \n%v", string(aJSON)))
-						fmt.Printf("############################################\n")
-						return nil
-					},
 					checkAttributeLength(datasourceNameListRestorePoints, "restore_points", 1),
+					resource.TestCheckResourceAttrSet(datasourceNameListRestorePoints, "restore_points.0.creation_time"),
 					resource.TestCheckResourceAttrSet(datasourceNameListRestorePoints, "restore_points.0.ext_id"),
+					resource.TestCheckResourceAttrSet(datasourceNameListRestorePoints, "restore_points.0.ext_id"),
+					resource.TestCheckResourceAttrSet(datasourceNameListRestorePoints, "restore_source_ext_id"),
+					resource.TestCheckResourceAttrSet(datasourceNameListRestorePoints, "restorable_domain_manager_ext_id"),
 				),
 			},
 		},

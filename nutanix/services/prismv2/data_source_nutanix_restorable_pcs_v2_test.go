@@ -98,7 +98,7 @@ resource "nutanix_restore_source_v2" "cluster-location" {
       }
     }
   }
-} 
+}
 
 `, username, password, endpoint, insecure, port)
 }
