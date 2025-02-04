@@ -1,18 +1,16 @@
 package prismv2_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
 const resourceNameUnregisterCluster = "nutanix_unregister_cluster_v2.test"
 
-func TestAccV2NutanixUnregisterClusterResource_Basic(t *testing.T) {
+func TestAccV2NutanixUnregisterClusterResource_Unregister_PC_PC(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -20,13 +18,6 @@ func TestAccV2NutanixUnregisterClusterResource_Basic(t *testing.T) {
 			{
 				Config: testAccUnregisterClusterResourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					func(s *terraform.State) error {
-						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[datasourceNameListRestorePoint].Primary.Attributes, "", "  ")
-						fmt.Printf("############################################\n")
-						fmt.Printf(fmt.Sprintf("Resource Attributes: \n%v", string(aJSON)))
-						fmt.Printf("############################################\n")
-						return nil
-					},
 					resource.TestCheckResourceAttrSet(resourceNameUnregisterCluster, "pc_ext_id"),
 					resource.TestCheckResourceAttrSet(resourceNameUnregisterCluster, "ext_id"),
 				),
@@ -37,20 +28,18 @@ func TestAccV2NutanixUnregisterClusterResource_Basic(t *testing.T) {
 
 func testAccUnregisterClusterResourceConfig() string {
 	return fmt.Sprintf(`
-data "nutanix_clusters_v2" "clusters" {}
-
+data "nutanix_clusters_v2" "cls" {
+	filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'PRISM_CENTRAL')"
+}
 locals {
-  pcExtID = [
-	for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-	cluster.ext_id if cluster.config[0].cluster_function[0] == "PRISM_CENTRAL"
-  ][0]
+  pcExtID = data.nutanix_clusters_v2.cls.cluster_entities.0.ext_id
   config   = (jsondecode(file("%[1]s")))
-  prism = local.config.prism
+  unregister = local.config.prism.unregister
 }
 
 resource "nutanix_unregister_cluster_v2" "test"{
-  pc_ext_id = local.pcExtID
-  ext_id = local.prism.cluster_ext_id
+  pc_ext_id = local.pcExtID # local pc ext id 
+  ext_id = local.unregister.pc_ext_id # remote pc ext id
 }
 `, filepath)
 }
