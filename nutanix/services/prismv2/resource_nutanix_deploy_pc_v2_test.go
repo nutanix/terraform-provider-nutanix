@@ -125,6 +125,16 @@ resource "nutanix_deploy_pc_v2" "test" {
         value = local.deploy_pc.ntp_servers[1]
       }
     }
+    ntp_servers {
+      fqdn {
+        value = local.deploy_pc.ntp_servers[2]
+      }
+    }
+    ntp_servers {
+      fqdn {
+        value = local.deploy_pc.ntp_servers[3]
+      }
+    }
   }
 }
  

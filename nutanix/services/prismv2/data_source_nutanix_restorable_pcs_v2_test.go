@@ -112,7 +112,7 @@ func testAccListRestorablePCConfig() string {
 
 data "nutanix_restorable_pcs_v2" "test" {
   provider = nutanix-2
-  restorable_source_ext_id = nutanix_restore_source_v2.cluster-location.ext_id
+  restore_source_ext_id = nutanix_restore_source_v2.cluster-location.ext_id
 }
 
 `

@@ -16,7 +16,7 @@ func DatasourceNutanixListRestorablePcsV2() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: DatasourceNutanixListRestorablePcsV2Read,
 		Schema: map[string]*schema.Schema{
-			"restorable_source_ext_id": {
+			"restore_source_ext_id": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -56,7 +56,7 @@ func DatasourceNutanixListRestorablePcsV2Read(ctx context.Context, d *schema.Res
 		filter = utils.StringPtr(filterf.(string))
 	}
 
-	restoreSourceExtID := d.Get("restorable_source_ext_id").(string)
+	restoreSourceExtID := d.Get("restore_source_ext_id").(string)
 
 	resp, err := conn.DomainManagerBackupsAPIInstance.ListRestorableDomainManagers(utils.StringPtr(restoreSourceExtID), page, limit, filter)
 	if err != nil {

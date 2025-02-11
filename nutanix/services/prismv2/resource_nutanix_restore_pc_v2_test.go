@@ -344,7 +344,7 @@ func restorePcResourceConfig(pcDetails map[string]interface{}, restorablePCExtID
 
 	// Build the full SSH command. Note the single quotes around the remoteCommands.
 	resetCommand := fmt.Sprintf("sshpass -p '%s' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %s@%s '%s'",
-		"nutanix/4u", username, pcIP, remoteCommands)
+		testVars.Prism.RestoreSource.PcPassword, username, pcIP, remoteCommands)
 
 	// pe config
 	username = os.Getenv("NUTANIX_USERNAME")

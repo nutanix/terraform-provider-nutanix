@@ -259,6 +259,8 @@
       ],
       "ntp_servers": [
         "",
+        "",
+        "",
         ""
       ]
     },
@@ -272,7 +274,8 @@
       "secret_key": ""
     },
     "restore_source": {
-      "pe_ip": ""
+      "pe_ip": "",
+      "pc_password": ""
     }
   }
 }
