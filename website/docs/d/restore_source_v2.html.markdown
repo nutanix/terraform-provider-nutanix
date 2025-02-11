@@ -18,7 +18,7 @@ Retrieves the restore source from the PE cache store and returns the restore sou
 ```hcl
 
 data "nutanix_restore_source_v2" "example"{
-  ext_id = "<restore_source_uuid>"
+  ext_id = "642c2af7-a38a-4085-99a6-5baedd02cdb5"
 }
 
 ```
@@ -46,8 +46,13 @@ The location argument exports the following:
 The `cluster_location` argument exports the following:
 
 * `config`: - Cluster reference of the remote cluster to be connected.
-* `config.ext_id`: - Cluster UUID of a remote cluster.
-* `config.name`: - Name of the cluster.
+
+##### Config
+The `config` argument exports the following:
+
+* `ext_id`: - Cluster UUID of a remote cluster.
+* `name`: - Name of the cluster.
+
 
 #### Object Store Location
 The `object_store_location` argument exports the following:
@@ -75,4 +80,4 @@ The `backup_policy` argument exports the following:
 
 
 
-See detailed information in [Nutanix Restore Source Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/getRestoreSourceById).
+See detailed information in [Nutanix Restore Source V4 Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/getRestoreSourceById).
