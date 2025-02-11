@@ -1,4 +1,4 @@
-package dataprotectionv2_test
+package datapoliciesv2_test
 
 import (
 	"encoding/json"
@@ -8,14 +8,17 @@ import (
 )
 
 type TestConfig struct {
-	DataProtection struct {
-		PcExtID      string `json:"pc_ext_id"`
-		ClusterExtID string `json:"cluster_ext_id"`
-		RemotePcIP   string `json:"remote_pc_ip"`
-	} `json:"data_protection"`
+	ProtectionPolicies struct {
+		DomainManagerExtID string `json:"domain_manager_ext_id"`
+	} `json:"data_policies"`
 }
 
 var testVars TestConfig
+
+var (
+	path, _  = os.Getwd()
+	filepath = path + "/../../../test_config_v2.json"
+)
 
 func loadVars(filepath string, varStuct interface{}) {
 	// Read config.json from home current path
