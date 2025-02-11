@@ -17,33 +17,106 @@ The restore domain manager is a task-driven operation to restore a domain manage
 
 ```hcl
 
-resource "nutanix_restore_pc_v2" "example"{
-  restorable_domain_manager_ext_id = "<domain_manager_uuid>"
-  restore_source_ext_id            = "<restore_source_uuid>"
-  ext_id                           = "<restore_point_uuid>"
+provider "nutanix" {
+  alias    = "pe"
+  username = var.username
+  password = var.password
+  endpoint = var.pe_endpoint
+  insecure = true
+  port     = var.port
+}
+
+resource "nutanix_restore_pc_v2" "test" {
+  provider = nutanix.pe
+  timeouts {
+    create = "120m"
+  }
+  ext_id                           = "3f4017e8-85e2-3cf5-8dfe-2dbfdfe546bf"
+  restore_source_ext_id            = "642c2af7-a38a-4085-99a6-5baedd02cdb5"
+  restorable_domain_manager_ext_id = "36526df2-08ac-49c4-bb4f-13f769c2b7ed"
   domain_manager {
     config {
-      name = "<domain_manager_name>"
-      size = "SMALL"
+      should_enable_lockdown_mode = false
+      build_info {
+        version = "pc.2024.3"
+      }
+      name = "tf-test-deploy-pc-4681093599007582619"
+      size = "STARTER"
+      resource_config {
+        container_ext_ids    = ["6a6da162-bd6c-418d-ad16-e99c5a6c4fb2"]
+        data_disk_size_bytes = 289910292480
+        memory_size_bytes    = 19327352832
+        num_vcpus            = 4
+      }
     }
     network {
       external_address {
         ipv4 {
-          value = "xx.xx.xx.xx"
-        }
-      }
-      ntp_servers {
-        ipv4 {
-          value = "xx.xx.xx.xx"
+          value = ""
         }
       }
       name_servers {
         ipv4 {
-          value = "xx.xx.xx.xx"
+          value = "10.40.64.16"
+        }
+      }
+      name_servers {
+        ipv4 {
+          value = "10.40.64.15"
+        }
+      }
+      ntp_servers {
+        fqdn {
+          value = "3.centos.pool.ntp.org"
+        }
+      }
+      ntp_servers {
+        fqdn {
+          value = "2.centos.pool.ntp.org"
+        }
+      }
+      ntp_servers {
+        fqdn {
+          value = "1.centos.pool.ntp.org"
+        }
+      }
+      ntp_servers {
+        fqdn {
+          value = "0.centos.pool.ntp.org"
+        }
+      }
+
+      external_networks {
+        network_ext_id = "ba416f8d-00f2-499d-bc4c-19da8d104af9"
+        default_gateway {
+          ipv4 {
+            value = "10.97.64.1"
+          }
+        }
+        subnet_mask {
+          ipv4 {
+            value = "255.255.252.0"
+          }
+        }
+        ip_ranges {
+          begin {
+            ipv4 {
+              value = "10.97.64.91"
+            }
+          }
+          end {
+            ipv4 {
+              value = "10.97.64.91"
+            }
+          }
         }
       }
     }
-    should_enable_high_availability = false
+  }
+  # after restore pc you need to reset the password 5 times before setting the desired password, you will need to use local-exec provisioner to do that
+  provisioner "local-exec" {
+    command    = "sshpass -p 'nutanix/4u' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null nutanix@10.97.64.91 '/home/nutanix/prism/cli/ncli user reset-password user-name=admin password=u.B.8.@.D.@.R ; /home/nutanix/prism/cli/ncli user reset-password user-name=admin password=y.O.7.@.d.d.y ; /home/nutanix/prism/cli/ncli user reset-password user-name=admin password=a.Z.5.$.5 ; /home/nutanix/prism/cli/ncli user reset-password user-name=admin password=z.J.1.#.g ; /home/nutanix/prism/cli/ncli user reset-password user-name=admin password=Nutanix.123'"
+    on_failure = continue
   }
 }
 
@@ -51,6 +124,7 @@ resource "nutanix_restore_pc_v2" "example"{
 
 ## Argument Reference
 The following arguments are supported:
+> We need to increase the timeout for restoring the PC, because the restore pc takes longer than the default timeout allows for the operation to complete.
 
 * `restore_source_ext_id`: -(Required) A unique identifier obtained from the restore source API that corresponds to the details provided for the restore source.
 * `restorable_domain_manager_ext_id`: -(Required) A unique identifier for the domain manager.
@@ -197,4 +271,4 @@ The `fqdn` argument supports the following:
 
 
 
-See detailed information in [Nutanix Restore PC Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/restore).
+See detailed information in [Nutanix Restore PC V4 Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/restore).
