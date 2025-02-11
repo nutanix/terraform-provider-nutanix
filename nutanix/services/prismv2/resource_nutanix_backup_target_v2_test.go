@@ -65,6 +65,17 @@ func TestAccV2NutanixBackupTargetResource_ObjectStoreLocation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameBackupTargetObjectStoreLocation, "location.0.object_store_location.0.provider_config.0.region", testVars.Prism.Bucket.Region),
 				),
 			},
+			// Update Backup target, Object store location
+			{
+				Config: testAccBackupTargetResourceObjectStoreLocationUpdateConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNameBackupTargetObjectStoreLocation, "ext_id"),
+					resource.TestCheckResourceAttrSet(resourceNameBackupTargetObjectStoreLocation, "domain_manager_ext_id"),
+					resource.TestCheckResourceAttr(resourceNameBackupTargetObjectStoreLocation, "location.0.object_store_location.0.backup_policy.0.rpo_in_minutes", "120"),
+					resource.TestCheckResourceAttr(resourceNameBackupTargetObjectStoreLocation, "location.0.object_store_location.0.provider_config.0.bucket_name", testVars.Prism.Bucket.Name),
+					resource.TestCheckResourceAttr(resourceNameBackupTargetObjectStoreLocation, "location.0.object_store_location.0.provider_config.0.region", testVars.Prism.Bucket.Region),
+				),
+			},
 		},
 	})
 }
@@ -110,6 +121,7 @@ func TestAccV2NutanixBackupTargetResource_ClusterLocationAndObjectStoreLocation(
 		},
 	})
 }
+
 func testAccListBackupTargetsDatasourceConfig() string {
 	return `
 
@@ -159,6 +171,46 @@ resource "nutanix_backup_target_v2" "cluster-location" {
 }
 
 func testAccBackupTargetResourceObjectStoreLocationConfig() string {
+	return fmt.Sprintf(`
+# list Clusters
+data "nutanix_clusters_v2" "cls" {
+	filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'PRISM_CENTRAL')"
+}
+
+locals {
+  domainManagerExtId = data.nutanix_clusters_v2.cls.cluster_entities.0.ext_id
+  config = jsondecode(file("%[1]s"))
+  bucket = local.config.prism.bucket 
+}
+
+resource "nutanix_backup_target_v2" "object-store-location" {
+  domain_manager_ext_id = local.domainManagerExtId
+  location {
+    object_store_location {
+      provider_config {
+        bucket_name = local.bucket.name
+        region      = local.bucket.region
+        credentials {
+          access_key_id     = local.bucket.access_key
+          secret_access_key = local.bucket.secret_key
+        }
+      }
+      backup_policy {
+        rpo_in_minutes = 120
+      }
+    }
+  }
+  lifecycle {
+    ignore_changes = [
+      location[0].object_store_location[0].provider_config[0].credentials
+    ]
+  }
+}
+
+`, filepath)
+}
+
+func testAccBackupTargetResourceObjectStoreLocationUpdateConfig() string {
 	return fmt.Sprintf(`
 # list Clusters
 data "nutanix_clusters_v2" "cls" {
