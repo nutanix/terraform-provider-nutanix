@@ -16,7 +16,7 @@ const resourceNamePromoteProtectedResource = "nutanix_promote_protected_resource
 
 const maxRetries = 60
 const retryInterval = 10 * time.Second
-const sleepTime = 120 * time.Second
+const sleepTime = 5 * time.Minute
 
 func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVm(t *testing.T) {
 	r := acctest.RandInt()
@@ -47,7 +47,8 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVm(t *testing.T) {
 					fmt.Println("Step 2: Promote Protected Resource")
 				},
 
-				Config: testPromoteProtectedResourceVMConfig(vmName, remotePcIP),
+				Config: testPromoteProtectedResourceVMAndProtectionPolicyConfig(vmName, ppName, description) +
+					testPromoteProtectedResourceVMConfig(remotePcIP),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNamePromoteProtectedResource, "promoted_vm_ext_id"),
 				),
@@ -59,7 +60,8 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVm(t *testing.T) {
 					time.Sleep(5 * time.Second)
 				},
 
-				Config: testPromoteProtectedResourceVMConfig(vmName, remotePcIP),
+				Config: testPromoteProtectedResourceVMAndProtectionPolicyConfig(vmName, ppName, description) +
+					testPromoteProtectedResourceVMConfig(remotePcIP),
 				Check: resource.ComposeTestCheckFunc(
 					deletePromotedVM(),
 				),
@@ -97,7 +99,8 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVG(t *testing.T) {
 					fmt.Println("Step 2: Promote Protected Resource")
 				},
 
-				Config: testPromoteProtectedResourceVGConfig(vgName, remotePcIP),
+				Config: testPromoteProtectedResourceVGAndProtectionPolicyConfig(vgName, ppName, description) +
+					testPromoteProtectedResourceVGConfig(vgName, remotePcIP),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNamePromoteProtectedResource, "promoted_vm_ext_id"),
 				),
@@ -109,9 +112,10 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVG(t *testing.T) {
 					time.Sleep(5 * time.Second)
 				},
 
-				Config: testPromoteProtectedResourceVGConfig(vgName, remotePcIP),
-				Check:  resource.ComposeTestCheckFunc(
-				//deletePromotedVM(),
+				Config: testPromoteProtectedResourceVGAndProtectionPolicyConfig(vgName, ppName, description) +
+					testPromoteProtectedResourceVGConfig(vgName, remotePcIP),
+				Check: resource.ComposeTestCheckFunc(
+					deletePromotedVM(),
 				),
 			},
 		},
@@ -124,19 +128,19 @@ func testPromoteProtectedResourceVMAndProtectionPolicyConfig(vmName, ppName, des
 data "nutanix_pcs_v2" "pcs" {
 }
 
-# List categories
-data "nutanix_categories_v2" "categories" {
-}
-
 # list Clusters 
 data "nutanix_clusters_v2" "clusters" {
 }
 
-locals {	
-	category1 = data.nutanix_categories_v2.categories.categories.5.ext_id
-	category2 = data.nutanix_categories_v2.categories.categories.6.ext_id
+locals {
 	config = jsondecode(file("%[1]s"))
   	data_policies = local.config.data_policies
+}
+
+resource "nutanix_category_v2" "test" {
+  key = "tf-test-category-pp"
+  value = "tf_test_category_pp"
+  description = "category for protection policy and protected vm"
 }
 
 resource "nutanix_protection_policy_v2" "test" {
@@ -163,7 +167,7 @@ resource "nutanix_protection_policy_v2" "test" {
  }
 
  replication_locations {
-   domain_manager_ext_id = data.nutanix_domain_managers_v2.pcs.domain_managers[0].ext_id
+   domain_manager_ext_id = data.nutanix_pcs_v2.pcs.pcs[0].ext_id
    label                 = "source"
    is_primary            = true
  }
@@ -173,8 +177,7 @@ resource "nutanix_protection_policy_v2" "test" {
    is_primary            = false
  }
 
- category_ids = [local.category1,local.category2]
- depends_on = [data.nutanix_categories_v2.categories]
+ category_ids = [nutanix_category_v2.test.id]
 }
 
 resource "nutanix_virtual_machine_v2" "test"{
@@ -186,7 +189,7 @@ resource "nutanix_virtual_machine_v2" "test"{
 		ext_id = data.nutanix_clusters_v2.clusters.cluster_entities.0.ext_id
 	}
     categories {
-	  ext_id = local.category1
+	  ext_id = nutanix_category_v2.test.id
     }
 	power_state = "OFF"
 	depends_on = [nutanix_protection_policy_v2.test]
@@ -196,7 +199,7 @@ resource "nutanix_virtual_machine_v2" "test"{
 	`, filepath, vmName, description, ppName)
 }
 
-func testPromoteProtectedResourceVMConfig(name, remotePcIP string) string {
+func testPromoteProtectedResourceVMConfig(remotePcIP string) string {
 	username := os.Getenv("NUTANIX_USERNAME")
 	password := os.Getenv("NUTANIX_PASSWORD")
 	port, _ := strconv.Atoi(os.Getenv("NUTANIX_PORT"))
@@ -215,26 +218,15 @@ provider "nutanix-2" {
 	return fmt.Sprintf(
 		`
 
-data "nutanix_virtual_machines_v2" "test" {
-	provider = nutanix
-	filter = "name eq '%[1]s'"
-}
 
-%[2]s
+%[1]s
 
 resource "nutanix_promote_protected_resource_v2" "test" {
   provider = nutanix-2
-  ext_id = data.nutanix_virtual_machines_v2.test.vms[0].ext_id
-  depends_on = [data.nutanix_virtual_machines_v2.test]
+  ext_id = nutanix_virtual_machine_v2.test.id
 }
 
-data "nutanix_virtual_machines_v2" "p-vm" {
-	provider = nutanix-2 
-	filter = "name eq '%[1]s'"
-	depends_on = [nutanix_promote_protected_resource_v2.test]
-}
-
-`, name, remoteHostProviderConfig)
+`, remoteHostProviderConfig)
 }
 
 func testPromoteProtectedResourceVGAndProtectionPolicyConfig(vgName, ppName, description string) string {

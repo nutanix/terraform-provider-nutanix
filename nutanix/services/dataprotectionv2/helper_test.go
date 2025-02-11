@@ -33,8 +33,8 @@ func waitForVMToBeProtected(resourceName, attributeName, desiredValue string, ma
 			vm := vmResp.Data.GetValue().(config.Vm)
 			lastValue = config.ProtectionType.GetName(*vm.ProtectionType)
 			if lastValue == desiredValue {
-				time.Sleep(sleepTime)
 				fmt.Printf("[DEBUG] VM is %s\n", lastValue)
+				time.Sleep(sleepTime)
 				return nil // Desired value reached
 			}
 
@@ -50,10 +50,12 @@ func waitForVMToBeProtected(resourceName, attributeName, desiredValue string, ma
 func testCheckDestroyProtectedResource(state *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
 	vmClient := conn.VmmAPI.VMAPIInstance
+	categoryClient := conn.PrismAPI.CategoriesAPIInstance
 	ppClient := conn.DataPoliciesAPI.ProtectionPolicies
 
 	for _, rs := range state.RootModule().Resources {
 		if rs.Type == "nutanix_virtual_machine_v2" {
+			fmt.Printf("Checking if VM still exists\n")
 			readResp, err := vmClient.GetVmById(utils.StringPtr(rs.Primary.ID))
 			if err == nil {
 				args := make(map[string]interface{})
@@ -63,12 +65,13 @@ func testCheckDestroyProtectedResource(state *terraform.State) error {
 				if err != nil {
 					return fmt.Errorf("error: VM still exists: %v", err)
 				}
-
+				fmt.Printf("VM deleted\n")
 				return nil
 			}
 		}
 
 		if rs.Type == "nutanix_protection_policy_v2" {
+			fmt.Printf("Checking if Protection Policy still exists\n")
 			_, err := ppClient.GetProtectionPolicyById(utils.StringPtr(rs.Primary.ID))
 			if err == nil {
 				fmt.Printf("Protection Policy still exists")
@@ -76,6 +79,25 @@ func testCheckDestroyProtectedResource(state *terraform.State) error {
 				if err != nil {
 					return fmt.Errorf("error: Protection Policy still exists : %v", err)
 				}
+				fmt.Printf("Protection Policy deleted\n")
+				return nil
+			}
+		}
+
+		if rs.Type == "nutanix_category_v2" {
+			fmt.Printf("Checking if Category still exists\n")
+			readResp, err := categoryClient.GetCategoryById(utils.StringPtr(rs.Primary.ID), nil)
+			if err == nil {
+				fmt.Printf("Category still exists")
+
+				args := make(map[string]interface{})
+				etag := categoryClient.ApiClient.GetEtag(readResp)
+				args["If-Match"] = utils.StringPtr(etag)
+				_, err = categoryClient.DeleteCategoryById(utils.StringPtr(rs.Primary.ID))
+				if err != nil {
+					return fmt.Errorf("error: Category still exists : %v", err)
+				}
+				fmt.Printf("Category deleted\n")
 				return nil
 			}
 		}
@@ -91,7 +113,9 @@ func deletePromotedVM() resource.TestCheckFunc {
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type == "nutanix_promote_protected_resource_v2" {
-				extID := rs.Primary.ID
+				extID := rs.Primary.Attributes["promoted_vm_ext_id"]
+				fmt.Printf("Promoted VM ext ID: %s\n", extID)
+
 				readResp, err := client.GetVmById(utils.StringPtr(extID))
 				if err == nil {
 					args := make(map[string]interface{})
@@ -101,11 +125,12 @@ func deletePromotedVM() resource.TestCheckFunc {
 					if err != nil {
 						return fmt.Errorf("error: VM still exists: %v", err)
 					}
+					fmt.Printf("Promoted VM deleted\n")
 					return nil
 				}
 			}
 		}
-		return nil
+		return fmt.Errorf("promoted VM not found")
 	}
 }
 

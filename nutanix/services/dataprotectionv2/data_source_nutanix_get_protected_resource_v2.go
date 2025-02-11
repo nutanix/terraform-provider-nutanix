@@ -103,7 +103,7 @@ func DatasourceNutanixGetProtectedResourceV2Create(ctx context.Context, d *schem
 		return diag.Errorf("error setting category_fq_names: %s", err)
 	}
 
-	d.SetId(utils.StringValue(protectedResource.ExtId))
+	d.SetId(utils.StringValue(protectedResource.EntityExtId))
 
 	return nil
 }
