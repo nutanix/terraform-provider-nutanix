@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -28,6 +29,9 @@ func ResourceNutanixDeployPcV2() *schema.Resource {
 		ReadContext:   ResourceNutanixDeployPcV2Read,
 		UpdateContext: ResourceNutanixDeployPcV2Update,
 		DeleteContext: ResourceNutanixDeployPcV2Delete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(1*time.Hour + 30*time.Minute),
+		},
 		Schema: map[string]*schema.Schema{
 			"config": {
 				Type:     schema.TypeList,
@@ -45,31 +49,6 @@ func ResourceNutanixDeployPcV2() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-			},
-			// read schema
-			"tenant_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ext_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"links": schemaForLinks(),
-			"is_registered_with_hosting_cluster": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"hosting_cluster_ext_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"node_ext_ids": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
 			},
 		},
 	}
@@ -111,7 +90,7 @@ func ResourceNutanixDeployPcV2Create(ctx context.Context, d *schema.ResourceData
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for Domain Manager to be created: %s", err)
+		return diag.Errorf("error waiting for Domain Manager to be deployed: %s", err)
 	}
 
 	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
@@ -121,52 +100,14 @@ func ResourceNutanixDeployPcV2Create(ctx context.Context, d *schema.ResourceData
 
 	rUUID := resourceUUID.Data.GetValue().(config.Task)
 	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Create Domain Manager Task Details: %s", string(aJSON))
+	log.Printf("[DEBUG] Deploy Domain Manager Task Details: %s", string(aJSON))
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
-	d.SetId(*uuid)
+	d.SetId(utils.GenUUID())
 
-	return ResourceNutanixDeployPcV2Read(ctx, d, meta)
+	return nil
 }
 
 func ResourceNutanixDeployPcV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).PrismAPI
-
-	resp, err := conn.DomainManagerAPIInstance.GetDomainManagerById(utils.StringPtr(d.Id()))
-
-	if err != nil {
-		return diag.Errorf("error while fetching Domain Manager: %s", err)
-	}
-
-	deployPcBody := resp.Data.GetValue().(config.DomainManager)
-
-	if err := d.Set("tenant_id", utils.StringValue(deployPcBody.TenantId)); err != nil {
-		return diag.Errorf("error setting tenant_id: %s", err)
-	}
-	if err := d.Set("ext_id", utils.StringValue(deployPcBody.ExtId)); err != nil {
-		return diag.Errorf("error setting ext_id: %s", err)
-	}
-	if err := d.Set("links", flattenLinks(deployPcBody.Links)); err != nil {
-		return diag.Errorf("error setting links: %s", err)
-	}
-	if err := d.Set("config", flattenPCConfig(deployPcBody.Config)); err != nil {
-		return diag.Errorf("error setting config: %s", err)
-	}
-	if err := d.Set("is_registered_with_hosting_cluster", utils.BoolValue(deployPcBody.IsRegisteredWithHostingCluster)); err != nil {
-		return diag.Errorf("error setting is_registered_with_hosting_cluster: %s", err)
-	}
-	if err := d.Set("network", flattenPCNetwork(deployPcBody.Network)); err != nil {
-		return diag.Errorf("error setting network: %s", err)
-	}
-	if err := d.Set("hosting_cluster_ext_id", utils.StringValue(deployPcBody.HostingClusterExtId)); err != nil {
-		return diag.Errorf("error setting hosting_cluster_ext_id: %s", err)
-	}
-	if err := d.Set("should_enable_high_availability", utils.BoolValue(deployPcBody.ShouldEnableHighAvailability)); err != nil {
-		return diag.Errorf("error setting should_enable_high_availability: %s", err)
-	}
-	if err := d.Set("node_ext_ids", deployPcBody.NodeExtIds); err != nil {
-		return diag.Errorf("error setting node_ext_ids: %s", err)
-	}
 	return nil
 }
 
@@ -329,14 +270,17 @@ func schemaForPcConfig() *schema.Resource {
 						},
 						"num_vcpus": {
 							Type:     schema.TypeInt,
+							Optional: true,
 							Computed: true,
 						},
 						"memory_size_bytes": {
 							Type:     schema.TypeInt,
+							Optional: true,
 							Computed: true,
 						},
 						"data_disk_size_bytes": {
 							Type:     schema.TypeInt,
+							Optional: true,
 							Computed: true,
 						},
 					},
@@ -448,7 +392,7 @@ func schemaForPcNetwork() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"external_address": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				MaxItems: 1,
 				Elem:     schemaForIPAddress(),
 			},
@@ -978,6 +922,15 @@ func expandResourceConfig(resourceConfig interface{}) *config.DomainManagerResou
 		}
 		resourceConfigObj.ContainerExtIds = containerExtIdsListObj
 	}
+	if dataDiskSizeBytes, ok := resourceConfigData["data_disk_size_bytes"]; ok {
+		resourceConfigObj.DataDiskSizeBytes = utils.Int64Ptr(int64(dataDiskSizeBytes.(int)))
+	}
+	if memorySizeBytes, ok := resourceConfigData["memory_size_bytes"]; ok {
+		resourceConfigObj.MemorySizeBytes = utils.Int64Ptr(int64(memorySizeBytes.(int)))
+	}
+	if numVcpus, ok := resourceConfigData["num_vcpus"]; ok {
+		resourceConfigObj.NumVcpus = utils.IntPtr(numVcpus.(int))
+	}
 
 	return resourceConfigObj
 }
@@ -993,11 +946,11 @@ func expandPCNetwork(pcNetwork interface{}) *config.DomainManagerNetwork {
 
 	pcNetworkObj := config.NewDomainManagerNetwork()
 
-	if externalAddress, ok := pcNetworkData["external_address"]; ok {
+	if externalAddress, ok := pcNetworkData["external_address"]; ok && len(externalAddress.([]interface{})) > 0 {
 		externalAddressData := externalAddress.([]interface{})[0].(map[string]interface{})
 		pcNetworkObj.ExternalAddress = expandIPAddress(externalAddressData)
 	}
-	if nameServers, ok := pcNetworkData["name_servers"]; ok {
+	if nameServers, ok := pcNetworkData["name_servers"]; ok && len(nameServers.([]interface{})) > 0 {
 		nameServersData := nameServers.([]interface{})
 		nameServersObj := make([]commonConfig.IPAddressOrFQDN, 0)
 		for _, nameServerData := range nameServersData {
@@ -1006,7 +959,7 @@ func expandPCNetwork(pcNetwork interface{}) *config.DomainManagerNetwork {
 		}
 		pcNetworkObj.NameServers = nameServersObj
 	}
-	if ntpServers, ok := pcNetworkData["ntp_servers"]; ok {
+	if ntpServers, ok := pcNetworkData["ntp_servers"]; ok && len(ntpServers.([]interface{})) > 0 {
 		ntpServersData := ntpServers.([]interface{})
 		ntpServersObj := make([]commonConfig.IPAddressOrFQDN, 0)
 		for _, ntpServerData := range ntpServersData {
@@ -1015,7 +968,7 @@ func expandPCNetwork(pcNetwork interface{}) *config.DomainManagerNetwork {
 		}
 		pcNetworkObj.NtpServers = ntpServersObj
 	}
-	if internalNetworks, ok := pcNetworkData["internal_networks"]; ok {
+	if internalNetworks, ok := pcNetworkData["internal_networks"]; ok && len(internalNetworks.([]interface{})) > 0 {
 		internalNetworksData := internalNetworks.([]interface{})
 		internalNetworksList := make([]config.BaseNetwork, 0)
 		for _, internalNetworkData := range internalNetworksData {
@@ -1024,7 +977,7 @@ func expandPCNetwork(pcNetwork interface{}) *config.DomainManagerNetwork {
 		}
 		pcNetworkObj.InternalNetworks = internalNetworksList
 	}
-	if externalNetworks, ok := pcNetworkData["external_networks"]; ok {
+	if externalNetworks, ok := pcNetworkData["external_networks"]; ok && len(externalNetworks.([]interface{})) > 0 {
 		externalNetworksData := externalNetworks.([]interface{})
 		externalNetworksList := make([]config.ExternalNetwork, 0)
 		for _, externalNetworkData := range externalNetworksData {

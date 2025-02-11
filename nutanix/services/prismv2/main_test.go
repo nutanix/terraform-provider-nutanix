@@ -9,6 +9,18 @@ import (
 
 type TestConfig struct {
 	Prism struct {
+		DeployPC struct {
+			PeIP           string `json:"pe_ip"`
+			Version        string `json:"version"`
+			DefaultGateway string `json:"default_gateway"`
+			SubnetMask     string `json:"subnet_mask"`
+			IPRange        struct {
+				Begin string `json:"begin"`
+				End   string `json:"end"`
+			} `json:"ip_range"`
+			NameServers []string `json:"name_servers"`
+			NtpServers  []string `json:"ntp_servers"`
+		} `json:"deploy_pc"`
 		Bucket struct {
 			Name      string `json:"name"`
 			Region    string `json:"region"`
