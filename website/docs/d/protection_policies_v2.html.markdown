@@ -18,6 +18,17 @@ List the protection policies defined on the system. This operation supports filt
 ## Example Usage
 
 ```hcl
+// with filter
+data "nutanix_protection_policies_v2" "pps-filter" {
+  filter = "name eq 'example_protection_policy'"
+}
+
+// with limit
+data "nutanix_protection_policies_v2" "pp-limit" {
+  limit = 4
+}
+
+// with filter and limit
 data "nutanix_protection_policies_v2" "example"{
   filter = "startswith(name, 'C')"
   limit = "10"
@@ -42,6 +53,11 @@ The following arguments are supported:
 
 ## Attributes Reference
 The following attributes are exported:
+
+* `protection_policies`: - List of protection policies.
+
+## Protection Policies
+The protection_policies attribute supports the following:
 
 * `tenant_id`: - A globally unique identifier that represents the tenant that owns this entity. The system automatically assigns it, and it and is immutable from an API consumer perspective (some use cases may cause this Id to change - For instance, a use case may require the transfer of ownership of the entity, but these cases are handled automatically on the server).
 * `ext_id`: - A globally unique identifier of an instance that is suitable for external consumption.
