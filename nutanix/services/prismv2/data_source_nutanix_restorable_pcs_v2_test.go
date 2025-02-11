@@ -1,12 +1,14 @@
 package prismv2_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -98,6 +100,10 @@ resource "nutanix_restore_source_v2" "cluster-location" {
       }
     }
   }
+}
+
+output "restore_source" {
+   value = nutanix_restore_source_v2.cluster-location.id
 }
 
 `, username, password, endpoint, insecure, port)

@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/management"
-
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -21,6 +21,9 @@ func ResourceNutanixRestorePcV2() *schema.Resource {
 		ReadContext:   ResourceNutanixRestorePcRead,
 		UpdateContext: ResourceNutanixRestorePcUpdate,
 		DeleteContext: ResourceNutanixRestorePcDelete,
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(1*time.Hour + 30*time.Minute),
+		},
 		Schema: map[string]*schema.Schema{
 			"restore_source_ext_id": {
 				Type:     schema.TypeString,
@@ -40,17 +43,9 @@ func ResourceNutanixRestorePcV2() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"tenant_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ext_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"config": {
 							Type:     schema.TypeList,
-							Computed: true,
+							Required: true,
 							Elem:     schemaForPcConfig(),
 						},
 						"is_registered_with_hosting_cluster": {
@@ -59,7 +54,7 @@ func ResourceNutanixRestorePcV2() *schema.Resource {
 						},
 						"network": {
 							Type:     schema.TypeList,
-							Computed: true,
+							Required: true,
 							Elem:     schemaForPcNetwork(),
 						},
 						"hosting_cluster_ext_id": {
@@ -81,16 +76,6 @@ func ResourceNutanixRestorePcV2() *schema.Resource {
 					},
 				},
 			},
-			// read schema
-			"tenant_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"links": schemaForLinks(),
-			"creation_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -107,8 +92,8 @@ func ResourceNutanixRestorePcCreate(ctx context.Context, d *schema.ResourceData,
 	domainManagerConfigI := d.Get("domain_manager").([]interface{})[0]
 	domainManagerConfig := domainManagerConfigI.(map[string]interface{})
 
-	restorePcBody.Config = expandPCConfig(domainManagerConfig["config"].(map[string]interface{}))
-	restorePcBody.Network = expandPCNetwork(domainManagerConfig["network"].(map[string]interface{}))
+	restorePcBody.Config = expandPCConfig(domainManagerConfig["config"])
+	restorePcBody.Network = expandPCNetwork(domainManagerConfig["network"])
 	restorePcBody.ShouldEnableHighAvailability = utils.BoolPtr(domainManagerConfig["should_enable_high_availability"].(bool))
 
 	restoreSpec := management.NewRestoreSpec()
@@ -148,41 +133,20 @@ func ResourceNutanixRestorePcCreate(ctx context.Context, d *schema.ResourceData,
 	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
 	log.Printf("[DEBUG] Restore Domain Manager Task Details: %s", string(aJSON))
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
-	d.SetId(*uuid)
+	entityAffected := rUUID.EntitiesAffected
 
-	return ResourceNutanixRestorePcRead(ctx, d, meta)
+	for _, entity := range entityAffected {
+		if utils.StringValue(entity.Name) == "prism_central" && utils.StringValue(entity.Rel) == "prism:config:domain_manager" {
+			uuid := entity.ExtId
+			d.SetId(*uuid)
+			return nil
+		}
+	}
+
+	return diag.Errorf("error while fetching Restored Domain Manager UUID From Task Response: %s", err)
 }
 
 func ResourceNutanixRestorePcRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.Client).PrismAPI
-
-	restoreSourceExtID := utils.StringPtr(d.Get("restore_source_ext_id").(string))
-	restorableDomainManagerExtID := utils.StringPtr(d.Get("restorable_domain_manager_ext_id").(string))
-
-	resp, err := conn.DomainManagerBackupsAPIInstance.GetRestorePointById(restoreSourceExtID, restorableDomainManagerExtID, utils.StringPtr(d.Id()))
-
-	if err != nil {
-		return diag.Errorf("error while fetching Domain Manager Restore Point Detail: %s", err)
-	}
-
-	restorePoint := resp.Data.GetValue().(management.RestorePoint)
-
-	if err := d.Set("tenant_id", utils.StringValue(restorePoint.TenantId)); err != nil {
-		return diag.Errorf("error setting tenant_id: %s", err)
-	}
-	if err := d.Set("ext_id", utils.StringValue(restorePoint.ExtId)); err != nil {
-		return diag.Errorf("error setting ext_id: %s", err)
-	}
-	if err := d.Set("links", flattenLinks(restorePoint.Links)); err != nil {
-		return diag.Errorf("error setting links: %s", err)
-	}
-	if err := d.Set("creation_time", flattenTime(restorePoint.CreationTime)); err != nil {
-		return diag.Errorf("error setting creation_time: %s", err)
-	}
-	if err := d.Set("domain_manager", flattenDomainManager(restorePoint.DomainManager)); err != nil {
-		return diag.Errorf("error setting domain_manager: %s", err)
-	}
 	return nil
 }
 

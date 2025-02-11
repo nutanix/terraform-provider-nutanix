@@ -4,13 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"strconv"
+	"strings"
 	"time"
+	"unicode"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/management"
+	vmConfig "github.com/nutanix/ntnx-api-golang-clients/vmm-go-client/v4/models/vmm/v4/ahv/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -193,4 +197,361 @@ func getTaskStatus(pr *config.TaskStatus) string {
 		}
 	}
 	return "UNKNOWN"
+}
+
+func createBackupTarget(backupTargetExtID *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		fmt.Printf("Creating Backup Target\n")
+		conn := acc.TestAccProvider.Meta().(*conns.Client)
+		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
+
+		// Extract the output value for use in later steps
+		outputDomainManagerExtID, ok := s.RootModule().Outputs["domainManagerExtID"]
+		if !ok {
+			return fmt.Errorf("output 'domainManagerExtID' not found")
+		}
+
+		domainManagerExtID := outputDomainManagerExtID.Value.(string)
+
+		outputClusterExtID, ok := s.RootModule().Outputs["clusterExtID"]
+		if !ok {
+			return fmt.Errorf("output 'clusterExtID' not found")
+		}
+
+		clusterExtID := outputClusterExtID.Value.(string)
+
+		// Create Backup Target
+		body := management.BackupTarget{}
+
+		OneOfBackupTargetLocation := management.NewOneOfBackupTargetLocation()
+
+		clusterConfigBody := management.NewClusterLocation()
+		clusterRef := management.NewClusterReference()
+
+		clusterRef.ExtId = utils.StringPtr(clusterExtID)
+
+		clusterConfigBody.Config = clusterRef
+
+		err := OneOfBackupTargetLocation.SetValue(*clusterConfigBody)
+		if err != nil {
+			return fmt.Errorf("error while setting cluster location : %v", err)
+		}
+
+		body.Location = OneOfBackupTargetLocation
+
+		resp, err := client.CreateBackupTarget(utils.StringPtr(domainManagerExtID), &body)
+
+		if err != nil {
+			return fmt.Errorf("error while Creating Backup Target: %s", err)
+		}
+
+		TaskRef := resp.Data.GetValue().(config.TaskReference)
+		taskUUID := TaskRef.ExtId
+
+		taskconn := conn.PrismAPI
+		// Wait for the backup target to be deleted
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: taskStateRefreshPrismTaskGroupFunc(utils.StringValue(taskUUID)),
+			Timeout: timeout,
+		}
+
+		if _, err := stateConf.WaitForState(); err != nil {
+			return fmt.Errorf("error waiting for Backup Target to be deleted: %s", err)
+		}
+
+		_, err = taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		if err != nil {
+			return fmt.Errorf("error while fetching Backup Target Task Details: %s", err)
+		}
+
+		listResp, err := client.ListBackupTargets(utils.StringPtr(domainManagerExtID), nil, nil, nil, nil, nil)
+		if err != nil {
+			return fmt.Errorf("error while fetching Backup Target: %s", err)
+		}
+		backupTargets := listResp.Data.GetValue().([]management.BackupTarget)
+
+		// Find the new backup target ext id
+		for _, backupTarget := range backupTargets {
+			backupTargetLocation := backupTarget.Location
+			if utils.StringValue(backupTargetLocation.ObjectType_) == "prism.v4.management.ClusterLocation" {
+				clusterLocation := backupTarget.Location.GetValue().(management.ClusterLocation)
+				if utils.StringValue(clusterLocation.Config.ExtId) == clusterExtID {
+					*backupTargetExtID = utils.StringValue(backupTarget.ExtId)
+					break
+				}
+			}
+		}
+
+		return nil
+
+	}
+}
+
+func checkLastSyncTimeBackupTargetRestorePC(backupTargetExtID, pcExtID *string, retries int, delay time.Duration) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		fmt.Printf("Checking Last Sync Time\n")
+
+		conn := acc.TestAccProvider.Meta().(*conns.Client)
+		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
+
+		// Extract the output value for use in later steps
+		outputDomainManagerExtID, ok := s.RootModule().Outputs["domainManagerExtID"]
+		if !ok {
+			return fmt.Errorf("output 'domainManagerExtID' not found")
+		}
+
+		*pcExtID = outputDomainManagerExtID.Value.(string)
+
+		for i := 0; i < retries; i++ {
+			readResp, err := client.GetBackupTargetById(pcExtID, backupTargetExtID, nil)
+			if err != nil {
+				return fmt.Errorf("error while fetching Backup Target: %s", err)
+			}
+
+			backupTarget := readResp.Data.GetValue().(management.BackupTarget)
+
+			fmt.Printf("LastSyncTime: %v\n", backupTarget.LastSyncTime)
+			if backupTarget.LastSyncTime != nil {
+				fmt.Printf(" Restore Point Created after %d minutes\n", i*30/60)
+				return nil
+			}
+			fmt.Printf("Waiting for 30 seconds to Fetch backup target\n")
+			time.Sleep(delay)
+		}
+
+		return fmt.Errorf("backup Target restore point not created")
+	}
+}
+
+func createRestoreSource(restoreSourceExtID *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		fmt.Printf("Create Restore Source\n")
+		conn := acc.TestAccProvider2.Meta().(*conns.Client)
+		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
+
+		// Extract the output value for use in later steps
+		outputClusterExtID, ok := s.RootModule().Outputs["clusterExtID"]
+		if !ok {
+			return fmt.Errorf("output 'clusterExtID' not found")
+		}
+
+		clusterExtID := outputClusterExtID.Value.(string)
+
+		// Create Backup Target
+		body := management.RestoreSource{}
+
+		oneOfRestoreSourceLocation := management.NewOneOfRestoreSourceLocation()
+
+		clusterConfigBody := management.NewClusterLocation()
+		clusterRef := management.NewClusterReference()
+
+		clusterRef.ExtId = utils.StringPtr(clusterExtID)
+
+		clusterConfigBody.Config = clusterRef
+
+		err := oneOfRestoreSourceLocation.SetValue(*clusterConfigBody)
+		if err != nil {
+			return fmt.Errorf("error while setting cluster location : %v", err)
+		}
+
+		body.Location = oneOfRestoreSourceLocation
+
+		resp, err := client.CreateRestoreSource(&body)
+
+		if err != nil {
+			return fmt.Errorf("error while Creating Restore Source: %s", err)
+		}
+
+		restoreSource := resp.Data.GetValue().(management.RestoreSource)
+		*restoreSourceExtID = utils.StringValue(restoreSource.ExtId)
+
+		return nil
+	}
+}
+
+func ListRestorePoints(restoreSourceExtID, restorePointExtID, restorablePcExtID *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		fmt.Printf("List Restore Points\n")
+		conn := acc.TestAccProvider2.Meta().(*conns.Client)
+		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
+
+		resp, err := client.ListRestorableDomainManagers(restoreSourceExtID, nil, nil, nil)
+		if err != nil {
+			return fmt.Errorf("error while Listing Restorable Domain Managers configurations Details: %v", err)
+		}
+
+		if resp.Data == nil {
+			return fmt.Errorf("error setting Restorable pcs: %v", err)
+
+		} else {
+			restorablePcs := resp.Data.GetValue().([]management.RestorableDomainManager)
+			*restorablePcExtID = utils.StringValue(restorablePcs[0].ExtId)
+		}
+
+		restorePointResp, err := client.ListRestorePoints(restoreSourceExtID, restorablePcExtID, nil, nil, nil, nil, nil)
+		if err != nil {
+			return fmt.Errorf("error while fetching Domain Manager Restore Point Detail: %s", err)
+		}
+
+		if restorePointResp.Data == nil {
+			return fmt.Errorf("error setting restore_points: %v", err)
+		} else {
+			restorePoints := restorePointResp.Data.GetValue().([]management.RestorePoint)
+			*restorePointExtID = utils.StringValue(restorePoints[0].ExtId)
+		}
+
+		return nil
+	}
+}
+
+func deleteBackupTarget(backupTargetExtID, pcExtID *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acc.TestAccProvider.Meta().(*conns.Client)
+		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
+
+		readResp, err := client.GetBackupTargetById(pcExtID, backupTargetExtID)
+		if err != nil {
+			return fmt.Errorf("error while fetching Backup Target: %s", err)
+		}
+
+		// extract the etag from the read response
+		args := make(map[string]interface{})
+		eTag := client.ApiClient.GetEtag(readResp)
+		args["If-Match"] = utils.StringPtr(eTag)
+
+		_, err = client.DeleteBackupTargetById(pcExtID, backupTargetExtID, args)
+
+		if err != nil {
+			return fmt.Errorf("error while deleting Backup Target: %s", err)
+		}
+
+		return nil
+	}
+}
+
+func powerOffPC() resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acc.TestAccProvider.Meta().(*conns.Client)
+		vmClient := conn.VmmAPI.VMAPIInstance
+
+		// Cluster filter
+		vmsResp, err := vmClient.ListVms(nil, nil, nil, nil, nil, nil)
+		if err != nil {
+			return fmt.Errorf("error while fetching VMs: %s", err)
+		}
+
+		vms := vmsResp.Data.GetValue().([]vmConfig.Vm)
+
+		for _, vm := range vms {
+			if vm.MachineType.GetName() == "PC" && utils.StringValue(vm.Description) == "NutanixPrismCentral" {
+
+				// get etag
+				readResp, err := vmClient.GetVmById(vm.ExtId, nil)
+				if err != nil {
+					return fmt.Errorf("error while fetching PC: %s", err)
+				}
+				args := make(map[string]interface{})
+				eTag := vmClient.ApiClient.GetEtag(readResp)
+				args["If-Match"] = utils.StringPtr(eTag)
+
+				// Power off the PC
+				_, err = vmClient.PowerOffVm(vm.ExtId, args)
+				if err != nil {
+					fmt.Printf("error while powering off PC: %s", err)
+					//return fmt.Errorf("error while powering off PC: %s", err)
+					return nil
+				}
+
+				return nil
+			}
+		}
+		return fmt.Errorf("PC not found")
+	}
+}
+
+// generate Random Passwords
+var (
+	lowerLetters = []rune("abcdefghijklmnopqrstuvwxyz")
+	upperLetters = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	digits       = []rune("0123456789")
+	specials     = []rune("@#$")
+)
+
+// allChars is the union of all allowed characters.
+var allChars = append(append(append(lowerLetters, upperLetters...), digits...), specials...)
+
+// getRandomRune returns a random rune from a given set.
+func getRandomRune(set []rune) rune {
+	return set[rand.Intn(len(set))]
+}
+
+// hasConsecutiveDuplicates returns true if there are three identical runes in a row.
+func hasConsecutiveDuplicates(p []rune) bool {
+	for i := 2; i < len(p); i++ {
+		if p[i] == p[i-1] && p[i] == p[i-2] {
+			return true
+		}
+	}
+	return false
+}
+
+// meetsRequirements checks that p contains at least one lowercase letter,
+// one uppercase letter, one digit, and one special character.
+func meetsRequirements(p []rune) bool {
+	var hasLower, hasUpper, hasDigit, hasSpecial bool
+	for _, c := range p {
+		switch {
+		case unicode.IsLower(c):
+			hasLower = true
+		case unicode.IsUpper(c):
+			hasUpper = true
+		case unicode.IsDigit(c):
+			hasDigit = true
+		case strings.ContainsRune(string(specials), c):
+			hasSpecial = true
+		}
+	}
+	return hasLower && hasUpper && hasDigit && hasSpecial
+}
+
+// generatePassword builds a password that meets the requirements.
+func generatePassword() (string, error) {
+	// Choose a random length between 9 and 15 characters.
+	length := rand.Intn(7) + 9 // 9-15 characters
+
+	// Try up to 100 times to generate a valid password.
+	for attempt := 0; attempt < 100; attempt++ {
+		password := make([]rune, 0, length)
+
+		// Guarantee one character from each required set.
+		password = append(password, getRandomRune(lowerLetters))
+		password = append(password, '.')
+		password = append(password, getRandomRune(upperLetters))
+		password = append(password, '.')
+		password = append(password, getRandomRune(digits))
+		password = append(password, '.')
+		password = append(password, getRandomRune(specials))
+
+		// Fill remaining characters.
+		for len(password) < length {
+			password = append(password, '.')
+			password = append(password, getRandomRune(allChars))
+
+		}
+
+		// Validate constraints.
+		if hasConsecutiveDuplicates(password) {
+			continue
+		}
+		if !meetsRequirements(password) {
+			continue
+		}
+
+		// Password meets all requirements.
+		return string(password), nil
+	}
+
+	return "", fmt.Errorf("failed to generate valid password after 100 attempts")
 }

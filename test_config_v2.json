@@ -243,14 +243,35 @@
     "domain_manager_ext_id": ""
   },
   "prism": {
-    "cluster_ext_id": "",
+    "deploy_pc": {
+      "pe_ip": "",
+      "version": "",
+      "network_id": "",
+      "default_gateway": "",
+      "subnet_mask": "",
+      "ip_range": {
+        "begin": "",
+        "end": ""
+      },
+      "name_servers": [
+        "",
+        ""
+      ],
+      "ntp_servers": [
+        "",
+        ""
+      ]
+    },
+    "unregister": {
+      "pc_ext_id": ""
+    },
     "bucket": {
       "name": "",
       "region": "",
       "access_key": "",
       "secret_key": ""
     },
-    "restore_source":{
+    "restore_source": {
       "pe_ip": ""
     }
   }

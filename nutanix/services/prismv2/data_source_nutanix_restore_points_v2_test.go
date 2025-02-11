@@ -90,5 +90,22 @@ data "nutanix_restore_points_v2" "test" {
   restore_source_ext_id = nutanix_restore_source_v2.cluster-location.id
 }
 
+output "restore_point" {
+  value = data.nutanix_restore_points_v2.test.restore_points.0.ext_id
+}
+
+output "restorable_pc_ext_id" {
+  value = data.nutanix_restorable_pcs_v2.test.restorable_pcs.0.ext_id
+}
+
+data "nutanix_pc_v2" "test" {
+  ext_id = local.domainManagerExtId
+}
+
+output "pc_details" {
+  value = data.nutanix_pc_v2.test
+}
+
+
 `
 }
