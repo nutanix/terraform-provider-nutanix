@@ -185,19 +185,16 @@ func testProtectionPolicyResourceConfig(name, description string) string {
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 
-# List categories
-data "nutanix_categories_v2" "categories" {}
-
-# list Clusters 
-data "nutanix_clusters_v2" "clusters" {}
-
 locals {
-	clusterExtId = [
-		  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-		  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-	][0]
 	config = jsondecode(file("%[3]s"))
   	data_policies = local.config.data_policies
+}
+
+# Create Category
+resource "nutanix_category_v2" "test" {
+  key = "category-synchronous-protection-policy"
+  value = "category_synchronous_protection_policy"
+  description = "category for synchronous protection policy "
 }
 
 resource "nutanix_protection_policy_v2" "test" {
@@ -234,29 +231,27 @@ resource "nutanix_protection_policy_v2" "test" {
     is_primary            = false
   }
 
-  category_ids = [data.nutanix_categories_v2.categories.categories.3.ext_id]
+  category_ids = [nutanix_category_v2.test.id]
 }
 `, name, description, filepath)
 }
 
 func testProtectionPolicyResourceUpdateConfig(name, description string) string {
 	return fmt.Sprintf(`
+
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 
-# List categories
-data "nutanix_categories_v2" "categories" {}
-
-# list Clusters 
-data "nutanix_clusters_v2" "clusters" {}
-
 locals {
-	clusterExtId = [
-		  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-		  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-	][0]
 	config = jsondecode(file("%[3]s"))
   	data_policies = local.config.data_policies
+}
+
+# Create Category
+resource "nutanix_category_v2" "test" {
+  key = "category-synchronous-protection-policy"
+  value = "category_synchronous_protection_policy"
+  description = "category for synchronous protection policy "
 }
 
 resource "nutanix_protection_policy_v2" "test" {
@@ -319,7 +314,7 @@ resource "nutanix_protection_policy_v2" "test" {
     is_primary            = false
   }
 
-  category_ids = [data.nutanix_categories_v2.categories.categories.3.ext_id, data.nutanix_categories_v2.categories.categories.4.ext_id]
+  category_ids = [ nutanix_category_v2.test.id ]
 }
 `, name, description, filepath)
 }
@@ -328,9 +323,6 @@ func testProtectionPolicyResourceConfigLinearRetention(name, description string)
 	return fmt.Sprintf(`
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
-
-# List categories
-data "nutanix_categories_v2" "categories" {}
 
 # list Clusters 
 data "nutanix_clusters_v2" "clusters" {}
@@ -342,6 +334,13 @@ locals {
 	][0]
 	config = jsondecode(file("%[3]s"))
   	data_policies = local.config.data_policies
+}
+
+# Create Category
+resource "nutanix_category_v2" "test" {
+  key = "category-linear-retention-protection-policy"
+  value = "category_linear_retention_protection_policy"
+  description = "category for linea retention protection policy"
 }
 
 resource "nutanix_protection_policy_v2" "test" {
@@ -393,9 +392,7 @@ resource "nutanix_protection_policy_v2" "test" {
     is_primary            = false
   }
 
-  category_ids = [
-    data.nutanix_categories_v2.categories.categories.3.ext_id, data.nutanix_categories_v2.categories.categories.4.ext_id
-  ]
+  category_ids = [ nutanix_category_v2.test.id ]
 }`, name, description, filepath)
 }
 
@@ -404,26 +401,23 @@ func testProtectionPolicyResourceConfigAutoRollupRetention(name, description str
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 
-# List categories
-data "nutanix_categories_v2" "categories" {}
-
-# list Clusters 
-data "nutanix_clusters_v2" "clusters" {}
-
 locals {
-	clusterExtId = [
-		  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-		  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-	][0]
 	config = jsondecode(file("%[3]s"))
   	data_policies = local.config.data_policies
+}
+
+# Create Category
+resource "nutanix_category_v2" "test" {
+  key = "category-auto-rollup-retention-protection-policy"
+  value = "category_auto_rollup_retention_protection_policy"
+  description = "category for auto rollup retention protection policy "
 }
 
 resource "nutanix_protection_policy_v2" "test" {
   name        = "%[1]s"
   description = "%[2]s"
 
-replication_configurations {
+  replication_configurations {
     source_location_label = "source"
     remote_location_label = "target"
     schedule {
@@ -479,7 +473,7 @@ replication_configurations {
     is_primary            = false
   }
 
-  category_ids = [data.nutanix_categories_v2.categories.categories.3.ext_id, data.nutanix_categories_v2.categories.categories.4.ext_id]
+  category_ids = [ nutanix_category_v2.test.id ]
 }
 `, name, description, filepath)
 }
