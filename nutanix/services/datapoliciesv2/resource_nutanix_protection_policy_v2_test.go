@@ -35,11 +35,13 @@ func TestAccV2NutanixProtectionPolicyResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.recovery_point_objective_time_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.recovery_point_type", "CRASH_CONSISTENT"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.sync_replication_auto_suspend_timeout_seconds", "10"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.start_time", "23h:54m"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.source_location_label", "target"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.remote_location_label", "source"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.recovery_point_objective_time_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.recovery_point_type", "CRASH_CONSISTENT"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.sync_replication_auto_suspend_timeout_seconds", "10"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.start_time", "23h:54m"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.0.label", "source"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.0.is_primary", "true"),
 					resource.TestCheckResourceAttrSet(resourceNameProtectionPolicy, "replication_locations.0.domain_manager_ext_id"),
@@ -65,7 +67,7 @@ func TestAccV2NutanixProtectionPolicyResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.retention.0.auto_rollup_retention.0.local.0.snapshot_interval_type", "WEEKLY"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.retention.0.auto_rollup_retention.0.remote.0.frequency", "1"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.retention.0.auto_rollup_retention.0.remote.0.snapshot_interval_type", "DAILY"),
-					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.start_time", "23h:54m"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.start_time", "15h:19m"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.source_location_label", "target-updated"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.remote_location_label", "source-updated"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.recovery_point_objective_time_seconds", "60"),
@@ -75,14 +77,14 @@ func TestAccV2NutanixProtectionPolicyResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.retention.0.auto_rollup_retention.0.local.0.snapshot_interval_type", "DAILY"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.retention.0.auto_rollup_retention.0.remote.0.frequency", "2"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.retention.0.auto_rollup_retention.0.remote.0.snapshot_interval_type", "WEEKLY"),
-					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.start_time", "23h:54m"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.start_time", "15h:19m"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.0.label", "source-updated"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.0.is_primary", "true"),
 					resource.TestCheckResourceAttrSet(resourceNameProtectionPolicy, "replication_locations.0.domain_manager_ext_id"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.domain_manager_ext_id", testVars.ProtectionPolicies.DomainManagerExtID),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.is_primary", "false"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.label", "target-updated"),
-					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "category_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "category_ids.#", "1"),
 				),
 			},
 		},
@@ -94,13 +96,16 @@ func TestAccV2NutanixProtectionPolicyResource_LinearRetention(t *testing.T) {
 	name := fmt.Sprintf("tf-test-protection-policy-%d", r)
 	description := "terraform test protection policy CRUD"
 
+	nameUpdated := fmt.Sprintf("tf-test-protection-policy-%d-update", r)
+	descriptionUpdated := "terraform test protection policy CRUD update"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testProtectionPolicyV2CheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testProtectionPolicyResourceConfigLinearRetention(name, description),
+				Config: testProtectionPolicyResourceConfigLinearRetentionConfig(name, description),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameProtectionPolicy, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "name", name),
@@ -109,6 +114,7 @@ func TestAccV2NutanixProtectionPolicyResource_LinearRetention(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.remote_location_label", "1"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.recovery_point_objective_time_seconds", "7200"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.recovery_point_type", "CRASH_CONSISTENT"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.start_time", "23h:54m"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.retention.0.linear_retention.0.local", "1"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.retention.0.linear_retention.0.remote", "1"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.source_location_label", "1"),
@@ -123,7 +129,36 @@ func TestAccV2NutanixProtectionPolicyResource_LinearRetention(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.label", "1"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.is_primary", "false"),
 					resource.TestCheckResourceAttrSet(resourceNameProtectionPolicy, "replication_locations.1.domain_manager_ext_id"),
-					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "category_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "category_ids.#", "1"),
+				),
+			},
+			{
+				Config: testProtectionPolicyResourceConfigLinearRetentionUpdateConfig(nameUpdated, descriptionUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNameProtectionPolicy, "ext_id"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "name", nameUpdated),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "description", descriptionUpdated),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.source_location_label", "0-updated"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.remote_location_label", "1-updated"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.recovery_point_objective_time_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.recovery_point_type", "APPLICATION_CONSISTENT"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.start_time", "15h:19m"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.retention.0.linear_retention.0.local", "2"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.retention.0.linear_retention.0.remote", "2"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.source_location_label", "1-updated"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.remote_location_label", "0-updated"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.recovery_point_objective_time_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.recovery_point_type", "APPLICATION_CONSISTENT"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.start_time", "15h:19m"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.retention.0.linear_retention.0.local", "2"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.retention.0.linear_retention.0.remote", "2"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.0.label", "0-updated"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.0.is_primary", "true"),
+					resource.TestCheckResourceAttrSet(resourceNameProtectionPolicy, "replication_locations.0.domain_manager_ext_id"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.label", "1-updated"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.is_primary", "false"),
+					resource.TestCheckResourceAttrSet(resourceNameProtectionPolicy, "replication_locations.1.domain_manager_ext_id"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "category_ids.#", "1"),
 				),
 			},
 		},
@@ -135,6 +170,9 @@ func TestAccV2NutanixProtectionPolicyResource_AutoRollupRetention(t *testing.T) 
 	name := fmt.Sprintf("tf-test-protection-policy-%d", r)
 	description := "terraform test protection policy CRUD auto rollup retention"
 
+	nameUpdated := fmt.Sprintf("tf-test-protection-policy-%d-update", r)
+	descriptionUpdated := "terraform test protection policy CRUD update auto rollup retention"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
 		Providers:    acc.TestAccProviders,
@@ -142,7 +180,7 @@ func TestAccV2NutanixProtectionPolicyResource_AutoRollupRetention(t *testing.T) 
 		Steps: []resource.TestStep{
 
 			{
-				Config: testProtectionPolicyResourceConfigAutoRollupRetention(name, description),
+				Config: testProtectionPolicyResourceConfigAutoRollupRetentionConfig(name, description),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameProtectionPolicy, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "name", name),
@@ -173,7 +211,42 @@ func TestAccV2NutanixProtectionPolicyResource_AutoRollupRetention(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.domain_manager_ext_id", testVars.ProtectionPolicies.DomainManagerExtID),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.is_primary", "false"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.label", "target"),
-					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "category_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "category_ids.#", "1"),
+				),
+			},
+			{
+				Config: testProtectionPolicyResourceConfigAutoRollupRetentionUpdateConfig(nameUpdated, descriptionUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceNameProtectionPolicy, "ext_id"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "name", nameUpdated),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "description", descriptionUpdated),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.source_location_label", "source-updated"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.remote_location_label", "target-updated"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.recovery_point_objective_time_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.recovery_point_type", "APPLICATION_CONSISTENT"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.sync_replication_auto_suspend_timeout_seconds", "90"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.retention.0.auto_rollup_retention.0.local.0.snapshot_interval_type", "WEEKLY"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.retention.0.auto_rollup_retention.0.local.0.frequency", "3"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.retention.0.auto_rollup_retention.0.remote.0.snapshot_interval_type", "DAILY"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.retention.0.auto_rollup_retention.0.remote.0.frequency", "2"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.0.schedule.0.start_time", "13h:08m"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.source_location_label", "target-updated"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.remote_location_label", "source-updated"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.recovery_point_objective_time_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.recovery_point_type", "APPLICATION_CONSISTENT"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.sync_replication_auto_suspend_timeout_seconds", "120"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.retention.0.auto_rollup_retention.0.local.0.frequency", "2"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.retention.0.auto_rollup_retention.0.local.0.snapshot_interval_type", "DAILY"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.retention.0.auto_rollup_retention.0.remote.0.frequency", "3"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.retention.0.auto_rollup_retention.0.remote.0.snapshot_interval_type", "WEEKLY"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_configurations.1.schedule.0.start_time", "13h:08m"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.0.label", "source-updated"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.0.is_primary", "true"),
+					resource.TestCheckResourceAttrSet(resourceNameProtectionPolicy, "replication_locations.0.domain_manager_ext_id"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.domain_manager_ext_id", testVars.ProtectionPolicies.DomainManagerExtID),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.is_primary", "false"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.label", "target-updated"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "category_ids.#", "1"),
 				),
 			},
 		},
@@ -192,7 +265,7 @@ locals {
 
 # Create Category
 resource "nutanix_category_v2" "test" {
-  key = "category-synchronous-protection-policy"
+  key = "tf-test-category-synchronous-protection-policy"
   value = "category_synchronous_protection_policy"
   description = "category for synchronous protection policy "
 }
@@ -208,6 +281,7 @@ resource "nutanix_protection_policy_v2" "test" {
       recovery_point_objective_time_seconds         = 0
       recovery_point_type                           = "CRASH_CONSISTENT"
       sync_replication_auto_suspend_timeout_seconds = 10
+      start_time									= "23h:54m"
     }
   }
   replication_configurations {
@@ -217,6 +291,7 @@ resource "nutanix_protection_policy_v2" "test" {
       recovery_point_objective_time_seconds         = 0
       recovery_point_type                           = "CRASH_CONSISTENT"
       sync_replication_auto_suspend_timeout_seconds = 10
+      start_time									= "23h:54m"
     }
   }
 
@@ -249,7 +324,7 @@ locals {
 
 # Create Category
 resource "nutanix_category_v2" "test" {
-  key = "category-synchronous-protection-policy"
+  key = "tf-test-category-synchronous-protection-policy"
   value = "category_synchronous_protection_policy"
   description = "category for synchronous protection policy "
 }
@@ -265,7 +340,7 @@ resource "nutanix_protection_policy_v2" "test" {
       recovery_point_objective_time_seconds         = 60
       recovery_point_type                           = "APPLICATION_CONSISTENT"
       sync_replication_auto_suspend_timeout_seconds = 20
-      start_time									= "23h:54m"
+      start_time									= "15h:19m"
       retention {
         auto_rollup_retention {
           local {
@@ -287,7 +362,7 @@ resource "nutanix_protection_policy_v2" "test" {
       recovery_point_objective_time_seconds         = 60
       recovery_point_type                           = "APPLICATION_CONSISTENT"
       sync_replication_auto_suspend_timeout_seconds = 30
-      start_time									= "23h:54m"
+      start_time									= "15h:19m"
       retention {
         auto_rollup_retention {
           local {
@@ -319,7 +394,7 @@ resource "nutanix_protection_policy_v2" "test" {
 `, name, description, filepath)
 }
 
-func testProtectionPolicyResourceConfigLinearRetention(name, description string) string {
+func testProtectionPolicyResourceConfigLinearRetentionConfig(name, description string) string {
 	return fmt.Sprintf(`
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
@@ -338,7 +413,7 @@ locals {
 
 # Create Category
 resource "nutanix_category_v2" "test" {
-  key = "category-linear-retention-protection-policy"
+  key = "tf-test-category-linear-retention-protection-policy"
   value = "category_linear_retention_protection_policy"
   description = "category for linea retention protection policy"
 }
@@ -353,6 +428,7 @@ resource "nutanix_protection_policy_v2" "test" {
     schedule {
       recovery_point_objective_time_seconds = 7200
       recovery_point_type                   = "CRASH_CONSISTENT"
+	  start_time							= "23h:54m"
       retention {
         linear_retention {
           local  = 1
@@ -367,6 +443,7 @@ resource "nutanix_protection_policy_v2" "test" {
     schedule {
       recovery_point_objective_time_seconds = 7200
       recovery_point_type                   = "CRASH_CONSISTENT"
+	  start_time							= "23h:54m"
       retention {
         linear_retention {
           local  = 1
@@ -396,7 +473,86 @@ resource "nutanix_protection_policy_v2" "test" {
 }`, name, description, filepath)
 }
 
-func testProtectionPolicyResourceConfigAutoRollupRetention(name, description string) string {
+func testProtectionPolicyResourceConfigLinearRetentionUpdateConfig(name, description string) string {
+	return fmt.Sprintf(`
+# List domain Managers
+data "nutanix_pcs_v2" "pcs-list" {}
+
+# list Clusters 
+data "nutanix_clusters_v2" "clusters" {}
+
+locals {
+	clusterExtId = [
+		  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+		  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+	][0]
+	config = jsondecode(file("%[3]s"))
+  	data_policies = local.config.data_policies
+}
+
+# Create Category
+resource "nutanix_category_v2" "test" {
+  key = "tf-test-category-linear-retention-protection-policy"
+  value = "category_linear_retention_protection_policy"
+  description = "category for linea retention protection policy"
+}
+
+resource "nutanix_protection_policy_v2" "test" {
+  name        = "%[1]s"
+  description = "%[2]s"
+
+ replication_configurations {
+    source_location_label = "0-updated"
+    remote_location_label = "1-updated"
+    schedule {
+      recovery_point_objective_time_seconds = 3600
+      recovery_point_type                   = "APPLICATION_CONSISTENT"
+	  start_time							= "15h:19m"
+      retention {
+        linear_retention {
+          local  = 2
+          remote = 2
+        }
+      }
+    }
+  }
+  replication_configurations {
+    source_location_label = "1-updated"
+    remote_location_label = "0-updated"
+    schedule {
+      recovery_point_objective_time_seconds = 3600
+      recovery_point_type                   = "APPLICATION_CONSISTENT"
+	  start_time							= "15h:19m"
+      retention {
+        linear_retention {
+          local  = 2
+          remote = 2
+        }
+      }
+    }
+  }
+
+  replication_locations {
+    domain_manager_ext_id = data.nutanix_pcs_v2.pcs-list.pcs[0].ext_id
+    label                 = "0-updated"
+    is_primary            = true
+    replication_sub_location {
+      cluster_ext_ids {
+        cluster_ext_ids = [local.clusterExtId]
+      }
+    }
+  }
+  replication_locations {
+    domain_manager_ext_id = local.data_policies.domain_manager_ext_id
+    label                 = "1-updated"
+    is_primary            = false
+  }
+
+  category_ids = [ nutanix_category_v2.test.id ]
+}`, name, description, filepath)
+}
+
+func testProtectionPolicyResourceConfigAutoRollupRetentionConfig(name, description string) string {
 	return fmt.Sprintf(`
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
@@ -408,7 +564,7 @@ locals {
 
 # Create Category
 resource "nutanix_category_v2" "test" {
-  key = "category-auto-rollup-retention-protection-policy"
+  key = "tf-test-category-auto-rollup-retention-protection-policy"
   value = "category_auto_rollup_retention_protection_policy"
   description = "category for auto rollup retention protection policy "
 }
@@ -478,4 +634,84 @@ resource "nutanix_protection_policy_v2" "test" {
 `, name, description, filepath)
 }
 
-// create sync protection policy, do not provide retention
+func testProtectionPolicyResourceConfigAutoRollupRetentionUpdateConfig(name, description string) string {
+	return fmt.Sprintf(`
+# List domain Managers
+data "nutanix_pcs_v2" "pcs-list" {}
+
+locals {
+	config = jsondecode(file("%[3]s"))
+  	data_policies = local.config.data_policies
+}
+
+# Create Category
+resource "nutanix_category_v2" "test" {
+  key = "tf-test-category-auto-rollup-retention-protection-policy"
+  value = "category_auto_rollup_retention_protection_policy"
+  description = "category for auto rollup retention protection policy "
+}
+
+resource "nutanix_protection_policy_v2" "test" {
+  name        = "%[1]s"
+  description = "%[2]s"
+
+  replication_configurations {
+    source_location_label = "source-updated"
+    remote_location_label = "target-updated"
+    schedule {
+      recovery_point_objective_time_seconds         = 3600
+      recovery_point_type                           = "APPLICATION_CONSISTENT"
+      sync_replication_auto_suspend_timeout_seconds = 90
+      start_time = "13h:08m"
+      retention {
+        auto_rollup_retention {
+          local {
+            snapshot_interval_type = "WEEKLY"
+            frequency              = 3
+          }
+          remote {
+            snapshot_interval_type = "DAILY"
+            frequency              = 2
+          }
+        }
+      }
+    }
+  }
+  replication_configurations {
+    source_location_label = "target-updated"
+    remote_location_label = "source-updated"
+    schedule {
+      recovery_point_objective_time_seconds         = 3600
+      recovery_point_type                           = "APPLICATION_CONSISTENT"
+      sync_replication_auto_suspend_timeout_seconds = 120
+      start_time = "13h:08m"
+      retention {
+        auto_rollup_retention {
+          local {
+            snapshot_interval_type = "DAILY"
+            frequency              = 2
+          }
+          remote {
+            snapshot_interval_type = "WEEKLY"
+            frequency              = 3
+          }
+        }
+      }
+    }
+  }
+
+  replication_locations {
+    domain_manager_ext_id = data.nutanix_pcs_v2.pcs-list.pcs[0].ext_id
+    label                 = "source-updated"
+    is_primary            = true
+  }
+  replication_locations {
+    domain_manager_ext_id = local.data_policies.domain_manager_ext_id
+    label                 = "target-updated"
+    is_primary            = false
+  }
+
+  category_ids = [ nutanix_category_v2.test.id ]
+}
+`, name, description, filepath)
+}

@@ -66,14 +66,20 @@ func checkAttributeLengthEqual(resourceName, attribute string, expectedLength in
 func testProtectionPolicyV2CheckDestroy(state *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
 	client := conn.DataPoliciesAPI.ProtectionPolicies
+
 	for _, rs := range state.RootModule().Resources {
-		if rs.Type != resourceNameProtectionPolicy {
-			continue
-		}
-		_, err := client.GetProtectionPolicyById(utils.StringPtr(rs.Primary.ID))
-		if err == nil {
-			return fmt.Errorf("protection policy still exists")
+		if rs.Type == resourceNameProtectionPolicy {
+			_, err := client.GetProtectionPolicyById(utils.StringPtr(rs.Primary.ID))
+			if err == nil {
+				return fmt.Errorf("protection policy still exists")
+			}
+			fmt.Printf("Protection Policy still exists")
+			_, err = client.DeleteProtectionPolicyById(utils.StringPtr(rs.Primary.ID))
+			if err != nil {
+				return fmt.Errorf("error: protection policy still exists : %v", err)
+			}
 		}
 	}
+
 	return nil
 }
