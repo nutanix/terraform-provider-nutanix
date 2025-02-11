@@ -43,7 +43,6 @@ func TestAccV2NutanixDeployPcResource_Basic(t *testing.T) {
 }
 
 func testAccDeployPCConfig(name string) string {
-
 	username := os.Getenv("NUTANIX_USERNAME")
 	password := os.Getenv("NUTANIX_PASSWORD")
 	port, _ := strconv.Atoi(os.Getenv("NUTANIX_PORT"))

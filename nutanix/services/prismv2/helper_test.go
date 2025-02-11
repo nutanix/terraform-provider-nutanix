@@ -257,8 +257,8 @@ func createBackupTarget(backupTargetExtID *string) resource.TestCheckFunc {
 			Timeout: timeout,
 		}
 
-		if _, err := stateConf.WaitForState(); err != nil {
-			return fmt.Errorf("error waiting for Backup Target to be deleted: %s", err)
+		if _, taskErr := stateConf.WaitForState(); err != nil {
+			return fmt.Errorf("error waiting for Backup Target to be deleted: %s", taskErr)
 		}
 
 		_, err = taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
@@ -384,11 +384,9 @@ func ListRestorePoints(restoreSourceExtID, restorePointExtID, restorablePcExtID 
 
 		if resp.Data == nil {
 			return fmt.Errorf("error setting Restorable pcs: %v", err)
-
-		} else {
-			restorablePcs := resp.Data.GetValue().([]management.RestorableDomainManager)
-			*restorablePcExtID = utils.StringValue(restorablePcs[0].ExtId)
 		}
+		restorablePcs := resp.Data.GetValue().([]management.RestorableDomainManager)
+		*restorablePcExtID = utils.StringValue(restorablePcs[0].ExtId)
 
 		restorePointResp, err := client.ListRestorePoints(restoreSourceExtID, restorablePcExtID, nil, nil, nil, nil, nil)
 		if err != nil {
@@ -397,10 +395,9 @@ func ListRestorePoints(restoreSourceExtID, restorePointExtID, restorablePcExtID 
 
 		if restorePointResp.Data == nil {
 			return fmt.Errorf("error setting restore_points: %v", err)
-		} else {
-			restorePoints := restorePointResp.Data.GetValue().([]management.RestorePoint)
-			*restorePointExtID = utils.StringValue(restorePoints[0].ExtId)
 		}
+		restorePoints := restorePointResp.Data.GetValue().([]management.RestorePoint)
+		*restorePointExtID = utils.StringValue(restorePoints[0].ExtId)
 
 		return nil
 	}
@@ -446,7 +443,6 @@ func powerOffPC() resource.TestCheckFunc {
 
 		for _, vm := range vms {
 			if vm.MachineType.GetName() == "PC" && utils.StringValue(vm.Description) == "NutanixPrismCentral" {
-
 				// get etag
 				readResp, err := vmClient.GetVmById(vm.ExtId, nil)
 				if err != nil {
@@ -538,7 +534,6 @@ func generatePassword() (string, error) {
 		for len(password) < length {
 			password = append(password, '.')
 			password = append(password, getRandomRune(allChars))
-
 		}
 
 		// Validate constraints.
