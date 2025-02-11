@@ -9,7 +9,6 @@ import (
 type Client struct {
 	APIClientInstance *dataprotection.ApiClient
 	RecoveryPoint     *api.RecoveryPointsApi
-	ProtectedResource *api.ProtectedResourcesApi
 }
 
 func NewDataProtectionClient(credentials client.Credentials) (*Client, error) {
@@ -29,8 +28,7 @@ func NewDataProtectionClient(credentials client.Credentials) (*Client, error) {
 	}
 
 	f := &Client{
-		RecoveryPoint:     api.NewRecoveryPointsApi(baseClient),
-		ProtectedResource: api.NewProtectedResourcesApi(baseClient),
+		RecoveryPoint: api.NewRecoveryPointsApi(baseClient),
 	}
 
 	return f, nil

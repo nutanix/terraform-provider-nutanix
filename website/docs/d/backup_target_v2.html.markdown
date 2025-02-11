@@ -17,8 +17,8 @@ Retrieves the backup targets (cluster or object store) from a domain manager and
 ```hcl
 
 data "nutanix_backup_target_v2" "example"{
-  domain_manager_ext_id = "<domain_manager_uuid>"
-  ext_id = "<backup_target_uuid>"
+  domain_manager_ext_id = "75dde184-3a0e-4f59-a185-03ca1efead17"
+  ext_id = "00062d3d-5d07-0da6-0000-000000028f57"
 }
 
 ```
@@ -51,8 +51,12 @@ The location argument exports the following:
 The `cluster_location` argument exports the following:
 
 * `config`: - Cluster reference of the remote cluster to be connected.
-* `config.ext_id`: - Cluster UUID of a remote cluster.
-* `config.name`: - Name of the cluster.
+
+##### Config
+The `config` argument exports the following:
+
+* `ext_id`: - Cluster UUID of a remote cluster.
+* `name`: - Name of the cluster.
 
 #### Object Store Location
 The `object_store_location` argument exports the following:
@@ -80,4 +84,4 @@ The `backup_policy` argument exports the following:
 
 
 
-See detailed information in [Nutanix Backup Target Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/getBackupTargetById).
+See detailed information in [Nutanix Backup Target V4 Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/getBackupTargetById).

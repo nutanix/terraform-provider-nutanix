@@ -17,9 +17,9 @@ Unregister a registered remote cluster from the local cluster. This process is a
 
 ```hcl
 
-resource "nutanix_unregister_cluster_v2 " "pc"{
-  pc_ext_id = "<PC_UUID>"
-  ext_id = "cluster uuid"
+resource "nutanix_unregister_cluster_v2 " "unregister-pc"{
+  pc_ext_id = "75dde184-3a0e-4f59-a185-03ca1efead17"
+  ext_id = "869aa8a5-5aeb-423f-829d-f932d2656b6c"
 }
 
 ```
@@ -31,4 +31,4 @@ The following arguments are supported:
 * `pc_ext_id`: -(Required) The external identifier of the domain manager (Prism Central) resource
 * `ext_id`: -(Required) Cluster UUID of a remote cluster.
 
-See detailed information in [Nutanix Unregister a Remote Cluster from Local Cluster Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/unregister).
+See detailed information in [Nutanix Unregister a Remote Cluster from Local Cluster V4 Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/unregister).

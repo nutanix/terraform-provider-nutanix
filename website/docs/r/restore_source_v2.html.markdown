@@ -13,41 +13,92 @@ description: |-
 Create a restore source pointing to a cluster or object store to restore the domain manager. The created restore source is intended to be deleted after use. If the restore source is not deleted using the deleteRestoreSource API, then it is auto-deleted after sometime. Also note that a restore source will not contain a backup policy. It is only used to access the backup data at the location from where the Prism Central may be restored. Credentials used to access the restore source are not validated at the time of creation of the restore source. They are validated when the restore source is used to fetch data.
 
 
-## Example Usage
+## Example Usage - Cluster Location
 
 ```hcl
-// using cluster location
-resource "nutanix_restore_source_v2" "example-1"{
+provider "nutanix" {
+  username = var.username
+  password = var.password
+  endpoint = var.pc_endpoint
+  insecure = true
+  port     = var.port
+}
+
+provider "nutanix" {
+  alias    = "pe"
+  username = var.username
+  password = var.password
+  endpoint = var.pe_endpoint
+  insecure = true
+  port     = var.port
+}
+
+data "nutanix_clusters_v2" "clusters" {}
+
+locals {
+  domainManagerExtID = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] == "PRISM_CENTRAL"
+  ][
+  0
+  ]
+  clusterExtID       = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+  ][
+  0
+  ]
+}
+
+resource "nutanix_backup_target_v2" "cluster-location"{
+  domain_manager_ext_id = local.domainManagerExtID
   location {
     cluster_location {
       config {
-        ext_id = "cluster uuid"
+        ext_id = local.clusterExtID
       }
-    }    
+    }
+  }
+}
+
+// using cluster location
+resource "nutanix_restore_source_v2" "example-1"{
+  provider = nutanix.pe
+  location {
+    cluster_location {
+      config {
+        ext_id = local.clusterExtID
+      }
+    }
   }
 }
 
 ```
 
-## Example Usage
+## Example Usage - Object Store Location
 
 ```hcl
 // using object store location
-resource "nutanix_restore_source_v2" "example-2"{
+resource "nutanix_restore_source_v2" "object-store-location"{
   location {
     object_store_location {
       provider_config {
-        bucket_name = "bucket name"
-        region      = "region"
+        bucket_name = "nutanix-terraform-bucket"
+        region      = "us-west-1"
         credentials {
-          access_key_id     = "id"
-          secret_access_key = "key"
+          access_key_id     = "IHSAJHDHADFWYTKJHFGCJKHASGJHKDSA"
+          secret_access_key = "JGSDHJYHGFHGHDS+JKBASDF/HSDAFHJ+SjkfbdsASDfdJFdSDFJfk"
         }
       }
       backup_policy {
-        rpo_in_minutes = 70
+        rpo_in_minutes = 120
       }
     }
+  }
+  lifecycle {
+    ignore_changes = [
+      location[0].object_store_location[0].provider_config[0].credentials
+    ]
   }
 }
 
@@ -69,7 +120,11 @@ The location argument supports the following:
 The `cluster_location` argument supports the following:
 
 * `config`: -(Required) Cluster reference of the remote cluster to be connected.
-* `config.ext_id`: -(Required) Cluster UUID of a remote cluster.
+
+##### Config
+The `config` argument supports the following:
+
+* `ext_id`: -(Required) Cluster UUID of a remote cluster.
 
 #### Object Store Location
 The `object_store_location` argument supports the following:
@@ -97,4 +152,4 @@ The `backup_policy` argument supports the following:
 
 
 
-See detailed information in [Nutanix Restore Source Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/createRestoreSource).
+See detailed information in [Nutanix Restore Source V4 Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/createRestoreSource).
