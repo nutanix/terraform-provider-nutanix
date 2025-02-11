@@ -285,7 +285,6 @@ func createBackupTarget(backupTargetExtID *string) resource.TestCheckFunc {
 		}
 
 		return nil
-
 	}
 }
 

@@ -113,7 +113,6 @@ func TestAccV2NutanixRestorePCResource_RestorePC(t *testing.T) {
 }
 
 func testAccPreRequestForRestorePcConfig() string {
-
 	// pe config
 	username := os.Getenv("NUTANIX_USERNAME")
 	password := os.Getenv("NUTANIX_PASSWORD")
