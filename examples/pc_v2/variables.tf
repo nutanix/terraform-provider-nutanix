@@ -11,22 +11,21 @@ variable "nutanix_endpoint" {
 variable "nutanix_port" {
   type = string
 }
+variable "pe_username" {
+  type = string
+}
+variable "pe_password" {
+  type = string
+}
 
-variable "pc_ext_id" {
-    type = string
-}
-variable "cluster_ext_id" {
-    type = string
-}
-variable "bucket_name" {
+variable "cvm_ip" {
   type = string
 }
-variable "region" {
+
+variable "new_username" {
   type = string
 }
-variable "access_key_id" {
-  type = string
-}
-variable "secret_access_key" {
+
+variable "new_password" {
   type = string
 }

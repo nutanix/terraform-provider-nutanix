@@ -2,7 +2,7 @@ terraform {
   required_providers {
     nutanix = {
       source  = "nutanix/nutanix"
-      version = "2.1"
+      version = "2.1.0"
     }
   }
 }
@@ -18,37 +18,62 @@ provider "nutanix" {
 
 
 // deploy pc
-resource "nutanix_deploy_pc_v2" "pc"{
+resource "nutanix_deploy_pc_v2" "example"{
+  timeouts {
+    create = "120m"
+  }
   config {
     build_info {
-      version = "5.17.0"
+      version = local.deploy_pc.version
     }
-    size = "SMALL"
-    name = "pc_example"
+    size = "STARTER"
+    name = "PC_EXAMPLE"
   }
   network {
-    external_address {
-      ipv4 {
-        value = "10.0.0.2"
+    external_networks {
+      network_ext_id = "ba416f8d-00f2-499d-bc4c-19da8d104af9"
+      default_gateway {
+        ipv4 {
+          value = "10.97.64.1"
+        }
       }
-    }
-    ntp_servers {
-      ipv4 {
-        value = "10.0.0.22"
+      subnet_mask {
+        ipv4 {
+          value = "255.255.252.0"
+        }
+      }
+      ip_ranges {
+        begin {
+          ipv4 {
+            value = "10.97.64.91"
+          }
+        }
+        end {
+          ipv4 {
+            value = "10.97.64.91"
+          }
+        }
       }
     }
     name_servers {
       ipv4 {
-        value = "10.0.0.43"
+        value = "10.40.64.16"
+      }
+    }
+    name_servers {
+      ipv4 {
+        value = "10.40.64.15"
+      }
+    }
+    ntp_servers {
+      fqdn {
+        value = "2.centos.pool.ntp.org"
+      }
+    }
+    ntp_servers {
+      fqdn {
+        value = "3.centos.pool.ntp.org"
       }
     }
   }
-}
-
-// list pcs
-data "nutanix_domain_managers_v2" "pcs"{}
-
-// get pc details
-data "nutanix_domain_manager_v2" "pc"{
-  ext_id = nutanix_deploy_pc_v2.pc.id
 }

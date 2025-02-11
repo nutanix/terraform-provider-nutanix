@@ -2,7 +2,7 @@ terraform {
   required_providers {
     nutanix = {
       source  = "nutanix/nutanix"
-      version = "2.1"
+      version = "2.1.0"
     }
   }
 }
@@ -17,46 +17,52 @@ provider "nutanix" {
 }
 
 // using cluster_location
-resource "nutanix_backup_target_v2" "example-1" {
-  domain_manager_ext_id = "<domain_manager_uuid>"
+resource "nutanix_backup_target_v2" "cluster-location"{
+  domain_manager_ext_id = var.pc_ext_id
   location {
     cluster_location {
       config {
-        ext_id = "cluster uuid"
+        ext_id = var.cluster_ext_id
       }
     }
   }
 }
 
-// using object_store_location
-resource "nutanix_backup_target_v2" "example-2" {
-  domain_manager_ext_id = "<domain_manager_uuid>"
+//using object store location
+resource "nutanix_backup_target_v2" "object-store-location"{
+  domain_manager_ext_id = var.pc_ext_id
   location {
     object_store_location {
       provider_config {
-        bucket_name = "bucket name"
-        region      = "region"
+        bucket_name = var.bucket_name
+        region      = var.region
         credentials {
-          access_key_id     = "id"
-          secret_access_key = "key"
+          access_key_id     = var.access_key_id
+          secret_access_key = var.secret_access_key
         }
       }
       backup_policy {
-        rpo_in_minutes = 0
+        rpo_in_minutes = 120
       }
     }
   }
+  lifecycle {
+    ignore_changes = [
+      location[0].object_store_location[0].provider_config[0].credentials
+    ]
+  }
 }
+
 
 // list backup targets
 data "nutanix_backup_targets_v2" "backup-targets" {
-  domain_manager_ext_id = "<domain_manager_uuid>"
+  domain_manager_ext_id = var.pc_ext_id
 }
 
 // get backup target
 data "nutanix_backup_target_v2" "backup-target" {
-  domain_manager_ext_id = "<domain_manager_uuid>"
-  ext_id = "<backup_target_uuid>"
+  domain_manager_ext_id = var.pc_ext_id
+  ext_id = nutanix_backup_target_v2.cluster-location.id
 }
 
 

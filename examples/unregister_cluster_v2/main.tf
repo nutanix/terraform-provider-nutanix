@@ -2,7 +2,7 @@ terraform {
   required_providers {
     nutanix = {
       source  = "nutanix/nutanix"
-      version = "2.1"
+      version = "2.1.0"
     }
   }
 }
@@ -18,6 +18,6 @@ provider "nutanix" {
 
 
 resource "nutanix_unregister_cluster_v2 " "pc"{
-  pc_ext_id = "<PC_UUID>"
-  ext_id = "<cluster uuid>"
+  pc_ext_id = var.local_pc_ext_id
+  ext_id = var.remote_pc_ext_id
 }
