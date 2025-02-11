@@ -183,7 +183,7 @@ func TestAccV2NutanixProtectionPolicyResource_AutoRollupRetention(t *testing.T) 
 func testProtectionPolicyResourceConfig(name, description string) string {
 	return fmt.Sprintf(`
 # List domain Managers
-data "nutanix_domain_managers_v2" "pcs" {}
+data "nutanix_pcs_v2" "pcs-list" {}
 
 # List categories
 data "nutanix_categories_v2" "categories" {}
@@ -224,7 +224,7 @@ resource "nutanix_protection_policy_v2" "test" {
   }
 
   replication_locations {
-    domain_manager_ext_id = data.nutanix_domain_managers_v2.pcs.domain_managers[0].ext_id
+    domain_manager_ext_id = data.nutanix_pcs_v2.pcs-list.pcs[0].ext_id
     label                 = "source"
     is_primary            = true
   }
@@ -242,7 +242,7 @@ resource "nutanix_protection_policy_v2" "test" {
 func testProtectionPolicyResourceUpdateConfig(name, description string) string {
 	return fmt.Sprintf(`
 # List domain Managers
-data "nutanix_domain_managers_v2" "pcs" {}
+data "nutanix_pcs_v2" "pcs-list" {}
 
 # List categories
 data "nutanix_categories_v2" "categories" {}
@@ -309,7 +309,7 @@ resource "nutanix_protection_policy_v2" "test" {
   }
 
   replication_locations {
-    domain_manager_ext_id = data.nutanix_domain_managers_v2.pcs.domain_managers[0].ext_id
+    domain_manager_ext_id = data.nutanix_pcs_v2.pcs-list.pcs[0].ext_id
     label                 = "source-updated"
     is_primary            = true
   }
@@ -327,7 +327,7 @@ resource "nutanix_protection_policy_v2" "test" {
 func testProtectionPolicyResourceConfigLinearRetention(name, description string) string {
 	return fmt.Sprintf(`
 # List domain Managers
-data "nutanix_domain_managers_v2" "pcs" {}
+data "nutanix_pcs_v2" "pcs-list" {}
 
 # List categories
 data "nutanix_categories_v2" "categories" {}
@@ -378,7 +378,7 @@ resource "nutanix_protection_policy_v2" "test" {
   }
 
   replication_locations {
-    domain_manager_ext_id = data.nutanix_domain_managers_v2.pcs.domain_managers[0].ext_id
+    domain_manager_ext_id = data.nutanix_pcs_v2.pcs-list.pcs[0].ext_id
     label                 = "0"
     is_primary            = true
     replication_sub_location {
@@ -402,7 +402,7 @@ resource "nutanix_protection_policy_v2" "test" {
 func testProtectionPolicyResourceConfigAutoRollupRetention(name, description string) string {
 	return fmt.Sprintf(`
 # List domain Managers
-data "nutanix_domain_managers_v2" "pcs" {}
+data "nutanix_pcs_v2" "pcs-list" {}
 
 # List categories
 data "nutanix_categories_v2" "categories" {}
@@ -469,7 +469,7 @@ replication_configurations {
   }
 
   replication_locations {
-    domain_manager_ext_id = data.nutanix_domain_managers_v2.pcs.domain_managers[0].ext_id
+    domain_manager_ext_id = data.nutanix_pcs_v2.pcs-list.pcs[0].ext_id
     label                 = "source"
     is_primary            = true
   }
