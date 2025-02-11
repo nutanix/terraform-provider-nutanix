@@ -1,14 +1,12 @@
 package prismv2_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
