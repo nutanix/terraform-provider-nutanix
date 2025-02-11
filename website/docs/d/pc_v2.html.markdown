@@ -15,15 +15,24 @@ Fetches the attributes associated with the domain manager (Prism Central) resour
 ## Example Usage
 
 ```hcl
-data "nutanix_pc_v2" "pc"{
-  ext_id = "<pc_external_id>"
+// list all PC (Domain Managers)
+data "nutanix_pcs_v2" "example" {}
+
+// Fetch a single PC (Domain Manager) from the list
+data "nutanix_pc_v2" "example-1" {
+  ext_id = data.nutanix_pcs_v2.test.pcs.0.ext_id
+}
+
+// Fetch a single PC (Domain Manager) by its external ID
+data "nutanix_pc_v2" "example-2" {
+  ext_id = "75dde184-3a0e-4f59-a185-03ca1efead17"
 }
 ```
 
 ## Argument Reference
 The following arguments are supported:
 
-* `ext_id`: - The external identifier of the domain manager (Prism Central) entity.
+* `ext_id`: -(Required) The external identifier of the domain manager (Prism Central) entity.
 
 ## Attributes Reference
 The following attributes are exported:
@@ -110,13 +119,6 @@ The `name_servers` and `ntp_servers` arguments support the following:
 * `ipv6`: - An unique address that identifies a device on the internet or a local network in IPv6 format.
 * `fqdn`: - A fully qualified domain name that specifies its exact location in the tree hierarchy of the Domain Name System.
 
-#### Internal Networks
-The `internal_networks` and `external_networks` arguments support the following:
-
-* `default_gateway`: - An unique address that identifies a device on the internet or a local network in IPv4/IPv6 format or a Fully Qualified Domain Name.
-* `subnet_mask`: - An unique address that identifies a device on the internet or a local network in IPv4/IPv6 format or a Fully Qualified Domain Name.
-* `ip_ranges`: - Range of IPs used for Prism Central network setup.
-
 #### External Networks
 The `external_networks` argument supports the following:
 
@@ -155,4 +157,4 @@ The `fqdn` argument supports the following:
 
 * `value`: - The fully qualified domain name of the host.
 
-See detailed information in [Nutanix Deploy PC Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/createDomainManager).
+See detailed information in [Nutanix Get PC Details V4 Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/getDomainManagerById).

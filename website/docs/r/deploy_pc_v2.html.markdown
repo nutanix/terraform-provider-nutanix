@@ -3,7 +3,9 @@ layout: "nutanix"
 page_title: "NUTANIX: nutanix_deploy_pc_v2 "
 sidebar_current: "docs-nutanix-deploy-pc-v2"
 description: |-
-  This operation Registers a domain manager (Prism Central) instance to other entities like PE and PC. This process is asynchronous, creating a registration task and returning its UUID.
+  This operation Deploys a Prism Central using the provided details. Prism Central Size, Network Config are mandatory fields to deploy Prism Central. The response from this endpoint contains the URL in the task object location header that can be used to track the request status.
+
+
 
 
 ---
@@ -17,27 +19,60 @@ Deploys a Prism Central using the provided details. Prism Central Size, Network 
 ```hcl
 
 resource "nutanix_deploy_pc_v2" "example"{
+  timeouts {
+    create = "120m"
+  }
   config {
     build_info {
-      version = "5.17.0"
+      version = local.deploy_pc.version
     }
-    size = "SMALL"
-    name = "pc_example"
+    size = "STARTER"
+    name = "PC_EXAMPLE"
   }
   network {
-    external_address {
-      ipv4 {
-        value = "xx.xx.xx.xx"
+    external_networks {
+      network_ext_id = "ba416f8d-00f2-499d-bc4c-19da8d104af9"
+      default_gateway {
+        ipv4 {
+          value = "10.97.64.1"
+        }
       }
-    }
-    ntp_servers {
-      ipv4 {
-        value = "xx.xx.xx.xx"
+      subnet_mask {
+        ipv4 {
+          value = "255.255.252.0"
+        }
+      }
+      ip_ranges {
+        begin {
+          ipv4 {
+            value = "10.97.64.91"
+          }
+        }
+        end {
+          ipv4 {
+            value = "10.97.64.91"
+          }
+        }
       }
     }
     name_servers {
       ipv4 {
-        value = "xx.xx.xx.xx"
+        value = "10.40.64.16"
+      }
+    }
+    name_servers {
+      ipv4 {
+        value = "10.40.64.15"
+      }
+    }
+    ntp_servers {
+      fqdn {
+        value = "2.centos.pool.ntp.org"
+      }
+    }
+    ntp_servers {
+      fqdn {
+        value = "3.centos.pool.ntp.org"
       }
     }
   }
@@ -46,7 +81,7 @@ resource "nutanix_deploy_pc_v2" "example"{
 
 ## Argument Reference
 The following arguments are supported:
-
+> We need to increase the timeout for deploying the PC resource because the deployment takes longer than the default timeout allows for the operation to complete.
 
 * `config`: -(Required) Domain manager (Prism Central) cluster configuration details.
 * `network`: -(Required) Domain manager (Prism Central) network configuration details.
@@ -70,7 +105,7 @@ The config argument supports the following:
 #### Build Info
 The `build_info` argument supports the following:
 
-* `version`: -(Optional) Software version.
+* `version`: -(Required) Software version.
 
 #### Bootstrap Config
 The `bootstrap_config` argument supports the following:
@@ -183,4 +218,4 @@ The `fqdn` argument supports the following:
 
 * `value`: -(Optional) The fully qualified domain name of the host.
 
-See detailed information in [Nutanix Deploy PC Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/createDomainManager).
+See detailed information in [Nutanix Deploy PC V4 Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/createDomainManager).

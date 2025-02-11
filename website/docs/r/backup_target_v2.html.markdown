@@ -12,16 +12,16 @@ description: |-
 Create a cluster or object store as the backup target. For a given Prism Central, there can be up to 3 clusters as backup targets and 1 object store as backup target. If any cluster or object store is not eligible for backup or lacks appropriate permissions, the API request will fail. For object store backup targets, specifying backup policy is mandatory along with the location of the object store.
 
 
-## Example Usage
+## Example Usage - Cluster Location
 
 ```hcl
 // using cluster location
-resource "nutanix_backup_target_v2" "example"{
-  domain_manager_ext_id = "<domain_manager_uuid>"
+resource "nutanix_backup_target_v2" "cluster-location"{
+  domain_manager_ext_id = "75dde184-3a0e-4f59-a185-03ca1efead17"
   location {
     cluster_location {
       config {
-        ext_id = "cluster uuid"
+        ext_id = "00062d3d-30b5-a5b7-0000-000000019e0a"
       }
     }
   }
@@ -30,26 +30,32 @@ resource "nutanix_backup_target_v2" "example"{
 ```
 
 
-## Example Usage
+## Example Usage - Object Store Location
 
 ```hcl
-// using object store location 
-resource "nutanix_backup_target_v2" "example"{
-  domain_manager_ext_id = "<domain_manager_uuid>"
+
+//using object store location 
+resource "nutanix_backup_target_v2" "object-store-location"{
+  domain_manager_ext_id = "75dde184-3a0e-4f59-a185-03ca1efead17"
   location {
     object_store_location {
       provider_config {
-        bucket_name = "bucket name"
-        region      = "region"
+        bucket_name = "nutanix-terraform-bucket"
+        region      = "us-west-1"
         credentials {
-          access_key_id     = "id"
-          secret_access_key = "key"
+          access_key_id     = "IHSAJHDHADFWYTKJHFGCJKHASGJHKDSA"
+          secret_access_key = "JGSDHJYHGFHGHDS+JKBASDF/HSDAFHJ+SjkfbdsASDfdJFdSDFJfk"
         }
       }
       backup_policy {
-        rpo_in_minutes = 0
+        rpo_in_minutes = 120
       }
     }
+  }
+  lifecycle {
+    ignore_changes = [
+      location[0].object_store_location[0].provider_config[0].credentials
+    ]
   }
 }
 
@@ -71,7 +77,11 @@ The location argument supports the following:
 The `cluster_location` argument supports the following:
 
 * `config`: -(Required) Cluster reference of the remote cluster to be connected.
-* `config.ext_id`: -(Required) Cluster UUID of a remote cluster.
+
+##### Config
+The `config` argument supports the following:
+
+* `ext_id`: -(Required) Cluster UUID of a remote cluster.
 
 #### Object Store Location
 The `object_store_location` argument supports the following:
@@ -99,4 +109,4 @@ The `backup_policy` argument supports the following:
 
 
 
-See detailed information in [Nutanix Backup Target Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/createBackupTarget).
+See detailed information in [Nutanix Backup Target V4 Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/createBackupTarget).

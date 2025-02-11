@@ -17,7 +17,7 @@ Lists backup targets (cluster or object store) configured for a given domain man
 ```hcl
 
 data "nutanix_backup_targets_v2" "example"{
-  domain_manager_ext_id = "<domain_manager_uuid>"
+  domain_manager_ext_id = "75dde184-3a0e-4f59-a185-03ca1efead17"
 }
 
 ```
@@ -29,6 +29,11 @@ The following arguments are supported:
 
 ## Attributes Reference
 The following attributes are exported:
+
+* `backup_targets`: - A list of backup target entities.
+
+## Backup Targets
+The `backup_targets` argument supports the following:
 
 * `tenant_id`: - A globally unique identifier that represents the tenant that owns this entity. The system automatically assigns it, and it and is immutable from an API consumer perspective (some use cases may cause this Id to change - For instance, a use case may require the transfer of ownership of the entity, but these cases are handled automatically on the server).
 * `ext_id`: - A globally unique identifier of an instance that is suitable for external consumption.
@@ -49,8 +54,13 @@ The location argument exports the following:
 The `cluster_location` argument exports the following:
 
 * `config`: - Cluster reference of the remote cluster to be connected.
-* `config.ext_id`: - Cluster UUID of a remote cluster.
-* `config.name`: - Name of the cluster.
+
+##### Config
+The `config` argument exports the following:
+
+* `ext_id`: - Cluster UUID of a remote cluster.
+* `name`: - Name of the cluster.
+
 
 #### Object Store Location
 The `object_store_location` argument exports the following:

@@ -29,6 +29,11 @@ The following arguments are supported:
 ## Attributes Reference
 The following attributes are exported:
 
+* `pcs`: - A list of domain manager (Prism Central) entities.
+
+## PCS
+The `pcs` argument supports the following:
+
 * `tenant_id`: - A globally unique identifier that represents the tenant that owns this entity. The system automatically assigns it, and it and is immutable from an API consumer perspective (some use cases may cause this Id to change - For instance, a use case may require the transfer of ownership of the entity, but these cases are handled automatically on the server).
 * `ext_id`: - A globally unique identifier of an instance that is suitable for external consumption.
 * `links`: - A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
@@ -111,13 +116,6 @@ The `name_servers` and `ntp_servers` arguments support the following:
 * `ipv6`: - An unique address that identifies a device on the internet or a local network in IPv6 format.
 * `fqdn`: - A fully qualified domain name that specifies its exact location in the tree hierarchy of the Domain Name System.
 
-#### Internal Networks
-The `internal_networks` and `external_networks` arguments support the following:
-
-* `default_gateway`: - An unique address that identifies a device on the internet or a local network in IPv4/IPv6 format or a Fully Qualified Domain Name.
-* `subnet_mask`: - An unique address that identifies a device on the internet or a local network in IPv4/IPv6 format or a Fully Qualified Domain Name.
-* `ip_ranges`: - Range of IPs used for Prism Central network setup.
-
 #### External Networks
 The `external_networks` argument supports the following:
 
@@ -156,4 +154,4 @@ The `fqdn` argument supports the following:
 
 * `value`: - The fully qualified domain name of the host.
 
-See detailed information in [Nutanix Deploy PC Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/createDomainManager).
+See detailed information in [Nutanix List PCs V4 Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/listDomainManagers).
