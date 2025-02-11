@@ -15,18 +15,33 @@ Create a cluster or object store as the backup target. For a given Prism Central
 ## Example Usage - Cluster Location
 
 ```hcl
-// using cluster location
+data "nutanix_clusters_v2" "clusters" {}
+
+locals {
+  domainManagerExtID = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] == "PRISM_CENTRAL"
+  ][
+  0
+  ]
+  clusterExtID       = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+  ][
+  0
+  ]
+}
+
 resource "nutanix_backup_target_v2" "cluster-location"{
-  domain_manager_ext_id = "75dde184-3a0e-4f59-a185-03ca1efead17"
+  domain_manager_ext_id = local.domainManagerExtID
   location {
     cluster_location {
       config {
-        ext_id = "00062d3d-30b5-a5b7-0000-000000019e0a"
+        ext_id = local.clusterExtID
       }
     }
   }
 }
-
 ```
 
 

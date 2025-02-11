@@ -16,12 +16,58 @@ Create a restore source pointing to a cluster or object store to restore the dom
 ## Example Usage - Cluster Location
 
 ```hcl
-// using cluster location
-resource "nutanix_restore_source_v2" "example-1"{
+provider "nutanix" {
+  username = var.username
+  password = var.password
+  endpoint = var.pc_endpoint
+  insecure = true
+  port     = var.port
+}
+
+provider "nutanix" {
+  alias    = "pe"
+  username = var.username
+  password = var.password
+  endpoint = var.pe_endpoint
+  insecure = true
+  port     = var.port
+}
+
+data "nutanix_clusters_v2" "clusters" {}
+
+locals {
+  domainManagerExtID = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] == "PRISM_CENTRAL"
+  ][
+  0
+  ]
+  clusterExtID       = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+  ][
+  0
+  ]
+}
+
+resource "nutanix_backup_target_v2" "cluster-location"{
+  domain_manager_ext_id = local.domainManagerExtID
   location {
     cluster_location {
       config {
-        ext_id = "00062d3d-30b5-a5b7-0000-000000019e0a"
+        ext_id = local.clusterExtID
+      }
+    }
+  }
+}
+
+// using cluster location
+resource "nutanix_restore_source_v2" "example-1"{
+  provider = nutanix.pe
+  location {
+    cluster_location {
+      config {
+        ext_id = local.clusterExtID
       }
     }
   }

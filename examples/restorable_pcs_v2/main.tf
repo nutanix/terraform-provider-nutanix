@@ -66,7 +66,8 @@ resource "nutanix_restore_source_v2" "cluster-location"{
   depends_on = [nutanix_backup_target_v2.cluster-location]
 }
 
-// get the restore source
-data "nutanix_restore_source_v2" "restore-source" {
-  ext_id = nutanix_restore_source_v2.cluster-location.id
+// Get the list of restorable domain managers
+data "nutanix_restorable_pcs_v2" "restorable_pcs"{
+  provider = nutanix.pe
+  restore_source_ext_id = nutanix_restore_source_v2.cluster-location.ext_id
 }
