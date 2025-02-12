@@ -8,11 +8,11 @@ import (
 )
 
 type TestConfig struct {
-	DataProtection struct {
+	AvailabilityZone struct {
 		PcExtID      string `json:"pc_ext_id"`
 		ClusterExtID string `json:"cluster_ext_id"`
 		RemotePcIP   string `json:"remote_pc_ip"`
-	} `json:"data_protection"`
+	} `json:"availability_zone"`
 }
 
 var testVars TestConfig
