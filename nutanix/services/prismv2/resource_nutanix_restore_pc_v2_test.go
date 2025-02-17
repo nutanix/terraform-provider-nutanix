@@ -287,19 +287,19 @@ func restorePcResourceConfig(pcDetails map[string]interface{}, clusterExtID stri
 	}
 	externalAddressIPv4Value := externalAddressIPv4Map["value"].(string)
 
-	nameServers, ok := networkMap["name_servers"].([]interface{})
+	nameServers := networkMap["name_servers"].([]interface{})
 	nameServersConfig := ""
 	for _, nameServer := range nameServers {
-		nameServerMap, ok := nameServer.(map[string]interface{})
-		if !ok {
+		nameServerMap, okNameServerMap := nameServer.(map[string]interface{})
+		if !okNameServerMap {
 			panic("name_server is not a map")
 		}
-		ipv4, ok := nameServerMap["ipv4"].([]interface{})
-		if !ok || len(ipv4) == 0 {
+		ipv4, okIpv4 := nameServerMap["ipv4"].([]interface{})
+		if !okIpv4 || len(ipv4) == 0 {
 			panic("ipv4 is not a slice or is empty")
 		}
-		ipv4Map, ok := ipv4[0].(map[string]interface{})
-		if !ok {
+		ipv4Map, okIpv4Map := ipv4[0].(map[string]interface{})
+		if !okIpv4Map {
 			panic("ipv4[0] is not a map")
 		}
 		nameServerIPv4Value := ipv4Map["value"].(string)
@@ -311,23 +311,22 @@ func restorePcResourceConfig(pcDetails map[string]interface{}, clusterExtID stri
 		  }
 
 `, nameServerIPv4Value)
-
 	}
 
-	ntpServers, ok := networkMap["ntp_servers"].([]interface{})
+	ntpServers := networkMap["ntp_servers"].([]interface{})
 
 	ntpServersConfig := ""
 	for _, ntpServer := range ntpServers {
-		ntpServerMap, ok := ntpServer.(map[string]interface{})
-		if !ok {
+		ntpServerMap, okNtpServerMap := ntpServer.(map[string]interface{})
+		if !okNtpServerMap {
 			panic("ntp_server is not a map")
 		}
-		fqdn, ok := ntpServerMap["fqdn"].([]interface{})
-		if !ok || len(fqdn) == 0 {
+		fqdn, okFqdn := ntpServerMap["fqdn"].([]interface{})
+		if !okFqdn || len(fqdn) == 0 {
 			panic("fqdn is not a slice or is empty")
 		}
-		fqdnMap, ok := fqdn[0].(map[string]interface{})
-		if !ok {
+		fqdnMap, okFqdnMap := fqdn[0].(map[string]interface{})
+		if !okFqdnMap {
 			panic("fqdn[0] is not a map")
 		}
 		ntpServerFQDN := fqdnMap["value"].(string)
@@ -339,11 +338,10 @@ func restorePcResourceConfig(pcDetails map[string]interface{}, clusterExtID stri
 		  }
 
 `, ntpServerFQDN)
-
 	}
 
-	externalNetworks, ok := networkMap["external_networks"].([]interface{})
-	if !ok || len(externalNetworks) == 0 {
+	externalNetworks, okExternalNetworks := networkMap["external_networks"].([]interface{})
+	if !okExternalNetworks || len(externalNetworks) == 0 {
 		panic("external_networks is not a slice or is empty")
 	}
 	externalNetworksMap, ok := externalNetworks[0].(map[string]interface{})
