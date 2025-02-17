@@ -209,7 +209,6 @@ func deleteRestoredVg(vgName string) resource.TestCheckFunc {
 
 		vg := vgs[0]
 		if err == nil {
-
 			_, err = client.DeleteVolumeGroupById(vg.ExtId)
 			if err != nil {
 				return fmt.Errorf("error: Restored Volume Group still exists: %v", err)
