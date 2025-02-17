@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	taskRef "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
-	lcmInventoryResp "github.com/nutanix/ntnx-api-golang-clients/lcm-go-client/v4/models/lcm/v4/operations"
+	lcmInventoryResp "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/operations"
 	import1 "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
@@ -46,7 +46,7 @@ func ResourceLcmPerformInventoryV2(ctx context.Context, d *schema.ResourceData, 
 	args["X-Cluster-Id"] = clusterId
 	args["NTNX-Request-Id"] = ntnxRequestId
 
-	resp, err := conn.LcmInventoryAPIInstance.Inventory(args)
+	resp, err := conn.LcmInventoryAPIInstance.PerformInventory(&clusterId, args)
 	if err != nil {
 		return diag.Errorf("error while performing the inventory: %v", err)
 	}
@@ -61,7 +61,7 @@ func ResourceLcmPerformInventoryV2(ctx context.Context, d *schema.ResourceData, 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: taskStateRefreshPrismTaskGroup(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -71,7 +71,7 @@ func ResourceLcmPerformInventoryV2(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
+func taskStateRefreshPrismTaskGroup(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// data := base64.StdEncoding.EncodeToString([]byte("ergon"))
 		// encodeUUID := data + ":" + taskUUID

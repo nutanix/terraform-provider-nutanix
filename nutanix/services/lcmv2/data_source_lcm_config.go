@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	lcmconfigimport1 "github.com/nutanix/ntnx-api-golang-clients/lcm-go-client/v4/models/lcm/v4/resources"
+	lcmconfigimport1 "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/resources"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 )
 
@@ -81,17 +81,50 @@ func DatasourceLcmConfigRead(ctx context.Context, d *schema.ResourceData, meta i
 	args := make(map[string]interface{})
 	args["X-Cluster-Id"] = clusterId
 
-	resp, err := conn.LcmConfigAPIInstance.GetConfig(args)
+	resp, err := conn.LcmConfigAPIInstance.GetConfig(&clusterId, args)
 	if err != nil {
 		return diag.Errorf("error while fetching the Lcm config : %v", err)
 	}
 
-	lcmConfig := resp.Data.GetValue().(lcmconfigimport1.LcmConfig)
-	if err := d.Set("is_auto_inventory_enabled", lcmConfig.AutoInventoryEnabled); err != nil {
+	lcmConfig := resp.Data.GetValue().(lcmconfigimport1.Config)
+	if err := d.Set("tenant_id", lcmConfig.TenantId); err != nil {
 		return diag.FromErr(err)
-	},
-
-	return 
+	}
+	if err := d.Set("links", flattenLinks(lcmConfig.Links)); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("is_auto_inventory_enabled", lcmConfig.IsAutoInventoryEnabled); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("auto_inventory_schedule", lcmConfig.AutoInventorySchedule); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("version", lcmConfig.Version); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("display_version", lcmConfig.DisplayVersion); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("connectivity_type", lcmConfig.ConnectivityType); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("is_https_enabled", lcmConfig.IsHttpsEnabled); err != nil {
+		return diag.FromErr(err)
+	}
+	// if err := d.Set("supported_software_entities", flattenSoftwareEntities(lcmConfig.SupportedSoftwareEntities)); err != nil {
+	// 	return diag.FromErr(err)
+	// }
+	// if err := d.Set("deprecated_software_entities", flattenSoftwareEntities(lcmConfig.DeprecatedSoftwareEntities)); err != nil {
+	// 	return diag.FromErr(err)
+	// }
+	if err := d.Set("is_framework_bundle_uploaded", lcmConfig.IsFrameworkBundleUploaded); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("has_module_auto_upgrade_enabled", lcmConfig.HasModuleAutoUpgradeEnabled); err != nil {
+		return diag.FromErr(err)
+	}
+	d.SetId(*lcmConfig.ExtId)
+	return nil
 }
 
 func schemaForLinks() *schema.Schema {
