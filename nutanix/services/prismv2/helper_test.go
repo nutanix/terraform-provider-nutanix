@@ -441,7 +441,8 @@ func powerOffPC() resource.TestCheckFunc {
 		vms := vmsResp.Data.GetValue().([]vmConfig.Vm)
 
 		for _, vm := range vms {
-			if vm.MachineType.GetName() == "PC" && utils.StringValue(vm.Description) == "" {
+			if vm.MachineType.GetName() == "PC" && utils.StringValue(vm.Description) == "NutanixPrismCentral" &&
+				strings.Contains(utils.StringValue(vm.Name), "auto_pc_") {
 				// get etag
 				readResp, err := vmClient.GetVmById(vm.ExtId, nil)
 				if err != nil {
