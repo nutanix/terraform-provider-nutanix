@@ -24,13 +24,14 @@ provider "nutanix" {
   port     = var.port
 }
 
+#defining nutanix configuration for PE
 provider "nutanix" {
   alias    = "pe"
-  username = var.username
-  password = var.password
-  endpoint = var.pe_endpoint
+  username = var.nutanix_pe_username
+  password = var.nutanix_pe_password
+  endpoint = var.nutanix_pe_endpoint # PE endpoint
   insecure = true
-  port     = var.port
+  port     = 9440
 }
 
 data "nutanix_clusters_v2" "clusters" {}
@@ -42,7 +43,7 @@ locals {
   ][
   0
   ]
-  clusterExtID       = [
+  clusterExtID = [
     for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
     cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
   ][
@@ -50,7 +51,7 @@ locals {
   ]
 }
 
-resource "nutanix_backup_target_v2" "cluster-location"{
+resource "nutanix_backup_target_v2" "cluster-location" {
   domain_manager_ext_id = local.domainManagerExtID
   location {
     cluster_location {
@@ -61,8 +62,7 @@ resource "nutanix_backup_target_v2" "cluster-location"{
   }
 }
 
-// using cluster location
-resource "nutanix_restore_source_v2" "example-1"{
+resource "nutanix_restore_source_v2" "cluster-location" {
   provider = nutanix.pe
   location {
     cluster_location {
@@ -71,6 +71,7 @@ resource "nutanix_restore_source_v2" "example-1"{
       }
     }
   }
+  depends_on = [nutanix_backup_target_v2.cluster-location]
 }
 
 ```

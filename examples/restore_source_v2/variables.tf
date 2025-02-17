@@ -5,13 +5,25 @@ variable "nutanix_username" {
 variable "nutanix_password" {
   type = string
 }
-variable "nutanix_pc_endpoint" {
+variable "nutanix_pe_username" {
+  type = string
+}
+variable "nutanix_pe_password" {
+  type = string
+}
+variable "nutanix_endpoint" {
   type = string
 }
 variable "nutanix_pe_endpoint" {
   type = string
 }
 variable "nutanix_port" {
+  type = string
+}
+variable "pe_username" {
+  type = string
+}
+variable "pe_password" {
   type = string
 }
 

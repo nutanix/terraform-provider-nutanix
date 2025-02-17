@@ -1,6 +1,6 @@
 # define another alias for the provider,  PE
 provider "nutanix" {
-  alias    = "remote"
+  alias    = "pe"
   username = var.nutanix_pe_username
   password = var.nutanix_pe_password
   endpoint = var.nutanix_pe_endpoint # PE endpoint
@@ -13,7 +13,7 @@ provider "nutanix" {
 # wait until backup target is synced, you can check the last_sync_time from the backup target data source
 # power off the PC VM before restore it
 resource "nutanix_restore_source_v2" "cluster-location" {
-  provider = nutanix.remote
+  provider = nutanix.pe
   location {
     cluster_location {
       config {
@@ -25,7 +25,7 @@ resource "nutanix_restore_source_v2" "cluster-location" {
 }
 
 data "nutanix_restorable_pcs_v2" "restorable-pcs" {
-  provider              = nutanix.remote
+  provider              = nutanix.pe
   restore_source_ext_id = nutanix_restore_source_v2.cluster-location.ext_id
 }
 
@@ -34,7 +34,7 @@ locals {
 }
 
 data "nutanix_restore_points_v2" "restore-points" {
-  provider                         = nutanix.remote
+  provider                         = nutanix.pe
   restorable_domain_manager_ext_id = local.restorablePcExtId
   restore_source_ext_id            = nutanix_restore_source_v2.cluster-location.id
 }
@@ -47,7 +47,7 @@ locals {
 # define the restore pc resource
 # you can get these values from the data source nutanix_pc_v2, this data source is on PC provider
 resource "nutanix_restore_pc_v2" "test" {
-  provider = nutanix.remote
+  provider = nutanix.pe
   timeouts {
     create = "120m"
   }
