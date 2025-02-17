@@ -524,7 +524,7 @@ func expandReplicationConfigurations(replicationConfigurationsData []interface{}
 		if sourceLocationLabel, ok := replicationConfigurationDataMap["source_location_label"]; ok {
 			replicationConfiguration.SourceLocationLabel = utils.StringPtr(sourceLocationLabel.(string))
 		}
-		if remoteLocationLabel, ok := replicationConfigurationDataMap["remote_location_label"]; ok {
+		if remoteLocationLabel, ok := replicationConfigurationDataMap["remote_location_label"]; ok && remoteLocationLabel != "" {
 			replicationConfiguration.RemoteLocationLabel = utils.StringPtr(remoteLocationLabel.(string))
 		}
 		if schedule, ok := replicationConfigurationDataMap["schedule"]; ok {
@@ -616,10 +616,10 @@ func expandLinearRetention(linearRetentionData []interface{}) *config.LinearRete
 	linearRetentionDataMap := linearRetentionData[0].(map[string]interface{})
 
 	linearRetention := config.NewLinearRetention()
-	if local, ok := linearRetentionDataMap["local"]; ok {
+	if local, ok := linearRetentionDataMap["local"]; ok && local != "" {
 		linearRetention.Local = utils.IntPtr(local.(int))
 	}
-	if remote, ok := linearRetentionDataMap["remote"]; ok {
+	if remote, ok := linearRetentionDataMap["remote"]; ok && remote.(int) > 0 {
 		linearRetention.Remote = utils.IntPtr(remote.(int))
 	}
 
@@ -634,10 +634,10 @@ func expandAutoRollupRetention(autoRollupRetentionData []interface{}) *config.Au
 	autoRollupRetentionDataMap := autoRollupRetentionData[0].(map[string]interface{})
 
 	autoRollupRetention := config.NewAutoRollupRetention()
-	if local, ok := autoRollupRetentionDataMap["local"]; ok {
+	if local, ok := autoRollupRetentionDataMap["local"]; ok && len(local.([]interface{})) > 0 {
 		autoRollupRetention.Local = expandAutoRollupRetentionDetails(local.([]interface{}))
 	}
-	if remote, ok := autoRollupRetentionDataMap["remote"]; ok {
+	if remote, ok := autoRollupRetentionDataMap["remote"]; ok && len(remote.([]interface{})) > 0 {
 		autoRollupRetention.Remote = expandAutoRollupRetentionDetails(remote.([]interface{}))
 	}
 
@@ -652,10 +652,10 @@ func expandAutoRollupRetentionDetails(autoRollupRetentionLocal []interface{}) *c
 	autoRollupRetentionLocalDataMap := autoRollupRetentionLocal[0].(map[string]interface{})
 
 	autoRollupRetentionLocalSpec := config.AutoRollupRetentionDetails{}
-	if snapshotIntervalType, ok := autoRollupRetentionLocalDataMap["snapshot_interval_type"]; ok {
+	if snapshotIntervalType, ok := autoRollupRetentionLocalDataMap["snapshot_interval_type"]; ok && snapshotIntervalType != "" {
 		autoRollupRetentionLocalSpec.SnapshotIntervalType = expandSnapshotIntervalType(snapshotIntervalType.(string))
 	}
-	if frequency, ok := autoRollupRetentionLocalDataMap["frequency"]; ok {
+	if frequency, ok := autoRollupRetentionLocalDataMap["frequency"]; ok && frequency != "" {
 		autoRollupRetentionLocalSpec.Frequency = utils.IntPtr(frequency.(int))
 	}
 

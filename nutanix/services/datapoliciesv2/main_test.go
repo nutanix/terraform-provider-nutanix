@@ -8,9 +8,11 @@ import (
 )
 
 type TestConfig struct {
-	ProtectionPolicies struct {
-		DomainManagerExtID string `json:"domain_manager_ext_id"`
-	} `json:"data_policies"`
+	AvailabilityZone struct {
+		PcExtID      string `json:"domain_manager_ext_id"`
+		ClusterExtID string `json:"cluster_ext_id"`
+		RemotePcIP   string `json:"remote_pc_ip"`
+	} `json:"availability_zone"`
 }
 
 var testVars TestConfig

@@ -11,7 +11,7 @@ import (
 
 const resourceNameProtectionPolicy = "nutanix_protection_policy_v2.test"
 
-func TestAccV2NutanixProtectionPolicyResource_Basic(t *testing.T) {
+func TestAccV2NutanixProtectionPolicyResource_Synchronous(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-protection-policy-%d", r)
 	description := "terraform test protection policy CRUD"
@@ -81,7 +81,7 @@ func TestAccV2NutanixProtectionPolicyResource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.0.label", "source-updated"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.0.is_primary", "true"),
 					resource.TestCheckResourceAttrSet(resourceNameProtectionPolicy, "replication_locations.0.domain_manager_ext_id"),
-					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.domain_manager_ext_id", testVars.ProtectionPolicies.DomainManagerExtID),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.domain_manager_ext_id", testVars.AvailabilityZone.PcExtID),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.is_primary", "false"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.label", "target-updated"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "category_ids.#", "1"),
@@ -208,7 +208,7 @@ func TestAccV2NutanixProtectionPolicyResource_AutoRollupRetention(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.0.label", "source"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.0.is_primary", "true"),
 					resource.TestCheckResourceAttrSet(resourceNameProtectionPolicy, "replication_locations.0.domain_manager_ext_id"),
-					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.domain_manager_ext_id", testVars.ProtectionPolicies.DomainManagerExtID),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.domain_manager_ext_id", testVars.AvailabilityZone.PcExtID),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.is_primary", "false"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.label", "target"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "category_ids.#", "1"),
@@ -243,7 +243,7 @@ func TestAccV2NutanixProtectionPolicyResource_AutoRollupRetention(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.0.label", "source-updated"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.0.is_primary", "true"),
 					resource.TestCheckResourceAttrSet(resourceNameProtectionPolicy, "replication_locations.0.domain_manager_ext_id"),
-					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.domain_manager_ext_id", testVars.ProtectionPolicies.DomainManagerExtID),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.domain_manager_ext_id", testVars.AvailabilityZone.PcExtID),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.is_primary", "false"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.label", "target-updated"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "category_ids.#", "1"),
@@ -260,7 +260,7 @@ data "nutanix_pcs_v2" "pcs-list" {}
 
 locals {
 	config = jsondecode(file("%[3]s"))
-  	data_policies = local.config.data_policies
+  	availability_zone = local.config.availability_zone
 }
 
 # Create Category
@@ -301,7 +301,7 @@ resource "nutanix_protection_policy_v2" "test" {
     is_primary            = true
   }
   replication_locations {
-    domain_manager_ext_id = local.data_policies.domain_manager_ext_id
+    domain_manager_ext_id = local.availability_zone.pc_ext_id
     label                 = "target"
     is_primary            = false
   }
@@ -319,7 +319,7 @@ data "nutanix_pcs_v2" "pcs-list" {}
 
 locals {
 	config = jsondecode(file("%[3]s"))
-  	data_policies = local.config.data_policies
+  	availability_zone = local.config.availability_zone
 }
 
 # Create Category
@@ -384,7 +384,7 @@ resource "nutanix_protection_policy_v2" "test" {
     is_primary            = true
   }
   replication_locations {
-    domain_manager_ext_id = local.data_policies.domain_manager_ext_id
+    domain_manager_ext_id = local.availability_zone.pc_ext_id
     label                 = "target-updated"
     is_primary            = false
   }
@@ -408,7 +408,7 @@ locals {
 		  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 	][0]
 	config = jsondecode(file("%[3]s"))
-  	data_policies = local.config.data_policies
+  	availability_zone = local.config.availability_zone
 }
 
 # Create Category
@@ -464,7 +464,7 @@ resource "nutanix_protection_policy_v2" "test" {
     }
   }
   replication_locations {
-    domain_manager_ext_id = local.data_policies.domain_manager_ext_id
+    domain_manager_ext_id = local.availability_zone.pc_ext_id
     label                 = "1"
     is_primary            = false
   }
@@ -487,7 +487,7 @@ locals {
 		  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 	][0]
 	config = jsondecode(file("%[3]s"))
-  	data_policies = local.config.data_policies
+  	availability_zone = local.config.availability_zone
 }
 
 # Create Category
@@ -543,7 +543,7 @@ resource "nutanix_protection_policy_v2" "test" {
     }
   }
   replication_locations {
-    domain_manager_ext_id = local.data_policies.domain_manager_ext_id
+    domain_manager_ext_id = local.availability_zone.pc_ext_id
     label                 = "1-updated"
     is_primary            = false
   }
@@ -559,7 +559,7 @@ data "nutanix_pcs_v2" "pcs-list" {}
 
 locals {
 	config = jsondecode(file("%[3]s"))
-  	data_policies = local.config.data_policies
+  	availability_zone = local.config.availability_zone
 }
 
 # Create Category
@@ -624,7 +624,7 @@ resource "nutanix_protection_policy_v2" "test" {
     is_primary            = true
   }
   replication_locations {
-    domain_manager_ext_id = local.data_policies.domain_manager_ext_id
+    domain_manager_ext_id = local.availability_zone.pc_ext_id
     label                 = "target"
     is_primary            = false
   }
@@ -641,7 +641,7 @@ data "nutanix_pcs_v2" "pcs-list" {}
 
 locals {
 	config = jsondecode(file("%[3]s"))
-  	data_policies = local.config.data_policies
+  	availability_zone = local.config.availability_zone
 }
 
 # Create Category
@@ -706,7 +706,7 @@ resource "nutanix_protection_policy_v2" "test" {
     is_primary            = true
   }
   replication_locations {
-    domain_manager_ext_id = local.data_policies.domain_manager_ext_id
+    domain_manager_ext_id = local.availability_zone.pc_ext_id
     label                 = "target-updated"
     is_primary            = false
   }
