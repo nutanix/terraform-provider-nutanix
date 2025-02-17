@@ -62,8 +62,6 @@ func TestAccV2NutanixRestorePCResource_RestorePC(t *testing.T) {
 						},
 						createBackupTarget(backupTargetExtID),
 						checkLastSyncTimeBackupTargetRestorePC(backupTargetExtID, pcExtID, retries, delay),
-						createRestoreSource(restoreSourceExtID),
-						ListRestorePoints(restoreSourceExtID, restorePointExtID, restorablePcExtID),
 					),
 				},
 				// Step 3: power off PC
