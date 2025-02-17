@@ -13,6 +13,12 @@ type TestConfig struct {
 		ClusterExtID string `json:"cluster_ext_id"`
 		RemotePcIP   string `json:"remote_pc_ip"`
 	} `json:"availability_zone"`
+	DataProtection struct {
+		LocalClusterPE   string `json:"local_cluster_pe"`
+		LocalClusterVIP  string `json:"local_cluster_vip"`
+		RemoteClusterPE  string `json:"remote_cluster_pe"`
+		RemoteClusterVIP string `json:"remote_cluster_vip"`
+	} `json:"data_protection"`
 }
 
 var testVars TestConfig

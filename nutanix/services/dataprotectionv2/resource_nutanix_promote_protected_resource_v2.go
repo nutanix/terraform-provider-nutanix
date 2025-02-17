@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	dataprtotectionPrismConfig "github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
+
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -73,18 +74,19 @@ func ResourceNutanixPromoteProtectedResourceV2Create(ctx context.Context, d *sch
 	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
 	log.Printf("[DEBUG] Promote Protected Resource Task Details: %s", aJSON)
 
-	// extract promoted item UUID
-	promotedItemName := rUUID.CompletionDetails[0].Name
-	promotedItemUUID := rUUID.CompletionDetails[0].Value.GetValue().(string)
+	// // extract promoted item UUID
+	// promotedItemName := rUUID.CompletionDetails[0].Name
+	// promotedItemUUID := rUUID.CompletionDetails[0].Value.GetValue().(string)
 
-	if utils.StringValue(promotedItemName) == "promotedVmExtId" {
-		err = d.Set("promoted_vm_ext_id", promotedItemUUID)
-		if err != nil {
-			return diag.Errorf("Error while setting promoted Vm Ext ID: %s", err)
-		}
-	}
+	// if utils.StringValue(promotedItemName) == "promotedVmExtId" {
+	// 	err = d.Set("promoted_vm_ext_id", promotedItemUUID)
+	// 	if err != nil {
+	// 		return diag.Errorf("Error while setting promoted Vm Ext ID: %s", err)
+	// 	}
+	// }
 
-	d.SetId(promotedItemUUID)
+	// d.SetId(promotedItemUUID)
+	d.SetId(utils.GenUUID())
 
 	return ResourceNutanixPromoteProtectedResourceV2Read(ctx, d, meta)
 }
