@@ -16,11 +16,10 @@ import (
 const resourceNameRestorePC = "nutanix_restore_pc_v2.test"
 
 func TestAccV2NutanixRestorePCResource_RestorePC(t *testing.T) {
-	var backupTargetExtID, restoreSourceExtID,
-		restorablePcExtID, restorePointExtID, pcExtID *string = new(string), new(string),
-		new(string), new(string), new(string)
+	var backupTargetExtID,
+		pcExtID = new(string), new(string)
 
-	var restorePcConfig string
+	var restorePcConfig, clusterExtID string
 
 	pcDetails := make(map[string]interface{})
 
@@ -52,6 +51,12 @@ func TestAccV2NutanixRestorePCResource_RestorePC(t *testing.T) {
 							if !ok {
 								return fmt.Errorf("output 'pc_details' not found")
 							}
+							clusterExtIDOutput, ok := s.RootModule().Outputs["clusterExtID"]
+							if !ok {
+								return fmt.Errorf("output 'clusterExtID' not found")
+							}
+							clusterExtID = clusterExtIDOutput.Value.(string)
+
 							pcDetails = pcDetailsOutput.Value.(map[string]interface{})
 							return nil
 						},
@@ -70,7 +75,8 @@ func TestAccV2NutanixRestorePCResource_RestorePC(t *testing.T) {
 					Check: resource.ComposeTestCheckFunc(
 						func(s *terraform.State) error {
 							// Build the restore PC configuration for the next subtest case
-							restorePcConfig = restorePcResourceConfig(pcDetails, *restorablePcExtID, *restoreSourceExtID, *restorePointExtID)
+							restorePcConfig = restorePcResourceConfig(pcDetails, clusterExtID)
+							fmt.Printf("Restore PC Config: %s\n", restorePcConfig)
 							return nil
 						},
 						powerOffPC(),
@@ -130,7 +136,7 @@ provider "nutanix-2" {
 `, username, password, testVars.Prism.RestoreSource.PeIP, insecure, port)
 
 	return fmt.Sprintf(`
-
+# peHostProviderConfig
 %s
 
 data "nutanix_clusters_v2" "cls" {
@@ -200,7 +206,7 @@ data "nutanix_subnets_v2" "subnets" {
 `, peHostProviderConfig)
 }
 
-func restorePcResourceConfig(pcDetails map[string]interface{}, restorablePCExtID, restoreSourceExtID, restorePointExtID string) string {
+func restorePcResourceConfig(pcDetails map[string]interface{}, clusterExtID string) string {
 	// Extract nested values from the map
 	config, ok := pcDetails["config"].([]interface{})
 	if !ok || len(config) == 0 {
@@ -284,20 +290,59 @@ func restorePcResourceConfig(pcDetails map[string]interface{}, restorablePCExtID
 	externalAddressIPv4Value := externalAddressIPv4Map["value"].(string)
 
 	nameServers, ok := networkMap["name_servers"].([]interface{})
-	if !ok || len(nameServers) < 2 {
-		panic("name_servers is not a slice or has fewer than 2 elements")
+	nameServersConfig := ""
+	for _, nameServer := range nameServers {
+		nameServerMap, ok := nameServer.(map[string]interface{})
+		if !ok {
+			panic("name_server is not a map")
+		}
+		ipv4, ok := nameServerMap["ipv4"].([]interface{})
+		if !ok || len(ipv4) == 0 {
+			panic("ipv4 is not a slice or is empty")
+		}
+		ipv4Map, ok := ipv4[0].(map[string]interface{})
+		if !ok {
+			panic("ipv4[0] is not a map")
+		}
+		nameServerIPv4Value := ipv4Map["value"].(string)
+		nameServersConfig += fmt.Sprintf(`
+		  name_servers {
+			ipv4 {
+			  value = "%s"
+			}
+		  }
+
+`, nameServerIPv4Value)
+
 	}
-	nameServer1IPv4 := nameServers[0].(map[string]interface{})["ipv4"].([]interface{})[0].(map[string]interface{})["value"].(string)
-	nameServer2IPv4 := nameServers[1].(map[string]interface{})["ipv4"].([]interface{})[0].(map[string]interface{})["value"].(string)
 
 	ntpServers, ok := networkMap["ntp_servers"].([]interface{})
-	if !ok || len(ntpServers) < 4 {
-		panic("ntp_servers is not a slice or has fewer than 4 elements")
+
+	ntpServersConfig := ""
+	for _, ntpServer := range ntpServers {
+		ntpServerMap, ok := ntpServer.(map[string]interface{})
+		if !ok {
+			panic("ntp_server is not a map")
+		}
+		fqdn, ok := ntpServerMap["fqdn"].([]interface{})
+		if !ok || len(fqdn) == 0 {
+			panic("fqdn is not a slice or is empty")
+		}
+		fqdnMap, ok := fqdn[0].(map[string]interface{})
+		if !ok {
+			panic("fqdn[0] is not a map")
+		}
+		ntpServerFQDN := fqdnMap["value"].(string)
+		ntpServersConfig += fmt.Sprintf(`
+		  ntp_servers {
+			fqdn {
+			  value = "%s"
+			}
+		  }
+
+`, ntpServerFQDN)
+
 	}
-	ntpServer1FQDN := ntpServers[0].(map[string]interface{})["fqdn"].([]interface{})[0].(map[string]interface{})["value"].(string)
-	ntpServer2FQDN := ntpServers[1].(map[string]interface{})["fqdn"].([]interface{})[0].(map[string]interface{})["value"].(string)
-	ntpServer3FQDN := ntpServers[2].(map[string]interface{})["fqdn"].([]interface{})[0].(map[string]interface{})["value"].(string)
-	ntpServer4FQDN := ntpServers[3].(map[string]interface{})["fqdn"].([]interface{})[0].(map[string]interface{})["value"].(string)
 
 	externalNetworks, ok := networkMap["external_networks"].([]interface{})
 	if !ok || len(externalNetworks) == 0 {
@@ -363,101 +408,109 @@ provider "nutanix-2" {
 `, username, password, testVars.Prism.RestoreSource.PeIP, insecure, port)
 
 	return fmt.Sprintf(`
-					%s
-					resource "nutanix_restore_pc_v2" "test" {
-						provider                         = nutanix-2
-						timeouts {
-							create = "120m"
-						}
-						ext_id                           = "%s"
-						restore_source_ext_id            = "%s"
-						restorable_domain_manager_ext_id = "%s"
-						domain_manager {
-							config {
-								should_enable_lockdown_mode = false
-								build_info {
-									version = "%s"
-								}
-								name = "%s"
-								size = "%s"
-								resource_config {
-									container_ext_ids    = %v
-									data_disk_size_bytes = %d
-									memory_size_bytes    = %d
-									num_vcpus            = %d
-								}
-							}
-							network {
-								external_address {
-									ipv4 {
-										value = "%s"
-									}
-								}
-								name_servers {
-									ipv4 {
-										value = "%s"
-									}
-								}
-								name_servers {
-									ipv4 {
-										value = "%s"
-									}
-								}
-								ntp_servers {
-									fqdn {
-										value = "%s"
-									}
-								}
-								ntp_servers {
-									fqdn {
-										value = "%s"
-									}
-								}
-								ntp_servers {
-									fqdn {
-										value = "%s"
-									}
-								}
-								ntp_servers {
-									fqdn {
-										value = "%s"
-									}
-								}
-								external_networks {
-									network_ext_id = "%s"
-									default_gateway {
-										ipv4 {
-											value = "%s"
-										}
-									}
-									subnet_mask {
-										ipv4 {
-											value = "%s"
-										}
-									}
-									ip_ranges {
-										begin {
-											ipv4 {
-												value = "%s"
-											}
-										}
-										end {
-											ipv4 {
-												value = "%s"
-											}
-										}
-									}
-								}
-							}
-						}
-					    provisioner "local-exec" {
-							command = "%s"		
-							on_failure = continue
-					    }
+# peHostProviderConfig
+%s
+
+resource "nutanix_restore_source_v2" "cluster-location" {
+  provider =  nutanix-2
+  location {
+    cluster_location {
+      config {
+		# clusterExtID
+        ext_id = "%s"
+      }
+    }
+  }
+}
+
+data "nutanix_restorable_pcs_v2" "restorable-pcs" {
+  provider              = nutanix-2
+  restore_source_ext_id = nutanix_restore_source_v2.cluster-location.ext_id
+}
+
+locals {
+  restorablePc = data.nutanix_restorable_pcs_v2.restorable-pcs.restorable_pcs.0
+}
+
+data "nutanix_restore_points_v2" "restore-points" {
+  provider                         = nutanix-2
+  restorable_domain_manager_ext_id = local.restorablePc.ext_id
+  restore_source_ext_id            = nutanix_restore_source_v2.cluster-location.id
+}
+
+locals {
+  restorePointId = data.nutanix_restore_points_v2.restore-points.restore_points[0].ext_id
+}
+
+
+resource "nutanix_restore_pc_v2" "test" {
+	provider                         = nutanix-2
+	timeouts {
+		create = "120m"
+	}
+    ext_id                           = local.restorePointId
+    restore_source_ext_id            = nutanix_restore_source_v2.cluster-location.id
+    restorable_domain_manager_ext_id = local.restorablePc.ext_id
+	domain_manager {
+		config {
+			should_enable_lockdown_mode = false
+			build_info {
+				version = "%s"
+			}
+			name = "%s"
+			size = "%s"
+			resource_config {
+				container_ext_ids    = %v
+				data_disk_size_bytes = %d
+				memory_size_bytes    = %d
+				num_vcpus            = %d
+			}
+		}
+		network {
+			external_address {
+				ipv4 {
+					value = "%s"
+				}
+			}
+			# name servers 
+			%s
+
+			# ntp servers
+			%s
+			
+			external_networks {
+				network_ext_id = "%s"
+				default_gateway {
+					ipv4 {
+						value = "%s"
 					}
-				`, peHostProviderConfig, restorePointExtID, restoreSourceExtID, restorablePCExtID,
-		version, name, size, strContainerExtIDs, dataDiskSizeBytes, memorySizeBytes, numVcpus,
-		externalAddressIPv4Value, nameServer1IPv4, nameServer2IPv4, ntpServer1FQDN, ntpServer2FQDN,
-		ntpServer3FQDN, ntpServer4FQDN, networkExtID, defaultGatewayIPv4, subnetMaskIPv4,
+				}
+				subnet_mask {
+					ipv4 {
+						value = "%s"
+					}
+				}
+				ip_ranges {
+					begin {
+						ipv4 {
+							value = "%s"
+						}
+					}
+					end {
+						ipv4 {
+							value = "%s"
+						}
+					}
+				}
+			}
+		}
+	}
+	provisioner "local-exec" {
+		command = "%s"		
+		on_failure = continue
+	}
+}
+				`, peHostProviderConfig, clusterExtID, version, name, size, strContainerExtIDs, dataDiskSizeBytes, memorySizeBytes, numVcpus,
+		externalAddressIPv4Value, nameServersConfig, ntpServersConfig, networkExtID, defaultGatewayIPv4, subnetMaskIPv4,
 		ipRangeBeginIPv4, ipRangeEndIPv4, resetCommand)
 }
