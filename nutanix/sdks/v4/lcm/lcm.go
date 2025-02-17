@@ -39,6 +39,5 @@ func NewLcmClient(credentials client.Credentials) (*Client, error) {
 		LcmEntitiesAPIInstance:  api.NewEntitiesApi(baseClient),
 		LcmUpgradeAPIInstance:   api.NewUpgradesApi(baseClient),
 	}
-
 	return f, nil
 }

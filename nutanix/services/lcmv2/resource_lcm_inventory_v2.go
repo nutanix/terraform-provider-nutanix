@@ -61,7 +61,7 @@ func ResourceLcmPerformInventoryV2(ctx context.Context, d *schema.ResourceData, 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroup(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: taskStateRefreshPrismTaskGroup(taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
@@ -71,7 +71,7 @@ func ResourceLcmPerformInventoryV2(ctx context.Context, d *schema.ResourceData, 
 	return nil
 }
 
-func taskStateRefreshPrismTaskGroup(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
+func taskStateRefreshPrismTaskGroup(client *prism.Client, taskUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		// data := base64.StdEncoding.EncodeToString([]byte("ergon"))
 		// encodeUUID := data + ":" + taskUUID

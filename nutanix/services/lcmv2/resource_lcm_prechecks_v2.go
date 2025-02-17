@@ -100,11 +100,12 @@ func ResourceLcmPreChecksV2(ctx context.Context, d *schema.ResourceData, meta in
 	// calling group API to poll for completion of task
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the inventorty to be successful
+
+	// Wait for the PreChecks to be successful
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
-		Refresh: taskStateRefreshPrismTaskGroup(ctx, taskconn, utils.StringValue(taskUUID)),
+		Refresh: taskStateRefreshPrismTaskGroup(taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 

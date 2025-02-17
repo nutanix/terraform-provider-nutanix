@@ -4,15 +4,27 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	taskRef "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	lcmconfigimport1 "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/resources"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func DatasourceLcmConfig() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: DatasourceLcmConfigRead,
+		ReadContext:   ResourceLcmConfigRead,
+		UpdateContext: ResourceLcmConfigUpdate,
 		Schema: map[string]*schema.Schema{
+			"ntnx_request_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"if_match": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"x_cluster_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -74,7 +86,51 @@ func DatasourceLcmConfig() *schema.Resource {
 	}
 }
 
-func DatasourceLcmConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceLcmConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.Client).LcmAPI
+	clusterId := d.Get("x_cluster_id").(string)
+	ntnxRequestId, ok := d.Get("ntnx_request_id").(string)
+	if !ok || ntnxRequestId == "" {
+		return diag.Errorf("ntnx_request_id is required and cannot be null or empty")
+	}
+	if_match, ok := d.Get("if_match").(string)
+	if !ok || if_match == "" {
+		return diag.Errorf("if_match is required and cannot be null or empty")
+	}
+
+	args := make(map[string]interface{})
+	args["X-Cluster-Id"] = clusterId
+
+	body := lcmconfigimport1.Config{}
+
+	resp, err := conn.LcmConfigAPIInstance.UpdateConfig(&body, &clusterId, args)
+	if err != nil {
+		return diag.Errorf("error while updating the LCM config: %v", err)
+	}
+
+	getResp := resp.Data.GetValue().(lcmconfigimport1.UpdateConfigApiResponse)
+	TaskRef := getResp.Data.GetValue().(taskRef.TaskReference)
+	taskUUID := TaskRef.ExtId
+
+	// calling group API to poll for completion of task
+
+	taskconn := meta.(*conns.Client).PrismAPI
+
+	// Wait for the Config Update to be successful
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
+		Target:  []string{"SUCCEEDED"},
+		Refresh: taskStateRefreshPrismTaskGroup(taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+	}
+
+	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
+		return diag.Errorf("Config Update task failed: %s", errWaitTask)
+	}
+	return ResourceLcmConfigRead(ctx, d, meta)
+}
+
+func ResourceLcmConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
 	clusterId := d.Get("x_cluster_id").(string)
 
