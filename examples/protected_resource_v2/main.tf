@@ -145,7 +145,7 @@ resource "nutanix_protection_policy_v2" "pp-vm" {
 }
 
 resource "nutanix_virtual_machine_v2" "vm" {
-  name                 = "tf-vm-exmaple-restore"
+  name                 = "tf-vm-example-restore"
   description          = "virtual machine for restore"
   num_cores_per_socket = 1
   num_sockets          = 1
@@ -300,7 +300,7 @@ resource "nutanix_protection_policy_v2" "pp-vg" {
 }
 
 resource "nutanix_volume_group_v2" "vg" {
-  name                 = "tf-vg-exmaple-restore"
+  name                 = "tf-vg-example-restore"
   description          = "volume group for restore"
   cluster_reference                  = local.clusterExtId
   depends_on = [nutanix_protection_policy_v2.pp-vg]
