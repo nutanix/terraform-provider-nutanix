@@ -107,7 +107,6 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVG(t *testing.T) {
 }
 
 func testPromoteProtectedResourceVMAndProtectionPolicyConfig(vmName, ppName, description string, r int) string {
-
 	return fmt.Sprintf(`
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}

@@ -117,9 +117,7 @@ func testCheckDestroyProtectedResource(state *terraform.State) error {
 			log.Printf("[DEBUG] Category deleted\n")
 			return nil
 		}
-
 	}
-
 	return nil
 }
 
