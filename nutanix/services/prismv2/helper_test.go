@@ -441,7 +441,7 @@ func powerOffPC() resource.TestCheckFunc {
 		vms := vmsResp.Data.GetValue().([]vmConfig.Vm)
 
 		for _, vm := range vms {
-			if vm.MachineType.GetName() == "PC" {
+			if vm.MachineType.GetName() == "PC" && utils.StringValue(vm.Description) == "" {
 				// get etag
 				readResp, err := vmClient.GetVmById(vm.ExtId, nil)
 				if err != nil {
