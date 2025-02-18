@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/common"
 	taskRef "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/prism/v4/config"
+	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -84,7 +85,7 @@ func ResourcePreloadArtifactsV2Create(ctx context.Context, d *schema.ResourceDat
 		return diag.Errorf("error while fetching the Preload Artifacts task : %v", err)
 	}
 
-	task := resourceUUID.Data.GetValue().(taskRef.TaskReference)
+	task := resourceUUID.Data.GetValue().(prismConfig.Task)
 	aJSON, _ := json.MarshalIndent(task, "", "  ")
 	log.Printf("[DEBUG] LCM Preload Artifacts Task Response: %s", string(aJSON))
 
