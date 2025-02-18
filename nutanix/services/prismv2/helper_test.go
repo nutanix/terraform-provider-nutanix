@@ -370,38 +370,6 @@ func createRestoreSource(restoreSourceExtID *string) resource.TestCheckFunc {
 	}
 }
 
-func ListRestorePoints(restoreSourceExtID, restorePointExtID, restorablePcExtID *string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		fmt.Printf("List Restore Points\n")
-		conn := acc.TestAccProvider2.Meta().(*conns.Client)
-		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
-
-		resp, err := client.ListRestorableDomainManagers(restoreSourceExtID, nil, nil, nil)
-		if err != nil {
-			return fmt.Errorf("error while Listing Restorable Domain Managers configurations Details: %v", err)
-		}
-
-		if resp.Data == nil {
-			return fmt.Errorf("error setting Restorable pcs: %v", err)
-		}
-		restorablePcs := resp.Data.GetValue().([]management.RestorableDomainManager)
-		*restorablePcExtID = utils.StringValue(restorablePcs[0].ExtId)
-
-		restorePointResp, err := client.ListRestorePoints(restoreSourceExtID, restorablePcExtID, nil, nil, nil, nil, nil)
-		if err != nil {
-			return fmt.Errorf("error while fetching Domain Manager Restore Point Detail: %s", err)
-		}
-
-		if restorePointResp.Data == nil {
-			return fmt.Errorf("error setting restore_points: %v", err)
-		}
-		restorePoints := restorePointResp.Data.GetValue().([]management.RestorePoint)
-		*restorePointExtID = utils.StringValue(restorePoints[0].ExtId)
-
-		return nil
-	}
-}
-
 func deleteBackupTarget(backupTargetExtID, pcExtID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acc.TestAccProvider.Meta().(*conns.Client)

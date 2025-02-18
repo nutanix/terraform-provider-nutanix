@@ -11,15 +11,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 const resourceNameRestorePC = "nutanix_restore_pc_v2.test"
 
 func TestAccV2NutanixRestorePCResource_RestorePC(t *testing.T) {
-	var backupTargetExtID,
-		pcExtID = new(string), new(string)
+	var backupTargetExtID, restoreSourceExtID,
+		pcExtID = new(string), new(string), new(string)
 
-	var restorePcConfig, clusterExtID string
+	var restorePcConfig string
 
 	pcDetails := make(map[string]interface{})
 
@@ -51,17 +52,13 @@ func TestAccV2NutanixRestorePCResource_RestorePC(t *testing.T) {
 							if !ok {
 								return fmt.Errorf("output 'pc_details' not found")
 							}
-							clusterExtIDOutput, ok := s.RootModule().Outputs["clusterExtID"]
-							if !ok {
-								return fmt.Errorf("output 'clusterExtID' not found")
-							}
-							clusterExtID = clusterExtIDOutput.Value.(string)
 
 							pcDetails = pcDetailsOutput.Value.(map[string]interface{})
 							return nil
 						},
 						createBackupTarget(backupTargetExtID),
 						checkLastSyncTimeBackupTargetRestorePC(backupTargetExtID, pcExtID, retries, delay),
+						createRestoreSource(restoreSourceExtID),
 					),
 				},
 				// Step 3: power off PC
@@ -73,7 +70,7 @@ func TestAccV2NutanixRestorePCResource_RestorePC(t *testing.T) {
 					Check: resource.ComposeTestCheckFunc(
 						func(s *terraform.State) error {
 							// Build the restore PC configuration for the next subtest case
-							restorePcConfig = restorePcResourceConfig(pcDetails, clusterExtID)
+							restorePcConfig = restorePcResourceConfig(pcDetails, utils.StringValue(restoreSourceExtID))
 							fmt.Printf("Restore PC Config: %s\n", restorePcConfig)
 							return nil
 						},
@@ -204,7 +201,7 @@ data "nutanix_subnets_v2" "subnets" {
 `, peHostProviderConfig)
 }
 
-func restorePcResourceConfig(pcDetails map[string]interface{}, clusterExtID string) string {
+func restorePcResourceConfig(pcDetails map[string]interface{}, restoreSourceExtID string) string {
 	// Extract nested values from the map
 	config, ok := pcDetails["config"].([]interface{})
 	if !ok || len(config) == 0 {
@@ -407,21 +404,10 @@ provider "nutanix-2" {
 # peHostProviderConfig
 %s
 
-resource "nutanix_restore_source_v2" "cluster-location" {
-  provider =  nutanix-2
-  location {
-    cluster_location {
-      config {
-		# clusterExtID
-        ext_id = "%s"
-      }
-    }
-  }
-}
 
 data "nutanix_restorable_pcs_v2" "restorable-pcs" {
   provider              = nutanix-2
-  restore_source_ext_id = nutanix_restore_source_v2.cluster-location.ext_id
+  restore_source_ext_id = "%[2]s"
 }
 
 locals {
@@ -431,7 +417,7 @@ locals {
 data "nutanix_restore_points_v2" "restore-points" {
   provider                         = nutanix-2
   restorable_domain_manager_ext_id = local.restorablePc.ext_id
-  restore_source_ext_id            = nutanix_restore_source_v2.cluster-location.id
+  restore_source_ext_id            = "%[2]s"
 }
 
 locals {
@@ -445,7 +431,7 @@ resource "nutanix_restore_pc_v2" "test" {
 		create = "120m"
 	}
     ext_id                           = local.restorePointId
-    restore_source_ext_id            = nutanix_restore_source_v2.cluster-location.id
+    restore_source_ext_id            = "%[2]s"
     restorable_domain_manager_ext_id = local.restorablePc.ext_id
 	domain_manager {
 		config {
@@ -506,7 +492,7 @@ resource "nutanix_restore_pc_v2" "test" {
 		on_failure = continue
 	}
 }
-				`, peHostProviderConfig, clusterExtID, version, name, size, strContainerExtIDs, dataDiskSizeBytes, memorySizeBytes, numVcpus,
+				`, peHostProviderConfig, restoreSourceExtID, version, name, size, strContainerExtIDs, dataDiskSizeBytes, memorySizeBytes, numVcpus,
 		externalAddressIPv4Value, nameServersConfig, ntpServersConfig, networkExtID, defaultGatewayIPv4, subnetMaskIPv4,
 		ipRangeBeginIPv4, ipRangeEndIPv4, resetCommand)
 }
