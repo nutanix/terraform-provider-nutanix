@@ -12,10 +12,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func DatasourceLcmConfig() *schema.Resource {
+func ResourceLcmConfigV2() *schema.Resource {
 	return &schema.Resource{
-		ReadContext:   ResourceLcmConfigRead,
-		UpdateContext: ResourceLcmConfigUpdate,
+		CreateContext: ResourceLcmConfigV2Create,
+		ReadContext:   ResourceLcmConfigV2Read,
+		UpdateContext: ResourceLcmConfigV2Update,
+		DeleteContext: ResourceLcmConfigV2Delete,
 		Schema: map[string]*schema.Schema{
 			"ntnx_request_id": {
 				Type:     schema.TypeString,
@@ -86,7 +88,7 @@ func DatasourceLcmConfig() *schema.Resource {
 	}
 }
 
-func ResourceLcmConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceLcmConfigV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
 	clusterId := d.Get("x_cluster_id").(string)
 	ntnxRequestId, ok := d.Get("ntnx_request_id").(string)
@@ -127,10 +129,10 @@ func ResourceLcmConfigUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("Config Update task failed: %s", errWaitTask)
 	}
-	return ResourceLcmConfigRead(ctx, d, meta)
+	return ResourceLcmConfigV2Read(ctx, d, meta)
 }
 
-func ResourceLcmConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceLcmConfigV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
 	clusterId := d.Get("x_cluster_id").(string)
 
@@ -180,6 +182,14 @@ func ResourceLcmConfigRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.FromErr(err)
 	}
 	d.SetId(*lcmConfig.ExtId)
+	return nil
+}
+
+func ResourceLcmConfigV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return ResourceLcmConfigV2Create(ctx, d, meta)
+}
+
+func ResourceLcmConfigV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 

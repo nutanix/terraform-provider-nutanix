@@ -15,13 +15,13 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func ResourceLcmInventoryV2() *schema.Resource {
+func ResourceNutanixLcmPerformInventoryV2() *schema.Resource {
 	return &schema.Resource{
+		CreateContext: ResourceNutanixLcmPerformInventoryV2Create,
+		ReadContext:   ResourceNutainxLcmPerformInventoryV2Read,
+		UpdateContext: ResourceNutanixLcmPerformInventoryV2Update,
+		DeleteContext: ResourceNutanixLcmPerformInventoryV2Delete,
 		Schema: map[string]*schema.Schema{
-			"ntnx_request_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"x_cluster_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -34,7 +34,7 @@ func ResourceLcmInventoryV2() *schema.Resource {
 	}
 }
 
-func ResourceLcmPerformInventoryV2(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixLcmPerformInventoryV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
 	clusterId := d.Get("x_cluster_id").(string)
 	ntnxRequestId, ok := d.Get("ntnx_request_id").(string)
@@ -68,6 +68,18 @@ func ResourceLcmPerformInventoryV2(ctx context.Context, d *schema.ResourceData, 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("Perform inventory task failed: %s", errWaitTask)
 	}
+	return nil
+}
+
+func ResourceNutainxLcmPerformInventoryV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return ResourceNutanixLcmPerformInventoryV2Create(ctx, d, meta)
+}
+
+func ResourceNutanixLcmPerformInventoryV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return nil
+}
+
+func ResourceNutanixLcmPerformInventoryV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
 

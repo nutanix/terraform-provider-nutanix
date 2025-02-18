@@ -10,9 +10,9 @@ import (
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 )
 
-func DatasourceLcmStatus() *schema.Resource {
+func DatasourceNutanixLcmStatusV2() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: DatasourceLcmStatusRead,
+		ReadContext: DatasourceNutanixLcmStatusV2Create,
 		Schema: map[string]*schema.Schema{
 			"x_cluster_id": {
 				Type:     schema.TypeString,
@@ -75,7 +75,7 @@ func DatasourceLcmStatus() *schema.Resource {
 	}
 }
 
-func DatasourceLcmStatusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func DatasourceNutanixLcmStatusV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
 	clusterId := d.Get("x_cluster_id").(string)
 

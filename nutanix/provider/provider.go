@@ -17,6 +17,7 @@ import (
 	foundationCentral "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/foundationCentral"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iamv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/lcmv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/ndb"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networkingv2"
@@ -289,6 +290,7 @@ func Provider() *schema.Provider {
 			"nutanix_clusters_v2":                             clustersv2.DatasourceNutanixClusterEntitiesV2(),
 			"nutanix_host_v2":                                 clustersv2.DatasourceNutanixHostEntityV2(),
 			"nutanix_hosts_v2":                                clustersv2.DatasourceNutanixHostEntitiesV2(),
+			"nutanix_lcm_status_v2":                           lcmv2.DatasourceNutanixLcmStatusV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
@@ -385,6 +387,7 @@ func Provider() *schema.Provider {
 			"nutanix_pc_registration_v2":                      clustersv2.ResourceNutanixClusterPCRegistrationV2(),
 			"nutanix_clusters_discover_unconfigured_nodes_v2": clustersv2.ResourceNutanixClusterDiscoverUnconfiguredNodesV2(),
 			"nutanix_clusters_unconfigured_node_networks_v2":  clustersv2.ResourceNutanixClusterUnconfiguredNodeNetworkV2(),
+			"nutanix_lcm_perform_inventory_v2":                lcmv2.ResourceNutanixLcmPerformInventoryV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
