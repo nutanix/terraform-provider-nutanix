@@ -103,7 +103,9 @@ func DatasourceNutanixLcmStatusV2Create(ctx context.Context, d *schema.ResourceD
 	if err := d.Set("upload_task_uuid", lcmStatusResp.UploadTaskUuid); err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(*lcmStatusResp.ExtId)
+
+	// setting the data source id to the random uuid
+	d.SetId(utils.GenUUID())
 	return nil
 }
 
