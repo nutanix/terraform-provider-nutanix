@@ -291,6 +291,7 @@ func Provider() *schema.Provider {
 			"nutanix_host_v2":                                 clustersv2.DatasourceNutanixHostEntityV2(),
 			"nutanix_hosts_v2":                                clustersv2.DatasourceNutanixHostEntitiesV2(),
 			"nutanix_lcm_status_v2":                           lcmv2.DatasourceNutanixLcmStatusV2(),
+			"nutanix_lcm_get_config_v2":                       lcmv2.DatasourceNutanixLcmConfigV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
@@ -388,6 +389,8 @@ func Provider() *schema.Provider {
 			"nutanix_clusters_discover_unconfigured_nodes_v2": clustersv2.ResourceNutanixClusterDiscoverUnconfiguredNodesV2(),
 			"nutanix_clusters_unconfigured_node_networks_v2":  clustersv2.ResourceNutanixClusterUnconfiguredNodeNetworkV2(),
 			"nutanix_lcm_perform_inventory_v2":                lcmv2.ResourceNutanixLcmPerformInventoryV2(),
+			"nutanix_lcm_update_config_v2":                    lcmv2.ResourceNutanixLcmConfigV2(),
+			"nutanix_lcm_prechecks_v2":                        lcmv2.ResourceNutanixPreChecksV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

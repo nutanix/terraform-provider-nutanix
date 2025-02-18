@@ -8,6 +8,7 @@ import (
 	import2 "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/common/v1/response"
 	lcmstatusimport1 "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/resources"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
 func DatasourceNutanixLcmStatusV2() *schema.Resource {
@@ -16,7 +17,7 @@ func DatasourceNutanixLcmStatusV2() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"x_cluster_id": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Required: true,
 			},
 			"tenant_id": {
 				Type:     schema.TypeString,
@@ -78,11 +79,7 @@ func DatasourceNutanixLcmStatusV2() *schema.Resource {
 func DatasourceNutanixLcmStatusV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
 	clusterId := d.Get("x_cluster_id").(string)
-
-	args := make(map[string]interface{})
-	args["X-Cluster-Id"] = clusterId
-
-	resp, err := conn.LcmStatusAPIInstance.GetStatus(&clusterId, args)
+	resp, err := conn.LcmStatusAPIInstance.GetStatus(utils.StringPtr(clusterId))
 	if err != nil {
 		return diag.Errorf("error while fetching the Lcm status : %v", err)
 	}

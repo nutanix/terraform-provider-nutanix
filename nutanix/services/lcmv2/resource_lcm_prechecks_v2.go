@@ -8,18 +8,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	taskRef "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	preCheckConfig "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/common"
-	lcmPreCheckResp "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/operations"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-func ResourcePreChecksV2() *schema.Resource {
+func ResourceNutanixPreChecksV2() *schema.Resource {
 	return &schema.Resource{
+		CreateContext: ResourceNutanixLcmPreChecksV2Create,
+		ReadContext:   ResourceNutanixLcmPreChecksV2Read,
+		UpdateContext: ResourceNutanixLcmPreChecksV2Update,
+		DeleteContext: ResourceNutanixLcmPreChecksV2Delete,
 		Schema: map[string]*schema.Schema{
-			"ntnx_request_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"x_cluster_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -76,25 +75,16 @@ func ResourcePreChecksV2() *schema.Resource {
 	}
 }
 
-func ResourceLcmPreChecksV2(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
 	clusterId := d.Get("x_cluster_id").(string)
-	ntnxRequestId, ok := d.Get("ntnx_request_id").(string)
-	if !ok || ntnxRequestId == "" {
-		return diag.Errorf("ntnx_request_id is required and cannot be null or empty")
-	}
-
-	args := make(map[string]interface{})
-	args["X-Cluster-Id"] = clusterId
-	args["NTNX-Request-Id"] = ntnxRequestId
 	body := preCheckConfig.PrechecksSpec{}
 
-	resp, err := conn.LcmPreChecksAPIInstance.PerformPrechecks(&body, &clusterId, args)
+	resp, err := conn.LcmPreChecksAPIInstance.PerformPrechecks(&body, utils.StringPtr(clusterId))
 	if err != nil {
 		return diag.Errorf("error while performing the prechecs: %v", err)
 	}
-	getResp := resp.Data.GetValue().(lcmPreCheckResp.PrechecksApiResponse)
-	TaskRef := getResp.Data.GetValue().(taskRef.TaskReference)
+	TaskRef := resp.Data.GetValue().(taskRef.TaskReference)
 	taskUUID := TaskRef.ExtId
 
 	// calling group API to poll for completion of task
@@ -112,5 +102,18 @@ func ResourceLcmPreChecksV2(ctx context.Context, d *schema.ResourceData, meta in
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("Prechecks task failed: %s", errWaitTask)
 	}
+	d.SetId(*taskUUID)
+	return nil
+}
+
+func ResourceNutanixLcmPreChecksV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return nil
+}
+
+func ResourceNutanixLcmPreChecksV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return nil
+}
+
+func ResourceNutanixLcmPreChecksV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	return nil
 }
