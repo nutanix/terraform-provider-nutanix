@@ -2,12 +2,15 @@ package lcmv2
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	taskRef "github.com/nutanix/ntnx-api-golang-clients/clustermgmt-go-client/v4/models/prism/v4/config"
 	preCheckConfig "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/lifecycle/v4/common"
+	taskRef "github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4/models/prism/v4/config"
+	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
@@ -25,6 +28,7 @@ func ResourceNutanixPreChecksV2() *schema.Resource {
 			},
 			"management_server": {
 				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -48,7 +52,8 @@ func ResourceNutanixPreChecksV2() *schema.Resource {
 				},
 			},
 			"entity_update_specs": {
-				Type: schema.TypeList,
+				Type:     schema.TypeList,
+				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"entity_uuid": {
@@ -61,11 +66,14 @@ func ResourceNutanixPreChecksV2() *schema.Resource {
 						},
 					},
 				},
-				Required: true,
 			},
 			"skipped_precheck_flags": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Elem: &schema.Schema{
+					Description: "List of String",
+					Type:        schema.TypeString,
+				},
 			},
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -78,17 +86,26 @@ func ResourceNutanixPreChecksV2() *schema.Resource {
 func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
 	clusterId := d.Get("x_cluster_id").(string)
-	body := preCheckConfig.PrechecksSpec{}
+	body := preCheckConfig.NewPrechecksSpec()
 
-	resp, err := conn.LcmPreChecksAPIInstance.PerformPrechecks(&body, utils.StringPtr(clusterId))
+	if managementServer, ok := d.GetOk("management_server"); ok {
+		body.ManagementServer = expandManagementServer(managementServer.([]interface{}))
+	}
+	if entityUpdateSpecs, ok := d.GetOk("entity_update_specs"); ok {
+		body.EntityUpdateSpecs = expandEntityUpdateSpecs(entityUpdateSpecs.([]interface{}))
+	}
+	if skippedPrecheckFlags, ok := d.GetOk("skipped_precheck_flags"); ok {
+		body.SkippedPrecheckFlags = expandSystemAutoMgmtFlag(skippedPrecheckFlags.([]interface{}))
+	}
+
+	resp, err := conn.LcmPreChecksAPIInstance.PerformPrechecks(body, utils.StringPtr(clusterId))
 	if err != nil {
-		return diag.Errorf("error while performing the prechecs: %v", err)
+		return diag.Errorf("error while performing the prechecks: %v", err)
 	}
 	TaskRef := resp.Data.GetValue().(taskRef.TaskReference)
 	taskUUID := TaskRef.ExtId
 
 	// calling group API to poll for completion of task
-
 	taskconn := meta.(*conns.Client).PrismAPI
 
 	// Wait for the PreChecks to be successful
@@ -102,12 +119,23 @@ func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.Resource
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("Prechecks task failed: %s", errWaitTask)
 	}
-	d.SetId(*taskUUID)
+
+	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	if err != nil {
+		return diag.Errorf("error while fetching the Lcm upgrade task : %v", err)
+	}
+
+	task := resourceUUID.Data.GetValue().(prismConfig.Task)
+	aJSON, _ := json.MarshalIndent(task, "", "  ")
+	log.Printf("[DEBUG] PrechecksSpec: %s", string(aJSON))
+
+	// set the resource id to random uuid
+	d.SetId(utils.GenUUID())
 	return nil
 }
 
 func ResourceNutanixLcmPreChecksV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	return ResourceNutanixLcmPreChecksV2Create(ctx, d, meta)
 }
 
 func ResourceNutanixLcmPreChecksV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

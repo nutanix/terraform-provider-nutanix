@@ -78,7 +78,11 @@ func DatasourceNutanixLcmEntitiesV2Create(ctx context.Context, d *schema.Resourc
 
 	resp, err := conn.LcmEntitiesAPIInstance.ListEntities(page, limit, filter, orderBy, selects)
 	if err != nil {
-		return diag.Errorf("error while listing the Lcm entites : %v", err)
+		return diag.Errorf("error while listing the Lcm entities : %v", err)
+	}
+
+	if resp.Data == nil {
+		return diag.Errorf("error while listing the Lcm entities : response data is empty")
 	}
 
 	entities := resp.Data.GetValue().([]lcmEntityPkg.Entity)
