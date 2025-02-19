@@ -27,10 +27,6 @@ func ResourceNutanixLcmPerformInventoryV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ext_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -63,7 +59,7 @@ func ResourceNutanixLcmPerformInventoryV2Create(ctx context.Context, d *schema.R
 
 	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching the Lcm upgrade task : %v", err)
+		return diag.Errorf("error while fetching the Lcm inventory task : %v", err)
 	}
 
 	task := resourceUUID.Data.GetValue().(prismConfig.Task)

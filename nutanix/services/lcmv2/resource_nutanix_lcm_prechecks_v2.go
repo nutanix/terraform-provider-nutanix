@@ -135,11 +135,11 @@ func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.Resource
 }
 
 func ResourceNutanixLcmPreChecksV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return ResourceNutanixLcmPreChecksV2Create(ctx, d, meta)
+	return nil
 }
 
 func ResourceNutanixLcmPreChecksV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	return ResourceNutanixLcmPreChecksV2Create(ctx, d, meta)
 }
 
 func ResourceNutanixLcmPreChecksV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

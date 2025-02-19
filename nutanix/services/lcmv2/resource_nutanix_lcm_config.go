@@ -19,10 +19,6 @@ func ResourceNutanixLcmConfigV2() *schema.Resource {
 		UpdateContext: ResourceNutanixLcmConfigV2Update,
 		DeleteContext: ResourceNutanixLcmConfigV2Delete,
 		Schema: map[string]*schema.Schema{
-			"if_match": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"x_cluster_id": {
 				Type:     schema.TypeString,
 				Required: true,
