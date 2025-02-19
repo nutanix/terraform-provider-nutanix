@@ -88,7 +88,7 @@ func ResourceLcmUpgradeV2() *schema.Resource {
 			"max_wait_time_in_secs": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IntBetween(60, 86400),
+				ValidateFunc: validation.IntBetween(60, 86400), //nolint:gomnd
 			},
 		},
 	}
@@ -189,13 +189,14 @@ func expandManagementServer(managementServer interface{}) *common.ManagementServ
 }
 
 func expandHypervisorType(hypervisorType string) *common.HypervisorType {
-	if hypervisorType == "HYPERV" {
+	switch hypervisorType {
+	case "HYPERV":
 		p := common.HYPERVISORTYPE_HYPERV
 		return &p
-	} else if hypervisorType == "ESX" {
+	case "ESX":
 		p := common.HYPERVISORTYPE_ESX
 		return &p
-	} else if hypervisorType == "AHV" {
+	case "AHV":
 		p := common.HYPERVISORTYPE_AHV
 		return &p
 	}

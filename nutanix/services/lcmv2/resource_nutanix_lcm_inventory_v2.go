@@ -37,9 +37,9 @@ func ResourceNutanixLcmPerformInventoryV2() *schema.Resource {
 
 func ResourceNutanixLcmPerformInventoryV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
-	clusterId := d.Get("x_cluster_id").(string)
+	clusterExtID := d.Get("x_cluster_id").(string)
 
-	resp, err := conn.LcmInventoryAPIInstance.PerformInventory(utils.StringPtr(clusterId))
+	resp, err := conn.LcmInventoryAPIInstance.PerformInventory(utils.StringPtr(clusterExtID))
 	if err != nil {
 		return diag.Errorf("error while performing the inventory: %v", err)
 	}
@@ -49,7 +49,7 @@ func ResourceNutanixLcmPerformInventoryV2Create(ctx context.Context, d *schema.R
 
 	// calling group API to poll for completion of task
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the inventorty to be successful
+	// Wait for the inventory to be successful
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
