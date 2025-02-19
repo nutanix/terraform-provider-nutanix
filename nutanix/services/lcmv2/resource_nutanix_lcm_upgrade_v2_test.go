@@ -46,7 +46,6 @@ func TestAccV2NutanixLcmUpgrade_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceNameLcmPreChecks, "entity_update_specs.0.entity_uuid", datasourceNameLcmEntityBeforeUpgrade, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameLcmPreChecks, "entity_update_specs.0.to_version", testVars.Lcm.EntityModelVersion),
 					// upgrade checks
-					resource.TestCheckResourceAttrSet(resourceNameLcmUpgrade, "x_cluster_id"),
 					resource.TestCheckResourceAttr(resourceNameLcmUpgrade, "entity_update_specs.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceNameLcmUpgrade, "entity_update_specs.0.entity_uuid", datasourceNameLcmEntityBeforeUpgrade, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameLcmUpgrade, "entity_update_specs.0.to_version", testVars.Lcm.EntityModelVersion),
@@ -65,10 +64,6 @@ func TestAccV2NutanixLcmUpgrade_Basic(t *testing.T) {
 
 func testLcmUpgradeConfig() string {
 	return fmt.Sprintf(`
-# list Clusters
-data "nutanix_clusters_v2" "clusters" {
-  filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"
-}
 
 # List Prism Central
 data "nutanix_clusters_v2" "pc" {
@@ -76,7 +71,6 @@ data "nutanix_clusters_v2" "pc" {
 }
 
 locals {
-  clusterExtID = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
   pcExtID      = data.nutanix_clusters_v2.pc.cluster_entities[0].ext_id
   config = jsondecode(file("%[1]s"))
   lcm          = local.config.lcm
@@ -128,7 +122,7 @@ resource "nutanix_lcm_upgrade_v2" "upgrade" {
 
 # check if there is any operation in progress after upgrade
 data "nutanix_lcm_status_v2" "status-after-upgrade" {
-  x_cluster_id = local.clusterExtID
+  x_cluster_id = local.pcExtID
   lifecycle {
     postcondition {
       condition     = self.in_progress_operation[0].operation_type == "" && self.in_progress_operation[0].operation_id == ""
