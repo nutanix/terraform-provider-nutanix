@@ -87,10 +87,6 @@ func ResourceNutanixLcmConfigV2() *schema.Resource {
 func ResourceNutanixLcmConfigV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
 	clusterExtID := d.Get("x_cluster_id").(string)
-	if_match, ok := d.Get("if_match").(string)
-	if !ok || if_match == "" {
-		return diag.Errorf("if_match is required and cannot be null or empty")
-	}
 
 	body := lcmconfigimport1.Config{}
 
