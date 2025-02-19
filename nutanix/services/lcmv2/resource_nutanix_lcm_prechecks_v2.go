@@ -85,7 +85,7 @@ func ResourceNutanixPreChecksV2() *schema.Resource {
 
 func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
-	clusterId := d.Get("x_cluster_id").(string)
+	clusterExtID := d.Get("x_cluster_id").(string)
 	body := preCheckConfig.NewPrechecksSpec()
 
 	if managementServer, ok := d.GetOk("management_server"); ok {
@@ -98,7 +98,7 @@ func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.Resource
 		body.SkippedPrecheckFlags = expandSystemAutoMgmtFlag(skippedPrecheckFlags.([]interface{}))
 	}
 
-	resp, err := conn.LcmPreChecksAPIInstance.PerformPrechecks(body, utils.StringPtr(clusterId))
+	resp, err := conn.LcmPreChecksAPIInstance.PerformPrechecks(body, utils.StringPtr(clusterExtID))
 	if err != nil {
 		return diag.Errorf("error while performing the prechecks: %v", err)
 	}
