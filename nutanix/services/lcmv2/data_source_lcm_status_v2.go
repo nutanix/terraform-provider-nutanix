@@ -17,8 +17,9 @@ func DatasourceNutanixLcmStatusV2() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"x_cluster_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
+			
 			"tenant_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -78,13 +79,19 @@ func DatasourceNutanixLcmStatusV2() *schema.Resource {
 
 func DatasourceNutanixLcmStatusV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
-	clusterId := d.Get("x_cluster_id").(string)
-	resp, err := conn.LcmStatusAPIInstance.GetStatus(utils.StringPtr(clusterId))
+
+	var clusterID *string
+	if id := d.Get("x_cluster_id").(string); id != "" {
+		clusterID = &id
+	}
+
+	resp, err := conn.LcmStatusAPIInstance.GetStatus(clusterID)
 	if err != nil {
 		return diag.Errorf("error while fetching the Lcm status : %v", err)
 	}
 
 	lcmStatusResp := resp.Data.GetValue().(lcmstatusimport1.StatusInfo)
+
 	if err := d.Set("tenant_id", lcmStatusResp.TenantId); err != nil {
 		return diag.FromErr(err)
 	}
@@ -111,15 +118,15 @@ func DatasourceNutanixLcmStatusV2Create(ctx context.Context, d *schema.ResourceD
 
 func flattenFrameworkVersion(pr *lcmstatusimport1.FrameworkVersionInfo) []map[string]interface{} {
 	if pr != nil {
-		frameworVersionRef := make([]map[string]interface{}, 0)
+		frameworkVersionRef := make([]map[string]interface{}, 0)
 		frameworkVersion := make(map[string]interface{})
 
 		frameworkVersion["current_version"] = pr.CurrentVersion
 		frameworkVersion["available_version"] = pr.AvailableVersion
 		frameworkVersion["is_update_needed"] = pr.IsUpdateNeeded
 
-		frameworVersionRef = append(frameworVersionRef, frameworkVersion)
-		return frameworVersionRef
+		frameworkVersionRef = append(frameworkVersionRef, frameworkVersion)
+		return frameworkVersionRef
 	}
 	return nil
 }
@@ -129,7 +136,7 @@ func flattenInProgressOperation(pr *lcmstatusimport1.InProgressOpInfo) []map[str
 		OperationRef := make([]map[string]interface{}, 0)
 		Operation := make(map[string]interface{})
 
-		Operation["operation_type"] = pr.OperationType
+		Operation["operation_type"] = pr.OperationType.GetName()
 		Operation["operation_id"] = pr.OperationId
 
 		OperationRef = append(OperationRef, Operation)
