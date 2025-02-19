@@ -25,7 +25,7 @@ func ResourceLcmUpgradeV2() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"x_cluster_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"management_server": {
 				Type:     schema.TypeList,
@@ -96,8 +96,10 @@ func ResourceLcmUpgradeV2() *schema.Resource {
 
 func ResourceLcmUpgradeV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
-
-	clusterId := d.Get("x_cluster_id").(string)
+	var clusterID *string
+	if id := d.Get("x_cluster_id").(string); id != "" {
+		clusterID = &id
+	}
 
 	body := common.NewUpgradeSpec()
 
@@ -118,9 +120,9 @@ func ResourceLcmUpgradeV2Create(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
-	log.Printf("[DEBUG] LCM Upgrade Request: %s", string(aJSON))
+	log.Printf("[DEBUG] LCM Upgrade Request Spec: %s", string(aJSON))
 
-	resp, err := conn.LcmUpgradeAPIInstance.PerformUpgrade(body, utils.StringPtr(clusterId))
+	resp, err := conn.LcmUpgradeAPIInstance.PerformUpgrade(body, clusterID)
 	if err != nil {
 		return diag.Errorf("error while Perform Upgrade the LCM config: %v", err)
 	}
@@ -150,7 +152,7 @@ func ResourceLcmUpgradeV2Create(ctx context.Context, d *schema.ResourceData, met
 
 	task := resourceUUID.Data.GetValue().(prismConfig.Task)
 	aJSON, _ = json.MarshalIndent(task, "", "  ")
-	log.Printf("[DEBUG] LCM Upgrade Task Response: %s", string(aJSON))
+	log.Printf("[DEBUG] LCM Upgrade Task Details: %s", string(aJSON))
 
 	// randomly generating the id
 	d.SetId(utils.GenUUID())

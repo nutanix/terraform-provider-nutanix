@@ -127,7 +127,7 @@ func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.Resource
 
 	task := resourceUUID.Data.GetValue().(prismConfig.Task)
 	aJSON, _ := json.MarshalIndent(task, "", "  ")
-	log.Printf("[DEBUG] PrechecksSpec: %s", string(aJSON))
+	log.Printf("[DEBUG] PrechecksSpec Task Details: %s", string(aJSON))
 
 	// set the resource id to random uuid
 	d.SetId(utils.GenUUID())
