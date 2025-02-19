@@ -30,7 +30,6 @@ func TestAccV2NutanixLcmPerformInventory_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(datasourceNameLcmEntityBeforeUpgrade, "entity_version"),
 					// perform inventory checks
 					resource.TestCheckResourceAttrSet(resourceNameLcmPerformInventory, "x_cluster_id"),
-
 				),
 			},
 		},

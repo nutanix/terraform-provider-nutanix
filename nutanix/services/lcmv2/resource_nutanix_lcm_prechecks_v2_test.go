@@ -35,7 +35,6 @@ func TestAccV2NutanixLcmPrechecks_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameLcmPreChecks, "entity_update_specs.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceNameLcmPreChecks, "entity_update_specs.0.entity_uuid", datasourceNameLcmEntityBeforeUpgrade, "ext_id"),
 					resource.TestCheckResourceAttr(resourceNameLcmPreChecks, "entity_update_specs.0.to_version", testVars.Lcm.EntityModelVersion),
-
 				),
 			},
 		},

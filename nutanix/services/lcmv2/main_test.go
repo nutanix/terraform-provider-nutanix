@@ -9,7 +9,7 @@ import (
 
 type TestConfig struct {
 	Lcm struct {
-		EntityModel string `json:"entity_model"`
+		EntityModel        string `json:"entity_model"`
 		EntityModelVersion string `json:"entity_model_version"`
 	} `json:"lcm"`
 }
