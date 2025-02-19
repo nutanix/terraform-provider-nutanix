@@ -58,10 +58,18 @@ func DatasourceNutanixLcmConfigV2() *schema.Resource {
 			"supported_software_entities": {
 				Type:     schema.TypeList,
 				Computed: true,
+				Elem: &schema.Schema{
+					Description: "List of String",
+					Type:        schema.TypeString,
+				},
 			},
 			"deprecated_software_entities": {
 				Type:     schema.TypeList,
 				Computed: true,
+				Elem: &schema.Schema{
+					Description: "List of String",
+					Type:        schema.TypeString,
+				},
 			},
 			"is_framework_bundle_uploaded": {
 				Type:     schema.TypeBool,
@@ -91,6 +99,9 @@ func DatasourceNutanixLcmConfigV2Create(ctx context.Context, d *schema.ResourceD
 	if err := d.Set("links", flattenLinks(lcmConfig.Links)); err != nil {
 		return diag.FromErr(err)
 	}
+	if err := d.Set("url", lcmConfig.Url); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("is_auto_inventory_enabled", lcmConfig.IsAutoInventoryEnabled); err != nil {
 		return diag.FromErr(err)
 	}
@@ -103,24 +114,26 @@ func DatasourceNutanixLcmConfigV2Create(ctx context.Context, d *schema.ResourceD
 	if err := d.Set("display_version", lcmConfig.DisplayVersion); err != nil {
 		return diag.FromErr(err)
 	}
-	if err := d.Set("connectivity_type", lcmConfig.ConnectivityType); err != nil {
+	if err := d.Set("connectivity_type", lcmConfig.ConnectivityType.GetName()); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("is_https_enabled", lcmConfig.IsHttpsEnabled); err != nil {
 		return diag.FromErr(err)
 	}
-	// if err := d.Set("supported_software_entities", flattenSoftwareEntities(lcmConfig.SupportedSoftwareEntities)); err != nil {
-	// 	return diag.FromErr(err)
-	// }
-	// if err := d.Set("deprecated_software_entities", flattenSoftwareEntities(lcmConfig.DeprecatedSoftwareEntities)); err != nil {
-	// 	return diag.FromErr(err)
-	// }
+	if err := d.Set("supported_software_entities", lcmConfig.SupportedSoftwareEntities); err != nil {
+		return diag.FromErr(err)
+	}
+	if err := d.Set("deprecated_software_entities", lcmConfig.DeprecatedSoftwareEntities); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("is_framework_bundle_uploaded", lcmConfig.IsFrameworkBundleUploaded); err != nil {
 		return diag.FromErr(err)
 	}
 	if err := d.Set("has_module_auto_upgrade_enabled", lcmConfig.HasModuleAutoUpgradeEnabled); err != nil {
 		return diag.FromErr(err)
 	}
-	d.SetId(*lcmConfig.ExtId)
+
+	// Set Id to random UUID
+	d.SetId(utils.GenUUID())
 	return nil
 }
