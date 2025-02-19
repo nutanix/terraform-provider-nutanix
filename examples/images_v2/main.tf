@@ -16,10 +16,10 @@ provider "nutanix" {
   insecure = true
 }
 
-# create a image from iso source
-resource "nutanix_images_v2" "example-1" {
-  name = "example-image-1"
-  type = "ISO_IMAGE"
+resource "nutanix_images_v2" "img-1" {
+  name        = "test-image"
+  description = "img desc"
+  type        = "ISO_IMAGE"
   source {
     url_source {
       url = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
@@ -27,17 +27,22 @@ resource "nutanix_images_v2" "example-1" {
   }
 }
 
-# create image from vm disk source
-resource "nutanix_images_v2" "example-2" {
-  name = "example-image-2"
-  type = "DISK_IMAGE"
+data "nutanix_clusters_v2" "clusters" {}
+
+locals {
+  clusterExtID = data.nutanix_clusters_v2.clusters.cluster_entities[0].ext_id
+}
+
+resource "nutanix_images_v2" "img-2" {
+  name        = "test-image"
+  description = "img desc"
+  type        = "DISK_IMAGE"
   source {
-    vm_disk_source {
-      ext_id = resource.nutanix_virtual_machine_v2.test.disks.0.ext_id
+    url_source {
+      url = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
     }
   }
   cluster_location_ext_ids = [
-    local.cluster0
+    local.clusterExtID
   ]
-  depends_on = [nutanix_virtual_machine_v2.test]
 }
