@@ -19,10 +19,6 @@ func ResourceNutanixLcmConfigV2() *schema.Resource {
 		UpdateContext: ResourceNutanixLcmConfigV2Update,
 		DeleteContext: ResourceNutanixLcmConfigV2Delete,
 		Schema: map[string]*schema.Schema{
-			"if_match": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"x_cluster_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -86,15 +82,11 @@ func ResourceNutanixLcmConfigV2() *schema.Resource {
 
 func ResourceNutanixLcmConfigV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
-	clusterId := d.Get("x_cluster_id").(string)
-	if_match, ok := d.Get("if_match").(string)
-	if !ok || if_match == "" {
-		return diag.Errorf("if_match is required and cannot be null or empty")
-	}
+	clusterExtID := d.Get("x_cluster_id").(string)
 
 	body := lcmconfigimport1.Config{}
 
-	resp, err := conn.LcmConfigAPIInstance.UpdateConfig(&body, utils.StringPtr(clusterId))
+	resp, err := conn.LcmConfigAPIInstance.UpdateConfig(&body, utils.StringPtr(clusterExtID))
 	if err != nil {
 		return diag.Errorf("error while updating the LCM config: %v", err)
 	}

@@ -27,19 +27,15 @@ func ResourceNutanixLcmPerformInventoryV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"ext_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
 
 func ResourceNutanixLcmPerformInventoryV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
-	clusterId := d.Get("x_cluster_id").(string)
-	
-	resp, err := conn.LcmInventoryAPIInstance.PerformInventory(utils.StringPtr(clusterId))
+	clusterExtID := d.Get("x_cluster_id").(string)
+
+	resp, err := conn.LcmInventoryAPIInstance.PerformInventory(utils.StringPtr(clusterExtID))
 	if err != nil {
 		return diag.Errorf("error while performing the inventory: %v", err)
 	}
@@ -49,7 +45,7 @@ func ResourceNutanixLcmPerformInventoryV2Create(ctx context.Context, d *schema.R
 
 	// calling group API to poll for completion of task
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the inventorty to be successful
+	// Wait for the inventory to be successful
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"QUEUED", "RUNNING", "PENDING"},
 		Target:  []string{"SUCCEEDED"},
@@ -63,7 +59,7 @@ func ResourceNutanixLcmPerformInventoryV2Create(ctx context.Context, d *schema.R
 
 	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching the Lcm upgrade task : %v", err)
+		return diag.Errorf("error while fetching the Lcm inventory task : %v", err)
 	}
 
 	task := resourceUUID.Data.GetValue().(prismConfig.Task)

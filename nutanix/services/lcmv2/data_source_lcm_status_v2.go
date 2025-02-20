@@ -19,7 +19,6 @@ func DatasourceNutanixLcmStatusV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			
 			"tenant_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -136,7 +135,11 @@ func flattenInProgressOperation(pr *lcmstatusimport1.InProgressOpInfo) []map[str
 		OperationRef := make([]map[string]interface{}, 0)
 		Operation := make(map[string]interface{})
 
-		Operation["operation_type"] = pr.OperationType.GetName()
+		operationType := ""
+		if pr.OperationType != nil {
+			operationType = pr.OperationType.GetName()
+		}
+		Operation["operation_type"] = operationType
 		Operation["operation_id"] = pr.OperationId
 
 		OperationRef = append(OperationRef, Operation)

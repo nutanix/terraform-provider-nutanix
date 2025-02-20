@@ -85,7 +85,7 @@ func ResourceNutanixPreChecksV2() *schema.Resource {
 
 func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
-	clusterId := d.Get("x_cluster_id").(string)
+	clusterExtID := d.Get("x_cluster_id").(string)
 	body := preCheckConfig.NewPrechecksSpec()
 
 	if managementServer, ok := d.GetOk("management_server"); ok {
@@ -98,7 +98,7 @@ func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.Resource
 		body.SkippedPrecheckFlags = expandSystemAutoMgmtFlag(skippedPrecheckFlags.([]interface{}))
 	}
 
-	resp, err := conn.LcmPreChecksAPIInstance.PerformPrechecks(body, utils.StringPtr(clusterId))
+	resp, err := conn.LcmPreChecksAPIInstance.PerformPrechecks(body, utils.StringPtr(clusterExtID))
 	if err != nil {
 		return diag.Errorf("error while performing the prechecks: %v", err)
 	}
@@ -127,7 +127,7 @@ func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.Resource
 
 	task := resourceUUID.Data.GetValue().(prismConfig.Task)
 	aJSON, _ := json.MarshalIndent(task, "", "  ")
-	log.Printf("[DEBUG] PrechecksSpec: %s", string(aJSON))
+	log.Printf("[DEBUG] PrechecksSpec Task Details: %s", string(aJSON))
 
 	// set the resource id to random uuid
 	d.SetId(utils.GenUUID())
@@ -135,11 +135,11 @@ func ResourceNutanixLcmPreChecksV2Create(ctx context.Context, d *schema.Resource
 }
 
 func ResourceNutanixLcmPreChecksV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return ResourceNutanixLcmPreChecksV2Create(ctx, d, meta)
+	return nil
 }
 
 func ResourceNutanixLcmPreChecksV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	return ResourceNutanixLcmPreChecksV2Create(ctx, d, meta)
 }
 
 func ResourceNutanixLcmPreChecksV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
