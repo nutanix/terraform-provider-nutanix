@@ -393,6 +393,7 @@ func Provider() *schema.Provider {
 			"nutanix_lcm_perform_inventory_v2":                lcmv2.ResourceNutanixLcmPerformInventoryV2(),
 			"nutanix_lcm_prechecks_v2":                        lcmv2.ResourceNutanixPreChecksV2(),
 			"nutanix_lcm_upgrade_v2":                          lcmv2.ResourceLcmUpgradeV2(),
+			"nutanix_lcm_config_v2":                           lcmv2.ResourceNutanixLcmConfigV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}
