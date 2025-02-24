@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -136,6 +137,7 @@ func ResourceNutanixRestoreSourceV2() *schema.Resource {
 }
 
 func ResourceNutanixRestoreSourceV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG] Restore Source Create. ID: %s", d.Id())
 	conn := meta.(*conns.Client).PrismAPI
 
 	body := management.RestoreSource{}
@@ -197,11 +199,19 @@ func ResourceNutanixRestoreSourceV2Create(ctx context.Context, d *schema.Resourc
 }
 
 func ResourceNutanixRestoreSourceV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG] Restore Source Read. ID: %s", d.Id())
 	conn := meta.(*conns.Client).PrismAPI
 
 	resp, err := conn.DomainManagerBackupsAPIInstance.GetRestoreSourceById(utils.StringPtr(d.Id()))
 
 	if err != nil {
+		log.Printf("[DEBUG] Restore Source Read Error: %s", err)
+		errMessage := utils.ExtractErrorFromV4APIResponse(err)
+		if strings.Contains(errMessage, "not found") {
+			// If the resource is not found, its Auto-Deleted create a new one
+			log.Printf("[DEBUG] Restore Source Automatically Deleted, Recreating it")
+			return ResourceNutanixRestoreSourceV2Create(ctx, d, meta)
+		}
 		return diag.Errorf("error while fetching Restore Source: %s", err)
 	}
 
@@ -227,14 +237,24 @@ func ResourceNutanixRestoreSourceV2Read(ctx context.Context, d *schema.ResourceD
 }
 
 func ResourceNutanixRestoreSourceV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return ResourceNutanixRestoreSourceV2Read(ctx, d, meta)
+	// Since the resource is auto-deleted, we will recreate it
+	log.Printf("[DEBUG] Restore Source Update. ID: %s", d.Id())
+	return ResourceNutanixRestoreSourceV2Create(ctx, d, meta)
 }
 
 func ResourceNutanixRestoreSourceV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	log.Printf("[DEBUG] Restore Source Delete. ID: %s", d.Id())
 	conn := meta.(*conns.Client).PrismAPI
 
 	readResp, err := conn.DomainManagerBackupsAPIInstance.GetRestoreSourceById(utils.StringPtr(d.Id()))
 	if err != nil {
+		log.Printf("[DEBUG] Restore Source Read Error: %s", err)
+		errMessage := utils.ExtractErrorFromV4APIResponse(err)
+		if strings.Contains(errMessage, "not found") {
+			// If the resource is not found, its Auto-Deleted create a new one
+			log.Printf("[DEBUG] Restore Source Automatically Deleted")
+			return nil
+		}
 		return diag.Errorf("error while fetching Restore Source: %s", err)
 	}
 
