@@ -214,10 +214,9 @@ func checkBackupTargetExistAndCreateIfNot(backupTargetExtID *string) resource.Te
 					log.Printf("[DEBUG] Backup Target already exists, ext_id: %s", attributes["backup_targets.0.ext_id"])
 					*backupTargetExtID = attributes["backup_targets.0.ext_id"]
 					return nil
-				} else {
-					log.Printf("[DEBUG] Backup Target not found, creating new Backup Target")
-					break
 				}
+				log.Printf("[DEBUG] Backup Target not found, creating new Backup Target")
+				break
 			}
 		}
 

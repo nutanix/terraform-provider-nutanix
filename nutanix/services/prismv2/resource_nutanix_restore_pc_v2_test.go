@@ -183,7 +183,6 @@ data "nutanix_subnets_v2" "subnets" {
     provider = nutanix-2
 }
 `, peHostProviderConfig)
-
 }
 
 func testAccPowerOffPCConfig(restoreSourceExtID string) string {
