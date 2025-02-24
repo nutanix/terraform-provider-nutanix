@@ -16,7 +16,7 @@ func DatasourceNutanixLcmConfigV2() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"x_cluster_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"tenant_id": {
 				Type:     schema.TypeString,
@@ -86,8 +86,13 @@ func DatasourceNutanixLcmConfigV2() *schema.Resource {
 func DatasourceNutanixLcmConfigV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
 	clusterExtID := d.Get("x_cluster_id").(string)
-
-	resp, err := conn.LcmConfigAPIInstance.GetConfig(utils.StringPtr(clusterExtID))
+	var clusterId *string
+	if clusterExtID != "" {
+		clusterId = utils.StringPtr(clusterExtID)
+	} else {
+		clusterId = nil
+	}
+	resp, err := conn.LcmConfigAPIInstance.GetConfig(clusterId)
 	if err != nil {
 		return diag.Errorf("error while fetching the Lcm config : %v", err)
 	}

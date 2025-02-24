@@ -25,7 +25,7 @@ func ResourceNutanixLcmConfigV2() *schema.Resource {
 		Schema: map[string]*schema.Schema{
 			"x_cluster_id": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"ext_id": {
 				Type:     schema.TypeString,
@@ -62,8 +62,13 @@ func ResourceNutanixLcmConfigV2() *schema.Resource {
 func ResourceNutanixLcmConfigV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
 	clusterExtID := d.Get("x_cluster_id").(string)
-
-	readResp, err := conn.LcmConfigAPIInstance.GetConfig(utils.StringPtr(clusterExtID))
+	var clusterId *string
+	if clusterExtID != "" {
+		clusterId = utils.StringPtr(clusterExtID)
+	} else {
+		clusterId = nil
+	}
+	readResp, err := conn.LcmConfigAPIInstance.GetConfig(clusterId)
 	if err != nil {
 		return diag.Errorf("error while fetching the Lcm config : %v", err)
 	}
@@ -108,7 +113,7 @@ func ResourceNutanixLcmConfigV2Create(ctx context.Context, d *schema.ResourceDat
 	aJSON, _ := json.MarshalIndent(body, "", " ")
 	log.Printf("[DEBUG] LCM Update Config Request Spec: %s", string(aJSON))
 
-	resp, err := conn.LcmConfigAPIInstance.UpdateConfig(body, utils.StringPtr(clusterExtID), args)
+	resp, err := conn.LcmConfigAPIInstance.UpdateConfig(body, clusterId, args)
 	if err != nil {
 		return diag.Errorf("error while updating the LCM config: %v", err)
 	}
