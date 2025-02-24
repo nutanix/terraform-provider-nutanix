@@ -108,12 +108,12 @@ func checkLastSyncTimeBackupTarget(retries int, delay time.Duration) resource.Te
 
 					backupTarget := readResp.Data.GetValue().(management.BackupTarget)
 
-					fmt.Printf("LastSyncTime: %v\n", backupTarget.LastSyncTime)
+					log.Printf("[DEBUG] LastSyncTime: %v\n", backupTarget.LastSyncTime)
 					if backupTarget.LastSyncTime != nil {
-						fmt.Printf(" Restore Point Created after %d minutes\n", i*30/60)
+						log.Printf("[DEBUG]  Restore Point Created after %d minutes\n", i*30/60)
 						return nil
 					}
-					fmt.Printf("Waiting for 30 seconds to Fetch backup target\n")
+					log.Printf("[DEBUG] Waiting for 30 seconds to Fetch backup target\n")
 					time.Sleep(delay)
 				}
 			}
@@ -199,11 +199,27 @@ func getTaskStatus(pr *config.TaskStatus) string {
 	return "UNKNOWN"
 }
 
-func createBackupTarget(backupTargetExtID *string) resource.TestCheckFunc {
+func checkBackupTargetExistAndCreateIfNot(backupTargetExtID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		fmt.Printf("Creating Backup Target\n")
 		conn := acc.TestAccProvider.Meta().(*conns.Client)
 		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type == "nutanix_backup_targets_v2" {
+				attributes := rs.Primary.Attributes
+
+				backupTargetsCount, _ := strconv.Atoi(attributes["backup_targets.#"])
+
+				if backupTargetsCount > 0 {
+					log.Printf("[DEBUG] Backup Target already exists, ext_id: %s", attributes["backup_targets.0.ext_id"])
+					*backupTargetExtID = attributes["backup_targets.0.ext_id"]
+					return nil
+				} else {
+					log.Printf("[DEBUG] Backup Target not found, creating new Backup Target")
+					break
+				}
+			}
+		}
 
 		// Extract the output value for use in later steps
 		outputDomainManagerExtID, ok := s.RootModule().Outputs["domainManagerExtID"]
@@ -288,9 +304,9 @@ func createBackupTarget(backupTargetExtID *string) resource.TestCheckFunc {
 	}
 }
 
-func checkLastSyncTimeBackupTargetRestorePC(backupTargetExtID, pcExtID *string, retries int, delay time.Duration) resource.TestCheckFunc {
+func checkLastSyncTimeBackupTargetRestorePC(backupTargetExtID *string, retries int, delay time.Duration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		fmt.Printf("Checking Last Sync Time\n")
+		log.Printf("[DEBUG] Checking Last Sync Time\n")
 
 		conn := acc.TestAccProvider.Meta().(*conns.Client)
 		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
@@ -301,22 +317,22 @@ func checkLastSyncTimeBackupTargetRestorePC(backupTargetExtID, pcExtID *string, 
 			return fmt.Errorf("output 'domainManagerExtID' not found")
 		}
 
-		*pcExtID = outputDomainManagerExtID.Value.(string)
+		pcExtID := outputDomainManagerExtID.Value.(string)
 
 		for i := 0; i < retries; i++ {
-			readResp, err := client.GetBackupTargetById(pcExtID, backupTargetExtID, nil)
+			readResp, err := client.GetBackupTargetById(utils.StringPtr(pcExtID), backupTargetExtID, nil)
 			if err != nil {
 				return fmt.Errorf("error while fetching Backup Target: %s", err)
 			}
 
 			backupTarget := readResp.Data.GetValue().(management.BackupTarget)
 
-			fmt.Printf("LastSyncTime: %v\n", backupTarget.LastSyncTime)
+			log.Printf("[DEBUG] LastSyncTime: %v\n", backupTarget.LastSyncTime)
 			if backupTarget.LastSyncTime != nil {
-				fmt.Printf(" Restore Point Created after %d minutes\n", i*30/60)
+				log.Printf("[DEBUG]  Restore Point Created after %d minutes\n", i*30/60)
 				return nil
 			}
-			fmt.Printf("Waiting for 30 seconds to Fetch backup target\n")
+			log.Printf("[DEBUG] Waiting for 30 seconds to Fetch backup target\n")
 			time.Sleep(delay)
 		}
 
@@ -326,7 +342,7 @@ func checkLastSyncTimeBackupTargetRestorePC(backupTargetExtID, pcExtID *string, 
 
 func createRestoreSource(restoreSourceExtID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		fmt.Printf("Create Restore Source\n")
+		log.Printf("[DEBUG] Create Restore Source\n")
 		conn := acc.TestAccProvider2.Meta().(*conns.Client)
 		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
 
@@ -423,7 +439,7 @@ func powerOffPC() resource.TestCheckFunc {
 				// Power off the PC
 				_, err = vmClient.PowerOffVm(vm.ExtId, args)
 				if err != nil {
-					fmt.Printf("error while powering off PC: %s", err)
+					log.Printf("[DEBUG] error while powering off PC: %s", err)
 					//return fmt.Errorf("error while powering off PC: %s", err)
 					return nil
 				}
@@ -433,6 +449,217 @@ func powerOffPC() resource.TestCheckFunc {
 		}
 		return fmt.Errorf("PC not found")
 	}
+}
+
+func expandDomainManagerConfigBlock(pcDetails map[string]interface{}) string {
+	// Extract nested values from the map
+	config, ok := pcDetails["config"].([]interface{})
+	if !ok || len(config) == 0 {
+		panic("config is not a slice or is empty")
+	}
+	configMap, ok := config[0].(map[string]interface{})
+	if !ok {
+		panic("config[0] is not a map")
+	}
+
+	buildInfo, ok := configMap["build_info"].([]interface{})
+	if !ok || len(buildInfo) == 0 {
+		panic("build_info is not a slice or is empty")
+	}
+	buildInfoMap, ok := buildInfo[0].(map[string]interface{})
+	if !ok {
+		panic("build_info[0] is not a map")
+	}
+	version := buildInfoMap["version"].(string)
+	showEnableLockdownMode := configMap["should_enable_lockdown_mode"].(bool)
+	name := configMap["name"].(string)
+	size := configMap["size"].(string)
+
+	resourceConfig, ok := configMap["resource_config"].([]interface{})
+	if !ok || len(resourceConfig) == 0 {
+		panic("resource_config is not a slice or is empty")
+	}
+	resourceConfigMap, ok := resourceConfig[0].(map[string]interface{})
+	if !ok {
+		panic("resource_config[0] is not a map")
+	}
+	containerExtIDs := resourceConfigMap["container_ext_ids"].([]interface{})
+	// Convert all elements to strings (add quotes implicitly in Go)
+	strContainerExtIDs := make([]string, len(containerExtIDs))
+	for i, extID := range containerExtIDs {
+		strContainerExtIDs[i] = fmt.Sprintf("\"%v\"", extID) // Convert to string
+	}
+
+	dataDiskSizeBytesStr := resourceConfigMap["data_disk_size_bytes"].(json.Number).String()
+	dataDiskSizeBytes, err := strconv.Atoi(dataDiskSizeBytesStr)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to convert data_disk_size_bytes to int: %v", err))
+	}
+	memorySizeBytesStr := resourceConfigMap["memory_size_bytes"].(json.Number).String()
+	memorySizeBytes, err := strconv.Atoi(memorySizeBytesStr)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to convert memory_size_bytes to int: %v", err))
+	}
+
+	numVcpusStr := resourceConfigMap["num_vcpus"].(json.Number).String()
+	numVcpus, err := strconv.Atoi(numVcpusStr)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to convert num_vcpus to int: %v", err))
+	}
+
+	network, ok := pcDetails["network"].([]interface{})
+	if !ok || len(network) == 0 {
+		panic("network is not a slice or is empty")
+	}
+	networkMap, ok := network[0].(map[string]interface{})
+	if !ok {
+		panic("network[0] is not a map")
+	}
+
+	externalAddress, ok := networkMap["external_address"].([]interface{})
+	if !ok || len(externalAddress) == 0 {
+		panic("external_address is not a slice or is empty")
+	}
+	externalAddressMap, ok := externalAddress[0].(map[string]interface{})
+	if !ok {
+		panic("external_address[0] is not a map")
+	}
+	externalAddressIPv4, ok := externalAddressMap["ipv4"].([]interface{})
+	if !ok || len(externalAddressIPv4) == 0 {
+		panic("external_address.ipv4 is not a slice or is empty")
+	}
+	externalAddressIPv4Map, ok := externalAddressIPv4[0].(map[string]interface{})
+	if !ok {
+		panic("external_address.ipv4[0] is not a map")
+	}
+	externalAddressIPv4Value := externalAddressIPv4Map["value"].(string)
+
+	nameServers := networkMap["name_servers"].([]interface{})
+	nameServersConfig := ""
+	for _, nameServer := range nameServers {
+		nameServerMap, okNameServerMap := nameServer.(map[string]interface{})
+		if !okNameServerMap {
+			panic("name_server is not a map")
+		}
+		ipv4, okIpv4 := nameServerMap["ipv4"].([]interface{})
+		if !okIpv4 || len(ipv4) == 0 {
+			panic("ipv4 is not a slice or is empty")
+		}
+		ipv4Map, okIpv4Map := ipv4[0].(map[string]interface{})
+		if !okIpv4Map {
+			panic("ipv4[0] is not a map")
+		}
+		nameServerIPv4Value := ipv4Map["value"].(string)
+		nameServersConfig += fmt.Sprintf(`
+		  name_servers {
+			ipv4 {
+			  value = "%s"
+			}
+		  }
+
+`, nameServerIPv4Value)
+	}
+
+	ntpServers := networkMap["ntp_servers"].([]interface{})
+
+	ntpServersConfig := ""
+	for _, ntpServer := range ntpServers {
+		ntpServerMap, okNtpServerMap := ntpServer.(map[string]interface{})
+		if !okNtpServerMap {
+			panic("ntp_server is not a map")
+		}
+		fqdn, okFqdn := ntpServerMap["fqdn"].([]interface{})
+		if !okFqdn || len(fqdn) == 0 {
+			panic("fqdn is not a slice or is empty")
+		}
+		fqdnMap, okFqdnMap := fqdn[0].(map[string]interface{})
+		if !okFqdnMap {
+			panic("fqdn[0] is not a map")
+		}
+		ntpServerFQDN := fqdnMap["value"].(string)
+		ntpServersConfig += fmt.Sprintf(`
+		  ntp_servers {
+			fqdn {
+			  value = "%s"
+			}
+		  }
+
+`, ntpServerFQDN)
+	}
+
+	externalNetworks, okExternalNetworks := networkMap["external_networks"].([]interface{})
+	if !okExternalNetworks || len(externalNetworks) == 0 {
+		panic("external_networks is not a slice or is empty")
+	}
+	externalNetworksMap, ok := externalNetworks[0].(map[string]interface{})
+	if !ok {
+		panic("external_networks[0] is not a map")
+	}
+	networkExtID := externalNetworksMap["network_ext_id"].(string)
+	defaultGatewayIPv4 := externalNetworksMap["default_gateway"].([]interface{})[0].(map[string]interface{})["ipv4"].([]interface{})[0].(map[string]interface{})["value"].(string)
+	subnetMaskIPv4 := externalNetworksMap["subnet_mask"].([]interface{})[0].(map[string]interface{})["ipv4"].([]interface{})[0].(map[string]interface{})["value"].(string)
+	ipRanges := externalNetworksMap["ip_ranges"].([]interface{})[0].(map[string]interface{})
+	ipRangeBeginIPv4 := ipRanges["begin"].([]interface{})[0].(map[string]interface{})["ipv4"].([]interface{})[0].(map[string]interface{})["value"].(string)
+	ipRangeEndIPv4 := ipRanges["end"].([]interface{})[0].(map[string]interface{})["ipv4"].([]interface{})[0].(map[string]interface{})["value"].(string)
+
+	return fmt.Sprintf(`
+	domain_manager {
+		config {
+			should_enable_lockdown_mode = %t
+			build_info {
+				version = "%s"
+			}
+			name = "%s"
+			size = "%s"
+			resource_config {
+				container_ext_ids    = %v
+				data_disk_size_bytes = %d
+				memory_size_bytes    = %d
+				num_vcpus            = %d
+			}
+		}
+		network {
+			external_address {
+				ipv4 {
+					value = "%s"
+				}
+			}
+			# name servers
+			%s
+
+			# ntp servers
+			%s
+
+			external_networks {
+				network_ext_id = "%s"
+				default_gateway {
+					ipv4 {
+						value = "%s"
+					}
+				}
+				subnet_mask {
+					ipv4 {
+						value = "%s"
+					}
+				}
+				ip_ranges {
+					begin {
+						ipv4 {
+							value = "%s"
+						}
+					}
+					end {
+						ipv4 {
+							value = "%s"
+						}
+					}
+				}
+			}
+		}
+
+	}`, showEnableLockdownMode, version, name, size, strContainerExtIDs, dataDiskSizeBytes, memorySizeBytes, numVcpus,
+		externalAddressIPv4Value, nameServersConfig, ntpServersConfig, networkExtID, defaultGatewayIPv4, subnetMaskIPv4,
+		ipRangeBeginIPv4, ipRangeEndIPv4)
 }
 
 // generate Random Passwords
@@ -517,4 +744,193 @@ func generatePassword() (string, error) {
 	}
 
 	return "", fmt.Errorf("failed to generate valid password after 100 attempts")
+}
+
+func expandPCConfigBlock(configMap map[string]interface{}) string {
+	// Extract nested values from the map
+	buildInfo, ok := configMap["build_info"].([]interface{})
+	if !ok || len(buildInfo) == 0 {
+		panic("build_info is not a slice or is empty")
+	}
+	buildInfoMap, ok := buildInfo[0].(map[string]interface{})
+	if !ok {
+		panic("build_info[0] is not a map")
+	}
+	version := buildInfoMap["version"].(string)
+	showEnableLockdownMode := configMap["should_enable_lockdown_mode"].(bool)
+	name := configMap["name"].(string)
+	size := configMap["size"].(string)
+
+	resourceConfig, ok := configMap["resource_config"].([]interface{})
+	if !ok || len(resourceConfig) == 0 {
+		panic("resource_config is not a slice or is empty")
+	}
+	resourceConfigMap, ok := resourceConfig[0].(map[string]interface{})
+	if !ok {
+		panic("resource_config[0] is not a map")
+	}
+	containerExtIDs := resourceConfigMap["container_ext_ids"].([]interface{})
+	// Convert all elements to strings (add quotes implicitly in Go)
+	strContainerExtIDs := make([]string, len(containerExtIDs))
+	for i, extID := range containerExtIDs {
+		strContainerExtIDs[i] = fmt.Sprintf("\"%v\"", extID) // Convert to string
+	}
+
+	dataDiskSizeBytesStr := resourceConfigMap["data_disk_size_bytes"].(json.Number).String()
+	dataDiskSizeBytes, err := strconv.Atoi(dataDiskSizeBytesStr)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to convert data_disk_size_bytes to int: %v", err))
+	}
+	memorySizeBytesStr := resourceConfigMap["memory_size_bytes"].(json.Number).String()
+	memorySizeBytes, err := strconv.Atoi(memorySizeBytesStr)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to convert memory_size_bytes to int: %v", err))
+	}
+
+	numVcpusStr := resourceConfigMap["num_vcpus"].(json.Number).String()
+	numVcpus, err := strconv.Atoi(numVcpusStr)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to convert num_vcpus to int: %v", err))
+	}
+	return fmt.Sprintf(`
+		config {
+			should_enable_lockdown_mode = %t
+			build_info {
+				version = "%s"
+			}
+			name = "%s"
+			size = "%s"
+			resource_config {
+				container_ext_ids    = %v
+				data_disk_size_bytes = %d
+				memory_size_bytes    = %d
+				num_vcpus            = %d
+			}
+		}`, showEnableLockdownMode, version, name, size, strContainerExtIDs, dataDiskSizeBytes, memorySizeBytes, numVcpus)
+}
+
+func expandPCNetworkBlock(networkMap map[string]interface{}) string {
+	// Extract nested values from the map
+	externalAddress, ok := networkMap["external_address"].([]interface{})
+	if !ok || len(externalAddress) == 0 {
+		panic("external_address is not a slice or is empty")
+	}
+	externalAddressMap, ok := externalAddress[0].(map[string]interface{})
+	if !ok {
+		panic("external_address[0] is not a map")
+	}
+	externalAddressIPv4, ok := externalAddressMap["ipv4"].([]interface{})
+	if !ok || len(externalAddressIPv4) == 0 {
+		panic("external_address.ipv4 is not a slice or is empty")
+	}
+	externalAddressIPv4Map, ok := externalAddressIPv4[0].(map[string]interface{})
+	if !ok {
+		panic("external_address.ipv4[0] is not a map")
+	}
+	externalAddressIPv4Value := externalAddressIPv4Map["value"].(string)
+
+	nameServers := networkMap["name_servers"].([]interface{})
+	nameServersConfig := ""
+	for _, nameServer := range nameServers {
+		nameServerMap, okNameServerMap := nameServer.(map[string]interface{})
+		if !okNameServerMap {
+			panic("name_server is not a map")
+		}
+		ipv4, okIpv4 := nameServerMap["ipv4"].([]interface{})
+		if !okIpv4 || len(ipv4) == 0 {
+			panic("ipv4 is not a slice or is empty")
+		}
+		ipv4Map, okIpv4Map := ipv4[0].(map[string]interface{})
+		if !okIpv4Map {
+			panic("ipv4[0] is not a map")
+		}
+		nameServerIPv4Value := ipv4Map["value"].(string)
+		nameServersConfig += fmt.Sprintf(`
+			name_servers {
+				ipv4 {
+					value = "%s"
+				}
+			}`, nameServerIPv4Value)
+	}
+
+	ntpServers := networkMap["ntp_servers"].([]interface{})
+
+	ntpServersConfig := ""
+	for _, ntpServer := range ntpServers {
+		ntpServerMap, okNtpServerMap := ntpServer.(map[string]interface{})
+		if !okNtpServerMap {
+			panic("ntp_server is not a map")
+		}
+		fqdn, okFqdn := ntpServerMap["fqdn"].([]interface{})
+		if !okFqdn || len(fqdn) == 0 {
+			panic("fqdn is not a slice or is empty")
+		}
+		fqdnMap, okFqdnMap := fqdn[0].(map[string]interface{})
+		if !okFqdnMap {
+			panic("fqdn[0] is not a map")
+		}
+		ntpServerFQDN := fqdnMap["value"].(string)
+		ntpServersConfig += fmt.Sprintf(`
+			ntp_servers {
+				fqdn {
+					value = "%s"
+				}
+			}`, ntpServerFQDN)
+	}
+
+	externalNetworks, okExternalNetworks := networkMap["external_networks"].([]interface{})
+	if !okExternalNetworks || len(externalNetworks) == 0 {
+		panic("external_networks is not a slice or is empty")
+	}
+	externalNetworksMap, ok := externalNetworks[0].(map[string]interface{})
+	if !ok {
+		panic("external_networks[0] is not a map")
+	}
+	networkExtID := externalNetworksMap["network_ext_id"].(string)
+	defaultGatewayIPv4 := externalNetworksMap["default_gateway"].([]interface{})[0].(map[string]interface{})["ipv4"].([]interface{})[0].(map[string]interface{})["value"].(string)
+	subnetMaskIPv4 := externalNetworksMap["subnet_mask"].([]interface{})[0].(map[string]interface{})["ipv4"].([]interface{})[0].(map[string]interface{})["value"].(string)
+	ipRanges := externalNetworksMap["ip_ranges"].([]interface{})[0].(map[string]interface{})
+	ipRangeBeginIPv4 := ipRanges["begin"].([]interface{})[0].(map[string]interface{})["ipv4"].([]interface{})[0].(map[string]interface{})["value"].(string)
+	ipRangeEndIPv4 := ipRanges["end"].([]interface{})[0].(map[string]interface{})["ipv4"].([]interface{})[0].(map[string]interface{})["value"].(string)
+
+	return fmt.Sprintf(`
+		network {
+			external_address {
+				ipv4 {
+					value = "%s"
+				}
+			}
+			# name servers
+			%s
+			# ntp servers
+			%s
+
+			external_networks {
+				network_ext_id = "%s"
+				default_gateway {
+					ipv4 {
+						value = "%s"
+					}
+				}
+				subnet_mask {
+					ipv4 {
+						value = "%s"
+					}
+				}
+				ip_ranges {
+					begin {
+						ipv4 {
+							value = "%s"
+						}
+					}
+					end {
+						ipv4 {
+							value = "%s"
+						}
+					}
+				}
+			}
+		}
+`, externalAddressIPv4Value, nameServersConfig, ntpServersConfig, networkExtID, defaultGatewayIPv4, subnetMaskIPv4,
+		ipRangeBeginIPv4, ipRangeEndIPv4)
 }
