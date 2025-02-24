@@ -8,9 +8,9 @@ import (
 )
 
 func TestAccV2NutanixLcmConfigUpdate(t *testing.T) {
-	datasourceLcmConfigBeforeUpdate := "data.nutanix_lcm_config_v2.get-lcm-config-before-update"
-	resourceLcmConfig := "nutanix_lcm_config_v2.update-lcm-config"
-	datasourceLcmConfigAfterUpdate := "data.nutanix_lcm_config_v2.get-lcm-config-after-update"
+	datasourceLcmConfigBeforeUpdate := "data.nutanix_lcm_config_v2.get_lcm_config_before_update"
+	resourceLcmConfig := "nutanix_lcm_config_v2.update_lcm_config"
+	datasourceLcmConfigAfterUpdate := "data.nutanix_lcm_config_v2.get_lcm_config_after_update"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() {},
@@ -36,7 +36,7 @@ func TestAccV2NutanixLcmConfigUpdate(t *testing.T) {
 func testLcmUpdateConfig() string {
 	return `
 # Get LCM Config before Update
-data "nutanix_lcm_config_v2" "get-lcm-config-before-update" {
+data "nutanix_lcm_config_v2" "get_lcm_config_before_update" {
 	lifecycle {
 		postcondition {
 			condition     = self.is_auto_inventory_enabled == false
@@ -46,20 +46,20 @@ data "nutanix_lcm_config_v2" "get-lcm-config-before-update" {
 }
 
 # Update LCM Config: Enable auto inventory
-resource "nutanix_lcm_config_v2" "update-lcm-config" {
+resource "nutanix_lcm_config_v2" "update_lcm_config" {
 	is_auto_inventory_enabled = true
-	depends_on = [data.nutanix_lcm_config_v2.get-lcm-config-before-update]
+	depends_on = [data.nutanix_lcm_config_v2.get_lcm_config_before_update]
 }
 
 # Get LCM Config after Update
-data "nutanix_lcm_config_v2" "get-lcm-config-after-update" {
+data "nutanix_lcm_config_v2" "get_lcm_config_after_update" {
    lifecycle {
 		postcondition {
 			condition     = self.is_auto_inventory_enabled == true
 			error_message = "Auto Inventory is not enabled, current value: ${self.is_auto_inventory_enabled}"
 	   }
   	}
-	depends_on = [nutanix_lcm_config_v2.update-lcm-config]
+	depends_on = [nutanix_lcm_config_v2.update_lcm_config]
 }
 `
 }
