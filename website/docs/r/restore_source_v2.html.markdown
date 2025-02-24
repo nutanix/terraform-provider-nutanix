@@ -8,7 +8,7 @@ description: |-
 
 ---
 
-# nutanix_restore_source_v2 
+# nutanix_restore_source_v2
 
 Create a restore source pointing to a cluster or object store to restore the domain manager. The created restore source is intended to be deleted after use. If the restore source is not deleted using the deleteRestoreSource API, then it is auto-deleted after sometime. Also note that a restore source will not contain a backup policy. It is only used to access the backup data at the location from where the Prism Central may be restored. Credentials used to access the restore source are not validated at the time of creation of the restore source. They are validated when the restore source is used to fetch data.
 
@@ -62,6 +62,9 @@ resource "nutanix_backup_target_v2" "cluster-location" {
   }
 }
 
+# restore source is auto-deleted after sometime, nutanix_restore_source_v2 resource is auto-create
+# new restore source if it was deleted, so notice that the id of the restore source will be different
+# after recreation
 resource "nutanix_restore_source_v2" "cluster-location" {
   provider = nutanix.pe
   location {
@@ -112,7 +115,7 @@ The following arguments are supported:
 
 ### Location
 The location argument supports the following:
-> one of the following is required: 
+> one of the following is required:
 
 * `cluster_location`: -(Optional) A boolean value indicating whether to enable lockdown mode for a cluster.
 * `object_store_location`: -(Optional) Currently representing the build information to be used for the cluster creation.

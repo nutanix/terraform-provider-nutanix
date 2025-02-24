@@ -11,7 +11,7 @@ variable "nutanix_pe_username" {
 variable "nutanix_pe_password" {
   type = string
 }
-variable "nutanix_endpoint" {
+variable "nutanix_pc_endpoint" {
   type = string
 }
 variable "nutanix_pe_endpoint" {

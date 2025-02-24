@@ -54,6 +54,9 @@ resource "nutanix_backup_target_v2" "cluster-location" {
   }
 }
 
+# restore source is auto-deleted after sometime, nutanix_restore_source_v2 resource is auto-create
+# new restore source if it was deleted, so notice that the id of the restore source will be different
+# after recreation
 resource "nutanix_restore_source_v2" "cluster-location" {
   provider = nutanix.pe
   location {
