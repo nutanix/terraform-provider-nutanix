@@ -48,13 +48,12 @@ func TestAccV2NutanixRestorePCResource_RestorePC(t *testing.T) {
 						createRestoreSource(restoreSourceExtID),
 					),
 				},
-
 			},
 		})
 	})
 
 	// fetch the restore point and extract the pc details
-	 t.Run("build_restore_pc_resource", func(t *testing.T) {
+	t.Run("build_restore_pc_resource", func(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			PreventPostDestroyRefresh: true,
 			PreCheck:                  func() { acc.TestAccPreCheck(t) },
@@ -102,7 +101,7 @@ func TestAccV2NutanixRestorePCResource_RestorePC(t *testing.T) {
 				},
 			},
 		})
-	 })
+	})
 
 	// Restore PC Sub-test Case
 	t.Run("restore_pc_v2", func(t *testing.T) {
