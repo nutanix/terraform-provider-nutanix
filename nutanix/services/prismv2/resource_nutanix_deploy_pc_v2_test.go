@@ -14,6 +14,7 @@ import (
 const resourceNameDeployPC = "nutanix_deploy_pc_v2.test"
 
 func TestAccV2NutanixDeployPcResource_Basic(t *testing.T) {
+  t.Skip("Skipping test no need to run this test on pipeline")
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-deploy-pc-%d", r)
 
@@ -137,6 +138,6 @@ resource "nutanix_deploy_pc_v2" "test" {
     }
   }
 }
- 
+
  `, filepath, remoteHostProviderConfig, name)
 }

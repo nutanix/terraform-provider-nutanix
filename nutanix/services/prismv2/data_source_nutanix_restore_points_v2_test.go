@@ -20,27 +20,23 @@ func TestAccV2NutanixRestorePointsDatasource_ListRestorePoints(t *testing.T) {
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
-			// List backup targets and delete if backup target exists
+			// List backup targets and create if backup target not exists
 			{
 				PreConfig: func() {
-					fmt.Printf("Step 1: List backup targets and delete if backup target exists\n")
+					fmt.Printf("Step 1: List backup targets and create if backup target not exists\n")
 				},
-				Config: testAccListBackupTargetsDatasourceConfig(),
+				Config: testAccCheckBackupTargetExistAndCreateIfNotExistsConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					checkBackupTargetExist(),
+					checkBackupTargetExistAndCreateIfNotExists(),
 				),
 			},
-			// Create backup target, cluster location
+			// Check last sync time of backup target
 			{
 				PreConfig: func() {
-					fmt.Printf("Step 2: Create backup target, cluster location\n")
+					fmt.Printf("Step 2: Check last sync time of backup target\n")
 				},
-				Config: testAccBackupTargetResourceClusterLocationConfig(),
+				Config: testAccCheckBackupTargetExistAndCreateIfNotExistsConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "domain_manager_ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.name"),
 					checkLastSyncTimeBackupTarget(retries, delay),
 				),
 			},
@@ -49,8 +45,7 @@ func TestAccV2NutanixRestorePointsDatasource_ListRestorePoints(t *testing.T) {
 				PreConfig: func() {
 					fmt.Printf("Step 3: Create the restore source, cluster location\n")
 				},
-				Config: testAccBackupTargetResourceClusterLocationConfig() +
-					testRestoreSourceConfig(),
+				Config: testRestoreSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRestoreSourceClusterLocation, "ext_id"),
 					resource.TestCheckResourceAttrSet(resourceNameRestoreSourceClusterLocation, "location.0.cluster_location.0.config.0.ext_id"),
@@ -61,8 +56,7 @@ func TestAccV2NutanixRestorePointsDatasource_ListRestorePoints(t *testing.T) {
 				PreConfig: func() {
 					fmt.Printf("Step 4: List Restore Points\n")
 				},
-				Config: testAccBackupTargetResourceClusterLocationConfig() +
-					testRestoreSourceConfig() + testAccListRestorePointsConfig(),
+				Config: testRestoreSourceConfig() + testAccListRestorePointsConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					checkAttributeLength(datasourceNameListRestorePoints, "restore_points", 1),
 					resource.TestCheckResourceAttrSet(datasourceNameListRestorePoints, "restore_points.0.creation_time"),
@@ -105,7 +99,5 @@ data "nutanix_pc_v2" "test" {
 output "pc_details" {
   value = data.nutanix_pc_v2.test
 }
-
-
 `
 }

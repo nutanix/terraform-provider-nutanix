@@ -14,26 +14,16 @@ func TestAccV2NutanixBackupTargetDatasource_Basic(t *testing.T) {
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
-			// List backup targets and delete if backup target exists
+			// List backup targets and Create if backup target not exists
 			{
-				Config: testAccListBackupTargetsDatasourceConfig(),
+				Config: testAccCheckBackupTargetExistAndCreateIfNotExistsConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					checkBackupTargetExist(),
+					checkBackupTargetExistAndCreateIfNotExists(),
 				),
 			},
 			// Create backup target, cluster location
 			{
-				Config: testAccBackupTargetResourceClusterLocationConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "domain_manager_ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.name"),
-				),
-			},
-			// Fetch backup target
-			{
-				Config: testAccBackupTargetResourceClusterLocationConfig() + testAccFetchBackupTargetDatasourceConfig(),
+				Config: testAccFetchBackupTargetDatasourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceNameBackupTarget, "ext_id"),
 					resource.TestCheckResourceAttrSet(datasourceNameBackupTarget, "domain_manager_ext_id"),
@@ -45,11 +35,63 @@ func TestAccV2NutanixBackupTargetDatasource_Basic(t *testing.T) {
 	})
 }
 
-func testAccFetchBackupTargetDatasourceConfig() string {
+
+func testAccCheckBackupTargetExistAndCreateIfNotExistsConfig() string {
 	return `
+
+# list Clusters
+data "nutanix_clusters_v2" "cls" {
+	filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'PRISM_CENTRAL')"
+}
+
+data "nutanix_clusters_v2" "clusters" {}
+
+
+locals {
+  domainManagerExtId = data.nutanix_clusters_v2.cls.cluster_entities.0.ext_id
+  clusterExtId = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+  ][0]
+}
+
+data "nutanix_backup_targets_v2" "test" {
+  domain_manager_ext_id = local.domainManagerExtId
+}
+
+output "domainManagerExtID" {
+  value = local.domainManagerExtId
+}
+
+output "clusterExtID" {
+  value = local.clusterExtId
+}
+
 data "nutanix_backup_target_v2" "test" {
   domain_manager_ext_id = local.domainManagerExtId
-  ext_id = nutanix_backup_target_v2.cluster-location.id 
+  ext_id = data.nutanix_backup_targets_v2.test.backup_targets.0.ext_id
+}
+  
+`
+}
+
+func testAccFetchBackupTargetDatasourceConfig() string {
+	return `
+data "nutanix_clusters_v2" "pcs" {
+	filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'PRISM_CENTRAL')"
+}
+
+locals {
+  domainManagerExtId = data.nutanix_clusters_v2.pcs.cluster_entities.0.ext_id
+}
+
+data "nutanix_backup_targets_v2" "test" {
+  domain_manager_ext_id = local.domainManagerExtId
+}
+
+data "nutanix_backup_target_v2" "test" {
+  domain_manager_ext_id = local.domainManagerExtId
+  ext_id = data.nutanix_backup_targets_v2.test.backup_targets.0.ext_id
 }
 `
 }

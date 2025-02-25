@@ -81,6 +81,7 @@ func ResourceNutanixBackupTargetV2() *schema.Resource {
 												"bucket_name": {
 													Type:     schema.TypeString,
 													Required: true,
+													ValidateFunc: validation.StringIsNotEmpty,
 												},
 												"region": {
 													Type:     schema.TypeString,
@@ -96,10 +97,12 @@ func ResourceNutanixBackupTargetV2() *schema.Resource {
 															"access_key_id": {
 																Type:     schema.TypeString,
 																Required: true,
+																ValidateFunc: validation.StringIsNotEmpty,
 															},
 															"secret_access_key": {
 																Type:     schema.TypeString,
 																Required: true,
+																ValidateFunc: validation.StringIsNotEmpty,
 															},
 														},
 													},

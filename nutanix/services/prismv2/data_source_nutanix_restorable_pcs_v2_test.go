@@ -17,36 +17,16 @@ func TestAccV2NutanixRestorablePcsDatasource_Basic(t *testing.T) {
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
-			// List backup targets and delete if backup target exists
+			// List backup targets and Create if backup target not exists
 			{
-				PreConfig: func() {
-					fmt.Printf("Step 1: List backup targets and delete if backup target exists\n")
-				},
-				Config: testAccListBackupTargetsDatasourceConfig(),
+				Config: testAccCheckBackupTargetExistAndCreateIfNotExistsConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					checkBackupTargetExist(),
-				),
-			},
-			// Create backup target, cluster location
-			{
-				PreConfig: func() {
-					fmt.Printf("Step 2: Create backup target, cluster location\n")
-				},
-				Config: testAccBackupTargetResourceClusterLocationConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "domain_manager_ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.name"),
+					checkBackupTargetExistAndCreateIfNotExists(),
 				),
 			},
 			// Create the restore source, cluster location
 			{
-				PreConfig: func() {
-					fmt.Printf("Step 3: Create the restore source, cluster location\n")
-				},
-				Config: testAccBackupTargetResourceClusterLocationConfig() +
-					testRestoreSourceConfig(),
+				Config: testRestoreSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRestoreSourceClusterLocation, "ext_id"),
 					resource.TestCheckResourceAttrSet(resourceNameRestoreSourceClusterLocation, "location.0.cluster_location.0.config.0.ext_id"),
@@ -57,11 +37,9 @@ func TestAccV2NutanixRestorablePcsDatasource_Basic(t *testing.T) {
 				PreConfig: func() {
 					fmt.Printf("Step 4: List Restorable pcs\n")
 				},
-				Config: testAccBackupTargetResourceClusterLocationConfig() +
-					testRestoreSourceConfig() +
-					testAccListRestorablePCConfig(),
+				Config: testRestoreSourceConfig() + testAccListRestorablePCConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceNameListRestorablePCs, "restorable_source_ext_id"),
+					resource.TestCheckResourceAttrSet(datasourceNameListRestorablePCs, "restore_source_ext_id"),
 					resource.TestCheckResourceAttrSet(datasourceNameListRestorablePCs, "restorable_pcs.#"),
 					checkAttributeLength(datasourceNameListRestorablePCs, "restorable_pcs", 1),
 					resource.TestCheckResourceAttrSet(datasourceNameListRestorablePCs, "restorable_pcs.0.ext_id"),
@@ -87,6 +65,23 @@ provider "nutanix-2" {
   endpoint = "%[3]s"
   insecure = %[4]t
   port     = %[5]d
+}
+
+
+# list Clusters
+data "nutanix_clusters_v2" "cls" {
+	filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'PRISM_CENTRAL')"
+}
+
+data "nutanix_clusters_v2" "clusters" {}
+
+
+locals {
+  domainManagerExtId = data.nutanix_clusters_v2.cls.cluster_entities.0.ext_id
+  clusterExtId = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+  ][0]
 }
 
 resource "nutanix_restore_source_v2" "cluster-location" {

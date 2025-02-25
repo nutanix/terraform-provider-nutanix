@@ -83,7 +83,7 @@ func TestAccV2NutanixBackupTargetResource_ObjectStoreLocation(t *testing.T) {
 func TestAccV2NutanixBackupTargetResource_ClusterLocationAndObjectStoreLocation(t *testing.T) {
 	bucket := testVars.Prism.Bucket
 
-	if bucket.Name == "" || bucket.AccessKey == "" || bucket.SecretKey == "" {
+if bucket.Name == "" || bucket.AccessKey == "" || bucket.SecretKey == "" {
 		t.Skip("Skipping test due to missing bucket configuration")
 	}
 	resource.Test(t, resource.TestCase{
@@ -130,13 +130,30 @@ data "nutanix_clusters_v2" "cls" {
 	filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'PRISM_CENTRAL')"
 }
 
+data "nutanix_clusters_v2" "clusters" {}
+
+
 locals {
   domainManagerExtId = data.nutanix_clusters_v2.cls.cluster_entities.0.ext_id
+  clusterExtId = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+  ][0]
 }
 
 data "nutanix_backup_targets_v2" "test" {
   domain_manager_ext_id = local.domainManagerExtId
 }
+
+output "domainManagerExtID" {
+  value = local.domainManagerExtId
+}
+
+output "clusterExtID" {
+  value = local.clusterExtId
+}
+
+
 `
 }
 
@@ -180,7 +197,7 @@ data "nutanix_clusters_v2" "cls" {
 locals {
   domainManagerExtId = data.nutanix_clusters_v2.cls.cluster_entities.0.ext_id
   config = jsondecode(file("%[1]s"))
-  bucket = local.config.prism.bucket 
+  bucket = local.config.prism.bucket
 }
 
 resource "nutanix_backup_target_v2" "object-store-location" {
@@ -220,7 +237,7 @@ data "nutanix_clusters_v2" "cls" {
 locals {
   domainManagerExtId = data.nutanix_clusters_v2.cls.cluster_entities.0.ext_id
   config = jsondecode(file("%[1]s"))
-  bucket = local.config.prism.bucket 
+  bucket = local.config.prism.bucket
 }
 
 resource "nutanix_backup_target_v2" "object-store-location" {

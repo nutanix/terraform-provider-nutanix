@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/management"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
@@ -63,8 +64,9 @@ func ResourceNutanixRestoreSourceV2() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"bucket_name": {
-													Type:     schema.TypeString,
-													Required: true,
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringIsNotEmpty,
 												},
 												"region": {
 													Type:     schema.TypeString,
@@ -80,10 +82,12 @@ func ResourceNutanixRestoreSourceV2() *schema.Resource {
 															"access_key_id": {
 																Type:     schema.TypeString,
 																Required: true,
+																ValidateFunc: validation.StringIsNotEmpty,
 															},
 															"secret_access_key": {
 																Type:     schema.TypeString,
 																Required: true,
+																ValidateFunc: validation.StringIsNotEmpty,
 															},
 														},
 													},
@@ -91,19 +95,19 @@ func ResourceNutanixRestoreSourceV2() *schema.Resource {
 											},
 										},
 									},
-									//"backup_policy": {
-									//	Type:     schema.TypeList,
-									//	Optional: true,
-									//	Elem: &schema.Resource{
-									//		Schema: map[string]*schema.Schema{
-									//			"rpo_in_minutes": {
-									//				Type:         schema.TypeInt,
-									//				Required:     true,
-									//				ValidateFunc: validation.IntBetween(60, 1440), //nolint:gomnd
-									//			},
-									//		},
-									//	},
-									//},
+									"backup_policy": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"rpo_in_minutes": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntBetween(60, 1440), //nolint:gomnd
+												},
+											},
+										},
+									},
 								},
 							},
 						},

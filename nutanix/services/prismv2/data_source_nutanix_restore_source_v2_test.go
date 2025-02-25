@@ -18,21 +18,11 @@ func TestAccV2NutanixRestoreSourceDatasource_ClusterLocation(t *testing.T) {
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
-			// List backup targets and delete if backup target exists
+			// List backup targets and Create if backup target not exists
 			{
-				Config: testAccListBackupTargetsDatasourceConfig(),
+				Config: testAccCheckBackupTargetExistAndCreateIfNotExistsConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					checkBackupTargetExist(),
-				),
-			},
-			// Create backup target, cluster location
-			{
-				Config: testAccBackupTargetResourceClusterLocationConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "domain_manager_ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.name"),
+					checkBackupTargetExistAndCreateIfNotExists(),
 				),
 			},
 			// Create the restore source, cluster location
@@ -48,6 +38,12 @@ func TestAccV2NutanixRestoreSourceDatasource_ClusterLocation(t *testing.T) {
 }
 
 func TestAccV2NutanixRestoreSourceDatasource_ObjectStoreLocation(t *testing.T) {
+	bucket := testVars.Prism.Bucket
+
+	if bucket.Name == "" || bucket.AccessKey == "" || bucket.SecretKey == "" {
+		t.Skip("Skipping test due to missing bucket configuration")
+	}
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -104,8 +100,8 @@ resource "nutanix_restore_source_v2" "cluster-location" {
 }
 
 data "nutanix_restore_source_v2" "cluster-location" {
-	  provider = nutanix-2
-	  ext_id = nutanix_restore_source_v2.cluster-location.id
+	provider = nutanix-2
+	ext_id = nutanix_restore_source_v2.cluster-location.id
 }
 
 `, username, password, endpoint, insecure, port)
@@ -137,7 +133,7 @@ locals {
     cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
   ][0]
   config = jsondecode(file("%[1]s"))
-  bucket = local.config.prism.bucket 
+  bucket = local.config.prism.bucket
 }
 
 resource "nutanix_restore_source_v2" "object-store-location" {
