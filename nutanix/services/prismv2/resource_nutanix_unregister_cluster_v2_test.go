@@ -11,6 +11,10 @@ import (
 const resourceNameUnregisterCluster = "nutanix_unregister_cluster_v2.test"
 
 func TestAccV2NutanixUnregisterClusterResource_Unregister_PC_PC(t *testing.T) {
+	if testVars.Prism.Unregister.PcExtID == "" {
+		t.Skip("Skipping test as it requires PC to unregister not provided")
+	}
+	
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -38,7 +42,7 @@ locals {
 }
 
 resource "nutanix_unregister_cluster_v2" "test"{
-  pc_ext_id = local.pcExtID # local pc ext id 
+  pc_ext_id = local.pcExtID # local pc ext id
   ext_id = local.unregister.pc_ext_id # remote pc ext id
 }
 `, filepath)

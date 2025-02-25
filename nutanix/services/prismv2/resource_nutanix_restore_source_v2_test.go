@@ -18,24 +18,13 @@ func TestAccV2NutanixRestoreSourceResource_ClusterLocation(t *testing.T) {
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
-			// List backup targets and delete if backup target exists
+			// List backup targets and Create if backup target not exists
 			{
 				Config: testAccListBackupTargetsDatasourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					checkBackupTargetExist(),
+					checkBackupTargetExistAndCreateIfNotExists(),
 				),
 			},
-			// Create backup target, cluster location
-			{
-				Config: testAccBackupTargetResourceClusterLocationConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "domain_manager_ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.name"),
-				),
-			},
-			// Create the restore source, cluster location
 			{
 				Config: testAccRestoreSourceResourceClusterLocationConfig(),
 				Check: resource.ComposeTestCheckFunc(
@@ -57,24 +46,6 @@ func TestAccV2NutanixRestoreSourceResource_ObjectStoreLocation(t *testing.T) {
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
-			//// List backup targets and delete if backup target exists
-			//{
-			//	Config: testAccListBackupTargetsDatasourceConfig(),
-			//	Check: resource.ComposeTestCheckFunc(
-			//		checkBackupTargetExist(),
-			//	),
-			//},
-			//// Create backup target, Object store location
-			//{
-			//	Config: testAccBackupTargetResourceObjectStoreLocationConfig(),
-			//	Check: resource.ComposeTestCheckFunc(
-			//		resource.TestCheckResourceAttrSet(resourceNameBackupTargetObjectStoreLocation, "ext_id"),
-			//		resource.TestCheckResourceAttrSet(resourceNameBackupTargetObjectStoreLocation, "domain_manager_ext_id"),
-			//		resource.TestCheckResourceAttr(resourceNameBackupTargetObjectStoreLocation, "location.0.object_store_location.0.backup_policy.0.rpo_in_minutes", "60"),
-			//		resource.TestCheckResourceAttr(resourceNameBackupTargetObjectStoreLocation, "location.0.object_store_location.0.provider_config.0.bucket_name", testVars.Prism.Bucket.Name),
-			//		resource.TestCheckResourceAttr(resourceNameBackupTargetObjectStoreLocation, "location.0.object_store_location.0.provider_config.0.region", testVars.Prism.Bucket.Region),
-			//	),
-			//},
 			// Create the restore source, Object store location
 			{
 				Config: testAccRestoreSourceResourceObjectStoreLocationConfig(),
@@ -104,9 +75,9 @@ provider "nutanix-2" {
   port     = %[5]d
 }
 
-data "nutanix_clusters_v2" "clusters" {
-  provider = nutanix
-}
+
+# list Clusters
+data "nutanix_clusters_v2" "clusters" {}
 
 locals {
   clusterExtId = [
@@ -114,6 +85,7 @@ locals {
     cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
   ][0]
 }
+
 
 resource "nutanix_restore_source_v2" "cluster-location" {
   provider = nutanix-2
@@ -147,7 +119,7 @@ provider "nutanix-2" {
 
 locals {
   config = jsondecode(file("%[1]s"))
-  bucket = local.config.prism.bucket 
+  bucket = local.config.prism.bucket
 }
 
 resource "nutanix_restore_source_v2" "object-store-location" {

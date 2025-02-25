@@ -31,6 +31,9 @@ type TestConfig struct {
 			PeIP       string `json:"pe_ip"`
 			PcPassword string `json:"pc_password"`
 		} `json:"restore_source"`
+		Unregister struct {
+			PcExtID string `json:"pc_ext_id"`
+		} `json:"unregister"`
 	} `json:"prism"`
 }
 

@@ -14,21 +14,11 @@ func TestAccV2NutanixBackupTargetsDatasource_Basic(t *testing.T) {
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
-			// List backup targets and delete if backup target exists
+			// List backup targets and Create if backup target not exists
 			{
-				Config: testAccListBackupTargetsDatasourceConfig(),
+				Config: testAccCheckBackupTargetExistAndCreateIfNotExistsConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					checkBackupTargetExist(),
-				),
-			},
-			// Create backup target, cluster location
-			{
-				Config: testAccBackupTargetResourceClusterLocationConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "domain_manager_ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.name"),
+					checkBackupTargetExistAndCreateIfNotExists(),
 				),
 			},
 			// List backup targets

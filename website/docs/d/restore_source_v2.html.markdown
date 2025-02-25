@@ -25,7 +25,7 @@ terraform {
   }
 }
 
-#defining nutanix configuration
+#defining nutanix configuration for PC
 provider "nutanix" {
   username = var.nutanix_username
   password = var.nutanix_password
@@ -34,14 +34,14 @@ provider "nutanix" {
   insecure = true
 }
 
-#defining nutanix configuration
+#defining nutanix configuration for PE
 provider "nutanix" {
-  alise    = "nutanix-pe"
-  username = var.nutanix_username
-  password = var.nutanix_password
-  endpoint = var.nutanix_pe_endpoint
-  port     = 9440
+  alias    = "pe"
+  username = var.nutanix_pe_username
+  password = var.nutanix_pe_password
+  endpoint = var.nutanix_pe_endpoint # PE endpoint
   insecure = true
+  port     = 9440
 }
 
 data "nutanix_clusters_v2" "clusters" {}
@@ -53,7 +53,7 @@ locals {
   ][
   0
   ]
-  clusterExtID       = [
+  clusterExtID = [
     for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
     cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
   ][
@@ -61,7 +61,7 @@ locals {
   ]
 }
 
-resource "nutanix_backup_target_v2" "cluster-location"{
+resource "nutanix_backup_target_v2" "cluster-location" {
   domain_manager_ext_id = local.domainManagerExtID
   location {
     cluster_location {
@@ -72,7 +72,7 @@ resource "nutanix_backup_target_v2" "cluster-location"{
   }
 }
 
-resource "nutanix_restore_source_v2" "cluster-location"{
+resource "nutanix_restore_source_v2" "cluster-location" {
   provider = nutanix.pe
   location {
     cluster_location {
@@ -84,9 +84,10 @@ resource "nutanix_restore_source_v2" "cluster-location"{
   depends_on = [nutanix_backup_target_v2.cluster-location]
 }
 
-data "nutanix_restore_source_v2" "example"{
+// get the restore source
+data "nutanix_restore_source_v2" "restore-source" {
   provider = nutanix.pe
-  ext_id = nutanix_restore_source_v2.cluster-location.id
+  ext_id   = nutanix_restore_source_v2.cluster-location.id
 }
 
 ```
