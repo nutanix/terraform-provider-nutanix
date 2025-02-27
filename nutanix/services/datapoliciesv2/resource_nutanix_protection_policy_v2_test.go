@@ -45,7 +45,7 @@ func TestAccV2NutanixProtectionPolicyResource_Synchronous(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.0.label", "source"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.0.is_primary", "true"),
 					resource.TestCheckResourceAttrSet(resourceNameProtectionPolicy, "replication_locations.0.domain_manager_ext_id"),
-					resource.TestCheckResourceAttrSet(resourceNameProtectionPolicy, "replication_locations.1.domain_manager_ext_id"),
+					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.domain_manager_ext_id", testVars.AvailabilityZone.PcExtID),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.is_primary", "false"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "replication_locations.1.label", "target"),
 					resource.TestCheckResourceAttr(resourceNameProtectionPolicy, "category_ids.#", "1"),
@@ -399,7 +399,7 @@ func testProtectionPolicyResourceConfigLinearRetentionConfig(name, description s
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 
-# list Clusters 
+# list Clusters
 data "nutanix_clusters_v2" "clusters" {}
 
 locals {
@@ -478,7 +478,7 @@ func testProtectionPolicyResourceConfigLinearRetentionUpdateConfig(name, descrip
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 
-# list Clusters 
+# list Clusters
 data "nutanix_clusters_v2" "clusters" {}
 
 locals {
