@@ -1210,7 +1210,7 @@ func flattenRedundancyStatus(redundancyStatus *import1.RedundancyStatusDetails) 
 		redStatus["is_cassandra_preparation_done"] = redundancyStatus.IsCassandraPreparationDone
 		redStatus["is_zookeeper_preparation_done"] = redundancyStatus.IsZookeeperPreparationDone
 
-		return redStatus
+		return []map[string]interface{}{redStatus}
 	}
 	return nil
 }
