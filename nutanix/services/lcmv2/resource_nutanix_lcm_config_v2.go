@@ -3,8 +3,6 @@ package lcmv2
 import (
 	"context"
 	"encoding/json"
-	"log"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -14,6 +12,7 @@ import (
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
+	"log"
 )
 
 func ResourceNutanixLcmConfigV2() *schema.Resource {
@@ -78,7 +77,7 @@ func ResourceNutanixLcmConfigV2Create(ctx context.Context, d *schema.ResourceDat
 	args := make(map[string]interface{})
 	args["If-Match"] = utils.StringPtr(etagValue)
 
-	body := &lcmconfigimport1.Config{}
+	body := readResp.Data.GetValue().(lcmconfigimport1.Config)
 	var connectivityTypeMap = map[string]resources.ConnectivityType{
 		"$UNKNOWN":               resources.CONNECTIVITYTYPE_UNKNOWN,
 		"$REDACTED":              resources.CONNECTIVITYTYPE_REDACTED,
@@ -90,9 +89,9 @@ func ResourceNutanixLcmConfigV2Create(ctx context.Context, d *schema.ResourceDat
 	if url, ok := d.GetOk("url"); ok {
 		body.Url = utils.StringPtr(url.(string))
 	}
-
-	if isAutoInventoryEnabled, ok := d.GetOk("is_auto_inventory_enabled"); ok {
-		body.IsAutoInventoryEnabled = utils.BoolPtr(isAutoInventoryEnabled.(bool))
+	if IsExplicitlySet(d, "is_auto_inventory_enabled") {
+		v := d.Get("is_auto_inventory_enabled").(bool)
+		body.IsAutoInventoryEnabled = utils.BoolPtr(v)
 	}
 	if autoInventorySchedule, ok := d.GetOk("auto_inventory_schedule"); ok {
 		body.AutoInventorySchedule = utils.StringPtr(autoInventorySchedule.(string))
@@ -104,16 +103,18 @@ func ResourceNutanixLcmConfigV2Create(ctx context.Context, d *schema.ResourceDat
 			}
 		}
 	}
-	if isHttpsEnabled, ok := d.GetOk("is_https_enabled"); ok {
-		body.IsHttpsEnabled = utils.BoolPtr(isHttpsEnabled.(bool))
+	if IsExplicitlySet(d, "is_https_enabled") {
+		v := d.Get("is_https_enabled").(bool)
+		body.IsHttpsEnabled = utils.BoolPtr(v)
 	}
-	if hasModuleAutoUpgradeEnabled, ok := d.GetOk("has_module_auto_upgrade_enabled"); ok {
-		body.HasModuleAutoUpgradeEnabled = utils.BoolPtr(hasModuleAutoUpgradeEnabled.(bool))
+	if IsExplicitlySet(d, "has_module_auto_upgrade_enabled") {
+		v := d.Get("has_module_auto_upgrade_enabled").(bool)
+		body.HasModuleAutoUpgradeEnabled = utils.BoolPtr(v)
 	}
 	aJSON, _ := json.MarshalIndent(body, "", " ")
 	log.Printf("[DEBUG] LCM Update Config Request Spec: %s", string(aJSON))
 
-	resp, err := conn.LcmConfigAPIInstance.UpdateConfig(body, clusterId, args)
+	resp, err := conn.LcmConfigAPIInstance.UpdateConfig(&body, clusterId, args)
 	if err != nil {
 		return diag.Errorf("error while updating the LCM config: %v", err)
 	}
@@ -179,4 +180,21 @@ func schemaForLinks() *schema.Schema {
 			},
 		},
 	}
+}
+
+func IsExplicitlySet(d *schema.ResourceData, key string) bool {
+	rawConfig := d.GetRawConfig() // Get raw Terraform config as cty.Value
+	log.Printf("[DEBUG] Raw Config: %s", rawConfig)
+	if rawConfig.IsNull() || !rawConfig.IsKnown() {
+		return false // If rawConfig is null/unknown, key wasn't explicitly set
+	}
+
+	// Convert rawConfig to map and check if key exists
+	configMap := rawConfig.AsValueMap()
+	if val, exists := configMap[key]; exists {
+		log.Printf("[DEBUG1] Key: %s, Value: %s", key, val)
+		log.Printf("[DEBUG2] values %t", val.IsNull())
+		return !val.IsNull() // Ensure key exists and isn't explicitly null
+	}
+	return false
 }
