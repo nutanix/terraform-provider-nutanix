@@ -11,64 +11,93 @@ description: |-
 Create a Routing Policy.
 
 
-## Example 
+## Example
 
 ```hcl
-    resource "nutanix_pbr_v2" "pbr-1"{
-      name = "{{ name }}"
-      description = "{{ desc }}"
-      vpc_ext_id = "{{ vpc uuid }}"
-      priority = 14
-      policies{
-        policy_match{
-          source{
-            address_type = "ANY"
-          }
-          destination{
-            address_type = "ANY"
-          }
-          protocol_type = "UDP"
+
+#pull all clusters data
+data "nutanix_clusters_v2" "clusters"{}
+
+#create local variable pointing to desired cluster
+locals {
+  clusterExtId = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+  ][0]
+}
+
+#creating subnet without IP pool
+resource "nutanix_subnet_v2" "vlan-112"{
+  name              = "vlan-112"
+  description       = "subnet VLAN 112 managed by Terraform with IP pool"
+  cluster_reference = local.clusterExtId
+  subnet_type       = "VLAN"
+  network_id        = 122
+  is_external       = true
+  ip_config {
+
+    ipv4 {
+      ip_subnet {
+        ip {
+          value = "192.168.0.0"
         }
-        policy_action{
-          action_type  = "PERMIT"
-        }
+        prefix_length = 24
       }
-	  }
-
-
-    resource "nutanix_pbr_v2" "pbr-2" {
-      name = "{{ name }}"
-      description = "{{ desc }}"
-      vpc_ext_id = "{{ vpc uuid }}"
-      priority = 11
-      policies{
-        policy_match{
-          source{
-            address_type = "EXTERNAL"
-          }
-          destination{
-            address_type = "SUBNET"
-            subnet_prefix{
-              ipv4{
-                ip{
-                  value= "10.10.10.0"
-                  prefix_length = 24
-                }
-              }
-            }
-          }
-          protocol_type = "ANY"
+      default_gateway_ip {
+        value = "192.168.0.1"
+      }
+      pool_list {
+        start_ip {
+          value = "192.168.0.20"
         }
-        policy_action{
-          action_type  = "FORWARD"
-          nexthop_ip_address{
-            ipv4{
-              value = "10.10.10.10"
-            }
-          }
+        end_ip {
+          value = "192.168.0.30"
         }
       }
     }
+  }
+}
+
+// creating VPC
+resource "nutanix_vpc_v2" "vpc"{
+  name        = "tf-vpc-example"
+  description = "VPC "
+  external_subnets {
+    subnet_reference = nutanix_subnet_v2.vlan-112.id
+  }
+  externally_routable_prefixes {
+    ipv4 {
+      ip {
+        value         = "172.30.0.0"
+        prefix_length = 32
+      }
+      prefix_length = 16
+    }
+  }
+}
+
+
+# create PBR with vpc name with any source or destination or protocol with permit action
+resource "nutanix_pbr_v2" "any-source-destination"{
+  name        = "routing_policy_any_source_destination"
+  description = "routing policy with any source and destination"
+  vpc_ext_id  = nutanix_vpc_v2.vpc.id
+  priority    = 11
+  policies {
+    policy_match {
+      source {
+        address_type = "ANY"
+      }
+      destination {
+        address_type = "ANY"
+      }
+      protocol_type = "UDP"
+    }
+    policy_action {
+      action_type = "PERMIT"
+    }
+  }
+}
 ```
 
 ## Argument Reference
@@ -96,7 +125,7 @@ The following arguments are supported:
 * `protocol_parameters`: (Optional) Protocol Params Object.
 
 ### policy_match.source, policy_match.destination
-* `address_type`: (Required) Address Type. Acceptable values are "SUBNET", "EXTERNAL", "ANY" . 
+* `address_type`: (Required) Address Type. Acceptable values are "SUBNET", "EXTERNAL", "ANY" .
 * `subnet_prefix`: (Optional) Subnet Prefix
 
 ### subnet_prefix
@@ -109,9 +138,9 @@ The following arguments are supported:
 
 
 ### protocol_parameters
-* `layer_four_protocol_object`: (Optional) Layer Four Protocol Object. 
+* `layer_four_protocol_object`: (Optional) Layer Four Protocol Object.
 * `icmp_object`: (Optional) ICMP object
-* `protocol_number_object`: (Optional) Protocol Number Object. 
+* `protocol_number_object`: (Optional) Protocol Number Object.
 
 ### layer_four_protocol_object
 * `source_port_ranges`: (Optional) Start and end port ranges object.
@@ -137,7 +166,7 @@ The following arguments are supported:
 
 ### reroute_params
 * `service_ip`: (Optional) An unique address that identifies a device on the internet or a local network in IPv4 or IPv6 format.
-* `reroute_fallback_action`: (Optional) Type of fallback action in reroute case when service VM is down. Acceptable values are "PASSTHROUGH", "NO_ACTION", "ALLOW", "DENY". 
+* `reroute_fallback_action`: (Optional) Type of fallback action in reroute case when service VM is down. Acceptable values are "PASSTHROUGH", "NO_ACTION", "ALLOW", "DENY".
 * `ingress_service_ip`: (Optional) An unique address that identifies a device on the internet or a local network in IPv4 or IPv6 format.
 * `egress_service_ip`: (Optional) An unique address that identifies a device on the internet or a local network in IPv4 or IPv6 format.
 

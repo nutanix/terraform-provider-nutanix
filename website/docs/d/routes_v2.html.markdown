@@ -13,8 +13,26 @@ Provides Nutanix resource to List Routes request.
 ## Example
 
 ```hcl
+# List all route tables
+data "nutanix_route_tables_v2" "list-route-tables" {}
+
+
+# List routes by route table id
 data "nutanix_routes_v2" "routes"{
-  route_table_ext_id = "<route_table_uuid>"
+  route_table_ext_id = data.nutanix_route_tables_v2.list-route-tables.route_tables[0].ext_id
+}
+
+# list all routes with filter
+data "nutanix_routes_v2" "filtered-routes" {
+  route_table_ext_id = data.nutanix_route_tables_v2.list-route-tables.route_tables[0].ext_id
+  filter             = "vpcReference eq '${nutanix_vpc_v2.example.id}' and isActive eq true"
+  order_by           = "name desc" # list all routes sorted by name in descending order
+  depends_on         = [nutanix_routes_v2.route]
+}
+
+# List routes by route table id with limit 3
+data "nutanix_routes_v2" "routes"{
+  route_table_ext_id = data.nutanix_route_tables_v2.list-route-tables.route_tables[0].ext_id
   limit = 3
 }
 ```
@@ -97,4 +115,4 @@ The following attributes are exported:
 - `value`: value of IP address
 - `prefix_length`: The prefix length of the network to which this host IPv4/IPv6 address belongs.
 
-See detailed information in [Nutanix Routes v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0).
+See detailed information in [Nutanix List Routes By Route Table Id v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0#tag/Routes/operation/listRoutesByRouteTableId).
