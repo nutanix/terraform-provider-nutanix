@@ -14,79 +14,12 @@ Provides Nutanix resource to Create Route.
 
 ```hcl
 
-data "nutanix_clusters_v2" "clusters" {}
-locals {
-  clusterExtId = [
-    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-  ][0]
-}
-
-# create a subnet
-resource "nutanix_subnet_v2" "ext-subnet" {
-  name              = "subnet_for_route"
-  description       = "subnet to test create route"
-  cluster_reference = local.clusterExtId
-  subnet_type       = "VLAN"
-  network_id        = "198"
-  is_external       = true
-  ip_config {
-    ipv4 {
-      ip_subnet {
-        ip {
-          value = "10.44.3.192"
-        }
-        prefix_length = "27"
-      }
-      default_gateway_ip {
-        value = "10.44.3.193"
-      }
-      pool_list {
-        start_ip {
-          value = "10.44.3.198"
-        }
-        end_ip {
-          value = "10.44.3.207"
-        }
-      }
-    }
-  }
-}
-
-# crete a vpc
-resource "nutanix_vpc_v2" "vpc" {
-  name        = "terraform_example_vpc_1"
-  description = "terraform example vpc 1 to test create route"
-  external_subnets {
-    subnet_reference = nutanix_subnet_v2.ext-subnet.id
-  }
-  depends_on = [nutanix_subnet_v2.ext-subnet]
-}
-
-# get route table
-data "nutanix_route_tables_v2" "list-route-tables" {
-  filter     = "vpcReference eq '${nutanix_vpc_v2.vpc.id}'"
-  depends_on = [nutanix_vpc_v2.vpc]
-}
-
-# create a project
-resource "nutanix_project" "example-project" {
-  name        = "tf-example-project"
-  description = "terraform example project"
-  default_subnet_reference {
-    kind = "subnet"
-    uuid = nutanix_subnet_v2.ext-subnet.id
-  }
-  lifecycle {
-    ignore_changes = [default_subnet_reference]
-  }
-}
 # create a route
 resource "nutanix_routes_v2" "route" {
   name               = "terraform_example_route"
   description        = "terraform example route to example create route"
-  vpc_reference      = nutanix_vpc_v2.vpc.id
-  route_table_ext_id = data.nutanix_route_tables_v2.list-route-tables.route_tables[0].ext_id
+  vpc_reference      = "8a938cc5-282b-48c4-81be-de22de145d07"
+  route_table_ext_id = "c2c249b0-98a0-43fa-9ff6-dcde578d3936"
   destination {
     ipv4 {
       ip {
@@ -97,11 +30,11 @@ resource "nutanix_routes_v2" "route" {
   }
   next_hop {
     next_hop_type      = "EXTERNAL_SUBNET"
-    next_hop_reference = nutanix_subnet_v2.ext-subnet.id
+    next_hop_reference = "ba250e3e-1db1-4950-917f-a9e2ea35b8e3"
   }
   metadata {
-    owner_reference_id   = nutanix_vpc_v2.vpc.id
-    project_reference_id = nutanix_project.example-project.metadata.uuid
+    owner_reference_id   = "a8fe48c4-f0d3-49c7-a017-efc30dd8fb2b"
+    project_reference_id = "ab520e1d-4950-1db1-917f-a9e2ea35b8e3"
   }
   route_type = "STATIC"
 }

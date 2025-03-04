@@ -13,22 +13,12 @@ Provides a resource to create a subnet based on the input parameters.
 ## Example
 
 ```hcl
-#pull all clusters data
-data "nutanix_clusters_v2" "clusters" {}
-
-#create local variable pointing to desired cluster
-locals {
-  clusterExtId = [
-    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-  ][0]
-}
 
 #creating subnet with IP pool
 resource "nutanix_subnet_v2" "vlan-112" {
   name              = "vlan-112"
   description       = "subnet VLAN 112 managed by Terraform with IP pool"
-  cluster_reference = local.clusterExtId
+  cluster_reference = "a8fe48c4-f0d3-49c7-a017-efc30dd8fb2b"
   subnet_type       = "VLAN"
   network_id        = 122
   is_external       = true
@@ -61,7 +51,7 @@ resource "nutanix_subnet_v2" "vlan-112" {
 resource "nutanix_subnet_v2" "vlan-113" {
   name              = "vlan-113"
   description       = "subnet VLAN 113 managed by Terraform"
-  cluster_reference = local.clusterExtId
+  cluster_reference = "a8fe48c4-f0d3-49c7-a017-efc30dd8fb2b"
   subnet_type       = "VLAN"
   network_id        = 113
 }
@@ -70,7 +60,7 @@ resource "nutanix_subnet_v2" "vlan-113" {
 resource "nutanix_subnet_v2" "van-114" {
   name              = "vlan-114"
   description       = "subnet VLAN 114 managed by Terraform"
-  cluster_reference = local.clusterExtId
+  cluster_reference = "a8fe48c4-f0d3-49c7-a017-efc30dd8fb2b"
   subnet_type       = "VLAN"
   network_id        = 114
   ip_config {
