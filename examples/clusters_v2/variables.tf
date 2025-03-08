@@ -22,10 +22,14 @@ variable "cvm_ip" {
   type = string
 }
 
-variable "new_username" {
+variable "username" {
   type = string
 }
 
-variable "new_password" {
+variable "password" {
+  type = string
+}
+
+variable "pc_ext_id" {
   type = string
 }
