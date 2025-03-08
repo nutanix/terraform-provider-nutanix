@@ -27,15 +27,15 @@ resource "nutanix_category_v2" "example" {
 
 
 #pull all categories data
-data "nutanix_categories_v2" "clusters" {}
+data "nutanix_categories_v2" "categories-list" {}
 
 # pull all categories with limit and filter
-data "nutanix_categories_v2" "example" {
+data "nutanix_categories_v2" "filtered-categories" {
   limit  = 2
-  filter = "key eq 'category_example_key'"
+  filter = "key eq '${nutanix_category_v2.example.key}'"
 }
 
 # get category by ext id
-data "nutanix_category_v2" "example" {
-  ext_id = resource.nutanix_category_v2.example.ext_id
+data "nutanix_category_v2" "get-category" {
+  ext_id = nutanix_category_v2.example.id
 }
