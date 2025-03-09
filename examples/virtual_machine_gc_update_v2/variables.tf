@@ -18,3 +18,6 @@ variable "vm_uuid" {
 variable "user_data" {
   type = string
 }
+variable "subnet_name" {
+  type = string
+}

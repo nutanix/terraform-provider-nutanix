@@ -16,9 +16,13 @@ provider "nutanix" {
   insecure = true
 }
 
+# pull the specified virtual machine data
+data "nutanix_virtual_machines_v2" "ngt-vm" {
+  filter = "name eq '${var.vm_name}'"
+}
 
-resource "nutanix_ngt_upgrade_v2" "example" {
-  ext_id = "<VM UUID>"
+resource "nutanix_ngt_upgrade_v2" "upgrade-ngt" {
+  ext_id = data.nutanix_virtual_machines_v2.ngt-vm.vms.0.ext_id
 
   reboot_preference {
     schedule_type = "IMMEDIATE"

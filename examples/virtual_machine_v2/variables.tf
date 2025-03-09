@@ -22,3 +22,6 @@ variable "disk_sizes" {
   type    = list(string)
   default = [1024, 2048]
 }
+variable "image_name" {
+  type = string
+}
