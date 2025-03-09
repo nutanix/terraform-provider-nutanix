@@ -2,13 +2,13 @@ package clustersv2_test
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -110,6 +110,8 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.number_of_nodes", "1"),
 					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
 					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
+					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.pulse_status.0.is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.pulse_status.0.pii_scrubbing_level", "DEFAULT"),
 					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.external_address.0.ipv4.0.value", testVars.Clusters.Network.VirtualIP),
 					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.external_data_services_ip.0.ipv4.0.value", testVars.Clusters.Network.IscsiIP),
 					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.ntp_server_ip_list.0.fqdn.0.value", testVars.Clusters.Network.NTPServers[0]),
@@ -127,7 +129,24 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 	})
 }
 
-var clusterConfig = fmt.Sprintf(` 
+func TestAccV2NutanixClusterResource_EnablePulseInCreate(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+
+			{
+				PreConfig: func() {
+					time.Sleep(10 * time.Second) // 10-second delay
+				},
+				Config:      testAccClusterResourceEnablePulseInCreate(),
+				ExpectError: regexp.MustCompile("pulse_status is available only for update operation"),
+			},
+		},
+	})
+}
+
+var clusterConfig = fmt.Sprintf(`
 	data "nutanix_clusters_v2" "clusters" {}
 
 	locals {
@@ -143,8 +162,8 @@ func testAccClusterResourceMinimumConfig(name string) string {
 	return fmt.Sprintf(`
 		# cluster config
 		%[1]s
-		
-		# check if the nodes is un configured or not 
+
+		# check if the nodes is un configured or not
 		resource "nutanix_clusters_discover_unconfigured_nodes_v2" "test-discover-cluster-node" {
 		  ext_id       = local.cluster_ext_id
 		  address_type = "IPV4"
@@ -154,7 +173,7 @@ func testAccClusterResourceMinimumConfig(name string) string {
 			}
 		  }
 		  depends_on = [data.nutanix_clusters_v2.clusters]
-		
+
 		  ## check if the node is  un configured or not
 		  lifecycle {
 			postcondition {
@@ -163,7 +182,7 @@ func testAccClusterResourceMinimumConfig(name string) string {
 			}
 		  }
 		}
-		
+  
 		# create a new cluster
 		resource "nutanix_cluster_v2" "test" {
 		  name   = "%[2]s"
@@ -182,22 +201,22 @@ func testAccClusterResourceMinimumConfig(name string) string {
 			cluster_arch     = local.clusters.config.cluster_arch
 			fault_tolerance_state {
 			  domain_awareness_level          = local.clusters.config.fault_tolerance_state.domain_awareness_level
-			}  
+			}
 		  }
-		
+
 		  provisioner "local-exec" {
 			command = "ssh-keygen -f "~/.ssh/known_hosts" -R "${local.clusters.nodes[0].cvm_ip}";  sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[0].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[0].username} password=${local.clusters.nodes[0].password}' "
-		
+
 			on_failure = continue
 		  }
-          # Set lifecycle to ignore changes 
+          # Set lifecycle to ignore changes
 		  lifecycle {
 			ignore_changes = [network.0.smtp_server.0.server.0.password,  links, categories, config.0.cluster_function]
 		  }
 		  depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.test-discover-cluster-node]
 		}
-		
-		
+
+
 		# register the cluster to pc
 		resource "nutanix_pc_registration_v2" "node-registration" {
 		  pc_ext_id = local.cluster_ext_id
@@ -228,7 +247,7 @@ func testAccClusterResourceAllConfig(name string) string {
 	return fmt.Sprintf(`
 		%[1]s
 
-		# check if the nodes is un configured or not 
+		# check if the nodes is un configured or not
 		resource "nutanix_clusters_discover_unconfigured_nodes_v2" "test-discover-cluster-node" {
 		  ext_id       = local.cluster_ext_id
 		  address_type = "IPV4"
@@ -238,7 +257,7 @@ func testAccClusterResourceAllConfig(name string) string {
 			}
 		  }
 		  depends_on = [data.nutanix_clusters_v2.clusters]
-		
+
 		  ## check if the node is  un configured or not
 		  lifecycle {
 			postcondition {
@@ -247,8 +266,8 @@ func testAccClusterResourceAllConfig(name string) string {
 			}
 		  }
 		}
-		
-		
+
+
 		resource "nutanix_cluster_v2" "test" {
 		  name   = "%[2]s"
 		  dryrun = false
@@ -293,21 +312,21 @@ func testAccClusterResourceAllConfig(name string) string {
 			  fqdn {
 				value = local.clusters.network.ntp_servers[3]
 			  }
-			}			
+			}
 		  }
-		  
+
 		  lifecycle {
 			ignore_changes = [network.0.smtp_server.0.server.0.password,  links, categories, config.0.cluster_function]
 		  }
-		
+
 		  provisioner "local-exec" {
 			command = "ssh-keygen -f "~/.ssh/known_hosts" -R "${local.clusters.nodes[0].cvm_ip}"; sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[0].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[0].username} password=${local.clusters.nodes[0].password}' "
-		
+
 			on_failure = continue
 		  }
 		  depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.test-discover-cluster-node]
 		}
-		
+
 		# register the cluster to pc
 		resource "nutanix_pc_registration_v2" "node-registration" {
 		  pc_ext_id = local.cluster_ext_id
@@ -337,8 +356,8 @@ func testAccClusterResourceUpdateConfig(updatedName string) string {
 	return fmt.Sprintf(`
 		# cluster config
 		%[1]s
-		
-		# check if the nodes is un configured or not 
+
+		# check if the nodes is un configured or not
 		resource "nutanix_clusters_discover_unconfigured_nodes_v2" "test-discover-cluster-node" {
 		  ext_id       = local.cluster_ext_id
 		  address_type = "IPV4"
@@ -348,7 +367,7 @@ func testAccClusterResourceUpdateConfig(updatedName string) string {
 			}
 		  }
 		  depends_on = [data.nutanix_clusters_v2.clusters]
-		
+
 		  ## check if the node is  un configured or not
 		  lifecycle {
 			postcondition {
@@ -357,8 +376,8 @@ func testAccClusterResourceUpdateConfig(updatedName string) string {
 			}
 		  }
 		}
-		
-		
+
+
 		resource "nutanix_cluster_v2" "test" {
 		  name   = "%[2]s"
 		  dryrun = false
@@ -377,6 +396,10 @@ func testAccClusterResourceUpdateConfig(updatedName string) string {
 			fault_tolerance_state {
 			  domain_awareness_level          = local.clusters.config.fault_tolerance_state.domain_awareness_level
 			}
+		    pulse_status {
+		      is_enabled = true
+		      pii_scrubbing_level = "DEFAULT"
+		    }
 		  }
 		  # update the network config, external_address, external data services ip, smtp server
 		  network {
@@ -425,20 +448,20 @@ func testAccClusterResourceUpdateConfig(updatedName string) string {
 			  type = local.clusters.network.smtp_server.type
 			}
 		  }
-		  
+
 		  lifecycle {
 			ignore_changes = [network.0.smtp_server.0.server.0.password,  links, categories, config.0.cluster_function]
 		  }
-		
+
 		  provisioner "local-exec" {
 
 			command = "ssh-keygen -f "~/.ssh/known_hosts" -R "${local.clusters.nodes[0].cvm_ip}"; ssh-keygen -f "/home/haroon/.ssh/known_hosts" -R "${local.clusters.nodes[0].cvm_ip}" ;  sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[0].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[0].username} password=${local.clusters.nodes[0].password}' "
-		
+
 			on_failure = continue
 		  }
 		  depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.test-discover-cluster-node]
 		}
-		
+
 		# register the cluster to pc
 		resource "nutanix_pc_registration_v2" "node-registration" {
 		  pc_ext_id = local.cluster_ext_id
@@ -463,4 +486,39 @@ func testAccClusterResourceUpdateConfig(updatedName string) string {
 		}
 
 `, clusterConfig, updatedName)
+}
+
+func testAccClusterResourceEnablePulseInCreate() string {
+	return `
+
+resource "nutanix_cluster_v2" "test" {
+  name   = "tf-test-cluster"
+  dryrun = false
+  nodes {
+    node_list {
+      controller_vm_ip {
+        ipv4 {
+          value = "10.0.0.1"
+        }
+      }
+    }
+  }
+  config {
+    cluster_function = ["AOS"]
+    cluster_arch     = "X86_64"
+    fault_tolerance_state {
+      domain_awareness_level = "DISK"
+    }
+    pulse_status {
+      is_enabled = true
+      pii_scrubbing_level = "DEFAULT"
+    }
+  }
+
+  # Set lifecycle to ignore changes
+  lifecycle {
+    ignore_changes = [network.0.smtp_server.0.server.0.password, links, categories, config.0.cluster_function]
+  }
+}
+`
 }
