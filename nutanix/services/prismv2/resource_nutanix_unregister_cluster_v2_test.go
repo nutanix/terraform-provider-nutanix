@@ -14,7 +14,7 @@ func TestAccV2NutanixUnregisterClusterResource_Unregister_PC_PC(t *testing.T) {
 	if testVars.Prism.Unregister.PcExtID == "" {
 		t.Skip("Skipping test as it requires PC to unregister not provided")
 	}
-	
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,

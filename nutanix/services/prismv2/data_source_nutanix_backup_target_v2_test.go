@@ -35,7 +35,6 @@ func TestAccV2NutanixBackupTargetDatasource_Basic(t *testing.T) {
 	})
 }
 
-
 func testAccCheckBackupTargetExistAndCreateIfNotExistsConfig() string {
 	return `
 

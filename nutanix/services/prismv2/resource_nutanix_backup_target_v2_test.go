@@ -83,7 +83,7 @@ func TestAccV2NutanixBackupTargetResource_ObjectStoreLocation(t *testing.T) {
 func TestAccV2NutanixBackupTargetResource_ClusterLocationAndObjectStoreLocation(t *testing.T) {
 	bucket := testVars.Prism.Bucket
 
-if bucket.Name == "" || bucket.AccessKey == "" || bucket.SecretKey == "" {
+	if bucket.Name == "" || bucket.AccessKey == "" || bucket.SecretKey == "" {
 		t.Skip("Skipping test due to missing bucket configuration")
 	}
 	resource.Test(t, resource.TestCase{

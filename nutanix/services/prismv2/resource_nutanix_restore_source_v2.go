@@ -80,13 +80,13 @@ func ResourceNutanixRestoreSourceV2() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"access_key_id": {
-																Type:     schema.TypeString,
-																Required: true,
+																Type:         schema.TypeString,
+																Required:     true,
 																ValidateFunc: validation.StringIsNotEmpty,
 															},
 															"secret_access_key": {
-																Type:     schema.TypeString,
-																Required: true,
+																Type:         schema.TypeString,
+																Required:     true,
 																ValidateFunc: validation.StringIsNotEmpty,
 															},
 														},
