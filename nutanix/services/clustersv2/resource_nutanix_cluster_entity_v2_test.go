@@ -110,6 +110,8 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameCluster, "nodes.0.number_of_nodes", "1"),
 					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.cluster_arch", testVars.Clusters.Config.ClusterArch),
 					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.fault_tolerance_state.0.domain_awareness_level", testVars.Clusters.Config.FaultToleranceState.DomainAwarenessLevel),
+					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.pulse_status.0.is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceNameCluster, "config.0.pulse_status.0.pii_scrubbing_level", "DEFAULT"),
 					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.external_address.0.ipv4.0.value", testVars.Clusters.Network.VirtualIP),
 					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.external_data_services_ip.0.ipv4.0.value", testVars.Clusters.Network.IscsiIP),
 					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.ntp_server_ip_list.0.fqdn.0.value", testVars.Clusters.Network.NTPServers[0]),
@@ -394,6 +396,10 @@ func testAccClusterResourceUpdateConfig(updatedName string) string {
 			fault_tolerance_state {
 			  domain_awareness_level          = local.clusters.config.fault_tolerance_state.domain_awareness_level
 			}
+		    pulse_status {
+		      is_enabled = true
+		      pii_scrubbing_level = "DEFAULT"
+		    }
 		  }
 		  # update the network config, external_address, external data services ip, smtp server
 		  network {
@@ -486,33 +492,33 @@ func testAccClusterResourceEnablePulseInCreate() string {
 	return `
 
 resource "nutanix_cluster_v2" "test" {
-	name   = "tf-test-cluster"
-	dryrun = false
-	nodes {
-		node_list {
-		controller_vm_ip {
-			ipv4 {
-			value = "10.0.0.1"
-			}
-		}
-		}
-	}
-	config {
-		cluster_function = ["AOS"]
-		cluster_arch     = "X86_64"
-		fault_tolerance_state {
-		domain_awareness_level = "DISK"
-		}
-		pulse_status {
-		is_enabled = true
-		pii_scrubbing_level = "DEFAULT"
-		}
-	}
+  name   = "tf-test-cluster"
+  dryrun = false
+  nodes {
+    node_list {
+      controller_vm_ip {
+        ipv4 {
+          value = "10.0.0.1"
+        }
+      }
+    }
+  }
+  config {
+    cluster_function = ["AOS"]
+    cluster_arch     = "X86_64"
+    fault_tolerance_state {
+      domain_awareness_level = "DISK"
+    }
+    pulse_status {
+      is_enabled = true
+      pii_scrubbing_level = "DEFAULT"
+    }
+  }
 
-	# Set lifecycle to ignore changes
-	lifecycle {
-		ignore_changes = [network.0.smtp_server.0.server.0.password, links, categories, config.0.cluster_function]
-	}
+  # Set lifecycle to ignore changes
+  lifecycle {
+    ignore_changes = [network.0.smtp_server.0.server.0.password, links, categories, config.0.cluster_function]
+  }
 }
-	`
+`
 }
