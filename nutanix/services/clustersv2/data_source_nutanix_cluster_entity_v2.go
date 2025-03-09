@@ -1203,14 +1203,14 @@ func flattenFaultToleranceState(pr *import1.FaultToleranceState) []map[string]in
 	return nil
 }
 
-func flattenRedundancyStatus(redundancyStatus *import1.RedundancyStatusDetails) interface{} {
+func flattenRedundancyStatus(redundancyStatus *import1.RedundancyStatusDetails) []interface{} {
 	if redundancyStatus != nil {
 		redStatus := make(map[string]interface{})
 
 		redStatus["is_cassandra_preparation_done"] = redundancyStatus.IsCassandraPreparationDone
 		redStatus["is_zookeeper_preparation_done"] = redundancyStatus.IsZookeeperPreparationDone
 
-		return []map[string]interface{}{redStatus}
+		return []interface{}{redStatus}
 	}
 	return nil
 }
