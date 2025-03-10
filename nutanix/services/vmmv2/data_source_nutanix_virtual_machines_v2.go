@@ -1148,6 +1148,11 @@ func DatasourceNutanixVirtualMachinesV4() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"tenant_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"links": schemaForLinks(),
 									"ext_id": {
 										Type:     schema.TypeString,
 										Computed: true,

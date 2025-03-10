@@ -1129,6 +1129,11 @@ func DatasourceNutanixVirtualMachineV4() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"tenant_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"links": schemaForLinks(),
 						"mode": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -1787,12 +1792,52 @@ func flattenOneOfVMBootConfig(pr *config.OneOfVmBootConfig) []map[string]interfa
 
 		uefiObj["is_secure_boot_enabled"] = uefiVals.IsSecureBootEnabled
 		uefiObj["nvram_device"] = flattenNvramDevice(uefiVals.NvramDevice)
-
+		uefiObj["boot_device"] = flattenOneOfUefiBootBootDevice(uefiVals.BootDevice)
+		uefiObj["boot_order"] = flattenBootDeviceType(uefiVals.BootOrder)
 		uefiObjList = append(uefiObjList, uefiObj)
 		uefiBootCfg["uefi_boot"] = uefiObjList
 		uefiBootCfgList = append(uefiBootCfgList, uefiBootCfg)
 
 		return uefiBootCfgList
+	}
+	return nil
+}
+
+func flattenOneOfUefiBootBootDevice(bootDevice *config.OneOfUefiBootBootDevice) []map[string]interface{} {
+	if bootDevice != nil {
+		// bootDeviceList := make([]map[string]interface{}, 0)
+		deviceDisk := make(map[string]interface{})
+		deviceDiskList := make([]map[string]interface{}, 0)
+		deviceNic := make(map[string]interface{})
+		deviceNicList := make([]map[string]interface{}, 0)
+
+		if *bootDevice.ObjectType_ == "vmm.v4.ahv.config.BootDeviceDisk" {
+			deviceDiskObj := make(map[string]interface{})
+			deviceDiskObjList := make([]map[string]interface{}, 0)
+			deviceDiskVal := bootDevice.GetValue().(config.BootDeviceDisk)
+
+			if deviceDiskVal.DiskAddress != nil {
+				deviceDiskObj["disk_address"] = flattenDiskAddress(deviceDiskVal.DiskAddress)
+			}
+
+			deviceDiskObjList = append(deviceDiskObjList, deviceDiskObj)
+
+			deviceDisk["boot_device_disk"] = deviceDiskObjList
+			deviceDiskList = append(deviceDiskList, deviceDisk)
+			return deviceDiskList
+		}
+		deviceNicObj := make(map[string]interface{})
+		deviceNicObjList := make([]map[string]interface{}, 0)
+		deviceNicVal := bootDevice.GetValue().(config.BootDeviceNic)
+
+		deviceNicObj["mac_address"] = deviceNicVal.MacAddress
+		deviceNicObjList = append(deviceNicObjList, deviceNicObj)
+
+		deviceNic["boot_device_nic"] = deviceNicObjList
+
+		deviceNicList = append(deviceNicList, deviceNic)
+
+		return deviceNicList
 	}
 	return nil
 }
