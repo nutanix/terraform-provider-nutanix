@@ -58,6 +58,29 @@ func TestAccV2NutanixVmsCloneResource_WithGuestCustomization(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixVmsCloneResource_WithUefiBootConfig(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-vm-%d", r)
+	desc := "test vm description"
+	// stateOn := "power_on"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testVmsCloneV2WithUefiBootConfig(name, desc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVMClone, "name", fmt.Sprintf(`%[1]s-clone`, name)),
+					resource.TestCheckResourceAttr(resourceNameVMClone, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(resourceNameVMClone, "num_cores_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceNameVMClone, "num_threads_per_core", "1"),
+					resource.TestCheckResourceAttr(resourceNameVMClone, "memory_size_bytes", "8589934592"),
+				),
+			},
+		},
+	})
+}
+
 func testVmsCloneV2Config(name, desc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
@@ -116,7 +139,7 @@ func testVmsCloneV2Config(name, desc string) string {
 			// 		cloud_init{
 			// 			cloud_init_script{
 			// 				user_data{
-			// 					value="${local.gs}"		
+			// 					value="${local.gs}"
 			// 				}
 			// 			}
 			// 		}
@@ -148,7 +171,7 @@ func testVmsCloneV2Config(name, desc string) string {
 			// 		cloud_init{
 			// 			cloud_init_script{
 			// 				user_data{
-			// 					value="${local.gs}"		
+			// 					value="${local.gs}"
 			// 				}
 			// 			}
 			// 		}
@@ -169,9 +192,9 @@ func testVmsCloneV2Config(name, desc string) string {
 			// 	}
 			// 	boot_order = ["CDROM", "DISK", "NETWORK"]
 			//   }
-			// }	  
+			// }
 		  }
-		  
+
 `, name, desc, filepath)
 }
 
@@ -226,7 +249,7 @@ func testVmsCloneV2WithGuestCustomizationConfig(name, desc string) string {
 			  index    = 0
 			}
 		  }
-		
+
 		  nics {
 			network_info {
 			  nic_type = "NORMAL_NIC"
@@ -235,8 +258,8 @@ func testVmsCloneV2WithGuestCustomizationConfig(name, desc string) string {
 			  }
 			  vlan_mode = "ACCESS"
 			}
-		  }		
-		  power_state = "OFF"		
+		  }
+		  power_state = "OFF"
 		  lifecycle {
 			ignore_changes = [
 			  guest_customization,
@@ -252,7 +275,7 @@ func testVmsCloneV2WithGuestCustomizationConfig(name, desc string) string {
 		  num_cores_per_socket = 2
 		  num_threads_per_core = 2
 		  memory_size_bytes    = 8 * 1024 * 1024 * 1024
-		  
+
 		  guest_customization {
 			config {
 			  cloud_init {
@@ -284,6 +307,48 @@ func testVmsCloneV2WithGuestCustomizationConfig(name, desc string) string {
 			]
 		  }
 		}
-		  
+
 `, name, desc, filepath)
+}
+
+func testVmsCloneV2WithUefiBootConfig(name, desc string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+
+locals {
+  cluster0 = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+    ][
+    0
+  ]
+}
+
+
+resource "nutanix_virtual_machine_v2" "test" {
+  name				   = "%[1]s"
+  description		   = "%[2]s"
+  num_cores_per_socket = 1
+  num_sockets          = 1
+  memory_size_bytes    = 8 * 1024 * 1024 * 1024
+  cluster {
+    ext_id = local.cluster0
+  }
+
+  boot_config {
+    uefi_boot {
+      boot_order = ["CDROM", "DISK", "NETWORK"]
+    }
+  }
+
+  power_state = "OFF"
+}
+
+
+resource "nutanix_vm_clone_v2" "test"{
+  vm_ext_id = nutanix_virtual_machine_v2.test.id
+  name = "%[1]s-clone"
+}
+
+`, name, desc)
 }
