@@ -361,7 +361,7 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 	uuid := rUUID.EntitiesAffected[0].ExtId
 	d.SetId(*uuid)
 
-	return ResourceNutanixVolumeGroupV2Read(ctx, d, meta)
+	return nil
 }
 
 func ResourceNutanixVolumeGroupV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

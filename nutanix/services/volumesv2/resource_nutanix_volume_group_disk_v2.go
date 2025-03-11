@@ -301,14 +301,14 @@ func ResourceNutanixVolumeGroupDiskV2Delete(ctx context.Context, d *schema.Resou
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
 		return diag.Errorf("error waiting for Volume Disk (%s) to Delete: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while fetching Volume Disk Delete Task : %v", err)
 	}
 
-	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
+	taskDetails := taskResp.Data.GetValue().(taskPoll.Task)
 
-	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Volume Disk Delete Task Details: %s", string(aJSON))
 
 	return nil

@@ -82,18 +82,18 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Create(ctx context.Context, d *
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Vm (%s) to Attach to Volume Group: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for Volume group (%s) to attach to VM: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while Attaching Vm to Volume Group: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
+	taskDetails := taskResp.Data.GetValue().(taskPoll.Task)
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
+	uuid := taskDetails.EntitiesAffected[0].ExtId
 
 	d.SetId(*uuid)
 	d.Set("ext_id", *uuid)
@@ -142,7 +142,7 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Delete(ctx context.Context, d *
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Vm (%s) to Detach from Volume Group: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for Volume group (%s) to detach from VM: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API

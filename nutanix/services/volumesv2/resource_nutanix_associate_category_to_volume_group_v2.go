@@ -75,18 +75,18 @@ func ResourceNutanixAssociateCategoryToVolumeGroupV2Create(ctx context.Context, 
 	}
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
-	log.Printf("[DEBUG] Associate Category to Volume Group Body: %s", string(aJSON))
+	log.Printf("[DEBUG] Payload to associate categories to Volume Group Body: %s", string(aJSON))
 
 	resp, err := conn.VolumeAPIInstance.AssociateCategory(utils.StringPtr(extID.(string)), body)
 	if err != nil {
-		return diag.Errorf("error while Associating Category to Volume Group : %v", err)
+		return diag.Errorf("error while associating categories to Volume Group : %v", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(volumesPrism.TaskReference)
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
-	// Wait for the VM to be available
+	// Wait for the category to be associated to the Volume Group
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
@@ -95,21 +95,20 @@ func ResourceNutanixAssociateCategoryToVolumeGroupV2Create(ctx context.Context, 
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for Associate Category task (%s) to Associate to Volume Group: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for associate categories task (%s) to finish: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while fetching Associate Category to Volume Group Task : %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
+	taskDetails := taskResp.Data.GetValue().(taskPoll.Task)
 
-	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Associate Category to Volume Group Task Details: %s", string(aJSON))
-	//uuid := rUUID.EntitiesAffected[1].ExtId
-	//
+
 	d.SetId(utils.GenUUID())
 	//d.Set("ext_id", *uuid)
 
@@ -121,7 +120,7 @@ func ResourceNutanixAssociateCategoryToVolumeGroupV2Read(ctx context.Context, d 
 }
 
 func ResourceNutanixAssociateCategoryToVolumeGroupV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	return ResourceNutanixAssociateCategoryToVolumeGroupV2Create(ctx, d, meta)
 }
 
 func ResourceNutanixAssociateCategoryToVolumeGroupV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -137,7 +136,7 @@ func ResourceNutanixAssociateCategoryToVolumeGroupV2Delete(ctx context.Context, 
 	}
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
-	log.Printf("[DEBUG] Dissociate Category from Volume Group Body: %s", string(aJSON))
+	log.Printf("[DEBUG] Payload for disassociating category from Volume Group: %s", string(aJSON))
 
 	resp, err := conn.VolumeAPIInstance.DisassociateCategory(utils.StringPtr(extID.(string)), body)
 	if err != nil {

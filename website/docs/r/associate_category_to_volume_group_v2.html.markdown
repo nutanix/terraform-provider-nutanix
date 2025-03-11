@@ -3,10 +3,11 @@ layout: "nutanix"
 page_title: "NUTANIX: nutanix_associate_category_to_volume_group_v2"
 sidebar_current: "docs-nutanix-resource-associate-category-to-volume-group-v2"
 description: |-
-  This operation submits a request to Creates a new Volume Disk.
+  This is a action module. It will associate categories to Volume groups in every apply and not maintain state. Terraform destroy will dissociate the categories from given volume group.
+
 ---
 
-# nutanix_volume_group_v2
+# nutanix_associate_category_to_volume_group_v2
 
 Provides a resource to Creates a new Volume Disk.
 
@@ -14,49 +15,17 @@ Provides a resource to Creates a new Volume Disk.
 
 ```hcl
 
-resource "nutanix_volume_group_v2" "example"{
-  name                               = "test_volume_group"
-  description                        = "Test Volume group with min spec and no Auth"
-  should_load_balance_vm_attachments = false
-  sharing_status                     = "SHARED"
-  target_name                        = "volumegroup-test-0"
-  created_by                         = "Test"
-  cluster_reference                  = "<Cluster uuid>"
-  iscsi_features {
-    enabled_authentications = "CHAP"
-    target_secret           = "1234567891011"
-  }
-
-  storage_features {
-    flash_mode {
-      is_enabled = true
-    }
-  }
-  usage_type = "USER"
-  is_hidden  = false
-
-  lifecycle {
-    ignore_changes = [
-      iscsi_features[0].target_secret
-    ]
-  }
-}
-
-
-# List categories
-data "nutanix_categories_v2" "categories"{}
-
 # Associate categories to volume group
 resource "nutanix_associate_category_to_volume_group_v2" "example"{
-  ext_id = nutanix_volume_group_v2.example.id
+  ext_id = "" # Volume Group extId
   categories{
-    ext_id = data.nutanix_categories_v2.categories.categories.0.ext_id
+    ext_id = "85e68112-5b2b-4220-bc8d-e529e4bf420e" # Category extId
   }
   categories{
-    ext_id = data.nutanix_categories_v2.categories.categories.1.ext_id
+    ext_id = "45588de3-7c18-4230-a147-7e26ad92d8a6" # Category extId
   }
   categories{
-    ext_id = data.nutanix_categories_v2.categories.categories.2.ext_id
+    ext_id = "1c6638f2-5215-4086-8f21-a30e75cb8068" # Category extId
   }
 }
 ```
