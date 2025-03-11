@@ -8,16 +8,27 @@ description: |-
 
 # nutanix_roles_v2
 
-Provides a resource to add a Role. 
+Provides a resource to add a Role.
 
 ## Example Usage
 
 ```hcl
-    resource "nutanix_roles_v2" "example" {
-        display_name= "{{ display-name }}"
-        description = "test description"
-        operations = "{{ operations }}"        
-    }
+# filtered list operation
+data "nutanix_operations_v2" "operations-filtered-list" {
+  filter = "startswith(displayName, 'Create_')"
+}
+
+# Create role
+resource "nutanix_roles_v2" "example-role"{
+  display_name = "example_role"
+  description  = "create example role"
+  operations = [
+    data.nutanix_operations_v2.operations-filtered-list.operations[0].ext_id,
+    data.nutanix_operations_v2.operations-filtered-list.operations[1].ext_id,
+    data.nutanix_operations_v2.operations-filtered-list.operations[2].ext_id,
+    data.nutanix_operations_v2.operations-filtered-list.operations[3].ext_id
+  ]
+}
 ```
 
 ## Argument Reference
@@ -57,5 +68,5 @@ The links attribute supports the following:
 * `href`: - The URL at which the entity described by the link can be accessed.
 * `rel`: - A name that identifies the relationship of the link to the object that is returned by the URL. The unique value of "self" identifies the URL for the object.
 
-See detailed information in [Nutanix Roles](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0).
+See detailed information in [Nutanix Create Role ](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Roles/operation/createRole).
 

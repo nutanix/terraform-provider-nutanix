@@ -14,12 +14,12 @@ Represents the Cluster entity. Provides the basic infrastructure for compute, st
 
 ```hcl
 resource "nutanix_cluster_v2" "cluster"{
-  name = "terraform-test-cluster"
+  name = "cluster-example"
   nodes {
     node_list {
       controller_vm_ip {
         ipv4 {
-          value = "<controller_vm_ip_ipv4>"
+          value = "10.xx.xx.xx"
         }
       }
     }
@@ -35,30 +35,30 @@ resource "nutanix_cluster_v2" "cluster"{
   network {
     external_address {
       ipv4 {
-        value = "<external_address_ipv4>"
+        value = "10.xx.xx.xx"
       }
     }
     external_data_services_ip {
       ipv4 {
-        value = "<external_data_services_ip_ipv4>"
+        value = "10.xx.xx.xx"
       }
     }
     ntp_server_ip_list {
       fqdn {
-        value = "<ntp_server_ip_list_fqdn_0>"
+        value = "ntp.server.nutanix.com"
       }
     }
     ntp_server_ip_list {
       fqdn {
-        value = "<ntp_server_ip_list_fqdn_1>"
+        value = "ntp.server_1.nutanix.com"
       }
-    }   
+    }
     smtp_server {
       email_address = "example.ex@exmple.com"
       server {
         ip_address {
           ipv4 {
-            value = "<smtp_server_ip_ipv4>"
+            value = "10.xx.xx.xx"
           }
         }
         port     = 123
@@ -109,14 +109,14 @@ The nodes attribute supports the following:
 
 The controller_vm_ip attribute supports the following:
 
-* `ipv4`: - (Optional) ip adresss params.
+* `ipv4`: - (Optional) ip address params.
 * `ipv6`: - (Optional) Ip address params.
 
 ### Host IP
 
 The host_ip attribute supports the following:
 
-* `ipv4`: - (Optional) ip adresss params.
+* `ipv4`: - (Optional) ip address params.
 * `ipv6`: - (Optional) Ip address params.
 
 ### Config
@@ -124,16 +124,16 @@ The host_ip attribute supports the following:
 The config attribute supports the following:
 
 * `build_info`: - (Optional) Build information details.
-* `cluster_function`: - (Optional) Cluster function. This is part of payload for cluster 
+* `cluster_function`: - (Optional) Cluster function. This is part of payload for cluster
   create operation only (allowed enum values for creation are AOS, ONE_NODE & TWO_NODE only).
     Valid values are:
      - "AOS"
-     - "PRISM_CENTRAL"	
-     - "CLOUD_DATA_GATEWAY"	
-     - "AFS"	
-     - "ONE_NODE"	
-     - "TWO_NODE"	
-     - "ANALYTICS_PLATFORM"	
+     - "PRISM_CENTRAL"
+     - "CLOUD_DATA_GATEWAY"
+     - "AFS"
+     - "ONE_NODE"
+     - "TWO_NODE"
+     - "ANALYTICS_PLATFORM"
 * `authorized_public_key_list`: - (Optional) Public ssh key details. This is part of payload for cluster update operation only.
 * `redundancy_factor`: - (Optional) Redundancy factor of a cluster. This is part of payload for both cluster create & update operations.
 * `cluster_arch`: - (Optional) Cluster arch.
@@ -214,21 +214,21 @@ The pulse_status attribute supports the following:
 
 The external_address attribute supports the following:
 
-* `ipv4`: - (Optional) ip adresss params.
+* `ipv4`: - (Optional) ip address params.
 * `ipv6`: - (Optional) Ip address params.
 
 ### External Data Services IP
 
 The external_data_services_ip attribute supports the following:
 
-* `ipv4`: - (Optional) ip adresss params.
+* `ipv4`: - (Optional) ip address params.
 * `ipv6`: - (Optional) Ip address params.
 
 ### Name Server IP List
 
 The name_server_ip_list attribute supports the following:
 
-* `ipv4`: - (Optional) ip adresss params.
+* `ipv4`: - (Optional) ip address params.
 * `ipv6`: - (Optional) Ip address params.
 * `fqdn`: - (Optional) A fully qualified domain name that specifies its exact location in the tree hierarchy of the Domain Name System.
 
@@ -236,7 +236,7 @@ The name_server_ip_list attribute supports the following:
 
 The ntp_server_ip_list attribute supports the following:
 
-* `ipv4`: - (Optional) ip adresss params.
+* `ipv4`: - (Optional) ip address params.
 * `ipv6`: - (Optional) Ip address params.
 * `fqdn`: - (Optional) A fully qualified domain name that specifies its exact location in the tree hierarchy of the Domain Name System.
 
@@ -267,7 +267,7 @@ The server attribute supports the following:
 
 The ip_address attribute supports the following:
 
-* `ipv4`: - (Optional) ip adresss params.
+* `ipv4`: - (Optional) ip address params.
 * `ipv6`: - (Optional) Ip address params.
 * `fqdn`: - (Optional) A fully qualified domain name that specifies its exact location in the tree hierarchy of the Domain Name System.
 
@@ -275,7 +275,7 @@ The ip_address attribute supports the following:
 
 The masquerading_ip attribute supports the following:
 
-* `ipv4`: - (Optional) ip adresss params.
+* `ipv4`: - (Optional) ip address params.
 * `ipv6`: - (Optional) Ip address params.
 
 ### Management Server
@@ -294,7 +294,7 @@ The management_server attribute supports the following:
 
 The ip attribute supports the following:
 
-* `ipv4`: - (Optional) ip adresss params.
+* `ipv4`: - (Optional) ip address params.
 * `ipv6`: - (Optional) Ip address params.
 
 ### Backplane
@@ -360,4 +360,4 @@ The ipv6 attribute supports the following:
 * `prefix_length`: - (Optional) The prefix length of the network to which this host IPv4 address belongs.
 * `value`: - (Required) Ip address.
 
-See detailed information in [Nutanix Cluster Entity V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0).
+See detailed information in [Nutanix Create Cluster V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0#tag/Clusters/operation/createCluster).

@@ -13,28 +13,54 @@ Provides Nutanix resource to create VPC.
 ## Example
 
 ```hcl
-resource "nutanix_vpc_v2" "vpc"{
-	name =  "{{name of vpc }}"
-	description = "{{ desc of vpc }}"
-	external_subnets{
-		subnet_reference = "{{ subnet uuid }}"
-		external_ips{
-		ipv4{
-			value = "{{ ip v4 address }}"
-			prefix_length = 32
-		}
-		}
-	}
-	externally_routable_prefixes{
-		ipv4{
-		ip{
-			value = "{{ ipv4 address }}"
-			prefix_length = 32
-		}
-		prefix_length = 16
-		}
-	}
+resource "nutanix_vpc_v2" "vpc" {
+  name        = "vpc-example"
+  description = "VPC for example"
+  external_subnets {
+    subnet_reference = "a8fe48c4-f0d3-49c7-a017-efc30dd8fb2b"
+  }
 }
+
+# creating VPC with external routable prefixes
+resource "nutanix_vpc_v2" "external-vpc-routable-vpc" {
+  name        = "tf-vpc-example"
+  description = "VPC "
+  external_subnets {
+    subnet_reference = "a8fe48c4-f0d3-49c7-a017-efc30dd8fb2b"
+    external_ips {
+      ipv4 {
+        value         = "192.168.0.24"
+        prefix_length = 32
+      }
+    }
+    external_ips {
+      ipv4 {
+        value         = "192.168.0.25"
+        prefix_length = 32
+      }
+    }
+  }
+  externally_routable_prefixes {
+    ipv4 {
+      ip {
+        value         = "172.30.0.0"
+        prefix_length = 32
+      }
+      prefix_length = 16
+    }
+  }
+}
+
+// creating VPC with transit type
+resource "nutanix_vpc_v2" "transit-vpc" {
+  name        = "vpc-transit"
+  description = "VPC for transit type"
+  external_subnets {
+    subnet_reference = "a8fe48c4-f0d3-49c7-a017-efc30dd8fb2b"
+  }
+  vpc_type = "TRANSIT"
+}
+
 ```
 
 ## Argument Reference

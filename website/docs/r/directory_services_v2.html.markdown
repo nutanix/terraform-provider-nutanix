@@ -13,15 +13,22 @@ Provides a resource to Create a Directory Service.
 ## Example Usage
 
 ``` hcl
-resource "nutanix_directory_services_v2" "example"{
-  name = "directory services name"
+# Add Directory Service .
+resource "nutanix_directory_services_v2" "active-directory" {
+  name           = "example_active_directory"
+  url            = "ldap://10.xx.xx.xx:xxxx"
+  directory_type = "ACTIVE_DIRECTORY"
+  domain_name    = "nutanix.com"
   service_account {
-    username = "service account username"
-    password = "service account password"
+    username = "username"
+    password = "password"
   }
-  directory_type = "directory type"
-  domain_name = "domain name"
-  url = "URL for the Directory Service"
+  white_listed_groups = ["example"]
+  lifecycle {
+    ignore_changes = [
+      service_account.0.password,
+    ]
+  }
 }
 ```
 
@@ -127,4 +134,4 @@ The user_group_configuration attribute supports the following:
 * `group_member_attribute_value`: - User attribute value that will be used in group entity to associate User to the group.
 
 
-See detailed information in [Nutanix Directory Services v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0).
+See detailed information in [Nutanix Directory Services v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/DirectoryServices/operation/createDirectoryService).

@@ -13,9 +13,18 @@ Lists all cluster entities registered to Prism Central.
 ## Example Usage
 
 ```hcl
-data "nutanix_clusters_v2" "clusters"{
-  filter = "startswith(name, 'PC_')"
+data "nutanix_clusters_v2" "cls" {
 }
+
+data "nutanix_clusters_v2" "filtered-cls"{
+  filter = "name eq 'cluster-1'"
+}
+
+data "nutanix_clusters_v2" "paged-cls" {
+  page = 1
+  limit = 10
+}
+
 ```
 
 ## Argument Reference
@@ -39,7 +48,7 @@ The following arguments are supported:
     - name
     - network/keyManagementServerType
     - upgradeStatus
-* `order_by`: -(Optional) A URL query parameter that allows clients to specify the sort criteria for the returned list of objects. Resources can be sorted in ascending order using asc or descending order using desc. If asc or desc are not specified, the resources will be sorted in ascending order by default. For example, '\$orderby=templateName desc' would get all templates sorted by templateName in descending order. 
+* `order_by`: -(Optional) A URL query parameter that allows clients to specify the sort criteria for the returned list of objects. Resources can be sorted in ascending order using asc or descending order using desc. If asc or desc are not specified, the resources will be sorted in ascending order by default. For example, '\$orderby=templateName desc' would get all templates sorted by templateName in descending order.
    The orderby can be applied to the following fields:
     - backupEligibilityScore
     - config/buildInfo/version
@@ -51,7 +60,7 @@ The following arguments are supported:
     - nodes/numberOfNodes
     - upgradeStatus
     - vmCount
-* `apply`: -(Optional) A URL query parameter that allows clients to specify a sequence of transformations to the entity set, such as groupby, filter, aggregate etc. As of now only support for groupby exists.For example '\$apply=groupby((templateName))' would get all templates grouped by templateName. 
+* `apply`: -(Optional) A URL query parameter that allows clients to specify a sequence of transformations to the entity set, such as groupby, filter, aggregate etc. As of now only support for groupby exists.For example '\$apply=groupby((templateName))' would get all templates grouped by templateName.
    The apply can be applied on the following fields:
    - config/buildInfo/version
    - nodes/numberOfNodes
@@ -59,8 +68,8 @@ The following arguments are supported:
    The `expand` can be applied on the following fields:
    - clusterProfile
    - storageSummary
-* `select`: -(Optional) A URL query parameter that allows clients to request a specific set of properties for each entity or complex type. Expression specified with the \$select must conform to the OData V4.01 URL conventions. If a \$select expression consists of a single select item that is an asterisk (i.e., *), then all properties on the matching resource will be returned. 
-   The select  can be applied to the following fields: 
+* `select`: -(Optional) A URL query parameter that allows clients to request a specific set of properties for each entity or complex type. Expression specified with the \$select must conform to the OData V4.01 URL conventions. If a \$select expression consists of a single select item that is an asterisk (i.e., *), then all properties on the matching resource will be returned.
+   The select  can be applied to the following fields:
     - backupEligibilityScore
     - inefficientVmCount
     - name
@@ -72,6 +81,11 @@ The following arguments are supported:
 ## Attribute Reference
 
 The following attributes are exported:
+
+* `cluster_entities`: - List of cluster entities.
+
+### Cluster Entities
+The `cluster_entities` contains list of cluster entities. Each cluster entity supports the following:
 
 * `tenant_id`: -  globally unique identifier that represents the tenant that owns this entity. The system automatically assigns it, and it and is immutable from an API consumer perspective (some use cases may cause this Id to change - For instance, a use case may require the transfer of ownership of the entity, but these cases are handled automatically on the server).
 * `ext_id`: -  A globally unique identifier of an instance that is suitable for external consumption.
@@ -124,7 +138,7 @@ The `config` attributes supports the following:
     - "ESX".
     - "HYPERV".
     - "XEN".
-    - "NATIVEHOST".  
+    - "NATIVEHOST".
 * `cluster_function`: - Cluster function. This is part of payload for cluster
   create operation only (allowed enum values for creation are AOS, ONE_NODE & TWO_NODE only).
   Valid values are:
@@ -340,7 +354,7 @@ The `https_proxy_white_list` attribute supports the following:
 ### Ip Address Attributes
 The `nodes.host_ip`, `nodes.controller_vm_ip`, `network.external_address`,
 `network.external_data_services_ip`, `network.smtp_server.server.ip_address`,
-`network.management_server.ip` 
+`network.management_server.ip`
 
 * `ipv4`: - An unique address that identifies a device on the internet or a local network in IPv4 format.
 * `ipv6`: - An unique address that identifies a device on the internet or a local network in IPv6 format.
@@ -358,4 +372,4 @@ The `fqdn` attribute supports the following:
 
 * `value`: - The fully qualified domain name of the host.
 
-See detailed information in [Nutanix Cluster V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0).
+See detailed information in [Nutanix List Clusters V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0#tag/Clusters/operation/listClusters).

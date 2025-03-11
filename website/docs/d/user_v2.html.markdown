@@ -13,8 +13,8 @@ Provides a datasource to View a User.
 ## Example Usage
 
 ``` hcl
-data "nutanix_user_v2" "user"{
-    ext_id = "<user ext Id>"
+data "nutanix_user_v2" "get-user"{
+  ext_id = "d3a3232a-9055-4740-b54f-b21a33524565"
 }
 ```
 
