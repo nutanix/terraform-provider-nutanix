@@ -111,7 +111,6 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return &Client{
 		WaitTimeout:         c.WaitTimeout,
 		API:                 v3Client,

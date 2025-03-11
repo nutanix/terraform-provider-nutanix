@@ -13,7 +13,6 @@ import (
 var TestAccProviders map[string]*schema.Provider
 
 var TestAccProvider *schema.Provider
-var TestAccProvider2 *schema.Provider
 
 func init() {
 	TestAccProvider = provider.Provider()
