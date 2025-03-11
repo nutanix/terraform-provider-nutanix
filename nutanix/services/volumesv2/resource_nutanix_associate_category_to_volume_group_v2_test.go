@@ -18,7 +18,7 @@ func TestAccV2NutanixAssociateCategoryToVolumeGroupResource_Basic(t *testing.T) 
 
 	dataSourceAssociatedCategory := "data.nutanix_category_v2.associated_vg"
 
-  resource.Test(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testAccCheckNutanixVolumeGroupV2Destroy,
@@ -37,7 +37,6 @@ func TestAccV2NutanixAssociateCategoryToVolumeGroupResource_Basic(t *testing.T) 
 		},
 	})
 }
-
 
 func testAccAssociateCategoryToVolumeGroupResourceConfig(name, desc string) string {
 	return fmt.Sprintf(`
