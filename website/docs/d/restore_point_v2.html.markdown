@@ -14,78 +14,17 @@ Retrieves detailed information about a specific recovery point and provides esse
 
 ```hcl
 provider "nutanix" {
-  username = var.username
-  password = var.password
-  endpoint = var.pc_endpoint
-  insecure = true
-  port     = var.port
-}
-
-provider "nutanix" {
   alias    = "pe"
-  username = var.username
-  password = var.password
-  endpoint = var.pe_endpoint
+  username = var.nutanix_pe_username
+  password = var.nutanix_pe_password
+  endpoint = var.nutanix_pe_endpoint
+  port     = 9440
   insecure = true
-  port     = var.port
 }
 
-data "nutanix_clusters_v2" "clusters" {}
-
-locals {
-  domainManagerExtID = [
-    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-    cluster.ext_id if cluster.config[0].cluster_function[0] == "PRISM_CENTRAL"
-  ][
-  0
-  ]
-  clusterExtID       = [
-    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-  ][
-  0
-  ]
-}
-
-resource "nutanix_backup_target_v2" "cluster-location"{
-  domain_manager_ext_id = local.domainManagerExtID
-  location {
-    cluster_location {
-      config {
-        ext_id = local.clusterExtID
-      }
-    }
-  }
-}
-
-// using cluster location
-resource "nutanix_restore_source_v2" "example-1"{
+# this is PE based module, so use PE provider alias
+data "nutanix_restore_point_v2" "get_restore_point" {
   provider = nutanix.pe
-  location {
-    cluster_location {
-      config {
-        ext_id = local.clusterExtID
-      }
-    }
-  }
-}
-
-# wait some time until the restore point is created
-# keep reading the backup target until the last_sync_time is updated
-data "nutanix_backup_target_v2" "targets" {
-  domain_manager_ext_id = local.domainManagerExtId
-  ext_id = nutanix_backup_target_v2.cluster-location.id
-}
-
-# after the restore point is created, you can list restore points and get restore point details
-data "nutanix_restore_points_v2" "test" {
-  provider = nutanix-2
-  restorable_domain_manager_ext_id = data.nutanix_restorable_pcs_v2.test.restorable_pcs.0.ext_id
-  restore_source_ext_id = nutanix_restore_source_v2.cluster-location.id
-}
-
-data "nutanix_restore_point_v2" "test" {
-  provider = nutanix-2
   restorable_domain_manager_ext_id = data.nutanix_restorable_pcs_v2.test.restorable_pcs.0.ext_id
   restore_source_ext_id = nutanix_restore_source_v2.cluster-location.id
   ext_id = data.nutanix_restore_points_v2.test.restore_points.0.ext_id
@@ -243,4 +182,4 @@ The `fqdn` argument supports the following:
 
 * `value`: - The fully qualified domain name of the host.
 
-See detailed information in [Nutanix Restore Point V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/getRestorePointById).
+See detailed information in [Nutanix Get Restore Point V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/getRestorePointById).

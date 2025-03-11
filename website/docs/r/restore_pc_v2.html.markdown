@@ -19,7 +19,7 @@ The restore domain manager is a task-driven operation to restore a domain manage
 
 # define another alias for the provider,  PE
 provider "nutanix" {
-  alias    = "remote"
+  alias    = "pe"
   username = var.nutanix_remote_username
   password = var.nutanix_remote_password
   endpoint = var.nutanix_remote_endpoint # PE endpoint
@@ -84,6 +84,7 @@ locals {
 # you can get these values from the data source nutanix_pc_v2, this data source is on PC provider
 resource "nutanix_restore_pc_v2" "test" {
   provider = nutanix.remote
+  # we need to increase the timeout for restoring the PC, because the restore pc takes longer than the default timeout allows for the operation to complete
   timeouts {
     create = "120m"
   }
@@ -326,4 +327,4 @@ The `fqdn` argument supports the following:
 
 
 
-See detailed information in [Nutanix Restore PC V4 Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/restore).
+See detailed information in [Nutanix Restore PC V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/restore).

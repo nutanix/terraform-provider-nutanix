@@ -7,7 +7,7 @@ description: |-
 
 ---
 
-# nutanix_backup_target_v2 
+# nutanix_backup_target_v2
 
 Create a cluster or object store as the backup target. For a given Prism Central, there can be up to 3 clusters as backup targets and 1 object store as backup target. If any cluster or object store is not eligible for backup or lacks appropriate permissions, the API request will fail. For object store backup targets, specifying backup policy is mandatory along with the location of the object store.
 
@@ -15,29 +15,13 @@ Create a cluster or object store as the backup target. For a given Prism Central
 ## Example Usage - Cluster Location
 
 ```hcl
-data "nutanix_clusters_v2" "clusters" {}
-
-locals {
-  domainManagerExtID = [
-    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-    cluster.ext_id if cluster.config[0].cluster_function[0] == "PRISM_CENTRAL"
-  ][
-  0
-  ]
-  clusterExtID       = [
-    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-  ][
-  0
-  ]
-}
 
 resource "nutanix_backup_target_v2" "cluster-location"{
-  domain_manager_ext_id = local.domainManagerExtID
+  domain_manager_ext_id = "75dde184-3a0e-4f59-a185-03ca1efead17"
   location {
     cluster_location {
       config {
-        ext_id = local.clusterExtID
+        ext_id = "323860ca-bd10-411e-9fe0-1430b62eaf45"
       }
     }
   }
@@ -49,7 +33,7 @@ resource "nutanix_backup_target_v2" "cluster-location"{
 
 ```hcl
 
-//using object store location 
+//using object store location
 resource "nutanix_backup_target_v2" "object-store-location"{
   domain_manager_ext_id = "75dde184-3a0e-4f59-a185-03ca1efead17"
   location {
@@ -84,7 +68,7 @@ The following arguments are supported:
 
 ### Location
 The location argument supports the following:
-> one of the following is required: 
+> one of the following is required:
 * `cluster_location`: -(Optional) A boolean value indicating whether to enable lockdown mode for a cluster.
 * `object_store_location`: -(Optional) Currently representing the build information to be used for the cluster creation.
 
@@ -124,4 +108,4 @@ The `backup_policy` argument supports the following:
 
 
 
-See detailed information in [Nutanix Backup Target V4 Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/createBackupTarget).
+See detailed information in [Nutanix Create Backup Target V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/createBackupTarget).

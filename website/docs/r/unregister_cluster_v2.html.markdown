@@ -8,9 +8,9 @@ description: |-
 
 ---
 
-# nutanix_unregister_cluster_v2 
+# nutanix_unregister_cluster_v2
 
-Unregister a registered remote cluster from the local cluster. This process is asynchronous, creating an unregisteration task and returning its UUID.
+Unregister a registered remote cluster from the local cluster. This process is asynchronous, creating an un-registration task and returning its UUID.
 
 
 ## Example Usage
@@ -31,4 +31,4 @@ The following arguments are supported:
 * `pc_ext_id`: -(Required) The external identifier of the domain manager (Prism Central) resource
 * `ext_id`: -(Required) Cluster UUID of a remote cluster.
 
-See detailed information in [Nutanix Unregister a Remote Cluster from Local Cluster V4 Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/unregister).
+See detailed information in [Nutanix Unregister a Remote Cluster from Local Cluster V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/unregister).

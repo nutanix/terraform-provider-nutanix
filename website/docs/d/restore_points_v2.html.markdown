@@ -1,25 +1,21 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_restore_point_v2"
-sidebar_current: "docs-nutanix-restore-point-v2"
+page_title: "NUTANIX: nutanix_restore_points_v2"
+sidebar_current: "docs-nutanix-restore-points-v2"
 description: |-
   Provides a datasource to Retrieves detailed information about a specific recovery point and provides essential domain manager information stored in the backup, which is required for the restoration process.
 ---
 
-# nutanix_restore_point_v2
+# nutanix_restore_points_v2
 
-Retrieves detailed information about a specific recovery point and provides essential domain manager information stored in the backup, which is required for the restoration process.
+The list restore points API allows you to retrieve a list of available restore points, which are snapshots of the domain manager taken at different times. These restore points can be used to revert the domain manager to a previous state. The list response includes the creation time and identifier ID for the configuration data.
+
+  - For cluster-based backups, only the most recent restore point is available, as backups are continuous.
+  - For object store-based backups, multiple restore points may be available, depending on the configured Recovery Point Objective (RPO) and the retention period set on the s3 bucket.
 
 ## Example Usage
 
 ```hcl
-provider "nutanix" {
-  username = var.username
-  password = var.password
-  endpoint = var.pc_endpoint
-  insecure = true
-  port     = var.port
-}
 
 provider "nutanix" {
   alias    = "pe"
@@ -30,59 +26,21 @@ provider "nutanix" {
   port     = var.port
 }
 
-data "nutanix_clusters_v2" "clusters" {}
-
-locals {
-  domainManagerExtID = [
-    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-    cluster.ext_id if cluster.config[0].cluster_function[0] == "PRISM_CENTRAL"
-  ][
-  0
-  ]
-  clusterExtID       = [
-    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-  ][
-  0
-  ]
-}
-
-resource "nutanix_backup_target_v2" "cluster-location"{
-  domain_manager_ext_id = local.domainManagerExtID
-  location {
-    cluster_location {
-      config {
-        ext_id = local.clusterExtID
-      }
-    }
-  }
-}
-
-// using cluster location
-resource "nutanix_restore_source_v2" "example-1"{
+# This pe based module, so use pe provider alias
+data "nutanix_restore_points_v2" "restore_points" {
   provider = nutanix.pe
-  location {
-    cluster_location {
-      config {
-        ext_id = local.clusterExtID
-      }
-    }
-  }
+  restorable_domain_manager_ext_id = "1cf35cfe-a341-4f27-8e31-2f51b79302c4"
+  restore_source_ext_id = "ec77405b-16c5-4c8d-ade1-bede241afae0"
 }
 
-# wait some time until the restore point is created
-# keep reading the backup target until the last_sync_time is updated
-data "nutanix_backup_target_v2" "targets" {
-  domain_manager_ext_id = local.domainManagerExtId
-  ext_id = nutanix_backup_target_v2.cluster-location.id
+# list all the restorable pcs with select properties
+data "nutanix_restore_points_v2" "restore_points_select" {
+  provider = nutanix.pe
+  restorable_domain_manager_ext_id = "1cf35cfe-a341-4f27-8e31-2f51b79302c4"
+  restore_source_ext_id = "ec77405b-16c5-4c8d-ade1-bede241afae0"
+  select = "creationTime,domainManager,extId"
 }
 
-# after the restore point is created, you can list restore points and get restore point details
-data "nutanix_restore_points_v2" "test" {
-  provider = nutanix-2
-  restorable_domain_manager_ext_id = data.nutanix_restorable_pcs_v2.test.restorable_pcs.0.ext_id
-  restore_source_ext_id = nutanix_restore_source_v2.cluster-location.id
-}
 
 ```
 
@@ -255,4 +213,4 @@ The `fqdn` argument supports the following:
 
 * `value`: - The fully qualified domain name of the host.
 
-See detailed information in [Nutanix Restore Points V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/listRestorePoints).
+See detailed information in [Nutanix List Restore Points V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/listRestorePoints).

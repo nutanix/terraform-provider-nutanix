@@ -3,40 +3,22 @@ layout: "nutanix"
 page_title: "NUTANIX: nutanix_restorable_pcs_v2 "
 sidebar_current: "docs-nutanix-restorable-pcs-v2"
 description: |-
-  Returns a list of domain managers backed up at the object store/cluster.
+  Returns a list of PCs (domain managers) backed up at the object store/cluster.
 
 
 ---
 
-# nutanix_restorable_pcs_v2 
+# nutanix_restorable_pcs_v2
 
-Lists all the domain managers backed up at the object store/cluster.
+Lists all the PCs (domain managers) backed up at the object store/cluster.
 
 
 ## Example Usage
 
 ```hcl
-terraform {
-  required_providers {
-    nutanix = {
-      source  = "nutanix/nutanix"
-      version = "2.1.0"
-    }
-  }
-}
-
-#defining nutanix configuration for PC
+#defining nutanix configuration for PE
 provider "nutanix" {
-  username = var.nutanix_username
-  password = var.nutanix_password
-  endpoint = var.nutanix_pc_endpoint
-  port     = 9440
-  insecure = true
-}
-
-#defining nutanix configuration for PE 
-provider "nutanix" {
-  alise    = "nutanix-pe"
+  alias    = "pe"
   username = var.nutanix_username
   password = var.nutanix_password
   endpoint = var.nutanix_pe_endpoint
@@ -44,49 +26,17 @@ provider "nutanix" {
   insecure = true
 }
 
-data "nutanix_clusters_v2" "clusters" {}
-
-locals {
-  domainManagerExtID = [
-    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-    cluster.ext_id if cluster.config[0].cluster_function[0] == "PRISM_CENTRAL"
-  ][
-  0
-  ]
-  clusterExtID       = [
-    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-  ][
-  0
-  ]
+# list all the restorable pcs
+data "nutanix_restorable_pcs_v2" "restorable_pcs"{
+  provider = nutanix.pe # this is PE based module, so use PE provider alias
+  restore_source_ext_id = "53bf9241-f226-4023-ad56-1db34e869c3d"
 }
 
-resource "nutanix_backup_target_v2" "cluster-location"{
-  domain_manager_ext_id = local.domainManagerExtID
-  location {
-    cluster_location {
-      config {
-        ext_id = local.clusterExtID
-      }
-    }
-  }
-}
-
-resource "nutanix_restore_source_v2" "cluster-location"{
-  provider = nutanix.pe
-  location {
-    cluster_location {
-      config {
-        ext_id = local.clusterExtID
-      }
-    }
-  }
-  depends_on = [nutanix_backup_target_v2.cluster-location]
-}
-
-data "nutanix_restorable_pcs_v2" "restorable_pcs"{ 
-  provider = nutanix.pe
-  restore_source_ext_id = nutanix_restore_source_v2.cluster-location.ext_id
+# list all the restorable pcs with specific properties
+data "nutanix_restorable_pcs_v2" "restorable_pcs"{
+  provider = nutanix.pe # this is PE based module, so use PE provider alias
+  restore_source_ext_id = "53bf9241-f226-4023-ad56-1db34e869c3d"
+  select = "config"
 }
 ```
 
@@ -144,11 +94,11 @@ The `bootstrap_config` argument supports the following:
 The `environment_info` argument supports the following:
 
 * `type`: - Enums denoting the environment type of the PC, that is, on-prem PC or cloud PC.
-  Following are the supported entity types: 
+  Following are the supported entity types:
   * `ONPREM` : On-prem environment.
   * `NTNX_CLOUD` : Nutanix cloud environment.
 * `provider_type`: - Enums denoting the provider type of the PC, that is, AHV or ESXi.
-  Following are the supported provider types: 
+  Following are the supported provider types:
   * `VSPHERE` : Vsphere cloud provider.
   * `AZURE` : Azure cloud provider.
   * `NTNX` : Nutanix cloud provider.
@@ -196,7 +146,7 @@ The `external_networks` argument supports the following:
 * `ip_ranges`: - Range of IPs used for Prism Central network setup.
 * `network_ext_id`: - The network external identifier to which Domain Manager (Prism Central) is to be deployed or is already configured.
 
-#### Default Gateway, Subnet Mask 
+#### Default Gateway, Subnet Mask
 The `default_gateway`and `subnet_mask` arguments support the following:
 
 * `ipv4`: - An unique address that identifies a device on the internet or a local network in IPv4 format.
@@ -226,4 +176,4 @@ The `fqdn` argument supports the following:
 
 * `value`: - The fully qualified domain name of the host.
 
-See detailed information in [Nutanix List PCs V4 Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/listDomainManagers).
+See detailed information in [Nutanix List Restorable PCs V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/listRestorableDomainManagers).

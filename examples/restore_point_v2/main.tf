@@ -18,7 +18,7 @@ provider "nutanix" {
 
 #defining nutanix configuration for PE
 provider "nutanix" {
-  alise    = "nutanix-pe"
+  alias = "pe"
   username = var.nutanix_username
   password = var.nutanix_password
   endpoint = var.nutanix_pe_endpoint
@@ -57,7 +57,7 @@ resource "nutanix_backup_target_v2" "cluster-location"{
 }
 
 // using cluster location
-resource "nutanix_restore_source_v2" "example-1"{
+resource "nutanix_restore_source_v2" "cluster-location" {
   provider = nutanix.pe
   location {
     cluster_location {
@@ -77,14 +77,14 @@ data "nutanix_backup_target_v2" "targets" {
 
 # after the restore point is created, you can list restore points
 data "nutanix_restore_points_v2" "test" {
-  provider = nutanix-2
+  provider = nutanix.pe
   restorable_domain_manager_ext_id = data.nutanix_restorable_pcs_v2.test.restorable_pcs.0.ext_id
   restore_source_ext_id = nutanix_restore_source_v2.cluster-location.id
 }
 
 # get restore point details
 data "nutanix_restore_point_v2" "test" {
-  provider = nutanix-2
+  provider = nutanix.pe
   restorable_domain_manager_ext_id = data.nutanix_restorable_pcs_v2.test.restorable_pcs.0.ext_id
   restore_source_ext_id = nutanix_restore_source_v2.cluster-location.id
   ext_id = data.nutanix_restore_points_v2.test.restore_points.0.ext_id

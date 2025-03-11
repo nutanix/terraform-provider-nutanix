@@ -16,14 +16,6 @@ Create a restore source pointing to a cluster or object store to restore the dom
 ## Example Usage - Cluster Location
 
 ```hcl
-provider "nutanix" {
-  username = var.username
-  password = var.password
-  endpoint = var.pc_endpoint
-  insecure = true
-  port     = var.port
-}
-
 #defining nutanix configuration for PE
 provider "nutanix" {
   alias    = "pe"
@@ -34,34 +26,6 @@ provider "nutanix" {
   port     = 9440
 }
 
-data "nutanix_clusters_v2" "clusters" {}
-
-locals {
-  domainManagerExtID = [
-    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-    cluster.ext_id if cluster.config[0].cluster_function[0] == "PRISM_CENTRAL"
-  ][
-  0
-  ]
-  clusterExtID = [
-    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-  ][
-  0
-  ]
-}
-
-resource "nutanix_backup_target_v2" "cluster-location" {
-  domain_manager_ext_id = local.domainManagerExtID
-  location {
-    cluster_location {
-      config {
-        ext_id = local.clusterExtID
-      }
-    }
-  }
-}
-
 # restore source is auto-deleted after sometime, nutanix_restore_source_v2 resource is auto-create
 # new restore source if it was deleted, so notice that the id of the restore source will be different
 # after recreation
@@ -70,11 +34,10 @@ resource "nutanix_restore_source_v2" "cluster-location" {
   location {
     cluster_location {
       config {
-        ext_id = local.clusterExtID
+        ext_id = "323860ca-bd10-411e-9fe0-1430b62eaf45"
       }
     }
   }
-  depends_on = [nutanix_backup_target_v2.cluster-location]
 }
 
 ```
@@ -156,4 +119,4 @@ The `backup_policy` argument supports the following:
 
 
 
-See detailed information in [Nutanix Restore Source V4 Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/createRestoreSource).
+See detailed information in [Nutanix Restore Source V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/createRestoreSource).

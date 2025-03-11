@@ -8,20 +8,13 @@ description: |-
 
 ---
 
-# nutanix_pc_v2 
+# nutanix_pc_v2
 
 Fetches the attributes associated with the domain manager (Prism Central) resource based on the provided external identifier. It includes attributes like config, network, node and other information such as size, environment and resource specifications.
 
 ## Example Usage
 
 ```hcl
-// list all PC (Domain Managers)
-data "nutanix_pcs_v2" "example" {}
-
-// Fetch a single PC (Domain Manager) from the list
-data "nutanix_pc_v2" "example-1" {
-  ext_id = data.nutanix_pcs_v2.test.pcs.0.ext_id
-}
 
 // Fetch a single PC (Domain Manager) by its external ID
 data "nutanix_pc_v2" "example-2" {
@@ -75,11 +68,11 @@ The `bootstrap_config` argument supports the following:
 The `environment_info` argument supports the following:
 
 * `type`: - Enums denoting the environment type of the PC, that is, on-prem PC or cloud PC.
-  Following are the supported entity types: 
+  Following are the supported entity types:
   * `ONPREM` : On-prem environment.
   * `NTNX_CLOUD` : Nutanix cloud environment.
 * `provider_type`: - Enums denoting the provider type of the PC, that is, AHV or ESXi.
-  Following are the supported provider types: 
+  Following are the supported provider types:
   * `VSPHERE` : Vsphere cloud provider.
   * `AZURE` : Azure cloud provider.
   * `NTNX` : Nutanix cloud provider.
@@ -127,7 +120,7 @@ The `external_networks` argument supports the following:
 * `ip_ranges`: - Range of IPs used for Prism Central network setup.
 * `network_ext_id`: - The network external identifier to which Domain Manager (Prism Central) is to be deployed or is already configured.
 
-#### Default Gateway, Subnet Mask 
+#### Default Gateway, Subnet Mask
 The `default_gateway`and `subnet_mask` arguments support the following:
 
 * `ipv4`: - An unique address that identifies a device on the internet or a local network in IPv4 format.
@@ -157,4 +150,4 @@ The `fqdn` argument supports the following:
 
 * `value`: - The fully qualified domain name of the host.
 
-See detailed information in [Nutanix Get PC Details V4 Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/getDomainManagerById).
+See detailed information in [Nutanix Get PC Details V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/getDomainManagerById).

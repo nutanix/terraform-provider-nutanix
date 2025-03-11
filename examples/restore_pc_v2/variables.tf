@@ -26,15 +26,17 @@ variable "pe_username" {
 variable "pe_password" {
   type = string
 }
-
+variable "ssh_pc_password" {
+  type = string
+}
 variable "cvm_ip" {
   type = string
 }
 
-variable "new_username" {
+variable "pc_username" {
   type = string
 }
 
-variable "new_password" {
+variable "pc_password" {
   type = string
 }

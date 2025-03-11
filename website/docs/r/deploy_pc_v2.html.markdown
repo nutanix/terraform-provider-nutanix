@@ -10,7 +10,7 @@ description: |-
 
 ---
 
-# nutanix_deploy_pc_v2 
+# nutanix_deploy_pc_v2
 
 Deploys a Prism Central using the provided details. Prism Central Size, Network Config are mandatory fields to deploy Prism Central. The response from this endpoint contains the URL in the task object location header that can be used to track the request status.
 
@@ -19,12 +19,13 @@ Deploys a Prism Central using the provided details. Prism Central Size, Network 
 ```hcl
 
 resource "nutanix_deploy_pc_v2" "example"{
+  # we need to increase the timeout for deploying the PC resource because the deployment takes longer than the default timeout allows for the operation to complete.
   timeouts {
     create = "120m"
   }
   config {
     build_info {
-      version = local.deploy_pc.version
+      version = "pc.2024.3"
     }
     size = "STARTER"
     name = "PC_EXAMPLE"
@@ -114,7 +115,7 @@ The `bootstrap_config` argument supports the following:
 * `environment_info`: -(Optional) Environment information for the domain manager (Prism Central) cluster.
 
 ##### Cloud Init Config
-The `cloud_init_config` argument supports the following: 
+The `cloud_init_config` argument supports the following:
 
 * `datasource_type`: -(Optional) Type of datasource. Default: CONFIG_DRIVE_V2
 * `metadata`: -(Optional)The contents of the meta_data configuration for cloud-init. This can be formatted as YAML or JSON. The value must be base64 encoded. Default value is 'CONFIG_DRIVE_V2'.
@@ -126,11 +127,11 @@ The `cloud_init_config` argument supports the following:
 The `environment_info` argument supports the following:
 
 * `type`: -(Optional) Enums denoting the environment type of the PC, that is, on-prem PC or cloud PC.
-  Following are the supported entity types: 
+  Following are the supported entity types:
   * `ONPREM` : On-prem environment.
   * `NTNX_CLOUD` : Nutanix cloud environment.
 * `provider_type`: -(Optional) Enums denoting the provider type of the PC, that is, AHV or ESXi.
-  Following are the supported provider types: 
+  Following are the supported provider types:
   * `VSPHERE` : Vsphere cloud provider.
   * `AZURE` : Azure cloud provider.
   * `NTNX` : Nutanix cloud provider.
@@ -187,7 +188,7 @@ The `external_networks` argument supports the following:
 * `ip_ranges`: -(Required) Range of IPs used for Prism Central network setup.
 * `network_ext_id`: -(Required) The network external identifier to which Domain Manager (Prism Central) is to be deployed or is already configured.
 
-#### Default Gateway, Subnet Mask 
+#### Default Gateway, Subnet Mask
 The `default_gateway`and `subnet_mask` arguments support the following:
 
 * `ipv4`: -(Optional) An unique address that identifies a device on the internet or a local network in IPv4 format.
@@ -218,4 +219,4 @@ The `fqdn` argument supports the following:
 
 * `value`: -(Optional) The fully qualified domain name of the host.
 
-See detailed information in [Nutanix Deploy PC V4 Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/createDomainManager).
+See detailed information in [Nutanix Deploy PC V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/createDomainManager).

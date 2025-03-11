@@ -7,7 +7,7 @@ terraform {
   }
 }
 
-#defining nutanix configuration
+#defining nutanix configuration for PE
 provider "nutanix" {
   username = var.nutanix_username
   password = var.nutanix_password
@@ -17,7 +17,7 @@ provider "nutanix" {
 }
 
 
-// deploy pc
+// deploy pc, this is PE resource, make sure you configure the provider with PE endpoint and credentials
 resource "nutanix_deploy_pc_v2" "example"{
   timeouts {
     create = "120m"

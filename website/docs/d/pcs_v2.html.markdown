@@ -8,14 +8,20 @@ description: |-
 
 ---
 
-# nutanix_pcs_v2 
+# nutanix_pcs_v2
 
 Returns a list of elements representing the domain manager (Prism Central) instance.
 
 ## Example Usage
 
 ```hcl
+# Fetch all PCs (Domain Managers)
 data "nutanix_pcs_v2" "pcs"{}
+
+# List all PCs (Domain Managers) with selected properties
+data "nutanix_pcs_v2" "pcs-select"{
+  select = "config,extId" # we can select multiple/individual property ex: select = "config"
+}
 ```
 
 ## Argument Reference
@@ -72,11 +78,11 @@ The `bootstrap_config` argument supports the following:
 The `environment_info` argument supports the following:
 
 * `type`: - Enums denoting the environment type of the PC, that is, on-prem PC or cloud PC.
-  Following are the supported entity types: 
+  Following are the supported entity types:
   * `ONPREM` : On-prem environment.
   * `NTNX_CLOUD` : Nutanix cloud environment.
 * `provider_type`: - Enums denoting the provider type of the PC, that is, AHV or ESXi.
-  Following are the supported provider types: 
+  Following are the supported provider types:
   * `VSPHERE` : Vsphere cloud provider.
   * `AZURE` : Azure cloud provider.
   * `NTNX` : Nutanix cloud provider.
@@ -124,7 +130,7 @@ The `external_networks` argument supports the following:
 * `ip_ranges`: - Range of IPs used for Prism Central network setup.
 * `network_ext_id`: - The network external identifier to which Domain Manager (Prism Central) is to be deployed or is already configured.
 
-#### Default Gateway, Subnet Mask 
+#### Default Gateway, Subnet Mask
 The `default_gateway`and `subnet_mask` arguments support the following:
 
 * `ipv4`: - An unique address that identifies a device on the internet or a local network in IPv4 format.
@@ -154,4 +160,4 @@ The `fqdn` argument supports the following:
 
 * `value`: - The fully qualified domain name of the host.
 
-See detailed information in [Nutanix List PCs V4 Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/listDomainManagers).
+See detailed information in [Nutanix List PCs V4](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/listDomainManagers).

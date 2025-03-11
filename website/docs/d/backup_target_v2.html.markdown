@@ -7,7 +7,7 @@ description: |-
 
 ---
 
-# nutanix_backup_target_v2 
+# nutanix_backup_target_v2
 
 Retrieves the backup targets (cluster or object store) from a domain manager and returns the backup configuration and lastSyncTimestamp parameter to the user.
 
@@ -84,4 +84,4 @@ The `backup_policy` argument exports the following:
 
 
 
-See detailed information in [Nutanix Backup Target V4 Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/getBackupTargetById).
+See detailed information in [Nutanix Get Backup Target V4 ](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/getBackupTargetById).

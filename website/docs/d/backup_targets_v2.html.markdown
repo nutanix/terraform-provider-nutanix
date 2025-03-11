@@ -7,7 +7,7 @@ description: |-
 
 ---
 
-# nutanix_backup_targets_v2 
+# nutanix_backup_targets_v2
 
 Lists backup targets (cluster or object store) configured for a given domain manager.
 
@@ -88,4 +88,4 @@ The `backup_policy` argument exports the following:
 
 
 
-See detailed information in [Nutanix Backup Target Docs](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/getBackupTargetById).
+See detailed information in [Nutanix List Backup Targets ](https://developers.nutanix.com/api-reference?namespace=prism&version=v4.0#tag/DomainManager/operation/listBackupTargets).
