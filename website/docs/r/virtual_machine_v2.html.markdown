@@ -75,7 +75,7 @@ resource "nutanix_virtual_machine_v2" "vm-3"{
             nic_type = "NORMAL_NIC"
             subnet{
                 ext_id = "{{ subnet ext id}}"
-            }	
+            }
             vlan_mode = "ACCESS"
         }
     }
@@ -96,7 +96,7 @@ The following arguments are supported:
 * `memory_size_bytes`: (Required) Memory size in bytes.
 * `is_vcpu_hard_pinning_enabled`: (Optional) Indicates whether the vCPUs should be hard pinned to specific pCPUs or not.
 * `is_cpu_passthrough_enabled`: (Optional) Indicates whether to passthrough the host CPU features to the guest or not. Enabling this will make VM incapable of live migration.
-* `enabled_cpu_features`: (Optional) The list of additional CPU features to be enabled. HardwareVirtualization: Indicates whether hardware assisted virtualization should be enabled for the Guest OS or not. Once enabled, the Guest OS can deploy a nested hypervisor. Valid values are "HARDWARE_VIRTUALIZATION". 
+* `enabled_cpu_features`: (Optional) The list of additional CPU features to be enabled. HardwareVirtualization: Indicates whether hardware assisted virtualization should be enabled for the Guest OS or not. Once enabled, the Guest OS can deploy a nested hypervisor. Valid values are "HARDWARE_VIRTUALIZATION".
 * `is_memory_overcommit_enabled`: (Optional) Indicates whether the memory overcommit feature should be enabled for the VM or not. If enabled, parts of the VM memory may reside outside of the hypervisor physical memory. Once enabled, it should be expected that the VM may suffer performance degradation.
 * `is_gpu_console_enabled`: (Optional) Indicates whether the vGPU console is enabled or not.
 * `is_cpu_hotplug_enabled`: (Optional) Indicates whether the VM CPU hotplug is enabled.
@@ -113,7 +113,7 @@ The following arguments are supported:
 * `is_branding_enabled`: (Optional) Indicates whether to remove AHV branding from VM firmware tables or not.
 * `boot_config`: (Optional) Indicates the order of device types in which the VM should try to boot from. If the boot device order is not provided the system will decide an appropriate boot device order.
 * `is_vga_console_enabled`: (Optional) Indicates whether the VGA console should be disabled or not.
-* `machine_type`: (Optional) Machine type for the VM. Machine type Q35 is required for secure boot and does not support IDE disks. Valid values are "PSERIES", "Q35", "PC" . 
+* `machine_type`: (Optional) Machine type for the VM. Machine type Q35 is required for secure boot and does not support IDE disks. Valid values are "PSERIES", "Q35", "PC" .
 * `vtpm_config`: (Optional) Indicates how the vTPM for the VM should be configured.
 * `is_agent_vm`: (Optional) Indicates whether the VM is an agent VM or not. When their host enters maintenance mode, once the normal VMs are evacuated, the agent VMs are powered off. When the host is restored, agent VMs are powered on before the normal VMs are restored. In other words, agent VMs cannot be HA-protected or live migrated.
 * `apc_config`: (Optional) Advanced Processor Compatibility configuration for the VM. Enabling this retains the CPU model for the VM across power cycles and migrations.
@@ -123,7 +123,7 @@ The following arguments are supported:
 * `nics`: (Optional) NICs attached to the VM.
 * `gpus`: (Optional) GPUs attached to the VM.
 * `serial_ports`: (Optional) Serial ports configured on the VM.
-* `protection_type`: (Optional) The type of protection applied on a VM. Valid values "PD_PROTECTED", "UNPROTECTED", "RULE_PROTECTED". 
+* `protection_type`: (Optional) The type of protection applied on a VM. Valid values "PD_PROTECTED", "UNPROTECTED", "RULE_PROTECTED".
 
 ### guest_customization
 * `config`: (Required) The Nutanix Guest Tools customization settings.
@@ -142,7 +142,7 @@ The following arguments are supported:
 
 ### config.cloud_init
 * `datasource_type`: (Optional) Type of datasource. Default: CONFIG_DRIVE_V2
-* `metadata`: The contents of the meta_data configuration for cloud-init. This can be formatted as YAML or JSON. The value must be base64 encoded. Default value is 'CONFIG_DRIVE_V2'. 
+* `metadata`: The contents of the meta_data configuration for cloud-init. This can be formatted as YAML or JSON. The value must be base64 encoded. Default value is 'CONFIG_DRIVE_V2'.
 * `cloud_init_script`: (Optional) The script to use for cloud-init.
 * `cloud_init_script.user_data`: (Optional) user data object
 * `cloud_init_script.custom_keys`: (Optional) The list of the individual KeyValuePair elements.
@@ -164,10 +164,10 @@ The following arguments are supported:
 * `boot_device.boot_device_disk.disk_address.bus_type`: (Required) Bus type for the device
 * `boot_device.boot_device_disk.disk_address.index`: (Required) Device index on the bus. This field is ignored unless the bus details are specified.
 
-* `boot_device.boot_device_nic`: (Optional) Disk Nic address. 
+* `boot_device.boot_device_nic`: (Optional) Disk Nic address.
 * `boot_device.boot_device_nic.mac_address`: (Required) mac address
 
-* `boot_order`: (Optional) Indicates the order of device types in which the VM should try to boot from. If the boot device order is not provided the system will decide an appropriate boot device order. Valid values are 'CDROM', 'DISK', 'NETWORK'. 
+* `boot_order`: (Optional) Indicates the order of device types in which the VM should try to boot from. If the boot device order is not provided the system will decide an appropriate boot device order. Valid values are 'CDROM', 'DISK', 'NETWORK'.
 
 
 ### boot_config.uefi_boot
@@ -228,7 +228,7 @@ The following arguments are supported:
 ### cd_roms
 * `disk_address`: (Optional) Virtual Machine disk (VM disk).
 * `backing_info`: (Optional) Storage provided by Nutanix ADSF
-* `iso_type`: Type of ISO image inserted in CD-ROM. Valid values "OTHER", "GUEST_TOOLS", "GUEST_CUSTOMIZATION" . 
+* `iso_type`: Type of ISO image inserted in CD-ROM. Valid values "OTHER", "GUEST_TOOLS", "GUEST_CUSTOMIZATION" .
 
 
 ### nics
@@ -236,13 +236,13 @@ The following arguments are supported:
 * `network_info`: (Optional) Network information for a NIC.
 
 ### nics.backing_info
-* `model`: (Optional) Options for the NIC emulation. Valid values "VIRTIO" , "E1000". 
+* `model`: (Optional) Options for the NIC emulation. Valid values "VIRTIO" , "E1000".
 * `mac_address`: (Optional) MAC address of the emulated NIC.
 * `is_connected`: (Optional) Indicates whether the NIC is connected or not. Default is True.
-* `num_queues`: (Optional) The number of Tx/Rx queue pairs for this NIC. Default is 1. 
+* `num_queues`: (Optional) The number of Tx/Rx queue pairs for this NIC. Default is 1.
 
 ### nics.network_info
-* `nic_type`: (Optional) NIC type. Valid values "SPAN_DESTINATION_NIC",  "NORMAL_NIC", "DIRECT_NIC", "NETWORK_FUNCTION_NIC" . 
+* `nic_type`: (Optional) NIC type. Valid values "SPAN_DESTINATION_NIC",  "NORMAL_NIC", "DIRECT_NIC", "NETWORK_FUNCTION_NIC" .
 * `network_function_chain`: (Optional) The network function chain associates with the NIC. Only valid if nic_type is NORMAL_NIC.
 * `network_function_nic_type`: (Optional) The type of this Network function NIC. Defaults to INGRESS.
 * `subnet`: (Required) Network identifier for this adapter. Only valid if nic_type is NORMAL_NIC or DIRECT_NIC
@@ -252,9 +252,9 @@ The following arguments are supported:
 * `ipv4_config`: (Optional) The IP address configurations.
 
 ### gpus
-* `mode`: (Required) The mode of this GPU. Valid values "PASSTHROUGH_GRAPHICS", "PASSTHROUGH_COMPUTE", "VIRTUAL" . 
+* `mode`: (Required) The mode of this GPU. Valid values "PASSTHROUGH_GRAPHICS", "PASSTHROUGH_COMPUTE", "VIRTUAL" .
 * `device_id`: (Optional) The device Id of the GPU.
-* `vendor`: (Optional) The vendor of the GPU. Valid values "NVIDIA", "AMD", "INTEL" . 
+* `vendor`: (Optional) The vendor of the GPU. Valid values "NVIDIA", "AMD", "INTEL" .
 * `pci_address`: (Optional) The (S)egment:(B)us:(D)evice.(F)unction hardware address.
 
 ### gpus.pci_address
@@ -313,3 +313,13 @@ The following attributes are exported:
 * `protection_policy_state`: Status of protection policy applied to this VM.
 
 See detailed information in [Nutanix Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).
+
+
+## Import
+Nutanix Virtual machine can be imported using the `UUID` eg,
+
+```
+terraform import nutanix_virtual_machine_v2.imported_vm 32679dc5-1309-4728-b135-402dc5234907
+```
+
+
