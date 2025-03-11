@@ -40,7 +40,7 @@ func ResourceNutanixUnregisterClusterV2Create(ctx context.Context, d *schema.Res
 
 	readClsResp, readErr := conn.DomainManagerAPIInstance.GetDomainManagerById(utils.StringPtr(pcExtID.(string)))
 	if readErr != nil {
-		return diag.Errorf("error while fetching Domain Manager: %v", readErr)
+		return diag.Errorf("error while fetching PC: %v", readErr)
 	}
 
 	args := make(map[string]interface{})
@@ -53,7 +53,7 @@ func ResourceNutanixUnregisterClusterV2Create(ctx context.Context, d *schema.Res
 	}
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
-	log.Printf("[DEBUG] Unregister Cluster Request Body: %s", string(aJSON))
+	log.Printf("[DEBUG] Unregister Cluster Request payload: %s", string(aJSON))
 
 	resp, err := conn.DomainManagerAPIInstance.Unregister(utils.StringPtr(pcExtID.(string)), &body, args)
 
@@ -74,19 +74,19 @@ func ResourceNutanixUnregisterClusterV2Create(ctx context.Context, d *schema.Res
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for Cluster Unregister Task to complete: %s", err)
+		return diag.Errorf("error waiting for cluster unregister task to complete: %s", err)
 	}
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while fetching task details : %v", err)
 	}
 
-	rUUID := resourceUUID.Data.GetValue().(config.Task)
-	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Unregister Cluster Task Details: %s", string(aJSON))
+	taskDetails := taskResp.Data.GetValue().(config.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Unregister Cluster task details: %s", string(aJSON))
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
+	uuid := taskDetails.EntitiesAffected[0].ExtId
 	d.SetId(*uuid)
 
 	return nil

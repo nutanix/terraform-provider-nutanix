@@ -206,12 +206,12 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 	body.Location = OneOfBackupTargetLocation
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
-	log.Printf("[DEBUG] Backup Target Body: %s", string(aJSON))
+	log.Printf("[DEBUG] Payload backup target Body: %s", string(aJSON))
 
 	resp, err := conn.DomainManagerBackupsAPIInstance.CreateBackupTarget(utils.StringPtr(domainManagerExtID), &body)
 
 	if err != nil {
-		return diag.Errorf("error while Creating Backup Target: %s", err)
+		return diag.Errorf("error while creating backup target: %s", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(config.TaskReference)
@@ -227,17 +227,17 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for Backup Target to be created: %s", err)
+		return diag.Errorf("error waiting for backup target to be created: %s", err)
 	}
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Backup Target Task Details: %s", err)
+		return diag.Errorf("error while fetching backup target task details: %s", err)
 	}
 
-	rUUID := resourceUUID.Data.GetValue().(config.Task)
-	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Create Backup Target Task Details: %s", string(aJSON))
+	taskDetails := taskResp.Data.GetValue().(config.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Create backup target task details: %s", string(aJSON))
 
 	listBackupTargets, err := conn.DomainManagerBackupsAPIInstance.ListBackupTargets(utils.StringPtr(domainManagerExtID))
 	if err != nil {
@@ -265,7 +265,7 @@ func ResourceNutanixBackupTargetV2Create(ctx context.Context, d *schema.Resource
 	}
 
 	if d.Id() == "" {
-		return diag.Errorf("error while setting Backup Target ID")
+		return diag.Errorf("error while setting backup target ID")
 	}
 
 	return ResourceNutanixBackupTargetV2Read(ctx, d, meta)
@@ -279,13 +279,10 @@ func ResourceNutanixBackupTargetV2Read(ctx context.Context, d *schema.ResourceDa
 	resp, err := conn.DomainManagerBackupsAPIInstance.GetBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(d.Id()), nil)
 
 	if err != nil {
-		return diag.Errorf("error while fetching Backup Target: %s", err)
+		return diag.Errorf("error while fetching backup target: %s", err)
 	}
 
 	backupTarget := resp.Data.GetValue().(management.BackupTarget)
-
-	aJSON, _ := json.MarshalIndent(backupTarget, "", "  ")
-	log.Printf("[DEBUG] Read Backup Target Details: %s", string(aJSON))
 
 	if err := d.Set("tenant_id", backupTarget.TenantId); err != nil {
 		return diag.Errorf("error setting tenant_id: %s", err)
@@ -318,7 +315,7 @@ func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.Resource
 
 	readResp, err := conn.DomainManagerBackupsAPIInstance.GetBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(d.Id()), nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Backup Target: %s", err)
+		return diag.Errorf("error while fetching backup target: %s", err)
 	}
 
 	// extract the etag from the read response
@@ -366,17 +363,17 @@ func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.Resource
 
 		updateSpec.Location = oneOfBackupTargetLocation
 	} else {
-		log.Printf("[DEBUG] No changes in Backup Target Location")
+		log.Printf("[DEBUG] No changes in backup target Location")
 		return nil
 	}
 
 	aJSON, _ := json.MarshalIndent(updateSpec, "", "  ")
-	log.Printf("[DEBUG] Backup Target Update Body: %s", string(aJSON))
+	log.Printf("[DEBUG] Payload to update backup target: %s", string(aJSON))
 
 	resp, err := conn.DomainManagerBackupsAPIInstance.UpdateBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(d.Id()), &updateSpec, args)
 
 	if err != nil {
-		return diag.Errorf("error while updating Backup Target: %s", err)
+		return diag.Errorf("error while updating backup target: %s", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(config.TaskReference)
@@ -391,18 +388,18 @@ func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.Resource
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for Backup Target to be updated: %s", err)
+		return diag.Errorf("error waiting for backup target to be updated: %s", err)
 	}
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Backup Target Task Details: %s", err)
+		return diag.Errorf("error while fetching backup target Task Details: %s", err)
 	}
 
-	rUUID := resourceUUID.Data.GetValue().(config.Task)
+	taskDetails := taskResp.Data.GetValue().(config.Task)
 
-	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Update Backup Target Task Details: %s", string(aJSON))
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Update backup target task details: %s", string(aJSON))
 
 	return ResourceNutanixBackupTargetV2Read(ctx, d, meta)
 }
@@ -413,7 +410,7 @@ func ResourceNutanixBackupTargetV2Delete(ctx context.Context, d *schema.Resource
 
 	readResp, err := conn.DomainManagerBackupsAPIInstance.GetBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(d.Id()), nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Backup Target: %s", err)
+		return diag.Errorf("error while fetching backup target: %s", err)
 	}
 
 	// extract the etag from the read response
@@ -424,7 +421,7 @@ func ResourceNutanixBackupTargetV2Delete(ctx context.Context, d *schema.Resource
 	resp, err := conn.DomainManagerBackupsAPIInstance.DeleteBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(d.Id()), args)
 
 	if err != nil {
-		return diag.Errorf("error while deleting Backup Target: %s", err)
+		return diag.Errorf("error while deleting backup target: %s", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(config.TaskReference)
@@ -440,18 +437,18 @@ func ResourceNutanixBackupTargetV2Delete(ctx context.Context, d *schema.Resource
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for Backup Target to be deleted: %s", err)
+		return diag.Errorf("error waiting for backup target to be deleted: %s", err)
 	}
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Delete Backup Target Task Details: %s", err)
+		return diag.Errorf("error while fetching delete backup target task details: %s", err)
 	}
 
-	rUUID := resourceUUID.Data.GetValue().(config.Task)
+	taskDetails := taskResp.Data.GetValue().(config.Task)
 
-	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Delete Backup Target Task Details: %s", string(aJSON))
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Delete backup target task details: %s", string(aJSON))
 
 	return nil
 }

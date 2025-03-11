@@ -168,12 +168,12 @@ func ResourceNutanixRestoreSourceV2Create(ctx context.Context, d *schema.Resourc
 	} else if location["object_store_location"] != nil && len(location["object_store_location"].([]interface{})) > 0 {
 		objectStoreLocation := location["object_store_location"].([]interface{})[0].(map[string]interface{})
 		providerConfig := objectStoreLocation["provider_config"]
-		//backupPolicy := objectStoreLocation["backup_policy"]
+		backupPolicy := objectStoreLocation["backup_policy"]
 
 		objectStoreLocationBody := management.NewObjectStoreLocation()
 
 		objectStoreLocationBody.ProviderConfig = expandProviderConfig(providerConfig)
-		//objectStoreLocationBody.BackupPolicy = expandBackupPolicy(backupPolicy)
+		objectStoreLocationBody.BackupPolicy = expandBackupPolicy(backupPolicy)
 
 		err := oneOfRestoreSourceLocation.SetValue(*objectStoreLocationBody)
 		if err != nil {
@@ -184,12 +184,12 @@ func ResourceNutanixRestoreSourceV2Create(ctx context.Context, d *schema.Resourc
 	body.Location = oneOfRestoreSourceLocation
 
 	aJSON, _ := json.MarshalIndent(body, "", "  ")
-	log.Printf("[DEBUG] Restore Source Create Body: %s", string(aJSON))
+	log.Printf("[DEBUG] Restore Source Create Payload: %s", string(aJSON))
 
 	resp, err := conn.DomainManagerBackupsAPIInstance.CreateRestoreSource(&body)
 
 	if err != nil {
-		return diag.Errorf("error while Creating Restore Source: %s", err)
+		return diag.Errorf("error while creating restore source: %s", err)
 	}
 
 	restoreSource := resp.Data.GetValue().(management.RestoreSource)
@@ -197,32 +197,28 @@ func ResourceNutanixRestoreSourceV2Create(ctx context.Context, d *schema.Resourc
 	d.SetId(utils.StringValue(restoreSource.ExtId))
 
 	aJSON, _ = json.MarshalIndent(resp, "", "  ")
-	log.Printf("[DEBUG] Restore Source Create Response: %s", string(aJSON))
+	log.Printf("[DEBUG] Restore Source create response: %s", string(aJSON))
 
 	return ResourceNutanixRestoreSourceV2Read(ctx, d, meta)
 }
 
 func ResourceNutanixRestoreSourceV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[DEBUG] Restore Source Read. ID: %s", d.Id())
 	conn := meta.(*conns.Client).PrismAPI
 
 	resp, err := conn.DomainManagerBackupsAPIInstance.GetRestoreSourceById(utils.StringPtr(d.Id()))
 
 	if err != nil {
-		log.Printf("[DEBUG] Restore Source Read Error: %s", err)
+		log.Printf("[DEBUG] Restore Source read error: %s", err)
 		errMessage := utils.ExtractErrorFromV4APIResponse(err)
 		if strings.Contains(errMessage, "not found") {
 			// If the resource is not found, its Auto-Deleted create a new one
-			log.Printf("[DEBUG] Restore Source Automatically Deleted, Recreating it")
+			log.Printf("[DEBUG] Restore Source automatically deleted, recreating it")
 			return ResourceNutanixRestoreSourceV2Create(ctx, d, meta)
 		}
-		return diag.Errorf("error while fetching Restore Source: %s", err)
+		return diag.Errorf("error while fetching restore source: %s", err)
 	}
 
 	restoreSource := resp.Data.GetValue().(management.RestoreSource)
-
-	aJSON, _ := json.MarshalIndent(restoreSource, "", "  ")
-	log.Printf("[DEBUG] Restore Source Read Response: %s", string(aJSON))
 
 	if err := d.Set("tenant_id", restoreSource.TenantId); err != nil {
 		return diag.Errorf("error setting tenant_id: %s", err)
@@ -242,12 +238,10 @@ func ResourceNutanixRestoreSourceV2Read(ctx context.Context, d *schema.ResourceD
 
 func ResourceNutanixRestoreSourceV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Since the resource is auto-deleted, we will recreate it
-	log.Printf("[DEBUG] Restore Source Update. ID: %s", d.Id())
 	return ResourceNutanixRestoreSourceV2Create(ctx, d, meta)
 }
 
 func ResourceNutanixRestoreSourceV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[DEBUG] Restore Source Delete. ID: %s", d.Id())
 	conn := meta.(*conns.Client).PrismAPI
 
 	readResp, err := conn.DomainManagerBackupsAPIInstance.GetRestoreSourceById(utils.StringPtr(d.Id()))
@@ -270,11 +264,11 @@ func ResourceNutanixRestoreSourceV2Delete(ctx context.Context, d *schema.Resourc
 	resp, err := conn.DomainManagerBackupsAPIInstance.DeleteRestoreSourceById(utils.StringPtr(d.Id()), args)
 
 	if err != nil {
-		return diag.Errorf("error while deleting Restore Source: %s", err)
+		return diag.Errorf("error while deleting restore source: %s", err)
 	}
 
 	aJSON, _ := json.MarshalIndent(resp, "", "  ")
-	log.Printf("[DEBUG] Restore Source Delete Response: %s", string(aJSON))
+	log.Printf("[DEBUG] Restore Source delete response: %s", string(aJSON))
 
 	return nil
 }

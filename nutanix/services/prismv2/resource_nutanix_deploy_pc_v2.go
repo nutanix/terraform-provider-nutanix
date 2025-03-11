@@ -70,11 +70,11 @@ func ResourceNutanixDeployPcV2Create(ctx context.Context, d *schema.ResourceData
 	}
 
 	aJSON, _ := json.MarshalIndent(deployPcBody, "", "  ")
-	log.Printf("[DEBUG] Create Domain Manager Request Payload: %s", string(aJSON))
+	log.Printf("[DEBUG] Payload to deploy PC: %s", string(aJSON))
 
 	resp, err := conn.DomainManagerAPIInstance.CreateDomainManager(deployPcBody)
 	if err != nil {
-		return diag.Errorf("error while Creating Domain Manager: %s", err)
+		return diag.Errorf("error while deploying PC: %s", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(config.TaskReference)
@@ -90,17 +90,17 @@ func ResourceNutanixDeployPcV2Create(ctx context.Context, d *schema.ResourceData
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for Domain Manager to be deployed: %s", err)
+		return diag.Errorf("error waiting for PC to be deployed: %s", err)
 	}
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
-		return diag.Errorf("error while fetching Domain Manager Task: %s", err)
+		return diag.Errorf("error while fetching PC Task: %s", err)
 	}
 
-	rUUID := resourceUUID.Data.GetValue().(config.Task)
-	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Deploy Domain Manager Task Details: %s", string(aJSON))
+	taskDetails := taskResp.Data.GetValue().(config.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Deploy PC task details: %s", string(aJSON))
 
 	d.SetId(utils.GenUUID())
 

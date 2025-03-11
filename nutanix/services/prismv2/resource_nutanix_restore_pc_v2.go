@@ -105,7 +105,7 @@ func ResourceNutanixRestorePcCreate(ctx context.Context, d *schema.ResourceData,
 
 	resp, err := conn.DomainManagerBackupsAPIInstance.Restore(utils.StringPtr(restoreSourceExtID), utils.StringPtr(restorableDomainManagerExtID), utils.StringPtr(restorePointExtID), restoreSpec)
 	if err != nil {
-		return diag.Errorf("error while restoring Domain Manager: %s", err)
+		return diag.Errorf("error while restoring PC: %s", err)
 	}
 
 	TaskRef := resp.Data.GetValue().(config.TaskReference)
@@ -121,7 +121,7 @@ func ResourceNutanixRestorePcCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
-		return diag.Errorf("error waiting for Restore Domain Manager Task to complete: %s", err)
+		return diag.Errorf("error waiting for restore PC task to complete: %s", err)
 	}
 
 	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
@@ -129,12 +129,13 @@ func ResourceNutanixRestorePcCreate(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("error while fetching task details : %v", err)
 	}
 
-	rUUID := resourceUUID.Data.GetValue().(config.Task)
-	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
-	log.Printf("[DEBUG] Restore Domain Manager Task Details: %s", string(aJSON))
+	taskDetails := resourceUUID.Data.GetValue().(config.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
+	log.Printf("[DEBUG] Restore PC task details: %s", string(aJSON))
 
-	entityAffected := rUUID.EntitiesAffected
+	entityAffected := taskDetails.EntitiesAffected
 
+	// extract the PC UUID from the task response
 	for _, entity := range entityAffected {
 		if utils.StringValue(entity.Name) == "prism_central" && utils.StringValue(entity.Rel) == "prism:config:domain_manager" {
 			uuid := entity.ExtId
@@ -143,7 +144,7 @@ func ResourceNutanixRestorePcCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	return diag.Errorf("error while fetching Restored Domain Manager UUID From Task Response: %s", err)
+	return diag.Errorf("error while fetching restored PC UUID From task response: %s", err)
 }
 
 func ResourceNutanixRestorePcRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
