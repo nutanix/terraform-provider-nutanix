@@ -360,6 +360,7 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 
 	uuid := rUUID.EntitiesAffected[0].ExtId
 	d.SetId(*uuid)
+	d.Set("ext_id", *uuid)
 
 	return nil
 }

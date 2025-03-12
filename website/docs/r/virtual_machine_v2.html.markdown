@@ -316,10 +316,10 @@ See detailed information in [Nutanix Virtual Machine V4](https://developers.nuta
 
 
 ## Import
-Nutanix Virtual machine can be imported using the `UUID` eg,
+Nutanix Virtual machine can be imported using the `extId` eg,
 
 ```
-terraform import nutanix_virtual_machine_v2.imported_vm 32679dc5-1309-4728-b135-402dc5234907
+terraform import nutanix_virtual_machine_v2.imported_vm "<vm external ID>"
 ```
 
 
