@@ -50,7 +50,6 @@ func checkAttributeLength(resourceName, attribute string, minLength int) resourc
 	}
 }
 
-
 // checkBackupTargetExist checks if the backup target exists and deletes it if it does
 func checkBackupTargetExist() resource.TestCheckFunc {
 	return func(s *terraform.State) error {

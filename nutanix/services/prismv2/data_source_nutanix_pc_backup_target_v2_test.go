@@ -28,8 +28,8 @@ func TestAccV2NutanixBackupTargetDatasource_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(datasourceNameBackupTarget, "ext_id"),
 					resource.TestCheckResourceAttrSet(datasourceNameBackupTarget, "domain_manager_ext_id"),
 					// check the name and ext_id of cluster location in backup target by comparing with the cluster name and ext_id
-					resource.TestCheckResourceAttrPair(datasourceNameBackupTarget, "location.0.cluster_location.0.config.0.ext_id","data.nutanix_cluster_v2.test","id"),
-					resource.TestCheckResourceAttrPair(datasourceNameBackupTarget, "location.0.cluster_location.0.config.0.name","data.nutanix_cluster_v2.test","name"),
+					resource.TestCheckResourceAttrPair(datasourceNameBackupTarget, "location.0.cluster_location.0.config.0.ext_id", "data.nutanix_cluster_v2.test", "id"),
+					resource.TestCheckResourceAttrPair(datasourceNameBackupTarget, "location.0.cluster_location.0.config.0.name", "data.nutanix_cluster_v2.test", "name"),
 				),
 			},
 		},
