@@ -43,6 +43,9 @@ jobs:
                   elif [ "$provider" = "v4" ]
                       then
                           runFlag+="TestAccV2Nutanix*"
+                  elif [ "$provider" = "lcmconfig" ]
+                      then
+                          runFlag+="TestAccV2NutanixLcmConfigUpdate"
                   elif [ "$provider" = "era" ]
                       then
                           runFlag+="TestAccEra*"
