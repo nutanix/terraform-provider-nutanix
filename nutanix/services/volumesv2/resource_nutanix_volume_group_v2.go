@@ -2,6 +2,7 @@ package volumesv2
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -343,7 +344,7 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for template (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for Volume Group (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
@@ -354,11 +355,14 @@ func ResourceNutanixVolumeGroupV2Create(ctx context.Context, d *schema.ResourceD
 	}
 	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
 
+	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	log.Printf("[DEBUG] Volume Group Task Details: %s", aJSON)
+
 	uuid := rUUID.EntitiesAffected[0].ExtId
 	d.SetId(*uuid)
 	d.Set("ext_id", *uuid)
 
-	return nil
+	return ResourceNutanixVolumeGroupV2Read(ctx, d, meta)
 }
 
 func ResourceNutanixVolumeGroupV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -371,6 +375,9 @@ func ResourceNutanixVolumeGroupV2Read(ctx context.Context, d *schema.ResourceDat
 
 	getResp := resp.Data.GetValue().(volumesClient.VolumeGroup)
 
+	if err := d.Set("ext_id", getResp.ExtId); err != nil {
+		return diag.FromErr(err)
+	}
 	if err := d.Set("name", getResp.Name); err != nil {
 		return diag.FromErr(err)
 	}
@@ -440,7 +447,7 @@ func ResourceNutanixVolumeGroupV2Delete(ctx context.Context, d *schema.ResourceD
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for template (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for Volume Group (%s) to create: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 	return nil
 }
