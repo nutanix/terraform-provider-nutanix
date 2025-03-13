@@ -172,7 +172,7 @@ func ResourceNutanixVolumeGroupDiskV2Create(ctx context.Context, d *schema.Resou
 
 	d.SetId(*uuid)
 
-	return nil
+	return ResourceNutanixVolumeGroupDiskV2Read(ctx, d, meta)
 }
 
 func ResourceNutanixVolumeGroupDiskV2Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
