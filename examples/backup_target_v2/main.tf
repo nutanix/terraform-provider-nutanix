@@ -22,19 +22,19 @@ locals {
   domainManagerExtID = [
     for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
     cluster.ext_id if cluster.config[0].cluster_function[0] == "PRISM_CENTRAL"
-  ][
-  0
+    ][
+    0
   ]
-  clusterExtID       = [
+  clusterExtID = [
     for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
     cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-  ][
-  0
+    ][
+    0
   ]
 }
 
-// using cluster_location
-resource "nutanix_backup_target_v2" "cluster-location"{
+// Create a backup target to cluster location to take PC backups
+resource "nutanix_pc_backup_target_v2" "cluster-location" {
   domain_manager_ext_id = local.domainManagerExtID
   location {
     cluster_location {
@@ -47,8 +47,8 @@ resource "nutanix_backup_target_v2" "cluster-location"{
 
 
 
-//using object store location
-resource "nutanix_backup_target_v2" "object-store-location"{
+// Create a backup target to object store location to take PC backups
+resource "nutanix_pc_backup_target_v2" "object-store-location" {
   domain_manager_ext_id = local.domainManagerExtID
   location {
     object_store_location {
@@ -65,6 +65,8 @@ resource "nutanix_backup_target_v2" "object-store-location"{
       }
     }
   }
+  // ignore changes to credentials because they are sensitive and its not returned by read operation
+  // so terraform will try to update the credentials every time
   lifecycle {
     ignore_changes = [
       location[0].object_store_location[0].provider_config[0].credentials
@@ -74,14 +76,14 @@ resource "nutanix_backup_target_v2" "object-store-location"{
 
 
 // list backup targets
-data "nutanix_backup_targets_v2" "backup-targets" {
+data "nutanix_pc_backup_targets_v2" "backup-targets" {
   domain_manager_ext_id = local.domainManagerExtID
 }
 
-// get backup target
-data "nutanix_backup_target_v2" "backup-target" {
+// get backup target created above
+data "nutanix_pc_backup_target_v2" "backup-target" {
   domain_manager_ext_id = local.domainManagerExtID
-  ext_id = nutanix_backup_target_v2.cluster-location.id
+  ext_id                = nutanix_pc_backup_target_v2.cluster-location.id
 }
 
 

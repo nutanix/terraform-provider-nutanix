@@ -8,7 +8,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameUnregisterCluster = "nutanix_unregister_cluster_v2.test"
+const resourceNameUnregisterCluster = "nutanix_pc_unregistration_v2.test"
 
 func TestAccV2NutanixUnregisterClusterResource_Unregister_PC_PC(t *testing.T) {
 	if testVars.Prism.Unregister.PcExtID == "" {
@@ -41,7 +41,7 @@ locals {
   unregister = local.config.prism.unregister
 }
 
-resource "nutanix_unregister_cluster_v2" "test"{
+resource "nutanix_pc_unregistration_v2" "test"{
   pc_ext_id = local.pcExtID # local pc ext id
   ext_id = local.unregister.pc_ext_id # remote pc ext id
 }

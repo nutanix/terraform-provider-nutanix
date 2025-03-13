@@ -13,7 +13,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-const resourceNameRestorePC = "nutanix_restore_pc_v2.test"
+const resourceNameRestorePC = "nutanix_pc_restore_v2.test"
 
 func TestAccV2NutanixRestorePCResource_RestorePC(t *testing.T) {
 	t.Skip("Skipping test as no need to run it on pipeline")
@@ -167,7 +167,7 @@ locals {
   ][0]
 }
 
-data "nutanix_backup_targets_v2" "test" {
+data "nutanix_pc_backup_targets_v2" "test" {
   domain_manager_ext_id = local.domainManagerExtId
 }
 
@@ -215,21 +215,21 @@ locals {
   restorablePcExtId = data.nutanix_restorable_pcs_v2.restorable-pcs.restorable_pcs.0.ext_id
 }
 
-data "nutanix_restore_points_v2" "restore-points" {
+data "nutanix_pc_restore_points_v2" "restore-points" {
   provider                         = nutanix-2
   restorable_domain_manager_ext_id = local.restorablePcExtId
   restore_source_ext_id            = "%[2]s"
 }
 
-data "nutanix_restore_point_v2" "restore-point" {
+data "nutanix_pc_restore_point_v2" "restore-point" {
   provider = nutanix-2
   restore_source_ext_id = "%[2]s"
   restorable_domain_manager_ext_id = local.restorablePcExtId
-  ext_id   = data.nutanix_restore_points_v2.restore-points.restore_points[0].ext_id
+  ext_id   = data.nutanix_pc_restore_points_v2.restore-points.restore_points[0].ext_id
 }
 
 locals {
-  restorePoint = data.nutanix_restore_point_v2.restore-point
+  restorePoint = data.nutanix_pc_restore_point_v2.restore-point
 }
 
 output "pc_details" {
@@ -327,7 +327,7 @@ provider "nutanix-2" {
 # peHostProviderConfig
 %[1]s
 
-resource "nutanix_restore_pc_v2" "test" {
+resource "nutanix_pc_restore_v2" "test" {
 	provider                         = nutanix-2
 	timeouts {
 		create = "120m"

@@ -22,6 +22,8 @@ import (
 
 const timeout = 3 * time.Minute
 
+// checkAttributeLength checks the length of an attribute and make sure it is greater than or equal to minLength
+// simply used to check the length of a list returned by List data sources
 func checkAttributeLength(resourceName, attribute string, minLength int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -48,18 +50,21 @@ func checkAttributeLength(resourceName, attribute string, minLength int) resourc
 	}
 }
 
+
+// checkBackupTargetExist checks if the backup target exists and deletes it if it does
 func checkBackupTargetExist() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acc.TestAccProvider.Meta().(*conns.Client)
 		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type == "nutanix_backup_targets_v2" {
+			if rs.Type == "nutanix_pc_backup_targets_v2" {
 				attributes := rs.Primary.Attributes
 
 				backupTargetsCount, _ := strconv.Atoi(attributes["backup_targets.#"])
 
 				domainManagerExtID := attributes["domain_manager_ext_id"]
+				// If backup target exists, delete it
 				for i := 0; i < backupTargetsCount; i++ {
 					extID := attributes["backup_targets."+strconv.Itoa(i)+".ext_id"]
 
@@ -78,6 +83,8 @@ func checkBackupTargetExist() resource.TestCheckFunc {
 					if err != nil {
 						return fmt.Errorf("error while deleting Backup Target: %s", err)
 					}
+					// wait for the backup target to be deleted
+					// if the task is not successful, return the error
 					return waitDeleteTask(resp)
 				}
 
@@ -88,13 +95,14 @@ func checkBackupTargetExist() resource.TestCheckFunc {
 	}
 }
 
+// checkBackupTargetExistAndCreateIfNotExists checks if the backup target exists and creates a new one if it does not
 func checkBackupTargetExistAndCreateIfNotExists() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acc.TestAccProvider.Meta().(*conns.Client)
 		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type == "nutanix_backup_targets_v2" {
+			if rs.Type == "nutanix_pc_backup_targets_v2" {
 				attributes := rs.Primary.Attributes
 
 				backupTargetsCount, _ := strconv.Atoi(attributes["backup_targets.#"])
@@ -190,13 +198,14 @@ func checkBackupTargetExistAndCreateIfNotExists() resource.TestCheckFunc {
 	}
 }
 
+// checkLastSyncTimeBackupTarget checks the last sync time of the backup target to know if the restore point is created
 func checkLastSyncTimeBackupTarget(retries int, delay time.Duration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acc.TestAccProvider.Meta().(*conns.Client)
 		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type == "nutanix_backup_target_v2" {
+			if rs.Type == "nutanix_pc_backup_target_v2" {
 				attributes := rs.Primary.Attributes
 
 				domainManagerExtID := attributes["domain_manager_ext_id"]
@@ -224,6 +233,7 @@ func checkLastSyncTimeBackupTarget(retries int, delay time.Duration) resource.Te
 	}
 }
 
+// helper function to check the delete task
 func waitDeleteTask(resp *management.DeleteBackupTargetApiResponse) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
 
@@ -255,6 +265,7 @@ func waitDeleteTask(resp *management.DeleteBackupTargetApiResponse) error {
 	return nil
 }
 
+// helper function to check the delete task
 func taskStateRefreshPrismTaskGroupFunc(taskUUID string) resource.StateRefreshFunc {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
 
@@ -279,6 +290,7 @@ func taskStateRefreshPrismTaskGroupFunc(taskUUID string) resource.StateRefreshFu
 	}
 }
 
+// helper function to flatten the task status to string
 func getTaskStatus(pr *config.TaskStatus) string {
 	if pr != nil {
 		const QUEUED, RUNNING, SUCCEEDED, FAILED, CANCELED = 2, 3, 5, 6, 7
@@ -301,13 +313,16 @@ func getTaskStatus(pr *config.TaskStatus) string {
 	return "UNKNOWN"
 }
 
+// checkBackupTargetExistAndCreateIfNot checks if the backup target exists and creates a new one if it does not
+// its set the backupTargetExtID to the ext_id of the created backup target
+// this method is used to check the backup target for restore PC test
 func checkBackupTargetExistAndCreateIfNot(backupTargetExtID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acc.TestAccProvider.Meta().(*conns.Client)
 		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type == "nutanix_backup_targets_v2" {
+			if rs.Type == "nutanix_pc_backup_targets_v2" {
 				attributes := rs.Primary.Attributes
 
 				backupTargetsCount, _ := strconv.Atoi(attributes["backup_targets.#"])
@@ -405,6 +420,8 @@ func checkBackupTargetExistAndCreateIfNot(backupTargetExtID *string) resource.Te
 	}
 }
 
+// checkLastSyncTimeBackupTarget checks the last sync time of the backup target to know if the restore point is created
+// this method is used to check the last sync time of the backup target for restore PC test
 func checkLastSyncTimeBackupTargetRestorePC(backupTargetExtID *string, retries int, delay time.Duration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		log.Printf("[DEBUG] Checking Last Sync Time\n")
@@ -441,6 +458,8 @@ func checkLastSyncTimeBackupTargetRestorePC(backupTargetExtID *string, retries i
 	}
 }
 
+// createRestoreSource to create the restore source
+// this method is used to create the restore source for restore PC test
 func createRestoreSource(restoreSourceExtID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		log.Printf("[DEBUG] Create Restore Source\n")
@@ -487,6 +506,8 @@ func createRestoreSource(restoreSourceExtID *string) resource.TestCheckFunc {
 	}
 }
 
+// powerOffPC to power off the PC
+// this method is used to power off the PC for restore PC test
 func powerOffPC() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acc.TestAccProvider.Meta().(*conns.Client)
@@ -527,6 +548,8 @@ func powerOffPC() resource.TestCheckFunc {
 	}
 }
 
+// method to expand the PC config block
+// to be used in the restore PC resource configuration
 func expandPCConfigBlock(configMap map[string]interface{}) string {
 	// Extract nested values from the map
 	buildInfo, ok := configMap["build_info"].([]interface{})
@@ -590,6 +613,8 @@ func expandPCConfigBlock(configMap map[string]interface{}) string {
 		}`, showEnableLockdownMode, version, name, size, strContainerExtIDs, dataDiskSizeBytes, memorySizeBytes, numVcpus)
 }
 
+// method to expand the PC network block
+// to be used in the restore PC resource configuration
 func expandPCNetworkBlock(networkMap map[string]interface{}) string {
 	// Extract nested values from the map
 	externalAddress, ok := networkMap["external_address"].([]interface{})

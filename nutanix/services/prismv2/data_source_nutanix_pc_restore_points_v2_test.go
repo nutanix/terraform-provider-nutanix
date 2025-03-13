@@ -3,14 +3,19 @@ package prismv2_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const datasourceNameRestorePoint = "data.nutanix_restore_point_v2.test"
+const (
+	datasourceNameListRestorePoints = "data.nutanix_pc_restore_points_v2.test"
+	retries                         = 120
+	delay                           = 30 * time.Second
+)
 
-func TestAccV2NutanixRestorePointDatasource_FetchRestorePoint(t *testing.T) {
+func TestAccV2NutanixRestorePointsDatasource_ListRestorePoints(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -30,7 +35,7 @@ func TestAccV2NutanixRestorePointDatasource_FetchRestorePoint(t *testing.T) {
 				PreConfig: func() {
 					fmt.Printf("Step 2: Check last sync time of backup target\n")
 				},
-				Config: testAccCheckBackupTargetExistAndCreateIfNotExistsConfig(),
+				Config: testAccCheckBackupTargetLastSyncTimeConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					checkLastSyncTimeBackupTarget(retries, delay),
 				),
@@ -61,38 +66,38 @@ func TestAccV2NutanixRestorePointDatasource_FetchRestorePoint(t *testing.T) {
 					resource.TestCheckResourceAttrSet(datasourceNameListRestorePoints, "restorable_domain_manager_ext_id"),
 				),
 			},
-			// Fetch Restore Point
-			{
-				PreConfig: func() {
-					fmt.Printf("Step 5: Fetch Restore Point\n")
-				},
-				Config: testRestoreSourceConfig() + testAccListRestorePointsConfig() +
-					testAccFetchRestorePointConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(datasourceNameRestorePoint, "ext_id"),
-					resource.TestCheckResourceAttrSet(datasourceNameRestorePoint, "restorable_domain_manager_ext_id"),
-					resource.TestCheckResourceAttrSet(datasourceNameRestorePoint, "restore_source_ext_id"),
-					resource.TestCheckResourceAttrSet(datasourceNameRestorePoint, "domain_manager.#"),
-					checkAttributeLength(datasourceNameRestorePoint, "domain_manager", 1),
-					resource.TestCheckResourceAttrSet(datasourceNameRestorePoint, "domain_manager.0.config.0.name"),
-					resource.TestCheckResourceAttrSet(datasourceNameRestorePoint, "domain_manager.0.config.0.build_info.0.version"),
-					resource.TestCheckResourceAttrSet(datasourceNameRestorePoint, "domain_manager.0.config.0.size"),
-				),
-			},
 		},
 	})
 }
 
-func testAccFetchRestorePointConfig() string {
+func testAccListRestorePointsConfig() string {
 	return `
 
-
-data "nutanix_restore_point_v2" "test" {
+data "nutanix_restorable_pcs_v2" "test" {
   provider = nutanix-2
-  restorable_domain_manager_ext_id = data.nutanix_restorable_pcs_v2.test.restorable_pcs.0.ext_id
-  restore_source_ext_id = nutanix_restore_source_v2.cluster-location.id
-  ext_id = data.nutanix_restore_points_v2.test.restore_points.0.ext_id
+  restore_source_ext_id = nutanix_pc_restore_source_v2.cluster-location.id
 }
 
+data "nutanix_pc_restore_points_v2" "test" {
+  provider = nutanix-2
+  restorable_domain_manager_ext_id = data.nutanix_restorable_pcs_v2.test.restorable_pcs.0.ext_id
+  restore_source_ext_id = nutanix_pc_restore_source_v2.cluster-location.id
+}
+
+output "restore_point" {
+  value = data.nutanix_pc_restore_points_v2.test.restore_points.0.ext_id
+}
+
+output "restorable_pc_ext_id" {
+  value = data.nutanix_restorable_pcs_v2.test.restorable_pcs.0.ext_id
+}
+
+data "nutanix_pc_v2" "test" {
+  ext_id = local.domainManagerExtId
+}
+
+output "pc_details" {
+  value = data.nutanix_pc_v2.test
+}
 `
 }

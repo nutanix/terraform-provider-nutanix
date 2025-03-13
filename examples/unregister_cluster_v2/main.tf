@@ -17,7 +17,7 @@ provider "nutanix" {
 }
 
 
-resource "nutanix_unregister_cluster_v2 " "unregister_pc"{
+resource "nutanix_pc_unregistration_v2 " "unregister_pc" {
   pc_ext_id = var.local_pc_ext_id
-  ext_id = var.remote_pc_ext_id
+  ext_id    = var.remote_pc_ext_id
 }

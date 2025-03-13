@@ -7,7 +7,8 @@ terraform {
   }
 }
 
-#defining nutanix configuration
+#Define provider configuration to connect to Nutanix PC
+
 provider "nutanix" {
   username = var.nutanix_username
   password = var.nutanix_password
@@ -16,7 +17,7 @@ provider "nutanix" {
   insecure = true
 }
 
-# define another alias for the provider,  PE
+# Define another alias provider configuration to connect to Nutanix PE
 provider "nutanix" {
   alias    = "pe"
   username = var.nutanix_pe_username
@@ -40,7 +41,7 @@ locals {
 
 # Create a restore source, before make sure to get the cluster ext_id from PC and create backup target
 # wait until backup target is synced, you can check the last_sync_time from the backup target data source
-resource "nutanix_restore_source_v2" "cluster-location" {
+resource "nutanix_pc_restore_source_v2" "cluster-location" {
   provider = nutanix.pe
   location {
     cluster_location {
@@ -52,42 +53,51 @@ resource "nutanix_restore_source_v2" "cluster-location" {
   }
 }
 
+# Get the restorable pcs using the restore source extID
 data "nutanix_restorable_pcs_v2" "restorable-pcs" {
   provider              = nutanix.pe
-  restore_source_ext_id = nutanix_restore_source_v2.cluster-location.ext_id
+  restore_source_ext_id = nutanix_pc_restore_source_v2.cluster-location.ext_id
 }
 
+# Take the first restorable pc ext_id since we are restoring only one pc
+# if you are having multiple pcs, you can loop through the restorable pcs and take the desired pc ext_id
 locals {
   restorablePcExtId = data.nutanix_restorable_pcs_v2.restorable-pcs.restorable_pcs.0.ext_id
 }
 
-data "nutanix_restore_points_v2" "restore-points" {
+# Get the restore points of the pc using the restorable pc ext_id and restore source ext_id
+data "nutanix_pc_restore_points_v2" "restore-points" {
   provider                         = nutanix.pe
   restorable_domain_manager_ext_id = local.restorablePcExtId
-  restore_source_ext_id            = nutanix_restore_source_v2.cluster-location.id
+  restore_source_ext_id            = nutanix_pc_restore_source_v2.cluster-location.id
 }
 
-data "nutanix_restore_point_v2" "restore-point" {
+# Take the first restore point ext_id since we are define backup target of type cluster location
+# so we will have only one restore point
+# for backup of type Object store, we will have multiple restore points
+# if you are having multiple restore points, you can loop through the restore points and take the desired restore point ext_id
+data "nutanix_pc_restore_point_v2" "restore-point" {
   provider                         = nutanix.pe
-  restore_source_ext_id            = nutanix_restore_source_v2.cluster-location.id
+  restore_source_ext_id            = nutanix_pc_restore_source_v2.cluster-location.id
   restorable_domain_manager_ext_id = local.restorablePcExtId
-  ext_id                           = data.nutanix_restore_points_v2.restore-points.restore_points[0].ext_id
+  ext_id                           = data.nutanix_pc_restore_points_v2.restore-points.restore_points[0].ext_id
 }
 
+# Capture the restore point and store it in a local variable.
 locals {
-  restorePoint = data.nutanix_restore_point_v2.restore-point
+  restorePoint = data.nutanix_pc_restore_point_v2.restore-point
 }
 
 
 # define the restore pc resource
 # you can get these values from the data source nutanix_pc_v2, this data source is on PC provider
-resource "nutanix_restore_pc_v2" "restore-pc" {
+resource "nutanix_pc_restore_v2" "restore-pc" {
   provider = nutanix.pe
   timeouts {
     create = "120m"
   }
   ext_id                           = local.restorePoint.ext_id
-  restore_source_ext_id            = nutanix_restore_source_v2.cluster-location.id
+  restore_source_ext_id            = nutanix_pc_restore_source_v2.cluster-location.id
   restorable_domain_manager_ext_id = local.restorablePcExtId
 
   domain_manager {
@@ -165,13 +175,5 @@ resource "nutanix_restore_pc_v2" "restore-pc" {
         }
       }
     }
-  }
-
-  # after restore pc, you need to reset the password of the pc_user
-  # this command will be executed after the restore pc is completed and
-  # its reset the password several times before setting the new password
-  provisioner "local-exec" {
-    command    = "sshpass -p '${var.ssh_pc_password}' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null nutanix@${local.restorePoint.domain_manager[0].network[0].external_address[0].ipv4[0].value} '/home/nutanix/prism/cli/ncli user reset-password user-name=${var.pc_username} password=o.P.5.#.s.U.Z.f ; /home/nutanix/prism/cli/ncli user reset-password user-name=${var.pc_username} password=n.L.9.@.P.Y ; /home/nutanix/prism/cli/ncli user reset-password user-name=${var.pc_username} password=g.B.1.$.U.$.2.@ ; /home/nutanix/prism/cli/ncli user reset-password user-name=${var.pc_username} password=r.B.7.$.V.9.W ; /home/nutanix/prism/cli/ncli user reset-password user-name=${var.pc_username} password=l.H.2.$.2.a.a.P ; /home/nutanix/prism/cli/ncli user reset-password user-name=${var.pc_username} password=q.F.4.#.u.t ; /home/nutanix/prism/cli/ncli user reset-password user-name=${var.pc_username} password=n.T.0.#.r ; /home/nutanix/prism/cli/ncli user reset-password user-name=${var.pc_username} password=s.K.0.$.w ; /home/nutanix/prism/cli/ncli user reset-password user-name=${var.pc_username} password=o.K.7.@.j ; /home/nutanix/prism/cli/ncli user reset-password user-name=${var.pc_username} password=${var.pc_password}'"
-    on_failure = continue
   }
 }

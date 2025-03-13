@@ -32,18 +32,18 @@ locals {
   domainManagerExtID = [
     for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
     cluster.ext_id if cluster.config[0].cluster_function[0] == "PRISM_CENTRAL"
-  ][
-  0
+    ][
+    0
   ]
   clusterExtID = [
     for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
     cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-  ][
-  0
+    ][
+    0
   ]
 }
 
-resource "nutanix_backup_target_v2" "cluster-location" {
+resource "nutanix_pc_backup_target_v2" "cluster-location" {
   domain_manager_ext_id = local.domainManagerExtID
   location {
     cluster_location {
@@ -54,10 +54,10 @@ resource "nutanix_backup_target_v2" "cluster-location" {
   }
 }
 
-# restore source is auto-deleted after sometime, nutanix_restore_source_v2 resource is auto-create
+# restore source is auto-deleted after sometime, nutanix_pc_restore_source_v2 resource is auto-create
 # new restore source if it was deleted, so notice that the id of the restore source will be different
 # after recreation
-resource "nutanix_restore_source_v2" "cluster-location" {
+resource "nutanix_pc_restore_source_v2" "cluster-location" {
   provider = nutanix.pe
   location {
     cluster_location {
@@ -66,11 +66,11 @@ resource "nutanix_restore_source_v2" "cluster-location" {
       }
     }
   }
-  depends_on = [nutanix_backup_target_v2.cluster-location]
+  depends_on = [nutanix_pc_backup_target_v2.cluster-location]
 }
 
 //using object store location
-resource "nutanix_restore_source_v2" "object-store-location"{
+resource "nutanix_pc_restore_source_v2" "object-store-location" {
   provider = nutanix.pe
   location {
     object_store_location {
@@ -95,7 +95,7 @@ resource "nutanix_restore_source_v2" "object-store-location"{
 }
 
 // get the restore source
-data "nutanix_restore_source_v2" "restore-source" {
+data "nutanix_pc_restore_source_v2" "restore-source" {
   provider = nutanix.pe
-  ext_id   = nutanix_restore_source_v2.cluster-location.id
+  ext_id   = nutanix_pc_restore_source_v2.cluster-location.id
 }

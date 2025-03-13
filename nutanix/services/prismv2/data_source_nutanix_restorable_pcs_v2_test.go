@@ -84,7 +84,7 @@ locals {
   ][0]
 }
 
-resource "nutanix_restore_source_v2" "cluster-location" {
+resource "nutanix_pc_restore_source_v2" "cluster-location" {
   provider = nutanix-2
   location {
     cluster_location {
@@ -96,7 +96,7 @@ resource "nutanix_restore_source_v2" "cluster-location" {
 }
 
 output "restore_source" {
-   value = nutanix_restore_source_v2.cluster-location.id
+   value = nutanix_pc_restore_source_v2.cluster-location.id
 }
 
 `, username, password, endpoint, insecure, port)
@@ -107,7 +107,7 @@ func testAccListRestorablePCConfig() string {
 
 data "nutanix_restorable_pcs_v2" "test" {
   provider = nutanix-2
-  restore_source_ext_id = nutanix_restore_source_v2.cluster-location.ext_id
+  restore_source_ext_id = nutanix_pc_restore_source_v2.cluster-location.ext_id
 }
 
 `

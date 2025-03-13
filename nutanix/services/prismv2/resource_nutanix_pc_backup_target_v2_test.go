@@ -8,8 +8,8 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameBackupTargetClusterLocation = "nutanix_backup_target_v2.cluster-location"
-const resourceNameBackupTargetObjectStoreLocation = "nutanix_backup_target_v2.object-store-location"
+const resourceNameBackupTargetClusterLocation = "nutanix_pc_backup_target_v2.cluster-location"
+const resourceNameBackupTargetObjectStoreLocation = "nutanix_pc_backup_target_v2.object-store-location"
 
 func TestAccV2NutanixBackupTargetResource_ClusterLocation(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -141,7 +141,7 @@ locals {
   ][0]
 }
 
-data "nutanix_backup_targets_v2" "test" {
+data "nutanix_pc_backup_targets_v2" "test" {
   domain_manager_ext_id = local.domainManagerExtId
 }
 
@@ -153,6 +153,10 @@ output "clusterExtID" {
   value = local.clusterExtId
 }
 
+# Get Cluster By Id to get the cluster name and ext_id
+data "nutanix_cluster_v2" "test" {
+  ext_id = data.nutanix_pc_backup_targets_v2.test.backup_targets.0.location.0.cluster_location.0.config.0.ext_id
+}
 
 `
 }
@@ -173,7 +177,7 @@ locals {
   ][0]
 }
 
-resource "nutanix_backup_target_v2" "cluster-location" {
+resource "nutanix_pc_backup_target_v2" "cluster-location" {
   domain_manager_ext_id = local.domainManagerExtId
   location {
     cluster_location {
@@ -200,7 +204,7 @@ locals {
   bucket = local.config.prism.bucket
 }
 
-resource "nutanix_backup_target_v2" "object-store-location" {
+resource "nutanix_pc_backup_target_v2" "object-store-location" {
   domain_manager_ext_id = local.domainManagerExtId
   location {
     object_store_location {
@@ -240,7 +244,7 @@ locals {
   bucket = local.config.prism.bucket
 }
 
-resource "nutanix_backup_target_v2" "object-store-location" {
+resource "nutanix_pc_backup_target_v2" "object-store-location" {
   domain_manager_ext_id = local.domainManagerExtId
   location {
     object_store_location {

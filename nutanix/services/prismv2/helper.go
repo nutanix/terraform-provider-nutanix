@@ -12,7 +12,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
-// funcs
+// func to check pc task status, and return the task status or error message
 func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Client, taskUUID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		taskResp, err := client.TaskRefAPI.GetTaskById(utils.StringPtr(taskUUID), nil)
@@ -32,6 +32,7 @@ func taskStateRefreshPrismTaskGroupFunc(ctx context.Context, client *prism.Clien
 	}
 }
 
+// func to flatten the task status to string
 func getTaskStatus(pr *config.TaskStatus) string {
 	if pr != nil {
 		const QUEUED, RUNNING, SUCCEEDED, FAILED, CANCELED = 2, 3, 5, 6, 7
@@ -54,6 +55,7 @@ func getTaskStatus(pr *config.TaskStatus) string {
 	return "UNKNOWN"
 }
 
+// func to flatten the time to string
 func flattenTime(time *time.Time) *string {
 	if time == nil {
 		return nil
@@ -61,7 +63,7 @@ func flattenTime(time *time.Time) *string {
 	return utils.StringPtr(time.String())
 }
 
-// schemas
+// schemas for links
 func schemaForLinks() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,

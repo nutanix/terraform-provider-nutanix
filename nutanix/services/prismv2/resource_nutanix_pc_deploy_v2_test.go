@@ -11,7 +11,7 @@ import (
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
-const resourceNameDeployPC = "nutanix_deploy_pc_v2.test"
+const resourceNameDeployPC = "nutanix_pc_deploy_v2.test"
 
 func TestAccV2NutanixDeployPcResource_Basic(t *testing.T) {
 	t.Skip("Skipping test no need to run this test on pipeline")
@@ -68,7 +68,7 @@ locals {
   deploy_pc = local.config.prism.deploy_pc
 }
 
-resource "nutanix_deploy_pc_v2" "test" {
+resource "nutanix_pc_deploy_v2" "test" {
   provider = nutanix-2
   timeouts {
     create = "120m"

@@ -18,7 +18,7 @@ provider "nutanix" {
 
 
 // deploy pc, this is PE resource, make sure you configure the provider with PE endpoint and credentials
-resource "nutanix_deploy_pc_v2" "example"{
+resource "nutanix_pc_deploy_v2" "example" {
   timeouts {
     create = "120m"
   }

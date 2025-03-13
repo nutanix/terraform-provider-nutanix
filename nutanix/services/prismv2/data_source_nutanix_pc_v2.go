@@ -278,16 +278,6 @@ func flattenPCConfig(pcConfig *config.DomainManagerClusterConfig) []map[string]i
 		if pcConfig.BootstrapConfig != nil {
 			pcConfigMap["bootstrap_config"] = flattenBootstrapConfig(pcConfig.BootstrapConfig)
 		}
-		//if pcConfig.Credentials != nil {
-		//	credentials := make([]map[string]interface{}, len(pcConfig.Credentials))
-		//	for i, credential := range pcConfig.Credentials {
-		//		credentials[i] = map[string]interface{}{
-		//			"username": utils.StringValue(credential.Username),
-		//			"password": utils.StringValue(credential.Password),
-		//		}
-		//	}
-		//	pcConfigMap["credentials"] = credentials
-		//}
 		if pcConfig.ResourceConfig != nil {
 			pcConfigMap["resource_config"] = flattenResourceConfig(pcConfig.ResourceConfig)
 		}
