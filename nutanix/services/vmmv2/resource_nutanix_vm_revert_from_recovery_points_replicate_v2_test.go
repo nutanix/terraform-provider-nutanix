@@ -71,7 +71,7 @@ func testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTime s
 			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 		config = (jsondecode(file("%[3]s")))
-		data_protection = local.config.data_protection
+		data_protection = local.config.data_protection			
 	}
 
 	resource "nutanix_virtual_machine_v2" "test"{
