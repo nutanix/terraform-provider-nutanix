@@ -4,7 +4,7 @@ on: [issue_comment]
 
 jobs:
   Trigger-Dispatch-Event:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     if: ${{ github.event.issue.pull_request }}
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
