@@ -57,10 +57,6 @@ func ResourceNutanixVirtualMachineV2() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice([]string{"VM", "VM_RECOVERY_POINT"}, false),
 						},
-						"ext_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 					},
 				},
 			},

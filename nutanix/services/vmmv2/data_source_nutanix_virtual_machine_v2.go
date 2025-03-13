@@ -1252,6 +1252,7 @@ func DatasourceNutanixVirtualMachineV4Read(ctx context.Context, d *schema.Resour
 		errorMessage := errorList[0].(map[string]interface{})
 		return diag.Errorf("error while fetching vm : %v", errorMessage["message"])
 	}
+	
 	getResp := resp.Data.GetValue().(config.Vm)
 
 	if err := d.Set("name", getResp.Name); err != nil {
