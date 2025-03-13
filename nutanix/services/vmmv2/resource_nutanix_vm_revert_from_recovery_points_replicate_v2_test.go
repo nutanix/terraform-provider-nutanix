@@ -64,14 +64,14 @@ func TestAccV2NutanixRecoveryPointRestoreResource_basic(t *testing.T) {
 
 func testRecoveryPointsResourceConfigWithVMRecoveryPoints(name, expirationTime string) string {
 	return fmt.Sprintf(`
-	data "nutanix_clusters_v2" "clusters" {} 
+	data "nutanix_clusters_v2" "clusters" {}
 	locals{
 		cluster1 = [
 			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
 			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 		config = (jsondecode(file("%[3]s")))
-		availability_zone = local.config.availability_zone			
+		data_protection = local.config.data_protection
 	}
 
 	resource "nutanix_virtual_machine_v2" "test"{

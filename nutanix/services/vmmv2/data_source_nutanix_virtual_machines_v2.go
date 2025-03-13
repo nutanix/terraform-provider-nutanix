@@ -2,6 +2,7 @@ package vmmv2
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -1295,11 +1296,15 @@ func DatasourceNutanixVirtualMachinesV4Read(ctx context.Context, d *schema.Resou
 	}
 	resp, err := conn.VMAPIInstance.ListVms(page, limit, filter, orderBy, selects)
 	if err != nil {
-		return diag.Errorf("error while fetching vms : %v", err)
-	}
-
-	if resp.Data == nil {
-		return diag.Errorf("error while fetching vms : %v", "no data found")
+		var errordata map[string]interface{}
+		e := json.Unmarshal([]byte(err.Error()), &errordata)
+		if e != nil {
+			return diag.FromErr(e)
+		}
+		data := errordata["data"].(map[string]interface{})
+		errorList := data["error"].([]interface{})
+		errorMessage := errorList[0].(map[string]interface{})
+		return diag.Errorf("error while fetching vms : %v", errorMessage["message"])
 	}
 
 	getResp := resp.Data.GetValue().([]config.Vm)
