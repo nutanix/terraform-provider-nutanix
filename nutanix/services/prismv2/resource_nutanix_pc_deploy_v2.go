@@ -112,7 +112,7 @@ func ResourceNutanixDeployPcV2Read(ctx context.Context, d *schema.ResourceData, 
 }
 
 func ResourceNutanixDeployPcV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return nil
+	return ResourceNutanixDeployPcV2Create(ctx, d, meta)
 }
 
 func ResourceNutanixDeployPcV2Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
