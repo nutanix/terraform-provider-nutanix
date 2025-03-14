@@ -215,12 +215,7 @@
       "iscsi_ip": "",
       "iscsi_ip1": "",
       "dns_servers": ["", ""],
-      "ntp_servers": [
-        "",
-        "",
-        "",
-        ""
-      ],
+      "ntp_servers": ["", "", "", ""],
       "smtp_server": {
         "ip": "",
         "port": 25,
@@ -237,5 +232,9 @@
       "username": "",
       "password": ""
     }
+  },
+  "lcm": {
+    "entity_model": "",
+    "entity_model_version": ""
   }
 }
