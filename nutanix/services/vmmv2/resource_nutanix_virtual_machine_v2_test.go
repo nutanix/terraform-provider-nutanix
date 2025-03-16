@@ -258,6 +258,60 @@ func TestAccV2NutanixVmsResource_WithLegacyBootOrder(t *testing.T) {
 	})
 }
 
+func TestAccV2NutanixVmsResource_WithUEFIBootOrder(t *testing.T) {
+	r := acctest.RandInt()
+	name := fmt.Sprintf("tf-test-vm-%d", r)
+	desc := "test vm description"
+	nameUpdated := fmt.Sprintf("tf-test-vm-updated-%d", r)
+	descUpdated := "test vm updated description"
+	resource.Test(t, resource.TestCase{
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
+		Providers: acc.TestAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testVmsV4ConfigWithUEFIBoot(name, desc),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "name", name),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_cores_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceNameVms, "description", desc),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_sockets", "1"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "create_time"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "update_time"),
+					resource.TestCheckResourceAttr(resourceNameVms, "protection_type", "UNPROTECTED"),
+					resource.TestCheckResourceAttr(resourceNameVms, "is_agent_vm", "false"),
+					resource.TestCheckResourceAttr(resourceNameVms, "machine_type", "PC"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "boot_config.#"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "boot_config.0.uefi_boot.#"),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.uefi_boot.0.boot_order.0", "CDROM"),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.uefi_boot.0.boot_order.1", "DISK"),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.uefi_boot.0.boot_order.2", "NETWORK"),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.uefi_boot.0.is_secure_boot_enabled", "false"),
+				),
+			},
+			{
+				Config: testVmsV4ConfigWithUEFIBootUpdate(nameUpdated, descUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceNameVms, "name", nameUpdated),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_cores_per_socket", "1"),
+					resource.TestCheckResourceAttr(resourceNameVms, "description", descUpdated),
+					resource.TestCheckResourceAttr(resourceNameVms, "num_sockets", "1"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "create_time"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "update_time"),
+					resource.TestCheckResourceAttr(resourceNameVms, "protection_type", "UNPROTECTED"),
+					resource.TestCheckResourceAttr(resourceNameVms, "is_agent_vm", "false"),
+					resource.TestCheckResourceAttr(resourceNameVms, "machine_type", "PC"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "boot_config.#"),
+					resource.TestCheckResourceAttrSet(resourceNameVms, "boot_config.0.uefi_boot.#"),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.uefi_boot.0.boot_order.0", "NETWORK"),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.uefi_boot.0.boot_order.1", "DISK"),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.uefi_boot.0.boot_order.2", "CDROM"),
+					resource.TestCheckResourceAttr(resourceNameVms, "boot_config.0.uefi_boot.0.is_secure_boot_enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccV2NutanixVmsResource_WithCdrom(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
@@ -647,7 +701,7 @@ func testVmsV4Config(name, desc string) string {
 			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 		  ][0]
 		}
-	
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "%[1]s"
 			description =  "%[2]s"
@@ -677,7 +731,7 @@ func testVmsV4ConfigWithDisk(r int, desc string) string {
 		  filter = "clusterExtId eq '${local.cluster0}'"
 		  limit = 1
 		}
-	
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "tf-test-vm-%[1]d"
 			description =  "%[2]s"
@@ -747,7 +801,7 @@ func testVmsV4ConfigWithDiskWithDatasource(name string, desc string) string {
 			power_state = "OFF"
 		}
 
-	
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "%[1]s-new"
 			description =  "%[2]s"
@@ -815,7 +869,7 @@ func testVmsV4ConfigWithNic(r int, desc string) string {
 		  filter = "clusterExtId eq '${local.cluster0}'"
 		  limit = 1
 		}
-	
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "tf-test-vm-%[1]d"
 			description =  "%[2]s"
@@ -843,7 +897,7 @@ func testVmsV4ConfigWithNic(r int, desc string) string {
 					nic_type = "NORMAL_NIC"
 					subnet{
 						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
-					}	
+					}
 					vlan_mode = "ACCESS"
 				}
 			}
@@ -873,7 +927,7 @@ func testVmsV4ConfigWithNicWithTrunkVlan(r int, desc string) string {
 		  filter = "clusterExtId eq '${local.cluster0}'"
 		  limit = 1
 		}
-	
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "tf-test-vm-%[1]d"
 			description =  "%[2]s"
@@ -901,7 +955,7 @@ func testVmsV4ConfigWithNicWithTrunkVlan(r int, desc string) string {
 					nic_type = "NORMAL_NIC"
 					subnet{
 						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
-					}	
+					}
 					vlan_mode = "TRUNK"
 					trunked_vlans = ["1"]
 				}
@@ -921,7 +975,7 @@ func testVmsV4ConfigWithLegacyBoot(name, desc string) string {
 			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 		  ][0]
 		}
-	
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "%[1]s"
 			description =  "%[2]s"
@@ -940,6 +994,69 @@ func testVmsV4ConfigWithLegacyBoot(name, desc string) string {
 `, name, desc)
 }
 
+func testVmsV4ConfigWithUEFIBoot(name, desc string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+
+		locals {
+		cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
+		}
+
+		resource "nutanix_virtual_machine_v2" "test"{
+			name                 = "%[1]s"
+			description          = "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets          = 1
+			cluster {
+				ext_id = local.cluster0
+			}
+
+
+			boot_config {
+				uefi_boot {
+				}
+			}
+
+			power_state = "OFF"
+		}
+`, name, desc)
+}
+
+func testVmsV4ConfigWithUEFIBootUpdate(name, desc string) string {
+	return fmt.Sprintf(`
+		data "nutanix_clusters_v2" "clusters" {}
+
+		locals {
+		cluster0 = [
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		  ][0]
+		}
+
+		resource "nutanix_virtual_machine_v2" "test"{
+			name                 = "%[1]s"
+			description          = "%[2]s"
+			num_cores_per_socket = 1
+			num_sockets          = 1
+			cluster {
+				ext_id = local.cluster0
+			}
+
+
+			boot_config {
+				uefi_boot {
+					boot_order = ["NETWORK","DISK", "CDROM", ]
+				}
+			}
+
+			power_state = "OFF"
+		}
+`, name, desc)
+}
+
 func testVmsV4ConfigWithLegacyBootWithUpdateOrder(name, desc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
@@ -950,7 +1067,7 @@ func testVmsV4ConfigWithLegacyBootWithUpdateOrder(name, desc string) string {
 			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 		  ][0]
 		}
-	
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "%[1]s"
 			description =  "%[2]s"
@@ -982,10 +1099,10 @@ func testVmsV4ConfigWithLegacyBootDevice(name, desc string) string {
 			vmm = local.config.vmm
 		}
 
-		
-	
+
+
 		data "nutanix_image" "ngt-image" {
-		  image_name = local.vmm.image_name		
+		  image_name = local.vmm.image_name
 		}
 
 		resource "nutanix_virtual_machine_v2" "test"{
@@ -1009,7 +1126,7 @@ func testVmsV4ConfigWithLegacyBootDevice(name, desc string) string {
 									image_ext_id = data.nutanix_image.ngt-image.id
 								}
 							}
-						}						
+						}
 					}
 				}
 			}
@@ -1021,7 +1138,7 @@ func testVmsV4ConfigWithLegacyBootDevice(name, desc string) string {
 								bus_type = "SCSI"
 								index = 0
 							}
-						}		
+						}
 				  	}
 				}
 			}
@@ -1041,7 +1158,7 @@ func testVmsV4ConfigWithCdrom(name, desc string) string {
 			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 		  ][0]
 		}
-	
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "%[1]s"
 			description =  "%[2]s"
@@ -1075,7 +1192,7 @@ func testVmsV4ConfigWithCdromIde(name, desc string) string {
 			cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 		  ][0]
 		}
-	
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "%[1]s"
 			description =  "%[2]s"
@@ -1142,7 +1259,7 @@ func testVmsV4ConfigWithCdromWithBackingInfo(name, desc string) string {
 			}
 			power_state = "OFF"
 		}
-	
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "%[1]s"
 			description =  "%[2]s"
@@ -1212,7 +1329,7 @@ func testVmsV4ConfigWithCloudInit(r int, desc string) string {
 		data "nutanix_subnets_v2" "subnets" {
 			filter = "name eq '${local.vmm.subnet_name}'"
 		}
-	
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "tf-test-vm-%[1]d"
 			description =  "%[2]s"
@@ -1240,7 +1357,7 @@ func testVmsV4ConfigWithCloudInit(r int, desc string) string {
 					nic_type = "NORMAL_NIC"
 					subnet{
 						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
-					}	
+					}
 					vlan_mode = "ACCESS"
 				}
 			}
@@ -1249,7 +1366,7 @@ func testVmsV4ConfigWithCloudInit(r int, desc string) string {
 					cloud_init{
 						cloud_init_script{
 							user_data{
-								value="${local.gs}"		
+								value="${local.gs}"
 							}
 						}
 					}
@@ -1287,7 +1404,7 @@ func testVmsV4ConfigWithCloudInitWithCustomKeys(r int, desc string) string {
 		data "nutanix_subnets_v2" "subnets" {
 			filter = "name eq '${local.vmm.subnet_name}'"
 		}
-	
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "tf-test-vm-%[1]d"
 			description =  "%[2]s"
@@ -1315,7 +1432,7 @@ func testVmsV4ConfigWithCloudInitWithCustomKeys(r int, desc string) string {
 					nic_type = "NORMAL_NIC"
 					subnet{
 						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
-					}	
+					}
 					vlan_mode = "ACCESS"
 				}
 			}
@@ -1365,7 +1482,7 @@ func testVmsV4ConfigWithDiskNic(name string, desc string) string {
 		data "nutanix_subnets_v2" "subnets" {
 			filter = "name eq '${local.vmm.subnet_name}'"
 		}
-	
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "%[1]s"
 			description =  "%[2]s"
@@ -1393,7 +1510,7 @@ func testVmsV4ConfigWithDiskNic(name string, desc string) string {
 					nic_type = "NORMAL_NIC"
 					subnet{
 						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
-					}	
+					}
 					vlan_mode = "ACCESS"
 				}
 			}
@@ -1423,7 +1540,7 @@ func testVmsV4ConfigWitUpdatedDiskNic(name, desc string) string {
 		  filter = "clusterExtId eq '${local.cluster0}'"
 		  limit = 1
 		}
-	
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "%[1]s"
 			description =  "%[2]s"
@@ -1459,13 +1576,13 @@ func testVmsV4ConfigWitUpdatedDiskNic(name, desc string) string {
 						}
 					}
 				}
-			}			
+			}
 			nics{
 				network_info{
 					nic_type = "NORMAL_NIC"
 					subnet{
 						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
-					}	
+					}
 					vlan_mode = "ACCESS"
 				}
 			}
@@ -1474,7 +1591,7 @@ func testVmsV4ConfigWitUpdatedDiskNic(name, desc string) string {
 					nic_type = "NORMAL_NIC"
 					subnet{
 						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
-					}	
+					}
 					vlan_mode = "ACCESS"
 				}
 			}
@@ -1501,7 +1618,7 @@ func testVmsCategoriesV4Config(name, desc string) string {
 		}
 
 		data "nutanix_categories_v2" "ctg"{}
-	
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "%[1]s"
 			description =  "%[2]s"
@@ -1509,13 +1626,13 @@ func testVmsCategoriesV4Config(name, desc string) string {
 			num_sockets = 2
 			cluster {
 				ext_id = local.cluster0
-			}			
+			}
 			nics{
 				network_info{
 					nic_type = "NORMAL_NIC"
 					subnet{
 						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
-					}	
+					}
 					vlan_mode = "ACCESS"
 				}
 			}
@@ -1551,7 +1668,7 @@ func testVmsCategoriesV4ConfigUpdate(name, desc string) string {
 		}
 
 		data "nutanix_categories_v2" "ctg"{}
-	
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "%[1]s"
 			description =  "%[2]s"
@@ -1559,13 +1676,13 @@ func testVmsCategoriesV4ConfigUpdate(name, desc string) string {
 			num_sockets = 2
 			cluster {
 				ext_id = local.cluster0
-			}			
+			}
 			nics{
 				network_info{
 					nic_type = "NORMAL_NIC"
 					subnet{
 						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
-					}	
+					}
 					vlan_mode = "ACCESS"
 				}
 			}
@@ -1583,7 +1700,7 @@ func testVmsCategoriesV4ConfigUpdate(name, desc string) string {
 func testVmsV2WithGpus(name, desc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
-		
+
 		locals {
 		  cluster0 = [
 			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
@@ -1593,7 +1710,7 @@ func testVmsV2WithGpus(name, desc string) string {
 		  vmm    = local.config.vmm
 		}
 
-		
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "%[1]s"
 			description =  "%[2]s"
@@ -1601,8 +1718,8 @@ func testVmsV2WithGpus(name, desc string) string {
 			num_sockets = 2
 			cluster {
 				ext_id = local.cluster0
-			}			
-			
+			}
+
 			gpus {
 				device_id = local.vmm.gpus[0].device_id
 				mode      = local.vmm.gpus[0].mode
@@ -1616,7 +1733,7 @@ func testVmsV2WithGpus(name, desc string) string {
 func testVmsV2RemoveGpus(name, desc string) string {
 	return fmt.Sprintf(`
 		data "nutanix_clusters_v2" "clusters" {}
-		
+
 		locals {
 		  cluster0 = [
 			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
@@ -1626,7 +1743,7 @@ func testVmsV2RemoveGpus(name, desc string) string {
 		  vmm    = local.config.vmm
 		}
 
-		
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "%[1]s"
 			description =  "%[2]s"
@@ -1634,8 +1751,8 @@ func testVmsV2RemoveGpus(name, desc string) string {
 			num_sockets = 2
 			cluster {
 				ext_id = local.cluster0
-			}			
-			
+			}
+
 			power_state = "OFF"
 		}
 	`, name, desc, filepath)
@@ -1659,7 +1776,7 @@ func testVmsConfigWithSerialPorts(name, desc string, isconn bool) string {
 		}
 
 		data "nutanix_categories_v2" "ctg"{}
-	
+
 		resource "nutanix_virtual_machine_v2" "test"{
 			name= "%[1]s"
 			description =  "%[2]s"
@@ -1667,20 +1784,20 @@ func testVmsConfigWithSerialPorts(name, desc string, isconn bool) string {
 			num_sockets = 2
 			cluster {
 				ext_id = local.cluster0
-			}			
+			}
 			nics{
 				network_info{
 					nic_type = "NORMAL_NIC"
 					subnet{
 						ext_id = data.nutanix_subnets_v2.subnets.subnets[0].ext_id
-					}	
+					}
 					vlan_mode = "ACCESS"
 				}
 			}
 			serial_ports{
 				index = 2
 				is_connected = %[3]t
-			}	
+			}
 			power_state = "ON"
 		}
 	`, name, desc, isconn, filepath)
