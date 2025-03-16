@@ -582,8 +582,8 @@ func DatasourceNutanixVirtualMachineV4() *schema.Resource {
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"bus_type": {
-																			Type:         schema.TypeString,
-																			Computed:     true,
+																			Type:     schema.TypeString,
+																			Computed: true,
 																		},
 																		"index": {
 																			Type:     schema.TypeInt,
@@ -614,7 +614,7 @@ func DatasourceNutanixVirtualMachineV4() *schema.Resource {
 										Type:     schema.TypeList,
 										Computed: true,
 										Elem: &schema.Schema{
-											Type:         schema.TypeString,
+											Type: schema.TypeString,
 										},
 									},
 								},
