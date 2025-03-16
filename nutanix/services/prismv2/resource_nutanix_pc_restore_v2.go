@@ -152,7 +152,7 @@ func ResourceNutanixRestorePcRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func ResourceNutanixRestorePcUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return ResourceNutanixRestorePcCreate(ctx, d, meta)
+	return nil
 }
 
 func ResourceNutanixRestorePcDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
