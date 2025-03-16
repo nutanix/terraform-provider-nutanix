@@ -63,7 +63,7 @@ func TestAccV2NutanixVmsCloneResource_WithUefiBootConfig(t *testing.T) {
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
 
-	datasourceNameVmCloned := "data.nutanix_virtual_machine_v2.test"
+	datasourceNameVMCloned := "data.nutanix_virtual_machine_v2.test"
 	// stateOn := "power_on"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -78,16 +78,16 @@ func TestAccV2NutanixVmsCloneResource_WithUefiBootConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVMClone, "num_threads_per_core", "1"),
 					resource.TestCheckResourceAttr(resourceNameVMClone, "memory_size_bytes", "8589934592"),
 					// Check on the cloned VM details to verify the boot config
-					resource.TestCheckResourceAttr(datasourceNameVmCloned, "memory_size_bytes", "8589934592"),
-					resource.TestCheckResourceAttr(datasourceNameVmCloned, "num_cores_per_socket", "1"),
-					resource.TestCheckResourceAttr(datasourceNameVmCloned, "num_sockets", "1"),
-					resource.TestCheckResourceAttr(datasourceNameVmCloned, "num_threads_per_core", "1"),
-					resource.TestCheckResourceAttr(datasourceNameVmCloned, "power_state", "OFF"),
-					resource.TestCheckResourceAttr(datasourceNameVmCloned, "boot_config.0.uefi_boot.0.boot_order.#", "3"),
-					resource.TestCheckResourceAttr(datasourceNameVmCloned, "boot_config.0.uefi_boot.0.boot_order.0", "CDROM"),
-					resource.TestCheckResourceAttr(datasourceNameVmCloned, "boot_config.0.uefi_boot.0.boot_order.1", "DISK"),
-					resource.TestCheckResourceAttr(datasourceNameVmCloned, "boot_config.0.uefi_boot.0.boot_order.2", "NETWORK"),
-					resource.TestCheckResourceAttr(datasourceNameVmCloned, "boot_config.0.uefi_boot.0.is_secure_boot_enabled", "false"),
+					resource.TestCheckResourceAttr(datasourceNameVMCloned, "memory_size_bytes", "8589934592"),
+					resource.TestCheckResourceAttr(datasourceNameVMCloned, "num_cores_per_socket", "1"),
+					resource.TestCheckResourceAttr(datasourceNameVMCloned, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(datasourceNameVMCloned, "num_threads_per_core", "1"),
+					resource.TestCheckResourceAttr(datasourceNameVMCloned, "power_state", "OFF"),
+					resource.TestCheckResourceAttr(datasourceNameVMCloned, "boot_config.0.uefi_boot.0.boot_order.#", "3"),
+					resource.TestCheckResourceAttr(datasourceNameVMCloned, "boot_config.0.uefi_boot.0.boot_order.0", "CDROM"),
+					resource.TestCheckResourceAttr(datasourceNameVMCloned, "boot_config.0.uefi_boot.0.boot_order.1", "DISK"),
+					resource.TestCheckResourceAttr(datasourceNameVMCloned, "boot_config.0.uefi_boot.0.boot_order.2", "NETWORK"),
+					resource.TestCheckResourceAttr(datasourceNameVMCloned, "boot_config.0.uefi_boot.0.is_secure_boot_enabled", "false"),
 				),
 			},
 		},
