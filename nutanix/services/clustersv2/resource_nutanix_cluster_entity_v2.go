@@ -766,11 +766,7 @@ func ResourceNutanixClusterV2Create(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if configVar, ok := d.GetOk("config"); ok {
-		config, err := expandClusterConfigReference(configVar, d, true)
-		if err != nil {
-			return diag.Errorf("error while expanding cluster config : %v", err)
-		}
-		body.Config = config
+		body.Config = expandClusterConfigReference(configVar, d)
 	}
 	if upgradeStatus, ok := d.GetOk("upgrade_status"); ok {
 		body.UpgradeStatus = expandUpgradeStatus(upgradeStatus)
@@ -945,7 +941,7 @@ func ResourceNutanixClusterV2Update(ctx context.Context, d *schema.ResourceData,
 		updateSpec.Network = expandClusterNetworkReference(d.Get("network"))
 	}
 	if d.HasChange("config") {
-		updateSpec.Config, _ = expandClusterConfigReference(d.Get("config"), d, false)
+		updateSpec.Config = expandClusterConfigReference(d.Get("config"), d)
 	}
 	if d.HasChange("upgrade_status") {
 		updateSpec.UpgradeStatus = expandUpgradeStatus(d.Get("upgrade_status"))
@@ -1369,7 +1365,7 @@ func expandHTTPProxyList(httpProxyList []interface{}) []config.HttpProxyConfig {
 	return nil
 }
 
-func expandClusterConfigReference(pr interface{}, d *schema.ResourceData, isClusterCreate bool) (*config.ClusterConfigReference, error) {
+func expandClusterConfigReference(pr interface{}, d *schema.ResourceData) *config.ClusterConfigReference {
 	if pr != nil {
 		clsConf := config.NewClusterConfigReference()
 		prI := pr.([]interface{})
@@ -1452,16 +1448,13 @@ func expandClusterConfigReference(pr interface{}, d *schema.ResourceData, isClus
 			}
 		}
 
-		if isClusterCreate {
-			return nil, fmt.Errorf("pulse_status is available only for update operation")
-		}
 		if pulseStatus, ok := val["pulse_status"]; ok && d.HasChange("config.0.pulse_status") {
 			clsConf.PulseStatus = expandPulseStatus(pulseStatus)
 		}
 
-		return clsConf, nil
+		return clsConf
 	}
-	return nil, nil
+	return nil
 }
 
 func expandPulseStatus(status interface{}) *config.PulseStatus {
