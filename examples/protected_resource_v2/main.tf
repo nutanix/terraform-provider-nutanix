@@ -2,7 +2,7 @@ terraform{
     required_providers {
         nutanix = {
             source = "nutanix/nutanix"
-            version = "2.0.0"
+            version = "2.1.0"
         }
     }
 }
@@ -77,8 +77,8 @@ locals {
 # Create Category
 resource "nutanix_category_v2" "example" {
   provider    = nutanix
-  key         = "tf-test-category-pp-restore-vm"
-  value       = "tf_test_category_pp_restore_vm"
+  key         = "tf-example-category-pp-restore-vm"
+  value       = "tf_example_category_pp_restore_vm"
   description = "category for protection policy and protected vm"
 }
 
@@ -232,8 +232,8 @@ locals {
 # Create Category
 resource "nutanix_category_v2" "example" {
   provider    = nutanix
-  key         = "tf-test-category-pp-restore-vg"
-  value       = "tf_test_category_pp_restore_vg"
+  key         = "tf-example-category-pp-restore-vg"
+  value       = "tf_example_category_pp_restore_vg"
   description = "category for protection policy and protected vg"
 }
 

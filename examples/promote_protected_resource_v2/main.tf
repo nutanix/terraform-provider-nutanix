@@ -2,11 +2,7 @@ terraform {
   required_providers {
     nutanix = {
       source  = "nutanix/nutanix"
-      version = "2.0.0"
-    }
-    nutanix-2 = {
-      source  = "nutanix/nutanix"
-      version = "2.0.0"
+      version = "2.1.0"
     }
   }
 }
@@ -136,7 +132,7 @@ resource "nutanix_protection_policy_v2" "sync-pp" {
 
 resource "nutanix_virtual_machine_v2" "vm" {
   provider             = nutanix
-  name                 = "tf-test-vm"
+  name                 = "tf-example-vm"
   description          = "create a new protected vm and get it"
   num_cores_per_socket = 1
   num_sockets          = 1
@@ -230,7 +226,7 @@ locals {
 }
 
 # check if the nodes is un configured or not
-resource "nutanix_clusters_discover_unconfigured_nodes_v2" "test-discover-cluster-node" {
+resource "nutanix_clusters_discover_unconfigured_nodes_v2" "example-discover-cluster-node" {
   ext_id       = local.pcExtId
   address_type = "IPV4"
   ip_filter_list {
@@ -252,7 +248,7 @@ resource "nutanix_clusters_discover_unconfigured_nodes_v2" "test-discover-cluste
 
 # create a new cluster
 resource "nutanix_cluster_v2" "remote-cluster" {
-  name = "tf-test-cluster-${local.randomNum}"
+  name = "tf-example-cluster-${local.randomNum}"
   nodes {
     node_list {
       controller_vm_ip {
@@ -287,7 +283,7 @@ resource "nutanix_cluster_v2" "remote-cluster" {
   lifecycle {
     ignore_changes = [network.0.smtp_server.0.server.0.password, links, categories, config.0.cluster_function]
   }
-  depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.test-discover-cluster-node]
+  depends_on = [nutanix_clusters_discover_unconfigured_nodes_v2.example-discover-cluster-node]
 }
 
 
@@ -333,8 +329,8 @@ locals {
 
 # Create Category
 resource "nutanix_category_v2" "cat" {
-  key   = "tf-test-category-pp-promote-vg-${local.randomNum}"
-  value = "tf_test_category_pp_promote_vg_${local.randomNum}"
+  key   = "tf-example-category-pp-promote-vg-${local.randomNum}"
+  value = "tf_example_category_pp_promote_vg_${local.randomNum}"
 
   # Modify the firewall rules on Local cluster
   provisioner "local-exec" {
@@ -351,7 +347,7 @@ resource "nutanix_category_v2" "cat" {
 }
 
 resource "nutanix_protection_policy_v2" "pp" {
-  name        = "tf-test-promote-pp-vg-${local.randomNum}"
+  name        = "tf-example-promote-pp-vg-${local.randomNum}"
   description = "create a new protected vg and promote it"
 
   replication_configurations {
@@ -399,7 +395,7 @@ resource "nutanix_protection_policy_v2" "pp" {
 }
 
 resource "nutanix_volume_group_v2" "vg" {
-  name              = "tf-test-promote-vg-${local.randomNum}"
+  name              = "tf-example-promote-vg-${local.randomNum}"
   description       = "create a new protected vg to be promoted"
   cluster_reference = local.clusterExtId
   lifecycle {

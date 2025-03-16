@@ -117,4 +117,4 @@ The local, remote attribute in the auto_rollup_retention supports the following:
 
 
 
-See detailed information in [Nutanix Protection Policy V4](https://developers.nutanix.com/api-reference?namespace=datapolicies&version=v4.0#tag/ProtectionPolicies/operation/getProtectionPolicyById).
+See detailed information in [Nutanix Get Protection Policy V4](https://developers.nutanix.com/api-reference?namespace=datapolicies&version=v4.0#tag/ProtectionPolicies/operation/getProtectionPolicyById).

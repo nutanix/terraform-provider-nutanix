@@ -2,7 +2,7 @@ terraform{
     required_providers {
         nutanix = {
             source = "nutanix/nutanix"
-            version = "2.0.0"
+            version = "2.1.0"
         }
     }
 }
@@ -204,7 +204,7 @@ resource "nutanix_protection_policy_v2" "auto-rollup-retention-protection-policy
 
 
 // List Protection Policies
-data "nutanix_protection_policies_v2" "protectiojn-policies" {}
+data "nutanix_protection_policies_v2" "protection-policies" {}
 
 // with filter
 data "nutanix_protection_policies_v2" "pps-filter" {

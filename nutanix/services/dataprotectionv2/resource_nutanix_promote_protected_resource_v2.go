@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	dataprtotectionPrismConfig "github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/prism/v4/config"
+	dataprotectionPrismConfig "github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
@@ -26,10 +26,6 @@ func ResourceNutanixPromoteProtectedResourceV2() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"promoted_vm_ext_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -45,7 +41,7 @@ func ResourceNutanixPromoteProtectedResourceV2Create(ctx context.Context, d *sch
 		return diag.Errorf("Error while promoting protected resource: %s", err)
 	}
 
-	TaskRef := resp.Data.GetValue().(dataprtotectionPrismConfig.TaskReference)
+	TaskRef := resp.Data.GetValue().(dataprotectionPrismConfig.TaskReference)
 	taskUUID := TaskRef.ExtId
 
 	taskconn := meta.(*conns.Client).PrismAPI
@@ -64,28 +60,16 @@ func ResourceNutanixPromoteProtectedResourceV2Create(ctx context.Context, d *sch
 
 	// Get UUID from TASK API
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("Error while getting task by ID: %s", err)
 	}
 
-	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
 
-	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Promote Protected Resource Task Details: %s", aJSON)
 
-	// // extract promoted item UUID
-	// promotedItemName := rUUID.CompletionDetails[0].Name
-	// promotedItemUUID := rUUID.CompletionDetails[0].Value.GetValue().(string)
-
-	// if utils.StringValue(promotedItemName) == "promotedVmExtId" {
-	// 	err = d.Set("promoted_vm_ext_id", promotedItemUUID)
-	// 	if err != nil {
-	// 		return diag.Errorf("Error while setting promoted Vm Ext ID: %s", err)
-	// 	}
-	// }
-
-	// d.SetId(promotedItemUUID)
 	d.SetId(utils.GenUUID())
 
 	return ResourceNutanixPromoteProtectedResourceV2Read(ctx, d, meta)

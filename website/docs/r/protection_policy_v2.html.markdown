@@ -16,14 +16,6 @@ Creates a protection policy to automate the recovery point creation and replicat
 ## Example—Synchronous Protection Policy
 
 ```hcl
-# List domain Managers
-data "nutanix_pcs_v2" "pcs-list" {}
-
-# Create Category
-resource "nutanix_category_v2" "synchronous-pp-category" {
-  key = "category-synchronous-protection-policy"
-  value = "category_synchronous_protection_policy"
-}
 
 resource "nutanix_protection_policy_v2" "synchronous-protection-policy"{
   name        = "synchronous_protection_policy"
@@ -48,7 +40,7 @@ resource "nutanix_protection_policy_v2" "synchronous-protection-policy"{
   }
 
   replication_locations {
-    domain_manager_ext_id = data.nutanix_pcs_v2.pcs-list.pcs[0].ext_id
+    domain_manager_ext_id = "6a44b05e-cb9b-4e7e-8d75-b1b4715369c4" # Local Domain Manager UUID
     label                 = "source"
     is_primary            = true
   }
@@ -58,34 +50,13 @@ resource "nutanix_protection_policy_v2" "synchronous-protection-policy"{
     is_primary            = false
   }
 
-  category_ids = [nutanix_category_v2.synchronous-pp-category.id]
+  category_ids = ["b08ed184-6b0c-42c1-8179-7b9026fe2676"]
 }
 ```
 
 ## Example—Linear Retention Protection Policy
 
 ```hcl
-# List domain Managers
-data "nutanix_pcs_v2" "pcs-list" {}
-
-# list Clusters 
-data "nutanix_clusters_v2" "clusters" {}
-
-locals {
-  clusterExtId = [
-    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
-    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-  ][
-  0
-  ]
-}
-
-# Create Category
-resource "nutanix_category_v2" "linear-retention-pp-category" {
-  key = "category-linear-retention-protection-policy"
-  value = "category_linear_retention_protection_policy"
-}
-
 resource "nutanix_protection_policy_v2" "linear-retention-protection-policy" {
   name = "linear-retention-protection-policy"
 
@@ -118,7 +89,7 @@ resource "nutanix_protection_policy_v2" "linear-retention-protection-policy" {
     }
   }
   replication_locations {
-    domain_manager_ext_id = data.nutanix_pcs_v2.pcs-list.pcs[0].ext_id
+    domain_manager_ext_id = "6a44b05e-cb9b-4e7e-8d75-b1b4715369c4" # Local Domain Manager UUID
     label                 = "source"
     is_primary            = true
     replication_sub_location {
@@ -133,22 +104,14 @@ resource "nutanix_protection_policy_v2" "linear-retention-protection-policy" {
     is_primary = false
   }
 
-  category_ids = [nutanix_category_v2.linear-retention-pp-category.id]
+  category_ids = ["b08ed184-6b0c-42c1-8179-7b9026fe2676"]
 }
 ```
 
 ## Example—Auto Rollup Retention Protection Policy
 
 ```hcl
-# List domain Managers
-data "nutanix_pcs_v2" "pcs-list" {}
 
-
-# Create Category
-resource "nutanix_category_v2" "auto-rollup-pp-category" {
-  key = "category-auto-rollup-retention-protection-policy"
-  value = "category_auto_rollup_retention_protection_policy"
-}
 # Create Auto Rollup Retention Protection Policy
 resource "nutanix_protection_policy_v2" "auto-rollup-retention-protection-policy" {
   name = "auto_rollup_retention_protection_policy"
@@ -199,7 +162,7 @@ resource "nutanix_protection_policy_v2" "auto-rollup-retention-protection-policy
   }
 
   replication_locations {
-    domain_manager_ext_id = data.nutanix_pcs_v2.pcs-list.pcs[0].ext_id
+    domain_manager_ext_id = "6a44b05e-cb9b-4e7e-8d75-b1b4715369c4" # Local Domain Manager UUID
     label                 = "source"
     is_primary            = true
   }
@@ -209,7 +172,7 @@ resource "nutanix_protection_policy_v2" "auto-rollup-retention-protection-policy
     is_primary = false
   }
 
-  category_ids = [nutanix_category_v2.auto-rollup-pp-category.id]
+  category_ids = ["b08ed184-6b0c-42c1-8179-7b9026fe2676"]
 }
 ```
 ## Argument Reference

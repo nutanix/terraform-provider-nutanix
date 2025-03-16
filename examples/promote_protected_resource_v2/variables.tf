@@ -12,8 +12,6 @@ variable "nutanix_port" {
   type = string
 }
 
-
-#define the type of variables to be used in terraform file
 variable "nutanix_remote_username" {
   type = string
 }

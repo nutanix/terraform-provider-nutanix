@@ -70,7 +70,7 @@ func DatasourceNutanixGetProtectedResourceV2Create(ctx context.Context, d *schem
 
 	resp, err := conn.ProtectedResource.GetProtectedResourceById(utils.StringPtr(extID))
 	if err != nil {
-		return diag.Errorf("Error while fetchining protected resource: %s", err)
+		return diag.Errorf("Error while fetching protected resource: %s", err)
 	}
 
 	protectedResource := resp.Data.GetValue().(config.ProtectedResource)

@@ -124,15 +124,15 @@ func ResourceNutanixProtectionPoliciesV2Create(ctx context.Context, d *schema.Re
 
 	// Get UUID from TASK API
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while fetching Protection Policy Task : %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
-	aJSON, _ = json.MarshalIndent(rUUID, "", "  ")
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	aJSON, _ = json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Create Protection Policy Task Response Details: %s", string(aJSON))
 
-	uuid := rUUID.CompletionDetails[0].Value.GetValue().(string)
+	uuid := taskDetails.CompletionDetails[0].Value.GetValue().(string)
 
 	d.SetId(uuid)
 
@@ -240,13 +240,13 @@ func ResourceNutanixProtectionPoliciesV2Update(ctx context.Context, d *schema.Re
 	}
 
 	// Get UUID from TASK API
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while fetching Protection Policy Task : %v", err)
 	}
 
-	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
-	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Update Protection Policy Task Response Details: %s", string(aJSON))
 
 	return ResourceNutanixProtectionPoliciesV2Read(ctx, d, meta)
@@ -277,12 +277,12 @@ func ResourceNutanixProtectionPoliciesV2Delete(ctx context.Context, d *schema.Re
 
 	// Get UUID from TASK API
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while deleting Protection Policy Task : %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(prismConfig.Task)
-	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	taskDetails := taskResp.Data.GetValue().(prismConfig.Task)
+	aJSON, _ := json.MarshalIndent(taskDetails, "", "  ")
 	log.Printf("[DEBUG] Delete Protection Policy Task Response Details: %s", string(aJSON))
 
 	return nil

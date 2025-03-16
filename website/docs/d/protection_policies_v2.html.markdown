@@ -48,7 +48,7 @@ The following arguments are supported:
 * `order_by`: -(Optional) A URL query parameter that allows clients to specify the sort criteria for the returned list of objects. Resources can be sorted in ascending order using asc or descending order using desc. If asc or desc are not specified, the resources will be sorted in ascending order by default. For example, '$orderby=templateName desc' would get all templates sorted by templateName in descending order. The orderby can be applied to the following fields:
   - name
 * `select`: -(Optional) A URL query parameter that allows clients to request a specific set of properties for each entity or complex type. Expression specified with the $select must conform to the OData V4.01 URL conventions. If a $select expression consists of a single select item that is an asterisk (i.e., *), then all properties on the matching resource will be returned.
-  - extId 
+  - extId
   - name
 
 ## Attributes Reference
@@ -57,7 +57,7 @@ The following attributes are exported:
 * `protection_policies`: - List of protection policies.
 
 ## Protection Policies
-The protection_policies attribute supports the following:
+The `protection_policies` is a list of protection policies. Each protection policy supports the following attributes:
 
 * `tenant_id`: - A globally unique identifier that represents the tenant that owns this entity. The system automatically assigns it, and it and is immutable from an API consumer perspective (some use cases may cause this Id to change - For instance, a use case may require the transfer of ownership of the entity, but these cases are handled automatically on the server).
 * `ext_id`: - A globally unique identifier of an instance that is suitable for external consumption.
@@ -87,7 +87,7 @@ The replication_locations attribute supports the following:
 
 #### Replication Sub Location
 The replication_sub_location attribute supports the following:
-> One of `cluster_ext_ids` : 
+> One of `cluster_ext_ids` :
 * `cluster_ext_ids` :  - External identifier of the clusters.
 
 ##### Cluster Ext Ids
@@ -149,4 +149,4 @@ The local, remote attribute in the auto_rollup_retention supports the following:
 
 
 
-See detailed information in [Nutanix Protection Policies V4](https://developers.nutanix.com/api-reference?namespace=datapolicies&version=v4.0#tag/ProtectionPolicies/operation/listProtectionPolicies).
+See detailed information in [Nutanix List Protection Policies V4](https://developers.nutanix.com/api-reference?namespace=datapolicies&version=v4.0#tag/ProtectionPolicies/operation/listProtectionPolicies).
