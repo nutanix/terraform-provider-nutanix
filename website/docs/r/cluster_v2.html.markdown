@@ -7,6 +7,7 @@ description: |-
 ---
 
 # nutanix_cluster_v2
+> config.pulse_status is supported only for update operation. It is not supported for create operation.
 
 Represents the Cluster entity. Provides the basic infrastructure for compute, storage and networking. This includes the operations that can be carried out on cluster and its subresources - host (node), rsyslog servers etc and actions that can be performed on cluster - add a node, remove a node, attach categories.
 
