@@ -8,6 +8,10 @@ description: |-
 
 # nutanix_pc_deploy_v2
 
+
+> - The Pc Deploy V2 resource is an action-only resource that supports creating actions. The update and delete operations have no effect. To run it again, destroy and reapply the resource.
+> - We need to increase the timeout for deploying the PC resource because the deployment takes longer than the default timeout allows for the operation to complete.
+
 Deploys a Prism Central using the provided details. Prism Central Size, Network Config are mandatory fields to deploy Prism Central. The response from this endpoint contains the URL in the task object location header that can be used to track the request status.
 
 ## Example Usage
@@ -79,8 +83,6 @@ resource "nutanix_pc_deploy_v2" "example"{
 ## Argument Reference
 
 The following arguments are supported:
-
-> We need to increase the timeout for deploying the PC resource because the deployment takes longer than the default timeout allows for the operation to complete.
 
 - `config`: -(Required) Domain manager (Prism Central) cluster configuration details.
 - `network`: -(Required) Domain manager (Prism Central) network configuration details.

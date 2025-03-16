@@ -8,6 +8,11 @@ description: |-
 
 # nutanix_pc_restore_v2
 
+
+> - The Pc Restore V2 resource is an action-only resource that supports creating actions. The update and delete operations have no effect. To run it again, destroy and reapply the resource.
+> -  We need to increase the timeout for restoring the PC, because the restore pc takes longer than the default timeout allows for the operation to complete.
+
+
 The restore domain manager is a task-driven operation to restore a domain manager from a cluster or object store backup location based on the selected restore point.
 
 ## Example Usage
@@ -178,8 +183,6 @@ resource "nutanix_pc_restore_v2" "test" {
 ## Argument Reference
 
 The following arguments are supported:
-
-> We need to increase the timeout for restoring the PC, because the restore pc takes longer than the default timeout allows for the operation to complete.
 
 - `restore_source_ext_id`: -(Required) A unique identifier obtained from the restore source API that corresponds to the details provided for the restore source.
 - `restorable_domain_manager_ext_id`: -(Required) A unique identifier for the domain manager.
