@@ -478,12 +478,12 @@ func DatasourceNutanixVirtualMachinesV4() *schema.Resource {
 																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"disk_size_bytes": {
-																			Type:     schema.TypeInt,
-																			Computed: true,
-																		},
 																		"disk_ext_id": {
 																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"disk_size_bytes": {
+																			Type:     schema.TypeInt,
 																			Computed: true,
 																		},
 																		"storage_container": {
@@ -586,6 +586,57 @@ func DatasourceNutanixVirtualMachinesV4() *schema.Resource {
 																},
 															},
 														},
+													},
+												},
+												"boot_device": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"boot_device_disk": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"disk_address": {
+																			Type:     schema.TypeList,
+																			Computed: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"bus_type": {
+																						Type:     schema.TypeString,
+																						Computed: true,
+																					},
+																					"index": {
+																						Type:     schema.TypeInt,
+																						Computed: true,
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+															"boot_device_nic": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"mac_address": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"boot_order": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
 													},
 												},
 											},
@@ -1147,6 +1198,11 @@ func DatasourceNutanixVirtualMachinesV4() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"tenant_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"links": schemaForLinks(),
 									"ext_id": {
 										Type:     schema.TypeString,
 										Computed: true,
