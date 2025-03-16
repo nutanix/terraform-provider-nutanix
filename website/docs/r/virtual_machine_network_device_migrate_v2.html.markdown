@@ -35,7 +35,7 @@ resource "nutanix_vm_network_device_v2" "nic"{
 }
 
 resource "nutanix_vm_network_device_migrate_v2" "migrate"{
-    vm_ext_id = resource.nutanix_virtual_machine_v4.vms.0.data.ext_id
+    vm_ext_id = resource.nutanix_virtual_machine_v2.vms.0.data.ext_id
     ext_id    = resource.nutanix_vm_network_device_v2.nic.ext_id
     subnet {
         ext_id = data.nutanix_subnets_v2.subnets.subnets.0.ext_id
