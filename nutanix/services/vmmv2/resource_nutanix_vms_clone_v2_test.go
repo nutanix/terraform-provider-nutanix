@@ -62,6 +62,8 @@ func TestAccV2NutanixVmsCloneResource_WithUefiBootConfig(t *testing.T) {
 	r := acctest.RandInt()
 	name := fmt.Sprintf("tf-test-vm-%d", r)
 	desc := "test vm description"
+
+	datasourceNameVmCloned := "data.nutanix_virtual_machine_v2.test"
 	// stateOn := "power_on"
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
@@ -75,6 +77,17 @@ func TestAccV2NutanixVmsCloneResource_WithUefiBootConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameVMClone, "num_cores_per_socket", "1"),
 					resource.TestCheckResourceAttr(resourceNameVMClone, "num_threads_per_core", "1"),
 					resource.TestCheckResourceAttr(resourceNameVMClone, "memory_size_bytes", "8589934592"),
+					// Check on the cloned VM details to verify the boot config
+					resource.TestCheckResourceAttr(datasourceNameVmCloned, "memory_size_bytes", "8589934592"),
+					resource.TestCheckResourceAttr(datasourceNameVmCloned, "num_cores_per_socket", "1"),
+					resource.TestCheckResourceAttr(datasourceNameVmCloned, "num_sockets", "1"),
+					resource.TestCheckResourceAttr(datasourceNameVmCloned, "num_threads_per_core", "1"),
+					resource.TestCheckResourceAttr(datasourceNameVmCloned, "power_state", "OFF"),
+					resource.TestCheckResourceAttr(datasourceNameVmCloned, "boot_config.0.uefi_boot.0.boot_order.#", "3"),
+					resource.TestCheckResourceAttr(datasourceNameVmCloned, "boot_config.0.uefi_boot.0.boot_order.0", "CDROM"),
+					resource.TestCheckResourceAttr(datasourceNameVmCloned, "boot_config.0.uefi_boot.0.boot_order.1", "DISK"),
+					resource.TestCheckResourceAttr(datasourceNameVmCloned, "boot_config.0.uefi_boot.0.boot_order.2", "NETWORK"),
+					resource.TestCheckResourceAttr(datasourceNameVmCloned, "boot_config.0.uefi_boot.0.is_secure_boot_enabled", "false"),
 				),
 			},
 		},
@@ -348,6 +361,11 @@ resource "nutanix_virtual_machine_v2" "test" {
 resource "nutanix_vm_clone_v2" "test"{
   vm_ext_id = nutanix_virtual_machine_v2.test.id
   name = "%[1]s-clone"
+}
+
+// data source to get the cloned vm details
+data "nutanix_virtual_machine_v2" "test" {
+  ext_id = nutanix_vm_clone_v2.test.id
 }
 
 `, name, desc)

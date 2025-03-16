@@ -566,6 +566,57 @@ func DatasourceNutanixVirtualMachineV4() *schema.Resource {
 											},
 										},
 									},
+									"boot_device": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"boot_device_disk": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"disk_address": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"bus_type": {
+																			Type:         schema.TypeString,
+																			Computed:     true,
+																		},
+																		"index": {
+																			Type:     schema.TypeInt,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"boot_device_nic": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"mac_address": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"boot_order": {
+										Type:     schema.TypeList,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type:         schema.TypeString,
+										},
+									},
 								},
 							},
 						},
@@ -1805,7 +1856,6 @@ func flattenOneOfVMBootConfig(pr *config.OneOfVmBootConfig) []map[string]interfa
 
 func flattenOneOfUefiBootBootDevice(bootDevice *config.OneOfUefiBootBootDevice) []map[string]interface{} {
 	if bootDevice != nil {
-		// bootDeviceList := make([]map[string]interface{}, 0)
 		deviceDisk := make(map[string]interface{})
 		deviceDiskList := make([]map[string]interface{}, 0)
 		deviceNic := make(map[string]interface{})
