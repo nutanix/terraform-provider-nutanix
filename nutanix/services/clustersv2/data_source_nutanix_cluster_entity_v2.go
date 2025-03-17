@@ -1203,7 +1203,7 @@ func flattenFaultToleranceState(pr *import1.FaultToleranceState) []map[string]in
 	return nil
 }
 
-func flattenRedundancyStatus(redundancyStatus *import1.RedundancyStatusDetails) []map[string]interface{}{
+func flattenRedundancyStatus(redundancyStatus *import1.RedundancyStatusDetails) []map[string]interface{} {
 	if redundancyStatus != nil {
 		redStatus := make(map[string]interface{})
 
