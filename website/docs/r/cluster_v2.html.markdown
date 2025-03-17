@@ -7,7 +7,6 @@ description: |-
 ---
 
 # nutanix_cluster_v2
-> config.pulse_status is supported only for update operation. It is not supported for create operation.
 
 Represents the Cluster entity. Provides the basic infrastructure for compute, storage and networking. This includes the operations that can be carried out on cluster and its subresources - host (node), rsyslog servers etc and actions that can be performed on cluster - add a node, remove a node, attach categories.
 
@@ -53,7 +52,7 @@ resource "nutanix_cluster_v2" "cluster"{
       fqdn {
         value = "<ntp_server_ip_list_fqdn_1>"
       }
-    }   
+    }
     smtp_server {
       email_address = "example.ex@exmple.com"
       server {
@@ -125,16 +124,16 @@ The host_ip attribute supports the following:
 The config attribute supports the following:
 
 * `build_info`: - (Optional) Build information details.
-* `cluster_function`: - (Optional) Cluster function. This is part of payload for cluster 
+* `cluster_function`: - (Optional) Cluster function. This is part of payload for cluster
   create operation only (allowed enum values for creation are AOS, ONE_NODE & TWO_NODE only).
     Valid values are:
      - "AOS"
-     - "PRISM_CENTRAL"	
-     - "CLOUD_DATA_GATEWAY"	
-     - "AFS"	
-     - "ONE_NODE"	
-     - "TWO_NODE"	
-     - "ANALYTICS_PLATFORM"	
+     - "PRISM_CENTRAL"
+     - "CLOUD_DATA_GATEWAY"
+     - "AFS"
+     - "ONE_NODE"
+     - "TWO_NODE"
+     - "ANALYTICS_PLATFORM"
 * `authorized_public_key_list`: - (Optional) Public ssh key details. This is part of payload for cluster update operation only.
 * `redundancy_factor`: - (Optional) Redundancy factor of a cluster. This is part of payload for both cluster create & update operations.
 * `cluster_arch`: - (Optional) Cluster arch.
@@ -154,7 +153,7 @@ The config attribute supports the following:
     Valid values are:
      - "DISABLED"	Disabled encryption status.
      - "ENABLED"	Enabled encryption status.
-* `pulse_status`: - (Optional) Pulse status for a cluster.
+* `pulse_status`: - (Optional) Pulse status for a cluster. `supported only for update operations and not available during creation.`
 
 ### Build info
 
