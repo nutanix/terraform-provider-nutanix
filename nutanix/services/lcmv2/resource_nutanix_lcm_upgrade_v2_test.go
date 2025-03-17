@@ -20,7 +20,7 @@ func TestAccV2NutanixLcmUpgrade_Basic(t *testing.T) {
 	datasourceNameLcmEntityAfterUpgrade := "data.nutanix_lcm_entity_v2.entity-after-upgrade"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		// CheckDestroy: testCheckDestroyProtectedResource,
 		Steps: []resource.TestStep{
