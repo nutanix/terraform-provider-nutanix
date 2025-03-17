@@ -68,7 +68,7 @@ jobs:
               echo "Setup V4 Config"
               echo '${{ secrets.V4_CONFIG }}' > test_config_v2.json
               echo "Run tests"
-              ${{ secrets.ACCEPTANCE_TEST_ARGS }} make testacc
+              ${{ secrets.ACCEPTANCE_TEST_ARGS }} make -d testacc
               echo "done"
       - name: Code Coverage Check
         if: ${{ always() }}
