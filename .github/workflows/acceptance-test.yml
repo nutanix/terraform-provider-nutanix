@@ -25,6 +25,8 @@ jobs:
           which go
       - name: Set environment variables
         run: |
+            export NUTANIX_PE_PASSWORD=${{ secrets.NUTANIX_PE_PASSWORD}}
+            export NUTANIX_PE_USERNAME=${{ secrets.NUTANIX_PE_USERNAME}}
             export NUTANIX_USERNAME=${{ secrets.NUTANIX_USERNAME}}
             export NUTANIX_PASSWORD=${{ secrets.NUTANIX_PASSWORD }}
             export NUTANIX_INSECURE=${{ secrets.NUTANIX_INSECURE }}
@@ -37,6 +39,8 @@ jobs:
             export NDB_ENDPOINT=${{ secrets.NDB_ENDPOINT }}
             export NDB_PASSWORD=${{ secrets.NDB_PASSWORD }}
             export NDB_USERNAME=${{ secrets.NDB_USERNAME }}
+            export PROTECTION_RULES_TEST_FLAG = ${{ secrets.PROTECTION_RULES_TEST_FLAG }}
+            export CGO_ENABLED=${{ secrets.CGO_ENABLED }}
       - name: Acceptance test cases
         run: |
               args="${{ github.event.client_payload.slash_command.args }}"
