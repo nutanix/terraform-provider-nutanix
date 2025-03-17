@@ -308,7 +308,6 @@ func ResourceNutanixDirectoryServicesV2Update(ctx context.Context, d *schema.Res
 	serviceAccount := expandDsServiceAccount(d.Get("service_account"))
 	updatedSpec.ServiceAccount = serviceAccount
 
-
 	if d.HasChange("name") {
 		updatedSpec.Name = utils.StringPtr(d.Get("name").(string))
 	}
