@@ -61,13 +61,13 @@ jobs:
               done
               export TESTARGS='-run="'$runFlag'"'
               echo "TESTARGS = $TESTARGS"
-              echo "Step: Foundation Config"
+              echo "Setup Foundation Config"
               echo '${{ secrets.FOUNDATION_CONFIG }}' > test_foundation_config.json
-              echo "Step: PC Config"
+              echo "Setup PC Config"
               echo '${{ secrets.PC_CONFIG }}' > test_config.json
-              echo "Step: V4 Config"
+              echo "Setup V4 Config"
               echo '${{ secrets.V4_CONFIG }}' > test_config_v2.json
-              echo "Step: Make test"
+              echo "Run tests"
               ${{ secrets.ACCEPTANCE_TEST_ARGS }} make testacc
               echo "done"
       - name: Code Coverage Check
