@@ -7,7 +7,6 @@ import (
 )
 
 type Client struct {
-	APIClientInstance  *datapolicies.ApiClient
 	ProtectionPolicies *api.ProtectionPoliciesApi
 }
 

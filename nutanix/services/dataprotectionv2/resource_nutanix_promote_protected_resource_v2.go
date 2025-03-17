@@ -31,6 +31,8 @@ func ResourceNutanixPromoteProtectedResourceV2() *schema.Resource {
 }
 
 // ResourceNutanixPromoteProtectedResourceV2Create to Promote Protected Resource
+// This Resource is action resource and does not have any state
+// resource id is set to random UUID
 func ResourceNutanixPromoteProtectedResourceV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).DataProtectionAPI
 
@@ -72,7 +74,7 @@ func ResourceNutanixPromoteProtectedResourceV2Create(ctx context.Context, d *sch
 
 	d.SetId(utils.GenUUID())
 
-	return ResourceNutanixPromoteProtectedResourceV2Read(ctx, d, meta)
+	return nil
 }
 
 // ResourceNutanixPromoteProtectedResourceV2Read to Promote Protected Resource

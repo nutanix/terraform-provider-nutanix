@@ -25,6 +25,7 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVm(t *testing.T) {
 	description := "create a new protected vm and promote it"
 
 	vmResourceName := "nutanix_virtual_machine_v2.test"
+	datasourceNamePromotedVM := "data.nutanix_virtual_machines_v2.promoted-vm"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
@@ -45,14 +46,15 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVm(t *testing.T) {
 				PreConfig: func() {
 					fmt.Println("Step 2: Promote Protected Resource")
 				},
-
 				Config: testPromoteProtectedResourceVMAndProtectionPolicyConfig(vmName, ppName, description, r) +
 					testPromoteProtectedResourceVMConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNamePromoteProtectedResource, "id"),
 					resource.TestCheckResourceAttrSet(resourceNamePromoteProtectedResource, "ext_id"),
-					// clean up the promoted vm
-					deletePromotedVM(vmName),
+					// check if the promoted vm is created
+					resource.TestCheckResourceAttrPair(datasourceNamePromotedVM, "vms.0.name", vmResourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceNamePromotedVM, "vms.0.num_cores_per_socket", vmResourceName, "num_cores_per_socket"),
+					resource.TestCheckResourceAttrPair(datasourceNamePromotedVM, "vms.0.num_sockets", vmResourceName, "num_sockets"),
 				),
 			},
 		},
@@ -222,11 +224,31 @@ provider "nutanix-2" {
 resource "nutanix_promote_protected_resource_v2" "test" {
   provider = nutanix-2
   ext_id = nutanix_virtual_machine_v2.test.id
+  provisioner "local-exec" {
+    command = "sleep 10" # sleep for 10 seconds after promoting the resource, to read the promoted resource
+  }
+}
+
+data "nutanix_virtual_machines_v2" "promoted-vm" {
+  provider = nutanix-2
+  filter = "name eq '${nutanix_virtual_machine_v2.test.name}'"
+  limit = 1
+  depends_on = [nutanix_promote_protected_resource_v2.test]
 }
 
 `, remoteHostProviderConfig)
 }
 
+// testPromoteProtectedResourceVGAndProtectionPolicyConfig returns the configuration for promoting a protected VG
+// Steps:
+// 1. Create a new cluster
+// 2. Register the cluster to PC
+// 3. Modify the firewall rules between the new cluster and the PC cluster
+// 4. Create a category
+// 5. Create a protection policy
+// 6. Create a volume group
+// 7. Associate the category to the volume group
+// 8. Promote the protected resource (VG)
 func testPromoteProtectedResourceVGAndProtectionPolicyConfig(clusterName, vgName, ppName, description, categoryKey, categoryValue string) string {
 	return fmt.Sprintf(`
 
@@ -248,7 +270,7 @@ locals {
 
   randomNum = 99
 
-  ## Commands
+  # Commands to reset the cluster password
   localClusterIP   = local.data_protection.local_cluster_pe
   localClusterVIP  = local.data_protection.local_cluster_vip
   remoteClusterIP  = local.clusters.nodes[0].cvm_ip
@@ -261,9 +283,10 @@ locals {
 
   resetClusterPasswordCommand = "${local.remoteClusterSSHCommand} '${local.resetClusterPassword}'"
 
+  # Commands to modify the firewall rules between the clusters
   modifyFirewallRulesCommand       = "/usr/local/nutanix/cluster/bin/modify_firewall -f -r"
   modifyLocalClusterFirewallRules  = "${local.localClusterSSHCommand} '${local.modifyFirewallRulesCommand} ${local.remoteClusterIP},${local.remoteClusterVIP} -p 2030,2036,2073,2090,8740 -i eth0'"
-  modifyRemoteClusterFirewallRules = "${local.remoteClusterSSHCommand} '${local.modifyFirewallRulesCommand} ${local.localClusterIP},${local.localClusterVIP}   -p 2030,2036,2073,2090,8740 -i eth0'"
+  modifyRemoteClusterFirewallRules = "${local.remoteClusterSSHCommand} '${local.modifyFirewallRulesCommand} ${local.localClusterIP},${local.localClusterVIP}  -p 2030,2036,2073,2090,8740 -i eth0'"
 }
 
 # check if the nodes is un configured or not

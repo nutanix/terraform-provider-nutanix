@@ -7,7 +7,6 @@ import (
 )
 
 type Client struct {
-	APIClientInstance *dataprotection.ApiClient
 	RecoveryPoint     *api.RecoveryPointsApi
 	ProtectedResource *api.ProtectedResourcesApi
 }

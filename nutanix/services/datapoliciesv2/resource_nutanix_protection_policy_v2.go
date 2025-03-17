@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"reflect"
+	"sort"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -15,7 +17,9 @@ import (
 	prism "github.com/nutanix/ntnx-api-golang-clients/datapolicies-go-client/v4/models/prism/v4/config"
 	prismConfig "github.com/nutanix/ntnx-api-golang-clients/prism-go-client/v4/models/prism/v4/config"
 	conns "github.com/terraform-providers/terraform-provider-nutanix/nutanix"
+	commonUtils "github.com/terraform-providers/terraform-provider-nutanix/nutanix/common"
 	prismSdk "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
+
 	"github.com/terraform-providers/terraform-provider-nutanix/utils"
 )
 
@@ -95,7 +99,7 @@ func ResourceNutanixProtectionPoliciesV2Create(ctx context.Context, d *schema.Re
 		bodySpec.ReplicationConfigurations = expandReplicationConfigurations(replicationConfigurations.([]interface{}))
 	}
 	if categoryIds, ok := d.GetOk("category_ids"); ok {
-		bodySpec.CategoryIds = expandListOfString(categoryIds.([]interface{}))
+		bodySpec.CategoryIds = commonUtils.ExpandListOfString(categoryIds.([]interface{}))
 	}
 
 	aJSON, _ := json.MarshalIndent(bodySpec, "", "  ")
@@ -215,7 +219,7 @@ func ResourceNutanixProtectionPoliciesV2Update(ctx context.Context, d *schema.Re
 		updateSpec.ReplicationConfigurations = expandReplicationConfigurations(replicationConfigurations.([]interface{}))
 	}
 	if categoryIds, ok := d.GetOk("category_ids"); ok {
-		updateSpec.CategoryIds = expandListOfString(categoryIds.([]interface{}))
+		updateSpec.CategoryIds = commonUtils.ExpandListOfString(categoryIds.([]interface{}))
 	}
 
 	resp, err := conn.ProtectionPolicies.UpdateProtectionPolicyById(utils.StringPtr(d.Id()), updateSpec, args)
@@ -497,7 +501,7 @@ func expandOneOfReplicationLocationReplicationSubLocation(oneOfReplicationLocati
 		clusterExtIdsVal := clusterExtIdsI.(map[string]interface{})
 
 		if clusterExtIds, ok := clusterExtIdsVal["cluster_ext_ids"]; ok {
-			nutanixCluster.ClusterExtIds = expandListOfString(clusterExtIds.([]interface{}))
+			nutanixCluster.ClusterExtIds = commonUtils.ExpandListOfString(clusterExtIds.([]interface{}))
 		}
 
 		err := oneOfReplicationLocationReplicationSubLocationSpec.SetValue(*nutanixCluster)
@@ -729,4 +733,40 @@ func getTaskStatus(pr *prismConfig.TaskStatus) string {
 		}
 	}
 	return "UNKNOWN"
+}
+
+func categoryIdsDiffSuppressFunc(k, old, new string, d *schema.ResourceData) bool {
+	if d.HasChange("category_ids") {
+		oldCap, newCap := d.GetChange("category_ids")
+		log.Printf("[DEBUG] oldCap : %v", oldCap)
+		log.Printf("[DEBUG] newCap : %v", newCap)
+
+		oldList := oldCap.([]interface{})
+		newList := newCap.([]interface{})
+
+		if len(oldList) != len(newList) {
+			log.Printf("[DEBUG] category_ids are different")
+			return false
+		}
+
+		sort.SliceStable(oldList, func(i, j int) bool {
+			return oldList[i].(string) < oldList[j].(string)
+		})
+		sort.SliceStable(newList, func(i, j int) bool {
+			return newList[i].(string) < newList[j].(string)
+		})
+
+		aJSON, _ := json.Marshal(oldList)
+		log.Printf("[DEBUG] oldList : %s", aJSON)
+		aJSON, _ = json.Marshal(newList)
+		log.Printf("[DEBUG] newList : %s", aJSON)
+
+		if reflect.DeepEqual(oldList, newList) {
+			log.Printf("[DEBUG] category_ids are same")
+			return true
+		}
+		log.Printf("[DEBUG] category_ids are different")
+		return false
+	}
+	return false
 }

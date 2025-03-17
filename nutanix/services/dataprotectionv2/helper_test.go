@@ -1,6 +1,7 @@
 package dataprotectionv2_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -115,45 +116,41 @@ func testCheckDestroyProtectedResource(state *terraform.State) error {
 				return fmt.Errorf("error: Category still exists : %v", err)
 			}
 			log.Printf("[DEBUG] Category deleted\n")
-			return nil
 		}
 	}
-	return nil
-}
 
-func deletePromotedVM(vmName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acc.TestAccProvider2.Meta().(*conns.Client)
-		client := conn.VmmAPI.VMAPIInstance
+	// delete promoted vm
+	for _, rs := range state.RootModule().Resources {
+		if rs.Type == "nutanix_virtual_machines_v2" {
+			log.Printf("[DEBUG] Checking if VM still exists\n")
+			vmExtID = rs.Primary.Attributes["vms.0.ext_id"]
 
-		filter := fmt.Sprintf("name eq '%s'", vmName)
+			fmt.Printf("vmExtID: %s\n", vmExtID)
+			connRemote := acc.TestAccProvider2.Meta().(*conns.Client)
+			client := connRemote.VmmAPI.VMAPIInstance
 
-		resp, err := client.ListVms(nil, nil, utils.StringPtr(filter), nil, nil)
-		if err != nil {
-			return fmt.Errorf("%v", err)
-		}
+			readResp, err := client.GetVmById(utils.StringPtr(vmExtID))
+			aJSON, _ := json.MarshalIndent(readResp, "", "  ")
+			fmt.Printf("[DEBUG] readResp: %v\n", aJSON)
 
-		if resp.Data == nil {
-			return fmt.Errorf("no data returned from list vms on Remote site")
-		}
-		vms := resp.Data.GetValue().([]config.Vm)
-
-		vm := vms[0]
-		readResp, err := client.GetVmById(vm.ExtId)
-		if err == nil {
-			args := make(map[string]interface{})
-			etag := client.ApiClient.GetEtag(readResp)
-			args["If-Match"] = utils.StringPtr(etag)
-			_, err = client.DeleteVmById(vm.ExtId, args)
-			if err != nil {
-				return fmt.Errorf("error: Promted VM still exists: %v", err)
+			if err == nil {
+				args := make(map[string]interface{})
+				etag := client.ApiClient.GetEtag(readResp)
+				args["If-Match"] = utils.StringPtr(etag)
+				aJSON, _ := json.MarshalIndent(args, "", "  ")
+				fmt.Printf("[DEBUG] args: %v\n", aJSON)
+				_, err = client.DeleteVmById(utils.StringPtr(vmExtID), args)
+				if err != nil {
+					return fmt.Errorf("error: Promoted VM still exists: %v", err)
+				}
+				log.Printf("[DEBUG] Promoted VM deleted\n")
+				return nil
 			}
-			log.Printf("[DEBUG] Promted VM deleted\n")
-			return nil
+			return fmt.Errorf("promoted VM not found")
 		}
-
-		return fmt.Errorf("promoted VM not found")
 	}
+
+	return nil
 }
 
 func deleteRestoredVM(vmName string) resource.TestCheckFunc {
