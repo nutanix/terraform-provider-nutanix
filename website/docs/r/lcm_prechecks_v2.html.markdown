@@ -13,27 +13,10 @@ Perform LCM prechecks for the intended update operation.
 ## Example
 
 ```hcl
-# List Prism Central
-data "nutanix_clusters_v2" "pc" {
-  filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'PRISM_CENTRAL')"
-}
-locals {
-  pcExtID      = data.nutanix_clusters_v2.pc.cluster_entities[0].ext_id
-}
-
-# In this example, we are trying to update Calm Policy Engine.
-data "nutanix_lcm_entities_v2" "lcm-entities" {
-  filter = "entityModel eq 'Calm Policy Engine'"
-}
-
-data "nutanix_lcm_entity_v2" "entity-before-upgrade" {
-  ext_id = data.nutanix_lcm_entities_v2.lcm-entities.entities[0].ext_id
-}
-
 resource "nutanix_lcm_prechecks_v2" "pre-checks" {
-  x_cluster_id = local.pcExtID
+  x_cluster_id = "0005a104-0b0b-4b0-8005-0b0b0b0b0b0b"
   entity_update_specs {
-    entity_uuid = data.nutanix_lcm_entity_v2.entity-before-upgrade.ext_id
+    entity_uuid = "0c5c9e53-3551-4c5d-b13c-e41c04cbfaf7"
     to_version  = "4.0.0"
   }
 }
@@ -65,4 +48,4 @@ The `entity_update_specs` attribute supports the following:
 * `entity_uuid`: (Required) UUID of the LCM entity.
 * `to_version`: (Required) Version to upgrade to.
 
-See detailed information in [Nutanix LCM Prechecks v4] https://developers.nutanix.com/api-reference?namespace=lifecycle&version=v4.0#tag/Prechecks/operation/performPrechecks
+See detailed information in [Nutanix LCM Prechecks v4](https://developers.nutanix.com/api-reference?namespace=lifecycle&version=v4.0#tag/Prechecks/operation/performPrechecks)
