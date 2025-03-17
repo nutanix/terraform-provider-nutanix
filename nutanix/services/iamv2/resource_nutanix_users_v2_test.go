@@ -18,7 +18,7 @@ func TestAccV2NutanixUsersResource_LocalActiveUser(t *testing.T) {
 	name := fmt.Sprintf("tf-test-user-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -59,7 +59,7 @@ func TestAccV2NutanixUsersResource_AlreadyExistsUser(t *testing.T) {
 	name := fmt.Sprintf("tf-test-user-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -87,7 +87,7 @@ func TestAccV2NutanixUsersResource_LocalInactiveUser(t *testing.T) {
 	name := fmt.Sprintf("tf-test-user-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -112,7 +112,7 @@ func TestAccV2NutanixUsersResource_SAMLUser(t *testing.T) {
 	name := fmt.Sprintf("tf-test-user-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -131,7 +131,7 @@ func TestAccV2NutanixUsersResource_SAMLUser(t *testing.T) {
 // create LDAP user
 func TestAccV2NutanixUsersResource_LDAPUser(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		// using V3 API to delete user
 		CheckDestroy: testAccCheckNutanixUserDestroy,
@@ -156,7 +156,7 @@ func TestAccV2NutanixUsersResource_DeactivateLocalUser(t *testing.T) {
 	name := fmt.Sprintf("tf-test-user-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -238,8 +238,8 @@ func testLocalActiveUserResourceConfig(filepath, name string) string {
 		display_name = "display-name-%[2]s"
 		password = local.users.password
 		user_type = "LOCAL"
-		status = "ACTIVE"  
-		force_reset_password = local.users.force_reset_password  
+		status = "ACTIVE"
+		force_reset_password = local.users.force_reset_password
 	}`, filepath, name)
 }
 
@@ -262,9 +262,9 @@ func testLocalActiveUserResourceUpdateConfig(filepath, name string) string {
 		display_name = "display-name-%[2]s_updated"
 		password = "${local.users.password}_updated"
 		user_type = "LOCAL"
-		status = "ACTIVE"  
+		status = "ACTIVE"
 		force_reset_password = local.users.force_reset_password
-		
+
 	}`, filepath, name)
 }
 
@@ -283,10 +283,10 @@ func testLocalUserAlreadyExistsResourceConfig(filepath, name string) string {
 		display_name = "display-name-%[2]s"
 		password = local.users.password
 		user_type = "LOCAL"
-		status = "ACTIVE"  
+		status = "ACTIVE"
 		force_reset_password = local.users.force_reset_password
 	}
-		
+
 	`, filepath, name)
 }
 
@@ -309,7 +309,7 @@ func testLocalInactiveUserResourceConfig(filepath, name string) string {
 		display_name = "display-name-%[2]s"
 		password = local.users.password
 		user_type = "LOCAL"
-		status = "INACTIVE"  
+		status = "INACTIVE"
 		force_reset_password = local.users.force_reset_password
 
 	}`, filepath, name)
@@ -326,7 +326,7 @@ func testSAMLUserResourceConfig(filepath, name string) string {
 	resource "nutanix_users_v2" "test" {
 		username = "%[2]s"
 		user_type = "SAML"
-		idp_id = local.users.idp_id		
+		idp_id = local.users.idp_id
 	}`, filepath, name)
 }
 
@@ -342,7 +342,7 @@ func testLDAPUserWithMinimalConfigResourceConfig(filepath string) string {
 		username = local.users.name
 		user_type = "LDAP"
 		idp_id = local.users.directory_service_id
-		
+
 	}`, filepath)
 }
 
@@ -363,7 +363,7 @@ func testDeactivateLocalUserResourceConfig(filepath, name string) string {
 		region = local.users.region
 		password = local.users.password
 		force_reset_password = local.users.force_reset_password
-		status = INACTIVE  
+		status = INACTIVE
 	}`, filepath, name)
 }
 
@@ -385,9 +385,9 @@ func testUsersResourceWithoutUserNameConfig(filepath string) string {
 		display_name = "display-name"
 		password = local.users.password
 		user_type = "LOCAL"
-		status = "ACTIVE"  
-		force_reset_password = local.users.force_reset_password  
-		
+		status = "ACTIVE"
+		force_reset_password = local.users.force_reset_password
+
 	}`, filepath)
 }
 
@@ -409,8 +409,8 @@ func testUsersResourceWithoutUserTypeConfig(filepath, name string) string {
 		region = local.users.region
 		display_name = "display-name-%[2]s"
 		password = local.users.password
-		status = "ACTIVE"  
-		force_reset_password = local.users.force_reset_password  
+		status = "ACTIVE"
+		force_reset_password = local.users.force_reset_password
 
 	}`, filepath, name)
 }
