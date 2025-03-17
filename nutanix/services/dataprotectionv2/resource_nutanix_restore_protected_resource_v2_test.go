@@ -24,7 +24,7 @@ func TestAccV2NutanixRestoreProtectedResourceResource_RestoreVm(t *testing.T) {
 	vmResourceName := "nutanix_virtual_machine_v2.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testCheckDestroyProtectedResource,
 		Steps: []resource.TestStep{
@@ -64,7 +64,7 @@ func TestAccV2NutanixRestoreProtectedResourceResource_RestoreVG(t *testing.T) {
 
 	vgResourceName := "nutanix_volume_group_v2.test"
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testCheckDestroyProtectedResource,
 		Steps: []resource.TestStep{
@@ -107,7 +107,7 @@ func testRestoreProtectedResourceVMAndProtectionPolicyConfig(vmName, ppName, des
 data "nutanix_pcs_v2" "pcs-list" {}
 
 
-# list Clusters 
+# list Clusters
 data "nutanix_clusters_v2" "clusters" {
   filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"
 }
@@ -241,7 +241,7 @@ func testRestoreProtectedResourceVGAndProtectionPolicyConfig(vgName, ppName, des
 data "nutanix_pcs_v2" "pcs-list" {}
 
 
-# list Clusters 
+# list Clusters
 data "nutanix_clusters_v2" "clusters" {
   filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"
 }

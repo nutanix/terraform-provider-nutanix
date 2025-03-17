@@ -27,7 +27,7 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVm(t *testing.T) {
 	vmResourceName := "nutanix_virtual_machine_v2.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testCheckDestroyProtectedResource,
 		Steps: []resource.TestStep{
@@ -77,7 +77,7 @@ func TestAccV2NutanixPromoteProtectedResourceResource_PromoteVG(t *testing.T) {
 	vgResourceName := "nutanix_volume_group_v2.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testCheckDestroyProtectedResource,
 		Steps: []resource.TestStep{
@@ -111,7 +111,7 @@ func testPromoteProtectedResourceVMAndProtectionPolicyConfig(vmName, ppName, des
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 
-# list Clusters 
+# list Clusters
 data "nutanix_clusters_v2" "clusters" {}
 
 locals {

@@ -20,7 +20,7 @@ func TestAccV2NutanixProtectionPolicyResource_Synchronous(t *testing.T) {
 	updateDescription := "terraform test protection policy CRUD update"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testProtectionPolicyV2CheckDestroy,
 		Steps: []resource.TestStep{
@@ -100,7 +100,7 @@ func TestAccV2NutanixProtectionPolicyResource_LinearRetention(t *testing.T) {
 	descriptionUpdated := "terraform test protection policy CRUD update"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testProtectionPolicyV2CheckDestroy,
 		Steps: []resource.TestStep{
@@ -174,7 +174,7 @@ func TestAccV2NutanixProtectionPolicyResource_AutoRollupRetention(t *testing.T) 
 	descriptionUpdated := "terraform test protection policy CRUD update auto rollup retention"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testProtectionPolicyV2CheckDestroy,
 		Steps: []resource.TestStep{

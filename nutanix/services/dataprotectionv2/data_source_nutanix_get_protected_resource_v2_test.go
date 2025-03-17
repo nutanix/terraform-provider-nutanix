@@ -21,7 +21,7 @@ func TestAccV2NutanixPromoteProtectedResourceDatasource_GetProtectedVm(t *testin
 	vmResourceName := "nutanix_virtual_machine_v2.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testCheckDestroyProtectedResource,
 		Steps: []resource.TestStep{
@@ -67,7 +67,7 @@ func TestAccV2NutanixPromoteProtectedResourceDatasource_GetProtectedVG(t *testin
 	vgResourceName := "nutanix_volume_group_v2.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testCheckDestroyProtectedResource,
 		Steps: []resource.TestStep{
@@ -105,7 +105,7 @@ func testCreateProtectedResourceVMConfig(vmName, ppName, description string, r i
 # List domain Managers
 data "nutanix_pcs_v2" "pcs-list" {}
 
-# list Clusters 
+# list Clusters
 data "nutanix_clusters_v2" "clusters" {}
 
 locals {
@@ -208,7 +208,7 @@ func testCreateProtectedResourceVgConfig(vgName, ppName, description string, r i
 data "nutanix_pcs_v2" "pcs-list" {}
 
 
-# list Clusters 
+# list Clusters
 data "nutanix_clusters_v2" "clusters" {
   filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'AOS')"
 }
