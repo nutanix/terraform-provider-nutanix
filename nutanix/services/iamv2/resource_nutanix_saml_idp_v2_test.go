@@ -13,7 +13,7 @@ const resourceNameIdentityProviders = "nutanix_saml_identity_providers_v2.test"
 
 func TestAccV2NutanixIdentityProvidersResource_CreateSamlIdp(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -76,7 +76,7 @@ func testIdentityProvidersResourceConfig(filepath string) string {
 		groups_delim = local.identity_providers.groups_delim
 		idp_metadata_xml = local.identity_providers.idp_metadata_xml
 		entity_issuer = local.identity_providers.entity_issuer
-		is_signed_authn_req_enabled = local.identity_providers.is_signed_authn_req_enabled	
+		is_signed_authn_req_enabled = local.identity_providers.is_signed_authn_req_enabled
 		custom_attributes = local.identity_providers.custom_attributes
 	}`, filepath)
 }
@@ -95,12 +95,12 @@ func testIdentityProvidersResourceWithoutName(filepath string) string {
 				login_url = local.identity_providers.idp_metadata.login_url
 				logout_url = local.identity_providers.idp_metadata.logout_url
 				certificate = local.identity_providers.idp_metadata.certificate
-				name_id_policy_format = local.identity_providers.idp_metadata.name_id_policy_format  
+				name_id_policy_format = local.identity_providers.idp_metadata.name_id_policy_format
 			}
 			username_attribute = local.identity_providers.username_attr
 			email_attribute = local.identity_providers.email_attr
 			entity_issuer = local.identity_providers.entity_issuer
-			is_signed_authn_req_enabled = local.identity_providers.is_signed_authn_req_enabled	
+			is_signed_authn_req_enabled = local.identity_providers.is_signed_authn_req_enabled
 		}`, filepath)
 }
 
@@ -117,12 +117,12 @@ func testIdentityProvidersResourceWithoutEntityID(filepath string) string {
 			login_url = local.identity_providers.idp_metadata.login_url
 			logout_url = local.identity_providers.idp_metadata.logout_url
 			certificate = local.identity_providers.idp_metadata.certificate
-			name_id_policy_format = local.identity_providers.idp_metadata.name_id_policy_format  
+			name_id_policy_format = local.identity_providers.idp_metadata.name_id_policy_format
 		}
 		name = local.identity_providers.name
 		username_attribute = local.identity_providers.username_attr
 		email_attribute = local.identity_providers.email_attr
 		entity_issuer = local.identity_providers.entity_issuer
-		is_signed_authn_req_enabled = local.identity_providers.is_signed_authn_req_enabled	
+		is_signed_authn_req_enabled = local.identity_providers.is_signed_authn_req_enabled
 	}`, filepath)
 }

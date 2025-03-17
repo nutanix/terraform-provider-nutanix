@@ -15,7 +15,7 @@ const resourceNameDirectoryServices = "nutanix_directory_services_v2.test"
 
 func TestAccV2NutanixDirectoryServicesResource_CreateACTIVE_DIRECTORYService(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testAccCheckNutanixDirectoryServicesV2Destroy,
 		Steps: []resource.TestStep{
@@ -55,7 +55,7 @@ func TestAccV2NutanixDirectoryServicesResource_CreateOpenLDAPService(t *testing.
 	name := fmt.Sprintf("tf-test-openldap-%d", acctest.RandInt())
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testAccCheckNutanixDirectoryServicesV2Destroy,
 		Steps: []resource.TestStep{
@@ -77,7 +77,7 @@ func TestAccV2NutanixDirectoryServicesResource_CreateOpenLDAPService(t *testing.
 
 func TestAccV2NutanixDirectoryServicesResource_CreateACTIVE_DIRECTORYAlreadyExists(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testAccCheckNutanixDirectoryServicesV2Destroy,
 		Steps: []resource.TestStep{
@@ -176,7 +176,7 @@ func testDirectoryServicesResourceConfig() string {
 
 	resource "nutanix_directory_services_v2" "test" {
 		name = local.directory_services.name
-		url = local.directory_services.url  
+		url = local.directory_services.url
 		directory_type = "ACTIVE_DIRECTORY"
 		domain_name = local.directory_services.domain_name
 		service_account {
@@ -202,7 +202,7 @@ func testDirectoryServicesUpdateResourceConfig() string {
 
 	resource "nutanix_directory_services_v2" "test" {
 		name = local.directory_services.name
-		url = local.directory_services.url  
+		url = local.directory_services.url
 		directory_type = "ACTIVE_DIRECTORY"
 		domain_name = local.directory_services.domain_name
 		service_account {
@@ -228,7 +228,7 @@ func testDirectoryOpenLDAPServicesResourceConfig(name string) string {
 
 	resource "nutanix_directory_services_v2" "test" {
 		name = "%[1]s"
-		url = local.directory_services.url  
+		url = local.directory_services.url
 		directory_type = "OPEN_LDAP"
 		domain_name = local.directory_services.domain_name
 		service_account {
@@ -260,7 +260,7 @@ func testDirectoryServicesDuplicatedResourceConfig() string {
 	return `
 	resource "nutanix_directory_services_v2" "test_1" {
 		name = local.directory_services.name
-		url = local.directory_services.url  
+		url = local.directory_services.url
 		directory_type = "ACTIVE_DIRECTORY"
 		domain_name = local.directory_services.domain_name
 		service_account {
@@ -291,7 +291,7 @@ func testDirectoryServicesResourceWithoutNameConfig() string {
 		}
 		directory_type = local.directory_services.directory_type
 		domain_name = local.directory_services.domain_name
-		url = local.directory_services.url  
+		url = local.directory_services.url
 		lifecycle {
 			ignore_changes = [
 			  service_account.0.password,
@@ -339,7 +339,7 @@ func testDirectoryServicesResourceWithoutDomainNameConfig() string {
 			password = local.directory_services.service_account.password
 		}
 		directory_type = local.directory_services.directory_type
-		url = local.directory_services.url  
+		url = local.directory_services.url
 		lifecycle {
 			ignore_changes = [
 			  service_account.0.password,
@@ -363,7 +363,7 @@ func testDirectoryServicesResourceWithoutDirectoryTypeConfig() string {
 			password = local.directory_services.service_account.password
 		}
 		domain_name = local.directory_services.domain_name
-		url = local.directory_services.url  
+		url = local.directory_services.url
 	    lifecycle {
 			ignore_changes = [
 			  service_account.0.password,
@@ -382,10 +382,10 @@ func testDirectoryServicesResourceWithoutServiceAccountConfig() string {
 
 	resource "nutanix_directory_services_v2" "test" {
 		name = local.directory_services.name
-		
+
 		directory_type = local.directory_services.directory_type
 		domain_name = local.directory_services.domain_name
-		url = local.directory_services.url  
+		url = local.directory_services.url
 		lifecycle {
 			ignore_changes = [
 			  service_account.0.password,

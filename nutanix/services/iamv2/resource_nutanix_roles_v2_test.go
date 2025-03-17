@@ -13,7 +13,7 @@ const resourceNameRoles = "nutanix_roles_v2.test"
 
 func TestAccV2NutanixRolesResource_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -83,7 +83,7 @@ func testRoleResourceConfig(filepath string) string {
 		config = (jsondecode(file("%s")))
 		roles = local.config.iam.roles
 	}
-	
+
 	data "nutanix_operations_v2" "test" {
 	  filter = "startswith(displayName, 'Create_')"
 	}
@@ -108,7 +108,7 @@ func testRoleResourceUpdateConfig(filepath string) string {
 		config = (jsondecode(file("%s")))
 		roles = local.config.iam.roles
 	}
-	
+
 	data "nutanix_operations_v2" "test" {
 	  //filter = "startswith(displayName, 'Create_')"
 	  filter = "startswith(displayName, 'Create_')"
@@ -134,7 +134,7 @@ func testRoleResourceDuplicateRoleConfig(filepath string) string {
 		config = (jsondecode(file("%s")))
 		roles = local.config.iam.roles
 	}
-	
+
 	data "nutanix_operations_v2" "test" {
 	  filter = "startswith(displayName, 'Create_')"
 	}
@@ -150,7 +150,7 @@ func testRoleResourceDuplicateRoleConfig(filepath string) string {
 	  	]
 		depends_on = [data.nutanix_operations_v2.test]
 	}
-	
+
 	resource "nutanix_roles_v2" "test_2" {
 		display_name = local.roles.display_name
 		description  = local.roles.description
@@ -162,7 +162,7 @@ func testRoleResourceDuplicateRoleConfig(filepath string) string {
 	  	]
 		depends_on = [data.nutanix_operations_v2.test, resource.nutanix_roles_v2.test_1]
 	}
-	
+
 	`, filepath)
 }
 
@@ -173,7 +173,7 @@ func testRoleResourceWithoutDisplayNameConfig(filepath string) string {
 		config = (jsondecode(file("%s")))
 		roles = local.config.iam.roles
 	}
-	
+
 	data "nutanix_operations_v2" "test" {
 	  filter = "startswith(displayName, 'Create_')"
 	}
