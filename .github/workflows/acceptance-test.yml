@@ -23,6 +23,20 @@ jobs:
         run: |
           go version
           which go
+      - name: Set environment variables
+        run: |
+            export NUTANIX_USERNAME=${{ secrets.NUTANIX_USERNAME}}
+            export NUTANIX_PASSWORD=${{ secrets.NUTANIX_PASSWORD }}
+            export NUTANIX_INSECURE=${{ secrets.NUTANIX_INSECURE }}
+            export NUTANIX_PORT=${{ secrets.NUTANIX_PORT }}
+            export NUTANIX_ENDPOINT=${{ secrets.NUTANIX_ENDPOINT }}
+            export NUTANIX_STORAGE_CONTAINER=${{ secrets.NUTANIX_STORAGE_CONTAINER}}
+            export FOUNDATION_ENDPOINT=${{ secrets.FOUNDATION_ENDPOINT }}
+            export FOUNDATION_PORT=${{ secrets.FOUNDATION_PORT }}
+            export NOS_IMAGE_TEST_URL=${{ secrets.NOS_IMAGE_TEST_URL }}
+            export NDB_ENDPOINT=${{ secrets.NDB_ENDPOINT }}
+            export NDB_PASSWORD=${{ secrets.NDB_PASSWORD }}
+            export NDB_USERNAME=${{ secrets.NDB_USERNAME }}
       - name: Acceptance test cases
         run: |
               args="${{ github.event.client_payload.slash_command.args }}"
@@ -80,7 +94,7 @@ jobs:
               exit 1
               fi
               echo "==> Running testcases..."
-              TF_ACC=1 go test /... -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count   
+              TF_ACC=1 go test ./... -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count   
               echo "done"
       - name: Code Coverage Check
         if: ${{ always() }}
