@@ -39,6 +39,7 @@ func TestAccV2NutanixDirectoryServicesResource_CreateACTIVE_DIRECTORYService(t *
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "name", testVars.Iam.DirectoryServices.Name),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "domain_name", testVars.Iam.DirectoryServices.DomainName),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "directory_type", "ACTIVE_DIRECTORY"),
+					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "group_search_type", "NON_RECURSIVE"),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "url", testVars.Iam.DirectoryServices.URL),
 					resource.TestCheckResourceAttr(resourceNameDirectoryServices, "service_account.0.username", testVars.Iam.DirectoryServices.ServiceAccount.Username),
 					resource.TestCheckResourceAttrSet(resourceNameDirectoryServices, "service_account.0.password"),
@@ -176,7 +177,7 @@ func testDirectoryServicesResourceConfig() string {
 
 	resource "nutanix_directory_services_v2" "test" {
 		name = local.directory_services.name
-		url = local.directory_services.url  
+		url = local.directory_services.url
 		directory_type = "ACTIVE_DIRECTORY"
 		domain_name = local.directory_services.domain_name
 		service_account {
@@ -184,11 +185,6 @@ func testDirectoryServicesResourceConfig() string {
 			password = local.directory_services.service_account.password
 		}
 		white_listed_groups = [ local.directory_services.white_listed_groups[0]]
-		lifecycle {
-			ignore_changes = [
-			  service_account.0.password,
-			]
-	  	}
 	}`, filepath)
 }
 
@@ -202,19 +198,15 @@ func testDirectoryServicesUpdateResourceConfig() string {
 
 	resource "nutanix_directory_services_v2" "test" {
 		name = local.directory_services.name
-		url = local.directory_services.url  
+		url = local.directory_services.url
 		directory_type = "ACTIVE_DIRECTORY"
 		domain_name = local.directory_services.domain_name
+		group_search_type = "NON_RECURSIVE"
 		service_account {
 			username = local.directory_services.service_account.username
 			password = local.directory_services.service_account.password
 		}
 		white_listed_groups = [ local.directory_services.white_listed_groups[1]]
-		lifecycle {
-			ignore_changes = [
-			  service_account.0.password,
-			]
-	  	}
 	}`, filepath)
 }
 
@@ -228,7 +220,7 @@ func testDirectoryOpenLDAPServicesResourceConfig(name string) string {
 
 	resource "nutanix_directory_services_v2" "test" {
 		name = "%[1]s"
-		url = local.directory_services.url  
+		url = local.directory_services.url
 		directory_type = "OPEN_LDAP"
 		domain_name = local.directory_services.domain_name
 		service_account {
@@ -248,11 +240,6 @@ func testDirectoryOpenLDAPServicesResourceConfig(name string) string {
 				group_member_attribute_value = local.directory_services.open_ldap_configuration.user_group_configuration.group_member_attribute_value
 			}
 		}
-		lifecycle {
-			ignore_changes = [
-			  service_account.0.password,
-			]
-	  	}
 	}`, name, filepath)
 }
 
@@ -260,7 +247,7 @@ func testDirectoryServicesDuplicatedResourceConfig() string {
 	return `
 	resource "nutanix_directory_services_v2" "test_1" {
 		name = local.directory_services.name
-		url = local.directory_services.url  
+		url = local.directory_services.url
 		directory_type = "ACTIVE_DIRECTORY"
 		domain_name = local.directory_services.domain_name
 		service_account {
@@ -268,11 +255,6 @@ func testDirectoryServicesDuplicatedResourceConfig() string {
 			password = local.directory_services.service_account.password
 		}
 		white_listed_groups = [ local.directory_services.white_listed_groups[0]]
-		lifecycle {
-			ignore_changes = [
-			  service_account.0.password,
-			]
-	  	}
 	}`
 }
 
@@ -291,12 +273,7 @@ func testDirectoryServicesResourceWithoutNameConfig() string {
 		}
 		directory_type = local.directory_services.directory_type
 		domain_name = local.directory_services.domain_name
-		url = local.directory_services.url  
-		lifecycle {
-			ignore_changes = [
-			  service_account.0.password,
-			]
-	  	}
+		url = local.directory_services.url
 	}`, filepath)
 }
 
@@ -316,11 +293,6 @@ func testDirectoryServicesResourceWithoutURLConfig() string {
 		}
 		directory_type = local.directory_services.directory_type
 		domain_name = local.directory_services.domain_name
-		lifecycle {
-			ignore_changes = [
-			  service_account.0.password,
-			]
-	  	}
 	}`, filepath)
 }
 
@@ -339,12 +311,7 @@ func testDirectoryServicesResourceWithoutDomainNameConfig() string {
 			password = local.directory_services.service_account.password
 		}
 		directory_type = local.directory_services.directory_type
-		url = local.directory_services.url  
-		lifecycle {
-			ignore_changes = [
-			  service_account.0.password,
-			]
-	  	}
+		url = local.directory_services.url
 	}`, filepath)
 }
 
@@ -363,12 +330,7 @@ func testDirectoryServicesResourceWithoutDirectoryTypeConfig() string {
 			password = local.directory_services.service_account.password
 		}
 		domain_name = local.directory_services.domain_name
-		url = local.directory_services.url  
-	    lifecycle {
-			ignore_changes = [
-			  service_account.0.password,
-			]
-	  	}
+		url = local.directory_services.url
 	}`, filepath)
 }
 
@@ -382,15 +344,9 @@ func testDirectoryServicesResourceWithoutServiceAccountConfig() string {
 
 	resource "nutanix_directory_services_v2" "test" {
 		name = local.directory_services.name
-		
+
 		directory_type = local.directory_services.directory_type
 		domain_name = local.directory_services.domain_name
-		url = local.directory_services.url  
-		lifecycle {
-			ignore_changes = [
-			  service_account.0.password,
-			]
-	  	}
-
+		url = local.directory_services.url
 	}`, filepath)
 }
