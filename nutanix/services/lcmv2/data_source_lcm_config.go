@@ -86,13 +86,13 @@ func DatasourceNutanixLcmConfigV2() *schema.Resource {
 func DatasourceNutanixLcmConfigV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
 	clusterExtID := d.Get("x_cluster_id").(string)
-	var clusterId *string
+	var clusterID *string
 	if clusterExtID != "" {
-		clusterId = utils.StringPtr(clusterExtID)
+		clusterID = utils.StringPtr(clusterExtID)
 	} else {
-		clusterId = nil
+		clusterID = nil
 	}
-	resp, err := conn.LcmConfigAPIInstance.GetConfig(clusterId)
+	resp, err := conn.LcmConfigAPIInstance.GetConfig(clusterID)
 	if err != nil {
 		return diag.Errorf("error while fetching the Lcm config : %v", err)
 	}

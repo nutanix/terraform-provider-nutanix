@@ -34,13 +34,13 @@ func ResourceNutanixLcmPerformInventoryV2() *schema.Resource {
 func ResourceNutanixLcmPerformInventoryV2Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).LcmAPI
 	clusterExtID := d.Get("x_cluster_id").(string)
-	var clusterId *string
+	var clusterID *string
 	if clusterExtID != "" {
-		clusterId = utils.StringPtr(clusterExtID)
+		clusterID = utils.StringPtr(clusterExtID)
 	} else {
-		clusterId = nil
+		clusterID = nil
 	}
-	resp, err := conn.LcmInventoryAPIInstance.PerformInventory(clusterId)
+	resp, err := conn.LcmInventoryAPIInstance.PerformInventory(clusterID)
 	if err != nil {
 		return diag.Errorf("error while performing the inventory: %v", err)
 	}
