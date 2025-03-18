@@ -23,6 +23,22 @@ jobs:
         run: |
           go version
           which go
+      - name: Set Go Environment
+        run: |
+          echo "GOPATH=$HOME/go" >> $GITHUB_ENV
+          echo "PATH=$HOME/go/bin:$PATH" >> $GITHUB_ENV
+      - name: Cache Go Modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/go/pkg/mod
+          key: go-mod-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            go-mod-${{ runner.os }}-
+      - name: Install Dependencies
+        run: |
+          go mod tidy
+          go mod vendor
       - name: Set environment variables
         run: |
             export NUTANIX_PE_PASSWORD=${{ secrets.NUTANIX_PE_PASSWORD}}
