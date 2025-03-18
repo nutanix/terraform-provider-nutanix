@@ -12,13 +12,35 @@ jobs:
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - name: Check out repository code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.17
+          go-version: 1.20
+      - name: Verify Go Installation
+        run: |
+          go version
+          which go
+      - name: Set environment variables
+        run: |
+            export NUTANIX_PE_PASSWORD=${{ secrets.NUTANIX_PE_PASSWORD}}
+            export NUTANIX_PE_USERNAME=${{ secrets.NUTANIX_PE_USERNAME}}
+            export NUTANIX_USERNAME=${{ secrets.NUTANIX_USERNAME}}
+            export NUTANIX_PASSWORD=${{ secrets.NUTANIX_PASSWORD }}
+            export NUTANIX_INSECURE=${{ secrets.NUTANIX_INSECURE }}
+            export NUTANIX_PORT=${{ secrets.NUTANIX_PORT }}
+            export NUTANIX_ENDPOINT=${{ secrets.NUTANIX_ENDPOINT }}
+            export NUTANIX_STORAGE_CONTAINER=${{ secrets.NUTANIX_STORAGE_CONTAINER}}
+            export FOUNDATION_ENDPOINT=${{ secrets.FOUNDATION_ENDPOINT }}
+            export FOUNDATION_PORT=${{ secrets.FOUNDATION_PORT }}
+            export NOS_IMAGE_TEST_URL=${{ secrets.NOS_IMAGE_TEST_URL }}
+            export NDB_ENDPOINT=${{ secrets.NDB_ENDPOINT }}
+            export NDB_PASSWORD=${{ secrets.NDB_PASSWORD }}
+            export NDB_USERNAME=${{ secrets.NDB_USERNAME }}
+            export PROTECTION_RULES_TEST_FLAG = ${{ secrets.PROTECTION_RULES_TEST_FLAG }}
+            export CGO_ENABLED=${{ secrets.CGO_ENABLED }}
       - name: Acceptance test cases
         run: |
               args="${{ github.event.client_payload.slash_command.args }}"
@@ -59,16 +81,24 @@ jobs:
                   fi
                   index=$((index+1))
               done
-              export TESTARGS='-run="'$runFlag'"'
+              export TESTARGS="-run=${runFlag}"
               echo "TESTARGS = $TESTARGS"
-              echo "Setup Foundation Config"
+              echo "==> Setup Foundation Config"
               echo '${{ secrets.FOUNDATION_CONFIG }}' > test_foundation_config.json
-              echo "Setup PC Config"
+              echo "==> Setup PC Config"
               echo '${{ secrets.PC_CONFIG }}' > test_config.json
-              echo "Setup V4 Config"
+              echo "==> Setup V4 Config"
               echo '${{ secrets.V4_CONFIG }}' > test_config_v2.json
-              echo "Run tests"
-              ${{ secrets.ACCEPTANCE_TEST_ARGS }} make testacc
+              echo "==> Checking that code complies with gofmt requirements..."
+              gofmt_files=$(gofmt -l `find . -name '*.go' | grep -v vendor`)
+              if [[ -n ${gofmt_files} ]]; then
+              echo 'gofmt needs running on the following files:'
+              echo "${gofmt_files}"
+              echo "You can use the command: \`make fmt\` to reformat code."
+              exit 1
+              fi
+              echo "==> Running testcases..."
+              TF_ACC=1 go test ./... -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count   
               echo "done"
       - name: Code Coverage Check
         if: ${{ always() }}
