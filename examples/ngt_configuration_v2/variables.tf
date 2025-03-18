@@ -17,3 +17,9 @@ variable "username" {
 variable "password" {
   type = string
 }
+variable "image_name" {
+  type = string
+}
+variable "subnet_name" {
+  type = string
+}

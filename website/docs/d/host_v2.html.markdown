@@ -6,7 +6,7 @@ description: |-
  Describes the statistics data of the host identified by {hostExtId} belonging to the cluster identified by {clusterExtId}.
 ---
 
-# nutanix_host
+# nutanix_host_v2
 
 Describes the statistics data of the host identified by {hostExtId} belonging to the cluster identified by {clusterExtId}.
 
@@ -14,8 +14,8 @@ Describes the statistics data of the host identified by {hostExtId} belonging to
 
 ```hcl
 data "nutanix_host_v2" "host"{
-   cluster_ext_id = "<cluster uuid>"
-   ext_id = "<host uuid>"
+   cluster_ext_id = "021151dc-3ed1-4fec-a81d-39606451750c"
+   ext_id = "919c9488-0b50-4fc8-9159-923e56a3abca"
 }
 ```
 
@@ -206,4 +206,4 @@ The ipv6 attribute supports the following:
 
 
 
-See detailed information in [Nutanix Hosts V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0).
+See detailed information in [Nutanix Get Host V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0#tag/Clusters/operation/getHostById).

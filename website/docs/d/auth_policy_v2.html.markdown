@@ -12,9 +12,9 @@ Provides a datasource to retrieve authorization policy with  authorization polic
 ## Example Usage
 
 ```hcl
-    data "nutanix_authorization_policy_v2" "acp"{
-        ext_id = {{ acp uuid }}
-    }
+data "nutanix_authorization_policy_v2" "get-acp"{
+  ext_id = "ba250e3e-1db1-4950-917f-a9e2ea35b8e3"
+}
 
 ```
 
@@ -55,4 +55,4 @@ The links attribute supports the following:
 * `rel`: - A name that identifies the relationship of the link to the object that is returned by the URL. The unique value of "self" identifies the URL for the object
 
 
-See detailed information in [Nutanix Authorization Policies v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0).
+See detailed information in [Nutanix Get Authorization Policy v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/AuthorizationPolicies/operation/getAuthorizationPolicyById).

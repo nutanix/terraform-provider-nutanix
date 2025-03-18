@@ -1,5 +1,5 @@
 
-#variable definations
+#variable definitions
 variable "nutanix_username" {
   type = string
 }
@@ -16,5 +16,8 @@ variable "vm_uuid" {
   type = string
 }
 variable "user_data" {
+  type = string
+}
+variable "subnet_name" {
   type = string
 }

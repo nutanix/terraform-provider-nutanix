@@ -13,8 +13,21 @@ Get the list of existing subnets.
 ### Example
 
 ```hcl
+# Get all subnets
+data "nutanix_subnets_v2" "example"{}
 
-    data "nutanix_subnets_v2" "example"{}
+# Get all subnets with filter
+data "nutanix_subnets_v2" "example"{
+  filter = "isExternal eq true and subnetType eq 'VLAN'"
+}
+
+# Get all subnets with order by and limit and filter
+data "nutanix_subnets_v2" "example"{
+  filter = "isExternal eq true"
+  order_by = "name desc"
+  limit = 10
+}
+
 ```
 
 ## Argument Reference
@@ -23,16 +36,46 @@ The following arguments are supported:
 
 - `page`: (Optional) A URL query parameter that specifies the page number of the result set. It must be a positive integer between 0 and the maximum number of pages that are available for that resource. Any number out of this range might lead to no results.
 - `limit`: (Optional) A URL query parameter that specifies the total number of records returned in the result set. Must be a positive integer between 1 and 100. Any number out of this range will lead to a validation error. If the limit is not provided, a default value of 50 records will be returned in the result set.
-- `filter`: (Optional) A URL query parameter that allows clients to filter a collection of resources.
-- `order_by`: (Optional) A URL query parameter that allows clients to specify the sort criteria for the returned list of objects. Resources can be sorted in ascending order using asc or descending order using desc. If asc or desc are not specified, the resources will be sorted in ascending order by default
-- `expand`: (Optional) A URL query parameter that allows clients to request related resources when a resource that satisfies a particular request is retrieved.
-- `select`: (Optional) A URL query parameter that allows clients to request a specific set of properties for each entity or complex type.
+- `filter`: (Optional) A URL query parameter that allows clients to filter a collection of resources. The filter can be applied to the following fields:
+  - `clusterReference`
+  - `extId`
+  - `isExternal`
+  - `name`
+  - `subnetType`
+  - `vpcReference`
+
+- `order_by`: (Optional) A URL query parameter that allows clients to specify the sort criteria for the returned list of objects. Resources can be sorted in ascending order using asc or descending order using desc. If asc or desc are not specified, the resources will be sorted in ascending order by default. The orderby can be applied to the following fields:
+  - `name`
+- `expand`: (Optional) A URL query parameter that allows clients to request related resources when a resource that satisfies a particular request is retrieved. The expand can be applied to the following fields:
+  - `virtualSwitch`
+  - `vpc`
+- `select`: (Optional) A URL query parameter that allows clients to request a specific set of properties for each entity or complex type. The select can be applied to the following fields:
+  - `clusterName`
+  - `clusterReference`
+  - `extId`
+  - `hypervisorType`
+  - `subnetType`
+  - `ipPrefix`
+  - `isAdvancedNetworking`
+  - `isExternal`
+  - `isNatEnabled`
+  - `links`
+  - `metadata`
+  - `name`
+  - `networkId`
+  - `subnetType`
+  - `tenantId`
+  - `virtualSwitchReference`
+  - `vpcReference`
+
+## Attribute Reference
+The following attributes are exported:
 
 - `subnets`: List all of subnets
 
-## subnets
 
-The following attributes are exported:
+## Subnets
+The `subnets` object contains the following attributes:
 
 - `ext_id`: A globally unique identifier of an instance that is suitable for external consumption.
 - `name`: Name of the subnet.
@@ -114,4 +157,4 @@ The following attributes are exported:
 - `value`: value of address
 - `prefix_length`: The prefix length of the network to which this host IPv4/IPv6 address belongs.
 
-See detailed information in [Nutanix Subnet v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0).
+See detailed information in [Nutanix List Subnets v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0#tag/Subnets/operation/listSubnets).

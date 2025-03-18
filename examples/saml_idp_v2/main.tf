@@ -20,15 +20,22 @@ provider "nutanix" {
 }
 
 resource "nutanix_saml_identity_providers_v2" "example" {
-  name                        = "<IDENTITY_PROVIDER_NAME>"
-  username_attribute          = "<IDENTITY_PROVIDER_USERNAME>"
-  email_attribute             = "<IDENTITY_PROVIDER_EMAIL>"
-  groups_attribute            = "<IDENTITY_PROVIDER_GROUPS>"
-  groups_delim                = "<IDENTITY_PROVIDER_GROUPS_DELIM>" # such as ',' or ';'
-  idp_metadata_xml            = "<IDENTITY_PROVIDER_METADATA_XML>"
-  entity_issuer               = "<IDENTITY_PROVIDER_ENTITY_ISSUER>"
-  is_signed_authn_req_enabled = "<IDENTITY_PROVIDER_IS_SIGNED_AUTHN_REQ_ENABLED>"
-  custom_attributes           = "<IDENTITY_PROVIDER_CUSTOM_ATTRIBUTES>"
+  name                        = "example_idp_name"
+  idp_metadata {
+    entity_id = "entity_id"
+    login_url = "login_url"
+    logout_url = "logout_url"
+    error_url = "error_url"
+    certificate = "certificate"
+  }
+  username_attribute          = "username"
+  email_attribute             = "email"
+  groups_attribute            = "groups"
+  groups_delim                = "," # such as ',' or ';'
+  idp_metadata_xml            = "<IDENTITY_PROVIDER_METADATA_XML content>"
+  entity_issuer               = "entity_issuer_issuer"
+  is_signed_authn_req_enabled = true
+  custom_attributes           = ["custom1", "custom2"]
 }
 
 # get saml identity provider by id

@@ -16,30 +16,33 @@ provider "nutanix" {
   insecure = true
 }
 
-
-
 # Add Directory Service .
-resource "nutanix_directory_services_v2" "example" {
-  name           = "<name of directory service>"
-  url            = "<URL for the Directory Service>"
-  directory_type = "<Type of Directory Service.>"
-  domain_name    = "<Domain name for the Directory Service.>"
+resource "nutanix_directory_services_v2" "active-directory" {
+  name           = "example_active_directory"
+  url            = "ldap://10.xx.xx.xx:xxxx"
+  directory_type = "ACTIVE_DIRECTORY"
+  domain_name    = "nutanix.com"
   service_account {
-    username = "<Username to connect to the Directory Service>"
-    password = "<Password to connect to the Directory Service>"
+    username = "username"
+    password = "password"
   }
   white_listed_groups = ["example"]
+  lifecycle {
+    ignore_changes = [
+      service_account.0.password,
+    ]
+  }
 }
 
 # List all  Directory Services.
 data "nutanix_directory_services_v2" "example" {}
 
 # List all  Directory Services with filter.
-data "nutanix_directory_services_v2" "test" {
-  filter = "name eq '${nutanix_directory_services_v2.example.name}'"
+data "nutanix_directory_services_v2" "list-active-directory" {
+  filter = "name eq '${nutanix_directory_services_v2.active-directory.name}'"
 }
 
 # Get a Directory Service.
-data "nutanix_directory_service_v2" "example" {
-  ext_id = "<Directory Service UUID>"
+data "nutanix_directory_service_v2" "get-active-directory" {
+  ext_id = nutanix_directory_services_v2.active-directory.ext_id
 }

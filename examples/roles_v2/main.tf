@@ -17,22 +17,38 @@ provider "nutanix" {
 }
 
 
+# filtered list operation
+data "nutanix_operations_v2" "operations-filtered-list" {
+  filter = "startswith(displayName, 'Create_')"
+}
+
 # Create role
-resource "nutanix_roles_v2" "test" {
-  display_name = "test_role"
-  description  = "creat a test role using terraform"
-  operations   = var.operations
+resource "nutanix_roles_v2" "example-role" {
+  display_name = "example_role"
+  description  = "create example role"
+  operations = [
+    data.nutanix_operations_v2.operations-filtered-list.operations[0].ext_id,
+    data.nutanix_operations_v2.operations-filtered-list.operations[1].ext_id,
+    data.nutanix_operations_v2.operations-filtered-list.operations[2].ext_id,
+    data.nutanix_operations_v2.operations-filtered-list.operations[3].ext_id
+  ]
 }
 
-# list Roles
-data "nutanix_roles_v2" "test" {}
+# List all Roles
+data "nutanix_roles_v2" "roles" {}
 
-# list Roles with filter
-data "nutanix_roles_v2" "test" {
-  filter = "displayName eq 'test_role'"
-}
-# get a specific role by id
-data "nutanix_role_v2" "test" {
-  ext_id = nutanix_roles_v2.test.id
+# List Roles with filter
+data "nutanix_roles_v2" "filtered-roles" {
+  filter = "displayName eq '${nutanix_roles_v2.example-role.display_name}'"
 }
 
+# List Roles with filter and orderby
+data "nutanix_roles_v2" "ordered-roles" {
+  order_by = "createdTime desc"
+}
+
+# List Roles with filter and orderby
+data "nutanix_roles_v2" "filtered-ordered-roles"{
+  filter = "displayName eq '${nutanix_roles_v2.example-role.display_name}'"
+  order_by = "createdTime desc"
+}
