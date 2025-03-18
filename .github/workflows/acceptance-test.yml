@@ -54,16 +54,26 @@ jobs:
           go mod tidy
           go mod vendor
 
-      - name: Install unzip and Node.js
-        run: sudo apt-get update && sudo apt-get install -y unzip nodejs npm
+      - name: Install unzip
+        run: |
+          sudo apt-get update && sudo apt-get install -y unzip
 
       - name: Setup Terraform v1.10.5
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: '1.10.5'
-
-      - name: Verify Terraform Installation
         run: |
+          set -e  # Exit on error
+          TERRAFORM_VERSION="1.10.5"
+          curl -fsSL -o terraform.zip "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
+          
+          if [ ! -f terraform.zip ]; then
+            echo "Terraform zip file not found!"
+            exit 1
+          fi
+
+          unzip terraform.zip
+          sudo mv terraform /usr/local/bin/
+          rm terraform.zip  # Cleanup
+
+          echo "✅ Terraform Installed Successfully!"
           terraform version
 
       - name: Set environment variables
