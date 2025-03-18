@@ -91,8 +91,8 @@ type TestConfig struct {
 var testVars TestConfig
 
 var (
-	path, _  = os.Getwd()
-	filepath = path + "/../../../test_config_v2.json"
+	path, _     = os.Getwd()
+	filepath    = path + "/../../../test_config_v2.json"
 	xmlFilePath = path + "/../../../test_idp_metadata.xml"
 )
 
