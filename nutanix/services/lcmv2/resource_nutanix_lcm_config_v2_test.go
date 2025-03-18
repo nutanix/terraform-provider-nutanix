@@ -13,7 +13,7 @@ func TestAccV2NutanixLcmConfigUpdate(t *testing.T) {
 	datasourceLcmConfigBeforeUpdate := "data.nutanix_lcm_config_v2.get_lcm_config_before_update"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() {},
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -39,7 +39,7 @@ func testLcmUpdateConfig() string {
 	return `
 # Get LCM Config before Update
 data "nutanix_lcm_config_v2" "get_lcm_config_before_update" {
-   
+
 }
 
 # Update LCM Config: Enable auto inventory
