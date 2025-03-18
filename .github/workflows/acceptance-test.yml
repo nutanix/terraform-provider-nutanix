@@ -41,6 +41,19 @@ jobs:
             export NDB_USERNAME=${{ secrets.NDB_USERNAME }}
             export PROTECTION_RULES_TEST_FLAG=${{ secrets.PROTECTION_RULES_TEST_FLAG }}
             export CGO_ENABLED=${{ secrets.CGO_ENABLED }}
+      - name: Check gofmt
+        run: |
+            echo "==> Checking that code complies with gofmt requirements..."
+            gofmt_files=$(gofmt -l `find . -name '*.go' | grep -v vendor`)
+            if [[ -n ${gofmt_files} ]]; then
+                echo 'gofmt needs running on the following files:'
+                echo "${gofmt_files}"
+                echo "You can use the command: \`make fmt\` to reformat code."
+                exit 1
+            else
+                echo "No gofmt issues found."
+            fi
+        continue-on-error: true
       - name: Acceptance test cases
         run: |
               args="${{ github.event.client_payload.slash_command.args }}"
@@ -89,14 +102,6 @@ jobs:
               echo '${{ secrets.PC_CONFIG }}' > test_config.json
               echo "==> Setup V4 Config"
               echo '${{ secrets.V4_CONFIG }}' > test_config_v2.json
-              echo "==> Checking that code complies with gofmt requirements..."
-              gofmt_files=$(gofmt -l `find . -name '*.go' | grep -v vendor`)
-              if [[ -n ${gofmt_files} ]]; then
-              echo 'gofmt needs running on the following files:'
-              echo "${gofmt_files}"
-              echo "You can use the command: \`make fmt\` to reformat code."
-              exit 1
-              fi
               echo "==> Running testcases..."
               TF_ACC=1 go test ./... -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count   
               echo "done"
