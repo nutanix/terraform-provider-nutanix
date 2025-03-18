@@ -18,6 +18,7 @@ func TestAccV2NutanixUsersDatasource_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testUsersDatasourceV4Config(filepath, name),
@@ -39,6 +40,7 @@ func TestAccV2NutanixUsersDatasource_WithFilter(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testUsersDatasourceV4WithFilterConfig(filepath, name, "userType eq Schema.Enums.UserType'LOCAL'"),
@@ -65,6 +67,7 @@ func TestAccV2NutanixUsersDatasource_WithLimit(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testUsersDatasourceV4WithLimitConfig(filepath, name),
@@ -82,7 +85,7 @@ func testUsersDatasourceV4Config(filepath, name string) string {
 			config = (jsondecode(file("%[1]s")))
 			users = local.config.iam.users
 		}
-		
+
 		resource "nutanix_users_v2" "test" {
 			username = "%[2]s"
 			first_name = "first-name-%[2]s"
@@ -94,8 +97,8 @@ func testUsersDatasourceV4Config(filepath, name string) string {
 			display_name = "display-name-%[2]s"
 			password = local.users.password
 			user_type = "LOCAL"
-			status = "ACTIVE"  
-			force_reset_password = local.users.force_reset_password   
+			status = "ACTIVE"
+			force_reset_password = local.users.force_reset_password
 		}
 
 		data "nutanix_users_v2" "test"{
@@ -123,16 +126,16 @@ func testUsersDatasourceV4WithFilterConfig(filepath, name, userQuery string) str
 		display_name = "display-name-%[2]s"
 		password = local.users.password
 		user_type = "LOCAL"
-		status = "ACTIVE"  
-		force_reset_password = local.users.force_reset_password   
+		status = "ACTIVE"
+		force_reset_password = local.users.force_reset_password
 	}
-	
+
 	data "nutanix_users_v2" "test" {
 		filter = "%[3]s"
 		depends_on = [nutanix_users_v2.test]
 	}
 
-	
+
 	`, filepath, name, userQuery)
 }
 
@@ -142,7 +145,7 @@ func testUsersDatasourceV4WithLimitConfig(filepath, name string) string {
 			config = (jsondecode(file("%[1]s")))
 			users = local.config.iam.users
 		}
-		
+
 		resource "nutanix_users_v2" "test" {
 			username = "%[2]s"
 			first_name = "first-name-%[2]s"
@@ -154,10 +157,10 @@ func testUsersDatasourceV4WithLimitConfig(filepath, name string) string {
 			display_name = "display-name-%[2]s"
 			password = local.users.password
 			user_type = "LOCAL"
-			status = "ACTIVE"  
-			force_reset_password = local.users.force_reset_password   
+			status = "ACTIVE"
+			force_reset_password = local.users.force_reset_password
 		}
-		
+
 		data "nutanix_users_v2" "test" {
 			limit     = 1
 			depends_on = [nutanix_users_v2.test]
