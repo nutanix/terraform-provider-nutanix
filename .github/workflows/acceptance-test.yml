@@ -39,7 +39,7 @@ jobs:
             export NDB_ENDPOINT=${{ secrets.NDB_ENDPOINT }}
             export NDB_PASSWORD=${{ secrets.NDB_PASSWORD }}
             export NDB_USERNAME=${{ secrets.NDB_USERNAME }}
-            export PROTECTION_RULES_TEST_FLAG = ${{ secrets.PROTECTION_RULES_TEST_FLAG }}
+            export PROTECTION_RULES_TEST_FLAG=${{ secrets.PROTECTION_RULES_TEST_FLAG }}
             export CGO_ENABLED=${{ secrets.CGO_ENABLED }}
       - name: Acceptance test cases
         run: |
