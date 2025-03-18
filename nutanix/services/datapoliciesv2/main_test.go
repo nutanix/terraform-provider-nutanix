@@ -1,4 +1,4 @@
-package dataprotectionv2_test
+package datapoliciesv2_test
 
 import (
 	"encoding/json"
@@ -13,15 +13,14 @@ type TestConfig struct {
 		ClusterExtID string `json:"cluster_ext_id"`
 		RemotePcIP   string `json:"remote_pc_ip"`
 	} `json:"availability_zone"`
-	DataProtection struct {
-		LocalClusterPE   string `json:"local_cluster_pe"`
-		LocalClusterVIP  string `json:"local_cluster_vip"`
-		RemoteClusterPE  string `json:"remote_cluster_pe"`
-		RemoteClusterVIP string `json:"remote_cluster_vip"`
-	} `json:"data_protection"`
 }
 
 var testVars TestConfig
+
+var (
+	path, _  = os.Getwd()
+	filepath = path + "/../../../test_config_v2.json"
+)
 
 func loadVars(filepath string, varStuct interface{}) {
 	// Read config.json from home current path
