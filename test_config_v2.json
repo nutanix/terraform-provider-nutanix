@@ -30,6 +30,11 @@
       "name": ""
     }
   },
+  "availability_zone": {
+    "pc_ext_id": "",
+    "cluster_ext_id": "",
+    "remote_pc_ip": ""
+  },
   "iam": {
     "roles": {
       "display_name": "",
@@ -161,10 +166,6 @@
       }
     }
   },
-  "data_protection": {
-    "pc_ext_id": "",
-    "cluster_ext_id": ""
-  },
   "clusters": {
     "pe_username": "",
     "pe_password": "",
@@ -232,6 +233,50 @@
       "username": "",
       "password": ""
     }
+  },
+  "data_policies": {
+    "domain_manager_ext_id": ""
+  },
+  "prism": {
+    "deploy_pc": {
+      "pe_ip": "",
+      "version": "",
+      "network_id": "",
+      "default_gateway": "",
+      "subnet_mask": "",
+      "ip_range": {
+        "begin": "",
+        "end": ""
+      },
+      "name_servers": [
+        "",
+        ""
+      ],
+      "ntp_servers": [
+        "",
+        "",
+        "",
+        ""
+      ]
+    },
+    "unregister": {
+      "pc_ext_id": ""
+    },
+    "bucket": {
+      "name": "",
+      "region": "",
+      "access_key": "",
+      "secret_key": ""
+    },
+    "restore_source": {
+      "pe_ip": "",
+      "pc_password": ""
+    }
+  },
+  "data_protection": {
+    "local_cluster_pe": "",
+    "local_cluster_vip": "",
+    "remote_cluster_vip": ""
   },
   "lcm": {
     "entity_model": "",

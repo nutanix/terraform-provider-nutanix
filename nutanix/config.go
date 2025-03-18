@@ -10,6 +10,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/karbon"
 	v3 "github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v3/prism"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/clusters"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/datapolicies"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/dataprotection"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/lcm"
@@ -112,6 +113,10 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	dataPoliciesClient, err := datapolicies.NewDataPoliciesClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 	LcmClient, err := lcm.NewLcmClient(configCreds)
 	if err != nil {
 		return nil, err
@@ -131,6 +136,7 @@ func (c *Config) Client() (*Client, error) {
 		VolumeAPI:           volumeClient,
 		DataProtectionAPI:   dataprotectionClient,
 		VmmAPI:              vmmClient,
+		DataPoliciesAPI:     dataPoliciesClient,
 		LcmAPI:              LcmClient,
 	}, nil
 }
@@ -151,5 +157,6 @@ type Client struct {
 	VolumeAPI           *volumes.Client
 	DataProtectionAPI   *dataprotection.Client
 	VmmAPI              *vmm.Client
+	DataPoliciesAPI     *datapolicies.Client
 	LcmAPI              *lcm.Client
 }
