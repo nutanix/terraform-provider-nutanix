@@ -1,7 +1,6 @@
 package dataprotectionv2_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -50,7 +49,7 @@ func waitForVMToBeProtected(resourceName, attributeName, desiredValue string, ma
 	}
 }
 
-func testCheckDestroyProtectedResource(state *terraform.State) error {
+func testCheckDestroyProtectedResourceAndCleanup(state *terraform.State) error {
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
 	vmClient := conn.VmmAPI.VMAPIInstance
 	categoryClient := conn.PrismAPI.CategoriesAPIInstance
@@ -119,26 +118,29 @@ func testCheckDestroyProtectedResource(state *terraform.State) error {
 		}
 	}
 
+	return nil
+}
+
+func testCheckDestroyProtectedResourceAndCleanupForPromoteVM(state *terraform.State) error {
+	// check on protection policy, category and vm on local site
+	testCheckDestroyProtectedResourceAndCleanup(state)
+
 	// delete promoted vm
 	for _, rs := range state.RootModule().Resources {
 		if rs.Type == "nutanix_virtual_machines_v2" {
 			log.Printf("[DEBUG] Checking if VM still exists\n")
-			vmExtID = rs.Primary.Attributes["vms.0.ext_id"]
+			vmExtID := rs.Primary.Attributes["vms.0.ext_id"]
 
-			fmt.Printf("vmExtID: %s\n", vmExtID)
 			connRemote := acc.TestAccProvider2.Meta().(*conns.Client)
 			client := connRemote.VmmAPI.VMAPIInstance
 
 			readResp, err := client.GetVmById(utils.StringPtr(vmExtID))
-			aJSON, _ := json.MarshalIndent(readResp, "", "  ")
-			fmt.Printf("[DEBUG] readResp: %v\n", aJSON)
 
 			if err == nil {
 				args := make(map[string]interface{})
 				etag := client.ApiClient.GetEtag(readResp)
 				args["If-Match"] = utils.StringPtr(etag)
-				aJSON, _ := json.MarshalIndent(args, "", "  ")
-				fmt.Printf("[DEBUG] args: %v\n", aJSON)
+
 				_, err = client.DeleteVmById(utils.StringPtr(vmExtID), args)
 				if err != nil {
 					return fmt.Errorf("error: Promoted VM still exists: %v", err)

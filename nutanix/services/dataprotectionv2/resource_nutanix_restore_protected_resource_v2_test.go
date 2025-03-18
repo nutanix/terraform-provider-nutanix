@@ -26,7 +26,7 @@ func TestAccV2NutanixRestoreProtectedResourceResource_RestoreVm(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
-		CheckDestroy: testCheckDestroyProtectedResource,
+		CheckDestroy: testCheckDestroyProtectedResourceAndCleanup,
 		Steps: []resource.TestStep{
 			// create protection policy and protected vm
 			{
@@ -66,7 +66,7 @@ func TestAccV2NutanixRestoreProtectedResourceResource_RestoreVG(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
-		CheckDestroy: testCheckDestroyProtectedResource,
+		CheckDestroy: testCheckDestroyProtectedResourceAndCleanup,
 		Steps: []resource.TestStep{
 			// create protection policy and protected vm
 			{
@@ -93,7 +93,7 @@ func TestAccV2NutanixRestoreProtectedResourceResource_RestoreVG(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceNameRestoreProtectedResource, "cluster_ext_id"),
 					resource.TestCheckResourceAttrSet(resourceNameRestoreProtectedResource, "ext_id"),
-					// Clean up the promoted vg
+					// Clean up the restored vg
 					deleteRestoredVg(vgName),
 				),
 			},

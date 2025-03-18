@@ -23,7 +23,7 @@ func TestAccV2NutanixPromoteProtectedResourceDatasource_GetProtectedVm(t *testin
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
-		CheckDestroy: testCheckDestroyProtectedResource,
+		CheckDestroy: testCheckDestroyProtectedResourceAndCleanup,
 		Steps: []resource.TestStep{
 			// create protection policy and protected vm
 			{
@@ -69,7 +69,7 @@ func TestAccV2NutanixPromoteProtectedResourceDatasource_GetProtectedVG(t *testin
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
-		CheckDestroy: testCheckDestroyProtectedResource,
+		CheckDestroy: testCheckDestroyProtectedResourceAndCleanup,
 		Steps: []resource.TestStep{
 			// create protection policy and protected VG
 			{
