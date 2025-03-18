@@ -14,12 +14,6 @@ func TestAccV2NutanixIdentityProvidersDatasource_GetSamlIdpById(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
-		ExternalProviders: map[string]resource.ExternalProvider{
-			"http": {
-				VersionConstraint: "~> 2.0",
-				Source:            "hashicorp/http",
-			},
-		},
 		Steps: []resource.TestStep{
 			{
 				Config: testIdentityProviderDatasourceV2Config(filepath),
