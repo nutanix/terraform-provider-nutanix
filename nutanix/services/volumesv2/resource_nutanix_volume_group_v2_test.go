@@ -123,12 +123,12 @@ func TestAccV2NutanixVolumeGroupResource_WithAttachmentTypeAndProtocolAndDisks(t
 // VG just required attributes
 func testAccVolumeGroupV2RequiredAttributes(name string) string {
 	return fmt.Sprintf(`
-	data "nutanix_clusters" "clusters" {}
+	data "nutanix_clusters_v2" "clusters" {}
 
 	locals{
 		cluster1 = [
-			for cluster in data.nutanix_clusters.clusters.entities :
-			cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+			for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 		][0]
 	}
 
@@ -142,15 +142,15 @@ func testAccVolumeGroupV2RequiredAttributes(name string) string {
 
 func testAccVolumeGroupV2ConfigWithNoName() string {
 	return `
-		data "nutanix_clusters" "clusters" {}
-	
+		data "nutanix_clusters_v2" "clusters" {}
+
 		locals{
 			cluster1 = [
-				for cluster in data.nutanix_clusters.clusters.entities :
-				cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
+				for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+					cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 		}
-	
+
 		resource "nutanix_volume_group_v2" "test" {
 			cluster_reference                  = local.cluster1
 		  }
@@ -160,7 +160,7 @@ func testAccVolumeGroupV2ConfigWithNoName() string {
 func testAccVolumeGroupV2ConfigWithNoClusterReference(name string) string {
 	return fmt.Sprintf(`
 	resource "nutanix_volume_group_v2" "test" {
-		name                               = "%s"	
+		name                               = "%s"
 	  }
 `, name)
 }
@@ -173,7 +173,7 @@ func testAccVolumeGroupResourceConfigWithAttachmentTypeAndProtocolAndDisks(name 
 		cluster1 =  [
 			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
 			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
-		][0]		
+		][0]
 	}
 
     data "nutanix_storage_containers_v2" "test" {
@@ -185,7 +185,7 @@ func testAccVolumeGroupResourceConfigWithAttachmentTypeAndProtocolAndDisks(name 
 		name                               = "%[1]s"
 		description                        = "%[2]s"
 		should_load_balance_vm_attachments = false
-		sharing_status                     = "SHARED"		
+		sharing_status                     = "SHARED"
 		created_by 						   = "admin"
 		cluster_reference                  = local.cluster1
 		iscsi_features {
@@ -210,7 +210,7 @@ func testAccVolumeGroupResourceConfigWithAttachmentTypeAndProtocolAndDisks(name 
 			  uris        = ["uri1","uri2"]
 			}
 			disk_storage_features {
-				flash_mode {	
+				flash_mode {
 					is_enabled = false
 				}
 			}
@@ -221,6 +221,6 @@ func testAccVolumeGroupResourceConfigWithAttachmentTypeAndProtocolAndDisks(name 
 			  iscsi_features[0].target_secret
 			]
 		}
-	  }	  
+	  }
 	`, name, desc)
 }
