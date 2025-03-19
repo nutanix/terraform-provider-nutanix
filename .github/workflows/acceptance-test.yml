@@ -158,8 +158,37 @@ jobs:
               echo "==> Setup V4 Config"
               echo '${{ secrets.V4_CONFIG }}' > test_config_v2.json
               echo "==> Running testcases..."
-              TF_ACC=1 go test ./... -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count   
-              echo "done"
+              TF_LOG="ERROR" TF_ACC=1 go test ./... -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count | tee test_output.log
+
+              # Extract total test cases executed
+              TOTAL_RUN=$(grep -c '^=== RUN' test_output.log)
+              TOTAL_PASSED=$(grep -c '^--- PASS' test_output.log)
+              TOTAL_FAILED=$(grep -c '^--- FAIL' test_output.log)
+
+              echo "================================================== TEST SUMMARY ============================================================================="
+              echo "Total Test Cases Run 🚀: $TOTAL_RUN"
+              echo "Total Test Cases Passed 🐹✅: $TOTAL_PASSED"
+              echo "Total Test Cases Failed 🐹❌: $TOTAL_FAILED"
+              echo "==============================================================================================================================="
+
+              # Process failures
+              if [ "$TOTAL_FAILED" -gt 0 ]; then
+                  echo ""
+                  echo "========= FAILURE DETAILS OF TESTCASES EXECUTED ========="
+
+                  # Extract all test case names that ran
+                  grep '^=== RUN' test_output.log | awk '{print $3}' | while read -r test; do
+                      if grep -q "^--- FAIL: $test" test_output.log; then
+                          echo "TESTCASE: $test"
+                          echo "====================🔥🔥🔥🔥📝 TRACEBACK 📝🔥🔥🔥🔥 ===================================================="
+                          # Extract logs between `=== RUN` and `--- FAIL`
+                          awk "/=== RUN   $test/,/--- FAIL: $test/" test_output.log | sed 's/^/    /'
+
+                          echo "==================================================================================="
+                      fi
+                  done
+              fi  
+              echo "Tests Execution is done, please debug if any failures"
 
       - name: Code Coverage Check
         if: ${{ always() }}
