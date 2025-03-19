@@ -139,9 +139,9 @@ jobs:
                   elif [ "$provider" = "era" ]
                       then
                           runFlag+="TestAccEra*"
-                  else 
-                          echo "Invalid provider=$provider given in arguments."
-                          exit 1
+                  else
+                      echo "running individual testcase"
+                      runFlag+="$provider"
                   fi
                   if [ $index -lt $((n-1)) ]
                       then
