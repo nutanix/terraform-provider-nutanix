@@ -140,7 +140,7 @@ jobs:
                       then
                           runFlag+="TestAccEra*"
                   else
-                      echo "running individual testcase"
+                      echo "running individual testcase/package"
                       runFlag+="$provider"
                   fi
                   if [ $index -lt $((n-1)) ]
