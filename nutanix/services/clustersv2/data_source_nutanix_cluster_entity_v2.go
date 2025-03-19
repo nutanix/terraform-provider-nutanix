@@ -316,7 +316,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 													Computed: true,
 												},
 												"prefix_length": {
-													Type:     schema.TypeString,
+													Type:     schema.TypeInt,
 													Computed: true,
 												},
 											},
@@ -332,7 +332,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 													Computed: true,
 												},
 												"prefix_length": {
-													Type:     schema.TypeString,
+													Type:     schema.TypeInt,
 													Computed: true,
 												},
 											},
