@@ -98,12 +98,15 @@ func TestAccV2NutanixSubnetResource_WithExternalSubnet(t *testing.T) {
 
 func testSubnetV2Config(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-		cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+		cluster0 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
 		}
-		
+
 		resource "nutanix_subnet_v2" "test" {
 			name = "%[1]s"
 			description = "%[2]s"
@@ -116,12 +119,15 @@ func testSubnetV2Config(name, desc string) string {
 
 func testSubnetV2ConfigWithIPPool(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-		cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+		cluster0 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
 		}
-		
+
 		resource "nutanix_subnet_v2" "test" {
 			name = "%[1]s"
 			description = "%[2]s"
@@ -161,19 +167,22 @@ func testSubnetV2ConfigWithIPPool(name, desc string) string {
 				tftp_server_name = "10.5.0.10"
 				boot_file_name = "pxelinux.0"
 			}
-			depends_on = [data.nutanix_clusters.clusters]
+			depends_on = [data.nutanix_clusters_v2.clusters]
 		}
 `, name, desc)
 }
 
 func testSubnetV2ConfigWithExternalSubnet(name, desc string) string {
 	return fmt.Sprintf(`
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-		cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+		cluster0 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
 		}
-		
+
 		resource "nutanix_subnet_v2" "test" {
 			name = "%[1]s"
 			description = "%[2]s"
@@ -202,7 +211,7 @@ func testSubnetV2ConfigWithExternalSubnet(name, desc string) string {
 					}
 				}
 			}
-		depends_on = [data.nutanix_clusters.clusters]
+		depends_on = [data.nutanix_clusters_v2.clusters]
 		}
 `, name, desc)
 }
