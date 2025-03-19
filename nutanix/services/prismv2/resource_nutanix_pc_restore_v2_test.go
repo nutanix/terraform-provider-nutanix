@@ -16,7 +16,6 @@ import (
 const resourceNameRestorePC = "nutanix_pc_restore_v2.test"
 
 func TestAccV2NutanixRestorePCResource_RestorePC(t *testing.T) {
-	t.Skip("Skipping test as no need to run it on pipeline")
 	var backupTargetExtID, restoreSourceExtID = new(string), new(string)
 	var restorePcConfig string
 
