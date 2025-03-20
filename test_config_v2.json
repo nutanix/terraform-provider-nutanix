@@ -275,12 +275,16 @@
     },
     "restore_source": {
       "pe_ip": "",
-      "pc_password": ""
+      "ssh_user": "",
+      "ssh_password": ""
     }
   },
   "data_protection": {
     "local_cluster_pe": "",
     "local_cluster_vip": "",
-    "remote_cluster_vip": ""
+    "remote_cluster_pe": "",
+    "remote_cluster_vip": "",
+    "username": "",
+    "password": ""
   }
 }

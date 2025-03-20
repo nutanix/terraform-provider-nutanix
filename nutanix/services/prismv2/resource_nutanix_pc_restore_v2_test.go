@@ -15,13 +15,13 @@ import (
 
 const resourceNameRestorePC = "nutanix_pc_restore_v2.test"
 
-func TestAccV2NutanixRestorePCResource_RestorePC(t *testing.T) {
-	var backupTargetExtID, restoreSourceExtID = new(string), new(string)
+func TestAccV2NutanixRestorePCResource_ClusterLocationRestorePC(t *testing.T) {
+	var backupTargetExtID, domainManagerExtID, restoreSourceExtID = new(string), new(string), new(string)
 	var restorePcConfig string
 
 	pcDetails := make(map[string]interface{})
 
-	t.Run("create_pre_request", func(t *testing.T) {
+	t.Run("pre request: backup target and restore source ", func(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			PreventPostDestroyRefresh: true,
 			PreCheck:                  func() { acc.TestAccPreCheck(t) },
@@ -34,7 +34,7 @@ func TestAccV2NutanixRestorePCResource_RestorePC(t *testing.T) {
 					},
 					Config: testAccPreRequestForRestoreSourceConfig(),
 					Check: resource.ComposeTestCheckFunc(
-						checkBackupTargetExistAndCreateIfNot(backupTargetExtID),
+						checkClusterLocationBackupTargetExistAndCreateIfNot(backupTargetExtID, domainManagerExtID),
 					),
 				},
 				// Step 2: Check last sync time for backup target
@@ -45,7 +45,7 @@ func TestAccV2NutanixRestorePCResource_RestorePC(t *testing.T) {
 					Config: testAccPreRequestForRestoreSourceConfig(),
 					Check: resource.ComposeTestCheckFunc(
 						checkLastSyncTimeBackupTargetRestorePC(backupTargetExtID, retries, delay),
-						createRestoreSource(restoreSourceExtID),
+						createClusterLocationRestoreSource(restoreSourceExtID),
 					),
 				},
 			},
@@ -53,7 +53,7 @@ func TestAccV2NutanixRestorePCResource_RestorePC(t *testing.T) {
 	})
 
 	// fetch the restore point and extract the pc details
-	t.Run("build_restore_pc_resource", func(t *testing.T) {
+	t.Run("power of PC", func(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			PreventPostDestroyRefresh: true,
 			PreCheck:                  func() { acc.TestAccPreCheck(t) },
@@ -64,7 +64,7 @@ func TestAccV2NutanixRestorePCResource_RestorePC(t *testing.T) {
 					PreConfig: func() {
 						fmt.Printf("Step 3: build PC restore Block and Power off PC\n")
 					},
-					Config: testAccPowerOffPCConfig(utils.StringValue(restoreSourceExtID)),
+					Config: testAccPowerOffPCConfig(utils.StringValue(restoreSourceExtID), utils.StringValue(domainManagerExtID)),
 					Check: resource.ComposeTestCheckFunc(
 						func(s *terraform.State) error {
 							// Build the restore PC configuration for the next sub-test case
@@ -104,7 +104,124 @@ func TestAccV2NutanixRestorePCResource_RestorePC(t *testing.T) {
 	})
 
 	// Restore PC Sub-test Case
-	t.Run("restore_pc_v2", func(t *testing.T) {
+	t.Run("PC restore test: ", func(t *testing.T) {
+		resource.Test(t, resource.TestCase{
+			PreCheck:  func() { acc.TestAccPreCheck(t) },
+			Providers: acc.TestAccProviders,
+			Steps: []resource.TestStep{
+				// Step 5: Restore PC
+				{
+					PreConfig: func() {
+						fmt.Printf("Step 4: Restore PC\n")
+					},
+					Config: restorePcConfig,
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "id"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.config.0.build_info.0.version"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.config.0.name"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.config.0.size"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.external_address.0.ipv4.0.value"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.name_servers.0.ipv4.0.value"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.name_servers.1.ipv4.0.value"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.ntp_servers.0.fqdn.0.value"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.ntp_servers.1.fqdn.0.value"),
+					),
+				},
+			},
+		})
+	})
+}
+
+func TestAccV2NutanixRestorePCResource_ObjectRestoreSourceRestorePC(t *testing.T) {
+	var backupTargetExtID, domainManagerExtID, restoreSourceExtID = new(string), new(string), new(string)
+	var restorePcConfig string
+
+	pcDetails := make(map[string]interface{})
+
+	t.Run("pre request: backup target and restore source ", func(t *testing.T) {
+		resource.Test(t, resource.TestCase{
+			PreventPostDestroyRefresh: true,
+			PreCheck:                  func() { acc.TestAccPreCheck(t) },
+			Providers:                 acc.TestAccProviders,
+			Steps: []resource.TestStep{
+				// Step 1: List backup targets and delete if backup target exists
+				{
+					PreConfig: func() {
+						fmt.Printf("Step 1: List backup targets and create if backup target does not exist\n")
+					},
+					Config: testAccPreRequestForRestoreSourceConfig(),
+					Check: resource.ComposeTestCheckFunc(
+						checkObjectRestoreSourceBackupTargetExistAndCreateIfNot(backupTargetExtID, domainManagerExtID),
+					),
+				},
+				// Step 2: Check last sync time for backup target
+				{
+					PreConfig: func() {
+						fmt.Printf("Step 2: Create Restore Source\n")
+					},
+					Config: testAccPreRequestForRestoreSourceConfig(),
+					Check: resource.ComposeTestCheckFunc(
+						checkLastSyncTimeBackupTargetRestorePC(backupTargetExtID, retries, delay),
+						createObjectStoreLocationLocationRestoreSource(restoreSourceExtID),
+					),
+				},
+			},
+		})
+	})
+
+	// fetch the restore point and extract the pc details
+	t.Run("power off PC: ", func(t *testing.T) {
+		resource.Test(t, resource.TestCase{
+			PreventPostDestroyRefresh: true,
+			PreCheck:                  func() { acc.TestAccPreCheck(t) },
+			Providers:                 acc.TestAccProviders,
+			Steps: []resource.TestStep{
+				// Step 3: power off PC
+				{
+					PreConfig: func() {
+						fmt.Printf("Step 3: build PC restore config block and power off PC\n")
+					},
+					Config: testAccPowerOffPCConfig(utils.StringValue(restoreSourceExtID), utils.StringValue(domainManagerExtID)),
+					Check: resource.ComposeTestCheckFunc(
+						func(s *terraform.State) error {
+							// Build the restore PC configuration for the next sub-test case
+							pcDetailsOutput, ok := s.RootModule().Outputs["pc_details"]
+							if !ok {
+								return fmt.Errorf("output 'pc_details' not found")
+							}
+							pcDetails = pcDetailsOutput.Value.(map[string]interface{})
+
+							restoreSourceExtIDOutput, ok := s.RootModule().Outputs["restoreSourceExtID"]
+							if !ok {
+								return fmt.Errorf("output 'restoreSourceExtID' not found")
+							}
+							restoreSourceExtID := restoreSourceExtIDOutput.Value.(string)
+
+							restorePointExtIDOutput, ok := s.RootModule().Outputs["restorePointExtID"]
+							if !ok {
+								return fmt.Errorf("output 'restorePointExtID' not found")
+							}
+							restorePointExtID := restorePointExtIDOutput.Value.(string)
+
+							restorablePcExtIDOutput, ok := s.RootModule().Outputs["restorablePcExtID"]
+							if !ok {
+								return fmt.Errorf("output 'restorablePcExtID' not found")
+							}
+							restorablePcExtID := restorablePcExtIDOutput.Value.(string)
+
+							restorePcConfig = restorePcResourceConfig(pcDetails, restoreSourceExtID, restorePointExtID, restorablePcExtID)
+							// log.Printf("[DEBUG] Restore PC Config: %s\n", restorePcConfig)
+							return nil
+						},
+						powerOffPC(),
+					),
+				},
+			},
+		})
+	})
+
+	// Restore PC Sub-test Case
+	t.Run("PC restore test: ", func(t *testing.T) {
 		resource.Test(t, resource.TestCase{
 			PreCheck:  func() { acc.TestAccPreCheck(t) },
 			Providers: acc.TestAccProviders,
@@ -185,7 +302,7 @@ data "nutanix_subnets_v2" "subnets" {
 `, peHostProviderConfig)
 }
 
-func testAccPowerOffPCConfig(restoreSourceExtID string) string {
+func testAccPowerOffPCConfig(restoreSourceExtID, domainManagerExtID string) string {
 	// pe config
 	username := os.Getenv("NUTANIX_USERNAME")
 	password := os.Getenv("NUTANIX_PASSWORD")
@@ -208,6 +325,7 @@ provider "nutanix-2" {
 data "nutanix_restorable_pcs_v2" "restorable-pcs" {
   provider              = nutanix-2
   restore_source_ext_id = "%[2]s"
+  filter = "extId eq %[3]s"
 }
 
 locals {
@@ -247,7 +365,7 @@ output "restorablePcExtID" {
   value = local.restorablePcExtId
 }
 
-`, peHostProviderConfig, restoreSourceExtID)
+`, peHostProviderConfig, restoreSourceExtID, domainManagerExtID)
 }
 
 func restorePcResourceConfig(pcDetails map[string]interface{}, restoreSourceExtID, restorePointExtID, restorablePcExtID string) string {
@@ -298,17 +416,16 @@ func restorePcResourceConfig(pcDetails map[string]interface{}, restoreSourceExtI
 	fallbackCmd := fmt.Sprintf("/home/nutanix/prism/cli/ncli user reset-password user-name=%s password=%s", "admin", "Nutanix.123")
 	remoteCommands += fallbackCmd
 
-	username := "nutanix"
 	// Build the two remote password reset commands.
 	//Retrieve environment variables.
 	pcIP := os.Getenv("NUTANIX_ENDPOINT")
 
 	// Build the full SSH command. Note the single quotes around the remoteCommands.
 	resetCommand := fmt.Sprintf("sshpass -p '%s' ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null %s@%s '%s'",
-		testVars.Prism.RestoreSource.PcPassword, username, pcIP, remoteCommands)
+		testVars.Prism.RestoreSource.SSHPassword, testVars.Prism.RestoreSource.SSHUser, pcIP, remoteCommands)
 
 	// pe config
-	username = os.Getenv("NUTANIX_USERNAME")
+	username := os.Getenv("NUTANIX_USERNAME")
 	password := os.Getenv("NUTANIX_PASSWORD")
 	port, _ := strconv.Atoi(os.Getenv("NUTANIX_PORT"))
 	insecure, _ := strconv.ParseBool(os.Getenv("NUTANIX_INSECURE"))
@@ -329,7 +446,7 @@ provider "nutanix-2" {
 resource "nutanix_pc_restore_v2" "test" {
 	provider                         = nutanix-2
 	timeouts {
-		create = "120m"
+		create = "140m"
 	}
 	ext_id                           = "%[2]s"
 	restore_source_ext_id            = "%[3]s"
