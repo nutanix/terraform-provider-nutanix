@@ -335,6 +335,7 @@ locals {
 data "nutanix_pc_restore_points_v2" "restore-points" {
   provider                         = nutanix-2
   restorable_domain_manager_ext_id = local.restorablePcExtId
+  order_by						   = "creationTime desc"
   restore_source_ext_id            = "%[2]s"
 }
 
