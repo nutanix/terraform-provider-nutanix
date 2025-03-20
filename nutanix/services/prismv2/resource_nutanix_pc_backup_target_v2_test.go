@@ -31,6 +31,9 @@ func TestAccV2NutanixBackupTargetResource_ClusterLocation(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "domain_manager_ext_id"),
 					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.ext_id"),
 					resource.TestCheckResourceAttrSet(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.name"),
+					// check the name and ext_id of cluster location in backup target by comparing with the cluster name and ext_id
+					resource.TestCheckResourceAttrPair(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.ext_id", "data.nutanix_cluster_v2.test", "ext_id"),
+					resource.TestCheckResourceAttrPair(resourceNameBackupTargetClusterLocation, "location.0.cluster_location.0.config.0.name", "data.nutanix_cluster_v2.test", "name"),
 				),
 			},
 		},
@@ -153,10 +156,6 @@ output "clusterExtID" {
   value = local.clusterExtId
 }
 
-# Get Cluster By Id to get the cluster name and ext_id
-data "nutanix_cluster_v2" "test" {
-  ext_id = data.nutanix_pc_backup_targets_v2.test.backup_targets.0.location.0.cluster_location.0.config.0.ext_id
-}
 
 `
 }
@@ -188,6 +187,11 @@ resource "nutanix_pc_backup_target_v2" "cluster-location" {
   }
 }
 
+# Get Cluster By Id to get the cluster name and ext_id
+data "nutanix_cluster_v2" "test" {
+  ext_id = nutanix_pc_backup_target_v2.cluster-location.location.0.cluster_location.0.config.0.ext_id
+}
+
 `
 }
 
@@ -217,7 +221,7 @@ resource "nutanix_pc_backup_target_v2" "object-store-location" {
         }
       }
       backup_policy {
-        rpo_in_minutes = 120
+        rpo_in_minutes = 60
       }
     }
   }
@@ -257,7 +261,7 @@ resource "nutanix_pc_backup_target_v2" "object-store-location" {
         }
       }
       backup_policy {
-        rpo_in_minutes = 60
+        rpo_in_minutes = 120
       }
     }
   }

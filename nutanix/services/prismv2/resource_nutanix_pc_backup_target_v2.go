@@ -302,11 +302,62 @@ func ResourceNutanixBackupTargetV2Read(ctx context.Context, d *schema.ResourceDa
 	if err := d.Set("backup_pause_reason", backupTarget.BackupPauseReason); err != nil {
 		return diag.Errorf("error setting backup_pause_reason: %s", err)
 	}
-	if err := d.Set("location", flattenBackupTargetLocation(backupTarget.Location)); err != nil {
+	if err := d.Set("location", flattenResourceBackupTargetLocation(backupTarget.Location, d.Get("location"))); err != nil {
 		return diag.Errorf("error setting location: %s", err)
 	}
 
 	return nil
+}
+
+func flattenResourceBackupTargetLocation(location *management.OneOfBackupTargetLocation, d interface{}) []map[string]interface{} {
+	if location == nil {
+		return nil
+	}
+
+	backupTargetLocation := make([]map[string]interface{}, 0)
+
+	if utils.StringValue(location.ObjectType_) == clustersLocationObjectType {
+		clusterLocation := location.GetValue().(management.ClusterLocation)
+
+		clusterLocationMap := make(map[string]interface{})
+		clusterLocationMap["cluster_location"] = flattenClusterLocation(clusterLocation)
+		backupTargetLocation = append(backupTargetLocation, clusterLocationMap)
+		return backupTargetLocation
+	}
+
+	if utils.StringValue(location.ObjectType_) == objectStoreLocationObjectType {
+		objectStoreLocation := location.GetValue().(management.ObjectStoreLocation)
+
+		objectStoreLocationMap := make(map[string]interface{})
+		objectStoreLocationMap["object_store_location"] = flattenResourceObjectStoreLocation(&objectStoreLocation, d)
+		backupTargetLocation = append(backupTargetLocation, objectStoreLocationMap)
+		return backupTargetLocation
+	}
+
+	return backupTargetLocation
+}
+
+func flattenResourceObjectStoreLocation(objectStoreLocation *management.ObjectStoreLocation, d interface{}) []map[string]interface{} {
+	if objectStoreLocation == nil {
+		return nil
+	}
+
+	objectStoreLocationMap := make(map[string]interface{})
+	objectStoreLocationMap["provider_config"] = flattenProviderConfig(objectStoreLocation.ProviderConfig)
+	objectStoreLocationMap["backup_policy"] = flattenBackupPolicy(objectStoreLocation.BackupPolicy)
+
+	// extract the credentials from the state file since they are not returned in the response
+	locationI := d.([]interface{})
+	location := locationI[0].(map[string]interface{})
+	objectStoreLocationI := location["object_store_location"].([]interface{})[0].(map[string]interface{})
+	providerConfig := objectStoreLocationI["provider_config"].([]interface{})[0].(map[string]interface{})
+	credentials := providerConfig["credentials"].([]interface{})
+	objectStoreLocationMap["provider_config"].([]map[string]interface {})[0]["credentials"] = credentials
+
+	objectStoreLocationList := make([]map[string]interface{}, 0)
+	objectStoreLocationList = append(objectStoreLocationList, objectStoreLocationMap)
+
+	return objectStoreLocationList
 }
 
 func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -346,6 +397,9 @@ func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.Resource
 				return diag.Errorf("error while setting cluster location : %v", err)
 			}
 		} else if location["object_store_location"] != nil && len(location["object_store_location"].([]interface{})) > 0 {
+			aJSON, _ := json.MarshalIndent(location, "", "  ")
+			log.Printf("[DEBUG] Object Store Location: %s", string(aJSON))
+
 			objectStoreLocation := location["object_store_location"].([]interface{})[0].(map[string]interface{})
 			providerConfig := objectStoreLocation["provider_config"]
 			backupPolicy := objectStoreLocation["backup_policy"]
@@ -385,6 +439,7 @@ func ResourceNutanixBackupTargetV2Update(ctx context.Context, d *schema.Resource
 		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
+		Timeout: d.Timeout(schema.TimeoutUpdate),
 	}
 
 	if _, err = stateConf.WaitForStateContext(ctx); err != nil {
