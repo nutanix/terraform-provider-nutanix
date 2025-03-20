@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -689,25 +690,42 @@ func powerOffPC() resource.TestCheckFunc {
 		vms := vmsResp.Data.GetValue().([]vmConfig.Vm)
 
 		for _, vm := range vms {
-			if utils.StringValue(vm.Description) == "NutanixPrismCentral" && vm.PowerState.GetName() == "ON" {
-				// get etag
-				readResp, err := vmClient.GetVmById(vm.ExtId, nil)
-				if err != nil {
-					return fmt.Errorf("error while fetching PC: %s", err)
+			if utils.StringValue(vm.Description) == "NutanixPrismCentral" {
+				// if the PC VM does not have any NICs, continue to the next VM
+				if len(vm.Nics) == 0 {
+					continue
 				}
-				args := make(map[string]interface{})
-				eTag := vmClient.ApiClient.GetEtag(readResp)
-				args["If-Match"] = utils.StringPtr(eTag)
+				for _, nic := range vm.Nics {
+					// if the PC VM does not have any network info, continue to the next VM
+					if nic.NetworkInfo == nil || nic.NetworkInfo.Ipv4Info == nil {
+						continue
+					}
 
-				// Power off the PC
-				_, err = vmClient.PowerOffVm(vm.ExtId, args)
-				if err != nil {
-					log.Printf("[DEBUG] error while powering off PC: %s", err)
-					// after the PC is powered off, the API returns timeout error
-					return nil
+					// loop through the learned IP addresses to find the correct PC VM
+					for _, learnedIpAddress := range nic.NetworkInfo.Ipv4Info.LearnedIpAddresses {
+						if utils.StringValue(learnedIpAddress.Value) == os.Getenv("NUTANIX_ENDPOINT") {
+							// get etag
+							readResp, err := vmClient.GetVmById(vm.ExtId, nil)
+							if err != nil {
+								return fmt.Errorf("error while fetching PC: %s", err)
+							}
+							args := make(map[string]interface{})
+							eTag := vmClient.ApiClient.GetEtag(readResp)
+							args["If-Match"] = utils.StringPtr(eTag)
+
+							// Power off the PC
+							_, err = vmClient.PowerOffVm(vm.ExtId, args)
+							if err != nil {
+								log.Printf("[DEBUG] error while powering off PC: %s", err)
+								// after the PC is powered off, the API returns timeout error
+								return nil
+							}
+
+							return nil
+						}
+					}
+
 				}
-
-				return nil
 			}
 		}
 		return fmt.Errorf("PC VM not found")
