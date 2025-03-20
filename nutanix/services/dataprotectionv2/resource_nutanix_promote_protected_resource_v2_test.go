@@ -273,10 +273,12 @@ locals {
   # Commands to reset the cluster password
   localClusterIP   = local.data_protection.local_cluster_pe
   localClusterVIP  = local.data_protection.local_cluster_vip
-  remoteClusterIP  = local.clusters.nodes[0].cvm_ip
+  remoteClusterIP  = local.data_protection.remote_cluster_pe
   remoteClusterVIP = local.data_protection.remote_cluster_vip
+  username         = local.clusters.nodes[0].username
+  password         = local.clusters.nodes[0].password
 
-  resetClusterPassword = "/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[0].username} password=${local.clusters.nodes[0].password}"
+  resetClusterPassword = "/home/nutanix/prism/cli/ncli user reset-password user-name=${local.username} password=${local.password}"
 
   remoteClusterSSHCommand = "sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.remoteClusterIP}"
   localClusterSSHCommand  = "sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.localClusterIP}"
@@ -295,7 +297,7 @@ resource "nutanix_clusters_discover_unconfigured_nodes_v2" "test-discover-cluste
   address_type = "IPV4"
   ip_filter_list {
     ipv4 {
-      value = local.clusters.nodes[0].cvm_ip
+      value = local.remoteClusterIP
     }
   }
 
@@ -303,7 +305,7 @@ resource "nutanix_clusters_discover_unconfigured_nodes_v2" "test-discover-cluste
   lifecycle {
     postcondition {
       condition     = length(self.unconfigured_nodes) == 1
-      error_message = "The node ${local.clusters.nodes[0].cvm_ip} are not unconfigured"
+      error_message = "The node ${local.remoteClusterIP} are not unconfigured"
     }
   }
 
@@ -317,7 +319,7 @@ resource "nutanix_cluster_v2" "test" {
     node_list {
       controller_vm_ip {
         ipv4 {
-          value = local.clusters.nodes[0].cvm_ip
+          value = local.remoteClusterIP
         }
       }
     }
@@ -359,13 +361,13 @@ resource "nutanix_pc_registration_v2" "node-registration" {
       remote_cluster {
         address {
           ipv4 {
-            value = local.clusters.nodes[0].cvm_ip
+            value = local.remoteClusterIP
           }
         }
         credentials {
           authentication {
-            username = local.clusters.nodes[0].username
-            password = local.clusters.nodes[0].password
+            username = local.username
+            password = local.password
           }
         }
       }
