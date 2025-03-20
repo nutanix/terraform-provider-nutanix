@@ -20,7 +20,7 @@ func TestAccV2NutanixRestorePCResource_ClusterLocationRestorePC(t *testing.T) {
 		// We are skipping the PC restore tests because they require powering off the PC VM,
 		// which could affect the execution of other test cases running in parallel.
 		// The PC restore test cases can be run separately.
-		t.Skip("Skipping PC restore test")
+		t.Skip("Skipping PC restore test: We are skipping the PC restore tests because they require powering off the PC VM, which could affect the execution of other test cases running in parallel. The PC restore test cases can be run separately.")
 	}
 	var backupTargetExtID, domainManagerExtID, restoreSourceExtID = new(string), new(string), new(string)
 	var restorePcConfig string
@@ -143,7 +143,7 @@ func TestAccV2NutanixRestorePCResource_ObjectRestoreSourceRestorePC(t *testing.T
 		// We are skipping the PC restore tests because they require powering off the PC VM,
 		// which could affect the execution of other test cases running in parallel.
 		// The PC restore test cases can be run separately.
-		t.Skip("Skipping PC restore test")
+		t.Skip("Skipping PC restore test: We are skipping the PC restore tests because they require powering off the PC VM, which could affect the execution of other test cases running in parallel. The PC restore test cases can be run separately.")
 	}
 	var backupTargetExtID, domainManagerExtID, restoreSourceExtID = new(string), new(string), new(string)
 	var restorePcConfig string
