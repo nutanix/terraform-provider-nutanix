@@ -702,8 +702,8 @@ func powerOffPC() resource.TestCheckFunc {
 					}
 
 					// loop through the learned IP addresses to find the correct PC VM
-					for _, learnedIpAddress := range nic.NetworkInfo.Ipv4Info.LearnedIpAddresses {
-						if utils.StringValue(learnedIpAddress.Value) == os.Getenv("NUTANIX_ENDPOINT") {
+					for _, learnedIPAddress := range nic.NetworkInfo.Ipv4Info.LearnedIpAddresses {
+						if utils.StringValue(learnedIPAddress.Value) == os.Getenv("NUTANIX_ENDPOINT") {
 							// get etag
 							readResp, err := vmClient.GetVmById(vm.ExtId, nil)
 							if err != nil {
@@ -724,7 +724,6 @@ func powerOffPC() resource.TestCheckFunc {
 							return nil
 						}
 					}
-
 				}
 			}
 		}
