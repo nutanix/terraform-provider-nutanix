@@ -283,8 +283,6 @@
     "local_cluster_pe": "",
     "local_cluster_vip": "",
     "remote_cluster_pe": "",
-    "remote_cluster_vip": "",
-    "username": "",
-    "password": ""
+    "remote_cluster_vip": ""
   }
 }
