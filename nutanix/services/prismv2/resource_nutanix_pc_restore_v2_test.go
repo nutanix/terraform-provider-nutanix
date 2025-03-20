@@ -16,6 +16,9 @@ import (
 const resourceNameRestorePC = "nutanix_pc_restore_v2.test"
 
 func TestAccV2NutanixRestorePCResource_ClusterLocationRestorePC(t *testing.T) {
+	if testVars.Prism.SkipPCRestoreTest {
+		t.Skip("Skipping PC restore test")
+	}
 	var backupTargetExtID, domainManagerExtID, restoreSourceExtID = new(string), new(string), new(string)
 	var restorePcConfig string
 
@@ -133,6 +136,9 @@ func TestAccV2NutanixRestorePCResource_ClusterLocationRestorePC(t *testing.T) {
 }
 
 func TestAccV2NutanixRestorePCResource_ObjectRestoreSourceRestorePC(t *testing.T) {
+	if testVars.Prism.SkipPCRestoreTest {
+		t.Skip("Skipping PC restore test")
+	}
 	var backupTargetExtID, domainManagerExtID, restoreSourceExtID = new(string), new(string), new(string)
 	var restorePcConfig string
 

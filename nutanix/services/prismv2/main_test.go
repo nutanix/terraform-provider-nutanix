@@ -35,6 +35,7 @@ type TestConfig struct {
 		Unregister struct {
 			PcExtID string `json:"pc_ext_id"`
 		} `json:"unregister"`
+		SkipPCRestoreTest bool `json:"skip_pc_restore_test"`
 	} `json:"prism"`
 }
 
