@@ -17,6 +17,9 @@ const resourceNameRestorePC = "nutanix_pc_restore_v2.test"
 
 func TestAccV2NutanixRestorePCResource_ClusterLocationRestorePC(t *testing.T) {
 	if testVars.Prism.SkipPCRestoreTest {
+		// We are skipping the PC restore tests because they require powering off the PC VM,
+		// which could affect the execution of other test cases running in parallel.
+		// The PC restore test cases can be run separately.
 		t.Skip("Skipping PC restore test")
 	}
 	var backupTargetExtID, domainManagerExtID, restoreSourceExtID = new(string), new(string), new(string)
@@ -137,6 +140,9 @@ func TestAccV2NutanixRestorePCResource_ClusterLocationRestorePC(t *testing.T) {
 
 func TestAccV2NutanixRestorePCResource_ObjectRestoreSourceRestorePC(t *testing.T) {
 	if testVars.Prism.SkipPCRestoreTest {
+		// We are skipping the PC restore tests because they require powering off the PC VM,
+		// which could affect the execution of other test cases running in parallel.
+		// The PC restore test cases can be run separately.
 		t.Skip("Skipping PC restore test")
 	}
 	var backupTargetExtID, domainManagerExtID, restoreSourceExtID = new(string), new(string), new(string)
