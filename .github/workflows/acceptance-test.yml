@@ -164,20 +164,24 @@ jobs:
               TOTAL_RUN=$(grep -c '^=== RUN' test_output.log)
               TOTAL_PASSED=$(grep -c '^--- PASS' test_output.log)
               TOTAL_FAILED=$(grep -c '^--- FAIL' test_output.log)
+              TOTAL_SKIPPED=$(grep -c '^--- SKIP' test_output.log)
 
               # Calculate percentages
               if [ "$TOTAL_RUN" -gt 0 ]; then
                   PASS_PERCENT=$((TOTAL_PASSED * 100 / TOTAL_RUN))
                   FAIL_PERCENT=$((TOTAL_FAILED * 100 / TOTAL_RUN))
+                  SKIP_PERCENT=$((TOTAL_SKIPPED * 100 / TOTAL_RUN))
               else
                   PASS_PERCENT=0
                   FAIL_PERCENT=0
+                  SKIP_PERCENT=0
               fi
 
               echo "==================================================🧪 TEST SUMMARY 🧪================================================================================="
-              echo "Total Test Cases Run 🚀: $TOTAL_RUN"
+              echo "Total Test Cases Run 🐹🚀: $TOTAL_RUN"
               echo "Total Test Cases Passed 🐹✅: $TOTAL_PASSED ($PASS_PERCENT %)" 
-              echo "Total Test Cases Failed 🐹❌: $TOTAL_FAILED ($FAIL_PERCENT %)" 
+              echo "Total Test Cases Failed 🐹❌: $TOTAL_FAILED ($FAIL_PERCENT %)"
+              echo "Total Test Cases Skipped 🐹⚠️: $TOTAL_SKIPPED ($SKIP_PERCENT %)"
               echo "=================================================================================================================================================="
               echo "================================================== TESTS SUCCEEDED ✅ ============================================================================="
               # Process passed test cases
@@ -191,6 +195,14 @@ jobs:
               if [ "$TOTAL_FAILED" -gt 0 ]; then
                   echo ""
                   grep '^--- FAIL' test_output.log | awk '{print "❌ " $3}'
+              fi
+              echo "==================================================================================================================================================="
+              echo "================================================== TESTS SKIPPED ⚠️ =============================================================================="
+              if [ "$TOTAL_SKIPPED" -gt 0 ]; then
+                 awk '
+                   /^=== RUN/ { testname=$3; reason="No reason provided" }
+                   /--- SKIP/ { print "⚠️ " testname "   : Reason: ➡️ :  " reason }
+                  /^[[:space:]]+/ { reason=$0 }' test_output.log
               fi
               echo "==================================================================================================================================================="
               # Process failures
