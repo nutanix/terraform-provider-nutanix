@@ -28,8 +28,9 @@ type TestConfig struct {
 			SecretKey string `json:"secret_key"`
 		} `json:"bucket"`
 		RestoreSource struct {
-			PeIP       string `json:"pe_ip"`
-			PcPassword string `json:"pc_password"`
+			PeIP        string `json:"pe_ip"`
+			SSHPassword string `json:"ssh_password"`
+			SSHUser     string `json:"ssh_user"`
 		} `json:"restore_source"`
 		Unregister struct {
 			PcExtID string `json:"pc_ext_id"`

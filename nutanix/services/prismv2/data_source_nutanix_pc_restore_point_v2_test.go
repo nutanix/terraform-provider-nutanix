@@ -114,9 +114,9 @@ output "clusterExtID" {
 }
 
 
-data "nutanix_backup_target_v2" "test" {
+data "nutanix_pc_backup_target_v2" "test" {
   domain_manager_ext_id = local.domainManagerExtId
-  ext_id = data.nutanix_backup_targets_v2.test.backup_targets.0.ext_id
+  ext_id = data.nutanix_pc_backup_targets_v2.test.backup_targets.0.ext_id
 }
 
 	`

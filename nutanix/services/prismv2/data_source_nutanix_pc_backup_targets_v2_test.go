@@ -23,7 +23,7 @@ func TestAccV2NutanixBackupTargetsDatasource_Basic(t *testing.T) {
 			},
 			// List backup targets
 			{
-				Config: testAccListBackupTargetsDatasourceConfig(),
+				Config: testAccListBackupTargetsDatasourceListConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					checkAttributeLength(datasourceNameBackupTargets, "backup_targets", 1),
 					resource.TestCheckResourceAttrSet(datasourceNameBackupTargets, "backup_targets.0.ext_id"),
@@ -34,4 +34,43 @@ func TestAccV2NutanixBackupTargetsDatasource_Basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccListBackupTargetsDatasourceListConfig() string {
+	return `
+
+# list Clusters
+data "nutanix_clusters_v2" "cls" {
+	filter = "config/clusterFunction/any(t:t eq Clustermgmt.Config.ClusterFunctionRef'PRISM_CENTRAL')"
+}
+
+data "nutanix_clusters_v2" "clusters" {}
+
+
+locals {
+  domainManagerExtId = data.nutanix_clusters_v2.cls.cluster_entities.0.ext_id
+  clusterExtId = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+  ][0]
+}
+
+data "nutanix_pc_backup_targets_v2" "test" {
+  domain_manager_ext_id = local.domainManagerExtId
+}
+
+output "domainManagerExtID" {
+  value = local.domainManagerExtId
+}
+
+output "clusterExtID" {
+  value = local.clusterExtId
+}
+
+# Get Cluster By Id to get the cluster name and ext_id
+data "nutanix_cluster_v2" "test" {
+  ext_id = data.nutanix_pc_backup_targets_v2.test.backup_targets.0.location.0.cluster_location.0.config.0.ext_id
+}
+
+`
 }
