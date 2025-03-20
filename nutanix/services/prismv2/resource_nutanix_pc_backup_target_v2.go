@@ -352,7 +352,7 @@ func flattenResourceObjectStoreLocation(objectStoreLocation *management.ObjectSt
 	objectStoreLocationI := location["object_store_location"].([]interface{})[0].(map[string]interface{})
 	providerConfig := objectStoreLocationI["provider_config"].([]interface{})[0].(map[string]interface{})
 	credentials := providerConfig["credentials"].([]interface{})
-	objectStoreLocationMap["provider_config"].([]map[string]interface {})[0]["credentials"] = credentials
+	objectStoreLocationMap["provider_config"].([]map[string]interface{})[0]["credentials"] = credentials
 
 	objectStoreLocationList := make([]map[string]interface{}, 0)
 	objectStoreLocationList = append(objectStoreLocationList, objectStoreLocationMap)
