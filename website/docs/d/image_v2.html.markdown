@@ -13,8 +13,8 @@ Retrieve the image details for the provided external identifier.
 ## Example
 
 ```hcl
-data "nutanix_image_v4" "image"{
-    ext_id = {{ ext_id of image }}
+data "nutanix_image_v2" "image"{
+    ext_id = "0005a7b1-0b3b-4b3b-8b3b-0b3b4b3b4b3b"
 }
 
 ```
