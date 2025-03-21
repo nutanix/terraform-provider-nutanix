@@ -20,7 +20,7 @@ func TestAccV2NutanixBackupTargetResource_ClusterLocation(t *testing.T) {
 			{
 				Config: testAccListBackupTargetsDatasourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					checkBackupTargetExist(),
+					checkClusterLocationBackupTargetExistAndDeleteIfExists(),
 				),
 			},
 			// Create backup target, cluster location
@@ -54,7 +54,7 @@ func TestAccV2NutanixBackupTargetResource_ObjectStoreLocation(t *testing.T) {
 			{
 				Config: testAccListBackupTargetsDatasourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					checkBackupTargetExist(),
+					checkObjectStoreLocationBackupTargetExistAndDeleteIfExists(),
 				),
 			},
 			// Create backup target, Object store location
@@ -97,7 +97,8 @@ func TestAccV2NutanixBackupTargetResource_ClusterLocationAndObjectStoreLocation(
 			{
 				Config: testAccListBackupTargetsDatasourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					checkBackupTargetExist(),
+					checkClusterLocationBackupTargetExistAndDeleteIfExists(),
+					checkObjectStoreLocationBackupTargetExistAndDeleteIfExists(),
 				),
 			},
 			// Create backup target, Object store location

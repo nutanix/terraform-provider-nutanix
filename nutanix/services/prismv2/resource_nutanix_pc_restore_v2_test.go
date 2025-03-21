@@ -102,7 +102,7 @@ func TestAccV2NutanixRestorePCResource_ClusterLocationRestorePC(t *testing.T) {
 							log.Printf("[DEBUG] Restore PC Config: %s\n", restorePcConfig)
 							return nil
 						},
-						powerOffPC(),
+						// powerOffPC(),
 					),
 				},
 			},
@@ -156,14 +156,14 @@ func TestAccV2NutanixRestorePCResource_ObjectRestoreSourceRestorePC(t *testing.T
 			PreCheck:                  func() { acc.TestAccPreCheck(t) },
 			Providers:                 acc.TestAccProviders,
 			Steps: []resource.TestStep{
-				// Step 1: List backup targets and delete if backup target exists
+				// Step 1: List backup targets and create if backup target does not exist
 				{
 					PreConfig: func() {
 						fmt.Printf("Step 1: List backup targets and create if backup target does not exist\n")
 					},
 					Config: testAccPreRequestForRestoreSourceConfig(),
 					Check: resource.ComposeTestCheckFunc(
-						checkObjectRestoreSourceBackupTargetExistAndCreateIfNot(backupTargetExtID, domainManagerExtID),
+						checkObjectRestoreLocationBackupTargetExistAndCreateIfNot(backupTargetExtID, domainManagerExtID),
 					),
 				},
 				// Step 2: Check last sync time for backup target
@@ -222,10 +222,10 @@ func TestAccV2NutanixRestorePCResource_ObjectRestoreSourceRestorePC(t *testing.T
 							restorablePcExtID := restorablePcExtIDOutput.Value.(string)
 
 							restorePcConfig = restorePcResourceConfig(pcDetails, restoreSourceExtID, restorePointExtID, restorablePcExtID)
-							// log.Printf("[DEBUG] Restore PC Config: %s\n", restorePcConfig)
+							log.Printf("[DEBUG] Restore PC Config: %s\n", restorePcConfig)
 							return nil
 						},
-						powerOffPC(),
+						// powerOffPC(),
 					),
 				},
 			},

@@ -18,7 +18,7 @@ func TestAccV2NutanixBackupTargetDatasource_Basic(t *testing.T) {
 			{
 				Config: testAccCheckBackupTargetExistAndCreateIfNotExistsConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					checkBackupTargetExistAndCreateIfNotExists(),
+					checkClusterLocationBackupTargetExistAndCreateIfNotExists(),
 				),
 			},
 			// Create backup target, cluster location
