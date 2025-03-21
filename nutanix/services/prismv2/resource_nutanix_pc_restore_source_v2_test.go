@@ -22,7 +22,7 @@ func TestAccV2NutanixRestoreSourceResource_ClusterLocation(t *testing.T) {
 			{
 				Config: testAccListBackupTargetsDatasourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					checkBackupTargetExistAndCreateIfNotExists(),
+					checkClusterLocationBackupTargetExistAndCreateIfNotExists(),
 				),
 			},
 			{
@@ -46,6 +46,13 @@ func TestAccV2NutanixRestoreSourceResource_ObjectStoreLocation(t *testing.T) {
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
+			// List backup targets and Create if backup target not exists
+			{
+				Config: testAccListBackupTargetsDatasourceConfig(),
+				Check: resource.ComposeTestCheckFunc(
+					checkObjectStoreLocationBackupTargetExistAndCreateIfNotExists(),
+				),
+			},
 			// Create the restore source, Object store location
 			{
 				Config: testAccRestoreSourceResourceObjectStoreLocationConfig(),

@@ -51,8 +51,75 @@ func checkAttributeLength(resourceName, attribute string, minLength int) resourc
 	}
 }
 
-// checkBackupTargetExist checks if the backup target exists and deletes it if it does
-func checkBackupTargetExist() resource.TestCheckFunc {
+// checkBackupTargetExist checks if the backup target exists
+// and deletes it if it does
+func checkClusterLocationBackupTargetExistAndDeleteIfExists() resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acc.TestAccProvider.Meta().(*conns.Client)
+		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
+
+		outputClusterExtID, ok := s.RootModule().Outputs["clusterExtID"]
+		if !ok {
+			return fmt.Errorf("output 'clusterExtID' not found")
+		}
+
+		clusterExtID := outputClusterExtID.Value.(string)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type == "nutanix_pc_backup_targets_v2" {
+				attributes := rs.Primary.Attributes
+
+				backupTargetsCount, _ := strconv.Atoi(attributes["backup_targets.#"])
+
+				domainManagerExtID := attributes["domain_manager_ext_id"]
+				// If backup target exists, delete it
+				for i := 0; i < backupTargetsCount; i++ {
+					attributes := rs.Primary.Attributes
+
+					backupTargetsCount, _ := strconv.Atoi(attributes["backup_targets.#"])
+
+					for i := 0; i < backupTargetsCount; i++ {
+						clusterLocationCount, _ := strconv.Atoi(attributes["backup_targets."+strconv.Itoa(i)+".location.0.cluster_location.#"])
+
+						if clusterLocationCount > 0 {
+							clusterLocationExtID := attributes["backup_targets."+strconv.Itoa(i)+".location.0.cluster_location.0.config.0.ext_id"]
+
+							// delete the backup target with the same cluster location ext_id
+							if clusterLocationExtID == clusterExtID {
+								log.Printf("[DEBUG] cluster location backup target already exists, ext_id: %s", attributes["backup_targets."+strconv.Itoa(i)+".ext_id"])
+								backupTargetExtID := attributes["backup_targets."+strconv.Itoa(i)+".ext_id"]
+								readResp, err := client.GetBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(backupTargetExtID), nil)
+								if err != nil {
+									return fmt.Errorf("error while fetching Backup Target: %s", err)
+								}
+
+								// extract the etag from the read response
+								args := make(map[string]interface{})
+								eTag := client.ApiClient.GetEtag(readResp)
+								args["If-Match"] = utils.StringPtr(eTag)
+
+								resp, err := client.DeleteBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(backupTargetExtID), args)
+
+								if err != nil {
+									return fmt.Errorf("error while deleting Backup Target: %s", err)
+								}
+								// wait for the backup target to be deleted
+								// if the task is not successful, return the error
+								return waitDeleteTask(resp)
+							}
+						}
+					}
+				}
+				return nil
+			}
+		}
+		return fmt.Errorf("backup target still exists")
+	}
+}
+
+// checkBackupTargetExist checks if the backup target exists
+// and deletes it if it does
+func checkObjectStoreLocationBackupTargetExistAndDeleteIfExists() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acc.TestAccProvider.Meta().(*conns.Client)
 		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
@@ -66,28 +133,37 @@ func checkBackupTargetExist() resource.TestCheckFunc {
 				domainManagerExtID := attributes["domain_manager_ext_id"]
 				// If backup target exists, delete it
 				for i := 0; i < backupTargetsCount; i++ {
-					extID := attributes["backup_targets."+strconv.Itoa(i)+".ext_id"]
+					attributes := rs.Primary.Attributes
 
-					readResp, err := client.GetBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(extID), nil)
-					if err != nil {
-						return fmt.Errorf("error while fetching Backup Target: %s", err)
+					backupTargetsCount, _ := strconv.Atoi(attributes["backup_targets.#"])
+
+					for i := 0; i < backupTargetsCount; i++ {
+						objectStoreLocationCount, _ := strconv.Atoi(attributes["backup_targets."+strconv.Itoa(i)+".location.0.object_store_location.#"])
+
+						if objectStoreLocationCount > 0 {
+							log.Printf("[DEBUG] object store location backup target already exists, ext_id: %s", attributes["backup_targets."+strconv.Itoa(i)+".ext_id"])
+							backupTargetExtID := attributes["backup_targets."+strconv.Itoa(i)+".ext_id"]
+							readResp, err := client.GetBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(backupTargetExtID), nil)
+							if err != nil {
+								return fmt.Errorf("error while fetching Backup Target: %s", err)
+							}
+
+							// extract the etag from the read response
+							args := make(map[string]interface{})
+							eTag := client.ApiClient.GetEtag(readResp)
+							args["If-Match"] = utils.StringPtr(eTag)
+
+							resp, err := client.DeleteBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(backupTargetExtID), args)
+
+							if err != nil {
+								return fmt.Errorf("error while deleting Backup Target: %s", err)
+							}
+							// wait for the backup target to be deleted
+							// if the task is not successful, return the error
+							waitDeleteTask(resp)
+						}
 					}
-
-					// extract the etag from the read response
-					args := make(map[string]interface{})
-					eTag := client.ApiClient.GetEtag(readResp)
-					args["If-Match"] = utils.StringPtr(eTag)
-
-					resp, err := client.DeleteBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(extID), args)
-
-					if err != nil {
-						return fmt.Errorf("error while deleting Backup Target: %s", err)
-					}
-					// wait for the backup target to be deleted
-					// if the task is not successful, return the error
-					return waitDeleteTask(resp)
 				}
-
 				return nil
 			}
 		}
@@ -95,21 +171,35 @@ func checkBackupTargetExist() resource.TestCheckFunc {
 	}
 }
 
-// checkBackupTargetExistAndCreateIfNotExists checks if the backup target exists and creates a new one if it does not
-func checkBackupTargetExistAndCreateIfNotExists() resource.TestCheckFunc {
+// checkBackupTargetExistAndCreateIfNotExists checks if the cluster location backup target exists
+// and creates a new one if it does not
+func checkClusterLocationBackupTargetExistAndCreateIfNotExists() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acc.TestAccProvider.Meta().(*conns.Client)
 		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
+
+		outputClusterExtID, ok := s.RootModule().Outputs["clusterExtID"]
+		if !ok {
+			return fmt.Errorf("output 'clusterExtID' not found")
+		}
+
+		clusterExtID := outputClusterExtID.Value.(string)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type == "nutanix_pc_backup_targets_v2" {
 				attributes := rs.Primary.Attributes
 
 				backupTargetsCount, _ := strconv.Atoi(attributes["backup_targets.#"])
+				for i := 0; i < backupTargetsCount; i++ {
+					clusterLocationCount, _ := strconv.Atoi(attributes["backup_targets."+strconv.Itoa(i)+".location.0.cluster_location.#"])
+					if clusterLocationCount > 0 {
+						clusterLocationExtID := attributes["backup_targets."+strconv.Itoa(i)+".location.0.cluster_location.0.config.0.ext_id"]
 
-				if backupTargetsCount > 0 {
-					log.Printf("[DEBUG] Backup Target already exists, ext_id: %s", attributes["backup_targets.0.ext_id"])
-					return nil
+						if clusterLocationExtID == clusterExtID {
+							log.Printf("[DEBUG] Backup Target already exists, ext_id: %s", attributes["backup_targets.0.ext_id"])
+							return nil
+						}
+					}
 				}
 				log.Printf("[DEBUG] Backup Target not found, creating new Backup Target")
 				break
@@ -123,13 +213,6 @@ func checkBackupTargetExistAndCreateIfNotExists() resource.TestCheckFunc {
 		}
 
 		domainManagerExtID := outputDomainManagerExtID.Value.(string)
-
-		outputClusterExtID, ok := s.RootModule().Outputs["clusterExtID"]
-		if !ok {
-			return fmt.Errorf("output 'clusterExtID' not found")
-		}
-
-		clusterExtID := outputClusterExtID.Value.(string)
 
 		// Create Backup Target
 		body := management.BackupTarget{}
@@ -198,37 +281,127 @@ func checkBackupTargetExistAndCreateIfNotExists() resource.TestCheckFunc {
 	}
 }
 
-// checkLastSyncTimeBackupTarget checks the last sync time of the backup target to know if the restore point is created
-func checkLastSyncTimeBackupTarget(retries int, delay time.Duration) resource.TestCheckFunc {
+// checkBackupTargetExistAndCreateIfNotExists checks if the cluster location backup target exists
+// and creates a new one if it does not
+func checkObjectStoreLocationBackupTargetExistAndCreateIfNotExists() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acc.TestAccProvider.Meta().(*conns.Client)
 		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type == "nutanix_pc_backup_target_v2" {
+			if rs.Type == "nutanix_pc_backup_targets_v2" {
 				attributes := rs.Primary.Attributes
 
-				domainManagerExtID := attributes["domain_manager_ext_id"]
-				backupTargetExtID := attributes["ext_id"]
+				backupTargetsCount, _ := strconv.Atoi(attributes["backup_targets.#"])
 
-				for i := 0; i < retries; i++ {
-					readResp, err := client.GetBackupTargetById(utils.StringPtr(domainManagerExtID), utils.StringPtr(backupTargetExtID), nil)
-					if err != nil {
-						return fmt.Errorf("error while fetching Backup Target: %s", err)
-					}
+				for i := 0; i < backupTargetsCount; i++ {
+					objectStoreLocationCount, _ := strconv.Atoi(attributes["backup_targets."+strconv.Itoa(i)+".location.0.object_store_location.#"])
 
-					backupTarget := readResp.Data.GetValue().(management.BackupTarget)
-
-					log.Printf("[DEBUG] LastSyncTime: %v\n", backupTarget.LastSyncTime)
-					if backupTarget.LastSyncTime != nil {
-						log.Printf("[DEBUG]  Restore Point Created after %d minutes\n", i*30/60)
+					if objectStoreLocationCount > 0 {
+						log.Printf("[DEBUG] object store location backup target already exists, ext_id: %s", attributes["backup_targets."+strconv.Itoa(i)+".ext_id"])
 						return nil
 					}
-					log.Printf("[DEBUG] Waiting for 30 seconds to Fetch backup target\n")
-					time.Sleep(delay)
 				}
+
+				log.Printf("[DEBUG] Backup Target not found, creating new Backup Target")
+				break
 			}
 		}
+
+		// Extract the output value for use in later steps
+		outputDomainManagerExtID, ok := s.RootModule().Outputs["domainManagerExtID"]
+		if !ok {
+			return fmt.Errorf("output 'domainManagerExtID' not found")
+		}
+
+		domainManagerExtID := outputDomainManagerExtID.Value.(string)
+
+		// Create Backup Target
+		body := management.BackupTarget{}
+
+		bucket := testVars.Prism.Bucket
+
+		OneOfBackupTargetLocation := management.NewOneOfBackupTargetLocation()
+
+		objectStoreLocationBody := management.NewObjectStoreLocation()
+
+		objectStoreLocationBody.ProviderConfig = &management.AWSS3Config{
+			BucketName: utils.StringPtr(bucket.Name),
+			Region:     utils.StringPtr(bucket.Region),
+			Credentials: &management.AccessKeyCredentials{
+				AccessKeyId:     utils.StringPtr(bucket.AccessKey),
+				SecretAccessKey: utils.StringPtr(bucket.SecretKey),
+			},
+		}
+
+		objectStoreLocationBody.BackupPolicy = &management.BackupPolicy{
+			RpoInMinutes: utils.IntPtr(60),
+		}
+
+		err := OneOfBackupTargetLocation.SetValue(*objectStoreLocationBody)
+		if err != nil {
+			return fmt.Errorf("error while setting object store location : %v", err)
+		}
+
+		body.Location = OneOfBackupTargetLocation
+
+		log.Printf("[DEBUG] Creating Backup Target")
+		resp, err := client.CreateBackupTarget(utils.StringPtr(domainManagerExtID), &body)
+
+		if err != nil {
+			return fmt.Errorf("error while Creating Backup Target: %s", err)
+		}
+
+		TaskRef := resp.Data.GetValue().(config.TaskReference)
+		taskUUID := TaskRef.ExtId
+
+		taskconn := conn.PrismAPI
+		// Wait for the backup target to be deleted
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"PENDING", "RUNNING", "QUEUED"},
+			Target:  []string{"SUCCEEDED"},
+			Refresh: taskStateRefreshPrismTaskGroupFunc(utils.StringValue(taskUUID)),
+			Timeout: timeout,
+		}
+
+		if _, taskErr := stateConf.WaitForState(); err != nil {
+			return fmt.Errorf("error waiting for Backup Target to be deleted: %s", taskErr)
+		}
+
+		_, err = taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+		if err != nil {
+			return fmt.Errorf("error while fetching Backup Target Task Details: %s", err)
+		}
+
+		return nil
+	}
+}
+
+// checkLastSyncTimeBackupTarget checks the last sync time of the backup target to know if the restore point is created
+func checkLastSyncTimeBackupTarget(domainManagerExtID, backupTargetExtID *string, retries int, delay time.Duration) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acc.TestAccProvider.Meta().(*conns.Client)
+		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
+		if *backupTargetExtID == "" && *domainManagerExtID == "" {
+			return fmt.Errorf("backup target ext_id and domain manager ext_id not set")
+		}
+		for i := 0; i < retries; i++ {
+			readResp, err := client.GetBackupTargetById(domainManagerExtID, backupTargetExtID, nil)
+			if err != nil {
+				return fmt.Errorf("error while fetching Backup Target: %s", err)
+			}
+
+			backupTarget := readResp.Data.GetValue().(management.BackupTarget)
+
+			log.Printf("[DEBUG] LastSyncTime: %v\n", backupTarget.LastSyncTime)
+			if backupTarget.LastSyncTime != nil {
+				log.Printf("[DEBUG]  Restore Point Created after %d minutes\n", i*30/60)
+				return nil
+			}
+			log.Printf("[DEBUG] Waiting for 30 seconds to Fetch backup target\n")
+			time.Sleep(delay)
+		}
+
 		return fmt.Errorf("backup Target restore point not created")
 	}
 }
@@ -330,6 +503,13 @@ func checkClusterLocationBackupTargetExistAndCreateIfNot(backupTargetExtID, doma
 
 		*domainManagerExtID = outputDomainManagerExtID.Value.(string)
 
+		outputClusterExtID, ok := s.RootModule().Outputs["clusterExtID"]
+		if !ok {
+			return fmt.Errorf("output 'clusterExtID' not found")
+		}
+
+		clusterExtID := outputClusterExtID.Value.(string)
+
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type == "nutanix_pc_backup_targets_v2" {
 				attributes := rs.Primary.Attributes
@@ -340,22 +520,17 @@ func checkClusterLocationBackupTargetExistAndCreateIfNot(backupTargetExtID, doma
 					clusterLocationCount, _ := strconv.Atoi(attributes["backup_targets."+strconv.Itoa(i)+".location.0.cluster_location.#"])
 
 					if clusterLocationCount > 0 {
-						log.Printf("[DEBUG] cluster location backup target already exists, ext_id: %s", attributes["backup_targets."+strconv.Itoa(i)+".ext_id"])
-						*backupTargetExtID = attributes["backup_targets."+strconv.Itoa(i)+".ext_id"]
-						return nil
+						if attributes["backup_targets."+strconv.Itoa(i)+".location.0.cluster_location.0.config.0.ext_id"] == clusterExtID {
+							log.Printf("[DEBUG] cluster location backup target already exists, ext_id: %s", attributes["backup_targets."+strconv.Itoa(i)+".ext_id"])
+							*backupTargetExtID = attributes["backup_targets."+strconv.Itoa(i)+".ext_id"]
+							return nil
+						}
 					}
 				}
 				log.Printf("[DEBUG] cluster location backup target target not found, creating new cluster location backup target")
 				break
 			}
 		}
-
-		outputClusterExtID, ok := s.RootModule().Outputs["clusterExtID"]
-		if !ok {
-			return fmt.Errorf("output 'clusterExtID' not found")
-		}
-
-		clusterExtID := outputClusterExtID.Value.(string)
 
 		// Create Backup Target
 		body := management.BackupTarget{}
@@ -425,11 +600,11 @@ func checkClusterLocationBackupTargetExistAndCreateIfNot(backupTargetExtID, doma
 	}
 }
 
-// checkObjectRestoreSourceBackupTargetExistAndCreateIfNot checks if the object restore source backup target exists
+// checkObjectRestoreLocationBackupTargetExistAndCreateIfNot checks if the object restore location backup target exists
 // and creates a new one if it does not
 // its set the backupTargetExtID to the ext_id of the created backup target
-// this method is used to check the backup target for object restore source restore PC test
-func checkObjectRestoreSourceBackupTargetExistAndCreateIfNot(backupTargetExtID, domainManagerExtID *string) resource.TestCheckFunc {
+// this method is used to check the backup target for object restore location restore PC test
+func checkObjectRestoreLocationBackupTargetExistAndCreateIfNot(backupTargetExtID, domainManagerExtID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acc.TestAccProvider.Meta().(*conns.Client)
 		client := conn.PrismAPI.DomainManagerBackupsAPIInstance
