@@ -94,7 +94,7 @@ jobs:
             echo "NDB_USERNAME=${{ secrets.NDB_USERNAME }}" >> $GITHUB_ENV
             echo "PROTECTION_RULES_TEST_FLAG=${{ secrets.PROTECTION_RULES_TEST_FLAG }}" >> $GITHUB_ENV
             echo "CGO_ENABLED=${{ secrets.CGO_ENABLED }}" >> $GITHUB_ENV
-
+            echo "REACTION_TYPE=hooray" >> $GITHUB_ENV  # Reaction for success
       - name: Check gofmt
         run: |
             echo "==> Checking that code complies with gofmt requirements..."
@@ -103,6 +103,7 @@ jobs:
                 echo 'gofmt needs running on the following files:'
                 echo "${gofmt_files}"
                 echo "You can use the command: \`make fmt\` to reformat code."
+                echo "REACTION_TYPE=confused" >> $GITHUB_ENV
                 exit 1
             else
                 echo "No gofmt issues found."
@@ -159,6 +160,13 @@ jobs:
               echo '${{ secrets.V4_CONFIG }}' > test_config_v2.json
               echo "==> Running testcases..."
               TF_LOG="ERROR" TF_ACC=1 go test ./... -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count | tee test_output.log
+
+              # Ensure test output exists
+              if [ ! -f test_output.log ]; then
+                  echo "No test output found!"
+                  echo "REACTION_TYPE=confused" >> $GITHUB_ENV
+                  exit 1
+              fi
 
               # Extract total test cases executed
               TOTAL_RUN=$(grep -c '^=== RUN' test_output.log)
@@ -221,8 +229,16 @@ jobs:
                           echo "==========================================================================================================================================================="
                       fi
                   done
-              fi  
-              echo "Tests Execution is done, please debug if any failures"
+              fi
+
+              # Set exit code
+              if [ "$TOTAL_FAILED" -gt 0 ]; then
+                  echo "Test Cases Failed!"
+                  echo "REACTION_TYPE=confused" >> $GITHUB_ENV
+                  exit 1
+              else
+                  exit 0
+              fi
 
       - name: Code Coverage Check
         if: ${{ always() }}
@@ -239,8 +255,6 @@ jobs:
                   echo "CODE_COVERAGE_OUTPUT=Current line coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD). Kindly add more acceptance tests." >> $GITHUB_ENV
                   echo "Current coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD)."
               fi
-      - run: echo "Success!"
-      - run: echo "🍏 This job's status is ${{ job.status }}."
 
       # Update the comment back
       - name: Update comment
@@ -249,9 +263,10 @@ jobs:
         with:
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
           body: |
-            >Acceptance test run status: ${{ job.status }}
-            >${{ env.CODE_COVERAGE_OUTPUT }}
-          reaction-type: hooray
+            > Run status: ${{ job.status }}
+            > [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) 🔗
+            > ${{ env.CODE_COVERAGE_OUTPUT }}
+          reaction-type: ${{ env.REACTION_TYPE }}
 
       # Update check run for Acceptance Test
       - uses: actions/github-script@v5
@@ -285,3 +300,6 @@ jobs:
               conclusion: process.env.conclusion
             });
             return result;
+      
+      - run: echo "Build Done!!"
+      - run: echo "🍏 This job's status is ${{ job.status }}."
