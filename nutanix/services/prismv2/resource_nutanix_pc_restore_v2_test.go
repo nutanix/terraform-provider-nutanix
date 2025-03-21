@@ -109,33 +109,33 @@ func TestAccV2NutanixRestorePCResource_ClusterLocationRestorePC(t *testing.T) {
 		})
 	})
 
-	// // Restore PC Sub-test Case
-	// t.Run("PC restore test: ", func(t *testing.T) {
-	// 	resource.Test(t, resource.TestCase{
-	// 		PreCheck:  func() { acc.TestAccPreCheck(t) },
-	// 		Providers: acc.TestAccProviders,
-	// 		Steps: []resource.TestStep{
-	// 			// Step 5: Restore PC
-	// 			{
-	// 				PreConfig: func() {
-	// 					fmt.Printf("Step 4: Restore PC\n")
-	// 				},
-	// 				Config: restorePcConfig,
-	// 				Check: resource.ComposeTestCheckFunc(
-	// 					resource.TestCheckResourceAttrSet(resourceNameRestorePC, "id"),
-	// 					resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.config.0.build_info.0.version"),
-	// 					resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.config.0.name"),
-	// 					resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.config.0.size"),
-	// 					resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.external_address.0.ipv4.0.value"),
-	// 					resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.name_servers.0.ipv4.0.value"),
-	// 					resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.name_servers.1.ipv4.0.value"),
-	// 					resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.ntp_servers.0.fqdn.0.value"),
-	// 					resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.ntp_servers.1.fqdn.0.value"),
-	// 				),
-	// 			},
-	// 		},
-	// 	})
-	// })
+	// Restore PC Sub-test Case
+	t.Run("PC restore test: ", func(t *testing.T) {
+		resource.Test(t, resource.TestCase{
+			PreCheck:  func() { acc.TestAccPreCheck(t) },
+			Providers: acc.TestAccProviders,
+			Steps: []resource.TestStep{
+				// Step 5: Restore PC
+				{
+					PreConfig: func() {
+						fmt.Printf("Step 4: Restore PC\n")
+					},
+					Config: restorePcConfig,
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "id"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.config.0.build_info.0.version"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.config.0.name"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.config.0.size"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.external_address.0.ipv4.0.value"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.name_servers.0.ipv4.0.value"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.name_servers.1.ipv4.0.value"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.ntp_servers.0.fqdn.0.value"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.ntp_servers.1.fqdn.0.value"),
+					),
+				},
+			},
+		})
+	})
 }
 
 func TestAccV2NutanixRestorePCResource_ObjectRestoreSourceRestorePC(t *testing.T) {
@@ -239,33 +239,33 @@ func TestAccV2NutanixRestorePCResource_ObjectRestoreSourceRestorePC(t *testing.T
 		})
 	})
 
-	// // Restore PC Sub-test Case
-	// t.Run("PC restore test: ", func(t *testing.T) {
-	// 	resource.Test(t, resource.TestCase{
-	// 		PreCheck:  func() { acc.TestAccPreCheck(t) },
-	// 		Providers: acc.TestAccProviders,
-	// 		Steps: []resource.TestStep{
-	// 			// Step 5: Restore PC
-	// 			{
-	// 				PreConfig: func() {
-	// 					fmt.Printf("Step 4: Restore PC\n")
-	// 				},
-	// 				Config: restorePcConfig,
-	// 				Check: resource.ComposeTestCheckFunc(
-	// 					resource.TestCheckResourceAttrSet(resourceNameRestorePC, "id"),
-	// 					resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.config.0.build_info.0.version"),
-	// 					resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.config.0.name"),
-	// 					resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.config.0.size"),
-	// 					resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.external_address.0.ipv4.0.value"),
-	// 					resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.name_servers.0.ipv4.0.value"),
-	// 					resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.name_servers.1.ipv4.0.value"),
-	// 					resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.ntp_servers.0.fqdn.0.value"),
-	// 					resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.ntp_servers.1.fqdn.0.value"),
-	// 				),
-	// 			},
-	// 		},
-	// 	})
-	// })
+	// Restore PC Sub-test Case
+	t.Run("PC restore test: ", func(t *testing.T) {
+		resource.Test(t, resource.TestCase{
+			PreCheck:  func() { acc.TestAccPreCheck(t) },
+			Providers: acc.TestAccProviders,
+			Steps: []resource.TestStep{
+				// Step 5: Restore PC
+				{
+					PreConfig: func() {
+						fmt.Printf("Step 4: Restore PC\n")
+					},
+					Config: restorePcConfig,
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "id"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.config.0.build_info.0.version"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.config.0.name"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.config.0.size"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.external_address.0.ipv4.0.value"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.name_servers.0.ipv4.0.value"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.name_servers.1.ipv4.0.value"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.ntp_servers.0.fqdn.0.value"),
+						resource.TestCheckResourceAttrSet(resourceNameRestorePC, "domain_manager.0.network.0.ntp_servers.1.fqdn.0.value"),
+					),
+				},
+			},
+		})
+	})
 }
 
 func testAccPreRequestForRestoreSourceConfig() string {
