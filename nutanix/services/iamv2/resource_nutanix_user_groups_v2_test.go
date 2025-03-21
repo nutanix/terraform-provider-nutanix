@@ -15,6 +15,7 @@ func TestAccV2NutanixUserGroupsResource_LDAPUserGroup(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
+		CheckDestroy:  testAccCheckNutanixUserGroupsV2Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testLDAPUserGroupsResourceConfig(filepath),
@@ -37,6 +38,7 @@ func TestAccV2NutanixUserGroupsResource_SAMLUserGroup(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
 		Providers: acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixUserGroupsV2Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testSAMLUserGroupsResourceConfig(filepath),
