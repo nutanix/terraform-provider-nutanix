@@ -159,9 +159,18 @@ jobs:
               echo "==> Setup V4 Config"
               echo '${{ secrets.V4_CONFIG }}' > test_config_v2.json
               echo "==> Running testcases..."
-              TF_LOG="ERROR" TF_ACC=1 go test ./... -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count | tee test_output.log
-
-              # Ensure test output exists
+              set -o pipefail  # Ensure failure detection in pipelines
+              TF_LOG="ERROR" TF_ACC=1 go test ./... -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count TEST_EXIT_CODE=$? | tee test_output.log
+              
+              if [ "$TEST_EXIT_CODE" -ne 0 ]; then
+                echo "Test Case Execution Failed" >> $GITHUB_ENV
+                echo "REACTION_TYPE=confused" >> $GITHUB_ENV
+                exit 1  # Fail the stage
+              fi
+      
+      - name: Test Results
+        run: |
+             # Ensure test output exists
               if [ ! -f test_output.log ]; then
                   echo "No test output found!"
                   echo "REACTION_TYPE=confused" >> $GITHUB_ENV
@@ -185,12 +194,17 @@ jobs:
                   SKIP_PERCENT=0
               fi
 
-              echo "==================================================🧪 TEST SUMMARY 🧪================================================================================="
-              echo "Total Test Cases Run 🐹🚀: $TOTAL_RUN"
-              echo "Total Test Cases Passed 🐹✅: $TOTAL_PASSED ($PASS_PERCENT %)" 
-              echo "Total Test Cases Failed 🐹❌: $TOTAL_FAILED ($FAIL_PERCENT %)"
-              echo "Total Test Cases Skipped 🐹⚠️: $TOTAL_SKIPPED ($SKIP_PERCENT %)"
-              echo "=================================================================================================================================================="
+              SUMMARY="==================================================🧪 TEST SUMMARY 🧪=================================================================================
+              \nTotal Test Cases Run 🐹🚀: $TOTAL_RUN
+              \nTotal Test Cases Passed 🐹✅: $TOTAL_PASSED ($PASS_PERCENT %)
+              \nTotal Test Cases Failed 🐹❌: $TOTAL_FAILED ($FAIL_PERCENT %)
+              \nTotal Test Cases Skipped 🐹⚠️: $TOTAL_SKIPPED ($SKIP_PERCENT %)
+              \n=================================================================================================================================================="
+              echo "TEST_SUMMARY<<EOF" >> $GITHUB_ENV
+              echo "$SUMMARY" >> $GITHUB_ENV
+              echo "EOF" >> $GITHUB_ENV
+
+              echo $SUMMARY
               echo "================================================== TESTS SUCCEEDED ✅ ============================================================================="
               # Process passed test cases
               if [ "$TOTAL_PASSED" -gt 0 ]; then
@@ -231,15 +245,6 @@ jobs:
                   done
               fi
 
-              # Set exit code
-              if [ "$TOTAL_FAILED" -gt 0 ]; then
-                  echo "Test Cases Failed!"
-                  echo "REACTION_TYPE=confused" >> $GITHUB_ENV
-                  exit 1
-              else
-                  exit 0
-              fi
-
       - name: Code Coverage Check
         if: ${{ always() }}
         run:  |
@@ -263,8 +268,17 @@ jobs:
         with:
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
           body: |
-            > Run status: ${{ job.status }}
-            > [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) 🔗
+            ## 📝 Execution Report
+
+            > **Run Status**: ${{ job.status }}
+            > 
+            > ```
+            > ${{ env.TEST_SUMMARY }}
+            > ```
+            > **📌 [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**
+            > 
+            > **📊 Code Coverage Summary:**
+            > 
             > ${{ env.CODE_COVERAGE_OUTPUT }}
           reaction-type: ${{ env.REACTION_TYPE }}
 
