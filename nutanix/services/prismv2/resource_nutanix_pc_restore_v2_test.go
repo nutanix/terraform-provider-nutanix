@@ -102,7 +102,7 @@ func TestAccV2NutanixRestorePCResource_ClusterLocationRestorePC(t *testing.T) {
 							log.Printf("[DEBUG] Restore PC Config: %s\n", restorePcConfig)
 							return nil
 						},
-						// powerOffPC(),
+						powerOffPC(),
 					),
 				},
 			},
@@ -225,7 +225,7 @@ func TestAccV2NutanixRestorePCResource_ObjectRestoreSourceRestorePC(t *testing.T
 							log.Printf("[DEBUG] Restore PC Config: %s\n", restorePcConfig)
 							return nil
 						},
-						// powerOffPC(),
+						powerOffPC(),
 					),
 				},
 			},
