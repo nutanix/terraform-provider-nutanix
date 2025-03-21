@@ -277,7 +277,8 @@
       "pe_ip": "",
       "ssh_user": "",
       "ssh_password": ""
-    }
+    },
+    "skip_pc_restore_test": true
   },
   "data_protection": {
     "local_cluster_pe": "",
