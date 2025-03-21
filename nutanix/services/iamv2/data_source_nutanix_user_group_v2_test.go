@@ -12,8 +12,8 @@ const datasourceNameUserGroup = "data.nutanix_user_group_v2.test"
 
 func TestAccV2NutanixUserGroupsDatasource_GetUserGroupByExtId(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
 		CheckDestroy: testAccCheckNutanixUserGroupsV2Destroy,
 		Steps: []resource.TestStep{
 			{

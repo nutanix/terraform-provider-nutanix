@@ -111,7 +111,7 @@ func testAccCheckNutanixUserGroupsV2Destroy(s *terraform.State) error {
 			}
 			return errRead
 		}
-		
+
 		// get etag value from read response to pass in update request If-Match header, Required for update request
 		etagValue := conn.IamAPI.DirectoryServiceAPIInstance.ApiClient.GetEtag(readResp)
 		headers := make(map[string]interface{})
