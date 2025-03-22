@@ -278,7 +278,11 @@
       "ssh_user": "",
       "ssh_password": ""
     },
-    "skip_pc_restore_test": true
+    "pc_restore":{
+      "username": "",
+      "password": "",
+      "skip_pc_restore_test": false
+    }
   },
   "data_protection": {
     "local_cluster_pe": "",

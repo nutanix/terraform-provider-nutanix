@@ -16,7 +16,7 @@ import (
 const resourceNameRestorePC = "nutanix_pc_restore_v2.test"
 
 func TestAccV2NutanixRestorePCResource_ClusterLocationRestorePC(t *testing.T) {
-	if testVars.Prism.SkipPCRestoreTest {
+	if testVars.Prism.PCRestore.SkipPCRestoreTest {
 		// We are skipping the PC restore tests because they require powering off the PC VM,
 		// which could affect the execution of other test cases running in parallel.
 		// The PC restore test cases can be run separately.
@@ -139,7 +139,7 @@ func TestAccV2NutanixRestorePCResource_ClusterLocationRestorePC(t *testing.T) {
 }
 
 func TestAccV2NutanixRestorePCResource_ObjectRestoreSourceRestorePC(t *testing.T) {
-	if testVars.Prism.SkipPCRestoreTest {
+	if testVars.Prism.PCRestore.SkipPCRestoreTest {
 		// We are skipping the PC restore tests because they require powering off the PC VM,
 		// which could affect the execution of other test cases running in parallel.
 		// The PC restore test cases can be run separately.
@@ -421,12 +421,12 @@ func restorePcResourceConfig(pcDetails map[string]interface{}, restoreSourceExtI
 	// Build remote commands to reset the admin password.
 	remoteCommands := ""
 	for pass := range uniquePasswords {
-		cmd := fmt.Sprintf("/home/nutanix/prism/cli/ncli user reset-password user-name=%s password=%s", "admin", pass)
+		cmd := fmt.Sprintf("/home/nutanix/prism/cli/ncli user reset-password user-name=%s password=%s", testVars.Prism.PCRestore.Username, pass)
 		remoteCommands += cmd + " ; "
 	}
 
 	// Append a fallback command using the previous password.
-	fallbackCmd := fmt.Sprintf("/home/nutanix/prism/cli/ncli user reset-password user-name=%s password=%s", "admin", "Nutanix.123")
+	fallbackCmd := fmt.Sprintf("/home/nutanix/prism/cli/ncli user reset-password user-name=%s password=%s", testVars.Prism.PCRestore.Username, testVars.Prism.PCRestore.Password)
 	remoteCommands += fallbackCmd
 
 	// Build the two remote password reset commands.
