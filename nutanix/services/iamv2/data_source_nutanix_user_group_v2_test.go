@@ -12,8 +12,9 @@ const datasourceNameUserGroup = "data.nutanix_user_group_v2.test"
 
 func TestAccV2NutanixUserGroupsDatasource_GetUserGroupByExtId(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccPreCheck(t) },
-		Providers: acc.TestAccProviders,
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
+		Providers:    acc.TestAccProviders,
+		CheckDestroy: testAccCheckNutanixUserGroupsV2Destroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testUserGroupDatasourceV4Config(filepath),
@@ -43,9 +44,9 @@ func testUserGroupDatasourceV4Config(filepath string) string {
 		name = local.user_groups.name
 		distinguished_name = local.user_groups.distinguished_name
 	}
-		
+
 	data "nutanix_user_group_v2" "test" {
-		ext_id = resource.nutanix_user_groups_v2.test.id  
+		ext_id = resource.nutanix_user_groups_v2.test.id
 	}
 	`, filepath)
 }
