@@ -36,9 +36,9 @@ type TestConfig struct {
 			PcExtID string `json:"pc_ext_id"`
 		} `json:"unregister"`
 		PCRestore struct {
-			Username string `json:"username"`
-			Password string `json:"password"`
-			SkipPCRestoreTest bool `json:"skip_pc_restore_test"`
+			Username          string `json:"username"`
+			Password          string `json:"password"`
+			SkipPCRestoreTest bool   `json:"skip_pc_restore_test"`
 		} `json:"pc_restore"`
 	} `json:"prism"`
 }
