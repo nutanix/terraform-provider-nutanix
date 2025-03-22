@@ -270,12 +270,19 @@
     },
     "restore_source": {
       "pe_ip": "",
-      "pc_password": ""
+      "ssh_user": "",
+      "ssh_password": ""
+    },
+    "pc_restore":{
+      "username": "",
+      "password": "",
+      "skip_pc_restore_test": false
     }
   },
   "data_protection": {
     "local_cluster_pe": "",
     "local_cluster_vip": "",
+    "remote_cluster_pe": "",
     "remote_cluster_vip": ""
   },
   "lcm": {
