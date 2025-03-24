@@ -192,17 +192,13 @@ jobs:
               fi
 
               echo "Preparing the test summary for better readability and easy debugging"
-              SUMMARY="==================================================🧪 TEST SUMMARY 🧪=================================================================================
-              \nTotal Test Cases Run 🐹🚀: $TOTAL_RUN
-              \nTotal Test Cases Passed 🐹✅: $TOTAL_PASSED ($PASS_PERCENT %)
-              \nTotal Test Cases Failed 🐹❌: $TOTAL_FAILED ($FAIL_PERCENT %)
-              \nTotal Test Cases Skipped 🐹⚠️: $TOTAL_SKIPPED ($SKIP_PERCENT %)
-              \n=================================================================================================================================================="
-              echo "TEST_SUMMARY<<EOF" >> $GITHUB_ENV
-              echo "$SUMMARY" >> $GITHUB_ENV
-              echo "EOF" >> $GITHUB_ENV
+              echo "==================================================🧪 TEST SUMMARY 🧪================================================================================="
+              echo "Total Test Cases Run 🐹🚀: $TOTAL_RUN"
+              echo "Total Test Cases Passed 🐹✅: $TOTAL_PASSED ($PASS_PERCENT %)" 
+              echo "Total Test Cases Failed 🐹❌: $TOTAL_FAILED ($FAIL_PERCENT %)"
+              echo "Total Test Cases Skipped 🐹⚠️: $TOTAL_SKIPPED ($SKIP_PERCENT %)"
+              echo "=================================================================================================================================================="
 
-              echo $SUMMARY
               echo "Showing the testcase names which are succeeded."
               echo "================================================== TESTS SUCCEEDED ✅ ============================================================================="
               # Process passed test cases
@@ -281,14 +277,9 @@ jobs:
             ## 📝 Execution Report
 
             > **Run Status**: ${{ job.status }}
-            > 
-            > ```
-            > ${{ env.TEST_SUMMARY }}
-            > ```
             > **📌 [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**
             > 
             > **📊 Code Coverage Summary:**
-            > 
             > ${{ env.CODE_COVERAGE_OUTPUT }}
           reaction-type: ${{ env.REACTION_TYPE }}
 
