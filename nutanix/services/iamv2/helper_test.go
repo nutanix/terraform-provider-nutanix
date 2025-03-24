@@ -2,6 +2,7 @@ package iamv2_test
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 
@@ -40,24 +41,25 @@ func checkAttributeLength(resourceName, attribute string, minLength int) resourc
 }
 
 func testAccCheckNutanixUserDestroy(s *terraform.State) error {
-	fmt.Println("Checking user destroy")
+	log.Println("Checking user destroy")
 	conn := acc.TestAccProvider.Meta().(*conns.Client)
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "nutanix_users_v2" {
+		if rs.Type != "nutanix_users_v2" || rs.Primary.Attributes["users.#"] != "" {
 			continue
 		}
+
 		if _, err := conn.API.V3.GetUser(rs.Primary.ID); err != nil {
 			if strings.Contains(fmt.Sprint(err), "ENTITY_NOT_FOUND") {
 				return nil
 			}
 			return err
 		}
-		_, err := conn.API.V3.DeleteUser("4f1d9cf6-83dc-5fe2-8dd1-a84e062aaeee")
+		_, err := conn.API.V3.DeleteUser(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
-		fmt.Println("Deleted user")
+		log.Println("User Deleted")
 	}
 	return nil
 }
