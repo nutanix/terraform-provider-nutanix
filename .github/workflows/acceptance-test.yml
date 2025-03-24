@@ -16,6 +16,10 @@ jobs:
         with:
           ref: ${{ github.event.client_payload.pull_request.head.ref }}  # This ensures it checks out the PR branch
 
+      - name: Debug: Verify Checked Out Branch
+        run: |
+          git rev-parse --abbrev-ref HEAD
+
       - name: Remove Cached Go Versions
         run: |
           sudo rm -rf /home/ubuntu/actions-runner/_work/_tool/go
