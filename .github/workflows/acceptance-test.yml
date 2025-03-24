@@ -156,7 +156,7 @@ jobs:
               echo "==> Setup V4 Config"
               echo '${{ secrets.V4_CONFIG }}' > test_config_v2.json
               echo "==> Running testcases..."
-              TF_LOG="ERROR" TF_ACC=1 go test ./... -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count | tee test_output.log
+              TF_LOG="ERROR" TF_ACC=1  GOTRACEBACK=all go test ./... -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count | tee test_output.log
               # Extract total test cases executed
               TOTAL_RUN=$(grep -c '^=== RUN' test_output.log)
               TOTAL_PASSED=$(grep -c '^--- PASS' test_output.log)
