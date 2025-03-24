@@ -137,7 +137,7 @@ jobs:
                   elif [ "$provider" = "era" ]
                       then
                           runFlag+="TestAccEra*"
-                  else 
+                  else
                       echo "running individual testcase/package"
                       runFlag+="$provider"
                   fi
