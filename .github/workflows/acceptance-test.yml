@@ -173,12 +173,14 @@ jobs:
               # fi
 
               # Extract total test cases executed
+              echo "Analysing the test output log, fetching the count of TestCases executed, failed, succeeded."
               TOTAL_RUN=$(grep -c '^=== RUN' test_output.log)
               TOTAL_PASSED=$(grep -c '^--- PASS' test_output.log)
               TOTAL_FAILED=$(grep -c '^--- FAIL' test_output.log)
               TOTAL_SKIPPED=$(grep -c '^--- SKIP' test_output.log)
 
               # Calculate percentages
+              echo "Calculating the percentage for failed, succeeded, skipped testcases."
               if [ "$TOTAL_RUN" -gt 0 ]; then
                   PASS_PERCENT=$((TOTAL_PASSED * 100 / TOTAL_RUN))
                   FAIL_PERCENT=$((TOTAL_FAILED * 100 / TOTAL_RUN))
@@ -189,6 +191,7 @@ jobs:
                   SKIP_PERCENT=0
               fi
 
+              echo "Preparing the test summary for better readability and easy debugging"
               SUMMARY="==================================================🧪 TEST SUMMARY 🧪=================================================================================
               \nTotal Test Cases Run 🐹🚀: $TOTAL_RUN
               \nTotal Test Cases Passed 🐹✅: $TOTAL_PASSED ($PASS_PERCENT %)
@@ -200,6 +203,7 @@ jobs:
               echo "EOF" >> $GITHUB_ENV
 
               echo $SUMMARY
+              echo "Showing the testcase names which are succeeded."
               echo "================================================== TESTS SUCCEEDED ✅ ============================================================================="
               # Process passed test cases
               if [ "$TOTAL_PASSED" -gt 0 ]; then
@@ -207,6 +211,7 @@ jobs:
                   grep '^--- PASS' test_output.log | awk '{print "✅ " $3}'
               fi
               echo "==================================================================================================================================================="
+              echo "Showing the testcase names which are failed."
               echo "================================================== TESTS FAILED ❌ ================================================================================"
               # Process failed test cases
               if [ "$TOTAL_FAILED" -gt 0 ]; then
@@ -214,6 +219,7 @@ jobs:
                   grep '^--- FAIL' test_output.log | awk '{print "❌ " $3}'
               fi
               echo "==================================================================================================================================================="
+              echo "Showing the testcase names which are skipped."
               echo "================================================== TESTS SKIPPED ⚠️ =============================================================================="
               if [ "$TOTAL_SKIPPED" -gt 0 ]; then
                  awk '
@@ -223,6 +229,7 @@ jobs:
               fi
               echo "==================================================================================================================================================="
               # Process failures
+              echo "Showing the failure details of testcases failed."
               if [ "$TOTAL_FAILED" -gt 0 ]; then
                   echo ""
                   echo "================== FAILURE DETAILS OF TESTCASES EXECUTED ==============================================================================================="
@@ -240,6 +247,7 @@ jobs:
                   done
               fi
 
+              echo "Exit if any testcases failed."
               # Exit if failed test cases
               if [ "$TOTAL_FAILED" -gt 0 ]; then
                 echo "Test Cases Failed!"
