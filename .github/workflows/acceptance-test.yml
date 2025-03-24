@@ -175,9 +175,13 @@ jobs:
               # Extract total test cases executed
               echo "Analysing the test output log, fetching the count of TestCases executed, failed, succeeded."
               TOTAL_RUN=$(grep -c '^=== RUN' test_output.log)
+              echo "Total run is done"
               TOTAL_PASSED=$(grep -c '^--- PASS' test_output.log)
+              echo "Total passed is done"
               TOTAL_FAILED=$(grep -c '^--- FAIL' test_output.log)
+              echo "Total failed is done"
               TOTAL_SKIPPED=$(grep -c '^--- SKIP' test_output.log)
+              echo "Total skipped is done"
 
               # Calculate percentages
               echo "Calculating the percentage for failed, succeeded, skipped testcases."
