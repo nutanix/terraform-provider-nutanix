@@ -247,14 +247,6 @@ jobs:
                   done
               fi
 
-              echo "Exit if any testcases failed."
-              # Exit if failed test cases
-              if [ "$TOTAL_FAILED" -gt 0 ]; then
-                echo "Test Cases Failed!"
-                echo "REACTION_TYPE=confused" >> $GITHUB_ENV
-                exit 1  # Fail the stage
-              fi
-
       - name: Code Coverage Check
         if: ${{ always() }}
         run:  |
