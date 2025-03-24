@@ -22,6 +22,7 @@ jobs:
           sudo rm -rf /usr/local/go
           sudo apt remove --purge golang -y
           hash -r  # Clear shell path cache
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -33,10 +34,12 @@ jobs:
         run: |
           go version
           which go
+
       - name: Set Go Environment
         run: |
           echo "GOPATH=$HOME/go" >> $GITHUB_ENV
           echo "PATH=$HOME/go/bin:$PATH" >> $GITHUB_ENV
+
       - name: Cache Go Modules
         uses: actions/cache@v3
         with:
@@ -45,13 +48,16 @@ jobs:
           key: go-mod-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             go-mod-${{ runner.os }}-
+
       - name: Install Dependencies
         run: |
           go mod tidy
           go mod vendor
+
       - name: Install unzip
         run: |
           sudo apt-get update && sudo apt-get install -y unzip
+
       - name: Setup Terraform v1.10.5
         run: |
           set -e  # Exit on error
@@ -67,6 +73,7 @@ jobs:
           rm terraform.zip  # Cleanup
           echo "✅ Terraform Installed Successfully!"
           terraform version
+
       - name: Set environment variables
         run: |
             echo "NUTANIX_PE_PASSWORD=${{ secrets.NUTANIX_PE_PASSWORD }}" >> $GITHUB_ENV
@@ -85,6 +92,7 @@ jobs:
             echo "NDB_USERNAME=${{ secrets.NDB_USERNAME }}" >> $GITHUB_ENV
             echo "PROTECTION_RULES_TEST_FLAG=${{ secrets.PROTECTION_RULES_TEST_FLAG }}" >> $GITHUB_ENV
             echo "CGO_ENABLED=${{ secrets.CGO_ENABLED }}" >> $GITHUB_ENV
+
       - name: Check gofmt
         run: |
             echo "==> Checking that code complies with gofmt requirements..."
@@ -130,8 +138,8 @@ jobs:
                       then
                           runFlag+="TestAccEra*"
                   else 
-                          echo "Invalid provider=$provider given in arguments."
-                          exit 1
+                      echo "running individual testcase/package"
+                      runFlag+="$provider"
                   fi
                   if [ $index -lt $((n-1)) ]
                       then
@@ -166,7 +174,7 @@ jobs:
                   SKIP_PERCENT=0
               fi
               echo "==================================================🧪 TEST SUMMARY 🧪================================================================================="
-              echo "Total Test Cases Run 🚀: $TOTAL_RUN"
+              echo "Total Test Cases Run 🐹🚀: $TOTAL_RUN"
               echo "Total Test Cases Passed 🐹✅: $TOTAL_PASSED ($PASS_PERCENT %)" 
               echo "Total Test Cases Failed 🐹❌: $TOTAL_FAILED ($FAIL_PERCENT %)"
               echo "Total Test Cases Skipped 🐹⚠️: $TOTAL_SKIPPED ($SKIP_PERCENT %)"
@@ -211,6 +219,7 @@ jobs:
                   done
               fi  
               echo "Tests Execution is done, please debug if any failures"
+ 
       - name: Code Coverage Check
         if: ${{ always() }}
         run:  |
@@ -226,8 +235,6 @@ jobs:
                   echo "CODE_COVERAGE_OUTPUT=Current line coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD). Kindly add more acceptance tests." >> $GITHUB_ENV
                   echo "Current coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD)."
               fi
-      - run: echo "Success!"
-      - run: echo "🍏 This job's status is ${{ job.status }}."
 
       # Update the comment back
       - name: Update comment
@@ -273,3 +280,6 @@ jobs:
               conclusion: process.env.conclusion
             });
             return result;
+
+      - run: echo "Build Done!!"
+      - run: echo "🍏 This job's status is ${{ job.status }}."
