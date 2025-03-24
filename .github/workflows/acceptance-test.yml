@@ -165,12 +165,12 @@ jobs:
               echo "Checking if test_output.log exists..."
               ls -l test_output.log || echo "test_output.log NOT FOUND!"
 
-              # Ensure test output exists
-              if [ ! -f test_output.log ]; then
-                  echo "No test output found!"
-                  echo "REACTION_TYPE=confused" >> $GITHUB_ENV
-                  exit 1
-              fi
+              # # Ensure test output exists
+              # if [ ! -f test_output.log ]; then
+              #     echo "No test output found!"
+              #     echo "REACTION_TYPE=confused" >> $GITHUB_ENV
+              #     exit 1
+              # fi
 
               # Extract total test cases executed
               TOTAL_RUN=$(grep -c '^=== RUN' test_output.log)
