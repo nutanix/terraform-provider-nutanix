@@ -22,7 +22,6 @@ jobs:
           sudo rm -rf /usr/local/go
           sudo apt remove --purge golang -y
           hash -r  # Clear shell path cache
-
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -34,12 +33,10 @@ jobs:
         run: |
           go version
           which go
-
       - name: Set Go Environment
         run: |
           echo "GOPATH=$HOME/go" >> $GITHUB_ENV
           echo "PATH=$HOME/go/bin:$PATH" >> $GITHUB_ENV
-
       - name: Cache Go Modules
         uses: actions/cache@v3
         with:
@@ -48,16 +45,13 @@ jobs:
           key: go-mod-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             go-mod-${{ runner.os }}-
-
       - name: Install Dependencies
         run: |
           go mod tidy
           go mod vendor
-
-      - name: Install unzip and sshpass
+      - name: Install unzip
         run: |
-          sudo apt-get update && sudo apt-get install -y unzip sshpass
-
+          sudo apt-get update && sudo apt-get install -y unzip
       - name: Setup Terraform v1.10.5
         run: |
           set -e  # Exit on error
@@ -68,14 +62,11 @@ jobs:
             echo "Terraform zip file not found!"
             exit 1
           fi
-
           unzip terraform.zip
           sudo mv terraform /usr/local/bin/
           rm terraform.zip  # Cleanup
-
           echo "✅ Terraform Installed Successfully!"
           terraform version
-
       - name: Set environment variables
         run: |
             echo "NUTANIX_PE_PASSWORD=${{ secrets.NUTANIX_PE_PASSWORD }}" >> $GITHUB_ENV
@@ -94,7 +85,6 @@ jobs:
             echo "NDB_USERNAME=${{ secrets.NDB_USERNAME }}" >> $GITHUB_ENV
             echo "PROTECTION_RULES_TEST_FLAG=${{ secrets.PROTECTION_RULES_TEST_FLAG }}" >> $GITHUB_ENV
             echo "CGO_ENABLED=${{ secrets.CGO_ENABLED }}" >> $GITHUB_ENV
-            echo "REACTION_TYPE=hooray" >> $GITHUB_ENV  # Reaction for success
       - name: Check gofmt
         run: |
             echo "==> Checking that code complies with gofmt requirements..."
@@ -103,7 +93,6 @@ jobs:
                 echo 'gofmt needs running on the following files:'
                 echo "${gofmt_files}"
                 echo "You can use the command: \`make fmt\` to reformat code."
-                echo "REACTION_TYPE=confused" >> $GITHUB_ENV
                 exit 1
             else
                 echo "No gofmt issues found."
@@ -140,9 +129,9 @@ jobs:
                   elif [ "$provider" = "era" ]
                       then
                           runFlag+="TestAccEra*"
-                  else
-                      echo "running individual testcase/package"
-                      runFlag+="$provider"
+                  else 
+                          echo "Invalid provider=$provider given in arguments."
+                          exit 1
                   fi
                   if [ $index -lt $((n-1)) ]
                       then
@@ -160,31 +149,13 @@ jobs:
               echo '${{ secrets.V4_CONFIG }}' > test_config_v2.json
               echo "==> Running testcases..."
               TF_LOG="ERROR" TF_ACC=1 go test ./... -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count | tee test_output.log
-
-              # Debug: Check if the file exists before proceeding
-              echo "Checking if test_output.log exists..."
-              ls -l test_output.log || echo "test_output.log NOT FOUND!"
-
-              # # Ensure test output exists
-              # if [ ! -f test_output.log ]; then
-              #     echo "No test output found!"
-              #     echo "REACTION_TYPE=confused" >> $GITHUB_ENV
-              #     exit 1
-              # fi
-
               # Extract total test cases executed
-              echo "Analysing the test output log, fetching the count of TestCases executed, failed, succeeded."
               TOTAL_RUN=$(grep -c '^=== RUN' test_output.log)
-              echo "Total run is done"
               TOTAL_PASSED=$(grep -c '^--- PASS' test_output.log)
-              echo "Total passed is done"
               TOTAL_FAILED=$(grep -c '^--- FAIL' test_output.log)
-              echo "Total failed is done"
               TOTAL_SKIPPED=$(grep -c '^--- SKIP' test_output.log)
-              echo "Total skipped is done"
 
               # Calculate percentages
-              echo "Calculating the percentage for failed, succeeded, skipped testcases."
               if [ "$TOTAL_RUN" -gt 0 ]; then
                   PASS_PERCENT=$((TOTAL_PASSED * 100 / TOTAL_RUN))
                   FAIL_PERCENT=$((TOTAL_FAILED * 100 / TOTAL_RUN))
@@ -194,16 +165,12 @@ jobs:
                   FAIL_PERCENT=0
                   SKIP_PERCENT=0
               fi
-
-              echo "Preparing the test summary for better readability and easy debugging"
               echo "==================================================🧪 TEST SUMMARY 🧪================================================================================="
-              echo "Total Test Cases Run 🐹🚀: $TOTAL_RUN"
+              echo "Total Test Cases Run 🚀: $TOTAL_RUN"
               echo "Total Test Cases Passed 🐹✅: $TOTAL_PASSED ($PASS_PERCENT %)" 
               echo "Total Test Cases Failed 🐹❌: $TOTAL_FAILED ($FAIL_PERCENT %)"
               echo "Total Test Cases Skipped 🐹⚠️: $TOTAL_SKIPPED ($SKIP_PERCENT %)"
               echo "=================================================================================================================================================="
-
-              echo "Showing the testcase names which are succeeded."
               echo "================================================== TESTS SUCCEEDED ✅ ============================================================================="
               # Process passed test cases
               if [ "$TOTAL_PASSED" -gt 0 ]; then
@@ -211,7 +178,6 @@ jobs:
                   grep '^--- PASS' test_output.log | awk '{print "✅ " $3}'
               fi
               echo "==================================================================================================================================================="
-              echo "Showing the testcase names which are failed."
               echo "================================================== TESTS FAILED ❌ ================================================================================"
               # Process failed test cases
               if [ "$TOTAL_FAILED" -gt 0 ]; then
@@ -219,7 +185,6 @@ jobs:
                   grep '^--- FAIL' test_output.log | awk '{print "❌ " $3}'
               fi
               echo "==================================================================================================================================================="
-              echo "Showing the testcase names which are skipped."
               echo "================================================== TESTS SKIPPED ⚠️ =============================================================================="
               if [ "$TOTAL_SKIPPED" -gt 0 ]; then
                  awk '
@@ -229,7 +194,6 @@ jobs:
               fi
               echo "==================================================================================================================================================="
               # Process failures
-              echo "Showing the failure details of testcases failed."
               if [ "$TOTAL_FAILED" -gt 0 ]; then
                   echo ""
                   echo "================== FAILURE DETAILS OF TESTCASES EXECUTED ==============================================================================================="
@@ -245,8 +209,8 @@ jobs:
                           echo "==========================================================================================================================================================="
                       fi
                   done
-              fi
-
+              fi  
+              echo "Tests Execution is done, please debug if any failures"
       - name: Code Coverage Check
         if: ${{ always() }}
         run:  |
@@ -262,6 +226,8 @@ jobs:
                   echo "CODE_COVERAGE_OUTPUT=Current line coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD). Kindly add more acceptance tests." >> $GITHUB_ENV
                   echo "Current coverage ($totalCoverage) is below threshold ($TESTCOV_THRESHOLD)."
               fi
+      - run: echo "Success!"
+      - run: echo "🍏 This job's status is ${{ job.status }}."
 
       # Update the comment back
       - name: Update comment
@@ -270,14 +236,10 @@ jobs:
         with:
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
           body: |
-            ## 📝 Execution Report
-
-            > **Run Status**: ${{ job.status }}
+            > Acceptance test run status: ${{ job.status }}
             > **📌 [View GitHub Actions Run](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})**
-            > 
-            > **📊 Code Coverage Summary:**
             > ${{ env.CODE_COVERAGE_OUTPUT }}
-          reaction-type: ${{ env.REACTION_TYPE }}
+          reaction-type: hooray
 
       # Update check run for Acceptance Test
       - uses: actions/github-script@v5
@@ -311,6 +273,3 @@ jobs:
               conclusion: process.env.conclusion
             });
             return result;
-      
-      - run: echo "Build Done!!"
-      - run: echo "🍏 This job's status is ${{ job.status }}."
