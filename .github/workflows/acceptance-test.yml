@@ -159,9 +159,8 @@ jobs:
               echo "==> Setup V4 Config"
               echo '${{ secrets.V4_CONFIG }}' > test_config_v2.json
               echo "==> Running testcases..."
-              set -o pipefail  # Ensure failure detection in pipelines
-              TF_LOG="ERROR" TF_ACC=1 go test ./... -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count TEST_EXIT_CODE=$? | tee test_output.log
-              
+              TF_LOG="ERROR" TF_ACC=1 go test ./... -v ${TESTARGS} -timeout 500m -coverprofile c.out -covermode=count | tee test_output.log
+
               # Debug: Check if the file exists before proceeding
               echo "Checking if test_output.log exists..."
               ls -l test_output.log || echo "test_output.log NOT FOUND!"
@@ -241,8 +240,9 @@ jobs:
                   done
               fi
 
-              if [ "$TEST_EXIT_CODE" -ne 0 ]; then
-                echo "Test Case Execution Failed" >> $GITHUB_ENV
+              # Exit if failed test cases
+              if [ "$TOTAL_FAILED" -gt 0 ]; then
+                echo "Test Cases Failed!"
                 echo "REACTION_TYPE=confused" >> $GITHUB_ENV
                 exit 1  # Fail the stage
               fi
