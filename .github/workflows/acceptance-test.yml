@@ -10,11 +10,11 @@ jobs:
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+      - run: echo "🔎 The name of your branch is ${{ github.event.client_payload.pull_request.head.ref }} and your repository is ${{ github.repository }}."
       - name: Check out repository code
         uses: actions/checkout@v4
         with:
-          ref: 'refs/pull/${{ github.event.client_payload.pull_request.number }}/merge'
+          ref: ${{ github.event.client_payload.pull_request.head.ref }}  # This ensures it checks out the PR branch
 
       - name: Remove Cached Go Versions
         run: |
