@@ -473,7 +473,7 @@ func testAccClusterResourceUpdateConfig(updatedName, pulseStatus string) string 
 
 		  provisioner "local-exec" {
 
-			command = "ssh-keygen -f '~/.ssh/known_hosts' -R '${local.clusters.nodes[0].cvm_ip}'; sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[0].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[0].username} password=${local.clusters.nodes[0].password}' "
+			command = "ssh-keygen -f "~/.ssh/known_hosts" -R "${local.clusters.nodes[0].cvm_ip}"; ssh-keygen -f "/home/haroon/.ssh/known_hosts" -R "${local.clusters.nodes[0].cvm_ip}" ;  sshpass -p '${local.clusters.pe_password}' ssh -o StrictHostKeyChecking=no ${local.clusters.pe_username}@${local.clusters.nodes[0].cvm_ip} '/home/nutanix/prism/cli/ncli user reset-password user-name=${local.clusters.nodes[0].username} password=${local.clusters.nodes[0].password}' "
 
 			on_failure = continue
 		  }

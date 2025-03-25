@@ -74,7 +74,7 @@ func testVMConfigRecovery(name string) string {
 			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 			config = (jsondecode(file("%[2]s")))
-			data_protection = local.config.data_protection	
+			availability_zone = local.config.availability_zone	
 		}
 	
 		resource "nutanix_virtual_machine_v2" "test-1"{
