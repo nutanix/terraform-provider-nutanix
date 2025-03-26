@@ -18,7 +18,7 @@ variable "pe_password" {
   type = string
 }
 
-variable "cvm_ip" {
+variable "node_ip" {
   type = string
 }
 
@@ -27,9 +27,5 @@ variable "username" {
 }
 
 variable "password" {
-  type = string
-}
-
-variable "pc_ext_id" {
   type = string
 }

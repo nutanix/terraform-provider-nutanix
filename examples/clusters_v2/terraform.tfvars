@@ -7,7 +7,7 @@ nutanix_port = 9440
 pe_username = "ntnx"
 pe_password = "password"
 
-cvm_ip = "10.xx.xx.xx"
+node_ip = "10.xx.xx.xx"
+# node credentials
 username = "admin"
 password = "password"
-pc_ext_id = "value"

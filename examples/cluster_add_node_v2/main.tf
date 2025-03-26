@@ -16,9 +16,15 @@ provider "nutanix" {
   insecure = true
 }
 
+#pull all clusters data
+data "nutanix_clusters_v2" "clusters" {}
+
+#create local variable pointing to desired cluster
 locals {
-  # cluster of 3 node uuid that we want to add node
-  clusters_ext_id = "00057b8b-0b3b-4b3b-0000-000000000000" # for example
+  clusters_ext_id = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+  ][0]
 }
 
 ## check if the node to add is un configured or not
@@ -27,7 +33,7 @@ resource "nutanix_clusters_discover_unconfigured_nodes_v2" "cluster-node" {
   address_type = "IPV4"
   ip_filter_list {
     ipv4 {
-      value = var.cvm_ip
+      value = var.node_ip
     }
   }
 
@@ -35,7 +41,7 @@ resource "nutanix_clusters_discover_unconfigured_nodes_v2" "cluster-node" {
   lifecycle {
     postcondition {
       condition     = length(self.unconfigured_nodes) == 1
-      error_message = "The node ${var.cvm_ip} is configured"
+      error_message = "The node ${var.node_ip} is configured"
     }
   }
 }
@@ -47,7 +53,7 @@ resource "nutanix_clusters_unconfigured_node_networks_v2" "node-network-info" {
   node_list {
     cvm_ip {
       ipv4 {
-        value = var.cvm_ip
+        value = var.node_ip
       }
     }
     hypervisor_ip {
@@ -89,7 +95,7 @@ resource "nutanix_cluster_add_node_v2" "add-node" {
       }
       cvm_ip {
         ipv4 {
-          value = var.cvm_ip
+          value = var.node_ip
         }
       }
       ipmi_ip {
