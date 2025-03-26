@@ -72,6 +72,10 @@ func DatasourceNutanixUsersV2() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"description": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"idp_id": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -267,6 +271,9 @@ func flattenUsersEntities(usersResp []iamConfig.User) []interface{} {
 			}
 			if v.UserType != nil {
 				user["user_type"] = flattenUserType(v.UserType)
+			}
+			if v.Description != nil {
+				user["description"] = v.Description
 			}
 			if v.IdpId != nil {
 				user["idp_id"] = v.IdpId
