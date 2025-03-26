@@ -2153,7 +2153,6 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 							}
 						}
 					}
-
 				}
 				diskInput := config.Disk{}
 				diskInput = expandDisk([]interface{}{disk})[0]
