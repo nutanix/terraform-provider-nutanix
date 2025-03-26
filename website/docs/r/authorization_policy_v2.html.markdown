@@ -15,21 +15,21 @@ Provides Nutanix resource to create authorization policy.
 
 ```hcl
 
-    resource "authorization_policy_v2" "acp"{
-        role         = <role uuid>
-        display_name = <authorization policy name>
-        description  = "auth policies description"
-        authorization_policy_type = "USER_DEFINED"
-        identities {
-            # must be a json string 
-            reserved = "{\"user\":{\"uuid\":{\"anyof\":[\"<user_uuid>\"]}}}"
-        }
-        
-        entities {
-            # must be a json string 
-            reserved = "{\"*\":{\"*\":{\"eq\":\"*\"}}}"
-        }
-    }
+resource "nutanix_authorization_policy_v2" "ap-example"{
+  role                      = "ba250e3e-1db1-4950-917f-a9e2ea35b8e3"
+  display_name              = "auth_policy_example"
+  description               = "authorization policy example"
+  authorization_policy_type = "USER_DEFINED"
+  identities {
+    reserved = "{\"user\":{\"uuid\":{\"anyof\":[\"00000000-0000-0000-0000-000000000000\"]}}}"
+  }
+  entities {
+    reserved = "{\"images\":{\"*\":{\"eq\":\"*\"}}}"
+  }
+  entities {
+    reserved = "{\"marketplace_item\":{\"owner_uuid\":{\"eq\":\"SELF_OWNED\"}}}"
+  }
+}
 ```
 
 ## Argument Reference
@@ -75,4 +75,4 @@ The links attribute supports the following:
 * `rel`: - A name that identifies the relationship of the link to the object that is returned by the URL. The unique value of "self" identifies the URL for the object
 
 
-See detailed information in [Nutanix Authorization Policies v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0).
+See detailed information in [Nutanix Authorization Policy v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/AuthorizationPolicies/operation/createAuthorizationPolicy).

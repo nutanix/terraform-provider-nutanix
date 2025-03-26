@@ -2,4 +2,8 @@
 nutanix_username = "admin"
 nutanix_password = "password"
 nutanix_endpoint = "10.xx.xx.xx"
-nutanix_port = 9440
+nutanix_port     = 9440
+cvm_ip           = "10.xx.xx.xx"
+username         = "admin"
+password         = "password"
+cluster_ext_id   = "value"
