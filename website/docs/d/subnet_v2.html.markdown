@@ -13,10 +13,9 @@ Get a subnet with the specified UUID.
 ### Example
 
 ```hcl
-
-    data "nutanix_subnet_v2" "example"{
-        ext_id = {{ subnet uuid }}
-    }
+data "nutanix_subnet_v2" "example"{
+  ext_id = "ba250e3e-1db1-4950-917f-a9e2ea35b8e3"
+}
 ```
 
 ## Argument Reference
@@ -108,4 +107,4 @@ The following attributes are exported:
 - `value`: value of address
 - `prefix_length`: The prefix length of the network to which this host IPv4/IPv6 address belongs.
 
-See detailed information in [Nutanix Subnet v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0).
+See detailed information in [Nutanix Get Subnet v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0#tag/Subnets/operation/getSubnetById).

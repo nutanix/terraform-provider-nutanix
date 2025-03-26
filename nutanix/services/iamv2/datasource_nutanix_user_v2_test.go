@@ -18,6 +18,8 @@ func TestAccV2NutanixUserDatasource_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
+		// using V3 API to delete user
+		CheckDestroy: testAccCheckNutanixUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testUserDatasourceV4Config(filepath, name),
@@ -45,7 +47,7 @@ func testUserDatasourceV4Config(filepath, name string) string {
 			config = (jsondecode(file("%[1]s")))
 			users = local.config.iam.users
 		}
-		
+
 		resource "nutanix_users_v2" "test" {
 			username = "%[2]s"
 			first_name = "first-name-%[2]s"
@@ -57,15 +59,15 @@ func testUserDatasourceV4Config(filepath, name string) string {
 			display_name = "display-name-%[2]s"
 			password = local.users.password
 			user_type = "LOCAL"
-			status = "ACTIVE"  
-			force_reset_password = local.users.force_reset_password   
+			status = "ACTIVE"
+			force_reset_password = local.users.force_reset_password
 		}
-		
+
 		data "nutanix_user_v2" "test" {
 			ext_id = nutanix_users_v2.test.id
 			depends_on = [nutanix_users_v2.test]
-		}			
+		}
 
-		
+
 	`, filepath, name)
 }

@@ -142,7 +142,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 																Computed: true,
 															},
 															"prefix_length": {
-																Type:     schema.TypeString,
+																Type:     schema.TypeInt,
 																Optional: true,
 																Computed: true,
 															},
@@ -161,7 +161,7 @@ func ResourceNutanixNetworkSecurityPolicyV2() *schema.Resource {
 																Computed: true,
 															},
 															"prefix_length": {
-																Type:     schema.TypeString,
+																Type:     schema.TypeInt,
 																Optional: true,
 																Computed: true,
 															},

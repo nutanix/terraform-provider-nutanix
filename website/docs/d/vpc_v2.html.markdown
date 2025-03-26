@@ -13,9 +13,9 @@ Provides a datasource to retrieve VPC with vpc_uuid .
 ## Example Usage
 
 ```hcl
-    data "nutanix_vpc_v2" "example"{
-        ext_id = "{{ vpc uuid }}"
-    }
+data "nutanix_vpc_v2" "get-vpc"{
+  ext_id = "8a938cc5-282b-48c4-81be-de22de145d07"
+}
 
 ```
 
@@ -37,7 +37,7 @@ The following attributes are exported:
 * `external_subnets`: List of external subnets that the VPC is attached to.
 * `external_routing_domain_reference`: External routing domain associated with this route table
 * `externally_routable_prefixes`: CIDR blocks from the VPC which can talk externally without performing NAT. This is applicable when connecting to external subnets which have disabled NAT.
-* `tenant_id`: A globally unique identifier that represents the tenant that owns this entity. 
+* `tenant_id`: A globally unique identifier that represents the tenant that owns this entity.
 * `links`: A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 * `metadata`: Metadata associated with this resource.
 
@@ -53,7 +53,7 @@ The following attributes are exported:
 
 * `subnet_reference`: External subnet reference.
 * `external_ips`: List of IP Addresses used for SNAT, if NAT is enabled on the external subnet. If NAT is not enabled, this specifies the IP address of the VPC port connected to the external gateway.
-* `gateway_nodes`: List of gateway nodes that can be used for external connectivity.    
+* `gateway_nodes`: List of gateway nodes that can be used for external connectivity.
 * `active_gateway_node`: Reference of gateway nodes
 * `active_gateway_count`: Maximum number of active gateway nodes for the VPC external subnet association.
 
@@ -81,4 +81,4 @@ The following attributes are exported:
 
 
 
-See detailed information in [Nutanix VPC v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0).
+See detailed information in [Nutanix Get VPC v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0#tag/Vpcs/operation/getVpcById).

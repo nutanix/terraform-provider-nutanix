@@ -21,7 +21,7 @@ func TestAccV2NutanixNGTInsertIsoResource_InsertNGTIsoIntoVmHaveNGT(t *testing.T
 	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -79,7 +79,7 @@ func TestAccV2NutanixNGTInsertIsoResource_InsertNGTIsoIntoVmHaveNGTIsConfigFalse
 	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -137,7 +137,7 @@ func TestAccV2NutanixNGTInsertIsoResource_InsertNGTIsoIntoVmDoseNotHaveNGT(t *te
 	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -172,7 +172,7 @@ func TestAccV2NutanixNGTInsertIsoResource_InsertNGTIsoIntoVmDoseNotHaveNGTIsConf
 	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -202,7 +202,7 @@ func TestAccV2NutanixNGTInsertIsoResource_InsertNGTIsoIntoVmDoseNotHaveNGTIsConf
 }
 
 func testNGTInsertIsoConfig(configMode string) string {
-	return fmt.Sprintf(`	
+	return fmt.Sprintf(`
 	resource "nutanix_ngt_insert_iso_v2" "test" {
 		ext_id = nutanix_virtual_machine_v2.ngt-vm.id
 		capablities = ["SELF_SERVICE_RESTORE","VSS_SNAPSHOT"]

@@ -18,7 +18,7 @@ func TestAccV2NutanixNGTUpgradeResource_UpgradeNGTWithRebootPreferenceSetToIMMED
 	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -75,7 +75,7 @@ func TestAccV2NutanixNGTUpgradeResource_UpgradeNGTWithRebootPreferenceSetToLATER
 	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -132,7 +132,7 @@ func TestAccV2NutanixNGTUpgradeResource_UpgradeNGTWithRebootPreferenceSetToSKIP(
 	vmName := fmt.Sprintf("tf-test-vm-ngt-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -184,7 +184,7 @@ func TestAccV2NutanixNGTUpgradeResource_UpgradeNGTWithRebootPreferenceSetToSKIP(
 }
 
 func testNGTUpgradeResourceConfigRebootLATER() string {
-	return `	
+	return `
 	resource "nutanix_ngt_upgrade_v2" "test" {
 		ext_id = nutanix_virtual_machine_v2.ngt-vm.id
 
@@ -198,23 +198,23 @@ func testNGTUpgradeResourceConfigRebootLATER() string {
 }
 
 func testNGTUpgradeResourceConfigRebootSKIP() string {
-	return `	
+	return `
 	resource "nutanix_ngt_upgrade_v2" "test" {
 		ext_id = nutanix_virtual_machine_v2.ngt-vm.id
 
 		reboot_preference {
-			schedule_type = "SKIP"			
+			schedule_type = "SKIP"
 		}
 	}`
 }
 
 func testNGTUpgradeResourceConfigRebootIMMEDIATE() string {
-	return `	
+	return `
 	resource "nutanix_ngt_upgrade_v2" "test" {
 		ext_id = nutanix_virtual_machine_v2.ngt-vm.id
 
 		reboot_preference {
-			schedule_type = "IMMEDIATE"			
+			schedule_type = "IMMEDIATE"
 		}
 	}`
 }

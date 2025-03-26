@@ -53,6 +53,10 @@ func TestAccV2NutanixNetworkSecurityResource_WithRules(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameNs, "rules.#", "3"),
 					resource.TestCheckResourceAttrSet(resourceNameNs, "vpc_reference.#"),
 					resource.TestCheckResourceAttr(resourceNameNs, "is_hitlog_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.spec.0.application_rule_spec.0.src_subnet.0.value", "192.168.0.0"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.0.spec.0.application_rule_spec.0.src_subnet.0.prefix_length", "24"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.1.spec.0.application_rule_spec.0.dest_subnet.0.value", "192.68.0.0"),
+					resource.TestCheckResourceAttr(resourceNameNs, "rules.1.spec.0.application_rule_spec.0.dest_subnet.0.prefix_length", "20"),
 				),
 			},
 		},
@@ -129,7 +133,7 @@ func testNetworkSecurityConfigWithRules(name, desc string) string {
 			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 	}
-	
+
 	resource "nutanix_subnet_v2" "test" {
 		name = "tf-test-subnet-vpc-%[1]s"
 		description = "test subnet description"
@@ -189,6 +193,10 @@ func testNetworkSecurityConfigWithRules(name, desc string) string {
 			  src_category_references = [
 				data.nutanix_categories_v2.test.categories.2.ext_id
 			  ]
+			  src_subnet {
+				value         = "192.168.0.0"
+				prefix_length = 24
+			  }
 			  is_all_protocol_allowed = true
 			}
 		  }
@@ -205,6 +213,10 @@ func testNetworkSecurityConfigWithRules(name, desc string) string {
 			  dest_category_references = [
 				data.nutanix_categories_v2.test.categories.5.ext_id
 			  ]
+			  dest_subnet {
+			  	value         = "192.68.0.0"
+			  	prefix_length = 20
+			  }
 			  is_all_protocol_allowed = true
 			}
 		  }
@@ -221,7 +233,7 @@ func testNetworkSecurityConfigWithRules(name, desc string) string {
 			}
 		  }
 		}
-		  
+
 		vpc_reference = [
 		  nutanix_vpc_v2.test.id
 		]
@@ -241,7 +253,7 @@ func testNetworkSecurityConfigWithMultiEnvIsolationRuleSpecRule(name, desc strin
 			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 	}
-	
+
 	resource "nutanix_subnet_v2" "test" {
 		name = "tf-test-subnet-vpc-%[1]s"
 		description = "test subnet description"
@@ -303,9 +315,9 @@ func testNetworkSecurityConfigWithMultiEnvIsolationRuleSpecRule(name, desc strin
 							]
 						}
 						isolation_group{
-							group_category_references = [	
+							group_category_references = [
 								data.nutanix_categories_v2.test.categories.2.ext_id,
-								data.nutanix_categories_v2.test.categories.3.ext_id	
+								data.nutanix_categories_v2.test.categories.3.ext_id
 							]
 						}
 					}
@@ -313,8 +325,8 @@ func testNetworkSecurityConfigWithMultiEnvIsolationRuleSpecRule(name, desc strin
 			}
 		  }
 		}
-		
-		  
+
+
 		vpc_reference = [
 		  nutanix_vpc_v2.test.id
 		]

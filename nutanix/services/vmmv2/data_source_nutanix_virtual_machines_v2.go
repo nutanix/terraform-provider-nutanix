@@ -2,7 +2,6 @@ package vmmv2
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -479,12 +478,12 @@ func DatasourceNutanixVirtualMachinesV4() *schema.Resource {
 																Computed: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"disk_size_bytes": {
-																			Type:     schema.TypeInt,
-																			Computed: true,
-																		},
 																		"disk_ext_id": {
 																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																		"disk_size_bytes": {
+																			Type:     schema.TypeInt,
 																			Computed: true,
 																		},
 																		"storage_container": {
@@ -587,6 +586,57 @@ func DatasourceNutanixVirtualMachinesV4() *schema.Resource {
 																},
 															},
 														},
+													},
+												},
+												"boot_device": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"boot_device_disk": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"disk_address": {
+																			Type:     schema.TypeList,
+																			Computed: true,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"bus_type": {
+																						Type:     schema.TypeString,
+																						Computed: true,
+																					},
+																					"index": {
+																						Type:     schema.TypeInt,
+																						Computed: true,
+																					},
+																				},
+																			},
+																		},
+																	},
+																},
+															},
+															"boot_device_nic": {
+																Type:     schema.TypeList,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"mac_address": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"boot_order": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
 													},
 												},
 											},
@@ -1148,6 +1198,11 @@ func DatasourceNutanixVirtualMachinesV4() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"tenant_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"links": schemaForLinks(),
 									"ext_id": {
 										Type:     schema.TypeString,
 										Computed: true,
@@ -1296,16 +1351,13 @@ func DatasourceNutanixVirtualMachinesV4Read(ctx context.Context, d *schema.Resou
 	}
 	resp, err := conn.VMAPIInstance.ListVms(page, limit, filter, orderBy, selects)
 	if err != nil {
-		var errordata map[string]interface{}
-		e := json.Unmarshal([]byte(err.Error()), &errordata)
-		if e != nil {
-			return diag.FromErr(e)
-		}
-		data := errordata["data"].(map[string]interface{})
-		errorList := data["error"].([]interface{})
-		errorMessage := errorList[0].(map[string]interface{})
-		return diag.Errorf("error while fetching vms : %v", errorMessage["message"])
+		return diag.Errorf("error while fetching vms : %v", err)
 	}
+
+	if resp.Data == nil {
+		return diag.Errorf("error while fetching vms : %v", "no data found")
+	}
+
 	getResp := resp.Data.GetValue().([]config.Vm)
 
 	if err := d.Set("vms", flattenVMEntities(getResp)); err != nil {

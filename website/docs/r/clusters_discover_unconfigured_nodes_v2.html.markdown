@@ -14,7 +14,7 @@ Get the unconfigured node details such as node UUID, node position, node IP, fou
 
 ```hcl
 data "nutanix_clusters_discover_unconfigured_nodes_v2" "example"{
-  ext_id = "<YOUR-CLUSTER-ID>"
+  ext_id = "00057b0b-0b0b-0b0b-0b0b-000000000000"
   address_type = "IPV4"
   ip_filter_list {
     ipv4 {
@@ -56,7 +56,7 @@ The `ipv4`, `ipv6` attributes supports the following:
 the following attributes are exported under `unconfigured_nodes`:
 
 * `arch`: Cluster arch type.
-* `attributes`: Attributes of a node. 
+* `attributes`: Attributes of a node.
 * `cluster_id`: Cluster ID.
 * `cpu_type`:  CPU type.
 * `current_cvm_vlan_tag`:  Current CVM VLAN tag.
@@ -64,12 +64,12 @@ the following attributes are exported under `unconfigured_nodes`:
 * `cvm_ip`:  CVM IP.
 * `foundation_version`:  Foundation version.
 * `host_name`:  Host name.
-* `host_type`:  Host type. 
+* `host_type`:  Host type.
 * `hypervisor_ip`: Hypervisor IP Address.
 * `hypervisor_type`: Hypervisor type.
 * `hypervisor_version`: Host version of the node.
 * `interface_ipv6`: Interface IPV6 address.
-* `ipmi_ip`: IPMI IP Address. 
+* `ipmi_ip`: IPMI IP Address.
 * `is_one_node_cluster_supported`: Indicates whether a node can be used to create a single node cluster or not.
 * `is_secure_booted`: Secure boot status.
 * `is_two_node_cluster_supported`: Indicates whether a node can be used to create a two node cluster or not.

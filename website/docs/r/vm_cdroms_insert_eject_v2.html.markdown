@@ -17,13 +17,13 @@ Ejects the ISO currently inserted into a CD-ROM device on a Virtual Machine.
 
 ```hcl
 resource "nutanix_vm_cdrom_insert_eject_v2" "insert-cdrom"{
-  vm_ext_id = "<vm uuid>"
-  ext_id    = "<vm cdrom uuid>"
+  vm_ext_id = "8a938cc5-282b-48c4-81be-de22de145d07"
+  ext_id    = "c2c249b0-98a0-43fa-9ff6-dcde578d3936"
   backing_info {
     data_source {
       reference {
         image_reference {
-          image_ext_id = "<image_uuid>"
+          image_ext_id = "ba250e3e-1db1-4950-917f-a9e2ea35b8e3"
         }
       }
     }
@@ -58,4 +58,4 @@ The following arguments are supported:
 * `vm_disk_reference.vm_reference`: (Required) This is a reference to a VM.
 
 
-See detailed information in [Nutanix VMs CDROM Insert Eject V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).
+See detailed information in [Nutanix VMs CDROM Insert V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Vm/operation/insertCdRomById).

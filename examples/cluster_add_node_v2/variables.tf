@@ -11,3 +11,6 @@ variable "nutanix_endpoint" {
 variable "nutanix_port" {
   type = string
 }
+variable "node_ip" {
+  type = string
+}

@@ -48,7 +48,7 @@ data "nutanix_clusters_v2" "clusters" {}
 
 #pull desired cluster data from setup
 locals {
-  cluster1 = [
+  cluster_ext_id = [
     for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
     cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
   ][0]
@@ -59,10 +59,22 @@ locals {
 ##########################
 
 
-# Fetch an iSCSI client details.
-data "nutanix_volume_iscsi_client_v2" "v_iscsi_client_example" {
-  ext_id = var.volume_iscsi_client_ext_id
-}
 
 # List all the iSCSI clients.
-data "nutanix_volume_iscsi_clients_v2" "v_iscsi_clients_example" {}
+data "nutanix_volume_iscsi_clients_v2" "list-iscsi-clients" {}
+
+# list iSCSI clients with a filter.
+data "nutanix_volume_iscsi_clients_v2" "list-iscsi-clients-filter" {
+  filter = "clusterReference eq '${local.cluster_ext_id}'"
+}
+
+# list iSCSI clients with a limit and pagination.
+data "nutanix_volume_iscsi_clients_v2" "list-iscsi-clients-limit" {
+  page  = 2
+  limit = 1
+}
+
+# Fetch an iSCSI client details.
+data "nutanix_volume_iscsi_client_v2" "v_iscsi_client_example" {
+  ext_id = data.nutanix_volume_iscsi_clients_v2.list-iscsi-clients.iscsi_clients.0.ext_id
+}

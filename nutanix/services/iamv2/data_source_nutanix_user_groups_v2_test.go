@@ -10,7 +10,7 @@ import (
 
 const datasourceNameUserGroups = "data.nutanix_user_groups_v2.test"
 
-func TestAccNutanixUserGroupsV2Datasource_Basic(t *testing.T) {
+func TestAccV2NutanixUserGroupsDatasource_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -26,7 +26,7 @@ func TestAccNutanixUserGroupsV2Datasource_Basic(t *testing.T) {
 	})
 }
 
-func TestAccNutanixUserGroupsV2Datasource_WithFilter(t *testing.T) {
+func TestAccV2NutanixUserGroupsDatasource_WithFilter(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -46,7 +46,7 @@ func TestAccNutanixUserGroupsV2Datasource_WithFilter(t *testing.T) {
 	})
 }
 
-func TestAccNutanixUserGroupsV2Datasource_WithLimit(t *testing.T) {
+func TestAccV2NutanixUserGroupsDatasource_WithLimit(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
@@ -98,7 +98,7 @@ func testUserGroupsDatasourceV4WithFilterConfig(filepath string) string {
 		name = local.user_groups.name
 		distinguished_name = local.user_groups.distinguished_name
 	  }
-	  
+
 	  data "nutanix_user_groups_v2" "test" {
 		filter     = "name eq '${local.user_groups.name}'"
 		depends_on = [resource.nutanix_user_groups_v2.test]

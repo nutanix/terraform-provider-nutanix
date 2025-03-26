@@ -13,66 +13,10 @@ Describes a Query the Volume Disk identified by {extId} in the Volume Group iden
 ## Example Usage
 
 ```hcl
-resource "nutanix_volume_group_v2" "example"{
-  name                               = "test_volume_group"
-  description                        = "Test Volume group with min spec and no Auth"
-  should_load_balance_vm_attachments = false
-  sharing_status                     = "SHARED"
-  target_name                        = "volumegroup-test-0"
-  created_by                         = "Test"
-  cluster_reference                  = "<Cluster uuid>"
-  iscsi_features {
-    enabled_authentications = "CHAP"
-    target_secret           = "1234567891011"
-  }
-
-  storage_features {
-    flash_mode {
-      is_enabled = true
-    }
-  }
-  usage_type = "USER"
-  is_hidden  = false
-
-  lifecycle {
-    ignore_changes = [
-      iscsi_features[0].target_secret
-    ]
-  }
-}
-
-
-# Attach a volume group disk to the previous volume group
-resource "nutanix_volume_group_disk_v2" "example"{
-  volume_group_ext_id = resource.nutanix_volume_group_v2.example.id
-  index               = 1
-  description         = "create volume disk test"
-  disk_size_bytes     = 5368709120
-
-  disk_data_source_reference {
-    name        = "disk1"
-    ext_id      = var.disk_data_source_ref_ext_id
-    entity_type = "STORAGE_CONTAINER"
-    uris        = ["uri1", "uri2"]
-  }
-
-  disk_storage_features {
-    flash_mode {
-      is_enabled = false
-    }
-  }
-
-  lifecycle {
-    ignore_changes = [
-      disk_data_source_reference, links
-    ]
-  }
-}
-
 # Get the details of a Volume Disk attached to the Volume Group.
 data "nutanix_volume_group_disk_v2" "example"{
-  volume_group_ext_id = resource.nutanix_volume_group_v2.example.id
-  ext_id              = resource.nutanix_volume_group_disk_v2.example.id
+  volume_group_ext_id = "3770be9d-06be-4e25-b85d-3457d9b0ceb1"
+  ext_id              = "1d92110d-26b5-46c0-8c93-20b8171373e0"
 }
 ```
 
@@ -125,4 +69,4 @@ The flash mode features attribute supports the following:
 
 * `is_enabled`: - Indicates whether the flash mode is enabled for the Volume Group Disk.
 
-See detailed information in [Nutanix Volumes V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.0).
+See detailed information in [Nutanix Get Volume Disk V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.0#tag/VolumeGroups/operation/getVolumeDiskById).

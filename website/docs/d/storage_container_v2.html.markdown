@@ -8,14 +8,14 @@ description: |-
 
 # nutanix_storage_container_v2
 
-Provides a datasource to Fetch the configuration details of the existing Storage Container identified by the {containerExtId}. 
+Provides a datasource to Fetch the configuration details of the existing Storage Container identified by the {containerExtId}.
 
 ## Example Usage
 
 ```hcl
-    data "nutanix_storage_container_v2" "test"{
-        ext_id = {{ storage container uuid }}
-    }
+data "nutanix_storage_container_v2" "get-storage-container"{
+  ext_id = "1891fd3a-1ef7-4947-af56-9ee4b973c6fd"
+}
 ```
 
 ## Argument Reference
@@ -29,7 +29,7 @@ The following arguments are supported:
 The following attributes are exported:
 
 * `ext_id`: - the storage container uuid
-* `tenant_id`: - A globally unique identifier that represents the tenant that owns this entity. 
+* `tenant_id`: - A globally unique identifier that represents the tenant that owns this entity.
 * `links`: - A HATEOAS style link for the response. Each link contains a user-friendly name identifying the link and an address for retrieving the particular resource.
 
 * `container_ext_id`: - the storage container ext id
@@ -77,4 +77,4 @@ The following attributes are exported:
 * `value`: value of fqdn address
 
 
-See detailed information in [Nutanix Storage Containers v4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0).
+See detailed information in [Nutanix Get Storage Container v4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0#tag/StorageContainers/operation/getStorageContainerById).

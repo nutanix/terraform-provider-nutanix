@@ -6,7 +6,7 @@ description: |-
   Fetches a role based on the provided external identifier.
 ---
 
-# nutanix_roles_v2
+# nutanix_role_v2
 
 Fetches a role based on the provided external identifier.
 
@@ -14,7 +14,7 @@ Fetches a role based on the provided external identifier.
 
 ```hcl
 data "nutanix_role_v2" "role"{
-  ext_id = "<role_uuid>"
+  ext_id = "a8fe48c4-f0d3-49c7-a017-efc30dd8fb2b"
 }
 
 ```
@@ -52,4 +52,4 @@ The links attribute supports the following:
 - `href`: - The URL at which the entity described by the link can be accessed.
 - `rel`: - A name that identifies the relationship of the link to the object that is returned by the URL. The unique value of "self" identifies the URL for the object.
 
-See detailed information in [Nutanix Role v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Roles/operation/getRoleById).
+See detailed information in [Nutanix Get Role v4](https://developers.nutanix.com/api-reference?namespace=iam&version=v4.0#tag/Roles/operation/getRoleById).

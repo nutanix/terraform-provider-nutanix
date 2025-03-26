@@ -14,7 +14,7 @@ const resourceNameAuthorizationPolicy = "nutanix_authorization_policy_v2.test"
 
 func TestAccV2NutanixAuthorizationPolicyResource_CreateACP(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -142,7 +142,7 @@ func testAuthorizationPolicyResourceConfig() string {
 			reserved = local.auth_policies.entities[1]
 		}
 		depends_on = [nutanix_roles_v2.test]
-		
+
 	}`, filepath)
 }
 
@@ -186,7 +186,7 @@ func testAuthorizationPolicyResourceUpdateConfig() string {
 			reserved = local.auth_policies.entities[1]
 		}
 		depends_on = [nutanix_roles_v2.test]
-		
+
 	}`, filepath)
 }
 
@@ -211,7 +211,7 @@ func testAuthorizationPolicyResourceWithoutDisplayNameConfig() string {
 		entities {
 			reserved = local.auth_policies.entities[1]
 		}
-		
+
 	}`, filepath)
 }
 
@@ -254,7 +254,7 @@ func testAuthorizationPolicyResourceWithoutEntitiesConfig() string {
 		identities {
 			reserved = local.auth_policies.identities[0]
 		}
-	
+
 	}`, filepath)
 }
 
@@ -276,6 +276,6 @@ func testAuthorizationPolicyResourceWithoutRoleConfig() string {
 		entities {
 			reserved = local.auth_policies.entities[0]
 		}
-		
+
 	}`, filepath)
 }

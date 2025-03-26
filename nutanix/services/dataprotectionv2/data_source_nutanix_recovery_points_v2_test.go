@@ -23,7 +23,7 @@ func TestAccV2NutanixRecoveryPointsDatasource_Basic(t *testing.T) {
 	expirationTimeFormatted := expirationTime.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -48,7 +48,7 @@ func TestAccV2NutanixRecoveryPointsDatasource_WithFilter(t *testing.T) {
 	expirationTimeFormatted := expirationTime.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -78,7 +78,7 @@ func TestAccV2NutanixRecoveryPointsDatasource_WithLimit(t *testing.T) {
 	expirationTimeFormatted := expirationTime.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
