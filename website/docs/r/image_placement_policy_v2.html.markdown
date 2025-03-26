@@ -16,7 +16,7 @@ Create an image placement policy using the provided request body. Name, placemen
 data "nutanix_categories_v2" "categories"{}
 
 locals {
-	category0 = data.nutanix_categories_v4.categories.categories.0.ext_id
+	category0 = data.nutanix_categories_v2.categories.categories.0.ext_id
 }
 resource "nutanix_image_placement_policy_v2" "example"{
 	name           = "image_placement_policy"
