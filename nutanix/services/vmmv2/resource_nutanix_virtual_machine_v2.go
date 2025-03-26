@@ -2145,16 +2145,16 @@ func ResourceNutanixVirtualMachineV2Update(ctx context.Context, d *schema.Resour
 							if backingInfoMap, ok := backingInfoSlice[0].(map[string]interface{}); ok {
 								if vmDiskArray, ok := backingInfoMap["vm_disk"].([]interface{}); ok {
 									if vmDiskMap, ok := vmDiskArray[0].(map[string]interface{}); ok {
-										if  vmDiskMap["data_source"] != nil {
+										if vmDiskMap["data_source"] != nil {
 											delete(vmDiskMap, "data_source")
-										}										
+										}
 									}
 								}
 							}
 						}
 					}
 
-				} 
+				}
 				diskInput := config.Disk{}
 				diskInput = expandDisk([]interface{}{disk})[0]
 
