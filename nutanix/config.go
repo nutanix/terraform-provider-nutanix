@@ -13,6 +13,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/datapolicies"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/dataprotection"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/iam"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/lcm"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/microseg"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/sdks/v4/prism"
@@ -116,6 +117,10 @@ func (c *Config) Client() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
+	LcmClient, err := lcm.NewLcmClient(configCreds)
+	if err != nil {
+		return nil, err
+	}
 	return &Client{
 		WaitTimeout:         c.WaitTimeout,
 		API:                 v3Client,
@@ -132,6 +137,7 @@ func (c *Config) Client() (*Client, error) {
 		DataProtectionAPI:   dataprotectionClient,
 		VmmAPI:              vmmClient,
 		DataPoliciesAPI:     dataPoliciesClient,
+		LcmAPI:              LcmClient,
 	}, nil
 }
 
@@ -152,4 +158,5 @@ type Client struct {
 	DataProtectionAPI   *dataprotection.Client
 	VmmAPI              *vmm.Client
 	DataPoliciesAPI     *datapolicies.Client
+	LcmAPI              *lcm.Client
 }

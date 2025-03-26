@@ -464,6 +464,8 @@ github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4 v4.0.1 h1
 github.com/nutanix/ntnx-api-golang-clients/dataprotection-go-client/v4 v4.0.1/go.mod h1:S07bx9/6uUbMOY/OUJsaIUdvZ/LDaE46Kx9VX7Pt7Ek=
 github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4 v4.0.1 h1:zWbA2qtSJt0WsBcEhqqv6FQTSz8pIwBnHA5etaQg4qo=
 github.com/nutanix/ntnx-api-golang-clients/iam-go-client/v4 v4.0.1/go.mod h1:+HvW0f4QGDRZ3/1jcXvF7xA/gQsvQc4XtZy6OUobaO4=
+github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4 v4.0.1 h1:JBSalV1dvI+5YjZzzE9E/tz8V4A7CbSA7wl4C3L8iYs=
+github.com/nutanix/ntnx-api-golang-clients/lifecycle-go-client/v4 v4.0.1/go.mod h1:fQTNQlfh5g4SavaQn+sDoMn29K+Lur5lHWtnbq3uA28=
 github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4 v4.0.1 h1:9SC9PsLQjvkuo0MyL2HMDXQ/dQl1a57RDR4OS22so/U=
 github.com/nutanix/ntnx-api-golang-clients/microseg-go-client/v4 v4.0.1/go.mod h1:75Ro+aFIepNAkf2eWjFrFR7m+Ct36EVrD9n9pwAYBrc=
 github.com/nutanix/ntnx-api-golang-clients/networking-go-client/v4 v4.0.1 h1:2D2ZJd5Cn0fMeWYnTEHsR1Fcv2G1BSrOAl1fVURtfn4=
