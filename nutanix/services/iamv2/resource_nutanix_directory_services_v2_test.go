@@ -15,7 +15,7 @@ const resourceNameDirectoryServices = "nutanix_directory_services_v2.test"
 
 func TestAccV2NutanixDirectoryServicesResource_CreateACTIVE_DIRECTORYService(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testAccCheckNutanixDirectoryServicesV2Destroy,
 		Steps: []resource.TestStep{
@@ -55,7 +55,7 @@ func TestAccV2NutanixDirectoryServicesResource_CreateOpenLDAPService(t *testing.
 	name := fmt.Sprintf("tf-test-openldap-%d", acctest.RandInt())
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testAccCheckNutanixDirectoryServicesV2Destroy,
 		Steps: []resource.TestStep{
@@ -77,7 +77,7 @@ func TestAccV2NutanixDirectoryServicesResource_CreateOpenLDAPService(t *testing.
 
 func TestAccV2NutanixDirectoryServicesResource_CreateACTIVE_DIRECTORYAlreadyExists(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:     func() { acc.TestAccPreCheck(t) },
 		Providers:    acc.TestAccProviders,
 		CheckDestroy: testAccCheckNutanixDirectoryServicesV2Destroy,
 		Steps: []resource.TestStep{
@@ -338,7 +338,7 @@ func testDirectoryServicesResourceWithoutDomainNameConfig() string {
 			username = local.directory_services.service_account.username
 			password = local.directory_services.service_account.password
 		}
-		directory_type = "ACTIVE_DIRECTORY"
+		directory_type = local.directory_services.directory_type
 		url = local.directory_services.url
 		lifecycle {
 			ignore_changes = [
@@ -383,7 +383,7 @@ func testDirectoryServicesResourceWithoutServiceAccountConfig() string {
 	resource "nutanix_directory_services_v2" "test" {
 		name = local.directory_services.name
 
-		directory_type = "ACTIVE_DIRECTORY"
+		directory_type = local.directory_services.directory_type
 		domain_name = local.directory_services.domain_name
 		url = local.directory_services.url
 		lifecycle {

@@ -23,7 +23,7 @@ func TestAccV2NutanixVmRecoveryPointDatasource_VmRecoveryPoint(t *testing.T) {
 	expirationTimeFormatted := expirationTime.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -51,7 +51,7 @@ func TestAccV2NutanixVmRecoveryPointDatasource_VmRecoveryPointWithAppConsProps(t
 	expirationTimeFormatted := expirationTime.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
