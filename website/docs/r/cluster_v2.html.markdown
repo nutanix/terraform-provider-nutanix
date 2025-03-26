@@ -153,7 +153,7 @@ The config attribute supports the following:
     Valid values are:
      - "DISABLED"	Disabled encryption status.
      - "ENABLED"	Enabled encryption status.
-* `pulse_status`: - (Optional) Pulse status for a cluster.
+* `pulse_status`: - (Optional) Pulse status for a cluster. `supported only for update operations and not available during creation.`
 
 ### Build info
 
