@@ -1,7 +1,6 @@
 package clustersv2_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"testing"
@@ -9,7 +8,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -151,13 +149,6 @@ func TestAccV2NutanixClusterResource_CreateClusterWithAllConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.server.0.port", strconv.Itoa(testVars.Clusters.Network.SMTPServer.Port)),
 					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.server.0.username", testVars.Clusters.Network.SMTPServer.Username),
 					resource.TestCheckResourceAttr(resourceNameCluster, "network.0.smtp_server.0.type", testVars.Clusters.Network.SMTPServer.Type),
-					func(s *terraform.State) error {
-						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceNameCluster].Primary.Attributes, "", "  ")
-						fmt.Printf("################### %s #########################\n", resourceNameCluster)
-						fmt.Printf("Resource Attributes: \n%v\n", string(aJSON))
-						fmt.Printf("\n############################################\n")
-						return nil
-					},
 				),
 			},
 		},
