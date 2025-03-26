@@ -12,7 +12,7 @@ Provides a datasource to retrieve a address group.
 
 ## Example Usage
 
-``` hcl
+```hcl
 resource "nutanix_address_group" "test_address" {
   			name = "test"
   			description = "test address groups resource"
