@@ -289,7 +289,7 @@ func testDirectoryServicesResourceWithoutNameConfig() string {
 			username = local.directory_services.service_account.username
 			password = local.directory_services.service_account.password
 		}
-		directory_type = local.directory_services.directory_type
+		directory_type = "ACTIVE_DIRECTORY"
 		domain_name = local.directory_services.domain_name
 		url = local.directory_services.url
 		lifecycle {
@@ -314,7 +314,7 @@ func testDirectoryServicesResourceWithoutURLConfig() string {
 			username = local.directory_services.service_account.username
 			password = local.directory_services.service_account.password
 		}
-		directory_type = local.directory_services.directory_type
+		directory_type = "ACTIVE_DIRECTORY"
 		domain_name = local.directory_services.domain_name
 		lifecycle {
 			ignore_changes = [

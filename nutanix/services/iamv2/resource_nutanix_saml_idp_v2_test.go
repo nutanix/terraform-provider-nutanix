@@ -74,11 +74,11 @@ func testIdentityProvidersResourceConfig(filepath string) string {
 		email_attribute = local.identity_providers.email_attr
 		groups_attribute = local.identity_providers.groups_attr
 		groups_delim = local.identity_providers.groups_delim
-		idp_metadata_xml = local.identity_providers.idp_metadata_xml
+		idp_metadata_xml = file("%[2]s") # xml content
 		entity_issuer = local.identity_providers.entity_issuer
 		is_signed_authn_req_enabled = local.identity_providers.is_signed_authn_req_enabled
 		custom_attributes = local.identity_providers.custom_attributes
-	}`, filepath)
+	}`, filepath, xmlFilePath)
 }
 
 func testIdentityProvidersResourceWithoutName(filepath string) string {

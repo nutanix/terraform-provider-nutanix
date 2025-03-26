@@ -20,6 +20,8 @@ func TestAccV2NutanixUsersResource_LocalActiveUser(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
+		// using V3 API to delete user
+		CheckDestroy: testAccCheckNutanixUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testLocalActiveUserResourceConfig(filepath, name),
@@ -61,6 +63,8 @@ func TestAccV2NutanixUsersResource_AlreadyExistsUser(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
+		// using V3 API to delete user
+		CheckDestroy: testAccCheckNutanixUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testLocalActiveUserResourceConfig(filepath, name),
@@ -89,6 +93,8 @@ func TestAccV2NutanixUsersResource_LocalInactiveUser(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
+		// using V3 API to delete user
+		CheckDestroy: testAccCheckNutanixUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testLocalInactiveUserResourceConfig(filepath, name),
@@ -114,6 +120,8 @@ func TestAccV2NutanixUsersResource_SAMLUser(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
+		// using V3 API to delete user
+		CheckDestroy: testAccCheckNutanixUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testSAMLUserResourceConfig(filepath, name),
@@ -158,6 +166,8 @@ func TestAccV2NutanixUsersResource_DeactivateLocalUser(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
+		// using V3 API to delete user
+		CheckDestroy: testAccCheckNutanixUserDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testLocalActiveUserResourceConfig(filepath, name),
