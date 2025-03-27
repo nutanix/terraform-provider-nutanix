@@ -277,6 +277,11 @@
       "pe_ip": "",
       "ssh_user": "",
       "ssh_password": ""
+    },
+    "pc_restore":{
+      "username": "",
+      "password": "",
+      "skip_pc_restore_test": false
     }
   },
   "data_protection": {

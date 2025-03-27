@@ -22,7 +22,7 @@ func TestAccV2NutanixRecoveryPointRestoreResource_basic(t *testing.T) {
 	expirationTimeFormatted := expirationTime.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{

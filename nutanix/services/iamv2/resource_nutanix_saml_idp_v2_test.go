@@ -13,7 +13,7 @@ const resourceNameIdentityProviders = "nutanix_saml_identity_providers_v2.test"
 
 func TestAccV2NutanixIdentityProvidersResource_CreateSamlIdp(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{

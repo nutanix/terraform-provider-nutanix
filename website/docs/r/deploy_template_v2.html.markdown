@@ -10,15 +10,15 @@ description: |-
 
 Deploy one or more VMs from a Template. Number of VMs to be deployed and their corresponding VM configuration overrides can be provided.
 
-## Example 
+## Example
 
 ```hcl
 resource "nutanix_deploy_templates_v2" "deploy-temp" {
-    ext_id = {{ template uuid }}
+    ext_id = "ab520e1d-4950-1db1-917f-a9e2ea35b8e3"
     number_of_vms = 1
-    cluster_reference = "<Cluster uuid>"
+    cluster_reference = "0005b6b8-7b3b-4b0b-8b3b-7b3b4b0b8b3b"
     override_vm_config_map{
-        name= "test-tf-temp"
+        name= "example-tf-temp"
         memory_size_bytes = 4294967296
         num_sockets=2
         num_cores_per_socket=1
@@ -34,7 +34,7 @@ The following arguments are supported:
 * `ext_id`: (Required) The identifier of a Template.
 * `version_id`: (Optional) The identifier of a Template Version.
 * `number_of_vms`: (Required) Number of VMs to be deployed.
-* `override_vm_config_map`: (Optional) The map specifying the VM configuration overrides for each of the specified VM(s) to be created. The overrides can include the created VM Name, Configuration and Guest Customization. 
+* `override_vm_config_map`: (Optional) The map specifying the VM configuration overrides for each of the specified VM(s) to be created. The overrides can include the created VM Name, Configuration and Guest Customization.
 * `cluster_reference`: (Required) The identifier of the Cluster where the VM(s) will be created using a Template.
 
 
@@ -56,13 +56,13 @@ The following arguments are supported:
 * `network_info`: (Optional) Network information for a NIC.
 
 ### nics.backing_info
-* `model`: (Optional) Options for the NIC emulation. Valid values "VIRTIO" , "E1000". 
+* `model`: (Optional) Options for the NIC emulation. Valid values "VIRTIO" , "E1000".
 * `mac_address`: (Optional) MAC address of the emulated NIC.
 * `is_connected`: (Optional) Indicates whether the NIC is connected or not. Default is True.
-* `num_queues`: (Optional) The number of Tx/Rx queue pairs for this NIC. Default is 1. 
+* `num_queues`: (Optional) The number of Tx/Rx queue pairs for this NIC. Default is 1.
 
 ### nics.network_info
-* `nic_type`: (Optional) NIC type. Valid values "SPAN_DESTINATION_NIC",  "NORMAL_NIC", "DIRECT_NIC", "NETWORK_FUNCTION_NIC" . 
+* `nic_type`: (Optional) NIC type. Valid values "SPAN_DESTINATION_NIC",  "NORMAL_NIC", "DIRECT_NIC", "NETWORK_FUNCTION_NIC" .
 * `network_function_chain`: (Optional) The network function chain associates with the NIC. Only valid if nic_type is NORMAL_NIC.
 * `network_function_nic_type`: (Optional) The type of this Network function NIC. Defaults to INGRESS.
 * `subnet`: (Required) Network identifier for this adapter. Only valid if nic_type is NORMAL_NIC or DIRECT_NIC
@@ -90,11 +90,11 @@ The following arguments are supported:
 
 ### config.cloud_init
 * `datasource_type`: (Optional) Type of datasource. Default: CONFIG_DRIVE_V2
-* `metadata`: The contents of the meta_data configuration for cloud-init. This can be formatted as YAML or JSON. The value must be base64 encoded. Default value is 'CONFIG_DRIVE_V2'. 
+* `metadata`: The contents of the meta_data configuration for cloud-init. This can be formatted as YAML or JSON. The value must be base64 encoded. Default value is 'CONFIG_DRIVE_V2'.
 * `cloud_init_script`: (Optional) The script to use for cloud-init.
 * `cloud_init_script.user_data`: (Optional) user data object
 * `cloud_init_script.custom_keys`: (Optional) The list of the individual KeyValuePair elements.
 
 
 
-See detailed information in [Nutanix Deploy Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).
+See detailed information in [Nutanix Deploy Template V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Templates/operation/deployTemplate).

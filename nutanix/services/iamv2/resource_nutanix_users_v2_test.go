@@ -18,7 +18,7 @@ func TestAccV2NutanixUsersResource_LocalActiveUser(t *testing.T) {
 	name := fmt.Sprintf("tf-test-user-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		// using V3 API to delete user
 		CheckDestroy: testAccCheckNutanixUserDestroy,
@@ -61,7 +61,7 @@ func TestAccV2NutanixUsersResource_AlreadyExistsUser(t *testing.T) {
 	name := fmt.Sprintf("tf-test-user-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		// using V3 API to delete user
 		CheckDestroy: testAccCheckNutanixUserDestroy,
@@ -91,7 +91,7 @@ func TestAccV2NutanixUsersResource_LocalInactiveUser(t *testing.T) {
 	name := fmt.Sprintf("tf-test-user-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		// using V3 API to delete user
 		CheckDestroy: testAccCheckNutanixUserDestroy,
@@ -118,7 +118,7 @@ func TestAccV2NutanixUsersResource_SAMLUser(t *testing.T) {
 	name := fmt.Sprintf("tf-test-user-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		// using V3 API to delete user
 		CheckDestroy: testAccCheckNutanixUserDestroy,
@@ -139,7 +139,7 @@ func TestAccV2NutanixUsersResource_SAMLUser(t *testing.T) {
 // create LDAP user
 func TestAccV2NutanixUsersResource_LDAPUser(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		// using V3 API to delete user
 		CheckDestroy: testAccCheckNutanixUserDestroy,
@@ -164,7 +164,7 @@ func TestAccV2NutanixUsersResource_DeactivateLocalUser(t *testing.T) {
 	name := fmt.Sprintf("tf-test-user-%d", r)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		// using V3 API to delete user
 		CheckDestroy: testAccCheckNutanixUserDestroy,
