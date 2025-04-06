@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_pc_restore_v2"
-sidebar_current: "docs-nutanix-pc-restore-v2"
+sidebar_current: "docs-nutanix-resource-pc-restore-v2"
 description: |-
   The restore domain manager is a task-driven operation to restore a domain manager from a cluster or object store backup location based on the selected restore point.
 ---

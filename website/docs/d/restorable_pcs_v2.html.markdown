@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_restorable_pcs_v2 "
-sidebar_current: "docs-nutanix-restorable-pcs-v2"
+sidebar_current: "docs-nutanix-datasource-restorable-pcs-v2"
 description: |-
   Returns a list of PCs (domain managers) backed up at the object store/cluster.
 

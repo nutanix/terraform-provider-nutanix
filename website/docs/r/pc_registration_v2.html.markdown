@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_pc_registration_v2 "
-sidebar_current: "docs-nutanix-resource-pe-pc-registration-v2"
+sidebar_current: "docs-nutanix-resource-pc-registration-v2"
 description: |-
   This operation Registers a domain manager (Prism Central) instance to other entities like PE and PC. This process is asynchronous, creating a registration task and returning its UUID.
 

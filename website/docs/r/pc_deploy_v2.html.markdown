@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_pc_deploy_v2 "
-sidebar_current: "docs-nutanix-pc-deploy-v2"
+sidebar_current: "docs-nutanix-resource-pc-deploy-v2"
 description: |-
   This operation Deploys a Prism Central using the provided details. Prism Central Size, Network Config are mandatory fields to deploy Prism Central. The response from this endpoint contains the URL in the task object location header that can be used to track the request status.
 ---

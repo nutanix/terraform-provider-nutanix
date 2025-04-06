@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_pc_restore_source_v2 "
-sidebar_current: "docs-nutanix-pc-restore-source-v2"
+sidebar_current: "docs-nutanix-datasource-pc-restore-source-v2"
 description: |-
   Retrieves the restore source from the PE cache store and returns the restore source configuration and external identifier to the user.
 ---

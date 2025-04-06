@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_pc_restore_points_v2"
-sidebar_current: "docs-nutanix-pc-restore-points-v2"
+sidebar_current: "docs-nutanix-datasource-pc-restore-points-v2"
 description: |-
   Provides a datasource to Retrieves detailed information about a specific recovery point and provides essential domain manager information stored in the backup, which is required for the restoration process.
 ---
