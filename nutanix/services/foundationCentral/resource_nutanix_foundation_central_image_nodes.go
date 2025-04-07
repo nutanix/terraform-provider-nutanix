@@ -705,12 +705,10 @@ func expandNetworklist(pr interface{}) []string {
 }
 
 func expandHyperVisorIsoDetails(config interface{}) *[]fc.HypervisorIsoDetails {
-
 	if config.([]interface{}) == nil && len(config.([]interface{})) == 0 {
 		return nil
 	}
 	settingsMap := config.([]interface{})[0].(map[string]interface{})
-
 	hid := fc.HypervisorIsoDetails{}
 	hid.HypervSku = utils.StringPtr(settingsMap["hyperv_sku"].(string))
 	hid.URL = utils.StringPtr(settingsMap["url"].(string))
