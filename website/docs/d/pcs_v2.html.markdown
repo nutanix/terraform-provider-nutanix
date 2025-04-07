@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_pcs_v2 "
-sidebar_current: "docs-nutanix-pcs-v2"
+sidebar_current: "docs-nutanix-datasource-pcs-v2"
 description: |-
   Returns a list of elements representing the domain manager (Prism Central) instance.
 

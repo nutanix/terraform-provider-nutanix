@@ -1,12 +1,12 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_recovery_point_replicate_v2"
-sidebar_current: "docs-nutanix-resource-recovery-point-replicate-v2"
+page_title: "NUTANIX: nutanix_recovery_point_restore_v2"
+sidebar_current: "docs-nutanix-resource-recovery-point-restore-v2"
 description: |-
   This operation Restore a recovery point identified by {extId}.
 ---
 
-# nutanix_recovery_point_replicate_v2
+# nutanix_recovery_point_restore_v2
 This operation Restore a recovery point identified by {extId}.
 A comma separated list of the created VM and volume group external identifiers can be found in the task completion details under the keys `vm_ext_ids` and `volume_group_ext_ids` respectively.
 
@@ -16,7 +16,7 @@ A comma separated list of the created VM and volume group external identifiers c
   # restore RP
 resource "nutanix_recovery_point_restore_v2" "rp-restore" {
   ext_id         = "150a7ed0-9d05-4f35-a060-16dac4c835d0"
-  cluster_ext_id = "1cefd0f5-6d38-4c9b-a07c-bdd2db004224""
+  cluster_ext_id = "1cefd0f5-6d38-4c9b-a07c-bdd2db004224"
   vm_recovery_point_restore_overrides {
     vm_recovery_point_ext_id = "1cefd0f5-6d38-4c9b-a07c-bdd2db004224"
   }

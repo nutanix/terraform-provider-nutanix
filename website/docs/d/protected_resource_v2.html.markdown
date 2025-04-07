@@ -1,6 +1,6 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: protected_resource_v2"
+page_title: "NUTANIX: nutanix_protected_resource_v2"
 sidebar_current: "docs-nutanix-datasource-protected-resource-v2"
 description: |-
   Get a protected resource
@@ -8,7 +8,7 @@ description: |-
 
 ---
 
-# protected_resource_v2
+# nutanix_protected_resource_v2
 
 Get the details of the specified protected resource such as the restorable time ranges available on the local Prism Central and the state of replication to the targets specified in the applied protection policies. This applies only if the entity is protected in a minutely or synchronous schedule. Other protection schedules are not served by this endpoint yet, and are considered not protected.
 

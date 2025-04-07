@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_pc_backup_target_v2 "
-sidebar_current: "docs-nutanix-pc-backup-target-v2"
+sidebar_current: "docs-nutanix-datasource-pc-backup-target-v2"
 description: |-
   Retrieves the backup targets (cluster or object store) from a domain manager and returns the backup configuration and lastSyncTimestamp parameter to the user.
 ---

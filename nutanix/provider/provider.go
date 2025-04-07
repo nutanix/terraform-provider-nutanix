@@ -18,6 +18,7 @@ import (
 	foundationCentral "github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/foundationCentral"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iam"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/iamv2"
+	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/lcmv2"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/ndb"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networking"
 	"github.com/terraform-providers/terraform-provider-nutanix/nutanix/services/networkingv2"
@@ -301,6 +302,10 @@ func Provider() *schema.Provider {
 			"nutanix_clusters_v2":                             clustersv2.DatasourceNutanixClusterEntitiesV2(),
 			"nutanix_host_v2":                                 clustersv2.DatasourceNutanixHostEntityV2(),
 			"nutanix_hosts_v2":                                clustersv2.DatasourceNutanixHostEntitiesV2(),
+			"nutanix_lcm_status_v2":                           lcmv2.DatasourceNutanixLcmStatusV2(),
+			"nutanix_lcm_entities_v2":                         lcmv2.DatasourceNutanixLcmEntitiesV2(),
+			"nutanix_lcm_entity_v2":                           lcmv2.DatasourceNutanixLcmEntityV2(),
+			"nutanix_lcm_config_v2":                           lcmv2.DatasourceNutanixLcmConfigV2(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"nutanix_virtual_machine":                         vmm.ResourceNutanixVirtualMachine(),
@@ -406,6 +411,10 @@ func Provider() *schema.Provider {
 			"nutanix_cluster_add_node_v2":                     clustersv2.ResourceNutanixClusterAddNodeV2(),
 			"nutanix_clusters_discover_unconfigured_nodes_v2": clustersv2.ResourceNutanixClusterDiscoverUnconfiguredNodesV2(),
 			"nutanix_clusters_unconfigured_node_networks_v2":  clustersv2.ResourceNutanixClusterUnconfiguredNodeNetworkV2(),
+			"nutanix_lcm_perform_inventory_v2":                lcmv2.ResourceNutanixLcmPerformInventoryV2(),
+			"nutanix_lcm_prechecks_v2":                        lcmv2.ResourceNutanixPreChecksV2(),
+			"nutanix_lcm_upgrade_v2":                          lcmv2.ResourceLcmUpgradeV2(),
+			"nutanix_lcm_config_v2":                           lcmv2.ResourceNutanixLcmConfigV2(),
 		},
 		ConfigureContextFunc: providerConfigure,
 	}

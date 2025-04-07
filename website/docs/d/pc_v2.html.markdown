@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_pc_v2 "
-sidebar_current: "docs-nutanix-pc-v2"
+sidebar_current: "docs-nutanix-datasource-pc-v2"
 description: |-
   Get the requested domain manager (Prism Central) entity
 
