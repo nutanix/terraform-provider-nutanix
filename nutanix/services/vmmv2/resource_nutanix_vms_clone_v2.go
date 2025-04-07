@@ -326,6 +326,10 @@ func ResourceNutanixVMCloneV2() *schema.Resource {
 													Computed: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
+															"disk_ext_id": {
+																Type:     schema.TypeString,
+																Computed: true,
+															},
 															"disk_size_bytes": {
 																Type:     schema.TypeInt,
 																Optional: true,
@@ -442,10 +446,74 @@ func ResourceNutanixVMCloneV2() *schema.Resource {
 																	},
 																},
 															},
+															"is_migration_in_progress": {
+																Type:     schema.TypeBool,
+																Computed: true,
+															},
 														},
 													},
 												},
 											},
+										},
+									},
+									"boot_device": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"boot_device_disk": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"disk_address": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"bus_type": {
+																			Type:         schema.TypeString,
+																			Optional:     true,
+																			Computed:     true,
+																			ValidateFunc: validation.StringInSlice([]string{"SCSI", "SPAPR", "PCI", "IDE", "SATA"}, false),
+																		},
+																		"index": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+												"boot_device_nic": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"mac_address": {
+																Type:     schema.TypeString,
+																Optional: true,
+																Computed: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"boot_order": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
 										},
 									},
 								},
@@ -1617,6 +1685,26 @@ func expandOneOfCloneVMBootConfig(pr interface{}) *config.OneOfCloneOverridePara
 			}
 			if nvram, ok := val["nvram_device"]; ok && len(nvram.([]interface{})) > 0 {
 				uefiBootInput.NvramDevice = expandNvramDevice(nvram)
+			}
+			if bootDevice, ok := val["boot_device"]; ok && len(bootDevice.([]interface{})) > 0 {
+				uefiBootInput.BootDevice = expandOneOfUefiBootBootDevice(bootDevice)
+			}
+			if bootOrder, ok := val["boot_order"]; ok && len(bootOrder.([]interface{})) > 0 {
+				bootOrderLen := len(bootOrder.([]interface{}))
+				orders := make([]config.BootDeviceType, bootOrderLen)
+
+				for k, v := range bootOrder.([]interface{}) {
+					const two, three, four = 2, 3, 4
+					subMap := map[string]interface{}{
+						"CDROM":   two,
+						"DISK":    three,
+						"NETWORK": four,
+					}
+					pVal := subMap[v.(string)]
+					p := config.BootDeviceType(pVal.(int))
+					orders[k] = p
+				}
+				uefiBootInput.BootOrder = orders
 			}
 			vmBootConfig.SetValue(*uefiBootInput)
 		}

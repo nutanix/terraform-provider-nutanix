@@ -16,9 +16,10 @@ provider "nutanix" {
   insecure = true
 }
 
-# Add Service  group.
-resource "nutanix_service_groups_v2" "example_1" {
-  name        = "service_group"
+
+# Add Service  group. with TCP and UDP
+resource "nutanix_service_groups_v2" "tcp-udp-service" {
+  name        = "service_group_tcp_udp"
   description = "service group description"
   tcp_services {
     start_port = "232"
@@ -31,8 +32,8 @@ resource "nutanix_service_groups_v2" "example_1" {
 }
 
 # service group with ICMP
-resource "nutanix_service_groups_v2" "example_2" {
-  name        = "service_group"
+resource "nutanix_service_groups_v2" "icmp-service" {
+  name        = "service_group_icmp"
   description = "service group description"
   icmp_services {
     type = 8
@@ -40,9 +41,9 @@ resource "nutanix_service_groups_v2" "example_2" {
   }
 }
 
-# service group with All
-resource "nutanix_service_groups_v2" "example_3" {
-  name        = "service_group"
+# service group with All TCP, UDP and ICMP
+resource "nutanix_service_groups_v2" "all-service" {
+  name        = "service_group_udp_tcp_icmp"
   description = "service group description"
   tcp_services {
     start_port = "232"
@@ -61,13 +62,23 @@ resource "nutanix_service_groups_v2" "example_3" {
 
 # get service group by ext_id
 data "nutanix_service_group_v2" "test" {
-  ext_id = nutanix_service_groups_v2.example_3.ext_id
+  ext_id = nutanix_service_groups_v2.all-service.ext_id
 }
 
 # list all service groups
-data "nutanix_service_groups_v2" "test" {}
+data "nutanix_service_groups_v2" "list-all-sg" {
+  depends_on = [nutanix_service_groups_v2.tcp-udp-service, nutanix_service_groups_v2.icmp-service, nutanix_service_groups_v2.all-service]
+}
 
 # list all service groups with filter
-data "nutanix_service_groups_v2" "test" {
-  filter = "name eq 'service_group'"
+data "nutanix_service_groups_v2" "filtered-sg" {
+  filter     = "name eq 'service_group_udp_tcp_icmp'"
+  depends_on = [nutanix_service_groups_v2.tcp-udp-service, nutanix_service_groups_v2.icmp-service, nutanix_service_groups_v2.all-service]
+}
+
+# list all service groups with filter and limit
+data "nutanix_service_groups_v2" "filtered-sg-limit" {
+  filter     = "startswith(name,'service_group')"
+  limit      = 1
+  depends_on = [nutanix_service_groups_v2.tcp-udp-service, nutanix_service_groups_v2.icmp-service, nutanix_service_groups_v2.all-service]
 }

@@ -21,7 +21,7 @@ resource "nutanix_volume_group_v2" "volume_group_example"{
   sharing_status                     = "SHARED"
   target_name                        = "volumegroup-test-001234"
   created_by                         = "example"
-  cluster_reference                  = "<Cluster uuid>"
+  cluster_reference                  = "ab520e1d-4950-1db1-917f-a9e2ea35b8e3"
   iscsi_features {
     enabled_authentications = "CHAP"
     target_secret           = "123456789abc"
@@ -35,7 +35,7 @@ resource "nutanix_volume_group_v2" "volume_group_example"{
   usage_type = "USER"
   is_hidden  = false
 
-  # ignore changes to target_secret, target secret will not be returned in terraform plan output 
+  # ignore changes to target_secret, target secret will not be returned in terraform plan output
   lifecycle {
     ignore_changes = [
       iscsi_features[0].target_secret
@@ -121,4 +121,4 @@ The flash mode features attribute supports the following:
 
 * `is_enabled`: - Indicates whether the flash mode is enabled for the Volume Group Disk.
 
-See detailed information in [Nutanix Volumes V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.0#tag/VolumeGroups/operation/createVolumeGroup).
+See detailed information in [Nutanix Create Volume Group V4](https://developers.nutanix.com/api-reference?namespace=volumes&version=v4.0#tag/VolumeGroups/operation/createVolumeGroup).

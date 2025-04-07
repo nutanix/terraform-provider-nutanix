@@ -11,3 +11,6 @@ variable "nutanix_endpoint" {
 variable "nutanix_port" {
   type = string
 }
+variable "subnet_name" {
+  type = string
+}

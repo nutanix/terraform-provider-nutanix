@@ -13,10 +13,12 @@ Provides Nutanix datasource Get Route for the specified {extId}.
 ## Example
 
 ```hcl
-data "nutanix_route_v2" "route-by-id"{
-  route_table_ext_id = "<route_table_uuid>"
-  ext_id = "<route_uuid>"
+
+data "nutanix_route_v2" "route-by-id" {
+  route_table_ext_id = "a8fe48c4-f0d3-49c7-a017-efc30dd8fb2b"
+  ext_id             = "7f66e20f-67f4-473f-96bb-c4fcfd487f16"
 }
+
 ```
 
 ## Argument Reference
@@ -90,4 +92,4 @@ The following attributes are exported:
 - `value`: value of IP address
 - `prefix_length`: The prefix length of the network to which this host IPv4/IPv6 address belongs.
 
-See detailed information in [Nutanix Routes v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0).
+See detailed information in [Nutanix Get Route For Route Table v4](https://developers.nutanix.com/api-reference?namespace=networking&version=v4.0#tag/Routes/operation/getRouteForRouteTableById).

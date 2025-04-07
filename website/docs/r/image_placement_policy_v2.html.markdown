@@ -12,25 +12,19 @@ Create an image placement policy using the provided request body. Name, placemen
 
 
 ```hcl
-
-data "nutanix_categories_v2" "categories"{}
-
-locals {
-	category0 = data.nutanix_categories_v4.categories.categories.0.ext_id
-}
 resource "nutanix_image_placement_policy_v2" "example"{
 	name           = "image_placement_policy"
 	description    = "%[2]s"
 	placement_type = "SOFT"
 	cluster_entity_filter {
 		category_ext_ids = [
-			local.category0,
+			"ab520e1d-4950-1db1-917f-a9e2ea35b8e3"
 		]
 		type = "CATEGORIES_MATCH_ALL"
 	}
 	image_entity_filter {
 		category_ext_ids = [
-			local.category0,
+			"ab520e1d-4950-1db1-917f-a9e2ea35b8e3",
 		]
 		type = "CATEGORIES_MATCH_ALL"
 	}
@@ -57,4 +51,4 @@ The following arguments are supported:
 * `category_ext_ids`: Array of strings
 
 
-See detailed information in [Nutanix Image Placement Policies V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0)
+See detailed information in [Nutanix Create Image Placement Policies V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/ImagePlacementPolicies/operation/createPlacementPolicy)

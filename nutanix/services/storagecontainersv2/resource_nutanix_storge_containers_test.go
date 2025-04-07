@@ -21,7 +21,7 @@ func TestAccV2NutanixStorageContainersResource_Basic(t *testing.T) {
 	filepath := path + "/../../../test_config_v2.json"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -94,7 +94,7 @@ func testStorageContainersResourceConfig(filepath, name string) string {
 				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 			config = (jsondecode(file("%[1]s")))
-			storage_container = local.config.storage_container			
+			storage_container = local.config.storage_container
 		}
 
 		resource "nutanix_storage_containers_v2" "test" {
@@ -131,7 +131,7 @@ func testStorageContainersResourceUpdateConfig(filepath, name string) string {
 				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 			config = (jsondecode(file("%[1]s")))
-			storage_container = local.config.storage_container			
+			storage_container = local.config.storage_container
 		}
 
 		resource "nutanix_storage_containers_v2" "test" {
@@ -168,7 +168,7 @@ func testStorageContainersResourceWithoutNameConfig(filepath string) string {
 				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 			config = (jsondecode(file("%s")))
-			storage_container = local.config.storage_container			
+			storage_container = local.config.storage_container
 		}
 
 		resource "nutanix_storage_containers_v2" "test" {
@@ -204,7 +204,7 @@ func testStorageContainersResourceWithoutClusterExtIDConfig(filepath string) str
 				cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 			config = (jsondecode(file("%s")))
-			storage_container = local.config.storage_container			
+			storage_container = local.config.storage_container
 		}
 
 		resource "nutanix_storage_containers_v2" "test" {

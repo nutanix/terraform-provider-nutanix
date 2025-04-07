@@ -14,7 +14,7 @@ Retrieve the image placement policy details for the provided external identifier
 
 ```hcl
 data "nutanix_image_placement_policy_v2" "ipp"{
-    ext_id = {{ ext_id of image placement policy }}
+  ext_id = "cf96e27a-4e52-4cec-b563-d0b25413cc4a"
 }
 ```
 
@@ -30,17 +30,25 @@ The following arguments are supported:
 The following arguments are supported:
 * `name`: (Required) Name of the image placement policy.
 * `description`: (Optional) Description of the image placement policy.
-* `placement_type`: (Required) Type of the image placement policy. Valid values "HARD", "SOFT"
+* `placement_type`: (Required) Type of the image placement policy. Valid values:
+    - HARD: Hard placement policy. Images can only be placed on clusters enforced by the image placement policy.
+    - SOFT: Soft placement policy. Images can be placed on clusters apart from those enforced by the image placement policy.
 * `image_entity_filter`: (Required) Category-based entity filter.
 * `cluster_entity_filter`: (Required) Category-based entity filter.
-* `enforcement_state`: (Optional) Enforcement status of the image placement policy. Valid values "ACTIVE", "SUSPENDED"
+* `enforcement_state`: (Optional) Enforcement status of the image placement policy. Valid values:
+    - ACTIVE: The image placement policy is being actively enforced.
+    - SUSPENDED: The policy enforcement for image placement is suspended.
 
 ### image_entity_filter
-* `type`: (Required) Filter matching type. Valid values "CATEGORIES_MATCH_ALL", "CATEGORIES_MATCH_ANY"
+* `type`: (Required) Filter matching type. Valid values:
+    - CATEGORIES_MATCH_ALL: Image policy only applies to the entities that are matched to all the corresponding entity categories attached to the image policy.
+    - CATEGORIES_MATCH_ANY: Image policy applies to the entities that match any subset of the entity categories attached to the image policy.
 * `category_ext_ids`: Array of strings
 
 ### cluster_entity_filter
-* `type`: (Required) Filter matching type. Valid values "CATEGORIES_MATCH_ALL", "CATEGORIES_MATCH_ANY"
+* `type`: (Required) Filter matching type. Valid values:
+    - CATEGORIES_MATCH_ALL: Image policy only applies to the entities that are matched to all the corresponding entity categories attached to the image policy.
+    - CATEGORIES_MATCH_ANY: Image policy applies to the entities that match any subset of the entity categories attached to the image policy.
 * `category_ext_ids`: Array of strings
 
-See detailed information in [Nutanix Image placement policy V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0)
+See detailed information in [Nutanix Get Image placement policy V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/ImagePlacementPolicies/operation/getPlacementPolicyById)

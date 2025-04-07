@@ -17,9 +17,9 @@ Provides Nutanix datasource to Retrieves the Nutanix Guest Tools configuration f
 ## Example
 
 ```hcl
-    resource "nutanix_ngt_configuration_v2" "example"{
-        ext_id = <uuid for vm>       
-    }
+data "nutanix_ngt_configuration_v2" "example" {
+  ext_id  = "f29535e2-6bd8-4782-b879-409f17217b31"
+}
 ```
 
 ## Argument Reference
@@ -49,4 +49,4 @@ The following attributes are exported:
 
 
 
-See detailed information in [Nutanix Guest Tools V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).
+See detailed information in [Nutanix Get VM NGT configuration V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Vm/operation/getGuestToolsById).

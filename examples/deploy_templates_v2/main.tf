@@ -16,6 +16,30 @@ provider "nutanix" {
   insecure = true
 }
 
+data "nutanix_clusters_v2" "clusters" {}
+
+locals {
+  cluster_ext_id = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+  ][0]
+}
+
+# pull subnet data
+data "nutanix_subnets_v2" "vm-subnet" {
+  filter = "name eq '${var.subnet_name}'"
+}
+resource "nutanix_virtual_machine_v2" "vm" {
+  name                 = "vm-example"
+  description          = "create vm example"
+  num_cores_per_socket = 1
+  num_sockets          = 1
+  cluster {
+    ext_id = local.cluster_ext_id
+  }
+  power_state = "OFF"
+}
+
 
 # Create a new Template from done only using vm reference
 resource "nutanix_template_v2" "example-1" {
@@ -24,17 +48,17 @@ resource "nutanix_template_v2" "example-1" {
   template_version_spec {
     version_source {
       template_vm_reference {
-        ext_id = "<VM_UUID>"
+        ext_id = nutanix_virtual_machine_v2.vm.id
       }
     }
   }
 }
 
 # Deploy a template
-resource "nutanix_deploy_templates_v2" "test" {
-  ext_id            = resource.nutanix_template_v2.example-1.id
+resource "nutanix_deploy_templates_v2" "deploy-example" {
+  ext_id            = nutanix_template_v2.example-1.id
   number_of_vms     = 1
-  cluster_reference = "<CLUSTER_UUID>"
+  cluster_reference = local.cluster_ext_id
   override_vm_config_map {
     name                 = "example-tf-template-deploy"
     memory_size_bytes    = 4294967296
@@ -49,14 +73,11 @@ resource "nutanix_deploy_templates_v2" "test" {
       network_info {
         nic_type = "NORMAL_NIC"
         subnet {
-          ext_id = " <SUBNET_UUID>"
+          ext_id = data.nutanix_subnets_v2.vm-subnet.subnets[0].ext_id
         }
         vlan_mode                 = "ACCESS"
         should_allow_unknown_macs = false
       }
     }
   }
-  depends_on = [
-    resource.nutanix_template_v2.example-1
-  ]
 }

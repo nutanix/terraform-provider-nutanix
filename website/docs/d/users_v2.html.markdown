@@ -13,7 +13,14 @@ Provides a datasource to retrieve all User(s).
 ## Example Usage
 
 ``` hcl
-data "nutanix_users_v2" "users"{}
+# list all users
+data "nutanix_users_v2" "list-users"{}
+
+
+data "nutanix_users_v2" "filtered-users" {
+  filter = "username eq 'username-example'"
+}
+
 ```
 
 ##  Argument Reference
@@ -45,7 +52,7 @@ The following arguments are supported:
     * lastUpdatedTime
     * userType
     * username
-* `select` : A URL query parameter that allows clients to request a specific set of properties for each entity or complex type. Expression specified with the \$select must conform to the OData V4.01 URL conventions. If a \$select expression consists of a single select item that is an asterisk (i.e., *), then all properties on the matching resource will be returned. following fields: 
+* `select` : A URL query parameter that allows clients to request a specific set of properties for each entity or complex type. Expression specified with the \$select must conform to the OData V4.01 URL conventions. If a \$select expression consists of a single select item that is an asterisk (i.e., *), then all properties on the matching resource will be returned. following fields:
     * additionalAttributes
     * bucketsAccessKeys
     * createdBy
@@ -76,7 +83,7 @@ The following attributes are exported:
 
 ### User Groups
 
-The users  attribute element contains the following attributes:
+The `users`  attribute element contains the following attributes:
 
 * `tenant_id` - A globally unique identifier that represents the tenant that owns this entity. The system automatically assigns it, and it and is immutable from an API consumer perspective (some use cases may cause this Id to change - For instance, a use case may require the transfer of ownership of the entity, but these cases are handled automatically on the server).
 * `ext_id` - The External Identifier of the User Group.

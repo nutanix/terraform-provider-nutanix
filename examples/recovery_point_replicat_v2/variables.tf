@@ -11,3 +11,10 @@ variable "nutanix_endpoint" {
 variable "nutanix_port" {
   type = string
 }
+
+variable "remote_cluster_uuid" {
+  type = string
+}
+variable "remote_pc_uuid" {
+  type = string
+}

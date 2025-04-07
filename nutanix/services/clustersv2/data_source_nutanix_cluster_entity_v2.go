@@ -316,7 +316,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 													Computed: true,
 												},
 												"prefix_length": {
-													Type:     schema.TypeString,
+													Type:     schema.TypeInt,
 													Computed: true,
 												},
 											},
@@ -332,7 +332,7 @@ func DatasourceNutanixClusterEntityV2() *schema.Resource {
 													Computed: true,
 												},
 												"prefix_length": {
-													Type:     schema.TypeString,
+													Type:     schema.TypeInt,
 													Computed: true,
 												},
 											},
@@ -1203,14 +1203,14 @@ func flattenFaultToleranceState(pr *import1.FaultToleranceState) []map[string]in
 	return nil
 }
 
-func flattenRedundancyStatus(redundancyStatus *import1.RedundancyStatusDetails) interface{} {
+func flattenRedundancyStatus(redundancyStatus *import1.RedundancyStatusDetails) []map[string]interface{} {
 	if redundancyStatus != nil {
 		redStatus := make(map[string]interface{})
 
 		redStatus["is_cassandra_preparation_done"] = redundancyStatus.IsCassandraPreparationDone
 		redStatus["is_zookeeper_preparation_done"] = redundancyStatus.IsZookeeperPreparationDone
 
-		return redStatus
+		return []map[string]interface{}{redStatus}
 	}
 	return nil
 }

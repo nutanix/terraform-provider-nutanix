@@ -88,7 +88,7 @@ func testAccVolumeGroupsDataSourceConfig(filepath, name, desc string) string {
 }
 
 func testAccVolumeGroupsDataSourceWithFilter(filepath, name, desc string) string {
-	return testAccVolumeGroupResourceConfig(name, desc) + fmt.Sprintf(`		
+	return testAccVolumeGroupResourceConfig(name, desc) + fmt.Sprintf(`
 	data "nutanix_volume_groups_v2" "test" {
 		filter = "name eq '%s'"
 		depends_on = [resource.nutanix_volume_group_v2.test]
@@ -99,35 +99,35 @@ func testAccVolumeGroupsDataSourceWithFilter(filepath, name, desc string) string
 func testAccVolumeGroupsDataSourceWithLimit(name, desc string, limit int) string {
 	return fmt.Sprintf(
 		`
-			data "nutanix_clusters" "clusters" {}
+			data "nutanix_clusters_v2" "clusters" {}
 
 			locals {
 				cluster1 = [
-					for cluster in data.nutanix_clusters.clusters.entities :
-					cluster.metadata.uuid if cluster.service_list[0] != "PRISM_CENTRAL"
-				][0]				
+					for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+						cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+				][0]
 			}
-	
+
 			resource "nutanix_volume_group_v2" "test1" {
 				name              = "%[1]s_1"
 				cluster_reference = local.cluster1
 				description       = "%[2]s"
 			}
-	
+
 			resource "nutanix_volume_group_v2" "test2" {
 				name              = "%[1]s_2"
 				cluster_reference = local.cluster1
 				description       = "%[2]s"
 				depends_on        = [resource.nutanix_volume_group_v2.test1]
 			}
-	
+
 			resource "nutanix_volume_group_v2" "test3" {
 				name              = "%[1]s_3"
 				cluster_reference = local.cluster1
 				description       = "%[2]s"
 				depends_on        = [resource.nutanix_volume_group_v2.test2]
 			}
-	
+
 			data "nutanix_volume_groups_v2" "test" {
 				filter     = "startswith(name, '%[1]s')"
 				limit      = %[3]d

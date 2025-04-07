@@ -22,8 +22,11 @@ fmt:
 	goimports -w ./client
 	goimports -w ./utils
 
+
 fmtcheck:
+	@echo "Running fmtcheck"
 	@sh -c "'$(CURDIR)/scripts/gofmtcheck.sh'"
+	@echo "fmtcheck done"
 
 errcheck:
 	@sh -c "'$(CURDIR)/scripts/errcheck.sh'"

@@ -2,6 +2,8 @@ package volumesv2
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -73,25 +75,25 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Create(ctx context.Context, d *
 	taskconn := meta.(*conns.Client).PrismAPI
 	// Wait for the VM to be available
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "QUEUED", "QUEUED"},
+		Pending: []string{"PENDING", "RUNNING", "QUEUED"},
 		Target:  []string{"SUCCEEDED"},
 		Refresh: taskStateRefreshPrismTaskGroupFunc(ctx, taskconn, utils.StringValue(taskUUID)),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for template (%s) to Attach Vm to Volume Group: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for Volume group (%s) to attach to VM: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
 
-	resourceUUID, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
+	taskResp, err := taskconn.TaskRefAPI.GetTaskById(taskUUID, nil)
 	if err != nil {
 		return diag.Errorf("error while Attaching Vm to Volume Group: %v", err)
 	}
-	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
+	taskDetails := taskResp.Data.GetValue().(taskPoll.Task)
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
+	uuid := taskDetails.EntitiesAffected[0].ExtId
 
 	d.SetId(*uuid)
 	d.Set("ext_id", *uuid)
@@ -140,7 +142,7 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Delete(ctx context.Context, d *
 	}
 
 	if _, errWaitTask := stateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("error waiting for template (%s) to Detach Vm to Volume Group: %s", utils.StringValue(taskUUID), errWaitTask)
+		return diag.Errorf("error waiting for Volume group (%s) to detach from VM: %s", utils.StringValue(taskUUID), errWaitTask)
 	}
 
 	// Get UUID from TASK API
@@ -151,10 +153,8 @@ func ResourceNutanixVolumeAttachVMToVolumeGroupV2Delete(ctx context.Context, d *
 	}
 	rUUID := resourceUUID.Data.GetValue().(taskPoll.Task)
 
-	uuid := rUUID.EntitiesAffected[0].ExtId
-
-	d.SetId(*uuid)
-	d.Set("ext_id", *uuid)
+	aJSON, _ := json.MarshalIndent(rUUID, "", "  ")
+	log.Printf("[DEBUG] Detach Vm from Volume Group Task Details: %s", string(aJSON))
 
 	return nil
 }

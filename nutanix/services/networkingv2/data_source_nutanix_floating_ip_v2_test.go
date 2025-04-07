@@ -38,12 +38,15 @@ func testAccFipDataSourceConfig(name, desc string) string {
 	networkID := acctest.RandIntRange(0, 999)
 	return fmt.Sprintf(`
 
-		data "nutanix_clusters" "clusters" {}
+		data "nutanix_clusters_v2" "clusters" {}
 
 		locals {
-			cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+			cluster0 =  [
+			  for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+		][0]
 		}
-		
+
 		resource "nutanix_subnet_v2" "test" {
 			name = "terraform-test-subnet-floating-ip"
 			description = "test subnet description"

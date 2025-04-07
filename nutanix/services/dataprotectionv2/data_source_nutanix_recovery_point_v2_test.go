@@ -23,7 +23,7 @@ func TestAccV2NutanixRecoveryPointDatasource_VmRecoveryPoints(t *testing.T) {
 	expirationTimeFormatted := expirationTime.UTC().Format(time.RFC3339)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { acc.TestAccFoundationPreCheck(t) },
+		PreCheck:  func() { acc.TestAccPreCheck(t) },
 		Providers: acc.TestAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -50,9 +50,9 @@ func testRecoveryPointDatasourceConfigWithVMRecoveryPoints(name, expirationTime 
 		status              = "COMPLETE"
 		recovery_point_type = "APPLICATION_CONSISTENT"
 		vm_recovery_points {
-			vm_ext_id = nutanix_virtual_machine_v2.test-1.id 
+			vm_ext_id = nutanix_virtual_machine_v2.test-1.id
 		}
-		
+
 		depends_on = [ nutanix_virtual_machine_v2.test-1 ]
 	}
 
@@ -74,9 +74,9 @@ func testVMConfigRecovery(name string) string {
 			  cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
 			][0]
 			config = (jsondecode(file("%[2]s")))
-			data_protection = local.config.data_protection	
+			availability_zone = local.config.availability_zone
 		}
-	
+
 		resource "nutanix_virtual_machine_v2" "test-1"{
 			name= "%[1]s"
 			description =  "test recovery point vm 1"
@@ -91,7 +91,7 @@ func testVMConfigRecovery(name string) string {
 
 func testVMConfig(name string) string {
 	return fmt.Sprintf(`
-	
+
 		resource "nutanix_virtual_machine_v2" "test-2"{
 			name= "%[1]s-vm2"
 			description =  "test recovery point vm 2"

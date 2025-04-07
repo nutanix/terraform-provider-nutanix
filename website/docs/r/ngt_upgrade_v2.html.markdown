@@ -15,12 +15,12 @@ Provides Nutanix resource to Trigger an in-guest upgrade of Nutanix Guest Tools.
 ## Example
 
 ```hcl
-    resource "nutanix_ngt_upgrade_v2" "example"{
-        ext_id = <uuid for vm to install NGT on it>        
-        reboot_preference {
-            schedule_type = <schedule type>
-        }
+resource "nutanix_ngt_upgrade_v2" "example"{
+    ext_id = "ab520e1d-4950-1db1-917f-a9e2ea35b8e3"
+    reboot_preference {
+        schedule_type = "IMMEDIATE"
     }
+}
 ```
 
 ## Argument Reference
@@ -67,4 +67,4 @@ The following attributes are exported:
 
 
 
-See detailed information in [Nutanix Guest Tools V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).
+See detailed information in [Nutanix Upgrade VM Guest Tools V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Vm/operation/upgradeVmGuestTools).

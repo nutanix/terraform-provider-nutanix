@@ -16,23 +16,30 @@ provider "nutanix" {
   insecure = true
 }
 
+data "nutanix_clusters_v2" "clusters" {}
 
+locals {
+  pc_ext_id = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] == "PRISM_CENTRAL"
+  ][0]
+}
 
 // DomainManagerRemoteClusterSpec
 resource "nutanix_pc_registration_v2 " "pc1" {
-  pc_ext_id = "00000000-0000-0000-0000-000000000000"
+  pc_ext_id = local.pc_ext_id
   remote_cluster {
     domain_manager_remote_cluster_spec {
       remote_cluster {
         address {
           ipv4 {
-            value = "0.0.0.0"
+            value = var.cvm_ip
           }
         }
         credentials {
           authentication {
-            username = "example"
-            password = "example.123"
+            username = var.username
+            password = var.password
           }
         }
       }
@@ -42,20 +49,20 @@ resource "nutanix_pc_registration_v2 " "pc1" {
 }
 
 // AOSRemoteClusterSpec
-resource "nutanix_pc_registration_v2 " "pc1" {
-  pc_ext_id = "00000000-0000-0000-0000-000000000000"
+resource "nutanix_pc_registration_v2 " "pc2" {
+  pc_ext_id = local.pc_ext_id
   remote_cluster {
     aos_remote_cluster_spec {
       remote_cluster {
         address {
           ipv4 {
-            value = "0.0.0.0"
+            value = var.cvm_ip
           }
         }
         credentials {
           authentication {
-            username = "example"
-            password = "example.123"
+            username = var.username
+            password = var.password
           }
         }
       }
@@ -65,10 +72,10 @@ resource "nutanix_pc_registration_v2 " "pc1" {
 
 // ClusterReference
 resource "nutanix_pc_registration_v2 " "pc1" {
-  pc_ext_id = "00000000-0000-0000-0000-000000000000"
+  pc_ext_id = local.pc_ext_id
   remote_cluster {
     cluster_reference {
-      ext_id = "11111111-1111-1111-1111-111111111111"
+      ext_id = var.cluster_ext_id
     }
   }
 }

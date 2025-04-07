@@ -2,7 +2,10 @@ package iamv2_test
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
 	"testing"
 )
@@ -91,8 +94,9 @@ type TestConfig struct {
 var testVars TestConfig
 
 var (
-	path, _  = os.Getwd()
-	filepath = path + "/../../../test_config_v2.json"
+	path, _     = os.Getwd()
+	filepath    = path + "/../../../test_config_v2.json"
+	xmlFilePath = path + "/../../../test_idp_metadata.txt"
 )
 
 func loadVars(filepath string, varStuct interface{}) {
@@ -113,5 +117,36 @@ func loadVars(filepath string, varStuct interface{}) {
 func TestMain(m *testing.M) {
 	log.Println("Do some crazy stuff before tests!")
 	loadVars("../../../test_config_v2.json", &testVars)
+	downloadFile(testVars.Iam.IdentityProviders.IdpMetadataXML, xmlFilePath)
 	os.Exit(m.Run())
+}
+
+// downloadFile downloads a file from a given URL and saves it to the specified path.
+func downloadFile(url, destinationFilePath string) error {
+	// Send HTTP request
+	resp, err := http.Get(url)
+	if err != nil {
+		return fmt.Errorf("failed to download file: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Check for non-200 responses
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("bad status: %s", resp.Status)
+	}
+
+	// Create the destination file
+	out, err := os.Create(destinationFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to create file: %w", err)
+	}
+	defer out.Close()
+
+	// Copy data from response to file
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to copy data: %w", err)
+	}
+
+	return nil
 }

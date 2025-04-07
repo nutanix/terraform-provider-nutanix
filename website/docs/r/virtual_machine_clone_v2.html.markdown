@@ -13,10 +13,10 @@ Provides a Nutanix Virtual Machine resource to Create a virtual machine clone.
 ## Example Usage
 
 ```hcl
-data "nutanix_virtual_machines_v2" "vms"{}
+data "nutanix_virtual_machines_v2" "vm-list"{}
 
 resource "nutanix_vm_clone_v2" "vm1"{
-  vm_ext_id = data.nutanix_virtual_machines_v2.vms.0.data.ext_id
+  vm_ext_id = data.nutanix_virtual_machines_v2.vm-list.vms.0.data.ext_id
   name = "test-dou"
   num_cores_per_socket = 1
   num_sockets          = 1
@@ -294,4 +294,4 @@ The key_value_pairs attribute supports the following:
 * `name`: - (Optional) The key of this key-value pair
 * `value`: - (Optional) The value associated with the key for this key-value pair.
 
-See detailed information in [Nutanix Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).
+See detailed information in [Nutanix Clone Virtual Machine V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Vm/operation/cloneVm).

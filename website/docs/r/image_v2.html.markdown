@@ -13,32 +13,31 @@ Create an image using the provided request body. Name, type and source are manda
 
 ```hcl
 
-    resource "nutanix_images_v2" "img-1"{
-        name = "test-image"
-        description = "img desc"
-        type = "ISO_IMAGE"
-        source{
-            url = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
-        }
+resource "nutanix_images_v2" "img-1" {
+  name        = "test-image"
+  description = "img desc"
+  type        = "ISO_IMAGE"
+  source {
+    url_source {
+      url = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
     }
+  }
+}
 
-    data "nutanix_clusters" "clusters"{}
 
-    locals {
-    cluster0 = data.nutanix_clusters.clusters.entities[0].metadata.uuid
+resource "nutanix_images_v2" "img-2"{
+  name = "test-image"
+  description = "img desc"
+  type = "DISK_IMAGE"
+  source {
+    url_source {
+      url = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
     }
-
-    resource "nutanix_images_v2" "img-2"{
-        name = "test-image"
-        description = "img desc"
-        type = "DISK_IMAGE"
-        source{
-            url = "http://archive.ubuntu.com/ubuntu/dists/bionic/main/installer-amd64/current/images/netboot/mini.iso"
-        }
-        cluster_location_ext_ids = [
-            local.cluster0
-        ]
-    }
+  }
+  cluster_location_ext_ids = [
+        "ab520e1d-4950-1db1-917f-a9e2ea35b8e3"
+  ]
+}
 ```
 
 ## Argument Reference
@@ -91,4 +90,4 @@ The following attributes are exported:
 * `enforced_cluster_ext_ids`: List of cluster external identifiers for the enforced placement policy.
 * `conflicting_policy_ext_ids`: List of image placement policy external identifier that conflict with the current one.
 
-See detailed information in [Nutanix Image V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0)
+See detailed information in [Nutanix Create Image V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Images/operation/createImage)

@@ -16,58 +16,103 @@ provider "nutanix" {
   insecure = true
 }
 
+data "nutanix_clusters_v2" "clusters" {}
+
+locals {
+  clusterExtId = [
+    for cluster in data.nutanix_clusters_v2.clusters.cluster_entities :
+    cluster.ext_id if cluster.config[0].cluster_function[0] != "PRISM_CENTRAL"
+  ][0]
+}
+
+#create a virtual machine with minium configuration
+resource "nutanix_virtual_machine_v2" "vm-1" {
+  name                 = "vm-example-1"
+  num_cores_per_socket = 1
+  num_sockets          = 1
+  cluster {
+    ext_id = local.clusterExtId
+  }
+  power_state = "OFF"
+}
+
+#create a virtual machine with minium configuration
+resource "nutanix_virtual_machine_v2" "vm-2" {
+  name                 = "vm-example-2"
+  num_cores_per_socket = 1
+  num_sockets          = 1
+  cluster {
+    ext_id = local.clusterExtId
+  }
+  power_state = "OFF"
+}
 
 # create RP with Vm Rp
 resource "nutanix_recovery_points_v2" "rp-example-1" {
   name                = "terraform-test-recovery-point"
-  expiration_time     = "2024-09-17T09:20:42Z"
+  expiration_time     = "2029-09-17T09:20:42Z"
   status              = "COMPLETE"
   recovery_point_type = "APPLICATION_CONSISTENT"
   vm_recovery_points {
-    vm_ext_id = "<Vm-uuid-1>"
-    name     = "vm-recovery-point-1"
-    expiration_time = "2024-09-17T09:20:42Z"
-    status = "COMPLETE"
+    vm_ext_id           = nutanix_virtual_machine_v2.vm-1.id
+    name                = "vm-recovery-point-1"
+    expiration_time     = "2029-09-17T09:20:42Z"
+    status              = "COMPLETE"
     recovery_point_type = "APPLICATION_CONSISTENT"
   }
 }
-
 # create RP with multiple Vm Rp
 resource "nutanix_recovery_points_v2" "rp-example-2" {
   name                = "terraform-test-recovery-point"
-  expiration_time     = "2024-09-17T09:20:42Z"
+  expiration_time     = "2029-09-17T09:20:42Z"
   status              = "COMPLETE"
   recovery_point_type = "CRASH_CONSISTENT"
   vm_recovery_points {
-    vm_ext_id = "<Vm-uuid-1>"
+    vm_ext_id = nutanix_virtual_machine_v2.vm-1.id
   }
   vm_recovery_points {
-    vm_ext_id = "<Vm-uuid-2>"
+    vm_ext_id = nutanix_virtual_machine_v2.vm-2.id
   }
+}
+
+
+# create a volume group
+resource "nutanix_volume_group_v2" "vg-1" {
+  name              = "volume-group-example-1"
+  description       = "Test Create Volume group with spec"
+  created_by        = "example"
+  cluster_reference = local.clusterExtId
+}
+
+resource "nutanix_volume_group_v2" "vg-2" {
+  name              = "volume-group-example-2"
+  description       = "Test Create Volume group with spec"
+  created_by        = "example"
+  cluster_reference = local.clusterExtId
 }
 
 # create RP with VG Rp
 resource "nutanix_recovery_points_v2" "rp-example-3" {
   name                = "terraform-test-recovery-point"
-  expiration_time     = "2024-09-17T09:20:42Z"
+  expiration_time     = "2029-09-17T09:20:42Z"
   status              = "COMPLETE"
   recovery_point_type = "CRASH_CONSISTENT"
   volume_group_recovery_points {
-    volume_group_ext_id = "<VG-uuid-1>"
+    volume_group_ext_id = nutanix_volume_group_v2.vg-1.id
   }
 }
 
 # create RP with multiple VG Rp
 resource "nutanix_recovery_points_v2" "rp-example-4" {
   name                = "terraform-test-recovery-point"
-  expiration_time     = "2024-09-17T09:20:42Z"
+  expiration_time     = "2029-09-17T09:20:42Z"
   status              = "COMPLETE"
   recovery_point_type = "CRASH_CONSISTENT"
   volume_group_recovery_points {
-    volume_group_ext_id = "<VG-uuid-1>"
+    volume_group_ext_id = nutanix_volume_group_v2.vg-1.id
   }
   volume_group_recovery_points {
-    volume_group_ext_id = "<VG-uuid-2>"
+    volume_group_ext_id = nutanix_volume_group_v2.vg-2.id
   }
 }
 
@@ -75,43 +120,41 @@ resource "nutanix_recovery_points_v2" "rp-example-4" {
 # create RP with multiple VG and Vms Rp
 resource "nutanix_recovery_points_v2" "rp-example-5" {
   name                = "terraform-test-recovery-point"
-  expiration_time     = "2024-09-17T09:20:42Z"
+  expiration_time     = "2029-09-17T09:20:42Z"
   status              = "COMPLETE"
   recovery_point_type = "CRASH_CONSISTENT"
   vm_recovery_points {
-    vm_ext_id = "<Vm-uuid-1>"
+    vm_ext_id = nutanix_virtual_machine_v2.vm-1.id
   }
   vm_recovery_points {
-    vm_ext_id = "<Vm-uuid-2>"
+    vm_ext_id = nutanix_virtual_machine_v2.vm-2.id
   }
   volume_group_recovery_points {
-    volume_group_ext_id = "<VG-uuid-1>"
+    volume_group_ext_id = nutanix_volume_group_v2.vg-1.id
   }
   volume_group_recovery_points {
-    volume_group_ext_id = "<VG-uuid-2>"
+    volume_group_ext_id = nutanix_volume_group_v2.vg-2.id
   }
 }
 
 # get RP data
 data "nutanix_recovery_point_v2" "rp-example-6" {
-  ext_id = nutanix_recovery_points_v2.rp-example.id
+  ext_id = nutanix_recovery_points_v2.rp-example-1.id
 }
 
 # list all RP
-data "nutanix_recovery_points_v2" "rp-example-7" {}
+data "nutanix_recovery_points_v2" "rp-example-7" {
+  depends_on = [nutanix_recovery_points_v2.rp-example-1, nutanix_recovery_points_v2.rp-example-2, nutanix_recovery_points_v2.rp-example-3, nutanix_recovery_points_v2.rp-example-4, nutanix_recovery_points_v2.rp-example-5]
+}
 
 # list all RP with filter
 data "nutanix_recovery_points_v2" "rp-example-8" {
-  filter = "name eq 'terraform-test-recovery-point'"
+  filter = "name eq '${nutanix_recovery_points_v2.rp-example-1.name}'"
 }
 
 # list all RP with limit
 data "nutanix_recovery_points_v2" "rp-example-9" {
-  limit = 10
-}
+  limit      = 3
+  depends_on = [nutanix_recovery_points_v2.rp-example-1, nutanix_recovery_points_v2.rp-example-2, nutanix_recovery_points_v2.rp-example-3, nutanix_recovery_points_v2.rp-example-4, nutanix_recovery_points_v2.rp-example-5]
 
-# vm recovery point details
-data "nutanix_vm_recovery_point_info_v2" "rp-example-10" {
-  recovery_point_ext_id = nutanix_recovery_points_v2.example-1.ext_id
-  ext_id                = nutanix_recovery_points_v2.example-1.vm_recovery_points[0].ext_id
 }

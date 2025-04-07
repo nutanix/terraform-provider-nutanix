@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_recovery_point_v2"
-sidebar_current: "docs-nutanix-recovery-point-v2"
+sidebar_current: "docs-nutanix-datasource-recovery-point-v2"
 description: |-
   Provides a datasource to get a single Recovery Point corresponding to the extId.
 ---
@@ -13,8 +13,8 @@ Get a single recovery point  corresponding to the extId.
 ## Example Usage
 
 ```hcl
-data "nutanix_recovery_point_v2" "rp"{
-    ext_id = <recovery_point_uuid>
+data "nutanix_recovery_point_v2" "get-recovery-point" {
+  ext_id = "1cefd0f5-6d38-4c9b-a07c-bdd2db004224"
 }
 ```
 
@@ -104,4 +104,4 @@ The links attribute supports the following:
 * `object_type`: value: `dataprotection.v4.common.VssProperties`
 
 
-See detailed information in [Nutanix Recovery Point V4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.0).
+See detailed information in [Nutanix Get Recovery Point V4](https://developers.nutanix.com/api-reference?namespace=dataprotection&version=v4.0#tag/RecoveryPoints/operation/getRecoveryPointById).

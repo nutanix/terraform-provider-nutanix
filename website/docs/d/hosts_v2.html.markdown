@@ -6,15 +6,22 @@ description: |-
  Describes the Lists of all host entities across clusters registered to Prism Central.
 ---
 
-# nutanix_host
+# nutanix_hosts_v2
 
 Describes the Lists of all host entities across clusters registered to Prism Central.
 
 ## Example Usage
 
 ```hcl
-data "nutanix_host_v2" "example"{
-   filter = "cluster/name eq '<cluster name>'"
+# list all host entities accosted to cluster
+data "nutanix_hosts_v2" "hosts"{
+   cluster_ext_id = "021151dc-3ed1-4fec-a81d-39606451750c"
+}
+
+# list all host entities accosted to cluster with filter
+data "nutanix_hosts_v2" "filtered-hosts"{
+   cluster_ext_id = "021151dc-3ed1-4fec-a81d-39606451750c"
+   filter = "hostName eq 'cluster_host_example'"
 }
 ```
 
@@ -23,7 +30,7 @@ data "nutanix_host_v2" "example"{
 The following arguments are supported:
 * `page`: -(Optional) A query parameter that specifies the page number of the result set. It must be a positive integer between 0 and the maximum number of pages that are available for that resource.
 * `limit` : -(Optional) A URL query parameter that specifies the total number of records returned in the result set. Must be a positive integer between 1 and 100. Any number out of this range will lead to a validation error. If the limit is not provided, a default value of 50 records will be returned in the result set.
-* `filter` : -(Optional) A URL query parameter that allows clients to filter a collection of resources. The expression specified with \$filter is evaluated for each resource in the collection, and only items where the expression evaluates to true are included in the response. Expression specified with the \$filter must conform to the OData V4.01 URL conventions. For example, filter '\$filter=name eq 'karbon-ntnx-1.0' would filter the result on cluster name 'karbon-ntnx1.0', filter '\$filter=startswith(name, 'C')' would filter on cluster name starting with 'C'. The filter can be applied to the following fields: 
+* `filter` : -(Optional) A URL query parameter that allows clients to filter a collection of resources. The expression specified with \$filter is evaluated for each resource in the collection, and only items where the expression evaluates to true are included in the response. Expression specified with the \$filter must conform to the OData V4.01 URL conventions. For example, filter '\$filter=name eq 'karbon-ntnx-1.0' would filter the result on cluster name 'karbon-ntnx1.0', filter '\$filter=startswith(name, 'C')' would filter on cluster name starting with 'C'. The filter can be applied to the following fields:
    * `bootTimeUsecs`
    * `cluster/name`
    * `cluster/uuid`
@@ -43,7 +50,7 @@ The following arguments are supported:
    * `numberOfCpuCores`
    * `numberOfCpuSockets`
    * `numberOfCpuThreads`
-* `orderby` : -(Optional) A URL query parameter that allows clients to specify the sort criteria for the returned list of objects. Resources can be sorted in ascending order using asc or descending order using desc. If asc or desc are not specified, the resources will be sorted in ascending order by default. For example, '\$orderby=templateName desc' would get all templates sorted by templateName in descending order. The orderby can be applied to the following fields: 
+* `orderby` : -(Optional) A URL query parameter that allows clients to specify the sort criteria for the returned list of objects. Resources can be sorted in ascending order using asc or descending order using desc. If asc or desc are not specified, the resources will be sorted in ascending order by default. For example, '\$orderby=templateName desc' would get all templates sorted by templateName in descending order. The orderby can be applied to the following fields:
    * `cluster/name`
    * `controllerVm/externalAddress/ipv4/value`
    * `controllerVm/externalAddress/ipv6/value`
@@ -55,7 +62,7 @@ The following arguments are supported:
 * `apply` : -(Optional) A URL query parameter that allows clients to specify a sequence of transformations to the entity set, such as groupby, filter, aggregate etc. As of now only support for groupby exists.For example '\$apply=groupby((templateName))' would get all templates grouped by templateName. The groupby can be applied on the following fields:
    * `cluster/name`
    * `hypervisor/type`
-* `select` : -(Optional) A query parameter that allows clients to request a specific set of properties for each entity or complex type. Expression specified with the \$select must conform to the OData V4.01 URL conventions. If a \$select expression consists of a single select item that is an asterisk (i.e., \*), then all properties on the matching resource will be returned. The select can be applied to the following fields: 
+* `select` : -(Optional) A query parameter that allows clients to request a specific set of properties for each entity or complex type. Expression specified with the \$select must conform to the OData V4.01 URL conventions. If a \$select expression consists of a single select item that is an asterisk (i.e., \*), then all properties on the matching resource will be returned. The select can be applied to the following fields:
    * `blockModel`
    * `blockSerial`
    * `bootTimeUsecs`
@@ -266,4 +273,4 @@ The ipv6 attribute supports the following:
 
 
 
-See detailed information in [Nutanix Hosts V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0).
+See detailed information in [Nutanix List Hosts V4](https://developers.nutanix.com/api-reference?namespace=clustermgmt&version=v4.0#tag/Clusters/operation/listHostsByClusterId).

@@ -19,6 +19,9 @@ provider "nutanix" {
 #pull all clusters data
 data "nutanix_clusters_v2" "clusters" {}
 
+#pull all clusters data
+data "nutanix_clusters_v2" "clusters" {}
+
 #create local variable pointing to desired cluster
 locals {
   cluster1 = [
@@ -29,15 +32,15 @@ locals {
 
 #creating storage container
 resource "nutanix_storage_containers_v2" "example" {
-  name                                     = "<storage_container_name>"
+  name                                     = "example_storage_container"
   cluster_ext_id                           = local.cluster1
-  logical_advertised_capacity_bytes        = "<logical_advertised_capacity_bytes>"
-  logical_explicit_reserved_capacity_bytes = "<logical_explicit_reserved_capacity_bytes>"
-  replication_factor                       = "<replication_factor>"
+  logical_advertised_capacity_bytes        = 1073741824000
+  logical_explicit_reserved_capacity_bytes = 32
+  replication_factor                       = 1
   nfs_whitelist_addresses {
     ipv4 {
-      value         = "<nfs_whitelist_addresses>"
-      prefix_length = "<prefix_length>"
+      value         = "192.168.15.0"
+      prefix_length = 32
     }
   }
   erasure_code                          = "OFF"
@@ -51,17 +54,18 @@ resource "nutanix_storage_containers_v2" "example" {
 }
 
 #output the storage container info
-output "subnet" {
+output "storage-container" {
   value = nutanix_storage_containers_v2.example
 }
 
 
-#pull all storage containers data in the system
-data "nutanix_storage_containers_v2" "example" {}
+#list all storage containers
+data "nutanix_storage_containers_v2" "list-storage-containers" {
+  depends_on = [ data.nutanix_storage_container_v2.example ]
+}
 
 
 #pull a storage containers data by ext id
 data "nutanix_storage_container_v2" "example" {
-  cluster_ext_id           = local.cluster1
-  storage_container_ext_id = nutanix_storage_containers_v2.example.id
+  ext_id         = nutanix_storage_containers_v2.example.id
 }

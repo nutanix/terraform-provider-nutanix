@@ -86,7 +86,7 @@ func DatasourceNutanixCategoriesV2() *schema.Resource {
 										Computed: true,
 									},
 									"count": {
-										Type:     schema.TypeString,
+										Type:     schema.TypeInt,
 										Computed: true,
 									},
 								},

@@ -15,17 +15,17 @@ Provides Nutanix resource to Installs Nutanix Guest Tools in a Virtual Machine b
 ## Example
 
 ```hcl
-    resource "nutanix_ngt_installation_v2" "example"{
-        ext_id = <uuid for vm to install NGT on it>
-        credential {
-            username = <username>
-            password = <password>
-        }
-        reboot_preference {
-            schedule_type = <schedule type>
-        }
-        capablities = ["VSS_SNAPSHOT"]
+resource "nutanix_ngt_installation_v2" "example"{
+    ext_id = "ab520e1d-4950-1db1-917f-a9e2ea35b8e3"
+    credential {
+        username = "username"
+        password = "pass.1234567890"
     }
+    reboot_preference {
+        schedule_type = "IMMEDIATE"
+    }
+    capablities = ["VSS_SNAPSHOT"]
+}
 ```
 
 ## Argument Reference
@@ -43,7 +43,7 @@ The following arguments are supported:
 
 The credential attribute supports the following:
 
-* `username`: - (Required) username to sign in to server 
+* `username`: - (Required) username to sign in to server
 * `password`: - (Required) password to sign in to server
 
 ### Reboot Preference
@@ -82,4 +82,4 @@ The following attributes are exported:
 
 
 
-See detailed information in [Nutanix Guest Tools V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).
+See detailed information in [Nutanix Install VM Guest Tools V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Vm/operation/installVmGuestTools).
