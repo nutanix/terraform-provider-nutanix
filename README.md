@@ -218,18 +218,14 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | nutanix_ndb_stretched_vlan | - |
 | nutanix_ndb_clone_refresh | - |
 | nutanix_ndb_cluster | - |
-| nutanix_prism | nutanix_prism_v2 |
 | - | nutanix_pc_deploy_v2 |
 | - | nutanix_pc_backup_target_v2 |
 | - | nutanix_pc_restore_source_v2 |
 | - | nutanix_pc_restore_v2 |
 | - | nutanix_pc_unregistration_v2 |
-| nutanix_dataprotection | nutanix_dataprotection_v2 |
 | - | nutanix_promote_protected_resource_v2 |
 | - | nutanix_restore_protected_resource_v2 |
-| nutanix_datapolicies | nutanix_datapolicies_v2 |
 | - | nutanix_protection_policy_v2 |
-| nutanix_lcm | nutanix_lcm_v2 |
 | - | nutanix_lcm_perform_inventory_v2 |
 | - | nutanix_lcm_prechecks_v2 |
 | - | nutanix_lcm_upgrade_v2 |
@@ -344,7 +340,6 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | nutanix_ndb_dbserver | - |
 | nutanix_ndb_dbservers | - |
 | nutanix_ndb_network_available_ips | - |
-| nutanix_prism | nutanix_prism_v2 |
 | - | nutanix_pc_v2 |
 | - | nutanix_pcs_v2 |
 | - | nutanix_restorable_pcs_v2 |
@@ -353,12 +348,9 @@ From foundation getting released in 1.5.0-beta, provider configuration will acco
 | - | nutanix_pc_backup_target_v2 |
 | - | nutanix_pc_backup_targets_v2 |
 | - | nutanix_pc_restore_source_v2
-| nutanix_dataprotection | nutanix_dataprotection_v2 |
 | - | nutanix_protected_resource_v2 |
-| nutanix_datapolicies | nutanix_datapolicies_v2 |
 | - | nutanix_protection_policy_v2 |
 | - | nutanix_protection_policies_v2 |
-| nutanix_lcm | nutanix_lcm_v2 |
 | - | nutanix_lcm_status_v2 |
 | - | nutanix_lcm_entities_v2 |
 | - | nutanix_lcm_entity_v2 |
