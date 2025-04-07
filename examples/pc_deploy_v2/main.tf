@@ -24,7 +24,7 @@ resource "nutanix_pc_deploy_v2" "example" {
   }
   config {
     build_info {
-      version = local.deploy_pc.version
+      version = "pc.2024.3"
     }
     size = "STARTER"
     name = "PC_EXAMPLE"
