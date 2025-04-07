@@ -195,6 +195,7 @@ type HypervisorIsoDetails struct {
 	URL              *string `json:"url,omitempty"`
 	HypervProductKey *string `json:"hyperv_product_key,omitempty"`
 	Sha256sum        *string `json:"sha256sum,omitempty"`
+	HypervisorType   *string `json:"hypervisor_type,omitempty"`
 }
 
 // format of Node to be Imaged
@@ -221,18 +222,19 @@ type Node struct {
 
 // Input to Create a cluster
 type CreateClusterInput struct {
-	ClusterExternalIP     *string                `json:"cluster_external_ip,omitempty"`
-	CommonNetworkSettings *CommonNetworkSettings `json:"common_network_settings,omitempty"`
-	HypervisorIsoDetails  *HypervisorIsoDetails  `json:"hypervisor_iso_details,omitempty"`
-	StorageNodeCount      *int                   `json:"storage_node_count,omitempty"`
-	RedundancyFactor      *int                   `json:"redundancy_factor,omitempty"`
-	ClusterName           *string                `json:"cluster_name,omitempty"`
-	AosPackageURL         *string                `json:"aos_package_url,omitempty"`
-	ClusterSize           *int                   `json:"cluster_size,omitempty"`
-	AosPackageSha256sum   *string                `json:"aos_package_sha256sum,omitempty"`
-	Timezone              *string                `json:"timezone,omitempty"`
-	NodesList             []*Node                `json:"nodes_list,omitempty"`
-	SkipClusterCreation   bool                   `json:"skip_cluster_creation,omitempty"`
+	ClusterExternalIP     *string                 `json:"cluster_external_ip,omitempty"`
+	CommonNetworkSettings *CommonNetworkSettings  `json:"common_network_settings,omitempty"`
+	HypervisorIsoDetails  *HypervisorIsoDetails   `json:"hypervisor_iso_details,omitempty"`
+	HypervisorIsos        *[]HypervisorIsoDetails `json:"hypervisor_isos,omitempty"`
+	StorageNodeCount      *int                    `json:"storage_node_count,omitempty"`
+	RedundancyFactor      *int                    `json:"redundancy_factor,omitempty"`
+	ClusterName           *string                 `json:"cluster_name,omitempty"`
+	AosPackageURL         *string                 `json:"aos_package_url,omitempty"`
+	ClusterSize           *int                    `json:"cluster_size,omitempty"`
+	AosPackageSha256sum   *string                 `json:"aos_package_sha256sum,omitempty"`
+	Timezone              *string                 `json:"timezone,omitempty"`
+	NodesList             []*Node                 `json:"nodes_list,omitempty"`
+	SkipClusterCreation   bool                    `json:"skip_cluster_creation,omitempty"`
 }
 
 // Response of cluster creation
