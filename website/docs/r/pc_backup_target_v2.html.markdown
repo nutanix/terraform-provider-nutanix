@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_pc_backup_target_v2 "
-sidebar_current: "docs-nutanix-pc-backup-target-v2"
+sidebar_current: "docs-nutanix-resource-pc-backup-target-v2"
 description: |-
   Creates a cluster or object store as the backup target. For a given Prism Central, there can be up to 3 clusters as backup targets and 1 object store as backup target. If any cluster or object store is not eligible for backup or lacks appropriate permissions, the API request will fail. For object store backup targets, specifying backup policy is mandatory along with the location of the object store.
 ---

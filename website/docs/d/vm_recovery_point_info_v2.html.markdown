@@ -1,14 +1,14 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: nutanix_recovery_point_v2"
-sidebar_current: "docs-nutanix-recovery-point-v2"
+page_title: "NUTANIX: nutanix_vm_recovery_point_info_v2"
+sidebar_current: "docs-nutanix-datasource-vm-recovery-point-info-v2"
 description: |-
-  Provides a datasource to get a single Recovery Point corresponding to the extId.
+  Provides a datasource to Query the VM recovery point identified by ex_id.
 ---
 
-# nutanix_recovery_point_v2
+# nutanix_vm_recovery_point_info_v2
 
-Get a single recovery point  corresponding to the extId.
+Get the VM recovery point identified by ex_id.
 
 ## Example Usage
 

@@ -1,6 +1,6 @@
 ---
 layout: "nutanix"
-page_title: "NUTANIX: restore_protected_resource_v2"
+page_title: "NUTANIX: nutanix_restore_protected_resource_v2"
 sidebar_current: "docs-nutanix-resource-restore-protected-resource-v2"
 description: |-
   Restore the specified protected resource from its state at the given timestamp on the given cluster. This is only relevant if the entity is protected in a minutely schedule at the given timestamp.
@@ -9,7 +9,7 @@ description: |-
 
 ---
 
-# restore_protected_resource_v2
+# nutanix_restore_protected_resource_v2
 
 Restore the specified protected resource from its state at the given timestamp on the given cluster. This is only relevant if the entity is protected in a minutely schedule at the given timestamp.
 

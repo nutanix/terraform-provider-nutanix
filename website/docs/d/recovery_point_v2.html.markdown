@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_recovery_point_v2"
-sidebar_current: "docs-nutanix-recovery-point-v2"
+sidebar_current: "docs-nutanix-datasource-recovery-point-v2"
 description: |-
   Provides a datasource to get a single Recovery Point corresponding to the extId.
 ---

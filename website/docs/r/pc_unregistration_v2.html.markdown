@@ -1,7 +1,7 @@
 ---
 layout: "nutanix"
 page_title: "NUTANIX: nutanix_pc_unregistration_v2 "
-sidebar_current: "docs-nutanix-pc-unregistration-v2"
+sidebar_current: "docs-nutanix-resource-pc-unregistration-v2"
 description: |-
   Unregister a registered remote cluster from the local cluster
 ---
