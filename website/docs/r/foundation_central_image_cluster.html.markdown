@@ -87,6 +87,12 @@ resource "nutanix_foundation_central_image_cluster" "img2"{
     }
     aos_package_url="<URL>"
 
+    // required for deploying AOS >= v6.8
+    hypervisor_isos{
+      url="<hypervisor-installer-link>"
+      sha256sum="<hypervisor-installer-checksum>"
+      hypervisor_type = "kvm"
+    }
     //pass true to skip cluster creation
     skip_cluster_creation = true
 
@@ -102,7 +108,8 @@ The following arguments are supported:
 
 * `cluster_external_ip`: External management ip of the cluster.
 * `common_network_settings`: Common network settings across the nodes in the cluster. 
-* `hypervisor_iso_details`: Details of the hypervisor iso.
+* `hypervisor_iso_details`: Details of the hypervisor iso. (Deprecated)
+* `hypervisor_isos`: Details of the hypervisor iso. Required for deploying node with AOS >= 6.8
 * `storage_node_count`: Number of storage only nodes in the cluster. AHV iso for storage node will be taken from aos package.
 * `redundancy_factor`: Redundancy factor of the cluster.
 * `cluster_name`: Name of the cluster.
@@ -123,6 +130,13 @@ The following arguments are supported:
 * `url`: (Required) URL to download hypervisor iso. Required only if imaging is needed. 
 * `hyperv_product_key`: Product key for hyperv isos. Required only if the hypervisor type is hyperv and product key is mandatory (ex: for volume license).
 * `sha256sum`: sha256sum of the hypervisor iso.
+
+### hypervisor isos
+* `hyperv_sku`: SKU of hyperv to be installed if hypervisor_type is hyperv.
+* `url`: (Required) URL to download hypervisor iso. Required only if imaging is needed. 
+* `hyperv_product_key`: Product key for hyperv isos. Required only if the hypervisor type is hyperv and product key is mandatory (ex: for volume license).
+* `sha256sum`: sha256sum of the hypervisor iso.
+* `hypervisor_type`: Hypervisor type. Only supports "kvm", "esx" and "hyperv"
 
 ### node list
 * `cvm_gateway`: Gateway of the cvm.
