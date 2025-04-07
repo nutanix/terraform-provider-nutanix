@@ -8,10 +8,16 @@ import (
 )
 
 type TestConfig struct {
+	AvailabilityZone struct {
+		PcExtID      string `json:"pc_ext_id"`
+		ClusterExtID string `json:"cluster_ext_id"`
+		RemotePcIP   string `json:"remote_pc_ip"`
+	} `json:"availability_zone"`
 	DataProtection struct {
-		VMExtID      []string `json:"vm_ext_id"`
-		PcExtID      string   `json:"pc_ext_id"`
-		ClusterExtID string   `json:"cluster_ext_id"`
+		LocalClusterPE   string `json:"local_cluster_pe"`
+		LocalClusterVIP  string `json:"local_cluster_vip"`
+		RemoteClusterPE  string `json:"remote_cluster_pe"`
+		RemoteClusterVIP string `json:"remote_cluster_vip"`
 	} `json:"data_protection"`
 }
 

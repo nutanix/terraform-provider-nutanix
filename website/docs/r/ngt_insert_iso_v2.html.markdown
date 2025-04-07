@@ -15,11 +15,11 @@ Provides Nutanix resource toInserts the Nutanix Guest Tools installation and con
 ## Example
 
 ```hcl
-    resource "nutanix_ngt_insert_iso_v2" "example"{
-        ext_id = <vm uuid>
-        capablities = [<capability>]
-        is_config_only = false
-    }
+resource "nutanix_ngt_insert_iso_v2" "example"{
+    ext_id = "ab520e1d-4950-1db1-917f-a9e2ea35b8e3"
+    capablities = ["VSS_SNAPSHOT"]
+    is_config_only = false
+}
 ```
 
 ## Argument Reference
@@ -50,4 +50,4 @@ The following attributes are exported:
 
 
 
-See detailed information in [Nutanix Guest Tools V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0).
+See detailed information in [Nutanix Insert VM Guest Tools V4](https://developers.nutanix.com/api-reference?namespace=vmm&version=v4.0#tag/Vm/operation/insertVmGuestTools).
