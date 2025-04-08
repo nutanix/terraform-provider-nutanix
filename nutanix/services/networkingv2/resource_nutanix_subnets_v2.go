@@ -493,7 +493,8 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	if vpcRef, ok := d.GetOk("vpc_reference"); ok {
 		inputSpec.VpcReference = utils.StringPtr(vpcRef.(string))
 	}
-	if isNat, ok := d.GetOk("is_nat_enabled"); ok {
+
+	if isNat, ok := d.GetOkExists("is_nat_enabled"); ok {
 		inputSpec.IsNatEnabled = utils.BoolPtr(isNat.(bool))
 	}
 	if isExt, ok := d.GetOk("is_external"); ok {
@@ -536,6 +537,8 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 	if ipConfig, ok := d.GetOk("ip_config"); ok {
 		inputSpec.IpConfig = expandIPConfig(ipConfig.([]interface{}))
 	}
+	aJSON, _ := json.MarshalIndent(inputSpec, "", " ")
+	log.Printf("[DEBUG] Subnets body : %s", string(aJSON))
 
 	resp, err := conn.SubnetAPIInstance.CreateSubnet(&inputSpec)
 	if err != nil {
