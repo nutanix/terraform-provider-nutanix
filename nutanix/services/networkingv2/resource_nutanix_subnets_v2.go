@@ -538,7 +538,7 @@ func ResourceNutanixSubnetV2Create(ctx context.Context, d *schema.ResourceData, 
 		inputSpec.IpConfig = expandIPConfig(ipConfig.([]interface{}))
 	}
 	aJSON, _ := json.MarshalIndent(inputSpec, "", " ")
-	log.Printf("[DEBUG] Subnets body : %s", string(aJSON))
+	log.Printf("[DEBUG] Subnets create payload : %s", string(aJSON))
 
 	resp, err := conn.SubnetAPIInstance.CreateSubnet(&inputSpec)
 	if err != nil {
