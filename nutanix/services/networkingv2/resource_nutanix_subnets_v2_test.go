@@ -299,4 +299,3 @@ resource "nutanix_subnet_v2" "test" {
 }
 `, name, desc)
 }
-
