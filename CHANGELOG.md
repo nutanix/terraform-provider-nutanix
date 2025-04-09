@@ -1,3 +1,9 @@
+## 2.1.1 (April 08, 2025)
+[Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.1.0...v2.1.1)
+
+**Fixed bugs:**
+- Error Creating NoNat Overlay External Network [\#820](https://github.com/nutanix/terraform-provider-nutanix/issues/820)
+
 ## 2.1.0 (April 07, 2025)
 [Full Changelog](https://github.com/nutanix/terraform-provider-nutanix/compare/v2.0.0...v2.1.0)
 

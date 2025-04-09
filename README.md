@@ -2,7 +2,7 @@
 
 Terraform provider plugin to integrate with Nutanix Cloud Platform.
 
-NOTE: The latest version of the Nutanix provider is [v2.1.0](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.1.0).
+NOTE: The latest version of the Nutanix provider is [v2.1.1](https://github.com/nutanix/terraform-provider-nutanix/releases/tag/v2.1.1).
 
 Modules based on Terraform Nutanix Provider can be found here : [Modules](https://github.com/nutanix/terraform-provider-nutanix/tree/master/modules)
 
@@ -40,6 +40,7 @@ The provider is used to interact with the many resources and data sources suppor
 ## Compatibility Matrix
 | Terraform Version |  AOS Version | PC version  | Other software versions | Supported |
 |  :--- |  :--- | :--- | :--- | :--- |
+| 2.1.1 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | yes |
 | 2.1.0 | 7.0.1, 7.0 | pc2024.3, pc2024.3.1 or later | yes |
 | 2.0.0 | |  7.0  | pc2024.3 or later  | ndb v2.7, nke v2.8, foundation v5.7 | Yes |
 | 1.9.5 | | pc2023.1.0.2 | ndb v2.5.1.1, v2.5.1,  v2.5 |  Yes |
