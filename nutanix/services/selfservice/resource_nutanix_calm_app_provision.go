@@ -306,6 +306,11 @@ func ResourceNutanixCalmAppProvision() *schema.Resource {
 					},
 				},
 			},
+			"soft_delete": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
@@ -635,7 +640,19 @@ func resourceNutanixCalmAppProvisionDelete(ctx context.Context, d *schema.Resour
 
 	log.Printf("[Debug] Destroying the app with the ID %s", d.Id())
 
-	if _, err := conn.Service.DeleteApp(ctx, d.Id()); err != nil {
+	soft := d.Get("soft_delete").(bool)
+
+	var err error
+
+	if soft {
+		log.Printf("[Debug] Performing soft delete on app: %s", d.Id())
+		_, err = conn.Service.SoftDeleteApp(ctx, d.Id()) // Your custom function
+	} else {
+		log.Printf("[Debug] Performing hard delete on app: %s", d.Id())
+		_, err = conn.Service.DeleteApp(ctx, d.Id())
+	}
+
+	if err != nil {
 		return diag.FromErr(err)
 	}
 

@@ -17,6 +17,7 @@ type Service interface {
 	GetBlueprint(ctx context.Context, uuid string) (*BlueprintResponse, error)
 	TaskPoll(ctx context.Context, bpUUID string, launchID string) (*PollResponse, error)
 	DeleteApp(ctx context.Context, appUUID string) (*DeleteAppResp, error)
+	SoftDeleteApp(ctx context.Context, appUUID string) (*DeleteAppResp, error)
 	GetApp(ctx context.Context, appUUID string) (*AppResponse, error)
 	PerformAction(ctx context.Context, appUUID string, spec *ActionSpec) (*AppActionResponse, error)
 	AppRunlogs(ctx context.Context, appUUID, runlogUUID string) (*AppRunlogsResponse, error)
@@ -73,6 +74,15 @@ func (op Operations) TaskPoll(ctx context.Context, bpUUID string, launchID strin
 
 func (op Operations) DeleteApp(ctx context.Context, id string) (*DeleteAppResp, error) {
 	httpReq, err := op.client.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/apps/%s", id), nil)
+	if err != nil {
+		return nil, err
+	}
+	res := new(DeleteAppResp)
+	return res, op.client.Do(ctx, httpReq, res)
+}
+
+func (op Operations) SoftDeleteApp(ctx context.Context, id string) (*DeleteAppResp, error) {
+	httpReq, err := op.client.NewRequest(ctx, http.MethodDelete, fmt.Sprintf("/apps/%s?type=soft", id), nil)
 	if err != nil {
 		return nil, err
 	}
