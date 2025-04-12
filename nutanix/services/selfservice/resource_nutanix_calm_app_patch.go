@@ -202,22 +202,30 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 
 	if nicsRuntimeEditable, ok := d.GetOk("nics"); ok {
 		nicsRuntimeEditable := nicsRuntimeEditable.([]interface{})
+		start_index := 0
 		for _, nic := range nicsRuntimeEditable {
 			nicMap := nic.(map[string]interface{})
 			log.Println("NIC MAP::::", nicMap)
 			nicList := fetchSpec.Args.Patch["attrs_list"].([]interface{})[0].(map[string]interface{})["data"].(map[string]interface{})["pre_defined_nic_list"].([]interface{})
 			if operation, ok := nicMap["operation"].(string); ok {
 				if operation == "add" {
-					nicList = append(nicList, map[string]interface{}{
-						"identifier": nicMap["index"],
-						"operation":  "add",
-						"subnet_reference": map[string]interface{}{
-							"kind": "subnet",
-							"type": "",
-							"name": "",
-							"uuid": nicMap["subnet_uuid"],
-						},
-					})
+					for indx := start_index; indx < len(nicList); indx++ {
+
+						nicListOperation := nicList[indx].(map[string]interface{})["operation"].(string)
+						nicListEditable := nicList[indx].(map[string]interface{})["editable"].(bool)
+
+						// Add a nic only if it's editable else proceed with addition of original nic present in nicList
+						if nicListEditable && nicListOperation == operation {
+							nicList[indx].(map[string]interface{})["subnet_reference"] = map[string]interface{}{
+								"kind": "subnet",
+								"type": "",
+								"name": "",
+								"uuid": nicMap["subnet_uuid"],
+							}
+							start_index = indx + 1
+							break
+						}
+					}
 				} else {
 					nicList = append(nicList, map[string]interface{}{
 						"identifier": nicMap["index"],
@@ -364,8 +372,8 @@ func resourceNutanixCalmAppPatchCreate(ctx context.Context, d *schema.ResourceDa
 
 	// poll till action is completed
 	appStateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING"},
-		Target:  []string{"POLICY_EXEC"},
+		Pending: []string{"PENDING", "RUNNING", "POLICY_EXEC"},
+		Target:  []string{"SUCCESS"},
 		Refresh: RunlogStateRefreshFunc(ctx, conn, appUUID, runlogUUID),
 		Timeout: d.Timeout(schema.TimeoutUpdate),
 		Delay:   5 * time.Second,
