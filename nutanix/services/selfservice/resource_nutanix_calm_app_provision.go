@@ -598,6 +598,11 @@ func resourceNutanixCalmAppProvisionUpdate(ctx context.Context, d *schema.Resour
 
 	actionSpec := &calm.ActionSpec{}
 
+	if d.HasChange("soft_delete") {
+		log.Printf("[INFO] soft_delete changed to: %v", d.Get("soft_delete").(bool))
+		return resourceNutanixCalmAppProvisionRead(ctx, d, meta)
+	}
+
 	if d.HasChange("action") {
 		actionSpec.Name = d.Get("action").(string)
 	}
