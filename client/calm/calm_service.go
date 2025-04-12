@@ -22,6 +22,7 @@ type Service interface {
 	PerformAction(ctx context.Context, appUUID string, spec *ActionSpec) (*AppActionResponse, error)
 	AppRunlogs(ctx context.Context, appUUID, runlogUUID string) (*AppRunlogsResponse, error)
 	ListBlueprint(ctx context.Context, filter *BlueprintListInput) (*BlueprintListResponse, error)
+	ListApplication(ctx context.Context, filter *ApplicationListInput) (*ApplicationListResponse, error)
 	GetRuntimeEditables(ctx context.Context, bpUUID string) (*RuntimeEditablesResponse, error)
 	PatchApp(ctx context.Context, appUUID string, patchUUID string, input *PatchInput) (*AppTaskResponse, error)
 	PerformActionUuid(ctx context.Context, appUUID string, actionUUID string, input *ActionInput) (*AppTaskResponse, error)
@@ -133,6 +134,20 @@ func (op Operations) ListBlueprint(ctx context.Context, filter *BlueprintListInp
 	req, err := op.client.NewRequest(ctx, http.MethodPost, path, filter)
 
 	appResponse := new(BlueprintListResponse)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return appResponse, op.client.Do(ctx, req, appResponse)
+}
+
+func (op Operations) ListApplication(ctx context.Context, filter *ApplicationListInput) (*ApplicationListResponse, error) {
+	path := "/apps/list"
+
+	req, err := op.client.NewRequest(ctx, http.MethodPost, path, filter)
+
+	appResponse := new(ApplicationListResponse)
 
 	if err != nil {
 		return nil, err
