@@ -101,7 +101,15 @@ type BlueprintListInput struct {
 	Filter string `json:"filter"`
 }
 
+type ApplicationListInput struct {
+	Filter string `json:"filter"`
+}
+
 type BlueprintListResponse struct {
+	Entities json.RawMessage `json:"entities"`
+}
+
+type ApplicationListResponse struct {
 	Entities json.RawMessage `json:"entities"`
 }
 
