@@ -26,9 +26,13 @@ func ResourceNutanixCalmAppRecoveryPoint() *schema.Resource {
 		UpdateContext: resourceNutanixCalmAppRecoveryPointUpdate,
 		DeleteContext: resourceNutanixCalmAppRecoveryPointDelete,
 		Schema: map[string]*schema.Schema{
+			"app_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"app_uuid": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"action_name": {
 				Type:     schema.TypeString,
@@ -44,7 +48,39 @@ func ResourceNutanixCalmAppRecoveryPoint() *schema.Resource {
 
 func resourceNutanixCalmAppRecoveryPointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).Calm
-	appUUID := d.Get("app_uuid").(string)
+
+	var appUUID string
+
+	app_name := d.Get("app_name").(string)
+
+	appFilter := &calm.ApplicationListInput{}
+
+	appFilter.Filter = fmt.Sprintf("name==%s;_state!=deleted", app_name)
+
+	log.Printf("[Debug] Qeurying apps/list API with filter %s", appFilter)
+
+	appNameResp, err := conn.Service.ListApplication(ctx, appFilter)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	log.Printf("[Debug] Getting app uuid from app response: %s", appNameResp)
+
+	var AppNameStatus []interface{}
+	if err := json.Unmarshal([]byte(appNameResp.Entities), &AppNameStatus); err != nil {
+		fmt.Println("Error unmarshalling AppName:", err)
+	}
+
+	entities := AppNameStatus[0].(map[string]interface{})
+
+	if entity, ok := entities["metadata"].(map[string]interface{}); ok {
+		appUUID = entity["uuid"].(string)
+	}
+
+	if appUUID, ok := d.GetOk("app_uuid"); ok {
+		appUUID = appUUID.(string)
+	}
+
 	snapshotActionName := d.Get("action_name").(string)
 	snapshotName := d.Get("recovery_point_name").(string)
 
@@ -134,7 +170,36 @@ func resourceNutanixCalmAppRecoveryPointUpdate(ctx context.Context, d *schema.Re
 func resourceNutanixCalmAppRecoveryPointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 
 	conn := meta.(*conns.Client).Calm
-	appUUID := d.Get("app_uuid").(string)
+
+	var appUUID string
+
+	app_name := d.Get("app_name").(string)
+
+	appFilter := &calm.ApplicationListInput{}
+
+	appFilter.Filter = fmt.Sprintf("name==%s;_state!=deleted", app_name)
+
+	log.Printf("[Debug] Qeurying apps/list API with filter %s", appFilter)
+
+	appNameResp, err := conn.Service.ListApplication(ctx, appFilter)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	log.Printf("[Debug] Getting app uuid from app response: %s", appNameResp)
+
+	var AppNameStatus []interface{}
+	if err := json.Unmarshal([]byte(appNameResp.Entities), &AppNameStatus); err != nil {
+		log.Println("Error unmarshalling AppName:", err)
+	}
+
+	entities := AppNameStatus[0].(map[string]interface{})
+
+	if entity, ok := entities["metadata"].(map[string]interface{}); ok {
+		appUUID = entity["uuid"].(string)
+	}
+	log.Println("[Debug] App uuid: ", appUUID)
+
 	snapshotName := d.Get("recovery_point_name").(string)
 	log.Printf("DELETE CALLED FOR %s %s", appUUID, snapshotName)
 	length := 250
@@ -211,18 +276,7 @@ func resourceNutanixCalmAppRecoveryPointDelete(ctx context.Context, d *schema.Re
 
 	runlogUUID := snapshotResp.Status.RunlogUUID
 
-	fmt.Println("Runlog UUID:", runlogUUID)
-	// poll till action is completed
-	appStateConf := &resource.StateChangeConf{
-		Pending: []string{"PENDING", "RUNNING", "POLICY_EXEC", "ABORTING", "APPROVAL"},
-		Target:  []string{"SUCCESS", "FAILURE", "WARNING", "ERROR", "SYS_FAILURE", "SYS_ERROR", "SYS_ABORTED", "TIMEOUT", "APPROVAL_FAILED"},
-		Refresh: SnapshotStateRefreshFunc(ctx, conn, appUUID, runlogUUID),
-		Timeout: d.Timeout(schema.TimeoutUpdate),
-		Delay:   5 * time.Second,
-	}
-	if _, errWaitTask := appStateConf.WaitForStateContext(ctx); errWaitTask != nil {
-		return diag.Errorf("Error waiting for app to perform Restore Action: %s", errWaitTask)
-	}
+	fmt.Println("[DEBUG] Trigger delete of snapshot with Runlog UUID:", runlogUUID)
 
 	return nil
 }
