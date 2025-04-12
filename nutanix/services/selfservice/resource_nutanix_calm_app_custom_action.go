@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -22,9 +23,13 @@ func ResourceNutanixCalmAppCustomAction() *schema.Resource {
 		UpdateContext: ResourceNutanixCalmAppCustomActionUpdate,
 		DeleteContext: ResourceNutanixCalmAppCustomActionDelete,
 		Schema: map[string]*schema.Schema{
+			"app_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"app_uuid": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"action_name": {
 				Type:     schema.TypeString,
@@ -42,7 +47,38 @@ func ResourceNutanixCalmAppCustomAction() *schema.Resource {
 func ResourceNutanixCalmAppCustomActionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.Client).Calm
 
-	appUUID := d.Get("app_uuid").(string)
+	var appUUID string
+
+	app_name := d.Get("app_name").(string)
+
+	appFilter := &calm.ApplicationListInput{}
+
+	appFilter.Filter = fmt.Sprintf("name==%s;_state!=deleted", app_name)
+
+	log.Printf("[Debug] Qeurying apps/list API with filter %s", appFilter)
+
+	appNameResp, err := conn.Service.ListApplication(ctx, appFilter)
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	log.Printf("[Debug] Getting app uuid from app response: %s", appNameResp)
+
+	var AppNameStatus []interface{}
+	if err := json.Unmarshal([]byte(appNameResp.Entities), &AppNameStatus); err != nil {
+		fmt.Println("Error unmarshalling AppName:", err)
+	}
+
+	entities := AppNameStatus[0].(map[string]interface{})
+
+	if entity, ok := entities["metadata"].(map[string]interface{}); ok {
+		appUUID = entity["uuid"].(string)
+	}
+
+	if appUUID, ok := d.GetOk("app_uuid"); ok {
+		appUUID = appUUID.(string)
+	}
+
 	actionName := d.Get("action_name").(string)
 
 	// fetch app for spec
