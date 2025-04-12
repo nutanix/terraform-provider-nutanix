@@ -215,7 +215,7 @@ func dataSourceNutanixCalmSnapshotPolicyRead(ctx context.Context, d *schema.Reso
 										PolicyMap["snapshot_config_uuid"] = config_uuid
 										PolicyMap["policy_expiry_days"] = policy.(map[string]interface{})["multiple"].(float64)
 										PolicyList = append(PolicyList, PolicyMap)
-										fmt.Println("Added policy with param %s %s", status["uuid"].(string), config_uuid)
+										fmt.Printf("Added policy with param %s %s", status["uuid"].(string), config_uuid)
 									}
 								}
 							}
