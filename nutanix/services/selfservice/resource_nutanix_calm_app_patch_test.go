@@ -1,13 +1,11 @@
 package selfservice_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	acc "github.com/terraform-providers/terraform-provider-nutanix/nutanix/acctest"
 )
 
@@ -26,26 +24,12 @@ func TestAccNutanixCalmAppVmUpdateResource(t *testing.T) {
 			{
 				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppVMUpdateBasic(configNameBasic),
 				Check: resource.ComposeTestCheckFunc(
-					func(s *terraform.State) error {
-						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceNamePatch].Primary.Attributes, "", "  ")
-						fmt.Printf("################### %s #########################\n", resourceNamePatch)
-						fmt.Printf("Resource Attributes: \n%v\n", string(aJSON))
-						fmt.Printf("\n############################################\n")
-						return nil
-					},
 					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", configNameBasic),
 				),
 			},
 			{
 				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppVMUpdateEditable(configNameEditable),
 				Check: resource.ComposeTestCheckFunc(
-					func(s *terraform.State) error {
-						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceNamePatch].Primary.Attributes, "", "  ")
-						fmt.Printf("################### %s #########################\n", resourceNamePatch)
-						fmt.Printf("Resource Attributes: \n%v\n", string(aJSON))
-						fmt.Printf("\n############################################\n")
-						return nil
-					},
 					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", configNameEditable),
 					resource.TestCheckResourceAttr(resourceNamePatch, "vm_config.0.memory_size_mib", "2048"),
 					resource.TestCheckResourceAttr(resourceNamePatch, "vm_config.0.num_sockets", "2"),
@@ -69,26 +53,12 @@ func TestAccNutanixCalmAppCategoryUpdateResource(t *testing.T) {
 			{
 				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppCategoryAdd(categoryAddConfig),
 				Check: resource.ComposeTestCheckFunc(
-					func(s *terraform.State) error {
-						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceNamePatch].Primary.Attributes, "", "  ")
-						fmt.Printf("################### %s #########################\n", resourceNamePatch)
-						fmt.Printf("Resource Attributes: \n%v\n", string(aJSON))
-						fmt.Printf("\n############################################\n")
-						return nil
-					},
 					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", categoryAddConfig),
 				),
 			},
 			{
 				Config: testCalmAppProvisionWithUpdateConfig(name, desc) + testCalmAppCategoryDelete(categoryDeleteConfig),
 				Check: resource.ComposeTestCheckFunc(
-					func(s *terraform.State) error {
-						aJSON, _ := json.MarshalIndent(s.RootModule().Resources[resourceNamePatch].Primary.Attributes, "", "  ")
-						fmt.Printf("################### %s #########################\n", resourceNamePatch)
-						fmt.Printf("Resource Attributes: \n%v\n", string(aJSON))
-						fmt.Printf("\n############################################\n")
-						return nil
-					},
 					resource.TestCheckResourceAttr(resourceNamePatch, "config_name", categoryDeleteConfig),
 				),
 			},
